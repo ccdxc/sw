@@ -17,6 +17,7 @@ struct s1_t0_read_rx2tx_extra_read_rx2tx_extra_d d;
 %%
     .align
     .param      tcp_tx_process_pending_start
+    .param      tcp_tx_s2_bubble_start
 
 tcp_tx_read_rx2tx_shared_extra_stage1_start:
     CAPRI_OPERAND_DEBUG(d.rcv_mss)
@@ -24,6 +25,8 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     phvwr           p.to_s5_rcv_mss, d.rcv_mss
     seq             c1, k.common_phv_pending_rx2tx, 1
     bcf             [c1], tcp_tx_start_pending
+    seq             c1, k.common_phv_pending_rto, 1
+    bcf             [c1], tcp_tx_start_s2_bubble
     nop
     nop.e
     nop
@@ -42,6 +45,11 @@ tcp_tx_start_pending:
                         k.common_phv_qstate_addr,
                         TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
 tcp_tx_rx2tx_extra_end:
+    nop.e
+    nop
+
+tcp_tx_start_s2_bubble:
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_tx_s2_bubble_start)
     nop.e
     nop
 

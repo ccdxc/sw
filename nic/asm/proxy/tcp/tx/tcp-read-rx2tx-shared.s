@@ -22,27 +22,13 @@ struct s0_t0_read_rx2tx_read_rx2tx_d d;
 tcp_tx_read_rx2tx_shared_process:
     phvwr           p.common_phv_fid, k.p4_txdma_intr_qid
     phvwr           p.common_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
-#if 0
-    /* Trigger any pending timer bookkeeping from rx */
-    sne             c1, d.pending_ft_clear, r0
-    bcf             [c1], ft_clear
-    nop
-    sne             c2, d.pending_ft_reset, r0
-    bcf             [c2], ft_reset
-    nop
-ft_clear:
-    b               write_phv
-    nop
-ft_reset:	
-    CAPRI_TIMER_START(LIF_TCP, 0, k.p4_txdma_intr_qid, TCP_SCHED_RING_FT, d.rto_deadline)
-write_phv:	
-#endif
     phvwr           p.common_phv_snd_una, d.snd_una
-    phvwr           p.common_phv_rcv_nxt, d.rcv_nxt
+    phvwr           p.to_s5_rcv_nxt, d.rcv_nxt
     CAPRI_OPERAND_DEBUG(d.snd_wnd)
     CAPRI_OPERAND_DEBUG(d.snd_cwnd)
     phvwr           p.t0_s2s_snd_cwnd, d.snd_cwnd
     phvwr           p.t0_s2s_snd_wnd, d.snd_wnd
+    phvwr           p.t0_s2s_rto, d.rto
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
@@ -62,7 +48,7 @@ write_phv:
 	            b tcp_tx_ft_expired
 	            nop
 	        .brcase 3
-	            b tcp_tx_rx2tx_end // shouldn't happen
+	            b tcp_tx_st_expired
 	            nop
 	        .brcase 4
 	            b tcp_tx_launch_asesq
@@ -78,6 +64,8 @@ tcp_tx_launch_sesq:
     phvwr           p.to_s2_sesq_cidx, d.{ci_0}.hx
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FREE_RNMDR, TCP_TX_DDOL_FREE_RNMDR
     phvwri.c1       p.common_phv_debug_dol_free_rnmdr, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
+    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
     add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
     phvwr           p.to_s1_sesq_ci_addr, r3
     tbladd          d.{ci_0}.hx, 1
@@ -119,6 +107,20 @@ tcp_tx_pending_rx2tx:
     add             r3, r3, 1
     memwr.dx        r4, r3
     nop.e
+    nop
+
+tcp_tx_st_expired:
+    phvwr           p.common_phv_pending_rto, 1
+    phvwr           p.t0_s2s_rto_pi, d.{pi_3}.hx
+    tbladd          d.{ci_3}.hx, 1
+    /* Ring ST doorbell to update CI
+     * store address in r4
+     */
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+
+    // data will be in r3
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_ST, d.{ci_3}.hx)
+    memwr.dx.e      r4, r3
     nop
 
 tcp_tx_ft_expired:

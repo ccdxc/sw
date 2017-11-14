@@ -27,7 +27,7 @@ tcp_tx_process_pending_start:
     nop
 launch_pending:
     seq             c3, d.retx_next_desc, r0
-    b.c3            launch_pending_empty_retx
+    bcf             [c3], launch_pending_empty_retx
     CAPRI_NEXT_TABLE_READ_e(0, TABLE_LOCK_DIS,
                         tcp_tx_read_descr_start, d.retx_next_desc, TABLE_SIZE_512_BITS)
     nop

@@ -76,7 +76,6 @@ tcp_rx_read_shared_stage0_start:
     tblwr           d.quick_acks_decr_old, d.quick_acks_decr
     phvwr           p.s1_s2s_quick_acks_decr, r1
 
-
     phvwr        p.to_s6_payload_len, k.tcp_app_header_payload_len
     phvwr        p.s1_s2s_payload_len, k.tcp_app_header_payload_len
     CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)

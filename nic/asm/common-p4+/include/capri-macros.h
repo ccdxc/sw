@@ -218,51 +218,11 @@
 #define DMA_CMD_TYPE_MEM2MEM_TYPE_SRC 0
 #define DMA_CMD_TYPE_MEM2MEM_TYPE_DST 1
 
-#define TIMER_START_ARRAY_BASE         0xab000000
-#define TIMER_START_ARRAY_LIF_SHIFT    12
-#define TIMER_START_WIDTH_BITS         40
-#define TIMER_START_TYPE_SHIFT         37
-#define TIMER_START_QID_SHIFT          13
-#define TIMER_START_RING_SHIFT         10
-
 #define TM_OPORT_DMA       9 
 #define TM_OPORT_P4EGRESS  10
 #define TM_OPORT_P4INGRESS 11
 
 
-// memwr timer_start[LIF], {type, qid, ring, delta_time}
-#define CAPRI_TIMER_START(_lif, _type, _qid, _ring, _delta_time) \
-        addi            r4, r0, TIMER_START_ARRAY_BASE;\
-        addi            r6, r0, _lif;\
-        sll             r6, r6, TIMER_START_ARRAY_LIF_SHIFT;\
-        add             r4, r4, r6;\
-        addi            r5, r5, 0;\
-        addi            r6, r0, _type;\
-        sll             r6, r6, TIMER_START_TYPE_SHIFT;\
-        add             r5, r5, r6;\
-        add             r6, r0, _qid;\
-        sll             r6, r6, TIMER_START_QID_SHIFT;\
-        add             r5, r5, r6;\
-        addi            r6, r0, _ring;\
-        sll             r6, r6, TIMER_START_RING_SHIFT;\
-        add             r5, r5, r6;\
-        add             r6, r0, _delta_time;\
-        add             r5, r5, r6;\
-        memwr.d         r4, r5
-
-// Increment the consumer index(cidx) of the timer ring. Producer index(pidx)
-// is incremented by the hw timer block on timer expiration
-// On timer expiry, timer handler is scheduled only if pidx == cidx+1
-#define CAPRI_TIMER_STOP(_cidx) \
-        tbladd          _cidx, 1
-
-// Stop the timer if started, otherwise nop
-#define CAPRI_TIMER_CLEAR(_pidx, _cidx) \
-        add             r6, _cidx,r0;\
-        addi            r6, r6, 1;\
-        seq             c7, _pidx, _cidx;\
-        tbladd.c1       _cidx, 1
-        
 // x = offsetof(_field)
 // flit = x / 512
 // base = flit * 512

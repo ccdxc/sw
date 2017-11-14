@@ -21,6 +21,7 @@ tcp_rx_rtt_stage2_start:
 
     CAPRI_CLEAR_TABLE0_VALID
     CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
+
     sne         c1, k.common_phv_write_arq, r0
     bcf         [c1], flow_rtt_process_done
     nop
@@ -165,7 +166,7 @@ m_ge_0_done:
     srl.c2      r4, r4,2
     sub.c2      r5, d.rttvar_us, r4
     tblwr       d.rttvar_us, r5
-    tblwr.c1    d.rtt_seq, k.to_s2_snd_nxt
+    tblwr.c1    d.rtt_seq, k.{to_s2_snd_nxt_sbit0_ebit7...to_s2_snd_nxt_sbit24_ebit31}
     addi.c1     r4, r0, TCP_RTO_MIN
     tblwr.c1    d.mdev_max_us, r4
     
@@ -189,7 +190,7 @@ first_rtt_measure:
     tblwr       d.mdev_max_us, d.rttvar_us
     
     /* tp->rtt.rtt_seq = tp->tx.snd_nxt; */
-    tblwr       d.rtt_seq, k.to_s2_snd_nxt
+    tblwr       d.rtt_seq, k.{to_s2_snd_nxt_sbit0_ebit7...to_s2_snd_nxt_sbit24_ebit31}
 first_rtt_measure_done:
     /* tp->rtt.srtt_us = max(1U, srtt) */
     addi        r5,r0,1
@@ -216,6 +217,10 @@ tcp_set_rto:
     tblwr       d.rto, r1
     
     tblwr       d.backoff, r0
+    /*
+     * TODO - we need to indicate to tx pipeline when backoff is reset
+     * via rx2tx_extra_pending_reset_backoff
+     */
 flow_rtt_process_done:
     
 table_read_FRA:

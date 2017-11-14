@@ -41,6 +41,7 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-read-rx2tx-shared-extra.s \
     $(SRC_DIR)/tcp-read-sesq-ci.s \
 	$(SRC_DIR)/tcp-tx-process-pending.s \
+    $(SRC_DIR)/tcp-s2-bubble.s \
     $(SRC_DIR)/tcp-read-descr.s \
     $(SRC_DIR)/tcp-s3-bubble.s \
     $(SRC_DIR)/tcp-sesq-consume.s \

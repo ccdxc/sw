@@ -130,6 +130,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->state = spec.state();
     tcpcb->source_lif = spec.source_lif();
     tcpcb->l7_proxy_type = spec.l7_proxy_type();
+    tcpcb->rto = spec.rto();
     
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -197,6 +198,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->header_len = spec.header_len();
     tcpcb->l7_proxy_type = spec.l7_proxy_type();
+    tcpcb->rto = spec.rto();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -274,6 +276,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
                                              sizeof(rtcpcb.header_template));
     rsp->mutable_spec()->set_retx_xmit_cursor(rtcpcb.retx_xmit_cursor);
     rsp->mutable_spec()->set_retx_snd_una(rtcpcb.retx_snd_una);
+    rsp->mutable_spec()->set_rto(rtcpcb.rto);
 
     rsp->mutable_spec()->set_state(rtcpcb.state);
     rsp->mutable_spec()->set_source_lif(rtcpcb.source_lif);

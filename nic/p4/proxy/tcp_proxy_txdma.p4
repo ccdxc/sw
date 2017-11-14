@@ -58,15 +58,16 @@
     modify_field(common_global_scratch.fid, common_phv.fid); \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
-    modify_field(common_global_scratch.rcv_nxt, common_phv.rcv_nxt); \
     modify_field(common_global_scratch.pending_rx2tx, common_phv.pending_rx2tx); \
     modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
     modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
     modify_field(common_global_scratch.pending_snd_una_update, common_phv.pending_snd_una_update); \
+    modify_field(common_global_scratch.pending_rto, common_phv.pending_rto); \
     modify_field(common_global_scratch.debug_dol_dont_send_ack, common_phv.debug_dol_dont_send_ack);\
     modify_field(common_global_scratch.pending_asesq, common_phv.pending_asesq); \
     modify_field(common_global_scratch.debug_dol_dont_tx, common_phv.debug_dol_dont_tx); \
-    modify_field(common_global_scratch.debug_dol_free_rnmdr, common_phv.debug_dol_free_rnmdr);
+    modify_field(common_global_scratch.debug_dol_free_rnmdr, common_phv.debug_dol_free_rnmdr);\
+    modify_field(common_global_scratch.debug_dol_dont_start_retx_timer, common_phv.debug_dol_dont_start_retx_timer);
 
 /******************************************************************************
  * D-vectors
@@ -145,15 +146,16 @@ header_type common_global_phv_t {
         fid                     : 24;
         qstate_addr             : HBM_ADDRESS_WIDTH;
         snd_una                 : SEQ_NUMBER_WIDTH;
-        rcv_nxt                 : SEQ_NUMBER_WIDTH;
         pending_rx2tx           : 1;
         pending_sesq            : 1;
         pending_ack_send        : 1;
         pending_snd_una_update  : 1;
+        pending_rto             : 1;
         debug_dol_dont_send_ack : 1;
         pending_asesq           : 1;
         debug_dol_dont_tx       : 1;
         debug_dol_free_rnmdr    : 1;
+        debug_dol_dont_start_retx_timer : 1;
     }
 }
 
@@ -196,7 +198,7 @@ header_type to_stage_5_phv_t {
         xmit_cursor_offset      : OFFSET_WIDTH;
         xmit_cursor_len         : LEN_WIDTH;
 
-        rcv_wnd                 : SEQ_NUMBER_WIDTH;
+        rcv_nxt                 : SEQ_NUMBER_WIDTH;
         rcv_mss                 : 16;
         ca_state                : 8;
 
@@ -230,8 +232,8 @@ header_type common_t0_s2s_phv_t {
         snd_nxt                 : SEQ_NUMBER_WIDTH;
         snd_wnd                 : SEQ_NUMBER_WIDTH;
         snd_cwnd                : WINDOW_WIDTH;
-        packets_out             : 16;
-        sacked_out              : 16;
+        rto                     : 16;
+        rto_pi                  : 16;
         lost_out                : 8;
         retrans_out             : 8;
     }
@@ -317,8 +319,8 @@ metadata txdma_phv_pad1_t phv_pad1;
 metadata tcp_header_t tcp_header;
 header_type txdma_max_options_t {
     fields {
-        pad1           : 224;
-        pad2           : 96;
+        pad1           : 216;
+        pad2           : 104;
     }
 }
 @pragma dont_trim
@@ -329,7 +331,7 @@ metadata ring_entry_t ring_entry;
 metadata doorbell_data_t db_data;
 header_type txdma_pad_before_dma_t {
     fields {
-        pad            : 32;
+        pad            : 24;
     }
 }
 @pragma dont_trim
@@ -365,7 +367,7 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 8
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
 pi_4, ci_4, pi_5, ci_5, debug_dol_tx, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd, ft_pi, snd_cwnd, \
-rto_deadline, pending_ft_clear, pending_ft_reset
+rto, pending_ft_clear, pending_ft_reset
 
 
 #define GENERATE_RX2TX_D                                                                               \
@@ -397,7 +399,7 @@ rto_deadline, pending_ft_clear, pending_ft_reset
     modify_field(rx2tx_d.snd_wnd, snd_wnd);                                                            \
     modify_field(rx2tx_d.ft_pi, ft_pi);                                                                \
     modify_field(rx2tx_d.snd_cwnd, snd_cwnd);                                                          \
-    modify_field(rx2tx_d.rto_deadline, rto_deadline);                                                  \
+    modify_field(rx2tx_d.rto, rto);                                                                    \
     modify_field(rx2tx_d.pending_ft_clear, pending_ft_clear);                                          \
     modify_field(rx2tx_d.pending_ft_reset, pending_ft_reset);
 
@@ -423,13 +425,13 @@ action read_rx2tx_extra(
        ato_deadline, retx_head_ts, srtt_us, rcv_wnd, prior_ssthresh, high_seq,
        sacked_out, lost_out, retrans_out, fackets_out, ooo_datalen,
        reordering, undo_marker, undo_retrans, snd_ssthresh, loss_cwnd,
-       write_seq, tso_seq, rcv_mss, rto, ca_state, ecn_flags, num_sacks,
+       write_seq, tso_seq, rcv_mss, ca_state, ecn_flags, num_sacks,
        pending_ack_send, pending_snd_una_update, pending_challenge_ack_send,
        pending_sync_mss, pending_tso_keepalive, pending_tso_pmtu_probe,
        pending_tso_data, pending_tso_probe_data, pending_tso_probe,
        pending_ooo_se_recv, pending_tso_retx, pending_rexmit, pending,
        ack_blocked, ack_pending, snd_wscale, rcv_mss_shft, quick,
-       pingpong, backoff, dsack) {
+       pingpong, pending_reset_backoff, dsack, pad_rx2tx_extra) {
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -458,7 +460,6 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.write_seq, write_seq);
     modify_field(rx2tx_extra_d.tso_seq, tso_seq);
     modify_field(rx2tx_extra_d.rcv_mss, rcv_mss);
-    modify_field(rx2tx_extra_d.rto, rto);
     modify_field(rx2tx_extra_d.ca_state, ca_state);
     modify_field(rx2tx_extra_d.ecn_flags, ecn_flags);
     modify_field(rx2tx_extra_d.num_sacks, num_sacks);
@@ -481,8 +482,9 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.rcv_mss_shft, rcv_mss_shft);
     modify_field(rx2tx_extra_d.quick, quick);
     modify_field(rx2tx_extra_d.pingpong, pingpong);
-    modify_field(rx2tx_extra_d.backoff, backoff);
+    modify_field(rx2tx_extra_d.pending_reset_backoff, pending_reset_backoff);
     modify_field(rx2tx_extra_d.dsack, dsack);
+    modify_field(rx2tx_extra_d.pad_rx2tx_extra, pad_rx2tx_extra);
 }
 
 /*
@@ -517,8 +519,8 @@ action pending(TX_SHARED_PARAMS) {
     modify_field(t0_s2s_scratch.snd_nxt, t0_s2s.snd_nxt);
     modify_field(t0_s2s_scratch.snd_wnd, t0_s2s.snd_wnd);
     modify_field(t0_s2s_scratch.snd_cwnd, t0_s2s.snd_cwnd);
-    modify_field(t0_s2s_scratch.packets_out, t0_s2s.packets_out);
-    modify_field(t0_s2s_scratch.sacked_out, t0_s2s.sacked_out);
+    modify_field(t0_s2s_scratch.rto, t0_s2s.rto);
+    modify_field(t0_s2s_scratch.rto_pi, t0_s2s.rto_pi);
     modify_field(t0_s2s_scratch.lost_out, t0_s2s.lost_out);
     modify_field(t0_s2s_scratch.retrans_out, t0_s2s.retrans_out);
 
@@ -553,8 +555,8 @@ action read_descr(A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt) {
     modify_field(t0_s2s_scratch.snd_nxt, t0_s2s.snd_nxt);
     modify_field(t0_s2s_scratch.snd_wnd, t0_s2s.snd_wnd);
     modify_field(t0_s2s_scratch.snd_cwnd, t0_s2s.snd_cwnd);
-    modify_field(t0_s2s_scratch.packets_out, t0_s2s.packets_out);
-    modify_field(t0_s2s_scratch.sacked_out, t0_s2s.sacked_out);
+    modify_field(t0_s2s_scratch.rto, t0_s2s.rto);
+    modify_field(t0_s2s_scratch.rto_pi, t0_s2s.rto_pi);
     modify_field(t0_s2s_scratch.lost_out, t0_s2s.lost_out);
     modify_field(t0_s2s_scratch.retrans_out, t0_s2s.retrans_out);
 
@@ -597,8 +599,8 @@ action tcp_tx(TX_SHARED_PARAMS) {
     modify_field(t0_s2s_scratch.snd_nxt, t0_s2s.snd_nxt);
     modify_field(t0_s2s_scratch.snd_wnd, t0_s2s.snd_wnd);
     modify_field(t0_s2s_scratch.snd_cwnd, t0_s2s.snd_cwnd);
-    modify_field(t0_s2s_scratch.packets_out, t0_s2s.packets_out);
-    modify_field(t0_s2s_scratch.sacked_out, t0_s2s.sacked_out);
+    modify_field(t0_s2s_scratch.rto, t0_s2s.rto);
+    modify_field(t0_s2s_scratch.rto_pi, t0_s2s.rto_pi);
     modify_field(t0_s2s_scratch.lost_out, t0_s2s.lost_out);
     modify_field(t0_s2s_scratch.retrans_out, t0_s2s.retrans_out);
 
@@ -618,7 +620,7 @@ action tso(TSO_PARAMS) {
     modify_field(to_s5_scratch.xmit_cursor_addr, to_s5.xmit_cursor_addr);
     modify_field(to_s5_scratch.xmit_cursor_offset, to_s5.xmit_cursor_offset);
     modify_field(to_s5_scratch.xmit_cursor_len, to_s5.xmit_cursor_len);
-    modify_field(to_s5_scratch.rcv_wnd, to_s5.rcv_wnd);
+    modify_field(to_s5_scratch.rcv_nxt, to_s5.rcv_nxt);
     modify_field(to_s5_scratch.rcv_mss, to_s5.rcv_mss);
     modify_field(to_s5_scratch.ca_state, to_s5.ca_state);
     modify_field(to_s5_scratch.pending_challenge_ack_send, to_s5.pending_challenge_ack_send);
@@ -634,8 +636,8 @@ action tso(TSO_PARAMS) {
     modify_field(t0_s2s_scratch.snd_nxt, t0_s2s.snd_nxt);
     modify_field(t0_s2s_scratch.snd_wnd, t0_s2s.snd_wnd);
     modify_field(t0_s2s_scratch.snd_cwnd, t0_s2s.snd_cwnd);
-    modify_field(t0_s2s_scratch.packets_out, t0_s2s.packets_out);
-    modify_field(t0_s2s_scratch.sacked_out, t0_s2s.sacked_out);
+    modify_field(t0_s2s_scratch.rto, t0_s2s.rto);
+    modify_field(t0_s2s_scratch.rto_pi, t0_s2s.rto_pi);
     modify_field(t0_s2s_scratch.lost_out, t0_s2s.lost_out);
     modify_field(t0_s2s_scratch.retrans_out, t0_s2s.retrans_out);
 

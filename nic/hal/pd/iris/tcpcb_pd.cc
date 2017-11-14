@@ -165,7 +165,7 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_RTT);
 
     if(!del) {
-        data.u.tcp_rtt_d.rto = 0x30;
+        data.u.tcp_rtt_d.rto = 100;
         data.u.tcp_rtt_d.srtt_us = 0x80;
         data.u.tcp_rtt_d.seq_rtt_us = 0x10;
         data.u.tcp_rtt_d.ca_rtt_us = 0x10;
@@ -633,6 +633,8 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcpcb_pd->tcpcb->debug_dol_tx);
         data.u.read_rx2tx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.read_rx2tx_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
+        // TODO : fix this hardcoding
+        data.u.read_rx2tx_d.rto = htons(100);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: 0x{0:x}", data.u.read_rx2tx_d.snd_wnd);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_cwnd: 0x{0:x}", data.u.read_rx2tx_d.snd_cwnd);
         HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: 0x{0:x}", data.u.read_rx2tx_d.debug_dol_tx);

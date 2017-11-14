@@ -12,7 +12,7 @@ entries:
         name        : RNMPR
         haltype     : 7
         type        : PAGE_VIA_REF
-        count       : 64
+        count       : 128
     - entry:
         name        : TNMPR_SMALL
         haltype     : 4

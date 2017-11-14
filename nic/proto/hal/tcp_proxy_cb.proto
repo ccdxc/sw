@@ -56,6 +56,7 @@ message TcpCbSpec {
   uint64                retx_xmit_cursor           = 27;
   uint64                retx_snd_una               = 28;
   uint64                rx_ts                      = 29;
+  uint64                rto                        = 30;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

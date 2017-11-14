@@ -115,8 +115,8 @@ header_type read_tx2rxd_t {
         eval_last               : 8;
         host                    : 4;
         total                   : 4;
-        pid                     : 16; // 8 bytes
-        rx_ts                   : 64;
+        pid                     : 16;
+        rx_ts                   : 64; // 16 bytes
 
         serq_ring_size          : 16;
         l7_proxy_type           : 8;
@@ -129,7 +129,7 @@ header_type read_tx2rxd_t {
         pad1                    : 48; // 8 bytes
 
         // written by TCP Tx P4+ program
-        TX2RX_SHARED_STATE           // offset = 24
+        TX2RX_SHARED_STATE           // offset = 32
     }
 }
 
@@ -180,7 +180,7 @@ header_type tcp_rtt_d_t {
         mdev_us                 : 32;
         mdev_max_us             : 32;
         rtt_seq                 : 32;
-        rto                     : 8;
+        rto                     : 16;
         backoff                 : 4;
     }
 }
@@ -324,10 +324,8 @@ header_type to_stage_1_phv_t {
 header_type to_stage_2_phv_t {
     // tcp-rtt, read-rnmdr, read-rnmpr, read-serq
     fields {
-        pad1                    : 48;
         snd_nxt                 : 32;
         rcv_tsecr               : 32;
-        pad2                    : 16;
     }
 }
 
@@ -668,7 +666,8 @@ metadata dma_cmd_phv2mem_t dma_cmd9;
  * Stage 0 table 0 action
  */
 action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
-                  serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old, pad2, serq_cidx,
+                  serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old,
+                  pad2, serq_cidx,
                   pad1, prr_out, snd_nxt, rcv_wup, packets_out, ecn_flags_tx, quick_acks_decr,
                   pad1_tx2rx) {
     // k + i for stage 0
@@ -823,6 +822,7 @@ action tcp_rtt(srtt_us, rto, backoff, seq_rtt_us, ca_rtt_us,
     // from to_stage 2
     if (backoff == 0) {
         modify_field(to_s2_scratch.snd_nxt, to_s2.snd_nxt);
+        modify_field(to_s2_scratch.rcv_tsecr, to_s2.rcv_tsecr);
     }
     if (backoff == 1) {
         modify_field(to_cpu2_scratch.l3_offset_2, cpu_hdr2.l3_offset_2);

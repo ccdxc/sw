@@ -311,6 +311,25 @@ modules:
             test_retx : complete
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_RETX_TIMER
+        spec    : uplink_to_uplink_retx.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            test_retx_timer : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_CANCEL_RETX_TIMER
+        spec    : uplink_to_uplink_cancel_retx.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            test_retx_timer : 1
+            test_cancel_retx_timer : 1
+
+    - module:
         name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4

@@ -34,10 +34,10 @@
         snd_wnd                         : SEQ_NUMBER_WIDTH      ;\
         ft_pi                           : 16                    ;\
         snd_cwnd                        : WINDOW_WIDTH          ;\
-        rto_deadline                    : TS_WIDTH              ;\
+        rto                             : 16                    ;\
         pending_ft_clear                : 1                     ;\
         pending_ft_reset                : 1                     ;\
-        pad1_rx2tx                      : 14                    ;
+        pad1_rx2tx                      : 30                    ;
 
 
 #define RX2TX_SHARED_EXTRA_STATE \
@@ -60,7 +60,6 @@
         write_seq                       : SEQ_NUMBER_WIDTH      ;\
         tso_seq                         : SEQ_NUMBER_WIDTH      ;\
         rcv_mss                         : 16                    ;\
-        rto                             : 8                     ;\
         ca_state                        : 8                     ;\
         ecn_flags                       : 8                     ;\
         num_sacks                       : 8                     ;\
@@ -83,8 +82,9 @@
         rcv_mss_shft                    : 4                     ;\
         quick                           : 4                     ;\
         pingpong                        : 1                     ;\
-        backoff                         : 4                     ;\
+        pending_reset_backoff           : 1                     ;\
         dsack                           : 1                     ;\
+        pad_rx2tx_extra                 : 11                    ;\
 
 #define TCB_TX_SHARED_STATE \
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
@@ -100,6 +100,10 @@
         retx_head_len                   : 16                    ;\
         xmit_offset                     : 16                    ;\
         xmit_len                        : 16                    ;\
+        packets_out                     : 16                    ;\
+        sacked_out                      : 16                    ;\
+        rto_pi                          : 16                    ;\
+        rto_backoff                     : 4                     ;\
         pending_ack_tx                  : 1                     ;\
         pending_delayed_ack_tx          : 1                     ;\
         pending_tso_data                : 1                     ;\
@@ -121,6 +125,7 @@
 snd_nxt, retx_snd_una, retx_head_desc, xmit_desc, retx_tail_desc,\
 retx_xmit_cursor, xmit_cursor_addr, retx_next_desc, xmit_next_desc,\
 retx_head_offset, retx_head_len, xmit_offset, xmit_len,\
+packets_out, sacked_out, rto_pi, rto_backoff,\
 pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad
 
 #define TSO_PARAMS                                                        \
@@ -143,6 +148,10 @@ quick_acks_decr
     modify_field(tcp_tx_d.retx_head_len, retx_head_len); \
     modify_field(tcp_tx_d.xmit_offset, xmit_offset); \
     modify_field(tcp_tx_d.xmit_len, xmit_len); \
+    modify_field(tcp_tx_d.packets_out, packets_out); \
+    modify_field(tcp_tx_d.sacked_out, sacked_out); \
+    modify_field(tcp_tx_d.rto_pi, rto_pi); \
+    modify_field(tcp_tx_d.rto_backoff, rto_backoff); \
     modify_field(tcp_tx_d.pending_ack_tx, pending_ack_tx); \
     modify_field(tcp_tx_d.pending_delayed_ack_tx, pending_delayed_ack_tx); \
     modify_field(tcp_tx_d.pending_tso_data, pending_tso_data);\

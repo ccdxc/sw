@@ -110,6 +110,9 @@ def TestCaseTrigger(tc):
     if tc.pvtdata.test_timer:
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(41)
+    if tc.pvtdata.test_retx_timer:
+        timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
+        timer.Step(101)
 
     return
 
@@ -177,62 +180,68 @@ def TestCaseVerify(tc):
     print("debug_num_phv_to_pkt = %d:" % other_tcpcb_cur.debug_num_phv_to_pkt)
     print("debug_num_mem_to_pkt = %d:" % other_tcpcb_cur.debug_num_mem_to_pkt)
 
+    num_rx_pkts = tc.pvtdata.num_pkts
+    if tc.pvtdata.test_retx_timer and not tc.pvtdata.test_cancel_retx_timer:
+        num_tx_pkts = tc.pvtdata.num_pkts * 2
+    else:
+        num_tx_pkts = tc.pvtdata.num_pkts
+
     # 1. Verify SERQ pi got updated
-    if (tlscb_cur.serq_pi != tlscb.serq_pi + tc.pvtdata.num_pkts):
+    if (tlscb_cur.serq_pi != tlscb.serq_pi + num_rx_pkts):
         print("serq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (tlscb.serq_pi, tlscb.serq_ci,
                  tlscb_cur.serq_pi, tlscb_cur.serq_ci))
         return False
 
     # 2. Verify SERQ ci got updated
-    if (tlscb_cur.serq_ci != tlscb.serq_ci + tc.pvtdata.num_pkts):
+    if (tlscb_cur.serq_ci != tlscb.serq_ci + num_rx_pkts):
         print("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (tlscb.serq_pi, tlscb.serq_ci,
                  tlscb_cur.serq_pi, tlscb_cur.serq_ci))
         return False
 
     # 3. Verify SESQ pi got updated
-    if (other_tcpcb_cur.sesq_pi != other_tcpcb.sesq_pi + tc.pvtdata.num_pkts):
+    if (other_tcpcb_cur.sesq_pi != other_tcpcb.sesq_pi + num_rx_pkts):
         print("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
                  other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))
         return False
 
     # 4. Verify SESQ ci got updated
-    if (other_tcpcb_cur.sesq_ci != other_tcpcb.sesq_ci + tc.pvtdata.num_pkts):
+    if (other_tcpcb_cur.sesq_ci != other_tcpcb.sesq_ci + num_rx_pkts):
         print("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
                  other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))
         return False
 
     # 5. Verify pkt rx stats
-    if tcpcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + tc.pvtdata.num_pkts:
+    if tcpcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + num_rx_pkts:
         print("pkt rx stats not as expected")
         return False
 
-    if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
-            tc.packets.Get('PKT1').payloadsize * tc.pvtdata.num_pkts:
-        print("Warning! pkt tx byte stats not as expected %d %d" % \
-                (other_tcpcb_cur.bytes_sent, other_tcpcb.bytes_sent))
+    if tcpcb_cur.bytes_rcvd - tcpcb.bytes_rcvd != \
+            tc.packets.Get('PKT1').payloadsize * num_rx_pkts:
+        print("Warning! pkt rx byte stats not as expected %d %d" % \
+                (tcpcb_cur.bytes_rcvd, tcpcb.bytes_rcvd))
         return False
     
     # 6. Verify pkt tx stats
-    if other_tcpcb_cur.pkts_sent != other_tcpcb.pkts_sent + tc.pvtdata.num_pkts:
+    if other_tcpcb_cur.pkts_sent != other_tcpcb.pkts_sent + num_tx_pkts:
         print("pkt tx stats (%d) not as expected (%d)" % (other_tcpcb_cur.pkts_sent, other_tcpcb.pkts_sent))
         return False
 
     if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
-            tc.packets.Get('PKT1').payloadsize * tc.pvtdata.num_pkts:
+            tc.packets.Get('PKT1').payloadsize * num_tx_pkts:
         print("Warning! pkt tx byte stats not as expected %d %d" % (other_tcpcb_cur.bytes_sent, other_tcpcb.bytes_sent))
         return False
 
     # 7. Verify phv2pkt
-    if other_tcpcb_cur.debug_num_phv_to_pkt != other_tcpcb.debug_num_phv_to_pkt + 2 * tc.pvtdata.num_pkts:
+    if other_tcpcb_cur.debug_num_phv_to_pkt != other_tcpcb.debug_num_phv_to_pkt + 2 * num_tx_pkts:
         print("Num phv2pkt not as expected")
         return False
 
     # 8. Verify mem2pkt
-    if other_tcpcb_cur.debug_num_mem_to_pkt != other_tcpcb.debug_num_mem_to_pkt + 2 * tc.pvtdata.num_pkts:
+    if other_tcpcb_cur.debug_num_mem_to_pkt != other_tcpcb.debug_num_mem_to_pkt + 2 * num_tx_pkts:
         print("Num mem2pkt not as expected")
         return False
 
@@ -253,7 +262,7 @@ def TestCaseVerify(tc):
             (rnmdr.pi, rnmdr.ci, rnmdr_cur.pi, rnmdr_cur.ci))
     print("RNMPR old pi=%d,ci=%d / new pi=%d,ci=%d" %
             (rnmpr.pi, rnmpr.ci, rnmpr_cur.pi, rnmpr_cur.ci))
-    if tc.pvtdata.free_rnmdr and rnmdr_cur.ci != rnmdr.ci + tc.pvtdata.num_pkts:
+    if tc.pvtdata.free_rnmdr and rnmdr_cur.ci != rnmdr.ci + num_rx_pkts:
         print("free rnmdr verification failed")
         return False
 

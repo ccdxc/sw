@@ -25,6 +25,9 @@ tcp_tx_process_start:
     seq             c1, k.common_phv_pending_snd_una_update, 1
     bcf             [c1], tcp_tx_snd_una_update
 
+    seq             c1, k.common_phv_pending_rto, 1
+    bcf             [c1], tcp_tx_retransmit
+
 tcp_tx_enqueue:
     phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
     /* check SESQ for pending data to be transmitted */
@@ -60,7 +63,7 @@ tcp_tx_enqueue:
     bcf             [c3], table_read_TSO
     nop
 
-    bcf             [!c1 | !c2], tcp_tx_no_window
+    bcf             [!c1 | !c2], tcp_tx_end_program
     nop
     /* Inform TSO stage following later to check for any data to
      * send from retx queue
@@ -77,9 +80,36 @@ flow_read_xmit_cursor_start:
     // TODO : r1 needs to be capped by the window size
     add             r1, d.xmit_len, r0
     phvwr           p.to_s5_xmit_cursor_addr, d.xmit_cursor_addr
-    phvwr           p.to_s5_xmit_cursor_offset, r0
     phvwr           p.to_s5_xmit_cursor_len, r1
     tbladd          d.snd_nxt, r1
+
+rearm_rto:
+    CAPRI_OPERAND_DEBUG(k.t0_s2s_rto)
+
+    /*
+     * r1 = rto
+     *    = min(rto << backoff, TCP_RTO_MAX)
+     *
+     * TODO: rto_backoff needs to be reset upon indication from rx
+     * pipeline (rx2tx_extra_pending_reset_backoff)
+     */
+    add             r1, r0, k.t0_s2s_rto
+    sll             r1, r1, d.rto_backoff
+    slt             c1, r1, TCP_RTO_MAX
+    add.!c1         r1, r0, TCP_RTO_MAX
+
+    // TODO : use slow timer just for testing purposes
+    // result will be in r3
+    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_RTO, r1)
+
+    // TODO : using slow timer just for testing
+    addi            r4, r0, CAPRI_SLOW_TIMER_ADDR(LIF_TCP)
+    seq             c1, k.common_phv_debug_dol_dont_start_retx_timer, 1
+    memwr.dx.!c1    r4, r3
+    tbladd          d.rto_pi, 1
+
+    // TODO : this needs to account for TSO, for now assume one packet
+    tbladd          d.packets_out, 1
 
     // TODO : Lot of stuff to do here:
     //      if window size is smaller, move xmit_cursor_addr by appropriate amount
@@ -109,9 +139,9 @@ tcp_cwnd_test:
     /* in_flight = packets_out - (sacked_out + lost_out) + retrans_out
     */
     /* r1 = packets_out + retrans_out */
-    add             r1, k.t0_s2s_packets_out, k.t0_s2s_retrans_out
+    add             r1, d.packets_out, k.t0_s2s_retrans_out
     /* r2 = left_out = sacked_out + lost_out */
-    add             r2, k.t0_s2s_sacked_out, k.t0_s2s_lost_out
+    add             r2, d.sacked_out, k.t0_s2s_lost_out
     /* r1 = in_flight = (packets_out + retrans_out) - (sacked_out + lost_out)*/
     sub             r1, r1, r2
     /* c1 = (in_flight >= cwnd) */
@@ -241,67 +271,7 @@ tcp_clean_retx_queue:
     jr              r7
     nop
 
-#if 0
-    /* retxq tail descriptor is not NULL
-     * check if the retxq tail descriptor entries are all filled
-     * up.
-      * Wait for a new descriptor to be allocated from TNMDR
-     */
-    /* r1 = &retx_tail_desc->entry.0 */
-    add             r1, d.retx_tail_desc, NIC_DESC_ENTRY_0_OFFSET
-    /* r1 = &retx_tail_desc->entry.nxt_free_idx - &retx_tail_desc->entry.0 */
-    sub             r1, d.retx_snd_nxt_cursor, r1
-    /* r1 = nxt_free_idx */
-    srl             r1, r1, NIC_DESC_ENTRY_SIZE_SHIFT
-    /* nxt_free_idx >= MAX_ENTRIES_PER_DESC = descriptor full ? */
-    sle             c1, MAX_ENTRIES_PER_DESC, r1
-    /* Wait for a new descriptor to be allocaed from TNMDR */
-    bcf             [c1], table_read_TNMDR
-    nop
-    /* This is the fast path, we have a empty slot in the
-     * tail descriptor
-     */
-nic_desc_entry_write:
-    /* Write A */
-    addi            r2, r0, NIC_DESC_ENTRY_ADDR_OFFSET
-    add             r1, d.retx_snd_nxt_cursor, r2
-    memwr.w         r1, k.to_s4_addr
-    phvwr           p.to_s4_xmit_cursor_addr, k.to_s4_addr
-    /* Write O */
-    addi            r2, r0,  NIC_DESC_ENTRY_OFF_OFFSET
-    add             r1, d.retx_snd_nxt_cursor, r2
-    memwr.h         r1, k.to_s4_offset
-    phvwr           p.to_s4_xmit_cursor_offset, k.to_s4_offset
-    /* Write L */
-    addi            r2, r0, NIC_DESC_ENTRY_LEN_OFFSET
-    add             r1, d.retx_snd_nxt_cursor, r2
-    memwr.h         r1, k.to_s4_len
-    phvwr           p.to_s4_xmit_cursor_len, k.to_s4_len
-    /* Update retx_snd_nxt_cursor */
-    tbladd          d.retx_snd_nxt_cursor, NIC_DESC_ENTRY_SIZE
-    sne             c4, r7, r0
-    jr.c4           r7
-    add             r7, r0, r0
-
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                        tcp_tso_process_start, k.common_phv_qstate_addr,
-                        TCP_TCB_TSO_OFFSET, TABLE_SIZE_512_BITS)
-
-
-table_read_TNMDR:
-    addi            r1,r0,TNMDR_TABLE_BASE
-    addi            r2,r0,TNMDR_ALLOC_IDX
-    mincr           r2,1,TNMDR_TABLE_SIZE_SHFT
-    sll             r2,r2,TNMDR_TABLE_ENTRY_SIZE_SHFT
-    add             r1,r1,r2
-
-    phvwri          p.table_sel, TABLE_TYPE_RAW
-    phvwri          p.table_mpu_entry_raw, flow_tdesc_alloc_process
-    phvwr.e         p.table_addr, r1
-    nop.e
-#endif
-
-tcp_tx_no_window:
+tcp_tx_end_program:
     // We have no window, wait till window opens up
     CAPRI_CLEAR_TABLE_VALID(0)
     nop.e
@@ -309,6 +279,7 @@ tcp_tx_no_window:
 
 tcp_tx_snd_una_update:
     CAPRI_CLEAR_TABLE_VALID(0)
+    // TODO : if this exceeds mtu, we need to decrement packets_out
     sub             r1, k.common_phv_snd_una, d.retx_snd_una
     slt             c1, r1, d.retx_head_len
     b.!c1           tcp_tx_snd_una_update_free_head
@@ -328,6 +299,11 @@ tcp_tx_snd_una_update_free_head:
     add             r2, k.to_s4_addr, k.to_s4_offset
     tblwr           d.retx_xmit_cursor, r2
     
+    // TODO : this needs to account for MTU
+    tblsub          d.packets_out, 1
+    // This effectively cancels retransmission timer
+    tbladd          d.rto_pi, 1
+    
     // If we have completely cleaned up, set tail to NULL
     seq             c1, d.retx_head_desc, r0
     tblwr.c1        d.retx_tail_desc, r0
@@ -342,3 +318,12 @@ tcp_tx_snd_una_update_free_head:
     nop.e
     nop
 
+tcp_tx_retransmit:
+    seq             c1, d.rto_pi, k.t0_s2s_rto_pi
+    b.!c1           tcp_tx_end_program // old timer, ignore it
+    phvwr           p.t0_s2s_snd_nxt, d.retx_snd_una
+    phvwr           p.to_s5_xmit_cursor_addr, d.retx_xmit_cursor
+    phvwr           p.to_s5_xmit_cursor_len, d.retx_head_len
+    phvwri          p.to_s5_pending_tso_data, 1
+    b               rearm_rto
+    tbladd          d.rto_backoff, 1
