@@ -101,6 +101,14 @@ capri_tm_uplink_lif_set(uint32_t port,
 hal_ret_t 
 capri_tm_hw_config_load_poll(int phase);
 
+/** capri_tm_asic_init
+ * API to call asic initialization routines for the PBC block 
+ *
+ * @return hal_ret_t: Status of the operation
+ */
+hal_ret_t
+capri_tm_asic_init(void);
+
 /** capri_tm_init
  * API to initialize the PBC block in hardware 
  *

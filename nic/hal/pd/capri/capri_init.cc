@@ -77,6 +77,11 @@ capri_init (capri_cfg_t *cfg = NULL)
         return HAL_RET_ERR;
     }
  
+    // Do asic init before overwriting with the default configs
+    if (ret == HAL_RET_OK) {
+        ret = capri_tm_asic_init();
+    }
+
     if (ret == HAL_RET_OK) {
         ret = capri_default_config_init();
     }

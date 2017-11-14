@@ -3935,13 +3935,21 @@ hal_ret_t
 capri_tm_hw_config_load_poll (int phase)
 {
     if (phase == 0) {
-        cap_pb_init_done(0,0);
+//        cap_pb_init_done(0,0);
     }
     return HAL_RET_OK;
 }
 
+hal_ret_t
+capri_tm_asic_init (void) 
+{
+    cap_pb_init_start(0,0);
+    cap_pb_init_done(0,0);
+    return HAL_RET_OK;
+}
+
 hal_ret_t 
-capri_tm_init(void)
+capri_tm_init (void)
 {
 #ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
