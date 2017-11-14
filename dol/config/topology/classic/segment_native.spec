@@ -6,8 +6,9 @@ type        : tenant
 fabencap    : vlan
 native      : True
 broadcast   : flood
-multicast   : replicate
+multicast   : flood
 l4lb        : False
+groups      : ref://store/specs/id=MULTICAST_GROUPS_CLASSIC
 endpoints   :
     classic : 2
-    remote  : 1
+    remote  : 8

@@ -50,6 +50,8 @@ def __get_packet_template_impl(flow, args):
     template = 'ETH'
     if flow.IsIP():
         template += "_%s_%s" % (flow.type, flow.proto)
+    elif flow.IsMulticast():
+        template += "_%s_UDP" % (flow.GetMulticastL3Type())
     else:
         assert(0)
 

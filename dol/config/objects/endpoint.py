@@ -100,6 +100,8 @@ class EndpointObject(base.ConfigObjectBase):
     def SetMacAddress(self, mac):
         self.macaddr = mac
         return
+    def GetMacAddress(self):
+        return self.macaddr
 
     def SetIpAddress(self, ip):
         self.ipaddrs.append(ip)

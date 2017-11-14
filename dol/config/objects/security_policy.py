@@ -119,8 +119,10 @@ class SecurityGroupPolicyObjectHelper:
         return
 
     def GetSGType(self, flow_obj, sep, dep):
-        src_sg_list = sep.sgs
-        dst_sg_list = dep.sgs
+        src_sg_list = getattr(sep, 'sgs', None)
+        dst_sg_list = getattr(dep, 'sgs', None)
+        if src_sg_list is None or dst_sg_list is None:
+            return 'INTRA'
         for src_sg, dst_sg in itertools.product(src_sg_list, dst_sg_list):
             if src_sg == dst_sg: return 'INTRA'
         return 'INTER'
@@ -137,8 +139,10 @@ class SecurityGroupPolicyObjectHelper:
         return None
 
     def GetAction(self, flow_obj, sep, dep):
-        src_sg_list  = sep.sgs
-        dst_sg_list  = dep.sgs
+        src_sg_list  = getattr(sep, 'sgs', None)
+        dst_sg_list  = getattr(dep, 'sgs', None)
+        if src_sg_list is None or dst_sg_list is None:
+            return None
         for src_sg, dst_sg in itertools.product(src_sg_list, dst_sg_list):
             if src_sg == dst_sg: continue
             try:

@@ -94,3 +94,71 @@ def GetExpectedBufferDataForMulticastCopy(tc, pkt, args=None):
         return tc.packets.Get(args.id).rawbytes
     else:
         return None
+
+def GetMulticastPacketDMAC(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    grpobj = tc.config.flow.GetMulticastGroup()
+    return grpobj.group.get()
+
+def GetMulticastPacketSMAC(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return tc.config.src.endpoint.macaddr
+
+def GetMulticastPacketDIP(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    grpobj = tc.config.flow.GetMulticastGroup()
+    return grpobj.gip.get()
+
+def GetMulticastPacketSIP(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return tc.config.src.endpoint.GetIpAddress()
+
+def GetMulticastPacketDIP6(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    grpobj = tc.config.flow.GetMulticastGroup()
+    return grpobj.gip.get()
+
+def GetMulticastPacketSIP6(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return tc.config.src.endpoint.GetIpv6Address()
+
+def GetMulticastPacketUdpSport(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 42000
+
+def GetMulticastPacketUdpDport(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 43000
+
+def GetMulticastPacketTcpSport(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 42000
+
+def GetMulticastPacketTcpDport(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 43000
+
+def GetPacketIcmpCode(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 1
+
+def GetPacketIcmpType(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 1
+
+def GetPacketIcmpId(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 1
+
+def GetPacketIcmp6Code(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 1
+
+def GetPacketIcmp6Type(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 1
+
+def GetPacketIcmp6Id(tc, pkt, args = None):
+    assert(tc.config.flow.IsMulticast())
+    return 1
+

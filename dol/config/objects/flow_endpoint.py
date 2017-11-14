@@ -103,7 +103,7 @@ class FlowEndpointL4LbObject:
         return self.backend.GID()
 
 class FlowEndpointObject(base.ConfigObjectBase):
-    def __init__(self, ep = None, srcobj = None, l4lbsvc = None):
+    def __init__(self, ep = None, srcobj = None, l4lbsvc = None, group = None):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW_ENDPOINT'))
         self.type       = None
@@ -111,19 +111,37 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.addr       = None
         self.proto      = None
         self.port       = None
+        self.ep         = ep
         self.icmp_type  = None
         self.icmp_code  = None
         self.icmp_id    = None
         self.esp_spi    = None
+        self.ethertype  = None
         self.__flow     = None
         self.l4lb       = FlowEndpointL4LbObject(l4lbsvc)
+        self.group      = group
+
+        if srcobj is not None:
+            self.__copy(srcobj)
+
         if self.IsL4Lb():
             self.ep     = self.l4lb.GetEp()
-        else:
-            self.ep     = ep
+        
+        if self.group is not None:
+            self.__init_multicast_group()
+        return
 
-        if srcobj:
-            self.__copy(srcobj)
+    def __init_multicast_group(self):
+        self.type = self.group.type
+        self.dom = self.group.segment.id # Always L2
+        self.addr = self.group.group
+        if self.IsMAC():
+            self.proto = None
+            self.__set_ethertype_for_multicast()
+        else:
+            self.proto = 'UDP'
+            self.port  = 65535
+        return
 
     def __copy(self, src):
         self.ep         = src.ep
@@ -137,7 +155,10 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.icmp_id    = src.icmp_id
         self.esp_spi    = src.esp_spi
         self.l4lb       = copy.copy(src.l4lb)
+        self.group      = src.group
+        self.ep         = src.ep
         self.hashgen    = src.hashgen
+        self.ethertype  = src.ethertype
         return
 
     def __set_tcpudp_info(self, entry):
@@ -164,10 +185,20 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.ethertype = entry.ethertype
         return
 
+    def __set_ip_ethertypes(self):
+        if self.IsIPV4():
+            self.ethertype = 0x800
+        elif self.IsIPV6():
+            self.ethertype = 0x86DD
+        else:
+            assert(0)
+        return
+
     def __set_info(self, entry):
         if 'hashgen' in entry.__dict__:
             self.hashgen = entry.hashgen
         if self.IsIP():
+            self.__set_ip_ethertypes()
             if self.IsTCP() or self.IsUDP():
                 self.__set_tcpudp_info(entry)
             elif self.IsICMP() or self.IsICMPV6():
@@ -181,6 +212,29 @@ class FlowEndpointObject(base.ConfigObjectBase):
         if 'flow_info' in entry.__dict__:
             self.flow_info = objects.MergeObjects(entry.flow_info,
                                                   self.flow_info)
+        return
+
+    def __set_ethertype_for_multicast(self, group = None):
+        if group is None:
+            group = self.group
+        if group.IsL3TypeIpv4():
+            self.ethertype = 0x800
+        elif group.IsL3TypeIpv6():
+            self.ethertype = 0x86DD
+        else:
+            assert(0)
+        return
+
+    def InitMulticastSourceFlowEndpoint(self, group):
+        self.type = group.type
+        self.dom = group.segment.id
+        if group.IsIpv4Group():
+            self.addr = self.ep.GetIpAddress()
+        elif group.IsIpv6Group():
+            self.addr = self.ep.GetIpv6Address()
+        else:
+            self.addr = self.ep.GetMacAddress()
+            self.__set_ethertype_for_multicast(group)
         return
 
     def SetInfo(self, entry):
@@ -284,10 +338,18 @@ class FlowEndpointObject(base.ConfigObjectBase):
     def GetGID(self):
         if self.IsL4Lb():
             return self.l4lb.GID()
+        elif self.group is not None:
+            return self.group.GID()
         return self.ep.GID()
 
     def __get_ep(self):
-        return self.ep
+        if self.ep is not None:
+            return self.ep
+        elif self.group is not None:
+            return self.group
+        pdb.set_trace()
+        assert(0)
+        return None
 
     def GetSegment(self):
         ep = self.__get_ep()
@@ -337,3 +399,7 @@ class FlowEndpointObject(base.ConfigObjectBase):
         cfglogger.info("  - Backend: %s" % string)
         return
 
+    def ShowTestcaseConfig(self, lg):
+        if self.group is not None:
+            lg.info("  - Group : %s" % self.group.Summary())
+        return

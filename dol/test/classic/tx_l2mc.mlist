@@ -1,0 +1,30 @@
+# Feature Test Modules List
+feature:
+    id          : classicl2mc
+    sub         : tx
+    package     : test.classic
+    module      : classic
+    spec        : tx.testspec
+    enable      : True
+    ignore      : False
+    args        :
+        maxflows: 4
+
+modules:
+    - module:
+        name    : BCAST
+        enable  : False
+        spec    : tx_bc.testspec
+        iterate :
+            - type  : BCAST
+              flow  : filter://label=CLASSICL2MC
+
+    - module:
+        name    : MCAST
+        spec    : tx_mc.testspec
+        ignore  : True
+        iterate :
+            - type  : MCAST
+              flow  : filter://type=MAC,label=CLASSICL2MC
+            - type  : MCAST
+              flow  : filter://type=MAC,label=CLASSICL2MC

@@ -16,6 +16,7 @@ import config.objects.endpoint        as endpoint
 import config.objects.tenant          as tenant
 import config.objects.collector       as collector
 import config.objects.l4lb            as l4lb
+import config.objects.multicast_group as multicast_group
 
 from config.store                      import Store
 from infra.common.logging              import cfglogger
@@ -33,36 +34,54 @@ class SessionObject(base.ConfigObjectBase):
     def Init(self, initiator, responder, spec):
         self.id = resmgr.SessionIdAllocator.get()
         self.GID("Session%d" % self.id)
-        self.spec = spec
+        self.__pre_process_spec(spec)
         self.conn_track_en = getattr(self.spec, 'tracking', False)
         self.tcp_ts_option = getattr(self.spec, 'timestamp', False)
 
         self.fte = getattr(spec, 'fte', False)
+        self.multicast = getattr(spec, 'multicast', False)
         self.initiator = flowep.FlowEndpointObject(srcobj = initiator)
-        self.initiator.SetInfo(spec.initiator)
-        #status = self.initiator.SelectL4LbBackend()
-        #if status != defs.status.SUCCESS: return status
-
+        self.__process_initiator_spec()
+        
         self.responder = flowep.FlowEndpointObject(srcobj = responder)
-        self.responder.SetInfo(spec.responder)
-        #status = self.responder.SelectL4LbBackend()
-        #if status != defs.status.SUCCESS: return status
-
+        self.__process_responder_spec()
 
         self.type = self.initiator.type
-        self.label = self.spec.label.upper()
+        self.label = getattr(self.spec, 'label', '')
+        self.label = self.label.upper()
 
         assert(initiator.proto == responder.proto)
         self.proto = initiator.proto
 
         self.iflow = flow.FlowObject(self, self.initiator, self.responder,
                                      'IFLOW', self.label,
-                                     self.spec.initiator.span)
-        self.rflow = flow.FlowObject(self, self.responder, self.initiator,
-                                     'RFLOW', self.label,
-                                     self.spec.responder.span)
+                                     getattr(self.ispec, 'span', None))
+        self.iflow.SetMulticast(self.multicast)
+        
+        self.rflow = None
+        if self.multicast is False:
+            self.rflow = flow.FlowObject(self, self.responder, self.initiator,
+                                         'RFLOW', self.label,
+                                         getattr(self.rspec, 'span', None))
+            self.rflow.SetMulticast(self.multicast)
         self.Show()
         return defs.status.SUCCESS
+
+    def __pre_process_spec(self, spec):
+        self.spec = spec
+        self.ispec = getattr(self.spec, 'initiator', None)
+        self.rspec = getattr(self.spec, 'responder', None)
+        return
+
+    def __process_initiator_spec(self):
+        if self.ispec is None: return
+        self.initiator.SetInfo(self.ispec)
+        return
+
+    def __process_responder_spec(self):
+        if self.rspec is None: return
+        self.responder.SetInfo(self.rspec)
+        return
 
     def SetFteEnabled(self):
         self.fte = True
@@ -79,6 +98,17 @@ class SessionObject(base.ConfigObjectBase):
             self.rflow.SetLabel(label)
         return
 
+    def __get_span_lens(self, spec):
+        ingspanlen = 0
+        egspanlen = 0
+        span = getattr(spec, 'span', None)
+        if span is None: return(0,0)
+        ing = getattr(span, 'ingress', None)
+        if ing is not None: ingspanlen = len(ing)
+        egr = getattr(span, 'egress', None)
+        if egr is not None: espanlen = len(egr)
+        return (ingspanlen, egspanlen)
+
     def Show(self):
         cfglogger.info("Created Session with GID:%s" % self.GID())
         cfglogger.info("- Label    : %s" % self.label)
@@ -94,22 +124,15 @@ class SessionObject(base.ConfigObjectBase):
 
         self.initiator.Show('Initiator')
         self.iflow.Show()
-        self.responder.Show('Responder')
-        self.rflow.Show()
-        ingspanlen = 0
-        egspanlen = 0
-        if self.spec.initiator.span != None and 'ingress' in self.spec.initiator.span.__dict__:
-            ingspanlen = len(self.spec.initiator.span.ingress)
-        if self.spec.initiator.span != None and 'egress' in self.spec.initiator.span.__dict__:
-            espanlen = len(self.spec.initiator.span.egress)
-        cfglogger.info(" Initatior SPAN sessions : %d/%d" % (ingspanlen, egspanlen))
-        ingspanlen = 0
-        egspanlen = 0
-        if self.spec.responder.span != None and 'ingress' in self.spec.responder.span.__dict__:
-            ingspanlen = len(self.spec.responder.span.ingress)
-        if self.spec.responder.span != None and 'egress' in self.spec.responder.span.__dict__:
-            espanlen = len(self.spec.responder.span.egress)
-        cfglogger.info(" Responder SPAN sessions : %d/%d" % (ingspanlen, egspanlen))
+
+        if self.multicast is False:
+            self.responder.Show('Responder')
+            self.rflow.Show()
+        
+        ilen,elen = self.__get_span_lens(self.ispec)
+        cfglogger.info(" Initatior SPAN sessions : %d/%d" % (ilen, elen))
+        ilen,elen = self.__get_span_lens(self.rspec)
+        cfglogger.info(" Responder SPAN sessions : %d/%d" % (ilen, elen))
         return
 
     def __copy__(self):
@@ -280,7 +303,32 @@ class SessionObjectHelper:
             return True
         return False
 
-    def __process_multidest(self, src_ep, dst_ep):
+    def __process_multicast_group(self, ep1, group):
+        tenant = ep1.tenant
+        flowep1 = flowep.FlowEndpointObject(ep = ep1)
+        flowep1.InitMulticastSourceFlowEndpoint(group)
+
+        flowep2 = flowep.FlowEndpointObject(group = group)
+
+        session = SessionObject()
+        session.Init(flowep1, flowep2, group.session_spec)
+
+        self.objs.append(session)
+        if session.IsFteEnabled():
+            cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
+            self.ftessns.append(session)
+        else:
+            cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
+            self.ssns.append(session)
+        return
+
+    def __process_multicast(self, ep_list):
+        groups = Store.objects.GetAllByClass(multicast_group.MulticastGroupObject)
+        for ep in ep_list:
+            for g in groups:
+                if ep.tenant != g.segment.tenant: continue
+                if ep.segment != g.segment: continue
+                self.__process_multicast_group(ep, g)
         return
 
     def __pre_process_spec_entry(self, entry):
@@ -393,7 +441,6 @@ class SessionObjectHelper:
     def __process_ep_pair(self, ep1, ep2):
         if ep1.IsL4LbBackend() or ep2.IsL4LbBackend(): return
         self.__process_unidest(ep1, ep2)
-        self.__process_multidest(ep2, ep2)
         return
 
     def __get_eps(self):
@@ -445,6 +492,9 @@ class SessionObjectHelper:
         # Generate L4LbService Flows for each EP.
         self.__process_l4lb(ep_list)
 
+        # Generate Multicast Flows
+        self.__process_multicast(ep_list)
+
         for ep1 in ep_list:
             for ep2 in ep_list:
                 if ep1 == ep2: continue
@@ -488,9 +538,9 @@ class SessionObjectHelper:
         timeprofiler.SelectorProfiler.Start()
         flows = []
         for ssn in self.objs:
-            if ssn.iflow.IsFilterMatch(selectors):
+            if ssn.iflow and ssn.iflow.IsFilterMatch(selectors):
                 flows.append(ssn.iflow)
-            if ssn.rflow.IsFilterMatch(selectors):
+            if ssn.rflow and ssn.rflow.IsFilterMatch(selectors):
                 flows.append(ssn.rflow)
         if selectors.maxflows is None:
             return flows

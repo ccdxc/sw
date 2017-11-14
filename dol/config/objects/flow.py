@@ -86,6 +86,23 @@ class FlowObject(base.ConfigObjectBase):
         if self.__session.IsFteEnabled():
             self.fte = True
         return
+
+    def SetMulticast(self, mc):
+        self.multicast = mc
+        return
+
+    def IsMulticast(self):
+        return self.multicast
+
+    def GetMulticastL3Type(self):
+        return self.__dfep.group.l3type
+
+    def GetMulticastEnicOifList(self):
+        return self.__dfep.group.GetEnicOifList()
+
+    def GetMulticastGroup(self):
+        return self.__dfep.group
+
     def __init_sp(self):
         action = SecurityGroupPolicyHelper.GetAction(self, self.__sep, self.__dep)
         if action is not None:
@@ -728,4 +745,6 @@ class FlowObject(base.ConfigObjectBase):
         self.__show_testcase_config(obj.src, lg)
         lg.info("- Destination:")
         self.__show_testcase_config(obj.dst, lg)
+        if self.IsMulticast():
+            self.__dfep.ShowTestcaseConfig(lg)
         return

@@ -9,6 +9,7 @@ import config.objects.endpoint  as endpoint
 import config.objects.enic      as enic
 import config.objects.network   as nw
 import config.objects.oif_list  as oiflist
+import config.objects.multicast_group as multicast_group
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -93,6 +94,7 @@ class SegmentObject(base.ConfigObjectBase):
         self.obj_helper_enic = enic.EnicObjectHelper()
         self.obj_helper_nw = nw.NetworkObjectHelper()
         self.obj_helper_oiflist = oiflist.OifListObjectHelper()
+        self.obj_helper_mcgroup = multicast_group.MulticastGroupObjectHelper()
 
         self.hal_handle = None
 
@@ -102,6 +104,7 @@ class SegmentObject(base.ConfigObjectBase):
         self.obj_helper_enic.Generate(self, self.spec.endpoints)
         self.obj_helper_ep.Generate(self, self.spec.endpoints)
         self.obj_helper_oiflist.Generate(self)
+        self.obj_helper_mcgroup.Generate(self)
 
         self.floodlist = self.obj_helper_oiflist.GetOifList()
 
@@ -265,9 +268,13 @@ class SegmentObject(base.ConfigObjectBase):
     def ConfigureNetworks(self):
         return self.obj_helper_nw.Configure()
 
+    def ConfigureMulticastGroups(self):
+        return self.obj_helper_mcgroup.Configure()
+
     def ConfigureChildren(self):
         self.ConfigureEnics()
         self.ConfigureEndpoints()
+        self.ConfigureMulticastGroups()
         return
 
     def AddSecurityGroup(self, sg):

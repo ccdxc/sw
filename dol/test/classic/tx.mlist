@@ -7,26 +7,28 @@ feature:
     spec        : tx.testspec
     enable      : True
     ignore      : False
+    args        :
+        maxflows: 4
 
 modules:
     - module:
         name    : IPV4_QTAG
         iterate:
-            - flow      : filter://type=IPV4,proto=UDP
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=False
-            - flow      : filter://type=IPV4,proto=TCP
+            - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
               segment   : filter://native=False
-            - flow      : filter://type=IPV4,proto=ICMP
+            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
               segment   : filter://native=False
 
     - module:
         name    : IPV6_QTAG
         iterate:
-            - flow      : filter://type=IPV6,proto=UDP
+            - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
               segment   : filter://native=False
-            - flow      : filter://type=IPV6,proto=TCP
+            - flow      : filter://type=IPV6,proto=TCP,label=CLASSIC
               segment   : filter://native=False
-            - flow      : filter://type=IPV6,proto=ICMPV6
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=CLASSIC
               segment   : filter://native=False
 
     - module:
@@ -34,25 +36,26 @@ modules:
         spec    : tx_nonip.testspec
         iterate :
             - segment   : filter://native=False
+              flow      : filter://label=CLASSIC
 
     - module:
         name    : IPV4_UTAG
         iterate:
-            - flow      : filter://type=IPV4,proto=UDP
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=True
-            - flow      : filter://type=IPV4,proto=TCP
+            - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
               segment   : filter://native=True
-            - flow      : filter://type=IPV4,proto=ICMP
+            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
               segment   : filter://native=True
 
     - module:
         name    : IPV6_UTAG
         iterate:
-            - flow      : filter://type=IPV6,proto=UDP
+            - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
               segment   : filter://native=True
-            - flow      : filter://type=IPV6,proto=TCP
+            - flow      : filter://type=IPV6,proto=TCP,label=CLASSIC
               segment   : filter://native=True
-            - flow      : filter://type=IPV6,proto=ICMPV6
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=CLASSIC
               segment   : filter://native=True
 
     - module:
@@ -60,4 +63,6 @@ modules:
         spec    : tx_nonip.testspec
         iterate :
             - segment   : filter://native=True
+              flow      : filter://label=CLASSIC
+
 

@@ -32,6 +32,7 @@ import rdma_pb2             as rdma_pb2
 import cpucb_pb2            as cpucb_pb2
 import rawrcb_pb2           as rawrcb_pb2
 import rawccb_pb2           as rawccb_pb2
+import multicast_pb2        as multicast_pb2
 
 #import endpoint_pb2_grpc        as endpoint_pb2_grpc
 #import l2segment_pb2_grpc       as l2segment_pb2_grpc
@@ -594,5 +595,12 @@ def GetQidProxycbGetFlowInfo(objlist):
     stub = proxy_pb2.ProxyStub(HalChannel)
     __config(objlist, proxy_pb2.ProxyGetFlowInfoRequestMsg,
              stub.ProxyGetFlowInfo)
+    return
+
+def ConfigureMulticastGroups(objlist, update = False):
+    if IsHalDisabled(): return
+    stub = multicast_pb2.MulticastStub(HalChannel)
+    api =  stub.MulticastEntryUpdate if update else stub.MulticastEntryCreate
+    __config(objlist, multicast_pb2.MulticastEntryRequestMsg, api)
     return
 
