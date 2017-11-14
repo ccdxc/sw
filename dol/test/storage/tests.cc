@@ -61,7 +61,7 @@ static uint64_t global_byte = 0xA0;
 
 class Poller {
 public:
-  Poller() : timeout(10) { }
+  Poller() : timeout(60) { }
   Poller(int timeout) : timeout(timeout) { }
   int operator()(std::function<int(void)> poll_func) {
     std::time_t start = std::time(nullptr);
@@ -1780,7 +1780,7 @@ int XtsCtx::test_seq_xts() {
       0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e,
       0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e,
       0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e};
-    if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES128, AES128_KEY_SIZE*2, &key128_desc_idx)) {
+    if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES128, AES256_KEY_SIZE*2, &key128_desc_idx)) {
       printf("can't create or update xts 128bit key index \n");
       return -1;
     }
@@ -1801,11 +1801,14 @@ int XtsCtx::test_seq_xts() {
   utils::write_bit_fields(seq_xts_desc, 96, 16, 2);  //2^2 which will be 4 - prod index size
 
   // Fill xts producer index addr
-  utils::write_bit_fields(seq_xts_desc, 112, 34, CAPRI_BARCO_MD_HENS_REG_XTS_PRODUCER_IDX);
+  if(decr_en)
+    utils::write_bit_fields(seq_xts_desc, 112, 34, CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX);
+  else
+    utils::write_bit_fields(seq_xts_desc, 112, 34, CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX);
 
   uint64_t xts_ring_base_addr;
 
-  if(hal_if::get_xts_ring_base_address(&xts_ring_base_addr) < 0) {
+  if(hal_if::get_xts_ring_base_address(decr_en, &xts_ring_base_addr) < 0) {
     printf("can't get xts ring base address \n");
     return -1;
   }
@@ -1846,7 +1849,7 @@ int XtsCtx::ring_db_n_verify() {
   }
 
   uint64_t opaque_tag_addr = 0;
-  if(hal_if::get_xts_opaque_tag_addr(&opaque_tag_addr)) {
+  if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr)) {
     printf("get_xts_opaque_tag_addr failed \n");
     return -1;
   }

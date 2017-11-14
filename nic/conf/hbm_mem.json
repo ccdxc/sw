@@ -223,7 +223,11 @@
             "size_kb": 2048
         },
         {
-            "name": "brq-ring-xts",
+            "name": "brq-ring-xts0",
+            "size_kb": 128
+        },
+        {
+            "name": "brq-ring-xts1",
             "size_kb": 128
         }
     ]

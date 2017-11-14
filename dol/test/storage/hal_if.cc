@@ -268,7 +268,7 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
   return 0;
 }
 
-int get_xts_ring_base_address(uint64_t *addr) {
+int get_xts_ring_base_address(bool is_decr, uint64_t *addr) {
   grpc::ClientContext context;
 
   internal::AllocHbmAddressRequestMsg req_msg;
@@ -278,7 +278,10 @@ int get_xts_ring_base_address(uint64_t *addr) {
     return -1;
 
   auto req = req_msg.add_reqs();
-  req->set_handle("brq-ring-xts");
+  if(is_decr)
+    req->set_handle("brq-ring-xts1");
+  else
+    req->set_handle("brq-ring-xts0");
 
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
   if (!status.ok())
@@ -351,12 +354,15 @@ int delete_key(uint32_t key_index) {
 
 using barcoRings::GetOpaqueTagAddrRequestMsg;
 using barcoRings::GetOpaqueTagAddrResponseMsg;
-int get_xts_opaque_tag_addr(uint64_t* addr) {
+int get_xts_opaque_tag_addr(bool is_decr, uint64_t* addr) {
   grpc::ClientContext context;
   GetOpaqueTagAddrRequestMsg req_msg;
   GetOpaqueTagAddrResponseMsg resp_msg;
   auto req = req_msg.add_request();
-  req->set_ring_type(types::BARCO_RING_XTS1);
+  if(is_decr)
+    req->set_ring_type(types::BARCO_RING_XTS1);
+  else
+    req->set_ring_type(types::BARCO_RING_XTS0);
   auto status = brings_stub->GetOpaqueTagAddr(&context, req_msg, &resp_msg);
   if (!status.ok()) {
     printf("get_xts_opaque_tag_addr request failed \n");
