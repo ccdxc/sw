@@ -146,6 +146,9 @@ capri_tm_pg_params_update(uint32_t port,
 //::    for pg in range(port_info[p]["pgs"]):
                 case ${pg}:
                 {
+                    pbc_csr.cfg_account_${p}_pg_${pg}.read();
+                    pbc_csr.cfg_account_${p}_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_${p}_pg_${pg}.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_${p}_pg_${pg}.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -166,6 +169,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_${p}_tc_to_pg.read();
             pbc_csr.cfg_account_${p}_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_${p}_tc_to_pg.write();
             break;
@@ -241,6 +245,10 @@ capri_tm_scheduler_map_update(uint32_t port,
 //::    pinfo = port_info[p]
         case ${pinfo["enum"]}:
         {
+            pbc_csr.cfg_oq_${p}_arb_l1_selection.read();
+            pbc_csr.cfg_oq_${p}_arb_l2_selection.read();
+            pbc_csr.cfg_oq_${p}_arb_l1_strict.read();
+            pbc_csr.cfg_oq_${p}_arb_l2_strict.read();
 //::    for l1 in range(pinfo["l1_nodes"]):
             pbc_csr.cfg_oq_${p}_arb_l1_selection.node_${l1}(l1_node_vals[${l1}]);
 //::    #endfor
@@ -285,6 +293,7 @@ capri_tm_uplink_lif_set(uint32_t port,
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
 
+    pbc_csr.cfg_src_port_to_lif_map.read();
     /* Update the value in the csr */
     switch(port) {
 //:: for p in range(TM_PORTS):
@@ -332,6 +341,7 @@ capri_tm_init(void)
 //::    pinfo = port_info[p]
 //::    if pinfo["type"] == "uplink":
     // ${pinfo["enum"]}
+    pbc_csr.cfg_oq_${p}.read();
     pbc_csr.cfg_oq_${p}.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_${p}.write();
@@ -351,6 +361,7 @@ capri_tm_repl_table_base_addr_set(uint32_t addr)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_rpl.read();
     pbc_csr.cfg_rpl.base(addr);
     pbc_csr.cfg_rpl.write();
     return HAL_RET_OK;
@@ -362,6 +373,7 @@ capri_tm_repl_table_num_tokens_set(uint32_t num_tokens)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_rpl.read();
     pbc_csr.cfg_rpl.token_size(num_tokens);
     pbc_csr.cfg_rpl.write();
     return HAL_RET_OK;

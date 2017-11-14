@@ -154,6 +154,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_0_pg_0.read();
+                    pbc_csr.cfg_account_0_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_0_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_0_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -171,6 +174,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_0_pg_1.read();
+                    pbc_csr.cfg_account_0_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_0_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_0_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -188,6 +194,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_0_pg_2.read();
+                    pbc_csr.cfg_account_0_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_0_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_0_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -205,6 +214,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_0_pg_3.read();
+                    pbc_csr.cfg_account_0_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_0_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_0_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -222,6 +234,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_0_pg_4.read();
+                    pbc_csr.cfg_account_0_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_0_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_0_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -239,6 +254,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_0_pg_5.read();
+                    pbc_csr.cfg_account_0_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_0_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_0_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -256,6 +274,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_0_pg_6.read();
+                    pbc_csr.cfg_account_0_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_0_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_0_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -273,6 +294,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_0_pg_7.read();
+                    pbc_csr.cfg_account_0_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_0_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_0_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -292,6 +316,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_0_tc_to_pg.read();
             pbc_csr.cfg_account_0_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_0_tc_to_pg.write();
             break;
@@ -301,6 +326,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_1_pg_0.read();
+                    pbc_csr.cfg_account_1_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_1_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_1_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -318,6 +346,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_1_pg_1.read();
+                    pbc_csr.cfg_account_1_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_1_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_1_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -335,6 +366,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_1_pg_2.read();
+                    pbc_csr.cfg_account_1_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_1_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_1_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -352,6 +386,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_1_pg_3.read();
+                    pbc_csr.cfg_account_1_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_1_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_1_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -369,6 +406,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_1_pg_4.read();
+                    pbc_csr.cfg_account_1_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_1_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_1_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -386,6 +426,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_1_pg_5.read();
+                    pbc_csr.cfg_account_1_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_1_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_1_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -403,6 +446,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_1_pg_6.read();
+                    pbc_csr.cfg_account_1_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_1_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_1_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -420,6 +466,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_1_pg_7.read();
+                    pbc_csr.cfg_account_1_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_1_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_1_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -439,6 +488,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_1_tc_to_pg.read();
             pbc_csr.cfg_account_1_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_1_tc_to_pg.write();
             break;
@@ -448,6 +498,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_2_pg_0.read();
+                    pbc_csr.cfg_account_2_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_2_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_2_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -465,6 +518,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_2_pg_1.read();
+                    pbc_csr.cfg_account_2_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_2_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_2_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -482,6 +538,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_2_pg_2.read();
+                    pbc_csr.cfg_account_2_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_2_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_2_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -499,6 +558,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_2_pg_3.read();
+                    pbc_csr.cfg_account_2_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_2_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_2_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -516,6 +578,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_2_pg_4.read();
+                    pbc_csr.cfg_account_2_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_2_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_2_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -533,6 +598,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_2_pg_5.read();
+                    pbc_csr.cfg_account_2_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_2_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_2_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -550,6 +618,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_2_pg_6.read();
+                    pbc_csr.cfg_account_2_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_2_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_2_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -567,6 +638,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_2_pg_7.read();
+                    pbc_csr.cfg_account_2_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_2_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_2_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -586,6 +660,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_2_tc_to_pg.read();
             pbc_csr.cfg_account_2_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_2_tc_to_pg.write();
             break;
@@ -595,6 +670,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_3_pg_0.read();
+                    pbc_csr.cfg_account_3_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_3_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_3_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -612,6 +690,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_3_pg_1.read();
+                    pbc_csr.cfg_account_3_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_3_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_3_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -629,6 +710,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_3_pg_2.read();
+                    pbc_csr.cfg_account_3_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_3_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_3_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -646,6 +730,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_3_pg_3.read();
+                    pbc_csr.cfg_account_3_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_3_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_3_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -663,6 +750,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_3_pg_4.read();
+                    pbc_csr.cfg_account_3_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_3_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_3_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -680,6 +770,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_3_pg_5.read();
+                    pbc_csr.cfg_account_3_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_3_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_3_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -697,6 +790,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_3_pg_6.read();
+                    pbc_csr.cfg_account_3_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_3_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_3_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -714,6 +810,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_3_pg_7.read();
+                    pbc_csr.cfg_account_3_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_3_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_3_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -733,6 +832,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_3_tc_to_pg.read();
             pbc_csr.cfg_account_3_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_3_tc_to_pg.write();
             break;
@@ -742,6 +842,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_4_pg_0.read();
+                    pbc_csr.cfg_account_4_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_4_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_4_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -759,6 +862,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_4_pg_1.read();
+                    pbc_csr.cfg_account_4_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_4_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_4_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -776,6 +882,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_4_pg_2.read();
+                    pbc_csr.cfg_account_4_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_4_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_4_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -793,6 +902,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_4_pg_3.read();
+                    pbc_csr.cfg_account_4_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_4_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_4_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -810,6 +922,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_4_pg_4.read();
+                    pbc_csr.cfg_account_4_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_4_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_4_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -827,6 +942,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_4_pg_5.read();
+                    pbc_csr.cfg_account_4_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_4_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_4_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -844,6 +962,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_4_pg_6.read();
+                    pbc_csr.cfg_account_4_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_4_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_4_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -861,6 +982,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_4_pg_7.read();
+                    pbc_csr.cfg_account_4_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_4_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_4_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -880,6 +1004,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_4_tc_to_pg.read();
             pbc_csr.cfg_account_4_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_4_tc_to_pg.write();
             break;
@@ -889,6 +1014,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_5_pg_0.read();
+                    pbc_csr.cfg_account_5_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_5_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_5_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -906,6 +1034,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_5_pg_1.read();
+                    pbc_csr.cfg_account_5_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_5_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_5_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -923,6 +1054,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_5_pg_2.read();
+                    pbc_csr.cfg_account_5_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_5_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_5_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -940,6 +1074,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_5_pg_3.read();
+                    pbc_csr.cfg_account_5_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_5_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_5_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -957,6 +1094,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_5_pg_4.read();
+                    pbc_csr.cfg_account_5_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_5_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_5_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -974,6 +1114,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_5_pg_5.read();
+                    pbc_csr.cfg_account_5_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_5_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_5_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -991,6 +1134,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_5_pg_6.read();
+                    pbc_csr.cfg_account_5_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_5_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_5_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1008,6 +1154,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_5_pg_7.read();
+                    pbc_csr.cfg_account_5_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_5_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_5_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1027,6 +1176,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_5_tc_to_pg.read();
             pbc_csr.cfg_account_5_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_5_tc_to_pg.write();
             break;
@@ -1036,6 +1186,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_6_pg_0.read();
+                    pbc_csr.cfg_account_6_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_6_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_6_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1053,6 +1206,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_6_pg_1.read();
+                    pbc_csr.cfg_account_6_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_6_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_6_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1070,6 +1226,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_6_pg_2.read();
+                    pbc_csr.cfg_account_6_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_6_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_6_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1087,6 +1246,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_6_pg_3.read();
+                    pbc_csr.cfg_account_6_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_6_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_6_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1104,6 +1266,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_6_pg_4.read();
+                    pbc_csr.cfg_account_6_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_6_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_6_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1121,6 +1286,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_6_pg_5.read();
+                    pbc_csr.cfg_account_6_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_6_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_6_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1138,6 +1306,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_6_pg_6.read();
+                    pbc_csr.cfg_account_6_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_6_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_6_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1155,6 +1326,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_6_pg_7.read();
+                    pbc_csr.cfg_account_6_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_6_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_6_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1174,6 +1348,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_6_tc_to_pg.read();
             pbc_csr.cfg_account_6_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_6_tc_to_pg.write();
             break;
@@ -1183,6 +1358,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_7_pg_0.read();
+                    pbc_csr.cfg_account_7_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_7_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_7_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1200,6 +1378,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_7_pg_1.read();
+                    pbc_csr.cfg_account_7_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_7_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_7_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1217,6 +1398,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_7_pg_2.read();
+                    pbc_csr.cfg_account_7_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_7_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_7_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1234,6 +1418,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_7_pg_3.read();
+                    pbc_csr.cfg_account_7_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_7_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_7_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1251,6 +1438,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_7_pg_4.read();
+                    pbc_csr.cfg_account_7_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_7_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_7_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1268,6 +1458,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_7_pg_5.read();
+                    pbc_csr.cfg_account_7_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_7_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_7_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1285,6 +1478,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_7_pg_6.read();
+                    pbc_csr.cfg_account_7_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_7_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_7_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1302,6 +1498,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_7_pg_7.read();
+                    pbc_csr.cfg_account_7_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_7_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_7_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1321,6 +1520,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_7_tc_to_pg.read();
             pbc_csr.cfg_account_7_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_7_tc_to_pg.write();
             break;
@@ -1330,6 +1530,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_8_pg_0.read();
+                    pbc_csr.cfg_account_8_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_8_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_8_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1347,6 +1550,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_8_pg_1.read();
+                    pbc_csr.cfg_account_8_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_8_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_8_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1364,6 +1570,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_8_pg_2.read();
+                    pbc_csr.cfg_account_8_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_8_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_8_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1381,6 +1590,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_8_pg_3.read();
+                    pbc_csr.cfg_account_8_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_8_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_8_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1398,6 +1610,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_8_pg_4.read();
+                    pbc_csr.cfg_account_8_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_8_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_8_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1415,6 +1630,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_8_pg_5.read();
+                    pbc_csr.cfg_account_8_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_8_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_8_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1432,6 +1650,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_8_pg_6.read();
+                    pbc_csr.cfg_account_8_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_8_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_8_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1449,6 +1670,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_8_pg_7.read();
+                    pbc_csr.cfg_account_8_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_8_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_8_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1468,6 +1692,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_8_tc_to_pg.read();
             pbc_csr.cfg_account_8_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_8_tc_to_pg.write();
             break;
@@ -1477,6 +1702,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_9_pg_0.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1494,6 +1722,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_9_pg_1.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1511,6 +1742,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_9_pg_2.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1528,6 +1762,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_9_pg_3.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1545,6 +1782,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_9_pg_4.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1562,6 +1802,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_9_pg_5.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1579,6 +1822,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_9_pg_6.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1596,6 +1842,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_9_pg_7.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1613,6 +1862,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 8:
                 {
+                    pbc_csr.cfg_account_9_pg_8.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_8.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_8.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1630,6 +1882,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 9:
                 {
+                    pbc_csr.cfg_account_9_pg_9.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_9.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_9.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1647,6 +1902,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 10:
                 {
+                    pbc_csr.cfg_account_9_pg_10.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_10.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_10.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1664,6 +1922,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 11:
                 {
+                    pbc_csr.cfg_account_9_pg_11.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_11.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_11.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1681,6 +1942,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 12:
                 {
+                    pbc_csr.cfg_account_9_pg_12.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_12.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_12.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1698,6 +1962,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 13:
                 {
+                    pbc_csr.cfg_account_9_pg_13.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_13.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_13.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1715,6 +1982,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 14:
                 {
+                    pbc_csr.cfg_account_9_pg_14.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_14.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_14.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1732,6 +2002,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 15:
                 {
+                    pbc_csr.cfg_account_9_pg_15.read();
+                    pbc_csr.cfg_account_9_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_9_pg_15.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_9_pg_15.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1751,6 +2024,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_9_tc_to_pg.read();
             pbc_csr.cfg_account_9_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_9_tc_to_pg.write();
             break;
@@ -1760,6 +2034,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_10_pg_0.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1777,6 +2054,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_10_pg_1.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1794,6 +2074,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_10_pg_2.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1811,6 +2094,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_10_pg_3.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1828,6 +2114,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_10_pg_4.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1845,6 +2134,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_10_pg_5.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1862,6 +2154,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_10_pg_6.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1879,6 +2174,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_10_pg_7.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1896,6 +2194,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 8:
                 {
+                    pbc_csr.cfg_account_10_pg_8.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_8.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_8.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1913,6 +2214,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 9:
                 {
+                    pbc_csr.cfg_account_10_pg_9.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_9.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_9.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1930,6 +2234,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 10:
                 {
+                    pbc_csr.cfg_account_10_pg_10.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_10.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_10.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1947,6 +2254,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 11:
                 {
+                    pbc_csr.cfg_account_10_pg_11.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_11.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_11.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1964,6 +2274,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 12:
                 {
+                    pbc_csr.cfg_account_10_pg_12.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_12.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_12.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1981,6 +2294,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 13:
                 {
+                    pbc_csr.cfg_account_10_pg_13.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_13.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_13.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -1998,6 +2314,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 14:
                 {
+                    pbc_csr.cfg_account_10_pg_14.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_14.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_14.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2015,6 +2334,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 15:
                 {
+                    pbc_csr.cfg_account_10_pg_15.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_15.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_15.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2032,6 +2354,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 16:
                 {
+                    pbc_csr.cfg_account_10_pg_16.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_16.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_16.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2049,6 +2374,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 17:
                 {
+                    pbc_csr.cfg_account_10_pg_17.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_17.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_17.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2066,6 +2394,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 18:
                 {
+                    pbc_csr.cfg_account_10_pg_18.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_18.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_18.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2083,6 +2414,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 19:
                 {
+                    pbc_csr.cfg_account_10_pg_19.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_19.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_19.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2100,6 +2434,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 20:
                 {
+                    pbc_csr.cfg_account_10_pg_20.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_20.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_20.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2117,6 +2454,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 21:
                 {
+                    pbc_csr.cfg_account_10_pg_21.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_21.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_21.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2134,6 +2474,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 22:
                 {
+                    pbc_csr.cfg_account_10_pg_22.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_22.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_22.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2151,6 +2494,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 23:
                 {
+                    pbc_csr.cfg_account_10_pg_23.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_23.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_23.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2168,6 +2514,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 24:
                 {
+                    pbc_csr.cfg_account_10_pg_24.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_24.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_24.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2185,6 +2534,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 25:
                 {
+                    pbc_csr.cfg_account_10_pg_25.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_25.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_25.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2202,6 +2554,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 26:
                 {
+                    pbc_csr.cfg_account_10_pg_26.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_26.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_26.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2219,6 +2574,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 27:
                 {
+                    pbc_csr.cfg_account_10_pg_27.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_27.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_27.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2236,6 +2594,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 28:
                 {
+                    pbc_csr.cfg_account_10_pg_28.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_28.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_28.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2253,6 +2614,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 29:
                 {
+                    pbc_csr.cfg_account_10_pg_29.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_29.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_29.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2270,6 +2634,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 30:
                 {
+                    pbc_csr.cfg_account_10_pg_30.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_30.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_30.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2287,6 +2654,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 31:
                 {
+                    pbc_csr.cfg_account_10_pg_31.read();
+                    pbc_csr.cfg_account_10_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_10_pg_31.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_10_pg_31.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2306,6 +2676,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_10_tc_to_pg.read();
             pbc_csr.cfg_account_10_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_10_tc_to_pg.write();
             break;
@@ -2315,6 +2686,9 @@ capri_tm_pg_params_update(uint32_t port,
             switch (pool_group) {
                 case 0:
                 {
+                    pbc_csr.cfg_account_11_pg_0.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_0.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_0.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2332,6 +2706,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 1:
                 {
+                    pbc_csr.cfg_account_11_pg_1.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_1.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_1.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2349,6 +2726,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 2:
                 {
+                    pbc_csr.cfg_account_11_pg_2.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_2.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_2.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2366,6 +2746,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 3:
                 {
+                    pbc_csr.cfg_account_11_pg_3.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_3.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_3.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2383,6 +2766,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 4:
                 {
+                    pbc_csr.cfg_account_11_pg_4.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_4.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_4.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2400,6 +2786,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 5:
                 {
+                    pbc_csr.cfg_account_11_pg_5.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_5.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_5.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2417,6 +2806,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 6:
                 {
+                    pbc_csr.cfg_account_11_pg_6.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_6.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_6.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2434,6 +2826,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 7:
                 {
+                    pbc_csr.cfg_account_11_pg_7.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_7.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_7.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2451,6 +2846,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 8:
                 {
+                    pbc_csr.cfg_account_11_pg_8.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_8.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_8.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2468,6 +2866,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 9:
                 {
+                    pbc_csr.cfg_account_11_pg_9.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_9.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_9.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2485,6 +2886,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 10:
                 {
+                    pbc_csr.cfg_account_11_pg_10.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_10.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_10.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2502,6 +2906,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 11:
                 {
+                    pbc_csr.cfg_account_11_pg_11.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_11.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_11.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2519,6 +2926,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 12:
                 {
+                    pbc_csr.cfg_account_11_pg_12.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_12.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_12.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2536,6 +2946,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 13:
                 {
+                    pbc_csr.cfg_account_11_pg_13.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_13.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_13.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2553,6 +2966,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 14:
                 {
+                    pbc_csr.cfg_account_11_pg_14.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_14.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_14.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2570,6 +2986,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 15:
                 {
+                    pbc_csr.cfg_account_11_pg_15.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_15.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_15.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2587,6 +3006,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 16:
                 {
+                    pbc_csr.cfg_account_11_pg_16.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_16.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_16.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2604,6 +3026,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 17:
                 {
+                    pbc_csr.cfg_account_11_pg_17.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_17.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_17.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2621,6 +3046,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 18:
                 {
+                    pbc_csr.cfg_account_11_pg_18.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_18.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_18.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2638,6 +3066,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 19:
                 {
+                    pbc_csr.cfg_account_11_pg_19.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_19.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_19.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2655,6 +3086,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 20:
                 {
+                    pbc_csr.cfg_account_11_pg_20.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_20.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_20.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2672,6 +3106,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 21:
                 {
+                    pbc_csr.cfg_account_11_pg_21.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_21.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_21.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2689,6 +3126,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 22:
                 {
+                    pbc_csr.cfg_account_11_pg_22.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_22.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_22.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2706,6 +3146,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 23:
                 {
+                    pbc_csr.cfg_account_11_pg_23.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_23.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_23.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2723,6 +3166,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 24:
                 {
+                    pbc_csr.cfg_account_11_pg_24.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_24.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_24.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2740,6 +3186,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 25:
                 {
+                    pbc_csr.cfg_account_11_pg_25.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_25.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_25.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2757,6 +3206,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 26:
                 {
+                    pbc_csr.cfg_account_11_pg_26.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_26.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_26.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2774,6 +3226,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 27:
                 {
+                    pbc_csr.cfg_account_11_pg_27.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_27.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_27.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2791,6 +3246,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 28:
                 {
+                    pbc_csr.cfg_account_11_pg_28.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_28.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_28.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2808,6 +3266,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 29:
                 {
+                    pbc_csr.cfg_account_11_pg_29.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_29.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_29.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2825,6 +3286,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 30:
                 {
+                    pbc_csr.cfg_account_11_pg_30.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_30.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_30.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2842,6 +3306,9 @@ capri_tm_pg_params_update(uint32_t port,
                 }
                 case 31:
                 {
+                    pbc_csr.cfg_account_11_pg_31.read();
+                    pbc_csr.cfg_account_11_mtu_table.read();
+
                     /* Update the PG parameters */
                     pbc_csr.cfg_account_11_pg_31.reserved_min(bytes_to_cells(pg_params->reserved_min));
                     pbc_csr.cfg_account_11_pg_31.xon_threshold(bytes_to_cells(pg_params->xon_threshold));
@@ -2861,6 +3328,7 @@ capri_tm_pg_params_update(uint32_t port,
                     return HAL_RET_ERR;
             }
             /* Update and write the cos to PG mapping */
+            pbc_csr.cfg_account_11_tc_to_pg.read();
             pbc_csr.cfg_account_11_tc_to_pg.table(cos_map_reg_val);
             pbc_csr.cfg_account_11_tc_to_pg.write();
             break;
@@ -2933,6 +3401,10 @@ capri_tm_scheduler_map_update(uint32_t port,
     switch(port) {
         case TM_PORT_UPLINK_0:
         {
+            pbc_csr.cfg_oq_0_arb_l1_selection.read();
+            pbc_csr.cfg_oq_0_arb_l2_selection.read();
+            pbc_csr.cfg_oq_0_arb_l1_strict.read();
+            pbc_csr.cfg_oq_0_arb_l2_strict.read();
             pbc_csr.cfg_oq_0_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_0_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_0_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -2966,6 +3438,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_UPLINK_1:
         {
+            pbc_csr.cfg_oq_1_arb_l1_selection.read();
+            pbc_csr.cfg_oq_1_arb_l2_selection.read();
+            pbc_csr.cfg_oq_1_arb_l1_strict.read();
+            pbc_csr.cfg_oq_1_arb_l2_strict.read();
             pbc_csr.cfg_oq_1_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_1_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_1_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -2999,6 +3475,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_UPLINK_2:
         {
+            pbc_csr.cfg_oq_2_arb_l1_selection.read();
+            pbc_csr.cfg_oq_2_arb_l2_selection.read();
+            pbc_csr.cfg_oq_2_arb_l1_strict.read();
+            pbc_csr.cfg_oq_2_arb_l2_strict.read();
             pbc_csr.cfg_oq_2_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_2_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_2_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3032,6 +3512,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_UPLINK_3:
         {
+            pbc_csr.cfg_oq_3_arb_l1_selection.read();
+            pbc_csr.cfg_oq_3_arb_l2_selection.read();
+            pbc_csr.cfg_oq_3_arb_l1_strict.read();
+            pbc_csr.cfg_oq_3_arb_l2_strict.read();
             pbc_csr.cfg_oq_3_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_3_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_3_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3065,6 +3549,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_UPLINK_4:
         {
+            pbc_csr.cfg_oq_4_arb_l1_selection.read();
+            pbc_csr.cfg_oq_4_arb_l2_selection.read();
+            pbc_csr.cfg_oq_4_arb_l1_strict.read();
+            pbc_csr.cfg_oq_4_arb_l2_strict.read();
             pbc_csr.cfg_oq_4_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_4_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_4_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3098,6 +3586,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_UPLINK_5:
         {
+            pbc_csr.cfg_oq_5_arb_l1_selection.read();
+            pbc_csr.cfg_oq_5_arb_l2_selection.read();
+            pbc_csr.cfg_oq_5_arb_l1_strict.read();
+            pbc_csr.cfg_oq_5_arb_l2_strict.read();
             pbc_csr.cfg_oq_5_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_5_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_5_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3131,6 +3623,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_UPLINK_6:
         {
+            pbc_csr.cfg_oq_6_arb_l1_selection.read();
+            pbc_csr.cfg_oq_6_arb_l2_selection.read();
+            pbc_csr.cfg_oq_6_arb_l1_strict.read();
+            pbc_csr.cfg_oq_6_arb_l2_strict.read();
             pbc_csr.cfg_oq_6_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_6_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_6_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3164,6 +3660,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_UPLINK_7:
         {
+            pbc_csr.cfg_oq_7_arb_l1_selection.read();
+            pbc_csr.cfg_oq_7_arb_l2_selection.read();
+            pbc_csr.cfg_oq_7_arb_l1_strict.read();
+            pbc_csr.cfg_oq_7_arb_l2_strict.read();
             pbc_csr.cfg_oq_7_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_7_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_7_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3197,6 +3697,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_NCSI:
         {
+            pbc_csr.cfg_oq_8_arb_l1_selection.read();
+            pbc_csr.cfg_oq_8_arb_l2_selection.read();
+            pbc_csr.cfg_oq_8_arb_l1_strict.read();
+            pbc_csr.cfg_oq_8_arb_l2_strict.read();
             pbc_csr.cfg_oq_8_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_8_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_8_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3230,6 +3734,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_DMA:
         {
+            pbc_csr.cfg_oq_9_arb_l1_selection.read();
+            pbc_csr.cfg_oq_9_arb_l2_selection.read();
+            pbc_csr.cfg_oq_9_arb_l1_strict.read();
+            pbc_csr.cfg_oq_9_arb_l2_strict.read();
             pbc_csr.cfg_oq_9_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_9_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_9_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3263,6 +3771,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_EGRESS:
         {
+            pbc_csr.cfg_oq_10_arb_l1_selection.read();
+            pbc_csr.cfg_oq_10_arb_l2_selection.read();
+            pbc_csr.cfg_oq_10_arb_l1_strict.read();
+            pbc_csr.cfg_oq_10_arb_l2_strict.read();
             pbc_csr.cfg_oq_10_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_10_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_10_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3296,6 +3808,10 @@ capri_tm_scheduler_map_update(uint32_t port,
         }
         case TM_PORT_INGRESS:
         {
+            pbc_csr.cfg_oq_11_arb_l1_selection.read();
+            pbc_csr.cfg_oq_11_arb_l2_selection.read();
+            pbc_csr.cfg_oq_11_arb_l1_strict.read();
+            pbc_csr.cfg_oq_11_arb_l2_strict.read();
             pbc_csr.cfg_oq_11_arb_l1_selection.node_0(l1_node_vals[0]);
             pbc_csr.cfg_oq_11_arb_l1_selection.node_1(l1_node_vals[1]);
             pbc_csr.cfg_oq_11_arb_l1_selection.node_2(l1_node_vals[2]);
@@ -3353,6 +3869,7 @@ capri_tm_uplink_lif_set(uint32_t port,
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
 
+    pbc_csr.cfg_src_port_to_lif_map.read();
     /* Update the value in the csr */
     switch(port) {
         case TM_PORT_UPLINK_0:
@@ -3431,46 +3948,55 @@ capri_tm_init(void)
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
 
     // TM_PORT_UPLINK_0
+    pbc_csr.cfg_oq_0.read();
     pbc_csr.cfg_oq_0.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_0.write();
 
     // TM_PORT_UPLINK_1
+    pbc_csr.cfg_oq_1.read();
     pbc_csr.cfg_oq_1.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_1.write();
 
     // TM_PORT_UPLINK_2
+    pbc_csr.cfg_oq_2.read();
     pbc_csr.cfg_oq_2.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_2.write();
 
     // TM_PORT_UPLINK_3
+    pbc_csr.cfg_oq_3.read();
     pbc_csr.cfg_oq_3.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_3.write();
 
     // TM_PORT_UPLINK_4
+    pbc_csr.cfg_oq_4.read();
     pbc_csr.cfg_oq_4.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_4.write();
 
     // TM_PORT_UPLINK_5
+    pbc_csr.cfg_oq_5.read();
     pbc_csr.cfg_oq_5.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_5.write();
 
     // TM_PORT_UPLINK_6
+    pbc_csr.cfg_oq_6.read();
     pbc_csr.cfg_oq_6.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_6.write();
 
     // TM_PORT_UPLINK_7
+    pbc_csr.cfg_oq_7.read();
     pbc_csr.cfg_oq_7.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_7.write();
 
     // TM_PORT_NCSI
+    pbc_csr.cfg_oq_8.read();
     pbc_csr.cfg_oq_8.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_8.write();
@@ -3488,6 +4014,7 @@ capri_tm_repl_table_base_addr_set(uint32_t addr)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_rpl.read();
     pbc_csr.cfg_rpl.base(addr);
     pbc_csr.cfg_rpl.write();
     return HAL_RET_OK;
@@ -3499,6 +4026,7 @@ capri_tm_repl_table_num_tokens_set(uint32_t num_tokens)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_rpl.read();
     pbc_csr.cfg_rpl.token_size(num_tokens);
     pbc_csr.cfg_rpl.write();
     return HAL_RET_OK;
