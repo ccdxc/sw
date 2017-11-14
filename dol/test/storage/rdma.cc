@@ -50,6 +50,9 @@ const uint32_t	kRoceEntrySize	 = 6; // Default is 64 bytes
 const uint32_t	kRoceNumEntries	 = 6; // Default is 64 entries
 const uint32_t kPvmRoceSqXlateTblSize	= (64 * 64); // 64 SQs x 64 bytes each
 
+const uint32_t kWritaDataSize = 4096;
+const uint32_t kR2NDataBufOffset = 4096;
+
 const uint32_t kMaxRDMAKeys = 64;
 const uint32_t kMaxRDMAPTEntries = 64;
 const uint32_t kSQType = 0;
@@ -500,6 +503,19 @@ void PostTargetRcvBuf1() {
   // wrid passed back in cq is the buffer offset passed in
   utils::write_bit_fields(rqwqe, 0, 64, host_mem_v2p((void *) &r2n_buf->cmd_buf));
 
+  // Pre-form the Status post wqe
+  uint8_t *sqwqe = (uint8_t *) &(r2n_buf->sta_req.s);
+  utils::write_bit_fields(sqwqe, 0, 64, 0x10);  // wrid = 1
+  utils::write_bit_fields(sqwqe, 64, 4, 0);  // op_type = OP_TYPE_SEND
+  utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
+  utils::write_bit_fields(sqwqe, 192, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));  // data len
+  // write the SGE
+  utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)&r2n_buf->sta_buf);  // SGE-va, same as pa
+  utils::write_bit_fields(sqwqe, 256+64, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));
+  utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
+
+
+
   uint32_t offset = target_rq_pindex;
   offset *= kRQWQESize;
   uint8_t *p = (uint8_t *)target_rq_va;
@@ -629,6 +645,11 @@ int StartRoceSeq(uint16_t ssd_handle, uint32_t ssd_q, uint8_t **ssd_cmd,
   utils::write_bit_fields(sqwqe, 256+64, 32, data_len);
   utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
 
+  // Form the write data buffer (of size 4K) at an offset from the NVME backend
+  // command
+  memset(((uint8_t *) r2n_buf_va) + kR2NDataBufOffset - offsetof(r2n::r2n_buf_t, cmd_buf), 
+         0xB3, kWritaDataSize);
+
   // Now kickstart the sequencer
   tests::test_rdma_write_cmd(35, 60, g_rdma_pvm_roce_sq, r2n_buf_pa, 
 		             r2n_hbm_buf_pa, data_len, 
@@ -675,8 +696,8 @@ int rdma_pvm_qs_init() {
   printf("RDMA PVM Target ROCE CQ init success\n");
 
   // Target SQ Xlate
-  qstate_if::update_xlate_entry(queues::get_pvm_lif(), CQ_TYPE, 
-                                g_rdma_pvm_roce_cq, 
+  qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
+                                g_rdma_pvm_roce_sq, 
                                 pvm_roce_sq_xlate_addr + (1 * 64), NULL);
 
   // Target R2N Xlate
@@ -759,4 +780,19 @@ int test_run_rdma_write_cmd() {
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
+}
+
+int test_run_rdma_e2e_write() {
+  uint16_t ssd_handle = 2; // the SSD handle
+  uint32_t ssd_q = 20; // the actual pvm queue
+  uint8_t *ssd_cmd = NULL;
+  uint8_t *nvme_cmd = NULL;
+  uint16_t ssd_index;
+
+  StartRoceSeq(ssd_handle, ssd_q, &ssd_cmd, &ssd_index, &nvme_cmd);
+  printf("Started sequencer to PDMA + send over ROCE \n");
+
+  sleep(6);
+
+  return 0;
 }

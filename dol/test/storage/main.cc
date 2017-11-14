@@ -61,7 +61,7 @@ std::vector<tests::TestEntry> test_suite = {
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
   {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
-  {&test_run_rdma_write_cmd, "NVME write cmd over RDMA", false},
+  {&test_run_rdma_e2e_write, "E2E write over RDMA", false},
 };
 
 void sig_handler(int sig) {
@@ -98,7 +98,7 @@ int main(int argc, char**argv) {
 
 
   // Add xts tests
-  tests::add_xts_tests(test_suite);
+  //tests::add_xts_tests(test_suite);
 
   for (size_t i = 0; i < test_suite.size(); i++) {
     printf(" Starting test %s \n", test_suite[i].test_name.c_str());

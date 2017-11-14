@@ -43,6 +43,15 @@ check_remote:
    bcf		![c1], push_local_status
    nop
 
+   // Save the is_remote flag to PHV
+   phvwr	p.storage_kivec0_is_remote, 1
+   
+   // Save the remote destination from R2N WQE into PHV
+   phvwr	p.storage_kivec0_dst_qaddr, d.dst_qaddr
+   phvwr	p.storage_kivec0_dst_lif, d.dst_lif
+   phvwr	p.storage_kivec0_dst_qtype, d.dst_qtype
+   phvwr	p.storage_kivec0_dst_qid, d.dst_qid
+
    // Calculate the base address of R2N buffer and store it in GPR r6
    add		r6, r0, d.handle
    subi		r6, r6, R2N_BUF_NVME_BE_CMD_OFFSET

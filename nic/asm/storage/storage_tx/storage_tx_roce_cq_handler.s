@@ -35,6 +35,16 @@ storage_tx_roce_cq_handler_start:
    phvwri	p.r2n_wqe_opcode, R2N_OPCODE_PROCESS_WQE
    phvwri	p.storage_kivec1_roce_cq_new_cmd, 1
    
+   // Overwrite the PRP1 to point to the data offset
+   // TODO: Based on the data size, need to fix up PRP list
+   add		r6, r0, d.wrid_msn
+   subi		r6, r6, R2N_BUF_NVME_BE_CMD_OFFSET
+   addi		r7, r6, R2N_BUF_DATA_OFFSET
+   phvwr	p.nvme_cmd_dptr1, r7.dx
+   addi		r7, r6, R2N_BUF_NVME_CMD_PRP1_OFFSET
+   DMA_PHV2MEM_SETUP(nvme_cmd_dptr1, nvme_cmd_dptr1, r7, dma_p2m_2)
+
+   // Load the table for the next stage
    b		tbl_load
 
 check_xfer:

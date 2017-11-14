@@ -27,4 +27,6 @@ void rdma_uspace_test();
 
 int test_run_rdma_write_cmd();
 
+int test_run_rdma_e2e_write();
+
 #endif  // _RDMA_HPP_
