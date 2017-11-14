@@ -1,6 +1,6 @@
 #include <net/ethernet.h>
 #include "nic/p4/include/common_defines.h"
-#include "nic/hal/plugins/classic/classic_plugin.hpp"
+#include "nic/fte/fte.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/include/pd_api.hpp"
 

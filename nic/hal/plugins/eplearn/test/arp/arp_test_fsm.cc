@@ -2,10 +2,10 @@
 #include <gtest/gtest.h>
 #include "nic/include/twheel.hpp"
 
-#include "nic/hal/plugins/network/ep_learn/arp/arp_learn.hpp"
+#include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
+#include "nic/hal/plugins/eplearn/arp/arp_trans.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
-#include "nic/include/arp_trans.hpp"
 
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/endpoint.hpp"
@@ -227,19 +227,19 @@ TEST_F(arp_fsm_test, arp_request_response) {
     arp_trans_key_t key;
     arp_trans_t::init_arp_trans_key((unsigned char *)"123456", dummy_ep, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     arp_packet_send(ARP::Flags::REPLY, "1.1.1.2", (unsigned char *)"567890",
                     "1.1.1.1", (unsigned char *)"123456");
     arp_trans_t::init_arp_trans_key((unsigned char *)"567890", dummy_ep, &key);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     arp_trans_t::init_arp_trans_key((unsigned char *)"123456", dummy_ep, &key);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
 
-    ASSERT_EQ(g_hal_state->arplearn_key_ht()->num_entries(), 2);
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 2);
 }
 
 TEST_F(arp_fsm_test, arp_spoofing) {
@@ -248,19 +248,19 @@ TEST_F(arp_fsm_test, arp_spoofing) {
     arp_trans_key_t key;
     arp_trans_t::init_arp_trans_key((unsigned char *)"123456", dummy_ep, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     arp_packet_send(ARP::Flags::REPLY, "1.1.1.2", (unsigned char *)"567890",
                     "1.1.1.1", (unsigned char *)"123456");
     arp_trans_t::init_arp_trans_key((unsigned char *)"567890", dummy_ep, &key);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     arp_trans_t::init_arp_trans_key((unsigned char *)"123456", dummy_ep, &key);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
 
-    ASSERT_EQ(g_hal_state->arplearn_key_ht()->num_entries(), 2);
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 2);
 }
 
 TEST_F(arp_fsm_test, arp_entry_timeout) {
@@ -269,7 +269,7 @@ TEST_F(arp_fsm_test, arp_entry_timeout) {
     arp_trans_key_t key;
     arp_trans_t::init_arp_trans_key((unsigned char *)"123456", dummy_ep, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
 
     //sleep(1);
@@ -277,7 +277,7 @@ TEST_F(arp_fsm_test, arp_entry_timeout) {
     hal::periodic::g_twheel->tick(timeout + 100);
     sleep(3);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry == NULL);
 }
 
@@ -287,35 +287,35 @@ TEST_F(arp_fsm_test, arp_request_response_replace) {
     arp_trans_key_t key;
     arp_trans_t::init_arp_trans_key((unsigned char *)"123456", dummy_ep, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     arp_packet_send(ARP::Flags::REPLY, "1.1.1.2", (unsigned char *)"567890",
                     "1.1.1.1", (unsigned char *)"123456");
     arp_trans_t::init_arp_trans_key((unsigned char *)"567890", dummy_ep, &key);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     arp_trans_t::init_arp_trans_key((unsigned char *)"123456", dummy_ep, &key);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
 
-    ASSERT_EQ(g_hal_state->arplearn_key_ht()->num_entries(), 2);
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 2);
 
     strcpy((char *)(dummy_ep->l2_key.mac_addr), "654321");
     arp_packet_send(ARP::Flags::REQUEST, "1.1.1.1", (unsigned char *)"654321",
                     "1.1.1.2");
     arp_trans_t::init_arp_trans_key((unsigned char *)"654321", dummy_ep, &key);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
-    ASSERT_EQ(g_hal_state->arplearn_key_ht()->num_entries(), 2);
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 2);
 
     strcpy((char *)(dummy_ep->l2_key.mac_addr), "098756");
     arp_packet_send(ARP::Flags::REQUEST, "1.1.1.2", (unsigned char *)"098756",
                     "1.1.1.2");
     arp_trans_t::init_arp_trans_key((unsigned char *)"098756", dummy_ep, &key);
     entry = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_key_ht()->lookup(&key));
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
-    ASSERT_EQ(g_hal_state->arplearn_key_ht()->num_entries(), 2);
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 2);
 }

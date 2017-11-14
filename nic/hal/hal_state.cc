@@ -24,8 +24,6 @@
 #include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/src/rawccb.hpp"
 #include "nic/hal/src/dos.hpp"
-#include "nic/hal/plugins/network/ep_learn/arp/arp_trans.hpp"
-#include "nic/hal/plugins/network/ep_learn/dhcp/dhcp_trans.hpp"
  
 namespace hal {
 
@@ -323,34 +321,6 @@ hal_cfg_db::init(void)
                                   hal::nwsec_group_compute_hash_func,
                                   hal::nwsec_group_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
-
-    // initialize arp learning related data structures
-    arplearn_key_ht_ =
-        ht::factory(HAL_MAX_ARP_TRANS, hal::network::arptrans_get_key_func,
-                    hal::network::arptrans_compute_hash_func,
-                    hal::network::arptrans_compare_key_func);
-    HAL_ASSERT_RETURN((arplearn_key_ht_ != NULL), false);
-
-    arplearn_ip_entry_ht_ =
-            ht::factory(HAL_MAX_ARP_TRANS,
-                        hal::network::arptrans_get_ip_entry_key_func,
-                        hal::network::arptrans_compute_ip_entry_hash_func,
-                        hal::network::arptrans_compare_ip_entry_key_func);
-    HAL_ASSERT_RETURN((arplearn_ip_entry_ht_ != NULL), false);
-
-    // initialize dhcp learning related data structures
-    dhcplearn_key_ht_ =
-        ht::factory(HAL_MAX_DHCP_TRANS, hal::network::dhcptrans_get_key_func,
-                    hal::network::dhcptrans_compute_hash_func,
-                    hal::network::dhcptrans_compare_key_func);
-    HAL_ASSERT_RETURN((dhcplearn_key_ht_ != NULL), false);
-
-    dhcplearn_ip_entry_ht_ =
-            ht::factory(HAL_MAX_DHCP_TRANS,
-                        hal::network::dhcptrans_get_ip_entry_key_func,
-                        hal::network::dhcptrans_compute_ip_entry_hash_func,
-                        hal::network::dhcptrans_compare_ip_entry_key_func);
-    HAL_ASSERT_RETURN((dhcplearn_ip_entry_ht_ != NULL), false);
 
     return true;
 }
@@ -939,15 +909,6 @@ hal_mem_db::init(void)
     HAL_ASSERT_RETURN((nwsec_group_slab_ != NULL), false);
 
     
-    arplearn_slab_ = slab::factory("arpLearn", HAL_SLAB_ARP_LEARN,
-                                   sizeof(hal::network::arp_trans_t), 16, false,
-                                   true, true, true);
-    HAL_ASSERT_RETURN((arplearn_slab_ != NULL), false);
-
-    dhcplearn_slab_ = slab::factory("dhcpLearn", HAL_SLAB_DHCP_LEARN,
-                                    sizeof(hal::network::dhcp_trans_t), 16,
-                                    false, true, true, true);
-    HAL_ASSERT_RETURN((dhcplearn_slab_ != NULL), false);
     return true;
 }
 
@@ -1365,11 +1326,11 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         break;
 
     case HAL_SLAB_DHCP_LEARN:
-        g_hal_state->dhcplearn_slab()->free_(elem);
+        //dhcp_trans_t::dhcplearn_slab()->free_(elem);
         break;
 
     case HAL_SLAB_ARP_LEARN:
-        g_hal_state->arplearn_slab()->free_(elem);
+        //arp_trans_t::arplearn_slab()->free_(elem);
         break;
 
     case HAL_SLAB_EVENT_MAP:

@@ -16,8 +16,3 @@ cc_library(
     ],
     alwayslink = 1,
 )
-
-cc_library(
-    name = "classic_includes",
-    hdrs = ["classic_plugin.hpp"],
-)

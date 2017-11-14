@@ -1,6 +1,10 @@
 #include "proxy_plugin.hpp"
 #include "app_redir.hpp"
 
+extern "C" void __plugin_init() {
+    hal::proxy::init();
+}
+
 namespace hal {
 namespace proxy {
 

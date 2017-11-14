@@ -9,7 +9,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/ht.hpp"
 #include "nic/include/twheel.hpp"
-#include "nic/hal/plugins/network/ep_learn/common/trans.hpp"
+#include "../common/trans.hpp"
 
 #define HAL_MAX_DHCP_TRANS 512
 #define DHCP_TIMER_ID 255
@@ -91,12 +91,19 @@ struct dhcp_event_data {
 };
 
 class dhcp_trans_t : public trans_t  {
+public:public:
+    static ht *dhcplearn_key_ht(void) { return dhcplearn_key_ht_; }
+    static ht *dhcplearn_ip_entry_ht(void) { return dhcplearn_ip_entry_ht_; }
 private:
     dhcp_trans_key_t trans_key_;
     class dhcp_fsm_t;  // forward declaration.
     class dhcp_timer_t;  // Forward declaration.
     static dhcp_fsm_t* dhcp_fsm_;
     static trans_timer_t* dhcp_timer_;
+    static slab *dhcplearn_slab_;
+    static ht *dhcplearn_key_ht_;
+    static ht *dhcplearn_ip_entry_ht_;
+
     dhcp_ctx ctx_;
 
     dhcp_ip_entry_key_t ip_entry_key_;
@@ -130,7 +137,7 @@ private:
     static dhcp_trans_t* dhcp_trans_alloc(void) {
         dhcp_trans_t* dhcp_trans;
 
-        dhcp_trans = (dhcp_trans_t*)g_hal_state->dhcplearn_slab()->alloc();
+        dhcp_trans = (dhcp_trans_t*)dhcplearn_slab_->alloc();
         if (dhcp_trans == NULL) {
             return NULL;
         }
@@ -161,7 +168,7 @@ private:
     void operator delete(void* p) { dhcp_trans_free((dhcp_trans_t*)p); }
 
     static inline hal_ret_t dhcp_trans_free(dhcp_trans_t* dhcp_trans) {
-        g_hal_state->dhcplearn_slab()->free(dhcp_trans);
+        dhcplearn_slab_->free(dhcp_trans);
         return HAL_RET_OK;
     }
     dhcp_trans_key_t* trans_key_ptr() { return &trans_key_; }
@@ -174,11 +181,11 @@ private:
     //static void process_transaction(dhcp_trans_t* trans, dhcp_fsm_event_t event,
       //                              fsm_event_data data);
     static dhcp_trans_t* find_dhcptrans_by_id(dhcp_trans_key_t id) {
-        return (dhcp_trans_t*)g_hal_state->dhcplearn_key_ht()->lookup(&id);
+        return (dhcp_trans_t*)dhcplearn_key_ht_->lookup(&id);
     }
 
     static dhcp_trans_t* find_dhcptrans_by_handle(hal_handle_t handle) {
-        return (dhcp_trans_t*)g_hal_state->dhcplearn_ip_entry_ht()->lookup(
+        return (dhcp_trans_t*)dhcplearn_ip_entry_ht_->lookup(
             &handle);
     }
 

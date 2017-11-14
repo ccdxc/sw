@@ -58,6 +58,19 @@ void dhcp_ctx::init(struct packet* dhcp_packet) {
 dhcp_trans_t::dhcp_fsm_t *dhcp_trans_t::dhcp_fsm_ = new dhcp_fsm_t();
 dhcp_trans_t::trans_timer_t *dhcp_trans_t::dhcp_timer_ =
             new trans_timer_t(DHCP_TIMER_ID);
+slab *dhcp_trans_t::dhcplearn_slab_ = slab::factory("dhcpLearn", HAL_SLAB_DHCP_LEARN,
+                                sizeof(hal::network::dhcp_trans_t), 16,
+                                false, true, true, true);
+ht *dhcp_trans_t::dhcplearn_key_ht_ =
+    ht::factory(HAL_MAX_DHCP_TRANS, hal::network::dhcptrans_get_key_func,
+                hal::network::dhcptrans_compute_hash_func,
+                hal::network::dhcptrans_compare_key_func);
+
+ht *dhcp_trans_t::dhcplearn_ip_entry_ht_ =
+    ht::factory(HAL_MAX_DHCP_TRANS,
+                hal::network::dhcptrans_get_ip_entry_key_func,
+                hal::network::dhcptrans_compute_ip_entry_hash_func,
+                hal::network::dhcptrans_compare_ip_entry_key_func);
 
 #define INIT_TIMEOUT        120 * TIME_MSECS_PER_SEC
 #define SELECTING_TIMEOUT   120 * TIME_MSECS_PER_SEC
@@ -112,10 +125,10 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_discover(fsm_state_ctx ctx,
     dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
 
     dhcp_trans_t *existing_trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&dhcp_trans->trans_key_));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&dhcp_trans->trans_key_));
 
     if (existing_trans == nullptr) {
-        g_hal_state->dhcplearn_key_ht()->insert((void *)dhcp_trans,
+        dhcp_trans_t::dhcplearn_key_ht()->insert((void *)dhcp_trans,
                                                 &dhcp_trans->ht_ctxt_);
     }
 
@@ -143,10 +156,10 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_request(fsm_state_ctx ctx,
            sizeof(dhcp_ctx->server_identifer_));
 
     dhcp_trans_t *existing_trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&dhcp_trans->trans_key_));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&dhcp_trans->trans_key_));
 
     if (existing_trans == nullptr) {
-        g_hal_state->dhcplearn_key_ht()->insert((void *)dhcp_trans,
+        dhcp_trans_t::dhcplearn_key_ht()->insert((void *)dhcp_trans,
                                                 &dhcp_trans->ht_ctxt_);
     }
 
@@ -162,7 +175,7 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_request_after_bound(
      */
 
     /* Remove this IP reference as new IP will be retrieved. */
-    g_hal_state->dhcplearn_ip_entry_ht()->remove(&dhcp_trans->ip_entry_key_);
+    dhcp_trans_t::dhcplearn_ip_entry_ht()->remove(&dhcp_trans->ip_entry_key_);
     return this->process_dhcp_request(ctx, fsm_data);
 }
 
@@ -231,7 +244,7 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
 
     init_dhcp_ip_entry_key((uint8_t *)(&raw->yiaddr.s_addr), vrf->vrf_id,
                            &dhcp_trans->ip_entry_key_);
-    g_hal_state->dhcplearn_ip_entry_ht()->insert(
+    dhcp_trans_t::dhcplearn_ip_entry_ht()->insert(
         (void *)dhcp_trans, &dhcp_trans->ip_entry_ht_ctxt_);
     return true;
 }
@@ -243,7 +256,7 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_bound_timeout(fsm_state_ctx ctx,
      * TODO: Add HAL EP delete API Here.
      */
 
-    // g_hal_state->dhcplearn_ip_entry_ht()->remove(&dhcp_trans->ip_entry_key_);
+    // dhcp_trans_t::dhcplearn_ip_entry_ht()->remove(&dhcp_trans->ip_entry_key_);
     return true;
 }
 
@@ -284,8 +297,8 @@ void dhcp_trans_t::process_event(dhcp_fsm_event_t event, fsm_event_data data) {
 }
 
 dhcp_trans_t::~dhcp_trans_t() {
-    g_hal_state->dhcplearn_key_ht()->remove(&this->trans_key_);
-    g_hal_state->dhcplearn_ip_entry_ht()->remove(&this->ip_entry_key_);
+    dhcp_trans_t::dhcplearn_key_ht()->remove(&this->trans_key_);
+    dhcp_trans_t::dhcplearn_ip_entry_ht()->remove(&this->ip_entry_key_);
     this->sm_->stop_state_timer();
     delete this->sm_;
 }

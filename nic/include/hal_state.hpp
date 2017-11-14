@@ -139,14 +139,6 @@ public:
     void set_forwarding_mode(std::string modestr);
     hal_forwarding_mode_t forwarding_mode() { return forwarding_mode_; }
 
-    // get APIs for ARP entry state
-    ht *arplearn_key_ht(void) const { return arplearn_key_ht_; }
-    ht *arplearn_ip_entry_ht(void) const { return arplearn_ip_entry_ht_; }
-
-    // get APIs for DHCP entry state
-    ht *dhcplearn_key_ht(void) const { return dhcplearn_key_ht_; }
-    ht *dhcplearn_ip_entry_ht(void) const { return dhcplearn_ip_entry_ht_; }
-
 private:
     bool init(void);
     hal_cfg_db();
@@ -285,18 +277,6 @@ private:
         ht         *ipseccb_hal_handle_ht_;
     } __PACK__;
 
-    // ARP related state
-    struct {
-        ht *arplearn_key_ht_;
-        ht *arplearn_ip_entry_ht_;
-    } __PACK__;
-
-    // DHCP related state
-    struct {
-        ht *dhcplearn_key_ht_;
-        ht *dhcplearn_ip_entry_ht_;
-    } __PACK__;
-
     // CPU CB related config
     struct {
         ht         *cpucb_id_ht_;
@@ -405,8 +385,6 @@ public:
     slab *cpucb_slab(void) const { return cpucb_slab_; }
     slab *rawrcb_slab(void) const { return rawrcb_slab_; }
     slab *rawccb_slab(void) const { return rawccb_slab_; }
-    slab *arplearn_slab(void) const { return arplearn_slab_; }
-    slab *dhcplearn_slab(void) const { return dhcplearn_slab_; }
 
 private:
     bool init(void);
@@ -449,8 +427,6 @@ private:
     slab    *cpucb_slab_;
     slab    *rawrcb_slab_;
     slab    *rawccb_slab_;
-    slab    *arplearn_slab_;
-    slab    *dhcplearn_slab_;
 };
 
 //------------------------------------------------------------------------------
@@ -618,16 +594,6 @@ public:
     slab *rawccb_slab(void) const { return mem_db_->rawccb_slab(); }
     ht *rawccb_id_ht(void) const { return cfg_db_->rawccb_id_ht(); }
     ht *rawccb_hal_handle_ht(void) const { return cfg_db_->rawccb_hal_handle_ht(); }
-
-    // get APIs for Arp learn state
-    slab *arplearn_slab(void) const { return mem_db_->arplearn_slab(); }
-    ht *arplearn_key_ht(void) const { return cfg_db_->arplearn_key_ht(); }
-    ht *arplearn_ip_entry_ht(void) const { return cfg_db_->arplearn_ip_entry_ht(); }
-
-    // get APIs for DHCP learn state
-    slab *dhcplearn_slab(void) const { return mem_db_->dhcplearn_slab(); }
-    ht *dhcplearn_key_ht(void) const { return cfg_db_->dhcplearn_key_ht(); }
-    ht *dhcplearn_ip_entry_ht(void) const { return cfg_db_->dhcplearn_ip_entry_ht(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(std::string modestr) { 

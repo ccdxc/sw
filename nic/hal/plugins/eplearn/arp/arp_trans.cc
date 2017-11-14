@@ -53,6 +53,19 @@ bool arptrans_compare_ip_entry_key_func(void *key1, void *key2) {
 arp_trans_t::arp_fsm_t *arp_trans_t::arp_fsm_ = new arp_fsm_t();
 arp_trans_t::trans_timer_t *arp_trans_t::arp_timer_ =
         new trans_timer_t(ARP_TIMER_ID);
+slab *arp_trans_t::arplearn_slab_ =
+    slab::factory("arpLearn", HAL_SLAB_ARP_LEARN,
+                  sizeof(hal::network::arp_trans_t), 16, false,
+                  true, true, true);
+ht *arp_trans_t::arplearn_key_ht_ =
+    ht::factory(HAL_MAX_ARP_TRANS, hal::network::arptrans_get_key_func,
+                hal::network::arptrans_compute_hash_func,
+                hal::network::arptrans_compare_key_func);
+ht *arp_trans_t::arplearn_ip_entry_ht_ =
+    ht::factory(HAL_MAX_ARP_TRANS,
+                hal::network::arptrans_get_ip_entry_key_func,
+                hal::network::arptrans_compute_ip_entry_hash_func,
+                hal::network::arptrans_compare_ip_entry_key_func);
 
 #define INIT_TIMEOUT       120 * TIME_MSECS_PER_SEC
 #define SELECTING_TIMEOUT  120 * TIME_MSECS_PER_SEC
@@ -130,7 +143,7 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
     init_arp_ip_entry_key(trans->protocol_addr_, vrf->vrf_id, &ip_key);
 
     arp_trans_t *other_trans = reinterpret_cast<arp_trans_t *>(
-        g_hal_state->arplearn_ip_entry_ht()->lookup(&ip_key));
+        arp_trans_t::arplearn_ip_entry_ht()->lookup(&ip_key));
 
     if (other_trans != NULL) {
         arp_trans_t::process_transaction(other_trans, ARP_REMOVE, NULL);
@@ -140,8 +153,8 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
      * 2. Add a new entry for this EP.
      *  */
 
-    g_hal_state->arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
-    g_hal_state->arplearn_ip_entry_ht()->insert((void *)trans,
+    arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
+    arp_trans_t::arplearn_ip_entry_ht()->insert((void *)trans,
                                                 &trans->ip_entry_ht_ctxt_);
 
     return true;
@@ -176,8 +189,8 @@ void arp_trans_t::process_event(arp_fsm_event_t event, fsm_event_data data) {
 }
 
 arp_trans_t::~arp_trans_t() {
-    g_hal_state->arplearn_key_ht()->remove(&this->trans_key_);
-    g_hal_state->arplearn_ip_entry_ht()->remove(&this->ip_entry_key_);
+    arp_trans_t::arplearn_key_ht()->remove(&this->trans_key_);
+    arp_trans_t::arplearn_ip_entry_ht()->remove(&this->ip_entry_key_);
     /*
      * TODO : Also remove the IP entry from the associated EP as well.
      */

@@ -14,6 +14,7 @@ cc_library(
         "//nic/third-party/spdlog",
         "//nic/utils/list:list_includes",
     ],
+    alwayslink = 1,
 )
 
 cc_test(

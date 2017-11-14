@@ -57,6 +57,9 @@ hal:
 	$(MAKE) bazel-gtests
 	$(MAKE) post-make
 
+plugins:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/...
+
 capmodel:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_client
@@ -72,6 +75,7 @@ bazel-build:
 	$(MAKE) -C proto
 	$(MAKE) -j8 -C gen/proto/hal
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/...
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto:all
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //protos:all
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/hal:all
@@ -97,8 +101,8 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/twheel:twheel_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) fte:fte_test
 	# TODO: Revisit
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:dhcp_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:arp_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/eplearn:dhcp_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/eplearn:arp_test
 	# PD Utils
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/acl_tcam:acl_tcam_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/directmap:directmap_test
@@ -116,8 +120,8 @@ post-make:
 
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
-CMD_OPTS = cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf
-PD_CMD_OPTS = cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf
+CMD_OPTS = cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf HAL_PLUGIN_PATH=$(TOPDIR_ABS)/../bazel-bin/nic/hal/plugins
+PD_CMD_OPTS = cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf HAL_PLUGIN_PATH=$(TOPDIR_ABS)/../bazel-bin/nic/hal/plugins
 run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	# PI gtests
 	$(CMD_OPTS) ./nic/hal/test/gtests/acl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_test.xml"
@@ -143,8 +147,8 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/scheduler_tx_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/scheduler_tx_test.xml"
 
 	# Revisit as its failing intermittently in sanity
-	$(CMD_OPTS) ./nic/hal/plugins/network/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
-	$(CMD_OPTS) ./nic/hal/plugins/network/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
 	# PI Utils gtests
 	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
 	cd ../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"

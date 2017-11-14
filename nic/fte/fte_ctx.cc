@@ -655,6 +655,12 @@ ctx_t::update_flow(const flow_update_t& flowupd)
     return update_flow(flowupd, role());
 }
 
+#define LOG_FLOW_UPDATE(__updinfo) \
+    HAL_TRACE_DEBUG("fte::update_flow {}.{} feature={} ret={} {}={}",   \
+                    role,                                               \
+                    (role == hal::FLOW_ROLE_INITIATOR)? istage_ : rstage_, \
+                    feature_name_, ret, #__updinfo, flowupd.__updinfo)
+
 hal_ret_t
 ctx_t::update_flow(const flow_update_t& flowupd, 
                    const hal::flow_role_t role)
@@ -684,14 +690,12 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             //    valid_rflow_ = false;
             //}
         }
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} action={}",
-                        role, feature_name_, ret, flowupd.action);
+        LOG_FLOW_UPDATE(action);
         break;
 
     case FLOWUPD_HEADER_REWRITE:
         ret = flow->header_rewrite(flowupd.header_rewrite);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_rewrite={}",
-                        role, feature_name_, ret, flowupd.header_rewrite);
+        LOG_FLOW_UPDATE(header_rewrite);
         if (ret == HAL_RET_OK) {
             // check if dep needs to be updated
             ret = update_for_dnat(role, flowupd.header_rewrite);
@@ -700,26 +704,22 @@ ctx_t::update_flow(const flow_update_t& flowupd,
 
     case FLOWUPD_HEADER_PUSH:
         ret = flow->header_push(flowupd.header_push);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_push={}",
-                        role, feature_name_, ret, flowupd.header_push);
+        LOG_FLOW_UPDATE(header_push);
         break;
 
     case FLOWUPD_HEADER_POP:
         ret = flow->header_pop(flowupd.header_pop);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_pop={}",
-                        role, feature_name_, ret, flowupd.header_pop);
+        LOG_FLOW_UPDATE(header_pop);
         break;
 
     case FLOWUPD_FLOW_STATE:
         ret = flow->set_flow_state(flowupd.flow_state);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} flow_state={}",
-                        role, feature_name_, ret, flowupd.flow_state);
+        LOG_FLOW_UPDATE(flow_state);
         break;
 
     case FLOWUPD_FWDING_INFO:
         ret = flow->set_fwding(flowupd.fwding);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} fwding_info={}",
-                        role, feature_name_, ret, flowupd.fwding);
+        LOG_FLOW_UPDATE(fwding);
         if (flowupd.fwding.dif) {
             dif_ = flowupd.fwding.dif;
         }
@@ -730,19 +730,16 @@ ctx_t::update_flow(const flow_update_t& flowupd,
 
     case FLOWUPD_KEY:
         ret = flow->set_key(flowupd.key);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} key={}",
-                        role, feature_name_, ret, flowupd.key);
+        LOG_FLOW_UPDATE(key);
         break;
 
     case FLOWUPD_MCAST_COPY:
         ret = flow->set_mcast_info(flowupd.mcast_info);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} mcast_info={}",
-                        role, feature_name_, ret, flowupd.mcast_info);
+        LOG_FLOW_UPDATE(mcast_info);
         break;
     case FLOWUPD_INGRESS_INFO:
         ret = flow->set_ingress_info(flowupd.ingress_info);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} ingress_info={}",
-                        role, feature_name_, ret, flowupd.ingress_info);
+        LOG_FLOW_UPDATE(ingress_info);
         break;
     }
 
@@ -759,7 +756,7 @@ ctx_t::advance_to_next_stage() {
     } else if (rflow_[rstage_]->valid_fwding()){
         HAL_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
         rstage_++;
-        HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", rstage_);
+        HAL_TRACE_DEBUG("fte: advancing to next rflow stage {}", rstage_);
     }
     return HAL_RET_OK;
 }

@@ -1,9 +1,9 @@
-#include "ep_learn/arp/arp_learn.hpp"
-#include "ep_learn/dhcp/dhcp_learn.hpp"
-#include "net_plugin.hpp"
+#include "nic/fte/fte.hpp"
+#include "arp/arp_learn.hpp"
+#include "dhcp/dhcp_learn.hpp"
 
 namespace hal {
-namespace net {
+namespace network {
 
 fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
     hal_ret_t ret;

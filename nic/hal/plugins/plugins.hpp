@@ -2,9 +2,8 @@
 
 #include "nic/include/base.h"
 #include "nic/include/fte.hpp"
-#include "nic/hal/plugins/classic/classic_plugin.hpp"
-#include "nic/hal/plugins/network/net_plugin.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
+#include <dlfcn.h>
 
 namespace hal {
 
@@ -149,14 +148,49 @@ inline hal_ret_t register_classic_nic_pipelines() {
     return HAL_RET_OK;
 }
 
+inline hal_ret_t plugin_init(const std::string &path, const char *so) {
+    std::string sopath = path + "/" + std::string(so);
+
+    HAL_TRACE_INFO("plugin:{} loading {}", so, sopath);
+    void *handle = dlopen(sopath.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND);
+    if (!handle) {
+        HAL_TRACE_ERR("plugin:{} dlopen failed {}", so, dlerror());
+        return HAL_RET_ERR;
+    }
+
+    typedef void (*init_t)();
+
+    init_t init = (init_t) dlsym(handle, "__plugin_init");
+    const char *dlsym_error = dlerror();
+    if (dlsym_error) {
+        HAL_TRACE_ERR("plugin:{} cannot load symbol '__plugin_init': {}", so, dlsym_error);
+        dlclose(handle);
+        return HAL_RET_ERR;
+    }
+
+    HAL_TRACE_DEBUG("plugin:{} initializing...", so);
+    init();
+    return HAL_RET_OK;
+}
+
 inline hal_ret_t init_plugins(bool classic_nic) {
     fte::init();
-
+    std::string plugin_path;
+    const char *path = std::getenv("HAL_PLUGIN_PATH");
+    if (path) {
+        plugin_path = std::string(path);
+    } else {
+        path = std::getenv("HAL_CONFIG_PATH");
+        HAL_ASSERT(path);
+        plugin_path = std::string(path) + std::string("/../../bazel-bin/nic/hal/plugins/");
+    }
     if (classic_nic) {
-        hal::classic::init();
+        plugin_init(plugin_path, "classic/libclassic.so");
         return hal::register_classic_nic_pipelines();
     } else {
-        hal::net::init();
+        plugin_init(plugin_path, "network/libnetwork.so");
+        plugin_init(plugin_path, "network/alg/libalg.so");
+        plugin_init(plugin_path, "eplearn/libeplearn.so");
         hal::proxy::init();
         return hal::register_pipelines();
     }

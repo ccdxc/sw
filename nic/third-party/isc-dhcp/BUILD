@@ -33,4 +33,5 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
     ],
+    alwayslink = 1,
 )

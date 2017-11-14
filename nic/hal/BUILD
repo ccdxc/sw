@@ -13,6 +13,7 @@ cc_binary(
         "-pthread",
         "-lz",
         "-lprotobuf",
+        "-rdynamic",
     ],
     deps = [
         ":hal_src",
@@ -22,14 +23,13 @@ cc_binary(
         "//nic/hal/svc:hal_svc",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/hal/plugins/network:network",
-        "//nic/hal/plugins/classic:classic",
-        "//nic/hal/plugins/proxy:proxyplugin",
         "//nic/utils/host_mem:host_mem",
+        "//nic/hal/plugins/proxy:proxyplugin",
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",
         "//nic:halproto",
         "//nic:grpc",
+        "//nic/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
 
         # PD
         "//nic/hal/pd/common:pdcommon",
@@ -81,7 +81,6 @@ cc_library(
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         "//nic/hal/plugins:plugins_includes",
         "//nic/hal/plugins/network:network_includes",
-        "//nic/hal/plugins/classic:classic_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/utils/thread:thread",

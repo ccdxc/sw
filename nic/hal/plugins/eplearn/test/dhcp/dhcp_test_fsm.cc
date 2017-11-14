@@ -2,9 +2,9 @@
 #include <gtest/gtest.h>
 #include "nic/include/twheel.hpp"
 // clang-format off
-#include "nic/hal/plugins/network/ep_learn/dhcp/dhcp_packet.hpp"
-#include "nic/hal/plugins/network/ep_learn/dhcp/dhcp_learn.hpp"
-#include "nic/include/dhcp_trans.hpp"
+#include "nic/hal/plugins/eplearn/dhcp/dhcp_packet.hpp"
+#include "nic/hal/plugins/eplearn/dhcp/dhcp_learn.hpp"
+#include "nic/hal/plugins/eplearn/dhcp/dhcp_trans.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 
@@ -252,7 +252,7 @@ static void setup_basic_dhcp_session(uint32_t xid, unsigned char *chaddr,
         dhcp_packet_send(DHCP::Flags::DISCOVER, xid, chaddr);
 
         dhcp_trans_t *trans = reinterpret_cast<dhcp_trans_t *>(
-            g_hal_state->dhcplearn_key_ht()->lookup(&key));
+            dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
         ASSERT_TRUE(trans != NULL);
 
         ctx = trans->get_ctx();
@@ -261,7 +261,7 @@ static void setup_basic_dhcp_session(uint32_t xid, unsigned char *chaddr,
 
         dhcp_packet_send(DHCP::Flags::OFFER, xid, chaddr);
         trans = reinterpret_cast<dhcp_trans_t *>(
-            g_hal_state->dhcplearn_key_ht()->lookup(&key));
+            dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
         ASSERT_TRUE(trans != NULL);
         ctx = trans->get_ctx();
         ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, 16), 0);
@@ -277,7 +277,7 @@ static void setup_basic_dhcp_session(uint32_t xid, unsigned char *chaddr,
     dhcp_packet_send(DHCP::Flags::REQUEST, xid, chaddr, NULL, &options);
 
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, 16), 0);
@@ -300,7 +300,7 @@ static void setup_basic_dhcp_session(uint32_t xid, unsigned char *chaddr,
     options.push_back(rebinding_time_opt);
     dhcp_packet_send(DHCP::Flags::ACK, xid, chaddr, ip_addr, &options);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     ASSERT_EQ(trans->get_state(), hal::network::DHCP_BOUND);
     ctx = trans->get_ctx();
@@ -319,7 +319,7 @@ static void setup_basic_dhcp_session(uint32_t xid, unsigned char *chaddr,
     dhcp_trans_t::init_dhcp_ip_entry_key((uint8_t *)(&(yiaddr.s_addr)),
                                             dummy_ten->vrf_id, &ip_key);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_ip_entry_ht()->lookup(&ip_key));
+        dhcp_trans_t::dhcplearn_ip_entry_ht()->lookup(&ip_key));
     ASSERT_TRUE(trans != NULL);
 }
 
@@ -332,11 +332,11 @@ TEST_F(dhcp_fsm_test, dhcp_basic_discover_request_offer) {
 
     setup_basic_dhcp_session(xid, chaddr);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     delete trans;
-    ASSERT_EQ(g_hal_state->dhcplearn_key_ht()->num_entries(), 0);
-    ASSERT_EQ(g_hal_state->dhcplearn_ip_entry_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }
 
 TEST_F(dhcp_fsm_test, dhcp_basic_request) {
@@ -348,11 +348,11 @@ TEST_F(dhcp_fsm_test, dhcp_basic_request) {
 
     setup_basic_dhcp_session(xid, chaddr, false);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     delete trans;
-    ASSERT_EQ(g_hal_state->dhcplearn_key_ht()->num_entries(), 0);
-    ASSERT_EQ(g_hal_state->dhcplearn_ip_entry_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }
 
 TEST_F(dhcp_fsm_test, dhcp_basic_request_release) {
@@ -374,10 +374,10 @@ TEST_F(dhcp_fsm_test, dhcp_basic_request_release) {
 
     dhcp_packet_send(DHCP::Flags::RELEASE, xid, chaddr, NULL, &options);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans == NULL);
-    ASSERT_EQ(g_hal_state->dhcplearn_key_ht()->num_entries(), 0);
-    ASSERT_EQ(g_hal_state->dhcplearn_ip_entry_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }
 
 TEST_F(dhcp_fsm_test, dhcp_inform) {
@@ -399,7 +399,7 @@ TEST_F(dhcp_fsm_test, dhcp_inform) {
     dhcp_packet_send(DHCP::Flags::INFORM, xid, chaddr, NULL, &options);
 
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, 16), 0);
@@ -408,11 +408,11 @@ TEST_F(dhcp_fsm_test, dhcp_inform) {
                      server_identifier.size()),
               0);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     delete trans;
-    ASSERT_EQ(g_hal_state->dhcplearn_key_ht()->num_entries(), 0);
-    ASSERT_EQ(g_hal_state->dhcplearn_ip_entry_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }
 
 TEST_F(dhcp_fsm_test, dhcp_inform_decline) {
@@ -435,7 +435,7 @@ TEST_F(dhcp_fsm_test, dhcp_inform_decline) {
     dhcp_packet_send(DHCP::Flags::INFORM, xid, chaddr, NULL, &options);
 
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, 16), 0);
@@ -446,10 +446,10 @@ TEST_F(dhcp_fsm_test, dhcp_inform_decline) {
 
     dhcp_packet_send(DHCP::Flags::DECLINE, xid, chaddr);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans == NULL);
-    ASSERT_EQ(g_hal_state->dhcplearn_key_ht()->num_entries(), 0);
-    ASSERT_EQ(g_hal_state->dhcplearn_ip_entry_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }
 
 TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
@@ -475,7 +475,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
     dhcp_packet_send(DHCP::Flags::REQUEST, xid, chaddr, NULL, &options);
 
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, 16), 0);
@@ -497,7 +497,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
     options.push_back(rebinding_time_opt);
     dhcp_packet_send(DHCP::Flags::ACK, xid, chaddr, ip_addr, &options);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     ASSERT_EQ(trans->get_state(), hal::network::DHCP_BOUND);
 
@@ -506,11 +506,11 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
     dhcp_trans_t::init_dhcp_ip_entry_key((uint8_t *)(&(yiaddr.s_addr)),
             dummy_ten->vrf_id, &ip_key);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_ip_entry_ht()->lookup(&ip_key));
+        dhcp_trans_t::dhcplearn_ip_entry_ht()->lookup(&ip_key));
     ASSERT_TRUE(trans != NULL);
     delete trans;
-    ASSERT_EQ(g_hal_state->dhcplearn_key_ht()->num_entries(), 0);
-    ASSERT_EQ(g_hal_state->dhcplearn_ip_entry_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }
 
 TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_nack) {
@@ -534,7 +534,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_nack) {
     dhcp_packet_send(DHCP::Flags::REQUEST, xid, chaddr, NULL, &options);
 
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, 16), 0);
@@ -556,10 +556,10 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_nack) {
     options.push_back(rebinding_time_opt);
     dhcp_packet_send(DHCP::Flags::NAK, xid, chaddr, ip_addr, &options);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans == NULL);
-    ASSERT_EQ(g_hal_state->dhcplearn_key_ht()->num_entries(), 0);
-    ASSERT_EQ(g_hal_state->dhcplearn_ip_entry_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }
 
 TEST_F(dhcp_fsm_test, dhcp_basic_bound_timeout) {
@@ -571,16 +571,16 @@ TEST_F(dhcp_fsm_test, dhcp_basic_bound_timeout) {
 
     setup_basic_dhcp_session(xid, chaddr);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
 
     sleep(1);
     hal::periodic::g_twheel->tick(trans->get_current_state_timeout() + 100);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
-        g_hal_state->dhcplearn_key_ht()->lookup(&key));
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans == NULL);
-    ASSERT_EQ(g_hal_state->dhcplearn_key_ht()->num_entries(), 0);
-    ASSERT_EQ(g_hal_state->dhcplearn_ip_entry_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
 }
 

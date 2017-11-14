@@ -9,7 +9,7 @@
 #include "nic/include/ht.hpp"
 #include "nic/include/twheel.hpp"
 #include "nic/include/periodic.hpp"
-#include "nic/hal/plugins/network/ep_learn/common/trans.hpp"
+#include "../common/trans.hpp"
 
 #define HAL_MAX_ARP_TRANS 512
 #define ARP_TIMER_ID 254
@@ -60,6 +60,10 @@ struct arp_event_data_t {
 };
 
 class arp_trans_t : public trans_t {
+public:
+    static ht *arplearn_key_ht(void) { return arplearn_key_ht_; }
+    static ht *arplearn_ip_entry_ht(void) { return arplearn_ip_entry_ht_; }
+
 private:
     arp_trans_key_t trans_key_;
     uint8_t hw_addr_[ETHER_ADDR_LEN]; /* hardware address */
@@ -73,6 +77,10 @@ private:
     class arp_timer_t;  // Forward declaration.
     static arp_fsm_t *arp_fsm_;
     static trans_timer_t *arp_timer_;
+
+    static slab *arplearn_slab_;
+    static ht *arplearn_key_ht_;
+    static ht *arplearn_ip_entry_ht_;
 
     class arp_fsm_t {
         void _init_state_machine();
@@ -91,7 +99,7 @@ private:
     static arp_trans_t *arp_trans_alloc(void) {
         arp_trans_t *arp_trans;
 
-        arp_trans = (arp_trans_t *)g_hal_state->arplearn_slab()->alloc();
+        arp_trans = (arp_trans_t *)arplearn_slab_->alloc();
         if (arp_trans == NULL) {
             return NULL;
         }
@@ -117,7 +125,7 @@ private:
 
     static hal_ret_t arp_trans_free(arp_trans_t *arp_trans) {
         //HAL_SPINLOCK_DESTROY(&arp_trans->slock_);
-        g_hal_state->arplearn_slab()->free(arp_trans);
+        arplearn_slab_->free(arp_trans);
         return HAL_RET_OK;
     }
 
@@ -137,11 +145,11 @@ private:
                                              arp_ip_entry_key_t *ip_entry_key);
 
     static inline arp_trans_t *find_arptrans_by_id(arp_trans_key_t id) {
-        return (arp_trans_t *)g_hal_state->arplearn_key_ht()->lookup(&id);
+        return (arp_trans_t *)arplearn_key_ht_->lookup(&id);
     }
 
     static inline arp_trans_t *find_arptrans_by_handle(hal_handle_t handle) {
-        return (arp_trans_t *)g_hal_state->arplearn_ip_entry_ht()->lookup(
+        return (arp_trans_t *)arplearn_ip_entry_ht_->lookup(
             &handle);
     }
 
