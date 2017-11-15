@@ -15,6 +15,7 @@
 #include "dol/test/storage/nvme.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/r2n.hpp"
+#include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/xts.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
@@ -2284,12 +2285,14 @@ int test_rdma_write_cmd(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   if (!ssd_cmd || !ssd_index) {
     return -1;
   }
+#if 0
 
   // Consume entry in SSD queue
   if (consume_ssd_entry(ssd_q, ssd_cmd, ssd_index) < 0) {
     printf("can't init and consume r2n/ssd entries \n");
     return -1;
   }
+#endif
 
   // Kickstart the sequencer
   rc = test_seq_write_roce(seq_pdma_q, seq_roce_q, pvm_roce_sq, 
@@ -2302,4 +2305,73 @@ int test_rdma_write_cmd(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   return 0;
 }
 
+int test_run_rdma_write_cmd() {
+  uint16_t ssd_handle = 1; // the SSD handle
+  uint32_t ssd_q = 19; // the actual pvm queue
+  uint8_t *ssd_cmd = NULL;
+  uint8_t *nvme_cmd = NULL;
+  uint16_t ssd_index;
+  int rc;
+
+  StartRoceSeq(ssd_handle, ssd_q, &ssd_cmd, &ssd_index, &nvme_cmd);
+  printf("Started sequencer to PDMA + send over ROCE \n");
+
+  sleep(6);
+
+  printf("NVME command \n");
+  utils::dump(nvme_cmd);
+
+  printf("SSD command \n");
+  utils::dump(ssd_cmd);
+
+  // Check the command ids
+  rc = tests::check_ignore_cid(nvme_cmd, ssd_cmd,  sizeof(struct NvmeCmd));
+
+  // rc could be <, ==, > 0. We need to return -1 from this API on error.
+  return (rc ? -1 : 0);
+}
+
+int test_run_rdma_e2e_write() {
+  uint16_t ssd_handle = 2; // the SSD handle
+  uint32_t ssd_q = 20; // the actual pvm queue
+  uint8_t *ssd_cmd = NULL;
+  uint8_t *cmd_buf = NULL;
+  uint16_t ssd_index;
+  int rc;
+
+
+  StartRoceSeq(ssd_handle, ssd_q, &ssd_cmd, &ssd_index, &cmd_buf);
+  printf("Started sequencer to PDMA + send over ROCE \n");
+
+  struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
+  printf("Dumping NVME command sent \n");
+  utils::dump(cmd_buf);
+
+  sleep(6);
+
+  uint8_t *rcv_buf = (uint8_t *) rdma_get_initiator_rcv_buf();
+  printf("Dumping initator rcv buf which contains NVME status \n");
+  utils::dump(rcv_buf);
+
+  // Process the status
+  struct NvmeStatus *nvme_status = 
+              (struct NvmeStatus *) (rcv_buf + kR2nStatusNvmeOffset);
+  printf("nvme status: cid %x, sq head %x, status_phase %x \n", 
+         nvme_status->dw3.cid, nvme_status->dw2.sq_head, 
+         nvme_status->dw3.status_phase);
+  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid || 
+      NVME_STATUS_GET_STATUS(*nvme_status)) {
+    rc = -1;
+    printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n", 
+           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
+           nvme_cmd->dw0.cid);
+  } else {
+    rc = 0;
+  }
+
+  PostTargetRcvBuf1();
+  PostInitiatorRcvBuf1();
+
+  return rc;
+}
 }  // namespace tests

@@ -300,7 +300,7 @@ int setup_roce_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   }
   utils::write_bit_fields(q_state, 292, 11, rsq_lif);
   utils::write_bit_fields(q_state, 303, 3, rsq_qtype);
-  utils::write_bit_fields(q_state, 330, 24, rsq_qid);
+  utils::write_bit_fields(q_state, 306, 24, rsq_qid);
 
   //utils::dump(q_state);
 

@@ -120,7 +120,8 @@ cc_library(
     name= "tests",
     srcs = [
         "tests.cc",
-        "tests.hpp",
+	"tests.hpp",
+        "rdma.hpp",
         "queues.cc",
         "queues.hpp",
         "nvme.hpp",

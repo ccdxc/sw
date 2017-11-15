@@ -26,12 +26,6 @@ storage_tx_nvme_be_wqe_release_start:
    // Write the bitmap back to the table 
    tbland       d.bitmap, r2
 
-   // Setup the DMA command to push the NVME backend status entry. For now keep 
-   // the destination address to be 0 (in GPR r0). Set this correctly in the
-   // next stage.
-   DMA_PHV2MEM_SETUP(nvme_be_sta_hdr_time_us, nvme_sta_status, r0, 
-                     dma_p2m_1)
-
    seq		c1, STORAGE_KIVEC0_IS_REMOTE, 1
    bcf		![c1], push_r2n_status
    nop
@@ -42,6 +36,12 @@ storage_tx_nvme_be_wqe_release_start:
                              storage_tx_pvm_roce_sq_cb_push_start)
 
 push_r2n_status:
+   // Setup the DMA command to push the NVME backend status entry. For now keep 
+   // the destination address to be 0 (in GPR r0). Set this correctly in the
+   // next stage.
+   DMA_PHV2MEM_SETUP(nvme_be_sta_hdr_time_us, nvme_sta_status, r0, 
+                     dma_p2m_1)
+
    // Set the table and program address to push status to local R2N CQ
    LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
                              storage_tx_pci_q_state_push_start)

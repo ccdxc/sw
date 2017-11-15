@@ -109,6 +109,10 @@ int test_rdma_write_cmd(uint32_t seq_pdma_q, uint32_t seq_roce_q,
 			uint64_t roce_wqe_addr, uint32_t roce_wqe_size,
                         uint32_t ssd_q, uint8_t **ssd_cmd, uint16_t *ssd_index);
 
+int test_run_rdma_write_cmd();
+
+int test_run_rdma_e2e_write();
+
 struct TestEntry {
   std::function<int(void)> test_fn;
   const std::string test_name;

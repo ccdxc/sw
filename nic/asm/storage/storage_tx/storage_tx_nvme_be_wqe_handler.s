@@ -69,19 +69,21 @@ check_remote:
 
    // Push RDMA write descriptor from R2N buffer to the ROCE SQ
    // Source (DMA command 3) is the write descriptor from R2N buffer. 
-   // Destination (DMA command 4) to be set by the push operation.
+   // Destination address (in DMA command 4) to be set by the push operation.
    addi		r7, r6, R2N_BUF_WRITE_REQ_OFFSET
    addi		r5, r0, ROCE_SQ_WQE_SIZE
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r7, r5, r0, r0, dma_m2m_3)
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_4)
 
    
    // Push status descriptor (RDMA send) from R2N buffer to the ROCE SQ
 push_remote_status:
    // Source (DMA command 5) is the status  descriptor from R2N buffer. 
-   // Destination (DMA command 6) to be set by the push operation.
+   // Destination address (in DMA command 6) to be set by the push operation.
    addi		r7, r6, R2N_BUF_STATUS_REQ_OFFSET
    addi		r5, r0, ROCE_SQ_WQE_SIZE
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r7, r5, r0, r0, dma_m2m_5)
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_6)
 
    // Jump to loading the tables
    b		load_tbl

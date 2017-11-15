@@ -39,7 +39,7 @@ storage_tx_pvm_roce_sq_cb_push_start:
    QUEUE_PUSH_ADDR(d.base_addr, r6, d.entry_size)
 
    // DMA command address update to store the destination address
-   DMA_ADDR_UPDATE(r7, dma_p2m_4)
+   DMA_ADDR_UPDATE(r7, dma_m2m_4)
    // HACK: This is because RDMA base address is only 32 bits and we are 
    //       passing a host based queue here
    // TODO: Fix this and remove hack after we resolve this with RDMA folks
@@ -69,7 +69,7 @@ push_status:
    QUEUE_PUSH_ADDR(d.base_addr, r6, d.entry_size)
 
    // DMA command address update to store the destination address
-   DMA_ADDR_UPDATE(r7, dma_p2m_6)
+   DMA_ADDR_UPDATE(r7, dma_m2m_6)
    // HACK: This is because RDMA base address is only 32 bits and we are 
    //       passing a host based queue here
    // TODO: Fix this and remove hack after we resolve this with RDMA folks
