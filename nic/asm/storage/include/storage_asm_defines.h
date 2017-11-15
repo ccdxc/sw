@@ -499,8 +499,8 @@
    
 
 #define R2N_WQE_BASE_COPY						\
-   phvwr 	p.{r2n_wqe_handle...r2n_wqe_db_index},			\
-		d.{handle...db_index};					\
+   phvwr 	p.{r2n_wqe_handle...r2n_wqe_dst_qaddr},			\
+		d.{handle...dst_qaddr};					\
 
 #define R2N_WQE_FULL_COPY						\
    phvwr 	p.{r2n_wqe_handle...r2n_wqe_nvme_cmd_cid},		\

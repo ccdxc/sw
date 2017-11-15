@@ -10,6 +10,10 @@ int test_setup();
 
 int check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size);
 
+int form_read_cmd_no_buf(uint8_t *nvme_cmd);
+
+int form_write_cmd_no_buf(uint8_t *nvme_cmd);
+
 int test_run_nvme_pvm_admin_cmd();
 
 int test_run_nvme_pvm_read_cmd();
@@ -99,11 +103,7 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
 			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
 			uint64_t roce_wqe_addr, uint32_t roce_wqe_size);
 
-int test_rdma_write_cmd(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
-			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
-			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
-			uint64_t roce_wqe_addr, uint32_t roce_wqe_size,
-                        uint32_t ssd_q, uint8_t **ssd_cmd, uint16_t *ssd_index);
+int test_run_rdma_e2e_write();
 
 struct TestEntry {
   std::function<int(void)> test_fn;

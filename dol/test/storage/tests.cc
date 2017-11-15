@@ -15,6 +15,7 @@
 #include "dol/test/storage/nvme.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/r2n.hpp"
+#include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/xts.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
@@ -468,6 +469,30 @@ int form_write_cmd_with_hbm_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
   write_cmd->nsid = kDefaultNsid; 
   write_cmd->slba = slba;
   write_cmd->dw12.nlb = nlb;
+
+  return 0;
+}
+
+int form_read_cmd_no_buf(uint8_t *nvme_cmd)
+{
+  struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
+  read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
+  read_cmd->dw0.cid = get_next_cid(); 
+  read_cmd->nsid = kDefaultNsid; 
+  read_cmd->slba = get_next_slba();
+  read_cmd->dw12.nlb = kDefaultNlb;
+
+  return 0;
+}
+
+int form_write_cmd_no_buf(uint8_t *nvme_cmd)
+{
+  struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
+  write_cmd->dw0.cid = get_next_cid(); 
+  write_cmd->nsid = kDefaultNsid; 
+  write_cmd->slba = get_next_slba();
+  write_cmd->dw12.nlb = kDefaultNlb;
 
   return 0;
 }
@@ -2249,33 +2274,44 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   return 0;
 }
 
-int test_rdma_write_cmd(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
-			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
-			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
-			uint64_t roce_wqe_addr, uint32_t roce_wqe_size,
-                        uint32_t ssd_q, uint8_t **ssd_cmd, uint16_t *ssd_index) {
-
+int test_run_rdma_e2e_write() {
+  uint16_t ssd_handle = 2; // the SSD handle
+  uint8_t *cmd_buf = NULL;
   int rc;
 
-  if (!ssd_cmd || !ssd_index) {
-    return -1;
+
+  StartRoceSeq(ssd_handle, get_next_byte(), &cmd_buf);
+  printf("Started sequencer to PDMA + send over ROCE \n");
+
+  struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
+  //printf("Dumping NVME command sent \n");
+  //utils::dump(cmd_buf);
+
+  sleep(6);
+
+  uint8_t *rcv_buf = (uint8_t *) rdma_get_initiator_rcv_buf();
+  //printf("Dumping initator rcv buf which contains NVME status \n");
+  //utils::dump(rcv_buf);
+
+  // Process the status
+  struct NvmeStatus *nvme_status = 
+              (struct NvmeStatus *) (rcv_buf + kR2nStatusNvmeOffset);
+  printf("nvme status: cid %x, sq head %x, status_phase %x \n", 
+         nvme_status->dw3.cid, nvme_status->dw2.sq_head, 
+         nvme_status->dw3.status_phase);
+  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid || 
+      NVME_STATUS_GET_STATUS(*nvme_status)) {
+    rc = -1;
+    printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n", 
+           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
+           nvme_cmd->dw0.cid);
+  } else {
+    rc = 0;
   }
 
-  // Consume entry in SSD queue
-  if (consume_ssd_entry(ssd_q, ssd_cmd, ssd_index) < 0) {
-    printf("can't init and consume r2n/ssd entries \n");
-    return -1;
-  }
+  PostTargetRcvBuf1();
+  PostInitiatorRcvBuf1();
 
-  // Kickstart the sequencer
-  rc = test_seq_write_roce(seq_pdma_q, seq_roce_q, pvm_roce_sq, 
-                           pdma_src_addr, pdma_dst_addr, pdma_data_size,
-			   roce_wqe_addr, roce_wqe_size);
-  if (rc < 0) {
-    printf("can't send RDMA command over Sequencer and ROCE \n");
-    return rc;
-  }
-  return 0;
+  return rc;
 }
-
 }  // namespace tests

@@ -25,6 +25,11 @@ int rdma_init();
 
 void rdma_uspace_test();
 
-int test_run_rdma_write_cmd();
+void *rdma_get_initiator_rcv_buf();
+
+void PostTargetRcvBuf1();
+void PostInitiatorRcvBuf1();
+
+int StartRoceSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd);
 
 #endif  // _RDMA_HPP_

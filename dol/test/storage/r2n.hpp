@@ -130,6 +130,11 @@ typedef struct r2n_wqe_ {
 
 void *r2n_buf_alloc();
 
+void r2n_nvme_be_cmd_buf_init(void *nvme_cmd_buf, void *r2n_buf,
+                              uint32_t src_queue_id, uint16_t ssd_handle, 
+                              uint8_t io_priority, uint8_t is_read, 
+                              uint8_t is_local, uint8_t **nvme_cmd_ptr);
+
 void r2n_nvme_be_cmd_init(void *r2n_buf, uint32_t src_queue_id, uint16_t ssd_handle,
                           uint8_t io_priority, uint8_t is_read, uint8_t is_local);
 

@@ -50,6 +50,9 @@ const uint32_t	kRoceEntrySize	 = 6; // Default is 64 bytes
 const uint32_t	kRoceNumEntries	 = 6; // Default is 64 entries
 const uint32_t kPvmRoceSqXlateTblSize	= (64 * 64); // 64 SQs x 64 bytes each
 
+const uint32_t kWritaDataSize = 4096;
+const uint32_t kR2NDataBufOffset = 4096;
+
 const uint32_t kMaxRDMAKeys = 64;
 const uint32_t kMaxRDMAPTEntries = 64;
 const uint32_t kSQType = 0;
@@ -73,8 +76,9 @@ uint64_t pvm_roce_sq_xlate_addr;
 uint64_t g_rdma_hw_lif_id;
 uint64_t g_l2seg_handle;
 uint64_t g_enic1_handle, g_enic2_handle;
-uint32_t g_rdma_pvm_roce_sq;
-uint32_t g_rdma_pvm_roce_cq;
+uint32_t g_rdma_pvm_roce_init_sq;
+uint32_t g_rdma_pvm_roce_tgt_sq;
+uint32_t g_rdma_pvm_roce_tgt_cq;
 
 }  // anonymous namespace
 
@@ -275,9 +279,12 @@ const uint32_t kTargetRcvBuf1LKey = 7;
 const uint32_t kTargetRcvBuf1RKey = 8;
 // R2N Buf
 const uint32_t kR2NBufLKey = 9;
+// Initiator side recv buffers
+const uint32_t kInitiatorRcvBuf1LKey = 10;
+const uint32_t kInitiatorRcvBuf1RKey = 11;
 
 // TODO: Fix this to at least 8K
-const uint32_t kR2NBufSize = (1 * 4096);
+const uint32_t kR2NBufSize = (2 * 4096);
 
 const uint16_t kSQWQESize = 64;
 const uint16_t kRQWQESize = 64;
@@ -290,6 +297,8 @@ void *initiator_sq_va;
 void *initiator_rq_va;
 uint16_t initiator_cq_cindex = 0;
 uint16_t initiator_sq_pindex = 0;
+uint16_t initiator_rq_pindex = 0;
+void *initiator_rcv_buf1_va;
 
 
 void *target_cq_va;
@@ -312,6 +321,8 @@ void AllocHostMem() {
   assert((target_sq_va = alloc_page_aligned_host_mem(4096)) != nullptr);
   assert((target_rq_va = alloc_page_aligned_host_mem(4096)) != nullptr);
   assert((target_rcv_buf1_va = alloc_page_aligned_host_mem(kR2NBufSize)) != nullptr);
+  assert((initiator_rq_va = alloc_page_aligned_host_mem(4096)) != nullptr);
+  assert((initiator_rcv_buf1_va = alloc_page_aligned_host_mem(kR2NBufSize)) != nullptr);
 }
 
 void RdmaMemRegister(void *va, uint64_t pa, uint32_t len, uint32_t lkey,
@@ -332,7 +343,12 @@ void RdmaMemRegister(void *va, uint64_t pa, uint32_t len, uint32_t lkey,
     mr->set_ac_remote_rd(true);
   }
   mr->set_hostmem_pg_size(4096);
-  mr->add_va_pages_phy_addr(pa);
+  uint32_t size_done = 0;
+  while (size_done < len) {
+    mr->add_va_pages_phy_addr(pa + size_done);
+    size_done += (4096 - (pa & 0xFFF));
+  }
+
 
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaMemReg(&context, req, &resp);
@@ -384,7 +400,7 @@ void CreateInitiatorQP() {
   rq->set_num_sq_wqes(kNumSQWQEs);
   rq->set_num_rq_wqes(kNumRQWQEs);
   rq->set_pd(kRdmaPD);
-  rq->set_pmtu(9000);
+  rq->set_pmtu(4096);
   rq->set_hostmem_pg_size(4096);
   rq->set_svc(rdma::RDMA_SERV_TYPE_RC);
   rq->set_sq_lkey(kInitiatorSQLKey);
@@ -401,6 +417,7 @@ void CreateInitiatorQP() {
 void CreateTargetQP() {
   RdmaMemRegister(target_sq_va, kTargetSQLKey, 0, false);
   RdmaMemRegister(target_rq_va, kTargetRQLKey, 0, false);
+  RdmaMemRegister(initiator_rq_va, kInitiatorRQLKey, 0, false);
   rdma::RdmaQpRequestMsg req;
   rdma::RdmaQpResponseMsg resp;
   rdma::RdmaQpSpec *rq = req.add_request();
@@ -412,7 +429,7 @@ void CreateTargetQP() {
   rq->set_num_sq_wqes(kNumSQWQEs);
   rq->set_num_rq_wqes(kNumRQWQEs);
   rq->set_pd(kRdmaPD);
-  rq->set_pmtu(9000);
+  rq->set_pmtu(4096);
   rq->set_hostmem_pg_size(4096);
   rq->set_svc(rdma::RDMA_SERV_TYPE_RC);
   rq->set_sq_lkey(kTargetSQLKey);
@@ -485,7 +502,7 @@ void PostTargetRcvBuf1() {
   // Correspondingly size is also lower by the same offset.
   r2n::r2n_buf_t *r2n_buf = (r2n::r2n_buf_t *) target_rcv_buf1_va;
   uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
-  printf("Posting buffer of size %d wrid %lx \n", size, host_mem_v2p((void *) &r2n_buf->cmd_buf));
+  printf("Posting target buffer of size %d wrid %lx \n", size, host_mem_v2p((void *) &r2n_buf->cmd_buf));
 
   // Fill the RQ WQE to post the buffer (at the offset)
   utils::write_bit_fields(rqwqe, 64, 8, 1);  // num_sges = 1
@@ -494,6 +511,17 @@ void PostTargetRcvBuf1() {
   utils::write_bit_fields(rqwqe, 256+64+32, 32, kTargetRcvBuf1LKey);  // sge0->l_key
   // wrid passed back in cq is the buffer offset passed in
   utils::write_bit_fields(rqwqe, 0, 64, host_mem_v2p((void *) &r2n_buf->cmd_buf));
+
+  // Pre-form the Status post wqe
+  uint8_t *sqwqe = (uint8_t *) &(r2n_buf->sta_req.s);
+  utils::write_bit_fields(sqwqe, 0, 64, 0x10);  // wrid = 1
+  utils::write_bit_fields(sqwqe, 64, 4, 0);  // op_type = OP_TYPE_SEND
+  utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
+  utils::write_bit_fields(sqwqe, 192, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));  // data len
+  // write the SGE
+  utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)&r2n_buf->sta_buf);  // SGE-va, same as pa
+  utils::write_bit_fields(sqwqe, 256+64, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));
+  utils::write_bit_fields(sqwqe, 256+64+32, 32, kTargetRcvBuf1LKey);
 
   uint32_t offset = target_rq_pindex;
   offset *= kRQWQESize;
@@ -506,9 +534,40 @@ void PostTargetRcvBuf1() {
 }
 
 void RegisterTargetRcvBufs() {
-  RdmaMemRegister(target_rcv_buf1_va, kTargetRcvBuf1LKey,
-                  kTargetRcvBuf1RKey, true);
+  RdmaMemRegister(target_rcv_buf1_va, host_mem_v2p(target_rcv_buf1_va), 
+                  kR2NBufSize, kTargetRcvBuf1LKey, kTargetRcvBuf1RKey, true);
   PostTargetRcvBuf1();
+}
+
+void PostInitiatorRcvBuf1() {
+  uint8_t rqwqe[64];
+  bzero(rqwqe, 64);
+
+  printf("Posting initiator buffer of size %d wrid %lx \n", kR2NBufSize, host_mem_v2p((void *) initiator_rcv_buf1_va));
+
+  // Fill the RQ WQE to post the buffer (at the offset)
+  utils::write_bit_fields(rqwqe, 0, 64, 1); // wrid = 1
+  utils::write_bit_fields(rqwqe, 64, 8, 1);  // num_sges = 1
+  utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) initiator_rcv_buf1_va); // sge0->va 
+  utils::write_bit_fields(rqwqe, 256+64, 32, kR2NBufSize);  // sge0->len
+  utils::write_bit_fields(rqwqe, 256+64+32, 32, kInitiatorRcvBuf1LKey);  // sge0->l_key
+  // wrid passed back in cq is the buffer address
+  utils::write_bit_fields(rqwqe, 0, 64, host_mem_v2p((void *) initiator_rcv_buf1_va));
+
+  uint32_t offset = initiator_rq_pindex;
+  offset *= kRQWQESize;
+  uint8_t *p = (uint8_t *)initiator_rq_va;
+  bcopy(rqwqe, p + offset, 64);
+  initiator_rq_pindex++;
+  if (initiator_rq_pindex >= kNumRQWQEs)
+    initiator_rq_pindex = 0;
+  tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 0, 0, bswap_16(initiator_rq_pindex));
+}
+
+void RegisterInitiatorRcvBufs() {
+  RdmaMemRegister(initiator_rcv_buf1_va, host_mem_v2p(initiator_rcv_buf1_va), 
+                  kR2NBufSize, kInitiatorRcvBuf1LKey, kInitiatorRcvBuf1RKey, true);
+  PostInitiatorRcvBuf1();
 }
 
 bool PullCQEntry(void *cq_va, uint16_t *cq_cindex, uint32_t ent_size,
@@ -579,12 +638,7 @@ int GetR2NHbmBuf(uint64_t *pa, uint32_t *size) {
 }
 
 
-int StartRoceSeq(uint16_t ssd_handle, uint32_t ssd_q, uint8_t **ssd_cmd, 
-                 uint16_t *ssd_index, uint8_t **nvme_cmd) {
-
-  if (!ssd_cmd || !ssd_index || !nvme_cmd) {
-    return -1;
-  }
+int StartRoceSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd) {
 
   uint8_t *sqwqe = (uint8_t *) alloc_host_mem(64);
   bzero(sqwqe, 64);
@@ -597,29 +651,15 @@ int StartRoceSeq(uint16_t ssd_handle, uint32_t ssd_q, uint8_t **ssd_cmd,
   // Send doorbell information of PVM's ROCE CQ in immediate data 
   utils::write_bit_fields(sqwqe, 96, 11, queues::get_pvm_lif());
   utils::write_bit_fields(sqwqe, 107, 3, CQ_TYPE);
-  utils::write_bit_fields(sqwqe, 110, 18, g_rdma_pvm_roce_cq);
+  utils::write_bit_fields(sqwqe, 110, 18, g_rdma_pvm_roce_tgt_cq);
 
   // Add the buffer to WQE.
   void *r2n_buf_va;
   uint64_t r2n_buf_pa;
   uint32_t r2n_buf_size;
   GetR2NUspaceBuf(&r2n_buf_va, &r2n_buf_pa, &r2n_buf_size);
-  r2n::nvme_be_cmd_t *nvme_be_cmd = (r2n::nvme_be_cmd_t *) r2n_buf_va;
-  nvme_be_cmd->s.src_queue_id = 0;
-  nvme_be_cmd->s.ssd_handle = bswap_16(ssd_handle);
-  nvme_be_cmd->s.r2n_buf_handle = 0;
-  nvme_be_cmd->s.io_priority = 0;
-  nvme_be_cmd->s.is_read = 0;
-  nvme_be_cmd->s.is_local = 0;
-  // Tmp code. Move to APIs
-  struct NvmeCmd *write_cmd = &(nvme_be_cmd->s.nvme_cmd);
-  write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
-  write_cmd->prp.prp1 = 0;
-  write_cmd->dw0.cid = 0x37;
-  write_cmd->nsid = 0x23;
-  write_cmd->slba = 1;
-  write_cmd->dw12.nlb = 1;
-  *nvme_cmd = (uint8_t *) write_cmd;
+  r2n::r2n_nvme_be_cmd_buf_init(r2n_buf_va, NULL, 0, ssd_handle, 0, 0, 0, nvme_cmd);
+  tests::form_write_cmd_no_buf(*nvme_cmd);
 
   uint64_t r2n_hbm_buf_pa;
   uint32_t r2n_hbm_buf_size;
@@ -631,18 +671,23 @@ int StartRoceSeq(uint16_t ssd_handle, uint32_t ssd_q, uint8_t **ssd_cmd,
   uint32_t data_len = r2n_hbm_buf_size - offsetof(r2n::r2n_buf_t, cmd_buf);
   //uint32_t data_len = r2n_hbm_buf_size;
   // Register R2N buf memory. Only LKey, no remote access.
-  RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, data_len, kR2NBufLKey, 0, false);
+  RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, r2n_hbm_buf_size, kR2NBufLKey, 0, false);
   utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)data_len);  // data len
   // write the SGE
   utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)r2n_hbm_buf_pa);  // SGE-va, same as pa
   utils::write_bit_fields(sqwqe, 256+64, 32, data_len);
   utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
 
+  // Form the write data buffer (of size 4K) at an offset from the NVME backend
+  // command
+  memset(((uint8_t *) r2n_buf_va) + kR2NDataBufOffset - offsetof(r2n::r2n_buf_t, cmd_buf), 
+         byte_val, kWritaDataSize);
+
   // Now kickstart the sequencer
-  tests::test_rdma_write_cmd(35, 60, g_rdma_pvm_roce_sq, r2n_buf_pa, 
+  tests::test_seq_write_roce(35, 60, g_rdma_pvm_roce_init_sq, r2n_buf_pa, 
 		             r2n_hbm_buf_pa, data_len, 
-                             host_mem_v2p((void *) sqwqe), 64,
-                             ssd_q, ssd_cmd, ssd_index);
+                             host_mem_v2p((void *) sqwqe), 64);
+
   return 0;
 }
 
@@ -666,7 +711,19 @@ int rdma_pvm_qs_init() {
     printf("RDMA PVM Initiator ROCE SQ init failure\n");
     return -1;
   } else {
-    g_rdma_pvm_roce_sq = (uint32_t) rc;
+    g_rdma_pvm_roce_init_sq = (uint32_t) rc;
+  }
+  printf("RDMA PVM Initiator ROCE SQ init success\n");
+
+  // Init the target SQ 
+  if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id, 
+                                     kSQType, 1, // 0 - initiator; 1 - target
+                                     host_mem_v2p(target_sq_va), 
+                                     kRoceNumEntries, kRoceEntrySize)) < 0) {
+    printf("RDMA PVM Target ROCE SQ init failure\n");
+    return -1;
+  } else {
+    g_rdma_pvm_roce_tgt_sq = (uint32_t) rc;
   }
   printf("RDMA PVM Initiator ROCE SQ init success\n");
 
@@ -679,13 +736,13 @@ int rdma_pvm_qs_init() {
     printf("RDMA PVM Target ROCE CQ init failure\n");
     return -1;
   } else {
-    g_rdma_pvm_roce_cq = (uint32_t) rc;
+    g_rdma_pvm_roce_tgt_cq = (uint32_t) rc;
   }
   printf("RDMA PVM Target ROCE CQ init success\n");
 
   // Target SQ Xlate
-  qstate_if::update_xlate_entry(queues::get_pvm_lif(), CQ_TYPE, 
-                                g_rdma_pvm_roce_cq, 
+  qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
+                                g_rdma_pvm_roce_tgt_sq, 
                                 pvm_roce_sq_xlate_addr + (1 * 64), NULL);
 
   // Target R2N Xlate
@@ -720,7 +777,9 @@ int rdma_init() {
   assert(PullCQEntry(initiator_cq_va, &initiator_cq_cindex, 64, 1, &ent) == false);
   assert(PullCQEntry(target_cq_va, &target_cq_cindex, 64, 1, &ent) == false);
   RegisterTargetRcvBufs();
-  printf("Registered recv buf\n");
+  printf("Registered target recv buf\n");
+  RegisterInitiatorRcvBufs();
+  printf("Registered initiator recv buf\n");
   return 0;
 }
 
@@ -744,28 +803,6 @@ void rdma_uspace_test() {
   }
 }
 
-int test_run_rdma_write_cmd() {
-  uint16_t ssd_handle = 1; // the SSD handle
-  uint32_t ssd_q = 20; // the actual pvm queue
-  uint8_t *ssd_cmd = NULL;
-  uint8_t *nvme_cmd = NULL;
-  uint16_t ssd_index;
-  int rc;
-
-  StartRoceSeq(ssd_handle, ssd_q, &ssd_cmd, &ssd_index, &nvme_cmd);
-  printf("Started sequencer to PDMA + send over ROCE \n");
-
-  sleep(6);
-
-  printf("NVME command \n");
-  utils::dump(nvme_cmd);
-
-  printf("SSD command \n");
-  utils::dump(ssd_cmd);
-
-  // Check the command ids
-  rc = tests::check_ignore_cid(nvme_cmd, ssd_cmd,  sizeof(struct NvmeCmd));
-
-  // rc could be <, ==, > 0. We need to return -1 from this API on error.
-  return (rc ? -1 : 0);
+void *rdma_get_initiator_rcv_buf() {
+  return initiator_rcv_buf1_va;
 }
