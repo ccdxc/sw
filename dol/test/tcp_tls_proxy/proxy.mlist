@@ -152,6 +152,17 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : MULTIPLE_PKTS_TO_SERQ_ATOMIC_STATS
+        spec    : multiple_pkts_to_serq.testspec
+        module  : pkt_to_serq
+        args    :
+            maxflows: 1
+            atomic_stats : 1
+            num_pkts : 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : PKT_TO_BRQ
         package : test.tcp_tls_proxy
         module  : pkt_to_brq
