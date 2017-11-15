@@ -6,8 +6,9 @@ proto: udp
 
 entries:
     - entry:
-        label: collector
+        label : collector
+        fte : True
         responder:
             port : const/4739
-        initiator: 
+        initiator:
             port : const/32007

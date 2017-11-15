@@ -5,7 +5,7 @@ meta:
 type        : span
 fabencap    : vlan
 native      : False
-broadcast   : drop
+broadcast   : flood
 multicast   : drop
 l4lb        : False
 endpoints   :
