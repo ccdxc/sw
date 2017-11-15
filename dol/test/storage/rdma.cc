@@ -502,7 +502,7 @@ void PostTargetRcvBuf1() {
   // Correspondingly size is also lower by the same offset.
   r2n::r2n_buf_t *r2n_buf = (r2n::r2n_buf_t *) target_rcv_buf1_va;
   uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
-  printf("Posting buffer of size %d wrid %lx \n", size, host_mem_v2p((void *) &r2n_buf->cmd_buf));
+  printf("Posting target buffer of size %d wrid %lx \n", size, host_mem_v2p((void *) &r2n_buf->cmd_buf));
 
   // Fill the RQ WQE to post the buffer (at the offset)
   utils::write_bit_fields(rqwqe, 64, 8, 1);  // num_sges = 1
@@ -519,13 +519,9 @@ void PostTargetRcvBuf1() {
   utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
   utils::write_bit_fields(sqwqe, 192, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));  // data len
   // write the SGE
-  printf("R2n buf %p Address %lx new %lx \n", r2n_buf, (uint64_t)&r2n_buf->sta_buf, (uint64_t)&(r2n_buf->sta_buf));
   utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)&r2n_buf->sta_buf);  // SGE-va, same as pa
   utils::write_bit_fields(sqwqe, 256+64, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));
   utils::write_bit_fields(sqwqe, 256+64+32, 32, kTargetRcvBuf1LKey);
-  utils::dump(sqwqe);
-
-
 
   uint32_t offset = target_rq_pindex;
   offset *= kRQWQESize;
@@ -547,7 +543,7 @@ void PostInitiatorRcvBuf1() {
   uint8_t rqwqe[64];
   bzero(rqwqe, 64);
 
-  printf("Posting initiator buffer of size %d \n", kR2NBufSize);
+  printf("Posting initiator buffer of size %d wrid %lx \n", kR2NBufSize, host_mem_v2p((void *) initiator_rcv_buf1_va));
 
   // Fill the RQ WQE to post the buffer (at the offset)
   utils::write_bit_fields(rqwqe, 0, 64, 1); // wrid = 1
@@ -555,6 +551,8 @@ void PostInitiatorRcvBuf1() {
   utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) initiator_rcv_buf1_va); // sge0->va 
   utils::write_bit_fields(rqwqe, 256+64, 32, kR2NBufSize);  // sge0->len
   utils::write_bit_fields(rqwqe, 256+64+32, 32, kInitiatorRcvBuf1LKey);  // sge0->l_key
+  // wrid passed back in cq is the buffer address
+  utils::write_bit_fields(rqwqe, 0, 64, host_mem_v2p((void *) initiator_rcv_buf1_va));
 
   uint32_t offset = initiator_rq_pindex;
   offset *= kRQWQESize;
@@ -640,12 +638,7 @@ int GetR2NHbmBuf(uint64_t *pa, uint32_t *size) {
 }
 
 
-int StartRoceSeq(uint16_t ssd_handle, uint32_t ssd_q, uint8_t **ssd_cmd, 
-                 uint16_t *ssd_index, uint8_t **nvme_cmd) {
-
-  if (!ssd_cmd || !ssd_index || !nvme_cmd) {
-    return -1;
-  }
+int StartRoceSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd) {
 
   uint8_t *sqwqe = (uint8_t *) alloc_host_mem(64);
   bzero(sqwqe, 64);
@@ -688,13 +681,13 @@ int StartRoceSeq(uint16_t ssd_handle, uint32_t ssd_q, uint8_t **ssd_cmd,
   // Form the write data buffer (of size 4K) at an offset from the NVME backend
   // command
   memset(((uint8_t *) r2n_buf_va) + kR2NDataBufOffset - offsetof(r2n::r2n_buf_t, cmd_buf), 
-         0xB3, kWritaDataSize);
+         byte_val, kWritaDataSize);
 
   // Now kickstart the sequencer
-  tests::test_rdma_write_cmd(35, 60, g_rdma_pvm_roce_init_sq, r2n_buf_pa, 
+  tests::test_seq_write_roce(35, 60, g_rdma_pvm_roce_init_sq, r2n_buf_pa, 
 		             r2n_hbm_buf_pa, data_len, 
-                             host_mem_v2p((void *) sqwqe), 64,
-                             ssd_q, ssd_cmd, ssd_index);
+                             host_mem_v2p((void *) sqwqe), 64);
+
   return 0;
 }
 

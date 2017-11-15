@@ -98,7 +98,7 @@ int main(int argc, char**argv) {
 
 
   // Add xts tests
-  //tests::add_xts_tests(test_suite);
+  tests::add_xts_tests(test_suite);
 
   for (size_t i = 0; i < test_suite.size(); i++) {
     printf(" Starting test %s \n", test_suite[i].test_name.c_str());

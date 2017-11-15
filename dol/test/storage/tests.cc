@@ -2274,84 +2274,24 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   return 0;
 }
 
-int test_rdma_write_cmd(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
-			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
-			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
-			uint64_t roce_wqe_addr, uint32_t roce_wqe_size,
-                        uint32_t ssd_q, uint8_t **ssd_cmd, uint16_t *ssd_index) {
-
-  int rc;
-
-  if (!ssd_cmd || !ssd_index) {
-    return -1;
-  }
-#if 0
-
-  // Consume entry in SSD queue
-  if (consume_ssd_entry(ssd_q, ssd_cmd, ssd_index) < 0) {
-    printf("can't init and consume r2n/ssd entries \n");
-    return -1;
-  }
-#endif
-
-  // Kickstart the sequencer
-  rc = test_seq_write_roce(seq_pdma_q, seq_roce_q, pvm_roce_sq, 
-                           pdma_src_addr, pdma_dst_addr, pdma_data_size,
-			   roce_wqe_addr, roce_wqe_size);
-  if (rc < 0) {
-    printf("can't send RDMA command over Sequencer and ROCE \n");
-    return rc;
-  }
-  return 0;
-}
-
-int test_run_rdma_write_cmd() {
-  uint16_t ssd_handle = 1; // the SSD handle
-  uint32_t ssd_q = 19; // the actual pvm queue
-  uint8_t *ssd_cmd = NULL;
-  uint8_t *nvme_cmd = NULL;
-  uint16_t ssd_index;
-  int rc;
-
-  StartRoceSeq(ssd_handle, ssd_q, &ssd_cmd, &ssd_index, &nvme_cmd);
-  printf("Started sequencer to PDMA + send over ROCE \n");
-
-  sleep(6);
-
-  printf("NVME command \n");
-  utils::dump(nvme_cmd);
-
-  printf("SSD command \n");
-  utils::dump(ssd_cmd);
-
-  // Check the command ids
-  rc = tests::check_ignore_cid(nvme_cmd, ssd_cmd,  sizeof(struct NvmeCmd));
-
-  // rc could be <, ==, > 0. We need to return -1 from this API on error.
-  return (rc ? -1 : 0);
-}
-
 int test_run_rdma_e2e_write() {
   uint16_t ssd_handle = 2; // the SSD handle
-  uint32_t ssd_q = 20; // the actual pvm queue
-  uint8_t *ssd_cmd = NULL;
   uint8_t *cmd_buf = NULL;
-  uint16_t ssd_index;
   int rc;
 
 
-  StartRoceSeq(ssd_handle, ssd_q, &ssd_cmd, &ssd_index, &cmd_buf);
+  StartRoceSeq(ssd_handle, get_next_byte(), &cmd_buf);
   printf("Started sequencer to PDMA + send over ROCE \n");
 
   struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
-  printf("Dumping NVME command sent \n");
-  utils::dump(cmd_buf);
+  //printf("Dumping NVME command sent \n");
+  //utils::dump(cmd_buf);
 
   sleep(6);
 
   uint8_t *rcv_buf = (uint8_t *) rdma_get_initiator_rcv_buf();
-  printf("Dumping initator rcv buf which contains NVME status \n");
-  utils::dump(rcv_buf);
+  //printf("Dumping initator rcv buf which contains NVME status \n");
+  //utils::dump(rcv_buf);
 
   // Process the status
   struct NvmeStatus *nvme_status = 
