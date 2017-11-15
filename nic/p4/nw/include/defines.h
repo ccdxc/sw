@@ -84,6 +84,7 @@
 #define UDP_PORT_VXLAN_GPE             4790
 #define UDP_PORT_ROCE_V2               4791
 #define UDP_PORT_GENV                  6081
+#define UDP_PORT_NATT                  4500
 
 /*****************************************************************************/
 /* GRE services                                                              */
@@ -405,6 +406,8 @@
 #define P4PLUS_IPSEC_HDR_SZ            14
 #define P4PLUS_RAW_REDIR_HDR_SZ        40
 #define P4PLUS_P4PT_HDR_SZ             8
+#define UDP_HDR_SIZE                   8
+#define IPV6_BASE_HDR_SIZE             40
 
 /*****************************************************************************/
 /* P4+ to P4 header size constants (in bytes)                                */

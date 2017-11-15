@@ -1094,6 +1094,7 @@ action common_p4plus_stage0_app_header_table_action(data0, data1,
 
 @pragma stage 0
 @pragma raw_index_table
+@pragma table_write
 table common_p4plus_stage0_app_header_table {
     reads { 
         COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY

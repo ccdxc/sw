@@ -140,6 +140,8 @@ p4plus_app_ipsec:
   bcf         [c2], p4plus_app_ipsec_ipv6
   phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv4_protocol
   sll         r2, k.ipv4_ihl, 2
+  seq         c3, k.udp_valid, TRUE
+  add.c3      r2, r2, 8
   phvwr       p.p4_to_p4plus_ipsec_ip_hdr_size, r2
   or          r1, k.ipv4_totalLen, k.ipv4_totalLen, 0
   add.e       r3, r6, r1
@@ -148,7 +150,9 @@ p4plus_app_ipsec:
 .align
 p4plus_app_ipsec_ipv6:
   phvwri      p.v6_generic_valid, 0
-  phvwri      p.p4_to_p4plus_ipsec_ip_hdr_size, 40
+  seq         c3, k.udp_valid, TRUE
+  phvwri.!c3      p.p4_to_p4plus_ipsec_ip_hdr_size, 40
+  phvwri.c3      p.p4_to_p4plus_ipsec_ip_hdr_size, 48
   phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv6_nextHdr
   add.e       r5, r6, k.ipv6_payloadLen
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r5

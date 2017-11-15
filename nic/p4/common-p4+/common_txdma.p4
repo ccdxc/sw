@@ -956,6 +956,7 @@ table tx_table_s0_t1 {
 
 @pragma stage 0
 @pragma raw_index_table
+@pragma table_write
 table tx_table_s0_t0 {
     reads {
        p4_txdma_intr.qstate_addr : exact;

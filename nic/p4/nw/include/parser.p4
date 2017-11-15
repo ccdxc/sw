@@ -1089,6 +1089,7 @@ parser parse_udp {
         UDP_PORT_GENV: parse_geneve;
         UDP_PORT_VXLAN_GPE : parse_vxlan_gpe;
         UDP_PORT_ROCE_V2: parse_roce_v2;
+        UDP_PORT_NATT : parse_ipsec_esp;
         default: ingress;
     }
 }

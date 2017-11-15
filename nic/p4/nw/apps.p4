@@ -180,7 +180,11 @@ action p4plus_app_ipsec() {
                   P4PLUS_IPSEC_HDR_SZ));
 
     if (ipv4.valid == TRUE) {
-        modify_field(p4_to_p4plus_ipsec.ip_hdr_size, ipv4.ihl << 2);
+        if (udp.valid == TRUE) {
+            modify_field(p4_to_p4plus_ipsec.ip_hdr_size, ipv4.ihl << 2 + UDP_HDR_SIZE);
+        } else {
+            modify_field(p4_to_p4plus_ipsec.ip_hdr_size, ipv4.ihl << 2);
+        }
         modify_field(p4_to_p4plus_ipsec.l4_protocol, ipv4.protocol);
         if (vlan_tag.valid == TRUE) {
             modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 18);
@@ -193,7 +197,11 @@ action p4plus_app_ipsec() {
 
     if (ipv6.valid == TRUE) {
         // Remove all extension headers before sending it to p4+
-        modify_field(p4_to_p4plus_ipsec.ip_hdr_size, 40);
+        if (udp.valid == TRUE) {
+            modify_field(p4_to_p4plus_ipsec.ip_hdr_size, IPV6_BASE_HDR_SIZE+UDP_HDR_SIZE);
+        } else {
+            modify_field(p4_to_p4plus_ipsec.ip_hdr_size, IPV6_BASE_HDR_SIZE);
+        }
         modify_field(p4_to_p4plus_ipsec.l4_protocol, ipv6.nextHdr);
         modify_field(v6_generic.valid, 0);
         if (vlan_tag.valid == TRUE) {
