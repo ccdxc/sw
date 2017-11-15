@@ -34,7 +34,7 @@ ipfix_create_non_ip_record:
                     CAPRI_PHV_END_OFFSET(ipfix_record_nonip_ether_type)
     phvwr       p.phv2mem_cmd1_dma_cmd_addr, r1
     add         r1, r1, (CAPRI_PHV_END_OFFSET(ipfix_record_nonip_ether_type) - \
-                         CAPRI_PHV_START_OFFSET(ipfix_record_nonip_set_id))
+                         CAPRI_PHV_START_OFFSET(ipfix_record_nonip_set_id) + 1)
 
     phvwr       p.phv2mem_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd2_dma_cmd_phv_start_addr, \
@@ -60,7 +60,7 @@ ipfix_create_ipv4_record:
                     CAPRI_PHV_END_OFFSET(ipfix_record_ipv4_dport)
     phvwr       p.phv2mem_cmd1_dma_cmd_addr, r1
     add         r1, r1, (CAPRI_PHV_END_OFFSET(ipfix_record_ipv4_dport) - \
-                         CAPRI_PHV_START_OFFSET(ipfix_record_ipv4_set_id))
+                         CAPRI_PHV_START_OFFSET(ipfix_record_ipv4_set_id) + 1)
 
     phvwr       p.phv2mem_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd2_dma_cmd_phv_start_addr, \
@@ -86,7 +86,7 @@ ipfix_create_ipv6_record:
                     CAPRI_PHV_END_OFFSET(ipfix_record_ipv6_dport)
     phvwr       p.phv2mem_cmd1_dma_cmd_addr, r1
     add         r1, r1, (CAPRI_PHV_END_OFFSET(ipfix_record_ipv6_dport) - \
-                         CAPRI_PHV_START_OFFSET(ipfix_record_ipv6_set_id))
+                         CAPRI_PHV_START_OFFSET(ipfix_record_ipv6_set_id) + 1)
 
     phvwr       p.phv2mem_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd2_dma_cmd_phv_start_addr, \

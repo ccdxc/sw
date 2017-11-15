@@ -37,7 +37,7 @@ ipfix_start:
     // table 0 : lookup flow_hash table
     addi        r1, r0, loword(p4_flow_hash_base)
     addui       r1, r1, hiword(p4_flow_hash_base)
-    add         r1, r1, d.u.ipfix_start_d.sindex, 6
+    add         r1, r1, d.{u.ipfix_start_d.sindex}.wx, 6
     phvwr       p.common_te0_phv_table_addr, r1
     phvwri      p.common_te0_phv_table_pc, ipfix_flow_hash[33:6]
     phvwr       p.common_te0_phv_table_raw_table_size, 6
