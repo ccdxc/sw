@@ -55,6 +55,12 @@ action flow_miss() {
         modify_field(control_metadata.drop_reason, DROP_INPUT_PROPERTIES_MISS);
         drop_packet();
     }
+    // Set ip_fragment to TRUE for all fragments including the first, middle an last
+    // packet af a fragmented IP Packet.
+    if (flow_lkp_metadata.ipv4_frag_offset != 0 or 
+        (flow_lkp_metadata.ipv4_flags & IP_FLAGS_MF_MASK == IP_FLAGS_MF_MASK)) {
+        modify_field(l3_metadata.ip_frag, 1);
+    }
 
     if ((flow_lkp_metadata.lkp_proto == IP_PROTO_TCP) and
         ((tcp.flags & TCP_FLAG_SYN) != TCP_FLAG_SYN) and

@@ -1,7 +1,7 @@
 This file will list all the issues that we think need to brought up when needed.
 
 Open Issues:
-
+1. We will be dropping all IPv4 Fragments (first, middle and last) of a IP Fragmented packet. This is beause we cannot generate the flow key for Fragmented packets. We drop it using NACL. Might be a big limitation.
 
 Resolved (As of 10/31/2017)
 1. TCP options can be reordered even when we are not doing any normalization or firewall features

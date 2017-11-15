@@ -49,7 +49,7 @@ flow_info:
   phvwr       p.flow_info_metadata_flow_role, d.u.flow_info_d.flow_role
 
   /* ttl change detected */
-  seq         c1, d.u.flow_info_d.flow_ttl, k.flow_lkp_metadata_ip_ttl
+  seq         c1, d.u.flow_info_d.flow_ttl, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit2, flow_lkp_metadata_ip_ttl_sbit3_ebit7}
   phvwr.c1    p.flow_info_metadata_flow_ttl_change_detected, k.l4_metadata_ip_ttl_change_detect_en
 
   /* Flow Connection Tracking enable */
@@ -99,6 +99,9 @@ flow_miss:
 flow_miss_common:
   seq         c1, k.flow_lkp_metadata_lkp_vrf, r0
   bcf         [c1], flow_miss_input_properites_miss_drop
+  sne         c1, k.{flow_lkp_metadata_ipv4_frag_offset_sbit0_ebit7, flow_lkp_metadata_ipv4_frag_offset_sbit8_ebit12}, r0
+  smeqb.!c1   c1, k.flow_lkp_metadata_ipv4_flags, IP_FLAGS_MF_MASK, IP_FLAGS_MF_MASK
+  phvwr.c1    p.l3_metadata_ip_frag, 1
   seq         c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_TCP
   smneb       c2, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c3, k.l4_metadata_tcp_non_syn_first_pkt_drop, ACT_DROP
