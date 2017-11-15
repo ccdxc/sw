@@ -1670,7 +1670,7 @@ class capri_parser:
         #Allocate HV bits for ICRC after allocating all other HV bits
         for _hidx in range(len(hv_headers)):
             h = hv_headers[_hidx]
-            if self.d == xgress.EGRESS and self.be.icrc.UpdateIcrcCalFieldObjGet(h.name):
+            if self.d == xgress.EGRESS and self.be.icrc.IsHdrInIcrcCompute(h.name):
                 icrc_hv_bit_and_hf = []
                 hf_name = h.name + '.icrc'
                 icrc_cf = self.be.pa.get_field(hf_name, self.d)

@@ -441,6 +441,7 @@ field_list ipv4_icrc_list {
     ipv4.ttl;
     ipv4.diffserv;
     ipv4.hdrChecksum;
+    udp.checksum;
 }
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
 field_list_calculation ipv4_roce_icrc {
@@ -456,6 +457,7 @@ field_list ipv6_icrc_list {
     ipv6.trafficClass;
     ipv6.flowLabel;
     ipv6.hopLimit;
+    udp.checksum;
 }
 
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
@@ -471,6 +473,7 @@ field_list inner_ipv4_icrc_list {
     inner_ipv4.ttl;
     inner_ipv4.diffserv;
     inner_ipv4.hdrChecksum;
+    inner_udp.checksum;
 }
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
 field_list_calculation inner_ipv4_roce_icrc {
@@ -481,11 +484,12 @@ field_list_calculation inner_ipv4_roce_icrc {
     output_width : 32;
 }
 
-//For icrc, specify invariant crc fields.
+//For icrc, specify invariant crc fields in the same order as they appear in packet
 field_list inner_ipv6_icrc_list {
     inner_ipv6.trafficClass;
     inner_ipv6.flowLabel;
     inner_ipv6.hopLimit;
+    inner_udp.checksum;
 }
 
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
