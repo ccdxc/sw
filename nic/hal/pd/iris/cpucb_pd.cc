@@ -13,7 +13,6 @@
 #include "nic/gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h"
 #include "nic/gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
-#include "nic/include/fte_common.hpp"
 
 namespace hal {
 namespace pd {

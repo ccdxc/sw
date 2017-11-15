@@ -175,8 +175,6 @@ populate_permit_actions (nacl_actiondata *data, acl_action_spec_t *as)
     data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id = 
         as->egr_mirror_session;
     // TODO Populate these values
-    data->nacl_action_u.nacl_nacl_permit.qid_en = 0;
-    data->nacl_action_u.nacl_nacl_permit.qid = 0;
     data->nacl_action_u.nacl_nacl_permit.egress_policer_en = 0;
     data->nacl_action_u.nacl_nacl_permit.egress_policer_index = 0;
 }
@@ -220,6 +218,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
         case acl::ACL_ACTION_LOG:
             data.actionid = NACL_NACL_PERMIT_ID;
             data.nacl_action_u.nacl_nacl_permit.log_en = 1;
+            data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
+            data.nacl_action_u.nacl_nacl_permit.qid = types::CPUCB_ID_NACL_LOG;
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_REDIRECT:
@@ -232,6 +232,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
             if (if_is_cpu_if(redirect_if)) {
                 // If going to CPU, do not do any rewrites on packet. So set
                 // the rewrite indexes to 0 (nop)
+                data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
+                data.nacl_action_u.nacl_nacl_permit.qid = types::CPUCB_ID_NACL_REDIRECT;
                 data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;

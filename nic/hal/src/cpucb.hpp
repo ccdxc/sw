@@ -8,7 +8,6 @@
 #include "nic/gen/proto/hal/cpucb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/include/fte_common.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;

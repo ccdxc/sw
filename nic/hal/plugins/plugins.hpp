@@ -53,6 +53,36 @@ inline hal_ret_t register_pipelines() {
                       flow_miss_inbound, sizeof(flow_miss_inbound)/sizeof(fte::feature_id_t));
 
     //----------------------------------------------------------------------------------------------------------
+    // TCP FIN/RST pipeline
+    //----------------------------------------------------------------------------------------------------------
+    fte::feature_id_t tcp_close_outbound[] = {
+        fte::FTE_FEATURE_DOL_TEST_ONLY,
+    };
+
+    register_pipeline("tcp-close", fte::TCP_CLOSE_LIFQ,
+                  tcp_close_outbound, sizeof(tcp_close_outbound)/sizeof(fte::feature_id_t));
+
+    //----------------------------------------------------------------------------------------------------------
+    // NACL Redirect pipeline
+    //----------------------------------------------------------------------------------------------------------
+    fte::feature_id_t nacl_redirect_outbound[] = {
+        fte::FTE_FEATURE_DOL_TEST_ONLY,
+    };
+
+    register_pipeline("nacl-redirect", fte::NACL_REDIRECT_LIFQ,
+                      nacl_redirect_outbound, sizeof(nacl_redirect_outbound)/sizeof(fte::feature_id_t));
+
+    //----------------------------------------------------------------------------------------------------------
+    // NACL Log pipeline
+    //----------------------------------------------------------------------------------------------------------
+    fte::feature_id_t nacl_log_outbound[] = {
+        fte::FTE_FEATURE_DOL_TEST_ONLY,
+    };
+
+    register_pipeline("nacl-log", fte::NACL_LOG_LIFQ,
+                      nacl_log_outbound, sizeof(nacl_log_outbound)/sizeof(fte::feature_id_t));
+
+    //----------------------------------------------------------------------------------------------------------
     // TCP Proxy Pipeline
     //----------------------------------------------------------------------------------------------------------
     fte::feature_id_t tcp_proxy_outbound[] = {
@@ -72,8 +102,7 @@ inline hal_ret_t register_pipelines() {
     };
     
     register_pipeline("quiesce", fte::QUIESCE_LIFQ,
-                      quiesce_outbound, sizeof(quiesce_outbound)/sizeof(fte::feature_id_t),
-                      {}, 0);
+                      quiesce_outbound, sizeof(quiesce_outbound)/sizeof(fte::feature_id_t));
     
     //----------------------------------------------------------------------------------------------------------
     // TLS Proxy Pipeline
@@ -120,6 +149,7 @@ inline hal_ret_t register_pipelines() {
                       alg_cflow_inbound, sizeof(alg_cflow_inbound)/sizeof(fte::feature_id_t));
 
     return HAL_RET_OK;
+
 }
 
 inline hal_ret_t register_classic_nic_pipelines() {

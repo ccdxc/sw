@@ -64,6 +64,3 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=IN_PKT
             port    : 128
-        - packet:
-            object  : ref://testcase/packets/id=IN_PKT
-            port    : ref://testcase/config/dst/endpoint/intf/ports

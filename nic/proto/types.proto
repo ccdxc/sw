@@ -255,8 +255,9 @@ enum AppRedirType {
 // Types of CPU CB/QIDs
 enum CpucbId {
     CPUCB_ID_FLOWMISS      = 0;
-    CPUCB_ID_FIN           = 1;
-    CPUCB_ID_RST           = 2;
-    CPUCB_ID_ALG           = 3;
+    CPUCB_ID_TCP_CLOSE     = 1;
+    CPUCB_ID_RELIABLE_COPY = 2;
+    CPUCB_ID_NACL_REDIRECT = 3;
     CPUCB_ID_QUIESCE       = 4;
+    CPUCB_ID_NACL_LOG      = 5;
 }

@@ -13,7 +13,7 @@
 #include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/include/fte_common.hpp"
+#include "nic/gen/proto/hal/types.pb.h"
 
 using hal::pd::utils::Tcam;
 using hal::pd::utils::acl_tcam_entry_handle_t;
@@ -1290,7 +1290,7 @@ capri_repl_pgm_def_entries (void)
     data.repl_type = TM_REPL_TYPE_TO_CPU_REL_COPY;
     data.lport = CPU_LPORT;
     data.is_qid = 1;
-    data.qid_or_vnid = HAL_FTE_FIN_QID;
+    data.qid_or_vnid = types::CPUCB_ID_TCP_CLOSE;
     hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_FIN_COPY, &data);
 
 
@@ -1304,7 +1304,7 @@ capri_repl_pgm_def_entries (void)
     data.repl_type = TM_REPL_TYPE_TO_CPU_REL_COPY;
     data.lport = CPU_LPORT;
     data.is_qid = 1;
-    data.qid_or_vnid = HAL_FTE_RST_QID;
+    data.qid_or_vnid = types::CPUCB_ID_TCP_CLOSE;
     hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_RST_COPY, &data);
 
     /* Add 1st repication copy for list 3*/
@@ -1317,7 +1317,7 @@ capri_repl_pgm_def_entries (void)
     data.repl_type = TM_REPL_TYPE_TO_CPU_REL_COPY;
     data.lport = CPU_LPORT;
     data.is_qid = 1;
-    data.qid_or_vnid = HAL_FTE_FLOW_REL_COPY_QID;
+    data.qid_or_vnid = types::CPUCB_ID_RELIABLE_COPY;
     hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_FLOW_REL_COPY, &data);
     return HAL_RET_OK;
 }

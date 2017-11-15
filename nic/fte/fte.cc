@@ -233,8 +233,7 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
         if (!feature) {
             HAL_TRACE_ERR("fte: unknown feature-id {} in inbound pipeline {} - skipping",
                           features_inbound[i], name);
-            HAL_FREE(pipeline_t, pipeline);
-            return HAL_RET_INVALID_ARG;
+            continue;
         }
         HAL_TRACE_DEBUG("fte: inbound pipeline feature {}/{}", name, feature->name);
         pipeline->features[i+num_features_outbound] = feature;
@@ -273,7 +272,7 @@ execute_pipeline(ctx_t &ctx)
             iflow_end = pipeline->num_features_outbound + pipeline->num_features_inbound;
         }
 
-        if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
+        if (ctx.role() == hal::FLOW_ROLE_RESPONDER && rflow_end > rflow_start) {
             // Invoke all responder feature handlers if we are processing Rflow
             rc = pipeline_invoke_exec_(pipeline, ctx, rflow_start, rflow_end); 
         } else {

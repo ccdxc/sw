@@ -27,8 +27,9 @@ std::ostream& operator<<(std::ostream& os, session::FlowAction val)
 }
 
 namespace fte {
-
+//------------------------------------------------------------------------------
 // extract flow key from packet
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::extract_flow_key()
 {
@@ -122,6 +123,9 @@ ctx_t::extract_flow_key()
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Lookup teannt/ep/if/l2seg from flow lookup key
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::lookup_flow_objs()
 {
@@ -146,10 +150,6 @@ ctx_t::lookup_flow_objs()
 
     //Lookup src and dest EPs
     hal::ep_get_from_flow_key(&key_, &sep_, &dep_);
-    if (sep_ == NULL && dep_ == NULL) {
-        HAL_TRACE_ERR("fte: both src and dst ep unknown, key={}", key_);
-        return HAL_RET_EP_NOT_FOUND;
-    }
 
     if (sep_) {
         if (protobuf_request()) {
@@ -186,6 +186,9 @@ ctx_t::lookup_flow_objs()
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Returns flow key of the specified flow
+//------------------------------------------------------------------------------
 const hal::flow_key_t& 
 ctx_t::get_key(hal::flow_role_t role)
 {
@@ -202,6 +205,9 @@ ctx_t::get_key(hal::flow_role_t role)
     return flow->key();
 }
 
+//------------------------------------------------------------------------------
+// Lookup existing session for the flow
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::lookup_session()
 {
@@ -231,9 +237,11 @@ ctx_t::lookup_session()
         }
 
         set_role(entry->role);  
-        set_flow_miss((arm_lifq_==FLOW_MISS_LIFQ));
         set_alg_entry(*entry);
-        if (!flow_miss()) key_ = entry->key;
+
+        if (!flow_miss()) {
+            key_ = entry->key;
+        }
     }
 
     if (!session_) {
@@ -265,6 +273,9 @@ ctx_t::lookup_session()
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Creates new seesion for the pkt's flow
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::create_session()
 {
@@ -273,6 +284,12 @@ ctx_t::create_session()
     hal_ret_t ret;
 
     HAL_TRACE_DEBUG("fte: create session");
+
+    // Create new session only when atleast one of the EP is known
+    if (sep_ == NULL && dep_ == NULL) {
+        HAL_TRACE_ERR("fte: both src and dst ep unknown, key={}", key_);
+        return HAL_RET_EP_NOT_FOUND;
+    } 
 
     ikey = key_;
     for (int i = 0; i < MAX_STAGES; i++) {
@@ -342,11 +359,13 @@ ctx_t::create_session()
     } 
 
     set_role(hal::FLOW_ROLE_INITIATOR);
-    set_flow_miss(true);
 
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Create/update session and flow table entries in hardware
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::update_flow_table()
 {
@@ -508,6 +527,9 @@ ctx_t::update_flow_table()
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// Update the dest ep/if/l2seg on dnat change
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& header)
 {
@@ -557,6 +579,9 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     return  HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Initialize the flow entries in the context
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 {
@@ -593,18 +618,26 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 
     // Lookup old session
     ret = lookup_session();
-    if (ret == HAL_RET_SESSION_NOT_FOUND) {
-        // Create new session
-        // TODO(goli) - check syn flag for TCP (could be a FIN packet for non-exisiting flow)
 
-        ret = create_session();
+    if (ret == HAL_RET_SESSION_NOT_FOUND) {
+        // Create new session only in the case of flow miss pkt
+        if (flow_miss()) {
+            // Create new session
+            ret = create_session();
+        } else {
+            ret = HAL_RET_OK;
+        }
     }
 
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// Initialize the context from incoming pkt
+//------------------------------------------------------------------------------
 hal_ret_t
-ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[], flow_t rflow[])
+ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
+            flow_t iflow[], flow_t rflow[])
 {
     hal_ret_t ret;
 
@@ -616,9 +649,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[]
     pkt_len_ = pkt_len;
     arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
-
-    //TODO(goli) - remove the CPUCB_ID_QUIESCE hard coding here
-    if (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU && cpu_rxhdr->qid != types::CPUCB_ID_QUIESCE) {
+    if (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) {
         ret = init_flows(iflow, rflow);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
@@ -629,6 +660,9 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[]
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Initialize the context from GRPC protobuf
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflow[])
 {
@@ -650,18 +684,24 @@ ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflo
     return HAL_RET_OK;
 }
 
+#define LOG_FLOW_UPDATE(__updinfo)                                      \
+    HAL_TRACE_DEBUG("fte::update_flow {}.{} feature={} ret={} {}={}",   \
+                    role,                                               \
+                    (role == hal::FLOW_ROLE_INITIATOR)? istage_ : rstage_, \
+                    feature_name_, ret, #__updinfo, flowupd.__updinfo)
+
+//------------------------------------------------------------------------------
+// Updates the current flow with the sepcified flowupd info
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::update_flow(const flow_update_t& flowupd)
 {
     return update_flow(flowupd, role());
 }
 
-#define LOG_FLOW_UPDATE(__updinfo) \
-    HAL_TRACE_DEBUG("fte::update_flow {}.{} feature={} ret={} {}={}",   \
-                    role,                                               \
-                    (role == hal::FLOW_ROLE_INITIATOR)? istage_ : rstage_, \
-                    feature_name_, ret, #__updinfo, flowupd.__updinfo)
-
+//------------------------------------------------------------------------------
+// Updates the specified flow with the sepcified flowupd info
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::update_flow(const flow_update_t& flowupd, 
                    const hal::flow_role_t role)
@@ -748,6 +788,9 @@ ctx_t::update_flow(const flow_update_t& flowupd,
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// Advance the pipeline to next stage if the fwding info is valid
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::advance_to_next_stage() {
     if (role_ == hal::FLOW_ROLE_INITIATOR && iflow_[istage_]->valid_fwding()) {
@@ -762,6 +805,10 @@ ctx_t::advance_to_next_stage() {
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Queues pkt for transmission on ASQ at the end of pipeline processing,
+// after updating the flow table
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                    hal::pd::cpu_to_p4plus_header_t *cpu_header,
@@ -815,6 +862,9 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Sends all the queued packets
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 {
@@ -857,18 +907,23 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Invoke all the queued completion handlers
+//------------------------------------------------------------------------------
 void
 ctx_t::invoke_completion_handlers(bool fail)
 {
     HAL_TRACE_DEBUG("fte: invoking completion handlers count={}", num_handlers_);
     for (int i = 0; i < num_handlers_; i++) {
-        HAL_TRACE_DEBUG("fte: invoking completion handler {:p}", (void*)(completion_handlers_[i]));
+        HAL_TRACE_DEBUG("fte: invoking completion handler {:p}",
+                        (void*)(completion_handlers_[i]));
         (*completion_handlers_[i])(*this, fail);
     }
 }
 
-//
+//------------------------------------------------------------------------------
 // Process the packet and update the flow table
+//------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::process()
 {
@@ -895,9 +950,9 @@ ctx_t::process()
     return ret;
 }
 
-/*-----------------------------------------------------------------------
-  - Swap the derived flow objects for reverse flow processing.
-  -------------------------------------------------------------------------*/
+//-------------------------------------------------------------------------
+// Swap the derived flow objects for reverse flow processing.
+//-------------------------------------------------------------------------
 void
 ctx_t::swap_flow_objs()
 {

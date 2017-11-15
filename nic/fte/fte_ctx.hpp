@@ -8,7 +8,7 @@
 #include "nic/include/cpupkt_api.hpp"
 #include <netinet/ether.h>
 #include "nic/include/fte_db.hpp"
-#include "nic/include/fte_common.hpp"
+#include "nic/gen/proto/hal/types.pb.h"
 
 namespace fte {
 
@@ -288,9 +288,12 @@ struct lifqid_s {
     uint64_t qid : 24;
 } __PACK__;
 
-const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, 0};
-const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 0, HAL_FTE_FLOW_REL_COPY_QID};
-const lifqid_t QUIESCE_LIFQ   = {hal::SERVICE_LIF_CPU, 0, 4};
+const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_FLOWMISS};
+const lifqid_t TCP_CLOSE_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_TCP_CLOSE};
+const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_RELIABLE_COPY};
+const lifqid_t NACL_REDIRECT_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_NACL_REDIRECT};
+const lifqid_t NACL_LOG_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_NACL_LOG};
+const lifqid_t QUIESCE_LIFQ   = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_QUIESCE};
 const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
 const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
 const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, 0, 0};
@@ -466,8 +469,7 @@ public:
         return HAL_RET_OK;
     }
 
-    bool flow_miss() const { return flow_miss_; }
-    void set_flow_miss(bool val) { flow_miss_ = val; }
+    bool flow_miss() const { return (arm_lifq_==FLOW_MISS_LIFQ); }
 
     bool valid_rflow() const { return valid_rflow_; }
     void set_valid_rflow(bool val) { valid_rflow_ = val; }
@@ -500,7 +502,6 @@ public:
 private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
-    bool                  flow_miss_;
 
     cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
     uint8_t               *pkt_;
