@@ -20,13 +20,19 @@ set_tm_oport:
 
   // mod instruction stalls; instructions below execute till r7 is ready
   seq         c1, d.u.set_tm_oport_d.egress_mirror_en, TRUE
-  //seq.c1      c1, k.control_metadata_span_copy, FALSE 
-  seq.c1      c1, k.control_metadata_cpu_copy, FALSE 
+  //seq.c1      c1, k.control_metadata_span_copy, FALSE
+  seq.c1      c1, k.control_metadata_cpu_copy, FALSE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
   phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue
   phvwr       p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif
   phvwr       p.control_metadata_rdma_enabled, d.u.set_tm_oport_d.rdma_enabled
   phvwr       p.control_metadata_p4plus_app_id, d.u.set_tm_oport_d.p4plus_app_id
+
+  sne         c1, d.u.set_tm_oport_d.access_vlan_id, 0
+  seq.c1      c1, k.{vlan_tag_vid_sbit0_ebit3,vlan_tag_vid_sbit4_ebit11}, \
+                d.u.set_tm_oport_d.access_vlan_id
+  phvwr.c1    p.vlan_tag_valid, FALSE
+  phvwr.c1    p.ethernet_etherType, k.vlan_tag_etherType
 
   sub         r7, 28, r7, 2
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7

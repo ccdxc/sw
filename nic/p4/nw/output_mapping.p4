@@ -33,7 +33,7 @@ action redirect_to_cpu(dst_lif, egress_mirror_en, tm_oqueue) {
 
 action set_tm_oport(vlan_strip, nports, egress_mirror_en,
                     p4plus_app_id, rdma_enabled, dst_lif,
-                    encap_vlan_id, encap_vlan_id_valid,
+                    encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                     egress_port1, egress_port2, egress_port3, egress_port4,
                     egress_port5, egress_port6, egress_port7, egress_port8) {
     if (nports == 1) {
@@ -60,6 +60,12 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     modify_field(control_metadata.p4plus_app_id, p4plus_app_id);
     modify_field(control_metadata.vlan_strip, vlan_strip);
 
+    if ((vlan_tag.valid == TRUE) and (access_vlan_id != 0) and
+        (vlan_tag.vid == access_vlan_id)) {
+        modify_field(ethernet.etherType, vlan_tag.etherType);
+        remove_header(vlan_tag);
+    }
+
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.egress_port, egress_port1);
     modify_field(scratch_metadata.egress_port, egress_port2);
@@ -72,6 +78,7 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     modify_field(scratch_metadata.egress_port, nports);
     modify_field(scratch_metadata.flag, egress_mirror_en);
     modify_field(scratch_metadata.flag, encap_vlan_id_valid);
+    modify_field(scratch_metadata.vlan_id, access_vlan_id);
 }
 
 action output_mapping_drop () {
