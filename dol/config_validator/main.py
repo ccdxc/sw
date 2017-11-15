@@ -52,13 +52,13 @@ hal_channel = get_hal_channel()
 
 config_specs = parser.ParseDirectory("config_validator/cfg/specs", "*.spec")
 for config_spec in config_specs:
-    if config_spec.enabled:
+    if config_spec.graphEnabled:
         logger.info("Adding config spec for service : " , config_spec.Service)
         config_mgr.AddConfigSpec(config_spec, hal_channel)
 
-logger.info("Building Config dependencey information")
+logger.info("Building Config dependency information")
 config_mgr.BuildConfigDeps()
-    
+
 test_specs = parser.ParseDirectory("config_validator/test/specs", "*.spec")
 for test_spec in test_specs:
     if not test_spec.Enabled:
@@ -68,7 +68,9 @@ for test_spec in test_specs:
         logger.info("Executing Step : ", step.step.op)
         op_name = op_map[step.step.op]
         for cfg_spec in config_mgr.GetOrderedConfigSpecs(rev=step.step.op=="Delete"):
-            logger.info("Executing Step  %s for Conifg %s" % (step.step.op, cfg_spec))
+            if not cfg_spec._spec.enabled:
+                continue
+            logger.info("Executing Step  %s for Config %s and object %s" % (step.step.op, cfg_spec, cfg_spec._service_object.name))
             method = getattr(cfg_spec, op_name)
             try:
                 ret = method(test_spec.MaxObjects, step.step.status)
@@ -81,3 +83,7 @@ for test_spec in test_specs:
                 sys.exit(1)
 
 logger.info("All Config test passed!")
+
+logger.info("Config Dependency graph is shown below")
+config_mgr.PrintOrderedConfigSpecs()
+    

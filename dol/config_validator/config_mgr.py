@@ -8,13 +8,17 @@ from infra.common.logging import logger
 import utils
 from grpc_meta.msg import GrpcReqRspMsg 
 
+# This class is used to map the dependencies between different configs 
+# based on their ConfigObjectMeta, and then create a dependency graph 
+# between them.
 class ConfigMetaMapper():
     
     def __init__(self):
         self.__key_type_to_config = {}
-        self.__orderered_objects = []
+        self.__ordered_objects = []
     
-    def Add(self, key_type, config_object):
+    def Add(self, key_type, service_object, config_object):
+        assert key_type is not None
         curr_config = self.__key_type_to_config.get(key_type, None)
         assert curr_config == None
         self.__key_type_to_config[key_type] = config_object
@@ -35,12 +39,12 @@ class ConfigMetaMapper():
                 logger.info("Adding dependency %s ", cfg_obj_dep)
             logger.info("Ending Processing config meta : ", config_object)
         logger.info("Building topolological dependency for all meta .")
-        self.__orderered_objects = utils.TopologicalSort(config_dep_map)
-        logger.info("Config meta order : ", self.__orderered_objects)
+        self.__ordered_objects = utils.TopologicalSort(config_dep_map)
+        logger.info("Config meta order : ", self.__ordered_objects)
         
     def ordered(self, rev=False):
-        for ord_obj in (self.__orderered_objects 
-                        if not rev else self.__orderered_objects[::-1]):
+        for ord_obj in (self.__ordered_objects 
+                        if not rev else self.__ordered_objects[::-1]):
             yield ord_obj[0]
             
     def GetRandomConfigOject(self, ext_ref):
@@ -56,6 +60,7 @@ cfg_meta_mapper = ConfigMetaMapper()
 class Object(object):
     pass
 
+# This class holds all the meta information required to create a config object.
 class ConfigObjectMeta():
     
     class CREATE:
@@ -68,7 +73,7 @@ class ConfigObjectMeta():
         pass
 
     class ReqRespObject():
-        def __init__(self, pb2, stub, spec):
+        def __init__(self, pb2, stub, spec, service_object):
             self._api = getattr(stub, spec.api)
             self._req_msg = getattr(pb2, spec.request)
             self._req_meta_obj = GrpcReqRspMsg(self._req_msg())
@@ -85,12 +90,12 @@ class ConfigObjectMeta():
             #Only request should have the key.
             return self._req_meta_obj.get_ext_refs()
         
-    def __init__(self, pb2, stub, spec):
+    def __init__(self, pb2, stub, spec, service_object):
         self._spec   = spec
-        self._create = ConfigObjectMeta.ReqRespObject(pb2, stub, spec.create)
-        self._get    = ConfigObjectMeta.ReqRespObject(pb2, stub, spec.get)
-        self._update = ConfigObjectMeta.ReqRespObject(pb2, stub, spec.update)
-        self._delete = ConfigObjectMeta.ReqRespObject(pb2, stub, spec.delete)
+        self._create = ConfigObjectMeta.ReqRespObject(pb2, stub, service_object.create, service_object)
+        self._get    = ConfigObjectMeta.ReqRespObject(pb2, stub, service_object.get, service_object)
+        self._update = ConfigObjectMeta.ReqRespObject(pb2, stub, service_object.update, service_object)
+        self._delete = ConfigObjectMeta.ReqRespObject(pb2, stub, service_object.delete, service_object)
 
     def __repr__(self):
         return  self._spec.Service
@@ -113,6 +118,9 @@ class ConfigData():
         self.exp_data = Object()
         self.actual_data = Object()
 
+# A ConfigObject maps to each config created. Once a config object is created, 
+# it can be used as an external reference for other config objects.
+# For example the network config object will refer to the tenant config object.
 class ConfigObject():
     _CREATED  = 1
     _DELETED  = 2
@@ -178,6 +186,8 @@ class ConfigObject():
         self._msg_cache[op_type] = req_message
         return api_status
         
+# Top level manager for a given config spec. Catering to one service, can have multiple
+# objects with CRUD operations within a service.
 class ConfigObjectHelper(object):
     
     __op_map = { 
@@ -186,18 +196,21 @@ class ConfigObjectHelper(object):
                  "Update" : ConfigObjectMeta.UPDATE,
                  "Get"    : ConfigObjectMeta.GET,
                }
-    def __init__(self, spec, hal_channel):
+    def __init__(self, spec, hal_channel, service_object):
         self._spec = spec
         self._hal_channel = hal_channel
         self._pb2 = importlib.import_module(spec.ProtoObject)
         stub_attr = self._spec.Service + "Stub"
         self._stub = getattr(self._pb2, stub_attr)(hal_channel)
-        logger.info("Setting up config meta for : " , spec.Service)
-        self._cfg_meta = ConfigObjectMeta(self._pb2, self._stub, self._spec)
+        self._service_object = service_object
+        logger.info("Setting up config meta for the object %s in service %s"
+                    %(service_object.name, spec.Service))
+        self._cfg_meta = ConfigObjectMeta(self._pb2, self._stub, self._spec, self._service_object)
         self._config_objects = []
-        logger.info("Adding config meta to meta mapper : ", spec.Service)
-        cfg_meta_mapper.Add(self._cfg_meta.get_config_key_type(),self)
-        self._ignore_ops = [ ConfigObjectHelper.__op_map[op.op] for op in self._spec.ignore or []]
+        logger.info("Adding config meta for the object %s in service %s"
+                    %(service_object.name, spec.Service))
+        cfg_meta_mapper.Add(self._cfg_meta.get_config_key_type(), service_object, self)
+        self._ignore_ops = [ ConfigObjectHelper.__op_map[op.op] for op in self._service_object.ignore or []]
 
     def __repr__(self):
         return str(self._spec.Service)
@@ -212,7 +225,10 @@ class ConfigObjectHelper(object):
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
                 cfg_object._status = ConfigObject._DELETED
-                return
+                if ConfigObjectMeta.GET not in self._ignore_ops:
+                    return False
+                else:
+                    return True
             else:
                 cfg_object._status = ConfigObject._CREATED
         
@@ -232,6 +248,10 @@ class ConfigObjectHelper(object):
         for config_object in self._config_objects[:count]:
             ret_status = config_object.process(ConfigObjectMeta.GET)
             if ret_status != status:
+                if ConfigObjectMeta.GET not in self._ignore_ops:
+                    return False
+                else:
+                    return True
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
                 return
@@ -264,7 +284,8 @@ class ConfigObjectHelper(object):
             if ret_status != status:
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
-                return
+                if ConfigObjectMeta.DELETE not in self._ignore_ops:
+                    return False
             config_object._status = ConfigObject._DELETED
         return True
     
@@ -283,8 +304,21 @@ def BuildConfigDeps():
     cfg_meta_mapper.Build()
 
 def AddConfigSpec(config_spec, hal_channel):
-    ConfigObjectHelper(config_spec, hal_channel)
-    
+    for sub_service in config_spec.objects:
+       logger.info("Adding config spec for service : " , config_spec.Service, sub_service.object.name)
+       ConfigObjectHelper(config_spec, hal_channel, sub_service.object)
+
+def PrintOrderedConfigSpecs():
+    for entry in cfg_meta_mapper._ConfigMetaMapper__ordered_objects:
+        if entry[1] == set():
+            dependencies = "No dependencies"
+        else:
+            dependencies = ""
+            for dep in entry[1]:
+                dependencies += "\"Service : " + str(dep) + ", Object : " + dep._service_object.name + "\"\t"
+        print ("Service : " + str(entry[0]) + ", Object : " + str(entry[0]._service_object.name))
+        print ("Dependencies : " + str(dependencies))
+   
 def GetOrderedConfigSpecs(rev = False):
     return cfg_meta_mapper.ordered(rev)
 

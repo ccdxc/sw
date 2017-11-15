@@ -7,12 +7,12 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
-#include "nic/gen/proto/hal/key_handles.pb.h"
+#include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
 
 using hal::utils::ht_ctxt_t;
 
-using key_handles::SecurityProfileKeyHandle;
+using kh::SecurityProfileKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileRequestMsg;
 using nwsec::SecurityProfileStatus;

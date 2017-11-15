@@ -115,9 +115,9 @@ l2seg_del_from_db (l2seg_t *l2seg)
 static hal_ret_t
 validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
-    if (!spec.has_meta() ||
-        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:no meta or invalid vrf id",
+    if (!spec.has_vrf_key_handle() ||
+        spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-l2seg:{}:no vrf_key_handle or invalid vrf id",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -404,9 +404,9 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
     hal_ret_t               ret = HAL_RET_OK;
     uint32_t                num_nws = 0, i = 0;
     network_t               *nw = NULL;
-    hal_handle_t            nw_handle;
+    NetworkKeyHandle        nw_key_handle;
 
-    num_nws = spec.network_handle_size();
+    num_nws = spec.network_key_handle_size();
 
     HAL_TRACE_DEBUG("pi-network:{}:adding {} no. of sgs", __FUNCTION__,
                     num_nws);
@@ -415,17 +415,17 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
             __FUNCTION__, num_nws);
     utils::dllist_reset(&l2seg->nw_list_head);
     for (i = 0; i < num_nws; i++) {
-        nw_handle = spec.network_handle(i);        
-        nw = find_network_by_handle(nw_handle);
+        nw_key_handle = spec.network_key_handle(i);        
+        nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
         if (nw == NULL) {
             ret = HAL_RET_NETWORK_NOT_FOUND;
             goto end;
         }
         HAL_TRACE_DEBUG("pi-l2seg:{}:adding network: {} with handle:{}", __FUNCTION__, 
-                        ippfx2str(&nw->nw_key.ip_pfx), nw_handle);
+                        ippfx2str(&nw->nw_key.ip_pfx), nw->hal_handle);
 
         // add nw to list
-        hal_add_to_handle_list(&l2seg->nw_list_head, nw_handle);
+        hal_add_to_handle_list(&l2seg->nw_list_head, nw->hal_handle);
     }
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:networks added:", __FUNCTION__);
@@ -437,7 +437,7 @@ end:
 
 //------------------------------------------------------------------------------
 // process a L2 segment create request
-// TODO: if L2 segment exists, treat this as modify (vrf id in the meta must
+// TODO: if L2 segment exists, treat this as modify (vrf id in the vrf_key_handle must
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -477,7 +477,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     }
 
     // fetch the vrf
-    tid = spec.meta().vrf_id();
+    tid = spec.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
         HAL_TRACE_ERR("pi-l2seg:{}: Fetch Vrf Id:{} Failed. ret: {}",
@@ -584,9 +584,9 @@ validate_l2seg_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     hal_ret_t   ret = HAL_RET_OK;
 
     // if vrf is set, it has to be right
-    if (spec.has_meta() &&
-        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:no meta or invalid vrf id",
+    if (spec.has_vrf_key_handle() &&
+        spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-l2seg:{}:no vrf_key_handle or invalid vrf id",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -875,7 +875,7 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     uint16_t                        num_nws = 0, i = 0;
     dllist_ctxt_t                   *lnode = NULL;
     bool                            nw_exists = false;
-    uint64_t                        nw_handle = 0;
+    NetworkKeyHandle                nw_key_handle;
     network_t                       *nw = NULL;
     hal_handle_id_list_entry_t      *entry = NULL, *lentry = NULL;
 
@@ -895,25 +895,25 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     utils::dllist_reset(*del_nwlist);
     utils::dllist_reset(*aggr_nwlist);
 
-    num_nws = spec.network_handle_size();
+    num_nws = spec.network_key_handle_size();
     HAL_TRACE_DEBUG("pi-l2seg:{}:num. of nws:{}", 
                     __FUNCTION__, num_nws);
     for (i = 0; i < num_nws; i++) {
-        nw_handle = spec.network_handle(i);
-        nw = find_network_by_handle(nw_handle);
+        nw_key_handle = spec.network_key_handle(i);
+        nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
         HAL_ASSERT_RETURN(nw != NULL, HAL_RET_INVALID_ARG);
 
         // Add to aggregated list
-        hal_add_to_handle_list(*aggr_nwlist, nw_handle);
+        hal_add_to_handle_list(*aggr_nwlist, nw->hal_handle);
 
-        if (hal_handle_in_list(&l2seg->nw_list_head, nw_handle)) {
+        if (hal_handle_in_list(&l2seg->nw_list_head, nw->hal_handle)) {
             continue;
         } else {
             // Add to added list
-            hal_add_to_handle_list(*add_nwlist, nw_handle);
+            hal_add_to_handle_list(*add_nwlist, nw->hal_handle);
             *nwlist_change = true;
             HAL_TRACE_DEBUG("pi-l2seg:{}: added to add list hdl: {}", 
-                    __FUNCTION__, nw_handle);
+                    __FUNCTION__, nw->hal_handle);
         }
     }
 
@@ -929,9 +929,9 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
         HAL_TRACE_DEBUG("pi-l2seg:{}: Checking for nw: {}", 
                 __FUNCTION__, entry->handle_id);
         for (i = 0; i < num_nws; i++) {
-            nw_handle = spec.network_handle(i);
-            HAL_TRACE_DEBUG("pi-l2seg:{}:grpc nw handle: {}", __FUNCTION__, nw_handle);
-            if (entry->handle_id == nw_handle) {
+            nw_key_handle = spec.network_key_handle(i);
+            HAL_TRACE_DEBUG("pi-l2seg:{}:grpc nw handle: {}", __FUNCTION__, nw->hal_handle);
+            if (entry->handle_id == nw->hal_handle) {
                 nw_exists = true;
                 break;
             } else {
@@ -1079,8 +1079,8 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
-    if (spec.has_meta()) {
-        ret = l2seg_validate_vrf(spec.meta().vrf_id(), l2seg);
+    if (spec.has_vrf_key_handle()) {
+        ret = l2seg_validate_vrf(spec.vrf_key_handle().vrf_id(), l2seg);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-l2seg:{}:mismatch of vrfs for l2seg, "
                           "id:{}, handle:{}",
@@ -1411,8 +1411,9 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     l2seg_t                         *l2seg;
     dllist_ctxt_t                   *lnode = NULL;
     hal_handle_id_list_entry_t      *entry = NULL;
+    NetworkKeyHandle                *nkh = NULL;
 
-    if (!req.has_meta() || req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!req.has_vrf_key_handle() || req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -1423,9 +1424,9 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     }
     auto kh = req.key_or_handle();
 
-    if (kh.key_or_handle_case() == key_handles::L2SegmentKeyHandle::kSegmentId) {
+    if (kh.key_or_handle_case() == kh::L2SegmentKeyHandle::kSegmentId) {
         l2seg = find_l2seg_by_id(kh.segment_id());
-    } else if (kh.key_or_handle_case() == key_handles::L2SegmentKeyHandle::kL2SegmentHandle) {
+    } else if (kh.key_or_handle_case() == kh::L2SegmentKeyHandle::kL2SegmentHandle) {
         l2seg = find_l2seg_by_handle(kh.l2segment_handle());
     } else {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -1438,7 +1439,7 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     }
 
     // fill config spec of this L2 segment
-    rsp->mutable_spec()->mutable_meta()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
+    rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
     rsp->mutable_spec()->mutable_key_or_handle()->set_segment_id(l2seg->seg_id);
     rsp->mutable_spec()->set_segment_type(l2seg->segment_type);
     rsp->mutable_spec()->set_mcast_fwd_policy(l2seg->mcast_fwd_policy);
@@ -1451,7 +1452,8 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     lnode = l2seg->nw_list_head.next;
     dllist_for_each(lnode, &(l2seg->nw_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        rsp->mutable_spec()->add_network_handle(entry->handle_id);
+        nkh = rsp->mutable_spec()->add_network_key_handle();
+        nkh->set_nw_handle(entry->handle_id);
     }
     // fill operational state of this L2 segment
     rsp->mutable_status()->set_l2segment_handle(l2seg->hal_handle);

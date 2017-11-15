@@ -16,12 +16,12 @@
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
 using intf::LifResponse;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentDeleteRequest;
@@ -79,6 +79,7 @@ TEST_F(l2seg_test, test1)
     NetworkResponse                 nw_rsp;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -139,8 +140,9 @@ TEST_F(l2seg_test, test1)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(2);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(21);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -168,8 +170,9 @@ TEST_F(l2seg_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create L2 Segment
-    l2seg_spec1.mutable_meta()->set_vrf_id(2);
-    l2seg_spec1.add_network_handle(nw_hdl);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(2);
+    nkh = l2seg_spec1.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(21);
     l2seg_spec1.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_wire_encap()->set_encap_value(10);
@@ -241,6 +244,7 @@ TEST_F(l2seg_test, test2)
     NetworkResponse                 nw_rsp;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(21);
@@ -294,8 +298,9 @@ TEST_F(l2seg_test, test2)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create 100 l2segs
-    l2seg_spec.mutable_meta()->set_vrf_id(1);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
     for (int i = 0; i < 100; i++) {
@@ -346,6 +351,7 @@ TEST_F(l2seg_test, test3)
     NetworkResponse                 nw_rsp;
     // slab_stats_t                    *pre = NULL, *post = NULL;
     // bool                            is_leak = false;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(31);
@@ -406,8 +412,9 @@ TEST_F(l2seg_test, test3)
     // pre = hal_test_utils_collect_slab_stats();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(3);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(3);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -417,7 +424,7 @@ TEST_F(l2seg_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Update to l2segment with no change
-    l2seg_spec1.mutable_meta()->set_vrf_id(3);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec1.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_wire_encap()->set_encap_value(10);
@@ -427,7 +434,7 @@ TEST_F(l2seg_test, test3)
     ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
 
     // Update to l2segment with no change
-    l2seg_spec1.mutable_meta()->set_vrf_id(3);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -462,6 +469,7 @@ TEST_F(l2seg_test, test4)
     std::string                     ipv6_ip1 = "00010001000100010001000100010001"; 
     std::string                     ipv6_ip2 = "00010001000100010001000100010001"; 
     std::string                     v6_pattern = "010101";
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(4);
@@ -513,10 +521,11 @@ TEST_F(l2seg_test, test4)
     }
 
     // Create 10 l2segs
-    l2seg_spec.mutable_meta()->set_vrf_id(4);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     for (int i = 0; i < 10; i++) {
         // Add nw handles
-        l2seg_spec.add_network_handle(nw_v4handles[i]);
+        nkh = l2seg_spec.add_network_key_handle();
+        nkh->set_nw_handle(nw_v4handles[i]);
     }
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -529,13 +538,16 @@ TEST_F(l2seg_test, test4)
     }
 
     // Update l2segs with more network
-    l2seg_spec1.mutable_meta()->set_vrf_id(4);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(4);
     for (int i = 0; i < 10; i++) {
         // Add nw handles
-        l2seg_spec1.add_network_handle(nw_v6handles[i]);
+        nkh = l2seg_spec1.add_network_key_handle();
+        nkh->set_nw_handle(nw_v6handles[i]);
     }
-    l2seg_spec1.add_network_handle(nw_v4handles[0]);
-    l2seg_spec1.add_network_handle(nw_v4handles[1]);
+    nkh = l2seg_spec1.add_network_key_handle();
+    nkh->set_nw_handle(nw_v4handles[0]);
+    nkh = l2seg_spec1.add_network_key_handle();
+    nkh->set_nw_handle(nw_v4handles[1]);
     l2seg_spec1.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_wire_encap()->set_encap_value(10);
     for (int i = 0; i < 10; i++) {
@@ -567,7 +579,7 @@ TEST_F(l2seg_test, test4)
     }
 
     // Delete 10 l2segs
-    l2seg_del_req.mutable_meta()->set_vrf_id(4);
+    l2seg_del_req.mutable_vrf_key_handle()->set_vrf_id(4);
     for (int i = 0; i < 10; i++) {
         l2seg_del_req.mutable_key_or_handle()->set_segment_id(400+i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -628,11 +640,12 @@ TEST_F(l2seg_test, test5)
     slab_stats_t                        *pre = NULL, *post = NULL;
     bool                                is_leak = false;
     int                                 num_l2segs = 2048;
+    NetworkKeyHandle                    *nkh = NULL;
 
     pre = hal_test_utils_collect_slab_stats();
 
     // Create l2seg with vrf id doesnt exist
-    l2seg_spec.mutable_meta()->set_vrf_id(5);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     // l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -644,7 +657,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create l2seg with no meta
-    // l2seg_spec.mutable_meta()->set_vrf_id(5);
+    // l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     // l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec2.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec2.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -695,8 +708,9 @@ TEST_F(l2seg_test, test5)
 
 
     // Create l2seg with network that doesnt exist
-    l2seg_spec.mutable_meta()->set_vrf_id(5);
-    l2seg_spec.add_network_handle(nw_hdl + 1);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl + 1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -707,8 +721,9 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create l2seg with no access or fabric encap set
-    l2seg_spec.mutable_meta()->set_vrf_id(5);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
@@ -717,9 +732,10 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create l2seg
-    l2seg_spec.mutable_meta()->set_vrf_id(5);
-    l2seg_spec.clear_network_handle();
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    l2seg_spec.clear_network_key_handle();
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -731,8 +747,9 @@ TEST_F(l2seg_test, test5)
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
     
     // Create l2seg which already exists
-    l2seg_spec.mutable_meta()->set_vrf_id(5);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -744,9 +761,10 @@ TEST_F(l2seg_test, test5)
 
     // Create the max number of HAL_MAX_HW_L2SEGMENTS
     // Create l2seg resulting in no resource
-    l2seg_spec.mutable_meta()->set_vrf_id(5);
-    l2seg_spec.clear_network_handle();
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    l2seg_spec.clear_network_key_handle();
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     for (int i = 0; i < num_l2segs; i++) {
         l2seg_spec.mutable_key_or_handle()->set_segment_id(500 + i);
         l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -759,7 +777,7 @@ TEST_F(l2seg_test, test5)
     }
     
     // Update l2seg with no key or handle
-    l2seg_spec1.mutable_meta()->set_vrf_id(5);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -769,7 +787,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Update l2seg with handle that doesn't exist
-    l2seg_spec1.mutable_meta()->set_vrf_id(5);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_spec1.mutable_key_or_handle()->set_l2segment_handle(0xFFFFFFF);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -780,7 +798,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
     // Update l2seg with invalid vrf id
-    l2seg_spec1.mutable_meta()->set_vrf_id(HAL_VRF_ID_INVALID);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(HAL_VRF_ID_INVALID);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -791,7 +809,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Update l2seg with different vrf not allowed
-    l2seg_spec1.mutable_meta()->set_vrf_id(6);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -802,7 +820,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
 
     // Update l2seg with different vrf not allowed
-    l2seg_spec1.mutable_meta()->set_vrf_id(51);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(51);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -815,7 +833,7 @@ TEST_F(l2seg_test, test5)
     // Update l2seg with the same networks as when its created
 
     // Update l2seg with a handle
-    l2seg_spec1.mutable_meta()->set_vrf_id(5);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_spec1.mutable_key_or_handle()->set_l2segment_handle(l2seg_hdl);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -842,7 +860,7 @@ TEST_F(l2seg_test, test5)
 
 
     // Get of l2seg with no key or handle
-    l2seg_get_req.mutable_meta()->set_vrf_id(5);
+    l2seg_get_req.mutable_vrf_key_handle()->set_vrf_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
     hal::hal_cfg_db_close();
@@ -851,7 +869,7 @@ TEST_F(l2seg_test, test5)
 
 
     // Get of l2seg without key or handle
-    l2seg_get_req.mutable_meta()->set_vrf_id(5);
+    l2seg_get_req.mutable_vrf_key_handle()->set_vrf_id(5);
     // l2seg_get_req.mutable_key_or_handle()->set_segment_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
@@ -860,7 +878,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Get of l2seg id for which l2seg is not present
-    l2seg_get_req.mutable_meta()->set_vrf_id(5);
+    l2seg_get_req.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_get_req.mutable_key_or_handle()->set_segment_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
@@ -869,7 +887,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
     // Get of l2seg handle for which l2seg is not present
-    l2seg_get_req.mutable_meta()->set_vrf_id(5);
+    l2seg_get_req.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_get_req.mutable_key_or_handle()->set_l2segment_handle(0xFFFFFF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
@@ -878,7 +896,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
     // Delete all l2segs
-    l2seg_del_req.mutable_meta()->set_vrf_id(5);
+    l2seg_del_req.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_del_req.mutable_key_or_handle()->set_segment_id(51);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);

@@ -446,15 +446,15 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
 // get port from either id or handle
 //------------------------------------------------------------------------------
 port_t *
-port_lookup_key_or_handle (const port::PortKeyHandle& key_handle)
+port_lookup_key_or_handle (const kh::PortKeyHandle& key_handle)
 {
     if (key_handle.key_or_handle_case() ==
-            port::PortKeyHandle::kPortId) {
+            kh::PortKeyHandle::kPortId) {
         return find_port_by_id(key_handle.port_id());
     }
 
     if (key_handle.key_or_handle_case() ==
-            port::PortKeyHandle::kPortHandle) {
+            kh::PortKeyHandle::kPortHandle) {
         return find_port_by_handle(key_handle.port_handle());
     }
 
@@ -664,7 +664,7 @@ port_update (PortSpec& spec, PortResponse *rsp)
     hal_ret_t   ret = HAL_RET_OK;
 
     port_t                     *pi_p = NULL;
-    const port::PortKeyHandle  &kh = spec.key_or_handle();
+    const kh::PortKeyHandle  &kh = spec.key_or_handle();
     cfg_op_ctxt_t              cfg_ctxt = { 0 };
     dhl_entry_t                dhl_entry = { 0 };
     bool                       has_changed = false;
@@ -888,7 +888,7 @@ port_delete (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
     port_t                     *pi_p = NULL;
     cfg_op_ctxt_t              cfg_ctxt = { 0 };
     dhl_entry_t                dhl_entry = { 0 };
-    const port::PortKeyHandle  &kh = req.key_or_handle();
+    const kh::PortKeyHandle  &kh = req.key_or_handle();
 
     hal_api_trace(" API Begin: port delete ");
 

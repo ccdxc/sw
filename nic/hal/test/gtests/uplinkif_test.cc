@@ -15,7 +15,7 @@
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
 using vrf::VrfSpec;
@@ -156,6 +156,7 @@ TEST_F(uplinkif_test, test3)
     SecurityProfileResponse         sp_rsp;
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -198,8 +199,9 @@ TEST_F(uplinkif_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     // Create l2segment
-    l2seg_spec.mutable_meta()->set_vrf_id(1);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -316,6 +318,7 @@ TEST_F(uplinkif_test, test5)
     int                             num_l2segs = 10;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(5);
@@ -350,10 +353,11 @@ TEST_F(uplinkif_test, test5)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create l2segments
-    l2seg_spec.add_network_handle(nw_hdl);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     for (int i = 1; i <= num_l2segs; i++) {
         // Create l2segment
-        l2seg_spec.mutable_meta()->set_vrf_id(5);
+        l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
         l2seg_spec.mutable_key_or_handle()->set_segment_id(500 + i);
         l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
         l2seg_spec.mutable_wire_encap()->set_encap_value(500 + i);
@@ -413,7 +417,7 @@ TEST_F(uplinkif_test, test5)
 
     // Delete l2segments
     for (int i = 1; i <= num_l2segs; i++) {
-        l2seg_del_req.mutable_meta()->set_vrf_id(5);
+        l2seg_del_req.mutable_vrf_key_handle()->set_vrf_id(5);
         l2seg_del_req.mutable_key_or_handle()->set_segment_id(500 + i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);

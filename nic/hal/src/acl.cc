@@ -526,7 +526,7 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->src_if_match = true;
 
         auto src_if_kh = sel.src_if_key_handle();
-        if (src_if_kh.key_or_handle_case() == intf::InterfaceKeyHandle::kInterfaceId) {
+        if (src_if_kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
             src_if_id = src_if_kh.interface_id();
             src_if = find_if_by_id(src_if_id);
         } else {
@@ -549,7 +549,7 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->dest_if_match = true;
 
         auto dest_if_kh = sel.dst_if_key_handle();
-        if (dest_if_kh.key_or_handle_case() == intf::InterfaceKeyHandle::kInterfaceId) {
+        if (dest_if_kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
             dest_if_id = dest_if_kh.interface_id();
             dest_if = find_if_by_id(dest_if_id);
         } else {
@@ -572,7 +572,7 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->vrf_match = true;
 
         auto vrf_kh = sel.vrf_key_handle();
-        if (vrf_kh.key_or_handle_case() == key_handles::VrfKeyHandle::kVrfId) {
+        if (vrf_kh.key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
             vrf_id = vrf_kh.vrf_id();
             vrf = vrf_lookup_by_id(vrf_id);
         } else {
@@ -593,7 +593,7 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->l2seg_match = true;
 
         auto l2seg_kh = sel.l2segment_key_handle();
-        if (l2seg_kh.key_or_handle_case() == key_handles::L2SegmentKeyHandle::kSegmentId) {
+        if (l2seg_kh.key_or_handle_case() == kh::L2SegmentKeyHandle::kSegmentId) {
             l2seg_id = l2seg_kh.segment_id();
             l2seg = find_l2seg_by_id(l2seg_id);
         } else {
@@ -791,7 +791,7 @@ extract_action_spec (acl_action_spec_t *as,
 
         auto redirect_if_kh = ainfo.redirect_if_key_handle();
         if (redirect_if_kh.key_or_handle_case() == 
-            intf::InterfaceKeyHandle::kInterfaceId) {
+            kh::InterfaceKeyHandle::kInterfaceId) {
             redirect_if_id = redirect_if_kh.interface_id();
             redirect_if = find_if_by_id(redirect_if_id);
         } else {

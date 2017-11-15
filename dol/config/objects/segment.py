@@ -288,6 +288,7 @@ class SegmentObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.vrf_id = self.tenant.id
         req_spec.key_or_handle.segment_id = self.id
+        req_spec.vrf_key_handle.vrf_id = self.tenant.id
         if self.IsTenantSegment() or self.IsSpanSegment():
             req_spec.segment_type = haldefs.common.L2_SEGMENT_TYPE_TENANT
         elif self.IsInfraSegment():
@@ -312,7 +313,8 @@ class SegmentObject(base.ConfigObjectBase):
 
         for nw in self.obj_helper_nw.nws:
             if nw.hal_handle:
-                req_spec.network_handle.append(nw.hal_handle)
+                nkh = req_spec.network_key_handle.add()
+                nkh.nw_handle = nw.hal_handle
                 self.nw_hal_handles.append(nw.hal_handle)
         return
 
@@ -327,6 +329,7 @@ class SegmentObject(base.ConfigObjectBase):
     def PrepareHALGetRequestSpec(self, get_req_spec):
         get_req_spec.meta.vrf_id = self.tenant.id
         get_req_spec.key_or_handle.l2segment_handle = self.hal_handle
+        get_req_spec.vrf_key_handle.vrf_id = self.tenant.id
         return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):

@@ -16,12 +16,12 @@
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
 using intf::LifResponse;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
 using vrf::VrfSpec;
@@ -95,7 +95,7 @@ TEST_F(vrf_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_key_or_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -127,6 +127,7 @@ TEST_F(vrf_test, test2)
     InterfaceResponse               enicif_rsp;
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
@@ -185,8 +186,9 @@ TEST_F(vrf_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(2);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(21);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -238,6 +240,7 @@ TEST_F(vrf_test, test3)
     NetworkResponse                 nw_rsp;
     InterfaceL2SegmentSpec          if_l2seg_spec;
     InterfaceL2SegmentResponse      if_l2seg_rsp;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(31);
@@ -299,8 +302,9 @@ TEST_F(vrf_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(3);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(3);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -347,6 +351,7 @@ TEST_F(vrf_test, test4)
     InterfaceResponse               enicif_rsp;
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(41);
@@ -405,8 +410,9 @@ TEST_F(vrf_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(4);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(4);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(41);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -458,6 +464,7 @@ TEST_F(vrf_test, test5)
     InterfaceResponse               enicif_rsp;
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(51);
@@ -516,8 +523,9 @@ TEST_F(vrf_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(5);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -670,6 +678,7 @@ TEST_F(vrf_test, test8)
     InterfaceResponse               enicif_rsp;
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(81);
@@ -728,8 +737,9 @@ TEST_F(vrf_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(8);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(8);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
 
     for (int i = 0; i < 10; i++) {
@@ -808,6 +818,7 @@ TEST_F(vrf_test, test9)
     InterfaceResponse               enicif_rsp;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
+    NetworkKeyHandle                *nkh = NULL;
 
     pre = hal_test_utils_collect_slab_stats();
 
@@ -879,8 +890,9 @@ TEST_F(vrf_test, test9)
     }
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(9);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(9);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     for (int i = 0; i < 10; i++) {
         // Creating 10 l2segs
@@ -936,7 +948,7 @@ TEST_F(vrf_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Remove L2 segments - Errors out
-    l2seg_del_req.mutable_meta()->set_vrf_id(9);
+    l2seg_del_req.mutable_vrf_key_handle()->set_vrf_id(9);
     for (int i = 0; i < 10; i++) {
         // Delete 10 l2segs
         l2seg_del_req.mutable_key_or_handle()->set_segment_id(90 + i);
@@ -976,7 +988,6 @@ TEST_F(vrf_test, test9)
     // TODO:Remove network. errors out
 
     // Remove vrf, errors out
-    ten_del_req.mutable_meta()->set_vrf_id(9);
     ten_del_req.mutable_key_or_handle()->set_vrf_id(9);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(ten_del_req, &ten_del_rsp);
@@ -984,7 +995,7 @@ TEST_F(vrf_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
 
     // Remove L2 segments
-    l2seg_del_req.mutable_meta()->set_vrf_id(9);
+    l2seg_del_req.mutable_vrf_key_handle()->set_vrf_id(9);
     for (int i = 0; i < 10; i++) {
         // Delete 10 l2segs
         l2seg_del_req.mutable_key_or_handle()->set_segment_id(90 + i);
@@ -1026,7 +1037,6 @@ TEST_F(vrf_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
 
     // Remove vrf
-    ten_del_req.mutable_meta()->set_vrf_id(9);
     ten_del_req.mutable_key_or_handle()->set_vrf_id(9);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(ten_del_req, &ten_del_rsp);

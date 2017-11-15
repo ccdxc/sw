@@ -19,7 +19,7 @@ using types::L2SegmentType;
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 
-using key_handles::L2SegmentKeyHandle;
+using kh::L2SegmentKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentStatus;
 using l2segment::L2SegmentResponse;

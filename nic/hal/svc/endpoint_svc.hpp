@@ -24,7 +24,7 @@ using endpoint::EndpointGetResponseMsg;
 using endpoint::EndpointUpdateRequestMsg;
 using endpoint::EndpointUpdateResponseMsg;
 using endpoint::EndpointUpdateRequest;
-using endpoint::EndpointKeyHandle;
+using kh::EndpointKeyHandle;
 
 
 class EndpointServiceImpl final : public Endpoint::Service {

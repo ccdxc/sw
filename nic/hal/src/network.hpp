@@ -8,7 +8,7 @@
 using nw::NetworkSpec;
 using nw::NetworkStatus;
 using nw::NetworkResponse;
-using key_handles::NetworkKeyHandle;
+using kh::NetworkKeyHandle;
 using nw::NetworkRequestMsg;
 using nw::NetworkResponseMsg;
 using nw::NetworkDeleteRequest;
@@ -213,7 +213,8 @@ hal_ret_t network_delete(nw::NetworkDeleteRequest& req,
                          nw::NetworkDeleteResponse *rsp);
 hal_ret_t network_get(nw::NetworkGetRequest& req,
                       nw::NetworkGetResponse *rsp);
-
+network_t *
+network_lookup_key_or_handle (NetworkKeyHandle& kh, vrf_id_t tid);
 }    // namespace hal
 
 #endif    // __NETWORK_HPP__

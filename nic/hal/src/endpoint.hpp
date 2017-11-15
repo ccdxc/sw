@@ -12,7 +12,7 @@
 #include "nic/include/pd.hpp"
 #include <netinet/ether.h>
 
-using endpoint::EndpointKeyHandle;
+using kh::EndpointKeyHandle;
 using endpoint::EndpointGetResponse;
 using types::ApiStatus;
 using endpoint::EndpointSpec;
@@ -29,7 +29,7 @@ using endpoint::EndpointGetResponseMsg;
 using endpoint::EndpointUpdateRequestMsg;
 using endpoint::EndpointUpdateResponseMsg;
 using endpoint::EndpointUpdateRequest;
-using endpoint::EndpointKeyHandle;
+using kh::EndpointKeyHandle;
 using endpoint::EndpointDeleteRequest;
 using endpoint::EndpointDeleteResponseMsg;
 

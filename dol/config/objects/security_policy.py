@@ -22,7 +22,7 @@ class SGPairObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        pl_id = haldefs.nwsec.SecurityGroupPolicyId()
+        pl_id = haldefs.kh.SecurityGroupPolicyId()
         pl_id.security_group_id = self.sg_id
         pl_id.peer_security_group_id = self.peer_sg_id
         req_spec.key_or_handle.security_group_policy_id.CopyFrom(pl_id)
@@ -40,7 +40,7 @@ class SGPairObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        pl_id = haldefs.nwsec.SecurityGroupPolicyId()
+        pl_id = haldefs.kh.SecurityGroupPolicyId()
         pl_id.security_group_id = self.sg_id
         pl_id.peer_security_group_id = self.peer_sg_id
 

@@ -9,7 +9,7 @@
 
 using intf::LifSpec;
 using intf::LifResponse;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using hal::lif_hal_info_t;
 
 class lif_test : public hal_base_test {

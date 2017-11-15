@@ -9,7 +9,7 @@
 syntax = "proto3";
 
 import "types.proto";
-import "key_handles.proto";
+import "kh.proto";
 
 package l2segment;
 option go_package="halproto";
@@ -43,17 +43,16 @@ enum MulticastFwdPolicy {
 message L2SegmentSpec {
   types.ObjectMeta       meta                       = 1;    // common object meta
   // key_or_handle is L2 segment's unique identifier
-  key_handles.L2SegmentKeyHandle     key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  repeated fixed64       network_handle             = 3;    // network handle
-  types.L2SegmentType    segment_type               = 4;    // L2 segment type
-  MulticastFwdPolicy     mcast_fwd_policy           = 5;    // multicast forwarding policy
-  BroadcastFwdPolicy     bcast_fwd_policy           = 6;    // broadcast forwarding policy
-  // types.EncapInfo        access_encap               = 7;    // deprecate: wire encap for workload
-  // types.EncapInfo        fabric_encap               = 8;    // deprecate: wire encap on uplink(s)
-  types.EncapInfo        wire_encap                 = 7;    // wire encap
-  types.EncapInfo        tunnel_encap               = 8;    // tunnel encap
-  types.IPAddress        gipo                       = 9;    // gipo for mcast vxlan traffic
-  fixed64                pinned_uplink              = 10;   // The pinned uplink
+  kh.L2SegmentKeyHandle  key_or_handle              = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  repeated kh.NetworkKeyHandle network_key_handle   = 3 [(gogoproto.jsontag) = "ref"];
+  kh.VrfKeyHandle        vrf_key_handle             = 4 [(gogoproto.jsontag) = "ref"];
+  types.L2SegmentType    segment_type               = 5;    // L2 segment type
+  MulticastFwdPolicy     mcast_fwd_policy           = 6;    // multicast forwarding policy
+  BroadcastFwdPolicy     bcast_fwd_policy           = 7;    // broadcast forwarding policy
+  types.EncapInfo        wire_encap                 = 8;    // wire encap
+  types.EncapInfo        tunnel_encap               = 9;    // tunnel encap
+  types.IPAddress        gipo                       = 10;    // gipo for mcast vxlan traffic
+  fixed64                pinned_uplink              = 11;   // The pinned uplink
 }
 
 // L2SegmentRequestMsg is batched add or modify L2 segment request
@@ -70,7 +69,7 @@ message L2SegmentStatus {
 
 // L2SegmentResponse is response to L2SegmentSpec
 message L2SegmentResponse {
-  types.ApiStatus       api_status        = 1;    // API status code
+  types.ApiStatus       api_status        = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   L2SegmentStatus       l2segment_status  = 2;    // L2 segment operational status
 }
 
@@ -83,7 +82,8 @@ message L2SegmentResponseMsg {
 message L2SegmentDeleteRequest {
   types.ObjectMeta      meta          = 1;    // object meta
   // key_or_handle is L2 segment's unique identifier
-  key_handles.L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.L2SegmentKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.VrfKeyHandle vrf_key_handle      = 3 [(gogoproto.jsontag) = "ref"];
 }
 
 // L2SegmentDeleteRequestMsg is used to delete a batch of L2 segments
@@ -93,14 +93,15 @@ message L2SegmentDeleteRequestMsg {
 
 // L2SegmentDeleteResponseMsg is batched response to L2SegmentDeleteRequestMsg
 message L2SegmentDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
 
 // L2SegmentGetRequest is used to get information about a L2 Segment
 message L2SegmentGetRequest {
-  types.ObjectMeta      meta          = 1;    // object meta
+  types.ObjectMeta      meta             = 1;    // object meta
   // key_or_handle is L2 segment's unique identifier
-  key_handles.L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.VrfKeyHandle vrf_key_handle         = 3 [(gogoproto.jsontag) = "ref"];
 }
 
 // L2SegmentGetRequestMsg is batched GET request for L2 segments
@@ -116,7 +117,7 @@ message L2SegmentStats {
 // L2SegmentGetResponse captures all the information about a L2 segment
 // only if api_status indicates success, other fields are valid
 message L2SegmentGetResponse {
-  types.ApiStatus    api_status = 1;    // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   L2SegmentSpec      spec       = 2;    // L2 segment configuration
   L2SegmentStatus    status     = 3;    // operational state of L2 segment
   L2SegmentStats     stats      = 4;    // stats of the L2 segment

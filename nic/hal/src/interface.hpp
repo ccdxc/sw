@@ -18,7 +18,7 @@ using hal::utils::dllist_ctxt_t;
 using hal::utils::bitmap;
 
 using intf::LifSpec;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using intf::LifRequestMsg;
 using intf::LifResponse;
 using intf::LifResponseMsg;
@@ -29,7 +29,7 @@ using intf::LifGetResponseMsg;
 using intf::InterfaceSpec;
 using intf::InterfaceStatus;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using intf::InterfaceRequestMsg;
 using intf::InterfaceResponseMsg;
 using intf::InterfaceDeleteRequestMsg;
@@ -415,7 +415,7 @@ hal_ret_t get_lif_handle_for_enic_if(intf::InterfaceSpec& spec,
 hal_ret_t get_lif_handle_for_cpu_if(intf::InterfaceSpec& spec,
                                     intf::InterfaceResponse *rsp,
                                     if_t *hal_if);
-if_t *if_get_from_id_handle(const intf::InterfaceKeyHandle *key_handle);
+if_t *if_get_from_id_handle(const kh::InterfaceKeyHandle *key_handle);
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);

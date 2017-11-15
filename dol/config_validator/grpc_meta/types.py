@@ -10,7 +10,7 @@ from google.protobuf import descriptor
 import config_mgr
 
 _tag_checker_map = {
-     "key_field"     : lambda x, y : x  == "gogoproto.moretags" and "key" in y,
+     "key_field"     : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "key" in y,
      "ext_ref_field" : lambda x, y : x  == "gogoproto.jsontag" and  y == "ref",
      "api_field"     : lambda x, y : x  == "gogoproto.jsontag" and  y == "api_status",
      "handle_field"  : lambda x, y : x  == "gogoproto.jsontag" and y == "handle",

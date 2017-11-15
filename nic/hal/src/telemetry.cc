@@ -40,17 +40,17 @@ typedef struct flow_monitor_spec_ {
 
 
 if_t
-*get_if_from_key_or_handle(intf::InterfaceKeyHandle ifid)
+*get_if_from_key_or_handle(kh::InterfaceKeyHandle ifid)
 {
     if_t *ift;
 
-    ift = (ifid.key_or_handle_case() == intf::InterfaceKeyHandle::kInterfaceId)
+    ift = (ifid.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId)
         ? find_if_by_id(ifid.interface_id())
         : find_if_by_handle(ifid.if_handle());
     if (!ift) {
         HAL_TRACE_DEBUG(
                 "PI-MirrorSession:{}: interface id {} not found", __FUNCTION__,
-                (ifid.key_or_handle_case() == intf::InterfaceKeyHandle::kInterfaceId)
+                (ifid.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId)
                 ? ifid.interface_id()
                 : ifid.if_handle());
         return NULL;
@@ -64,7 +64,7 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
 
     pd_mirror_session_args_t args;
     mirror_session_t session;
-    intf::InterfaceKeyHandle ifid;
+    kh::InterfaceKeyHandle ifid;
     hal_ret_t ret;
     if_t *id;
 

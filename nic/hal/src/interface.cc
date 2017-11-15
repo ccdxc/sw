@@ -123,14 +123,14 @@ if_del_from_db (if_t *hal_if)
 // get if from either id or handle
 //------------------------------------------------------------------------------
 if_t *
-if_lookup_key_or_handle (const intf::InterfaceKeyHandle& key_handle)
+if_lookup_key_or_handle (const kh::InterfaceKeyHandle& key_handle)
 {
     if (key_handle.key_or_handle_case() == 
-            intf::InterfaceKeyHandle::kInterfaceId) {
+            kh::InterfaceKeyHandle::kInterfaceId) {
         return find_if_by_id(key_handle.interface_id());
     }
     if (key_handle.key_or_handle_case() == 
-            intf::InterfaceKeyHandle::kIfHandle) {
+            kh::InterfaceKeyHandle::kIfHandle) {
         return find_if_by_handle(key_handle.if_handle());
     }
 
@@ -1729,7 +1729,7 @@ static if_t *
 fetch_if_ifl2seg (InterfaceL2SegmentSpec& spec)
 {
     if (spec.if_key_handle().key_or_handle_case() == 
-            intf::InterfaceKeyHandle::kInterfaceId) {
+            kh::InterfaceKeyHandle::kInterfaceId) {
         return find_if_by_id(spec.if_key_handle().interface_id());
     } else {
         return find_if_by_handle(spec.if_key_handle().if_handle());
@@ -1746,7 +1746,7 @@ fetch_l2seg_ifl2seg (InterfaceL2SegmentSpec& spec)
 {
 
     if (spec.l2segment_key_or_handle().key_or_handle_case() ==
-            key_handles::L2SegmentKeyHandle::kSegmentId) {
+            kh::L2SegmentKeyHandle::kSegmentId) {
         return find_l2seg_by_id(spec.l2segment_key_or_handle().segment_id());
     } else {
         return find_l2seg_by_handle(spec.l2segment_key_or_handle().l2segment_handle());
@@ -1770,7 +1770,7 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
     // L2 segment has to exist
     if (spec.l2segment_key_or_handle().key_or_handle_case() == 
-            key_handles::L2SegmentKeyHandle::kSegmentId &&
+            kh::L2SegmentKeyHandle::kSegmentId &&
             !find_l2seg_by_id(spec.l2segment_key_or_handle().segment_id())) {
         HAL_TRACE_ERR("{}:failed to find l2seg with id:{}", 
                       __FUNCTION__, 
@@ -1778,7 +1778,7 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         return HAL_RET_L2SEG_NOT_FOUND;
     }
     if (spec.l2segment_key_or_handle().key_or_handle_case() == 
-            key_handles::L2SegmentKeyHandle::kL2SegmentHandle &&
+            kh::L2SegmentKeyHandle::kL2SegmentHandle &&
             !find_l2seg_by_handle(spec.l2segment_key_or_handle().l2segment_handle())) {
         HAL_TRACE_ERR("{}:failed to find l2seg with handle:{}", 
                       __FUNCTION__, 
@@ -1794,7 +1794,7 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
     // uplink has to exist
     if (spec.if_key_handle().key_or_handle_case() == 
-            intf::InterfaceKeyHandle::kInterfaceId && 
+            kh::InterfaceKeyHandle::kInterfaceId && 
             !find_if_by_id(spec.if_key_handle().interface_id())) {
         HAL_TRACE_ERR("{}:failed to find interface with id:{}", 
                       __FUNCTION__, 
@@ -1802,7 +1802,7 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         return HAL_RET_IF_NOT_FOUND;
     }
     if (spec.if_key_handle().key_or_handle_case() == 
-            intf::InterfaceKeyHandle::kIfHandle &&
+            kh::InterfaceKeyHandle::kIfHandle &&
             !find_if_by_handle(spec.if_key_handle().if_handle())) {
         HAL_TRACE_ERR("{}:failed to find interface with handle:{}", 
                       __FUNCTION__, 
@@ -2779,7 +2779,7 @@ get_lif_handle_for_enic_if (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     // fetch the lif associated with this interface
     auto lif_kh = spec.if_enic_info().lif_key_or_handle();
-    if (lif_kh.key_or_handle_case() == intf::LifKeyHandle::kLifId) {
+    if (lif_kh.key_or_handle_case() == kh::LifKeyHandle::kLifId) {
         lif_id = lif_kh.lif_id();
         lif = find_lif_by_id(lif_id);
     } else {
@@ -2816,7 +2816,7 @@ get_lif_handle_for_cpu_if (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     // fetch the lif associated with this interface
     auto lif_kh = spec.if_cpu_info().lif_key_or_handle();
-    if (lif_kh.key_or_handle_case() == intf::LifKeyHandle::kLifId) {
+    if (lif_kh.key_or_handle_case() == kh::LifKeyHandle::kLifId) {
         lif_id = lif_kh.lif_id();
         lif = find_lif_by_id(lif_id);
     } else {

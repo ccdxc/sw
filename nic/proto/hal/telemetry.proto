@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "types.proto";
-import "interface.proto";
+import "kh.proto";
 
 package telemetry;
 option go_package="halproto";
@@ -188,7 +188,7 @@ message FlowMonitorRuleResponseMsg {
 
 // RspanSpec is the configuration specification for RSPAN.
 message RSpanSpec {
-  intf.InterfaceKeyHandle 	intf 		= 1; // Interface handle
+  kh.InterfaceKeyHandle 	intf 		= 1; // Interface handle
   types.EncapInfo		rspan_encap 	= 2; // VLAN encapsulation
 }
 
@@ -211,7 +211,7 @@ message MirrorSessionSpec {
   MirrorSessionId	id              = 2; // Session ID
   uint32		snaplen		        = 3; // maximum  bytes of packet to mirror.
   oneof destination {
-    intf.InterfaceKeyHandle	local_span_if  = 4; // Local span destination
+    kh.InterfaceKeyHandle	local_span_if  = 4; // Local span destination
     RSpanSpec   		rspan_spec     = 5; // VLAN encap to use when configuration is for RSPAN
     ERSpanSpec        		erspan_spec    = 6; // ERSPAN configuration in case of ERSPAN
   }

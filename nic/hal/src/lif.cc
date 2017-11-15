@@ -238,7 +238,7 @@ validate_lif_create(LifSpec& spec, LifResponse *rsp)
 
     // check if lif id is set in key-handle
     if (spec.key_or_handle().key_or_handle_case() !=
-            intf::LifKeyHandle::kLifId) {
+            kh::LifKeyHandle::kLifId) {
         HAL_TRACE_ERR("pi-lif:{}: Lif didn't have Id. Err: {}", 
                       __FUNCTION__, HAL_RET_INVALID_ARG);
         rsp->set_api_status(types::API_STATUS_LIF_ID_INVALID);

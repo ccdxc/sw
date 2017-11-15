@@ -11,7 +11,7 @@ using grpc::Status;
 
 using intf::Interface;
 using intf::LifSpec;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using intf::LifRequestMsg;
 using intf::LifResponse;
 using intf::LifResponseMsg;
@@ -22,7 +22,7 @@ using intf::LifGetResponseMsg;
 using intf::InterfaceSpec;
 using intf::InterfaceStatus;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using intf::InterfaceRequestMsg;
 using intf::InterfaceResponseMsg;
 using intf::InterfaceDeleteRequestMsg;

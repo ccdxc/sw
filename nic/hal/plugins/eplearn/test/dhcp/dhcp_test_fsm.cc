@@ -63,7 +63,7 @@ void dhcp_topo_setup()
    EndpointUpdateRequest       ep_req, ep_req1;
    NetworkSpec                 nw_spec, nw_spec1;
    NetworkResponse             nw_rsp, nw_rsp1;
-
+   NetworkKeyHandle            *nkh = NULL;
 
    // Create vrf
    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
@@ -98,8 +98,9 @@ void dhcp_topo_setup()
    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
 
    // Create L2 Segment
-   l2seg_spec.mutable_meta()->set_vrf_id(1);
-   l2seg_spec.add_network_handle(nw_hdl);
+   l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+   nkh = l2seg_spec.add_network_key_handle();
+   nkh->set_nw_handle(nw_hdl);
    l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
    l2seg_spec.mutable_wire_encap()->set_encap_value(11);
@@ -109,8 +110,9 @@ void dhcp_topo_setup()
    ASSERT_TRUE(ret == HAL_RET_OK);
    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-   l2seg_spec.mutable_meta()->set_vrf_id(1);
-   l2seg_spec.add_network_handle(nw_hdl1);
+   l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+   nkh = l2seg_spec.add_network_key_handle();
+   nkh->set_nw_handle(nw_hdl1);
    l2seg_spec.mutable_key_or_handle()->set_segment_id(2);
    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
    l2seg_spec.mutable_wire_encap()->set_encap_value(12);

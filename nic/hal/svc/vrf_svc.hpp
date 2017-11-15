@@ -4,7 +4,7 @@
 #include "nic/include/base.h"
 #include "grpc++/grpc++.h"
 #include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/key_handles.pb.h"
+#include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/gen/proto/hal/vrf.grpc.pb.h"
 
 using grpc::ServerContext;
@@ -14,7 +14,7 @@ using vrf::Vrf;
 using vrf::VrfSpec;
 using vrf::VrfStatus;
 using vrf::VrfResponse;
-using key_handles::VrfKeyHandle;
+using kh::VrfKeyHandle;
 using vrf::VrfRequestMsg;
 using vrf::VrfResponseMsg;
 using vrf::VrfDeleteRequest;

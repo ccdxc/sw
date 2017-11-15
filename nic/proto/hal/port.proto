@@ -7,6 +7,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "kh.proto";
 
 package port;
 option go_package="halproto";
@@ -47,20 +48,12 @@ enum PortSpeed {
     PORT_SPEED_100G = 3;     // port speed is 100Gbps
 }
 
-// PortKeyHandle uniquely identifies a Port
-message PortKeyHandle {
-  oneof key_or_handle {
-    fixed32   port_id       = 1;     // app allocated unique (across all ports) port id
-    fixed64   port_handle   = 2;     // id of port returned by HAL
-  }
-}
-
 // PortSpec message is used to do add/mod properties of a port
 message PortSpec {
   types.ObjectMeta  meta            = 1;    // common object meta
 
   // key_or_handle is the port number
-  PortKeyHandle     key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.PortKeyHandle  key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];
 
   PortType          port_type       = 3;    // port type
   PortAdminState    admin_state     = 4;    // admin status of the port
@@ -79,7 +72,7 @@ message PortRequestMsg {
 
 // PortResponse is response to PortSpec
 message PortResponse {
-  types.ApiStatus  api_status = 1;    // API status code
+  types.ApiStatus  api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
 
 //------------------------------------------------------------------------------
@@ -94,7 +87,7 @@ message PortDeleteRequest {
   types.ObjectMeta  meta          = 1;    // object meta
 
   // key_or_handle is the port number
-  PortKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 //------------------------------------------------------------------------------
@@ -108,7 +101,7 @@ message PortDeleteRequestMsg {
 // PortDeleteResponseMsg is batched response to PortDeleteRequestMsg
 //------------------------------------------------------------------------------
 message PortDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated types.ApiStatus  api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
 
 // PortStats captures all the statistics of given Port
@@ -120,7 +113,7 @@ message PortGetRequest {
   types.ObjectMeta  meta          = 1;    // object meta
 
   // key_or_handle is the port number
-  PortKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 //------------------------------------------------------------------------------
@@ -133,7 +126,7 @@ message PortGetRequestMsg {
 // PortGetResponse captures all the information about a port
 // only if api_status indicates success, other fields are valid
 message PortGetResponse {
-  types.ApiStatus  api_status = 1;    // API status code
+  types.ApiStatus  api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   PortSpec         spec       = 2;    // port configuration
   PortOperStatus   status     = 3;    // operational state of port
   PortStats        stats      = 4;    // Port statistics

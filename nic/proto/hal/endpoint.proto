@@ -10,6 +10,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "kh.proto";
 
 package endpoint;
 option go_package="halproto";
@@ -22,36 +23,6 @@ service Endpoint {
   rpc EndpointGet (EndpointGetRequestMsg) returns (EndpointGetResponseMsg) {}
   rpc EndpointGetAll(EndpointGetAllRequestMsg) returns (EndpointGetResponseMsg) {}
   rpc EndpointGetByInterface(EndpointGetByInterfaceRequestMsg) returns (EndpointGetResponseMsg) {}
-}
-
-// EndpointL2Key is L2 key of the endpoint
-// NOTE: An endpoint can have only one L2 key
-message EndpointL2Key {
-  fixed64    l2_segment_handle    = 1;
-  uint64     mac_address          = 2;
-}
-
-// EndpointL3Key is the L3 key of the endpoint
-// NOTE: An endpoint can have many L3 keys
-message EndpointL3Key {
-  types.IPAddress    ip_address = 1;    // IP address of the endpoint
-                                        // NOTE: vrf information is taken from meta
-}
-
-// Endpoint can be uniquely identified by its L2 or one of its L3 keys
-message EndpointKey {
-  oneof endpoint_l2_l3_key {
-    EndpointL2Key    l2_key = 1;    // L2 key
-    EndpointL3Key    l3_key = 2;    // L3 key
-  }
-}
-
-// Endpoint is accessible via its key or handle
-message EndpointKeyHandle {
-  oneof key_or_handle {
-    EndpointKey        endpoint_key        = 1;    // endpoint's key
-    fixed64            endpoint_handle     = 2;    // endpoint's handle
-  }
 }
 
 enum EndpointVMotionState {
@@ -68,14 +39,17 @@ message EndpointAttributes {
     repeated types.IPAddress    ip_address           = 3;    // IP address(es) of endpoint
     repeated uint64             sg_handle            = 4;    // list of security group handles
     EndpointVMotionState        vmotion_state        = 5;    // Vmotion state
+    kh.InterfaceKeyHandle       interface_key_handle = 6 [(gogoproto.jsontag) = "ref"];
+    repeated kh.SecurityGroupKeyHandle sg_key_handle = 7 [(gogoproto.jsontag) = "ref"];
 }
 
 
 // EndpointSpec is used to add or update an endpoint
 message EndpointSpec {
-    types.ObjectMeta            meta                 = 1;    // common object meta
-    EndpointL2Key               l2_key               = 2;    // l2 key
-    EndpointAttributes          endpoint_attrs       = 3;    // endpoint's attributes
+    types.ObjectMeta   meta           = 1;    // common object meta
+    kh.EndpointL2Key   l2_key         = 2;    // l2 key
+    kh.VrfKeyHandle    vrf_key_handle = 3 [(gogoproto.jsontag) = "ref"];
+    EndpointAttributes endpoint_attrs = 4;    // endpoint's attributes
 }
 
 // EndpointRequestMsg is batched add or modify endpoint request
@@ -108,10 +82,11 @@ message EndpointResponseMsg {
 
 // Endpoint Update message
 message EndpointUpdateRequest {
-  types.ObjectMeta            meta                 = 1;    // object meta
+  types.ObjectMeta     meta           = 1;    // object meta
   // key_or_handle is used to identify an endpoint uniquely
-  EndpointKeyHandle           key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  EndpointAttributes          endpoint_attrs       = 3;    // endpoint's attributes
+  kh.EndpointKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.VrfKeyHandle      vrf_key_handle = 3 [(gogoproto.jsontag) = "ref"];
+  EndpointAttributes   endpoint_attrs = 4;    // endpoint's attributes
 }
 
 // EndpointUpdateRequestMsg is batched endpoint update request
@@ -129,8 +104,10 @@ message EndpointUpdateResponseMsg {
 // so that agent and HAL are less chatty when doing bulk deletes (e.g.
 // when a L2 segment is deleted or interfae goes down etc.)
 message EndpointFilter {
-  fixed64    l2_segment_handle    = 1;        // L2 segment handle
-  fixed64    interface_handle     = 2;        // interface handle
+  fixed64               l2_segment_handle    = 1;        // L2 segment handle
+  fixed64               interface_handle     = 2;        // interface handle
+  kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.jsontag) = "ref"];
+  kh.L2SegmentKeyHandle l2Segment_key_handle = 4 [(gogoproto.jsontag) = "ref"];
 }
 
 // EndpointDeleteRequest is used to delete an endpoint
@@ -138,9 +115,10 @@ message EndpointDeleteRequest {
   types.ObjectMeta       meta          = 1;    // object meta
   oneof delete_by {
   // key_or_handle is used to identify the endpoint being deleted
-    EndpointKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+    kh.EndpointKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
     EndpointFilter       filter        = 3;    // delete by interface and/or L2 segment etc.
   }
+  kh.VrfKeyHandle vrf_key_handle       = 4 [(gogoproto.jsontag) = "ref"];
 }
 
 // EndpointDeleteRequestMsg is batched endpoint delete request
@@ -155,9 +133,10 @@ message EndpointDeleteResponseMsg {
 
 // EndpointGetRequest is used to get information about an endpoint
 message EndpointGetRequest {
-  types.ObjectMeta     meta          = 1;    // object meta
+  types.ObjectMeta     meta           = 1;    // object meta
   // key_or_handle is the endpoint's identifier for retrieval
-  EndpointKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.EndpointKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.VrfKeyHandle      vrf_key_handle = 3 [(gogoproto.jsontag) = "ref"];
 }
 
 // EndpointGetRequestMsg is batched GET request for endpoints
@@ -167,8 +146,10 @@ message EndpointGetRequestMsg {
 
 // EndpointGetByInterfaceRequestMsg is used to GET endpoints by interface
 message EndpointGetByInterfaceRequestMsg {
-  types.ObjectMeta     meta             = 1;    // object meta
-  fixed64              interface_handle = 2;    // interface of interest
+  types.ObjectMeta      meta                 = 1;    // object meta
+  fixed64               interface_handle     = 2;    // interface of interest
+  kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.jsontag) = "ref"];
+  kh.InterfaceKeyHandle interface_key_handle = 4 [(gogoproto.jsontag) = "ref"];
 }
 
 // EndpointGetAllRequestMsg is used to GET all the endpoints

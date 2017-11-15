@@ -5,8 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
-import "key_handles.proto";
-import "interface.proto";
+import "kh.proto";
 import "telemetry.proto";
 
 package acl;
@@ -162,11 +161,11 @@ message AclInternalActionInfo {
 
 // AclSelector has all the match criteria for an ACL entry
 message AclSelector {
-  intf.InterfaceKeyHandle          src_if_key_handle      = 1;    // source interface
-  intf.InterfaceKeyHandle          dst_if_key_handle      = 2;    // destination interface
+  kh.InterfaceKeyHandle          src_if_key_handle      = 1;    // source interface
+  kh.InterfaceKeyHandle          dst_if_key_handle      = 2;    // destination interface
   oneof seg_selector {
-      key_handles.VrfKeyHandle  vrf_key_handle            = 3;    // Vrf match
-      key_handles.L2SegmentKeyHandle l2segment_key_handle = 4;    // L2 segment
+      kh.VrfKeyHandle  vrf_key_handle            = 3;    // Vrf match
+      kh.L2SegmentKeyHandle l2segment_key_handle = 4;    // L2 segment
   }
   oneof pkt_selector {
     EthSelector                    eth_selector         = 5;    // non-IP packet selector
@@ -192,7 +191,7 @@ message AclActionInfo {
   repeated telemetry.MirrorSessionId ing_mirror_sessions    = 2;    // ingress mirror sessions
   repeated telemetry.MirrorSessionId egr_mirror_sessions    = 3;    // egress mirror sessions 
   fixed64                            copp_policer_handle    = 4;    // egress copp policer
-  intf.InterfaceKeyHandle            redirect_if_key_handle = 5;    // redirect interface
+  kh.InterfaceKeyHandle              redirect_if_key_handle = 5;    // redirect interface
                                                                     // TODO: REMOVE
   AclInternalActionInfo              internal_actions       = 6;    // Internal action fields
 }

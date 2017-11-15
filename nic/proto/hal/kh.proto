@@ -1,0 +1,135 @@
+//------------------------------------------------------------------------------
+// protobuf specification for global objects. HAL's static global configuration
+// comes from hal.json that HAL uses when it comes up. However, there are few
+// knobs that are global to the NIC and can be changed after init time. Those
+// are captured here. For example, NIC can boot in classic mode and then connect
+// to Pensando controller that can make it trasition to flow mode.
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+package kh;
+option go_package="halproto";
+
+// import public "protos/github/gogo/protobuf/gogoproto/gogo.proto";
+import "types.proto";
+import public "gogo.proto";
+
+// SecurityProfileKeyHandle is used to operate on a security profile
+// either by its id or HAL allocated handle
+message SecurityProfileKeyHandle {
+  oneof key_or_handle {
+    uint32     profile_id     = 1 [(gogoproto.jsontag) = "unique"];     // App allocated unique security profile id
+    fixed64    profile_handle = 2 [(gogoproto.jsontag) = "handle"];     // id of the SecurityProfile returned by HAL
+  }
+}
+
+
+// VrfKeyHandle is used to operate on a vrf either by its key or handle
+message VrfKeyHandle {
+  oneof key_or_handle {
+    uint32     vrf_id     = 1  [(gogoproto.jsontag) = "unique"];   // unique vrf id allocated by app
+    fixed64    vrf_handle = 2 [(gogoproto.jsontag) = "handle"];    // vrf handle returned by HAL
+  }
+}
+
+// NetworkKeyHandle uniquely identifies a Network
+message NetworkKeyHandle {
+  oneof key_or_handle {
+    types.IPPrefix     ip_prefix    = 1;    // IP prefix
+    fixed64            nw_handle    = 2  [(gogoproto.jsontag) = "handle"];    // network's handle returned by HAL
+  }
+}
+
+// L2SegmentKeyHandle is used to operate on a L2 segment either by its
+// segment id or HAL allocated handle
+message L2SegmentKeyHandle {
+  oneof key_or_handle {
+    uint32     segment_id        = 1 [(gogoproto.jsontag) = "unique"];   // App allocated unique L2 segment id
+                                         // NOTE:
+                                         // 1. this is unique across all types of L2 segments
+                                         // 2. this is allocated by the HAL app
+    fixed64    l2segment_handle  = 2 [(gogoproto.jsontag) = "handle"];     // id of the L2 segment returned by HAL
+  }
+}
+
+message SecurityGroupPolicyId {
+    uint32     security_group_id         = 1;    // security group id or label
+    uint32     peer_security_group_id    = 2;    // peer security group id
+}
+
+// SecurityGroupKeyPolicyHandle uniquely identifies a security group and is used
+// to create/update/delete/get security group Policy
+message SecurityGroupPolicyKeyHandle {
+  oneof policy_key_or_handle {
+    SecurityGroupPolicyId   security_group_policy_id      = 1;
+    fixed64                 security_group_policy_handle  = 2;// handle for security group policy 
+  }
+}
+
+// security_group obj definition
+// SecurityGroupKeyHandle uniquely identifies a security group and is used
+// to create/update/delete/get security groups
+message SecurityGroupKeyHandle {
+  oneof key_or_handle {
+    uint32     security_group_id      = 1;    // security group id or label
+    fixed64    security_group_handle  = 2;    // id of security group returned by HAL
+  }
+}
+
+// PortKeyHandle uniquely identifies a Port
+message PortKeyHandle {
+  oneof key_or_handle {
+    fixed32   port_id       = 1;     // app allocated unique (across all ports) port id
+    fixed64   port_handle   = 2;     // id of port returned by HAL
+  }
+}
+
+// LifKeyHandle uniquely identifies a LIF
+message LifKeyHandle {
+  oneof key_or_handle {
+    fixed32         lif_id     = 1;     // app allocated unique LIF id
+    fixed64         lif_handle = 2;     // id of interface returned by HAL
+  }
+}
+
+// InterfaceKeyHandle uniquely identifies a Interface
+message InterfaceKeyHandle {
+  oneof key_or_handle {
+    fixed64         interface_id = 1;     // app allocated unique (across all interface types) interface id
+    fixed64         if_handle    = 2;     // id of interface returned by HAL
+  }
+}
+
+// EndpointL2Key is L2 key of the endpoint
+// NOTE: An endpoint can have only one L2 key
+message EndpointL2Key {
+  fixed64    l2_segment_handle    = 1;
+  uint64     mac_address          = 2;
+  kh.L2SegmentKeyHandle l2segment_key_handle = 3 [(gogoproto.jsontag) = "ref"];
+}
+
+// EndpointL3Key is the L3 key of the endpoint
+// NOTE: An endpoint can have many L3 keys
+message EndpointL3Key {
+  types.IPAddress    ip_address = 1;    // IP address of the endpoint
+                                        // NOTE: vrf information is taken from meta
+}
+
+// Endpoint can be uniquely identified by its L2 or one of its L3 keys
+message EndpointKey {
+  oneof endpoint_l2_l3_key {
+    EndpointL2Key    l2_key = 1;    // L2 key
+    EndpointL3Key    l3_key = 2;    // L3 key
+  }
+}
+
+// Endpoint is accessible via its key or handle
+message EndpointKeyHandle {
+  oneof key_or_handle {
+    EndpointKey        endpoint_key        = 1;    // endpoint's key
+    fixed64            endpoint_handle     = 2;    // endpoint's handle
+  }
+}
+
+

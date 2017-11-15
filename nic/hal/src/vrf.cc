@@ -828,7 +828,6 @@ vrf_get (VrfGetRequest& req, VrfGetResponse *rsp)
     }
 
     // fill config spec of this vrf
-    rsp->mutable_spec()->mutable_meta()->set_vrf_id(vrf->vrf_id);
     rsp->mutable_spec()->mutable_key_or_handle()->set_vrf_id(vrf->vrf_id);
     sec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
     if (sec_prof != NULL) {

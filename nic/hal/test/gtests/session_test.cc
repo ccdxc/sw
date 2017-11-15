@@ -23,7 +23,7 @@
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
 using vrf::VrfSpec;
@@ -32,7 +32,7 @@ using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
 using intf::LifResponse;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
 using endpoint::EndpointSpec;
@@ -89,6 +89,7 @@ TEST_F(session_test, test1)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
+    NetworkKeyHandle                *nkh = NULL;
 
 
     // Create vrf
@@ -124,8 +125,9 @@ TEST_F(session_test, test1)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(1);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);
@@ -135,8 +137,9 @@ TEST_F(session_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_vrf_id(1);
-    l2seg_spec.add_network_handle(nw_hdl1);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(2);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(12);
@@ -255,6 +258,7 @@ TEST_F(session_test, test2)
     ::google::protobuf::uint32  ip2 = 0x0a000002;
     ::google::protobuf::uint32  ip3 = 0x40020001;
     ::google::protobuf::uint32  ip4 = 0x40020002;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
@@ -297,8 +301,9 @@ TEST_F(session_test, test2)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(2);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(21);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(100);
@@ -308,8 +313,9 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_vrf_id(2);
-    l2seg_spec.add_network_handle(nw_hdl1);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(22);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(200);
@@ -495,6 +501,7 @@ TEST_F(session_test, test3)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::std::string ipv6_ip1 = "00010001000100010001000100010001"; 
     ::std::string ipv6_ip2 = "10010001000100010001000100010002"; 
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(3);
@@ -538,9 +545,10 @@ TEST_F(session_test, test3)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(3);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(31);
-    l2seg_spec.add_network_handle(nw_hdl1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(301);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -549,9 +557,10 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_vrf_id(3);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(32);
-    l2seg_spec.add_network_handle(nw_hdl1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(302);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -678,6 +687,7 @@ TEST_F(session_test, test4)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::google::protobuf::uint32  ip1 = 0x40020001;
     ::google::protobuf::uint32  ip2 = 0x40020002;
+    NetworkKeyHandle                *nkh = NULL;
 
 
     // Create vrf
@@ -713,8 +723,9 @@ TEST_F(session_test, test4)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(4);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(4);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(41);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);
@@ -724,8 +735,9 @@ TEST_F(session_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec1.mutable_meta()->set_vrf_id(4);
-    l2seg_spec1.add_network_handle(nw_hdl1);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(4);
+    nkh = l2seg_spec1.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(42);
     l2seg_spec1.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_wire_encap()->set_encap_value(12);
@@ -859,6 +871,7 @@ TEST_F(session_test, test5)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
+    NetworkKeyHandle                *nkh = NULL;
 
 
     // Create vrf
@@ -894,8 +907,9 @@ TEST_F(session_test, test5)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(5);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);
@@ -905,8 +919,9 @@ TEST_F(session_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec1.mutable_meta()->set_vrf_id(5);
-    l2seg_spec1.add_network_handle(nw_hdl1);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
+    nkh = l2seg_spec1.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(52);
     l2seg_spec1.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_wire_encap()->set_encap_value(12);
@@ -1015,6 +1030,7 @@ TEST_F(session_test, test6)
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
     ::google::protobuf::uint32  ip3 = 0x0a000005;
+    NetworkKeyHandle                *nkh = NULL;
 
 
     // Create vrf
@@ -1050,8 +1066,9 @@ TEST_F(session_test, test6)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(6);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(6);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(61);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);
@@ -1061,8 +1078,9 @@ TEST_F(session_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec1.mutable_meta()->set_vrf_id(6);
-    l2seg_spec1.add_network_handle(nw_hdl1);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
+    nkh = l2seg_spec1.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(62);
     l2seg_spec1.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_wire_encap()->set_encap_value(12);
@@ -1200,6 +1218,7 @@ TEST_F(session_test, test7)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
+    NetworkKeyHandle                *nkh = NULL;
 
 
     // Create vrf
@@ -1235,8 +1254,9 @@ TEST_F(session_test, test7)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(7);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(7);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(71);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);
@@ -1246,8 +1266,9 @@ TEST_F(session_test, test7)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_vrf_id(7);
-    l2seg_spec.add_network_handle(nw_hdl1);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(7);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(72);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(12);
@@ -1360,6 +1381,7 @@ TEST_F(session_test, test8)
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
     ::google::protobuf::uint32  ip3 = 0x0a000005;
+    NetworkKeyHandle                *nkh = NULL;
 
 
     // Create vrf
@@ -1395,8 +1417,9 @@ TEST_F(session_test, test8)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(8);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(8);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(81);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);
@@ -1406,8 +1429,9 @@ TEST_F(session_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec1.mutable_meta()->set_vrf_id(8);
-    l2seg_spec1.add_network_handle(nw_hdl1);
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(8);
+    nkh = l2seg_spec1.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(82);
     l2seg_spec1.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_wire_encap()->set_encap_value(12);
@@ -1562,6 +1586,7 @@ TEST_F(session_test, test9)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
+    NetworkKeyHandle                *nkh = NULL;
 
 
     // Create vrf
@@ -1597,8 +1622,9 @@ TEST_F(session_test, test9)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(9);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(9);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(91);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);
@@ -1608,8 +1634,9 @@ TEST_F(session_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_vrf_id(9);
-    l2seg_spec.add_network_handle(nw_hdl1);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(9);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(92);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(12);
@@ -1718,6 +1745,7 @@ TEST_F(session_test, test10)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::std::string ipv6_ip1 = "00010001000100010001000100010001"; 
     ::std::string ipv6_ip2 = "00020001000100010001000100010002"; 
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(10);
@@ -1761,9 +1789,10 @@ TEST_F(session_test, test10)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(10);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(10);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(101);
-    l2seg_spec.add_network_handle(nw_hdl1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(301);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -1772,9 +1801,10 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_vrf_id(10);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(10);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(102);
-    l2seg_spec.add_network_handle(nw_hdl1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(302);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

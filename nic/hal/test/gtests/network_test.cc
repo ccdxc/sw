@@ -16,12 +16,12 @@
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
 using intf::LifResponse;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentDeleteRequest;

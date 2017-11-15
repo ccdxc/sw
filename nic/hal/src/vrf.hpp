@@ -7,14 +7,14 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/vrf.pb.h"
-#include "nic/gen/proto/hal/key_handles.pb.h"
+#include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/src/nwsec.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
-using key_handles::VrfKeyHandle;
+using kh::VrfKeyHandle;
 
 using vrf::VrfSpec;
 using vrf::VrfStatus;

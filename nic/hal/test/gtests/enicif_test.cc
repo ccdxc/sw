@@ -15,7 +15,7 @@
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
 using vrf::VrfSpec;
@@ -24,7 +24,7 @@ using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
 using intf::LifResponse;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
 using nw::NetworkSpec;
@@ -77,6 +77,7 @@ TEST_F(enicif_test, test1)
     InterfaceDeleteResponseMsg  del_rsp;
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;
+    NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -116,8 +117,9 @@ TEST_F(enicif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(1);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(10);
@@ -189,6 +191,7 @@ TEST_F(enicif_test, test2)
     InterfaceDeleteResponseMsg  del_rsp;
     int                         num_l2segs = 10;
     uint64_t                    l2seg_hdls[10] = { 0 };
+    NetworkKeyHandle                *nkh = NULL;
     // slab_stats_t                *pre = NULL, *post = NULL;
     // bool                        is_leak = false;
 
@@ -253,7 +256,7 @@ TEST_F(enicif_test, test2)
 
 #if 0
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(2);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(21);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -266,10 +269,11 @@ TEST_F(enicif_test, test2)
 #endif
 
     // Create l2segments
-    l2seg_spec.add_network_handle(nw_hdl);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     for (int i = 1; i <= num_l2segs; i++) {
         // Create l2segment
-        l2seg_spec.mutable_meta()->set_vrf_id(2);
+        l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
         l2seg_spec.mutable_key_or_handle()->set_segment_id(200 + i);
         l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
         l2seg_spec.mutable_wire_encap()->set_encap_value(200 + i);
@@ -348,6 +352,7 @@ TEST_F(enicif_test, test3)
     InterfaceDeleteRequest      del_req;
     InterfaceDeleteResponseMsg  del_rsp;
     int                         num_l2segs = 1;
+    NetworkKeyHandle                *nkh = NULL;
     // uint64_t                    l2seg_hdls[10] = { 0 };
     // slab_stats_t                *pre = NULL, *post = NULL;
     // bool                        is_leak = false;
@@ -413,10 +418,11 @@ TEST_F(enicif_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create l2segments
-    l2seg_spec.add_network_handle(nw_hdl);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     for (int i = 1; i <= num_l2segs; i++) {
         // Create l2segment
-        l2seg_spec.mutable_meta()->set_vrf_id(3);
+        l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(3);
         l2seg_spec.mutable_key_or_handle()->set_segment_id(300 + i);
         l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
         l2seg_spec.mutable_wire_encap()->set_encap_value(300 + i);

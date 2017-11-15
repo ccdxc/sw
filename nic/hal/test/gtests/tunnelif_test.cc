@@ -17,7 +17,7 @@
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
-using intf::InterfaceKeyHandle;
+using kh::InterfaceKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
 using vrf::VrfSpec;
@@ -26,7 +26,7 @@ using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
 using intf::LifResponse;
-using intf::LifKeyHandle;
+using kh::LifKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
 using endpoint::EndpointSpec;
@@ -76,6 +76,7 @@ TEST_F(tunnelif_test, test1)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
+    NetworkKeyHandle            *nkh = NULL;
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(1);
@@ -98,8 +99,9 @@ TEST_F(tunnelif_test, test1)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_vrf_id(1);
-    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(11);

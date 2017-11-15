@@ -15,3 +15,4 @@ import session_pb2          as session
 import nwsec_pb2            as nwsec
 import acl_pb2              as acl 
 import l4lb_pb2             as l4lb
+import kh_pb2               as kh
