@@ -51,20 +51,13 @@ dma_cmd_intrinsic:
     nop
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
-    CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport, p4_intr_global_tm_instance_type)
-
-// TODO: This is temporary. There is now support to DMA multiple PHV segments
-// in the same command. Once model gets that feature, we can fold this into the
-// previous command
-dma_cmd_txdma_intrinsic:
-    CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_txdma_dma_cmd, p4_txdma_intr_qid, p4_txdma_intr_txdma_rsv)
-dma_cmd_p4plus_to_p4_app_header:
+    // app header
     phvwr           p.tcp_app_header_p4plus_app_id, 1 // TODO: P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID
     phvwri          p.tcp_app_header_flags, P4PLUS_TO_P4_FLAGS_LKP_INST | P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
 
-    phvwri          p.app_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwr           p.app_header_dma_dma_cmd_phv_start_addr, TCP_PHV_TX_APP_HDR_START
-    phvwr           p.app_header_dma_dma_cmd_phv_end_addr, TCP_PHV_TX_APP_HDR_END
+    CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport,
+                                p4_intr_global_tm_instance_type,
+                                p4_txdma_intr_qid, tcp_app_header_vlan_tag)
 
 dma_cmd_hdr:
     add             r5, k.common_phv_qstate_addr, TCP_TCB_HEADER_TEMPLATE_OFFSET

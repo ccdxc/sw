@@ -338,24 +338,18 @@ header_type txdma_pad_before_dma_t {
 metadata txdma_pad_before_dma_t dma_pad;
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 0
-// TODO: Note intrinsic_txdma is temporary until model gets ability to DMA
-// multiple PHV segments in one command
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t intrinsic_txdma;    // dma cmd 1
+metadata dma_cmd_mem2pkt_t l2l3_header_dma;  // dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t app_header_dma;   // dma cmd 2
+metadata dma_cmd_phv2pkt_t tcp_header_dma;   // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t l2l3_header_dma;  // dma cmd 3
+metadata dma_cmd_phv2mem_t ringentry_dma;    // dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t tcp_header_dma;   // dma cmd 4
+metadata dma_cmd_phv2mem_t doorbell_dma;     // dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ringentry_dma;    // dma cmd 5
+metadata dma_cmd_mem2pkt_t data_dma;         // dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t doorbell_dma;     // dma cmd 6
-@pragma dont_trim
-metadata dma_cmd_mem2pkt_t data_dma;         // dma cmd 7
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 8
+metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
