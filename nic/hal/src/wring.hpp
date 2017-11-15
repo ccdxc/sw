@@ -26,6 +26,8 @@ using wring::WRingGetEntriesResponse;
 using wring::WRingGetEntriesResponseMsg;
 using wring::WRingGetMetaResponseMsg;
 using wring::WRingGetMetaResponse;
+using wring::WRingSetMetaResponseMsg;
+using wring::WRingSetMetaResponse;
 
 namespace hal {
 
@@ -150,6 +152,9 @@ hal_ret_t wring_get_entries(wring::WRingGetEntriesRequest& req,
 
 hal_ret_t wring_get_meta(wring::WRingSpec& req,
                     wring::WRingGetMetaResponse *rsp);
+
+hal_ret_t wring_set_meta(wring::WRingSpec& req,
+                    wring::WRingSetMetaResponse *rsp);
 }    // namespace hal
 
 #endif    // __WRING_HPP__

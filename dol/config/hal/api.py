@@ -502,8 +502,15 @@ def GetRingEntries(objlist):
 def GetRingMeta(objlist):
     if IsHalDisabled(): return
     stub = wring_pb2.WRingStub(HalChannel)
-    __config(objlist, wring_pb2.WRingRequestMsg,
+    __get(objlist, wring_pb2.WRingRequestMsg,
              stub.WRingGetMeta)
+    return
+
+def SetRingMeta(objlist):
+    if IsHalDisabled(): return
+    stub = wring_pb2.WRingStub(HalChannel)
+    __config(objlist, wring_pb2.WRingRequestMsg,
+             stub.WRingSetMeta)
     return
 
 def ConfigureAcls(objlist):

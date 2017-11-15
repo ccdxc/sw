@@ -94,8 +94,7 @@
     modify_field(common_global_scratch.pending_del_ack_send, common_phv.pending_del_ack_send); \
     modify_field(common_global_scratch.pending_txdma, common_phv.pending_txdma); \
     modify_field(common_global_scratch.pingpong, common_phv.pingpong); \
-    modify_field(common_global_scratch.rnmdr_full, common_phv.rnmdr_full); \
-    modify_field(common_global_scratch.rnmpr_full, common_phv.rnmpr_full); \
+    modify_field(common_global_scratch.fatal_error, common_phv.fatal_error); \
     modify_field(common_global_scratch.write_arq, common_phv.write_arq); \
     modify_field(common_global_scratch.write_tcp_app_hdr, common_phv.write_tcp_app_hdr); \
     modify_field(common_global_scratch.l7_proxy_en, common_phv.l7_proxy_en); \
@@ -189,7 +188,7 @@ header_type tcp_rtt_d_t {
 header_type read_rnmdr_d_t {
     fields {
         rnmdr_pidx              : 32;
-        rnmdr_pidx_full         : 1;
+        rnmdr_pidx_full         : 8;
     }
 }
 
@@ -197,7 +196,7 @@ header_type read_rnmdr_d_t {
 header_type read_rnmpr_d_t {
     fields {
         rnmpr_pidx              : 32;
-        rnmpr_pidx_full         : 1;
+        rnmpr_pidx_full         : 8;
     }
 }
 
@@ -413,8 +412,7 @@ header_type common_global_phv_t {
         pending_del_ack_send    : 1;
         pending_txdma           : 1;
         pingpong                : 1;
-        rnmdr_full              : 1;
-        rnmpr_full              : 1;
+        fatal_error             : 1;
         write_arq               : 1;
         write_tcp_app_hdr       : 1;
         l7_proxy_en             : 1;

@@ -15,6 +15,7 @@ service WRing {
   rpc WRingDelete (WRingDeleteRequestMsg) returns (WRingDeleteResponseMsg) {}
   rpc WRingGetEntries (WRingGetEntriesRequestMsg) returns (WRingGetEntriesResponseMsg) {}
   rpc WRingGetMeta (WRingRequestMsg) returns (WRingGetMetaResponseMsg) {}
+  rpc WRingSetMeta (WRingRequestMsg) returns (WRingSetMetaResponseMsg) {}
 }
 
 // WRingKeyHandle is used to operate either by its key or handle
@@ -30,6 +31,8 @@ message WRingSpec {
   types.ObjectMeta      meta                      = 1;    // common object meta
   WRingKeyHandle        key_or_handle             = 2;
   types.WRingType       type                      = 3;
+  uint32                pi                        = 4;
+  uint32                ci                        = 5;
 }
 
 // WRingRequestMsg is batched add or modify wring request
@@ -124,13 +127,25 @@ message WRingGetEntriesResponseMsg {
 // WRingGetMetaResponseMsg captures all the information about a wring metadata
 // only if api_status indicates success, other fields are valid
 message WRingGetMetaResponse {
-  types.ApiStatus    api_status = 1;    // API status code
-  WRingSpec         spec        = 2;    // wring configuration
-  uint32            pi          = 3;
-  uint32            ci          = 4;
+  types.ApiStatus   api_status = 1;    // API status code
+  WRingSpec         spec       = 2;    // wring configuration
+  //uint32            pi          = 3;
+  //uint32            ci          = 4;
 }
 
 // WRingGetMetaResponse is batched response to WRingGetMetaResponseMsg
 message WRingGetMetaResponseMsg {
   repeated WRingGetMetaResponse    response = 1;    // batch get response
+}
+
+// WRingSetMetaResponseMsg captures all the information about a wring metadata
+// only if api_status indicates success, other fields are valid
+message WRingSetMetaResponse {
+  types.ApiStatus   api_status = 1;    // API status code
+  WRingSpec         spec       = 2;    // wring configuration
+}
+
+// WRingSetMetaResponse is batched response to WRingSetMetaResponseMsg
+message WRingSetMetaResponseMsg {
+  repeated WRingSetMetaResponse    response = 1;    // batch set response
 }

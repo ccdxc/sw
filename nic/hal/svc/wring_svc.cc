@@ -100,3 +100,24 @@ WRingServiceImpl::WRingGetMeta(ServerContext *context,
     }
     return Status::OK;
 }
+
+Status
+WRingServiceImpl::WRingSetMeta(ServerContext *context,
+                           const WRingRequestMsg *req,
+                           WRingSetMetaResponseMsg *rsp)
+{
+    uint32_t            i, nreqs = req->request_size();
+    WRingSetMetaResponse    *response;
+
+    HAL_TRACE_DEBUG("Rcvd WRing Set Meta Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto request = req->request(i);
+        hal::wring_set_meta(request, response);
+    }
+    return Status::OK;
+}

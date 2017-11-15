@@ -100,12 +100,19 @@ class BRQObject(base.ConfigObjectBase):
             ring_entry.Show()
         return
     def PrepareHALRequestSpec(self, reqspec):
+        self.pi = resp_spec.spec.pi
+        self.ci = resp_spec.spec.ci
         reqspec.type = self.type
         return
     def ProcessHALResponse(self, req_spec, resp_spec):
+        return
+    def PrepareHALGetRequestSpec(self, reqspec):
+        reqspec.type = self.type
+        return
+    def ProcessHALGetResponse(self, req_spec, resp_spec):
         #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
-        self.pi = resp_spec.pi
-        self.ci = resp_spec.ci
+        self.pi = resp_spec.spec.pi
+        self.ci = resp_spec.spec.ci
         cfglogger.info("Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
         return
 

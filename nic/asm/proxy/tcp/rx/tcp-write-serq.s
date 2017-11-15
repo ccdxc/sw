@@ -31,7 +31,8 @@ tcp_rx_write_serq_stage6_start:
     sne         c1, k.common_phv_write_arq, r0
     seq         c2, k.to_s6_payload_len, r0
     setcf       c7, [!c1 & c2]
-    bcf         [c7], flow_write_serq_drop
+    seq         c3, k.common_phv_fatal_error, 1
+    bcf         [c7 | c3], flow_write_serq_drop
     nop
     bcf         [c1], flow_write_serq_process_done
     nop

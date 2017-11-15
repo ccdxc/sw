@@ -51,6 +51,7 @@ def SetupProxyArgs(tc):
     free_rnmdr = 0
     num_pkts = 1
     test_retx = None
+    sem_full = None
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -80,6 +81,8 @@ def SetupProxyArgs(tc):
         tc.module.logger.info("- num_pkts %s" % tc.module.args.num_pkts)
     if hasattr(tc.module.args, 'test_retx'):
         test_retx = tc.module.args.test_retx
+    if hasattr(tc.module.args, 'sem_full'):
+        sem_full = tc.module.args.sem_full
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -111,6 +114,9 @@ def SetupProxyArgs(tc):
         if 'num_pkts' in iterelem.__dict__:
             num_pkts = iterelem.num_pkts
             tc.module.logger.info("- num_pkts %s" % iterelem.num_pkts)
+        if 'sem_full' in iterelem.__dict__:
+            sem_full = iterelem.sem_full
+            tc.module.logger.info("- sem_full %s" % iterelem.sem_full)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack = send_ack
@@ -121,6 +127,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.free_rnmdr = free_rnmdr
     tc.pvtdata.num_pkts = num_pkts
     tc.pvtdata.test_retx = test_retx
+    tc.pvtdata.sem_full = sem_full
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA

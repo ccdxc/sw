@@ -251,8 +251,51 @@ wring_get_meta (WRingSpec& spec, WRingGetMetaResponse *rsp)
 
     // fill config spec of this WRING
     rsp->mutable_spec()->set_type(wring.wring_type);
-    rsp->set_pi(wring.pi);
-    rsp->set_ci(wring.ci);
+    rsp->mutable_spec()->set_pi(wring.pi);
+    rsp->mutable_spec()->set_ci(wring.ci);
+
+    HAL_TRACE_DEBUG("Ring pi: {} ci: {}", wring.pi, wring.ci);
+
+    // fill stats of this WRING
+    rsp->set_api_status(types::API_STATUS_OK);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// process a WRing set Meta request
+//------------------------------------------------------------------------------
+hal_ret_t
+wring_set_meta (WRingSpec& spec, WRingSetMetaResponse *rsp)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    wring_t                 wring;
+    pd::pd_wring_args_t     pd_wring_args;
+
+    if(spec.type() <= types::WRING_TYPE_NONE) {
+        HAL_TRACE_ERR("Invalid wring type");
+        rsp->set_api_status(types::API_STATUS_WRING_TYPE_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    wring_init(&wring);
+    wring.wring_type = spec.type();
+    wring.pi = spec.pi();
+    wring.ci = spec.ci();
+
+    pd::pd_wring_args_init(&pd_wring_args);
+    pd_wring_args.wring = &wring;
+
+    ret = pd::pd_wring_set_meta(&pd_wring_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
+        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        return HAL_RET_HW_FAIL;
+    }
+
+    // fill config spec of this WRING
+    rsp->mutable_spec()->set_type(wring.wring_type);
+    rsp->mutable_spec()->set_pi(wring.pi);
+    rsp->mutable_spec()->set_ci(wring.ci);
 
     HAL_TRACE_DEBUG("Ring pi: {} ci: {}", wring.pi, wring.ci);
 

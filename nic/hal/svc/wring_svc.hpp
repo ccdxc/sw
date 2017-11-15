@@ -24,6 +24,8 @@ using wring::WRingGetEntriesResponse;
 using wring::WRingGetEntriesResponseMsg;
 using wring::WRingGetMetaResponseMsg;
 using wring::WRingGetMetaResponse;
+using wring::WRingSetMetaResponseMsg;
+using wring::WRingSetMetaResponse;
 
 class WRingServiceImpl final : public WRing::Service {
 public:
@@ -47,6 +49,10 @@ public:
     Status WRingGetMeta(ServerContext *context,
                     const WRingRequestMsg *req,
                     WRingGetMetaResponseMsg *rsp) override;
+
+    Status WRingSetMeta(ServerContext *context,
+                    const WRingRequestMsg *req,
+                    WRingSetMetaResponseMsg *rsp) override;
 };
 
 #endif    // __WRING_SVC_HPP__

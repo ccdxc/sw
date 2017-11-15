@@ -330,6 +330,14 @@ modules:
             test_cancel_retx_timer : 1
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_NMDR_FULL
+        spec    : uplink_to_uplink_sem_full.testspec
+        module  : pkt_to_p4
+        args    :
+            sem_full : nmdr
+            bypass_barco : 1
+
+    - module:
         name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4

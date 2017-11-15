@@ -615,6 +615,7 @@ hal_ret_t pd_wring_update(pd_wring_args_t *wring);
 hal_ret_t pd_wring_delete(pd_wring_args_t *wring);
 hal_ret_t pd_wring_get_entry(pd_wring_args_t *wring);
 hal_ret_t pd_wring_get_meta (pd_wring_args_t *wring);
+hal_ret_t pd_wring_set_meta (pd_wring_args_t *wring);
 
 
 typedef struct pd_descr_aol_s {

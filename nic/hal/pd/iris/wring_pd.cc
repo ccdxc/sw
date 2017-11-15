@@ -460,6 +460,40 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     return ret;
 }
 
+static
+hal_ret_t
+p4pd_wring_set_meta(pd_wring_t* wring_pd)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    wring_t*            wring = wring_pd->wring;
+    pd_wring_meta_t     *meta = &g_meta[wring->wring_type];
+    uint64_t            sem_addr = meta->alloc_semaphore_addr;
+
+    if(meta->get_hw_meta_fn) {
+    	return meta->get_hw_meta_fn(wring_pd);
+    }
+
+    HAL_TRACE_DEBUG("Writing pi {0} to addr: 0x{1:x}",
+            wring->pi, sem_addr);
+
+    if(!p4plus_reg_write(sem_addr,
+                        wring->pi)) {
+        HAL_TRACE_ERR("Failed to write data to hw)");
+    }
+
+    sem_addr += 4;
+    HAL_TRACE_DEBUG("Writing ci {0} to addr: 0x{1:x}",
+            wring->ci, sem_addr);
+
+    if(!p4plus_reg_write(sem_addr,
+                        wring->ci)) {
+        HAL_TRACE_ERR("Failed to write data to hw)");
+    }
+
+    return ret;
+}
+
+
 hal_ret_t
 wring_pd_init_global_rings() 
 {
@@ -586,6 +620,29 @@ pd_wring_get_meta (pd_wring_args_t *args)
 
     // get hw wring entry
     ret = p4pd_wring_get_meta(&wring_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get wring meta");
+        goto cleanup;
+    }
+cleanup:
+    return ret;
+}
+
+hal_ret_t
+pd_wring_set_meta (pd_wring_args_t *args)
+{
+    hal_ret_t               ret;
+    pd_wring_t              wring_pd;
+
+    HAL_TRACE_DEBUG("Wring pd set meta");
+
+    // allocate PD wring state
+    wring_pd_init(&wring_pd);
+
+    wring_pd.wring = args->wring;
+
+    // get hw wring entry
+    ret = p4pd_wring_set_meta(&wring_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get wring meta");
         goto cleanup;

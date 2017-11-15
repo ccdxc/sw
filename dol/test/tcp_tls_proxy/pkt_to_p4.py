@@ -96,6 +96,10 @@ def TestCaseSetup(tc):
 
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmdr.Configure()
+    if tc.pvtdata.sem_full and tc.pvtdata.sem_full == 'nmdr':
+        rnmdr.pi = 0
+        rnmdr.ci = 2    # ring size of 2, so can hold 1 entry
+        rnmdr.SetMeta()
     tc.pvtdata.Add(rnmdr)
 
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
@@ -223,7 +227,13 @@ def TestCaseVerify(tc):
             tc.packets.Get('PKT1').payloadsize * num_rx_pkts:
         print("Warning! pkt rx byte stats not as expected %d %d" % \
                 (tcpcb_cur.bytes_rcvd, tcpcb.bytes_rcvd))
-        return False
+
+        # In the error case of running out of descriptors, we increment stats and
+        # update rcv_nxt before discovering too late that we cannot continue.
+        # Since we will likely kill the connection in this case, ignore this
+        # check
+        if not tc.pvtdata.sem_full:
+            return False
     
     # 6. Verify pkt tx stats
     if other_tcpcb_cur.pkts_sent != other_tcpcb.pkts_sent + num_tx_pkts:
@@ -299,4 +309,9 @@ def TestCaseTeardown(tc):
     if tc.pvtdata.test_timer:
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(0)
+    if tc.pvtdata.sem_full and tc.pvtdata.sem_full == 'nmdr':
+        rnmdr = tc.pvtdata.db["RNMDR"]
+        rnmdr.pi = 0
+        rnmdr.ci = 1024
+        rnmdr.SetMeta()
     return

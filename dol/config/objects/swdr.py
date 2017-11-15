@@ -173,12 +173,24 @@ class SwDscrRingObject(base.ConfigObjectBase):
         if (self.ringidx != None):
             reqspec.key_or_handle.wring_id = self.ringidx
         reqspec.type = self.haltype
+        reqspec.pi = self.pi
+        reqspec.ci = self.ci
+        cfglogger.info("Req Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
+        return
+
+    def PrepareHALGetRequestSpec(self, reqspec):
+        if (self.ringidx != None):
+            reqspec.key_or_handle.wring_id = self.ringidx
+        reqspec.type = self.haltype
+        return
+
+    def ProcessHALGetResponse(self, req_spec, resp_spec):
         #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
-        self.pi = resp_spec.pi
-        self.ci = resp_spec.ci
+        self.pi = resp_spec.spec.pi
+        self.ci = resp_spec.spec.ci
         cfglogger.info("Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
         return
 
@@ -210,6 +222,11 @@ class SwDscrRingObject(base.ConfigObjectBase):
         RingEntryHelper = HelperDB[self.swdr_type]
         RingEntryHelper.Configure(self.swdre_list)
         return
+
+    def SetMeta(self):
+        lst = []
+        lst.append(self)
+        halapi.SetRingMeta(lst)
 
 
 class SwDscrRingObjectHelper:
