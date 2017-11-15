@@ -3298,6 +3298,112 @@ def capri_p4pd_create_swig_makefile(be):
         of.write(content_str)
         of.close()
 
+
+def capri_p4pd_create_debug_cli_sh(be):
+
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    content_str = '#!/bin/bash\n'
+    content_str += 'SW_DIR=../../../..\n'
+    content_str += 'NIC_DIR=$SW_DIR/nic\n'
+    content_str += '\n'
+    content_str += '# generate swig files\n'
+    content_str += 'swig -c++ -python -I$NIC_DIR/gen/iris/include  -I$NIC_DIR/hal/pd  -o iris_wrap.cc iris.i\n'
+    content_str += '\n'
+    content_str += '# compile the shared lib\n'
+    content_str += 'g++ -shared -fPIC -o _iris.so iris_wrap.cc $NIC_DIR/gen/iris/src/p4pd_debug.cc -Wl,--allow-multiple-definition -Wl,--whole-archive $NIC_DIR/third-party/grpc/*.a /usr/local/lib/libgrpc.a -Wl,--no-whole-archive  -I$SW_DIR  -I/usr/include/python2.7 -L$NIC_DIR/obj/  -lhalproto -lprotobuf -lgrpc++\n'
+    content_str += '\n'
+    content_str += '# dependent modules for python\n'
+    content_str += 'export PYTHONPATH=$PYTHONPATH:$NIC_DIR/gen/proto/hal\n'
+    content_str += '\n'
+    content_str += '# dependent shared libs\n'
+    content_str += 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/obj\n'
+    content_str += '\n'
+    content_str += '# start the debug CLI prompt\n'
+    content_str += 'python debugshell.py repl\n'
+
+    out_file = out_dir + 'debug_hal_cli.sh'
+    with open(out_file, "w") as of:
+        of.write(content_str)
+        of.close()
+    os.chmod(out_file, 0o755)
+
+def capri_p4pd_create_swig_custom_hdr(be):
+
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    content_str = 'p4pd_error_t\n';
+    content_str += 'p4pd_entry_read(uint32_t  tableid,\n';
+    content_str += '                uint32_t  index,\n';
+    content_str += '                void      *swkey,\n';
+    content_str += '                void      *swkey_mask,\n';
+    content_str += '                void      *actiondata);\n';
+    content_str += '\n';
+    content_str += 'p4pd_error_t\n';
+    content_str += 'p4pd_entry_write(uint32_t tableid,\n';
+    content_str += '                 uint32_t index,\n';
+    content_str += '                 void     *swkey,\n';
+    content_str += '                 void     *swkey_mask,\n';
+    content_str += '                 void     *actiondata);\n';
+
+    out_file = out_dir + 'iris_custom.h'
+    with open(out_file, "w") as of:
+        of.write(content_str)
+        of.close()
+
+
+def capri_p4pd_create_bazel_build(be):
+
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    content_str = 'package(default_visibility = ["//visibility:public"])\n'
+    content_str += '\n'
+    content_str += 'licenses(["notice"])  # MIT license\n'
+    content_str += '\n'
+    content_str += 'cc_library(\n'
+    content_str += '    name = "swig_includes",\n'
+    content_str += '    hdrs = [\n'
+    content_str += '    ] + glob(["*.hpp"]) + glob(["*.h"]),\n'
+    content_str += ')\n'
+    content_str += '\n'
+    content_str += '# use cc_binary to force the lib name\n'
+    content_str += 'cc_binary(\n'
+    content_str += '    name = "_iris.so",\n'
+    content_str += '    linkshared = 1,\n'
+    content_str += '    srcs = [\n'
+    content_str += '    ] + glob(["*.cc"]),\n'
+    content_str += '    deps = [\n'
+    content_str += '        "//nic/include:base_includes",\n'
+    content_str += '        "@python_path//:python27-lib",\n'
+    content_str += '        ":swig_includes",\n'
+    content_str += '        "//nic:gen_includes",\n'
+    content_str += '        "//nic:gen_proto_includes",\n'
+    content_str += '        "//nic:halproto",\n'
+    content_str += '        "//nic:grpc",\n'
+    content_str += '    ],\n'
+    content_str += 'linkopts = [\n'
+    content_str += '    "-lprotobuf",\n'
+    content_str += '],\n'
+    content_str += ')\n'
+
+    out_file = out_dir + 'BUILD'
+    with open(out_file, "w") as of:
+        of.write(content_str)
+        of.close()
+    os.chmod(out_file, 0o755)
+
 def capri_p4pd_create_swig_interface(be):
 
     name = be.prog_name
@@ -3316,12 +3422,13 @@ def capri_p4pd_create_swig_interface(be):
 %include "std_vector.i"
 %{
     #include <thread>
-    #include "p4pd.h"
-    #include "common_rxdma_actions_p4pd.h"
-    #include "common_txdma_actions_p4pd.h"
-    #include "p4pd_api.hpp"
-    #include "lib_model_client.h"
+    #include "nic/gen/iris/include/p4pd.h"
+    #include "iris_custom.h"
     extern int capri_init(void);
+    char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
+    uint16_t p4pd_tbl_swkey_size[P4TBL_ID_TBLMAX];
+    uint16_t p4pd_tbl_sw_action_data_size[P4TBL_ID_TBLMAX];
+
     namespace hal {
         thread_local std::thread *t_curr_thread;
     }
@@ -3351,55 +3458,7 @@ typedef unsigned long long uint64_t;
 %free(uint32_t);
 %free(uint64_t);
 %include "p4pd.h"
-%include "common_rxdma_actions_p4pd.h"
-%include "common_txdma_actions_p4pd.h"
-%include "p4pd_api.hpp"
-%include "lib_model_client.h"
-extern int capri_init(void);
-%inline %{""" + """
-    int %s_cli_init()""" % (name) + """
-    {
-        int ret;
-
-        setenv("HAL_CONFIG_PATH", "./conf", 1);
-
-        lib_model_connect();
-
-        if (ret = p4pd_init())
-        {
-            printf("Error! p4pd_init() returned %d\\n", ret);
-            return ret;
-        }
-
-        if (ret = p4pluspd_rxdma_init())
-        {
-            printf("Error! p4pluspd_rxdma_init() returned %d\\n", ret);
-            return ret;
-        }
-
-        if (ret = p4pluspd_txdma_init())
-        {
-            printf("Error! p4pluspd_txdma_init() returned %d\\n", ret);
-            return ret;
-        }
-
-        if (ret = capri_init())
-        {
-            printf("Error! capri_init() returned %d\\n", ret);
-            return ret;
-        }
-
-        return 0;
-    }
-""" + """
-    void %s_cli_cleanup()""" % (name) + """
-    {
-        lib_model_conn_close();
-        p4pd_cleanup();
-        p4pluspd_rxdma_cleanup();
-        p4pluspd_txdma_cleanup();
-    }
-%}
+%include "iris_custom.h"
 """
     out_file = out_dir + '%s.i' % (name)
     with open(out_file, "w") as of:

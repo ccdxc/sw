@@ -283,6 +283,8 @@ cc_library(
             ],
     linkopts = [
         "-Lthird-party/grpc",
+        #"-L/usr/local/lib",
+        #"-lgrpc++"
         ],
 )
 

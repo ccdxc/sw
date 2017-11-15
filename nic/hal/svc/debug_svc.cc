@@ -8,6 +8,7 @@
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/gen/iris/include/p4pd.h"
+#include "nic/hal/pd/p4pd_api.hpp"
 
 extern uint32_t read_reg_base(uint32_t chip, uint64_t addr);
 
@@ -20,9 +21,10 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
 {
     HAL_TRACE_DEBUG("Rcvd DEBUG Invoke Request");
     int table_access = 0;
-    int reg_access   = 0;
+    int reg_access = 0;
     uint32_t data = 0x0;
     int chip = 0;
+    p4pd_error_t pd_err = P4PD_SUCCESS;
 
     DebugSpec spec = req->request(0);
     DebugResponse *response = rsp->add_response();
@@ -43,15 +45,76 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                         key_handle.reg_id());
     }
 
-    HAL_TRACE_DEBUG("operation: {}", spec.opn_type());
+    HAL_TRACE_DEBUG("operation: {}", spec.opn_type(), spec.index());
 
     if (table_access) {
-        egress_policer_actiondata *ad = (egress_policer_actiondata *)spec.str_data().c_str();
+        HAL_TRACE_DEBUG("operation: {} index: {}",
+                        spec.opn_type(), spec.index());
 
-        HAL_TRACE_DEBUG("actionid: {}", ad->actionid);
+        if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
+            pd_err = p4pd_global_entry_read(
+                                        key_handle.table_id(),
+                                        spec.index(),
+                                        (void *) spec.swkey().c_str(),
+                                        (void *) spec.swkey_mask().c_str(),
+                                        (void *) spec.actiondata().c_str());
 
-        HAL_TRACE_DEBUG("entry_valid: {}",
-                        ad->egress_policer_action_u.egress_policer_execute_egress_policer.entry_valid);
+            if (pd_err != P4PD_SUCCESS) {
+                HAL_TRACE_DEBUG("Hardware read fail");
+                return Status::OK;
+            }
+            DebugSpec *rsp_spec = response->mutable_rsp_data();
+            rsp_spec->set_swkey(spec.swkey());
+            rsp_spec->set_swkey_mask(spec.swkey_mask());
+            rsp_spec->set_actiondata(spec.actiondata());
+        } else {
+            uint32_t hwkey_len        = 0;
+            uint32_t hwkeymask_len    = 0;
+            uint32_t hwactiondata_len = 0;
+
+            p4pd_hwentry_query(key_handle.table_id(), &hwkey_len,
+                               &hwkeymask_len, &hwactiondata_len);
+
+            void *hwkey      = NULL;
+            void *hwkeymask  = NULL;
+
+            HAL_TRACE_DEBUG("hwkeylen: {}, hwkeymask_len: {}",
+                            hwkey_len, hwkeymask_len);
+
+            // build hw key & mask
+            hwkey      = HAL_MALLOC(HAL_MEM_ALLOC_DEBUG_CLI,
+                                    (hwkey_len     + 7)/8);
+
+            hwkeymask  = HAL_MALLOC(HAL_MEM_ALLOC_DEBUG_CLI,
+                                    (hwkeymask_len + 7)/8);
+
+            memset(hwkey,     0, (hwkey_len     + 7)/8);
+            memset(hwkeymask, 0, (hwkeymask_len + 7)/8);
+
+            pd_err = p4pd_hwkey_hwmask_build(
+                                key_handle.table_id(),
+                                (void *) spec.swkey().c_str(),
+                                (void *) spec.swkey_mask().c_str(),
+                                (uint8_t *)hwkey,
+                                (uint8_t *)hwkeymask);
+
+            pd_err = p4pd_entry_write(
+                                key_handle.table_id(),
+                                spec.index(),
+                                (uint8_t *)hwkey,
+                                (uint8_t *)hwkeymask,
+                                (void *) spec.actiondata().c_str());
+
+            if (pd_err != P4PD_SUCCESS) {
+                HAL_TRACE_DEBUG("Hardware write fail");
+                return Status::OK;
+            } else {
+                HAL_TRACE_DEBUG("Hardware write PASS");
+            }
+
+            if (hwkey)     HAL_FREE(HAL_MEM_ALLOC_DEBUG_CLI, hwkey);
+            if (hwkeymask) HAL_FREE(HAL_MEM_ALLOC_DEBUG_CLI, hwkeymask);
+        }
     }
 
     if (reg_access) {
@@ -70,6 +133,8 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
 
         response->set_debug_status(types::API_STATUS_OK);
     }
+
+    response->set_debug_status(types::API_STATUS_OK);
 
     return Status::OK;
 }

@@ -10,6 +10,7 @@
 
 import click
 from click_repl import register_repl
+import iris_debug_cli as backend
 //::    tabledict = {}
 //::    tableid = 1
 //::    for table in pddict['tables']:
@@ -95,13 +96,18 @@ def ${table}_index(ctx, ids):
 @click.pass_context
 def process_results(ctx, rslt, ids):
     config = {}
+    config['action_name'] = ''
     config['table_name'] = ctx.obj['table_name']
     config['opn'] = ctx.obj['opn']
     config['index'] = ids
     config['action_name'] = ctx.obj['action_name']
+    config['actionid_vld'] = False
     config['actionfld'] = {}
+    config['swkey'] = {}
+    config['swkey_mask'] = {}
     for arg, value in rslt:
         config['actionfld'][arg] = value
+    backend.populate_table(config)
     print config
 
 //::        for action in pddict['tables'][table]['actions']:
@@ -123,7 +129,7 @@ def ${actionname}(ctx):
 @${actionname}.command(name='${actionfldname}')
 @click.argument('arg_${actionfldname}', type=click.STRING)
 def ${actionfldname}_cmd(arg_${actionfldname}):
-    return ('arg_${actionfldname}', arg_${actionfldname})
+    return ('${actionfldname}', arg_${actionfldname})
 
 //::                #endfor
 //::            #endif
@@ -147,8 +153,14 @@ def ${table}(ctx):
 def ${table}_index(ctx, ids):
     config = {}
     config['table_name'] = ctx.obj['table_name']
+    config['action_name'] = ''
     config['opn'] = ctx.obj['opn']
     config['index'] = ids
+    config['actionid_vld'] = False
+    config['actionfld'] = {}
+    config['swkey']={}
+    config['swkey_mask']={}
+    backend.populate_table(config)
     print config
     pass
 

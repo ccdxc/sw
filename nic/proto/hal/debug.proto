@@ -37,7 +37,10 @@ message DebugSpec {
     DebugOperationType  opn_type        =   2;      // read/write operation
     uint64              addr            =   3;      // address to be read/write
     uint32              reg_data        =   4;      // data to write
-    bytes               str_data        =   5;      // structure typecast to char* and wrapped with string
+    uint32              index           =   5;      // index for tables
+    bytes               swkey           =   6;      // structure typecast to char* and wrapped with string
+    bytes               swkey_mask      =   7;      // structure typecast to char* and wrapped with string
+    bytes               actiondata      =   8;      // structure typecast to char* and wrapped with string
 }
 
 // Batched DEBUG request message
@@ -47,8 +50,9 @@ message DebugRequestMsg {
 
 // DEBUG response
 message DebugResponse {
-    fixed32     debug_status  =   1;    // DEBUG cmd status
-    uint32      ret_data    =   2;      // return data for read operations
+    DebugSpec   rsp_data      =   1;
+    fixed32     debug_status  =   2;    // DEBUG cmd status
+    uint32      ret_data      =   3;      // return data for read operations
 }
 
 // Batched DEBUG response msg

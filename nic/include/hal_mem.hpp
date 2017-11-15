@@ -123,6 +123,7 @@ typedef enum hal_mem_alloc_e {
     HAL_MEM_ALLOC_DLLIST,
     HAL_MEM_ALLOC_EVENT_MGR,
     HAL_MEM_ALLOC_CATALOG,
+    HAL_MEM_ALLOC_DEBUG_CLI,
     HAL_MEM_ALLOC_OTHER,
 } hal_mem_alloc_t;
 

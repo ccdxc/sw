@@ -25,8 +25,11 @@ from capri_utils import *
 from capri_pa import capri_field as capri_field
 from capri_output import _get_output_name as _get_output_name
 from capri_output import capri_p4pd_create_swig_makefile as capri_p4pd_create_swig_makefile
+from capri_output import capri_p4pd_create_bazel_build as capri_p4pd_create_bazel_build
+from capri_output import capri_p4pd_create_swig_custom_hdr as capri_p4pd_create_swig_custom_hdr
 from capri_output import capri_p4pd_create_swig_interface as capri_p4pd_create_swig_interface
 from capri_output import capri_p4pd_create_swig_main as capri_p4pd_create_swig_main
+from capri_output import capri_p4pd_create_debug_cli_sh as capri_p4pd_create_debug_cli_sh
 
 tenjin_prefix = "//::"
 
@@ -45,7 +48,7 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_
     for f in files:
         if f.endswith('.py'):
             output_dir = output_py_dir
-            if "debug" in f:
+            if "debug_cli" in f:
                 genf = cli_name + '_debug_cli.py'
             elif "p4pd" in f:
                 genf = cli_name + '_cli.py'
@@ -1468,6 +1471,9 @@ class capri_p4pd:
         capri_p4pd_create_swig_makefile(self.be)
         capri_p4pd_create_swig_interface(self.be)
         capri_p4pd_create_swig_main(self.be)
+        capri_p4pd_create_debug_cli_sh(self.be)
+        capri_p4pd_create_bazel_build(self.be)
+        capri_p4pd_create_swig_custom_hdr(self.be)
 
 def capri_p4pd_code_generate(capri_be):
     p4pd = capri_p4pd(capri_be)

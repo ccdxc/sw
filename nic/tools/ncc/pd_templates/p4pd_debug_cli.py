@@ -7,9 +7,14 @@
 #
 # ${pddict['cli-name']} DEBUG CLI
 #
+import    grpc
+import    debug_pb2
+import    debug_pb2_grpc
+
+grpc_server = 'localhost:50054'
 
 import glob
-from cmd2 import Cmd
+from iris import *
 import ${pddict['cli-name']}
 //::    tabledict = {}
 //::    tableid = 1
@@ -44,6 +49,11 @@ import ${pddict['cli-name']}
 //::        #endif
 //::    #endfor
 
+table_name_to_id_dict = {}
+//::    for table in pddict['tables']:
+table_name_to_id_dict['${table}'] = ${tabledict[table]}
+//::    #endfor
+
 array_cols = 16
 
 p4pd_table_types_enum = [
@@ -53,6 +63,19 @@ p4pd_table_types_enum = [
     'INDEX',
     'MPU',
 ]
+
+def debug_grpc_setup():
+    global debug_client_stub
+
+    # create grpc client connection
+    debug_client_channel = grpc.insecure_channel(grpc_server)
+    debug_client_stub = debug_pb2_grpc.DebugStub(debug_client_channel)
+
+def debug_msg_send(ctx, debug_request_msg):
+    debug_grpc_setup()
+
+    global debug_client_stub
+    return debug_client_stub.DebugInvoke(debug_request_msg)
 
 def docstring_parameter(*sub):
     def dec(obj):
@@ -86,7 +109,18 @@ class ${table}():
         self.actiondata   = ${table}_actiondata()
         self.actiondata_p = self.actiondata.this
 
-    def populate_table(ctx):
+//::        if len(pddict['tables'][table]['actions']):
+//::            tbl = table.upper()
+//::            var = 0
+//::            for action in pddict['tables'][table]['actions']:
+//::                (actionname, actionfldlist) = action
+//::                actname = actionname.upper()
+        self.${tbl}_${actname}_ID = ${var}
+//::                var = var + 1
+//::            #endfor
+//::        #endif
+
+    def populate_table(self, ctx):
 
             # if table type != Index
 //::        if pddict['tables'][table]['type'] != 'Index':
@@ -98,18 +132,16 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
             self.swkey.${table}_u${i}.${p4fldname} = int(values[0])
 
 //::                        else:
 
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -130,17 +162,16 @@ class ${table}():
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
 
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
             self.swkey.${table}_hdr_u${i}.${p4fldname} = int(values[0])
 
 //::                        else:
 
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -157,17 +188,16 @@ class ${table}():
 //::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                if (p4fldwidth <= 32):
 
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
             self.swkey.${p4fldname} = int(values[0])
 
 //::                else:
 
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -187,16 +217,15 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey.${p4fldname} = int(values[0])
 //::                        else:
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -216,16 +245,15 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey.${p4fldname} = int(values[0])
 //::                        else:
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_vld'] == true):
-            values = ctx['${p4fldname}'].split()
+        if ('${p4fldname}' in ctx['swkey']):
+            values = ctx['swkey']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -251,18 +279,16 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask = int(values[0])
 
 //::                        else:
-
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -283,18 +309,16 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask = int(values[0])
 
 //::                        else:
-
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -311,18 +335,16 @@ class ${table}():
 //::            for fields in pddict['tables'][table]['keys']:
 //::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                if (p4fldwidth <= 32):
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey_mask.${p4fldname}_mask = int(values[0])
 
 //::                        else:
-
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -342,16 +364,15 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey_mask.${p4fldname}_mask = int(values[0])
 //::                        else:
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -371,16 +392,15 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) != 1:
                 return
 
             self.swkey_mask.${p4fldname}_mask = int(values[0])
 //::                        else:
-        @docstring_parameter(str((((${p4fldwidth} + 7) / 8) - 1)))
-        if (ctx['${p4fldname}_mask_vld'] == true):
-            values = ctx['${p4fldname}_mask'].split()
+        if ('${p4fldname}_mask' in ctx['swkey_mask']):
+            values = ctx['swkey_mask']['${p4fldname}'].split()
             if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
                 return
 
@@ -398,28 +418,30 @@ class ${table}():
             # for each actions
 //::        for action in pddict['tables'][table]['actions']:
 //::            (actionname, actionfldlist) = action
-//::            if len(actionfldlist):
+//::            action_name_upper = actionname.upper()
+//::            table_upper = table.upper()
+        if ctx['action_name'] == '${actionname}':
+            self.actiondata.actionid = self.${table_upper}_${action_name_upper}_ID
 
+//::            if len(actionfldlist):
                     # for each action field
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
 //::                    if (actionfldwidth <= 32):
+            if '${actionfldname}' in ctx['actionfld']:
+                values = ctx['actionfld']['${actionfldname}'].split()
+                if len(values) != 1:
+                    return
 
-        if (ctx['${actionfldname}_vld'] == true):
-            values = ctx['${actionfldname}'].split()
-            if len(values) != 1:
-                return
-
-            self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname} = int(values[0])
+                self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname} = int(values[0])
 //::                    else:
-        @docstring_parameter(str((((${actionfldwidth} + 7) / 8) - 1)))
-        if (ctx['${actionfldname}_vld'] == true):
-            values = ctx['${actionfldname}'].split()
-            if len(values) == 0 or len(values) > ((${actionfldwidth} + 7) / 8):
-                return
+            if '${actionfldname}' in ctx['actionfld']:
+                values = ctx['actionfld']['${actionfldname}'].split()
+                if len(values) == 0 or len(values) > ((${actionfldwidth} + 7) / 8):
+                    return
 
-            for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i, int(values[i]))
+                for i in range(len(values)):
+                    ${pddict['cli-name']}.uint8_array_t_setitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i, int(values[i]))
 //::                    #endif
 //::                #endfor
                     # endfor action fields
@@ -427,25 +449,11 @@ class ${table}():
 //::        #endfor
             # endfor actions
 
-//::        if len(pddict['tables'][table]['actions']):
-//::            tbl = table.upper()
-        ${table}_actions_en = [
-//::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
-//::                actname = actionname.upper()
-            '${tbl}_${actname}_ID',
-//::            #endfor
-        ]
-//::        #endif
 
-        if (ctx['actionid_vld'] == true):
-            values = ctx['action_vld'].split()
-            if len(values) != 1:
-                return
-            self.actiondata.actionid = ${table}_actions_en.index(values[0])
+    def create_entry(self, ctx):
 
+        self.populate_table(ctx)
 
-    def create_entry(ctx):
         hwentry_p = ${pddict['cli-name']}.new_uint8_ptr_t()
 
         ret = ${pddict['cli-name']}.p4pd_entry_create(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, hwentry_p)
@@ -457,8 +465,10 @@ class ${table}():
 
         ${pddict['cli-name']}.delete_uint8_ptr_t(hwentryp)
 
-    def write_entry(ctx):
+    def write_entry(self, ctx):
         try:
+            self.populate_table(ctx)
+
             index = ctx['index']
 
 //::        if pddict['tables'][table]['type'] != 'Index':
@@ -505,7 +515,7 @@ class ${table}():
             pass
 //::        #endif
 
-    def modify_entry(ctx):
+    def modify_entry(self, ctx):
 
         index = ctx['index']
 
@@ -517,28 +527,30 @@ class ${table}():
 
         print('Entry was read successfully at index %d' % (index))
 
+        self.populate_table(ctx)
+
         try:
 //::        if pddict['tables'][table]['type'] != 'Index':
-            hwkey_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
-            hwkeymask_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
-            hwactiondata_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
+            #hwkey_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
+            #hwkeymask_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
+            #hwactiondata_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
 
-            ${pddict['cli-name']}.p4pd_hwentry_query(self.table_id, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
+            #${pddict['cli-name']}.p4pd_hwentry_query(self.table_id, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
 
-            hwkey_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkey_len_p)+7)/8)
-            hwkeymask_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkeymask_len_p)+7)/8)
+            #hwkey_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkey_len_p)+7)/8)
+            #hwkeymask_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkeymask_len_p)+7)/8)
 
-            ret = ${pddict['cli-name']}.p4pd_hwkey_hwmask_build(self.table_id, self.swkey_p, self.swkey_mask_p, hwkey_p, hwkeymask_p)
+            #ret = ${pddict['cli-name']}.p4pd_hwkey_hwmask_build(self.table_id, self.swkey_p, self.swkey_mask_p, hwkey_p, hwkeymask_p)
 
-            if ret < 0:
-                raise RuntimeError('p4pd_hwkey_hwmask_build() returned %d!' % (ret))
+            #if ret < 0:
+            #    raise RuntimeError('p4pd_hwkey_hwmask_build() returned %d!' % (ret))
 
 //::        else:
-            hwkey_p = None
-            hwkeymask_p = None
+            #hwkey_p = None
+            #hwkeymask_p = None
 //::        #endif
 
-            ret = ${pddict['cli-name']}.p4pd_entry_write(self.table_id, index, hwkey_p, hwkeymask_p, self.actiondata_p)
+            ret = ${pddict['cli-name']}.p4pd_entry_write(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p)
 
             if ret < 0:
                 raise RuntimeError('p4pd_entry_write() returned %d!' % (ret))
@@ -550,19 +562,33 @@ class ${table}():
 
         finally:
 //::        if pddict['tables'][table]['type'] != 'Index':
-            ${pddict['cli-name']}.free_uint8_t(hwkey_p)
-            ${pddict['cli-name']}.free_uint8_t(hwkeymask_p)
-            ${pddict['cli-name']}.delete_uint32_ptr_t(hwkey_len_p)
-            ${pddict['cli-name']}.delete_uint32_ptr_t(hwkeymask_len_p)
-            ${pddict['cli-name']}.delete_uint32_ptr_t(hwactiondata_len_p)
+            #${pddict['cli-name']}.free_uint8_t(hwkey_p)
+            #${pddict['cli-name']}.free_uint8_t(hwkeymask_p)
+            #${pddict['cli-name']}.delete_uint32_ptr_t(hwkey_len_p)
+            #${pddict['cli-name']}.delete_uint32_ptr_t(hwkeymask_len_p)
+            #${pddict['cli-name']}.delete_uint32_ptr_t(hwactiondata_len_p)
+            pass
 //::        else:
             pass
 //::        #endif
 
-    def read_entry(ctx):
+    def read_entry(self, ctx):
 
+        self.populate_table(ctx)
+
+        #create the grpc DEBUG Request
+        debug_request_msg = debug_pb2.DebugRequestMsg()
+
+        debug_request = debug_request_msg.request.add()
+        debug_request.opn_type = debug_pb2.DebugOperationType.Value('DEBUG_OP_TYPE_' + ctx['opn'].upper())
+        debug_request.key_or_handle.table_id = ctx['table_id']
         index = ctx['index']
 
+        #debug_request.swkey = iris.get_data_void(self.swkey_p)
+        #debug_request.swkey_mask = iris.get_data_void(self.swkey_mask_p)
+        #debug_request.actiondata = iris.get_data_void(self.actiondata_p)
+
+        #ret = debug_msg_send(ctx, debug_request_msg)
         ret = ${pddict['cli-name']}.p4pd_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p)
 
         if ret < 0:
@@ -577,18 +603,18 @@ class ${table}():
 //::            for fields in pddict['tables'][table]['keys']:
 //::            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                if (p4fldwidth <= 8):
-        print('  ${p4fldname}: %d (0x%02x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%02x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                elif (p4fldwidth <= 16):
-        print('  ${p4fldname}: %d (0x%04x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%04x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                elif (p4fldwidth <= 32):
-        print('  ${p4fldname}: %d (0x%08x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%08x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${p4fldname}, i))
         print(valstr)
 //::                #endif
 //::            #endfor
@@ -603,11 +629,11 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 8):
-        print('    ${p4fldname}: %d (0x%02x)' % (swkey.${table}_u${i}.${p4fldname}, swkey.${table}_u${i}.${p4fldname}))
+        print('    ${p4fldname}: %d (0x%02x)' % (self.swkey.${table}_u${i}.${p4fldname}, self.swkey.${table}_u${i}.${p4fldname}))
 //::                        elif (p4fldwidth <= 16):
-        print('    ${p4fldname}: %d (0x%04x)' % (swkey.${table}_u${i}.${p4fldname}, swkey.${table}_u${i}.${p4fldname}))
+        print('    ${p4fldname}: %d (0x%04x)' % (self.swkey.${table}_u${i}.${p4fldname}, self.swkey.${table}_u${i}.${p4fldname}))
 //::                        elif (p4fldwidth <= 32):
-        print('    ${p4fldname}: %d (0x%08x)' % (swkey.${table}_u${i}.${p4fldname}, swkey.${table}_u${i}.${p4fldname}))
+        print('    ${p4fldname}: %d (0x%08x)' % (self.swkey.${table}_u${i}.${p4fldname}, self.swkey.${table}_u${i}.${p4fldname}))
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
@@ -624,18 +650,18 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 8):
-        print('  ${p4fldname}: %d (0x%02x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%02x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        elif (p4fldwidth <= 16):
-        print('  ${p4fldname}: %d (0x%04x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%04x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        elif (p4fldwidth <= 32):
-        print('  ${p4fldname}: %d (0x%08x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%08x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${p4fldname}, i))
         print(valstr)
 
 //::                        #endif
@@ -650,18 +676,18 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 8):
-        print('    ${p4fldname}: %d (0x%02x)' % (swkey.${table}_hdr_union${i}_t.${p4fldname}, swkey.${table}_hdr_union${i}_t.${p4fldname}))
+        print('    ${p4fldname}: %d (0x%02x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
 //::                        elif (p4fldwidth <= 16):
-        print('    ${p4fldname}: %d (0x%04x)' % (swkey.${table}_hdr_union${i}_t.${p4fldname}, swkey.${table}_hdr_union${i}_t.${p4fldname}))
+        print('    ${p4fldname}: %d (0x%04x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
 //::                        elif (p4fldwidth <= 32):
-        print('    ${p4fldname}: %d (0x%08x)' % (swkey.${table}_hdr_union${i}_t.${p4fldname}, swkey.${table}_hdr_union${i}_t.${p4fldname}))
+        print('    ${p4fldname}: %d (0x%08x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${table}_hdr_union${i}_t.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${table}_hdr_union${i}_t.${p4fldname}, i))
         print(valstr)
 
 //::                        #endif
@@ -671,18 +697,18 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 8):
-        print('  ${p4fldname}: %d (0x%02x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%02x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        elif (p4fldwidth <= 16):
-        print('  ${p4fldname}: %d (0x%04x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%04x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        elif (p4fldwidth <= 32):
-        print('  ${p4fldname}: %d (0x%08x)' % (swkey.${p4fldname}, swkey.${p4fldname}))
+        print('  ${p4fldname}: %d (0x%08x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${p4fldname}, i))
         print(valstr)
 
 //::                        #endif
@@ -696,18 +722,18 @@ class ${table}():
 //::            for fields in pddict['tables'][table]['keys']:
 //::            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                if (p4fldwidth <= 8):
-        print('  ${p4fldname}_mask: %d (0x%02x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                elif (p4fldwidth <= 16):
-        print('  ${p4fldname}_mask: %d (0x%04x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                elif (p4fldwidth <= 32):
-        print('  ${p4fldname}_mask: %d (0x%08x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${p4fldname}_mask, i))
         print(valstr)
 
 //::                #endif
@@ -721,18 +747,18 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 8):
-        print('    ${p4fldname}_mask: %d (0x%02x)' % (swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
+        print('    ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 16):
-        print('    ${p4fldname}_mask: %d (0x%04x)' % (swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
+        print('    ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 32):
-        print('    ${p4fldname}_mask: %d (0x%08x)' % (swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
+        print('    ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i))
         print(valstr)
 
 //::                        #endif
@@ -742,18 +768,18 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 8):
-        print('  ${p4fldname}_mask: %d (0x%02x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 16):
-        print('  ${p4fldname}_mask: %d (0x%04x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 32):
-        print('  ${p4fldname}_mask: %d (0x%08x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${p4fldname}_mask, i))
         print(valstr)
 
 //::                        #endif
@@ -768,18 +794,18 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 8):
-        print('    ${p4fldname}_mask: %d (0x%02x)' % (swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
+        print('    ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 16):
-        print('    ${p4fldname}_mask: %d (0x%04x)' % (swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
+        print('    ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 32):
-        print('    ${p4fldname}_mask: %d (0x%08x)' % (swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
+        print('    ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
 //::                        else:
         valstr = '    ${p4fldname}_mask[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i))
         print(valstr)
 
 //::                        #endif
@@ -789,18 +815,18 @@ class ${table}():
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 8):
-        print('  ${p4fldname}_mask: %d (0x%02x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 16):
-        print('  ${p4fldname}_mask: %d (0x%04x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 32):
-        print('  ${p4fldname}_mask: %d (0x%08x)' % (swkey_mask.${p4fldname}_mask, swkey_mask.${p4fldname}_mask))
+        print('  ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${p4fldname}_mask, i))
         print(valstr)
 
 //::                        #endif
@@ -809,35 +835,41 @@ class ${table}():
 //::            #endfor
 //::        #endif
 
-        print('${table}_actiondata:')
-        if actiondata.actionid < len(${table}.${table}_actiondata.${table}_actions_en):
-            print('  actionid: %s (%d)' % (${table}.${table}_actiondata.${table}_actions_en[actiondata.actionid], actiondata.actionid))
-        else:
-            print('  actionid: UNKNOWN (%d)' % (actiondata.actionid))
+        #print('${table}_actiondata:')
+        #if self.actiondata.actionid < len(${table}.actiondata.${table}_actions_en):
+        #    print('  actionid: %s (%d)' % (${table}.actiondata.${table}_actions_en[self.actiondata.actionid], self.actiondata.actionid))
+        #else:
+        #    print('  actionid: UNKNOWN (%d)' % (self.actiondata.actionid))
         print('  ${table}_action_u:')
+//::        table_upper = table.upper()
 //::        for action in pddict['tables'][table]['actions']:
-//::        (actionname, actionfldlist) = action
+//::            (actionname, actionfldlist) = action
+//::            actionname_upper = actionname.upper()
+
+        if self.actiondata.actionid == self.${table_upper}_${actionname_upper}_ID:
 //::            if len(actionfldlist):
-        print('    ${table}_${actionname}_t:')
+            print('    ${table}_${actionname}_t:')
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
 //::                    if (actionfldwidth <= 8):
-        print('      ${actionfldname}: %d (0x%02x)' % (actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
+            print('      ${actionfldname}: %d (0x%02x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
 //::                    elif (actionfldwidth <= 16):
-        print('      ${actionfldname}: %d (0x%04x)' % (actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
+            print('      ${actionfldname}: %d (0x%04x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
 //::                    elif (actionfldwidth <= 32):
-        print('      ${actionfldname}: %d (0x%08x)' % (actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
+            print('      ${actionfldname}: %d (0x%08x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
 //::                    else:
-        valstr =   '      ${actionfldname}[]: '
-        lenstr = len(valstr)
-        for i in range((${actionfldwidth} + 7) / 8):
-            if i != 0 and (i % array_cols) == 0:
-                valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i))
-        print(valstr)
+            valstr =   '      ${actionfldname}[]: '
+            lenstr = len(valstr)
+            for i in range((${actionfldwidth} + 7) / 8):
+                if i != 0 and (i % array_cols) == 0:
+                    valstr += ('\n' + (' ' * lenstr))
+                valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i))
+            print(valstr)
 
 //::                    #endif
 //::                #endfor
+//::            else:
+            print('    ${table}_${actionname}')
 //::            #endif
 //::        #endfor
 
@@ -845,6 +877,7 @@ class ${table}():
         # endfor table
 
 def populate_table(ctx):
+    ctx['table_id'] = table_name_to_id_dict[ctx['table_name']]
         # for each table
 //::    first_time = 1
 //::    for table in pddict['tables']:
@@ -859,7 +892,12 @@ def populate_table(ctx):
     # table: ${table}, type: ${table_type}
     ${if_condn} (ctx['table_id'] == ${tabledict[table]}):
         table = ${table}()
-        table.populate_table(ctx)
+
+        if (ctx['opn'] == 'read'):
+            table.read_entry(ctx)
+        elif (ctx['opn'] == 'write'):
+            table.modify_entry(ctx)
+
 //::    #endfor
         # endfor table
 
