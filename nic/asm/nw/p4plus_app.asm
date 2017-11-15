@@ -151,8 +151,8 @@ p4plus_app_ipsec:
 p4plus_app_ipsec_ipv6:
   phvwri      p.v6_generic_valid, 0
   seq         c3, k.udp_valid, TRUE
-  phvwri.!c3      p.p4_to_p4plus_ipsec_ip_hdr_size, 40
-  phvwri.c3      p.p4_to_p4plus_ipsec_ip_hdr_size, 48
+  phvwri.!c3  p.p4_to_p4plus_ipsec_ip_hdr_size, 40
+  phvwri.c3   p.p4_to_p4plus_ipsec_ip_hdr_size, 48
   phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv6_nextHdr
   add.e       r5, r6, k.ipv6_payloadLen
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r5

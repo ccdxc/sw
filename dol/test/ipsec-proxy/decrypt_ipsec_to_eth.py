@@ -178,6 +178,12 @@ def TestCaseVerify(tc):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+    if (rnmpr.ringentries[rnmpr.pi].handle != (brq_cur.ring_entries[brq.pi].iv_addr - 42)):
+        print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
+        return False
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].status_addr - 56)):
+        print("Status Addr not as expected in BRQ Req 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].status_addr))
+        return False
 
     return True
 

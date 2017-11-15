@@ -406,8 +406,13 @@
 #define P4PLUS_IPSEC_HDR_SZ            14
 #define P4PLUS_RAW_REDIR_HDR_SZ        40
 #define P4PLUS_P4PT_HDR_SZ             8
+
+/*****************************************************************************/
+/* P4 fixed header size constants (in bytes)                                */
+/*****************************************************************************/
 #define UDP_HDR_SIZE                   8
 #define IPV6_BASE_HDR_SIZE             40
+#define IPV4_BASE_HDR_SIZE             20
 
 /*****************************************************************************/
 /* P4+ to P4 header size constants (in bytes)                                */

@@ -181,8 +181,18 @@ def TestCaseVerify(tc):
         print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
         return False
 
+    # 11. Verify IV increment
     if (ipseccb_cur.iv != iv+1):
         print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
+        return False
+    print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
+    # 12. Verify BARCO IV Address
+    if (rnmpr.ringentries[rnmpr.pi].handle != brq_cur.ring_entries[brq.pi].iv_addr):
+        print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
+        return False
+    # 13. Verify BARCO Status Address
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].status_addr - 56)):
+        print("Descriptor handle not as expected in BRQ Req 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].status_addr))
         return False
 
     return True

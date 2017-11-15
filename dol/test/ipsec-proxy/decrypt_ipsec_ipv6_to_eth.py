@@ -145,12 +145,12 @@ def TestCaseVerify(tc):
         return False
 
     print("BRQ:")
-    print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
-    print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)
-    print("command 0x%x" % brq_cur.ring_entries[0].command)
-    print("key_desc_index 0x%x" % brq_cur.ring_entries[0].key_desc_index)
-    print("iv_addr 0x%x" % brq_cur.ring_entries[0].iv_addr)
-    print("status_addr 0x%x" % brq_cur.ring_entries[0].status_addr)
+    print("ilist_addr 0x%x" % brq_cur.ring_entries[brq.pi].ilist_addr)
+    print("olist_addr 0x%x" % brq_cur.ring_entries[brq.pi].olist_addr)
+    print("command 0x%x" % brq_cur.ring_entries[brq.pi].command)
+    print("key_desc_index 0x%x" % brq_cur.ring_entries[brq.pi].key_desc_index)
+    print("iv_addr 0x%x" % brq_cur.ring_entries[brq.pi].iv_addr)
+    print("status_addr 0x%x" % brq_cur.ring_entries[brq.pi].status_addr)
     # There is an offset of 64 to go past scratch when queuing to barco. Pls modify
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
@@ -165,7 +165,7 @@ def TestCaseVerify(tc):
         return False
     # 7. Verify brq input desc and rnmdr
     if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].ilist_addr - 0x40)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
+        print("Descriptor handle not as expected in BRQ Req 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
         return False
 
     # 8. Verify PI for TNMDR got incremented by 1
@@ -179,7 +179,13 @@ def TestCaseVerify(tc):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
-
+    print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
+    if (rnmpr.ringentries[rnmpr.pi].handle != (brq_cur.ring_entries[brq.pi].iv_addr - 62)):
+        print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
+        return False
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].status_addr - 56)):
+        print("Status Addr not as expected in BRQ Req 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].status_addr))
+        return False
     return True
 
 def TestCaseTeardown(tc):
