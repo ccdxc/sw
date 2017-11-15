@@ -183,6 +183,18 @@ profiles:
       fields:
          tcp_unexpected_win_scale_action: EDIT
 
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_ALLOW
+      fields:
+         tcp_unexpected_sack_perm_action: ALLOW
+
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_DROP
+      fields:
+         tcp_unexpected_sack_perm_action: DROP
+
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_EDIT
+      fields:
+         tcp_unexpected_sack_perm_action: EDIT
+
     - id: SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_ALLOW
       fields:
          tcp_urg_ptr_not_set_action: ALLOW
@@ -278,6 +290,30 @@ profiles:
     - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT
       fields:
          tcp_unexpected_ts_option_action: EDIT
+
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_ALLOW
+      fields:
+         tcp_unexpected_sack_option_action: ALLOW
+
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_DROP
+      fields:
+         tcp_unexpected_sack_option_action: DROP
+
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_EDIT
+      fields:
+         tcp_unexpected_sack_option_action: EDIT
+
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_ALLOW
+      fields:
+         tcp_unexpected_sack_option_action: ALLOW
+
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_DROP
+      fields:
+         tcp_unexpected_sack_option_action: DROP
+
+    - id: SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_EDIT
+      fields:
+         tcp_unexpected_sack_option_action: EDIT
 
     - id: SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
       fields:

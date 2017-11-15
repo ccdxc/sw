@@ -37,6 +37,7 @@ class SessionObject(base.ConfigObjectBase):
         self.__pre_process_spec(spec)
         self.conn_track_en = getattr(self.spec, 'tracking', False)
         self.tcp_ts_option = getattr(self.spec, 'timestamp', False)
+        self.tcp_sack_perm_option = getattr(self.spec, 'sack_perm', False)
 
         self.fte = getattr(spec, 'fte', False)
         self.multicast = getattr(spec, 'multicast', False)
@@ -141,6 +142,7 @@ class SessionObject(base.ConfigObjectBase):
         session.hal_handle = self.hal_handle
         session.conn_track_en = self.conn_track_en
         session.tcp_ts_option = self.tcp_ts_option
+        session.tcp_sack_perm_option = self.tcp_sack_perm_option
         session.iflow = copy.copy(self.iflow)
         session.rflow = copy.copy(self.rflow)
 
@@ -150,7 +152,7 @@ class SessionObject(base.ConfigObjectBase):
         if not isinstance(other, self.__class__):
             return False
 
-        fields = ["id", "hal_handle", "tcp_ts_option", "conn_track_en"]
+        fields = ["id", "hal_handle", "tcp_ts_option", "conn_track_en", "tcp_sack_perm_optionr"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
 
@@ -186,9 +188,11 @@ class SessionObject(base.ConfigObjectBase):
         if self.IsTCP():
             req_spec.conn_track_en = getattr(self.spec, 'tracking', False)
             req_spec.tcp_ts_option = getattr(self.spec, 'timestamp', False)
+            req_spec.tcp_sack_perm_option = getattr(self.spec, 'sack_perm', False)
         else:
             req_spec.conn_track_en = False
             req_spec.tcp_ts_option = False
+            req_spec.tcp_sack_perm_option = False
 
         self.iflow.PrepareHALRequestSpec(req_spec.initiator_flow)
         self.rflow.PrepareHALRequestSpec(req_spec.responder_flow)
@@ -223,10 +227,12 @@ class SessionObject(base.ConfigObjectBase):
             self.id = get_resp.spec.session_id
             self.tcp_ts_option = get_resp.spec.tcp_ts_option
             self.conn_track_en = get_resp.spec.conn_track_en
+            self.tcp_sack_perm_option = get_resp.spec.tcp_sack_perm_option
         else:
             self.id = None
             self.tcp_ts_option = None
             self.conn_track_en = None
+            self.tcp_sack_perm_option = None
 
         self.iflow.ProcessHALGetResponse(get_req_spec, get_resp.spec.initiator_flow)
         self.rflow.ProcessHALGetResponse(get_req_spec, get_resp.spec.responder_flow)

@@ -173,9 +173,10 @@ message SessionSpec {
   fixed32              session_id             = 2 [(gogoproto.jsontag) = "key"];
   bool                 conn_track_en          = 3;    // TRUE if connection tracking is ON
   bool                 tcp_ts_option          = 4;   // TCP timestamp option seen or not
-  sint32               iflow_syn_ack_delta    = 5;    // syn cookie delta of iflow
-  FlowSpec             initiator_flow         = 6;    // initiator flow
-  FlowSpec             responder_flow         = 7;    // responder flow
+  bool                 tcp_sack_perm_option   = 5;   // TCP SACK Permitted option negotiated or not
+  sint32               iflow_syn_ack_delta    = 6;    // syn cookie delta of iflow
+  FlowSpec             initiator_flow         = 7;    // initiator flow
+  FlowSpec             responder_flow         = 8;    // responder flow
 }
 
 // SessionRequestMsg is batched session request message

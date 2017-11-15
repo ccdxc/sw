@@ -29,6 +29,7 @@ fields:
     tcp_rsvd_flags_action: ALLOW
     tcp_unexpected_mss_action: ALLOW
     tcp_unexpected_win_scale_action: ALLOW
+    tcp_unexpected_sack_perm_action: ALLOW
     tcp_urg_ptr_not_set_action: ALLOW
     tcp_urg_flag_not_set_action: ALLOW
     tcp_urg_payload_missing_action: ALLOW
@@ -36,6 +37,7 @@ fields:
     tcp_data_len_gt_mss_action: ALLOW
     tcp_data_len_gt_win_size_action: ALLOW
     tcp_unexpected_ts_option_action: ALLOW
+    tcp_unexpected_sack_option_action: ALLOW
     tcp_unexpected_echo_ts_action: ALLOW
     tcp_ts_not_present_drop: 0
     tcp_invalid_flags_drop: 0

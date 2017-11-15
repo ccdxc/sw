@@ -60,6 +60,20 @@ modules:
               flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
             - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT
               flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            # Flow config - unset tcp_sack_option - sack_perm not negotiated, send pkt with sack option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_SACK
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_DROP
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_SACK
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_SACK
+            # Flow config - set tcp_sack_option - sack_perm negotiated, send pkt with sack option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SACK
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_DROP
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SACK
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SACK
 
     - module:
         name    : IP
@@ -135,27 +149,6 @@ modules:
               flow: filter://type=IPV4,proto=ICMP
 
     - module:
-        name    : TCP_STATELESS_IGNORE
-        ignore  : True
-        iterate :
-            - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_EDIT
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_EDIT
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_DROP
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
-              flow: filter://type=IPV4,proto=TCP
-
-    - module:
         name    : TCP_STATELESS
         iterate :
             - profile    : SEC_PROF_TCP_RSVD_FLAGS_ACTION_ALLOW
@@ -168,7 +161,19 @@ modules:
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_DROP
               flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_PERM_ACTION_EDIT
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_ALLOW
               flow: filter://type=IPV4,proto=TCP
@@ -184,9 +189,15 @@ modules:
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW
               flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_ALLOW
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_EDIT
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_INVALID_FLAGS_DROP_ENABLE
               flow: filter://type=IPV4,proto=TCP
@@ -196,6 +207,10 @@ modules:
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_DISABLE
               flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
               flow: filter://type=IPV4,proto=TCP
 

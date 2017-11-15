@@ -217,6 +217,8 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
         profile->tcp_unexpected_mss_action;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_win_scale_action =
         profile->tcp_unexpected_win_scale_action;
+    data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_sack_perm_action =
+        profile->tcp_unexpected_sack_perm_action;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_urg_ptr_not_set_action =
         profile->tcp_urg_ptr_not_set_action;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_urg_flag_not_set_action =
@@ -233,6 +235,8 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
         profile->tcp_data_len_gt_win_size_action;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_ts_option_action =
         profile->tcp_unexpected_ts_option_action;
+    data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_sack_option_action =
+        profile->tcp_unexpected_sack_option_action;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_ts_not_present_drop =
         profile->tcp_ts_not_present_drop;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_invalid_flags_drop =

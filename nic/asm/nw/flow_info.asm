@@ -49,9 +49,7 @@ flow_info:
   phvwr       p.flow_info_metadata_flow_role, d.u.flow_info_d.flow_role
 
   /* ttl change detected */
-  seq         c1, d.u.flow_info_d.flow_ttl, \
-                  k.{flow_lkp_metadata_ip_ttl_sbit0_ebit4, \
-                     flow_lkp_metadata_ip_ttl_sbit5_ebit7}
+  seq         c1, d.u.flow_info_d.flow_ttl, k.flow_lkp_metadata_ip_ttl
   phvwr.c1    p.flow_info_metadata_flow_ttl_change_detected, k.l4_metadata_ip_ttl_change_detect_en
 
   /* Flow Connection Tracking enable */
@@ -124,7 +122,8 @@ flow_miss_common:
   phvwr.!c1.e p.control_metadata_dst_lport, CPU_LPORT
   nop
   .brcase FLOW_MISS_ACTION_REDIRECT
-  phvwr.e     p.rewrite_metadata_tunnel_rewrite_index, k.control_metadata_flow_miss_idx
+  phvwr.e     p.rewrite_metadata_tunnel_rewrite_index[7:0], k.control_metadata_flow_miss_idx_sbit8_ebit15
+  phvwr.e     p.rewrite_metadata_tunnel_rewrite_index[9:8], k.control_metadata_flow_miss_idx_sbit0_ebit7[1:0]
   nop
   .brend
 
@@ -132,7 +131,8 @@ flow_miss_multicast:
   seq         c1, k.control_metadata_allow_flood, TRUE
   bcf         [!c1], flow_miss_drop
   phvwr.c1    p.capri_intrinsic_tm_replicate_en, 1
-  phvwr       p.capri_intrinsic_tm_replicate_ptr, k.control_metadata_flow_miss_idx
+  phvwr       p.capri_intrinsic_tm_replicate_ptr[7:0], k.control_metadata_flow_miss_idx_sbit8_ebit15
+  phvwr       p.capri_intrinsic_tm_replicate_ptr[15:8], k.control_metadata_flow_miss_idx_sbit0_ebit7
   phvwr       p.rewrite_metadata_rewrite_index, k.flow_miss_metadata_rewrite_index
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, k.flow_miss_metadata_tunnel_rewrite_index
   phvwr.e     p.rewrite_metadata_tunnel_vnid, k.flow_miss_metadata_tunnel_vnid

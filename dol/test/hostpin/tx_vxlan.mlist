@@ -4,7 +4,7 @@ feature:
     sub         : txvxlan
     package     : test.hostpin
     module      : hostpin
-    enable      : True
+    enable      : False
     ignore      : False
 
 modules:

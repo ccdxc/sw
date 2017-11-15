@@ -367,6 +367,7 @@ ctx_t::update_flow_table()
     if (protobuf_request()) {
         session_cfg.session_id = sess_spec_->session_id();
         session_state.tcp_ts_option = sess_spec_->tcp_ts_option();
+        session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
     }
 
     if (!flow_miss()) {

@@ -53,6 +53,11 @@ lb_tcp_session_state_initiator:
   slt.!c3      c3, r6, r2 // tcp_rcvr_win_sz < tcp_data_len
   xor          r1, d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, k.tcp_option_timestamp_valid
   seq.!c3      c3, r1, 1
+  // One more normalizaiton check, if any of the sack_valid bit is set we need to make sure
+  // that sack_perm_option_neogitated is TRUE, otherwise we have to enter normalization code
+  seq          c4, d.u.tcp_session_state_info_d.tcp_sack_perm_option_negotiated, FALSE
+  sne.c4       c4, k.{tcp_option_four_sack_valid...tcp_option_one_sack_valid}, r0
+  setcf        c3, [c3 | c4]
   // All normalizaiton checks are in c3. c3 = TRUE (needs normaliaiton, otherwise no normalization)
   // c1 = normalizatio en, c2 = established connection, c3 = bad condition hit
   bcf          [c1 & c2 & c3], lb_tcp_session_initator_normalization
@@ -322,6 +327,11 @@ lb_tcp_session_state_responder:
   slt.!c3      c3, r6, r2 // tcp_rcvr_win_sz < tcp_data_len
   xor          r1, d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, k.tcp_option_timestamp_valid
   seq.!c3      c3, r1, 1
+  // One more normalizaiton check, if any of the sack_valid bit is set we need to make sure
+  // that sack_perm_option_neogitated is TRUE, otherwise we have to enter normalization code
+  seq          c4, d.u.tcp_session_state_info_d.tcp_sack_perm_option_negotiated, FALSE
+  sne.c4       c4, k.{tcp_option_four_sack_valid...tcp_option_one_sack_valid}, r0
+  setcf        c3, [c3 | c4]
   // All normalizaiton checks are in c3. c3 = TRUE (needs normaliaiton, otherwise no normalization)
   // c1 = normalizatio en, c2 = established connection, c3 = bad condition hit
   bcf          [c1 & c2 & c3], lb_tcp_session_responder_normalization
@@ -490,17 +500,20 @@ lb_tss_r_6:
   setcf        c1, [c1 & c2]
   b.!c1        lb_tss_r_init_1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_SYN_ACK_RCVD
+  // Begin: Can make a macro to handle options in syn from responder
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_ws_option_sent, 1
-  seq          c2, k.tcp_option_ws_valid, 1
-  setcf        c1, [c1 & c2]
+  seq.c1       c1, k.tcp_option_ws_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_scale, k.tcp_option_ws_value
   tblwr.!c1    d.u.tcp_session_state_info_d.iflow_tcp_win_scale, 0
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_ts_option_sent, 1
-  seq          c2, k.tcp_option_timestamp_valid, 1
-  setcf        c1, [c1 & c2]
+  seq.c1       c1, k.tcp_option_timestamp_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
+  seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_sack_perm_option_sent, 1
+  seq.c1       c1, k.tcp_option_sack_perm_valid, 1
+  tblwr.c1     d.u.tcp_session_state_info_d.tcp_sack_perm_option_negotiated, 1
   seq          c1, k.tcp_option_mss_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
+  // End: 
   add          r1, r5, 1 // tcp_seq_num_hi + 1
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
@@ -537,18 +550,20 @@ lb_tss_r_init_2:
 lb_tss_r_init_2_1:
   // Simultaneous open allowed.
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
-
+  // Begin: Can make a macro to handle options in syn from responder
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_ws_option_sent, 1
-  seq          c2, k.tcp_option_ws_valid, 1
-  setcf        c1, [c1 & c2]
+  seq.c1       c1, k.tcp_option_ws_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_scale, k.tcp_option_ws_value
   tblwr.!c1    d.u.tcp_session_state_info_d.iflow_tcp_win_scale, 0
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_ts_option_sent, 1
-  seq          c2, k.tcp_option_timestamp_valid, 1
-  setcf        c1, [c1 & c2]
+  seq.c1       c1, k.tcp_option_timestamp_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
+  seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_sack_perm_option_sent, 1
+  seq.c1       c1, k.tcp_option_sack_perm_valid, 1
+  tblwr.c1     d.u.tcp_session_state_info_d.tcp_sack_perm_option_negotiated, 1
   seq          c1, k.tcp_option_mss_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
+  // End: 
   add          r1, r5, 1 // tcp_seq_num_hi + 1
   b            lb_tss_r_exit
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
@@ -580,18 +595,21 @@ lb_tss_r_init_3:
   .brcase      FLOW_STATE_TCP_ACK_RCVD
   smeqb        c1, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   b.!c1        lb_tss_r_exit
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
+  // Begin: Can make a macro to handle options in syn from responder
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_ws_option_sent, 1
-  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
-  seq          c2, k.tcp_option_ws_valid, 1
-  setcf        c1, [c1 & c2]
+  seq.c1       c1, k.tcp_option_ws_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_scale, k.tcp_option_ws_value
   tblwr.!c1    d.u.tcp_session_state_info_d.iflow_tcp_win_scale, 0
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_ts_option_sent, 1
-  seq          c2, k.tcp_option_timestamp_valid, 1
-  setcf        c1, [c1 & c2]
+  seq.c1       c1, k.tcp_option_timestamp_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
+  seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_sack_perm_option_sent, 1
+  seq.c1       c1, k.tcp_option_sack_perm_valid, 1
+  tblwr.c1     d.u.tcp_session_state_info_d.tcp_sack_perm_option_negotiated, 1
   seq          c1, k.tcp_option_mss_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
+  // End: 
   add          r1, r5, 1 // tcp_seq_num_hi + 1
   b            lb_tss_r_exit
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
@@ -682,23 +700,23 @@ lb_tss_r_exit:
 lb_tcp_session_initator_normalization: 
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_mss, r0
   b            lb_tcp_data_len_gt_mss_size 
-  seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, \
+  seq          c2, k.{l4_metadata_tcp_data_len_gt_mss_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_mss_action_sbit1_ebit1}, \
                       NORMALIZATION_ACTION_ALLOW
   
 
 lb_tcp_session_responder_normalization: 
   add          r4, d.u.tcp_session_state_info_d.iflow_tcp_mss, r0
   b            lb_tcp_data_len_gt_mss_size 
-  seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, \
+  seq          c2, k.{l4_metadata_tcp_data_len_gt_mss_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_mss_action_sbit1_ebit1}, \
                       NORMALIZATION_ACTION_ALLOW
 
 
 lb_tcp_data_len_gt_mss_size:
   b.c2         lb_tcp_data_len_gt_win_size
-  seq          c2, k.{l4_metadata_tcp_data_len_gt_win_size_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_win_size_action_sbit1_ebit1}, NORMALIZATION_ACTION_ALLOW
+  seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_ALLOW
   slt          c3, r4, r2
   b.!c3        lb_tcp_data_len_gt_win_size
-  seq          c4, k.l4_metadata_tcp_data_len_gt_mss_action, \
+  seq          c4, k.{l4_metadata_tcp_data_len_gt_mss_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_mss_action_sbit1_ebit1}, \
                       NORMALIZATION_ACTION_DROP
   phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4     p.capri_intrinsic_drop, 1
@@ -719,19 +737,13 @@ lb_tcp_data_len_gt_mss_size:
   phvwr        p.capri_intrinsic_payload, 0
   phvwr        p.capri_deparser_len_trunc, 1
  
-  // Edit option
-  // 1. Change the l4_metadata.tcp_data_len to mss
-  // 2. Edit the IP Total len based on whether tunnel is terminated or not
-  // 3. Update the packet_len which is used by deparser to reconstruct
-  //    the packet.
-
 lb_tcp_data_len_gt_win_size:
-  b.c2         lb_tcp_unexpected_ts_option
-  seq          c2, k.l4_metadata_tcp_unexpected_ts_option_action, \
+  b.c2         lb_tcp_unexpected_sack_option
+  seq          c2, k.l4_metadata_tcp_unexpected_sack_option_action, \
                       NORMALIZATION_ACTION_ALLOW
   slt          c3, r6, r2
-  b.!c3        lb_tcp_unexpected_ts_option
-  seq          c4, k.{l4_metadata_tcp_data_len_gt_win_size_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_win_size_action_sbit1_ebit1}, NORMALIZATION_ACTION_DROP
+  b.!c3        lb_tcp_unexpected_sack_option
+  seq          c4, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_DROP
   phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4     p.capri_intrinsic_drop, 1
   // Edit
@@ -751,12 +763,27 @@ lb_tcp_data_len_gt_win_size:
   add          r2, r6, r0 // Updating tcp_data_len to rcvr_win_sz
   phvwr        p.capri_intrinsic_payload, 0
   phvwr        p.capri_deparser_len_trunc, 1
-  // Edit option
-  // 1. Change the l4_metadata.tcp_data_len to rcvr_win_sz
-  // 2. Edit the IP Total len based on whether tunnel is terminated or not
-  // 3. Update the packet_len which is used by deparser to reconstruct
-  //    the packet.
 
+
+// Add the sack related normalization check here. We can have SACK option only
+// if the SACK_PERM is negotiated.
+// Write the code
+lb_tcp_unexpected_sack_option:
+  b.c2         lb_tcp_unexpected_ts_option
+  seq          c2, k.l4_metadata_tcp_unexpected_ts_option_action, \
+                      NORMALIZATION_ACTION_ALLOW
+  seq          c3, d.u.tcp_session_state_info_d.tcp_sack_perm_option_negotiated, FALSE
+  sne          c4, k.{tcp_option_four_sack_valid...tcp_option_one_sack_valid}, r0
+  bcf          ![c3 & c4], lb_tcp_unexpected_ts_option
+  seq          c4, k.l4_metadata_tcp_unexpected_sack_option_action, \
+                      NORMALIZATION_ACTION_DROP
+  phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
+  phvwr.c4     p.capri_intrinsic_drop, 1
+  // Edit option - Remove the sack option and we have to also
+  // delete the blob so that the tcp_options_fixup code recomputes
+  // the new options and all the header lengths.
+  phvwr        p.{tcp_option_four_sack_valid...tcp_option_one_sack_valid}, 0
+  phvwr        p.tcp_options_blob_valid, 0
 
 lb_tcp_unexpected_ts_option:
   b.c2         lb_tcp_ts_not_present

@@ -38,17 +38,19 @@ knobs_list = [
     ('NormalizationAction', 'tcp_rsvd_flags_action', '42'),
     ('NormalizationAction', 'tcp_unexpected_mss_action', '43'),
     ('NormalizationAction', 'tcp_unexpected_win_scale_action', '44'),
-    ('NormalizationAction', 'tcp_urg_ptr_not_set_action', '45'),
-    ('NormalizationAction', 'tcp_urg_flag_not_set_action', '46'),
-    ('NormalizationAction', 'tcp_urg_payload_missing_action', '47'),
-    ('NormalizationAction', 'tcp_rst_with_data_action', '48'),
-    ('NormalizationAction', 'tcp_data_len_gt_mss_action', '49'),
-    ('NormalizationAction', 'tcp_data_len_gt_win_size_action', '50'),
-    ('NormalizationAction', 'tcp_unexpected_ts_option_action', '51'),
-    ('NormalizationAction', 'tcp_unexpected_echo_ts_action', '52'),
-    ('bool', 'tcp_ts_not_present_drop', '53'),
-    ('bool', 'tcp_invalid_flags_drop', '54'),
-    ('bool', 'tcp_nonsyn_noack_drop', '55')]
+    ('NormalizationAction', 'tcp_unexpected_sack_perm_action', '45'),
+    ('NormalizationAction', 'tcp_urg_ptr_not_set_action', '46'),
+    ('NormalizationAction', 'tcp_urg_flag_not_set_action', '47'),
+    ('NormalizationAction', 'tcp_urg_payload_missing_action', '48'),
+    ('NormalizationAction', 'tcp_rst_with_data_action', '49'),
+    ('NormalizationAction', 'tcp_data_len_gt_mss_action', '50'),
+    ('NormalizationAction', 'tcp_data_len_gt_win_size_action', '51'),
+    ('NormalizationAction', 'tcp_unexpected_ts_option_action', '52'),
+    ('NormalizationAction', 'tcp_unexpected_echo_ts_action', '53'),
+    ('NormalizationAction', 'tcp_unexpected_sack_option_action', '54'),
+    ('bool', 'tcp_ts_not_present_drop', '55'),
+    ('bool', 'tcp_invalid_flags_drop', '56'),
+    ('bool', 'tcp_nonsyn_noack_drop', '57')]
 
 print 'meta:'
 print '    id: SECURITY_PROFILES'

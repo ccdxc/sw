@@ -97,6 +97,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         req_spec.tcp_rsvd_flags_action = self.__getEnumValue(self.fields.tcp_rsvd_flags_action)
         req_spec.tcp_unexpected_mss_action = self.__getEnumValue(self.fields.tcp_unexpected_mss_action)
         req_spec.tcp_unexpected_win_scale_action = self.__getEnumValue(self.fields.tcp_unexpected_win_scale_action)
+        req_spec.tcp_unexpected_sack_perm_action = self.__getEnumValue(self.fields.tcp_unexpected_sack_perm_action)
         req_spec.tcp_urg_ptr_not_set_action = self.__getEnumValue(self.fields.tcp_urg_ptr_not_set_action)
         req_spec.tcp_urg_flag_not_set_action = self.__getEnumValue(self.fields.tcp_urg_flag_not_set_action)
         req_spec.tcp_urg_payload_missing_action = self.__getEnumValue(self.fields.tcp_urg_payload_missing_action)
@@ -104,6 +105,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         req_spec.tcp_data_len_gt_mss_action = self.__getEnumValue(self.fields.tcp_data_len_gt_mss_action)
         req_spec.tcp_data_len_gt_win_size_action = self.__getEnumValue(self.fields.tcp_data_len_gt_win_size_action)
         req_spec.tcp_unexpected_ts_option_action = self.__getEnumValue(self.fields.tcp_unexpected_ts_option_action)
+        req_spec.tcp_unexpected_sack_option_action = self.__getEnumValue(self.fields.tcp_unexpected_sack_option_action)
         req_spec.tcp_unexpected_echo_ts_action = self.__getEnumValue(self.fields.tcp_unexpected_echo_ts_action)
         req_spec.tcp_ts_not_present_drop = self.fields.tcp_ts_not_present_drop
         req_spec.tcp_invalid_flags_drop = self.fields.tcp_invalid_flags_drop

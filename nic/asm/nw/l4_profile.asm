@@ -38,6 +38,7 @@ l4_profile:
   phvwr       p.{l4_metadata_tcp_rsvd_flags_action, \
                  l4_metadata_tcp_unexpected_mss_action, \
                  l4_metadata_tcp_unexpected_win_scale_action, \
+                 l4_metadata_tcp_unexpected_sack_perm_action, \
                  l4_metadata_tcp_urg_ptr_not_set_action, \
                  l4_metadata_tcp_urg_flag_not_set_action, \
                  l4_metadata_tcp_urg_payload_missing_action, \
@@ -46,11 +47,13 @@ l4_profile:
                  l4_metadata_tcp_data_len_gt_mss_action, \
                  l4_metadata_tcp_data_len_gt_win_size_action, \
                  l4_metadata_tcp_unexpected_ts_option_action, \
+                 l4_metadata_tcp_unexpected_sack_option_action, \
                  l4_metadata_tcp_ts_not_present_drop, \
                  l4_metadata_tcp_flags_nonsyn_noack_drop}, \
               d.{u.l4_profile_d.tcp_rsvd_flags_action, \
                  u.l4_profile_d.tcp_unexpected_mss_action, \
                  u.l4_profile_d.tcp_unexpected_win_scale_action, \
+                 u.l4_profile_d.tcp_unexpected_sack_perm_action, \
                  u.l4_profile_d.tcp_urg_ptr_not_set_action, \
                  u.l4_profile_d.tcp_urg_flag_not_set_action, \
                  u.l4_profile_d.tcp_urg_payload_missing_action, \
@@ -59,6 +62,7 @@ l4_profile:
                  u.l4_profile_d.tcp_data_len_gt_mss_action, \
                  u.l4_profile_d.tcp_data_len_gt_win_size_action, \
                  u.l4_profile_d.tcp_unexpected_ts_option_action, \
+                 u.l4_profile_d.tcp_unexpected_sack_option_action, \
                  u.l4_profile_d.tcp_ts_not_present_drop, \
                  u.l4_profile_d.tcp_flags_nonsyn_noack_drop}
 

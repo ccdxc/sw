@@ -144,12 +144,66 @@ entries:
                 tcp_mss         : const/1500
 
     - entry:
+        label: norm_sack
+        tracking: True
+        sack_perm: True
+        responder: 
+            port : const/40011
+            flow_info:
+                action  : allow
+                state   : established
+            tracking_info:
+                tcp_seq_num     : const/1000
+                tcp_ack_num     : const/5000
+                tcp_win_sz      : const/1000
+                tcp_win_scale   : const/1
+                tcp_mss         : const/1500
+        initiator: 
+            port : const/40012
+            flow_info:
+                action  : allow
+                state   : established
+            tracking_info:
+                tcp_seq_num     : const/5000
+                tcp_ack_num     : const/1000
+                tcp_win_sz      : const/1000
+                tcp_win_scale   : const/1
+                tcp_mss         : const/1500
+    
+    - entry:
+        label: norm_non_sack
+        tracking: True
+        sack_perm: False
+        responder: 
+            port : const/40013
+            flow_info:
+                action  : allow
+                state   : established
+            tracking_info:
+                tcp_seq_num     : const/1000
+                tcp_ack_num     : const/5000
+                tcp_win_sz      : const/1000
+                tcp_win_scale   : const/1
+                tcp_mss         : const/1500
+        initiator: 
+            port : const/40014
+            flow_info:
+                action  : allow
+                state   : established
+            tracking_info:
+                tcp_seq_num     : const/5000
+                tcp_ack_num     : const/1000
+                tcp_win_sz      : const/1000
+                tcp_win_scale   : const/1
+                tcp_mss         : const/1500
+
+    - entry:
         label: norm_tcp_non_syn
         tracking: False
         timestamp: False
         fte: True
         responder:
-            port : const/40011
+            port : const/40015
         initiator:
-            port : const/40012
+            port : const/40016
 

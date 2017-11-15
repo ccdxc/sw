@@ -44,13 +44,16 @@ header_type l4_metadata_t {
         icmp_invalid_code_action                 : 2;
 
         // TCP - Normalization
-        // tcp_unexpected_mss_action: We can NOP the MSS option
-        // tcp_unexpected_win_scale_action: We can NOP the MSS option
+        // tcp_unexpected_mss_action: We can Remove the MSS option
+        // tcp_unexpected_win_scale_action: We can Remove the MSS option
+        // tcp_unexpected_sack_perm_action: We can Remove the SACK_PERM option
         // tcp_unexpected_echo_ts_action: Packet with no ACK flag but echo_ts is non-zero
         // tcp_unexpected_ts_option_action: timestamp option present, but not negotiated and this is not a SYN packet
+        // tcp_unexpected_sack_option_action: sack option present, but not negotiated
         tcp_rsvd_flags_action                    : 2;
         tcp_unexpected_mss_action                : 2;
         tcp_unexpected_win_scale_action          : 2;
+        tcp_unexpected_sack_perm_action          : 2;
         tcp_urg_ptr_not_set_action               : 2;
         tcp_urg_flag_not_set_action              : 2;
         tcp_urg_payload_missing_action           : 2;
@@ -59,6 +62,7 @@ header_type l4_metadata_t {
         tcp_data_len_gt_mss_action               : 2;
         tcp_data_len_gt_win_size_action          : 2;
         tcp_unexpected_ts_option_action          : 2;
+        tcp_unexpected_sack_option_action        : 2;
         tcp_ts_not_present_drop                  : 1;
         tcp_flags_nonsyn_noack_drop              : 1;
         tcp_invalid_flags_drop                   : 1;
@@ -84,6 +88,7 @@ header_type l4_metadata_t {
         tcp_rcvr_win_sz                          : 32;
         tcp_mss                                  : 16;
         tcp_ts_option_negotiated                 : 1;
+        tcp_sack_perm_option_negotiated          : 1;
 
         // Once the complete processing is done for packet this field
         // needs to be ORed with the initator or responder exception_seen bits
@@ -110,6 +115,7 @@ action l4_profile(ip_normalization_en,
                   tcp_rsvd_flags_action,
                   tcp_unexpected_mss_action,
                   tcp_unexpected_win_scale_action,
+                  tcp_unexpected_sack_perm_action,
                   tcp_urg_ptr_not_set_action,
                   tcp_urg_flag_not_set_action,
                   tcp_urg_payload_missing_action,
@@ -118,6 +124,7 @@ action l4_profile(ip_normalization_en,
                   tcp_data_len_gt_mss_action,
                   tcp_data_len_gt_win_size_action,
                   tcp_unexpected_ts_option_action,
+                  tcp_unexpected_sack_option_action,
                   tcp_ts_not_present_drop,
                   tcp_flags_nonsyn_noack_drop,
                   tcp_invalid_flags_drop,
@@ -140,6 +147,7 @@ action l4_profile(ip_normalization_en,
     modify_field(l4_metadata.tcp_rsvd_flags_action, tcp_rsvd_flags_action);
     modify_field(l4_metadata.tcp_unexpected_mss_action, tcp_unexpected_mss_action);
     modify_field(l4_metadata.tcp_unexpected_win_scale_action, tcp_unexpected_win_scale_action);
+    modify_field(l4_metadata.tcp_unexpected_sack_perm_action, tcp_unexpected_sack_perm_action);
     modify_field(l4_metadata.tcp_urg_ptr_not_set_action, tcp_urg_ptr_not_set_action);
     modify_field(l4_metadata.tcp_urg_flag_not_set_action, tcp_urg_flag_not_set_action);
     modify_field(l4_metadata.tcp_urg_payload_missing_action, tcp_urg_payload_missing_action);
@@ -148,6 +156,7 @@ action l4_profile(ip_normalization_en,
     modify_field(l4_metadata.tcp_data_len_gt_mss_action, tcp_data_len_gt_mss_action);
     modify_field(l4_metadata.tcp_data_len_gt_win_size_action, tcp_data_len_gt_win_size_action);
     modify_field(l4_metadata.tcp_unexpected_ts_option_action, tcp_unexpected_ts_option_action);
+    modify_field(l4_metadata.tcp_unexpected_sack_option_action, tcp_unexpected_sack_option_action);
     modify_field(l4_metadata.tcp_ts_not_present_drop, tcp_ts_not_present_drop);
     modify_field(l4_metadata.tcp_flags_nonsyn_noack_drop, tcp_flags_nonsyn_noack_drop);
     modify_field(l4_metadata.tcp_invalid_flags_drop, tcp_invalid_flags_drop);
@@ -216,7 +225,8 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                        rflow_rtt_in_progress,
                        rflow_rtt, rflow_rtt_seq_no, rflow_rtt_timestamp,
                        iflow_tcp_ws_option_sent, iflow_tcp_ts_option_sent,
-                       tcp_ts_option_negotiated) {
+                       iflow_tcp_sack_perm_option_sent, tcp_ts_option_negotiated,
+                       tcp_sack_perm_option_negotiated) {
 
     /* dummy ops to keep compiler happy */
     modify_field(scratch_metadata.iflow_tcp_seq_num, iflow_tcp_seq_num);
@@ -234,7 +244,9 @@ action tcp_session_state_info(iflow_tcp_seq_num,
     modify_field(scratch_metadata.syn_cookie_delta, syn_cookie_delta);
     modify_field(scratch_metadata.iflow_tcp_ws_option_sent, iflow_tcp_ws_option_sent);
     modify_field(scratch_metadata.iflow_tcp_ts_option_sent, iflow_tcp_ts_option_sent);
+    modify_field(scratch_metadata.iflow_tcp_sack_perm_option_sent, iflow_tcp_sack_perm_option_sent);
     modify_field(l4_metadata.tcp_ts_option_negotiated, tcp_ts_option_negotiated);
+    modify_field(l4_metadata.tcp_sack_perm_option_negotiated, tcp_sack_perm_option_negotiated);
 
     // RTT
     modify_field(scratch_metadata.flow_rtt_seq_check_enabled, flow_rtt_seq_check_enabled);
@@ -788,6 +800,10 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                     tcp_option_timestamp.valid == TRUE) {
                     modify_field (l4_metadata.tcp_ts_option_negotiated, 1);
                 }
+                if (scratch_metadata.iflow_tcp_sack_perm_option_sent == TRUE  and
+                    tcp_option_sack_perm.valid == TRUE) {
+                    modify_field (l4_metadata.tcp_sack_perm_option_negotiated, 1);
+                }
                 if (tcp_option_mss.valid == TRUE) {
                     modify_field (scratch_metadata.rflow_tcp_mss, tcp_option_mss.value);
                 }
@@ -831,6 +847,10 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                     if (scratch_metadata.iflow_tcp_ts_option_sent == TRUE  and
                         tcp_option_timestamp.valid == TRUE) {
                         modify_field (l4_metadata.tcp_ts_option_negotiated, 1);
+                    }
+                    if (scratch_metadata.iflow_tcp_sack_perm_option_sent == TRUE  and
+                        tcp_option_sack_perm.valid == TRUE) {
+                        modify_field (l4_metadata.tcp_sack_perm_option_negotiated, 1);
                     }
                     if (tcp_option_mss.valid == TRUE) {
                         modify_field (scratch_metadata.rflow_tcp_mss, tcp_option_mss.value);
@@ -883,6 +903,10 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                 if (scratch_metadata.iflow_tcp_ts_option_sent == TRUE  and
                     tcp_option_timestamp.valid == TRUE) {
                     modify_field (l4_metadata.tcp_ts_option_negotiated, 1);
+                }
+                if (scratch_metadata.iflow_tcp_sack_perm_option_sent == TRUE  and
+                    tcp_option_sack_perm.valid == TRUE) {
+                    modify_field (l4_metadata.tcp_sack_perm_option_negotiated, 1);
                 }
                 if (tcp_option_mss.valid == TRUE) {
                     modify_field (scratch_metadata.rflow_tcp_mss, tcp_option_mss.value);
@@ -1268,11 +1292,25 @@ action tcp_stateless_normalization() {
         (l4_metadata.tcp_unexpected_win_scale_action == NORMALIZATION_ACTION_DROP)) {
         modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
     }
-    // NOPs will be added for EDIT option
+    // For EDIT case we will remove the option
     if ((tcp.flags & TCP_FLAG_SYN == 0) and
         (tcp_option_ws.valid == TRUE) and
         (l4_metadata.tcp_unexpected_win_scale_action == NORMALIZATION_ACTION_EDIT)) {
         remove_header(tcp_option_ws);
+        //remove_header(tcp_options_blob); NCC error so commented
+     }
+
+    // sack_perm is present but SYN is not present
+    if ((tcp.flags & TCP_FLAG_SYN == 0) and
+        (tcp_option_sack_perm.valid == TRUE) and
+        (l4_metadata.tcp_unexpected_sack_perm_action == NORMALIZATION_ACTION_DROP)) {
+        modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
+    }
+    // For EDIT case we will remove the optio
+    if ((tcp.flags & TCP_FLAG_SYN == 0) and
+        (tcp_option_sack_perm.valid == TRUE) and
+        (l4_metadata.tcp_unexpected_sack_perm_action == NORMALIZATION_ACTION_EDIT)) {
+        remove_header(tcp_option_sack_perm);
         //remove_header(tcp_options_blob); NCC error so commented
      }
 
@@ -1482,6 +1520,32 @@ action tcp_session_normalization() {
         tcp_option_timestamp.valid == FALSE) {
         modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
         drop_packet();
+    }
+    // sack option present, but not negotiated 
+    if ((l4_metadata.tcp_sack_perm_option_negotiated == FALSE) and
+        ((tcp_option_one_sack.valid == TRUE) or (tcp_option_two_sack.valid == TRUE) or
+         (tcp_option_three_sack.valid == TRUE) or (tcp_option_four_sack.valid == TRUE)) and
+        (l4_metadata.tcp_unexpected_sack_option_action == NORMALIZATION_ACTION_DROP)) {
+        modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
+        drop_packet();
+    }
+    if ((l4_metadata.tcp_sack_perm_option_negotiated == FALSE) and
+        ((tcp_option_one_sack.valid == TRUE) or (tcp_option_two_sack.valid == TRUE) or
+         (tcp_option_three_sack.valid == TRUE) or (tcp_option_four_sack.valid == TRUE)) and
+        (l4_metadata.tcp_unexpected_sack_option_action == NORMALIZATION_ACTION_EDIT)) {
+        remove_header(tcp_option_one_sack);
+        remove_header(tcp_option_two_sack);
+        remove_header(tcp_option_three_sack);
+        remove_header(tcp_option_four_sack);
+        // Since we are modifying tcp options we have to clear the tcp_option_blob
+        // In a seperate table at the end we will update the pakets with
+        // 1. Reevaluate all the existing options and add NOPs and EOLs
+        // 2. TCP Data offset
+        // If Tunneled packet and Tunnel Terminute == TRUE
+        //    3. Update Inner IP Packet total length
+        //    4. Updte the outer UDP Packet lenght.
+        // 5. Update Outer IP Total length
+        // 6. Update Control_metadata.packet_len
     }
 }
 

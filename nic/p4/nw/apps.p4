@@ -309,6 +309,10 @@ action f_p4plus_cpu_pkt(offset) {
                 bit_or(scratch_metadata.cpu_tcp_options, scratch_metadata.cpu_tcp_options,
                        CPU_TCP_OPTIONS_TIMESTAMP);
             }
+            if (tcp_option_sack_perm.valid == TRUE) {
+                bit_or(scratch_metadata.cpu_tcp_options, scratch_metadata.cpu_tcp_options,
+                       CPU_TCP_OPTIONS_SACK_PERMITTED);
+            }
         }
     }
     if ((icmp.valid == TRUE) or (icmpv6.valid == TRUE)) {

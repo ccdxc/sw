@@ -284,6 +284,12 @@ dfw_exec(fte::ctx_t& ctx)
                 if (rxhdr->tcp_options & CPU_TCP_OPTIONS_TIMESTAMP) {
                     flowupd.flow_state.tcp_ts_option_sent = 1;
                 }
+                // sack_permitted option
+                flowupd.flow_state.tcp_sack_perm_option_sent = 0;
+                if (rxhdr->tcp_options & CPU_TCP_OPTIONS_SACK_PERMITTED) {
+                    flowupd.flow_state.tcp_sack_perm_option_sent = 1;
+                }
+                
             }
         }
     } else { /* rflow */

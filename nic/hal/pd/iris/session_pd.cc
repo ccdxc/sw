@@ -162,6 +162,8 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
         // session specific information
         d.session_state_action_u.session_state_tcp_session_state_info.tcp_ts_option_negotiated =
             session_state->tcp_ts_option;
+        d.session_state_action_u.session_state_tcp_session_state_info.tcp_sack_perm_option_negotiated =
+            session_state->tcp_sack_perm_option;
 
         // initiator flow specific information
         d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_state =
@@ -180,6 +182,8 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
             session_state->iflow_state.tcp_ws_option_sent;
         d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ts_option_sent =
             session_state->iflow_state.tcp_ts_option_sent;
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_sack_perm_option_sent =
+            session_state->iflow_state.tcp_sack_perm_option_sent;
         d.session_state_action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
             session_state->iflow_state.exception_bmap;
 

@@ -159,6 +159,7 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
             NWSEC_SPEC_CHECK(tcp_rsvd_flags_action) ||
             NWSEC_SPEC_CHECK(tcp_unexpected_mss_action) ||
             NWSEC_SPEC_CHECK(tcp_unexpected_win_scale_action) ||
+            NWSEC_SPEC_CHECK(tcp_unexpected_sack_perm_action) ||
             NWSEC_SPEC_CHECK(tcp_urg_ptr_not_set_action) ||
             NWSEC_SPEC_CHECK(tcp_urg_flag_not_set_action) ||
             NWSEC_SPEC_CHECK(tcp_urg_payload_missing_action) ||
@@ -166,6 +167,7 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
             NWSEC_SPEC_CHECK(tcp_data_len_gt_mss_action) ||
             NWSEC_SPEC_CHECK(tcp_data_len_gt_win_size_action) ||
             NWSEC_SPEC_CHECK(tcp_unexpected_ts_option_action) ||
+            NWSEC_SPEC_CHECK(tcp_unexpected_sack_option_action) ||
             NWSEC_SPEC_CHECK(tcp_unexpected_echo_ts_action) ||
             NWSEC_SPEC_CHECK(tcp_ts_not_present_drop) ||
             NWSEC_SPEC_CHECK(tcp_invalid_flags_drop) ||
@@ -218,6 +220,7 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(tcp_rsvd_flags_action);
     NWSEC_SPEC_ASSIGN(tcp_unexpected_mss_action);
     NWSEC_SPEC_ASSIGN(tcp_unexpected_win_scale_action);
+    NWSEC_SPEC_ASSIGN(tcp_unexpected_sack_perm_action);
     NWSEC_SPEC_ASSIGN(tcp_urg_ptr_not_set_action);
     NWSEC_SPEC_ASSIGN(tcp_urg_flag_not_set_action);
     NWSEC_SPEC_ASSIGN(tcp_urg_payload_missing_action);
@@ -225,6 +228,7 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(tcp_data_len_gt_mss_action);
     NWSEC_SPEC_ASSIGN(tcp_data_len_gt_win_size_action);
     NWSEC_SPEC_ASSIGN(tcp_unexpected_ts_option_action);
+    NWSEC_SPEC_ASSIGN(tcp_unexpected_sack_option_action);
     NWSEC_SPEC_ASSIGN(tcp_unexpected_echo_ts_action);
     NWSEC_SPEC_ASSIGN(tcp_ts_not_present_drop);
     NWSEC_SPEC_ASSIGN(tcp_invalid_flags_drop);
@@ -1080,6 +1084,8 @@ security_profile_get (nwsec::SecurityProfileGetRequest& req,
               static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_mss_action));
     spec->set_tcp_unexpected_win_scale_action(
               static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_win_scale_action));
+    spec->set_tcp_unexpected_sack_perm_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_sack_perm_action));
     spec->set_tcp_urg_ptr_not_set_action(
               static_cast<nwsec::NormalizationAction>(sec_prof->tcp_urg_ptr_not_set_action));
     spec->set_tcp_urg_flag_not_set_action(
@@ -1094,6 +1100,8 @@ security_profile_get (nwsec::SecurityProfileGetRequest& req,
               static_cast<nwsec::NormalizationAction>(sec_prof->tcp_data_len_gt_win_size_action));
     spec->set_tcp_unexpected_ts_option_action(
               static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_ts_option_action));
+    spec->set_tcp_unexpected_sack_option_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_sack_option_action));
     spec->set_tcp_unexpected_echo_ts_action(
               static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_echo_ts_action));
     spec->set_tcp_ts_not_present_drop(sec_prof->tcp_ts_not_present_drop);

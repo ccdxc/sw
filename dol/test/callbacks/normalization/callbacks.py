@@ -93,6 +93,9 @@ def GetExpectedPacket(testcase):
     if 'TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP' in profile_name:
         # Only drop case where packet is actually allowed
         return testcase.packets.Get('PKT2')
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_DROP' in profile_name:
+        # Only drop case where packet is actually allowed
+        return testcase.packets.Get('PKT2')
     elif 'ACTION_DROP' in profile_name:
         return None
     elif '_DROP_ENABLE' in profile_name:
@@ -210,25 +213,7 @@ def GetInputTcpFlags(testcase, packet):
     #TBD: TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
-    if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_MSS_ACTION_EDIT' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
-        return None
-    elif 'TCP_URG_FLAG_NOT_SET_ACTION_ALLOW' in profile_name:
-        return None
-    elif 'TCP_URG_FLAG_NOT_SET_ACTION_DROP' in profile_name:
-        return None
-    elif 'TCP_URG_FLAG_NOT_SET_ACTION_EDIT' in profile_name:
-        return None
-    elif 'TCP_URG_PTR_NOT_SET_ACTION_ALLOW' in profile_name:
+    if 'TCP_URG_PTR_NOT_SET_ACTION_ALLOW' in profile_name:
         return 'urg,ack'
     elif 'TCP_URG_PTR_NOT_SET_ACTION_DROP' in profile_name:
         return 'urg,ack'
@@ -265,7 +250,7 @@ def GetInputTcpFlags(testcase, packet):
         return 'syn'
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
         return 'syn'
-    return None
+    return 'ack'
 
 def GetInputTcpOptions(testcase, packet):
     iterelem = testcase.module.iterator.Get()
@@ -273,6 +258,9 @@ def GetInputTcpOptions(testcase, packet):
     echo_ts = []
     echo_ts.append(TcpOptions('Timestamp', '0x3 0x4'))
     echo_ts.append(TcpOptions('NOP', None))
+    sack = []
+    sack.append(TcpOptions('SAck', '12345678 12346000'))
+    sack.append(TcpOptions('NOP', None))
     if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
         return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
@@ -285,6 +273,12 @@ def GetInputTcpOptions(testcase, packet):
         return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
         return [TcpOptions('WScale', '0x2')]
+    elif 'TCP_UNEXPECTED_SACK_PERM_ACTION_ALLOW' in profile_name:
+        return [TcpOptions('SAckOK', 'None')]
+    elif 'TCP_UNEXPECTED_SACK_PERM_ACTION_DROP' in profile_name:
+        return [TcpOptions('SAckOK', 'None')]
+    elif 'TCP_UNEXPECTED_SACK_PERM_ACTION_EDIT' in profile_name:
+        return [TcpOptions('SAckOK', 'None')]
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW' in profile_name:
         return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_DROP' in profile_name:
@@ -303,6 +297,18 @@ def GetInputTcpOptions(testcase, packet):
         return echo_ts
     elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT' in profile_name:
         return echo_ts
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_ALLOW' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_DROP' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_EDIT' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_ALLOW' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_DROP' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_EDIT' in profile_name:
+        return sack
     elif 'TCP_TS_NOT_PRESENT_DROP_ENABLE' in profile_name:
         return []
     elif 'TCP_TS_NOT_PRESENT_DROP_DISABLE' in profile_name:
@@ -340,25 +346,7 @@ def GetExpectedTcpReserved(testcase, packet):
 def GetExpectedTcpFlags(testcase, packet):
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
-    if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_MSS_ACTION_EDIT' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP' in profile_name:
-        return None
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
-        return None
-    elif 'TCP_URG_FLAG_NOT_SET_ACTION_ALLOW' in profile_name:
-        return None
-    elif 'TCP_URG_FLAG_NOT_SET_ACTION_DROP' in profile_name:
-        return None
-    elif 'TCP_URG_FLAG_NOT_SET_ACTION_EDIT' in profile_name:
-        return None
-    elif 'TCP_URG_PTR_NOT_SET_ACTION_ALLOW' in profile_name:
+    if 'TCP_URG_PTR_NOT_SET_ACTION_ALLOW' in profile_name:
         return 'urg,ack'
     elif 'TCP_URG_PTR_NOT_SET_ACTION_DROP' in profile_name:
         return 'urg,ack'
@@ -395,7 +383,7 @@ def GetExpectedTcpFlags(testcase, packet):
         return 'syn'
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
         return 'syn'
-    return None
+    return 'ack'
 
 def GetExpectedTcpOptions(testcase, packet):
     iterelem = testcase.module.iterator.Get()
@@ -403,6 +391,8 @@ def GetExpectedTcpOptions(testcase, packet):
     echo_ts = []
     echo_ts_edit = []
     echo_ts_nop_edit = []
+    sack = []
+   
     
     echo_ts.append(TcpOptions('Timestamp', '0x3 0x4'))
     echo_ts.append(TcpOptions('NOP', None))
@@ -410,6 +400,9 @@ def GetExpectedTcpOptions(testcase, packet):
     echo_ts_edit.append(TcpOptions('Timestamp', '0x3 0x0'))
     echo_ts_edit.append(TcpOptions('NOP', None))
     
+    sack.append(TcpOptions('SAck', '12345678 12346000'))
+    sack.append(TcpOptions('NOP', None))
+
     echo_ts_nop_edit.append(TcpOptions('NOP', None))
     echo_ts_nop_edit.append(TcpOptions('NOP', None))
     echo_ts_nop_edit.append(TcpOptions('NOP', None))
@@ -428,6 +421,12 @@ def GetExpectedTcpOptions(testcase, packet):
         return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
         return []
+    elif 'TCP_UNEXPECTED_SACK_PERM_ACTION_ALLOW' in profile_name:
+        return [TcpOptions('SAckOK', 'None')]
+    elif 'TCP_UNEXPECTED_SACK_PERM_ACTION_DROP' in profile_name:
+        return [TcpOptions('SAckOK', 'None')]
+    elif 'TCP_UNEXPECTED_SACK_PERM_ACTION_EDIT' in profile_name:
+        return []
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW' in profile_name:
         return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_DROP' in profile_name:
@@ -445,6 +444,18 @@ def GetExpectedTcpOptions(testcase, packet):
     elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_DROP' in profile_name:
         return echo_ts
     elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT' in profile_name:
+        return []
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_ALLOW' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_DROP' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_EDIT' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_ALLOW' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_DROP' in profile_name:
+        return sack
+    elif 'TCP_UNEXPECTED_SACK_OPTION_NOT_NEG_ACTION_EDIT' in profile_name:
         return []
     elif 'TCP_TS_NOT_PRESENT_DROP_ENABLE' in profile_name:
         return []

@@ -63,6 +63,7 @@ typedef struct nwsec_profile_s {
     uint32_t              tcp_rsvd_flags_action:2;
     uint32_t              tcp_unexpected_mss_action:2;
     uint32_t              tcp_unexpected_win_scale_action:2;
+    uint32_t              tcp_unexpected_sack_perm_action:2;
     uint32_t              tcp_urg_ptr_not_set_action:2;
     uint32_t              tcp_urg_flag_not_set_action:2;
     uint32_t              tcp_urg_payload_missing_action:2;
@@ -70,6 +71,7 @@ typedef struct nwsec_profile_s {
     uint32_t              tcp_data_len_gt_mss_action:2;
     uint32_t              tcp_data_len_gt_win_size_action:2;
     uint32_t              tcp_unexpected_ts_option_action:2;
+    uint32_t              tcp_unexpected_sack_option_action:2;
     uint32_t              tcp_unexpected_echo_ts_action:2;
     uint32_t              tcp_ts_not_present_drop:1;
     uint32_t              tcp_invalid_flags_drop:1;

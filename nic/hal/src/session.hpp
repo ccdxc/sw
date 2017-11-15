@@ -224,6 +224,7 @@ typedef struct flow_state_s {
     uint8_t         tcp_win_scale;
     uint8_t         tcp_ws_option_sent : 1;
     uint8_t         tcp_ts_option_sent : 1;
+    uint8_t         tcp_sack_perm_option_sent : 1;
 } __PACK__ flow_state_t;
 
 inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)
@@ -243,12 +244,14 @@ inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)
 
 typedef struct session_state_s {
     uint8_t             tcp_ts_option:1;
+    uint8_t             tcp_sack_perm_option:1;
     flow_state_t        iflow_state;
     flow_state_t        rflow_state;
 } __PACK__ session_state_t;
 
 typedef struct session_cfg_s {
     uint8_t             tcp_ts_option:1;
+    uint8_t             tcp_sack_perm_option:1;
     session_id_t        session_id;               // unique session id
     uint16_t            conn_track_en:1;          // enable connection tracking
 } __PACK__ session_cfg_t;

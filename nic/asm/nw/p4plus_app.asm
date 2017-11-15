@@ -268,6 +268,8 @@ lb_cpu_pkt_tcp:
   or.c1       r2, r2, CPU_TCP_OPTIONS_MSS
   seq         c1, k.tcp_option_timestamp_valid, TRUE
   or.c1       r2, r2, CPU_TCP_OPTIONS_TIMESTAMP
+  seq         c1, k.tcp_option_sack_perm_valid, TRUE
+  or.c1       r2, r2, CPU_TCP_OPTIONS_SACK_PERMITTED
   phvwr       p.p4_to_p4plus_cpu_pkt_tcp_options, r2
   jr          r7
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)

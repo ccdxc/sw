@@ -219,6 +219,7 @@ header_type scratch_metadata_t {
         iflow_exceptions_seen         : 14;           // list of exceptions seen
         iflow_tcp_ws_option_sent      : 1;
         iflow_tcp_ts_option_sent      : 1;
+        iflow_tcp_sack_perm_option_sent : 1;
 
         // responder flow's TCP state
         rflow_tcp_seq_num             : 32;           // TCP seq#
