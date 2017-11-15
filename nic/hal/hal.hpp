@@ -27,16 +27,6 @@ using hal::utils::dllist_ctxt_t;
 extern thread *g_hal_threads[HAL_THREAD_ID_MAX];
 thread *hal_get_current_thread(void);
 
-#define HAL_MAX_NAME_STR         16
-typedef struct hal_cfg_s {
-    bool                    sim;
-    char                    asic_name[HAL_MAX_NAME_STR];
-    std::string             grpc_port;
-    std::string             loader_info_file;
-    char                    feature_set[HAL_MAX_NAME_STR];
-    std::string             forwarding_mode;
-} hal_cfg_t;
-
 //------------------------------------------------------------------------------
 // parse HAL configuration
 //------------------------------------------------------------------------------

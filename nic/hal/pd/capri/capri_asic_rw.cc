@@ -1,11 +1,18 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <unistd.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <atomic>
-#include "nic/hal/hal.hpp"
-#include "nic/hal/pd/capri/capri.hpp"
+#include <string>
+
+#include "nic/include/base.h"
+#include "nic/include/hal_cfg.hpp"
 #include "nic/include/asic_pd.hpp"
+
+#include "nic/utils/thread/thread.hpp"
+#include "nic/hal/pd/capri/capri.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 
 namespace hal {
@@ -82,7 +89,7 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
 {
     uint16_t           pindx;
 
-    thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
 
     uint32_t           curr_tid = curr_thread->thread_id();
     asic_rw_entry_t    *rw_entry;
@@ -159,7 +166,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
 {
     hal_ret_t          ret;
     uint16_t           pindx;
-    thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
     uint32_t           curr_tid = curr_thread->thread_id();
     asic_rw_entry_t    *rw_entry;
 
@@ -242,7 +249,7 @@ asic_port_cfg (uint32_t port_num,
     asic_rw_entry_t    *rw_entry = NULL;
     uint32_t           op = HAL_ASIC_RW_OPERATION_PORT;
 
-    thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
     uint32_t           curr_tid = curr_thread->thread_id();
 
     if (g_asic_rw_workq[curr_tid].nentries >= HAL_ASIC_RW_Q_SIZE) {

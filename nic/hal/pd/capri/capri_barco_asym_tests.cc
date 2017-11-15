@@ -1,4 +1,4 @@
-#include "nic/hal/hal.hpp"
+#include "nic/include/base.h"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 
 namespace hal {

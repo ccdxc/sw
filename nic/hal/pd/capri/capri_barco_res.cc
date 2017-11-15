@@ -1,4 +1,3 @@
-#include "nic/hal/hal.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"

@@ -483,6 +483,20 @@ bool      pd_port_has_speed_changed
 bool      pd_port_has_admin_state_changed
                              (pd_port_args_t *hal_port);
 
+hal_ret_t
+pd_debug_cli_read(uint32_t tableid,
+                  uint32_t index,
+                  void     *swkey,
+                  void     *swkey_mask,
+                  void     *actiondata);
+
+hal_ret_t
+pd_debug_cli_write(uint32_t tableid,
+                   uint32_t index,
+                   void     *swkey,
+                   void     *swkey_mask,
+                   void     *actiondata);
+
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);
 uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 

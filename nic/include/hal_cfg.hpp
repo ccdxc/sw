@@ -10,6 +10,16 @@
 using hal::utils::dllist_ctxt_t;
 namespace hal {
 
+#define HAL_MAX_NAME_STR         16
+typedef struct hal_cfg_s {
+    bool                    sim;
+    char                    asic_name[HAL_MAX_NAME_STR];
+    std::string             grpc_port;
+    std::string             loader_info_file;
+    char                    feature_set[HAL_MAX_NAME_STR];
+    std::string             forwarding_mode;
+} hal_cfg_t;
+
 //------------------------------------------------------------------------------
 // HAL config operations
 //------------------------------------------------------------------------------
