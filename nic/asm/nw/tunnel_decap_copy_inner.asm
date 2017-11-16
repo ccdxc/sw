@@ -12,6 +12,8 @@ nop:
   nop.e
   nop
 
+#if 0
+// Commenting as we are currently not testing the L3 Tunnels.
 .align
 copy_inner_ipv4_udp:
   phvwr       p.{ipv4_version...ipv4_fragOffset}, \
@@ -55,6 +57,8 @@ copy_inner_ipv6_other:
   phvwr       p.ipv4_valid, FALSE
   phvwr.e     p.inner_ipv6_valid, FALSE
   phvwr       p.udp_valid, FALSE
+
+#endif /* 0 */
 
 .align
 copy_inner_eth_ipv4_udp:
