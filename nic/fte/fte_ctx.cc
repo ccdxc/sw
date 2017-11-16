@@ -390,8 +390,8 @@ ctx_t::update_flow_table()
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
     }
 
-    if (!flow_miss() || existing_session()) {
-      return HAL_RET_OK;
+    if (!flow_miss()) {
+        return HAL_RET_OK;
     }
 
     for (uint8_t stage = 0; stage <= istage_; stage++) {

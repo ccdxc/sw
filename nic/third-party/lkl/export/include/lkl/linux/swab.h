@@ -54,8 +54,8 @@ static __inline__  __lkl__u16 __lkl__fswab16(__lkl__u16 val)
 
 static __inline__  __lkl__u32 __lkl__fswab32(__lkl__u32 val)
 {
-#if defined(__arch_swab32)
-	return __arch_swab32(val);
+#if defined(__lkl__arch_swab32)
+	return __lkl__arch_swab32(val);
 #else
 	return __lkl___constant_swab32(val);
 #endif
@@ -154,10 +154,10 @@ static __inline__  __lkl__u32 __lkl__fswahb32(__lkl__u32 val)
 	__lkl__fswahb32(x))
 
 /**
- * __swab16p - return a byteswapped 16-bit value from a pointer
+ * __lkl__swab16p - return a byteswapped 16-bit value from a pointer
  * @p: pointer to a naturally-aligned 16-bit value
  */
-static __lkl__always_inline __lkl__u16 __swab16p(const __lkl__u16 *p)
+static __lkl__always_inline __lkl__u16 __lkl__swab16p(const __lkl__u16 *p)
 {
 #ifdef __arch_swab16p
 	return __arch_swab16p(p);
@@ -167,10 +167,10 @@ static __lkl__always_inline __lkl__u16 __swab16p(const __lkl__u16 *p)
 }
 
 /**
- * __swab32p - return a byteswapped 32-bit value from a pointer
+ * __lkl__swab32p - return a byteswapped 32-bit value from a pointer
  * @p: pointer to a naturally-aligned 32-bit value
  */
-static __lkl__always_inline __lkl__u32 __swab32p(const __lkl__u32 *p)
+static __lkl__always_inline __lkl__u32 __lkl__swab32p(const __lkl__u32 *p)
 {
 #ifdef __arch_swab32p
 	return __arch_swab32p(p);
@@ -180,10 +180,10 @@ static __lkl__always_inline __lkl__u32 __swab32p(const __lkl__u32 *p)
 }
 
 /**
- * __swab64p - return a byteswapped 64-bit value from a pointer
+ * __lkl__swab64p - return a byteswapped 64-bit value from a pointer
  * @p: pointer to a naturally-aligned 64-bit value
  */
-static __lkl__always_inline __lkl__u64 __swab64p(const __lkl__u64 *p)
+static __lkl__always_inline __lkl__u64 __lkl__swab64p(const __lkl__u64 *p)
 {
 #ifdef __arch_swab64p
 	return __arch_swab64p(p);
@@ -231,32 +231,32 @@ static __inline__ void __lkl__swab16s(__lkl__u16 *p)
 #ifdef __arch_swab16s
 	__arch_swab16s(p);
 #else
-	*p = __swab16p(p);
+	*p = __lkl__swab16p(p);
 #endif
 }
 /**
- * __swab32s - byteswap a 32-bit value in-place
+ * __lkl__swab32s - byteswap a 32-bit value in-place
  * @p: pointer to a naturally-aligned 32-bit value
  */
-static __lkl__always_inline void __swab32s(__lkl__u32 *p)
+static __lkl__always_inline void __lkl__swab32s(__lkl__u32 *p)
 {
 #ifdef __arch_swab32s
 	__arch_swab32s(p);
 #else
-	*p = __swab32p(p);
+	*p = __lkl__swab32p(p);
 #endif
 }
 
 /**
- * __swab64s - byteswap a 64-bit value in-place
+ * __lkl__swab64s - byteswap a 64-bit value in-place
  * @p: pointer to a naturally-aligned 64-bit value
  */
-static __lkl__always_inline void __swab64s(__lkl__u64 *p)
+static __lkl__always_inline void __lkl__swab64s(__lkl__u64 *p)
 {
 #ifdef __arch_swab64s
 	__arch_swab64s(p);
 #else
-	*p = __swab64p(p);
+	*p = __lkl__swab64p(p);
 #endif
 }
 

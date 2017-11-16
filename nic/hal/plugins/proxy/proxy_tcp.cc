@@ -366,9 +366,11 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     }
 
     // Check if exising session , then do nothing
-    if(ctx.existing_session()) {
+    if (ctx.existing_session()) {
+        ctx.set_drop();
         HAL_TRACE_DEBUG("tcp-proxy: already enabled for flow: {}", ctx.key());
-        return fte::PIPELINE_CONTINUE;
+        ctx.set_feature_status(HAL_RET_EXISTING_PROXY_SESSION);
+        return fte::PIPELINE_END;
     }
 
     // get the flow info for the tcp proxy service 

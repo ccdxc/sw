@@ -266,8 +266,6 @@ def main():
     print("\n- Total run time: %s seconds\n" % round(time.time() - start_time, 1))
     print("Final Status = %s\n" % ("PASS" if (status == 0) else "FAIL"))
 
-    #We'll ignore the result to monitor stability of the test for a few days
-    status = 0
     sys.exit(status)
 
 if __name__ == "__main__":
