@@ -766,7 +766,7 @@ parser parse_ipsec_esp {
 
 parser parse_icmp {
     extract(icmp);
-    set_metadata(flow_lkp_metadata.lkp_sport, latest.typeCode);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.typeCode);
     return select(latest.typeCode) {
         ICMP_ECHO_REQ_TYPE_CODE : parse_icmp_echo_req_reply;
         ICMP_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_req_reply;
@@ -776,7 +776,7 @@ parser parse_icmp {
 
 parser parse_icmpv6 {
     extract(icmpv6);
-    set_metadata(flow_lkp_metadata.lkp_sport, latest.typeCode);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.typeCode);
     return select(latest.typeCode) {
         ICMPV6_ECHO_REQ_TYPE_CODE : parse_icmp_echo_req_reply;
         ICMPV6_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_req_reply;
@@ -788,7 +788,7 @@ header icmp_echo_req_reply_t icmp_echo;
 
 parser parse_icmp_echo_req_reply {
     extract(icmp_echo);
-    set_metadata(flow_lkp_metadata.lkp_dport, latest.identifier);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.identifier);
     return ingress;
 }
 

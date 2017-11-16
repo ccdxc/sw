@@ -93,8 +93,8 @@ native_non_ip_packet:
 native_non_ip_packet_common:
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_MAC
   seq         c1, k.vlan_tag_valid, 1
-  phvwr.c1    p.flow_lkp_metadata_lkp_sport, k.vlan_tag_etherType
-  phvwr.!c1   p.flow_lkp_metadata_lkp_sport, k.ethernet_etherType
+  phvwr.c1    p.flow_lkp_metadata_lkp_dport, k.vlan_tag_etherType
+  phvwr.!c1   p.flow_lkp_metadata_lkp_dport, k.ethernet_etherType
   add         r1, r0, k.ethernet_srcAddr
   phvwr       p.flow_lkp_metadata_lkp_src, r1
   phvwr       p.flow_lkp_metadata_lkp_dst, k.ethernet_dstAddr

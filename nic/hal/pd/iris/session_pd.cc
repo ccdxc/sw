@@ -498,8 +498,8 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
                 (flow_key->proto == IP_PROTO_ICMPV6)) {
             // Revisit: Swapped sport and dport. This is what matches what 
             //          is coded in P4. 
-            key.flow_lkp_metadata_lkp_dport = flow_key->icmp_id;
-            key.flow_lkp_metadata_lkp_sport =
+            key.flow_lkp_metadata_lkp_sport = flow_key->icmp_id;
+            key.flow_lkp_metadata_lkp_dport =
                 ((flow_key->icmp_type << 8) | flow_key->icmp_code);
         } else if (flow_key->proto == IPPROTO_ESP) {
             key.flow_lkp_metadata_lkp_sport = flow_key->spi >> 16 & 0xFFFF;
@@ -507,7 +507,7 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
         }
     } else {
         // For FLOW_TYPE_L2
-        key.flow_lkp_metadata_lkp_sport = flow_key->ether_type;
+        key.flow_lkp_metadata_lkp_dport = flow_key->ether_type;
     }
     if (flow_key->flow_type == FLOW_TYPE_L2) {
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;

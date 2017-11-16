@@ -127,9 +127,9 @@ populate_ip_common (nacl_swkey_t *key, nacl_swkey_mask_t *mask,
     switch(ip_key->ip_proto) {
         case IP_PROTO_ICMP:
         case IP_PROTO_ICMPV6:
-            key->flow_lkp_metadata_lkp_sport = 
+            key->flow_lkp_metadata_lkp_dport = 
                 (ip_key->u.icmp.icmp_type << 8) | ip_key->u.icmp.icmp_code;
-            mask->flow_lkp_metadata_lkp_sport_mask = 
+            mask->flow_lkp_metadata_lkp_dport_mask = 
                 (ip_mask->u.icmp.icmp_type << 8) | ip_mask->u.icmp.icmp_code;
             break;
         case IP_PROTO_TCP:
@@ -349,8 +349,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
             memcpy(mask.flow_lkp_metadata_lkp_dst_mask, eth_mask->mac_da, sizeof(mac_addr_t));
             memrev(mask.flow_lkp_metadata_lkp_dst_mask, sizeof(mac_addr_t));
 
-            key.flow_lkp_metadata_lkp_sport = eth_key->ether_type;
-            mask.flow_lkp_metadata_lkp_sport_mask = eth_mask->ether_type;
+            key.flow_lkp_metadata_lkp_dport = eth_key->ether_type;
+            mask.flow_lkp_metadata_lkp_dport_mask = eth_mask->ether_type;
             break;
         case ACL_TYPE_IP:
             key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4 &

@@ -505,8 +505,8 @@ p4pd_nacl_init (void)
     memcpy(key.flow_lkp_metadata_lkp_dst, mac_da, 6);
     memcpy(mask.flow_lkp_metadata_lkp_dst_mask, mac_da_mask, 6);
 
-    key.flow_lkp_metadata_lkp_sport = ether_type;
-    mask.flow_lkp_metadata_lkp_sport_mask = ether_type_mask;
+    key.flow_lkp_metadata_lkp_dport = ether_type;
+    mask.flow_lkp_metadata_lkp_dport_mask = ether_type_mask;
 
 
     data.nacl_action_u.nacl_nacl_permit.dst_lport = 1023;

@@ -48,8 +48,8 @@ action tunneled_non_ip_packet() {
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     modify_field(flow_lkp_metadata.lkp_proto, 0);
-    modify_field(flow_lkp_metadata.lkp_sport, inner_ethernet.etherType);
-    modify_field(flow_lkp_metadata.lkp_dport, 0);
+    modify_field(flow_lkp_metadata.lkp_dport, inner_ethernet.etherType);
+    modify_field(flow_lkp_metadata.lkp_sport, 0);
     modify_field(flow_lkp_metadata.ip_ttl, 0);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     set_packet_type(inner_ethernet.dstAddr);
@@ -112,12 +112,12 @@ action native_non_ip_packet() {
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
     modify_field(flow_lkp_metadata.lkp_proto, 0);
     if (vlan_tag.valid == TRUE) {
-        modify_field(flow_lkp_metadata.lkp_sport, vlan_tag.etherType);
+        modify_field(flow_lkp_metadata.lkp_dport, vlan_tag.etherType);
     } else {
-        modify_field(flow_lkp_metadata.lkp_sport, ethernet.etherType);
+        modify_field(flow_lkp_metadata.lkp_dport, ethernet.etherType);
     }
-    modify_field(flow_lkp_metadata.lkp_sport, ethernet.etherType);
-    modify_field(flow_lkp_metadata.lkp_dport, 0);
+    modify_field(flow_lkp_metadata.lkp_dport, ethernet.etherType);
+    modify_field(flow_lkp_metadata.lkp_sport, 0);
     modify_field(flow_lkp_metadata.ip_ttl, 0);
     set_packet_type(ethernet.dstAddr);
 }
