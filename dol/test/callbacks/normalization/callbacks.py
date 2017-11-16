@@ -232,10 +232,22 @@ def GetInputTcpFlags(testcase, packet):
     elif 'TCP_RST_WITH_DATA_ACTION_EDIT' in profile_name:
         return 'rst'
     # Need more invalid flags combinations
-    elif 'TCP_INVALID_FLAGS_DROP_ENABLE' in profile_name:
+    elif 'TCP_INVALID_FLAGS_1_DROP_ENABLE' in profile_name:
         return 'syn,rst'
-    elif 'TCP_INVALID_FLAGS_DROP_DISABLE' in profile_name:
+    elif 'TCP_INVALID_FLAGS_1_DROP_DISABLE' in profile_name:
         return 'syn,rst'
+    elif 'TCP_INVALID_FLAGS_2_DROP_ENABLE' in profile_name:
+        return 'syn,fin'
+    elif 'TCP_INVALID_FLAGS_2_DROP_DISABLE' in profile_name:
+        return 'syn,fin'
+    elif 'TCP_INVALID_FLAGS_3_DROP_ENABLE' in profile_name:
+        return 'cwr,ece,urg,ack,psh,rst,syn,fin'
+    elif 'TCP_INVALID_FLAGS_3_DROP_DISABLE' in profile_name:
+        return 'cwr,ece,urg,ack,psh,rst,syn,fin'
+    elif 'TCP_INVALID_FLAGS_4_DROP_ENABLE' in profile_name:
+        return None # No flags specific case
+    elif 'TCP_INVALID_FLAGS_4_DROP_DISABLE' in profile_name:
+        return None # No flags specific case
     elif 'TCP_FLAGS_NONSYN_NOACK_DROP_ENABLE' in profile_name:
         return None
     elif 'TCP_FLAGS_NONSYN_NOACK_DROP_DISABLE' in profile_name:
@@ -365,10 +377,22 @@ def GetExpectedTcpFlags(testcase, packet):
     elif 'TCP_RST_WITH_DATA_ACTION_EDIT' in profile_name:
         return 'rst'
     # Need more invalid flags combinations
-    elif 'TCP_INVALID_FLAGS_DROP_ENABLE' in profile_name:
-        return None
-    elif 'TCP_INVALID_FLAGS_DROP_DISABLE' in profile_name:
+    elif 'TCP_INVALID_FLAGS_1_DROP_ENABLE' in profile_name:
         return 'syn,rst'
+    elif 'TCP_INVALID_FLAGS_1_DROP_DISABLE' in profile_name:
+        return 'syn,rst'
+    elif 'TCP_INVALID_FLAGS_2_DROP_ENABLE' in profile_name:
+        return 'syn,fin'
+    elif 'TCP_INVALID_FLAGS_2_DROP_DISABLE' in profile_name:
+        return 'syn,fin'
+    elif 'TCP_INVALID_FLAGS_3_DROP_ENABLE' in profile_name:
+        return 'cwr,ece,urg,ack,psh,rst,syn,fin'
+    elif 'TCP_INVALID_FLAGS_3_DROP_DISABLE' in profile_name:
+        return 'cwr,ece,urg,ack,psh,rst,syn,fin'
+    elif 'TCP_INVALID_FLAGS_4_DROP_ENABLE' in profile_name:
+        return None # No flags specific case
+    elif 'TCP_INVALID_FLAGS_4_DROP_DISABLE' in profile_name:
+        return None # No flags specific case
     elif 'TCP_FLAGS_NONSYN_NOACK_DROP_ENABLE' in profile_name:
         return None
     elif 'TCP_FLAGS_NONSYN_NOACK_DROP_DISABLE' in profile_name:

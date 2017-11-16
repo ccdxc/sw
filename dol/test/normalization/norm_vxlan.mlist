@@ -199,9 +199,21 @@ modules:
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_EDIT
               flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_INVALID_FLAGS_DROP_ENABLE
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_1_DROP_ENABLE
               flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_INVALID_FLAGS_DROP_DISABLE
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_2_DROP_ENABLE
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_3_DROP_ENABLE
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_4_DROP_ENABLE
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_1_DROP_DISABLE
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_2_DROP_DISABLE
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_3_DROP_DISABLE
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_INVALID_FLAGS_4_DROP_DISABLE
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_ENABLE
               flow: filter://type=IPV4,proto=TCP

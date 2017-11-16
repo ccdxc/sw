@@ -335,11 +335,35 @@ profiles:
       fields:
          tcp_ts_not_present_drop: 0
 
-    - id: SEC_PROF_TCP_INVALID_FLAGS_DROP_ENABLE
+    - id: SEC_PROF_TCP_INVALID_FLAGS_1_DROP_ENABLE
       fields:
          tcp_invalid_flags_drop: 1
 
-    - id: SEC_PROF_TCP_INVALID_FLAGS_DROP_DISABLE
+    - id: SEC_PROF_TCP_INVALID_FLAGS_2_DROP_ENABLE
+      fields:
+         tcp_invalid_flags_drop: 1
+
+    - id: SEC_PROF_TCP_INVALID_FLAGS_3_DROP_ENABLE
+      fields:
+         tcp_invalid_flags_drop: 1
+
+    - id: SEC_PROF_TCP_INVALID_FLAGS_4_DROP_ENABLE
+      fields:
+         tcp_invalid_flags_drop: 1
+
+    - id: SEC_PROF_TCP_INVALID_FLAGS_1_DROP_DISABLE
+      fields:
+         tcp_invalid_flags_drop: 0
+
+    - id: SEC_PROF_TCP_INVALID_FLAGS_2_DROP_DISABLE
+      fields:
+         tcp_invalid_flags_drop: 0
+
+    - id: SEC_PROF_TCP_INVALID_FLAGS_3_DROP_DISABLE
+      fields:
+         tcp_invalid_flags_drop: 0
+
+    - id: SEC_PROF_TCP_INVALID_FLAGS_4_DROP_DISABLE
       fields:
          tcp_invalid_flags_drop: 0
 
