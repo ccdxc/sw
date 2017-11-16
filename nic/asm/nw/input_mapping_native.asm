@@ -31,8 +31,8 @@ native_ipv4_packet_common:
   phvwr         p.l4_metadata_tcp_data_len, r7
 
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
-                    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
+  phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
+  phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwrpair     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr, \
@@ -61,8 +61,8 @@ native_ipv6_packet_common:
   phvwr         p.l4_metadata_tcp_data_len, r7
 
   seq           c1, k.ipv6_nextHdr, IP_PROTO_UDP
-  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
-                    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
+  phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
+  phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
   phvwr         p.flow_lkp_metadata_lkp_src, k.{ipv6_srcAddr_sbit0_ebit31, \
