@@ -1292,6 +1292,7 @@ class capri_p4pd:
             # List of (action-name, list of action-data-fields)
             # one per p4 action.
             tdict['actions'] = keydict['actions']
+            tdict['le_action_params'] = ctable.le_action_param_set
 
             # Indicates where table resides.
             tdict['location'] = 'HBM' if ctable.is_hbm else 'P4Pipe'

@@ -176,13 +176,17 @@ struct ${table}_${actionname}_d {
 //::                        fill_adata = max_adata_bits_before_key
 //::                        for actionfld in actionfldlist:
 //::                            actionfldname, actionfldwidth = actionfld
+//::                            little_str = ''
+//::                            if actionfldname in pddict['tables'][table]['le_action_params']:
+//::                                little_str = ' (little)'
+//::                            #endif
 //::                            if actionfldwidth <= fill_adata:
-    ${actionfldname} : ${actionfldwidth};
+    ${actionfldname} : ${actionfldwidth} ${little_str};
 //::                                fill_adata -= actionfldwidth
 //::                                last_actionfld_bits = actionfldwidth
 //::                                total_adatabits_beforekey += actionfldwidth
 //::                            else:
-    ${actionfldname}_sbit0_ebit${fill_adata - 1} : ${fill_adata};
+    ${actionfldname}_sbit0_ebit${fill_adata - 1} : ${fill_adata} ${little_str};
 //::                                last_actionfld_bits = fill_adata
 //::                                total_adatabits_beforekey += fill_adata
 //::                                fill_adata = 0
@@ -347,12 +351,16 @@ struct ${table}_${actionname}_d {
 //::                    skip_adatafld  = True
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
+//::                        little_str = ''
+//::                        if actionfldname in pddict['tables'][table]['le_action_params']:
+//::                            little_str = ' (little)'
+//::                        #endif
 //::                        if skip_adatafld and actionfldname != last_actionfldname:
 //::                            continue
 //::                        elif skip_adatafld:
 //::                            skip_adatafld  = False
 //::                            if actionfldwidth > last_actionfld_bits:
-    ${actionfldname}_sbit${last_actionfld_bits}_ebit${actionfldwidth - 1} : ${actionfldwidth - last_actionfld_bits};
+    ${actionfldname}_sbit${last_actionfld_bits}_ebit${actionfldwidth - 1} : ${actionfldwidth - last_actionfld_bits} ${little_str};
 //::                            #endif    
 //::                            continue
 //::                        #endif
@@ -361,7 +369,11 @@ struct ${table}_${actionname}_d {
 //::                else:
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
-    ${actionfldname} : ${actionfldwidth};
+//::                        little_str = ''
+//::                        if actionfldname in pddict['tables'][table]['le_action_params']:
+//::                            little_str = ' (little)'
+//::                        #endif
+    ${actionfldname} : ${actionfldwidth} ${little_str};
 //::                    #endfor
 //::                #endif
 //::                kd_size += totaladatabits 
