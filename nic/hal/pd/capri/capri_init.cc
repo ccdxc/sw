@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 70
+#define CAPRI_P4PLUS_NUM_SYMBOLS 74
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -625,6 +625,26 @@ capri_p4p_asm_init()
     symbols[69].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
     symbols[69].params[1].name = RNMPR_SMALL_TABLE_BASE;
     symbols[69].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+
+    symbols[70].name = "tls-dec-aesgcm-newseg-queue-barco.bin";
+    symbols[70].num_params = 1;
+    symbols[70].params[0].name = BRQ_BASE;
+    symbols[70].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+
+    symbols[71].name = "tls-dec-aesgcm-newseg-read-tnmdr-odesc-alloc-idx.bin";
+    symbols[71].num_params = 1;
+    symbols[71].params[0].name = TNMDR_TABLE_BASE;
+    symbols[71].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+
+    symbols[72].name = "tls-dec-aesgcm-newseg-read-tnmpr-opage-alloc-idx.bin";
+    symbols[72].num_params = 1;
+    symbols[72].params[0].name = TNMPR_TABLE_BASE;
+    symbols[72].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+
+    symbols[73].name = "tls-dec-aesgcm-newseg-read-tnmdr-idesc-alloc-idx.bin";
+    symbols[73].num_params = 1;
+    symbols[73].params[0].name = TNMDR_TABLE_BASE;
+    symbols[73].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

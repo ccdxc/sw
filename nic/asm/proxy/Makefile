@@ -8,6 +8,8 @@ LIBDIRS = \
 	  tls/pre_crypto_dec \
 	  tls/post_crypto_enc \
 	  tls/post_crypto_dec \
+	  tls/pre_crypto_dec_aesgcm_newseg \
+	  tls/post_crypto_dec_aesgcm_newseg \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

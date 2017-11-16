@@ -135,6 +135,7 @@ def init_tcb_inorder(tc, tcb):
     tc.pvtdata.flow1_rcv_nxt = tcb.rcv_nxt
     tc.pvtdata.flow1_snd_nxt = tcb.snd_nxt
     tc.pvtdata.flow1_snd_una = tcb.snd_una
+    tc.pvtdata.flow1_bytes_rxed = 0
     tcb.rcv_tsval = 0x1AFAFAFA
     tcb.ts_recent = 0x1AFAFAF0
     tcb.snd_wnd = 1000

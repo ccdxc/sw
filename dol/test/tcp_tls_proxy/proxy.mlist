@@ -208,6 +208,32 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : PKT_TO_BSQ_AES128_GCM_DECRYPT_REASM
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_decrypt
+        spec    : one_tls_aes128_gcm_record_pkt.testspec
+        args    :
+            cipher_suite: GCM
+            maxflows: 1
+            key_size : 16
+            reassemble : True
+        iterate  :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_BSQ_AES128_GCM_DECRYPT_MULTI_SEGMENT_REASM
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_decrypt
+        spec    : one_tls_aes128_gcm_record_pkt_multi_segment.testspec
+        args    :
+            cipher_suite: GCM
+            maxflows: 1
+            key_size : 16
+            reassemble : True
+        iterate  :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : PKT_TO_BSQ_AES256_GCM_ENCRYPT
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt

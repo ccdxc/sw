@@ -25,7 +25,27 @@
 #define NIC_DESC_DATA_LEN_OFFSET             0x1c       /* &((nic_desc_t *)0)->data_len */
 #define NIC_DESC_ENTRY0_OFFSET               0x20       /* &((nic_desc_t *)0)->entry[0] */
 
+#define PKT_DESC_STATUS_OFFSET               0
+#define PKT_DESC_ODESC_OFFSET                4
+#define PKT_DESC_OPAGE_OFFSET                (PKT_DESC_ODESC_OFFSET + 8)
 #define PKT_DESC_AOL_OFFSET                  64
+#define PKT_DESC_AOL_OFFSET_A0               (PKT_DESC_AOL_OFFSET)
+#define PKT_DESC_AOL_OFFSET_O0               (PKT_DESC_AOL_OFFSET_A0 + 8)
+#define PKT_DESC_AOL_OFFSET_L0               (PKT_DESC_AOL_OFFSET_O0 + 4)
+#define PKT_DESC_AOL_OFFSET_A1               (PKT_DESC_AOL_OFFSET_L0 + 4)
+#define PKT_DESC_AOL_OFFSET_O1               (PKT_DESC_AOL_OFFSET_A1 + 8)
+#define PKT_DESC_AOL_OFFSET_L1               (PKT_DESC_AOL_OFFSET_O1 + 4)
+#define PKT_DESC_AOL_OFFSET_A2               (PKT_DESC_AOL_OFFSET_L1 + 4)
+#define PKT_DESC_AOL_OFFSET_O2               (PKT_DESC_AOL_OFFSET_A2 + 8)
+#define PKT_DESC_AOL_OFFSET_L2               (PKT_DESC_AOL_OFFSET_O2 + 4)
+#define PKT_DESC_AOL_OFFSET_NXT_ADDR         (PKT_DESC_AOL_OFFSET_L2 + 4)
+#define PKT_DESC_AOL_OFFSET_NXT_PKT          (PKT_DESC_AOL_OFFSET_NXT_ADDR + 8)
+
+/* Offsets to Barco inputs stored/DMAed into opage */
+#define BARCO_INPUT_OPAGE_AAD                0
+#define BARCO_INPUT_OPAGE_IV                 (BARCO_INPUT_OPAGE_AAD + 16)
+#define BARCO_INPUT_OPAGE_AUTHTAG            (BARCO_INPUT_OPAGE_IV + 16)
+
 
 #define NIC_DESC_ENTRY_ADDR_OFFSET           8          /* &((nic_desc_entry_t *)0)->addr */
 #define NIC_DESC_ENTRY_OFF_OFFSET            0xc        /* &((nic_desc_entry_t *)0)->offset */
@@ -331,6 +351,11 @@
 
 #define NTLS_RECORD_DATA                0x17
 
+/* Constants */
+#define NTLS_AES_GCM_128_IV_SIZE        (8)
+#define NTLS_AES_GCM_128_KEY_SIZE       (16)
+#define NTLS_AES_GCM_128_SALT_SIZE      (4)
+
 #define NTLS_KEY_SIZE                   NTLS_AES_GCM_128_KEY_SIZE
 #define NTLS_SALT_SIZE                  NTLS_AES_GCM_128_SALT_SIZE
 #define NTLS_TAG_SIZE                   16
@@ -376,6 +401,7 @@
 /* MAKE SURE that this is in sync with the define in hal/plugin/proxy/proxy_tls.cc*/
 #define TLS_DDOL_ARM_LOOP_CTRL_PKTS     0x10   /* Loopback control packets in ARM */
 #define TLS_DDOL_EXPLICIT_IV_USE_RANDOM 0x20   /* Use DRBG random value for explicit IV */   
+#define TLS_DDOL_DEC_REASM_PATH         0x40   /* Use the new decrypt reassembly path */
 /* HACK used until the issue with payload generation is fixed in DoL framework */
 #define TLS_DDOL_FAKE_HANDSHAKE_MSG     0x80
 
