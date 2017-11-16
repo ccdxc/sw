@@ -48,7 +48,6 @@ header_type control_metadata_t {
         drop_reason                    : 32;
         qid                            : 24;
         qtype                          : 8;
-        flow_miss_idx                  : 16;
         tm_iport                       : 4;
         egress_mirror_session_id       : 8;
         egress_tm_oqueue               : 5;
@@ -63,6 +62,7 @@ header_type control_metadata_t {
         src_lif                        : 11;
         flow_miss_action               : 2;
         flow_miss_tm_oqueue            : 5;
+        flow_miss_idx                  : 16;
         p4plus_app_id                  : 8;
         rdma_enabled                   : 1;
         src_lport                      : 11;

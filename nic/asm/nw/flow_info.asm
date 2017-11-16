@@ -13,7 +13,9 @@ flow_info:
   /* expected src lif check */
   seq         c1, d.u.flow_info_d.expected_src_lif_check_en, TRUE
   sne.c1      c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
-  sne.c1      c1, k.control_metadata_src_lif, d.u.flow_info_d.expected_src_lif
+  or          r1, k.control_metadata_src_lif_sbit8_ebit15, \
+                k.control_metadata_src_lif_sbit0_ebit7, 8
+  sne.c1      c1, r1, d.u.flow_info_d.expected_src_lif
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_SRC_LIF_MISMATCH], 1
   phvwr.c1    p.capri_intrinsic_drop, 1
 
@@ -125,8 +127,7 @@ flow_miss_common:
   phvwr.!c1.e p.control_metadata_dst_lport, CPU_LPORT
   nop
   .brcase FLOW_MISS_ACTION_REDIRECT
-  phvwr.e     p.rewrite_metadata_tunnel_rewrite_index[7:0], k.control_metadata_flow_miss_idx_sbit8_ebit15
-  phvwr.e     p.rewrite_metadata_tunnel_rewrite_index[9:8], k.control_metadata_flow_miss_idx_sbit0_ebit7[1:0]
+  phvwr.e     p.rewrite_metadata_tunnel_rewrite_index, k.control_metadata_flow_miss_idx
   nop
   .brend
 
@@ -134,8 +135,7 @@ flow_miss_multicast:
   seq         c1, k.control_metadata_allow_flood, TRUE
   bcf         [!c1], flow_miss_drop
   phvwr.c1    p.capri_intrinsic_tm_replicate_en, 1
-  phvwr       p.capri_intrinsic_tm_replicate_ptr[7:0], k.control_metadata_flow_miss_idx_sbit8_ebit15
-  phvwr       p.capri_intrinsic_tm_replicate_ptr[15:8], k.control_metadata_flow_miss_idx_sbit0_ebit7
+  phvwr       p.capri_intrinsic_tm_replicate_ptr, k.control_metadata_flow_miss_idx
   phvwr       p.rewrite_metadata_rewrite_index, k.flow_miss_metadata_rewrite_index
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, k.flow_miss_metadata_tunnel_rewrite_index
   phvwr.e     p.rewrite_metadata_tunnel_vnid, k.flow_miss_metadata_tunnel_vnid

@@ -116,8 +116,7 @@ action native_non_ip_packet() {
     } else {
         modify_field(flow_lkp_metadata.lkp_dport, ethernet.etherType);
     }
-    modify_field(flow_lkp_metadata.lkp_dport, ethernet.etherType);
-    modify_field(flow_lkp_metadata.lkp_sport, 0);
+    modify_field(flow_lkp_metadata.lkp_dport, 0);
     modify_field(flow_lkp_metadata.ip_ttl, 0);
     set_packet_type(ethernet.dstAddr);
 }
@@ -175,9 +174,9 @@ table input_mapping_native {
     size : INPUT_MAPPING_TABLE_SIZE;
 }
 
-action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
-                        ipsg_enable, dscp, l4_profile_idx, src_lport,
-                        flow_miss_tm_oqueue, dst_lport, allow_flood) {
+action input_properties(vrf, dir, flow_miss_action, flow_miss_tm_oqueue,
+                        flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
+                        dst_lport, src_lport, allow_flood) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.flow_miss_action, flow_miss_action);
@@ -237,10 +236,11 @@ table input_properties {
 // Micro-VLAN derives the input_properties and the other entry with
 // User-VLAN will be used for dejavu check.
 action input_properties_mac_vlan(src_lif, src_lif_check_en,
-                                 vrf, dir, flow_miss_action,flow_miss_idx,
-                                 ipsg_enable, dscp, l4_profile_idx, src_lport,
-                                 flow_miss_tm_oqueue, dst_lport, allow_flood,
-                                 rewrite_index, tunnel_rewrite_index, tunnel_vnid,
+                                 vrf, dir, flow_miss_action,flow_miss_tm_oqueue,
+                                 flow_miss_idx, ipsg_enable, dscp,
+                                 l4_profile_idx, dst_lport, src_lport,
+                                 allow_flood, rewrite_index,
+                                 tunnel_rewrite_index, tunnel_vnid,
                                  tunnel_originate) {
     adjust_lkp_fields();
 
@@ -259,9 +259,9 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 
     modify_field(control_metadata.src_lif, src_lif);
 
-    input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
-                     ipsg_enable, dscp, l4_profile_idx, src_lport,
-                     flow_miss_tm_oqueue, dst_lport, allow_flood);
+    input_properties(vrf, dir, flow_miss_action, flow_miss_tm_oqueue,
+                     flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
+                     dst_lport, src_lport, allow_flood);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);
