@@ -53,6 +53,8 @@ type apiSrv struct {
 
 // addKvConnToPool is adds connections to the pool if there is space in the pool.
 func (a *apiSrv) addKvConnToPool() error {
+	a.nextKvMutex.Lock()
+	defer a.nextKvMutex.Unlock()
 	k, err := store.New(a.config.Kvstore)
 	if err != nil {
 		errors.Wrap(err, "could not create KV conn pool")
@@ -77,6 +79,16 @@ var once sync.Once
 // initAPIServer performs all needed initializations.
 func initAPIServer() {
 	singletonAPISrv.svcmap = make(map[string]apiserver.ServiceBackend)
+	singletonAPISrv.services = make(map[string]apiserver.Service)
+	singletonAPISrv.messages = make(map[string]apiserver.Message)
+	singletonAPISrv.hookregs = make(map[string]apiserver.ServiceHookCb)
+	singletonAPISrv.doneCh = make(chan error)
+	singletonAPISrv.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
+	singletonAPISrv.activeWatches = safelist.New()
+}
+
+// reinitAPIServer performs needed initialization on reinit.
+func reinitAPIServer() {
 	singletonAPISrv.services = make(map[string]apiserver.Service)
 	singletonAPISrv.messages = make(map[string]apiserver.Message)
 	singletonAPISrv.hookregs = make(map[string]apiserver.ServiceHookCb)
@@ -252,6 +264,7 @@ func (a *apiSrv) Stop() {
 	}
 	a.kvPool = []kvstore.Interface{}
 	a.nextKvMutex.Unlock()
+	reinitAPIServer()
 }
 
 func (a *apiSrv) WaitRunning() {

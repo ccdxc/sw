@@ -136,6 +136,7 @@ func TestRunApiSrv(t *testing.T) {
 			Type:  store.KVStoreTypeMemkv,
 			Codec: runtime.NewJSONCodec(runtime.NewScheme()),
 		},
+		KVPoolSize: 1,
 	}
 
 	_ = MustGetAPIServer()
@@ -192,5 +193,13 @@ func TestRunApiSrv(t *testing.T) {
 	}
 	if s1.hookcbCalled != 2 {
 		t.Errorf("Was expecting [2] hooks invocation found [%d]", s1.hookcbCalled)
+	}
+	if len(singletonAPISrv.kvPool) != 0 {
+		t.Fatalf("expecing no kv connections in pool got %d", len(singletonAPISrv.kvPool))
+	}
+	// Replenish the pool before exiting
+	t.Logf("replenish kv pool %d \n", config.KVPoolSize)
+	for i := 0; i < singletonAPISrv.config.KVPoolSize; i++ {
+		singletonAPISrv.addKvConnToPool()
 	}
 }
