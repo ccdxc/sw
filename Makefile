@@ -73,7 +73,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.5 strip ${TO_STRIP}
+	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.6 strip ${TO_STRIP}
 	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
@@ -102,15 +102,15 @@ clean: c-stop
 helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.1 .
-	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.5 .
+	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.6 .
 
 container-qcompile:
 	mkdir -p ${PWD}/bin/cbin
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.5 make qbuild
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.6 make qbuild
 
 container-compile:
 	mkdir -p ${PWD}/bin/cbin
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.5
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.6
 
 ws-tools:
 	$(info +++ building WS tools)
