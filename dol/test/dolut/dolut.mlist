@@ -65,3 +65,7 @@ modules:
         ignore  : True
         spec    : sample_pkt_to_pkt.testspec
         module  : dolut_verify_fail
+
+    - module:
+        name    : IPFIX
+        spec    : sample_pkt_ipfix.testspec

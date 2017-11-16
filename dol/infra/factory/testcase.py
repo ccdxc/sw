@@ -203,8 +203,7 @@ class TestCase(objects.FrameworkObject):
         if pktspec.id is None: return
         packet = pktfactory.Packet(self, pktspec)
         packet.Build(self)
-        if packet:
-            self.packets.Add(packet)
+        self.packets.Add(packet)
         return
 
     def __generate_packets_from_callback(self, pspec):

@@ -227,6 +227,16 @@ class ScapyHeaderBuilder_TFTP(ScapyHeaderBuilder_BASE):
         return super().build(hdr)
 TFTP_builder = ScapyHeaderBuilder_TFTP()
 
+class ScapyHeaderBuilder_IPFIX(ScapyHeaderBuilder_BASE):
+    def build(self, hdr):
+        records = []
+        for r in hdr.fields.records:
+            records.append(penscapy.IpfixRecord(r.record))
+        hdr.fields.records = records
+        return super().build(hdr)
+IPFIX_builder = ScapyHeaderBuilder_IPFIX()
+        
+
 class ScapyPacketObject:
     def __init__(self):
         self.spkt       = None

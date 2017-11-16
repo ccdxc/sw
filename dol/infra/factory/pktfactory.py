@@ -329,7 +329,9 @@ class Packet(objects.FrameworkObject):
         return
 
     def __add_payload(self, tc):
-        tc.info("- Adding Payload of Size = %d" % self.payloadsize)
+        if getattr(self.headers, 'payload', None) is None:
+            self.payloadsize = 0
+            return
         self.headers.payload.meta.size = self.payloadsize
         if self.headers.payload.fields.data is None:
             self.headers.payload.fields.data =\
@@ -350,6 +352,7 @@ class Packet(objects.FrameworkObject):
             self.__fixup_payload(tc)
         else:
             self.__fixup_payload(tc)
+        tc.info("- Added Payload of Size = %d" % self.payloadsize)
         return
 
     def __process(self, tc):

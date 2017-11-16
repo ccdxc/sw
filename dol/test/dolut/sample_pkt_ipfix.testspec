@@ -1,0 +1,160 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+    dst:
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+    flow        : filter://any
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : IPV4_REC
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV4
+        headers     :
+            data:
+               len       : 0
+               vrf       : 0
+               ip_sa     : 0.0.0.0
+               ip_da     : 0.0.0.0
+               proto     : 0
+               sport     : 0
+               dport     : 0
+               flow_state_index: 0
+               role      : 0
+               ttl       : 0
+               icmp_type_code: 0
+               tcp_seq_num: 0
+               tcp_ack_num: 0
+               tcp_win_sz: 0
+               tcp_win_scale: 0
+               tcp_state : 0
+               tcp_win_mss: 0
+               tcp_exceptions: 0
+               flit_pad1  : 0
+               tcp_rtt   : 0
+               flow_id   : 0
+               egress_interface: 0
+               egress_interface_type: 0
+               permit_packets: 0
+               permit_bytes: 0
+               delta_permit_packets: 0
+               delta_permit_bytes: 0
+               drop_packets: 0
+               drop_bytes: 0
+               delta_drop_packets: 0
+               delta_drop_bytes: 0
+               flit_pad2  : 0
+               start_timestamp: 0
+               last_seen_timestamp: 0
+               drop_vector: 0            
+
+    - packet:
+        id          : IPV6_REC
+        template    : ref://factory/packets/id=IPFIX_RECORD_IPV6
+        headers     :
+            data:
+               len       : 0
+               vrf       : 0
+               ip_sa     : 2000::2000
+               ip_da     : 3000::3000
+               proto     : 0
+               sport     : 0
+               dport     : 0
+               pad       : 0
+               flow_state_index: 0
+               role      : 0
+               ttl       : 0
+               icmp_type_code: 0
+               tcp_seq_num: 0
+               tcp_ack_num: 0
+               tcp_win_sz: 0
+               tcp_win_scale: 0
+               tcp_state : 0
+               tcp_win_mss: 0
+               tcp_exceptions: 0
+               flit_pad1  : 0
+               tcp_rtt   : 0
+               flow_id   : 0
+               egress_interface: 0
+               egress_interface_type: 0
+               permit_packets: 0
+               permit_bytes: 0
+               delta_permit_packets: 0
+               delta_permit_bytes: 0
+               drop_packets: 0
+               drop_bytes: 0
+               delta_drop_packets: 0
+               delta_drop_bytes: 0
+               flit_pad2  : 0
+               start_timestamp: 0
+               last_seen_timestamp: 0
+               drop_vector: 0
+
+    - packet:
+        id          : NONIP_REC
+        template    : ref://factory/packets/id=IPFIX_RECORD_NONIP
+        headers     :
+            data:
+               len       : 0
+               mac_sa    : 00:00:00:00:00:00
+               mac_da    : 00:00:00:00:00:00
+               ether_type: 0
+               flow_id   : 0
+               egress_interface: 0
+               egress_interface_type: 0
+               permit_packets: 0
+               permit_bytes: 0
+               delta_permit_packets: 0
+               delta_permit_bytes: 0
+               drop_packets: 0
+               drop_bytes: 0
+               delta_drop_packets: 0
+               delta_drop_bytes: 0
+               flit_pad  : 0
+               start_timestamp: 0
+               last_seen_timestamp: 0
+               drop_vector: 0       
+        
+    - packet:
+        id          : PKT1     # Input packet
+        template    : ref://factory/packets/id=IPFIX
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : callback://networking/packets/GetTtl
+            udp:
+                sport   : ref://testcase/config/flow/sport
+            ipfix:
+                records:
+                    - record: ref://testcase/packets/id=IPV4_REC/rawbytes
+                    - record: ref://testcase/packets/id=IPV6_REC/rawbytes
+                    - record: ref://testcase/packets/id=NONIP_REC/rawbytes
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 1
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 1

@@ -1,0 +1,14 @@
+meta:
+    id: IPFIX_RECORD_IPV6
+
+headers:
+    - header:
+        id      : base
+        template: ref://store/headers/id=IPFIX_RECORD
+        fields:
+            set_id  : 258
+
+    - header:
+        id      : data
+        template: ref://store/headers/id=IPFIX_RECORD_IPV6_DATA
+        fields:

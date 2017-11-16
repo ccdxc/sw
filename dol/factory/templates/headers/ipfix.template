@@ -1,0 +1,12 @@
+meta:    
+    id      : IPFIX
+    scapy   : Ipfix
+    size    : None
+
+fields:
+    version     : None
+    len         : None
+    export_time : None
+    seq_num     : None
+    domain_id   : None
+    records     : None

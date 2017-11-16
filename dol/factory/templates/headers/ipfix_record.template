@@ -1,0 +1,7 @@
+meta:    
+    id      : IPFIX_RECORD
+    scapy   : IpfixRecord
+    size    : None
+
+fields:
+    set_id      : None

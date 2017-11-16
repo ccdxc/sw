@@ -1,0 +1,14 @@
+meta:
+    id: IPFIX_RECORD_NONIP
+
+headers:
+    - header:
+        id      : base
+        template: ref://store/headers/id=IPFIX_RECORD
+        fields:
+            set_id  : 259
+
+    - header:
+        id      : data
+        template: ref://store/headers/id=IPFIX_RECORD_NONIP_DATA
+        fields:

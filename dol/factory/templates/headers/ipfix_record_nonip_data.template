@@ -1,0 +1,25 @@
+meta:    
+    id      : IPFIX_RECORD_NONIP_DATA
+    scapy   : IpfixRecordNonIpData
+    size    : None
+
+fields:
+   len       : 0
+   mac_sa    : 00:00:00:00:00:00
+   mac_da    : 00:00:00:00:00:00
+   ether_type: 0
+   flow_id   : 0
+   egress_interface: 0
+   egress_interface_type: 0
+   permit_packets: 0
+   permit_bytes: 0
+   delta_permit_packets: 0
+   delta_permit_bytes: 0
+   drop_packets: 0
+   drop_bytes: 0
+   delta_drop_packets: 0
+   delta_drop_bytes: 0
+   flit_pad  : 0
+   start_timestamp: 0
+   last_seen_timestamp: 0
+   drop_vector: 0
