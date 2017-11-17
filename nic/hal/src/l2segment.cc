@@ -82,9 +82,6 @@ l2seg_add_to_db (l2seg_t *l2seg, hal_handle_t handle)
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
 
-    // TODO: Check if this is the right place
-    l2seg->hal_handle = handle;
-
     return ret;
 }
 

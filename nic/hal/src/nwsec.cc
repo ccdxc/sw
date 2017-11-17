@@ -63,7 +63,8 @@ nwsec_lookup_key_or_handle (const SecurityProfileKeyHandle& kh)
 
     if (kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileId) {
         nwsec = find_nwsec_profile_by_id(kh.profile_id());
-    } else if (kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileHandle) {
+    } else if (kh.key_or_handle_case() == 
+               SecurityProfileKeyHandle::kProfileHandle) {
         nwsec = find_nwsec_profile_by_handle(kh.profile_handle());
     }
 
@@ -191,10 +192,13 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
 // initialize security profile object from the config spec
 static inline void
 nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
-                              nwsec::SecurityProfileSpec& spec)
+                              nwsec::SecurityProfileSpec& spec,
+                              bool update_profile_id = false)
 {
 
-    sec_prof->profile_id = spec.key_or_handle().profile_id();
+    if (update_profile_id) {
+        sec_prof->profile_id = spec.key_or_handle().profile_id();
+    }
 
     NWSEC_SPEC_ASSIGN(cnxn_tracking_en);
     NWSEC_SPEC_ASSIGN(ipsg_en);
@@ -432,6 +436,79 @@ nwsec_prepare_rsp (SecurityProfileResponse *rsp, hal_ret_t ret,
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Security Profile dump
+//-----------------------------------------------------------------------------
+#define NWSEC_SPEC_FIELD_PRINT(fname) buf.write(#fname":{}, ", spec.fname())
+hal_ret_t
+security_profile_spec_print (SecurityProfileSpec& spec)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    fmt::MemoryWriter   buf;
+
+    buf.write("Security Profile Spec: ");
+    if (spec.has_key_or_handle()) {
+        auto kh = spec.key_or_handle();
+        if (kh.key_or_handle_case() == 
+            SecurityProfileKeyHandle::kProfileId) {
+            buf.write("profile_id:{}, ", kh.profile_id());
+        } else if (kh.key_or_handle_case() == 
+                   SecurityProfileKeyHandle::kProfileHandle) {
+            buf.write("profile_hdl:{}, ", kh.profile_handle());
+        }
+    } else {
+        buf.write("profile_id_hdl:NULL, ");
+    }
+
+    // buf.write("cnxn_tracking_en: {}, ", spec.cnxn_tracking_en());
+    NWSEC_SPEC_FIELD_PRINT(cnxn_tracking_en);
+    NWSEC_SPEC_FIELD_PRINT(ipsg_en);
+    NWSEC_SPEC_FIELD_PRINT(tcp_rtt_estimate_en);
+    NWSEC_SPEC_FIELD_PRINT(session_idle_timeout);
+    NWSEC_SPEC_FIELD_PRINT(tcp_cnxn_setup_timeout);
+    buf.write("\n");
+    NWSEC_SPEC_FIELD_PRINT(tcp_close_timeout);
+    NWSEC_SPEC_FIELD_PRINT(tcp_close_wait_timeout);
+    NWSEC_SPEC_FIELD_PRINT(ip_normalization_en);
+    NWSEC_SPEC_FIELD_PRINT(tcp_normalization_en);
+    NWSEC_SPEC_FIELD_PRINT(icmp_normalization_en);
+    NWSEC_SPEC_FIELD_PRINT(ip_ttl_change_detect_en);
+    buf.write("\n");
+    NWSEC_SPEC_FIELD_PRINT(ip_rsvd_flags_action);
+    NWSEC_SPEC_FIELD_PRINT(ip_df_action);
+    NWSEC_SPEC_FIELD_PRINT(ip_options_action);
+    NWSEC_SPEC_FIELD_PRINT(ip_invalid_len_action);
+    NWSEC_SPEC_FIELD_PRINT(ip_normalize_ttl);
+    NWSEC_SPEC_FIELD_PRINT(icmp_invalid_code_action);
+    NWSEC_SPEC_FIELD_PRINT(icmp_deprecated_msgs_drop);
+    buf.write("\n");
+    NWSEC_SPEC_FIELD_PRINT(icmp_redirect_msg_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_non_syn_first_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_split_handshake_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_rsvd_flags_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_mss_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_win_scale_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_sack_perm_action);
+    buf.write("\n");
+    NWSEC_SPEC_FIELD_PRINT(tcp_urg_ptr_not_set_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_urg_flag_not_set_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_urg_payload_missing_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_rst_with_data_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_data_len_gt_mss_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_data_len_gt_win_size_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_ts_option_action);
+    buf.write("\n");
+    NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_sack_option_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_echo_ts_action);
+    NWSEC_SPEC_FIELD_PRINT(tcp_ts_not_present_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_invalid_flags_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_nonsyn_noack_drop);
+
+    HAL_TRACE_DEBUG(buf.c_str());
+    return ret;
+}
+
+
 // create an instance of security profile
 hal_ret_t
 security_profile_create (SecurityProfileSpec& spec,
@@ -446,6 +523,9 @@ security_profile_create (SecurityProfileSpec& spec,
     hal_api_trace(" API Begin: security profile create ");
     HAL_TRACE_DEBUG("pi-sec-prof:{}: creating security profile, id {}", __FUNCTION__,
                     spec.key_or_handle().profile_id());
+
+    // Prints spec
+    security_profile_spec_print(spec);
 
     // validate the request message
     ret = validate_nwsec_create(spec, rsp);
@@ -475,7 +555,7 @@ security_profile_create (SecurityProfileSpec& spec,
     }
 
     // consume the config
-    nwsec_profile_init_from_spec(sec_prof, spec);
+    nwsec_profile_init_from_spec(sec_prof, spec, true);
 
     // allocate hal handle id
     sec_prof->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_PROFILE);
@@ -610,7 +690,8 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // IPSG changes, trigger vrfs.
     if (app_ctxt->ipsg_changed) {
-        nwsec_clone->ipsg_en = app_ctxt->ipsg_en;
+        // Clone already has new value. Uncomment this
+        // nwsec_clone->ipsg_en = app_ctxt->ipsg_en;
         ret = nwsec_handle_ipsg_change(nwsec, nwsec_clone);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-sec-prof:{}:failed to handle ipsg "
@@ -639,10 +720,11 @@ nwsec_make_clone (nwsec_profile_t *nwsec, nwsec_profile_t **nwsec_clone,
 
     pd::pd_nwsec_profile_make_clone(nwsec, *nwsec_clone);
 
-
     // Keep new values in the clone
     nwsec_profile_init_from_spec(*nwsec_clone, spec);
 
+    HAL_TRACE_DEBUG("pi-sec-prof:{}:clone_ipsg:{}",
+                    __FUNCTION__, (*nwsec_clone)->ipsg_en);
 
     return HAL_RET_OK;
 }
@@ -660,7 +742,7 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     nwsec_profile_t             *nwsec = NULL, *nwsec_clone = NULL;
-    nwsec_update_app_ctxt_t     *app_ctxt = NULL;
+    // nwsec_update_app_ctxt_t     *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-sec-prof{}:invalid cfg_ctxt", __FUNCTION__);
@@ -670,7 +752,7 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (nwsec_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    // app_ctxt = (nwsec_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     nwsec_clone = (nwsec_profile_t *)dhl_entry->cloned_obj;
@@ -681,10 +763,15 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     // move lists
     dllist_move(&nwsec_clone->vrf_list_head, &nwsec->vrf_list_head);
 
+    // Remove: clone already have new values in nwsec_make_clone
+#if 0
     // update clone with new values
     if (app_ctxt->nwsec_changed) {
         nwsec_profile_init_from_spec(nwsec_clone, *app_ctxt->spec);
     }
+#endif
+    HAL_TRACE_DEBUG("pi-sec-prof:{}:clone_ipsg:{}",
+                    __FUNCTION__, (nwsec_clone)->ipsg_en);
 
     // Free PD
     pd::pd_nwsec_profile_args_init(&pd_nwsec_args);
@@ -756,19 +843,21 @@ hal_ret_t
 security_profile_update (nwsec::SecurityProfileSpec& spec,
                          nwsec::SecurityProfileResponse *rsp)
 {
-    hal_ret_t                      ret = HAL_RET_OK;
-    nwsec_profile_t                *sec_prof;
-    // nwsec_profile_t                local_sec_prof;
-    cfg_op_ctxt_t                  cfg_ctxt = { 0 };
+    hal_ret_t                      ret       = HAL_RET_OK;
+    nwsec_profile_t                *sec_prof = NULL;
+    cfg_op_ctxt_t                  cfg_ctxt  = { 0 };
     dhl_entry_t                    dhl_entry = { 0 };
-    nwsec_update_app_ctxt_t        app_ctxt = { 0 };
-    const SecurityProfileKeyHandle  &kh = spec.key_or_handle();
+    nwsec_update_app_ctxt_t        app_ctxt  = { 0 };
+    const SecurityProfileKeyHandle &kh       = spec.key_or_handle();
 
     hal_api_trace(" API Begin: security profile update ");
     HAL_TRACE_DEBUG("pi-sec-prof:{}: nwsec update for id:{} or handle:{}",
                     __FUNCTION__,
                     spec.key_or_handle().profile_id(),
                     spec.key_or_handle().profile_handle());
+
+    // Prints spec
+    security_profile_spec_print(spec);
 
     // validate the request message
     ret = validate_nwsec_update(spec, rsp);
@@ -803,9 +892,9 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
     nwsec_make_clone(sec_prof, (nwsec_profile_t **)&dhl_entry.cloned_obj, spec);
 
     // form ctxt and call infra update object
-    app_ctxt.spec = &spec;
-    dhl_entry.handle = sec_prof->hal_handle;
-    dhl_entry.obj = sec_prof;
+    app_ctxt.spec     = &spec;
+    dhl_entry.handle  = sec_prof->hal_handle;
+    dhl_entry.obj     = sec_prof;
     cfg_ctxt.app_ctxt = &app_ctxt;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);

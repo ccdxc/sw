@@ -94,7 +94,7 @@ typedef struct nwsec_update_app_ctxt_s {
     bool        nwsec_changed;                      // Any field changed
 
     // valid for ipsg_changed
-    uint32_t    ipsg_en:1;                          // new ipsg_en value
+    // uint32_t    ipsg_en:1;                          // new ipsg_en value
 
     // valid for any change
     SecurityProfileSpec *spec;
@@ -178,7 +178,8 @@ find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
     hal_handle_id_ht_entry_t    *entry;
     nwsec_profile_t             *sec_prof;
 
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->nwsec_profile_id_ht()->lookup(&profile_id);
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        nwsec_profile_id_ht()->lookup(&profile_id);
     if (entry) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 

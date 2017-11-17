@@ -71,8 +71,8 @@ protected:
 TEST_F(nwsec_test, test1) 
 {
     hal_ret_t                               ret;
-    SecurityProfileSpec                     sp_spec;
-    SecurityProfileResponse                 sp_rsp;
+    SecurityProfileSpec                     sp_spec, sp_spec1;
+    SecurityProfileResponse                 sp_rsp, sp_rsp1;
     SecurityProfileDeleteRequest            del_req;
     SecurityProfileDeleteResponse           del_rsp;
     slab_stats_t                            *pre = NULL, *post = NULL;
@@ -88,11 +88,29 @@ TEST_F(nwsec_test, test1)
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    // uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Update nwsec without id or handle
+    // sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec1.set_ipsg_en(true);
+    sp_spec1.set_ip_normalization_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_update(sp_spec1, &sp_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Update nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
     sp_spec.set_ipsg_en(true);
+    sp_spec.set_ip_normalization_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_update(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_handle(nwsec_hdl);
+    sp_spec.set_ipsg_en(false);
     sp_spec.set_ip_normalization_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_update(sp_spec, &sp_rsp);
@@ -243,6 +261,93 @@ TEST_F(nwsec_test, test3)
     //ASSERT_TRUE(is_leak == false);
 }
 
+TEST_F(nwsec_test, test4) 
+{
+    hal_ret_t                               ret;
+    SecurityProfileSpec                     sp_spec;
+    SecurityProfileResponse                 sp_rsp;
+    SecurityProfileDeleteRequest            del_req;
+    SecurityProfileDeleteResponse           del_rsp;
+    slab_stats_t                            *pre = NULL, *post = NULL;
+    bool                                    is_leak = false;
+
+    pre = hal_test_utils_collect_slab_stats();
+
+    // Create nwsec with no profile id
+    // sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
+    sp_spec.set_ip_normalization_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Create nwsec with no profile id but with handle
+    sp_spec.mutable_key_or_handle()->set_profile_handle(1);
+    sp_spec.set_ipsg_en(true);
+    sp_spec.set_ip_normalization_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_NWSEC_ID_INVALID);
+
+
+    // Create 256 nwsecs
+    for (int i = 0; i < 256; i++) {
+        sp_spec.mutable_key_or_handle()->set_profile_id(i);
+        sp_spec.set_ipsg_en(true);
+        sp_spec.set_ip_normalization_en(true);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::security_profile_create(sp_spec, &sp_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK || ret == HAL_RET_NO_RESOURCE || HAL_RET_ENTRY_EXISTS);
+    }
+
+#if 0
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
+    sp_spec.set_ip_normalization_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Update nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
+    sp_spec.set_ip_normalization_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_update(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_handle(nwsec_hdl);
+    sp_spec.set_ipsg_en(false);
+    sp_spec.set_ip_normalization_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_update(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
+
+
+    for ( int i = 0; i < 256; i++) {
+        // Delete nwsec
+        del_req.mutable_key_or_handle()->set_profile_id(i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::security_profile_delete(del_req, &del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK || ret == HAL_RET_SECURITY_PROFILE_NOT_FOUND);
+    }
+
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

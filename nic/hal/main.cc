@@ -67,7 +67,7 @@ const std::string&    hal_svc_endpoint_("localhost:50052");
 void
 svc_reg (const std::string& server_addr)
 {
-    VrfServiceImpl        vrf_svc;
+    VrfServiceImpl           vrf_svc;
     NetworkServiceImpl       network_svc;
     InterfaceServiceImpl     if_svc;
     InternalServiceImpl      internal_svc;

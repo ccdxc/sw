@@ -14,7 +14,7 @@ hal_ret_t
 pd_vrf_create (pd_vrf_args_t *args)
 {
     hal_ret_t               ret;
-    pd_vrf_t             *vrf_pd;
+    pd_vrf_t                *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("pd-vrf:{}:creating pd state for vrf {}",

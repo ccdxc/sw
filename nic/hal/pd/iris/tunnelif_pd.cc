@@ -257,7 +257,7 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
     input_mapping_native_swkey_mask_t   mask;
     input_mapping_native_actiondata     data;
     Tcam                                *tcam;
-    uint32_t                            ret_idx;
+    uint32_t                            ret_idx = 0;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     HAL_ASSERT(tcam != NULL);

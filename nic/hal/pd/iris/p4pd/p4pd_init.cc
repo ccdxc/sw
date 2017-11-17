@@ -364,6 +364,10 @@ p4pd_flow_info_init (void)
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Session State
+//  0: nop entry.
+//-----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_session_state_init (void)
 {
@@ -387,10 +391,14 @@ p4pd_session_state_init (void)
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Flow Stats: Default entries
+//  0: nop entry.
+//  1: Have to be in sync in flow stats.
+//-----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_flow_stats_init (void)
 {
-    uint32_t                 idx = 0;
     hal_ret_t                ret;
     DirectMap                *dm;
     flow_stats_actiondata    data = { 0 };
@@ -400,33 +408,35 @@ p4pd_flow_stats_init (void)
 
     // "catch-all" nop entry
     data.actionid = FLOW_STATS_FLOW_STATS_ID;
-    ret = dm->insert_withid(&data, idx);
+    ret = dm->insert_withid(&data, FLOW_STATS_NOP_ENTRY);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
-                      idx, ret);
+                      FLOW_STATS_NOP_ENTRY, ret);
         return ret;
     }
 
     // claim one more entry to be in sync with flow info table
-    ++idx;
-    ret = dm->insert_withid(&data, idx);
+    ret = dm->insert_withid(&data, FLOW_STATS_RSVD_ENTRY);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
-                      idx, ret);
+                      FLOW_STATS_RSVD_ENTRY, ret);
         return ret;
     }
 
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Initializes drop stats to point to atomic region
+//-----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_drop_stats_init (void)
 {
     hal_ret_t                ret;
     Tcam                     *tcam;
-    drop_stats_swkey         key = { 0 };
+    drop_stats_swkey         key      = { 0 };
     drop_stats_swkey_mask    key_mask = { 0 };
-    drop_stats_actiondata    data = { 0 };
+    drop_stats_actiondata    data     = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
@@ -446,9 +456,9 @@ p4pd_drop_stats_init (void)
      */
     for (int i = DROP_MIN; i <= DROP_MAX; i++) {
 
-        key.entry_inactive_drop_stats = 0;
-        key.control_metadata_drop_reason = 1 << i;
-        key_mask.entry_inactive_drop_stats_mask = 0xFF;
+        key.entry_inactive_drop_stats              = 0;
+        key.control_metadata_drop_reason           = 1 << i;
+        key_mask.entry_inactive_drop_stats_mask    = 0xFF;
         key_mask.control_metadata_drop_reason_mask = 1 << i;
 
         data.actionid = DROP_STATS_DROP_STATS_ID;
@@ -724,10 +734,13 @@ p4pd_tunnel_decap_copy_inner_init (void)
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Twice NAT:
+//  0: nop entry
+//-----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_twice_nat_init (void)
 {
-    uint32_t                idx = 0;
     hal_ret_t               ret;
     DirectMap               *dm;
     twice_nat_actiondata    data = { 0 };
@@ -737,20 +750,26 @@ p4pd_twice_nat_init (void)
 
     // "catch-all" nop entry
     data.actionid = TWICE_NAT_NOP_ID;
-    ret = dm->insert_withid(&data, idx);
+    ret = dm->insert_withid(&data, TWICE_NAT_NOP_ENTRY);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("twice nat table write failure, idx : {}, err : {}",
-                      idx, ret);
+                      TWICE_NAT_NOP_ENTRY, ret);
         return ret;
     }
 
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Rewrite table:
+//  0: nop entry
+//  1: decap vlan entry
+//     - L2 Mcast packets
+//-----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_rewrite_init (void)
 {
-    uint32_t              idx = 0, decap_vlan_idx = 1;
+    uint32_t              idx = 0;
     hal_ret_t             ret;
     DirectMap             *dm;
     pd_rw_entry_key_t     rw_key{};
@@ -760,30 +779,28 @@ p4pd_rewrite_init (void)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
     HAL_ASSERT(dm != NULL);
 
-    rw_info.with_id = true;
-
     // "catch-all" nop entry
     rw_key.rw_act = REWRITE_NOP_ID;
-    rw_info.rw_idx = idx;
+    rw_info.with_id = true;
+    rw_info.rw_idx = REWRITE_NOP_ENTRY;
     ret = rw_entry_alloc(&rw_key, &rw_info, &idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("rewrite table write failure, idx : {}, err : {}",
-                      idx, ret);
+                      REWRITE_NOP_ENTRY, ret);
         return ret;
     }
 
     // "decap vlan" entry - 
-    // - For L2 Mcast packets
     rw_key.rw_act = REWRITE_REWRITE_ID;
-    rw_info.rw_idx = decap_vlan_idx;
-    ret = rw_entry_alloc(&rw_key, &rw_info, &decap_vlan_idx);
+    rw_info.rw_idx = REWRITE_DECAP_VLAN_ENTRY;
+    ret = rw_entry_alloc(&rw_key, &rw_info, &idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("rewrite table write failure, idx : {}, err : {}",
-                      idx, ret);
+                      REWRITE_DECAP_VLAN_ENTRY, ret);
         return ret;
     }
 
-    g_hal_state_pd->set_rwr_tbl_decap_vlan_idx(decap_vlan_idx);
+    g_hal_state_pd->set_rwr_tbl_decap_vlan_idx(REWRITE_DECAP_VLAN_ENTRY);
     return HAL_RET_OK;
 }
 
@@ -946,10 +963,9 @@ p4pd_tunnel_encap_update_inner (void)
 static hal_ret_t
 p4pd_tunnel_rewrite_init (void)
 {
-    uint32_t                     noop_idx = 0, enc_vlan_idx = 1, idx;
+    uint32_t                     idx;
     hal_ret_t                    ret;
     DirectMap                    *dm;
-    // tunnel_rewrite_actiondata    data = { 0 };
     pd_tnnl_rw_entry_key_t       rw_key{};
     pd_tnnl_rw_entry_info_t      rw_info{};
 
@@ -960,46 +976,30 @@ p4pd_tunnel_rewrite_init (void)
 
     // "catch-all" nop entry
     rw_key.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
-    rw_info.tnnl_rw_idx = noop_idx;
+    rw_info.tnnl_rw_idx = TUNNEL_REWRITE_NOP_ENTRY;
     ret = tnnl_rw_entry_alloc(&rw_key, &rw_info, &idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
-                      noop_idx, ret);
+                      TUNNEL_REWRITE_NOP_ENTRY, ret);
         return ret;
     }
 
     // "encap_vlan" entry
     rw_key.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
-    rw_info.tnnl_rw_idx = enc_vlan_idx;
+    rw_info.tnnl_rw_idx = TUNNEL_REWRITE_ENCP_VLAN_ENTRY;
     ret = tnnl_rw_entry_alloc(&rw_key, &rw_info, &idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
-                      enc_vlan_idx, ret);
+                      TUNNEL_REWRITE_ENCP_VLAN_ENTRY, ret);
         return ret;
     }
-    g_hal_state_pd->set_tnnl_rwr_tbl_encap_vlan_idx(enc_vlan_idx);
-#if 0
-    data.actionid = TUNNEL_REWRITE_NOP_ID;
-    ret = dm->insert_withid(&data, noop_idx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
-                      noop_idx, ret);
-        return ret;
-    }
-
-    // "encap_vlan" entry
-    data.actionid = TUNNEL_REWRITE_ENCAP_VLAN_ID;
-    ret = dm->insert_withid(&data, enc_vlan_idx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
-                      enc_vlan_idx, ret);
-        return ret;
-    }
-    g_hal_state_pd->set_tnnl_rwr_tbl_encap_vlan_idx(enc_vlan_idx);
-#endif
+    g_hal_state_pd->set_tnnl_rwr_tbl_encap_vlan_idx(TUNNEL_REWRITE_ENCP_VLAN_ENTRY);
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Mirror table: Initialization 
+//-----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_mirror_table_init (void)
 {
@@ -1270,6 +1270,16 @@ p4pd_compute_checksum_init(void) {
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Replication Lists:
+//  - P4_NW_MCAST_INDEX_FIN_COPY & P4_NW_MCAST_INDEX_RST_COPY
+//    - P4 drives these repl. lists for the respected packets.
+//    - Lport driven from flow will be honored and a CPU copy will be sent.
+//    - Each of them have different qids
+//  - P4_NW_MCAST_INDEX_FLOW_REL_COPY
+//    - Same as above but this is not inherently driven by P4 code and have 
+//      a different qid than above two.
+//-----------------------------------------------------------------------------
 hal_ret_t
 capri_repl_pgm_def_entries (void)
 {
@@ -1322,6 +1332,9 @@ capri_repl_pgm_def_entries (void)
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Chip Forwarding Mode Initialization
+//-----------------------------------------------------------------------------
 hal_ret_t
 p4pd_forwarding_mode_init (void) 
 {

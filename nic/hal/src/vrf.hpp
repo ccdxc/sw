@@ -37,11 +37,10 @@ typedef uint32_t vrf_id_t;
 
 typedef struct vrf_s {
     hal_spinlock_t     slock;                // lock to protect this structure
-    types::VrfType  vrf_type;          // type of the vrf
-    vrf_id_t        vrf_id;            // app provided vrf id
+    types::VrfType     vrf_type;             // type of the vrf
+    vrf_id_t           vrf_id;               // app provided vrf id
     hal_handle_t       nwsec_profile_handle; // security profile handle
     ip_prefix_t        gipo_prefix;          // the prefix to terminate gipo
-    // vrf?
 
     // operational state of vrf
     hal_handle_t       hal_handle;           // HAL allocated handle
@@ -117,12 +116,12 @@ vrf_init (vrf_t *vrf)
     HAL_SPINLOCK_INIT(&vrf->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
-    vrf->hal_handle = HAL_HANDLE_INVALID;
-    vrf->num_l2seg = 0;
-    vrf->num_sg = 0;
+    vrf->hal_handle   = HAL_HANDLE_INVALID;
+    vrf->num_l2seg    = 0;
+    vrf->num_sg       = 0;
     vrf->num_l4lb_svc = 0;
-    vrf->num_ep = 0;
-    vrf->pd = NULL;
+    vrf->num_ep       = 0;
+    vrf->pd           = NULL;
 
     // initialize meta information
     // vrf->ht_ctxt.reset();

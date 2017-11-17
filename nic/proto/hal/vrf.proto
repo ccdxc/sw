@@ -25,9 +25,9 @@ service Vrf {
 message VrfSpec {
   types.ObjectMeta                      meta                 = 1;    // common object meta
   // key_or_handle is vrf's unique identifier
-  kh.VrfKeyHandle              key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.SecurityProfileKeyHandle  security_key_handle  = 3 [(gogoproto.jsontag) = "ref"];    // security profile, if any
-  types.VrfType    					    vrf_type          = 4;
+  kh.VrfKeyHandle                       key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.SecurityProfileKeyHandle           security_key_handle  = 3 [(gogoproto.jsontag) = "ref"];    // security profile, if any
+  types.VrfType    					    vrf_type             = 4;
   types.IPAddress     					mytep_ip             = 5;    // Local VTEP IP address for vxlan tunnels
   types.IPPrefix      					gipo_prefix          = 6;    // GIPo prefix
 }

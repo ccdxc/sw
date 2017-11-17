@@ -18,8 +18,8 @@ namespace hal {
 void *
 vrf_id_get_key_func (void *entry)
 {
-    hal_handle_id_ht_entry_t    *ht_entry;
-    vrf_t                    *vrf = NULL;
+    hal_handle_id_ht_entry_t    *ht_entry = NULL;
+    vrf_t                       *vrf      = NULL;
 
     HAL_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
@@ -82,9 +82,6 @@ vrf_add_to_db (vrf_t *vrf, hal_handle_t handle)
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
 
-    // TODO: Check if this is the right place
-    vrf->hal_handle = handle;
-
     return ret;
 }
 
@@ -107,6 +104,52 @@ vrf_del_from_db (vrf_t *vrf)
     return HAL_RET_OK;
 }
 
+
+//-----------------------------------------------------------------------------
+// Print vrf spec
+//-----------------------------------------------------------------------------
+hal_ret_t
+vrf_spec_print (VrfSpec& spec)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    fmt::MemoryWriter   buf;
+    ip_addr_t           my_tep;
+    ip_prefix_t         gipo_pfx;
+
+    buf.write("Vrf Spec: ");
+    if (spec.has_key_or_handle()) {
+        auto kh = spec.key_or_handle();
+        if (kh.key_or_handle_case() == VrfKeyHandle::kVrfId) {
+            buf.write("vrf_id:{}, ", kh.vrf_id());
+        } else if (kh.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
+            buf.write("vrf_hdl:{}, ", kh.vrf_handle());
+        }
+    } else {
+        buf.write("vrf_id_hdl:NULL, ");
+    }
+
+    if (spec.has_security_key_handle()) {
+        auto kh = spec.security_key_handle();
+        if (kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileId) {
+            buf.write("sec_prof_id:{}, ", kh.profile_id());
+        } else if (kh.key_or_handle_case() == SecurityProfileKeyHandle::kProfileHandle) {
+            buf.write("sec_prof_hdl:{}, ", kh.profile_handle());
+        }
+    } else {
+        buf.write("sec_pro_id_hdl:NULL, ");
+    }
+
+    buf.write("type: {}, ", (spec.vrf_type() == types::VrfType::VRF_TYPE_NONE) ? "none" :
+              (spec.vrf_type() == types::VrfType::VRF_TYPE_INFRA) ? "infra" : "customer");
+
+    ip_addr_spec_to_ip_addr(&my_tep, spec.mytep_ip());
+    ip_pfx_spec_to_pfx_spec(&gipo_pfx, spec.gipo_prefix());
+    buf.write("my_tep:{}, gipo_pfx:{}/{}", ipaddr2str(&my_tep), ipaddr2str(&gipo_pfx.addr), gipo_pfx.len);
+
+    HAL_TRACE_DEBUG(buf.c_str());
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // validate an incoming vrf create request
 // TODO:
@@ -116,6 +159,7 @@ vrf_del_from_db (vrf_t *vrf)
 static hal_ret_t
 validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
 {
+
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
         HAL_TRACE_ERR("pi-vrf:{}:vrf id and handle not set in request",
@@ -169,9 +213,6 @@ vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     vrf = (vrf_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-vrf:{}:create add CB {}",
-                    __FUNCTION__, vrf->vrf_id);
-
     // PD Call to allocate PD resources and HW programming
     pd::pd_vrf_args_init(&pd_vrf_args);
     pd_vrf_args.vrf = vrf;
@@ -193,12 +234,12 @@ end:
 hal_ret_t
 vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
+    hal_ret_t                   ret        = HAL_RET_OK;
+    dllist_ctxt_t               *lnode     = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    vrf_t                    *vrf = NULL;
+    vrf_t                       *vrf       = NULL;
     hal_handle_t                hal_handle = 0;
-    vrf_create_app_ctxt_t    *app_ctxt = NULL; 
+    vrf_create_app_ctxt_t       *app_ctxt  = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -213,9 +254,6 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     vrf = (vrf_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
-
-    HAL_TRACE_DEBUG("pi-vrf:{}:create commit CB {}",
-                    __FUNCTION__, vrf->vrf_id);
 
     // 1. a. Add to vrf id hash table
     ret = vrf_add_to_db(vrf, hal_handle);
@@ -251,12 +289,12 @@ end:
 hal_ret_t
 vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    vrf_t                    *vrf = NULL;
-    hal_handle_t                hal_handle = 0;
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_vrf_args_t pd_vrf_args = { 0 };
+    dllist_ctxt_t *lnode =  NULL;
+    dhl_entry_t *dhl_entry        = NULL;
+    vrf_t *vrf                    = NULL;
+    hal_handle_t hal_handle       = 0;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -326,17 +364,19 @@ vrf_prepare_rsp (VrfResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
 hal_ret_t
 vrf_create (VrfSpec& spec, VrfResponse *rsp)
 {
-    hal_ret_t                   ret;
-    vrf_t                    *vrf = NULL;
-    nwsec_profile_t             *sec_prof;
-    hal_handle_t                hal_handle = HAL_HANDLE_INVALID;
-    vrf_create_app_ctxt_t    app_ctxt = { 0 };
+    hal_ret_t                   ret       = HAL_RET_OK;
+    vrf_t                       *vrf      = NULL;
+    nwsec_profile_t             *sec_prof = NULL;
+    vrf_create_app_ctxt_t       app_ctxt  = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
+    cfg_op_ctxt_t               cfg_ctxt  = { 0 };
 
     hal_api_trace(" API Begin: vrf create ");
     HAL_TRACE_DEBUG("pi-vrf:{}:creating vrf with id {}",
                     __FUNCTION__, spec.key_or_handle().vrf_id());
+
+    // dump spec
+    vrf_spec_print(spec);
 
     // validate the request message
     ret = validate_vrf_create(spec, rsp);
@@ -362,8 +402,8 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
         ret = HAL_RET_OOM;
         goto end;
     }
-    vrf->vrf_type = spec.vrf_type();
-    vrf->vrf_id = spec.key_or_handle().vrf_id();
+    vrf->vrf_type             = spec.vrf_type();
+    vrf->vrf_id               = spec.key_or_handle().vrf_id();
     vrf->nwsec_profile_handle = spec.security_key_handle().profile_handle();
     if (vrf->nwsec_profile_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_DEBUG("pi-vrf:{}: No nwsec prof passed, "
@@ -382,11 +422,12 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
         }
     }
 
-    if ( vrf->vrf_type == types::VRF_TYPE_INFRA) {
+    if (vrf->vrf_type == types::VRF_TYPE_INFRA) {
         // Update global mytep ip.
         // Assumption: There is only one mytep ip. So for all tunnel ifs,
         //             my tep ip have to be same.
-        ip_addr_spec_to_ip_addr(g_hal_state->oper_db()->mytep(), spec.mytep_ip());
+        ip_addr_spec_to_ip_addr(g_hal_state->oper_db()->mytep(), 
+                                spec.mytep_ip());
         ip_pfx_spec_to_pfx_spec(&vrf->gipo_prefix, spec.gipo_prefix());
         HAL_TRACE_DEBUG("pi-vrf: {} Local VTEP: {}; GIPo Prefix: {}/{}",
                         __FUNCTION__,
@@ -396,8 +437,8 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     }
 
     // allocate hal handle id
-    hal_handle = hal_handle_alloc(HAL_OBJ_ID_VRF);
-    if (hal_handle == HAL_HANDLE_INVALID) {
+    vrf->hal_handle = hal_handle_alloc(HAL_OBJ_ID_VRF);
+    if (vrf->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("pi-vrf:{}: failed to alloc handle {}", 
                       __FUNCTION__, vrf->vrf_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
@@ -408,13 +449,13 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
 
     // form ctxt and call infra add
     app_ctxt.sec_prof = sec_prof;
-    dhl_entry.handle = hal_handle;
-    dhl_entry.obj = vrf;
+    dhl_entry.handle  = vrf->hal_handle;
+    dhl_entry.obj     = vrf;
     cfg_ctxt.app_ctxt = &app_ctxt;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
     utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(hal_handle, &cfg_ctxt, 
+    ret = hal_handle_add_obj(vrf->hal_handle, &cfg_ctxt, 
                              vrf_create_add_cb,
                              vrf_create_commit_cb,
                              vrf_create_abort_cb, 
@@ -722,6 +763,9 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     vrf_update_app_ctxt_t    app_ctxt = { 0 };
 
     hal_api_trace(" API Begin: vrf update");
+
+    // dump spec
+    vrf_spec_print(spec);
 
     // validate the request message
     ret = validate_vrf_update(spec, rsp);

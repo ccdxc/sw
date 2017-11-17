@@ -241,8 +241,9 @@ slab::alloc(void)
     void            *elem = NULL;
     slab_block_t    *block;
 
-    HAL_TRACE_DEBUG("slaballoc:slab_id:{} ", slab_id_);
-	slab_custom_backtrace();
+    // Uncomment to debug
+    // HAL_TRACE_DEBUG("slaballoc:slab_id:{} ", slab_id_);
+	// slab_custom_backtrace();
     if (thread_safe_) {
         HAL_SPINLOCK_LOCK(&slock_);
     }
@@ -349,8 +350,9 @@ slab::free_(void *elem)
 void
 slab::free(void *elem)
 {
-    HAL_TRACE_DEBUG("slabfree:slab_id:{} ", slab_id_);
-	slab_custom_backtrace();
+    // Uncomment to debug
+    // HAL_TRACE_DEBUG("slabfree:slab_id:{} ", slab_id_);
+	// slab_custom_backtrace();
     if (delay_delete_ && g_delay_delete) {
         hal::periodic::delay_delete_to_slab(slab_id_, elem);
     } else {
