@@ -26,8 +26,9 @@ req_tx_bktrack_write_back_process:
 
      // Empty RRQ ring
      tblwr         RRQ_C_INDEX, RRQ_P_INDEX
-     // Empty backtrack ring
+     // Empty backtrack and retransmit timer rings
      tblwr         SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
+     tblwr         SQ_TIMER_C_INDEX, SQ_TIMER_P_INDEX
 
 end:
      CAPRI_SET_TABLE_0_VALID(0)

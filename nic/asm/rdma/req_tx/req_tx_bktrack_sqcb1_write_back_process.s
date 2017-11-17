@@ -10,6 +10,7 @@ struct sqcb1_t d;
 .align
 req_tx_bktrack_sqcb1_write_back_process:
      tblwr         d.tx_psn, k.args.tx_psn
+     tblwr         d.ssn, k.args.ssn
      seq           c1, k.args.skip_wqe_start_psn, 1
      tblwr.!c1     d.wqe_start_psn, k.args.wqe_start_psn
     

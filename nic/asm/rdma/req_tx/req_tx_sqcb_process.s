@@ -85,15 +85,16 @@ process_sq_or_sq_bktrack:
     bcf          [c1], process_sq 
     nop          // Branch Delay Slot 
 
-    // Check for fence in the starting wqe and go past it for backtracking
-    ssle           c1, r0, d.fence, d.li_fence
-    bcf            [c1], process_sq_bktrack
-    add            r1, r0, SQ_C_INDEX
+process_sq_bktrack:
+    bbeq           d.in_progress, 1, sq_bktrack
+    add            r1, r0, SQ_C_INDEX // Branch Delay Slot
+
     mincr          r1, d.log_num_wqes, -1
     seq            c1, r1, SQ_P_INDEX
     bcf            [c1], invalid_bktrack
 
-process_sq_bktrack:
+sq_bktrack:
+
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
 
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, sq_c_index, r1)

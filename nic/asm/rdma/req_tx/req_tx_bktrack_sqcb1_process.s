@@ -19,11 +19,12 @@ req_tx_bktrack_sqcb1_process:
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, k.args.sq_c_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, in_progress, k.args.in_progress)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, bktrack_in_progress, k.args.bktrack_in_progress)
+    //CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, bktrack_in_progress, k.args.bktrack_in_progress)
     CAPRI_SET_FIELD_RANGE(r7, SQ_BKTRACK_T, current_sge_offset, num_sges, k.{args.current_sge_offset...args.num_sges})
+    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, d.ssn)
 
     seq            c1, k.to_stage.bktrack.wqe_addr, r0
-    bcf            [c1],  ptseg_bktrack
+    bcf            [c1],  bktrack_sqpt
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, d.tx_psn) // Branch Delay Slot
 
 wqe_bktrack:
@@ -37,7 +38,7 @@ wqe_bktrack:
     nop.e
     nop
 
-ptseg_bktrack:
+bktrack_sqpt:
     // log_num_wqe_per_page = (ssqcb0_to_sqcb1_info_p->log_sq_page_size - sqcb0_to_sqcb1_info_p->log_wqe_size) 
     sub            r1, k.to_stage.bktrack.log_sq_page_size, k.to_stage.bktrack.log_wqe_size
 

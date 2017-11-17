@@ -56,6 +56,10 @@ write_back:
     SQCB1_ADDR_GET(r1)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
  
+    bbeq          d.retry_timer_on, 1, exit
+    tblwr         d.retry_timer_on, 1 //BD slot
+    CAPRI_START_SLOW_TIMER(r1, r6, k.global.lif, k.global.qtype, k.global.qid, TIMER_RING_ID, 30)
+
 exit:
      nop.e
      nop

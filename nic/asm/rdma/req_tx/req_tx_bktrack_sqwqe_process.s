@@ -11,20 +11,21 @@ struct req_tx_bktrack_sqwqe_process_k_t k;
 #define SQCB1_WRITE_BACK_T struct req_tx_bktrack_sqcb1_write_back_info_t
 #define TO_STAGE_T struct req_tx_to_stage_t
 
-#define WQE_OP_TO_NUM_PKTS(_num_pkts_r, _wqe, _log_pmtu_r, _cf1, _cf2)   \
+#define WQE_OP_TO_NUM_PKTS(_num_pkts_r, _wqe, _log_pmtu, _cf1, _cf2)   \
     seq            _cf1,  _wqe.base.op_type, OP_TYPE_FETCH_N_ADD;        \
     seq            _cf2,  _wqe.base.op_type, OP_TYPE_CMP_N_SWAP;         \
     bcf            [_cf1 | _cf2], _wqe_op_to_num_pkts_end;               \
     add            _num_pkts_r, r0, 1;                                   \
-    sllv           _num_pkts_r, 1, _log_pmtu_r;                          \
+    sllv           _num_pkts_r, 1, _log_pmtu;                            \
     add            _num_pkts_r, _wqe.send.length, _num_pkts_r;           \
     sub            _num_pkts_r, _num_pkts_r, 1;                          \
-    srlv           _num_pkts_r, _num_pkts_r, _log_pmtu_r;                \
+    srlv           _num_pkts_r, _num_pkts_r, _log_pmtu;                  \
 _wqe_op_to_num_pkts_end:
 
 %%
 
-    .param    req_tx_write_back_process
+    .param    req_tx_bktrack_sqsge_process
+    .param    req_tx_bktrack_write_back_process
     .param    req_tx_bktrack_sqcb1_write_back_process
 
 .align
@@ -33,12 +34,15 @@ req_tx_bktrack_sqwqe_process:
     //     tx_psn = k.args.tx_psn
     // else
     //     tx_psn = k.args.tx_psn - wqe_op_to_num_pkts()
+    add            r6, k.args.ssn, r0
     seq            c1, k.args.in_progress, 1 
     bcf            [c1], wqe_bktrack
     add            r1, k.args.tx_psn, r0 // Branch Delay Slot
-    add            r3, k.to_stage.bktrack.log_pmtu, r0
-    WQE_OP_TO_NUM_PKTS(r2, d, r3, c1, c2)
+    WQE_OP_TO_NUM_PKTS(r2, d, k.to_stage.bktrack.log_pmtu, c1, c2)
     sub            r1, k.args.tx_psn, r2
+    mincr          r1, 24, r0 
+    sub            r6, k.args.ssn, 1
+    mincr          r6, 24, r0
 
 wqe_bktrack:
     //if (rexmit_psn < tx_psn)
@@ -80,6 +84,7 @@ wqe_bktrack:
     
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, rexmit_psn, k.args.rexmit_psn)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, r1)
+    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, r6)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, r4)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
   
@@ -147,6 +152,7 @@ sge_bktrack:
 
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, rexmit_psn, k.args.rexmit_psn)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, r1)
+    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, r6)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, k.args.sq_c_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, in_progress, k.args.in_progress)
@@ -155,15 +161,8 @@ sge_bktrack:
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, num_sges, k.args.num_sges)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, op_type, d.base.op_type)
      
-    // label adn pc cannot be same, so calculate cur pc using bal 
-    // and compute start pc deducting the current instruction position
-    bal     r6, calculate_raw_table_pc_2
-    nop     //BD Slot
-
-calculate_raw_table_pc_2:
-    // "$" here denores releative current instruction position
-    sub     r6, r6, $
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_sqsge_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
 
     nop.e
@@ -190,8 +189,18 @@ wqe_page_bktrack:
     // fall through to cb writeback
 
 sqcb_writeback:
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, wqe_start_psn, r1)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tx_psn, r1)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, ssn, r6)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 1)
 
+    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_sqcb1_write_back_process)
+    SQCB1_ADDR_GET(r5)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_offset, k.args.current_sge_offset)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_id, k.args.current_sge_id)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, num_sges, k.args.num_sges)
@@ -200,19 +209,10 @@ sqcb_writeback:
     CAPRI_SET_FIELD_C(r7, SQCB0_WRITE_BACK_T, empty_rrq_bktrack, 1, c7)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_write_back_process)
     SQCB0_ADDR_GET(r5)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
 
-    CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, wqe_start_psn, r1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tx_psn, r1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 1)
-
-    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_sqcb1_write_back_process)
-    SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
 
 invalid_rexmit_psn:
     nop.e

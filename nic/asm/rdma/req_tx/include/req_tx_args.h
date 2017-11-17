@@ -144,22 +144,24 @@ struct req_tx_sq_bktrack_info_t {
     sq_c_index                    : 16;
     sq_p_index                    : 16;
     in_progress                   : 1;
-    bktrack_in_progress           : 1;
+//    bktrack_in_progress           : 1;
     current_sge_offset            : 32;
     current_sge_id                : 8;
     num_sges                      : 8;
     rexmit_psn                    : 24;
     tx_psn                        : 24;
+    ssn                           : 24;
     op_type                       : 5;
-    pad                           : 23;
+    pad                           : 2;
 };
 
 struct req_tx_bktrack_sqcb1_write_back_info_t {
     wqe_start_psn                 : 24;
     tx_psn                        : 24;
+    ssn                           : 24;
     skip_wqe_start_psn            : 1;
     tbl_id                        : 3;
-    pad                           : 108;
+    pad                           : 84;
 };
 
 struct req_tx_sq_to_stage_t {

@@ -22,6 +22,8 @@
 #define FC_C_INDEX                   d.{ring1.cindex}.hx
 #define SQ_BKTRACK_P_INDEX           d.{ring2.pindex}.hx
 #define SQ_BKTRACK_C_INDEX           d.{ring2.cindex}.hx
+#define SQ_TIMER_P_INDEX             d.{ring3.pindex}.hx
+#define SQ_TIMER_C_INDEX             d.{ring3.cindex}.hx
 #define RRQ_P_INDEX                  d.{ring5.pindex}.hx
 #define RRQ_C_INDEX                  d.{ring5.cindex}.hx
 
@@ -67,7 +69,7 @@ struct sqcb0_t {
     fast_reg_enable: 1;
     fence: 1;
     li_fence: 1;
-    rsvd1: 1;
+    retry_timer_on: 1;
     bktrack_in_progress: 1;
     pd: 32;
     rsvd0: 7;

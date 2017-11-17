@@ -894,7 +894,7 @@ typedef struct sqcb0_s {
     uint8_t  rsvd0: 7;
     uint32_t pd;
     uint8_t  bktrack_in_progress:1;
-    uint8_t  rsvd1:1;
+    uint8_t  retry_timer_on:1;
     uint8_t  li_fence:1;
     uint8_t  fence:1;
     uint8_t  fast_reg_enable: 1; //tx

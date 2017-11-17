@@ -80,6 +80,7 @@ next_sge_start:
 
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, rexmit_psn, k.args.rexmit_psn)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, r3)
+    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, k.args.ssn)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, k.args.sq_c_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, in_progress, 1)
@@ -134,6 +135,7 @@ sqcb_writeback:
     CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, skip_wqe_start_psn, 1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tx_psn, r3)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, ssn, k.args.ssn)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 1)
 
     CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)

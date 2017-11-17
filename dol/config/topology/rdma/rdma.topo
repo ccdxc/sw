@@ -28,3 +28,13 @@ tenants:
         lifns   : range/201/210
 
 cpu: None
+
+timers:
+    - entry:
+        id          : SLOW_TIMER
+        slowfast    : 0
+        ctime       : 0
+    - entry:
+        id          : FAST_TIMER
+        slowfast    : 1
+        ctime       : 0

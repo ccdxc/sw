@@ -1,6 +1,8 @@
 #ifndef __CAPRI_H
 #define __CAPRI_H
 
+#include "capri_common.h"
+
 #define CAPRI_NUM_STAGES    8
 #define CAPRI_STAGE_FIRST   0
 #define CAPRI_STAGE_LAST    (CAPRI_NUM_STAGES-1)
@@ -815,5 +817,31 @@ addi _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FL
     smeqb   _c, _flags_r, _ring_id_bmap, 0;
 
 #define PENDING_RECIR_PKTS_MAX  4
-   
+
+// Timers
+#define CAPRI_FAST_TIMER_ADDR(_lif) \
+        (CAPRI_MEM_FAST_TIMER_START + (_lif << 3))
+
+#define CAPRI_SLOW_TIMER_ADDR(_lif) \
+        (CAPRI_MEM_SLOW_TIMER_START + (_lif << 3))
+
+#define TIMER_ADDR_LIF_SHFT         3
+#define TIMER_QID_SHFT              3
+#define TIMER_RING_SHFT             27
+#define TIMER_DELTA_TIME_SHFT       30
+
+#define CAPRI_SETUP_TIMER_ADDR(__addr, _base, _lif) \
+        addi            __addr, r0, _base; \
+        add             __addr, __addr, _lif, TIMER_ADDR_LIF_SHFT;
+
+#define CAPRI_SETUP_TIMER_DATA(__data, _qtype, _qid, _ring, _delta_time) \
+        add             __data, _qtype, _qid, TIMER_QID_SHFT;\
+        or              __data, __data, _ring, TIMER_RING_SHFT;\
+        or              __data, __data, _delta_time, TIMER_DELTA_TIME_SHFT;
+
+#define CAPRI_START_SLOW_TIMER(__addr, __data, _lif, _qtype, _qid, _ring, _delta_time) \
+        CAPRI_SETUP_TIMER_ADDR(__addr, CAPRI_MEM_SLOW_TIMER_START, _lif); \
+        CAPRI_SETUP_TIMER_DATA(__data, _qtype, _qid, _ring, _delta_time); \
+        memwr.dx        __addr, __data;
+
 #endif //__CAPRI_H

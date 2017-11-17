@@ -169,7 +169,7 @@ class RdmaSQstate(Packet):
         BitField("fast_reg_enable", 0, 1),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
-        BitField("rsvd1", 0, 1),
+        BitField("retry_timer_on", 0, 1),
         BitField("bktrack_in_progress", 0, 1),
         IntField("pd", 0),
         BitField("rsvd0", 0, 7),
