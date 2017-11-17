@@ -274,8 +274,54 @@ if_enicif_get_ipsg_en(if_t *pi_if)
     return pi_nwsec->ipsg_en;
 }
 
+//-----------------------------------------------------------------------------
+// Get native vlan id for classic enic
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if, uint32_t *vlan_id)
+{
+    hal_ret_t           ret     = HAL_RET_OK;
+    intf::IfType        if_type = intf::IF_TYPE_NONE;
+    l2seg_t             *pi_seg = NULL;
+
+    HAL_ASSERT(pi_if != NULL && vlan_id != NULL);
+
+    if_type  = intf_get_if_type(pi_if);
+    *vlan_id = 0;
+
+    if (if_type != intf::IF_TYPE_ENIC) {
+        HAL_TRACE_ERR("{}:native l2seg classic is only for ENIC. if_type:{}", 
+                      __FUNCTION__, if_type);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if (pi_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+        pi_seg = find_l2seg_by_handle(pi_if->native_l2seg_clsc);
+        if (pi_seg == NULL) {
+            HAL_TRACE_ERR("{}:native l2seg is not present: l2seg_hdl:{}",
+                          __FUNCTION__, pi_if->native_l2seg_clsc);
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+    
+        // Check if wire encap is vlan
+        if (pi_seg->wire_encap.type != types::ENCAP_TYPE_DOT1Q) {
+            HAL_TRACE_ERR("{}:native l2seg classic doesn't have wire encap",
+                          __FUNCTION__);
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+
+        *vlan_id = pi_seg->wire_encap.val;
+    }
+
+end:
+    return ret;
+}
+
 //----------------------------------------------------------------------------
-// Returns hwlif id
+// Returns uplink if
 //----------------------------------------------------------------------------
 hal_ret_t
 if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)

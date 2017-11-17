@@ -874,25 +874,32 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     output_mapping_actiondata   data;
     DirectMap                   *dm_omap = NULL;
     pd_lif_t                    *pd_lif = NULL;
+    uint32_t                    access_vlan_classic = 0;
 
     memset(&data, 0, sizeof(data));
 
     pd_lif = pd_enicif_get_pd_lif(pd_enicif);
+    if_enicif_get_native_l2seg_clsc_vlan((if_t *)pd_enicif->pi_if, 
+                                         &access_vlan_classic);
 
     tm_oport = TM_PORT_DMA;
     p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
-    om_tmoport.nports = 1;
-    om_tmoport.egress_mirror_en = 1;
-    om_tmoport.egress_port1 = tm_oport;
-    om_tmoport.p4plus_app_id = p4plus_app_id;
-    om_tmoport.dst_lif = pd_lif->hw_lif_id;
-    om_tmoport.rdma_enabled = lif_get_enable_rdma((lif_t *)pd_lif->pi_lif);
+    om_tmoport.nports              = 1;
+    om_tmoport.egress_mirror_en    = 1;
+    om_tmoport.egress_port1        = tm_oport;
+    om_tmoport.p4plus_app_id       = p4plus_app_id;
+    om_tmoport.dst_lif             = pd_lif->hw_lif_id;
+    om_tmoport.rdma_enabled        = lif_get_enable_rdma((lif_t *)
+                                                         pd_lif->pi_lif);
     om_tmoport.encap_vlan_id_valid = 1;
-    om_tmoport.encap_vlan_id = if_get_encap_vlan((if_t *)pd_enicif->pi_if);
-    om_tmoport.vlan_strip = pd_enicif_get_vlan_strip((lif_t *)pd_lif->pi_lif,
-                                                     lif_upd);
+    om_tmoport.encap_vlan_id       = if_get_encap_vlan((if_t *)
+                                                       pd_enicif->pi_if);
+    om_tmoport.vlan_strip          = pd_enicif_get_vlan_strip((lif_t *)
+                                                              pd_lif->pi_lif,
+                                                              lif_upd);
+    om_tmoport.access_vlan_id      = access_vlan_classic;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
@@ -906,10 +913,11 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                           oper);
         } else {
             HAL_TRACE_DEBUG("pd-enicif:{}: lif_id:{} {} programmed output "
-                            "mapping at:{}",
+                            "mapping at:{} access_vlan:{}",
                             __FUNCTION__, 
                             ((if_t*)pd_enicif->pi_if)->if_id,
-                            oper, pd_enicif->enic_lport_id);
+                            oper, pd_enicif->enic_lport_id, 
+                            om_tmoport.access_vlan_id);
         }
     } else {
         ret = dm_omap->update(pd_enicif->enic_lport_id, &data);
@@ -919,11 +927,11 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                           ((if_t*)pd_enicif->pi_if)->if_id,
                           oper);
         } else {
-            HAL_TRACE_DEBUG("pd-enicif:{}: lif_id:{} {} programmed output "
-                            "mapping at:{}",
+            HAL_TRACE_DEBUG("pd-enicif:{}: if_id:{} {} programmed output "
+                            "mapping at:{} access_vlan:{}",
                             __FUNCTION__, 
                             ((if_t*)pd_enicif->pi_if)->if_id,
-                            oper, pd_enicif->enic_lport_id);
+                            oper, pd_enicif->enic_lport_id, om_tmoport.access_vlan_id);
         }
     }
     return ret;

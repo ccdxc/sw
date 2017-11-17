@@ -53,6 +53,8 @@ void *if_enicif_get_pi_nwsec(if_t *pi_if);
 uint32_t if_enicif_get_ipsg_en(if_t *pi_if);
 hal_ret_t if_enicif_get_pinned_if(if_t *pi_if,
                                   if_t **uplink_if);
+hal_ret_t if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if, 
+                                               uint32_t *vlan_id);
 
 //TODO Remove this when the above function works for all cases.
 uint8_t
