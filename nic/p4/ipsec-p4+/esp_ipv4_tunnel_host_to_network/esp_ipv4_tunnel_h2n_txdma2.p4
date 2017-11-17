@@ -73,7 +73,9 @@ header_type ipsec_to_stage2_t {
 header_type ipsec_to_stage3_t {
     fields {
         ipsec_cb_addr : ADDRESS_WIDTH;
-        is_v6         : 8;
+        flags         : 6;
+        is_nat_t      : 1;
+        is_v6         : 1;
         barco_error   : 8;
         stage3_pad1     : 48;
     }
@@ -194,6 +196,8 @@ action ipsec_build_encap_packet()
 
     modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
     modify_field(ipsec_to_stage3_scratch.is_v6, ipsec_to_stage3.is_v6);
+    modify_field(ipsec_to_stage3_scratch.is_nat_t, ipsec_to_stage3.is_nat_t);
+    modify_field(ipsec_to_stage3_scratch.flags, ipsec_to_stage3.flags);
     modify_field(ipsec_to_stage3_scratch.barco_error, ipsec_to_stage3.barco_error);
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
@@ -300,7 +304,7 @@ action ipsec_encap_txdma2_initial_table(rsvd, cosA, cosB, cos_sel,
                                        ipsec_cb_index, block_size,
                                        cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr,  
-                                       iv_salt, is_v6)
+                                       iv_salt, flags)
 {
     IPSEC_CB_SCRATCH
 

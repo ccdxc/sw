@@ -120,11 +120,18 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         data.u.ipsec_encap_rxdma_initial_table_d.barco_pindex = 0;
 
         if (ipseccb_pd->ipseccb->is_v6) {
-            data.u.ipsec_encap_rxdma_initial_table_d.is_v6 = 1;
+            data.u.ipsec_encap_rxdma_initial_table_d.flags |= 1;
         } else {
-            data.u.ipsec_encap_rxdma_initial_table_d.is_v6 = 0;
+            data.u.ipsec_encap_rxdma_initial_table_d.flags &= 0xFE;
         }
-        HAL_TRACE_DEBUG("is_v6 {}", ipseccb_pd->ipseccb->is_v6);
+
+        if (ipseccb_pd->ipseccb->is_nat_t) {
+            data.u.ipsec_encap_rxdma_initial_table_d.flags |= 2;
+        } else {
+            data.u.ipsec_encap_rxdma_initial_table_d.flags &= 0xFD;
+        }
+
+        HAL_TRACE_DEBUG("is_v6 {} is_nat_t {}", ipseccb_pd->ipseccb->is_v6, ipseccb_pd->ipseccb->is_nat_t);
     }
     HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
@@ -137,9 +144,10 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
 hal_ret_t
 p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del)
 {
-    pd_ipseccb_eth_ip4_hdr_t eth_ip_hdr = {0};
-    pd_ipseccb_eth_ip6_hdr_t eth_ip6_hdr = {0};
-    hal_ret_t                                   ret = HAL_RET_OK;
+    pd_ipseccb_eth_ip4_hdr_t   eth_ip_hdr = {0};
+    pd_ipseccb_eth_ip6_hdr_t   eth_ip6_hdr = {0};
+    pd_ipseccb_udp_nat_t_hdr_t nat_t_udp_hdr = {0};
+    hal_ret_t                  ret = HAL_RET_OK;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -180,11 +188,27 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
             HAL_TRACE_ERR("Failed to create ip_hdr entry for IPSECCB");
             ret = HAL_RET_HW_FAIL;
         }
+        if (ipseccb_pd->ipseccb->is_nat_t == 1) {
+            nat_t_udp_hdr.sport = UDP_PORT_NAT_T;
+            nat_t_udp_hdr.dport = UDP_PORT_NAT_T;
+            if(!p4plus_hbm_write(hwid+34,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr))){
+                HAL_TRACE_ERR("Failed to create nat_t_hdr entry for IPSECCB");
+                ret = HAL_RET_HW_FAIL;
+            }
+        }    
     } else {
         if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip6_hdr, sizeof(eth_ip6_hdr))){
             HAL_TRACE_ERR("Failed to create ipv6_hdr entry for IPSECCB");
             ret = HAL_RET_HW_FAIL;
         }
+        if (ipseccb_pd->ipseccb->is_nat_t == 1) {
+            nat_t_udp_hdr.sport = UDP_PORT_NAT_T;
+            nat_t_udp_hdr.dport = UDP_PORT_NAT_T;
+            if(!p4plus_hbm_write(hwid+54,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr))){
+                HAL_TRACE_ERR("Failed to create nat_t_hdr entry for IPSECCB");
+                ret = HAL_RET_HW_FAIL;
+            }
+        }    
     }
     return ret;
 }
@@ -239,7 +263,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipsec_barco_ring_addr = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr);
     ipseccb_pd->ipseccb->pi = data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex;
     ipseccb_pd->ipseccb->ci = data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex;
-    ipseccb_pd->ipseccb->is_v6 = data.u.ipsec_encap_rxdma_initial_table_d.is_v6;
+    ipseccb_pd->ipseccb->is_v6 = data.u.ipsec_encap_rxdma_initial_table_d.flags & 0x1;
     HAL_TRACE_DEBUG("CB Ring Addr {:#x} Pindex {} CIndex {}", ipsec_cb_ring_addr, ipseccb_pd->ipseccb->pi, ipseccb_pd->ipseccb->ci);
     HAL_TRACE_DEBUG("Barco Ring Addr {:#x} Pindex {} CIndex {}", ipsec_barco_ring_addr, 
                    data.u.ipsec_encap_rxdma_initial_table_d.barco_pindex, 

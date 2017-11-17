@@ -214,7 +214,7 @@ action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              ipsec_cb_index, block_size,
                              cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
                              cb_ring_base_addr, barco_ring_base_addr, 
-                             iv_salt, is_v6)
+                             iv_salt, flags)
 {
     IPSEC_CB_SCRATCH_WITH_PC
     // memwr to increment hw-cindex (cb_base + offset)
@@ -292,7 +292,7 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        ipsec_cb_index, block_size,
                                        cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr,
-                                       iv_salt, is_v6)
+                                       iv_salt, flags)
 {
     IPSEC_CB_SCRATCH
   

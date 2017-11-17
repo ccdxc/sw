@@ -18,6 +18,8 @@ namespace pd {
 #define IPSEC_CB_RING_ENTRY_SIZE                   8
 #define IPSEC_BARCO_RING_ENTRY_SIZE              128 
 
+#define UDP_PORT_NAT_T 4500
+
 typedef enum ipseccb_hwid_order_ {
     P4PD_HWID_IPSEC_RX_STAGE0 = 0,
     P4PD_HWID_IPSEC_IP_HDR = 1,
@@ -78,6 +80,13 @@ typedef struct pd_ipseccb_eth_ip6_hdr_s {
     uint8_t    src[16];
     uint8_t    dst[16];
 } __PACK__ pd_ipseccb_eth_ip6_hdr_t;
+
+typedef struct pd_ipseccb_udp_nat_t_hdr_s {
+    uint16_t sport;
+    uint16_t dport;
+    uint16_t length;
+    uint16_t csum;
+} __PACK__ pd_ipseccb_udp_nat_t_hdr_t;
 
 // allocate a ipseccb pd instance
 static inline pd_ipseccb_encrypt_t *

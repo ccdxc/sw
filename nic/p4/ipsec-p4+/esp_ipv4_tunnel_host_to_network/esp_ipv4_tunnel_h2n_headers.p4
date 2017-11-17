@@ -86,7 +86,7 @@ header_type ipsec_cb_metadata_t {
         cb_ring_base_addr : 32;
         barco_ring_base_addr : 32;
         iv_salt   : 32;
-        is_v6 : 8;
+        flags : 8;
     }
 }
 
@@ -179,7 +179,7 @@ header_type p4plus_to_p4_ipsec_header_t {
     modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr); \
     modify_field(ipsec_cb_scratch.barco_ring_base_addr, barco_ring_base_addr); \
     modify_field(ipsec_cb_scratch.iv_salt, iv_salt); \
-    modify_field(ipsec_cb_scratch.is_v6, is_v6); \          
+    modify_field(ipsec_cb_scratch.flags, flags); \          
 
 #define IPSEC_CB_SCRATCH_WITH_PC \
     modify_field(ipsec_cb_scratch.pc, pc); \
