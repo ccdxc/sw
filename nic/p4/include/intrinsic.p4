@@ -69,6 +69,7 @@ header_type p4_to_p4plus_ipsec_header_t {
         l4_protocol         : 8;
         ip_hdr_size         : 8;
         seq_no              : 32;
+        spi                 : 32;
     }
 }
 

@@ -173,6 +173,7 @@ action p4plus_app_ipsec() {
     modify_field(p4_to_p4plus_ipsec.p4plus_app_id,
                  control_metadata.p4plus_app_id);
     modify_field(p4_to_p4plus_ipsec.seq_no, ipsec_metadata.seq_no);
+    modify_field(p4_to_p4plus_ipsec.spi, (flow_lkp_metadata.lkp_sport << 16) | flow_lkp_metadata.lkp_dport);
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,

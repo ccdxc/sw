@@ -127,6 +127,8 @@ p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
+  add         r4, k.flow_lkp_metadata_lkp_dport,k.flow_lkp_metadata_lkp_sport, 16
+  phvwr       p.p4_to_p4plus_ipsec_spi, r4
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
