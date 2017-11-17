@@ -71,10 +71,11 @@ func TestCKMBasedProviderRPC(t *testing.T) {
 
 	// create server
 	rpcServer, err := rpckit.NewRPCServer("testServer", "localhost:0", rpckit.WithTLSProvider(tlsProvider))
-	defer rpcServer.Stop()
 	AssertOk(t, err, "Error creating test server at localhost:0")
+	defer rpcServer.Stop()
 	testHandler := rpckit.NewTestRPCHandler("dummy message", "test TLS response")
 	rpckit.RegisterTestServer(rpcServer.GrpcServer, testHandler)
+	rpcServer.Start()
 
 	// create client
 	rpcClient, err := rpckit.NewRPCClient("testServer", rpcServer.GetListenURL(), rpckit.WithTLSProvider(tlsProvider), rpckit.WithTracerEnabled(true))
@@ -113,6 +114,7 @@ func TestRPCBalancing(t *testing.T) {
 	AssertOk(t, err, "Failed to create resolver server")
 	defer resolverServer.Stop()
 	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
+	resolverServer.Start()
 
 	// populate the mock resolver with the two servers
 	si1 := types.ServiceInstance{

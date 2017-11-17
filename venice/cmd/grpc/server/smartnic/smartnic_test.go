@@ -47,6 +47,10 @@ type testInfo struct {
 	smartNICServer *RPCServer
 }
 
+func (t testInfo) APIClient() cmd.CmdV1Interface {
+	return t.apiClient.CmdV1()
+}
+
 var tInfo testInfo
 
 // runRPCServer creates a smartNIC server for SmartNIC service.
@@ -60,9 +64,11 @@ func createRPCServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 	tInfo.rpcServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer = NewRPCServer(tInfo.apiClient.CmdV1().Cluster(),
-		tInfo.apiClient.CmdV1().Node(), tInfo.apiClient.CmdV1().SmartNIC(),
-		healthInterval, deadtimeInterval)
+	tInfo.smartNICServer, err = NewRPCServer(tInfo, healthInterval, deadtimeInterval)
+	if err != nil {
+		fmt.Printf("Error creating SmartNIC RPC server: %v", err)
+		return nil, err
+	}
 
 	// Launch go routine to monitor health updates of smartNIC objects and update status
 	go func() {
@@ -70,6 +76,7 @@ func createRPCServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 	}()
 
 	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
+	rpcServer.Start()
 
 	return rpcServer, nil
 }
@@ -203,7 +210,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 			clRef.ObjectMeta.Name = "testCluster"
 			clRef.ObjectMeta.ResourceVersion = refObj.ObjectMeta.ResourceVersion
 			clRef.Spec.AutoAdmitNICs = tc.autoAdmit
-			clObj, err := tInfo.smartNICServer.ClusterAPI.Update(context.Background(), &clRef)
+			clObj, err := tInfo.apiClient.CmdV1().Cluster().Update(context.Background(), &clRef)
 			if err != nil || clObj == nil {
 				t.Fatalf("Error updating cluster auto-admit status: %v %v", clObj, err)
 			}

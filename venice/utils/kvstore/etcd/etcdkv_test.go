@@ -64,7 +64,7 @@ func TestWatchVersion(t *testing.T) {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 
-	client := cluster.NewClient(t)
+	client := cluster.Client()
 	etcdWatcher := client.Watch(context.Background(), kvstore.TestKey)
 
 	if err = store.Delete(context.Background(), kvstore.TestKey, obj); err != nil {
@@ -84,6 +84,5 @@ func TestWatchVersion(t *testing.T) {
 	}
 
 	w.Stop()
-	client.Close()
 	t.Logf("Got expected version from watch")
 }

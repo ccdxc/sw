@@ -44,6 +44,7 @@ func NewCollRPCSrv(listenURL string, c *tec.Collector) (*CollRPCSrv, error) {
 		grpcSrv: s,
 	}
 	metric.RegisterMetricApiServer(s.GrpcServer, srv)
+	s.Start()
 	log.Infof("Metric collector RPC server started at %s", listenURL)
 	return srv, nil
 }

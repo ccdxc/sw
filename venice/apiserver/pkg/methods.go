@@ -253,7 +253,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		return nil, errAPIDisabled
 	}
 
-	md, ok := metadata.FromContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		l.Errorf("unable to get metadata from context")
 		return nil, errRequestInfo

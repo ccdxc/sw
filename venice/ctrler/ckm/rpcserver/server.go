@@ -50,8 +50,9 @@ func NewRPCServer(serverName, listenURL string, cm *certmgr.CertificateMgr) (*RP
 		return nil, errors.Wrap(err, "Error certificates rpc server")
 	}
 
-	// register the RPC handlers
+	// register the RPC handlers and start the server
 	ckmproto.RegisterCertificatesServer(rpcServer.GrpcServer, cs)
+	rpcServer.Start()
 
 	// create rpc server object
 	server := RPCServer{

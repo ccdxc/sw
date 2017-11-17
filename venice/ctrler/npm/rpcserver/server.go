@@ -51,10 +51,11 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr, debugStats *deb
 		log.Fatalf("Error creating security rpc server. Err; %v", err)
 	}
 
-	// register the RPC handlers
+	// register the RPC handlers and start the server
 	netproto.RegisterNetworkApiServer(grpcServer.GrpcServer, networkHandler)
 	netproto.RegisterEndpointApiServer(grpcServer.GrpcServer, endpointHandler)
 	netproto.RegisterSecurityApiServer(grpcServer.GrpcServer, securityHandler)
+	grpcServer.Start()
 
 	// create rpc server object
 	rpcServer := RPCServer{

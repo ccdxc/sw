@@ -69,6 +69,10 @@ type testInfo struct {
 
 var tInfo testInfo
 
+func (t testInfo) APIClient() cmd.CmdV1Interface {
+	return t.apiClient.CmdV1()
+}
+
 func getNodeID(index int) string {
 	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
 }
@@ -93,12 +97,13 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 	tInfo.rpcServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer = smartnic.NewRPCServer(tInfo.apiClient.CmdV1().Cluster(),
-		tInfo.apiClient.CmdV1().Node(),
-		tInfo.apiClient.CmdV1().SmartNIC(),
-		smartnic.HealthWatchInterval,
-		smartnic.DeadInterval)
+	tInfo.smartNICServer, err = smartnic.NewRPCServer(tInfo, smartnic.HealthWatchInterval, smartnic.DeadInterval)
+	if err != nil {
+		fmt.Printf("Error creating Smart NIC server: %v", err)
+		return nil, err
+	}
 	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
+	rpcServer.Start()
 
 	return rpcServer, nil
 }

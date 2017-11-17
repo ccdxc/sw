@@ -76,7 +76,7 @@ func TestMethodWiths(t *testing.T) {
 	if mhdlr.version != "Vtest" || mhdlr.oper != "POST" {
 		t.Errorf("Flags not set correction ver[%v] oper[%v]", mhdlr.version, mhdlr.oper)
 	}
-	ctx := metadata.NewContext(context.Background(), md)
+	ctx := metadata.NewIncomingContext(context.Background(), md)
 	respmsg, _ := m.HandleInvocation(ctx, reqmsg)
 
 	if r, ok := respmsg.(string); ok {
@@ -132,7 +132,7 @@ func TestMethodKvWrite(t *testing.T) {
 	// Set the same version as the apiServer
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "GET")
-	ctx := metadata.NewContext(context.Background(), md)
+	ctx := metadata.NewIncomingContext(context.Background(), md)
 	if respmsg, _ := m.HandleInvocation(ctx, reqmsg); respmsg != nil {
 		t.Errorf("Expecting err but succeded")
 	}
@@ -142,7 +142,7 @@ func TestMethodKvWrite(t *testing.T) {
 	// Now add the object and check
 	md1 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
-	ctx1 := metadata.NewContext(context.Background(), md1)
+	ctx1 := metadata.NewIncomingContext(context.Background(), md1)
 	m.HandleInvocation(ctx1, reqmsg)
 	if req.kvwrites != 1 {
 		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
@@ -150,7 +150,7 @@ func TestMethodKvWrite(t *testing.T) {
 	// Now modify the object and check
 	md2 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "PUT")
-	ctx2 := metadata.NewContext(context.Background(), md2)
+	ctx2 := metadata.NewIncomingContext(context.Background(), md2)
 	m.HandleInvocation(ctx2, reqmsg)
 	if req.kvwrites != 2 {
 		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
@@ -158,7 +158,7 @@ func TestMethodKvWrite(t *testing.T) {
 	// Now delete the object and check
 	md3 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "DELETE")
-	ctx3 := metadata.NewContext(context.Background(), md3)
+	ctx3 := metadata.NewIncomingContext(context.Background(), md3)
 	span := opentracing.StartSpan("delete")
 	ctx3 = opentracing.ContextWithSpan(ctx3, span)
 	if _, err := m.HandleInvocation(ctx3, reqmsg); err != nil {
@@ -181,7 +181,7 @@ func TestMethodKvList(t *testing.T) {
 	// Set the same version as the apiServer
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "LIST")
-	ctx := metadata.NewContext(context.Background(), md)
+	ctx := metadata.NewIncomingContext(context.Background(), md)
 	if respmsg, _ := m.HandleInvocation(ctx, reqmsg); respmsg != nil {
 		t.Errorf("Expecting err but succeded")
 	}
@@ -247,7 +247,7 @@ func TestTxn(t *testing.T) {
 	reqmsg := &kvstore.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
-	ctx := metadata.NewContext(context.Background(), md)
+	ctx := metadata.NewIncomingContext(context.Background(), md)
 	m.HandleInvocation(ctx, reqmsg)
 	if req.txnwrites != 1 {
 		t.Fatalf("Txn Write: expecting [1] saw [%d]", req.txnwrites)
@@ -255,7 +255,7 @@ func TestTxn(t *testing.T) {
 	// Modify the same object
 	md1 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "PUT")
-	ctx1 := metadata.NewContext(context.Background(), md1)
+	ctx1 := metadata.NewIncomingContext(context.Background(), md1)
 	req.kvpath = txnTestKey
 	m.HandleInvocation(ctx1, reqmsg)
 	if req.txnwrites != 2 {
@@ -264,7 +264,7 @@ func TestTxn(t *testing.T) {
 	// Delete the Object
 	md2 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "DELETE")
-	ctx2 := metadata.NewContext(context.Background(), md2)
+	ctx2 := metadata.NewIncomingContext(context.Background(), md2)
 	_, err := m.HandleInvocation(ctx2, reqmsg)
 	if err != nil {
 		t.Fatalf("Invocation failed (%s)", err)

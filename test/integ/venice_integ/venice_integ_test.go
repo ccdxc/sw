@@ -110,6 +110,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	resolverServer, err := rpckit.NewRPCServer("resolver", "localhost:0", rpckit.WithTracerEnabled(true))
 	c.Assert(err, IsNil)
 	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
+	resolverServer.Start()
 
 	// populate the mock resolver with apiserver instance.
 	si := types.ServiceInstance{

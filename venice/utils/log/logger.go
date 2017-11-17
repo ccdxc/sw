@@ -54,6 +54,8 @@ type Logger interface {
 	WithContext(pairs ...string) Logger
 	SetOutput(w io.Writer) Logger
 	SetFilter(f FilterType) Logger
+
+	V(l int) bool
 }
 
 // FormatType identifies logging format type
@@ -491,6 +493,10 @@ func (l *kitLogger) Audit(ctx context.Context, keyvals ...interface{}) error {
 	// XXX-TBD add Span id from open tracing to the audit log.
 	keyvals = append(keyvals, "level", "audit")
 	return l.logger.Log(keyvals...)
+}
+
+func (l *kitLogger) V(m int) bool {
+	return true
 }
 
 // SetTraceDebug enables trace debug

@@ -11,7 +11,7 @@ import (
 )
 
 func dummyBefore(ctx context.Context, md *metadata.MD) context.Context {
-	xmd, ok := metadata.FromContext(ctx)
+	xmd, ok := metadata.FromOutgoingContext(ctx)
 	if ok {
 		cmd := metadata.Join(*md, xmd)
 		*md = cmd
@@ -21,12 +21,12 @@ func dummyBefore(ctx context.Context, md *metadata.MD) context.Context {
 
 func addVersion(ctx context.Context, version string) context.Context {
 	pairs := []string{apiserver.RequestParamVersion, version}
-	inmd, ok := metadata.FromContext(ctx)
+	inmd, ok := metadata.FromOutgoingContext(ctx)
 	var outmd metadata.MD
 	if ok {
 		outmd = metadata.Join(inmd, metadata.Pairs(pairs...))
 	} else {
 		outmd = metadata.Pairs(pairs...)
 	}
-	return metadata.NewContext(ctx, outmd)
+	return metadata.NewOutgoingContext(ctx, outmd)
 }

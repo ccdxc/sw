@@ -126,7 +126,7 @@ func ServerEndpoint(operationName string) endpoint.Middleware {
 // in `ctx` into the grpc Metadata.
 func ToGRPCRequest(logger log.Logger) func(ctx context.Context, md *metadata.MD) context.Context {
 	if IsEnabled() {
-		return gokittracing.ToGRPCRequest(GlobalTracer(), logger)
+		return gokittracing.ContextToGRPC(GlobalTracer(), logger)
 	}
 	return func(ctx context.Context, md *metadata.MD) context.Context {
 		return ctx
@@ -138,7 +138,7 @@ func ToGRPCRequest(logger log.Logger) func(ctx context.Context, md *metadata.MD)
 //  client side with ToGRPCRequest() call above
 func FromGRPCRequest(operationName string, logger log.Logger) func(ctx context.Context, md metadata.MD) context.Context {
 	if IsEnabled() {
-		return gokittracing.FromGRPCRequest(GlobalTracer(), operationName, logger)
+		return gokittracing.GRPCToContext(GlobalTracer(), operationName, logger)
 	}
 	return func(ctx context.Context, md metadata.MD) context.Context {
 		return ctx

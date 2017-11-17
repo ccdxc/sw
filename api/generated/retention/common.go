@@ -45,7 +45,7 @@ func recoverVersion(ctx context.Context, md metadata.MD) context.Context {
 	}
 	nmd := metadata.Pairs(pairs...)
 	nmd = metadata.Join(nmd, md)
-	ctx = metadata.NewContext(ctx, nmd)
+	ctx = metadata.NewIncomingContext(ctx, nmd)
 	return ctx
 }
 

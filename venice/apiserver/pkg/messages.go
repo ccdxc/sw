@@ -301,7 +301,7 @@ func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 		l := singletonAPISrv.Logger
 		ctx := stream.Context()
 
-		md, ok := metadata.FromContext(ctx)
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			l.ErrorLog("msg", "unable to get metadata from context")
 			return errRequestInfo

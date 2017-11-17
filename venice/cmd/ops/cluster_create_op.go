@@ -130,7 +130,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 		sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
 		return nil, errors.NewInternalError(err)
 	}
-	log.Debugf("Wrote cluster %#v to kvstore", o.cluster)
+	log.Infof("Wrote cluster %#v to kvstore", o.cluster)
 
 	return o.cluster, nil
 }

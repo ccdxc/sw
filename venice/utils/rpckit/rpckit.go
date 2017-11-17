@@ -43,11 +43,11 @@ type options struct {
 	enableStats  bool              // option to enable Stats middleware
 	tlsProvider  TLSProvider       // provides TLS parameters for all RPC clients and servers
 	balancer     grpc.Balancer     // Load balance RPCs between available servers (client option)
-	deferStart   bool              // Defers starting the listen on the gRPC server if set
 }
 
 // RPCServer contains RPC server state
 type RPCServer struct {
+	sync.Mutex
 	GrpcServer *grpc.Server // gRPC server.
 	mysvcName  string       // my service name
 	listenURL  string       // URL where this server is listening
@@ -110,14 +110,6 @@ func WithBalancer(b grpc.Balancer) Option {
 	}
 }
 
-// WithDeferredStart when set will defer the listen on the gRPC server
-//  till Start() is called.
-func WithDeferredStart(enabled bool) Option {
-	return func(o *options) {
-		o.deferStart = enabled
-	}
-}
-
 func defaultOptions(mysvcName, role string) *options {
 	return &options{
 		stats:        newStatsMiddleware(mysvcName, role),
@@ -125,7 +117,6 @@ func defaultOptions(mysvcName, role string) *options {
 		enableTracer: false,
 		enableLogger: true,
 		enableStats:  true,
-		deferStart:   false,
 	}
 }
 
@@ -212,14 +203,6 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 		log.Fatalf("Error creating grpc server")
 	}
 	rpcServer.GrpcServer = server
-
-	// start new grpc server
-	if !rpcServer.deferStart {
-		rpcServer.Start()
-	}
-
-	log.Infof("gRpc server %s Listening on %s", mysvcName, listenURL)
-
 	return rpcServer, nil
 }
 
@@ -230,6 +213,9 @@ func (srv *RPCServer) GetListenURL() string {
 
 // Stop stops grpc server and closes the listener
 func (srv *RPCServer) Stop() error {
+	srv.Lock()
+	defer srv.Unlock()
+
 	// stop the server
 	if srv.GrpcServer != nil {
 		log.Infof("Stopping grpc server %s listening on %s", srv.mysvcName, srv.listenURL)
@@ -244,9 +230,16 @@ func (srv *RPCServer) Stop() error {
 func (srv *RPCServer) run() {
 	// start service requests
 	go func() {
-		if srv.GrpcServer != nil && srv.listener != nil {
-			srv.DoneCh <- srv.GrpcServer.Serve(srv.listener)
+		srv.Lock()
+		grpcServer := srv.GrpcServer
+		listener := srv.listener
+		if grpcServer != nil && listener != nil {
+			log.Infof("gRpc server %s Listening on %s", srv.mysvcName, srv.listenURL)
+			srv.Unlock()
+			srv.DoneCh <- grpcServer.Serve(listener)
+			return
 		}
+		srv.Unlock()
 	}()
 }
 
@@ -368,7 +361,7 @@ func (c *RPCClient) Reconnect() error {
 	}
 
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(c.remoteURL, opts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
+	conn, err := grpc.Dial(c.remoteURL, opts, grpc.WithBlock(), grpc.WithTimeout(time.Second*5),
 		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(c)),
 		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(c)))
 	if err != nil {

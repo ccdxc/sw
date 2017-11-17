@@ -83,6 +83,8 @@ func NewCfgWatcherService(logger log.Logger) *CfgWatcherService {
 
 // APIClient returns an interface to APIClient. Allows for sharing of grpc connection between various modules
 func (k *CfgWatcherService) APIClient() cmd.CmdV1Interface {
+	k.Lock()
+	defer k.Unlock()
 	return k.apiClient
 }
 
@@ -132,7 +134,9 @@ func (k *CfgWatcherService) waitForAPIServerOrCancel() {
 			_, err = cl.Cluster().List(k.ctx, &opts)
 			if err == nil {
 				k.clientConn = c
+				k.Lock()
 				k.apiClient = cl
+				k.Unlock()
 				go k.runUntilCancel()
 				return
 			}

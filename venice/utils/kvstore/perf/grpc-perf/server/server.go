@@ -107,8 +107,9 @@ func RunServer(url string, client kvstore.Interface, stopChannel chan bool) {
 
 	go h.handleWatches()
 
-	// register the RPC handler
+	// register the RPC handler and start the server
 	api.RegisterRulesServer(rpcServer.GrpcServer, h)
+	rpcServer.Start()
 	defer func() { rpcServer.Stop() }()
 
 	// wait forever

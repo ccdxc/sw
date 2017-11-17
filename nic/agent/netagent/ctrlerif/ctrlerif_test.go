@@ -179,6 +179,7 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 	netproto.RegisterNetworkApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterEndpointApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSecurityApiServer(grpcServer.GrpcServer, &srv)
+	grpcServer.Start()
 
 	return &srv
 }

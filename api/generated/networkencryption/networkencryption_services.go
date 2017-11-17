@@ -8,7 +8,6 @@ package networkencryption
 
 import (
 	"context"
-
 	"github.com/pensando/sw/api"
 )
 

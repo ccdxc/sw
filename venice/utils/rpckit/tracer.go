@@ -84,7 +84,7 @@ func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, 
 			ext.SpanKindRPCClient, gRPCComponentTag)
 
 		// get existing metadata
-		md, ok := metadata.FromContext(ctx)
+		md, ok := metadata.FromOutgoingContext(ctx)
 		if !ok {
 			md = metadata.New(nil)
 		} else {
@@ -103,13 +103,13 @@ func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, 
 		clientSpan.LogFields(log.Object("gRPC request sent", req))
 
 		// save trace context
-		ctx = metadata.NewContext(ctx, md)
+		ctx = metadata.NewOutgoingContext(ctx, md)
 		trCtx := &tracerCtx{span: clientSpan}
 		ctx = context.WithValue(ctx, tracerCtx{}, trCtx)
 
 	case RoleServer:
 		// get grpc metadata
-		md, ok := metadata.FromContext(ctx)
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			md = metadata.New(nil)
 		}

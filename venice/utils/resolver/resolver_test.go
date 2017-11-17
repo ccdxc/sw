@@ -48,6 +48,7 @@ func createFakeResolver(t *testing.T) (*rpckit.RPCServer, *mock.ResolverService)
 	}
 	m := setupMockResolver()
 	types.RegisterServiceAPIServer(rpcServer.GrpcServer, service.NewRPCHandler(m))
+	rpcServer.Start()
 	return rpcServer, m
 }
 

@@ -274,7 +274,7 @@ func TestMessageWith(t *testing.T) {
 	ctx := context.TODO()
 	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
 		apisrv.RequestParamMethod, "WATCH")
-	ctx = metadata.NewContext(ctx, md)
+	ctx = metadata.NewIncomingContext(ctx, md)
 	stream := fakeGrpcStream{ctx: ctx}
 	opts := api.ListWatchOptions{}
 	err := m.WatchFromKv(&opts, stream, "test")

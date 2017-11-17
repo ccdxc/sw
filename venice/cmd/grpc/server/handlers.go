@@ -9,13 +9,10 @@ import (
 
 	context "golang.org/x/net/context"
 
-	"github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
-	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services"
-	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -161,9 +158,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
 		env.SystemdService = services.NewSystemdService()
 		env.VipService = services.NewVIPService()
-		env.K8sService = services.NewK8sService()
-		env.ResolverService = services.NewResolverService(env.K8sService)
-		env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger)
 		env.MasterService = services.NewMasterService(req.VirtualIp, services.WithK8sSvcMasterOption(env.K8sService),
 			services.WithResolverSvcMasterOption(env.ResolverService))
 		env.NtpService = services.NewNtpService(req.NTPServers)
@@ -176,12 +170,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 
 		// We let the quorum nodes use the external NTP server and non-quorum nodes use the VIP for ntp server
 		env.NtpService.NtpConfigFile(req.NTPServers)
-
-		// create and register the RPC handler for service object.
-		types.RegisterServiceAPIServer(env.RPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
-
-		// Create and register the RPC handler for SmartNIC service
-		go RegisterSmartNICServer()
 
 	} else {
 		env.NtpService = services.NewNtpService(req.NTPServers)
@@ -223,24 +211,20 @@ func RegisterSmartNICServer() {
 	// Start smartNIC gRPC server
 	for i := 0; i < maxIters; i++ {
 
-		if env.CfgWatcherService.APIClient() != nil {
-
-			// create new smartNIC server
-			nicServer := smartnic.NewRPCServer(env.CfgWatcherService.APIClient().Cluster(),
-				env.CfgWatcherService.APIClient().Node(),
-				env.CfgWatcherService.APIClient().SmartNIC(),
-				smartnic.HealthWatchInterval,
-				smartnic.DeadInterval)
-
-			// Launch go routine to monitor health updates of smartNIC objects and update status
-			go func() {
-				nicServer.MonitorHealth()
-			}()
-
-			grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, nicServer)
-			return
+		// create new smartNIC server
+		nicServer, err := smartnic.NewRPCServer(env.CfgWatcherService, smartnic.HealthWatchInterval, smartnic.DeadInterval)
+		if err != nil {
+			time.Sleep(apiClientWaitTimeMsec * time.Millisecond)
+			continue
 		}
-		time.Sleep(apiClientWaitTimeMsec * time.Millisecond)
+
+		// Launch go routine to monitor health updates of smartNIC objects and update status
+		go func() {
+			nicServer.MonitorHealth()
+		}()
+
+		grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, nicServer)
+		return
 	}
 	log.Fatalf("Failed to register smartNIC RPCserver, apiClient not up")
 }

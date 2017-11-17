@@ -69,7 +69,7 @@ func New(c *Config) Interface {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	md := metadata.Pairs("cname", c.Name)
-	ctx = metadata.NewContext(ctx, md)
+	ctx = metadata.NewOutgoingContext(ctx, md)
 
 	r := &resolverClient{
 		config:    c,

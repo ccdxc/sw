@@ -129,14 +129,14 @@ func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, m
 	switch role {
 	case RoleClient:
 		// get existing metadata
-		md, ok := metadata.FromContext(ctx)
+		md, ok := metadata.FromOutgoingContext(ctx)
 		if !ok {
 			md = metadata.New(nil)
 		} else {
 			md = md.Copy()
 		}
 		newMd := metadata.Join(md, metadata.Pairs("cname", mysvcName))
-		ctx = metadata.NewContext(ctx, newMd)
+		ctx = metadata.NewOutgoingContext(ctx, newMd)
 		// increment request stats
 		singletonMap.Add(fmt.Sprintf("%v/client/requests%v", mysvcName, method), 1)
 	case RoleServer:
@@ -144,7 +144,7 @@ func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, m
 		singletonMap.Add(fmt.Sprintf("%v/server/requests%v", mysvcName, method), 1)
 
 		// get grpc metadata
-		md, ok := metadata.FromContext(ctx)
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			break
 		}
@@ -176,7 +176,7 @@ func (s *statsMiddleware) RespInterceptor(ctx context.Context, role, mysvcName, 
 		}
 
 		// increment per client response and error stats
-		md, ok := metadata.FromContext(ctx)
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			break
 		}

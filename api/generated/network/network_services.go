@@ -8,7 +8,6 @@ package network
 
 import (
 	"context"
-
 	"github.com/pensando/sw/api"
 )
 

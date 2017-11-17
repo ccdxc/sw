@@ -177,9 +177,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	}
 	poolSize := a.config.KVPoolSize
 
-	opts := []rpckit.Option{
-		rpckit.WithDeferredStart(true),
-	}
+	opts := []rpckit.Option{}
 	if !config.DevMode {
 		opts = append(opts, rpckit.WithTracerEnabled(false))
 		opts = append(opts, rpckit.WithLoggerEnabled(false))

@@ -26,6 +26,7 @@ func createServiceAPIServerClient(t *testing.T) (*mock.ResolverService, *rpckit.
 
 	m := setupMockResolver()
 	types.RegisterServiceAPIServer(rpcServer.GrpcServer, NewRPCHandler(m))
+	rpcServer.Start()
 
 	// create RPC Client.
 	rpcClient, err := rpckit.NewRPCClient("testService", testURL)

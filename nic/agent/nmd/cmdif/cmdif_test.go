@@ -106,6 +106,7 @@ func createRPCServer(t *testing.T) *mockRPCServer {
 
 	// register self as rpc handler
 	grpc.RegisterSmartNICServer(grpcServer.GrpcServer, &srv)
+	grpcServer.Start()
 
 	return &srv
 }

@@ -8,7 +8,6 @@ package events
 
 import (
 	"context"
-
 	"github.com/pensando/sw/api"
 )
 

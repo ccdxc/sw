@@ -28,17 +28,14 @@ const (
 	DeadInterval = 120 * time.Second
 )
 
+var (
+	errAPIServerDown = fmt.Errorf("API Server not reachable or down")
+)
+
 // RPCServer implements SmartNIC gRPC service.
 type RPCServer struct {
-
-	// ClusterAPI is CRUD interface for Cluster object
-	ClusterAPI cmd.ClusterInterface
-
-	// NodeAPI is CRUD interface for Node object
-	NodeAPI cmd.NodeInterface
-
-	// SmartNICAPI is CRUD interface for SmartNIC object
-	SmartNICAPI cmd.SmartNICInterface
+	// ClientGetter is an interface to get the API client.
+	ClientGetter APIClientGetter
 
 	// HealthWatchIntvl is the health watch interval
 	HealthWatchIntvl time.Duration
@@ -47,15 +44,21 @@ type RPCServer struct {
 	DeadIntvl time.Duration
 }
 
+// APIClientGetter is an interface that returns an API Client.
+type APIClientGetter interface {
+	APIClient() cmd.CmdV1Interface
+}
+
 // NewRPCServer returns a SmartNIC RPC server object
-func NewRPCServer(cIf cmd.ClusterInterface, nIf cmd.NodeInterface, sIf cmd.SmartNICInterface, healthInvl, deadInvl time.Duration) *RPCServer {
+func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Duration) (*RPCServer, error) {
+	if clientGetter == nil {
+		return nil, fmt.Errorf("Client getter is nil")
+	}
 	return &RPCServer{
-		ClusterAPI:       cIf,
-		NodeAPI:          nIf,
-		SmartNICAPI:      sIf,
+		ClientGetter:     clientGetter,
 		HealthWatchIntvl: healthInvl,
 		DeadIntvl:        deadInvl,
-	}
+	}, nil
 }
 
 // Temporary definition, until CKM provides a API to validate Cert
@@ -78,8 +81,12 @@ func (s *RPCServer) IsValidFactoryCert(cert []byte) bool {
 
 // GetCluster fetches the Cluster object based on object meta
 func (s *RPCServer) GetCluster() (*cmd.Cluster, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
 	opts := api.ListWatchOptions{}
-	clusterObjs, err := s.ClusterAPI.List(context.Background(), &opts)
+	clusterObjs, err := cl.Cluster().List(context.Background(), &opts)
 	if err != nil || len(clusterObjs) == 0 {
 		return nil, perror.NewNotFound("Cluster", "")
 	}
@@ -90,6 +97,10 @@ func (s *RPCServer) GetCluster() (*cmd.Cluster, error) {
 
 // CreateNode creates the Node object based on object meta
 func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cmd.Node, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
 
 	node := &cmd.Node{
 		TypeMeta:   api.TypeMeta{Kind: "Node"},
@@ -102,7 +113,7 @@ func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cmd.Node, error) {
 		},
 	}
 
-	nodeObj, err := s.NodeAPI.Create(context.Background(), node)
+	nodeObj, err := cl.Node().Create(context.Background(), node)
 	if err != nil || nodeObj == nil {
 		return nil, perror.NewNotFound("Node", ometa.Name)
 	}
@@ -112,8 +123,12 @@ func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cmd.Node, error) {
 
 // GetNode fetches the Node object based on object meta
 func (s *RPCServer) GetNode(om api.ObjectMeta) (*cmd.Node, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
 
-	nodeObj, err := s.NodeAPI.Get(context.Background(), &om)
+	nodeObj, err := cl.Node().Get(context.Background(), &om)
 	if err != nil || nodeObj == nil {
 		return nil, perror.NewNotFound("Node", om.Name)
 	}
@@ -124,6 +139,10 @@ func (s *RPCServer) GetNode(om api.ObjectMeta) (*cmd.Node, error) {
 // UpdateNode updates the list of Nics in status of Node object
 // Node object is  created if it does not exist.
 func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
 
 	// Check if object exists
 	var nodeObj *cmd.Node
@@ -148,12 +167,12 @@ func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
 			},
 		}
 
-		nodeObj, err = s.NodeAPI.Create(context.Background(), node)
+		nodeObj, err = cl.Node().Create(context.Background(), node)
 	} else {
 
 		// Update the Nics list in Node status
 		refObj.Status.Nics = append(refObj.Status.Nics, nic.ObjectMeta.Name)
-		nodeObj, err = s.NodeAPI.Update(context.Background(), refObj)
+		nodeObj, err = cl.Node().Update(context.Background(), refObj)
 	}
 
 	return nodeObj, err
@@ -161,8 +180,12 @@ func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
 
 // DeleteNode deletes the Node object based on object meta name
 func (s *RPCServer) DeleteNode(om api.ObjectMeta) error {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return errAPIServerDown
+	}
 
-	_, err := s.NodeAPI.Delete(context.Background(), &om)
+	_, err := cl.Node().Delete(context.Background(), &om)
 	if err != nil {
 		log.Errorf("Error deleting Node object name:%s err: %v", om.Name, err)
 		return err
@@ -173,8 +196,12 @@ func (s *RPCServer) DeleteNode(om api.ObjectMeta) error {
 
 // GetSmartNIC fetches the SmartNIC object based on object meta
 func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cmd.SmartNIC, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
 
-	nicObj, err := s.SmartNICAPI.Get(context.Background(), &om)
+	nicObj, err := cl.SmartNIC().Get(context.Background(), &om)
 	if err != nil || nicObj == nil {
 		return nil, perror.NewNotFound("SmartNIC", om.Name)
 	}
@@ -184,6 +211,10 @@ func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cmd.SmartNIC, error) {
 
 // UpdateSmartNIC creates or updates the smartNIC object
 func (s *RPCServer) UpdateSmartNIC(obj *cmd.SmartNIC) (*cmd.SmartNIC, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
 
 	// Check if object exists
 	var nicObj *cmd.SmartNIC
@@ -191,12 +222,12 @@ func (s *RPCServer) UpdateSmartNIC(obj *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 	if err != nil || refObj == nil {
 
 		// Create smartNIC object
-		nicObj, err = s.SmartNICAPI.Create(context.Background(), obj)
+		nicObj, err = cl.SmartNIC().Create(context.Background(), obj)
 	} else {
 
 		// Update the object with CAS semantics
 		obj.ObjectMeta.ResourceVersion = refObj.ObjectMeta.ResourceVersion
-		nicObj, err = s.SmartNICAPI.Update(context.Background(), obj)
+		nicObj, err = cl.SmartNIC().Update(context.Background(), obj)
 	}
 
 	return nicObj, err
@@ -204,8 +235,12 @@ func (s *RPCServer) UpdateSmartNIC(obj *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 
 // DeleteSmartNIC deletes the SmartNIC object based on object meta name
 func (s *RPCServer) DeleteSmartNIC(om api.ObjectMeta) error {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return errAPIServerDown
+	}
 
-	_, err := s.SmartNICAPI.Delete(context.Background(), &om)
+	_, err := cl.SmartNIC().Delete(context.Background(), &om)
 	if err != nil {
 		log.Errorf("Error deleting smartNIC object name:%s err: %v", om.Name, err)
 		return err
@@ -218,6 +253,10 @@ func (s *RPCServer) DeleteSmartNIC(om api.ObjectMeta) error {
 // NMD starts the NIC registration process when the NIC is placed in managed mode.
 // NMD is expected to retry with backoff if there are API errors or if the NIC is rejected.
 func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICRequest) (*grpc.RegisterNICResponse, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
 
 	mac := req.GetNic().Name
 	cert := req.GetCert()
@@ -278,12 +317,16 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 
 // UpdateNIC handles the update to smartNIC object
 func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (*grpc.UpdateNICResponse, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
 
 	obj := req.GetNic()
 
 	// Get existing Object from Object store
 	ometa := api.ObjectMeta{Name: obj.ObjectMeta.Name, Tenant: obj.ObjectMeta.Tenant}
-	refObj, err := s.SmartNICAPI.Get(context.Background(), &ometa)
+	refObj, err := cl.SmartNIC().Get(context.Background(), &ometa)
 	if err != nil {
 		log.Errorf("Error getting SmartNIC object: %+v err: %v", obj, err)
 		return &grpc.UpdateNICResponse{Nic: nil}, err
@@ -291,7 +334,7 @@ func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (
 
 	// Update smartNIC object with CAS semantics
 	obj.ObjectMeta.ResourceVersion = refObj.ObjectMeta.ResourceVersion
-	nicObj, err := s.SmartNICAPI.Update(context.Background(), &obj)
+	nicObj, err := cl.SmartNIC().Update(context.Background(), &obj)
 
 	if err != nil || nicObj == nil {
 		log.Errorf("Error updating SmartNIC object: %+v err: %v", obj, err)
@@ -303,11 +346,15 @@ func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (
 
 // WatchNICs watches smartNICs for changes and sends them as streaming rpc
 func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNIC_WatchNICsServer) error {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return errAPIServerDown
+	}
 
 	// watch for changes
 	opts := api.ListWatchOptions{}
 	var watcher kvstore.Watcher
-	watcher, err := s.SmartNICAPI.Watch(stream.Context(), &opts)
+	watcher, err := cl.SmartNIC().Watch(stream.Context(), &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch, err: %v", err)
 		return err
@@ -316,7 +363,7 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNIC_WatchNIC
 
 	// first get a list of all existing smartNICs
 	opts = api.ListWatchOptions{}
-	nics, err := s.SmartNICAPI.List(stream.Context(), &opts)
+	nics, err := cl.SmartNIC().List(stream.Context(), &opts)
 	if err != nil {
 		log.Errorf("Error getting a list of nics, err: %v", err)
 		return err
@@ -394,16 +441,20 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNIC_WatchNIC
 // smartNIC objects every 30sec. For NICs that haven't received
 // health updates in over 120secs, CMD would mark the status as unknown.
 func (s *RPCServer) MonitorHealth() {
-
 	for {
 		select {
 
 		// NIC health watch timer callback
 		case <-time.After(s.HealthWatchIntvl):
 
+			cl := s.ClientGetter.APIClient()
+			if cl == nil {
+				log.Errorf("Failed to get API client")
+				continue
+			}
 			// Get a list of all existing smartNICs
 			opts := api.ListWatchOptions{}
-			nics, err := s.SmartNICAPI.List(context.Background(), &opts)
+			nics, err := cl.SmartNIC().List(context.Background(), &opts)
 			if err != nil {
 				log.Errorf("Failed to getting a list of nics, err: %v", err)
 				continue
@@ -438,7 +489,7 @@ func (s *RPCServer) MonitorHealth() {
 							nic.Status.Conditions[i].Status = cmd.ConditionStatus_UNKNOWN.String()
 							nic.Status.Conditions[i].LastTransitionTime = time.Now().Format(time.RFC3339)
 							nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
-							_, err := s.SmartNICAPI.Update(context.Background(), nic)
+							_, err := cl.SmartNIC().Update(context.Background(), nic)
 							if err != nil {
 								log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 							}
