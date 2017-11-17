@@ -223,6 +223,7 @@ ctx_t::lookup_session()
     entry = (alg_entry_t *)lookup_alg_db(this);
     if (entry) {
         // ALG Entry found
+        HAL_TRACE_DEBUG("fte: found existing alg session");
         session_ = entry->session;
         set_alg_proto_state(entry->alg_proto_state);
          
@@ -246,16 +247,16 @@ ctx_t::lookup_session()
 
     if (!session_) {
         session_ = hal::session_lookup(key_, std::addressof(role_));
+        if (!session_) {
+            return HAL_RET_SESSION_NOT_FOUND;
+        }
+
+        existing_session_ = true;
+        HAL_TRACE_DEBUG("fte: found existing session");
     }
 
-    if (!session_) {
-        existing_session_ = false;
-        return HAL_RET_SESSION_NOT_FOUND;
-    }
-
-    HAL_TRACE_DEBUG("fte: found existing session");
-    existing_session_ = true;
     hflow = session_->iflow;
+
     // TODO(goli) handle post svc flows
     if (hflow->config.role == hal::FLOW_ROLE_INITIATOR) {
         iflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
@@ -389,7 +390,7 @@ ctx_t::update_flow_table()
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
     }
 
-    if (!flow_miss()) {
+    if (!flow_miss() || existing_session()) {
       return HAL_RET_OK;
     }
 

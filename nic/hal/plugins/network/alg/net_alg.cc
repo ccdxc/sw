@@ -22,8 +22,7 @@ IsAlgExistingFlow(fte::ctx_t& ctx)
     HAL_TRACE_DEBUG("ALG Exec role: {} alg_proto_state: {}", 
                      ctx.role(), ctx.alg_proto_state());
 
-    return (ctx.alg_proto_state() != fte::ALG_PROTO_STATE_NONE &&
-            ctx.existing_session());
+    return (ctx.alg_proto_state() != fte::ALG_PROTO_STATE_NONE);
 }
 
 fte::pipeline_action_t
