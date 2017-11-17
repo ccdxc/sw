@@ -357,6 +357,35 @@ lklshim_flowdb_init ()
     lklshim_mem_init();
 }
 
+bool 
+lklshim_release_client_syn(uint16_t qid) 
+{
+    lklshim_flow_t *flow = lklshim_flow_by_qid[qid];
+
+    
+    if (flow == NULL) {
+      HAL_TRACE_ERR("lklshim: flow does't exist to release client syn for qid = {}", qid);
+      return false;
+    }
+    
+    HAL_TRACE_DEBUG("lklshim: trying to release client syn for qid = {}", qid);
+
+    if (flow->hostns.skbuff != NULL) {
+      void *pkt_skb = flow->hostns.skbuff;
+      ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
+      ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
+      tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
+
+      HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump((uint8_t*)eth, 18));
+      HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
+      HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
+
+      lkl_tcp_v4_rcv(pkt_skb);
+    }
+
+    return true;
+}
+
 bool
 lklshim_process_flow_hit_rx_packet (void *pkt_skb,
                                     hal::flow_direction_t dir,
@@ -381,10 +410,24 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
         return false;
     }
 
-    if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
-        hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid);
+    /*
+     * If the TLS bypass mode is set, we're doing TCP proxy only, so we can
+     * release the client syn and establish session for the original flow.
+     */
+    if (!hal::tls::proxy_tls_bypass_mode) {
+        if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
+	    hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid);
+	} else {
+            hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid);
+	}
     } else {
-        hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid);
+
+        HAL_TRACE_DEBUG("lklshim: TLS proxy bypass mode: release client syn for daddr={}, saddr={}, "
+			"dport={}, sport={}, seqno={}, ackseqno={} ", 
+			ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport), ntohl(tcp->seq),
+			ntohl(tcp->ack_seq));
+        // Inform LKL  
+        lklshim_release_client_syn(flow->iqid);
     }
  
     return true;
@@ -473,35 +516,6 @@ lklshim_process_flow_hit_rx_header (void *pkt_skb,
 
     if (lkl_tcp_v4_rcv(pkt_skb)) {
         return false;
-    }
-
-    return true;
-}
-
-bool 
-lklshim_release_client_syn(uint16_t qid) 
-{
-    lklshim_flow_t *flow = lklshim_flow_by_qid[qid];
-
-    
-    if (flow == NULL) {
-      HAL_TRACE_ERR("lklshim: flow does't exist to release client syn for qid = {}", qid);
-      return false;
-    }
-    
-    HAL_TRACE_DEBUG("lklshim: trying to release client syn for qid = {}", qid);
-
-    if (flow->hostns.skbuff != NULL) {
-      void *pkt_skb = flow->hostns.skbuff;
-      ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
-      ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
-      tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
-
-      HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump((uint8_t*)eth, 18));
-      HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
-      HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
-
-      lkl_tcp_v4_rcv(pkt_skb);
     }
 
     return true;

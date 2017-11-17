@@ -329,7 +329,7 @@ cc_binary(
 cc_binary(
     name = "nic_proxy-e2etest_tcp-server",
     srcs = [
-        "utls/tcp-client.cc",
+        "utls/tcp-server.cc",
     ],
     deps = [
         #"//nic/model_sim/include:modelsim_includes",

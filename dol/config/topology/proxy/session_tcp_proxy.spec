@@ -41,3 +41,83 @@ entries:
             port : const/80
         initiator: 
             port : const/47802
+
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/81
+        initiator: 
+            port : const/47802
+
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/82
+        initiator: 
+            port : const/47802
+
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/83
+        initiator: 
+            port : const/47802
+
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/84
+        initiator: 
+            port : const/47802
+
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/85
+        initiator: 
+            port : const/47802
+
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/86
+        initiator: 
+            port : const/47802
+
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/87
+        initiator: 
+            port : const/47802
+
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/88
+        initiator: 
+            port : const/47802

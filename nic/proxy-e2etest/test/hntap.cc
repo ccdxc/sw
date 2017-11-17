@@ -726,6 +726,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt,opkt;
   uint8_t *buf;
+  bool got_nw_pkt = false;
 
 
   ipkt.resize(size);
@@ -765,7 +766,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
   TLOG("Sending packet to model! size: %d on port: %d\n", ipkt.size(), port);
   step_network_pkt(ipkt, port);
 
-#define POLL_RETRIES 3
+#define POLL_RETRIES 4
 
   if (poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
     TLOG("Got some packet\n");
@@ -783,11 +784,13 @@ hntap_net_rx_to_model (char *pktbuf, int size)
         TLOG("NO packet back from nw side of model! size: %d\n", opkt.size());
     } else {
         TLOG("Got packet back from nw side of model! size: %d on port: %d cos %d\n", opkt.size(), port, cos);
+	got_nw_pkt = true;
     }
     
   }
 
-  if (opkt.size()) {
+  if (got_nw_pkt) {
+
     /*
      * Now that we got the packet from the Model, lets send it out on the Net-Tap interface.
      */
@@ -802,7 +805,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     }
   }
 
-  if (poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
+  if (!rsize && poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
       TLOG("Got some packet\n");
     // Receive Packet                                                                                                                                            
     consume_buffer(lif_id, RX, 0, buf, &rsize);

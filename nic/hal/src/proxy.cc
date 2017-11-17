@@ -749,4 +749,33 @@ is_proxy_enabled_for_flow(types::ProxyType proxy_type,
 {
     return (NULL != proxy_get_flow_info(proxy_type, &flow_key));
 }
+
+/*
+ * Process request to set global config for proxy services.
+ */
+hal_ret_t
+proxy_globalcfg_set(proxy::ProxyGlobalCfgRequest& req,
+		    proxy::ProxyGlobalCfgResponseMsg *rsp)
+{
+
+    /*
+     * Validate the request message. Currently only TLS proxy
+     * feature supported.
+     */
+    if (req.proxy_type() != types::PROXY_TYPE_TLS) {
+        rsp->add_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
+        HAL_TRACE_ERR("Proxy global config, invalid proxy type: {}",
+		      req.proxy_type());
+        return HAL_RET_INVALID_ARG;
+    }
+
+    hal::tls::proxy_tls_bypass_mode = req.bypass_mode();
+    HAL_TRACE_DEBUG("Proxy TLS: setting bypass mode {:d}",
+		    hal::tls::proxy_tls_bypass_mode);
+
+    // prepare the response
+    rsp->add_api_status(types::API_STATUS_OK);
+    return HAL_RET_OK;
+}
+
 }    // namespace hal

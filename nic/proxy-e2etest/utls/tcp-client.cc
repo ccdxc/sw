@@ -4,6 +4,7 @@ int bytes_recv;
 int port;
 char* test_data;
 bool from_localhost;
+bool continuous_stream = false;
 
 pthread_t server_thread;
 
@@ -17,12 +18,12 @@ int main(int argv, char* argc[]) {
   setlinebuf(stdout);
   setlinebuf(stderr);
 
-  if (argv != 7) {
-    TLOG( "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
+  if (argv != 7 && argv != 8) {
+    TLOG( "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net [-c]\n");
     exit(-1);
   }
 
-  while ((opt = getopt(argv, argc, "p:d:m:")) != -1) {
+  while ((opt = getopt(argv, argc, "p:d:m:c")) != -1) {
     switch (opt) {
     case 'p':
         port = atoi(optarg);
@@ -40,6 +41,9 @@ int main(int argv, char* argc[]) {
             TLOG( "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
 	    exit(-1);
 	}
+        break;
+    case 'c':
+        continuous_stream = true;
         break;
     case '?':
     default:
@@ -191,11 +195,10 @@ int main_tcp_client()
   } while(0);
 
   // Start tests
-  test_tcp(transport_fd);
-
-  //while(1) {
-   sleep(1);
-   //}
+  do {
+    test_tcp(transport_fd);
+    sleep(1);
+  } while (continuous_stream);
 
   close(transport_fd);
 

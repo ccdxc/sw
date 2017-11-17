@@ -127,3 +127,22 @@ ProxyServiceImpl::ProxyGetFlowInfo(ServerContext *context,
     return Status::OK;
    
 }
+
+Status
+ProxyServiceImpl::ProxyGlobalCfg(ServerContext *context,
+				 const ProxyGlobalCfgRequestMsg *req,
+				 ProxyGlobalCfgResponseMsg *rsp)
+{
+    uint32_t         i, nreqs = req->request_size();
+
+    HAL_TRACE_DEBUG("Rcvd Proxy Global config Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        auto request = req->request(i);
+        hal::proxy_globalcfg_set(request, rsp);
+    }
+    return Status::OK;
+}

@@ -281,6 +281,9 @@ hal_ret_t proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
 bool is_proxy_enabled_for_flow(types::ProxyType proxy_type,
                                const flow_key_t &flow_key);
 
+hal_ret_t proxy_globalcfg_set(proxy::ProxyGlobalCfgRequest& req,
+			      proxy::ProxyGlobalCfgResponseMsg *rsp);
+
 }    // namespace hal
 
 #endif    // __PROXY_HPP__

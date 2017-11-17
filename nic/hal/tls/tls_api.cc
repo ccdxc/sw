@@ -14,6 +14,16 @@ static hal::pd::cpupkt_ctxt_t* asesq_ctx = NULL;
 //static int tcpfd = 0;
 static int port = 80;
 
+/*
+ * Global to indicate bypass mode for TLS proxy for all
+ * flows, and perform tcp-proxy only.
+ */
+bool proxy_tls_bypass_mode = true;
+
+#define TLS_DDOL_BYPASS_BARCO           1    /* Enqueue the request to BRQ, but bypass updating the PI of barco and 
+                                              * ring BSQ doorbell 
+                                              */
+
 /**********************************************************'
  * Dummy test code. TODO: REMOVEME
  **********************************************************/
@@ -214,7 +224,7 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
 }
 
 hal_ret_t
-tls_api_createcb(uint32_t qid, bool is_decrypt_flow)
+tls_api_createcb(uint32_t qid, bool is_decrypt_flow, uint32_t other_fid)
 {
     hal_ret_t            ret = HAL_RET_OK;
     TlsCbSpec            spec;
@@ -223,7 +233,16 @@ tls_api_createcb(uint32_t qid, bool is_decrypt_flow)
     HAL_TRACE_DEBUG("Creating TLS Cb with for qid: {}, is_decrypt: ", qid, is_decrypt_flow);
     spec.mutable_key_or_handle()->set_tlscb_id(qid);
     spec.set_is_decrypt_flow(is_decrypt_flow);
-    spec.set_other_fid(0xFFFF);
+
+    /*
+     * If TLS bypass mode is set, we'll bypass barco requests in data path.
+     */
+    if (proxy_tls_bypass_mode) {
+        spec.set_debug_dol(TLS_DDOL_BYPASS_BARCO);
+        spec.set_other_fid(other_fid);
+    } else {
+        spec.set_other_fid(0xFFFF);
+    }
     ret = hal::tlscb_create(spec, &rsp);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create tls cb with id: {}, err: {}", qid, ret);
@@ -264,12 +283,17 @@ hal_ret_t
 tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    ret = tls_api_createcb(enc_qid, false);
+    ret = tls_api_createcb(enc_qid, false, dec_qid);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: Failed to create enc flow tlscb, qid: {}, ret: {}", enc_qid, ret);
         return ret;
     }
-    ret = tls_api_createcb(dec_qid, true);
+
+    /*
+     * If TLS bypass mode is set, we'll fake both flows as "encrypt", so the bypass barco
+     * logic is triggered, as there is no TLS processing to be done anyway.
+     */
+    ret = tls_api_createcb(dec_qid, !proxy_tls_bypass_mode, enc_qid);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: Failed to create dec flow tlscb, qid: {}, ret: {}", dec_qid, ret);
         return ret;

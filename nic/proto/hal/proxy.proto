@@ -17,6 +17,7 @@ service Proxy {
   rpc ProxyGet (ProxyGetRequestMsg) returns (ProxyGetResponseMsg) {}
   rpc ProxyFlowConfig(ProxyFlowConfigRequestMsg) returns (ProxyResponseMsg){}
   rpc ProxyGetFlowInfo(ProxyGetFlowInfoRequestMsg) returns(ProxyGetFlowInfoResponseMsg) {}
+  rpc ProxyGlobalCfg (ProxyGlobalCfgRequestMsg) returns (ProxyGlobalCfgResponseMsg) {}
 }
 
 // ProxyKeyHandle is used to operate on a proxy either by its key or handle
@@ -144,4 +145,20 @@ message ProxyGetFlowInfoResponse {
 
 message ProxyGetFlowInfoResponseMsg {
     repeated ProxyGetFlowInfoResponse response = 1;  // batched response
+}
+
+// ProxyGlobalCfgRequest - to configure global settings for proxy features
+message ProxyGlobalCfgRequest {
+   types.ProxyType       proxy_type        = 1;
+   bool                  bypass_mode       = 2; // Bypass mode. Valid only for TLS proxy currently
+}
+
+// ProxyGlobalCfgRequestMsg - is batched global config request
+message ProxyGlobalCfgRequestMsg {
+  repeated ProxyGlobalCfgRequest    request = 1;    // batched global config request
+}
+
+// ProxyGlobalCfgResponseMsg is batched response to ProxyGlobalCfgRequestMsg
+message ProxyGlobalCfgResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
 }

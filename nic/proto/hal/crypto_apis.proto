@@ -28,14 +28,14 @@ enum CryptoApiHashType {
     CRYPTOAPI_HASHTYPE_SHA256 = 4 [(gogoproto.enumvalue_customname) = "SHA256"];
     CRYPTOAPI_HASHTYPE_SHA384 = 5 [(gogoproto.enumvalue_customname) = "SHA384"];
     CRYPTOAPI_HASHTYPE_SHA512 = 6 [(gogoproto.enumvalue_customname) = "SHA512"];
-    CRYPTOAPI_HASHTYPE_SHA512_224 = 7 [(gogoproto.enumvalue_customname) = "SHA512-224"];
-    CRYPTOAPI_HASHTYPE_SHA512_256 = 8 [(gogoproto.enumvalue_customname) = "SHA512-256"];
-    CRYPTOAPI_HASHTYPE_HMAC_MD5 = 9 [(gogoproto.enumvalue_customname) = "HMAC-MD5"];
-    CRYPTOAPI_HASHTYPE_HMAC_SHA1 = 10 [(gogoproto.enumvalue_customname) = "HMAC-SHA1"];
-    CRYPTOAPI_HASHTYPE_HMAC_SHA224 = 11 [(gogoproto.enumvalue_customname) = "HMAC-SHA224"];
-    CRYPTOAPI_HASHTYPE_HMAC_SHA256 = 12 [(gogoproto.enumvalue_customname) = "HMAC-SHA256"];
-    CRYPTOAPI_HASHTYPE_HMAC_SHA384 = 13 [(gogoproto.enumvalue_customname) = "HMAC-SHA384"];
-    CRYPTOAPI_HASHTYPE_HMAC_SHA512 = 14 [(gogoproto.enumvalue_customname) = "HMAC-SHA512"];
+    CRYPTOAPI_HASHTYPE_SHA512_224 = 7 [(gogoproto.enumvalue_customname) = "SHA512_224"];
+    CRYPTOAPI_HASHTYPE_SHA512_256 = 8 [(gogoproto.enumvalue_customname) = "SHA512_256"];
+    CRYPTOAPI_HASHTYPE_HMAC_MD5 = 9 [(gogoproto.enumvalue_customname) = "HMAC_MD5"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA1 = 10 [(gogoproto.enumvalue_customname) = "HMAC_SHA1"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA224 = 11 [(gogoproto.enumvalue_customname) = "HMAC_SHA224"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA256 = 12 [(gogoproto.enumvalue_customname) = "HMAC_SHA256"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA384 = 13 [(gogoproto.enumvalue_customname) = "HMAC_SHA384"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA512 = 14 [(gogoproto.enumvalue_customname) = "HMAC_SHA512"];
 }
 
 enum CryptoApiType {
