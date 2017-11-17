@@ -1,0 +1,127 @@
+Building/Installing Kernel
+--------------------------
+
+To build the driver, we need a kernel tree prepared for building kernel
+modules.  Since we also need a matching running kernel to load the driver
+against, we might as well do a full kernel package build, which is also prepped
+for building modules.  This example builds Debian kernel packages using the
+net-next kernel tree.  This example assumes an Ubuntu or Debian-based build
+system and a Debian-based target system (Debian guest running on a VM, for
+example) to run the kernel and load the driver.
+
+Step 1: Install needed build tools
+
+(note: these packages are probably already installed, so skip to step 2)
+
+  $ sudo apt-get -y install gcc bc make dpkg-dev
+
+Step 2: Clone net-next
+
+Will need a fresh copy of the upstream net-next kernel tree.
+
+  $ git clone https://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
+
+Step 3: Build the Debian kernel packages
+
+We need to copy the config file from a running Debian system to build a kernel
+compatible with the driver.  On the target system running Debian, copy the
+config file from /boot/config-$(uname -r) to net-next/.config:
+
+  $ cd net-next
+  $ scp <running config> .config
+  $ yes "" | make oldconfig
+  $ make -j4 deb-pkg
+
+(This takes some time, actually, lots of time)
+
+Step 4: Install kernel packages on target system
+
+The previous step should have produced some *.deb files one directory level up
+from net-next.  Copy these *.deb files to your target system and then run dpkg
+to install.
+
+  $ cd ..
+  $ scp *.deb <target system>
+  $ dpkg -i linux-image-*.deb linux-libc-*.deb
+
+Step 5: Reboot target system into new kernel.  Verify uname -r kernel matches
+*.deb files.
+
+  $ uname -r
+
+
+Building Driver Module
+----------------------
+
+The driver module is built outside of the kernel tree using the -C option to
+the kernel's make.  The resultant driver module will be named ionic.ko.
+
+  $ cd <driver directory>
+  $ CONFIG_IONIC=m make -C <path to net-next kernel tree> M=$PWD modules
+
+Should build ionic.ko driver module.
+
+
+Cleaning
+--------
+
+  $ cd <driver directory>
+  $ CONFIG_IONIC=m make -C <path to kernel tree> M=$PWD clean
+
+
+Loading Driver
+--------------
+
+Prerequisite: one or more Pensando PCI Ethernet devices are installed on the
+target system.  To check:
+
+  $ sudo lspci -d 1dd8:*
+  01:00.0 PCI bridge: Device 1dd8:0001
+  02:00.0 PCI bridge: Device 1dd8:1001
+  03:00.0 Ethernet controller: Device 1dd8:1002
+
+The driver is loaded manually using insmod:
+
+  $ sudo insmod ./ionic.ko
+  $ lsmod | grep ionic   // verify driver loaded
+
+Manual loading of driver is recommended rather than automatically loading
+driver on startup, in case there is a bug or issue with the driver or device.
+If the driver is loaded automatically, it may be hard to break the loop of a
+system that crashes on startup when the driver is loaded.
+
+To automatically load driver on startup, the driver needs to be installed:
+
+  $ sudo cp ionic.ko /lib/modules/$(uname -r)
+  $ sudo depmod -a
+  $ sudo reboot
+
+Now driver will load automaticallyi on startup.  To undo this, remove the
+driver and re-run depmod:
+
+  $ sudo rm /lib/modules/$(uname -r)/ionic.ko
+  $ sudo depmod -a
+  $ sudo reboot
+
+If you're really stuck and can't unload the driver because the system crashes
+when the driver loads, we can blacklist the driver on the kernel command line.  
+On startup, interrupt Grub and edit the linux command line to add:
+
+  modprobe.blacklist=ionic
+
+And let the boot continue.  This is a one-time fix.  Remove the driver from
+lib/modules and re-run depmod -a.
+
+
+Driver Module Parameters
+------------------------
+
+There are a few driver module parameters used to change the driver's default
+settings.  Specify the parameters on the insmod command line:
+
+  $ sudo insmod ./ionic.ko ntxq_descs=64,nrxq_descs=64
+
+Available parameters:
+
+  ntxq_descs: set the number of Tx queue descriptors, must be a power of 2
+  nrxq_descs: set the number of Rx queue descriptors, must be a power of 2
