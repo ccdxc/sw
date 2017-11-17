@@ -328,10 +328,15 @@ inc_psn:
     //     phv_p->bth.a = 1
     //     write_back_info_p->set_credits = TRUE
     scwlt24.c5     c5, d.lsn, d.ssn
-    phvwr.c5       BTH_ACK_REQ, 1
-    
-    SQCB0_ADDR_GET(r2)
+    bcf            [!c5], rrq_p_index_chk
+    SQCB0_ADDR_GET(r2)     // Branch Delay Slot
 
+    phvwr          BTH_ACK_REQ, 1
+    // Disable TX scheduler for this QP until ack is received with credits to
+    // send subsequent packets
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, r3, r4)
+
+rrq_p_index_chk:
     // do we need to increment rrq_pindex ?
     bcf             [!c7], cb1_byte_update
     // cb1_busy is by default set to FALSE

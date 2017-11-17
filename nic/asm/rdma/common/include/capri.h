@@ -813,6 +813,14 @@ addi _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FL
     PREPARE_DOORBELL_NO_UPDATE(_lif, _qtype, _qid, _addr, _data);                  \
     memwr.dx   _addr, _data;
 
+#define PREPARE_DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(_lif, _qtype, _qid, _ring_id, _addr, _data) \
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_NO_UPDATE, DB_SCHED_WR_0, _lif, _qtype, _addr);   \
+    CAPRI_SETUP_DB_DATA(_qid, _ring_id, r0, _data);                                            \
+
+#define DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(_lif, _qtype, _qid, _ring_id, _addr, _data)         \
+    PREPARE_DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(_lif, _qtype, _qid, _ring_id, _addr, _data);     \
+    memwr.dx   _addr, _data;
+
 #define ARE_ALL_RINGS_EMPTY(_c, _flags_r, _ring_id_bmap) \
     smeqb   _c, _flags_r, _ring_id_bmap, 0;
 
