@@ -26,7 +26,6 @@ modules:
               segment   : filter://native=False
     - module:
         name    : TO_WORKLOAD_ICMP_V4
-        ignore  : True
         iterate:
             - flow      : filter://type=IPV4,proto=ICMP,label=FTE
               segment   : filter://native=False
@@ -49,7 +48,6 @@ modules:
               segment   : filter://native=False
     - module:
         name    : TO_WORKLOAD_ICMP_V6
-        ignore  : True
         iterate:
             - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE
               segment   : filter://native=False

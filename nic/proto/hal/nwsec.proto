@@ -438,12 +438,17 @@ message SecurityGroupGetResponseMsg {
   repeated SecurityGroupGetResponse    response   = 2;    // batched get response
 }
 
+message ICMPMsg {
+  types.ICMPMsgType     type = 1;  // ICMP Type
+  uint32                code = 2;  // ICMP code
+}
+
 message DoSService {
     types.IPProtocol           ip_protocol   = 1;    // IP protocol
     oneof l4_info {
         uint32                 dst_port      = 2;    // TCP or UDP port, 
                                                      // 0 for other protocols
-        types.ICMPMsgType      icmp_msg_type = 3;
+        ICMPMsg                icmp_msg      = 3;
     }
 }
 

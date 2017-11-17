@@ -42,11 +42,11 @@ packets:
                 dport   : 47275 
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
-                type    : 5
+                type    : 8
                 id      : ref://testcase/config/flow/icmpid
             icmpv6:
                 code    : ref://testcase/config/flow/icmpcode
-                type    : 133
+                type    : 128
                 id      : ref://testcase/config/flow/icmpid
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
@@ -74,9 +74,9 @@ packets:
                 sport   : 1001
                 flags: syn
             icmp:
-                type    : 3
+                id    : 20
             icmpv6:
-                type    : 1
+                id    : 20
 
     - packet:
         id          : EXP_PKT     # Expected packet

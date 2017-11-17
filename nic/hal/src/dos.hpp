@@ -36,9 +36,13 @@ typedef uint32_t dos_policy_id_t;
 
 typedef struct dos_service_s {
     uint8_t         ip_proto;       // IP protocol
+    bool            is_icmp;        // Is ICMP msg type ?
     union {
         uint16_t    dport;          // TCP or UDP port, 0 for other protos
-        uint16_t    icmp_msg_type;  // ICMP msg type
+        struct {
+            uint8_t    icmp_msg_type;   // ICMP msg type
+            uint8_t    icmp_msg_code;   // ICMP code
+        } __PACK__;
     };
 } __PACK__ dos_service_t;
 

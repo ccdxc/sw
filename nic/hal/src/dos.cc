@@ -44,10 +44,13 @@ dos_policy_props_init_from_spec (dos_policy_prop_t *dosp,
     nwsec_group_t *nwsec_group = NULL;
 
     dosp->service.ip_proto = spec.svc().ip_protocol();
-    if (spec.svc().l4_info_case() == DoSService::kIcmpMsgType) {
-        dosp->service.icmp_msg_type = spec.svc().icmp_msg_type();
+    if (spec.svc().l4_info_case() == DoSService::kIcmpMsg) {
+        dosp->service.icmp_msg_type = spec.svc().icmp_msg().type();
+        dosp->service.icmp_msg_code = spec.svc().icmp_msg().code();
+        dosp->service.is_icmp = TRUE;
     } else {
         dosp->service.dport = spec.svc().dst_port();
+        dosp->service.is_icmp = FALSE;
     }
 
     dosp->session_setup_rate = spec.session_setup_rate();

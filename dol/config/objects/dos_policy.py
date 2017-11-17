@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import copy
 import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
@@ -21,24 +22,30 @@ class DosPolicyObject(base.ConfigObjectBase):
         self.id = resmgr.DosPolicyAllocator.get()
         self.GID("DP%04d" % self.id)
         self.tenant = tenant
-        self.spec = spec
+        self.spec = copy.deepcopy(spec)
         self.label = spec.id
         
         self.__init_from_spec()
         self.Show()
         return
 
+    def __init_icmp_msg(self, obj, spec):
+        icmpspec = getattr(spec, 'icmp_msg', None)
+        obj.service.icmp_msg = icmpspec
+        if obj.service.icmp_msg is not None:
+            obj.service.icmp_msg.code = spec.icmp_msg.code.get()
+            obj.service.icmp_msg.type = spec.icmp_msg.type.get()
+        return
+
     def __init_service(self, obj, spec):
         svcspec = getattr(spec, 'service', None)
         if svcspec is None:
             return
+        self.__init_icmp_msg(obj, spec.service)
         obj.service.proto = spec.service.proto.upper()
         obj.service.port = spec.service.port
         if obj.service.port is not None:
             obj.service.port = obj.service.port.get()
-        obj.service.icmp_msg_type = spec.service.icmp_msg_type
-        if obj.service.icmp_msg_type is not None:
-            obj.service.icmp_msg_type = obj.service.icmp_msg_type.get()
         return
 
     def __init_flood_limits_common(self, obj, spec):
@@ -129,12 +136,13 @@ class DosPolicyObject(base.ConfigObjectBase):
 
     def __show_service(self, obj):
         cfglogger.info("  - Service")
+        if obj.icmp_msg is not None:
+            cfglogger.info("    - IcmpMsgType=%s" % obj.icmp_msg.type)
+            cfglogger.info("    - IcmpMsgCode=%s" % obj.icmp_msg.code)
         if obj.proto is not None:
             cfglogger.info("    - Proto     = %s" % obj.proto)
         if obj.port is not None:
             cfglogger.info("    - Port      = %s" % obj.port)
-        if obj.icmp_msg_type is not None:
-            cfglogger.info("    - IcmpMsgType=%s" % obj.icmp_msg_type)
         return
 
     def __show_flood_limits_common(self, obj, typestr):
@@ -198,13 +206,20 @@ class DosPolicyObject(base.ConfigObjectBase):
         #return hal_ipproto
         return defs.ipprotos.id(proto)
 
+    def __phrs_svc_common_icmp(self, req_spec, obj):
+        if obj is None:
+            return
+        if obj.type is not None:
+            req_spec.type = obj.type
+        if obj.code is not None:
+            req_spec.code = obj.code
+
     def __phrs_svc_common(self, req_spec, obj):
         if obj.proto is not None:
             req_spec.ip_protocol = self.__get_hal_ipproto(obj.proto) 
         if obj.port is not None:
             req_spec.dst_port = obj.port
-        if obj.icmp_msg_type is not None:
-            req_spec.icmp_msg_type = obj.icmp_msg_type
+        self.__phrs_svc_common_icmp(req_spec.icmp_msg, obj.icmp_msg)
         return
 
     def __phrs_dir_common(self, req_spec, obj):

@@ -9,7 +9,9 @@ ingress :
     service:
         proto       : 
         port        : 
-        icmp_msg_type:
+        icmp_msg:
+            type    :
+            code    :
     tcp_syn_flood_limits:
         restrict:
             pps     :
@@ -52,7 +54,9 @@ egress  :
     service:
         proto       :
         port        :
-        icmp_msg_type:
+        icmp_msg:
+            type    :
+            code    :
     tcp_syn_flood_limits:
         restrict:
             pps     :

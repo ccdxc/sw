@@ -10,6 +10,18 @@ feature:
 
 modules:
     - module:
+        name    : REMOTE_SRC_DST_ICMPV4
+        iterate :
+            - flow    : filter://type=IPV4,proto=ICMP,label=FTE,direction=RFLOW
+              segment : filter://native=False,fabencap=VLAN
+              tenant  : filter://type=TENANT,label=DOS_SRC_DST
+    - module:
+        name    : REMOTE_SRC_DST_ICMPV6
+        iterate :
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=RFLOW
+              segment : filter://native=False,fabencap=VLAN
+              tenant  : filter://type=TENANT,label=DOS_SRC_DST_V6
+    - module:
         name    : REMOTE_SRC_DST_ANY_V4
         iterate :
             - flow    : filter://type=IPV4,proto=PROTO255,label=FTE,direction=RFLOW
@@ -31,20 +43,6 @@ modules:
         name    : REMOTE_SRC_DST_TCP_V6
         iterate :
             - flow    : filter://type=IPV6,proto=TCP,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
-              tenant  : filter://type=TENANT,label=DOS_SRC_DST_V6
-    - module:
-        name    : REMOTE_SRC_DST_ICMPV4
-        ignore  : True
-        iterate :
-            - flow    : filter://type=IPV4,proto=ICMP,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
-              tenant  : filter://type=TENANT,label=DOS_SRC_DST
-    - module:
-        name    : REMOTE_SRC_DST_ICMPV6
-        ignore  : True
-        iterate :
-            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=RFLOW
               segment : filter://native=False,fabencap=VLAN
               tenant  : filter://type=TENANT,label=DOS_SRC_DST_V6
     - module:

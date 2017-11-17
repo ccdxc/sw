@@ -12,7 +12,7 @@ entries:
             service :
                 proto   : tcp
                 port    : const/47274
-                icmp_msg_type: None
+                icmp_msg: None
             tcp_syn_flood_limits:
                 restrict_limits:
                     pps     : const/10000
@@ -32,7 +32,7 @@ entries:
             service :
                 proto   : udp
                 port    : const/47274
-                icmp_msg_type: None
+                icmp_msg: None
             udp_flood_limits:
                 restrict_limits:
                     pps     : const/10000
@@ -52,7 +52,9 @@ entries:
             service :
                 proto   : icmp
                 port    : None
-                icmp_msg_type: const/8
+                icmp_msg:
+                    type    : const/8
+                    code    : const/0
             icmp_flood_limits:
                 restrict_limits:
                     pps     : const/10000
@@ -72,7 +74,9 @@ entries:
             service :
                 proto   : icmpv6
                 port    : None
-                icmp_msg_type: const/129
+                icmp_msg:
+                    type    : const/128
+                    code    : const/0
             icmp_flood_limits:
                 restrict_limits:
                     pps     : const/10000
@@ -92,7 +96,7 @@ entries:
             service :
                 proto   : proto255
                 port    : None
-                icmp_msg_type: None
+                icmp_msg: None
             other_flood_limits:
                 restrict_limits:
                     pps     : const/10000
