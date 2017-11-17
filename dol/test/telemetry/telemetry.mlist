@@ -59,4 +59,4 @@ modules:
         name    : TELEMETRY_EXPORT
         module  : ipfix
         spec    : ipfix.testspec
-        ignore  : True
+        ignore  : False

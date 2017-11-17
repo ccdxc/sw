@@ -480,7 +480,7 @@ class _IpfixNonIpFields(Packet):
 class _IpfixIpFields(Packet):
     name = "IpfixIpFields"
     fields_desc = [
-        BitField("flow_state_index",        0,      32),
+        BitField("flow_state_index",        0,      24),
         BitField("role",                    0,      8),
         BitField("ttl",                     0,      8),
         BitField("icmp_type_code",          0,      16),

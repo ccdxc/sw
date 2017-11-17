@@ -13,7 +13,7 @@ segments:
 
 # NFV Endpoints:
 # - They will attach to a 'TRUNK' Enic.
-# - All the segments will be enabled on these Enics              
+# - All the segments will be enabled on these Enics
 nfveps: 0
 
 security_profile: None
@@ -22,6 +22,7 @@ sessions:
     unidest:
         ipv4:
             - ref://store/specs/id=SESSION_TCP_TELEMETRY
+            - ref://store/specs/id=SESSION_IPFIX
         ipv6:
         mac:
 
