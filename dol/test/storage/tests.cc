@@ -2243,9 +2243,9 @@ int test_seq_e2e_xts_r2n1() {
 }
 
 int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
-      uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
-      uint64_t pdma_dst_addr, uint32_t pdma_data_size,
-      uint64_t roce_wqe_addr, uint32_t roce_wqe_size) {
+                        uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
+                        uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+                        uint64_t roce_wqe_addr, uint32_t roce_wqe_size) {
 
   uint16_t seq_pdma_index;
   uint8_t *seq_pdma_desc;
@@ -2297,39 +2297,111 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   return 0;
 }
 
+int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr, 
+                        uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+                        uint16_t db_lif, uint16_t db_qtype, uint32_t db_qid,
+                        uint16_t db_ring, uint16_t db_index) {
+
+  uint16_t seq_pdma_index;
+  uint8_t *seq_pdma_desc;
+
+  reset_seq_db_data();
+
+  printf("seq_pdma_q %u, pdma_src_addr %lx, pdma_dst_addr %lx, " 
+         "pdma_data_size %u, db_lif %u, db_qtype %u, db_qid %u, "
+         "db_ring %u, db_index %u \n", 
+	 seq_pdma_q, pdma_src_addr, pdma_dst_addr, pdma_data_size,
+	 db_lif, db_qtype, db_qid, db_ring, db_index);
+
+  // Sequencer #1: PDMA descriptor
+  seq_pdma_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  memset(seq_pdma_desc, 0, kSeqDescSize);
+  utils::write_bit_fields(seq_pdma_desc, 0, 64, host_mem_v2p(seq_db_data));
+  utils::write_bit_fields(seq_pdma_desc, 64, 64, kSeqDbDataMagic);
+  utils::write_bit_fields(seq_pdma_desc, 128, 64, pdma_src_addr);
+  utils::write_bit_fields(seq_pdma_desc, 192, 64, pdma_dst_addr);
+  utils::write_bit_fields(seq_pdma_desc, 256, 32, pdma_data_size);
+
+  // Kickstart the ROCE program 
+  tests::test_ring_doorbell(db_lif, db_qtype, db_qid, db_ring, db_index);
+  
+  return 0;
+}
+
 int test_run_rdma_e2e_write() {
   uint16_t ssd_handle = 2; // the SSD handle
   uint8_t *cmd_buf = NULL;
   int rc;
 
 
-  StartRoceSeq(ssd_handle, get_next_byte(), &cmd_buf);
-  printf("Started sequencer to PDMA + send over ROCE \n");
+  StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf);
+  printf("Started sequencer to PDMA + write command send over ROCE \n");
 
   struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
   //printf("Dumping NVME command sent \n");
   //utils::dump(cmd_buf);
 
-  sleep(6);
-
   uint8_t *rcv_buf = (uint8_t *) rdma_get_initiator_rcv_buf();
-  //printf("Dumping initator rcv buf which contains NVME status \n");
-  //utils::dump(rcv_buf);
-
-  // Process the status
   struct NvmeStatus *nvme_status = 
               (struct NvmeStatus *) (rcv_buf + kR2nStatusNvmeOffset);
-  printf("nvme status: cid %x, sq head %x, status_phase %x \n", 
-         nvme_status->dw3.cid, nvme_status->dw2.sq_head, 
-         nvme_status->dw3.status_phase);
-  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid || 
-      NVME_STATUS_GET_STATUS(*nvme_status)) {
-    rc = -1;
-    printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n", 
-           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
-           nvme_cmd->dw0.cid);
-  } else {
-    rc = 0;
+
+  // Poll for status
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  rc = poll(func1);
+  PostTargetRcvBuf1();
+  PostInitiatorRcvBuf1();
+
+  return rc;
+}
+
+int test_run_rdma_e2e_read() {
+  uint16_t ssd_handle = 2; // the SSD handle
+  uint8_t *cmd_buf = NULL;
+  uint8_t *data_buf = NULL;
+  int rc;
+
+
+  StartRoceReadSeq(ssd_handle, &cmd_buf, &data_buf);
+  printf("Started read command send over ROCE \n");
+
+  struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
+  //printf("Dumping NVME command sent \n");
+  //utils::dump(cmd_buf);
+
+  // Process the status
+  uint8_t *rcv_buf = (uint8_t *) rdma_get_initiator_rcv_buf();
+  struct NvmeStatus *nvme_status = 
+              (struct NvmeStatus *) (rcv_buf + kR2nStatusNvmeOffset);
+
+  // Poll for status
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  // Poll for DMA completion of read data only if status is successful
+  if (rc >= 0) {
+    auto func2 = [] () {
+      if  (*((uint64_t *) seq_db_data) != kSeqDbDataMagic) {
+        //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data));
+        return -1;
+      }
+      return 0;
+    };
+
+    rc = poll(func2);
+// Enble this to debug as needed
+#if 0
+    printf("Dumping data buffer which contains NVME read data\n");
+    utils::dump(data_buf);
+    uint8_t *orig_buf = rdma_get_target_write_data_buf();
+    printf("Dumping orig write data buffer %p \n", orig_buf);
+    utils::dump(orig_buf);
+#endif
   }
 
   PostTargetRcvBuf1();
@@ -2337,4 +2409,5 @@ int test_run_rdma_e2e_write() {
 
   return rc;
 }
+
 }  // namespace tests

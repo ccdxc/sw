@@ -244,6 +244,19 @@
 
 // DMA write w_ndx to c_ndx via to pop the entry. Doorbell update is needed 
 // to reset the scheduler bit.
+// HACK: Till we fix the pragmas with little endian
+#define QUEUE_POP_ROCE_DOORBELL_UPDATE					\
+   add		r6, r0, STORAGE_KIVEC0_W_NDX;				\
+   add		r6, r0, r6.hx;						\
+   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r6,			\
+                       r0, STORAGE_KIVEC1_SRC_QID, r0)			\
+   DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,\
+                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_C_NDX)	\
+   DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
+                     r7, dma_p2m_0)					\
+
+// DMA write w_ndx to c_ndx via to pop the entry. Doorbell update is needed 
+// to reset the scheduler bit.
 #define QUEUE_POP_DOORBELL_UPDATE					\
    DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX,	\
                        r0, STORAGE_KIVEC1_SRC_QID, r0)			\

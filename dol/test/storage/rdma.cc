@@ -50,7 +50,7 @@ const uint32_t	kRoceEntrySize	 = 6; // Default is 64 bytes
 const uint32_t	kRoceNumEntries	 = 6; // Default is 64 entries
 const uint32_t kPvmRoceSqXlateTblSize	= (64 * 64); // 64 SQs x 64 bytes each
 
-const uint32_t kWritaDataSize = 4096;
+const uint32_t kR2NDataSize = 4096;
 const uint32_t kR2NDataBufOffset = 4096;
 
 const uint32_t kMaxRDMAKeys = 64;
@@ -282,6 +282,9 @@ const uint32_t kR2NBufLKey = 9;
 // Initiator side recv buffers
 const uint32_t kInitiatorRcvBuf1LKey = 10;
 const uint32_t kInitiatorRcvBuf1RKey = 11;
+// Writeback data buf keyus
+const uint32_t kWriteBackBufLKey = 12;
+const uint32_t kWriteBackBufRKey = 13;
 
 // TODO: Fix this to at least 8K
 const uint32_t kR2NBufSize = (2 * 4096);
@@ -502,7 +505,8 @@ void PostTargetRcvBuf1() {
   // Correspondingly size is also lower by the same offset.
   r2n::r2n_buf_t *r2n_buf = (r2n::r2n_buf_t *) target_rcv_buf1_va;
   uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
-  printf("Posting target buffer of size %d wrid %lx \n", size, host_mem_v2p((void *) &r2n_buf->cmd_buf));
+  printf("Posting target buffer of size %d wrid %lx \n", 
+         size, host_mem_v2p((void *) &r2n_buf->cmd_buf));
 
   // Fill the RQ WQE to post the buffer (at the offset)
   utils::write_bit_fields(rqwqe, 64, 8, 1);  // num_sges = 1
@@ -512,16 +516,16 @@ void PostTargetRcvBuf1() {
   // wrid passed back in cq is the buffer offset passed in
   utils::write_bit_fields(rqwqe, 0, 64, host_mem_v2p((void *) &r2n_buf->cmd_buf));
 
-  // Pre-form the Status post wqe
-  uint8_t *sqwqe = (uint8_t *) &(r2n_buf->sta_req.s);
-  utils::write_bit_fields(sqwqe, 0, 64, 0x10);  // wrid = 1
+  // Pre-form the Status descriptor to point to the status buffer
+  uint8_t *sqwqe = (uint8_t *) &(r2n_buf->sta_desc.s);
+  utils::write_bit_fields(sqwqe, 0, 64, host_mem_v2p((void *) &r2n_buf->sta_buf));  // wrid 
   utils::write_bit_fields(sqwqe, 64, 4, 0);  // op_type = OP_TYPE_SEND
   utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
   utils::write_bit_fields(sqwqe, 192, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));  // data len
   // write the SGE
-  utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)&r2n_buf->sta_buf);  // SGE-va, same as pa
-  utils::write_bit_fields(sqwqe, 256+64, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));
-  utils::write_bit_fields(sqwqe, 256+64+32, 32, kTargetRcvBuf1LKey);
+  utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)&r2n_buf->sta_buf);  // SGE-va
+  utils::write_bit_fields(sqwqe, 256+64, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t)); // SGE-len
+  utils::write_bit_fields(sqwqe, 256+64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey
 
   uint32_t offset = target_rq_pindex;
   offset *= kRQWQESize;
@@ -543,10 +547,10 @@ void PostInitiatorRcvBuf1() {
   uint8_t rqwqe[64];
   bzero(rqwqe, 64);
 
-  printf("Posting initiator buffer of size %d wrid %lx \n", kR2NBufSize, host_mem_v2p((void *) initiator_rcv_buf1_va));
+  printf("Posting initiator buffer of size %d wrid %lx \n", 
+         kR2NBufSize, host_mem_v2p((void *) initiator_rcv_buf1_va));
 
   // Fill the RQ WQE to post the buffer (at the offset)
-  utils::write_bit_fields(rqwqe, 0, 64, 1); // wrid = 1
   utils::write_bit_fields(rqwqe, 64, 8, 1);  // num_sges = 1
   utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) initiator_rcv_buf1_va); // sge0->va 
   utils::write_bit_fields(rqwqe, 256+64, 32, kR2NBufSize);  // sge0->len
@@ -638,55 +642,155 @@ int GetR2NHbmBuf(uint64_t *pa, uint32_t *size) {
 }
 
 
-int StartRoceSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd) {
+int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_ptr) {
 
-  uint8_t *sqwqe = (uint8_t *) alloc_host_mem(64);
-  bzero(sqwqe, 64);
-  utils::write_bit_fields(sqwqe, 0, 64, 0x10);  // wrid = 1
-  //utils::write_bit_fields(sqwqe, 64, 4, 0);  // op_type = OP_TYPE_SEND
-  utils::write_bit_fields(sqwqe, 64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
-  //utils::write_bit_fields(sqwqe, 71, 1, 1);  // inline data valid
-  utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
 
-  // Send doorbell information of PVM's ROCE CQ in immediate data 
-  utils::write_bit_fields(sqwqe, 96, 11, queues::get_pvm_lif());
-  utils::write_bit_fields(sqwqe, 107, 3, CQ_TYPE);
-  utils::write_bit_fields(sqwqe, 110, 18, g_rdma_pvm_roce_tgt_cq);
-
-  // Add the buffer to WQE.
+  // Get userspace R2N buffer for write command and data. 
   void *r2n_buf_va;
   uint64_t r2n_buf_pa;
   uint32_t r2n_buf_size;
   GetR2NUspaceBuf(&r2n_buf_va, &r2n_buf_pa, &r2n_buf_size);
-  r2n::r2n_nvme_be_cmd_buf_init(r2n_buf_va, NULL, 0, ssd_handle, 0, 0, 0, nvme_cmd);
-  tests::form_write_cmd_no_buf(*nvme_cmd);
 
+  // Initialize and form the write command
+  r2n::r2n_nvme_be_cmd_buf_init(r2n_buf_va, NULL, 0, ssd_handle, 0, 0, 0, nvme_cmd_ptr);
+  tests::form_write_cmd_no_buf(*nvme_cmd_ptr);
+
+  // Get the HBM buffer for the write data to be PDMA'ed to before sending over RDMA
   uint64_t r2n_hbm_buf_pa;
   uint32_t r2n_hbm_buf_size;
   if (GetR2NHbmBuf(&r2n_hbm_buf_pa, &r2n_hbm_buf_size) < 0) {
     return -1;
   }
-
   assert(r2n_hbm_buf_size == r2n_buf_size);
   uint32_t data_len = r2n_hbm_buf_size - offsetof(r2n::r2n_buf_t, cmd_buf);
-  //uint32_t data_len = r2n_hbm_buf_size;
+
   // Register R2N buf memory. Only LKey, no remote access.
   RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, r2n_hbm_buf_size, kR2NBufLKey, 0, false);
-  utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)data_len);  // data len
-  // write the SGE
-  utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)r2n_hbm_buf_pa);  // SGE-va, same as pa
-  utils::write_bit_fields(sqwqe, 256+64, 32, data_len);
-  utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
 
-  // Form the write data buffer (of size 4K) at an offset from the NVME backend
+  // Initialize the write data buffer (of size 4K) at an offset from the NVME backend
   // command
   memset(((uint8_t *) r2n_buf_va) + kR2NDataBufOffset - offsetof(r2n::r2n_buf_t, cmd_buf), 
-         byte_val, kWritaDataSize);
+         byte_val, kR2NDataSize);
+
+
+  // For the send wqe
+  uint8_t *sqwqe = (uint8_t *) alloc_host_mem(64);
+  bzero(sqwqe, 64);
+  utils::write_bit_fields(sqwqe, 0, 64, r2n_hbm_buf_pa);  // wrid 
+  utils::write_bit_fields(sqwqe, 64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
+  utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
+
+  // Store doorbell information of PVM's ROCE CQ in immediate data 
+  utils::write_bit_fields(sqwqe, 96, 11, queues::get_pvm_lif());
+  utils::write_bit_fields(sqwqe, 107, 3, CQ_TYPE);
+  utils::write_bit_fields(sqwqe, 110, 18, g_rdma_pvm_roce_tgt_cq);
+  utils::write_bit_fields(sqwqe, 192, 32, data_len);  // data len
+
+  // Form the SGE
+  utils::write_bit_fields(sqwqe, 256, 64, r2n_hbm_buf_pa);  // SGE-va, same as pa
+  utils::write_bit_fields(sqwqe, 256+64, 32, data_len);
+  utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
 
   // Now kickstart the sequencer
   tests::test_seq_write_roce(35, 60, g_rdma_pvm_roce_init_sq, r2n_buf_pa, 
 		             r2n_hbm_buf_pa, data_len, 
                              host_mem_v2p((void *) sqwqe), 64);
+
+  return 0;
+}
+
+int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read_buf_ptr) {
+
+  if (!nvme_cmd_ptr || !read_buf_ptr) return -1;
+
+
+  // Get userspace R2N buffer for read command and data. 
+  void *r2n_buf_va;
+  uint64_t r2n_buf_pa;
+  uint32_t r2n_buf_size;
+  GetR2NUspaceBuf(&r2n_buf_va, &r2n_buf_pa, &r2n_buf_size);
+
+  // Initialize and form the read command
+  r2n::r2n_nvme_be_cmd_buf_init(r2n_buf_va, NULL, 0, ssd_handle, 0, 1, 0, nvme_cmd_ptr);
+  tests::form_read_cmd_no_buf(*nvme_cmd_ptr);
+
+  // Register it with RDMA.
+  RdmaMemRegister((void *) r2n_buf_va, r2n_buf_pa, r2n_buf_size, kR2NBufLKey, 0, false);
+
+  // Initialize helper fields
+  uint32_t r2n_data_len = sizeof(r2n::r2n_buf_t) - offsetof(r2n::r2n_buf_t, cmd_buf);
+  uint8_t *read_data_buf = ((uint8_t *) r2n_buf_va) + kR2NDataBufOffset;
+  memset(read_data_buf, 0x23, kR2NDataSize);
+  *read_buf_ptr = read_data_buf;
+
+  // Get the HBM buffer for the write back data for the read command
+  uint64_t r2n_hbm_buf_pa;
+  uint32_t r2n_hbm_buf_size;
+  if (GetR2NHbmBuf(&r2n_hbm_buf_pa, &r2n_hbm_buf_size) < 0) {
+    return -1;
+  }
+  // Register the HBM buffer with RDMA
+  RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, r2n_hbm_buf_size, 
+                  kWriteBackBufLKey, kWriteBackBufRKey, true);
+
+
+  // For the RDMA send WQE
+  uint8_t *sqwqe = (uint8_t *) alloc_host_mem(64);
+  bzero(sqwqe, 64);
+  utils::write_bit_fields(sqwqe, 0, 64, r2n_buf_pa);  // wrid 
+  utils::write_bit_fields(sqwqe, 64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
+  utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
+
+  // Store doorbell information of PVM's ROCE CQ in immediate data 
+  utils::write_bit_fields(sqwqe, 96, 11, queues::get_pvm_lif());
+  utils::write_bit_fields(sqwqe, 107, 3, CQ_TYPE);
+  utils::write_bit_fields(sqwqe, 110, 18, g_rdma_pvm_roce_tgt_cq);
+  utils::write_bit_fields(sqwqe, 192, 32, r2n_data_len);  // data len
+
+  // Local read command buffer goes into SGE
+  utils::write_bit_fields(sqwqe, 256, 64, (uint64_t) r2n_buf_va);  // SGE-va
+  utils::write_bit_fields(sqwqe, 256+64, 32, r2n_data_len);
+  utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
+
+
+  // Pre-form the (RDMA) write descriptor to point to the data buffer
+  // TODO: Remove the write_data_buf pointer and do this in P4+
+  uint32_t seq_pdma_q = 39;
+  uint32_t write_wqe_offset = offsetof(r2n::r2n_buf_t, write_desc) - offsetof(r2n::r2n_buf_t, cmd_buf);
+  uint8_t *write_wqe = ((uint8_t *) r2n_buf_va) + write_wqe_offset;
+  void *write_data_buf = (void *) (((uint8_t *) target_rcv_buf1_va) + kR2NDataBufOffset);  
+
+  // Start the write WQE formation
+  utils::write_bit_fields(write_wqe, 0, 64,  host_mem_v2p(write_data_buf)); // wrid
+  utils::write_bit_fields(write_wqe, 64, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
+  utils::write_bit_fields(write_wqe, 72, 8, 1);  // Num SGEs = 1
+  utils::write_bit_fields(write_wqe, 192, 32, (uint32_t) kR2NDataSize);  // data len
+
+  // Write WQE: remote side buffer with immediate data as doorbell
+  utils::write_bit_fields(write_wqe, 96, 11, queues::get_pvm_lif());
+  utils::write_bit_fields(write_wqe, 107, 3, SQ_TYPE);
+  utils::write_bit_fields(write_wqe, 110, 18, seq_pdma_q);
+  utils::write_bit_fields(write_wqe, 128, 64, (uint64_t) r2n_hbm_buf_pa); // va == pa
+  utils::write_bit_fields(write_wqe, 128+64, 32, (uint32_t) kR2NDataSize); // len
+  utils::write_bit_fields(write_wqe, 128+64+32, 32, kWriteBackBufRKey); // rkey
+  // Write SGE: local side buffer
+  utils::write_bit_fields(write_wqe, 256, 64, (uint64_t) write_data_buf); // SGE-va
+  utils::write_bit_fields(write_wqe, 256+64, 32, (uint32_t) kR2NDataSize); // SGE-len
+  utils::write_bit_fields(write_wqe, 256+64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey
+
+  // Now post the WQE into initiator send queue
+  uint32_t offset = initiator_sq_pindex;
+  offset *= kSQWQESize;
+  uint8_t *p = (uint8_t *)initiator_sq_va;
+  bcopy(sqwqe, p + offset, 64);
+  initiator_sq_pindex++;
+  if (initiator_sq_pindex >= kNumSQWQEs)
+    initiator_sq_pindex = 0;
+
+  // Now kickstart the sequencer
+  tests::test_seq_read_roce(seq_pdma_q, r2n_hbm_buf_pa, host_mem_v2p((void *) read_data_buf),
+                            kR2NDataSize, g_rdma_hw_lif_id, kSQType, 0, 0, 
+                            bswap_16(initiator_sq_pindex));
 
   return 0;
 }
@@ -725,7 +829,7 @@ int rdma_pvm_qs_init() {
   } else {
     g_rdma_pvm_roce_tgt_sq = (uint32_t) rc;
   }
-  printf("RDMA PVM Initiator ROCE SQ init success\n");
+  printf("RDMA PVM Target ROCE SQ init success %p\n", target_sq_va);
 
   // Init the target CQ 
   if ((rc = queues::pvm_roce_cq_init(g_rdma_hw_lif_id, 
@@ -805,4 +909,8 @@ void rdma_uspace_test() {
 
 void *rdma_get_initiator_rcv_buf() {
   return initiator_rcv_buf1_va;
+}
+
+uint8_t *rdma_get_target_write_data_buf() {
+  return ((uint8_t *) target_rcv_buf1_va) + 4096;
 }

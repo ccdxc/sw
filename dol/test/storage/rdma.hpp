@@ -26,10 +26,12 @@ int rdma_init();
 void rdma_uspace_test();
 
 void *rdma_get_initiator_rcv_buf();
+uint8_t *rdma_get_target_write_data_buf();
 
 void PostTargetRcvBuf1();
 void PostInitiatorRcvBuf1();
 
-int StartRoceSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd);
+int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_ptr);
+int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read_buf_ptr);
 
 #endif  // _RDMA_HPP_

@@ -48,6 +48,8 @@ const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
 const static char	*kSeqXtsSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
 const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
+// Hack: Remove this after fixing fields with little endian pragma
+const static char	*kRocePdmaSqHandler	 = "storage_tx_roce_pdma_entry_handler.bin";
 
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
@@ -445,12 +447,21 @@ int queues_setup() {
 
   // Initialize PVM SQs for processing Sequencer commands for PDMA
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqPdmaSQs); j++, i++) {
+    if (i == 39) {
+    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kRocePdmaSqHandler,
+                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+      printf("Failed to setup PVM Seq PDMA queue %d \n", i);
+      return -1;
+    }
+    printf("Setup PVM Seq PDMA queue %d \n", i);
+    } else {
     if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqPdmaSqHandler,
                         kDefaultTotalRings, kDefaultHostRings) < 0) {
       printf("Failed to setup PVM Seq PDMA queue %d \n", i);
       return -1;
     }
     printf("Setup PVM Seq PDMA queue %d \n", i);
+    }
   }
 
   // Initialize PVM SQs for processing Sequencer commands for R2N

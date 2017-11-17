@@ -53,12 +53,12 @@ typedef struct {
   uint32_t l_key1;             // 480
 } __attribute__((packed)) roce_rq_wqe_t;
 
-typedef struct r2n_buf_post_ {
+typedef struct r2n_buf_post_desc_ {
   union {
     uint8_t bytes[64];
     roce_sq_wqe_t s;
   };
-} r2n_buf_post_t;
+} r2n_buf_post_desc_t;
 
 typedef struct r2n_prp_list_ {
   union {
@@ -82,12 +82,12 @@ typedef struct nvme_be_sta_ {
   };
 } nvme_be_sta_t;
 
-typedef struct r2n_sta_req_ {
+typedef struct r2n_sta_desc_ {
   union {
     uint8_t bytes[64];
     roce_sq_wqe_t s;
   };
-} r2n_sta_req_t;
+} r2n_sta_desc_t;
 
 typedef struct nvme_be_cmd_ {
   union {
@@ -105,20 +105,20 @@ typedef struct nvme_be_cmd_ {
   };
 } nvme_be_cmd_t;
 
-typedef struct r2n_write_req_ {
+typedef struct r2n_write_desc_ {
   union {
     uint8_t bytes[64];
     roce_sq_wqe_t s;
   };
-} r2n_write_req_t;
+} r2n_write_desc_t;
 
 typedef struct r2n_buf_ {
-  r2n_buf_post_t  buf_post_desc;
-  r2n_prp_list_t  prp_buf;
-  nvme_be_sta_t   sta_buf;
-  r2n_sta_req_t   sta_req;
-  nvme_be_cmd_t   cmd_buf;
-  r2n_write_req_t write_desc;
+  r2n_buf_post_desc_t	buf_post_desc;
+  r2n_prp_list_t	prp_buf;
+  nvme_be_sta_t		sta_buf;
+  r2n_sta_desc_t	sta_desc;
+  nvme_be_cmd_t		cmd_buf;
+  r2n_write_desc_t	write_desc;
 } r2n_buf_t;
 
 typedef struct r2n_wqe_ {
