@@ -1,0 +1,50 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://native=False
+        endpoint: filter://remote=True
+    dst:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://native=False
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L2,proto=UDP
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : PKT1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : callback://normalization/mf/GetMfSmac
+                dst     : callback://normalization/mf/GetMfDmac
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                version : callback://normalization/mf/GetMfIpv4Version
+                src     : callback://normalization/mf/GetMfSip
+                dst     : callback://normalization/mf/GetMfDip
+                ttl     : callback://normalization/mf/GetMfTtl
+            ipv6:
+                version : callback://normalization/mf/GetMfIpv6Version
+                src     : callback://normalization/mf/GetMfSip6
+                dst     : callback://normalization/mf/GetMfDip6
+                hlim    : callback://normalization/mf/GetMfTtl
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:

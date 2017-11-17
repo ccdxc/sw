@@ -1,13 +1,16 @@
 #! /usr/bin/python3
-
 import pdb
+
 def Setup(infra, module):
     asp = infra.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
     iterelem = module.iterator.Get()
-    profile = infra.ConfigStore.objects.Get(iterelem.profile)
-    module.logger.info("Updating Active Security Profile --> %s" % profile)
-    asp.CloneFields(profile)
-    asp.Update()
+    
+    pfname = getattr(iterelem, 'profile', None)
+    if pfname is not None:
+        profile = infra.ConfigStore.objects.Get(pfname)
+        module.logger.info("Updating Active Security Profile --> %s" % profile)
+        asp.CloneFields(profile)
+        asp.Update()
 
     flowsel = getattr(iterelem, 'flow', None)
     if flowsel is not None:

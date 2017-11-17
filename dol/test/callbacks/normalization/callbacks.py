@@ -608,3 +608,5 @@ def GetExpectedCpuPacket(testcase, args):
     elif 'SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_DISABLE' in profile_name:
         return testcase.packets.Get(pktid)
     return None
+
+
