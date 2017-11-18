@@ -152,6 +152,16 @@ entries:
             action: deny 
 
     - entry:
+        id: ACL_IPV4_FRAGMENT_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type     : v4
+                fragment : True    
+        action:
+            action: deny 
+
+    - entry:
         id: ACL_IPV6_SIP_DIP_FLOW_MISS_ACTION_DROP
         match:
             flow_miss: True

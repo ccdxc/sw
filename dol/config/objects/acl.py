@@ -23,6 +23,10 @@ class AclObject(base.ConfigObjectBase):
         super().__init__()
         self.Clone(Store.templates.Get('ACL'))
         self.id = resmgr.AclIdAllocator.get()
+
+        # TEP miss is handled in input_mapping table. Skip adding ACL
+        # Ip fragments are dropped by adding default entry. Skip adding from DOL
+        self.acls_to_skip = ['ACL_TEP_MISS_ACTION_DROP', 'ACL_IPV4_FRAGMENT_ACTION_DROP']
         return
         
     def Init(self, spec):
@@ -150,8 +154,7 @@ class AclObject(base.ConfigObjectBase):
 
     def Configure(self):
         cfglogger.info("Configuring Acl  : %s (id: %d)" % (self.GID(), self.id))
-        if self.GID() == 'ACL_TEP_MISS_ACTION_DROP':
-            # TEP miss is handled in input_mapping table. Skip adding ACL
+        if self.GID() in self.acls_to_skip:
             return
         self.Show()
         halapi.ConfigureAcls([self])
@@ -159,8 +162,7 @@ class AclObject(base.ConfigObjectBase):
 
     def Delete(self):
         cfglogger.info("Deleting Acl  : %s (id: %d)" % (self.GID(), self.id))
-        if self.GID() == 'ACL_TEP_MISS_ACTION_DROP':
-            # TEP miss is handled in input_mapping table. Skip deleting ACL
+        if self.GID() in self.acls_to_skip:
             return
         halapi.DeleteAcls([self])
         return
@@ -285,6 +287,10 @@ class AclObject(base.ConfigObjectBase):
             reqspec.match.internal_key.ip_options = True
             reqspec.match.internal_mask.ip_options = True
     
+        if self.MatchOnIpFragment():
+            reqspec.match.internal_key.ip_frag = True
+            reqspec.match.internal_mask.ip_frag = True
+    
         if self.MatchOnFlowMiss():
             reqspec.match.internal_key.flow_miss = True
             reqspec.match.internal_mask.flow_miss = True
@@ -377,6 +383,9 @@ class AclObject(base.ConfigObjectBase):
 
     def MatchOnIpOptions(self):
         return self.MatchOnIP() and self.fields.match.ip.options
+
+    def MatchOnIpFragment(self):
+        return self.MatchOnIP() and self.fields.match.ip.fragment
 
     def MatchOnL4Proto(self):
         return self.MatchOnIP() and self.fields.match.l4.type == 'proto'

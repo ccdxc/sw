@@ -28,6 +28,7 @@ def TestCaseSetup(tc):
 
     acl = tc.infra_data.ConfigStore.objects.Get(iterelem.id)
     tc.pvtdata.acl = acl
+    tc.pvtdata.scenario = getattr(iterelem, 'scenario', None)
 
     if 'mirror' in iterelem.__dict__:
         tc.pvtdata.span_case = iterelem.mirror

@@ -45,6 +45,42 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
+        name    : CONN_SETUP_IFLOW_SACK_OK_RFLOW_NO_SACK_OK
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=WINDOW_SCALE
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_SACK_OK
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
+        name    : CONN_SETUP_IFLOW_SACK_OK_RFLOW_SACK_OK
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=WINDOW_SCALE
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_SACK_OK
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK_SACK_OK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
+        name    : CONN_SETUP_IFLOW_NO__SACK_OK_RFLOW_SACK_OK
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=WINDOW_SCALE
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK_SACK_OK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
         name    : CONN_SETUP_IFLOW_WS_RFLOW_NO_WS
         tracker : True
         args    :
@@ -234,9 +270,9 @@ modules:
             connspec: ref://trackerstore/connections/id=DEFAULT
         iterate :
             # 4-way handshake
-            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WS_MSS_TS
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WS_MSS_TS_SACK
               cpu   : True
-            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY_WS_MSS_TS
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY_WS_MSS_TS_SACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
 
@@ -261,10 +297,10 @@ modules:
             connspec: ref://trackerstore/connections/id=DEFAULT
         iterate :
             # 3-way handshake
-            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WS_MSS_TS
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WS_MSS_TS_SACK
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
-            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY_WS_MSS_TS
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY_WS_MSS_TS_SACK
             - step  : ref://trackerstore/steps/id=IFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
 

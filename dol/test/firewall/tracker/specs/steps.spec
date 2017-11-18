@@ -41,6 +41,14 @@ steps:
                 scale       : ref://step/ifstate/scale
 
     - step:
+        id          : IFLOW_SYN_SACK_OK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            options :
+                sackok       : 0
+
+    - step:
         id          : IFLOW_SYN_MSS
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
@@ -74,11 +82,6 @@ steps:
                 scale     : ref://step/ifstate/scale
                 mss       : ref://step/ifstate/mss
                 timestamp : 0x12345678
-                # We are adding sackok so that we get two extra
-                # bytes of option so that there will be only one
-                # EOL instead of 3 EOLs (need parser changes
-                # to support multiple EOLs) once that is fied we
-                # have to add extra test cases
                 sackok    : 0
 
       # This packet will have 3 EOLs
@@ -136,6 +139,14 @@ steps:
                 scale       : ref://step/rfstate/scale
 
     - step:
+        id          : RFLOW_SYN_ACK_SACK_OK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            options :
+                sackok     : 0
+
+    - step:
         id          : RFLOW_SYN_ACK_MSS
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
@@ -180,11 +191,6 @@ steps:
                 scale     : ref://step/rfstate/scale
                 mss       : ref://step/rfstate/mss
                 timestamp : 0x23456789
-                # We are adding sackok so that we get two extra
-                # bytes of option so that there will be only one
-                # EOL instead of 3 EOLs (need parser changes
-                # to support multiple EOLs) once that is fied we
-                # have to add extra test cases
                 sackok    : 0
 
     - step:
@@ -207,7 +213,7 @@ steps:
             ack     : callback://firewall/alu/Mul/val=0
 
     - step:
-        id          : RFLOW_SYN_ONLY_WS_MSS_TS
+        id          : RFLOW_SYN_ONLY_WS_MSS_TS_SACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
             flags   : syn
@@ -216,6 +222,7 @@ steps:
                 scale     : ref://step/ifstate/scale
                 mss       : ref://step/ifstate/mss
                 timestamp : 0x12345678
+                sackok    : 0
 
     - step:
         id          : RFLOW_SYN_DROP

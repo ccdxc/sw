@@ -34,23 +34,21 @@ modules:
 
     - module:
         name    : IPV4_FIRST_FRAGMENT
-        spec    : ip.testspec
+        spec    : ip_drop.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : FIRST_FRAGMENT
 
     - module:
         name    : IPV4_MIDDLE_FRAGMENT
-        spec    : ip.testspec
-        ignore  : True
+        spec    : ip_drop.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : MIDDLE_FRAGMENT
 
     - module:
         name    : IPV4_LAST_FRAGMENT
-        spec    : ip.testspec
-        ignore  : True
+        spec    : ip_drop.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : LAST_FRAGMENT

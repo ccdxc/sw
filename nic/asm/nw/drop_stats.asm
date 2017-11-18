@@ -17,9 +17,9 @@ nop:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 drop_stats:
   seq         c1, d.u.drop_stats_d.mirror_en, 1
-  phvwr.c1    p.capri_intrinsic_tm_span_session, d.u.drop_stats_d.mirror_session_id
   add         r7, d.u.drop_stats_d.drop_pkts, 1
   bgti        r7, 0xF, drop_stats_overflow
+  phvwr.c1    p.capri_intrinsic_tm_span_session, d.u.drop_stats_d.mirror_session_id
   tblwr.e     d.u.drop_stats_d.drop_pkts, r7[3:0]
   nop
 

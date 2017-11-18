@@ -524,20 +524,30 @@ calculated_field parser_metadata.icrc {
 #endif
 }
 
+parser parse_ipv4_frag {
+    set_metadata(l3_metadata.ip_frag, 1);
+    return ingress;
+}
+parser parse_inner_ipv4_frag {
+    set_metadata(l3_metadata.inner_ip_frag, 1);
+    return ingress;
+}
+
 parser parse_base_ipv4 {
     // option-blob parsing - parse_ipv4 does not extract ipv4 header
     extract(ipv4);
     set_metadata(parser_metadata.ipv4hdr_len, (ipv4.ihl << 2) - 20);
-    return select(ipv4.fragOffset, ipv4.protocol) {
-        IP_PROTO_ICMP : parse_icmp;
-        IP_PROTO_TCP : parse_tcp;
-        IP_PROTO_UDP : parse_udp;
-        IP_PROTO_GRE : parse_gre;
-        IP_PROTO_IPV4 : parse_ipv4_in_ip;
-        IP_PROTO_IPV6 : parse_ipv6_in_ip;
-        IP_PROTO_IPSEC_AH : parse_ipsec_ah;
-        IP_PROTO_IPSEC_ESP : parse_ipsec_esp;
-        default: ingress;
+    return select(ipv4.flags, ipv4.fragOffset, ipv4.protocol) {
+        IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
+        IP_PROTO_TCP mask 0x3fffff : parse_tcp;
+        IP_PROTO_UDP mask 0x3fffff : parse_udp;
+        IP_PROTO_GRE mask 0x3fffff : parse_gre;
+        IP_PROTO_IPV4 mask 0x3fffff : parse_ipv4_in_ip;
+        IP_PROTO_IPV6 mask 0x3fffff : parse_ipv6_in_ip;
+        IP_PROTO_IPSEC_AH mask 0x3fffff : parse_ipsec_ah;
+        IP_PROTO_IPSEC_ESP mask 0x3fffff : parse_ipsec_esp;
+        0x000000 mask 0x3fff00 : ingress;
+        default: parse_ipv4_frag;
     }
 }
 
@@ -622,16 +632,17 @@ parser parse_ipv4_options_blob {
     // All options are extracted as a single header
     extract(ipv4_options_blob);
     set_metadata(l3_metadata.ip_option_seen, 1);
-    return select(ipv4.fragOffset, ipv4.protocol) {
-        IP_PROTO_ICMP : parse_icmp;
-        IP_PROTO_TCP : parse_tcp;
-        IP_PROTO_UDP : parse_udp;
-        IP_PROTO_GRE : parse_gre;
-        IP_PROTO_IPV4 : parse_ipv4_in_ip;
-        IP_PROTO_IPV6 : parse_ipv6_in_ip;
-        IP_PROTO_IPSEC_AH : parse_ipsec_ah;
-        IP_PROTO_IPSEC_ESP : parse_ipsec_esp;
-        default: ingress;
+    return select(ipv4.flags, ipv4.fragOffset, ipv4.protocol) {
+        IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
+        IP_PROTO_TCP mask 0x3fffff : parse_tcp;
+        IP_PROTO_UDP mask 0x3fffff : parse_udp;
+        IP_PROTO_GRE mask 0x3fffff : parse_gre;
+        IP_PROTO_IPV4 mask 0x3fffff : parse_ipv4_in_ip;
+        IP_PROTO_IPV6 mask 0x3fffff : parse_ipv6_in_ip;
+        IP_PROTO_IPSEC_AH mask 0x3fffff : parse_ipsec_ah;
+        IP_PROTO_IPSEC_ESP mask 0x3fffff : parse_ipsec_esp;
+        0x000000 mask 0x3fff00 : ingress;
+        default: parse_ipv4_frag;
     }
 
 }
@@ -1189,11 +1200,12 @@ parser parse_base_inner_ipv4 {
     // option-blob parsing - extract inner_ipv4 here
     extract(inner_ipv4);
     set_metadata(parser_metadata.inner_ipv4hdr_len, (inner_ipv4.ihl << 2) - 20);
-    return select(inner_ipv4.fragOffset, inner_ipv4.protocol) {
-        IP_PROTO_ICMP : parse_icmp;
-        IP_PROTO_TCP : parse_tcp;
-        IP_PROTO_UDP : parse_inner_udp;
-        default: ingress;
+    return select(inner_ipv4.flags, inner_ipv4.fragOffset, inner_ipv4.protocol) {
+        IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
+        IP_PROTO_TCP mask 0x3fffff : parse_tcp;
+        IP_PROTO_UDP mask 0x3fffff : parse_inner_udp;
+        0x000000 mask 0x3fff00 : ingress;
+        default: parse_inner_ipv4_frag;
     }
 }
 
@@ -1275,10 +1287,11 @@ parser parse_inner_ipv4_options_blob {
     set_metadata(l3_metadata.inner_ip_option_seen, 1);
 
     return select(inner_ipv4.fragOffset, inner_ipv4.protocol) {
-        IP_PROTO_ICMP : parse_icmp;
-        IP_PROTO_TCP : parse_tcp;
-        IP_PROTO_UDP : parse_inner_udp;
-        default: ingress;
+        IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
+        IP_PROTO_TCP mask 0x3fffff : parse_tcp;
+        IP_PROTO_UDP mask 0x3fffff : parse_inner_udp;
+        0x000000 mask 0x3fff00 : ingress;
+        default: parse_inner_ipv4_frag;
     }
 }
 

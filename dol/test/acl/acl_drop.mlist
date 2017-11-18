@@ -65,6 +65,15 @@ modules:
               flow      : filter://type=IPV4
             - id       : ACL_IPV4_OPTIONS_ACTION_DROP
               flow     : filter://type=IPV4
+            - id       : ACL_IPV4_FRAGMENT_ACTION_DROP
+              flow     : filter://type=IPV4
+              scenario : FIRST_FRAGMENT
+            - id       : ACL_IPV4_FRAGMENT_ACTION_DROP
+              flow     : filter://type=IPV4
+              scenario : MIDDLE_FRAGMENT
+            - id       : ACL_IPV4_FRAGMENT_ACTION_DROP
+              flow     : filter://type=IPV4
+              scenario : LAST_FRAGMENT
 #           # IPV6 specific cases
             - id        : ACL_IPV6_SIP_DIP_ACTION_DROP
               flow      : filter://type=IPV6
@@ -140,6 +149,15 @@ modules:
         iterate:
             - id        : ACL_IPV4_OPTIONS_ACTION_DROP
               flow      : filter://type=IPV4
+            - id        : ACL_IPV4_FRAGMENT_ACTION_DROP
+              flow      : filter://type=IPV4
+              scenario  : FIRST_FRAGMENT
+            - id        : ACL_IPV4_FRAGMENT_ACTION_DROP
+              flow      : filter://type=IPV4
+              scenario  : MIDDLE_FRAGMENT
+            - id        : ACL_IPV4_FRAGMENT_ACTION_DROP
+              flow      : filter://type=IPV4
+              scenario  : LAST_FRAGMENT
 #           # IPV4 segment,tenant etc cases
             - id        : ACL_TENANT_ACTION_DROP
             - id        : ACL_VNID_ACTION_DROP

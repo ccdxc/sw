@@ -5,7 +5,7 @@ header_type flow_lkp_metadata_t {
     fields {
         lkp_inst         : 1;
         lkp_type         : 4;
-        ipv4_hlen        : 4;          // To catch ping of death.
+        ipv4_hlen        : 4;          // For Normalization
         lkp_vrf          : 16;
         lkp_src          : 128;
         lkp_dst          : 128;
@@ -15,8 +15,7 @@ header_type flow_lkp_metadata_t {
         lkp_srcMacAddr   : 48;         // For NACL Key
         lkp_dstMacAddr   : 48;         // For NACL Key
 
-        ipv4_flags       : 3;          // To catch ping of death.
-        ipv4_frag_offset : 13;         // To catch ping of death.
+        ipv4_flags       : 3;          // For Normalization
         lkp_proto        : 8;
         ip_ttl           : 8;          // used to check if TTL == 0
         pkt_type         : 2;
@@ -54,12 +53,6 @@ action flow_miss() {
     if (flow_lkp_metadata.lkp_vrf == 0) {
         modify_field(control_metadata.drop_reason, DROP_INPUT_PROPERTIES_MISS);
         drop_packet();
-    }
-    // Set ip_fragment to TRUE for all fragments including the first, middle an last
-    // packet af a fragmented IP Packet.
-    if (flow_lkp_metadata.ipv4_frag_offset != 0 or 
-        (flow_lkp_metadata.ipv4_flags & IP_FLAGS_MF_MASK == IP_FLAGS_MF_MASK)) {
-        modify_field(l3_metadata.ip_frag, 1);
     }
 
     if ((flow_lkp_metadata.lkp_proto == IP_PROTO_TCP) and

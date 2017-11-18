@@ -151,3 +151,20 @@ def GetIpv6ExtHeaders(tc, packet):
     if acl.MatchOnIpOptions():
         return penscapy.IPv6ExtHdrHopByHop()
     return None
+
+def GetIpv4Flags(tc, pkt):
+    acl = __get_acl_from_tc(tc)
+    if acl.MatchOnIpFragment():
+        if 'FIRST_FRAGMENT' in tc.pvtdata.scenario or\
+           'MIDDLE_FRAGMENT' in tc.pvtdata.scenario:
+            return 'MF'
+    return None
+
+def GetIpv4FragOffset(tc, pkt):
+    acl = __get_acl_from_tc(tc)
+    if acl.MatchOnIpFragment():
+        if 'MIDDLE_FRAGMENT' in tc.pvtdata.scenario or\
+           'LAST_FRAGMENT' in tc.pvtdata.scenario:
+            return 256
+    return 0
+

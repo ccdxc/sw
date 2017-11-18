@@ -32,11 +32,9 @@ tunneled_ipv4_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol
   phvwrpair     p.flow_lkp_metadata_ipv4_flags, k.inner_ipv4_flags, \
                     p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
-  phvwr         p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
-  phvwrpair     p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl, \
-                    p.flow_lkp_metadata_ipv4_frag_offset, \
-                    k.{inner_ipv4_fragOffset_sbit0_ebit4, \
-                       inner_ipv4_fragOffset_sbit5_ebit12}
+  phvwrpair     p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen, \
+                    p.l3_metadata_ip_frag, k.l3_metadata_inner_ip_frag
+  phvwr         p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl
 
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr

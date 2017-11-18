@@ -33,6 +33,7 @@ fields:
             dst_ip           : ipaddr/0.0.0.0
             dst_prefix_len   : const/0
             options          : None
+            fragment         : None
 
         l4:
             type    : None

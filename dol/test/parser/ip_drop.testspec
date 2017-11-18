@@ -2,23 +2,22 @@
 selectors:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://native=False
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://type=TENANT
-        segment     : filter://any
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
         endpoint    : filter://remote=True
         interface   : filter://any
-    flow        : filter://label=NETWORKING
-    maxflows    : 1
+    flow            : filter://any
+    maxflows        : 1
 
 packets:
     - packet:
-        id          : IN_PKT # Input packet
+        id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://acl/packets/GetPacketTemplate
-        encaps      : callback://networking/packets/GetPacketEncaps
+        template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -26,36 +25,45 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : callback://networking/packets/GetVlanId
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                options : callback://acl/packets/GetIpv4Options
-                flags   : callback://acl/packets/GetIpv4Flags
-                frag    : callback://acl/packets/GetIpv4FragOffset
                 ttl     : 64
+                flags   : callback://parser/callbacks/GetIpv4Flags
+                frag    : callback://parser/callbacks/GetIpv4FragOffset
+                options : callback://parser/callbacks/GetIpv4Options
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                extns   : callback://acl/packets/GetIpv6ExtHeaders
                 hlim    : 64
+                extns   : callback://parser/callbacks/GetIpv6ExtHeaders
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
+                chksum  : callback://parser/callbacks/GetUdpChecksum
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                flags   : callback://acl/packets/GetTCPFlags
-            icmp:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
-            icmpv6:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : IN_PKT     # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+
+    - packet:
+        id          : EXP_PKT     # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            qtag:
+                prio    : ref://testcase/config/flow/txqos/cos
+            ipv4:
+                tos     : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                tc      : ref://testcase/config/flow/txqos/dscp
 
 trigger:
     packets:

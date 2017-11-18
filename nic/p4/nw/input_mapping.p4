@@ -17,11 +17,11 @@ action tunneled_ipv4_packet() {
     modify_field(flow_lkp_metadata.lkp_dst, inner_ipv4.dstAddr);
     modify_field(flow_lkp_metadata.lkp_proto, inner_ipv4.protocol);
     modify_field(flow_lkp_metadata.ipv4_flags, inner_ipv4.flags);
-    modify_field(flow_lkp_metadata.ipv4_frag_offset, inner_ipv4.fragOffset);
     modify_field(flow_lkp_metadata.ipv4_hlen, inner_ipv4.ihl);
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv4.ttl);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     modify_field(l3_metadata.ip_option_seen, l3_metadata.inner_ip_option_seen);
+    modify_field(l3_metadata.ip_frag, l3_metadata.inner_ip_frag);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     modify_field(l4_metadata.tcp_data_len,
@@ -73,7 +73,6 @@ action native_ipv4_packet() {
     modify_field(flow_lkp_metadata.lkp_dst, ipv4.dstAddr);
     modify_field(flow_lkp_metadata.lkp_proto, ipv4.protocol);
     modify_field(flow_lkp_metadata.ipv4_flags, ipv4.flags);
-    modify_field(flow_lkp_metadata.ipv4_frag_offset, ipv4.fragOffset);
     modify_field(flow_lkp_metadata.ipv4_hlen, ipv4.ihl);
     modify_field(flow_lkp_metadata.ip_ttl, ipv4.ttl);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);

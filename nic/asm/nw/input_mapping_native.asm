@@ -31,7 +31,10 @@ native_ipv4_packet_common:
   phvwr         p.l4_metadata_tcp_data_len, r7
 
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
+  //phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
+  // more than 128 bits apart in K structure
+  phvwr.c1      p.flow_lkp_metadata_lkp_dport[15:8], k.udp_dstPort_sbit0_ebit7
+  phvwr.c1      p.flow_lkp_metadata_lkp_dport[7:0], k.udp_dstPort_sbit8_ebit15
   phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
@@ -40,9 +43,7 @@ native_ipv4_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
   phvwrpair     p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags, \
                     p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
-  phvwrpair     p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl, \
-                    p.flow_lkp_metadata_ipv4_frag_offset, \
-                    k.{ipv4_fragOffset_sbit0_ebit4,ipv4_fragOffset_sbit5_ebit12}
+  phvwr         p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
 
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
@@ -61,7 +62,8 @@ native_ipv6_packet_common:
   phvwr         p.l4_metadata_tcp_data_len, r7
 
   seq           c1, k.ipv6_nextHdr, IP_PROTO_UDP
-  phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
+  phvwr.c1      p.flow_lkp_metadata_lkp_dport[15:8], k.udp_dstPort_sbit0_ebit7
+  phvwr.c1      p.flow_lkp_metadata_lkp_dport[7:0], k.udp_dstPort_sbit8_ebit15
   phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
