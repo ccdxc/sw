@@ -48,6 +48,11 @@ int capri_table_entry_read(uint32_t tableid,
                            uint8_t  *hwentry,
                            uint16_t *hwentry_bit_len);
 
+int capri_table_hw_entry_read(uint32_t tableid,
+                              uint32_t index,
+                              uint8_t  *hwentry,
+                              uint16_t *hwentry_bit_len);
+
 
 int capri_tcam_table_entry_write(uint32_t tableid,
                                  uint32_t index,
@@ -60,6 +65,12 @@ int capri_tcam_table_entry_read(uint32_t tableid,
                                 uint8_t  *trit_x,
                                 uint8_t  *trit_y,
                                 uint16_t *hwentry_bit_len);
+
+int capri_tcam_table_hw_entry_read(uint32_t tableid,
+                                   uint32_t index,
+                                   uint8_t  *trit_x,
+                                   uint8_t  *trit_y,
+                                   uint16_t *hwentry_bit_len);
 
 int capri_hbm_table_entry_write(uint32_t tableid,
                                 uint32_t index,

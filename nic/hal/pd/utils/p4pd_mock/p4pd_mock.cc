@@ -38,6 +38,7 @@ int p4pd_global_entry_create(uint32_t tableid, void *swkey, void *swkey_mask,
 }
 
 int p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
+                                            uint32_t   index,
                                         void*      sw_key,
                                         /* Valid only in case of TCAM;
                                          * Otherwise can be NULL)

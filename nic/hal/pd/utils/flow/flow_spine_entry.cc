@@ -395,7 +395,7 @@ FlowSpineEntry::entry_trace(uint32_t table_id, uint32_t index,
     char            buff[4096] = {0};
     p4pd_error_t    p4_err;
 
-    p4_err = p4pd_table_ds_decoded_string_get(table_id, key, NULL, 
+    p4_err = p4pd_table_ds_decoded_string_get(table_id, index, key, NULL, 
                                               data, buff, sizeof(buff));
     HAL_ASSERT(p4_err == P4PD_SUCCESS);
 

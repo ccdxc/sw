@@ -918,7 +918,6 @@ int capri_table_entry_write(uint32_t tableid,
             cap_pics_csr_t *pics_csr = p4pd_global_pics_get(tableid);
             sram_block_data = 0;
             pics_csr->hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
-                                   // (uint8_t*)(shadow_sram->mem[sram_row][i % CAPRI_SRAM_BLOCK_COUNT]));
             pics_csr->dhs_sram.entry[i]
                         .data((pu_cpp_int<128>)sram_block_data);
             pics_csr->dhs_sram.entry[i].write();
@@ -926,7 +925,6 @@ int capri_table_entry_write(uint32_t tableid,
             cap_pics_csr_t & pics_csr = cap0.sse.pics;
             sram_block_data = 0;
             pics_csr.hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
-                                    //(uint8_t*)(shadow_sram->mem[sram_row][i % CAPRI_SRAM_BLOCK_COUNT]));
             pics_csr.dhs_sram.entry[i]
                         .data((pu_cpp_int<128>)sram_block_data);
             pics_csr.dhs_sram.entry[i].write();
@@ -938,16 +936,6 @@ int capri_table_entry_write(uint32_t tableid,
     if (tbl_ctx.table_type == P4_TBL_TYPE_HASH || tbl_ctx.table_type == P4_TBL_TYPE_INDEX) {
         char    buffer[2048];
         memset(buffer, 0, sizeof(buffer));
-#if 0
-        p4pd_table_entry_decoded_string_get(tableid,
-                                            index,
-                                            hwentry,
-                                            NULL,
-                                            hwentry_bit_len,
-                                            buffer,
-                                            sizeof(buffer));
-        HAL_TRACE_DEBUG("{}", buffer);
-#endif
 
         uint8_t key[128] = {0}; /* Atmost key is 64B. Assuming each
                                  * key byte has worst case byte padding
@@ -956,7 +944,7 @@ int capri_table_entry_write(uint32_t tableid,
         uint8_t data[128] = {0};
         HAL_TRACE_DEBUG("{}", "Read last installed table entry back into table key and action structures");
         p4pd_global_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
-        p4pd_global_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
+        p4pd_global_table_ds_decoded_string_get(tableid, index, (void*)key, (void*)keymask,
                                                 (void*)data, buffer, sizeof(buffer));
         HAL_TRACE_DEBUG("{}", buffer);
     }
@@ -1028,8 +1016,76 @@ int capri_table_entry_read(uint32_t tableid,
 
     *hwentry_bit_len = tbl_ctx.sram_layout.entry_width_bits;
 
-    // TODO : Read from HW is also needed... (not just returning from shadow)
 
+    return (CAPRI_OK);
+}
+
+int capri_table_hw_entry_read(uint32_t tableid,
+                              uint32_t index,
+                              uint8_t  *hwentry,
+                              uint16_t *hwentry_bit_len)
+{
+    /*
+     * Unswizzing of the bytes into readable format is
+     * expected to be done by caller of the API.
+     */
+
+    int sram_row, entry_start_block, entry_end_block;
+    int entry_start_word;
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
+    assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
+    // In case of overflow TCAM, SRAM associated with the table
+    // is folded along with its parent's hash table.
+    // Change index to parent table size + index
+    if (tbl_ctx.is_oflow_table) {
+        p4pd_table_properties_t ofl_tbl_parent_ctx;
+        p4pd_table_properties_get(tbl_ctx.oflow_table_id, &ofl_tbl_parent_ctx);
+        index += ofl_tbl_parent_ctx.tabledepth;
+    }
+    capri_sram_entry_details_get(tableid, index,
+                                 &sram_row, &entry_start_block,
+                                 &entry_end_block, &entry_start_word);
+    int copy_bits = tbl_ctx.sram_layout.entry_width_bits;
+    p4pd_table_dir_en dir = tbl_ctx.gress;
+    uint8_t *_hwentry = (uint8_t*)hwentry;
+    uint8_t  byte, to_copy;
+#ifndef P4PD_CLI
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    // read from HW/Capri from entry_start_block to block
+    cpp_int sram_block_data;
+    uint8_t temp[16];
+    for (int i = entry_start_block; (i <= entry_end_block) && (copy_bits > 0);
+         i += CAPRI_SRAM_ROWS) {
+        if (dir == P4_GRESS_INGRESS) {
+            cap_pics_csr_t *pics_csr = p4pd_global_pics_get(tableid);
+            pics_csr->dhs_sram.entry[i].read();
+            sram_block_data = pics_csr->dhs_sram.entry[i].data();
+            pics_csr->hlp.s_array_from_cpp_int(sram_block_data, 0, 15, temp);
+        } else {
+            cap_pics_csr_t & pics_csr = cap0.sse.pics;
+            pics_csr.dhs_sram.entry[i].read();
+            sram_block_data = pics_csr.dhs_sram.entry[i].data();
+            pics_csr.hlp.s_array_from_cpp_int(sram_block_data, 0, 15, temp);
+        }
+        for (int p = 15; p >= 8; p--) {
+            byte = temp[p];
+            temp[p] = temp[15-p];
+            temp[15-p] = byte;
+        }
+        if (entry_start_word) {
+            int bits_in_macro = 128 - (entry_start_word * 16);
+            to_copy = (copy_bits > bits_in_macro) ? bits_in_macro : copy_bits;
+        } else {
+            to_copy = (copy_bits > 128) ? 128 : copy_bits;
+        }
+        memcpy(_hwentry, temp + (entry_start_word << 1), (to_copy + 7) / 8);
+        copy_bits -= to_copy;
+        _hwentry += (to_copy + 7)/8;
+        entry_start_word = 0;
+    }
+#endif
+    *hwentry_bit_len = tbl_ctx.sram_layout.entry_width_bits;
     return (CAPRI_OK);
 }
 
@@ -1203,16 +1259,6 @@ int capri_tcam_table_entry_write(uint32_t tableid,
     if (tbl_ctx.table_type != P4_TBL_TYPE_HASH && tbl_ctx.table_type != P4_TBL_TYPE_INDEX) {
         char    buffer[2048];
         memset(buffer, 0, sizeof(buffer));
-#if 0
-        p4pd_table_entry_decoded_string_get(tableid,
-                                            index,
-                                            trit_x,
-                                            trit_y,
-                                            hwentry_bit_len,
-                                            buffer,
-                                            sizeof(buffer));
-        HAL_TRACE_DEBUG("{}", buffer);
-#endif
 
         uint8_t key[128] = {0}; /* Atmost key is 64B. Assuming each
                           * key byte has worst case byte padding
@@ -1222,7 +1268,7 @@ int capri_tcam_table_entry_write(uint32_t tableid,
         HAL_TRACE_DEBUG("{}", "Read last installed table entry back into table key and action structures");
         p4pd_global_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
 
-        p4pd_global_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
+        p4pd_global_table_ds_decoded_string_get(tableid, index, (void*)key, (void*)keymask,
                                                 (void*)data, buffer, sizeof(buffer));
         HAL_TRACE_DEBUG("{}", buffer);
     }
@@ -1293,11 +1339,82 @@ int capri_tcam_table_entry_read(uint32_t tableid,
 
     *hwentry_bit_len = tbl_ctx.tcam_layout.entry_width_bits;;
 
-    // TODO : Read from HW is also needed... (not just returning from shadow)
-
     return (CAPRI_OK);
 }
 
+int capri_tcam_table_hw_entry_read(uint32_t tableid,
+                                   uint32_t index,
+                                   uint8_t  *trit_x,
+                                   uint8_t  *trit_y,
+                                   uint16_t *hwentry_bit_len)
+{
+    int tcam_row, entry_start_block, entry_end_block;
+    int entry_start_word;
+
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    p4pd_table_dir_en dir = tbl_ctx.gress;
+    assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
+    capri_tcam_entry_details_get(tableid, index,
+                                &tcam_row, &entry_start_block,
+                                &entry_end_block, &entry_start_word);
+    int copy_bits = tbl_ctx.tcam_layout.entry_width_bits;
+    uint8_t byte, to_copy;
+    uint8_t *_trit_x = (uint8_t*)trit_x;
+    uint8_t *_trit_y = (uint8_t*)trit_y;
+
+#ifndef P4PD_CLI
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    // Push to HW/Capri from entry_start_block to block
+    cpp_int tcam_block_data_x;
+    cpp_int tcam_block_data_y;
+    uint8_t temp_x[16];
+    uint8_t temp_y[16];
+    for (int i = entry_start_block; (i <= entry_end_block) && (copy_bits > 0);
+         i += CAPRI_TCAM_ROWS) {
+        if (dir == P4_GRESS_INGRESS) {
+            cap_pict_csr_t & pict_csr = cap0.tsi.pict;
+            pict_csr.dhs_tcam_xy.entry[i].read();
+            tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
+            tcam_block_data_y = pict_csr.dhs_tcam_xy.entry[i].y();
+            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
+            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
+        } else {
+            cap_pict_csr_t & pict_csr = cap0.tse.pict;
+            pict_csr.dhs_tcam_xy.entry[i].read();
+            tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
+            tcam_block_data_y = pict_csr.dhs_tcam_xy.entry[i].y();
+            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
+            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
+        }
+        for (int p = 15; p >= 8; p--) {
+            byte = temp_x[p];
+            temp_x[p] = temp_x[15-p];
+            temp_x[15-p] = byte;
+        }
+        for (int p = 15; p >= 8; p--) {
+            byte = temp_y[p];
+            temp_y[p] = temp_y[15-p];
+            temp_y[15-p] = byte;
+        }
+        if (entry_start_word) {
+            int bits_in_macro = 128 - (entry_start_word * 16);
+            to_copy = (copy_bits > bits_in_macro) ? bits_in_macro : copy_bits;
+        } else {
+            to_copy = (copy_bits > 128) ? 128: copy_bits;
+        }
+        memcpy(_trit_x, temp_x + (entry_start_word << 1), (to_copy + 7) / 8);
+        memcpy(_trit_y, temp_y + (entry_start_word << 1), (to_copy + 7) / 8);
+        _trit_x += (to_copy + 7)/8;
+        _trit_y += (to_copy + 7)/8;
+        entry_start_word = 0;
+        copy_bits -= to_copy;
+    }
+#endif
+    *hwentry_bit_len = tbl_ctx.tcam_layout.entry_width_bits;;
+
+    return (CAPRI_OK);
+}
 
 
 
@@ -1323,16 +1440,6 @@ int capri_hbm_table_entry_write(uint32_t tableid,
 #ifdef HAL_LOG_TBL_UPDATES
     char    buffer[2048];
     memset(buffer, 0, sizeof(buffer));
-#if 0
-    p4pd_table_entry_decoded_string_get(tableid,
-                                        index,
-                                        hwentry,
-                                        NULL,
-                                        entry_size,
-                                        buffer,
-                                        sizeof(buffer));
-    HAL_TRACE_DEBUG("{}", buffer);
-#endif
     uint8_t key[128] = {0}; /* Atmost key is 64B. Assuming each
                       * key byte has worst case byte padding
                       */
@@ -1341,7 +1448,7 @@ int capri_hbm_table_entry_write(uint32_t tableid,
     HAL_TRACE_DEBUG("{}", "Read last installed hbm table entry back into table key and action structures");
     p4pd_global_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
 
-    p4pd_global_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
+    p4pd_global_table_ds_decoded_string_get(tableid, index, (void*)key, (void*)keymask,
                                             (void*)data, buffer, sizeof(buffer));
     HAL_TRACE_DEBUG("{}", buffer);
 #endif

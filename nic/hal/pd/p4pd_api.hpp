@@ -383,6 +383,7 @@ p4pd_error_t p4pd_table_entry_decoded_string_get(uint32_t   tableid,
  *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
  */
 p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
+                                              uint32_t   index,
                                               void*      sw_key,
                                               /* Valid only in case of TCAM;
                                                * Otherwise can be NULL) 
@@ -548,6 +549,7 @@ p4pd_common_rxdma_actions_entry_read(uint32_t   tableid,
  */
 p4pd_error_t
 p4pd_common_rxdma_actions_table_ds_decoded_string_get(uint32_t   tableid,
+                                                      uint32_t index,
                                           void*      sw_key,
                                           /* Valid only in case of TCAM;
                                            * Otherwise can be NULL)
@@ -715,6 +717,7 @@ p4pd_common_txdma_actions_entry_read(uint32_t   tableid,
  */
 p4pd_error_t
 p4pd_common_txdma_actions_table_ds_decoded_string_get(uint32_t   tableid,
+                                                      uint32_t   index,
                                           void*      sw_key,
                                           /* Valid only in case of TCAM;
                                            * Otherwise can be NULL)
@@ -890,6 +893,7 @@ p4pd_error_t p4pd_global_entry_read(uint32_t   tableid,
  */
 p4pd_error_t
 p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
+                                        uint32_t   index,
                                         void*      sw_key,
                                         /* Valid only in case of TCAM;
                                          * Otherwise can be NULL)
@@ -913,7 +917,7 @@ p4pd_error_t p4pd_gft_table_entry_decoded_string_get(
     uint32_t tableid, uint32_t index, uint8_t *hwentry, uint8_t *hwentry_y,
     uint16_t hwentry_len, char *buffer, uint16_t buf_len);
 p4pd_error_t p4pd_gft_table_ds_decoded_string_get(
-    uint32_t tableid, void *sw_key, void *sw_key_mask, void *action_data,
+    uint32_t tableid, uint32_t index, void *sw_key, void *sw_key_mask, void *action_data,
     char *buffer, uint16_t buf_len);
 p4pd_error_t p4pd_gft_hwkey_hwmask_build(uint32_t tableid, void *swkey,
                                          void *swkey_mask, uint8_t *hw_key,

@@ -121,6 +121,7 @@ p4pd_global_entry_read(uint32_t tableid,
 
 p4pd_error_t
 p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
+                                        uint32_t   index,
                                         void*      sw_key,
                                         /* Valid only in case of TCAM;
                                          * Otherwise can be NULL) */
@@ -132,20 +133,20 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
     if ((tableid >= P4TBL_ID_TBLMIN) &&
         (tableid <= P4TBL_ID_TBLMAX)) {
         return (p4pd_table_ds_decoded_string_get(tableid,
-                sw_key, sw_key_mask, action_data, buffer, buf_len));
+                index, sw_key, sw_key_mask, action_data, buffer, buf_len));
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pd_common_rxdma_actions_table_ds_decoded_string_get(tableid,
-                sw_key, sw_key_mask, action_data, buffer, buf_len));
+                index, sw_key, sw_key_mask, action_data, buffer, buf_len));
     } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pd_common_txdma_actions_table_ds_decoded_string_get(tableid,
-                sw_key, sw_key_mask, action_data, buffer, buf_len));
+                index, sw_key, sw_key_mask, action_data, buffer, buf_len));
 #ifdef GFT
     } else if ((tableid >= P4_GFT_TBL_ID_TBLMIN) &&
                (tableid <= P4_GFT_TBL_ID_TBLMAX)) {
         return (p4pd_gft_table_ds_decoded_string_get(tableid,
-                sw_key, sw_key_mask, action_data, buffer, buf_len));
+                index, sw_key, sw_key_mask, action_data, buffer, buf_len));
 #endif
     } else {
         HAL_ASSERT(0);

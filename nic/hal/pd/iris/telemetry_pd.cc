@@ -31,7 +31,7 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
         HAL_TRACE_ERR("PD-MIRROR-SESSION::{}: programming sesion {} failed ({})", 
                 __FUNCTION__, id, ret);
     } else {
-        p4_err =  p4pd_table_ds_decoded_string_get(P4TBL_ID_MIRROR, NULL, NULL,
+        p4_err =  p4pd_table_ds_decoded_string_get(P4TBL_ID_MIRROR, 0, NULL, NULL,
                 action_data, buff, sizeof(buff));
         HAL_ASSERT(p4_err == P4PD_SUCCESS);
         HAL_TRACE_DEBUG("PD-MIRROR-SESSION::{}: programmed session {}: {}",

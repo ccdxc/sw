@@ -93,6 +93,10 @@ extern int capri_table_entry_read(uint32_t  tableid,
                                   uint32_t  index,
                                   uint8_t   *hwentry,
                                   uint16_t  *hwentry_bit_len);
+extern int capri_table_hw_entry_read(uint32_t  tableid,
+                                     uint32_t  index,
+                                     uint8_t   *hwentry,
+                                     uint16_t  *hwentry_bit_len);
 extern int capri_tcam_table_entry_write(uint32_t tableid,
                                         uint32_t index,
                                         uint8_t  *trit_x,
@@ -103,6 +107,11 @@ extern int capri_tcam_table_entry_read(uint32_t tableid,
                                        uint8_t  *trit_x,
                                        uint8_t  *trit_y,
                                        uint16_t *hwentry_bit_len);
+extern int capri_tcam_table_hw_entry_read(uint32_t tableid,
+                                          uint32_t index,
+                                          uint8_t  *trit_x,
+                                          uint8_t  *trit_y,
+                                          uint16_t *hwentry_bit_len);
 extern int capri_hbm_table_entry_write(uint32_t tableid,
                                        uint32_t index,
                                        uint8_t *hwentry,
@@ -3008,8 +3017,8 @@ ${table}_entry_read(uint32_t tableid,
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
 
-    capri_tcam_table_entry_read(tableid, index, hwentry_x, hwentry_y,
-                                &hwentry_bit_len);
+    capri_tcam_table_hw_entry_read(tableid, index, hwentry_x, hwentry_y,
+                                   &hwentry_bit_len);
     if (!hwentry_bit_len) {
         return (P4PD_FAIL);
     }
@@ -3018,7 +3027,7 @@ ${table}_entry_read(uint32_t tableid,
     p4pd_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
     ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_bit_len,
                                   swkey, swkey_mask);
-    capri_table_entry_read(tableid, index, hwentry, &hwentry_bit_len);
+    capri_table_hw_entry_read(tableid, index, hwentry, &hwentry_bit_len);
     if (!hwentry_bit_len) {
         return (P4PD_SUCCESS);
     }
@@ -3059,7 +3068,7 @@ ${table}_entry_read(uint32_t tableid,
 //::            if pddict['tables'][table]['location'] == 'HBM':
     capri_hbm_table_entry_read(tableid, index, hwentry, &hwentry_bit_len);
 //::            else:
-    capri_table_entry_read(tableid, index, hwentry, &hwentry_bit_len);
+    capri_table_hw_entry_read(tableid, index, hwentry, &hwentry_bit_len);
     p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
 
@@ -3108,7 +3117,7 @@ ${table}_entry_read(uint32_t tableid,
 //::            if pddict['tables'][table]['location'] == 'HBM':
     capri_hbm_table_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
 //::            else:
-    capri_table_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
+    capri_table_hw_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
     p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
 
@@ -3754,7 +3763,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::        if pddict['tables'][table]['location'] != 'HBM':
             p4pd_swizzle_bytes(_hwentry, hwentry_len);
 //::        #endif
-            b = snprintf(buf, blen, "Table: %s, Index %d\n", "P4TBL_ID_${caps_tablename}", index);
+            b = snprintf(buf, blen, "Table: %s, Index 0x%x\n", "P4TBL_ID_${caps_tablename}", index);
             buf += b;
             blen -= b;
             if (blen <= 0) {
@@ -4305,6 +4314,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
  */
 p4pd_error_t
 ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
+                                          uint32_t   index,
                                           void*      sw_key,
                                           /* Valid only in case of TCAM;
                                            * Otherwise can be NULL) 
@@ -4344,7 +4354,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
         case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
 //::            #endif
         {
-            b = snprintf(buf, blen, "Table: %s\n", "P4TBL_ID_${caps_tablename}");
+            b = snprintf(buf, blen, "Table: %s, Index 0x%x\n", "P4TBL_ID_${caps_tablename}", index);
             buf += b;
             blen -= b;
             if (blen <= 0) {

@@ -815,7 +815,7 @@ acl_tcam::entry_trace_(TcamEntry *te, uint32_t index)
     char            buff[4096] = {0};
     p4pd_error_t    p4_err;
 
-    p4_err = p4pd_table_ds_decoded_string_get(table_id_,
+    p4_err = p4pd_table_ds_decoded_string_get(table_id_, te->get_index(),
             te->get_key(), te->get_key_mask(), te->get_data(), 
             buff, sizeof(buff));
     HAL_ASSERT(p4_err == P4PD_SUCCESS);
