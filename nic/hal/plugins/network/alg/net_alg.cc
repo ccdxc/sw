@@ -12,7 +12,6 @@ init_alg_entry(fte::ctx_t& ctx)
 
     memset(&entry, 0, sizeof(fte::alg_entry_t));
  
-    memset(&entry, 0, sizeof(entry));
     entry.key = ctx.key();
     entry.role = ctx.role();
 
