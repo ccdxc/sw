@@ -30,7 +30,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     addi r1, r1, IPSEC_IP_HDR_OFFSET
     phvwr  p.eth_hdr_dma_cmd_addr, r1
     //phvwr  p.eth_hdr_dma_cmd_size, k.t0_s2s_headroom_offset
-    phvwri  p.eth_hdr_dma_cmd_size, 14 
+    phvwri  p.eth_hdr_dma_cmd_size, ETH_FIXED_HDR_SIZE 
     // Outer-IP  
     phvwri p.ip_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     add r1, r0, k.ipsec_to_stage3_ipsec_cb_addr
@@ -39,7 +39,11 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwr  p.ip_hdr_dma_cmd_addr, r1 
     seq c1, k.ipsec_to_stage3_is_v6, 1
     cmov r6, c1, IPV6_HDR_SIZE, IPV4_HDR_SIZE 
+    seq c3, k.ipsec_to_stage3_is_nat_t, 1
+    addi.c3 r6, r6, UDP_FIXED_HDR_SIZE 
     phvwr  p.ip_hdr_dma_cmd_size, r6 
+    // P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN | P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | P4PLUS_TO_P4_FLAGS_COMP_OUTER_CSUM 
+    phvwri.c3 p.p4plus2p4_hdr_flags, 0x2a 
     //ESP Header with IV 
     phvwri p.esp_iv_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     add r1, r0, k.t0_s2s_in_page_addr

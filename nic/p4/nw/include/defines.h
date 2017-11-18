@@ -492,6 +492,8 @@
 #define P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO    0x04
 #define P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN       0x08
 #define P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG      0x10
+#define P4PLUS_TO_P4_FLAGS_COMP_OUTER_CSUM      0x20
+#define P4PLUS_TO_P4_FLAGS_COMP_INNER_CSUM      0x40
 #define P4PLUS_TO_P4_FLAGS_LKP_INST             0x80
 
 /*****************************************************************************/

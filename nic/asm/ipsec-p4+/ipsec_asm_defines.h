@@ -3,9 +3,6 @@
 #define IPSEC_CB_SHIFT_SIZE 7
 #define IPHDR_SHIFT_SIZE 6 
 
-#define IPV4_HDR_SIZE 20
-#define IPV6_HDR_SIZE 40
-
 #define IPSEC_CB_IV_OFFSET 30 
 #define IPSEC_IP_HDR_OFFSET 64
 
@@ -29,6 +26,12 @@
 
 
 #define ESP_FIXED_HDR_SIZE 8 
+#define ETH_FIXED_HDR_SIZE 14
+#define UDP_FIXED_HDR_SIZE 8
+#define IPV4_HDR_SIZE 20
+#define IPV6_HDR_SIZE 40
+
+
 #define DOT1Q_ETYPE  0x8100
 #define IPV4_ETYPE   0x0800
 #define IPV6_ETYPE   0x86dd
