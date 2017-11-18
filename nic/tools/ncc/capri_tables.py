@@ -5367,7 +5367,8 @@ class capri_table_mapper:
                                                             'stage':tspec['stage'],
                                                             'width':width,
                                                             'depth':depth,
-                                                            'layout':OrderedDict()})
+                                                            'layout':OrderedDict(),
+                                                            'entry_width':width})
             if 'sram' in tspec.keys():
                 if tspec['overflow_parent']:
                     continue # Overflow SRAMs are appended to their parent SRAMs.
@@ -5377,14 +5378,16 @@ class capri_table_mapper:
                         if tspec['overflow'] == temp['name']:
                             depth += temp['num_entries']
                 width = table_width_to_allocation_units('sram', tspec['sram']['width'])
+                padded_width = width
                 ctable = self.tmgr.gress_tm[xgress_from_string(tspec['region'])].tables[tspec['name']]
                 if ctable.is_policer or ctable.is_writeback:
-                    width = pad_to_x(width, self.memory['sram'][tspec['region']]['blk_w'])
+                    padded_width = pad_to_x(width, self.memory['sram'][tspec['region']]['blk_w'])
                 self.insert_table('sram', tspec['region'], {'name':tspec['name'],
                                                                'stage':tspec['stage'],
-                                                               'width':width,
+                                                               'width':padded_width,
                                                                'depth':depth,
-                                                               'layout':OrderedDict()})
+                                                               'layout':OrderedDict(),
+                                                               'entry_width':width})
             if 'hbm' in tspec.keys():
                 width = pad_to_power2(tspec['hbm']['width'])
                 width = table_width_to_allocation_units('hbm', width)
@@ -5392,7 +5395,8 @@ class capri_table_mapper:
                                                               'stage':tspec['stage'],
                                                               'width':width,
                                                               'depth':tspec['num_entries'],
-                                                              'layout':OrderedDict()})
+                                                              'layout':OrderedDict(),
+                                                              'entry_width':width})
 
     def place_tcam_table(self, region, start, i, req_width, req_depth, available_width, available_depth):
 
@@ -5659,12 +5663,12 @@ class capri_table_mapper:
                 for table in self.tables['tcam'][table_spec['region']]:
                     if table_spec['name'] == table['name']:
                         memory = OrderedDict()
-                        memory['entry_width'] = table['width']
+                        memory['entry_width'] = table['entry_width']
                         memory['entry_width_bits'] = table_spec['tcam']['width']
                         memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
                         memory['entry_start_index'] = capri_get_tcam_start_address_from_layout(memory['layout'])
                         memory['entry_end_index'] = capri_get_tcam_end_address_from_layout(memory['layout'])
-                        memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], memory['entry_width'])
+                        memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], table['width'])
                         table_mapping['tcam'] = memory
                         break
 
@@ -5680,24 +5684,24 @@ class capri_table_mapper:
                                         entry_bit_width = temp_spec['sram']['width']
                                     break
                             memory = OrderedDict()
-                            memory['entry_width'] = table['width']
+                            memory['entry_width'] = table['entry_width']
                             memory['entry_width_bits'] = entry_bit_width
                             memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
                             memory['entry_start_index'] = capri_get_sram_sw_start_address_from_layout(memory['layout'])
                             memory['entry_end_index'] = capri_get_sram_sw_end_address_from_layout(memory['layout'])
-                            memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], memory['entry_width'])
+                            memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], table['width'])
                             table_mapping['sram'] = memory
                             break
                 else:
                     for table in self.tables['sram'][table_spec['region']]:
                         if table_spec['name'] == table['name']:
                             memory = OrderedDict()
-                            memory['entry_width'] = table['width']
+                            memory['entry_width'] = table['entry_width']
                             memory['entry_width_bits'] = table_spec['sram']['width']
                             memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
                             memory['entry_start_index'] = capri_get_sram_sw_start_address_from_layout(memory['layout'])
                             memory['entry_end_index'] = capri_get_sram_sw_end_address_from_layout(memory['layout'])
-                            memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], memory['entry_width'])
+                            memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], table['width'])
                             table_mapping['sram'] = memory
                             break
 
@@ -5705,7 +5709,7 @@ class capri_table_mapper:
                 for table in self.tables['hbm'][table_spec['region']]:
                     if table_spec['name'] == table['name']:
                         memory = OrderedDict()
-                        memory['entry_width'] = table['width']
+                        memory['entry_width'] = table['entry_width']
                         memory['entry_start_index'] = capri_get_hbm_start_address_from_layout(table['layout'])
                         memory['entry_end_index'] = capri_get_hbm_end_address_from_layout(table['layout'])
                         memory['num_buckets'] = 1
@@ -5842,7 +5846,7 @@ class capri_table_manager:
                         cap_name = 'cap_pics'
                         profile_name = "%s_csr_cfg_table_profile[%d]" % (cap_name, profile_id)
                         profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
-                        profile['width']['value'] = "0x%x" % table['width']
+                        profile['width']['value'] = "0x%x" % table['entry_width']
                         profile['hash']['value'] = "0x%x" % 0 # Not used, confirmed by hw
                         profile['opcode']['value'] = "0x%x" % 0 # Policer/Sampler/Counter
                         profile['log2bkts']['value'] = "0x%x" % capri_get_log2bkts_from_layout(layout, table['width'])
@@ -5866,7 +5870,7 @@ class capri_table_manager:
                         num_bkts = 0 if table['depth'] == 0 else (capri_get_depth_from_layout(layout) / table['depth'])
                         profile_name = "%s_csr_cfg_tcam_table_profile[%d]" % (cap_name, profile_id)
                         profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
-                        profile['width']['value'] = "0x%x" % table['width']
+                        profile['width']['value'] = "0x%x" % table['entry_width']
                         profile['bkts']['value'] = "0x%x" % (num_bkts)
                         profile['start_addr']['value'] = "0x%x" % capri_get_tcam_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_tcam_end_address_from_layout(layout)
