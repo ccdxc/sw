@@ -43,4 +43,5 @@ DryRunSanity telemetry telemetry
 DryRunSanity admin admin
 DryRunSanity rdma rdma
 DryRunSanity eth dolut
+DryRunSanity alg alg
 exit 0

@@ -13,21 +13,16 @@ namespace net {
 uuid_t epm_uuid = {0xe1af8308, 0x5d1f, 0x11c9, 0x91, 0xa4, {0x08, 0x00, 0x2b, 0x14, 0xa0, 0xfa}};
 
 
-uint8_t
-__parse_uuid(const uint8_t *pkt, uint8_t offset, uuid_t *u)
+void
+__parse_uuid(const uint8_t *pkt, uint8_t *offset, uuid_t *u)
 {
     u->time_lo = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
     u->time_mid = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
     u->time_hi_vers = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    u->clock_seq_hi = pkt[offset++];
-    u->clock_seq_lo = pkt[offset++];
+    u->clock_seq_hi = pkt[(*offset)++];
+    u->clock_seq_lo = pkt[(*offset)++];
     for (int i=0; i<6; i++)
-        u->node[i] = pkt[offset++];  
-
-    return offset; 
+        u->node[i] = pkt[(*offset)++];  
 }
 
 uint8_t
@@ -40,25 +35,17 @@ __parse_dg_common_hdr(const uint8_t *pkt, uint8_t offset, msrpc_dg_common_hdr_t 
     for (int i=0; i<3; i++) hdr->drep[i] = pkt[offset++];
     if (hdr->drep[0] & DREP_LENDIAN) data_rep = 0x1;
     hdr->serial_hi = pkt[offset++];
-    offset += __parse_uuid(pkt, offset, &hdr->obj_id);
-    offset += __parse_uuid(pkt, offset, &hdr->if_id);
-    offset += __parse_uuid(pkt, offset, &hdr->act_id);
-    hdr->server_boot = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    hdr->if_ver = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    hdr->seqnum = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;  
-    hdr->opnum = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->ihint = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->ahint = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->frag_len = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->frag_num = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
+    (void)__parse_uuid(pkt, &offset, &hdr->obj_id);
+    (void)__parse_uuid(pkt, &offset, &hdr->if_id);
+    (void)__parse_uuid(pkt, &offset, &hdr->act_id);
+    hdr->server_boot = __pack_uint32(pkt, &offset, data_rep);
+    hdr->if_ver = __pack_uint32(pkt, &offset, data_rep);
+    hdr->seqnum = __pack_uint32(pkt, &offset, data_rep);
+    hdr->opnum = __pack_uint16(pkt, &offset, data_rep);
+    hdr->ihint = __pack_uint16(pkt, &offset, data_rep);
+    hdr->ahint = __pack_uint16(pkt, &offset, data_rep);
+    hdr->frag_len = __pack_uint16(pkt, &offset, data_rep);
+    hdr->frag_num = __pack_uint16(pkt, &offset, data_rep);
     hdr->auth_proto = pkt[offset++];
     hdr->serial_lo = pkt[offset++];
  
@@ -75,43 +62,79 @@ __parse_cn_common_hdr(const uint8_t *pkt, uint8_t offset, msrpc_cn_common_hdr_t 
     for (int i=0; i<4; i++) hdr->drep[i] = pkt[offset++];
     if (hdr->drep[0] & DREP_LENDIAN) data_rep = 0x1;
  
-    hdr->frag_len = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->auth_len = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->call_id = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
+    hdr->frag_len = __pack_uint16(pkt, &offset, data_rep);
+    hdr->auth_len = __pack_uint16(pkt, &offset, data_rep);
+    hdr->call_id = __pack_uint32(pkt, &offset, data_rep);
 
     return offset; 
 }
 
+static p_cont_elem_t ctxt_elem[MAX_CONTEXT];
+static p_result_t    rslt[MAX_CONTEXT];
+
 uint8_t
-__parse_msrpc_bind_hdr(const uint8_t *pkt, uint8_t offset, msrpc_bind_hdr_t *hdr)
+__parse_msrpc_bind_hdr(const uint8_t *pkt,  
+                       uint8_t offset, msrpc_bind_hdr_t *hdr)
+{
+    uint8_t ele = 0, xferele = 0;
+
+    hdr->max_xmit_frag = __pack_uint16(pkt, &offset, data_rep);
+    hdr->max_recv_frag = __pack_uint16(pkt, &offset, data_rep);
+    hdr->assoc_group_id = __pack_uint32(pkt, &offset, data_rep);
+    hdr->context_list.num_elm = pkt[offset++];
+    hdr->context_list.rsvd = pkt[offset++];
+    hdr->context_list.rsvd2 = __pack_uint16(pkt, &offset, data_rep);
+    hdr->context_list.cont_elem = ctxt_elem;
+ 
+    // Parse one element to get the UUID
+    do {
+       hdr->context_list.cont_elem[ele].context_id = __pack_uint16(pkt, &offset, data_rep);
+       hdr->context_list.cont_elem[ele].num_xfer_syn = pkt[offset++];
+       hdr->context_list.cont_elem[ele].reserved = pkt[offset++];
+       (void)__parse_uuid(pkt, &offset, 
+                           &hdr->context_list.cont_elem[ele].abs_syntax.if_uuid);
+       hdr->context_list.cont_elem[ele].abs_syntax.if_vers = __pack_uint32(pkt, &offset, data_rep);
+       do {
+           //We dont really care about the xfer syntax
+           //Parse the pointer to move it
+           uuid_t xferuuid;
+           //uint32_t xfer_vers;
+
+           (void)__parse_uuid(pkt, &offset, &xferuuid);
+           (void)__pack_uint32(pkt, &offset, data_rep);
+           xferele++;
+       } while(xferele < hdr->context_list.cont_elem[ele].num_xfer_syn);
+       ele++;
+    } while (ele < hdr->context_list.num_elm);
+
+    return offset;
+}
+
+uint8_t
+__parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint8_t offset, 
+                            msrpc_bind_ack_hdr_t *hdr)
 {
     uint8_t ele = 0;
 
-    hdr->max_xmit_frag = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;   
-    hdr->max_recv_frag = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->assoc_group_id = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    hdr->context_list.num_elm = pkt[offset++];
-    hdr->context_list.rsvd = pkt[offset++];
-    hdr->context_list.rsvd2 = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    
-    // Parse one element to get the UUID
-    hdr->context_list.cont_elem[ele].context_id = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->context_list.cont_elem[ele].num_xfer_syn = pkt[offset++];
-    hdr->context_list.cont_elem[ele].reserved = pkt[offset++];
-    offset += __parse_uuid(pkt, offset, 
-                           &hdr->context_list.cont_elem[ele].abs_syntax.if_uuid);
-    hdr->context_list.cont_elem[ele].abs_syntax.if_vers = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
+    hdr->max_xmit_frag = __pack_uint16(pkt, &offset, data_rep);
+    hdr->max_recv_frag = __pack_uint16(pkt, &offset, data_rep);
+    hdr->assoc_group_id = __pack_uint32(pkt, &offset, data_rep);
+    hdr->sec_addr.len = __pack_uint16(pkt, &offset, data_rep);
+    // It is padded to be word aligned
+    offset += (hdr->sec_addr.len%WORD_BYTES)?(hdr->sec_addr.len+(\
+         WORD_BYTES + hdr->sec_addr.len%WORD_BYTES)):hdr->sec_addr.len;    
+    hdr->rlist.num_rslts = pkt[offset++];
+    hdr->rlist.rsvd = pkt[offset++];
+    hdr->rlist.rsvd2 = __pack_uint16(pkt, &offset, data_rep);
+    hdr->rlist.rslts = rslt;
 
-    //We dont really need to look beyond this point
+    do {
+        hdr->rlist.rslts[ele].result = pkt[offset++];
+        hdr->rlist.rslts[ele].fail_reason = pkt[offset++];
+        (void)__parse_uuid(pkt, &offset, &hdr->rlist.rslts[ele].xfer_syn.if_uuid);
+        hdr->rlist.rslts[ele].xfer_syn.if_vers = __pack_uint32(pkt, &offset, data_rep);
+        ele++;
+    } while (ele < hdr->rlist.num_rslts);
 
     return offset;
 }
@@ -120,13 +143,10 @@ uint8_t
 __parse_msrpc_req_hdr(const uint8_t *pkt, uint8_t offset,
                        msrpc_req_hdr_t *hdr)
 {
-    hdr->alloc_hint = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    hdr->ctxt_id = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    hdr->opnum = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
-    offset += __parse_uuid(pkt, offset, &hdr->uuid);
+    hdr->alloc_hint = __pack_uint32(pkt, &offset, data_rep);
+    hdr->ctxt_id = __pack_uint16(pkt, &offset, data_rep);
+    hdr->opnum = __pack_uint16(pkt, &offset, data_rep);
+    (void)__parse_uuid(pkt, &offset, &hdr->uuid);
     
     return offset;
 }
@@ -135,40 +155,29 @@ uint8_t
 __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint8_t offset,
                           msrpc_map_twr_t *twr)
 {
-    twr->twr_ptr = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    twr->twr_lgth = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    twr->twr_arr.twr_arr_len = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    twr->twr_arr.num_floors = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
+    twr->twr_ptr = __pack_uint32(pkt, &offset, data_rep);
+    twr->twr_lgth = __pack_uint32(pkt, &offset, data_rep);
+    twr->twr_arr.twr_arr_len = __pack_uint32(pkt, &offset, data_rep);
+    twr->twr_arr.num_floors = __pack_uint16(pkt, &offset, data_rep);
     for (int i=0; i<twr->twr_arr.num_floors; i++) {
-        twr->twr_arr.flrs[i].lhs_length = __pack_uint16(pkt, offset, data_rep);
-        offset += SHORT_BYTES;
+        twr->twr_arr.flrs[i].lhs_length = __pack_uint16(pkt, &offset, data_rep);
         twr->twr_arr.flrs[i].protocol = pkt[offset++];
         switch (twr->twr_arr.flrs[i].protocol) {
             case EPM_PROTO_UUID:
-                offset += __parse_uuid(pkt, offset, &twr->twr_arr.flrs[i].uuid);
-                twr->twr_arr.flrs[i].version = __pack_uint16(pkt, offset, data_rep);
-                offset += SHORT_BYTES;
-                twr->twr_arr.flrs[i].rhs_length = __pack_uint16(pkt, offset, data_rep);
-                offset += SHORT_BYTES;
-                twr->twr_arr.flrs[i].minor_vers = __pack_uint16(pkt, offset, data_rep);
-                offset += SHORT_BYTES;
+                __parse_uuid(pkt, &offset, &twr->twr_arr.flrs[i].uuid);
+                twr->twr_arr.flrs[i].version = __pack_uint16(pkt, &offset, data_rep);
+                twr->twr_arr.flrs[i].rhs_length = __pack_uint16(pkt, &offset, data_rep);
+                twr->twr_arr.flrs[i].minor_vers = __pack_uint16(pkt, &offset, data_rep);
                 break;
 
             case EPM_PROTO_TCP_PORT:
             case EPM_PROTO_UDP_PORT:
-                twr->twr_arr.flrs[i].rhs_length = __pack_uint16(pkt, offset, data_rep);
-                offset += SHORT_BYTES;
-                twr->twr_arr.flrs[i].port = __pack_uint16(pkt, offset, data_rep);
-                offset += SHORT_BYTES;
+                twr->twr_arr.flrs[i].rhs_length = __pack_uint16(pkt, &offset, data_rep);
+                twr->twr_arr.flrs[i].port = __pack_uint16(pkt, &offset, data_rep);
                 break;
 
             default:
-                twr->twr_arr.flrs[i].rhs_length = __pack_uint16(pkt, offset, data_rep);
-                offset += SHORT_BYTES;
+                twr->twr_arr.flrs[i].rhs_length = __pack_uint16(pkt, &offset, data_rep);
                 break;
         };
     }
@@ -181,11 +190,9 @@ __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint8_t offset,
                           msrpc_epm_req_hdr_t *hdr)
 {
     offset += __parse_msrpc_epm_map_twr(pkt, offset, &hdr->twr);
-    hdr->hdl.attr = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    offset += __parse_uuid(pkt, offset, &hdr->hdl.uuid);
-    hdr->max_twrs = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES; 
+    hdr->hdl.attr = __pack_uint32(pkt, &offset, data_rep);
+    (void)__parse_uuid(pkt, &offset, &hdr->hdl.uuid);
+    hdr->max_twrs = __pack_uint32(pkt, &offset, data_rep);
 
     return offset;
 } 
@@ -194,10 +201,8 @@ uint8_t
 __parse_msrpc_rsp_hdr(const uint8_t *pkt, uint8_t offset,
                       msrpc_rsp_hdr_t *hdr)
 {
-    hdr->alloc_hint = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    hdr->ctxt_id = __pack_uint16(pkt, offset, data_rep);
-    offset += SHORT_BYTES;
+    hdr->alloc_hint = __pack_uint32(pkt, &offset, data_rep);
+    hdr->ctxt_id = __pack_uint16(pkt, &offset, data_rep);
     hdr->cancel_cnt = pkt[offset++];
     hdr->rsvd = pkt[offset++];
 
@@ -208,17 +213,12 @@ uint8_t
 __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint8_t offset,
                       msrpc_epm_rsp_hdr_t *hdr)
 {
-    hdr->hdl.attr = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    offset += __parse_uuid(pkt, offset, &hdr->hdl.uuid); 
-    hdr->num_twrs = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    hdr->max_cnt = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    hdr->offset = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
-    hdr->actual_cnt = __pack_uint32(pkt, offset, data_rep);
-    offset += WORD_BYTES;
+    hdr->hdl.attr = __pack_uint32(pkt, &offset, data_rep);
+    (void)__parse_uuid(pkt, &offset, &hdr->hdl.uuid); 
+    hdr->num_twrs = __pack_uint32(pkt, &offset, data_rep);
+    hdr->max_cnt = __pack_uint32(pkt, &offset, data_rep);
+    hdr->offset = __pack_uint32(pkt, &offset, data_rep);
+    hdr->actual_cnt = __pack_uint32(pkt, &offset, data_rep);
     offset += __parse_msrpc_epm_map_twr(pkt, offset, &hdr->twr);
  
     return offset;
@@ -231,7 +231,7 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
     uint8_t                  rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
     msrpc_cn_common_hdr_t    rpc_hdr;
     fte::alg_entry_t         newentry = ctx.alg_entry();
-    uint8_t                  pgm_offset = 0;
+    uint8_t                  pgm_offset = 0, idx = 0;
 
     if (ctx.pkt_len() == rpc_msg_offset) {
         // The first iflow packet that get mcast copied could be an
@@ -240,7 +240,7 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
         return HAL_RET_OK;
     }
 
-    if (ctx.pkt_len() <= (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t))) {
+    if (ctx.pkt_len() < (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
                        ctx.pkt_len(), (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t)));
         return HAL_RET_ERR;
@@ -248,30 +248,44 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
 
     pgm_offset = __parse_cn_common_hdr(ctx.pkt(), rpc_msg_offset,  &rpc_hdr);
     if (rpc_hdr.rpc_ver_minor == 0 || rpc_hdr.flags & PFC_LAST_FRAG) {
-        newentry.rpc_frag_cont = 0;
+        newentry.rpcinfo.rpc_frag_cont = 0;
     } else {
-        newentry.rpc_frag_cont = 1;
+        // Todo (Pavithra) we need to save the packet until all the
+        // L7 Fragments are received before we decode the header
+        newentry.rpcinfo.rpc_frag_cont = 1;
     }
 
     switch (ctx.alg_proto_state())
     {
         case fte::ALG_PROTO_STATE_RPC_INIT:
-            if (rpc_hdr.ptype == PDU_BIND) {
+            if (rpc_hdr.ptype == PDU_BIND || 
+                rpc_hdr.ptype == PDU_ALTER_CTXT) {
                 msrpc_bind_hdr_t bind_hdr;
 
                 __parse_msrpc_bind_hdr(ctx.pkt(), pgm_offset, &bind_hdr);
                 // Move to bind state if the interface UUID is
                 // for endpoint mapper.
-                if (!memcmp(&epm_uuid, 
-                      &bind_hdr.context_list.cont_elem[0].abs_syntax.if_uuid, UUID_BYTES)) {
-                    newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BIND;
+                for (idx = 0; idx < bind_hdr.context_list.num_elm; idx++) { 
+                    if (!memcmp(&epm_uuid, 
+                        &bind_hdr.context_list.cont_elem[0].abs_syntax.if_uuid, UUID_BYTES)) {
+                        newentry.rpcinfo.msrpc_ctxt_id = idx;
+                        newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BIND;
+                    }
                 }
             }
             break;
 
         case fte::ALG_PROTO_STATE_MSRPC_BIND:
-            if (rpc_hdr.ptype == PDU_BIND_ACK) {
-                newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BOUND;
+            if (rpc_hdr.ptype == PDU_BIND_ACK ||
+                rpc_hdr.ptype == PDU_ALTER_CTXT_ACK) {
+                msrpc_bind_ack_hdr_t bind_ack;
+ 
+                __parse_msrpc_bind_ack_hdr(ctx.pkt(), pgm_offset, &bind_ack);
+                // Check if we the result was successful
+                if (bind_ack.rlist.num_rslts >= newentry.rpcinfo.msrpc_ctxt_id && 
+                    !bind_ack.rlist.rslts[newentry.rpcinfo.msrpc_ctxt_id].result) {
+                     newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BOUND;
+                }
             }
             break;
 
@@ -288,13 +302,15 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
                 twr_arr = epm_req.twr.twr_arr;
                 if (twr_arr.flrs[2].protocol == EPM_PROTO_CN || 
                     twr_arr.flrs[2].protocol == EPM_PROTO_DG) {
-                    newentry.rpc_map.maps[newentry.rpc_map.num_map].xid = rpc_hdr.call_id;
-                    memcpy(&newentry.rpc_map.maps[newentry.rpc_map.num_map].uuid, 
+                    uint8_t num_map = newentry.rpcinfo.rpc_map.num_map;
+
+                    newentry.rpcinfo.rpc_map.maps[num_map].call_id = rpc_hdr.call_id;
+                    memcpy(&newentry.rpcinfo.rpc_map.maps[num_map].uuid, 
                             &twr_arr.flrs[0].uuid, UUID_BYTES);
-                    newentry.rpc_map.maps[newentry.rpc_map.num_map].vers = twr_arr.flrs[0].version;
-                    newentry.rpc_map.maps[newentry.rpc_map.num_map].prot = 
+                    newentry.rpcinfo.rpc_map.maps[num_map].vers = twr_arr.flrs[0].version;
+                    newentry.rpcinfo.rpc_map.maps[num_map].prot = 
                       (twr_arr.flrs[2].protocol == EPM_PROTO_TCP_PORT)?IP_PROTO_TCP:IP_PROTO_UDP;
-                    newentry.rpc_map.maps[newentry.rpc_map.num_map].dport = twr_arr.flrs[3].port;
+                    newentry.rpcinfo.rpc_map.maps[num_map].dport = twr_arr.flrs[3].port;
                     newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
                 }
             }
@@ -311,11 +327,11 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
                 __parse_msrpc_epm_rsp_hdr(ctx.pkt(), epm_offset, &epm_rsp);
              
                 twr_arr = epm_rsp.twr.twr_arr;
-                for (int i=0; i< (int)newentry.rpc_map.num_map; i++) {
-                    if (newentry.rpc_map.maps[i].xid == rpc_hdr.call_id &&
-                        (!memcmp(&twr_arr.flrs[0].uuid, &newentry.rpc_map.maps[i].uuid, UUID_BYTES))) {
-                        newentry.rpc_map.maps[i].dport = twr_arr.flrs[3].port;
-                        insert_rpc_entry(ctx, &newentry.rpc_map.maps[i]);
+                for (int i=0; i< (int)newentry.rpcinfo.rpc_map.num_map; i++) {
+                    if (newentry.rpcinfo.rpc_map.maps[i].xid == rpc_hdr.call_id &&
+                        (!memcmp(&twr_arr.flrs[0].uuid, &newentry.rpcinfo.rpc_map.maps[i].uuid, UUID_BYTES))) {
+                        newentry.rpcinfo.rpc_map.maps[i].dport = twr_arr.flrs[3].port;
+                        insert_rpc_entry(ctx, &newentry.rpcinfo.rpc_map.maps[i]);
                     }
                 }
                 newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
@@ -340,9 +356,10 @@ parse_msrpc_dg_control_flow(fte::ctx_t& ctx)
     hal_ret_t                ret = HAL_RET_OK;
     uint8_t                  rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
     msrpc_dg_common_hdr_t    rpc_hdr;
-    fte::alg_entry_t         newentry = ctx.alg_entry(), *entry = NULL;
+    fte::alg_entry_t         newentry = ctx.alg_entry();
     hal::flow_key_t          key = ctx.key();
-    uint8_t                  idx = 0;
+    uint8_t                  idx = 0, insert_entry = 0;
+    
 
     if (ctx.pkt_len() == rpc_msg_offset) {
         // The first iflow packet that get mcast copied could be an
@@ -351,46 +368,81 @@ parse_msrpc_dg_control_flow(fte::ctx_t& ctx)
         return HAL_RET_OK;
     }
 
-    if (ctx.pkt_len() <= (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t))) {
+    HAL_TRACE_DEBUG("Payload offset: {}", rpc_msg_offset);
+    if (ctx.pkt_len() < (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
-                       ctx.pkt_len(), (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t)));
+                       ctx.pkt_len(), (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t)));
         return HAL_RET_ERR;
     }
 
     __parse_dg_common_hdr(ctx.pkt(), rpc_msg_offset,  &rpc_hdr);
+    if (ctx.alg_proto_state() == fte::ALG_PROTO_STATE_RPC_INIT) {
+        insert_entry = 1;
+    } 
+
     if (rpc_hdr.flags1 & PFC_LAST_FRAG) {
-        newentry.rpc_frag_cont = 0;
+        newentry.rpcinfo.rpc_frag_cont = 0;
     } else {
-        newentry.rpc_frag_cont = 1;
+        newentry.rpcinfo.rpc_frag_cont = 1;
     }
 
     switch (ctx.alg_proto_state())
     {
         case fte::ALG_PROTO_STATE_RPC_INIT:
             if (rpc_hdr.ptype == PDU_REQ) {
-                newentry.rpc_map.maps[0].xid = rpc_hdr.seqnum;    
-                memcpy(&newentry.rpc_map.maps[0].act_id, &rpc_hdr.act_id, UUID_BYTES);
-                memcpy(&newentry.rpc_map.maps[0].uuid, &rpc_hdr.if_id, UUID_BYTES);
-                newentry.rpc_map.num_map++;
-                newentry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
-                newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
-                ctx.set_alg_entry(newentry); 
+                if ((insert_entry) ||
+                    (!newentry.rpcinfo.rpc_frag_cont && 
+                     newentry.rpcinfo.rpc_map.maps[0].call_id == rpc_hdr.seqnum &&
+                     !memcmp(&newentry.rpcinfo.rpc_map.maps[0].act_id, &rpc_hdr.act_id, UUID_BYTES) &&
+                     !memcmp(&newentry.rpcinfo.rpc_map.maps[0].uuid, &rpc_hdr.if_id, UUID_BYTES))) {
+
+                    if (insert_entry) {
+                        newentry.rpcinfo.rpc_map.maps[0].call_id = rpc_hdr.seqnum;
+                        memcpy(&newentry.rpcinfo.rpc_map.maps[0].act_id, &rpc_hdr.act_id, UUID_BYTES);
+                        memcpy(&newentry.rpcinfo.rpc_map.maps[0].uuid, &rpc_hdr.if_id, UUID_BYTES);
+                        newentry.rpcinfo.rpc_map.num_map = 1;
+                        if (newentry.rpcinfo.rpc_frag_cont) {
+                            newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_FRAG_REQ;
+                        } else {
+                            newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
+                        }
+                        ctx.set_valid_rflow(false);
+                    } 
+                   
+                    if (!newentry.rpcinfo.rpc_frag_cont) {
+                        newentry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
+                        newentry.role = hal::FLOW_ROLE_INITIATOR;
+                        newentry.key.sport = 0;
+                        newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
+                        newentry.session_override = TRUE;
+                        newentry.skip_firewall = TRUE;
+
+                        // Insert an entry for Iflow when the first fragment is seen in case 
+                        // of fragmented packet. Insert an entry for Rflow in case of Last 
+                        // fragment/un-fragmented packet.
+                        ctx.register_completion_handler(fte::alg_completion_hdlr);
+                    }
+                }
+
+                ctx.set_alg_entry(newentry);
             }
             break;
 
        case fte::ALG_PROTO_STATE_MSRPC_EPM:
             if (rpc_hdr.ptype == PDU_RESP) {
                 do {
-                    if (newentry.rpc_map.maps[idx].xid == rpc_hdr.seqnum && 
-                        (!memcmp(&newentry.rpc_map.maps[idx].act_id, &rpc_hdr.act_id, UUID_BYTES))) {
-                        newentry.rpc_map.maps[idx].dport = ctx.key().sport;
-                        insert_rpc_entry(ctx, &newentry.rpc_map.maps[idx]);
+                    if (newentry.rpcinfo.rpc_map.maps[idx].call_id == rpc_hdr.seqnum && 
+                        (!memcmp(&newentry.rpcinfo.rpc_map.maps[idx].act_id, &rpc_hdr.act_id, UUID_BYTES))) {
+                        newentry.rpcinfo.rpc_map.maps[idx].dport = ctx.key().sport;
+                        HAL_TRACE_DEBUG("Received matching PDU response key: {}", ctx.key());
+
+                        // Cleanup the Rflow entry now that the state m/c
+                        // has moved to wait to response. Is session cleanup needed too ?
                         key.sport = 0;
-                        entry = (fte::alg_entry_t *)fte::remove_alg_entry(key);
-                        HAL_FREE(hal::HAL_MEM_ALLOC_ALG, entry);
+                        cleanup_alg_entry(ctx, key); 
                         break;
                     }
-                } while (idx < newentry.rpc_map.num_map); 
+                } while (idx < newentry.rpcinfo.rpc_map.num_map); 
             }
             break;
 
@@ -431,10 +483,7 @@ process_msrpc_control_flow(fte::ctx_t& ctx)
             // start of the session
             if (ctx.key().proto == IP_PROTO_UDP) {
                 ret = parse_msrpc_control_flow(ctx);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
-                    return ret;
-                }
+                return ret;
             }
 
             ctx.register_completion_handler(fte::alg_completion_hdlr);

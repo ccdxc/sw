@@ -1,38 +1,33 @@
 #! /usr/bin/python3
-# Test Module
+import test.fte.tracker.tracker as trackermod
 
-import pdb
-import infra.api.api as InfraApi
-import test.callbacks.networking.modcbs as modcbs
+def InitTracker(infra, module):
+    tracker = trackermod.ALGTrackerObject()
+    tracker.Init(module.name, module.args.connspec, module.logger)
+    return tracker
 
 def Setup(infra, module):
-    modcbs.Setup(infra, module)
+   return
+
+def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    modcbs.TestCaseSetup(tc)
+    stepspec = tc.module.iterator.Get()
+    tc.tracker.SetStep(stepspec, tc)
+    tc.tracker.SetupTestcaseConfig(tc)
     return
+
+def TestCaseVerify(tc):
+    return True
 
 def TestCaseTeardown(tc):
-    root = getattr(tc.config, 'flow', None)
-    if root is None:
-       root = getattr(tc.config.session.iconfig, 'flow', None)
+    if tc.tracker.IsFteDone():
+        root = getattr(tc.tracker.config, 'flow', None)
+        session = root.GetSession()
+        session.SetLabel("FTE_DONE")
 
-    session = root.GetSession()
-    session.SetLabel("FTE_DONE")
+        #tc.tracker.pvtdata.fte_session_aware = False
 
-    tc.pvtdata.fte_session_aware = False
-    modcbs.TestCaseTeardown(tc)
+    tc.tracker.Advance()
     return
-
-def TestCaseStepSetup(tc, step):
-    return modcbs.TestCaseStepSetup(tc, step)
-
-def TestCaseStepTrigger(tc, step):
-    return modcbs.TestCaseStepTrigger(tc, step)
-
-def TestCaseStepVerify(tc, step):
-    return modcbs.TestCaseStepVerify(tc, step)
-
-def TestCaseStepTeardown(tc, step):
-    return modcbs.TestCaseStepTeardown(tc, step)

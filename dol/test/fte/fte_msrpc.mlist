@@ -1,0 +1,29 @@
+# Feature Test Modules List
+feature:
+    id          : alg 
+    sub         : msrpc 
+    package     : test.fte
+    module      : alg 
+    spec        : msrpc.testspec
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name     : MSRPC_DG_UNFRAGMENTED
+        tracker  : True
+        args     : 
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate  :
+            # MSRPC DG UNFRAGMENTED
+            - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_DG_LE
+              pkttemplate : ETH_IPV4_UDP_MSRPC_DG
+              cpu         : True
+            - step        : ref://trackerstore/steps/id=RFLOW_MSRPC_DG_LE
+              pkttemplate : ETH_IPV4_UDP_MSRPC_DG
+              cpu         : True
+            - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_DG_DATA
+              pkttemplate : ETH_IPV4_UDP_MSRPC_DG
+            - step        : ref://trackerstore/steps/id=RFLOW_MSRPC_DG_DATA
+              pkttemplate : ETH_IPV4_UDP_MSRPC_DG
+              fte_done    : True

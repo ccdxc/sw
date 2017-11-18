@@ -1,0 +1,24 @@
+meta:
+    id      : MSRPC_DG_HDR
+    scapy   : MSRPC_DG_HDR
+    size    : 0
+
+fields:
+    ptype        : const/0
+    flags1       : const/0
+    flags2       : const/0
+    drep         : const/0
+    serial_hi    : const/0
+    object       : None
+    if_id        : None
+    act_id       : None
+    server_boot  : const/0
+    if_vers      : const/0
+    seqnum       : const/0
+    opnum        : const/0
+    ihint        : const/0
+    ahint        : const/0
+    len          : const/0
+    fragnum      : const/0
+    auth_proto   : const/0
+    serial_lo    : const/0

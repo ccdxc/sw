@@ -9,6 +9,8 @@ static void
 init_alg_entry(fte::ctx_t& ctx)
 {
     fte::alg_entry_t entry;
+
+    memset(&entry, 0, sizeof(fte::alg_entry_t));
  
     entry.key = ctx.key();
     entry.role = ctx.role();

@@ -1,0 +1,8 @@
+meta:
+    id: UUID
+
+headers:
+    - header:
+        id      : base
+        template: ref://store/headers/id=UUID
+        fields:

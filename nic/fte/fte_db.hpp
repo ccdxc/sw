@@ -7,19 +7,20 @@ namespace fte {
 
 // ALG types
 #define ALG_PROTO_STATE(ENTRY)                                         \
-    ENTRY(ALG_PROTO_STATE_NONE,        0,  "ALG_PROTO_STATE_NONE")      \
-    ENTRY(ALG_PROTO_STATE_TFTP_RRQ,    1,  "ALG_PROTO_STATE_TFTP_RRQ")  \
-    ENTRY(ALG_PROTO_STATE_TFTP_WRQ,    2,  "ALG_PROTO_STATE_TFTP_WRQ")  \
-    ENTRY(ALG_PROTO_STATE_FTP,         3,  "ALG_PROTO_STATE_FTP")       \
-    ENTRY(ALG_PROTO_STATE_DNS,         4,  "ALG_PROTO_STATE_DNS")       \
-    ENTRY(ALG_PROTO_STATE_RPC_INIT,    5,  "ALG_PROTO_STATE_RPC_INIT")  \
-    ENTRY(ALG_PROTO_STATE_RPC_GETPORT, 6,  "ALG_PROTO_STATE_RPC_GETPORT") \
-    ENTRY(ALG_PROTO_STATE_RPC_CALLIT,  7,  "ALG_PROTO_STATE_RPC_CALLIT") \
-    ENTRY(ALG_PROTO_STATE_RPC_DUMP,    8,  "ALG_PROTO_STATE_RPC_DUMP") \
-    ENTRY(ALG_PROTO_STATE_RPC_DATA,    9,  "ALG_PROTO_STATE_RPC_DATA") \
-    ENTRY(ALG_PROTO_STATE_MSRPC_BIND,  10, "ALG_PROTO_STATE_MSRPC_BIND") \
-    ENTRY(ALG_PROTO_STATE_MSRPC_BOUND, 11, "ALG_PROTO_STATE_MSRPC_BOUND") \
-    ENTRY(ALG_PROTO_STATE_MSRPC_EPM,   12, "ALG_PROTO_STATE_MSRPC_EPM") \
+    ENTRY(ALG_PROTO_STATE_NONE,           0,  "ALG_PROTO_STATE_NONE")      \
+    ENTRY(ALG_PROTO_STATE_TFTP_RRQ,       1,  "ALG_PROTO_STATE_TFTP_RRQ")  \
+    ENTRY(ALG_PROTO_STATE_TFTP_WRQ,       2,  "ALG_PROTO_STATE_TFTP_WRQ")  \
+    ENTRY(ALG_PROTO_STATE_FTP,            3,  "ALG_PROTO_STATE_FTP")       \
+    ENTRY(ALG_PROTO_STATE_DNS,            4,  "ALG_PROTO_STATE_DNS")       \
+    ENTRY(ALG_PROTO_STATE_RPC_INIT,       5,  "ALG_PROTO_STATE_RPC_INIT")  \
+    ENTRY(ALG_PROTO_STATE_RPC_GETPORT,    6,  "ALG_PROTO_STATE_RPC_GETPORT") \
+    ENTRY(ALG_PROTO_STATE_RPC_CALLIT,     7,  "ALG_PROTO_STATE_RPC_CALLIT") \
+    ENTRY(ALG_PROTO_STATE_RPC_DUMP,       8,  "ALG_PROTO_STATE_RPC_DUMP") \
+    ENTRY(ALG_PROTO_STATE_RPC_DATA,       9,  "ALG_PROTO_STATE_RPC_DATA") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_BIND,     10, "ALG_PROTO_STATE_MSRPC_BIND") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_BOUND,    11, "ALG_PROTO_STATE_MSRPC_BOUND") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_EPM,      12, "ALG_PROTO_STATE_MSRPC_EPM") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_FRAG_REQ, 13, "ALG_PROTO_STATE_MSRPC_FRAG_REQ") \
     
 
 DEFINE_ENUM(alg_proto_state_t, ALG_PROTO_STATE)
@@ -37,14 +38,25 @@ DEFINE_ENUM(alg_addr_family_t, ALG_ADDRESS_FAMILY)
 #define MAX_RPC          1000     // Revisit this
 
 typedef struct map {
-    uint32_t             xid;
-    uint32_t             prog_num;
-    uint8_t              act_id[16];
-    uint8_t              uuid[16];
     alg_addr_family_t    addr_family;
     uint32_t             prot;
     uint32_t             vers;
     uint32_t             dport;
+    union {
+        // SUN RPC Information
+        struct {
+            uint32_t             xid;
+            uint8_t              rpcvers;
+            uint32_t             prog_num;
+        } __PACK__;
+                
+        // MS RPC Information
+        struct {    
+            uint32_t             call_id;
+            uint8_t              act_id[16];
+            uint8_t              uuid[16];
+        } __PACK__;
+    } __PACK__;
 } RPCMap;
 
 typedef struct maplist {
@@ -52,13 +64,21 @@ typedef struct maplist {
     RPCMap    maps[MAX_RPC];
 } RPCMaplist;
 
+typedef struct rpcinfo {
+    uint8_t     rpc_frag_cont;
+    uint8_t     msrpc_ctxt_id;
+    RPCMaplist  rpc_map;
+} RPCInfo;
+
 typedef struct alg_entry_s {
     hal::flow_key_t         key;
     hal::session_t         *session;
     alg_proto_state_t       alg_proto_state;
     hal::flow_role_t        role;
-    RPCMaplist              rpc_map;
-    uint8_t                 rpc_frag_cont;
+    bool                    session_override;
+    bool                    skip_firewall;
+    
+    RPCInfo                 rpcinfo; 
 
     // meta data maintained for flow
     hal::utils::ht_ctxt_t   flow_key_ht_ctxt;  // Flow key based hash table

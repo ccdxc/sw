@@ -110,31 +110,37 @@ TCP_builder = ScapyHeaderBuilder_TCP()
 
 class ScapyHeaderBuilder_SUNRPC_4_PORTMAP_DUMP_REPLY(ScapyHeaderBuilder_BASE):
     def __translate_data(self, hdr):
-        scapy_data = []
+        scapy_data = None 
         for dat in hdr.fields.data:
-            scapy_hdr = penscapy.SUNRPC_4_PORTMAP_DUMP_REPLY_DATA(pgm=hdr.fields.data[0].pgm, 
-                            netid=hdr.fields.data[0].netid, addr=hdr.fields.data[0].addr, 
-                            owner=hdr.fields.data[0].owner, ValFollows=hdr.fields.data[0].ValFollows)
+            scapy_hdr = penscapy.SUNRPC_4_PORTMAP_DUMP_REPLY_DATA(pgm=dat.pgm, 
+                            netid=dat.netid, addr=dat.addr, 
+                            owner=dat.owner, ValFollows=dat.ValFollows)
+            scapy_hdr.netid_len = len(scapy_hdr.netid)
             l = len(scapy_hdr.netid)%4
             if l:
                opq = ''
                for i in range(0, (4-l)):
                    opq = opq + '\x00'
                scapy_hdr.opaque_data1 = opq
+            scapy_hdr.addr_len = len(scapy_hdr.addr)
             l = len(scapy_hdr.addr)%4
             if l:
                opq = ''
                for i in range(0, (4-l)):
                    opq = opq + '\x00'
                scapy_hdr.opaque_data2 = opq
+            scapy_hdr.owner_len = len(scapy_hdr.owner)
             l = len(scapy_hdr.owner)%4
             if l:
                opq = ''
                for i in range(0, (4-l)):
                    opq = opq + '\x00'
                scapy_hdr.opaque_data3 = opq
-            scapy_data.append(scapy_hdr)
-        hdr.fields.data = scapy_data
+            if scapy_data is None:
+                scapy_data = scapy_hdr
+            else:
+                scapy_data = scapy_data / scapy_hdr
+        hdr.fields.data = scapy_data 
         return
 
     def build(self, hdr):
@@ -236,7 +242,6 @@ class ScapyHeaderBuilder_IPFIX(ScapyHeaderBuilder_BASE):
         return super().build(hdr)
 IPFIX_builder = ScapyHeaderBuilder_IPFIX()
         
-
 class ScapyPacketObject:
     def __init__(self):
         self.spkt       = None

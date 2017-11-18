@@ -226,6 +226,7 @@ ctx_t::lookup_session()
         HAL_TRACE_DEBUG("fte: found existing alg session");
         session_ = entry->session;
         set_alg_proto_state(entry->alg_proto_state);
+        set_skip_firewall(entry->skip_firewall);
          
         // This is an RFlow if we found its key and role
         // set as responder. Initialize the rflow_ stage
@@ -234,14 +235,21 @@ ctx_t::lookup_session()
         //              we need to preserve all plugin's per pkt state
         if (entry->role == hal::FLOW_ROLE_RESPONDER) {
             valid_rflow_ = true;
-            rflow_[stage]->set_key(key());
+            for (int i = 0; i < MAX_STAGES; i++) {
+                rflow_[stage]->set_key(key());
+            }
         }
 
         set_role(entry->role);  
         set_alg_entry(*entry);
+        if (!flow_miss()) key_ = entry->key;
 
-        if (!flow_miss()) {
-            key_ = entry->key;
+        // If the session override is set, we dont
+        // want to use the existing session for this
+        // flow
+        if (entry->session_override == true) {
+            session_ = NULL;
+            return HAL_RET_SESSION_NOT_FOUND;
         }
     }
 
@@ -299,6 +307,8 @@ ctx_t::create_session()
  
     cleanup_hal_ = false;
     num_handlers_ = 0;
+    alg_proto_state_ = fte::ALG_PROTO_STATE_NONE;
+    alg_proto_  = nwsec::APP_SVC_NONE;
    
     // read rkey from spec
     if (protobuf_request()) {

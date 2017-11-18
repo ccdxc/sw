@@ -1,13 +1,15 @@
 #pragma once
 
-#define PDU_REQ        0
-#define PDU_RESP       2
-#define PDU_REJECT     6
-#define PDU_BIND       11
-#define PDU_BIND_ACK   12
-#define PDU_BIND_NAK   13
+#define PDU_REQ             0
+#define PDU_RESP            2
+#define PDU_REJECT          6
+#define PDU_BIND            11
+#define PDU_BIND_ACK        12
+#define PDU_BIND_NAK        13
+#define PDU_ALTER_CTXT      14
+#define PDU_ALTER_CTXT_ACK  15
 
-#define PFC_LAST_FRAG  0x02/* Last fragment */
+#define PFC_LAST_FRAG  0x02 /* Last fragment */
 #define PFC_DG_FRAG    0x04 /* Datagram fragment */
 
 #define EPM_PROTO_UUID 0x0d
@@ -16,7 +18,7 @@
 #define EPM_PROTO_TCP_PORT 0x07
 #define EPM_PROTO_UDP_PORT 0x08
 #define MAX_FLOORS     5
-#define MAX_CONTEXT    1
+#define MAX_CONTEXT    256 
 #define WORD_BYTES     4
 #define SHORT_BYTES    2
 
@@ -70,6 +72,11 @@ typedef struct msrpc_dg_common_hdr_t {
     uint8_t serial_lo;
 } msrpc_dg_common_hdr_t;
 
+typedef struct port_any_s {
+    uint16_t len;
+    char *port_spec;
+} port_any_t;
+
 typedef struct p_syntax_id_ {
     uuid_t   if_uuid;
     uint32_t if_vers;
@@ -80,15 +87,28 @@ typedef struct p_cont_elem_ {
     uint8_t         num_xfer_syn;
     uint8_t         reserved;
     p_syntax_id_t   abs_syntax;
-    p_syntax_id_t   xfer_syn[MAX_CONTEXT];
+    p_syntax_id_t   xfer_syn;
 } p_cont_elem_t;
 
 typedef struct p_cont_list_ {
     uint8_t       num_elm;
     uint8_t       rsvd;
     uint16_t      rsvd2;
-    p_cont_elem_t cont_elem[MAX_CONTEXT];
+    p_cont_elem_t *cont_elem;
 } p_cont_list_t;
+
+typedef struct p_result_ {
+    uint8_t        result;
+    uint8_t        fail_reason;
+    p_syntax_id_t  xfer_syn;
+} p_result_t;
+
+typedef struct p_result_list_s {
+    uint8_t      num_rslts;
+    uint8_t      rsvd;
+    uint16_t     rsvd2;
+    p_result_t   *rslts;
+} p_result_list_t;
 
 typedef struct msrpc_bind_hdr_s {
     uint16_t       max_xmit_frag;
@@ -96,6 +116,14 @@ typedef struct msrpc_bind_hdr_s {
     uint32_t       assoc_group_id;
     p_cont_list_t  context_list;
 } msrpc_bind_hdr_t;
+
+typedef struct msrpc_bind_ack_hdr_s {
+    uint16_t        max_xmit_frag;
+    uint16_t        max_recv_frag;
+    uint32_t        assoc_group_id;
+    port_any_t      sec_addr; 
+    p_result_list_t rlist;
+} msrpc_bind_ack_hdr_t;
 
 typedef struct msrpc_req_hdr_s {
     uint32_t   alloc_hint;

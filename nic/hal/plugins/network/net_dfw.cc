@@ -214,8 +214,8 @@ dfw_exec(fte::ctx_t& ctx)
 
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction
-    // 
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
+    HAL_TRACE_DEBUG("Firewall lookup {}", (ctx.skip_firewall())?"skipped":"begin");
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !ctx.skip_firewall()) {
         ret = net_dfw_pol_check_sg_policy(ctx, &match_rslt);
         if (ret == HAL_RET_OK) {
             if (match_rslt.valid) {

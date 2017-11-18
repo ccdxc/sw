@@ -1,6 +1,6 @@
 # Feature Test Modules List
 feature:
-    id          : fte
+    id          : alg 
     sub         : sunrpc 
     package     : test.fte
     module      : alg 
@@ -10,11 +10,49 @@ feature:
 
 modules:
     - module:
-        name     : SUNRPC_UTAG
-        iterate :
-            - profile  : VERS2_GETPORT_SUCCESS_ACCEPT
-              session  : filter://type=IPV4,proto=UDP,label=FTE
-              segment  : filter://native=True
-            - profile  : VERS4_DUMP_PORTMAP_STAT_SUCCESS_ACCEPT
-              session  : filter://type=IPV4,proto=TCP,label=FTE
-              segment  : filter://native=True
+        name     : SUNRPC_VERS2_GETPORT_SUCCESS
+        tracker  : True
+        args     : 
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV4,proto=UDP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+        iterate  :
+            # SUNRPC UDP VERS2 GETPORT REQ & RESP
+            - step        : ref://trackerstore/steps/id=IFLOW_GETPORT
+              pkttemplate : ETH_IPV4_UDP_SUNRPC_CALL_2_GETPORT
+              cpu         : True
+            - step        : ref://trackerstore/steps/id=RFLOW_GETPORT_RESPONSE
+              pkttemplate : ETH_IPV4_UDP_SUNRPC_REPLY_2_GETPORT 
+            - step        : ref://trackerstore/steps/id=IFLOW_GETPORT_DATA
+              cpu         : True
+              pkttemplate : ETH_IPV4_UDP
+
+    - module:
+        name     : SUNRPC_VERS4_DUMP_PORTMAP_SUCCESS
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV4,proto=TCP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+        iterate  :
+            # SUNRPC TCP VERS4 DUMP REQ & RESP
+            - step        : ref://trackerstore/steps/id=IFLOW_SRPC_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_SRPC_SYN_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_SRPC_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_VERS4_DUMP
+              pkttemplate : ETH_IPV4_TCP_SUNRPC_CALL_4_DUMP
+            - step        : ref://trackerstore/steps/id=IFLOW_VERS4_PMAP_STAT
+              pkttemplate : ETH_IPV4_TCP_SUNRPC_REPLY_4_DUMP
+            - step        : ref://trackerstore/steps/id=IFLOW_DUMP_DATA
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP

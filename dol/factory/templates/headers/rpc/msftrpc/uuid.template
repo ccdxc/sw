@@ -1,0 +1,13 @@
+meta:
+    id      : UUID
+    scapy   : UUID
+    size    : 0
+
+fields:
+    time_lo     : const/0
+    time_mid    : const/0
+    time_hi_vers: const/0
+    clock_seq_hi: const/0
+    clock_seq_lo: const/0
+    node_hi     : const/0
+    node_lo     : const/0

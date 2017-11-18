@@ -43,6 +43,7 @@ process_tftp_first_packet(fte::ctx_t& ctx)
         newentry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
         newentry.alg_proto_state = state;
         ctx.set_alg_entry(newentry);
+        HAL_TRACE_DEBUG("Alg Entry key: {}", ctx.alg_entry().key);
         ctx.register_completion_handler(fte::alg_completion_hdlr);
     }
 

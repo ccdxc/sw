@@ -10,9 +10,15 @@
 
 #define WORD_BYTES   4
 #define ADDR_NETID_BYTES 128
-#define CALL_HDR_LEN (sizeof(struct call_body) + (2*WORD_BYTES))
-#define REPLY_HDR_LEN (sizeof(struct reply_body) + (2*WORD_BYTES))
+
+// Mininum length of call and reply header required
+// for parsing. Auth/cred len is variable so taking
+// minimal required for those.
+#define CALL_HDR_LEN (8*WORD_BYTES)
+#define REPLY_HDR_LEN (5*WORD_BYTES)
 #define LAST_RECORD_FRAG 0x80
+#define RPC_CALL 0
+#define RPC_REPLY 1
 
 typedef struct rp__list rpcblist;
 
@@ -24,7 +30,7 @@ __parse_rpcb_res_hdr(const uint8_t *pkt, uint8_t offset, char *uaddr)
 {
     uint32_t len = 0;
     
-    len = __pack_uint32(pkt, offset);
+    len = __pack_uint32(pkt, &offset);
     memcpy(uaddr, &pkt[offset], len);
 }
 
@@ -33,22 +39,19 @@ __parse_rpcb_entry(const uint8_t *pkt, uint8_t offset, struct rpcb *rpcb)
 {
     uint32_t len = 0;
 
-    rpcb->r_prog = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    rpcb->r_vers = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    len = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    memcpy(rpcb->r_netid, &pkt[offset], len);
+    rpcb->r_prog = __pack_uint32(pkt, &offset);
+    rpcb->r_vers = __pack_uint32(pkt, &offset);
     // Even if the netid or Uaddr is not a multiple of 4
     // zeroes are written to make it a multiple of 4
-    offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
-    len = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
+    len = __pack_uint32(pkt, &offset);
     memcpy(rpcb->r_netid, &pkt[offset], len);
-    offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
-    len = __pack_uint32(pkt, offset);
-    offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
+    offset += (len%WORD_BYTES)?(len+(WORD_BYTES - len%WORD_BYTES)):len;
+    len = __pack_uint32(pkt, &offset);
+    memcpy(rpcb->r_addr, &pkt[offset], len);
+    offset += (len%WORD_BYTES)?(len+(WORD_BYTES - len%WORD_BYTES)):len;
+    len = __pack_uint32(pkt, &offset);
+    memcpy(rpcb->r_owner, &pkt[offset], len);
+    offset += (len%WORD_BYTES)?(len+(WORD_BYTES - len%WORD_BYTES)):len;
 
     return offset;
 }
@@ -56,14 +59,10 @@ __parse_rpcb_entry(const uint8_t *pkt, uint8_t offset, struct rpcb *rpcb)
 uint32_t
 __parse_pmap_hdr(const uint8_t *pkt, uint8_t offset, struct pmaplist *pmap)
 {
-    pmap->pml_map.pm_prog = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    pmap->pml_map.pm_vers = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    pmap->pml_map.pm_prot = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    pmap->pml_map.pm_port = __pack_uint32(pkt, offset);    
-    offset += WORD_BYTES;
+    pmap->pml_map.pm_prog = __pack_uint32(pkt, &offset);
+    pmap->pml_map.pm_vers = __pack_uint32(pkt, &offset);
+    pmap->pml_map.pm_prot = __pack_uint32(pkt, &offset);
+    pmap->pml_map.pm_port = __pack_uint32(pkt, &offset);    
    
     return (offset);
 }
@@ -73,24 +72,18 @@ __parse_call_hdr(const uint8_t *pkt, uint8_t offset, struct rpc_msg *cmsg)
 {
     uint32_t len = 0;
    
-    cmsg->rm_call.cb_rpcvers = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    cmsg->rm_call.cb_prog = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    cmsg->rm_call.cb_vers = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    cmsg->rm_call.cb_proc = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
+    cmsg->rm_call.cb_rpcvers = __pack_uint32(pkt, &offset);
+    cmsg->rm_call.cb_prog = __pack_uint32(pkt, &offset);
+    cmsg->rm_call.cb_vers = __pack_uint32(pkt, &offset);
+    cmsg->rm_call.cb_proc = __pack_uint32(pkt, &offset);
     // Move the offset after Auth credentials and verif
-    len = __pack_uint32(pkt, offset);
+    len = __pack_uint32(pkt, &offset);
     if (len == 0) 
         len = 4;
-    offset += WORD_BYTES;
     offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
-    len = __pack_uint32(pkt, offset);
+    len = __pack_uint32(pkt, &offset);
     if (len == 0)
         len = 4;
-    offset += WORD_BYTES;
     offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len; 
 
     return offset;
@@ -101,18 +94,15 @@ __parse_reply_hdr(const uint8_t *pkt, uint8_t offset, struct rpc_msg *rmsg)
 {
     uint32_t len = 0;
 
-    rmsg->rm_reply.rp_stat = (reply_stat)__pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
+    rmsg->rm_reply.rp_stat = (reply_stat)__pack_uint32(pkt, &offset);
     if (rmsg->rm_reply.rp_stat == MSG_ACCEPTED) {
 
         // Move the offset after Auth credentials and verif
-        len = __pack_uint32(pkt, offset);
+        len = __pack_uint32(pkt, &offset);
         if (len == 0)
             len = 4;
-        offset += WORD_BYTES;
         offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
-        rmsg->acpted_rply.ar_stat = (accept_stat)__pack_uint32(pkt, offset);
-        offset += WORD_BYTES;
+        rmsg->acpted_rply.ar_stat = (accept_stat)__pack_uint32(pkt, &offset);
     }
  
     return offset;
@@ -123,27 +113,26 @@ __parse_rpc_msg(const uint8_t *pkt, uint8_t offset, uint32_t pkt_len, struct rpc
 {
     uint32_t call_hdr_offset=0, reply_hdr_offset=0;
 
-    msg->rm_xid = __pack_uint32(pkt, offset);
-    offset += WORD_BYTES; 
-    msg->rm_direction = (msg_type)__pack_uint32(pkt, offset);
-    offset += WORD_BYTES;
-    
-    if (msg->rm_direction == CALL) {
+    msg->rm_xid = __pack_uint32(pkt, &offset);
+    msg->rm_direction = (msg_type)__pack_uint32(pkt, &offset);
+   
+    HAL_TRACE_DEBUG("xid: {} direction: {}", msg->rm_xid, msg->rm_direction); 
+    if (msg->rm_direction == RPC_CALL) {
         call_hdr_offset = (offset + CALL_HDR_LEN);
         if (pkt_len >= call_hdr_offset) {
             return (__parse_call_hdr(pkt, offset, msg));
         } else {
-            HAL_TRACE_ERR("RPC Message parsing failed -- packet len: {} \
-                           is smaller than call hdr offset: {}", pkt_len,
-                           call_hdr_offset);
+            HAL_TRACE_ERR("RPC Message parsing failed -- packet len: {} "\
+                          "is smaller than call hdr offset: {}",\
+                          pkt_len, call_hdr_offset);
         }        
     } else {
         reply_hdr_offset = (offset + REPLY_HDR_LEN);
         if (pkt_len >= reply_hdr_offset) { 
             return (__parse_reply_hdr(pkt, offset, msg));
         } else {
-            HAL_TRACE_ERR("RPC Message parsing failed -- packet len: {} \
-                           is smaller than call hdr offset: {}", pkt_len,
+            HAL_TRACE_ERR("RPC Message parsing failed -- packet len: {}" \
+                           " is smaller than reply hdr offset: {}", pkt_len,
                            reply_hdr_offset);
         }
     }
@@ -213,7 +202,7 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
     pmaplist                 pmap_list;
     rpcblist                 rpcb_list;
     uint8_t                  idx = 0, update_entry = 0;
-    char                     netid[128], uaddr[128];
+    char                     netid[128], uaddr[128], owner[128];
 
     // Payload offset from CPU header
     if (ctx.pkt_len() == rpc_msg_offset && 
@@ -232,12 +221,12 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
         return HAL_RET_ERR;
     }
 
-    newentry.rpc_frag_cont = 0;
+    newentry.rpcinfo.rpc_frag_cont = 0;
     if (ctx.key().proto == IP_PROTO_TCP) {
         // Do we need to maintain the record tracking state for TCP ?
         if (!(pkt[rpc_msg_offset] & LAST_RECORD_FRAG)) {
             HAL_TRACE_DEBUG("Fragmented packet detected");
-            newentry.rpc_frag_cont = 1;
+            newentry.rpcinfo.rpc_frag_cont = 1;
         } 
         update_entry = 1;
         rpc_msg_offset += WORD_BYTES;
@@ -256,17 +245,18 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                 rpc_msg.rm_call.cb_prog == PMAPPROG && \
                 (rpc_msg.rm_call.cb_proc == PMAPPROC_GETPORT || \
                  rpc_msg.rm_call.cb_proc == PMAPPROC_DUMP)) {
-                 map = &newentry.rpc_map.maps[newentry.rpc_map.num_map];
-                //Calculate the offset of the call header alone
+                 map = &newentry.rpcinfo.rpc_map.maps[newentry.rpcinfo.rpc_map.num_map];
                 switch (rpc_msg.rm_call.cb_proc) {
                     case PMAPPROC_GETPORT:
                         if (rpc_msg.rm_call.cb_vers == RPCBVERS_3 ||
                             rpc_msg.rm_call.cb_vers == RPCBVERS_4) {
                             rpcb_list.rpcb_map.r_netid = &netid[0];
                             rpcb_list.rpcb_map.r_addr = &uaddr[0];
+                            rpcb_list.rpcb_map.r_owner = &owner[0];
                             __parse_rpcb_entry(pkt, pgm_offset, 
                                                    &rpcb_list.rpcb_map);
                             map->xid = rpc_msg.rm_xid;
+                            map->rpcvers = rpc_msg.rm_call.cb_vers;
                             map->prog_num = rpcb_list.rpcb_map.r_prog;
                             map->vers = rpcb_list.rpcb_map.r_vers;
                             map->prot = netid2proto(rpcb_list.rpcb_map.r_netid);
@@ -274,18 +264,18 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                         } else {
                             __parse_pmap_hdr(pkt, pgm_offset, &pmap_list);
                             map->xid = rpc_msg.rm_xid;
+                            map->rpcvers = 2;
                             map->prog_num = pmap_list.pml_map.pm_prog; 
                             map->prot  = pmap_list.pml_map.pm_prot;
                             map->dport = pmap_list.pml_map.pm_port;
                             map->vers  = pmap_list.pml_map.pm_vers;
                         }
 
-                        newentry.rpc_map.num_map++;
+                        newentry.rpcinfo.rpc_map.num_map++;
                         newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_GETPORT;
                         break;
                   
                     case PMAPPROC_DUMP:
-                        HAL_TRACE_DEBUG("Dump request received");
                         newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_DUMP;
                         break;
  
@@ -299,21 +289,18 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
             if (rpc_msg.rm_direction == 1 && \
                 rpc_msg.rm_reply.rp_stat == 0 && \
                 rpc_msg.rm_reply.rp_acpt.ar_stat == 0) {
-                uint32_t dport = 0;
  
-                // Parse the header to save the details
-                if (rpc_msg.rm_call.cb_vers == RPCBVERS_3 ||
-                    rpc_msg.rm_call.cb_vers == RPCBVERS_4) {
-                    __parse_rpcb_res_hdr(pkt, pgm_offset, &uaddr[0]);
-                    dport =  uaddr2dport(uaddr);
-                } else {
-                    dport = (uint16_t)__pack_uint32(pkt, pgm_offset); 
-                }
-
-                map = ctx.alg_entry().rpc_map.maps; 
-                for (idx = 0; idx < ctx.alg_entry().rpc_map.num_map; idx++) {
-                     if (map[idx].xid == rpc_msg.rm_xid) { 
-                         map[idx].dport = dport;
+                map = ctx.alg_entry().rpcinfo.rpc_map.maps; 
+                for (idx = 0; idx < ctx.alg_entry().rpcinfo.rpc_map.num_map; idx++) {
+                     if (map[idx].xid == rpc_msg.rm_xid) {
+                         // Parse the header to save the details
+                         if (map[idx].vers == RPCBVERS_3 ||
+                             map[idx].vers == RPCBVERS_4) { 
+                             __parse_rpcb_res_hdr(pkt, pgm_offset, &uaddr[0]);
+                             map[idx].dport =  uaddr2dport(uaddr);
+                         } else {
+                             map[idx].dport = __pack_uint32(pkt, &pgm_offset);
+                         }
                          break;
                      } 
                 }
@@ -326,50 +313,49 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
             break;
 
         case fte::ALG_PROTO_STATE_RPC_DUMP:
+            HAL_TRACE_DEBUG("Reply state: {} accp state: {}", rpc_msg.rm_reply.rp_stat, 
+                             rpc_msg.acpted_rply.ar_stat);
             if (rpc_msg.rm_direction == 1 && \
                 rpc_msg.rm_reply.rp_stat == 0 && \
                 rpc_msg.acpted_rply.ar_stat == 0) {
            
-                map = newentry.rpc_map.maps;
-           
-                HAL_TRACE_DEBUG("Dump reply detected: offset1: {} offset2: {} offset3: {} offset4: {}", 
-                               pkt[pgm_offset], pkt[pgm_offset+1], pkt[pgm_offset+2], pkt[pgm_offset+3]);
-
-                rpcb_list.rpcb_map.r_netid = &netid[0];
-                rpcb_list.rpcb_map.r_addr = &uaddr[0]; 
-                while (__pack_uint32(pkt, pgm_offset) == 1) {
-                    pgm_offset += WORD_BYTES;
+                map = newentry.rpcinfo.rpc_map.maps;
+                while (__pack_uint32(pkt, &pgm_offset) == 1) {
                     // Todo (Pavithra) search if the program already
                     // exists in the list
                     if (rpc_msg.rm_call.cb_vers == RPCBVERS_3 ||
                         rpc_msg.rm_call.cb_vers == RPCBVERS_4) { 
                         memset(&rpcb_list, 0, sizeof(rpcb_list));
-                        memset(&uaddr, 0, ADDR_NETID_BYTES);
-                        memset(&netid, 0, ADDR_NETID_BYTES);
+                        rpcb_list.rpcb_map.r_netid = &netid[0];
+                        rpcb_list.rpcb_map.r_addr = &uaddr[0];
+                        rpcb_list.rpcb_map.r_owner = &owner[0];
+                        memset(uaddr, 0, ADDR_NETID_BYTES);
+                        memset(netid, 0, ADDR_NETID_BYTES);
+                        memset(owner, 0, ADDR_NETID_BYTES);
                         pgm_offset = __parse_rpcb_entry(pkt, pgm_offset,
                                                     &rpcb_list.rpcb_map);
-                        map[newentry.rpc_map.num_map].prog_num = 
+                        map[newentry.rpcinfo.rpc_map.num_map].prog_num = 
                                                     rpcb_list.rpcb_map.r_prog;
-                        map[newentry.rpc_map.num_map].vers = 
+                        map[newentry.rpcinfo.rpc_map.num_map].vers = 
                                                    rpcb_list.rpcb_map.r_vers;
-                        map[newentry.rpc_map.num_map].prot = 
+                        map[newentry.rpcinfo.rpc_map.num_map].prot = 
                                       netid2proto(rpcb_list.rpcb_map.r_netid);
-                        map[newentry.rpc_map.num_map].dport = 
+                        map[newentry.rpcinfo.rpc_map.num_map].dport = 
                                        uaddr2dport(rpcb_list.rpcb_map.r_addr); 
                     } else {
                         __parse_pmap_hdr(pkt, pgm_offset, &pmap_list);
-                        map[newentry.rpc_map.num_map].xid = rpc_msg.rm_xid;
-                        map[newentry.rpc_map.num_map].prog_num = pmap_list.pml_map.pm_prog;
-                        map[newentry.rpc_map.num_map].prot  = pmap_list.pml_map.pm_prot;
-                        map[newentry.rpc_map.num_map].dport = pmap_list.pml_map.pm_port;
-                        map[newentry.rpc_map.num_map].vers  = pmap_list.pml_map.pm_vers;    
+                        map[newentry.rpcinfo.rpc_map.num_map].xid = rpc_msg.rm_xid;
+                        map[newentry.rpcinfo.rpc_map.num_map].prog_num = pmap_list.pml_map.pm_prog;
+                        map[newentry.rpcinfo.rpc_map.num_map].prot  = pmap_list.pml_map.pm_prot;
+                        map[newentry.rpcinfo.rpc_map.num_map].dport = pmap_list.pml_map.pm_port;
+                        map[newentry.rpcinfo.rpc_map.num_map].vers  = pmap_list.pml_map.pm_vers;    
                     }
                     update_entry = 1;
                     // Insert ALG Entry for DIP, Dport
-                    insert_rpc_entry(ctx, &map[newentry.rpc_map.num_map]);
-                    newentry.rpc_map.num_map++;        
+                    insert_rpc_entry(ctx, &map[newentry.rpcinfo.rpc_map.num_map]);
+                    newentry.rpcinfo.rpc_map.num_map++;        
                 };
-                if (!newentry.rpc_frag_cont) {
+                if (!newentry.rpcinfo.rpc_frag_cont) {
                     newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
                 }
             }
@@ -400,6 +386,7 @@ process_sunrpc_control_flow(fte::ctx_t& ctx)
 {
     hal_ret_t             ret = HAL_RET_OK;
     fte::flow_update_t    flowupd;
+    fte::alg_entry_t      newentry = ctx.alg_entry();
 
     if (ctx.alg_proto() == nwsec::APP_SVC_SUN_RPC && \
         ctx.role() == hal::FLOW_ROLE_INITIATOR) {
@@ -414,6 +401,9 @@ process_sunrpc_control_flow(fte::ctx_t& ctx)
                 HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
                 return ret;
             }
+        } else {
+            newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
+            ctx.set_alg_entry(newentry);
         }
 
         ctx.register_completion_handler(fte::alg_completion_hdlr);

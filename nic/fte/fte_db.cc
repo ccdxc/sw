@@ -49,24 +49,24 @@ alg_flow_compare_key_func (void *key1, void *key2)
   the flow.
 -------------------------------------------------------------------------*/
 static hal_ret_t
-build_wildcard_key(hal::flow_key_t& key, hal::flow_key_t key_, 
+build_wildcard_key(hal::flow_key_t *key, hal::flow_key_t key_, 
                    key_fields_t *fields, uint8_t num_mask)
 {
-    memcpy(std::addressof(key), &key_, sizeof(hal::flow_key_t));
+    memcpy(key, &key_, sizeof(hal::flow_key_t));
 
-    if (key.flow_type != hal::FLOW_TYPE_L2) {
+    if (key->flow_type != hal::FLOW_TYPE_L2) {
         for (int i=0; i<num_mask; i++) {
             switch(fields[i]) {
                 case SPORT:
-                    key.sport = 0;
+                    key->sport = 0;
                     break;
 
                 case SIP:
-                    memset(&key.sip, 0, sizeof(ipvx_addr_t));
+                    memset(&key->sip, 0, sizeof(ipvx_addr_t));
                     break;
  
                 case DIR:
-                    key.dir = 0;
+                    key->dir = 0;
                     break;
 
                 default:
@@ -108,26 +108,27 @@ lookup_alg_db(ctx_t *ctx)
  
     // TFTP response
     fields[num_fields++] = SPORT;
-    build_wildcard_key(keys[num_keys++], ctx->key(), fields, 1);
+    build_wildcard_key(&keys[num_keys++], ctx->key(), fields, 1);
 
     // For RPC Data session
     fields[num_fields++] = SIP;
     fields[num_fields++] = DIR;
-    build_wildcard_key(keys[num_keys++], ctx->key(), fields, 3);
+    build_wildcard_key(&keys[num_keys++], ctx->key(), fields, 3);
 
-    g_fte_db->rlock();
     while (i < num_keys) {
+        hal::flow_key_t key;
+
         HAL_TRACE_DEBUG("Looking up ALG DB for key: {}", keys[i]);
-        entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup(std::addressof(keys[i++]));
+        key = keys[i++];
+        entry = (alg_entry_t *)lookup_alg_entry(&key);
         if (!entry) {
             continue;
         } else {
+            // Todo (Pavithra) add a lock per entry to keep it thread-safe
             HAL_TRACE_DEBUG("ALG Entry Found with key: {}", keys[i-1]);
             break;
         }
     }
-
-    g_fte_db->runlock();
 
     return (entry);
 }
@@ -162,12 +163,12 @@ remove_alg_entry(hal::flow_key_t key)
 - This API can be used to lookup an entry from ALG hash table.
 -------------------------------------------------------------------------*/
 const void *
-lookup_alg_entry(hal::flow_key_t key)
+lookup_alg_entry(hal::flow_key_t *key)
 {
     alg_entry_t   *entry = NULL;
 
     g_fte_db->rlock();
-    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup((void *)std::addressof(key));
+    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup((void *)key);
     g_fte_db->runlock();
 
     return entry;
@@ -200,7 +201,8 @@ std::ostream& operator<<(std::ostream& os, const alg_entry_t& val)
     os << "{key=" << val.key;
     os << " ,alg_proto_state=" << val.alg_proto_state;
     os << " ,role=" << val.role;
-    os << " ,rpc_frag_cont=" << val.rpc_frag_cont;
+    os << " ,session_override=" << val.session_override;
+    os << " ,rpc_frag_cont=" << val.rpcinfo.rpc_frag_cont;
 
     return os << "}";
 }

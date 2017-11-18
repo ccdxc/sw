@@ -12,13 +12,13 @@ namespace net {
 
 // Big-Endian util
 inline uint32_t
-__be_pack_uint32(const uint8_t *buf, uint8_t idx)
+__be_pack_uint32(const uint8_t *buf, uint8_t *idx)
 {
     int shift = 24;
     uint32_t val = 0;
 
     do {
-       val = val | (buf[idx++]<<shift);
+       val = val | (buf[(*idx)++]<<shift);
        shift -= 8;
     } while (shift >= 0);
 
@@ -26,13 +26,13 @@ __be_pack_uint32(const uint8_t *buf, uint8_t idx)
 }
 
 inline uint16_t
-__be_pack_uint16(const uint8_t *buf, uint8_t idx)
+__be_pack_uint16(const uint8_t *buf, uint8_t *idx)
 {
     int shift = 8;
     uint32_t val = 0;
 
     do {
-       val = val | (buf[idx++]<<shift);
+       val = val | (buf[(*idx)++]<<shift);
        shift -= 8;
     } while (shift >= 0);
 
@@ -41,13 +41,13 @@ __be_pack_uint16(const uint8_t *buf, uint8_t idx)
 
 //Little Endian util
 inline uint32_t
-__le_pack_uint32(const uint8_t *buf, uint8_t idx)
+__le_pack_uint32(const uint8_t *buf, uint8_t *idx)
 {
     int shift = 0;
     uint32_t val = 0;
 
     do {
-       val = val | (buf[idx++]<<shift);
+       val = val | (buf[(*idx)++]<<shift);
        shift += 8;
     } while (shift <= 24);
 
@@ -55,7 +55,7 @@ __le_pack_uint32(const uint8_t *buf, uint8_t idx)
 }
 
 inline uint32_t
-__pack_uint32(const uint8_t *buf, uint8_t idx, uint8_t format=0)
+__pack_uint32(const uint8_t *buf, uint8_t *idx, uint8_t format=0)
 {
     if (format == 1) {
         return (__le_pack_uint32(buf, idx));
@@ -65,13 +65,13 @@ __pack_uint32(const uint8_t *buf, uint8_t idx, uint8_t format=0)
 }
 
 inline uint16_t
-__le_pack_uint16(const uint8_t *buf, uint8_t idx)
+__le_pack_uint16(const uint8_t *buf, uint8_t *idx)
 {
     int shift = 0;
     uint32_t val = 0;
 
     do {
-       val = val | (buf[idx++]<<shift);
+       val = val | (buf[(*idx)++]<<shift);
        shift += 8;
     } while (shift <= 8);
 
@@ -79,7 +79,7 @@ __le_pack_uint16(const uint8_t *buf, uint8_t idx)
 }
 
 inline uint16_t
-__pack_uint16(const uint8_t *buf, uint8_t idx, uint8_t format=0)
+__pack_uint16(const uint8_t *buf, uint8_t *idx, uint8_t format=0)
 {
     if (format == 1) {
         return (__le_pack_uint16(buf, idx));
@@ -90,6 +90,7 @@ __pack_uint16(const uint8_t *buf, uint8_t idx, uint8_t format=0)
 
 
 void insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map);
+void cleanup_alg_entry(fte::ctx_t& ctx, hal::flow_key_t key);
 
 }
 }

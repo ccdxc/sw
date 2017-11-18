@@ -41,6 +41,9 @@ class TrackerObject(objects.FrameworkObject):
     def IsCpuCopyValid(self):
         return self.step.IsCpuCopyValid()
 
+    def IsFteDone(self):
+        return self.step.IsFteDone()
+
     def __set_flow_states(self):
         ifstate = self.flowstate.GetState(True)
         rfstate = self.flowstate.GetState(False)

@@ -1,0 +1,13 @@
+meta:
+    id      : MSRPC_CN_HDR
+    scapy   : MSRPC_CN_HDR
+    size    : 0
+
+fields:
+    rpc_vers_minor  : const/0
+    ptype           : const/0
+    pfc_flags       : const/0
+    drep            : const/0
+    frag_lgth       : const/0
+    auth_lgth       : const/0
+    call_id         : const/0

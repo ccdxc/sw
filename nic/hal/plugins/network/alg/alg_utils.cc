@@ -12,7 +12,6 @@ alg_entry_t *
 alloc_and_insert_alg_entry(fte::ctx_t& ctx, hal::flow_role_t role)
 {
     alg_entry_t     *entryp = NULL;
-    hal::flow_key_t  key = ctx.key();
     alg_entry_t      alg_entry = ctx.alg_entry();
 
     entryp = (alg_entry_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
@@ -25,6 +24,9 @@ alloc_and_insert_alg_entry(fte::ctx_t& ctx, hal::flow_role_t role)
     switch (ctx.alg_proto()) {
         case nwsec::APP_SVC_TFTP:
             entryp->role = hal::FLOW_ROLE_RESPONDER;
+
+        /* Intentionally left to flow through */
+        case nwsec::APP_SVC_MSFT_RPC:
             entryp->key.sport = 0;
             break;
 
@@ -33,9 +35,9 @@ alloc_and_insert_alg_entry(fte::ctx_t& ctx, hal::flow_role_t role)
     }
 
     entryp->session = ctx.session();
-    //entryp->alg_proto_state = ctx.alg_proto_state();
 
-    HAL_TRACE_DEBUG("Inserting Key: {} in ALG table", key);
+    HAL_TRACE_DEBUG("Inserting Key: {} in ALG table", entryp->key);
+    HAL_TRACE_DEBUG("New entry: {}", *entryp);
 
     entryp->flow_key_ht_ctxt.reset();
 
@@ -90,19 +92,31 @@ insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map)
     entry->key.proto = (types::IPProtocol)map->prot;
     entry->key.flow_type = (map->addr_family == fte::ALG_ADDRESS_FAMILY_IPV6)?FLOW_TYPE_V6:FLOW_TYPE_V4;
     entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_DATA;
+    entry->skip_firewall = TRUE;
 
     // Save the program number and SUN/MS RPC control dport (could be user specified)
     // We would replace this with the incoming one for Firewall lookup.
-    entry->rpc_map.num_map = 1;
-    entry->rpc_map.maps[entry->rpc_map.num_map-1].prog_num = map->prog_num;
-    memcpy(&entry->rpc_map.maps[entry->rpc_map.num_map-1].uuid, &map->uuid, sizeof(map->uuid));
-    entry->rpc_map.maps[entry->rpc_map.num_map-1].vers = map->vers;
-    entry->rpc_map.maps[entry->rpc_map.num_map-1].dport = ctx.key().dport;
+    entry->rpcinfo.rpc_map.num_map = 1;
+    entry->rpcinfo.rpc_map.maps[entry->rpcinfo.rpc_map.num_map-1].prog_num = map->prog_num;
+    memcpy(&entry->rpcinfo.rpc_map.maps[entry->rpcinfo.rpc_map.num_map-1].uuid, &map->uuid, sizeof(map->uuid));
+    entry->rpcinfo.rpc_map.maps[entry->rpcinfo.rpc_map.num_map-1].vers = map->vers;
+    entry->rpcinfo.rpc_map.maps[entry->rpcinfo.rpc_map.num_map-1].dport = ctx.key().dport;
 
     // Need to add the entry with a timer
     // Todo(Pavithra) add timer to every ALG entry
     HAL_TRACE_DEBUG("Inserting RPC entry with key: {}", entry->key);
     insert_alg_entry(entry);
+}
+
+void
+cleanup_alg_entry(fte::ctx_t& ctx, hal::flow_key_t key) 
+{
+    fte::alg_entry_t *entry = (fte::alg_entry_t *)fte::remove_alg_entry(key);
+
+    if (entry != NULL) {
+        HAL_FREE(hal::HAL_MEM_ALLOC_ALG, entry);
+    }
+
 }
 
 }

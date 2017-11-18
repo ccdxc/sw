@@ -1,0 +1,121 @@
+# Test Spec
+selectors:
+    src:
+        tenant    : filter://overlay=VLAN,type=TENANT
+        segment   : filter://native=True
+        endpoint  : filter://remote=True
+    dst:
+        tenant    : filter://overlay=VLAN,type=TENANT
+        segment   : filter://native=True
+        endpoint  : filter://remote=True
+    session       :
+        base      : filter://any
+        iflow     : filter://any
+        rflow     : filter://any
+    flow          : None
+    maxsessions   : 1
+
+tracker: True
+
+packets:
+    - packet: 
+        id          : OBJUUID
+        template    : ref://factory/packets/id=UUID
+        headers     :
+            base:
+                time_lo     : ref://testcase/tracker/step/fields/l7/object/time_lo
+                time_mid    : ref://testcase/tracker/step/fields/l7/object/time_mid
+                time_hi_vers: ref://testcase/tracker/step/fields/l7/object/time_hi_vers
+                clock_seq_hi: ref://testcase/tracker/step/fields/l7/object/clock_seq_hi
+                clock_seq_lo: ref://testcase/tracker/step/fields/l7/object/clock_seq_lo
+                node_hi     : ref://testcase/tracker/step/fields/l7/object/node_hi
+                node_lo     : ref://testcase/tracker/step/fields/l7/object/node_lo
+
+    - packet:
+        id          : IFIDUUID
+        template    : ref://factory/packets/id=UUID
+        headers     :
+            base:
+                time_lo     : ref://testcase/tracker/step/fields/l7/if_id/time_lo
+                time_mid    : ref://testcase/tracker/step/fields/l7/if_id/time_mid
+                time_hi_vers: ref://testcase/tracker/step/fields/l7/if_id/time_hi_vers
+                clock_seq_hi: ref://testcase/tracker/step/fields/l7/if_id/clock_seq_hi
+                clock_seq_lo: ref://testcase/tracker/step/fields/l7/if_id/clock_seq_lo
+                node_hi     : ref://testcase/tracker/step/fields/l7/if_id/node_hi
+                node_lo     : ref://testcase/tracker/step/fields/l7/if_id/node_lo
+
+    - packet:
+        id          : ACTUUID
+        template    : ref://factory/packets/id=UUID
+        headers     :
+            base:
+                time_lo     : ref://testcase/tracker/step/fields/l7/act_id/time_lo
+                time_mid    : ref://testcase/tracker/step/fields/l7/act_id/time_mid
+                time_hi_vers: ref://testcase/tracker/step/fields/l7/act_id/time_hi_vers
+                clock_seq_hi: ref://testcase/tracker/step/fields/l7/act_id/clock_seq_hi
+                clock_seq_lo: ref://testcase/tracker/step/fields/l7/act_id/clock_seq_lo
+                node_hi     : ref://testcase/tracker/step/fields/l7/act_id/node_hi
+                node_lo     : ref://testcase/tracker/step/fields/l7/act_id/node_lo
+
+    - packet:
+        id          : PKT  # IFlow Base Packet
+        payloadsize : ref://testcase/tracker/step/payloadsize
+        template    : callback://alg/callbacks/GetPacketTemplateBySessionIflow
+        headers     :
+            eth:
+                src     : ref://testcase/tracker/config/src/endpoint/macaddr
+                dst     : ref://testcase/tracker/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/tracker/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/tracker/config/flow/sip
+                dst     : ref://testcase/tracker/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/tracker/config/flow/sip
+                dst     : ref://testcase/tracker/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/tracker/step/fields/sport
+                dport   : ref://testcase/tracker/step/fields/dport
+                seq     : ref://testcase/tracker/step/fields/seq
+                ack     : ref://testcase/tracker/step/fields/ack
+            udp:
+                sport   : ref://testcase/tracker/step/fields/sport
+                dport   : ref://testcase/tracker/step/fields/dport
+            msrpc:
+                rpc_vers: ref://testcase/tracker/step/fields/l7/rpc_vers
+            msrpc_dg_hdr:
+                ptype       : ref://testcase/tracker/step/fields/l7/ptype
+                flags1      : ref://testcase/tracker/step/fields/l7/flags1
+                flags2      : 0
+                drep        : ref://testcase/tracker/step/fields/l7/drep 
+                serial_hi   : 0
+                object      : ref://testcase/packets/id=OBJUUID/rawbytes
+                if_id       : ref://testcase/packets/id=IFIDUUID/rawbytes
+                act_id      : ref://testcase/packets/id=ACTUUID/rawbytes
+                server_boot : 0
+                if_vers     : 1
+                seqnum      : ref://testcase/tracker/step/fields/l7/seqnum
+                opnum       : ref://testcase/tracker/step/fields/l7/opnum
+                ihint       : 0
+                ahint       : 0
+                len         : 100 
+                fragnum     : ref://testcase/tracker/step/fields/l7/fragnum
+                auth_proto  : 0
+                serial_lo   : ref://testcase/tracker/step/fields/l7/serial_lo 
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT
+            port    : ref://testcase/tracker/config/src/endpoint/intf/ports
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    packets:
+        - packet:
+            object  : callback://alg/callbacks/GetForwardingCopy/pktid=PKT
+            port    : ref://testcase/tracker/config/dst/endpoint/intf/ports
+        - packet:
+            object  : callback://alg/callbacks/GetCpuCopy/pktid=PKT
+            port    : 128

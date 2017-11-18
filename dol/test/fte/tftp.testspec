@@ -1,111 +1,63 @@
 # Test Spec
 selectors:
     src:
-        tenant    : filter://overlay=VLAN,type=TENANT
-        segment   : filter://any
-        endpoint  : filter://remote=True
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://native=True
+        endpoint: filter://remote=True
     dst:
-        tenant    : filter://overlay=VLAN,type=TENANT
-        segment   : filter://any
-        endpoint  : filter://remote=True
-    #flow          : filter://fwtype=L3
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://native=True
+        endpoint: filter://remote=True
     session       :
-        base      : filter://proto=UDP
+        base      : filter://type=IPV4,proto=UDP,label=FTE
         iflow     : filter://any
         rflow     : filter://any
-    maxsessions   : 2
+    flow          : None 
+    maxsessions   : 1
+
+tracker: True
 
 packets:
     - packet:
-        id          : IFLOW_BASE  # IFlow Base Packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://alg/callbacks/GetPacketTemplateBySessionIflow/l7proto=TFTP
+        id          : PKT  # IFlow Base Packet
+        payloadsize : ref://testcase/tracker/step/payloadsize
+        template    : callback://alg/callbacks/GetPacketTemplateBySessionIflow
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
+            eth:
+                src     : ref://testcase/tracker/config/src/endpoint/macaddr
+                dst     : ref://testcase/tracker/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/tracker/config/src/segment/vlan_id
             ipv4:
-                src     : ref://testcase/config/session/iconfig/flow/sip
-                dst     : ref://testcase/config/session/iconfig/flow/dip
+                src     : ref://testcase/tracker/config/flow/sip
+                dst     : ref://testcase/tracker/config/flow/dip
                 ttl     : 64
             ipv6:
-                src     : ref://testcase/config/session/iconfig/flow/sip
-                dst     : ref://testcase/config/session/iconfig/flow/dip
+                src     : ref://testcase/tracker/config/flow/sip
+                dst     : ref://testcase/tracker/config/flow/dip
                 hlim    : 64
+            tcp:
+                sport   : ref://testcase/tracker/step/fields/sport
+                dport   : ref://testcase/tracker/step/fields/dport
+                seq     : ref://testcase/tracker/step/fields/seq
+                ack     : ref://testcase/tracker/step/fields/ack
             udp:
-                sport   : 65530 
-                dport   : 69 
+                sport   : ref://testcase/tracker/step/fields/sport
+                dport   : ref://testcase/tracker/step/fields/dport
             tftp:
-            payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                op      : ref://testcase/tracker/step/fields/tftpop
 
-    - packet:
-        id          : RFLOW_BASE  # RFlow Base Packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://alg/callbacks/GetPacketTemplateBySessionRflow/l7proto=TFTP
-        headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
-            ipv4:
-                src     : ref://testcase/config/session/rconfig/flow/sip
-                dst     : ref://testcase/config/session/rconfig/flow/dip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/session/rconfig/flow/sip
-                dst     : ref://testcase/config/session/rconfig/flow/dip
-                hlim    : 64
-            udp:
-                sport   : ref://testcase/config/session/rconfig/flow/sport 
-                dport   : 65530
-            tftp:
-            payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
-
-    - packet:
-        id           : IFLOW_PKT1     # IFlow Packet
-        clone        : ref://testcase/packets/id=IFLOW_BASE
-        headers      :
-            tftp     :
-                op   : callback://alg/callbacks/GetExpectedTFTPIflowOp 
-
-    - packet:
-        id            : RFLOW_PKT1     # RFlow packet
-        clone         : ref://testcase/packets/id=RFLOW_BASE
-        headers       :
-            tftp      :
-                op    : callback://alg/callbacks/GetExpectedTFTPRflowOp
-
-
-session:
-    - step:
-        trigger:
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=IFLOW_PKT1
-                    port    : ref://testcase/config/session/iconfig/src/endpoint/intf/ports
-        expect:
-            delay   : callback://networking/packets/GetExpectDelay
-            packets:
-                - packet:
-                    object  : callback://alg/callbacks/GetL3UcExpectedPacketbyIflow/expktid=IFLOW_PKT1
-                    port    : ref://testcase/config/session/iconfig/dst/endpoint/intf/ports
- 
-                - packet:
-                    object  : callback://alg/callbacks/GetCpuPacketbyIflow/expktid=IFLOW_PKT1
-                    port    : 128
-
-    - step:
-        trigger:
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=RFLOW_PKT1
-                    port    : ref://testcase/config/session/rconfig/src/endpoint/intf/ports
-        expect:
-            delay   : callback://networking/packets/GetExpectDelay
-            packets:
-                - packet:
-                    object  : callback://alg/callbacks/GetL3UcExpectedPacketbyRflow/expktid=RFLOW_PKT1 
-                    port    : ref://testcase/config/session/rconfig/dst/endpoint/intf/ports
- 
-                - packet:
-                    object  : callback://alg/callbacks/GetCpuPacketbyRflow/expktid=RFLOW_PKT1
-                    port    : 128
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT
+            port    : ref://testcase/tracker/config/src/endpoint/intf/ports
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    packets:
+        - packet:
+            object  : callback://alg/callbacks/GetForwardingCopy/pktid=PKT
+            port    : ref://testcase/tracker/config/dst/endpoint/intf/ports
+        - packet:
+            object  : callback://alg/callbacks/GetCpuCopy/pktid=PKT
+            port    : 128

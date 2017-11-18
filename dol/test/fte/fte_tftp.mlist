@@ -1,29 +1,70 @@
 # Feature Test Modules List
 feature:
-    id          : fte
-    sub         : tftp 
+    id          : alg 
+    sub         : tftp
     package     : test.fte
     module      : alg
     spec        : tftp.testspec
     enable      : True
     ignore      : False
+    serial      : True
 
 modules:
     - module:
-        name     : TFTP_UTAG
-        iterate :
-            - profile   : RRQ_DATA
-              session  : filter://type=IPV4,proto=UDP,label=FTE
-              segment  : filter://native=True
-            - profile   : WRQ_ACK
-              session  : filter://type=IPV6,proto=UDP,label=FTE
-              segment  : filter://native=True
-            - profile   : RRQ_OACK
-              session  : filter://type=IPV4,proto=UDP,label=FTE
-              segment  : filter://native=True
-            - profile   : WRQ_OACK
-              session  : filter://type=IPV4,proto=UDP,label=FTE
-              segment  : filter://native=True
-            - profile   : RRQ_ERROR
-              session  : filter://type=IPV4,proto=UDP,label=FTE
-              segment  : filter://native=True
+        name     : TFTP_IPV4
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate: 
+            # TFTP RRQ & DATA
+            - step         : ref://trackerstore/steps/id=IFLOW_RRQ
+              pkttemplate  : ETH_IPV4_UDP_TFTP 
+              cpu          : True
+            - step         : ref://trackerstore/steps/id=RFLOW_DATA
+              pkttemplate  : ETH_IPV4_UDP_TFTP
+              cpu          : True
+              fte_done     : True
+            # TFTP WRQ & ACK
+            - step         : ref://trackerstore/steps/id=IFLOW_WRQ
+              pkttemplate  : ETH_IPV4_UDP_TFTP
+              cpu          : True
+            - step         : ref://trackerstore/steps/id=RFLOW_ACK
+              pkttemplate  : ETH_IPV4_UDP_TFTP
+              cpu          : True
+              fte_done     : True
+            # TFTP RRQ & OACK
+            - step         : ref://trackerstore/steps/id=IFLOW_RRQ
+              pkttemplate  : ETH_IPV4_UDP_TFTP
+              cpu          : True
+            - step         : ref://trackerstore/steps/id=RFLOW_OACK
+              pkttemplate  : ETH_IPV4_UDP_TFTP
+              cpu          : True
+              fte_done     : True
+            # TFTP WRQ & OACK
+            - step         : ref://trackerstore/steps/id=IFLOW_WRQ
+              pkttemplate  : ETH_IPV4_UDP_TFTP
+              cpu          : True
+            - step         : ref://trackerstore/steps/id=RFLOW_OACK
+              pkttemplate  : ETH_IPV4_UDP_TFTP
+              cpu          : True
+              fte_done     : True
+             
+    
+    - module:
+        name     : TFTP_IPV6
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session      :
+                 base    : filter://type=IPV6,proto=UDP,label=FTE
+                 iflow   : filter://any
+                 rflow   : filter://any
+        iterate:
+            # TFTP WRQ & ACK
+            - step         : ref://trackerstore/steps/id=IFLOW_WRQ
+              pkttemplate  : ETH_IPV6_UDP_TFTP
+              cpu          : True
+            - step         : ref://trackerstore/steps/id=RFLOW_ACK
+              pkttemplate  : ETH_IPV6_UDP_TFTP
+              cpu          : True

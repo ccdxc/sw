@@ -312,14 +312,14 @@ class SUNRPC_4_PORTMAP_DUMP_REPLY_DATA(Packet):
    fields_desc = [
        BitField("pgm",        0, 32),
        BitField("vers",       0, 32),
-       FieldLenField("netid_len", 0, length_of="netid"),
-       StrLenField("netid", "0", length_from=lambda pkt:pkt.netid_len),
+       BitField("netid_len",  0, 32),
+       StrField("netid", "0"),
        ConditionalField(StrLenField("opaque_data1", []), lambda pkt:len(pkt.netid)%4 != 0),
-       FieldLenField("addr_len", 0, length_of="addr"),
-       StrLenField("addr", "0", length_from=lambda pkt:pkt.addr_len),
+       BitField("addr_len", 0, 32),
+       StrField("addr", "0"),
        ConditionalField(StrLenField("opaque_data2", []), lambda pkt:len(pkt.addr)%4 != 0),
-       FieldLenField("owner_len", 0, length_of="owner"),
-       StrLenField("owner", "0", length_from=lambda pkt:pkt.owner_len),
+       BitField("owner_len", 0, 32),
+       StrField("owner", "0"),
        ConditionalField(StrLenField("opaque_data3", []), lambda pkt:len(pkt.owner)%4 != 0),
        BitField("ValFollows", 0, 32),
    ]
@@ -573,3 +573,65 @@ class Ipfix(Packet):
     ]
 
 bind_layers(UDP, Ipfix, dport=4739)
+
+class UUID(Packet):
+    name = "UUID"
+    fields_desc = [
+        BitField("time_lo",   0,  32),
+        BitField("time_mid",  0,  16),
+        BitField("time_hi_vers", 0, 16),
+        BitField("clock_seq_hi", 0, 8),
+        BitField("clock_seq_lo", 0, 8),
+        BitField("node_hi",  0, 24),
+        BitField("node_lo", 0, 24),
+    ]
+
+class MSRPC_CN_HDR(Packet):
+    name = "MSRPC_CN_HDR"
+    fields_desc = [
+        BitField("rpc_vers_minor",  0,  8),
+        BitField("ptype",           0,  8),
+        BitField("pfc_flags",       0,  8),
+        BitField("drep",            0,  32),
+        BitField("frag_lgth",       0,  16),
+        BitField("auth_lgth",       0,  16),
+        BitField("call_id",         0,  32), 
+    ]
+
+class MSRPC_DG_HDR(Packet):
+    name = "MSRPC_DG_HDR"
+    fields_desc = [
+        ByteEnumField("ptype",  0, {0:"PDU_REQ", 2:"PDU_RSP"}),
+        BitField("flags1",    0,     8),
+        BitField("flags2",    0,     8),
+        BitField("drep",      0,     24),
+        BitField("serial_hi", 0,     8),
+        PacketField("object", '',  UUID),
+        PacketField("if_id", '',   UUID),
+        PacketField("act_id", '',  UUID),
+        BitField("server_boot", 0,   32),
+        BitField("if_vers",     0,   32),
+        BitField("seqnum",      0,   32),
+        BitField("opnum",       0,   16),
+        BitField("ihint",       0,   16),
+        BitField("ahint",       0,   16),
+        BitField("len",         0,   16),
+        BitField("fragnum",     0,   16),
+        BitField("auth_proto",  0,   8),
+        BitField("serial_lo",   0,   8),
+    ]
+  
+class MSRPC(Packet):
+    name = "MSRPC"
+    fields_desc = [
+        BitField("rpc_vers",     0,      8),
+    ]
+
+bind_layers(UDP, MSRPC, dport=135)
+bind_layers(UDP, MSRPC, dport=65528)
+bind_layers(UDP, MSRPC, dport=65527)
+bind_layers(TCP, MSRPC, dport=135)
+bind_layers(TCP, MSRPC, dport=65528)
+bind_layers(TCP, MSRPC, dport=65527)
+bind_layers(MSRPC, MSRPC_CN_HDR, rpc_vers=5)
+bind_layers(MSRPC, MSRPC_DG_HDR, rpc_vers=4)

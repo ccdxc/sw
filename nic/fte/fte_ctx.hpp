@@ -499,6 +499,9 @@ public:
 
     app_redir_ctx_t& app_redir() { return app_redir_; }
 
+    bool skip_firewall() const { return skip_firewall_; }
+    void set_skip_firewall(bool val) { skip_firewall_ = val; }
+
 private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
@@ -544,6 +547,7 @@ private:
     nwsec::ALGName        alg_proto_;         // ALG Proto to be applied
     alg_proto_state_t     alg_proto_state_;   // ALG Proto state machine state
     alg_entry_t           alg_entry_;         // ALG entry in the wildcard table
+    bool                  skip_firewall_;
     app_redir_ctx_t       app_redir_;
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

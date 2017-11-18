@@ -1,0 +1,7 @@
+meta:
+    id      : MSRPC
+    scapy   : MSRPC
+    size    : 0
+
+fields:
+    rpc_vers  : const/0
