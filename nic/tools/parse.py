@@ -53,15 +53,15 @@ def parse_logs():
     inscount_sort_file  = open(inscount_sort_log, "a+")
     program = ""
     for linenum, line in enumerate(modelfile):
-        if re.match("(.*) Setting PC to 0x(.*)\[ (.*)", line, re.I):
-            fields = re.split(r'(.*) Setting PC to 0x(.*)\[ (.*)', line)
+        if re.match("(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)", line, re.I):
+            fields = re.split(r'(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)', line)
             program = symbols['0x'+fields[2].upper()]
             programline = linenum
             print linenum, '0x'+fields[2], program
             line = line.replace('0x'+fields[2], program)
         elif re.match("^\[(.*)\]: (.*)\.e(.*)", line, re.I):
             fields1 = re.split(r'\[(.*)\]: (.*)\.e(.*)', line)
-            inscountfile.write("%s %s %d\n" % (fields1[1], program, programline))
+            inscountfile.write("%03d %s %d\n" % (int(fields1[1])+1, program, programline))
             #print(fields1[1], program, programline, linenum)
         model1file.write(line)
     modelfile.close()

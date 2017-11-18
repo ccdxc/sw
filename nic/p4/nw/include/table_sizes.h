@@ -18,7 +18,7 @@
 #define COPP_TABLE_SIZE                                    32
 #define TUNNEL_DECAP_TABLE_SIZE                            32
 #define TUNNEL_ENCAP_UPDATE_INNER_TABLE_SIZE               32
-#define DROP_STATS_TABLE_SIZE                              32
+#define DROP_STATS_TABLE_SIZE                              64
 #define IPSG_TABLE_SIZE                                    1024
 #define OUTPUT_MAPPING_TABLE_SIZE                          2048
 #define TX_STATS_TABLE_SIZE                                2048

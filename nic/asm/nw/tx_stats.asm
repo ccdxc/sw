@@ -14,8 +14,7 @@ struct phv_       p;
 %%
 
 tx_stats:
-  seq         c2, k.capri_intrinsic_drop, 1
-  bcf         [c2], tx_egress_drops
+  bbeq        k.capri_intrinsic_drop, 1, tx_egress_drops
   add         r3, r0, k.flow_lkp_metadata_pkt_type
   .brbegin
   br          r3[1:0]

@@ -55,10 +55,9 @@ metadata parser_metadata_t parser_metadata;
         default: ingress
 
 header cap_phv_intr_global_t capri_intrinsic;
-header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
-header cap_phv_intr_txdma_t capri_txdma_intrinsic;
-
-header cap_phv_intr_p4_t    capri_p4_intrinsic;
+header cap_phv_intr_p4_t     capri_p4_intrinsic;
+header cap_phv_intr_rxdma_t  capri_rxdma_intrinsic;
+header cap_phv_intr_txdma_t  capri_txdma_intrinsic;
 
 @pragma pa_header_union egress p4_to_p4plus_roce_eth
 header ethernet_t ethernet;

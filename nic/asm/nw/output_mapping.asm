@@ -23,18 +23,24 @@ set_tm_oport:
   //seq.c1      c1, k.control_metadata_span_copy, FALSE
   seq.c1      c1, k.control_metadata_cpu_copy, FALSE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
-  phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue
-  phvwr       p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif
+  phvwrpair   p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif, \
+                p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue[4:0]
   phvwr       p.control_metadata_rdma_enabled, d.u.set_tm_oport_d.rdma_enabled
   phvwr       p.control_metadata_p4plus_app_id, d.u.set_tm_oport_d.p4plus_app_id
 
   sne         c1, d.u.set_tm_oport_d.access_vlan_id, 0
   seq.c1      c1, k.{vlan_tag_vid_sbit0_ebit3,vlan_tag_vid_sbit4_ebit11}, \
                 d.u.set_tm_oport_d.access_vlan_id
-  phvwr.c1    p.vlan_tag_valid, FALSE
-  phvwr.c1    p.ethernet_etherType, k.vlan_tag_etherType
-
+  bcf         [!c1], set_tm_oport_common
   sub         r7, 28, r7, 2
+  // access vlan processing
+  sub         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, 4
+  phvwr       p.vlan_tag_valid, FALSE
+  phvwr       p.ethernet_etherType, k.vlan_tag_etherType
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
+set_tm_oport_common:
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7
   phvwr       p.capri_intrinsic_tm_oport, r6
   phvwr       p.control_metadata_vlan_strip, d.u.set_tm_oport_d.vlan_strip

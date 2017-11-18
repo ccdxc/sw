@@ -64,6 +64,8 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
         (vlan_tag.vid == access_vlan_id)) {
         modify_field(ethernet.etherType, vlan_tag.etherType);
         remove_header(vlan_tag);
+        subtract(capri_p4_intrinsic.packet_len,
+                 capri_p4_intrinsic.packet_len, 4);
     }
 
     // dummy ops to keep compiler happy
