@@ -1,6 +1,8 @@
 #include <vector>
 #include "dol/test/storage/xts.hpp"
 
+#define kDefaultBufSize 4096
+
 namespace xts {
 
 /*
@@ -27,7 +29,7 @@ std::vector<TestCtx> xts_tests = {
     { AES128_KEY_SIZE, T10_ONLY, false, INVALID, 1, 1, 2 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, true, INVALID, 1, 1, 2 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, false, INVALID, 1, 1, 2 },
-    //{ AES128_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 1, 1, 2 },
+    { AES128_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 1, 1, 2 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, false, AES_DECR_N_T10, 1, 1, 2 },
     // num_mds = 2, num_aols = 4
     { AES128_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, 1, 2, 4 },
@@ -36,7 +38,7 @@ std::vector<TestCtx> xts_tests = {
     { AES128_KEY_SIZE, T10_ONLY, false, INVALID, 1, 2, 4 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, true, INVALID, 1, 2, 4 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, false, INVALID, 1, 2, 4 },
-    //{ AES128_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 1, 2, 4 },
+    { AES128_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 1, 2, 4 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, false, AES_DECR_N_T10, 1, 2, 4 },
     // num_sectors = 2
     { AES128_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, 2, 1, 1 },
@@ -54,15 +56,13 @@ std::vector<TestCtx> xts_tests = {
     { AES128_KEY_SIZE, T10_ONLY, false, INVALID, 4, 2, 4 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, true, INVALID, 4, 2, 4 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, false, INVALID, 4, 2, 4 },
-    //{ AES128_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 4, 2, 4 },
+    { AES128_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 4, 2, 4 },
     { AES128_KEY_SIZE, AES_ENCR_N_T10, false, AES_DECR_N_T10, 4, 2, 4 },
 
-    //Misc - failing cases
-    // Verifying prot_info fails for four sectors
-    //{ AES128_KEY_SIZE, T10_ONLY, false, INVALID, 4, 1, 1 },
-    // 4K size DMA fails
-    //{ AES128_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, kDefaultBufSize/SECTOR_SIZE, 1, 1 },
-    //{ AES128_KEY_SIZE, AES_ENCR_ONLY, false, AES_DECR_ONLY, kDefaultBufSize/SECTOR_SIZE, 1, 1 },
+    //Misc cases
+    { AES128_KEY_SIZE, T10_ONLY, false, INVALID, 4, 1, 1 },
+    { AES128_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, kDefaultBufSize/SECTOR_SIZE, 1, 1 },
+    { AES128_KEY_SIZE, AES_ENCR_ONLY, false, AES_DECR_ONLY, kDefaultBufSize/SECTOR_SIZE, 1, 1 },
 
     // Key_size 256 bits
     { AES256_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, 1, 1, 1 },
@@ -80,7 +80,7 @@ std::vector<TestCtx> xts_tests = {
     { AES256_KEY_SIZE, T10_ONLY, false, INVALID, 1, 1, 2 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, true, INVALID, 1, 1, 2 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, false, INVALID, 1, 1, 2 },
-    //{ AES256_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 1, 1, 2 },
+    { AES256_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 1, 1, 2 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, false, AES_DECR_N_T10, 1, 1, 2 },
     // num_mds = 2, num_aols = 4
     { AES256_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, 1, 2, 4 },
@@ -89,7 +89,7 @@ std::vector<TestCtx> xts_tests = {
     { AES256_KEY_SIZE, T10_ONLY, false, INVALID, 1, 2, 4 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, true, INVALID, 1, 2, 4 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, false, INVALID, 1, 2, 4 },
-    //{ AES256_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 1, 2, 4 },
+    { AES256_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 1, 2, 4 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, false, AES_DECR_N_T10, 1, 2, 4 },
     // num_sectors = 2
     { AES256_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, 2, 1, 1 },
@@ -107,15 +107,13 @@ std::vector<TestCtx> xts_tests = {
     { AES256_KEY_SIZE, T10_ONLY, false, INVALID, 4, 2, 4 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, true, INVALID, 4, 2, 4 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, false, INVALID, 4, 2, 4 },
-    //{ AES256_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 4, 2, 4 },
+    { AES256_KEY_SIZE, AES_ENCR_N_T10, true, AES_DECR_N_T10, 4, 2, 4 },
     { AES256_KEY_SIZE, AES_ENCR_N_T10, false, AES_DECR_N_T10, 4, 2, 4 },
 
-    //Misc - failing cases
-    // Verifying prot_info fails for four sectors
-    //{ AES256_KEY_SIZE, T10_ONLY, false, INVALID, 4, 1, 1 },
-    // 4K size DMA fails
-    //{ AES256_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, kDefaultBufSize/SECTOR_SIZE, 1, 1 },
-    //{ AES256_KEY_SIZE, AES_ENCR_ONLY, false, AES_DECR_ONLY, kDefaultBufSize/SECTOR_SIZE, 1, 1 },
+    //Misc cases
+    { AES256_KEY_SIZE, T10_ONLY, false, INVALID, 4, 1, 1 },
+    { AES256_KEY_SIZE, AES_ENCR_ONLY, true, AES_DECR_ONLY, kDefaultBufSize/SECTOR_SIZE, 1, 1 },
+    { AES256_KEY_SIZE, AES_ENCR_ONLY, false, AES_DECR_ONLY, kDefaultBufSize/SECTOR_SIZE, 1, 1 },
 
 };
 

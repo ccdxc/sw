@@ -1736,20 +1736,26 @@ int XtsCtx::test_seq_xts() {
     out_aol[i] = (xts::xts_aol_t*)alloc_page_aligned_host_mem(sizeof(xts::xts_aol_t));
     memset(out_aol[i], 0x0, sizeof(xts::xts_aol_t));
   }
-  uint32_t data_size;
-  if(op == xts::AES_DECR_N_T10) {
-    data_size = (num_sectors * sector_size) + (num_sectors * PROT_INFO_SIZE);
+  uint32_t in_data_size, out_data_size;
+  if(t10_en && decr_en) {
+    in_data_size = num_sectors * sector_size + (num_sectors * PROT_INFO_SIZE);;
+    out_data_size = (num_sectors * sector_size);
+  } else if(t10_en && !decr_en) {
+    in_data_size = (num_sectors * sector_size);
+    out_data_size = (num_sectors * sector_size) + (num_sectors * PROT_INFO_SIZE);
   } else {
-    data_size = num_sectors * sector_size;
+    in_data_size = num_sectors * sector_size;
+    out_data_size = num_sectors * sector_size;
   }
-  assert(data_size % num_sub_aols == 0); // For simplicity
-  uint32_t sub_aol_data_size = data_size / num_sub_aols;
+
+  assert(in_data_size % num_sub_aols == 0); // For simplicity
+  assert(out_data_size % num_sub_aols == 0); // For simplicity
+  uint32_t sub_aol_data_size = in_data_size / num_sub_aols;
   uint32_t sub_aol_data_offset = 0;
-  uint32_t out_sub_aol_data_size =
-    t10_en ? (xts::get_output_size(data_size, sector_size) + num_sub_aols - 1) / num_sub_aols : sub_aol_data_size;
+  uint32_t out_sub_aol_data_size = out_data_size / num_sub_aols;
   uint32_t out_sub_aol_data_offset = 0;
-  uint32_t in_pending_size = data_size;
-  uint32_t out_pending_size = t10_en ? xts::get_output_size(data_size, sector_size) : data_size;
+  uint32_t in_pending_size = in_data_size;
+  uint32_t out_pending_size = out_data_size;
   bool in_cont = true, out_cont = true;
 
   for(uint32_t i = 0; i < num_aols; i++) {
@@ -1854,7 +1860,7 @@ int XtsCtx::ring_db_n_verify() {
   // Poll for doorbell data as XTS which runs in a different thread
   auto func = [this] () {
     if(*xts_db != exp_db_data) {
-      printf("Doorbell data not yet there - try again \n");
+      //printf("Doorbell data not yet there - try again \n");
       return -1;
     }
     return 0;
@@ -1902,6 +1908,10 @@ public:
       printf(" Executing second part of chain\n");
       rv = xts_ctx2.test_seq_xts();
       if(0 == rv) {
+        char src_buf_cp[kDefaultBufSize], dst_buf_cp[kDefaultBufSize];
+        uint32_t src_off = 0, dst_off = 0;
+        memset(src_buf_cp, 0, kDefaultBufSize);
+        memset(dst_buf_cp, 0, kDefaultBufSize);
         for(uint32_t i = 0; i < xts_ctx1.num_aols; i++) {
           for(uint32_t j = 0; j < xts_ctx1.num_sub_aols; j++) {
             uint32_t off, len;
@@ -1917,11 +1927,30 @@ public:
               off = xts_ctx1.in_aol[i]->o2;
               len = xts_ctx1.in_aol[i]->l2;
             }
-            rv = memcmp((char*)xts_ctx1.src_buf+off, (char*)xts_ctx2.dst_buf+off, len);
-            if(0 != rv)
-              break;
+            memcpy(src_buf_cp + src_off, (char*)xts_ctx1.src_buf+off, len);
+            src_off += len;
           }
         }
+        for(uint32_t i = 0; i < xts_ctx2.num_aols; i++) {
+          for(uint32_t j = 0; j < xts_ctx2.num_sub_aols; j++) {
+            uint32_t off, len;
+            if(0 == j) {
+              off = xts_ctx2.out_aol[i]->o0;
+              len = xts_ctx2.out_aol[i]->l0;
+            }
+            else if(1 == j) {
+              off = xts_ctx2.out_aol[i]->o1;
+              len = xts_ctx2.out_aol[i]->l1;
+            }
+            else if(2 == j) {
+              off = xts_ctx2.out_aol[i]->o2;
+              len = xts_ctx2.out_aol[i]->l2;
+            }
+            memcpy(dst_buf_cp + dst_off, (char*)xts_ctx2.dst_buf+off, len);
+            dst_off += len;
+          }
+        }
+        rv = memcmp(src_buf_cp, dst_buf_cp, xts_ctx1.num_sectors * SECTOR_SIZE);
         if(0 != rv) {
           rv = -1;
           printf(" Memcmp failed \n");
@@ -2045,6 +2074,7 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   xts_ctx.is_src_hbm_buf = true;
   xts_ctx.dst_buf = (void*)write_hbm_buf;
   xts_ctx.is_dst_hbm_buf = true;
+  xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
   xts_ctx.ring_seq_db = false;
   xts_ctx.init();
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_r2n_q, 0,
@@ -2133,6 +2163,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   xts_ctx.is_src_hbm_buf = true;
   xts_ctx.dst_buf = (void*)read_hbm_buf2;
   xts_ctx.is_dst_hbm_buf = true;
+  xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
   xts_ctx.ring_seq_db = false;
   xts_ctx.init();
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
@@ -2184,15 +2215,7 @@ int test_seq_e2e_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   int rc;
   XtsCtx xts_ctx_write, xts_ctx_read;
 
-  uint8_t byte_val = get_next_byte() + 1;
-  memset(write_buf, byte_val, kDefaultBufSize);
-  memset(read_buf, byte_val, kDefaultBufSize);
-  write_mem(write_hbm_buf, (uint8_t *)read_buf, kDefaultBufSize);
-  write_mem(write_hbm_buf2, (uint8_t *)read_buf, kDefaultBufSize);
-  write_mem(read_hbm_buf, (uint8_t *)read_buf, kDefaultBufSize);
-  write_mem(read_hbm_buf2, (uint8_t *)read_buf, kDefaultBufSize);
-
-  memset(read_buf, 0x0, SECTOR_SIZE);
+  memset(read_buf, 0x0, kDefaultBufSize);
 
   // Send the write command and check status
   rc = test_seq_write_xts_r2n(seq_pdma_q, seq_r2n_q, ssd_handle,

@@ -20,7 +20,7 @@ namespace xts {
 #define MSG_DESC_ALIGN 512
 #define MAX_AOLS 2
 #define MAX_SUB_AOLS 4
-#define SECTOR_SIZE 256
+#define SECTOR_SIZE 512
 #define INTER_SUB_AOL_GAP SECTOR_SIZE
 #define STATUS_DEF_VALUE 0
 

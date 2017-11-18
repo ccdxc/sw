@@ -34,17 +34,17 @@ typedef struct barco_asym_dma_descriptor_s {
     uint64_t                rsvd0:1;
     uint64_t                next:62;
 
-    uint32_t                int_en:1;
-    uint32_t                discard:1;
-    uint32_t                realign:1;
-    uint32_t                cst_addr:1;
     uint32_t                length:28;
+    uint32_t                cst_addr:1;
+    uint32_t                realign:1;
+    uint32_t                discard:1;
+    uint32_t                int_en:1;
 #else
-    uint32_t                length:28;
-    uint32_t                cst_addr:1;
-    uint32_t                realign:1;
-    uint32_t                discard:1;
     uint32_t                int_en:1;
+    uint32_t                discard:1;
+    uint32_t                realign:1;
+    uint32_t                cst_addr:1;
+    uint32_t                length:28;
 
     uint64_t                next:62;
     uint64_t                rsvd0:1;

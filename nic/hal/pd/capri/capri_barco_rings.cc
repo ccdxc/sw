@@ -640,33 +640,9 @@ hal_ret_t capri_barco_rings_init(void)
 
 hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr)
 {
-    hal_ret_t       ret = HAL_RET_OK;
-    std::string ring_type_str;
-    switch(ring_type) {
-    case(types::BARCO_RING_ASYM): {
-        ring_type_str = BARCO_RING_ASYM_STR;
-    } break;
-    case(types::BARCO_RING_XTS0):
-        ring_type_str = BARCO_RING_XTS0_STR;
-    break;
-    case(types::BARCO_RING_XTS1):
-        ring_type_str = BARCO_RING_XTS1_STR;
-    break;
-    default:
-        return HAL_RET_ERR;
-    break;
-    }
-
-    for (uint32_t idx = 0; idx < types::BarcoRings_MAX; idx++) {
-      if(ring_type_str == std::string(barco_rings[idx].ring_name)) {
-        *addr = barco_rings[idx].opaque_tag_addr;
-        return ret;
-      }
-    }
-
-  return HAL_RET_ERR;
+    *addr = barco_rings[ring_type].opaque_tag_addr;
+    return HAL_RET_OK;
 }
-
 
 
 } // namespace pd
