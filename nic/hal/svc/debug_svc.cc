@@ -8,6 +8,7 @@
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/hal/src/debug.hpp"
 
 extern uint32_t read_reg_base(uint32_t chip, uint64_t addr);
 extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t data);
@@ -100,5 +101,22 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
 
     response->set_debug_status(types::API_STATUS_OK);
 
+    return Status::OK;
+}
+
+Status DebugServiceImpl::MemTrackGet(ServerContext *context,
+                                     const MemTrackGetRequestMsg *req,
+                                     MemTrackGetResponseMsg *rsp)
+{
+    uint32_t               i, nreqs = req->request_size();
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        auto request = req->request(i);
+        hal::mtrack_get(request, rsp);
+    }
     return Status::OK;
 }

@@ -125,7 +125,7 @@ CLEANFILES += $(LCLEANFILES)
 
 # OPT is separate to allow override on command line, e.g. "make OPT=-g"
 # For now to allow debugging ... eventually we can make it -O3
-OPT = -g 
+# OPT = -g 
 # OPT = -O3
 
 # For code coverage, do "make GCOV="--coverage -DCOVERAGE" <target>"

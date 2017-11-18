@@ -42,12 +42,12 @@ fte_db::factory(void)
     void         *mem;
     fte_db       *db;
 
-    mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(fte_db));
+    mem = HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA, sizeof(fte_db));
     HAL_ABORT(mem != NULL);
     db = new (mem) fte_db();
     if (db->init() == HAL_RET_ERR) {
         db->~fte_db();
-        HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
+        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, mem);
             return NULL;
     }
 
@@ -72,7 +72,7 @@ static STAILQ_HEAD(feature_list_s_, feature_s) g_feature_list_ =
 
 static inline feature_t *feature_alloc_()
 {
-    return (feature_t *)HAL_CALLOC(feature_t, sizeof(feature_t));
+    return (feature_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA, sizeof(feature_t));
 }
 
 static inline void feature_add_(feature_t *feature)
@@ -143,7 +143,8 @@ static STAILQ_HEAD(pipeline_list_s_, pipeline_s) g_pipeline_list_ =
 static inline pipeline_t *
 pipeline_alloc_(uint16_t num_features)
 {
-    return (pipeline_t *)HAL_CALLOC(pipeline_t, sizeof(pipeline_t) +
+    return (pipeline_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA,
+                                    sizeof(pipeline_t) +
                                     num_features * sizeof(feature_t *));
 }
 
@@ -220,7 +221,7 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
         if (!feature) {
             HAL_TRACE_ERR("fte: unknown feature-id {} in outbound pipeline {} - skipping",
                           features_outbound[i], name);
-            HAL_FREE(pipeline_t, pipeline);
+            HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, pipeline);
             return HAL_RET_INVALID_ARG;
         }
         HAL_TRACE_DEBUG("fte: outbound pipeline feature {}/{}", name, feature->name);
@@ -304,12 +305,12 @@ void unregister_features_and_pipelines() {
     while (!STAILQ_EMPTY(&g_pipeline_list_)) {
         pipeline_t *pipeline = STAILQ_FIRST(&g_pipeline_list_);
         STAILQ_REMOVE_HEAD(&g_pipeline_list_, entries);
-        HAL_FREE(pipeline_t, pipeline);
+        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, pipeline);
     }
     while (!STAILQ_EMPTY(&g_feature_list_)) {
         feature_t *feature = STAILQ_FIRST(&g_feature_list_);
         STAILQ_REMOVE_HEAD(&g_feature_list_, entries);
-        HAL_FREE(feature_t, feature);
+        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, feature);
     }
 }
 

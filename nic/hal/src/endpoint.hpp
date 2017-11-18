@@ -283,72 +283,6 @@ find_ep_by_v6_key (vrf_id_t tid, const ip_addr_t *ip_addr)
     return find_ep_by_l3_key(&l3_key);
 }
 
-
-
-
-
-
-
-
-
-
-#if 0
-
-
-static inline ep_t *
-find_ep_by_handle (hal_handle_t handle)
-{
-    return (ep_t *)g_hal_state->ep_hal_handle_ht()->lookup(&handle);
-}
-
-static inline ep_t *
-find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
-{
-    ep_l2_key_t    l2_key = { 0 };
-    ep_t           *ep;
-
-    l2_key.l2_segid = l2seg_id;
-    memcpy(&l2_key.mac_addr, mac_addr, ETH_ADDR_LEN);
-    ep = (ep_t *)g_hal_state->ep_l2_ht()->lookup(&l2_key);
-    return ep;
-}
-
-static inline ep_t *
-find_ep_by_l3_key (ep_l3_key_t *ep_l3_key)
-{
-    ep_l3_entry_t    *ep_l3_entry;
-
-    HAL_ASSERT(ep_l3_key != NULL);
-    ep_l3_entry =
-        (ep_l3_entry_t *)g_hal_state->ep_l3_entry_ht()->lookup(ep_l3_key);
-    if (ep_l3_entry == NULL) {
-        return NULL;
-    }
-    return ep_l3_entry->ep;
-}
-
-static inline ep_t *
-find_ep_by_v4_key (vrf_id_t tid, uint32_t v4_addr)
-{
-    ep_l3_key_t    l3_key = { 0 };
-
-    l3_key.vrf_id = tid;
-    l3_key.ip_addr.af = IP_AF_IPV4;
-    l3_key.ip_addr.addr.v4_addr = v4_addr;
-    return find_ep_by_l3_key(&l3_key);
-}
-
-static inline ep_t *
-find_ep_by_v6_key (vrf_id_t tid, const ip_addr_t *ip_addr)
-{
-    ep_l3_key_t    l3_key = { 0 };
-
-    l3_key.vrf_id = tid;
-    memcpy(&l3_key.ip_addr, ip_addr, sizeof(ip_addr_t));
-    return find_ep_by_l3_key(&l3_key);
-}
-#endif
-
 extern void *ep_get_l2_key_func(void *entry);
 extern uint32_t ep_compute_l2_hash_func(void *key, uint32_t ht_size);
 extern bool ep_compare_l2_key_func(void *key1, void *key2);
@@ -357,9 +291,6 @@ extern void *ep_get_l3_key_func(void *entry);
 extern uint32_t ep_compute_l3_hash_func(void *key, uint32_t ht_size);
 extern bool ep_compare_l3_key_func(void *key1, void *key2);
 
-//extern void *ep_get_handle_key_func(void *entry);
-//extern uint32_t ep_compute_handle_hash_func(void *key, uint32_t ht_size);
-//extern bool ep_compare_handle_key_func(void *key1, void *key2);
 mac_addr_t *ep_get_mac_addr(ep_t *pi_ep);
 mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);
 hal_ret_t endpoint_update_pi_with_iplist(ep_t *ep, dllist_ctxt_t *add_iplist,
@@ -371,19 +302,13 @@ hal_ret_t endpoint_cleanup_ip_list(dllist_ctxt_t **list);
 void ep_print_ips(ep_t *ep);
 const char *ep_l2_key_to_str(ep_t *ep);
 
-
-
-// SVC CRUD APIs
+// Endpoint service CRUD APIs
 hal_ret_t endpoint_create(EndpointSpec& spec, EndpointResponse *rsp);
 hal_ret_t endpoint_update(EndpointUpdateRequest& spec, EndpointResponse *rsp);
 hal_ret_t endpoint_delete(EndpointDeleteRequest& spec, 
                           EndpointDeleteResponseMsg *rsp);
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
-
-
-
-
 }    // namespace hal
 
 #endif    // __ENDPOINT_HPP__

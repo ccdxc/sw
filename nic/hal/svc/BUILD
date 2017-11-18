@@ -8,8 +8,6 @@ cc_library(
     hdrs = [
             ] + glob(["*.hpp"]),
     deps = ["//nic/include:base_includes",
-            #"//nic/proto:types_proto",
-            #"//nic/proto/hal:hal_proto",
             "//nic:gen_includes",
             "//nic:gen_proto_includes",
             "//nic/hal:hal_src",

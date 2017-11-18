@@ -15,7 +15,8 @@ alloc_and_insert_alg_entry(fte::ctx_t& ctx, hal::flow_role_t role)
     hal::flow_key_t  key = ctx.key();
     alg_entry_t      alg_entry = ctx.alg_entry();
 
-    entryp = (alg_entry_t *)HAL_CALLOC(alg_entry_t, sizeof(alg_entry_t));
+    entryp = (alg_entry_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
+                                       sizeof(alg_entry_t));
     if (!entryp) {
         return NULL;
     }
@@ -75,7 +76,8 @@ insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map)
 {
     fte::alg_entry_t *entry = NULL;
 
-    entry = (fte::alg_entry_t *)HAL_CALLOC(alg_entry_t, sizeof(fte::alg_entry_t));
+    entry = (fte::alg_entry_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
+                                           sizeof(fte::alg_entry_t));
     if (!entry) {
         HAL_TRACE_ERR("Could not allocated memory for RPC ALG entry");
         return;

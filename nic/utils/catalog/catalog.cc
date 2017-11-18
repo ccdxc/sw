@@ -1,6 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/utils/catalog/catalog.hpp"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace utils {
@@ -176,6 +177,7 @@ catalog::init(std::string catalog_file)
 catalog *
 catalog::factory(std::string catalog_file) {
     hal_ret_t  ret;
+    void       *mem;
     catalog    *new_catalog = NULL;
 
     // make sure file exists
@@ -185,14 +187,15 @@ catalog::factory(std::string catalog_file) {
         return NULL;
     }
 
-    new_catalog = (catalog*)HAL_MALLOC(HAL_MEM_ALLOC_CATALOG, sizeof(catalog));
-    if (new_catalog == NULL) {
+    mem = HAL_MALLOC(hal::HAL_MEM_ALLOC_CATALOG, sizeof(catalog));
+    if (!mem) {
         return NULL;
     }
 
+    new_catalog = new (mem) catalog();
     ret = new_catalog->init(catalog_file);
     if (ret != HAL_RET_OK) {
-        HAL_FREE(HAL_MEM_ALLOC_CATALOG, new_catalog);
+        HAL_FREE(hal::HAL_MEM_ALLOC_CATALOG, new_catalog);
         return NULL;
     }
 

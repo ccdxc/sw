@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <iostream>
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
@@ -56,7 +57,7 @@ capri_hbm_parse()
     }
 
     int num_regs = CARPI_HBM_MEM_NUM_MEM_REGS;
-    hbm_regions_ = (capri_hbm_region_t *)HAL_CALLOC(HAL_MEM_ALLOC_PD, num_regs * sizeof(capri_hbm_region_t));
+    hbm_regions_ = (capri_hbm_region_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_PD, num_regs * sizeof(capri_hbm_region_t));
     if (!hbm_regions_) {
         return HAL_RET_OOM;
     }

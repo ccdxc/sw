@@ -14,6 +14,7 @@ option go_package="halproto";
 // HAL debug service
 service Debug {
     rpc DebugInvoke (DebugRequestMsg) returns (DebugResponseMsg) {}
+    rpc MemTrackGet (MemTrackGetRequestMsg) returns (MemTrackGetResponseMsg) {}
 }
 
 // DebugKeyHandle uniquely identfies the table/register to access
@@ -60,3 +61,25 @@ message DebugResponseMsg {
     repeated DebugResponse    response = 1;
 }
 
+// MemTrackGetRequest is request msg with allocation id that info is requested for
+message MemTrackGetRequest {
+  uint32    alloc_id = 1;    // allocation id stats are requested for (0xFFFFFFFF for all)
+}
+
+// MemTrackGetRequestMsg is batched MemTrackGetRequest
+message MemTrackGetRequestMsg {
+  repeated MemTrackGetRequest    request = 1;    // individual request
+}
+
+// MemTrackGetResponse captures debug information per allocation id
+message MemTrackGetResponse {
+  uint32    alloc_id      = 1;    // unique allocation id
+  uint32    num_allocs    = 2;    // number of allocations with alloc_id
+  uint32    num_frees     = 3;    // number of frees with alloc_id
+}
+
+// MemTrackGetResponseMsg is batched MemTrackGetResponse
+message MemTrackGetResponseMsg {
+  types.ApiStatus                 api_status = 1;    // API status code
+  repeated MemTrackGetResponse    response   = 2;    // response per allocation id
+}

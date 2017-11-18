@@ -1,15 +1,7 @@
-
 GEN_DIR = ../gen/proto/hal
 TOPDIR = ..
 CUSTOM = $(GEN_DIR)/proto
 CUSTOM_CLEAN =
-
-LCXXFLAGS = \
-			-I/usr/local/include \
-			-pthread \
-			-g \
-			$(NULL)
-
 include $(TOPDIR)/make/Makefile.inc
 
 # Adding more clean files

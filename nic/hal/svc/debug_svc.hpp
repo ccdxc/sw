@@ -16,12 +16,20 @@ using debug::DebugSpec;
 using debug::DebugRequestMsg;
 using debug::DebugResponse;
 using debug::DebugResponseMsg;
+using debug::MemTrackGetRequest;
+using debug::MemTrackGetRequestMsg;
+using debug::MemTrackGetResponse;
+using debug::MemTrackGetResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
     Status DebugInvoke(ServerContext *context,
                        const DebugRequestMsg *req,
                        DebugResponseMsg *rsp) override;
+    Status MemTrackGet(ServerContext *context,
+                       const MemTrackGetRequestMsg *req,
+                       MemTrackGetResponseMsg *rsp) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__
+

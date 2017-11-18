@@ -13,6 +13,8 @@ cc_test(
      srcs = ["test/bitmap_test.cc"],
      deps = [
         ":bitmap",
+        "//nic/hal/test:hal_mock",
+        "//nic/utils/trace:trace",
         # "//nic/utils/trace:trace",
 
         # External 

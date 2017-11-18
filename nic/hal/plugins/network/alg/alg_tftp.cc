@@ -104,7 +104,7 @@ process_tftp(fte::ctx_t& ctx)
     // installed/dropped.
     key.sport = 0;
     entry = (fte::alg_entry_t *)fte::remove_alg_entry(key);
-    HAL_FREE(alg_entry_t, entry);
+    HAL_FREE(hal::HAL_MEM_ALLOC_ALG, entry);
 
     return ret;
 }

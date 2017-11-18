@@ -196,10 +196,12 @@ slab::factory(const char *name, hal_slab_t slab_id,
         return NULL;
     }
 
-    new_slab = new slab();
-    if (new_slab == NULL) {
+    //new_slab = new slab();
+    void *mem = HAL_MALLOC(HAL_MEM_ALLOC_LIB_SLAB, sizeof(slab));
+    if (mem == NULL) {
         return NULL;
     }
+    new_slab = new (mem) slab();
     rv = new_slab->init(name, slab_id, elem_sz, elems_per_block, thread_safe,
                         grow_on_demand, delay_delete, zero_on_alloc);
     if (rv < 0) {

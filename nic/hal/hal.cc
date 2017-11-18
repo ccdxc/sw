@@ -41,10 +41,14 @@ using port::PortResponse;
 
 namespace hal {
 
+namespace utils {
+hal::utils::mem_mgr     g_hal_mem_mgr;
+}
+
 // process globals
-thread    *g_hal_threads[HAL_THREAD_ID_MAX];
-uint64_t  g_hal_handle = 1;
-bool      gl_super_user = false;
+thread                  *g_hal_threads[HAL_THREAD_ID_MAX];
+uint64_t                g_hal_handle = 1;
+bool                    gl_super_user = false;
 
 // TODO_CLEANUP: THIS DOESN'T BELONG HERE !!
 LIFManager *g_lif_manager = nullptr;

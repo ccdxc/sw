@@ -1,4 +1,5 @@
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
@@ -251,7 +252,7 @@ capri_p4p_asm_init()
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 
-    symbols = (capri_prog_param_info_t *)HAL_CALLOC(capri_prog_param_info_t,
+    symbols = (capri_prog_param_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_PD,
                         CAPRI_P4PLUS_NUM_SYMBOLS * sizeof(capri_prog_param_info_t));
     symbols[0].name = "tcp-read-rnmdr-alloc-idx.bin";
     symbols[0].num_params = 1;
@@ -523,7 +524,7 @@ capri_p4p_asm_init()
     capri_load_mpu_programs("p4plus", (char *)full_path.c_str(),
                             p4plus_prm_base_addr, symbols, CAPRI_P4PLUS_NUM_SYMBOLS);
 
-    HAL_FREE(capri_prog_param_info_t, symbols);
+    HAL_FREE(hal::HAL_MEM_ALLOC_PD, symbols);
 
     return ret;
 }

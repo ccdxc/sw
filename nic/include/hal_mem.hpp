@@ -4,6 +4,7 @@
 #define __HAL_MEM_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/mtrack.hpp"
 
 namespace hal {
 
@@ -15,7 +16,6 @@ typedef enum hal_slab_e {
     HAL_SLAB_HANDLE_LIST_ENTRY,
     HAL_SLAB_HANDLE_ID_HT_ENTRY,
     HAL_SLAB_HANDLE_ID_LIST_ENTRY,
-    //HAL_SLAB_DEL_CACHE_ENTRY,
     HAL_SLAB_VRF,
     HAL_SLAB_NETWORK,
     HAL_SLAB_L2SEG,
@@ -103,7 +103,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_MAX,
 } hal_slab_t;
 
-typedef enum hal_mem_alloc_e {
+enum {
     HAL_MEM_ALLOC_NONE,
     HAL_MEM_ALLOC_INFRA,
     HAL_MEM_ALLOC_LIB_HT,
@@ -124,8 +124,18 @@ typedef enum hal_mem_alloc_e {
     HAL_MEM_ALLOC_EVENT_MGR,
     HAL_MEM_ALLOC_CATALOG,
     HAL_MEM_ALLOC_DEBUG_CLI,
+    HAL_MEM_ALLOC_ALG,
     HAL_MEM_ALLOC_OTHER,
-} hal_mem_alloc_t;
+    HAL_MEM_ALLOC_RSVD = 0xFFFFFFFF,    // reserved and shouldn't be used
+};
+
+//------------------------------------------------------------------------------
+// use these memory allocation and free macros when one off allocation is
+// needed, otherwise use slabs
+//------------------------------------------------------------------------------
+#define HAL_MALLOC(alloc_id, size)    (hal::utils::g_hal_mem_mgr.mtrack_alloc(static_cast<uint32_t>(alloc_id), false, size, __FUNCTION__, __LINE__))
+#define HAL_CALLOC(alloc_id, size)    (hal::utils::g_hal_mem_mgr.mtrack_alloc(static_cast<uint32_t>(alloc_id), true, size, __FUNCTION__, __LINE__))
+#define HAL_FREE(alloc_id, ptr)       (hal::utils::g_hal_mem_mgr.mtrack_free(static_cast<uint32_t>(alloc_id), ptr, __FUNCTION__, __LINE__))
 
 hal_ret_t free_to_slab(hal_slab_t slab_id, void *elem);
 

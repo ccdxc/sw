@@ -10,6 +10,7 @@
 #include "nic/hal/pd/utils/tcam/tcam_entry.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/include/hal_mem.hpp"
 
 using hal::pd::utils::TcamEntry;
 using hal::pd::utils::acl_tcam;
@@ -30,7 +31,7 @@ acl_tcam::init(std::string table_name, uint32_t table_id, uint32_t table_size,
     swkey_len_ = swkey_len;
     swdata_len_ = swdata_len;
 
-    tcam_entries_ = (TcamEntry **)HAL_CALLOC(HAL_MEM_ALLOC_LIB_ACL_TCAM,
+    tcam_entries_ = (TcamEntry **)HAL_CALLOC(hal::HAL_MEM_ALLOC_LIB_ACL_TCAM,
                                              tcam_size_ * sizeof(TcamEntry*));
     if (!tcam_entries_) {
         return HAL_RET_OOM;
@@ -532,7 +533,7 @@ acl_tcam::create_move_chain_(uint32_t target_up,
         num_moves = move_count_down;
     }
 
-    move_chain = (move_chain_t *)HAL_CALLOC(HAL_MEM_ALLOC_LIB_ACL_TCAM,
+    move_chain = (move_chain_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_LIB_ACL_TCAM,
                                             num_moves * sizeof(move_chain_t));
 
     ret = populate_move_chain_(move_chain, num_moves, move_up, target);
@@ -634,7 +635,7 @@ acl_tcam::set_entry_(uint32_t index,
     prio_range = get_prio_range_(tentry);
 
     if (prio_range == NULL) {
-        prio_range = (prio_range_t*)HAL_CALLOC(HAL_MEM_ALLOC_LIB_ACL_TCAM,
+        prio_range = (prio_range_t*)HAL_CALLOC(hal::HAL_MEM_ALLOC_LIB_ACL_TCAM,
                                                sizeof(prio_range_t));
         prio_range->start = index;
         prio_range->end = index;

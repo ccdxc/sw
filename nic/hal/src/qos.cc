@@ -1,7 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-// #include "nic/hal/svc/qos_svc.hpp"
 #include "nic/hal/src/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"

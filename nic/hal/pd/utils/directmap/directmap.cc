@@ -1,6 +1,7 @@
 #include "nic/hal/pd/utils/directmap/directmap.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/utils/thread/thread.hpp"
 #include "nic/utils/ht/ht.hpp"
 
@@ -163,7 +164,7 @@ DirectMap::insert(void *data, uint32_t *index)
 
             // Allocate DM entry
             dme_elem = directmap_entry_alloc_init();
-            dme_elem->data = (void *)HAL_MALLOC(HAL_SLAB_DIRECTMAP_DATA, swdata_len_);
+            dme_elem->data = (void *)HAL_MALLOC(hal::HAL_SLAB_DIRECTMAP_DATA, swdata_len_);
             memcpy(dme_elem->data, data, swdata_len_);
             dme_elem->len = swdata_len_;
             dme_elem->index = *index;
@@ -245,7 +246,7 @@ DirectMap::insert_withid(void *data, uint32_t index)
 
             // Allocate DM entry
             dme_elem = directmap_entry_alloc_init();
-            dme_elem->data = (void *)HAL_MALLOC(HAL_SLAB_DIRECTMAP_DATA, swdata_len_);
+            dme_elem->data = (void *)HAL_MALLOC(hal::HAL_SLAB_DIRECTMAP_DATA, swdata_len_);
             memcpy(dme_elem->data, data, swdata_len_);
             dme_elem->len = swdata_len_;
             dme_elem->index = index;

@@ -387,7 +387,7 @@ parse_msrpc_dg_control_flow(fte::ctx_t& ctx)
                         insert_rpc_entry(ctx, &newentry.rpc_map.maps[idx]);
                         key.sport = 0;
                         entry = (fte::alg_entry_t *)fte::remove_alg_entry(key);
-                        HAL_FREE(alg_entry_t, entry);
+                        HAL_FREE(hal::HAL_MEM_ALLOC_ALG, entry);
                         break;
                     }
                 } while (idx < newentry.rpc_map.num_map); 
