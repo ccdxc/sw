@@ -541,15 +541,15 @@ dos_pd_program_ddos_src_vf_table (pd_dos_policy_t *pd_dosp, ep_t *ep, if_t *intf
 }
 
 hal_ret_t
-dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
-                                   dos_policy_t *pi_dosp,
-                                   pd_vrf_t *ten_pd)
+dos_pd_program_ddos_src_dst_table (dos_policy_t *dosp,
+                                   dos_policy_prop_t *dosp_prop,
+                                   pd_dos_policy_t *pd_dosp,
+                                   dos_policy_t *pi_dosp, pd_vrf_t *ten_pd)
 {
     int             tcam_idx;
     uint16_t        dport;
     uint32_t        base_pol_idx;
     hal_ret_t       ret = HAL_RET_OK;
-    dos_policy_t    *dosp;
     network_t       *nw, *pnw;
     dllist_ctxt_t   *curr, *next;
     dllist_ctxt_t   *nwcurr, *nwnext;
@@ -559,141 +559,96 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
     hal_handle_id_list_entry_t  *nw_ent = NULL;
     hal_handle_id_list_entry_t  *pnw_ent = NULL;
 
-    dosp = (dos_policy_t *) pd_dosp->pi_dos_policy;
-    HAL_ASSERT(dosp != NULL);
-    HAL_TRACE_DEBUG("pd-dos:{}: ingr_pol_valid: {} ingress.peer_sg_id: {}",
-                    __FUNCTION__, dosp->ingr_pol_valid, dosp->ingress.peer_sg_id);
-    /* Program the src-dst subnets if ingress policy is valid */
-    if (dosp->ingr_pol_valid && 
-            (dosp->ingress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
-        HAL_TRACE_DEBUG("pd-dos:{}: DoS ingress policy is valid. ",
-                        __FUNCTION__);
-        /* Program the policers */
-        ret = dos_pd_program_ddos_policers(&dosp->ingress,
-                        DDOS_SRC_DST_POLICER_EXECUTE_DDOS_SRC_DST_POLICER_ID,
-                        DDOS_SRC_DST_POLICER_ACTION_DDOS_SRC_DST_POLICER_ACTION_ID,
-                        P4TBL_ID_DDOS_SRC_DST_POLICER,
-                        P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION, &base_pol_idx);
-        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-        HAL_TRACE_DEBUG("pd-dos:{}: base_policer_index: {}",
-                         base_pol_idx, __FUNCTION__);
-        sg_list = &dosp->sg_list_head;
-        /* Go through all the security groups */
-        HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all SG", __FUNCTION__);
-        dllist_for_each_safe(curr, next, sg_list) {
-            ent = dllist_entry(curr, dos_policy_sg_list_entry_t, dllist_ctxt);
-            nw_list = get_nw_list_for_security_group(ent->sg_id);
-            HAL_TRACE_DEBUG("pd-dos:{}: SG-id: {}", __FUNCTION__, ent->sg_id);
-            HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all NWs", __FUNCTION__);
-            /* For each security group, go through the associated Networks */
-            dllist_for_each_safe(nwcurr, nwnext, nw_list) {
-                nw_ent = dllist_entry(nwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
-                nw = find_network_by_handle(nw_ent->handle_id);
-                HAL_ASSERT(nw != NULL);
-                HAL_TRACE_DEBUG("pd-dos:{}: NW pfx: {}/{}", __FUNCTION__,
-                                nw->nw_key.ip_pfx.addr, nw->nw_key.ip_pfx.len);
-                /* Get the peer Security Group */
-                pnw_list = get_nw_list_for_security_group(dosp->ingress.peer_sg_id);
-                HAL_TRACE_DEBUG("pd-dos:{}: Ingress peer sg-id: {}", __FUNCTION__,
-                                dosp->ingress.peer_sg_id);
-                HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all peer NWs", __FUNCTION__);
-                /* Go through the associated peer networks */
-                dllist_for_each_safe(pnwcurr, pnwnext, pnw_list) {
-                    pnw_ent = dllist_entry(pnwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
-                    pnw = find_network_by_handle(pnw_ent->handle_id);
-                    HAL_ASSERT(pnw != NULL);
-                    HAL_TRACE_DEBUG("pd-dos:{}: Peer-NW pfx: {}/{}", __FUNCTION__,
-                                    pnw->nw_key.ip_pfx.addr, pnw->nw_key.ip_pfx.len);
-                    HAL_TRACE_DEBUG("pd-dos:{}: is_icmp: {} type: {} code: {}",
-                                    __FUNCTION__, dosp->ingress.service.is_icmp,
-                                    dosp->ingress.service.icmp_msg_type,
-                                    dosp->ingress.service.icmp_msg_code);
-                    dport = (dosp->ingress.service.is_icmp) ?
-                            ((dosp->ingress.service.icmp_msg_type << 8) |
-                            (dosp->ingress.service.icmp_msg_code)) :
-                            dosp->ingress.service.dport;
-                    ret = dos_pd_program_ddos_src_dst_tcam(&pnw->nw_key.ip_pfx.addr,
-                                  pnw->nw_key.ip_pfx.len, &nw->nw_key.ip_pfx.addr,
-                                  nw->nw_key.ip_pfx.len,
-                                  dosp->ingress.service.is_icmp,
-                                  dport, dosp->ingress.service.ip_proto,
-                                  ten_pd->ten_hw_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
-                                  base_pol_idx, P4TBL_ID_DDOS_SRC_DST,
-                                  &tcam_idx);
-                    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-                    HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}",
-                                                    __FUNCTION__, tcam_idx);
-                }
+    /* Program the policers */
+    ret = dos_pd_program_ddos_policers(dosp_prop,
+                    DDOS_SRC_DST_POLICER_EXECUTE_DDOS_SRC_DST_POLICER_ID,
+                    DDOS_SRC_DST_POLICER_ACTION_DDOS_SRC_DST_POLICER_ACTION_ID,
+                    P4TBL_ID_DDOS_SRC_DST_POLICER,
+                    P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION, &base_pol_idx);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_TRACE_DEBUG("pd-dos:{}: base_policer_index: {}",
+                     base_pol_idx, __FUNCTION__);
+    sg_list = &dosp->sg_list_head;
+    /* Go through all the security groups */
+    HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all SG", __FUNCTION__);
+    dllist_for_each_safe(curr, next, sg_list) {
+        ent = dllist_entry(curr, dos_policy_sg_list_entry_t, dllist_ctxt);
+        nw_list = get_nw_list_for_security_group(ent->sg_id);
+        HAL_TRACE_DEBUG("pd-dos:{}: SG-id: {}", __FUNCTION__, ent->sg_id);
+        HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all NWs", __FUNCTION__);
+        /* For each security group, go through the associated Networks */
+        dllist_for_each_safe(nwcurr, nwnext, nw_list) {
+            nw_ent = dllist_entry(nwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
+            nw = find_network_by_handle(nw_ent->handle_id);
+            HAL_ASSERT(nw != NULL);
+            HAL_TRACE_DEBUG("pd-dos:{}: NW pfx: {}/{}", __FUNCTION__,
+                            nw->nw_key.ip_pfx.addr, nw->nw_key.ip_pfx.len);
+            /* Get the peer Security Group */
+            pnw_list = get_nw_list_for_security_group(dosp_prop->peer_sg_id);
+            HAL_TRACE_DEBUG("pd-dos:{}: Peer sg-id: {}", __FUNCTION__,
+                            dosp_prop->peer_sg_id);
+            HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all peer NWs", __FUNCTION__);
+            /* Go through the associated peer networks */
+            dllist_for_each_safe(pnwcurr, pnwnext, pnw_list) {
+                pnw_ent = dllist_entry(pnwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
+                pnw = find_network_by_handle(pnw_ent->handle_id);
+                HAL_ASSERT(pnw != NULL);
+                HAL_TRACE_DEBUG("pd-dos:{}: Peer-NW pfx: {}/{}", __FUNCTION__,
+                                pnw->nw_key.ip_pfx.addr, pnw->nw_key.ip_pfx.len);
+                HAL_TRACE_DEBUG("pd-dos:{}: is_icmp: {} type: {} code: {}",
+                                __FUNCTION__, dosp_prop->service.is_icmp,
+                                dosp_prop->service.icmp_msg_type,
+                                dosp_prop->service.icmp_msg_code);
+                dport = (dosp_prop->service.is_icmp) ?
+                        ((dosp_prop->service.icmp_msg_type << 8) |
+                        (dosp_prop->service.icmp_msg_code)) :
+                        dosp_prop->service.dport;
+                ret = dos_pd_program_ddos_src_dst_tcam(&nw->nw_key.ip_pfx.addr,
+                              nw->nw_key.ip_pfx.len, &pnw->nw_key.ip_pfx.addr,
+                              pnw->nw_key.ip_pfx.len,
+                              dosp_prop->service.is_icmp,
+                              dport, dosp_prop->service.ip_proto,
+                              ten_pd->ten_hw_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
+                              base_pol_idx, P4TBL_ID_DDOS_SRC_DST,
+                              &tcam_idx);
+                HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+                HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}", tcam_idx,
+                                __FUNCTION__);
             }
         }
     }
 
+    return (ret);
+}
+
+hal_ret_t
+dos_pd_program_ddos_src_dst_policy (pd_dos_policy_t *pd_dosp,
+                                   dos_policy_t *pi_dosp,
+                                   pd_vrf_t *ten_pd)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dos_policy_t    *dosp;
+
+    dosp = (dos_policy_t *) pd_dosp->pi_dos_policy;
+    HAL_ASSERT(dosp != NULL);
+    /* Program the src-dst subnets if ingress policy is valid */
+    HAL_TRACE_DEBUG("pd-dos:{}: ingr_pol_valid: {} ingress.peer_sg_id: {}",
+                    __FUNCTION__, dosp->ingr_pol_valid, dosp->ingress.peer_sg_id);
+    if (dosp->ingr_pol_valid && 
+            (dosp->ingress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
+        ret = dos_pd_program_ddos_src_dst_table (dosp, &dosp->ingress, pd_dosp,
+                                                 pi_dosp, ten_pd);
+        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    }
+
+    /* Program the src-dst subnets if egress policy is valid */
     HAL_TRACE_DEBUG("pd-dos:{}: egr_pol_valid: {} egress.peer_sg_id: {}",
                     __FUNCTION__, dosp->egr_pol_valid, dosp->egress.peer_sg_id);
-    /* Program the src-dst subnets if egress policy is valid */
     if (dosp->egr_pol_valid && 
             (dosp->egress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
-        HAL_TRACE_DEBUG("pd-dos:{}: DoS egress policy is valid. ",
-                        __FUNCTION__);
-        /* Program the policers */
-        ret = dos_pd_program_ddos_policers(&dosp->egress,
-                        DDOS_SRC_DST_POLICER_EXECUTE_DDOS_SRC_DST_POLICER_ID,
-                        DDOS_SRC_DST_POLICER_ACTION_DDOS_SRC_DST_POLICER_ACTION_ID,
-                        P4TBL_ID_DDOS_SRC_DST_POLICER,
-                        P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION, &base_pol_idx);
+        ret = dos_pd_program_ddos_src_dst_table (dosp, &dosp->egress, pd_dosp,
+                                                 pi_dosp, ten_pd);
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-        HAL_TRACE_DEBUG("pd-dos:{}: base_policer_index: {}",
-                         base_pol_idx, __FUNCTION__);
-        sg_list = &dosp->sg_list_head;
-        /* Go through all the security groups */
-        HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all SG", __FUNCTION__);
-        dllist_for_each_safe(curr, next, sg_list) {
-            ent = dllist_entry(curr, dos_policy_sg_list_entry_t, dllist_ctxt);
-            nw_list = get_nw_list_for_security_group(ent->sg_id);
-            HAL_TRACE_DEBUG("pd-dos:{}: SG-id: {}", __FUNCTION__, ent->sg_id);
-            HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all NWs", __FUNCTION__);
-            /* For each security group, go through the associated Networks */
-            dllist_for_each_safe(nwcurr, nwnext, nw_list) {
-                nw_ent = dllist_entry(nwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
-                nw = find_network_by_handle(nw_ent->handle_id);
-                HAL_ASSERT(nw != NULL);
-                HAL_TRACE_DEBUG("pd-dos:{}: NW pfx: {}/{}", __FUNCTION__,
-                                nw->nw_key.ip_pfx.addr, nw->nw_key.ip_pfx.len);
-                /* Get the peer Security Group */
-                pnw_list = get_nw_list_for_security_group(dosp->egress.peer_sg_id);
-                HAL_TRACE_DEBUG("pd-dos:{}: Egress peer sg-id: {}", __FUNCTION__,
-                                dosp->egress.peer_sg_id);
-                HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all peer NWs", __FUNCTION__);
-                /* Go through the associated peer networks */
-                dllist_for_each_safe(pnwcurr, pnwnext, pnw_list) {
-                    pnw_ent = dllist_entry(pnwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
-                    pnw = find_network_by_handle(nw_ent->handle_id);
-                    HAL_ASSERT(pnw != NULL);
-                    HAL_TRACE_DEBUG("pd-dos:{}: Peer-NW pfx: {}/{}", __FUNCTION__,
-                                    pnw->nw_key.ip_pfx.addr, pnw->nw_key.ip_pfx.len);
-                    HAL_TRACE_DEBUG("pd-dos:{}: is_icmp: {} type: {} code: {}",
-                                    __FUNCTION__, dosp->ingress.service.is_icmp,
-                                    dosp->ingress.service.icmp_msg_type,
-                                    dosp->ingress.service.icmp_msg_code);
-                    dport = (dosp->egress.service.is_icmp) ?
-                            ((dosp->egress.service.icmp_msg_type << 8) |
-                            (dosp->egress.service.icmp_msg_code)) :
-                            dosp->egress.service.dport;
-                    ret = dos_pd_program_ddos_src_dst_tcam(&nw->nw_key.ip_pfx.addr,
-                                  nw->nw_key.ip_pfx.len, &pnw->nw_key.ip_pfx.addr,
-                                  pnw->nw_key.ip_pfx.len,
-                                  dosp->ingress.service.is_icmp,
-                                  dport,
-                                  dosp->egress.service.ip_proto,
-                                  ten_pd->ten_hw_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
-                                  base_pol_idx, P4TBL_ID_DDOS_SRC_DST,
-                                  &tcam_idx);
-                    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-                    HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}",
-                                    tcam_idx, __FUNCTION__);
-                }
-            }
-        }
     }
     return (ret);
 }
@@ -821,7 +776,7 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
     }
     
     // Program DDoS src-dst policer
-    ret = dos_pd_program_ddos_src_dst_table (pd_dosp, dp, ten_pd);
+    ret = dos_pd_program_ddos_src_dst_policy (pd_dosp, dp, ten_pd);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
 end:
