@@ -51,7 +51,6 @@ validate_tunneled_packet:
   sub         r1, r0, 1
   seq         c4, k.inner_ethernet_srcAddr, r1
   bcf         [c1|c2|c3|c4], malformed_packet
-  bcf         [c1|c2|c3], malformed_packet
   seq         c1, k.inner_ipv4_valid, TRUE
   seq         c2, k.inner_ipv6_valid, TRUE
 

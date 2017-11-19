@@ -6,7 +6,7 @@ feature:
     module  : normalization
     spec    : norm_mf_vxlan.testspec
     enable  : True
-    ignore  : True
+    ignore  : False
 
 modules:
     - module:
@@ -16,6 +16,7 @@ modules:
 
     - module:
         name    : OUTER_SMAC_ZERO
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
 
@@ -26,6 +27,7 @@ modules:
 
     - module:
         name    : OUTER_DMAC_ZERO
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
 
@@ -36,6 +38,7 @@ modules:
 
     - module:
         name    : OUTER_SMAC_MCAST
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
 
@@ -46,6 +49,7 @@ modules:
 
     - module:
         name    : OUTER_SMAC_BCAST
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
 
@@ -56,6 +60,7 @@ modules:
 
     - module:
         name    : OUTER_SIP_MCAST_V4
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
 
@@ -71,6 +76,7 @@ modules:
 
     - module:
         name    : OUTER_SIP_BCAST_V4
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
 
@@ -81,6 +87,7 @@ modules:
  
     - module:
         name    : OUTER_SIP_LOOPBACK_V4
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
    
@@ -111,6 +118,7 @@ modules:
 
     - module:
         name    : OUTER_TTL_ZERO_V4
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
 
@@ -126,6 +134,7 @@ modules:
 
     - module:
         name    : OUTER_IPV4_BAD_VERSION
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
    
@@ -151,10 +160,12 @@ modules:
 
     - module:
         name    : SMAC_EQ_DMAC
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
 
     - module:
         name    : OUTER_SMAC_EQ_DMAC
+        ignore  : True
         iterate :
             - flow: filter://type=IPV4
