@@ -16,6 +16,7 @@ SOURCES = \
 	proxy_tls.cc \
 	ipsec.cc \
 	app_redir.cc \
+	app_redir_cb_ops.cc \
 	$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

@@ -112,7 +112,17 @@ p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd, bool del)
                 HAL_TRACE_ERR("Failed to receive WRING_TYPE_APP_REDIR_RAWC");
             }
         }
+
+        data.u.start_d.chain_txq_base = rawccb->chain_txq_base;
+        data.u.start_d.chain_txq_ring_indices_addr = rawccb->chain_txq_ring_indices_addr;
+        data.u.start_d.chain_txq_ring_size_shift = rawccb->chain_txq_ring_size_shift;
+        data.u.start_d.chain_txq_entry_size_shift = rawccb->chain_txq_entry_size_shift;
+        data.u.start_d.chain_txq_lif = rawccb->chain_txq_lif;
+        data.u.start_d.chain_txq_qtype = rawccb->chain_txq_qtype;
+        data.u.start_d.chain_txq_qid = rawccb->chain_txq_qid;
+        data.u.start_d.chain_txq_ring = rawccb->chain_txq_ring;
     }
+
     HAL_TRACE_DEBUG("RAWCCB Programming stage0 at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for RAWCCB");

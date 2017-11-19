@@ -9,6 +9,7 @@
 #include <netinet/ether.h>
 #include "nic/include/fte_db.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
+#include "nic/include/app_redir_headers.hpp"
 
 namespace fte {
 
@@ -320,13 +321,20 @@ class app_redir_ctx_t {
 public:
     void init()
     {
-        redir_flags_        = 0;
-        hdr_len_total_      = 0;
-        chain_qtype_        = hal::APP_REDIR_RAWC_QTYPE;
-        chain_wring_type_   = types::WRING_TYPE_APP_REDIR_RAWC;
-        chain_pkt_verdict_  = APP_REDIR_VERDICT_PASS;
-        pipeline_end_       = false;
-        chain_pkt_sent_     = false;
+        redir_flags_            = 0;
+        hdr_len_total_          = 0;
+        chain_flow_id_          = 0;
+        chain_rev_role_         = hal::FLOW_ROLE_NONE;
+        chain_ring_             = 0;
+        chain_qtype_            = hal::APP_REDIR_RAWC_QTYPE;
+        chain_wring_type_       = types::WRING_TYPE_APP_REDIR_RAWC;
+        chain_pkt_verdict_      = APP_REDIR_VERDICT_PASS;
+        pipeline_end_           = false;
+        chain_pkt_enqueued_     = false;
+        redir_policy_applic_    = false;
+        redir_miss_pkt_p_       = nullptr;
+        proxy_flow_info_        = nullptr;
+        arm_ctx_                = nullptr;
     };
 
     uint16_t redir_flags() const { return redir_flags_; }
@@ -335,30 +343,71 @@ public:
     uint16_t hdr_len_total() const { return hdr_len_total_; }
     void set_hdr_len_total(uint16_t hdr_len_total) { hdr_len_total_ = hdr_len_total; }
 
-    bool chain_pkt_sent() const { return chain_pkt_sent_; }
-    void set_chain_pkt_sent(bool yesno) { chain_pkt_sent_ = yesno; }
+    bool chain_pkt_enqueued() const { return chain_pkt_enqueued_; }
+    void set_chain_pkt_enqueued(bool yesno) { chain_pkt_enqueued_ = yesno; }
 
     app_redir_verdict_t chain_pkt_verdict() const { return chain_pkt_verdict_; }
     void set_chain_pkt_verdict(app_redir_verdict_t verdict) { chain_pkt_verdict_ = verdict; }
-    bool chain_pkt_verdict_pass(void);
+
+    bool chain_pkt_verdict_pass(void)
+    {
+        return (chain_pkt_verdict_ != APP_REDIR_VERDICT_BLOCK);
+    }
+
+    bool chain_pkt_span_instance(void)
+    {
+        return !!(redir_flags_ & PEN_APP_REDIR_SPAN_INSTANCE);
+    }
 
     bool pipeline_end() const { return pipeline_end_; }
     void set_pipeline_end(bool yesno) { pipeline_end_ = yesno; }
 
-    uint16_t chain_qtype() const { return chain_qtype_; }
+    bool redir_policy_applic() const { return redir_policy_applic_; }
+    void set_redir_policy_applic(bool yesno) { redir_policy_applic_ = yesno; }
+
+    uint8_t chain_qtype() const { return chain_qtype_; }
     void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
+
+    uint8_t chain_ring() const { return chain_ring_; }
+    void set_chain_ring(uint8_t chain_ring) { chain_ring_ = chain_ring; }
+
+    uint32_t chain_flow_id() const { return chain_flow_id_; }
+    void set_chain_flow_id(uint32_t chain_flow_id) { chain_flow_id_ = chain_flow_id; }
+
+    hal::flow_role_t chain_rev_role() const { return chain_rev_role_; }
+    void set_chain_rev_role(hal::flow_role_t chain_rev_role) { chain_rev_role_ = chain_rev_role; }
+
+    uint8_t *redir_miss_pkt_p() const { return redir_miss_pkt_p_; }
+    void set_redir_miss_pkt_p(uint8_t *redir_miss_pkt_p) { redir_miss_pkt_p_ = redir_miss_pkt_p; }
+
+    hal::proxy_flow_info_t *proxy_flow_info() { return proxy_flow_info_; }
+    void set_proxy_flow_info(hal::proxy_flow_info_t *proxy_flow_info) { proxy_flow_info_ = proxy_flow_info; }
 
     types::WRingType chain_wring_type() const { return chain_wring_type_; }
     void set_chain_wring_type(types::WRingType chain_wring_type) { chain_wring_type_ = chain_wring_type; }
 
+    hal::pd::cpupkt_ctxt_t* arm_ctx() const { return arm_ctx_; }
+    void set_arm_ctx(hal::pd::cpupkt_ctxt_t* arm_ctx) {arm_ctx_= arm_ctx;}
+
+    pen_app_redir_header_v1_full_t& redir_miss_hdr() { return redir_miss_hdr_; }
+    size_t redir_miss_hdr_size() { return sizeof(redir_miss_hdr_); }
+
 private:
-    uint16_t            redir_flags_;
-    uint16_t            hdr_len_total_;
-    types::WRingType    chain_wring_type_;
-    bool                chain_pkt_sent_;
-    bool                pipeline_end_;
-    app_redir_verdict_t chain_pkt_verdict_;
-    uint8_t             chain_qtype_;
+    uint16_t                        redir_flags_;
+    uint16_t                        hdr_len_total_;
+    types::WRingType                chain_wring_type_;
+    bool                            chain_pkt_enqueued_ : 1,
+                                    pipeline_end_       : 1,
+                                    redir_policy_applic_: 1;
+    app_redir_verdict_t             chain_pkt_verdict_;
+    pen_app_redir_header_v1_full_t  redir_miss_hdr_;
+    uint8_t                         *redir_miss_pkt_p_;
+    hal::proxy_flow_info_t          *proxy_flow_info_;
+    hal::pd::cpupkt_ctxt_t          *arm_ctx_;
+    uint32_t                        chain_flow_id_;
+    hal::flow_role_t                chain_rev_role_;    // rflow role
+    uint8_t                         chain_qtype_;
+    uint8_t                         chain_ring_;
 };
 
 // pkt info for queued tx packets
@@ -370,6 +419,7 @@ struct txpkt_info_s {
     size_t                          pkt_len;
     lifqid_t                        lifq;   // Dest lif/qtype/qid
     uint8_t                         ring_number; // arm ring
+    types::WRingType                wring_type;
 };
 
 typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
@@ -433,7 +483,8 @@ public:
                           uint16_t dest_lif = hal::SERVICE_LIF_CPU, 
                           uint8_t  qtype = CPU_ASQ_QTYPE,
                           uint32_t qid = CPU_ASQ_QID,
-                          uint8_t  ring_number = CPU_SCHED_RING_ASQ);
+                          uint8_t  ring_number = CPU_SCHED_RING_ASQ,
+                          types::WRingType wring_type = types::WRING_TYPE_ASQ);
     hal_ret_t send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx);
 
     //proto spec is valid when flow update triggered via hal proto api

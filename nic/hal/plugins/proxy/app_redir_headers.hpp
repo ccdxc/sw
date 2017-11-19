@@ -43,7 +43,8 @@ typedef struct pen_raw_redir_header_v1_s {
     uint32_t            flow_id;
     uint16_t            flags;
     uint16_t            vrf;
-    uint8_t             end_pad[14];
+    uint64_t            redir_miss_pkt_p;
+    uint8_t             end_pad[6];
 } __attribute__ ((__packed__)) pen_raw_redir_header_v1_t;
 
 #define PEN_RAW_REDIR_HEADER_V1_SIZE    sizeof(pen_raw_redir_header_v1_t)

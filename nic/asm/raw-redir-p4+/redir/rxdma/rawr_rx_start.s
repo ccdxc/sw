@@ -33,8 +33,13 @@ rawr_s0_rx_start:
      * qid is our flow ID context:
      */
     phvwr       p.pen_raw_redir_hdr_v1_flow_id, CAPRI_RXDMA_INTRINSIC_QID
+    
+    /*
+     * temporarily remove access to tm_instance_type until issue of qid..qtype
+     * range is solved in RDMA
     seq         c1, CAPRI_INTRINSIC_TM_INSTANCE_TYPE, TM_INSTANCE_TYPE_SPAN
     phvwr.c1    p.common_phv_redir_span_instance, TRUE
+     */
 
     /*
      * For a given flow, one of 2 types of redirection applies:

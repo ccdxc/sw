@@ -431,7 +431,10 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     // from intrinsic
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
-    modify_field(p4_intr_global_scratch.tm_instance_type, p4_intr_global.tm_instance_type);
+    
+    // temporarily remove access to tm_instance_type until issue of qid..qtype
+    // range is solved in RDMA
+    // modify_field(p4_intr_global_scratch.tm_instance_type, p4_intr_global.tm_instance_type);
     modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);

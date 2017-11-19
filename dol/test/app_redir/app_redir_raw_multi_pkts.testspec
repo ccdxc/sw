@@ -13,7 +13,7 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=True
         qpair       : filter://any 
-    flow        : filter://proto=TCP,label=RAW-REDIR,fwtype=L2,direction=IFLOW
+    flow        : filter://proto=TCP,label=RAW-REDIR-MULTI,fwtype=L2,direction=IFLOW
     maxflows    : 1
 
 # Packet section defines the set of input and output packets. Input packets
@@ -45,10 +45,13 @@ packets:
     - packet:
         id          : PKT2
         clone       : ref://testcase/packets/id=PKT1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         headers     :
             tcp:
-                seq     : 0x1abababb
-                ack     : 0x1fefefff
+                seq     : 0x2abababa
+                ack     : 0x2fefefef
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_FF64/data 
 
 session:
     - step:
@@ -57,9 +60,20 @@ session:
                  - packet:
                      object  : ref://testcase/packets/id=PKT1
                      port    : ref://testcase/config/src/endpoint/intf/ports
+        expect:
+             packets:
+                 - packet:
+                     object  : ref://testcase/packets/id=PKT1
+                     port    : ref://testcase/config/dst/endpoint/intf/ports
+    - step:
+        trigger:
+             packets:
                  - packet:
                      object  : ref://testcase/packets/id=PKT2
                      port    : ref://testcase/config/src/endpoint/intf/ports
-
         expect:
+             packets:
+                 - packet:
+                     object  : ref://testcase/packets/id=PKT2
+                     port    : ref://testcase/config/dst/endpoint/intf/ports
 

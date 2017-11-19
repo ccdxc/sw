@@ -17,7 +17,7 @@
 
 namespace hal {
 
-static proxy_meta_t g_meta[types::ProxyType_MAX];
+static proxy_meta_t g_meta[types::ProxyType_ARRAYSIZE];
 
 hal_ret_t
 proxy_meta_init() {
