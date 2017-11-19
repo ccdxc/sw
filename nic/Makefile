@@ -97,6 +97,7 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/pt:pt_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/shm:shmseg_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/slab:slab_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/block_list:block_list_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/fsm:fsm_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/twheel:twheel_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) fte:fte_test
@@ -212,6 +213,7 @@ gft-build:
 clean:
 	bazel clean
 	rm -rf GEN_TEST_RESULTS_DIR
+	rm -rf conf/hal.ini
 	$(MAKE) -C p4 clean
 	$(MAKE) -C asm clean
 	$(MAKE) -C proto clean

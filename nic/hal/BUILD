@@ -86,6 +86,7 @@ cc_library(
         "//nic/utils/thread:thread",
         "//nic/utils/print:print",
         "//nic/utils/slab:slab",
+        "//nic/utils/block_list:block_list",
         "//nic/utils/indexer:indexer",
         "//nic/utils/ht:ht",
         "//nic:gen_includes",
