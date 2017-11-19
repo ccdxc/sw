@@ -1,16 +1,21 @@
 # For Usage details: Refer <ws>/dol/examples/sample.mlist.example
 feature:
     id      : norm
-    sub     : mf
+    sub     : mfvxlan
     package : test.normalization
     module  : normalization
-    spec    : norm_mf.testspec
+    spec    : norm_mf_vxlan.testspec
     enable  : True
-    ignore  : False
+    ignore  : True
 
 modules:
     - module:
         name    : SMAC_ZERO
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OUTER_SMAC_ZERO
         iterate :
             - flow: filter://type=IPV4
 
@@ -20,17 +25,37 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : OUTER_DMAC_ZERO
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : SMAC_MCAST
         iterate :
             - flow: filter://type=IPV4
-    
+
+    - module:
+        name    : OUTER_SMAC_MCAST
+        iterate :
+            - flow: filter://type=IPV4
+
     - module:
         name    : SMAC_BCAST
         iterate :
             - flow: filter://type=IPV4
 
     - module:
+        name    : OUTER_SMAC_BCAST
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : SIP_MCAST_V4
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OUTER_SIP_MCAST_V4
         iterate :
             - flow: filter://type=IPV4
 
@@ -45,10 +70,20 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : OUTER_SIP_BCAST_V4
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : SIP_LOOPBACK_V4
         iterate :
             - flow: filter://type=IPV4
-    
+ 
+    - module:
+        name    : OUTER_SIP_LOOPBACK_V4
+        iterate :
+            - flow: filter://type=IPV4
+   
     - module:
         name    : SIP_LOOPBACK_V6
         iterate :
@@ -58,7 +93,12 @@ modules:
         name    : DIP_LOOPBACK_V4
         iterate :
             - flow: filter://type=IPV4
-    
+
+    - module:
+        name    : OUTER_DIP_LOOPBACK_V4
+        iterate :
+            - flow: filter://type=IPV4
+
     - module:
         name    : DIP_LOOPBACK_V6
         iterate :
@@ -66,6 +106,11 @@ modules:
 
     - module:
         name    : TTL_ZERO_V4
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OUTER_TTL_ZERO_V4
         iterate :
             - flow: filter://type=IPV4
 
@@ -78,7 +123,12 @@ modules:
         name    : IPV4_BAD_VERSION
         iterate :
             - flow: filter://type=IPV4
-    
+
+    - module:
+        name    : OUTER_IPV4_BAD_VERSION
+        iterate :
+            - flow: filter://type=IPV4
+   
     - module:
         name    : IPV6_BAD_VERSION
         iterate :
@@ -88,7 +138,12 @@ modules:
         name    : SIP_EQ_DIP_V4
         iterate :
             - flow: filter://type=IPV4
-    
+
+    - module:
+        name    : OUTER_SIP_EQ_DIP_V4
+        iterate :
+            - flow: filter://type=IPV4
+   
     - module:
         name    : SIP_EQ_DIP_V6
         iterate :
@@ -100,11 +155,6 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : DIP_ZERO_V4
+        name    : OUTER_SMAC_EQ_DMAC
         iterate :
             - flow: filter://type=IPV4
-    
-    - module:
-        name    : DIP_ZERO_V6
-        iterate :
-            - flow: filter://type=IPV6

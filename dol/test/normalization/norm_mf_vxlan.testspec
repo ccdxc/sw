@@ -1,0 +1,70 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://type=TENANT
+        segment : filter://fabencap=VXLAN
+        endpoint: filter://remote=True
+    dst:
+        tenant  : filter://type=TENANT
+        endpoint: filter://remote=True
+        segment : filter://fabencap=VXLAN
+    flow        : filter://fwtype=L2,proto=UDP
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : BASE
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        headers     :
+            eth:
+                src     : callback://normalization/mf/GetMfSmac
+                dst     : callback://normalization/mf/GetMfDmac
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                version : callback://normalization/mf/GetMfIpv4Version
+                src     : callback://normalization/mf/GetMfSip
+                dst     : callback://normalization/mf/GetMfDip
+                ttl     : callback://normalization/mf/GetMfTtl
+            ipv6:
+                version : callback://normalization/mf/GetMfIpv6Version
+                src     : callback://normalization/mf/GetMfSip6
+                dst     : callback://normalization/mf/GetMfDip6
+                hlim    : callback://normalization/mf/GetMfTtl
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : PKT1     # Input packet 1
+        clone       : ref://testcase/packets/id=BASE
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+            - ref://factory/packets/id=ENCAP_VXLAN
+        headers     :
+            outereth    :
+                src     : callback://normalization/mf/GetMfOuterSmac
+                dst     : callback://normalization/mf/GetMfOuterDmac
+            outeripv4   :
+                version : callback://normalization/mf/GetMfOuterIpv4Version
+                src     : callback://normalization/mf/GetMfOuterSip
+                dst     : callback://normalization/mf/GetMfOuterDip
+                ttl     : callback://normalization/mf/GetMfOuterTtl
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                prio    : 0
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
