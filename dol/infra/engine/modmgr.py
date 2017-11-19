@@ -3,6 +3,7 @@ import os
 import pdb
 import importlib
 import subprocess
+import operator
 
 import infra.common.dyml        as dyml
 import infra.common.defs        as defs
@@ -66,7 +67,8 @@ class Module(objects.FrameworkObject):
         self.args       = getattr(spec, 'args', None)
         self.selectors  = getattr(spec, 'selectors', None)
         self.tracker    = getattr(spec, 'tracker', False)
-        self.id         = ModuleIdAllocator.get()
+        self.runorder   = getattr(spec, 'runorder', 65535)
+        self.id         = self.runorder << 16 + ModuleIdAllocator.get()
         self.module_hdl = None
         self.infra_data = None
         self.CompletedTestCases = []
@@ -343,7 +345,7 @@ class ModuleDatabase:
         return
 
     def GetAll(self):
-        return self.db.values()
+        return sorted(self.db.values(), key=operator.attrgetter('runorder'))
 
     def Add(self, spec):
         self.__add(spec)

@@ -7,6 +7,7 @@ feature:
     enable  : True
     ignore  : False
     spec    : tx.testspec
+    runorder: 20
     args    :
         maxflows: 4
 
