@@ -21,6 +21,7 @@ modules:
 
     - module:
         name    : MCAST
+        enable  : False
         spec    : tx_mc.testspec
         ignore  : True
         iterate :
