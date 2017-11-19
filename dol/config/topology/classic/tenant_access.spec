@@ -1,6 +1,6 @@
 # Configuration Template.
 meta:
-    id: TENANT_CLASSIC
+    id: TENANT_CLASSIC_ACCESS
 
 type    : tenant
 overlay : vlan
@@ -10,8 +10,8 @@ enics:
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_CLASSIC_DEFAULT
-      count : 2
-    - spec  : ref://store/specs/id=SEGMENT_CLASSIC_NATIVE
+      count : 1
+    - spec  : ref://store/specs/id=SEGMENT_CLASSIC_ENIC_NATIVE
       count : 1
 
 sessions:

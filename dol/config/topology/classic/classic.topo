@@ -32,7 +32,7 @@ tenants:
         count   : 1
         lifns   : range/100/104
         uplink  : ref://store/objects/id=Uplink1
-    -   spec    : ref://store/specs/id=TENANT_CLASSIC
+    -   spec    : ref://store/specs/id=TENANT_CLASSIC_ACCESS
         count   : 1
         lifns   : range/200/204
         uplink  : ref://store/objects/id=Uplink2

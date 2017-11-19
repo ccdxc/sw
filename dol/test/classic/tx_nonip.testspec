@@ -1,15 +1,15 @@
 # Test Spec
 selectors:
     src:
-        tenant  : filter://overlay=VLAN,type=TENANT
+        tenant  : filter://type=TENANT
         segment : filter://any
         endpoint: filter://remote=False
     dst:
-        tenant  : filter://overlay=VLAN,type=TENANT
+        tenant  : filter://type=TENANT
         segment : filter://any
-        endpoint: filter://remote=True
+        endpoint: filter://remote=True,access=False
     flow        : filter://fwtype=L2,type=MAC
-    maxflows    : None
+    maxflows    : 8
 
 packets:
     - packet:

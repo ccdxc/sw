@@ -47,6 +47,19 @@ def Setup(infra, module):
             module.testspec.selectors.src.tenant.Extend(iterelem.tenant)
             module.testspec.selectors.dst.tenant.Extend(iterelem.tenant)
 
+        if 'ep' in iterelem.__dict__:
+            module.logger.info("- ep: %s" % iterelem.tenant)
+            module.testspec.selectors.src.endpoint.Extend(iterelem.tenant)
+            module.testspec.selectors.dst.endpoint.Extend(iterelem.tenant)
+
+        if 'srcep' in iterelem.__dict__:
+            module.logger.info("- srcep: %s" % iterelem.tenant)
+            module.testspec.selectors.src.endpoint.Extend(iterelem.tenant)
+
+        if 'dstep' in iterelem.__dict__:
+            module.logger.info("- dstep: %s" % iterelem.tenant)
+            module.testspec.selectors.dst.endpoint.Extend(iterelem.tenant)
+
     if module.args == None:
         return
 

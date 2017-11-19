@@ -3,12 +3,12 @@ selectors:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=False
+        endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=False,access=True
         interface   : filter://any
     flow            : filter://fwtype=L2
     maxflows        : 8
@@ -36,7 +36,6 @@ packets:
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                flags   : ack
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : ref://testcase/config/flow/icmptype
@@ -49,23 +48,23 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1 # Base packet
+        id          : PKT1 # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+            qtag:
+                vlan    : callback://networking/packets/GetVlanId
             tcp:
                 flags: ack
 
     - packet:
-        id          : EXP_PKT # Base packet
+        id          : PKT2 # Expected Packet
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        encaps      : callback://classic/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
-                vlan: ref://testcase/config/dst/segment/vlan_id
-                prio: ref://testcase/config/flow/txqos/cos
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: callback://networking/packets/GetExpectedPacketCos
             ipv4:
                 tos : ref://testcase/config/flow/txqos/dscp
             ipv6:
@@ -73,19 +72,28 @@ packets:
             tcp:
                 flags: ack
 
+
 buffers:
     - buffer:
-        id      : BUF1 # Input Buffer
+        id      : BUF1  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-           bind : True
-           size : ref://testcase/packets/id=PKT1/size
-           data : ref://testcase/packets/id=PKT1/rawbytes
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : BUF2  # Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=PKT2/size
+            data  : ref://testcase/packets/id=PKT2/rawbytes
 
 descriptors:
     - descriptor:
         id      : DESC1 # Input Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_TX
+        template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
@@ -93,27 +101,30 @@ descriptors:
 
     - descriptor:
         id      : DESC2 # Expected Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            err_code : 0x0
+            _buf          : ref://testcase/buffers/id=BUF2
+            bytes_written : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
 
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : callback://classic/callbacks/GetRxTriggerPorts
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay
-    packets:
-        - packet:
-            object  : callback://classic/callbacks/GetTxExpectedPacket/expktid=PKT1
-            port    : callback://classic/callbacks/GetTxExpectedPorts
+#    packets:
+#        - packet:
+#            object  : callback://classic/callbacks/GetCpuPacket/expktid=PKT1
+#            port    : 128
 
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

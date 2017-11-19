@@ -35,6 +35,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.label              = None
         self.segment            = segment
         self.local              = True
+        self.access             = False
         self.tenant             = segment.tenant
         self.segment            = segment
         self.remote             = False
@@ -68,7 +69,11 @@ class EndpointObject(base.ConfigObjectBase):
         return self.remote and self.segment.IsFabEncapVxlan()
 
     def IsNative(self):
-        return self.segment.native
+        return self.segment.native or self.access
+
+    def SetAccessMode(self):
+        self.access = True
+        return
 
     def SetLabel(self, label):
         self.label = label
@@ -173,6 +178,7 @@ class EndpointObject(base.ConfigObjectBase):
     def Show(self):
         cfglogger.info("Endpoint = %s(%d)" % (self.GID(), self.id))
         cfglogger.info("- IsBackend = %s" % self.IsL4LbBackend())
+        cfglogger.info("- Access    = %s" % self.access)
         cfglogger.info("- Tenant    = %s" % self.tenant)
         cfglogger.info("- Macaddr   = %s" % self.macaddr.get())
         cfglogger.info("- Interface = %s" % self.intf.GID())
@@ -190,6 +196,7 @@ class EndpointObject(base.ConfigObjectBase):
         summary += '/Mac:%s' % self.macaddr.get()
         summary += '/Remote:%s' % self.remote
         summary += '/Bkend:%s' % self.IsL4LbBackend()
+        summary += '/Acc:%s' % self.access
         return summary
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -335,7 +342,8 @@ class EndpointObjectHelper:
         return
 
     def __create(self, segment, intfs, count,
-                 remote = False, backend = False):
+                 remote = False, backend = False,
+                 access = False):
         eps = []
         #if count > len(intfs):
         #    count = len(intfs)
@@ -346,6 +354,8 @@ class EndpointObjectHelper:
             ep.Init(segment, backend)
             if remote:
                 ep.SetRemote()
+            if access:
+                ep.SetAccessMode()
             ep.AttachInterface(intf)
             if not remote:
                 intf.AttachEndpoint(ep)
@@ -375,60 +385,40 @@ class EndpointObjectHelper:
                                                     backend = True)
         return
 
-    def __create_local(self, segment, spec):
-        if getattr(spec, 'direct', None):
-            cfglogger.info("Creating %d DIRECT EPs in Segment = %s" %\
-                           (spec.direct, segment.GID()))
-            direct_enics = segment.GetDirectEnics()
-            self.direct = self.__create(segment, direct_enics, spec.direct)
-            self.local += self.direct
+    def __create_local(self, segment, spec, typestr, enic_cb):
+        eps = []
+        bend_eps = []
+        count = getattr(spec, typestr, None)
+        if count is None: return eps,bend_eps
+        cfglogger.info("Creating %d %s EPs in Segment = %s" %\
+                       (count, typestr, segment.GID()))
+        enics = enic_cb()
+        eps = self.__create(segment, enics, count)
+        self.local += eps
 
-            if segment.l4lb:
-                cfglogger.info("Creating %d DIRECT L4LB Backend EPs in Segment = %s" %\
-                               (spec.direct, segment.GID()))
-                direct_enics = segment.GetDirectEnics(backend = True)
-                self.backend_direct = self.__create(segment, direct_enics,
-                                                    spec.direct,
-                                                    backend = True)
-                self.backend_local += self.backend_direct
+        if segment.l4lb:
+            cfglogger.info("Creating %d %s L4LB Backend EPs in Segment = %s" %\
+                           (spec.direct, typestr, segment.GID()))
+            enics = enic_cb(backend = True)
+            bend_eps = self.__create(segment, enics, count, backend = True)
+            self.backend_local += bend_eps
 
-        if getattr(spec, 'pvlan', None):
-            cfglogger.info("Creating %d PVLAN EPs in Segment = %s" %\
-                           (spec.pvlan, segment.GID()))
-            pvlan_enics = segment.GetPvlanEnics()
-            self.pvlan = self.__create(segment, pvlan_enics, spec.pvlan)
-            self.local  += self.pvlan
+        return eps,bend_eps
 
-            if segment.l4lb:
-                cfglogger.info("Creating %d PVLAN L4LB Backend EPs in Segment = %s" %\
-                               (spec.pvlan, segment.GID()))
-                pvlan_enics = segment.GetPvlanEnics(backend = True)
-                self.backend_pvlan = self.__create(segment, pvlan_enics,
-                                                   spec.pvlan,
-                                                   backend = True)
-                self.backend_local += self.backend_pvlan
-
-        if getattr(spec, 'useg', None):
-            cfglogger.info("Creating %d USEG EPs in Segment = %s" %\
-                           (spec.useg, segment.GID()))
-            useg_enics = segment.GetUsegEnics()
-            self.useg = self.__create(segment, useg_enics, spec.useg)
-            self.local += self.useg
-
-            if segment.l4lb:
-                cfglogger.info("Creating %d USEG L4LB Backend EPs in Segment = %s" %\
-                               (spec.useg, segment.GID()))
-                useg_enics = segment.GetUsegEnics(backend = True)
-                self.backend_useg = self.__create(segment, useg_enics,
-                                                  spec.useg,
-                                                  backend = True)
-                self.backend_local += self.backend_useg
+    def __create_local_all(self, segment, spec):
+        self.direct,self.backend_direct = self.__create_local(segment, spec, 'direct', 
+                                                              segment.GetDirectEnics)
+        self.pvlan,self.backend_pvlan = self.__create_local(segment, spec, 'pvlan',
+                                                            segment.GetPvlanEnics)
+        self.useg,self.backend_useg = self.__create_local(segment, spec, 'useg',
+                                                          segment.GetUsegEnics)
 
         if GlobalOptions.classic:
             cfglogger.info("Creating %d CLASSIC EPs in Segment = %s" %\
                            (spec.classic, segment.GID()))
             classic_enics = segment.tenant.GetClassicEnics()
-            self.classic = self.__create(segment, classic_enics, spec.classic)
+            self.classic = self.__create(segment, classic_enics, spec.classic,
+                                         access = getattr(spec, 'access', False))
             self.local += self.classic
         return
 
@@ -443,7 +433,7 @@ class EndpointObjectHelper:
 
     def Generate(self, segment, spec):
         self.__create_remote(segment, spec)
-        self.__create_local(segment, spec)
+        self.__create_local_all(segment, spec)
         self.eps += self.local
         self.eps += self.remote
 

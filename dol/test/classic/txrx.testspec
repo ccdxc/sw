@@ -8,10 +8,10 @@ selectors:
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=False
+        endpoint    : filter://remote=False,access=False
         interface   : filter://any
     flow            : filter://fwtype=L2
-    maxflows        : None
+    maxflows        : 8
 
 packets:
     - packet:
