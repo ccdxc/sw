@@ -262,6 +262,9 @@ class CapcovCoverage(CoverageBase):
         if not gcda_file:
             print ("MPU_COV_DUMP_FILE not set")
             sys.exit(1)
+        if not os.path.getsize(gcda_file):
+            print ("Coverage data not generated for ", name)
+            raise
         subprocess.call(["mkdir", "-p", cov_output_dir])
 
         try:
@@ -341,7 +344,9 @@ class CapcovCoverage(CoverageBase):
             dst_file.close()
             src_file.close()
             subprocess.call(["mv", tmp_file_name, dst_file_name])
-                    
+        
+        if not info_files:
+            return            
         #First copy the capcov files from the directory of the first info file.
         src_dir_name = os.path.dirname(info_files[0])
         dst_dir_name = os.path.dirname(output_file)
@@ -408,9 +413,12 @@ def run_and_generate_coverage(data):
             dir_name = "_".join([run_name, sub_run_name]) if sub_run_name else run_name
             cov_output_dir = env.coverage_output_path + dir_name + "/" + module_name
             cov_instance = CoverageBase.factory(module["cov_type"])
-            module_infos[module_name].append(cov_instance.generate_coverage(
-                module, module_name, cov_output_dir))
-
+            try:
+                module_infos[module_name].append(cov_instance.generate_coverage(
+                    module, module_name, cov_output_dir))
+            except:
+                print("Coverage generation failed for run :", run_name)
+                continue
             os.chdir(env.nic_dir)
             obj_dir = module.get("obj_dir")
             os.chdir(obj_dir)
