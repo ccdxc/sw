@@ -8,7 +8,7 @@ LIBDIRS = \
           rdma \
           cpu-p4+ \
           gc \
-          raw-redir-p4+ \
+          app-redir-p4+ \
           eth \
           ipfix \
           adminq \
