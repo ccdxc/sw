@@ -8,17 +8,18 @@
 
 syntax = "proto3";
 
-package nic;
+package device;
 option go_package="halproto";
 
 // NIC boots in classic mode first and may later transition to flow mode
-enum OperatingMode {
-  OPERATING_MODE_NONE     = 0;
-  OPERATING_MODE_CLASSIC  = 1;    // classic NIC mode (default)
-  OPERATING_MODE_SMART    = 2;    // flow based forwarding mode
+enum DeviceMode {
+  DEVICE_MODE_NONE             = 0;
+  DEVICE_MODE_MANAGED_SWITCH   = 1;    // Managed NIC mode
+  DEVICE_MODE_MANAGED_HOST_PIN = 2;    // Managed NIC mode 
+  DEVICE_MODE_STANDALONE       = 3;    // flow based forwarding mode
 }
 
 // Global config object for NIC
-message RootConfig {
-  OperatingMode    nic_mode = 1;    // one of the operating modes
+message Device {
+  DeviceMode    device_mode = 1;    // one of the operating modes
 }

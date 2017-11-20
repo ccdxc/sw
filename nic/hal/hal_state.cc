@@ -498,10 +498,10 @@ hal_cfg_db::~hal_cfg_db()
 void
 hal_cfg_db::set_forwarding_mode(std::string modestr)
 {
-    if (modestr == "default") {
-        forwarding_mode_ = HAL_FORWARDING_MODE_DEFAULT;
-    } else if (modestr == "host-pinned") {
-        forwarding_mode_ = HAL_FORWARDING_MODE_HOST_PINNED;
+    if (modestr == "smart-switch") {
+        forwarding_mode_ = HAL_FORWARDING_MODE_SMART_SWITCH;
+    } else if (modestr == "smart-host-pinned") {
+        forwarding_mode_ = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
     } else if (modestr == "classic") {
         forwarding_mode_ = HAL_FORWARDING_MODE_CLASSIC;
     } else {

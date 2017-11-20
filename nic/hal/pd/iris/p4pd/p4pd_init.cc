@@ -485,7 +485,7 @@ p4pd_nacl_smart_nic_mode_init (void)
     priority_t              priority;
     acl_tcam_entry_handle_t handle;
 
-    if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_DEFAULT) {
+    if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_SMART_SWITCH) {
         return HAL_RET_OK;
     }
     

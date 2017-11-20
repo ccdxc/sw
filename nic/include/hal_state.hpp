@@ -24,10 +24,10 @@ using hal::utils::eventmgr;
 using hal::utils::dllist_ctxt_t;
 
 typedef enum hal_forwarding_mode_s {
-    HAL_FORWARDING_MODE_NONE        = 0,
-    HAL_FORWARDING_MODE_DEFAULT     = 1,
-    HAL_FORWARDING_MODE_HOST_PINNED = 2,
-    HAL_FORWARDING_MODE_CLASSIC     = 3,
+    HAL_FORWARDING_MODE_NONE              = 0,
+    HAL_FORWARDING_MODE_SMART_SWITCH      = 1,
+    HAL_FORWARDING_MODE_SMART_HOST_PINNED = 2,
+    HAL_FORWARDING_MODE_CLASSIC           = 3,
 } hal_forwarding_mode_t;
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
@@ -624,7 +624,7 @@ extern class hal_state    *g_hal_state;
 static inline bool
 is_forwarding_mode_host_pinned()
 {
-    return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_HOST_PINNED;
+    return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED;
 }
 
 }    // namespace hal

@@ -815,9 +815,9 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (ep_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt  = (ep_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     ep = (ep_t *)dhl_entry->obj;
     // ep_clone = (ep_t *)dhl_entry->cloned_obj;
@@ -826,11 +826,11 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_ep_upd_args_init(&pd_ep_args);
-    pd_ep_args.ep = ep;
+    pd_ep_args.ep            = ep;
     pd_ep_args.iplist_change = app_ctxt->iplist_change;
-    pd_ep_args.add_iplist = app_ctxt->add_iplist;
-    pd_ep_args.del_iplist = app_ctxt->del_iplist;
-    pd_ep_args.app_ctxt = app_ctxt;
+    pd_ep_args.add_iplist    = app_ctxt->add_iplist;
+    pd_ep_args.del_iplist    = app_ctxt->del_iplist;
+    pd_ep_args.app_ctxt      = app_ctxt;
     ret = pd::pd_ep_update(&pd_ep_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to update ep pd, err : {}",
@@ -1557,8 +1557,8 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     ep_make_clone(ep, (ep_t **)&dhl_entry.cloned_obj);
 
     // form ctxt and call infra update object
-    dhl_entry.handle = ep->hal_handle;
-    dhl_entry.obj = ep;
+    dhl_entry.handle  = ep->hal_handle;
+    dhl_entry.obj     = ep;
     cfg_ctxt.app_ctxt = &app_ctxt;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);

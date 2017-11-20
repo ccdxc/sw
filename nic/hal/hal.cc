@@ -638,7 +638,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     if (!in) {
         HAL_TRACE_ERR("unable to open ini file ... "
                       "setting default forwarding mode");
-        hal_cfg->forwarding_mode = "default";
+        hal_cfg->forwarding_mode = "smart-switch";
         return HAL_RET_OK;
     }
 
@@ -648,8 +648,8 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
         // HAL_TRACE_DEBUG("key:{}, val:{}", key, val);
 
         if (key == "forwarding_mode") {
-            if (val != "default" && val != "host-pinned" && val != "classic") {
-                HAL_TRACE_ERR("Invalid forwarding mode: aborting ...");
+            if (val != "smart-switch" && val != "smart-host-pinned" && val != "classic") {
+                HAL_TRACE_ERR("Invalid forwarding mode:{}, aborting ...", val);
                 HAL_ABORT(0);
             }
             hal_cfg->forwarding_mode = val;

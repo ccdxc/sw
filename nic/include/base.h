@@ -163,7 +163,7 @@ do {                                                       \
     ENTRY(HAL_RET_FLOW_OFLOW_FULL,            16,"flow oflow table full")      \
     ENTRY(HAL_RET_FLOW_LIMT_REACHED,          17,"allowed flow limit reached") \
     ENTRY(HAL_RET_DUP_FREE,                   18,"freeing multiple times")     \
-    ENTRY(HAL_RET_VRF_NOT_FOUND,           19,"vrf not found")           \
+    ENTRY(HAL_RET_VRF_NOT_FOUND,              19,"vrf not found")           \
     ENTRY(HAL_RET_L2SEG_NOT_FOUND,            20,"L2 segment not found")       \
     ENTRY(HAL_RET_IF_NOT_FOUND,               21,"interface not found")        \
     ENTRY(HAL_RET_EP_NOT_FOUND,               22,"endpoint not found")         \
@@ -187,7 +187,7 @@ do {                                                       \
     ENTRY(HAL_RET_IF_ENIC_TYPE_INVALID,       40, "enic type invalid")         \
     ENTRY(HAL_RET_IF_ENIC_INFO_INVALID,       41, "enic info invalid")         \
     ENTRY(HAL_RET_IF_INFO_INVALID,            42, "if info invalid")           \
-    ENTRY(HAL_RET_VRF_ID_INVALID,          43, "vrf id invalid")         \
+    ENTRY(HAL_RET_VRF_ID_INVALID,             43, "vrf id invalid")         \
     ENTRY(HAL_RET_NWSEC_ID_INVALID,           44, "nwsec id invalid")          \
     ENTRY(HAL_RET_INTERFACE_ID_INVALID,       45, "interface id invalid")      \
     ENTRY(HAL_RET_DOS_POLICY_ID_INVALID,      46, "dos policy id invalid")     \

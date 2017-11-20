@@ -127,7 +127,7 @@ def run_hal(args):
 
     log = open(hal_log, "w")
     jsonfile = 'hal.json'
-    os.system("cp " + nic_dir + "/conf/hal_default.ini " + nic_dir + "/conf/hal.ini")
+    os.system("cp " + nic_dir + "/conf/hal_switch.ini " + nic_dir + "/conf/hal.ini")
     if args.hostpin:
         #jsonfile = 'hal_hostpin.json'
         os.system("cp " + nic_dir + "/conf/hal_hostpin.ini " + nic_dir + "/conf/hal.ini")
@@ -261,7 +261,7 @@ def run_config_validation(args):
     log.close()
 
     print "* Validator exit code " + str(p.returncode)
-    return p.returncode    
+    return p.returncode
 
 # Sample Client
 '''
