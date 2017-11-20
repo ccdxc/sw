@@ -758,6 +758,7 @@ tcp_queue_rcv:
     srl             r2, r1, TCP_OOO_CELL_SIZE_SHIFT
     and             r3, r1, TCP_OOO_CELL_SIZE_MASK
     seq             c3, r3, r0
+    sub             r2, r2, 1
     sub.!c3         r2, r2, 1
 
     fsetv           r4, d.u.tcp_rx_d.ooo_rcv_bitmap, r2, r0
@@ -768,17 +769,41 @@ tcp_queue_rcv:
      * Add it to rcv_nxt to get new rcv_nxt
      *
      * r1 = end_seq - rcv_nxt
-     * r2 = len based on consecutive 1s
-     * Set r1 (bytes_rcvd) based on max(r1, r2)
+     * r3 = len based on consecutive 1s
+     * Set r1 (bytes_rcvd) based on max(r1, r3)
      */
-    ffcv            r2, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
-    sll             r2, r2, TCP_OOO_CELL_SIZE_SHIFT
-    slt             c1, r1, r2
-    add.c1          r1, r2, r0
+    ffcv            r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
+    sll             r3, r3, TCP_OOO_CELL_SIZE_SHIFT
+    slt             c1, r1, r3
+    add.c1          r1, r3, r0
     phvwr           p.to_s6_payload_len, r1
     tbladd          d.u.tcp_rx_d.rcv_nxt, r1
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.common_phv_ooo_in_rx_q, 1
+
+    /*
+     * Test instructions just to test 2 remaining sack instructions.
+     * Remove later. TODO
+     */
+     // START OF TEST
+     ffsv           r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
+     seq            c1, r3, r0
+     b.!c1          flow_rx_drop
+
+     fclrv          r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r2, r0
+     tblwr          d.u.tcp_rx_d.ooo_rcv_bitmap, r3
+
+     ffsv           r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
+     tblwr          d.u.tcp_rx_d.ooo_rcv_bitmap, r0
+     sub            r3, r3, 1
+     seq            c1, r3, r2
+     b.!c1          flow_rx_drop
+
+     ffsv           r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
+     seq            c1, r3, -1
+     b.!c1          flow_rx_drop
+     // END OF TEST
+
 ooo_bytes_rcvd_stats_update_start:
     CAPRI_STATS_INC(bytes_rcvd, 16, r1, d.u.tcp_rx_d.bytes_rcvd)
 ooo_bytes_rcvd_stats_update:
