@@ -254,8 +254,10 @@ header_type scratch_metadata_t {
         policer_rate                  : 40;
         policer_tbkt                  : 40;
 
+        size32                        : 32;
         size16                        : 16;
         size8                         : 8;
+        size6                         : 6;
     }
 }
 

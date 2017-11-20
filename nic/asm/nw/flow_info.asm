@@ -175,10 +175,10 @@ nop:
   nop
 
 validate_ipv4_flow_key:
-  sub         r7, r0, -1
+  sub         r7, r0, 1
   seq         c1, k.flow_lkp_metadata_lkp_src[31:24], 0x7f
   seq         c2, k.flow_lkp_metadata_lkp_src[31:28], 0xe
-  seq         c3, k.flow_lkp_metadata_lkp_src[31:0], r7
+  seq         c3, k.flow_lkp_metadata_lkp_src[31:0], r7[31:0]
   seq         c4, k.flow_lkp_metadata_lkp_dst[31:0], r0
   seq         c5, k.flow_lkp_metadata_lkp_dst[31:24], 0x7f
   seq         c6, k.flow_lkp_metadata_lkp_src[31:0], \

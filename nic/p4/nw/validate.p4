@@ -108,6 +108,17 @@ action validate_native_packet() {
 }
 
 action validate_tunneled_packet() {
+    // For tunneled packet we will also validate the outer-L2 Header
+    // Not validating outer-L3 header because if we decided to terminate
+    // then the outer L3 header is mostly good (Like DIP should be valid
+    // as we do a lookup of it in input_mapping_tunnel table, where as 
+    // outer SIP might still be invalid).
+    if ((ethernet.srcAddr == 0) or
+        (ethernet.dstAddr == 0) or
+        ((ethernet.srcAddr & 0x010000000000) == 0x010000000000) or
+        (ethernet.srcAddr == 0xFFFFFFFFFFFF)) {
+        malformed_packet();
+    }
     if ((inner_ethernet.srcAddr == 0) or
         (inner_ethernet.dstAddr == 0) or
         ((inner_ethernet.srcAddr & 0x010000000000) == 0x010000000000) or
