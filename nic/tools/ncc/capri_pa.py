@@ -94,6 +94,10 @@ class capri_field:
         self.pad = 0        # internal pad added to the field (due to alignment requirements)
         self.union_pad_size = 0 # valid when is_fld_union_storage == True
 
+    def no_register(self):
+        # HACK - revisit
+        return True if 'parser_no_reg' in self.p4_fld.instance._parsed_pragmas else False
+
     def is_wide_ki(self):
         return self.is_wide_key or self.is_wide_input
 
@@ -1775,7 +1779,7 @@ class capri_gress_pa:
             self.field_order = sorted(self.field_order, key=lambda cf: cf.phv_bit)
             return
 
-        # process special allocation for wide-key cfs.. 
+        # process special allocation for wide-key cfs..
         if len(self.pa.be.tables.gress_tm[self.d].wide_key_tables):
             self.wide_key_table_phv_allocate()
 

@@ -169,7 +169,19 @@ def _parser_sram_print(parser, se):
                     '+' if mux_inst['addsub']['value'] == '1' else '-',
                     mux_inst['addsub_val']['value'])
         else:
-            pstr += 'mux_inst_data[%d] = lkp_val[%s] %s ((mux_pkt[%s] & %s) %s %s) %s %s\n' % \
+            if mux_inst['load_mux_pkt']['value'] == '0':
+                pstr += 'mux_inst_data[%d] = lkp_val[%s] %s ((mux_pkt[%s] & %s) %s %s) %s %s\n' % \
+                    (e,
+                    mux_inst['lkpsel']['value'],
+                    '+' if mux_inst['lkp_addsub']['value'] == '1' else '-',
+                    mux_inst['muxsel']['value'],
+                    mux_inst['mask_val']['value'],
+                    '<<' if mux_inst['shift_left']['value'] == '1' else '>>',
+                    mux_inst['shift_val']['value'],
+                    '+' if mux_inst['addsub']['value'] == '1' else '-',
+                    mux_inst['addsub_val']['value'])
+            else:
+                pstr += 'mux_inst_data[%d] = mux_pkt2[%s] %s ((mux_pkt[%s] & %s) %s %s) %s %s\n' % \
                     (e,
                     mux_inst['lkpsel']['value'],
                     '+' if mux_inst['lkp_addsub']['value'] == '1' else '-',
@@ -193,6 +205,103 @@ def _parser_init_profile_print(parser, cfg_init_profile):
     pstr += 'lkp_val_pkt_idx1 = %s, ' % cfg_init_profile['lkp_val_pkt_idx1']['value']
     pstr += 'lkp_val_pkt_idx2 = %s\n' % cfg_init_profile['lkp_val_pkt_idx2']['value']
     return pstr
+
+def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_expr):
+    #capri_expr = copy.copy(_capri_expr)
+    capri_expr = _capri_expr
+    if capri_expr.op2:
+        mux_inst['sel']['value'] = str(1)
+        mux_inst['lkp_addsub']['value'] = str(1) if capri_expr.op2 == '+' else str(0)
+        if mux_id2 != None:
+            mux_inst['load_mux_pkt']['value'] = str(1)
+            mux_inst['lkpsel']['value'] = str(mux_id2)
+        else:
+            assert rid1 != None, pdb.set_trace()
+            mux_inst['load_mux_pkt']['value'] = str(0)
+            mux_inst['lkpsel']['value'] = str(rid1)
+    else:
+        mux_inst['sel']['value'] = str(0)
+        mux_inst['lkpsel']['value'] = str(0)         # NA
+        mux_inst['lkp_addsub']['value'] = str(0)     # NA
+
+    op1 = capri_expr.op1
+    if capri_expr.op1:
+        if rid2 != None:
+            mux_inst['muxsel']['value'] = str(rid2)
+            if isinstance(capri_expr.src1, tuple):
+                mask = (1<<capri_expr.src1[1]) - 1
+            else:
+                mask = (1<<capri_expr.src1.width) - 1
+            mux_inst['mask_val']['value'] = str(mask)
+            mux_inst['shift_val']['value'] = str(capri_expr.shft)
+        else:
+            assert mux_id1 != None, pdb.set_trace()
+            mux_inst['muxsel']['value'] = str(mux_id1)
+            # need to adjust mask and shift vals based on alignment
+            # hw pull 16b from a specified byte boundary
+            if isinstance(capri_expr.src1, tuple):
+                # XXX is this offset correct or need to get it from lkp_reg??
+                off = capri_expr.src1[0]
+                eoff = off + capri_expr.src1[1]
+            else:
+                off = cs.fld_off[capri_expr.src1]
+                eoff = off + capri_expr.src1.width
+                assert capri_expr.src1.width <= 16
+            # lookup fields > 16 bits are not currently supported. That requires concatenation
+            # of multiple lkp regs - TBD
+            c_soff = (off / 8) * 8
+            c_eoff = ((eoff+7)/8) * 8
+            # since the lkp regs are 16bits each, end offset must be aligned to register
+            c_eoff = max(c_eoff, (c_soff + 16))
+            if c_soff != off:
+                # not aligned at the start of the container - nothing to do
+                pass
+
+            if capri_expr.mask:
+                mask = capri_expr.mask
+            else:
+                if isinstance(capri_expr.src1, tuple):
+                    mask = (1<<capri_expr.src1[1]) - 1
+                else:
+                    mask = (1<<capri_expr.src1.width) - 1
+
+            c_shft = c_eoff - eoff          # c_shft indicate >> to right justify the field
+            if c_shft:
+                # mask is shifted in opposite direction since the value being used is not
+                # right justified, c_shft will right justify it.. but mask is applied before
+                # the shift, so adjust the mask to the left
+                mask <<= c_shft
+            # Adjust the mask. Mask is applied before any shifting so it has to be moved to
+            # align with the field prior to any shifting
+            new_shft = 0
+            if capri_expr.op1 == '>>':
+                new_shft = capri_expr.shft + c_shft
+            elif capri_expr.op1 == '<<':
+                if c_shft > capri_expr.shft:
+                    # reverse the direction
+                    op1 = '>>'
+                    new_shft = (c_shft - capri_expr.shft)
+                else:
+                    new_shft = capri_expr.shft - c_shft
+            else:
+                op1 = '>>'
+                new_shft = capri_expr.shft + c_shft
+
+            assert (new_shft >= 0 and new_shft < 16), pdb.set_trace()
+            mux_inst['mask_val']['value'] = str(mask)
+            mux_inst['shift_val']['value'] = str(new_shft)
+    else:
+        mux_inst['muxsel']['value'] = str(0)
+        mux_inst['mask_val']['value'] = str(0)     # mask off all bits
+        mux_inst['shift_val']['value'] = str(0)
+
+    mux_inst['addsub_val']['value'] = str(capri_expr.const)
+    # XXX name changed - remove this once move to new format is complete
+    if 'shift_left' in mux_inst.keys():
+        mux_inst['shift_left']['value'] = str(1) if op1 == '<<' else str(0)
+    else:
+        mux_inst['shift']['value'] = str(1) if op1 == '<<' else str(0)
+    mux_inst['addsub']['value'] = str(1) if capri_expr.op3 == '+' else str(0)
 
 def _build_mux_inst(parser, cs, rid, mux_inst, mux_id, _capri_expr):
     # DO NOT modify _capri_expr, this function is called multiple times for the same state
@@ -1557,26 +1666,38 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     current_flit = None
 
     # As there is instruction pressure in entering into ipv4 or
-    # inner_ipv4 state. For CSUM try to reuse instructions.
-    option_len_expr_found = 0
-    reuse_mux_idx_id = -1
-    reuse_mux_instr_id = -1
+    # inner_ipv4 state, for CSUM try to reuse instructions when
+    # csum verify len expression matches with another expression
+    # (used for lookup) in the same state.
+    csum_len_expr_found = 0
     reuse_instr_of_lkp_reg = -1
-    reuse_option_len_ohi_id = -1
+    csum_mux_instr_id = -1
+    csum_mux_idx_id = -1
+    csum_len_ohi_id = -1
+    all_set_ops = []
+    for elem in nxt_cs.set_ops:
+        all_set_ops.append(elem)
+    for elem in nxt_cs.no_reg_set_ops:
+        all_set_ops.append(elem)
     if len(nxt_cs.verify_cal_field_objs) > 0:
         for calfldobj in nxt_cs.verify_cal_field_objs:
             if calfldobj.csum_hdrlen_parser_local_var != '':
-                for s_ops, set_ops_field in enumerate(nxt_cs.set_ops):
+                for s_ops, set_ops_field in enumerate(all_set_ops):
                     if set_ops_field.dst.hfname == \
                         calfldobj.csum_hdrlen_parser_local_var:
-                        option_len_expr_found = 1
+                        csum_len_expr_found = 1
                         break
-                if option_len_expr_found:
-                    hdr_len_const = set_ops_field.const
-                    csum_hdr_len_expr = set_ops_field.capri_expr
+                if csum_len_expr_found:
+                    len_const = set_ops_field.const
+                    csum_len_expr = set_ops_field.capri_expr
                     break
-    if option_len_expr_found:
-        hdr_len_expr_str = csum_hdr_len_expr.flatten_capri_expr()
+    if csum_len_expr_found:
+        len_expr_str = csum_len_expr.flatten_capri_expr()
+        #Check if csum len expr is same as any other expr
+        #used for lookup. When computing ip option
+        #blob len, there is overlap in expr used for
+        #calculating ip hdr len and option len that is also
+        #for lookup purposes to jump to option parsing state.
         for l_reg, lkp_reg  in enumerate(nxt_cs.lkp_regs):
             if lkp_reg != None and lkp_reg.capri_expr and \
                 lkp_reg.capri_expr.flatten_capri_expr() == hdr_len_expr_str:
@@ -1611,26 +1732,55 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 sram['lkp_val_inst'][r]['muxsel']['value'] = str(0)  # NA
         else: # REG_LOAD/UPDATE
             if lkp_reg.capri_expr:
-                if lkp_reg.capri_expr.op1:
-                    assert lkp_reg.capri_expr.src1, pdb.set_trace()
-                    assert lkp_reg.pkt_off != -1
-                    off = lkp_reg.pkt_off
-                    mux_id = mux_idx_alloc(mux_idx_allocator, (off/8) + add_off)
-                    sram['mux_idx'][mux_id]['sel']['value'] = str(0)
-                    sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
-                    sram['mux_idx'][mux_id]['idx']['value'] = str((off/8) + add_off)
-                else:
-                    mux_id = 0    # NA
+                # with new mux_instruction, we can now supply two mux_idx/reg_ids, depending on
+                # the operands src_reg and src1. Each of these operands can be either a lkp_reg or
+                # pkt_field
+                # mux_inst natively supports one lkpsel (reg) second reg must use mux_sel and vice-
+                # versa for pkt field
+                reg_id1 = None; reg_id2 = None
+                mux_id1 = None; mux_id2 = None
+                if lkp_reg.capri_expr.src_reg:
+                    if not isinstance(lkp_reg.capri_expr.src_reg, tuple) and \
+                        lkp_reg.capri_expr.src_reg.is_meta:
+                        if lkp_reg.capri_expr.src_reg.hfname not in nxt_cs.lkp_flds:
+                            reg_id1 = r
+                        else:
+                            reg_id1 = nxt_cs.lkp_flds[lkp_reg.capri_expr.src_reg.hfname].reg_id
+                    else:
+                        assert lkp_reg.pkt_off2 >= 0, pdb.set_trace()
+                        off = lkp_reg.pkt_off2
+                        mux_id2 = mux_idx_alloc(mux_idx_allocator, off/8)
+                        sram['mux_idx'][mux_id2]['sel']['value'] = str(0)
+                        sram['mux_idx'][mux_id2]['lkpsel']['value'] = str(0)   # NA
+                        sram['mux_idx'][mux_id2]['idx']['value'] = str((off/8) + add_off)
+
+                if lkp_reg.capri_expr.src1:
+                    if not isinstance(lkp_reg.capri_expr.src1, tuple) and \
+                        lkp_reg.capri_expr.src1.is_meta:
+                        assert lkp_reg.capri_expr.src1.hfname in nxt_cs.lkp_flds, \
+                            "%s is not avaialbe in state %s" % \
+                            (lkp_reg.capri_expr.src1.hfname, nxt_cs,name)
+                        reg_id2 = nxt_cs.lkp_flds[lkp_reg.capri_expr.src1.hfname].reg_id
+                    else:
+                        assert lkp_reg.pkt_off >= 0, pdb.set_trace()
+                        off = lkp_reg.pkt_off
+                        mux_id1 = mux_idx_alloc(mux_idx_allocator, off/8)
+                        sram['mux_idx'][mux_id1]['sel']['value'] = str(0)
+                        sram['mux_idx'][mux_id1]['lkpsel']['value'] = str(0)   # NA
+                        sram['mux_idx'][mux_id1]['idx']['value'] = str((off/8) + add_off)
 
                 mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, lkp_reg.capri_expr)
-                _build_mux_inst(parser, nxt_cs, r, sram['mux_inst'][mux_inst_id],
-                    mux_id, lkp_reg.capri_expr)
+                _build_mux_inst2(parser, nxt_cs, sram['mux_inst'][mux_inst_id], reg_id1, reg_id2,
+                    mux_id1, mux_id2, lkp_reg.capri_expr)
                 sram['lkp_val_inst'][r]['sel']['value'] = str(1)
                 sram['lkp_val_inst'][r]['muxsel']['value'] = str(mux_inst_id)
 
                 if reuse_instr_of_lkp_reg == r:
-                    reuse_mux_instr_id = mux_inst_id
-                    reuse_mux_idx_id = mux_id
+                    csum_mux_instr_id = mux_inst_id
+                    if mux_id1 != None:
+                        csum_mux_idx_id = mux_id1
+                    else:
+                        csum_mux_idx_id = 0
             else:
                 # local var load from pkt
                 if lkp_reg.first_pkt_fld:
@@ -1654,6 +1804,28 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     #lkp instructions allocated so far
     lkp_instr_inst = r
+
+    #Generate instructions to evaluate expressions that are not
+    #used for lookup purposes but other pursposes (csum, icrc).
+    for set_op in nxt_cs.no_reg_set_ops:
+        if set_op.capri_expr:
+            offset = nxt_cs.fld_off[set_op.capri_expr.src1] / 8
+            mux_id = mux_idx_alloc(mux_idx_allocator, offset)
+            sram['mux_idx'][mux_id]['sel']['value'] = str(0)
+            sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
+            sram['mux_idx'][mux_id]['idx']['value'] = str(offset)
+            mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
+            _build_mux_inst(parser, nxt_cs, None, sram['mux_inst'][mux_inst_id],
+                            mux_id, set_op.capri_expr)
+
+    if csum_len_expr_found and reuse_instr_of_lkp_reg == -1:
+        #This parse state has set-metadata to compute csum len expr
+        #and csum len expression is not used by lookup purposes.
+        #In this case csum_len_expr should be in no_reg_set_ops list.
+        #Look up in no_reg_set_ops list and reuse mux_instr, mux_id
+        offset = nxt_cs.fld_off[csum_len_expr.src1] / 8
+        csum_mux_idx_id = mux_idx_alloc(mux_idx_allocator, offset)
+        csum_mux_instr_id, _ = mux_inst_alloc(mux_inst_allocator, csum_len_expr)
 
     # extract_inst
     # For all fields that go to phv, check if fields can be combined to extract
@@ -1738,16 +1910,16 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
             if not isinstance(ohi.length, int):
                 # ohi.length is a capri expression
-                if option_len_expr_found:
+                if csum_len_expr_found:
                     #When option hdr len expression is specified in parse-state,
                     #lets reuse same instructions allocated to evaluate the expr
                     #to specify option len in OHI
-                    mux_inst_id = reuse_mux_instr_id
-                    reuse_option_len_ohi_id = ohi.var_id
+                    mux_inst_id = csum_mux_instr_id
+                    csum_len_ohi_id = ohi.var_id
                 else:
                     #need to allocate mux_idx and inst
                     mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, ohi.length)
-                    reuse_option_len_ohi_id = -1
+                    csum_len_ohi_id = -1
 
                 #pdb.set_trace()
                 # special case for option_blob where ohi len comes from another header field
@@ -1847,24 +2019,17 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     # as 'stop'
     sram['offset_jump_chk_en']['value'] = str(1)
 
+
     #Generate Checksum related Configuration in parser.
     if len(nxt_cs.verify_cal_field_objs) > 0:
         # Check for availability of OHI instr in this parse state.
         assert s < hw_max_ohi_per_state, pdb.set_trace()
 
-        '''
-        # !!! Assert only one header is extracted; If more, then current offset
-        # capture for checksum/calfld verification will be a bit complicated !!!
-        assert s <= 1, pdb.set_trace()
-        # At a minimum, 2 ohi inst are needed. If payload checksum, three are
-        # needed. Check if that many ohi inst are available in this state.
-        assert(s + 2) < hw_max_ohi_per_state, pdb.set_trace()
-        '''
 
         if reuse_instr_of_lkp_reg != -1:
             #Use same instrucstions that were used for
-            assert(reuse_mux_instr_id != -1), pdb.set_trace()
-            assert(reuse_mux_idx_id != -1), pdb.set_trace()
+            assert(csum_mux_instr_id != -1), pdb.set_trace()
+            assert(csum_mux_idx_id != -1), pdb.set_trace()
 
         # Genearate Checksum config since transition to parser state 'nxt_cs'
         # will extract header which has checksum field (p4 cal fld for verification)
@@ -1872,8 +2037,8 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                                                parse_states_in_path, nxt_cs, sram, s,\
                                                lkp_instr_inst, mux_idx_allocator,\
                                                mux_inst_allocator, \
-                                               reuse_mux_instr_id, reuse_mux_idx_id, \
-                                               reuse_option_len_ohi_id)
+                                               csum_mux_instr_id, csum_mux_idx_id, \
+                                               csum_len_ohi_id)
         if nxt_cs.is_end:
             assert(s < hw_max_ohi_per_state), pdb.set_trace()
     elif nxt_cs.phdr_offset_ohi_id != -1:
@@ -1893,7 +2058,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         s = parser.be.checksum.CsumParserPayloadLenGenerate(\
                                                nxt_cs, sram, s,\
                                                lkp_instr_inst, mux_idx_allocator,\
-                                               mux_inst_allocator, reuse_mux_idx_id)
+                                               mux_inst_allocator, csum_mux_idx_id)
     if nxt_cs.csum_payloadlen_ohi_instr_gen[0]:
         #In case of option parsing, parse states where l4_verify_len is updated,
         #store the expression result back into OHI.
@@ -1909,10 +2074,12 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                                                 parse_states_in_path, nxt_cs, sram, s,\
                                                 lkp_instr_inst, mux_idx_allocator,\
                                                 mux_inst_allocator, \
-                                                reuse_mux_instr_id, reuse_mux_idx_id, \
-                                                reuse_option_len_ohi_id)
+                                                csum_mux_instr_id, csum_mux_idx_id, \
+                                                csum_len_ohi_id)
         if nxt_cs.is_end:
             assert(s < hw_max_ohi_per_state), pdb.set_trace()
+
+
 
     if nxt_cs.capture_payload_offset():
         # need to capture current_offset where parser stops parsing. This is needed for the

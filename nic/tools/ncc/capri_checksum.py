@@ -276,6 +276,11 @@ class Checksum:
                         #Indicate that the parse state should generate OHI instr
                         #by setting True and OHI# to use is ohi_id
                         parse_state.csum_payloadlen_ohi_instr_gen = (True, ohi_id, calfldobj)
+                for setop in parse_state.no_reg_set_ops:
+                    if setop.dst.hfname == verify_len_field:
+                        #Indicate that the parse state should generate OHI instr
+                        #by setting True and OHI# to use is ohi_id
+                        parse_state.csum_payloadlen_ohi_instr_gen = (True, ohi_id, calfldobj)
 
     def CalFldListLogStrTableGet(self):
         return self.logstr_tbl
@@ -676,7 +681,8 @@ class Checksum:
             flat_expr_str, flat_expr_wo_const_str, capri_expr = mux_instr
             if not capri_expr: continue
             if not capri_expr.src_reg: continue
-            if capri_expr.src_reg.hfname == len_local_var_str:
+            if not isinstance(capri_expr.src_reg, tuple) and \
+                capri_expr.src_reg.hfname == len_local_var_str:
                 mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, capri_expr)
                 #Build OHI instr to load result into OHI-Slot.
                 select          = 3 # ohi[slot_num] = mux_inst_data[muxsel]
@@ -723,7 +729,6 @@ class Checksum:
                     ohi_instr_inst += 1
                     return ohi_instr_inst
 
-        pdb.set_trace()
         return ohi_instr_inst
 
 
@@ -841,7 +846,7 @@ class Checksum:
                 phdr_parse_state_found = True
                 break
         assert phdr_parse_state_found == True, pdb.set_trace()
-        
+
         return calfldobj, phdr_parse_state
 
 

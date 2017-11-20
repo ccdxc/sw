@@ -308,17 +308,19 @@ class capri_parser_set_op:
             self.src1 = src
         elif isinstance(src, p4.p4_expression):
             # src is p4_expr
-            node = copy.copy(src)
-            self.capri_expr = capri_parser_expr(cstate.parser, node)
+            #node = copy.copy(src) XXXX
+            self.capri_expr = capri_parser_expr(cstate.parser, src)
             if dst.parser_local:
-                if self.capri_expr.src_reg:
+                self.op_type = meta_op.LOAD_REG
+                if self.capri_expr.src_reg and self.capri_expr.src_reg == dst:
                     self.op_type = meta_op.UPDATE_REG
-                elif self.capri_expr.src1:
-                    self.op_type = meta_op.LOAD_REG
+                elif self.capri_expr.src1 and self.capri_expr.src1 == dst:
+                    self.op_type = meta_op.UPDATE_REG
                 elif self.capri_expr.const:
                     self.op_type = meta_op.LOAD_REG
                 else:
-                    assert 0, pdb.set_trace()
+                    #assert 0, pdb.set_trace()
+                    pass
             else:
                 # EXTRACT_REG uses meta_instruction to perform the operation
                 # Also any time an expression is involved, use EXTRACT_META
@@ -364,6 +366,7 @@ class capri_lkp_reg:
         self.first_pkt_fld = None   # First pkt field that is loaded into this reg
         self.flds = OrderedDict()   # flds in this register {reg_off : (lkp_fld, off, used)}
         self.pkt_off = -1
+        self.pkt_off2 = -1
         self.store_en = False
         self.capri_expr = None
         # book-keeping
@@ -383,9 +386,10 @@ class capri_lkp_reg:
         self.is_key = False         # True if register is used for lookup
 
     def __repr__(self):
-        return "\ntype %s pkt_off %d, is_key %s, store_en %s, expr %s, first_pkt_fld %s flds %s" % \
-                (self.type, self.pkt_off, self.is_key, self.store_en, self.capri_expr,
-                 self.first_pkt_fld.hfname if self.first_pkt_fld else None, self.flds)
+        return "\n%s pkt_off %d, pkt_off2 %d, is_key %s, store_en %s, expr %s, first_pkt_fld: %s flds: %s" % \
+                (self.type.name, self.pkt_off, self.pkt_off2, self.is_key, self.store_en, self.capri_expr,
+                 self.first_pkt_fld.hfname if self.first_pkt_fld else None, 
+                 [(f[0],f[1][0].hfname) for f in self.flds.items()])
 
 class capri_parse_state:
     def __init__(self, parser, p4_state, name=None):
@@ -400,6 +404,7 @@ class capri_parse_state:
         self.headers = []
         self.extracted_fields = []      # all header fields extracted, can go to phv or ohi
         self.set_ops = []
+        self.no_reg_set_ops = []        # HACK XXX revisit
         self.local_flds = OrderedDict()
         self.meta_extracted_fields = [] # extractions to metadata phvs
         # utility flags/variables
@@ -422,6 +427,8 @@ class capri_parse_state:
         self.saved_lkp = []             # lkp registers reserved
         self.key_len = 0
         self.branches = []              # processed branch information - maintain the order
+
+        self.active_lkp_lfs = [None for _ in self.parser.be.hw_model['parser']['lkp_regs']]
 
         # hardware information
         self.lkp_regs = [capri_lkp_reg(v) for v in self.parser.be.hw_model['parser']['lkp_regs']]
@@ -450,11 +457,37 @@ class capri_parse_state:
                                            #can be present
 
 
+    def active_reg_find(self, lf):
+        if lf in self.active_lkp_lfs:
+            return self.active_lkp_lfs.index(lf)
+        return None
+
+    def active_reg_alloc(self, lf, rid=None):
+        if rid == None:
+            for i,_lf in enumerate(self.active_lkp_lfs):
+                if _lf == None:
+                    self.active_lkp_lfs[i] = lf
+                    self.parser.logger.debug("%s:state %s:Reserve LF %s reg %d" % \
+                            (self.parser.d.name, self.name, lf.hfname, i))
+                    return i
+            assert 0, pdb.set_trace() # out of lkp registers
+        else:
+            if self.active_lkp_lfs[rid] == None:
+                self.active_lkp_lfs[rid] = lf
+                self.parser.logger.debug("%s:state %s:Assign LF %s reg %d" % \
+                            (self.parser.d.name, self.name, lf.hfname, rid))
+                return rid
+            else:
+                assert self.active_lkp_lfs[rid] == lf, pdb.set_trace() # duplicate assignment
+                return rid
+
     def lkp_reg_alloc(self):
         for i,lr in enumerate(self.lkp_regs):
             if lr.type == lkp_reg_type.LKP_REG_NONE:
                 return i
-        assert 0, "%s:No free lkp register - regs used: %s" % (self.name, self.lkp_regs)
+        self.parser.logger.critical("%s:%s:No free lkp register - regs used: %s" % \
+                        (self.parser.d.name, self.name, self.lkp_regs))
+        assert 0, pdb.set_trace()
             
     def get_hdr_off(self, hdr):
         for cf in self.extracted_fields:
@@ -518,17 +551,22 @@ class capri_parser_expr:
         # Possible operations (supported by capri-parser hw):
         # reg = reg +/- ((src1 & mask) <</>> shft) +/- c
         # phv = reg +/- ((src1 & mask) <</>> shft) +/- c
+        # New: XXXX
+        # reg = src2 +/- ((src1 & mask) <</>> shft) +/- c
+        # reg = reg1 +/- ((reg2 & mask) <</>> shft) +/- c (TBD)
+        # The generic expression is defined as -
         # dst = src_reg OP2 (src1 OP1 shft) OP3 c
         # NOTE: 
         # 1. src1 & mask is not supported as user programmble,
         #   it is computed and used internally to handle field alignements in h/w
         # 2. src1 is expected to be pkt_data (not register)
+        # 
     def __init__(self, parser, p4_expr):
         self.parser = parser
         self.p4_expr = p4_expr     # original expr
 
         self.op1 = None
-        self.src1 = None    # cfield or tuple
+        self.src1 = None    # cfield or tuple or register
         self.shft = 0
 
         self.op2 = None
@@ -540,10 +578,20 @@ class capri_parser_expr:
         # fields programmed later, based on usage and field alignment
         self.pkt_offset = -1    # applicable for op1
         self.mask = None        # applicable for op1, user supplied mask is not supported
+        self.pkt_offset2 = -1   # applicable for src2, when used
         self.lkp_sel = -1       # register assigned to src_reg
+        self.lkp_sel2 = -1      # applicable for reg2, when used
 
         if p4_expr:
-            self.process_p4_expr(copy.copy(p4_expr))
+            #self.process_p4_expr(copy.deepcopy(p4_expr))
+            self.process_p4_expr(p4_expr)
+            # op fixup
+            if self.src1 and not self.op1:
+                self.op1 = '<<'
+                self.shft = 0
+            if self.src_reg and not self.op2:
+                self.op2 = self.op3
+            self.parser.logger.debug("%s:Initialized parser expr %s" % (self.parser.d.name, self))
 
     def __copy__(self):
         new_obj = capri_parser_expr(self.parser, None)
@@ -556,11 +604,167 @@ class capri_parser_expr:
         new_obj.op3 = copy.copy(self.op3)
         new_obj.const = copy.copy(self.const)
         new_obj.pkt_offset = copy.copy(self.pkt_offset)
+        new_obj.pkt_offset2 = copy.copy(self.pkt_offset2)
         new_obj.mask = copy.copy(self.mask)
         new_obj.lkp_sel = copy.copy(self.lkp_sel)
+        new_obj.lkp_sel2 = copy.copy(self.lkp_sel2)
         return new_obj
 
     def process_p4_expr(self, p4_expr):
+        # XXXX <<
+        # New format:
+        # [cf2 +-] [(cf1 [<<>> shft])+-] [const]
+        # [cf2 OP2] [(cf1 [OP1 shft]) OP3] [const]
+        # XXXX >>
+        supported_ops1 = ['<<', '>>']
+        supported_ops2 = ['+', '-',]    # op2 and op3
+
+        #pdb.set_trace()
+        # convert p4_fields to capri_fields
+        # do not modify the original p4_expr same object is used on ingress and egress by hlir
+        left_cf = None; right_cf = None
+        if isinstance(p4_expr.left, p4.p4_field):
+            hf_name = get_hfname(p4_expr.left)
+            cf = self.parser.be.pa.get_field(hf_name, self.parser.d)
+            #p4_expr.left = cf
+            left_cf = cf
+
+        if isinstance(p4_expr.right, p4.p4_field):
+            hf_name = get_hfname(p4_expr.right)
+            cf = self.parser.be.pa.get_field(hf_name, self.parser.d)
+            #p4_expr.right = cf
+            right_cf = cf
+
+        if isinstance(p4_expr.left, p4.p4_expression):
+            self.process_p4_expr(p4_expr.left)
+        if isinstance(p4_expr.right, p4.p4_expression):
+            self.process_p4_expr(p4_expr.right)
+
+        # case: cf/tuple OP expr (expr is already processed)
+        if isinstance(p4_expr.left, p4.p4_expression):
+            # if right is expr/cf/tuple
+            if not isinstance(p4_expr.right, int):
+                if not self.op2:
+                    self.op2 = p4_expr.op
+                else:
+                    assert not self.op3, pdb.set_trace()
+                    self.op3 = p4_expr.op
+                if not isinstance(p4_expr.right, p4.p4_expression):
+                    if not self.src_reg:
+                        self.src_reg = right_cf if right_cf else p4_expr.right
+                    else:
+                        assert not self.src1, pdb.set_trace()
+                        self.src1 = right_cf if right_cf else p4_expr.right
+            # elif right is const
+            elif isinstance(p4_expr.right, int):
+                assert not self.op3, pdb.set_trace()
+                self.op3 = p4_expr.op
+                self.const = p4_expr.right
+            else:
+                assert 0, pdb.set_trace()
+            return
+        elif isinstance(p4_expr.right, p4.p4_expression):
+            # if left is expr/cf/tuple
+            if not isinstance(p4_expr.left, int):
+                if not self.op2:
+                    self.op2 = p4_expr.op
+                else:
+                    assert not self.op3, pdb.set_trace()
+                    self.op3 = p4_expr.op
+                if not isinstance(p4_expr.left, p4.p4_expression):
+                    if not self.src_reg:
+                        self.src_reg = left_cf if left_cf else p4_expr.left
+                    else:
+                        assert not self.src1, pdb.set_trace()
+                        self.src1 = left_cf if left_cf else p4_expr.left
+            # elif left is const
+            elif isinstance(p4_expr.left, int):
+                assert not self.op3, pdb.set_trace()
+                self.op3 = p4_expr.op
+                self.const = p4_expr.left
+            else:
+                assert 0, pdb.set_trace()
+            return
+        # cases:
+        # cf/tuple +- cf/tuple
+        # cf/tuple +- const
+        # cf/tuple <<>> shift_val
+        # src_reg OP2 ((src1 OP1 shft) OP3 c
+        if p4_expr.op in supported_ops1:
+            # left must be pkt_field/reg and right must be int
+            if self.op1:
+                # set due to dummy expression creation
+                assert self.shft == 0 and not self.src_reg, pdb.set_trace()
+                self.src_reg = self.src1
+            self.op1 = p4_expr.op
+            assert isinstance(p4_expr.left, p4.p4_field) or \
+                   isinstance(p4_expr.left, tuple), \
+                   "%s:unsupported left oprand - Must refer to packet data (found %s)" % \
+                   (self.parser.d.name, p4_expr.left)
+            if left_cf:
+                self.src1 = left_cf #p4_expr.left
+            else:
+                self.src1 = p4_expr.left # tuple
+            assert isinstance(p4_expr.right, int), "invalid operand %s for as shift val" % \
+                (p4_expr.right)
+            self.shft = p4_expr.right
+        else:
+            # top level is +-, left or right can be expr involving << >>
+            if left_cf:
+                cf1 = left_cf
+            elif isinstance(p4_expr.left, tuple):
+                cf1 = p4_expr.left
+            else:
+                cf1 = None
+            if right_cf:
+                cf2 = right_cf
+            elif isinstance(p4_expr.right, tuple):
+                cf2 = p4_expr.right
+            else:
+                cf2 = None
+
+            # handle : reg/pkt_fld +- reg/pkt_fld
+            if cf1 and cf2:
+                assert not self.src_reg, pdb.set_trace()
+                assert not self.src1, pdb.set_trace()
+
+                if isinstance(cf1, capri_field) and cf1.parser_local:
+                    self.src_reg = cf1
+                    self.src1 = cf2
+                else:
+                    self.src_reg = cf2
+                    self.src1 = cf1
+                if not self.op1:
+                    self.op1 = '<<'
+                    self.shft = 0
+                self.op2 = p4_expr.op
+
+            elif cf1:
+                assert isinstance(p4_expr.right, int), pdb.set_trace()
+                assert not self.op3, pdb.set_trace()
+                self.op3 = p4_expr.op
+                self.const = p4_expr.right
+
+                # if cf1 is tuple or pkt fld, first choice is to use src1
+                # if src1 is already used, use src_reg
+                if (isinstance(cf1, tuple) or not cf1.parser_local) and not self.src1:
+                    self.src1 = cf1
+                else:
+                    self.src_reg = cf1
+            elif cf2:
+                assert isinstance(p4_expr.left, int), pdb.set_trace()
+                assert not self.op3, pdb.set_trace()
+                self.op3 = p4_expr.op
+                self.const = p4_expr.left
+
+                # if cf2 is tuple or pkt fld, first choice is to use src1
+                # if src1 is already used, use src_reg
+                if (isinstance(cf2, tuple) or not cf2.parser_local) and not self.src1:
+                    self.src1 = cf2
+                else:
+                    self.src_reg = cf2
+
+        '''
         # traverse p4_expressions - ensure that only supported operations
         # are used, translate p4_field to capri_field, derive op_type..
         # supported expressions are
@@ -585,6 +789,7 @@ class capri_parser_expr:
 
         if p4_expr.op in supported_ops1:
             # left must be pkt_field/[reg - not supported] and right must be int
+            # XXXX support reg
             self.op1 = p4_expr.op
             assert isinstance(p4_expr.left, capri_field) or \
                    isinstance(p4_expr.left, tuple), \
@@ -606,16 +811,16 @@ class capri_parser_expr:
             if isinstance(p4_expr.right, capri_field):
                 cf2 = p4_expr.right
 
-            # hadle a case : reg +- pkt_fld
+            # handle a case : reg +- pkt_fld
             if cf1 and cf2:
                 if cf1.parser_local:
                     self.src_reg = cf1
-                    assert not cf2.parser_local
+                    assert not cf2.parser_local, pdb.set_trace()
                     self.src1 = cf2
                     self.op1 = '<<'
                     self.shft = 0
                 else:
-                    assert cf2.parser_local
+                    assert cf2.parser_local, pdb.set_trace()
                     self.src_reg = cf2
                     self.src1 = cf1
                     self.op1 = '<<'
@@ -656,6 +861,7 @@ class capri_parser_expr:
                 self.process_p4_expr(p4_expr.right)
             else:
                 pass
+        '''
 
     def add_signed_const(self, s_val):
         # s_val is a signed value
@@ -690,13 +896,13 @@ class capri_parser_expr:
             # Keep operator used with constant so that expr has
             # no numerical value but all other part.
             pstr = 'EXPR:%s %s (%s %s %s) %s\n' % \
-                (self.src_reg.hfname if self.src_reg else None, self.op2,
+                (self.src_reg.hfname if isinstance(self.src_reg, capri_field) else self.src_reg, self.op2,
                  self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
                  self.op1, self.shft, self.op3)
                  
         else:
             pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
-                (self.src_reg.hfname if self.src_reg else None, self.op2,
+                (self.src_reg.hfname if isinstance(self.src_reg, capri_field) else self.src_reg, self.op2,
                  self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
                  self.op1, self.shft,
                  self.op3, self.const)
@@ -704,14 +910,13 @@ class capri_parser_expr:
 
 
     def __repr__(self):
-        if self.src_reg and not isinstance(self.src_reg, capri_field): pdb.set_trace()
         pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
-                (self.src_reg.hfname if self.src_reg else None, self.op2,
+                (self.src_reg.hfname if isinstance(self.src_reg, capri_field) else self.src_reg, self.op2,
                  self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
                  self.op1, self.shft,
                  self.op3, self.const)
-        pstr += 'pkt_offset %d, mask 0x%x, lkp_sel %d' % \
-                    (self.pkt_offset, self.mask if self.mask != None else 0, self.lkp_sel)
+        #pstr += 'pkt_offset %d, mask 0x%x, lkp_sel %d' % \
+        #            (self.pkt_offset, self.mask if self.mask != None else 0, self.lkp_sel)
         return pstr        
 
 class capri_parser:
@@ -726,8 +931,8 @@ class capri_parser:
         self.headers = []
         self.deparse_only_hdrs = []
         self.extracted_fields = []
-        self.paths = []
-        self.path_states = []
+        self.paths = []                 # headers extracted along a parse path
+        self.path_states = []           # states visited along a parse path
         self.longest_path_size = 0
         self.ohi = None
         self.ohi_used = 0
@@ -989,25 +1194,53 @@ class capri_parser:
                         pass
 
                     set_op = capri_parser_set_op(s, cfield, c[2])
-                    s.set_ops.append(set_op)
+                    if cfield.no_register():
+                        s.no_reg_set_ops.append(set_op)
+                    else:
+                        s.set_ops.append(set_op)
                     hf_name = cfield.hfname
                     if cfield.parser_local:
                         if set_op.op_type == meta_op.LOAD_REG:
                             s.local_flds[hf_name] = (cfield, 0, 1) # rd=0 wr=1
                         elif set_op.op_type == meta_op.UPDATE_REG:
                             s.local_flds[hf_name] = (cfield, 1, 1) # rd=1 wr=1
-                        self.logger.debug("%s:%s Add local field %s - %s:%d:%d" % \
+                        self.logger.debug("%s:%s Add local field %s  %s:%d:%d" % \
                             (self.d.name, s.name, hf_name, s.local_flds[hf_name][0].hfname, \
                              s.local_flds[hf_name][1], \
                              s.local_flds[hf_name][2]))
                     
-                    if set_op.op_type == meta_op.EXTRACT_REG and set_op.src_reg:
+                    if set_op.op_type == meta_op.EXTRACT_REG and set_op.src_reg and \
+                        set_op.src_reg.is_meta:
                         hf_name = set_op.src_reg.hfname
                         s.local_flds[hf_name] = (set_op.src_reg, 1, 0) # rd=1 wr=0
-                        self.logger.debug("%s:%s Add local field(Ext) %s - %s:%d:%d" % \
-                            (self.d.name, s.name, hf_name, s.local_flds[hf_name][0].hfname, \
+                        self.logger.debug("%s:%s Add local field(Ext) %s: %d:%d" % \
+                            (self.d.name, s.name, hf_name, \
                              s.local_flds[hf_name][1], \
                              s.local_flds[hf_name][2]))
+
+                    # Add any RHS variables to local_flds
+                    if set_op.capri_expr:
+                        set_op_expr = set_op.capri_expr
+                        if set_op_expr.src_reg and isinstance(set_op_expr.src_reg, capri_field):
+                            if set_op_expr.src_reg.is_meta and \
+                                set_op_expr.src_reg.hfname not in s.local_flds:
+                                hf_name = set_op_expr.src_reg.hfname
+                                s.local_flds[hf_name] = (set_op_expr.src_reg, 1, 0) # rd=1 wr=0
+                                self.logger.debug("%s:%s Add local field (RHS)%s: %d:%d" % \
+                                    (self.d.name, s.name, hf_name, \
+                                     s.local_flds[hf_name][1], \
+                                     s.local_flds[hf_name][2]))
+                        if set_op_expr.src1 and isinstance(set_op_expr.src1, capri_field):
+                            if set_op_expr.src1.is_meta and set_op_expr.src1.hfname not in s.local_flds:
+                                hf_name = set_op_expr.src1.hfname
+                                s.local_flds[hf_name] = (set_op_expr.src1, 1, 0) # rd=1 wr=0
+                                self.logger.debug("%s:%s Add local field(RHS) %s: %d:%d" % \
+                                    (self.d.name, s.name, hf_name, \
+                                     s.local_flds[hf_name][1], \
+                                     s.local_flds[hf_name][2]))
+                            # XXX - what if src1 is pkt fld not extracted in this state (reserve lkp?)
+                            # not handled currently, do it by forcing a local variable
+                            # Add it to upstream variables and make reservations
 
         for hdr in syn_headers:
             for f in hdr.fields:
@@ -1060,6 +1293,9 @@ class capri_parser:
                     if not cf:
                         cf = self.be.pa.allocate_field(b_on, self.d)
                     assert cf
+                    if cf.is_meta:
+                        assert cf.parser_local, "%s:%s %s must be parser_local for using as select" % \
+                            (self.d.name, cs.name, cf.hfname)
                     if cf.parser_local:
                         # if metadata is used for select(), it must be parser local
                         if hf_name not in cs.local_flds:
@@ -1528,7 +1764,10 @@ class capri_parser:
             extracted_hdrs = self._prune_next_states(node, node_list)
             # collect all looping states as traversed states
             looping_branches = [nxt for nxt in node.branch_to.values() if nxt not in node_list]
-            traversed_nodes += self._traverse_loops(node, looping_branches)
+            loop_traversed_nodes = self._traverse_loops(node, looping_branches)
+            for n in loop_traversed_nodes:
+                if n not in traversed_nodes:
+                    traversed_nodes.append(n)
 
         extracted_hdrs += node.headers
 
@@ -1754,6 +1993,167 @@ class capri_parser:
                                  self.states.index(self.saved_lkp_scope[cf].end_cs)))
 
     def setup_local_regs(self):
+        path_states = sorted(self.path_states, key=lambda p: len(p), reverse=True)
+        # start with longest path
+        # do data flow ananlysis per path and create in(down) and out(up) variables for each state
+        # do not share in, out objects between states (multiple down stream states can clobber each
+        # others data
+        # ALGO: Register allocation is done by doing liveness calcualtion and creating 
+        # up(out)/down(in) variables for each state. Since a given parse state can be on multiple
+        # paths, collect the proallocated register information while performing the liveness
+        # analysis on each path.
+        # Perform register allocation on each path top->bottom, allocate register for any 
+        # un-allocated variables
+        # This code does not create RIG (register interference graph).. need to see if that is 
+        # a better way to handle this.
+        cs_lfs = OrderedDict() # {cs: {in_lfs, out_lfs]}
+        for path in path_states:
+            #lf_scope = OrderedDict()
+            out_lfs = OrderedDict() # {lf: reg}
+            for cs in reversed(path):
+                # if cs.name == 'parse_trailer': pdb.set_trace()
+                if cs not in cs_lfs:
+                    cs_lfs[cs] = [OrderedDict(), OrderedDict()]
+
+                in_lfs = cs_lfs[cs][0]
+                # previous (downstream out_lf is now in_lf) copy it
+                for lf,r in out_lfs.items():
+                    if lf in in_lfs:
+                        assert in_lfs[lf] == None or r == None or in_lfs[lf] == r, pdb.set_trace()
+                        pass
+                    else:
+                        in_lfs[lf] = r
+                        if r != None:
+                            cs.active_reg_alloc(lf, r)
+                out_lfs = cs_lfs[cs][1]
+                sol_lfs = []    # start of life for this variable
+                # Don't allocate new.. just collect previously allocated
+                for (lf,rd,wr) in cs.local_flds.values():
+                    if lf in cs.saved_lkp:
+                        # saved_lkp and load_saved_lkp are handled separately
+                        continue
+                    if lf in in_lfs:
+                        rid = in_lfs[lf]
+                    else:
+                        rid = cs.active_reg_find(lf)
+
+                    if wr and not rd:
+                        sol_lfs.append(lf)
+                    elif rd:
+                        out_lfs[lf] = rid
+                    else:
+                        assert 0, pdb.set_trace # must be either wr or rd
+
+                for lf in in_lfs.keys():
+                    if lf not in out_lfs and lf not in sol_lfs and lf not in cs.load_saved_lkp:
+                        # pass thru' variable
+                        out_lfs[lf] = in_lfs[lf]
+
+            if len(out_lfs):
+                # unassigned/un-written lfs.. remove them
+                #pdb.set_trace()
+                pass
+
+            '''
+            # XXXX remove printing
+            for cs in path:
+                if cs not in cs_lfs:
+                    continue
+                self.logger.debug("%s:state %s:In LFs %s, Out LFs %s" % \
+                            (self.d.name, cs.name, [(k.hfname,t) for k,t in cs_lfs[cs][0].items()],
+                            [(k.hfname,t) for k,t in cs_lfs[cs][1].items()]))
+            '''
+            # allocate reg ids for new lfs
+            upstream_lfs = OrderedDict() #out_lfs
+            for cs in path:
+                downstream_lfs = cs_lfs[cs][0]
+                # if cs.name == 'parse_trailer': pdb.set_trace()
+                # if cs.name == 'parse_roce_v2': pdb.set_trace()
+                # take the reg assignments from upstream node for local and downstream lfs
+                for lf,r in upstream_lfs.items():
+                    if r == None:
+                        assert 0, pdb.set_trace() 
+                        continue
+                    if lf in downstream_lfs or lf.hfname in cs.local_flds:
+                        r_used = cs.active_reg_find(lf)
+                        if r_used == None:
+                            cs.active_reg_alloc(lf, r)
+                        else:
+                            assert r_used == r, pdb.set_trace()
+                        if lf in downstream_lfs:
+                            downstream_lfs[lf] = r
+
+                for lf,rd,wr in cs.local_flds.values():
+                    if lf in cs.saved_lkp:
+                        continue
+                    # Rest of the code uses cs.reserved_lfs list.. update it
+                    if lf not in cs.reserved_lfs:
+                        cs.reserved_lfs.append(lf)
+
+                    if lf in upstream_lfs:
+                        # reg should come from top, if not ignore
+                        rid = upstream_lfs[lf] 
+                        if rid == None:
+                            continue
+                        _ = cs.active_reg_alloc(lf, rid)
+                    else:
+                        rid = cs.active_reg_find(lf)
+                        if rid == None:
+                            if not lf.no_register():
+                                rid = cs.active_reg_alloc(lf)
+
+                    if lf in downstream_lfs:
+                        downstream_lfs[lf] = rid
+                
+                for lf,r in downstream_lfs.items()[:]:
+                    if r == None:
+                        #self.logger.debug("%s:%s Prune LF %s" % \
+                        #    (self.d.name, cs.name, lf.hfname))
+                        del downstream_lfs[lf]
+                    else:
+                        # Rest of the code uses cs.reserved_lfs list.. update it
+                        if lf not in cs.reserved_lfs:
+                            cs.reserved_lfs.append(lf)
+
+                upstream_lfs = OrderedDict()
+                upstream_lfs = copy.copy(downstream_lfs)
+            '''
+            lf_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
+            for cs in path:
+                for lf, rid in cs.reserved_lf_regs.items():
+                    # check top-level out_lfs for un-assigned lfs - ignore those
+                    if rid == None and lf not in out_lfs:
+                        if lf in lf_reg_allocation:
+                            rid = lf_reg_allocation.index(lf)
+                            cs.reserved_lf_regs[lf] = rid
+                        else:
+                            # allocate register if it is wr[2] and not rd[1]
+                            if lf.hfname in cs.local_flds and \
+                                cs.local_flds[lf.hfname][2] and not cs.local_flds[lf.hfname][1]:
+                                if None not in lf_reg_allocation:
+                                    assert 0, pdb.set_trace()
+                                rid = lf_reg_allocation.index(None)
+                                cs.reserved_lf_regs[lf] = rid
+                                lf_reg_allocation[rid] = lf 
+
+                # reset and re-create lf_reg_allocation for downstream node
+                lf_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
+                for lf, rid in cs.reserved_lf_regs.items():
+                    self.logger.debug("%s:state %s:Reserve LF %s reg %d" % \
+                            (self.d.name, cs.name, lf.hfname, rid))
+                    if lf in cs_lfs[cs][0] and rid != None:
+                        lf_reg_allocation[rid] = lf
+
+            '''
+        for cs in self.states:
+            if cs not in cs_lfs:
+                continue
+            self.logger.debug("%s:state %s:In LFs %s, Out LFs %s" % \
+                            (self.d.name, cs.name, [(k.hfname,t) for k,t in cs_lfs[cs][0].items()],
+                            [(k.hfname,t) for k,t in cs_lfs[cs][1].items()]))
+
+    def _setup_local_regs(self):
+        # XXX: Old code - will be removed once new code goes thru some testing
         # Perform backward search to determine scope of each local register along every path
         # for simplicity/speed, assume/allow a single-scope for a given variable so that 
         # all (thousands - 6K for nic.p4 for example) paths need not be traversed
@@ -1786,7 +2186,8 @@ class capri_parser:
                     path_cs = None
                     # Since only one scope is maintained per LF, there are new cases
                     # where same LF name must be used on different paths. This causes
-                    # that both start and end states are not on the same path, as a work-aournd
+                    # problem when both start and end states are not on the same path,
+                    # as a work-aournd,
                     # save register only in the start/end state that is on a give path
                     # XXX - keep multiple scopes per LF
                     if scope.start_cs in path:
@@ -1827,23 +2228,27 @@ class capri_parser:
 
 
     def lf_reg_find(self, lf):
+        assert 0, "Depricated function lf_reg_find"
         for i, reg_lf in enumerate(self.lf_reg_allocation):
             if lf == reg_lf:
                 return i
         return None
 
     def lf_reg_alloc(self, lf):
+        assert 0, "Depricated function lf_reg_alloc"
         for i, reg_lf in enumerate(self.lf_reg_allocation):
             if not reg_lf:
                 self.lf_reg_allocation[i] = lf
                 self.logger.debug("%s:lf_reg_alloc(), lf= %s, rid= %d" % \
                     (self.d.name, lf.hfname, i))
                 return i
+        pdb.set_trace()
         assert 0, "No lkp reg avaialable for local field %s Used %s" % \
                     (lf.hfname, [f.hfname for f in self.lf_reg_allocation])
         return None
 
     def lf_reg_free(self, lf):
+        assert 0
         for i, reg_lf in enumerate(self.lf_reg_allocation):
             if lf == reg_lf:
                 self.lf_reg_allocation[i] = None
@@ -1887,8 +2292,87 @@ class capri_parser:
         return i
 
     def reserve_lkp_regs(self, cs):
+        # Reserve all the lkp_registers that are dictated by downstream reservations
+        # 1. local_flds
+        # 2. saved_lkp (if field is used for lookup)
+        # 3. Then allocate registers to save future lkp.
+        # After all reservations are done, registers for for lookups in current state
+        # are allocated in program_capri_state()
+        for lf in cs.reserved_lfs:
+            reg_type = lkp_reg_type.LKP_REG_RETAIN
+            if lf.hfname in cs.local_flds:
+                lf,r,w = cs.local_flds[lf.hfname]
+                if w:
+                    reg_type = lkp_reg_type.LKP_REG_LOAD
+            rid = cs.active_reg_find(lf)
+            if rid == None and lf.no_register():
+                continue
+
+            assert rid != None, pdb.set_trace()
+
+            if not lf.is_meta:
+                cs.lkp_regs[rid].first_pkt_fld = lf
+
+            cs.lkp_regs[rid].type = reg_type
+            # create lkp_fld - used for l2p key mapping
+            lkp_fld = capri_lkp_fld(lf, lkp_fld_type.FLD_LOCAL)
+            lkp_fld.reg_id = rid
+            cs.lkp_flds[lf.hfname] = lkp_fld
+
+            if lf.is_meta:
+                roff = cs.lkp_regs[rid].size - lf.width
+                self.logger.debug("%s:roff for REG fld %s is set to %d" % \
+                    (cs.name, lf.hfname, roff))
+            else:
+                roff = (lf.p4_fld.offset % 8)
+
+            cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, lf.width)
+
+        for cf in cs.saved_lkp:
+            if cf not in cs.branch_on:
+                # lkp field is not used in this state, pass-thru
+                continue
+            rid, sr = self.saved_lkp_reg_find(cf)
+            assert cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_NONE, \
+                "Lkp register is double-booked"
+            cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_STORED
+            # create lkp_fld - used for l2p key mapping
+            lkp_fld = capri_lkp_fld(cf, lkp_fld_type.FLD_SAVED_REG)
+            lkp_fld.reg_id = rid
+            cs.lkp_flds[cf.hfname] = lkp_fld
+            if cf.is_meta:
+                roff = cs.lkp_regs[rid].size - cf.width
+                self.logger.debug("%s:roff for REG fld %s is set to %d" % \
+                    (cs.name, cf.hfname, roff))
+            else:
+                roff = (cf.p4_fld.offset % 8)
+            cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, cf.width)
+
+        for sf in cs.load_saved_lkp:
+            rid = cs.active_reg_alloc(sf)
+            cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_LOAD
+            cs.lkp_regs[rid].store_en = True
+            self.saved_lkp_reg_alloc(sf, rid)
+            # create lkp_fld - used for l2p key mapping
+            if sf.is_meta:
+                lkp_fld = capri_lkp_fld(sf, lkp_fld_type.FLD_LOCAL)
+            else:
+                lkp_fld = capri_lkp_fld(sf, lkp_fld_type.FLD_PKT)
+                cs.lkp_regs[rid].first_pkt_fld = sf
+            lkp_fld.reg_id = rid
+            cs.lkp_flds[sf.hfname] = lkp_fld
+            if sf.is_meta:
+                roff = cs.lkp_regs[rid].size - sf.width
+                self.logger.debug("%s:roff for REG fld %s is set to %d" % \
+                    (cs.name, sf.hfname, roff))
+            else:
+                roff = (sf.p4_fld.offset % 8)
+            cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, sf.width)
+
+    def _reserve_lkp_regs(self, cs):
         # Reserve all the lkp_registers that are dictated by upstream reservations
-        # 1. saved_lkp (if field is used for lookup) 2. reserved_lfs
+        # 1. saved_lkp (if field is used for lookup)
+        # 2. reserved_lfs
         # 3. Then allocate registers to save future lkp.
         # After all reservations are done, allocate remaining for lookups in current state
         for cf in cs.saved_lkp:
@@ -1970,14 +2454,14 @@ class capri_parser:
             elif op.op_type == meta_op.EXTRACT_REG:
                 # meta instruction - find lkp_reg holding this local variable
                 cf = op.src_reg
-                rid = self.lf_reg_find(cf)
+                rid = cs.active_reg_find(cf)
                 assert rid, "Invalid src reg  %s for EXTRACT_REG" % (cf.hfname)
                 op.rid = rid
             elif op.op_type == meta_op.EXTRACT_META:
                 # meta instruction - phv <- expr(pkt_data) or parser_local (reg)
                 cf = op.src1
                 if cf.parser_local:
-                    rid = self.lf_reg_find(cf)
+                    rid = cs.active_reg_find(cf)
                     assert rid, "Invalid src %s for EXTRACT_META" % (cf.hfname)
                     op.rid = rid
             elif op.op_type == meta_op.EXTRACT_CONST:
@@ -1987,7 +2471,8 @@ class capri_parser:
                 # find lkp_reg, set capri-expression
                 # allocation is done up-front
                 # create lkp_reg object for this state
-                rid = self.lf_reg_find(op.dst)
+                rid = cs.active_reg_find(op.dst)
+                assert rid != None, pdb.set_trace()
                 # parser local variables can be updated (reloaded)
                 if cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_RETAIN:
                     self.logger.debug("%s:%s:Reg %d changed from RETAIN to LOAD- %s" % \
@@ -2003,7 +2488,7 @@ class capri_parser:
             elif op.op_type == meta_op.UPDATE_REG:
                 # allocate/find lkp_reg, set capri-expression
                 # allocation is done up-front
-                rid = self.lf_reg_find(op.dst)
+                rid = cs.active_reg_find(op.dst)
                 cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_UPDATE
                 cs.lkp_regs[rid].capri_expr = op.capri_expr
                 if op.capri_expr:
@@ -2415,11 +2900,25 @@ class capri_parser:
                     continue
 
                 if lkp_reg.capri_expr:
-                    if lkp_reg.capri_expr.op1:
-                        assert lkp_reg.capri_expr.src1, pdb.set_trace()
+                    if lkp_reg.capri_expr.src_reg and \
+                            (not isinstance(lkp_reg.capri_expr.src_reg, capri_field) or \
+                             not lkp_reg.capri_expr.src_reg.is_meta):
+                        # pkt fld used as src2
+                        if isinstance(lkp_reg.capri_expr.src_reg, tuple):
+                            off = lkp_reg.capri_expr.src_reg[0]
+                        else:
+                            assert lkp_reg.capri_expr.src_reg in cs.fld_off, pdb.set_trace()
+                            off = cs.fld_off[lkp_reg.capri_expr.src_reg]
+                        lkp_reg.pkt_off2 = off
+                        
+                    if lkp_reg.capri_expr.src1 and \
+                            (not isinstance(lkp_reg.capri_expr.src_reg, capri_field) or \
+                             not lkp_reg.capri_expr.src1.is_meta):
+                        # pkt fld used as src1 - could be tuple
                         if isinstance(lkp_reg.capri_expr.src1, tuple):
                             off = lkp_reg.capri_expr.src1[0]
                         else:
+                            assert lkp_reg.capri_expr.src1 in cs.fld_off, pdb.set_trace()
                             off = cs.fld_off[lkp_reg.capri_expr.src1]
                         lkp_reg.pkt_off = off
                 else:
@@ -2503,9 +3002,6 @@ class capri_parser:
             self.logger.debug('%s:%s extract_len %s' % (self.d.name, cs.name, cs.extract_len))
 
             # free lkp_reg whose scope ends here
-            for lf, scope in self.lf_scope.items():
-                if cs == scope.end_cs:
-                    self.lf_reg_free(lf)
             for lf, scope in self.saved_lkp_scope.items():
                 if cs == scope.end_cs:
                     self.saved_lkp_reg_free(lf)

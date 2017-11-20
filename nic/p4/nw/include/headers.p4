@@ -376,6 +376,45 @@ header_type udp_t {
     }
 }
 
+header_type udp_payload_t {
+    fields {
+        hdr_len : 8;
+        data : *;
+    }
+    length : (hdr_len);
+    max_length : 65535;
+}
+
+header_type udp_opt_ocs_t {
+    fields {
+        kind :      8;  // 0x02
+        chksum :    8;
+    }
+}
+header_type udp_opt_timestamp_t {
+    fields {
+        kind :      8;  // 0x06
+        len  :      8;  // 10
+    }
+}
+
+header_type udp_opt_mss_t {
+    fields {
+        kind :      8;  // 0x05
+        len  :      8;  // 4
+    }
+}
+header_type udp_opt_nop_t {
+    fields {
+        kind :      8;  // 0x01
+    }
+}
+header_type udp_opt_eol_t {
+    fields {
+        kind :      8;  // 0x00
+    }
+}
+
 header_type gre_t {
     fields {
         C : 1;
