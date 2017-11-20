@@ -74,7 +74,6 @@ typedef struct pen_proxy_redir_header_v1_s {
     uint16_t            dport;
     uint8_t             af;
     uint8_t             ip_proto;
-    uint16_t            src_lif;
     uint8_t             tcp_flags;
     uint8_t             end_pad;
 } __attribute__ ((__packed__)) pen_proxy_redir_header_v1_t;

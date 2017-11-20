@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 59
+#define CAPRI_P4PLUS_NUM_SYMBOLS 63
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -563,6 +563,26 @@ capri_p4p_asm_init()
     symbols[58].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR);
     symbols[58].params[1].name = RDMA_PCIE_ATOMIC_BASE_ADDR;
     symbols[58].params[1].val = CAPRI_PCIE_ATOMIC_BASE_ADDR;
+
+    symbols[59].name = "proxyr_mpage_sem_pindex_post_update.bin";
+    symbols[59].num_params = 1;
+    symbols[59].params[0].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[59].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+
+    symbols[60].name = "proxyr_desc_free.bin";
+    symbols[60].num_params = 1;
+    symbols[60].params[0].name = RNMDR_TABLE_BASE;
+    symbols[60].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+
+    symbols[61].name = "proxyr_ppage_free.bin";
+    symbols[61].num_params = 1;
+    symbols[61].params[0].name = RNMPR_TABLE_BASE;
+    symbols[61].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+
+    symbols[62].name = "proxyr_mpage_free.bin";
+    symbols[62].num_params = 1;
+    symbols[62].params[0].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[62].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

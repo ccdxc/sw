@@ -7,7 +7,7 @@ LIBDIRS = \
           storage \
           cpu-p4plus \
           gc \
-          raw-redir-p4+ \
+          app-redir-p4+ \
           p4pt \
           eth \
           ipfix \
