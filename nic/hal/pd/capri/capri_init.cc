@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 51
+#define CAPRI_P4PLUS_NUM_SYMBOLS 52
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -516,6 +516,14 @@ capri_p4p_asm_init()
     symbols[50].num_params = 1;
     symbols[50].params[0].name = RNMDR_TABLE_BASE;
     symbols[50].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+
+    // TODO: This is a placeholder. Replace this with appropriate value based on 
+    // clock frequency.
+    symbols[51].name = "resp_rx_dcqcn_ecn_process.bin";
+    symbols[51].num_params = 1;
+    symbols[51].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
+    symbols[51].params[0].val = 50000; 
+
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

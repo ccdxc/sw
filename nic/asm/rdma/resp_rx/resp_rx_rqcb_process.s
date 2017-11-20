@@ -18,6 +18,7 @@ struct rdma_stage0_table_k k;
 #define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
 #define STATS_INFO_T struct resp_rx_stats_info_t
 #define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
+#define ECN_INFO_T  struct resp_rx_ecn_info_t
 
 #define RAW_TABLE_PC r2
 
@@ -38,6 +39,7 @@ struct rdma_stage0_table_k k;
     .param    resp_rx_rsq_backtrack_process
     .param    resp_rx_rqcb1_recirc_sge_process
     .param    resp_rx_stats_process
+    .param    resp_rx_rqcb1_ecn_process
 
 .align
 resp_rx_rqcb_process:
@@ -76,6 +78,19 @@ resp_rx_rqcb_process:
     //set DMA cmd ptr
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID) //BD Slot
 
+    //Check if ECN bits are set in Packet and congestion management is enabled.                      
+    sne      c7, k.rdma_bth_ecn, 3
+    bbne.!c7 d.congestion_mgmt_enable, 1, skip_cnp_send
+
+    //Process sending CNP packet to the requester.
+    CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, ECN_INFO_T, p_key, CAPRI_APP_DATA_BTH_P_KEY)
+    CAPRI_GET_TABLE_3_K(resp_rx_phv_t, r4)        
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_ecn_process)                                  
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES                         
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)    
+
+skip_cnp_send:
     // TODO: Migrate ACK_REQ flag to P4 table
     seq     c7, CAPRI_APP_DATA_BTH_ACK_REQ, 1
     or.c7   r7, r7, RESP_RX_FLAG_ACK_REQ

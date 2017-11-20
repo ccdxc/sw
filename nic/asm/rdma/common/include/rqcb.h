@@ -7,6 +7,7 @@
 #define RSQ_RING_ID 	1
 #define ACK_NAK_RING_ID 2
 #define RSQ_BT_RING_ID 	3
+#define CNP_RING_ID     4
 
 #define RQ_P_INDEX d.{ring0.pindex}.hx
 #define RQ_C_INDEX d.{ring0.cindex}.hx
@@ -19,6 +20,9 @@
 
 #define RSQ_BT_P_INDEX d.{ring3.pindex}.hx
 #define RSQ_BT_C_INDEX d.{ring3.cindex}.hx
+
+#define CNP_P_INDEX d.{ring4.pindex}.hx
+#define CNP_C_INDEX d.{ring4.cindex}.hx
 
 #define PROXY_RQ_C_INDEX   d.{proxy_cindex}.hx
 
@@ -43,7 +47,8 @@ struct rqcb0_t {
     };
 
     immdt_as_dbell: 1;
-    rsvd0: 2;
+    congestion_mgmt_enable:1;
+    rsvd0: 1;
     log_rsq_size: 5;
     
     token_id: 8;
@@ -101,7 +106,6 @@ struct rqcb1_t {
     rsvd: 8;
 };
 
-
 struct rqcb4_t {
     num_bytes: 64;
     num_pkts: 32;
@@ -126,6 +130,13 @@ struct rqcb_t {
     struct rqcb1_t rqcb2;
     struct rqcb1_t rqcb3;
     struct rqcb4_t rqcb4;
+};
+
+struct dcqcn_cb_t {
+    last_cnp_timestamp: 48;
+    partition_key: 16;
+    cur_timestamp: 48; // For debugging on Model since model doesnt have timestamps
+    pad : 400;
 };
 
 #endif // __RQCB_H

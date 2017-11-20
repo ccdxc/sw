@@ -15,6 +15,7 @@
 #define RESP_TX_DMA_CMD_HDR_TEMPLATE    3
 #define RESP_TX_DMA_CMD_BTH             4
 #define RESP_TX_DMA_CMD_AETH            5
+#define RESP_TX_DMA_CMD_CNP_RSVD        5 // CNP packets do not have AETH header. Re-using index.
 #define RESP_TX_DMA_CMD_PYLD_BASE       6
 
 #define RESP_TX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
@@ -26,7 +27,10 @@ struct resp_tx_phv_t {
     // scratch (flit 6 - 7)
     db_data1: 64;
     db_data2: 64;
-    struct rdma_aeth_t aeth;
+    union {
+        struct rdma_cnp_rsvd_t cnp_rsvd;
+        struct rdma_aeth_t aeth;
+    }; // CNP packets do not have aeth header.
     struct rdma_bth_t bth;
     struct p4plus_to_p4_header_t p4plus_to_p4;
 
@@ -158,6 +162,18 @@ struct resp_tx_rsq_backtrack_adjust_process_k_t {
     struct phv_global_common_t global;
 };
 
+
+struct resp_tx_rqcb_to_cnp_info_t {
+    new_c_index: 16;
+    pad: 144;   
+};  
+    
+struct resp_tx_cnp_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_tx_rqcb_to_cnp_info_t args;
+    struct resp_tx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};  
 
 
 #endif //__RESP_TX_H

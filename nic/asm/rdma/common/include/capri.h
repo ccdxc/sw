@@ -38,7 +38,7 @@
 
 // app data fields
 #define CAPRI_APP_DATA_RAW_FLAGS k.rdma_bth_raw_flags
-#define CAPRI_APP_DATA_PAYLOAD_LEN k.rdma_bth_payload_len
+#define CAPRI_APP_DATA_PAYLOAD_LEN k.{rdma_bth_payload_len_sbit0_ebit5...rdma_bth_payload_len_sbit6_ebit13}
 
 #define CAPRI_RECIRC_REASON_NONE                    0
 #define CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE   1
@@ -54,6 +54,7 @@
 #define CAPRI_APP_DATA_AETH_MSN k.rdma_bth_aeth_aeth_msn
 #define CAPRI_APP_DATA_AETH_SYNDROME k.rdma_bth_aeth_aeth_syndrome
 #define CAPRI_APP_DATA_BTH_ACK_REQ  k.rdma_bth_bth_a
+#define CAPRI_APP_DATA_BTH_P_KEY k.rdma_bth_bth_pkey
 
 //DETH header fields
 #define CAPRI_RXDMA_DETH_Q_KEY                k.{rdma_bth_deth_deth_q_key_sbit0_ebit7...rdma_bth_deth_deth_q_key_sbit8_ebit31}

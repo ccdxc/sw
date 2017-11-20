@@ -115,6 +115,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define P4_SESSION_STATE_BASE           "p4_session_state_base"
 #define P4_FLOW_STATS_BASE              "p4_flow_stats_base"
 #define P4_FLOW_ATOMIC_STATS_BASE       "p4_flow_atomic_stats_base"
+#define NUM_CLOCK_TICKS_PER_CNP         "rdma_num_clock_ticks_per_cnp"
 
 typedef struct capri_descr_s {
         uint64_t        scratch[8];

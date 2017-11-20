@@ -971,6 +971,7 @@ typedef struct header_template_s {
 #define RSQ_RING_ID           RING_ID_1
 #define ACK_NAK_RING_ID       RING_ID_2
 #define RSQ_BACKTRACK_RING_ID RING_ID_3 
+#define CNP_RING_ID           RING_ID_4
 #define MAX_RQ_RINGS          6
 
 typedef struct rqcb0_s {
@@ -997,13 +998,13 @@ typedef struct rqcb0_s {
     uint32_t  log_rq_page_size: 5;
     uint32_t  log_pmtu: 5;
 
-    uint16_t  rsq_pindex_prime;
+    uint16_t rsq_pindex_prime;
     uint8_t  nxt_to_go_token_id;
     uint8_t  token_id;
     uint8_t  log_rsq_size: 5;
-    uint8_t  rsvd0:2;
-
-    uint8_t immdt_as_dbell:1;
+    uint8_t  rsvd0:1;
+    uint8_t  congestion_mgmt_enable:1;
+    uint8_t  immdt_as_dbell:1;
 
     union {
         uint32_t rsq_base_addr;
@@ -1055,6 +1056,7 @@ typedef struct rqcb2_s {
     uint8_t             rsvd1[6];
 } PACKED rqcb2_t;
 
+
 typedef struct rqcb4_s {
     uint8_t  rsvd[28];
     uint16_t max_pkts_in_any_msg;
@@ -1080,6 +1082,15 @@ typedef struct rqcb_s {
     uint8_t  rsvd[64];
     rqcb4_t  rqcb4; // RESP_RX stats
 } PACKED rqcb_t;
+
+//dcqcn_cb_t dynamically allocated to store dcqcn related info in HBM
+typedef struct dcqcn_cb_s {
+    uint8_t             rsvd[50];
+    uint64_t            cur_timestamp: 48; // For model testing only. Will be removed.
+    uint16_t            partition_key;
+    uint64_t            last_cnp_timestamp: 48;
+} PACKED dcqcn_cb_t;
+
 
 #define MAX_SRQ_RINGS 6
 

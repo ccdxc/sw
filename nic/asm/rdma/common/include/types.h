@@ -132,6 +132,10 @@ struct rdma_atomiceth_t {
     sll.!_tmp_c     _credits, _credits, 1;
 
 
+struct rdma_cnp_rsvd_t {
+    rsvd        : 128;
+};  
+
 struct rdma_aeth_t {
     syndrome    : 8;
     msn         : 24;
@@ -243,7 +247,8 @@ struct p4_2_p4plus_app_hdr_t {
     raw_flags        : 16; // copied directly from p4 rdma table
 //    mac_da_inner     : 48; // from inner l2-hdr
 //    mac_sa_inner     : 48; // from inner l2-hdr
-    payload_len      : 16;
+    ecn              : 2;
+    payload_len      : 14;
     struct rdma_hdr_t rdma_hdr;
 };
 
@@ -257,7 +262,8 @@ struct app_data0_0_t {
     flags            : 4;
     rdma_hdr_len     : 8;  // copied directly from p4 rdma table
     raw_flags        : 16; // copied directly from p4 rdma table
-    payload_len      : 16;
+    ecn              : 2;
+    payload_len      : 14;
     struct rdma_hdr0_t rdma_hdr;   // 112 bits
 };
 
@@ -357,6 +363,7 @@ struct resp_tx_flags_t {
 
 #define RDMA_SERV_TYPE_RC                      0
 #define RDMA_SERV_TYPE_UD                      3
+#define RDMA_SERV_TYPE_CNP                     4
 
 #define RDMA_PKT_OPC_SEND_FIRST                0
 #define RDMA_PKT_OPC_SEND_MIDDLE               1
@@ -382,6 +389,8 @@ struct resp_tx_flags_t {
 #define RDMA_PKT_OPC_RESYNC                    21
 #define RDMA_PKT_OPC_SEND_LAST_WITH_INV        22
 #define RDMA_PKT_OPC_SEND_ONLY_WITH_INV        23
+
+#define RDMA_PKT_OPC_CNP                       1
 
 union roce_opcode_flags_t {
     flags: 16;
@@ -839,7 +848,8 @@ struct p4_to_p4plus_roce_header_t {
     table3_valid : 1;
     rdma_hdr_len : 8;
     raw_flags : 16;
-    payload_len : 16;
+    ecn         : 2;
+    payload_len : 14;
 };
 
 #define RDMA_UD_FEEDBACK          0x1

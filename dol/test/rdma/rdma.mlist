@@ -319,6 +319,22 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_SEND_ONLY_ECN
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_ecn
+        spec    : resp_rx_send_only_ecn.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_ECN_TIMESTAMP
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_ecn_timestamp
+        spec    : resp_rx_send_only_ecn_timestamp.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_OPTIONS
         enable  : False
         package : test.rdma

@@ -284,7 +284,35 @@ class QpObject(base.ConfigObjectBase):
         halapi.ModifyQps([self])
 
         return
-         
+
+    # Routines to read and write to dcqcn_cb    
+    def WriteDcqcnCb(self):
+        if (GlobalOptions.dryrun): return
+        # dcqcn_cb is located after header_template. header_template is 46 bytes len.
+        cfglogger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 46, 64))
+        model_wrap.write_mem(self.header_temp_addr + 46, bytes(self.data), 64)
+        self.ReadDcqcnCb()
+        return
+
+    def ReadDcqcnCb(self):
+        if (GlobalOptions.dryrun):
+            data = bytes(64)
+            self.data = RdmaDCQCNstate(data)
+            return
+        self.data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + 46, 64))
+        self.data.show()
+        cfglogger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 46, 64))
+        return
+
+class RdmaDCQCNstate(scapy.Packet):
+    name = "RdmaDCQCNstate"
+    fields_desc = [
+        scapy.BitField("last_cnp_timestamp", 0, 48),
+        scapy.BitField("partition_key", 0, 16),
+        scapy.BitField("cur_timestamp", 0, 48),
+        scapy.BitField("pad", 0, 400),
+    ]
+
 class QpObjectHelper:
     def __init__(self):
         self.qps = []

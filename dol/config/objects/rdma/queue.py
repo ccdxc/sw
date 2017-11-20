@@ -50,7 +50,8 @@ class RdmaRQstate(Packet):
         IntField("rsq_base_addr", 0),
 
         BitField("immdt_as_dbell", 0, 1),
-        BitField("rsvd0", 0, 2),
+        BitField("rsvd0", 0, 1),
+        BitField("congestion_mgmt_enable", 0, 1),
         BitField("log_rsq_size", 0, 5),
         ByteField("token_id", 0),
         ByteField("nxt_to_go_token_id", 0),
@@ -308,7 +309,7 @@ class RdmaQstateObject(object):
         self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
         self.data.show()
         cfglogger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
-
+    
     def incr_pindex(self, ring, ring_size):
         assert(ring < 7)
         self.set_pindex(ring, ((self.get_pindex(ring) + 1) & (ring_size - 1)))

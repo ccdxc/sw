@@ -63,7 +63,6 @@
     phvwr       p.db_data1, _db_data_r.dx; \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data1, db_data1, _db_addr_r);
 
-
 #define RSQ_EVAL_MIDDLE     0
 #define RSQ_WALK_FORWARD    1
 #define RSQ_WALK_BACKWARD   2
@@ -493,9 +492,24 @@ struct resp_rx_stats_info_t {
     pad : 157;
 };
 
+
 struct resp_rx_stats_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct resp_rx_stats_info_t args;
+    struct resp_rx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+//20
+struct resp_rx_ecn_info_t {
+    p_key: 16;
+    pad : 144;
+};
+
+
+struct resp_rx_ecn_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_rx_ecn_info_t args;
     struct resp_rx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };

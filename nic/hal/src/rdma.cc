@@ -715,8 +715,9 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     HAL_TRACE_DEBUG("sqwqe_size: {} rqwqe_size: {}",
                     sqwqe_size, rqwqe_size);
-    
-    header_template_addr = g_rdma_manager->HbmAlloc(sizeof(header_template_t));
+   
+    // DCQCN related info is stored after header-template info 
+    header_template_addr = g_rdma_manager->HbmAlloc(sizeof(header_template_t) + sizeof(dcqcn_cb_t));
     HAL_ASSERT(header_template_addr);
     HAL_ASSERT(header_template_addr != (uint32_t)-ENOMEM);
     // Fill sqcb and write to HW
@@ -786,6 +787,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.cache = FALSE;
     rqcb.rqcb0.immdt_as_dbell = spec.immdt_as_dbell();
     rqcb.rqcb0.pd = spec.pd();
+    rqcb.rqcb0.congestion_mgmt_enable = TRUE;  // Set always to be true for now.
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
     rqcb.rqcb1.header_template_addr = header_template_addr;
     rqcb.rqcb1.p4plus_to_p4_flags = 0xA;

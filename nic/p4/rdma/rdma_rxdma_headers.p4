@@ -11,7 +11,8 @@ header_type p4_to_p4plus_roce_bth_header_t {
         table3_valid        : 1;
         rdma_hdr_len        : 8;
         raw_flags           : 16;
-        payload_len         : 16;
+        ecn                 : 2;
+        payload_len         : 14;
 
         // BTH header
         bth_opcode          : 8;
