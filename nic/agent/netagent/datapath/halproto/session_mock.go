@@ -185,6 +185,64 @@ func (_mr *MockisFlowKey_FlowKeyMockRecorder) Size() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisFlowKey_FlowKey)(nil).Size))
 }
 
+// MockisSessionStatus_AlgInfo is a mock of isSessionStatus_AlgInfo interface
+type MockisSessionStatus_AlgInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisSessionStatus_AlgInfoMockRecorder
+}
+
+// MockisSessionStatus_AlgInfoMockRecorder is the mock recorder for MockisSessionStatus_AlgInfo
+type MockisSessionStatus_AlgInfoMockRecorder struct {
+	mock *MockisSessionStatus_AlgInfo
+}
+
+// NewMockisSessionStatus_AlgInfo creates a new mock instance
+func NewMockisSessionStatus_AlgInfo(ctrl *gomock.Controller) *MockisSessionStatus_AlgInfo {
+	mock := &MockisSessionStatus_AlgInfo{ctrl: ctrl}
+	mock.recorder = &MockisSessionStatus_AlgInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisSessionStatus_AlgInfo) EXPECT() *MockisSessionStatus_AlgInfoMockRecorder {
+	return _m.recorder
+}
+
+// isSessionStatus_AlgInfo mocks base method
+func (_m *MockisSessionStatus_AlgInfo) isSessionStatus_AlgInfo() {
+	_m.ctrl.Call(_m, "isSessionStatus_AlgInfo")
+}
+
+// isSessionStatus_AlgInfo indicates an expected call of isSessionStatus_AlgInfo
+func (_mr *MockisSessionStatus_AlgInfoMockRecorder) isSessionStatus_AlgInfo() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isSessionStatus_AlgInfo", reflect.TypeOf((*MockisSessionStatus_AlgInfo)(nil).isSessionStatus_AlgInfo))
+}
+
+// MarshalTo mocks base method
+func (_m *MockisSessionStatus_AlgInfo) MarshalTo(_param0 []byte) (int, error) {
+	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (_mr *MockisSessionStatus_AlgInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisSessionStatus_AlgInfo)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (_m *MockisSessionStatus_AlgInfo) Size() int {
+	ret := _m.ctrl.Call(_m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (_mr *MockisSessionStatus_AlgInfoMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisSessionStatus_AlgInfo)(nil).Size))
+}
+
 // MockSessionClient is a mock of SessionClient interface
 type MockSessionClient struct {
 	ctrl     *gomock.Controller

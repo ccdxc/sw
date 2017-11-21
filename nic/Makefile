@@ -66,8 +66,7 @@ capmodel:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_cli
 
 go-proto:
-	#cd agent/netagent/datapath/halproto && make
-	#$(MAKE) -C agent/netagent/datapath/halproto
+	$(MAKE) -C agent/netagent/datapath/halproto
 
 bazel-build:
 	$(MAKE) -C p4

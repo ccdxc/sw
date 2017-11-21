@@ -54,13 +54,17 @@ func setup() (*RestServer, error) {
 		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
 		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
 
+		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
+		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
+		dp.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+
 		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
 		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
 		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
 
-		dp.Hal.MockClients.MockTnclient.EXPECT().TenantCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		dp.Hal.MockClients.MockTnclient.EXPECT().TenantUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Hal.MockClients.MockTnclient.EXPECT().TenantDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
+		dp.Hal.MockClients.MockTnclient.EXPECT().VrfUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
+		dp.Hal.MockClients.MockTnclient.EXPECT().VrfDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
 	err = populatePreTestData(nagent)

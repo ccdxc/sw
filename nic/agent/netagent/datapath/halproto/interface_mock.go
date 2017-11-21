@@ -11,41 +11,41 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-// MockisLifKeyHandle_KeyOrHandle is a mock of isLifKeyHandle_KeyOrHandle interface
-type MockisLifKeyHandle_KeyOrHandle struct {
+// MockisIfEnicInfo_EnicTypeInfo is a mock of isIfEnicInfo_EnicTypeInfo interface
+type MockisIfEnicInfo_EnicTypeInfo struct {
 	ctrl     *gomock.Controller
-	recorder *MockisLifKeyHandle_KeyOrHandleMockRecorder
+	recorder *MockisIfEnicInfo_EnicTypeInfoMockRecorder
 }
 
-// MockisLifKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisLifKeyHandle_KeyOrHandle
-type MockisLifKeyHandle_KeyOrHandleMockRecorder struct {
-	mock *MockisLifKeyHandle_KeyOrHandle
+// MockisIfEnicInfo_EnicTypeInfoMockRecorder is the mock recorder for MockisIfEnicInfo_EnicTypeInfo
+type MockisIfEnicInfo_EnicTypeInfoMockRecorder struct {
+	mock *MockisIfEnicInfo_EnicTypeInfo
 }
 
-// NewMockisLifKeyHandle_KeyOrHandle creates a new mock instance
-func NewMockisLifKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisLifKeyHandle_KeyOrHandle {
-	mock := &MockisLifKeyHandle_KeyOrHandle{ctrl: ctrl}
-	mock.recorder = &MockisLifKeyHandle_KeyOrHandleMockRecorder{mock}
+// NewMockisIfEnicInfo_EnicTypeInfo creates a new mock instance
+func NewMockisIfEnicInfo_EnicTypeInfo(ctrl *gomock.Controller) *MockisIfEnicInfo_EnicTypeInfo {
+	mock := &MockisIfEnicInfo_EnicTypeInfo{ctrl: ctrl}
+	mock.recorder = &MockisIfEnicInfo_EnicTypeInfoMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisLifKeyHandle_KeyOrHandle) EXPECT() *MockisLifKeyHandle_KeyOrHandleMockRecorder {
+func (_m *MockisIfEnicInfo_EnicTypeInfo) EXPECT() *MockisIfEnicInfo_EnicTypeInfoMockRecorder {
 	return _m.recorder
 }
 
-// isLifKeyHandle_KeyOrHandle mocks base method
-func (_m *MockisLifKeyHandle_KeyOrHandle) isLifKeyHandle_KeyOrHandle() {
-	_m.ctrl.Call(_m, "isLifKeyHandle_KeyOrHandle")
+// isIfEnicInfo_EnicTypeInfo mocks base method
+func (_m *MockisIfEnicInfo_EnicTypeInfo) isIfEnicInfo_EnicTypeInfo() {
+	_m.ctrl.Call(_m, "isIfEnicInfo_EnicTypeInfo")
 }
 
-// isLifKeyHandle_KeyOrHandle indicates an expected call of isLifKeyHandle_KeyOrHandle
-func (_mr *MockisLifKeyHandle_KeyOrHandleMockRecorder) isLifKeyHandle_KeyOrHandle() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isLifKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisLifKeyHandle_KeyOrHandle)(nil).isLifKeyHandle_KeyOrHandle))
+// isIfEnicInfo_EnicTypeInfo indicates an expected call of isIfEnicInfo_EnicTypeInfo
+func (_mr *MockisIfEnicInfo_EnicTypeInfoMockRecorder) isIfEnicInfo_EnicTypeInfo() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isIfEnicInfo_EnicTypeInfo", reflect.TypeOf((*MockisIfEnicInfo_EnicTypeInfo)(nil).isIfEnicInfo_EnicTypeInfo))
 }
 
 // MarshalTo mocks base method
-func (_m *MockisLifKeyHandle_KeyOrHandle) MarshalTo(_param0 []byte) (int, error) {
+func (_m *MockisIfEnicInfo_EnicTypeInfo) MarshalTo(_param0 []byte) (int, error) {
 	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
@@ -53,78 +53,20 @@ func (_m *MockisLifKeyHandle_KeyOrHandle) MarshalTo(_param0 []byte) (int, error)
 }
 
 // MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisLifKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisLifKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+func (_mr *MockisIfEnicInfo_EnicTypeInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisIfEnicInfo_EnicTypeInfo)(nil).MarshalTo), arg0)
 }
 
 // Size mocks base method
-func (_m *MockisLifKeyHandle_KeyOrHandle) Size() int {
+func (_m *MockisIfEnicInfo_EnicTypeInfo) Size() int {
 	ret := _m.ctrl.Call(_m, "Size")
 	ret0, _ := ret[0].(int)
 	return ret0
 }
 
 // Size indicates an expected call of Size
-func (_mr *MockisLifKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisLifKeyHandle_KeyOrHandle)(nil).Size))
-}
-
-// MockisInterfaceKeyHandle_KeyOrHandle is a mock of isInterfaceKeyHandle_KeyOrHandle interface
-type MockisInterfaceKeyHandle_KeyOrHandle struct {
-	ctrl     *gomock.Controller
-	recorder *MockisInterfaceKeyHandle_KeyOrHandleMockRecorder
-}
-
-// MockisInterfaceKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisInterfaceKeyHandle_KeyOrHandle
-type MockisInterfaceKeyHandle_KeyOrHandleMockRecorder struct {
-	mock *MockisInterfaceKeyHandle_KeyOrHandle
-}
-
-// NewMockisInterfaceKeyHandle_KeyOrHandle creates a new mock instance
-func NewMockisInterfaceKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisInterfaceKeyHandle_KeyOrHandle {
-	mock := &MockisInterfaceKeyHandle_KeyOrHandle{ctrl: ctrl}
-	mock.recorder = &MockisInterfaceKeyHandle_KeyOrHandleMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisInterfaceKeyHandle_KeyOrHandle) EXPECT() *MockisInterfaceKeyHandle_KeyOrHandleMockRecorder {
-	return _m.recorder
-}
-
-// isInterfaceKeyHandle_KeyOrHandle mocks base method
-func (_m *MockisInterfaceKeyHandle_KeyOrHandle) isInterfaceKeyHandle_KeyOrHandle() {
-	_m.ctrl.Call(_m, "isInterfaceKeyHandle_KeyOrHandle")
-}
-
-// isInterfaceKeyHandle_KeyOrHandle indicates an expected call of isInterfaceKeyHandle_KeyOrHandle
-func (_mr *MockisInterfaceKeyHandle_KeyOrHandleMockRecorder) isInterfaceKeyHandle_KeyOrHandle() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isInterfaceKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisInterfaceKeyHandle_KeyOrHandle)(nil).isInterfaceKeyHandle_KeyOrHandle))
-}
-
-// MarshalTo mocks base method
-func (_m *MockisInterfaceKeyHandle_KeyOrHandle) MarshalTo(_param0 []byte) (int, error) {
-	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisInterfaceKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisInterfaceKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
-}
-
-// Size mocks base method
-func (_m *MockisInterfaceKeyHandle_KeyOrHandle) Size() int {
-	ret := _m.ctrl.Call(_m, "Size")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Size indicates an expected call of Size
-func (_mr *MockisInterfaceKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisInterfaceKeyHandle_KeyOrHandle)(nil).Size))
+func (_mr *MockisIfEnicInfo_EnicTypeInfoMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisIfEnicInfo_EnicTypeInfo)(nil).Size))
 }
 
 // MockisIfTunnelInfo_EncapInfo is a mock of isIfTunnelInfo_EncapInfo interface

@@ -22,7 +22,7 @@ import (
 
 // integ test suite parameters
 const (
-	numIntegTestAgents = 16
+	numIntegTestAgents = 3
 	integTestRPCURL    = "localhost:9595"
 	integTestRESTURL   = "localhost:9596"
 	agentDatapathKind  = "mock"

@@ -11,64 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-// MockisSecurityProfileKeyHandle_KeyOrHandle is a mock of isSecurityProfileKeyHandle_KeyOrHandle interface
-type MockisSecurityProfileKeyHandle_KeyOrHandle struct {
-	ctrl     *gomock.Controller
-	recorder *MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder
-}
-
-// MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisSecurityProfileKeyHandle_KeyOrHandle
-type MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder struct {
-	mock *MockisSecurityProfileKeyHandle_KeyOrHandle
-}
-
-// NewMockisSecurityProfileKeyHandle_KeyOrHandle creates a new mock instance
-func NewMockisSecurityProfileKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisSecurityProfileKeyHandle_KeyOrHandle {
-	mock := &MockisSecurityProfileKeyHandle_KeyOrHandle{ctrl: ctrl}
-	mock.recorder = &MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisSecurityProfileKeyHandle_KeyOrHandle) EXPECT() *MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder {
-	return _m.recorder
-}
-
-// isSecurityProfileKeyHandle_KeyOrHandle mocks base method
-func (_m *MockisSecurityProfileKeyHandle_KeyOrHandle) isSecurityProfileKeyHandle_KeyOrHandle() {
-	_m.ctrl.Call(_m, "isSecurityProfileKeyHandle_KeyOrHandle")
-}
-
-// isSecurityProfileKeyHandle_KeyOrHandle indicates an expected call of isSecurityProfileKeyHandle_KeyOrHandle
-func (_mr *MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder) isSecurityProfileKeyHandle_KeyOrHandle() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isSecurityProfileKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisSecurityProfileKeyHandle_KeyOrHandle)(nil).isSecurityProfileKeyHandle_KeyOrHandle))
-}
-
-// MarshalTo mocks base method
-func (_m *MockisSecurityProfileKeyHandle_KeyOrHandle) MarshalTo(_param0 []byte) (int, error) {
-	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisSecurityProfileKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
-}
-
-// Size mocks base method
-func (_m *MockisSecurityProfileKeyHandle_KeyOrHandle) Size() int {
-	ret := _m.ctrl.Call(_m, "Size")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Size indicates an expected call of Size
-func (_mr *MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisSecurityProfileKeyHandle_KeyOrHandle)(nil).Size))
-}
-
 // MockisService_L4Info is a mock of isService_L4Info interface
 type MockisService_L4Info struct {
 	ctrl     *gomock.Controller
@@ -185,64 +127,6 @@ func (_mr *MockisDoSService_L4InfoMockRecorder) Size() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisDoSService_L4Info)(nil).Size))
 }
 
-// MockisSecurityGroupKeyHandle_KeyOrHandle is a mock of isSecurityGroupKeyHandle_KeyOrHandle interface
-type MockisSecurityGroupKeyHandle_KeyOrHandle struct {
-	ctrl     *gomock.Controller
-	recorder *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder
-}
-
-// MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisSecurityGroupKeyHandle_KeyOrHandle
-type MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder struct {
-	mock *MockisSecurityGroupKeyHandle_KeyOrHandle
-}
-
-// NewMockisSecurityGroupKeyHandle_KeyOrHandle creates a new mock instance
-func NewMockisSecurityGroupKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisSecurityGroupKeyHandle_KeyOrHandle {
-	mock := &MockisSecurityGroupKeyHandle_KeyOrHandle{ctrl: ctrl}
-	mock.recorder = &MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisSecurityGroupKeyHandle_KeyOrHandle) EXPECT() *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder {
-	return _m.recorder
-}
-
-// isSecurityGroupKeyHandle_KeyOrHandle mocks base method
-func (_m *MockisSecurityGroupKeyHandle_KeyOrHandle) isSecurityGroupKeyHandle_KeyOrHandle() {
-	_m.ctrl.Call(_m, "isSecurityGroupKeyHandle_KeyOrHandle")
-}
-
-// isSecurityGroupKeyHandle_KeyOrHandle indicates an expected call of isSecurityGroupKeyHandle_KeyOrHandle
-func (_mr *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder) isSecurityGroupKeyHandle_KeyOrHandle() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isSecurityGroupKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisSecurityGroupKeyHandle_KeyOrHandle)(nil).isSecurityGroupKeyHandle_KeyOrHandle))
-}
-
-// MarshalTo mocks base method
-func (_m *MockisSecurityGroupKeyHandle_KeyOrHandle) MarshalTo(_param0 []byte) (int, error) {
-	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisSecurityGroupKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
-}
-
-// Size mocks base method
-func (_m *MockisSecurityGroupKeyHandle_KeyOrHandle) Size() int {
-	ret := _m.ctrl.Call(_m, "Size")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Size indicates an expected call of Size
-func (_mr *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisSecurityGroupKeyHandle_KeyOrHandle)(nil).Size))
-}
-
 // MockNwSecurityClient is a mock of NwSecurityClient interface
 type MockNwSecurityClient struct {
 	ctrl     *gomock.Controller
@@ -336,6 +220,78 @@ func (_m *MockNwSecurityClient) SecurityProfileGet(ctx context.Context, in *Secu
 func (_mr *MockNwSecurityClientMockRecorder) SecurityProfileGet(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	_s := append([]interface{}{arg0, arg1}, arg2...)
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityProfileGet", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityProfileGet), _s...)
+}
+
+// SecurityGroupPolicyCreate mocks base method
+func (_m *MockNwSecurityClient) SecurityGroupPolicyCreate(ctx context.Context, in *SecurityGroupPolicyRequestMsg, opts ...grpc.CallOption) (*SecurityGroupPolicyResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "SecurityGroupPolicyCreate", _s...)
+	ret0, _ := ret[0].(*SecurityGroupPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityGroupPolicyCreate indicates an expected call of SecurityGroupPolicyCreate
+func (_mr *MockNwSecurityClientMockRecorder) SecurityGroupPolicyCreate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupPolicyCreate", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityGroupPolicyCreate), _s...)
+}
+
+// SecurityGroupPolicyUpdate mocks base method
+func (_m *MockNwSecurityClient) SecurityGroupPolicyUpdate(ctx context.Context, in *SecurityGroupPolicyRequestMsg, opts ...grpc.CallOption) (*SecurityGroupPolicyResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "SecurityGroupPolicyUpdate", _s...)
+	ret0, _ := ret[0].(*SecurityGroupPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityGroupPolicyUpdate indicates an expected call of SecurityGroupPolicyUpdate
+func (_mr *MockNwSecurityClientMockRecorder) SecurityGroupPolicyUpdate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupPolicyUpdate", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityGroupPolicyUpdate), _s...)
+}
+
+// SecurityGroupPolicyDelete mocks base method
+func (_m *MockNwSecurityClient) SecurityGroupPolicyDelete(ctx context.Context, in *SecurityGroupPolicyDeleteRequestMsg, opts ...grpc.CallOption) (*SecurityGroupPolicyDeleteResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "SecurityGroupPolicyDelete", _s...)
+	ret0, _ := ret[0].(*SecurityGroupPolicyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityGroupPolicyDelete indicates an expected call of SecurityGroupPolicyDelete
+func (_mr *MockNwSecurityClientMockRecorder) SecurityGroupPolicyDelete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupPolicyDelete", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityGroupPolicyDelete), _s...)
+}
+
+// SecurityGroupPolicyGet mocks base method
+func (_m *MockNwSecurityClient) SecurityGroupPolicyGet(ctx context.Context, in *SecurityGroupPolicyGetRequestMsg, opts ...grpc.CallOption) (*SecurityGroupPolicyGetResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "SecurityGroupPolicyGet", _s...)
+	ret0, _ := ret[0].(*SecurityGroupPolicyGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityGroupPolicyGet indicates an expected call of SecurityGroupPolicyGet
+func (_mr *MockNwSecurityClientMockRecorder) SecurityGroupPolicyGet(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupPolicyGet", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityGroupPolicyGet), _s...)
 }
 
 // SecurityGroupCreate mocks base method
@@ -555,6 +511,58 @@ func (_m *MockNwSecurityServer) SecurityProfileGet(_param0 context.Context, _par
 // SecurityProfileGet indicates an expected call of SecurityProfileGet
 func (_mr *MockNwSecurityServerMockRecorder) SecurityProfileGet(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityProfileGet", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityProfileGet), arg0, arg1)
+}
+
+// SecurityGroupPolicyCreate mocks base method
+func (_m *MockNwSecurityServer) SecurityGroupPolicyCreate(_param0 context.Context, _param1 *SecurityGroupPolicyRequestMsg) (*SecurityGroupPolicyResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityGroupPolicyCreate", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityGroupPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityGroupPolicyCreate indicates an expected call of SecurityGroupPolicyCreate
+func (_mr *MockNwSecurityServerMockRecorder) SecurityGroupPolicyCreate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupPolicyCreate", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityGroupPolicyCreate), arg0, arg1)
+}
+
+// SecurityGroupPolicyUpdate mocks base method
+func (_m *MockNwSecurityServer) SecurityGroupPolicyUpdate(_param0 context.Context, _param1 *SecurityGroupPolicyRequestMsg) (*SecurityGroupPolicyResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityGroupPolicyUpdate", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityGroupPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityGroupPolicyUpdate indicates an expected call of SecurityGroupPolicyUpdate
+func (_mr *MockNwSecurityServerMockRecorder) SecurityGroupPolicyUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupPolicyUpdate", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityGroupPolicyUpdate), arg0, arg1)
+}
+
+// SecurityGroupPolicyDelete mocks base method
+func (_m *MockNwSecurityServer) SecurityGroupPolicyDelete(_param0 context.Context, _param1 *SecurityGroupPolicyDeleteRequestMsg) (*SecurityGroupPolicyDeleteResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityGroupPolicyDelete", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityGroupPolicyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityGroupPolicyDelete indicates an expected call of SecurityGroupPolicyDelete
+func (_mr *MockNwSecurityServerMockRecorder) SecurityGroupPolicyDelete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupPolicyDelete", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityGroupPolicyDelete), arg0, arg1)
+}
+
+// SecurityGroupPolicyGet mocks base method
+func (_m *MockNwSecurityServer) SecurityGroupPolicyGet(_param0 context.Context, _param1 *SecurityGroupPolicyGetRequestMsg) (*SecurityGroupPolicyGetResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityGroupPolicyGet", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityGroupPolicyGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityGroupPolicyGet indicates an expected call of SecurityGroupPolicyGet
+func (_mr *MockNwSecurityServerMockRecorder) SecurityGroupPolicyGet(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityGroupPolicyGet", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityGroupPolicyGet), arg0, arg1)
 }
 
 // SecurityGroupCreate mocks base method

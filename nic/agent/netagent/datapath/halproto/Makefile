@@ -1,11 +1,7 @@
 GEN_DIR = ${CURDIR}
-HAL_PROTO_FILES = $(wildcard ../../../../proto/hal/*.proto)
+HAL_PROTO_FILES = $(shell ls ${CURDIR}/../../../../proto/hal/ | grep .proto)
 default:
 	$(MAKE) hal-proto
-	#FIXME We need a flat structure *.pb.go for imports to work
-	mv nic/proto/*.pb.go .
-	mv nic/proto/hal/*.pb.go .
-	rm -rf nic
 
 	# Generate mock files
 	mockgen -source=endpoint.pb.go -destination=endpoint_mock.go -package=halproto
@@ -14,10 +10,11 @@ default:
 	mockgen -source=l4lb.pb.go -destination=l4lb_mock.go -package=halproto
 	mockgen -source=nwsec.pb.go -destination=nwsec_mock.go -package=halproto
 	mockgen -source=session.pb.go -destination=session_mock.go -package=halproto
-	mockgen -source=tenant.pb.go -destination=tenant_mock.go -package=halproto
+	mockgen -source=vrf.pb.go -destination=tenant_mock.go -package=halproto
+	
+	# Run go imports on mock files
+	goimports -w -l *mock.go
 
 hal-proto:
 	# Compile proto definitions
-	protoc --proto_path=../../../../../ --gofast_out=Mprotos/github/gogo/protobuf/gogoproto/gogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:$(GEN_DIR) ../../../../../nic/proto/hal/*.proto ../../../../../nic/proto/types.proto
-
-
+	protoc --proto_path=../../../../../ -I../../../../../nic/proto -I../../../../../nic/proto/hal -I../../../../../vendor/github.com/gogo/protobuf/gogoproto --gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:. types.proto ${HAL_PROTO_FILES}

@@ -44,8 +44,8 @@ message L2SegmentSpec {
   types.ObjectMeta       meta                       = 1;    // common object meta
   // key_or_handle is L2 segment's unique identifier
   kh.L2SegmentKeyHandle  key_or_handle              = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  repeated kh.NetworkKeyHandle network_key_handle   = 3 [(gogoproto.jsontag) = "ref"];
-  kh.VrfKeyHandle        vrf_key_handle             = 4 [(gogoproto.jsontag) = "ref"];
+  repeated kh.NetworkKeyHandle network_key_handle   = 3 [(gogoproto.jsontag) = "network_ref"];
+  kh.VrfKeyHandle        vrf_key_handle             = 4 [(gogoproto.jsontag) = "vrf_ref"];
   types.L2SegmentType    segment_type               = 5;    // L2 segment type
   MulticastFwdPolicy     mcast_fwd_policy           = 6;    // multicast forwarding policy
   BroadcastFwdPolicy     bcast_fwd_policy           = 7;    // broadcast forwarding policy

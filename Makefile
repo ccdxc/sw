@@ -1,6 +1,6 @@
 # Makefile for building packages
 
-EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts"
+EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts|netagent/datapath/halproto"
 
 #
 # Note: Excluded api/generated directory on purpose to avoid golint errors

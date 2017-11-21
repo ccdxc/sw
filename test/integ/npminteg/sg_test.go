@@ -18,6 +18,8 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	if it.datapathKind.String() == "mock" {
 		for _, ag := range it.agents {
 			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
 			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
 			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
 		}
@@ -56,13 +58,19 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify datapath has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			sg, ok := ag.datapath.DB.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
+			sgPolicy, ok := ag.datapath.DB.SgPolicyDB[fmt.Sprintf("%s|%s", "default", "testsg")]
 			if !ok {
 				return false, nil
 			}
-
-			return ((len(sg.Request[0].IngressPolicy.FwRules) == 1) && (len(sg.Request[0].EgressPolicy.FwRules) == 1)), nil
+			return len(sgPolicy.Request) == 2, nil
 		}, "Sg rules not found on agent", "10ms", it.pollTimeout())
+		AssertEventually(c, func() (bool, []interface{}) {
+			sgPolicy, ok := ag.datapath.DB.SgPolicyDB[fmt.Sprintf("%s|%s", "default", "testsg")]
+			if !ok {
+				return false, nil
+			}
+			return len(sgPolicy.Request[0].PolicyRules.InFwRules) == 1 && len(sgPolicy.Request[1].PolicyRules.EgFwRules) == 1, nil
+		}, "Sg ingress and egress rules count did not match on agent", "10ms", it.pollTimeout())
 	}
 
 	// delete the sg policy
@@ -72,12 +80,13 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify rules are gone from datapath
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			sg, ok := ag.datapath.DB.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
+			sg, ok := ag.datapath.DB.SgPolicyDB[fmt.Sprintf("%s|%s", "default", "testsg")]
 			if !ok {
 				return false, nil
 			}
 
-			return ((len(sg.Request[0].IngressPolicy.FwRules) == 0) && (len(sg.Request[0].EgressPolicy.FwRules) == 0)), nil
+			//return len(sg.Request[0].PolicyRules.InFwRules) == 0 && len(sg.Request[1].PolicyRules.EgFwRules) == 0, nil
+			return len(sg.Request) == 0, nil
 		}, "Sg rules still found on agent", "10ms", it.pollTimeout())
 	}
 	// delete the security group
@@ -101,6 +110,8 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
 			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
 			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
@@ -140,8 +151,8 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 		ep, ok := ag.datapath.DB.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
-		c.Assert(len(ep.Request[0].SecurityGroup), Equals, 1)
-		c.Assert(ep.Request[0].UsegVlan, Equals, uint32(2))
+		c.Assert(len(ep.Request[0].EndpointAttrs.SgHandle), Equals, 1)
+		c.Assert(ep.Request[0].EndpointAttrs.UsegVlan, Equals, uint32(2))
 	}
 
 	// create second endpoint
@@ -156,8 +167,8 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 		ep, ok := ag.datapath.DB.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint2")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
-		c.Assert(len(ep.Request[0].SecurityGroup), Equals, 1)
-		c.Assert(ep.Request[0].UsegVlan, Equals, uint32(3))
+		c.Assert(len(ep.Request[0].EndpointAttrs.SgHandle), Equals, 1)
+		c.Assert(ep.Request[0].EndpointAttrs.UsegVlan, Equals, uint32(3))
 	}
 
 	// delete the second endpoint
@@ -177,7 +188,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
 			ep, ok := ag.datapath.DB.EndpointUpdateDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
-			if ok && len(ep.Request) == 1 && len(ep.Request[0].SecurityGroup) == 0 {
+			if ok && len(ep.Request) == 1 && len(ep.Request[0].EndpointAttrs.SgHandle) == 0 {
 				return true, nil
 			}
 			return false, nil

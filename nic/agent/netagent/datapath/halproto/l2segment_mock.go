@@ -11,64 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-// MockisL2SegmentKeyHandle_KeyOrHandle is a mock of isL2SegmentKeyHandle_KeyOrHandle interface
-type MockisL2SegmentKeyHandle_KeyOrHandle struct {
-	ctrl     *gomock.Controller
-	recorder *MockisL2SegmentKeyHandle_KeyOrHandleMockRecorder
-}
-
-// MockisL2SegmentKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisL2SegmentKeyHandle_KeyOrHandle
-type MockisL2SegmentKeyHandle_KeyOrHandleMockRecorder struct {
-	mock *MockisL2SegmentKeyHandle_KeyOrHandle
-}
-
-// NewMockisL2SegmentKeyHandle_KeyOrHandle creates a new mock instance
-func NewMockisL2SegmentKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisL2SegmentKeyHandle_KeyOrHandle {
-	mock := &MockisL2SegmentKeyHandle_KeyOrHandle{ctrl: ctrl}
-	mock.recorder = &MockisL2SegmentKeyHandle_KeyOrHandleMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisL2SegmentKeyHandle_KeyOrHandle) EXPECT() *MockisL2SegmentKeyHandle_KeyOrHandleMockRecorder {
-	return _m.recorder
-}
-
-// isL2SegmentKeyHandle_KeyOrHandle mocks base method
-func (_m *MockisL2SegmentKeyHandle_KeyOrHandle) isL2SegmentKeyHandle_KeyOrHandle() {
-	_m.ctrl.Call(_m, "isL2SegmentKeyHandle_KeyOrHandle")
-}
-
-// isL2SegmentKeyHandle_KeyOrHandle indicates an expected call of isL2SegmentKeyHandle_KeyOrHandle
-func (_mr *MockisL2SegmentKeyHandle_KeyOrHandleMockRecorder) isL2SegmentKeyHandle_KeyOrHandle() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isL2SegmentKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisL2SegmentKeyHandle_KeyOrHandle)(nil).isL2SegmentKeyHandle_KeyOrHandle))
-}
-
-// MarshalTo mocks base method
-func (_m *MockisL2SegmentKeyHandle_KeyOrHandle) MarshalTo(_param0 []byte) (int, error) {
-	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MarshalTo indicates an expected call of MarshalTo
-func (_mr *MockisL2SegmentKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisL2SegmentKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
-}
-
-// Size mocks base method
-func (_m *MockisL2SegmentKeyHandle_KeyOrHandle) Size() int {
-	ret := _m.ctrl.Call(_m, "Size")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Size indicates an expected call of Size
-func (_mr *MockisL2SegmentKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisL2SegmentKeyHandle_KeyOrHandle)(nil).Size))
-}
-
 // MockL2SegmentClient is a mock of L2SegmentClient interface
 type MockL2SegmentClient struct {
 	ctrl     *gomock.Controller

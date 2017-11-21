@@ -15,6 +15,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"strings"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/state"
@@ -42,7 +44,7 @@ type Hal struct {
 	Lbclient    halproto.L4LbClient
 	Sgclient    halproto.NwSecurityClient
 	Sessclient  halproto.SessionClient
-	Tnclient    halproto.TenantClient
+	Tnclient    halproto.VrfClient
 }
 
 // MockClients stores references for mockclients to be used for setting expectations
@@ -53,7 +55,7 @@ type mockClients struct {
 	MockLbclient   *halproto.MockL4LbClient
 	MockSgclient   *halproto.MockNwSecurityClient
 	MockSessclient *halproto.MockSessionClient
-	MockTnclient   *halproto.MockTenantClient
+	MockTnclient   *halproto.MockVrfClient
 }
 
 // DB holds all the state information.
@@ -62,8 +64,9 @@ type DB struct {
 	EndpointUpdateDB map[string]*halproto.EndpointUpdateRequestMsg
 	EndpointDelDB    map[string]*halproto.EndpointDeleteRequestMsg
 	SgDB             map[string]*halproto.SecurityGroupRequestMsg
-	TenantDB         map[string]*halproto.TenantRequestMsg
-	TenantDelDB      map[string]*halproto.TenantDeleteRequestMsg
+	TenantDB         map[string]*halproto.VrfRequestMsg
+	TenantDelDB      map[string]*halproto.VrfDeleteRequestMsg
+	SgPolicyDB       map[string]*halproto.SecurityGroupPolicyRequestMsg
 }
 
 // HalDatapath contains mock and hal clients.
@@ -100,8 +103,9 @@ func NewHalDatapath(kind Kind) (*HalDatapath, error) {
 		EndpointUpdateDB: make(map[string]*halproto.EndpointUpdateRequestMsg),
 		EndpointDelDB:    make(map[string]*halproto.EndpointDeleteRequestMsg),
 		SgDB:             make(map[string]*halproto.SecurityGroupRequestMsg),
-		TenantDB:         make(map[string]*halproto.TenantRequestMsg),
-		TenantDelDB:      make(map[string]*halproto.TenantDeleteRequestMsg),
+		TenantDB:         make(map[string]*halproto.VrfRequestMsg),
+		TenantDelDB:      make(map[string]*halproto.VrfDeleteRequestMsg),
+		SgPolicyDB:       make(map[string]*halproto.SecurityGroupPolicyRequestMsg),
 	}
 	haldp.DB = db
 	if haldp.Kind.String() == "hal" {
@@ -115,7 +119,7 @@ func NewHalDatapath(kind Kind) (*HalDatapath, error) {
 		hal.Lbclient = halproto.NewL4LbClient(hal.client.ClientConn)
 		hal.Sgclient = halproto.NewNwSecurityClient(hal.client.ClientConn)
 		hal.Sessclient = halproto.NewSessionClient(hal.client.ClientConn)
-		hal.Tnclient = halproto.NewTenantClient(hal.client.ClientConn)
+		hal.Tnclient = halproto.NewVrfClient(hal.client.ClientConn)
 		haldp.Hal = hal
 		return &haldp, nil
 	}
@@ -127,7 +131,7 @@ func NewHalDatapath(kind Kind) (*HalDatapath, error) {
 		MockLbclient:   halproto.NewMockL4LbClient(hal.mockCtrl),
 		MockSgclient:   halproto.NewMockNwSecurityClient(hal.mockCtrl),
 		MockSessclient: halproto.NewMockSessionClient(hal.mockCtrl),
-		MockTnclient:   halproto.NewMockTenantClient(hal.mockCtrl),
+		MockTnclient:   halproto.NewMockVrfClient(hal.mockCtrl),
 	}
 
 	hal.Epclient = hal.MockClients.MockEpclient
@@ -237,20 +241,28 @@ func (hd *HalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 	}
 
 	// get sg ids
-	var sgids []uint32
+	var sgids []uint64
 	for _, sg := range sgs {
-		sgids = append(sgids, sg.Status.SecurityGroupID)
+		sgids = append(sgids, uint64(sg.Status.SecurityGroupID))
+	}
+
+	l2key := halproto.EndpointL2Key{
+		L2SegmentHandle: nw.Status.NetworkHandle,
+		MacAddress:      macaddr,
+	}
+
+	epAttrs := halproto.EndpointAttributes{
+		InterfaceHandle: 0, //FIXME
+		UsegVlan:        ep.Status.UsegVlan,
+		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
+		SgHandle:        sgids,
 	}
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
-		Meta:            &halproto.ObjectMeta{},
-		L2SegmentHandle: nw.Status.NetworkHandle,
-		MacAddress:      macaddr,
-		InterfaceHandle: 0, // FIXME
-		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
-		SecurityGroup:   sgids,
+		Meta:          &halproto.ObjectMeta{},
+		L2Key:         &l2key,
+		EndpointAttrs: &epAttrs,
 	}
 	epReq := halproto.EndpointRequestMsg{
 		Request: []*halproto.EndpointSpec{&epinfo},
@@ -296,20 +308,28 @@ func (hd *HalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.
 	}
 
 	// get sg ids
-	var sgids []uint32
+	var sgids []uint64
 	for _, sg := range sgs {
-		sgids = append(sgids, sg.Status.SecurityGroupID)
+		sgids = append(sgids, uint64(sg.Status.SecurityGroupID))
+	}
+
+	l2key := halproto.EndpointL2Key{
+		L2SegmentHandle: nw.Status.NetworkHandle,
+		MacAddress:      macaddr,
+	}
+
+	epAttrs := halproto.EndpointAttributes{
+		InterfaceHandle: 0, //FIXME
+		UsegVlan:        ep.Status.UsegVlan,
+		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
+		SgHandle:        sgids,
 	}
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
-		Meta:            &halproto.ObjectMeta{},
-		L2SegmentHandle: nw.Status.NetworkHandle,
-		MacAddress:      macaddr,
-		InterfaceHandle: 0, // FIXME
-		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
-		SecurityGroup:   sgids,
+		Meta:          &halproto.ObjectMeta{},
+		L2Key:         &l2key,
+		EndpointAttrs: &epAttrs,
 	}
 	epReq := halproto.EndpointRequestMsg{
 		Request: []*halproto.EndpointSpec{&epinfo},
@@ -334,9 +354,6 @@ func (hd *HalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.
 // UpdateLocalEndpoint updates the endpoint
 func (hd *HalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
-	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
-	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
-	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 
 	// convert v4 address
@@ -356,20 +373,22 @@ func (hd *HalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 	}
 
 	// get sg ids
-	var sgids []uint32
+	var sgids []uint64
 	for _, sg := range sgs {
-		sgids = append(sgids, sg.Status.SecurityGroupID)
+		sgids = append(sgids, uint64(sg.Status.SecurityGroupID))
+	}
+
+	epAttrs := halproto.EndpointAttributes{
+		InterfaceHandle: 0, //FIXME
+		UsegVlan:        ep.Status.UsegVlan,
+		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
+		SgHandle:        sgids,
 	}
 
 	// build endpoint message
 	epUpdateReq := halproto.EndpointUpdateRequest{
-		Meta:            &halproto.ObjectMeta{},
-		L2SegmentHandle: nw.Status.NetworkHandle,
-		MacAddress:      macaddr,
-		InterfaceHandle: 0, // FIXME
-		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
-		SecurityGroup:   sgids,
+		Meta:          &halproto.ObjectMeta{},
+		EndpointAttrs: &epAttrs,
 	}
 
 	epUpdateReqMsg := halproto.EndpointUpdateRequestMsg{
@@ -395,9 +414,6 @@ func (hd *HalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 // UpdateRemoteEndpoint updates an existing endpoint
 func (hd *HalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
-	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
-	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
-	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 
 	// convert v4 address
@@ -417,20 +433,22 @@ func (hd *HalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.
 	}
 
 	// get sg ids
-	var sgids []uint32
+	var sgids []uint64
 	for _, sg := range sgs {
-		sgids = append(sgids, sg.Status.SecurityGroupID)
+		sgids = append(sgids, uint64(sg.Status.SecurityGroupID))
+	}
+
+	epAttrs := halproto.EndpointAttributes{
+		InterfaceHandle: 0, //FIXME
+		UsegVlan:        ep.Status.UsegVlan,
+		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
+		SgHandle:        sgids,
 	}
 
 	// build endpoint message
 	epUpdateReq := halproto.EndpointUpdateRequest{
-		Meta:            &halproto.ObjectMeta{},
-		L2SegmentHandle: nw.Status.NetworkHandle,
-		MacAddress:      macaddr,
-		InterfaceHandle: 0, // FIXME
-		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
-		SecurityGroup:   sgids,
+		Meta:          &halproto.ObjectMeta{},
+		EndpointAttrs: &epAttrs,
 	}
 
 	epUpdateReqMsg := halproto.EndpointUpdateRequestMsg{
@@ -562,11 +580,11 @@ func (hd *HalDatapath) CreateNetwork(nw *netproto.Network) error {
 		SegmentType:    halproto.L2SegmentType_L2_SEGMENT_TYPE_TENANT,
 		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_FLOOD,
 		BcastFwdPolicy: halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD,
-		AccessEncap: &halproto.EncapInfo{
+		WireEncap: &halproto.EncapInfo{
 			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
-		FabricEncap: &halproto.EncapInfo{
+		TunnelEncap: &halproto.EncapInfo{
 			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
@@ -598,11 +616,11 @@ func (hd *HalDatapath) UpdateNetwork(nw *netproto.Network) error {
 		SegmentType:    halproto.L2SegmentType_L2_SEGMENT_TYPE_TENANT,
 		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_FLOOD,
 		BcastFwdPolicy: halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD,
-		AccessEncap: &halproto.EncapInfo{
+		WireEncap: &halproto.EncapInfo{
 			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
-		FabricEncap: &halproto.EncapInfo{
+		TunnelEncap: &halproto.EncapInfo{
 			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
@@ -649,23 +667,31 @@ func (hd *HalDatapath) DeleteNetwork(nw *netproto.Network) error {
 
 // CreateSecurityGroup creates a security group
 func (hd *HalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
-	var inrules []*halproto.FirewallRuleSpec
-	var outrules []*halproto.FirewallRuleSpec
+	var secGroupPolicyRequests []*halproto.SecurityGroupPolicySpec
 
 	// convert the rules
 	for _, rl := range sg.Spec.Rules {
-		hrule, err := hd.convertRule(sg, &rl)
+		policySpec, err := hd.convertRule(sg, &rl)
 		if err != nil {
 			return err
 		}
-
-		// append it to the list
-		if rl.Direction == "outgoing" {
-			outrules = append(outrules, hrule)
-		} else {
-			inrules = append(inrules, hrule)
-		}
+		secGroupPolicyRequests = append(secGroupPolicyRequests, policySpec)
 	}
+
+	sgPolicyRequestMsg := halproto.SecurityGroupPolicyRequestMsg{
+		Request: secGroupPolicyRequests,
+	}
+
+	// add security group policies
+	_, err := hd.Hal.Sgclient.SecurityGroupPolicyCreate(context.Background(), &sgPolicyRequestMsg)
+	if err != nil {
+		log.Errorf("Could not create SG Policy. %v", err)
+		return err
+	}
+
+	hd.Lock()
+	hd.DB.SgPolicyDB[objectKey(&sg.ObjectMeta)] = &sgPolicyRequestMsg
+	hd.Unlock()
 
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
@@ -675,22 +701,16 @@ func (hd *HalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 				SecurityGroupId: sg.Status.SecurityGroupID,
 			},
 		},
-		IngressPolicy: &halproto.IngressSGPolicy{
-			FwRules: inrules,
-		},
-		EgressPolicy: &halproto.EgressSGPolicy{
-			FwRules: outrules,
-		},
 	}
 	sgmsg := halproto.SecurityGroupRequestMsg{
 		Request: []*halproto.SecurityGroupSpec{&sgs},
 	}
 
 	// add security group
-	_, err := hd.Hal.Sgclient.SecurityGroupCreate(context.Background(), &sgmsg)
+	_, err = hd.Hal.Sgclient.SecurityGroupCreate(context.Background(), &sgmsg)
 	if err != nil {
 		log.Errorf("Error creating security group. Err: %v", err)
-		//return nil
+		return err
 	}
 
 	// save the sg message
@@ -703,23 +723,29 @@ func (hd *HalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 
 // UpdateSecurityGroup updates a security group
 func (hd *HalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
-	var inrules []*halproto.FirewallRuleSpec
-	var outrules []*halproto.FirewallRuleSpec
-
+	var secGroupPolicyRequests []*halproto.SecurityGroupPolicySpec
 	// convert the rules
 	for _, rl := range sg.Spec.Rules {
-		hrule, err := hd.convertRule(sg, &rl)
+		policySpec, err := hd.convertRule(sg, &rl)
 		if err != nil {
 			return err
 		}
-
-		// append it to the list
-		if rl.Direction == "outgoing" {
-			outrules = append(outrules, hrule)
-		} else {
-			inrules = append(inrules, hrule)
-		}
+		secGroupPolicyRequests = append(secGroupPolicyRequests, policySpec)
 	}
+
+	sgPolicyRequestMsg := halproto.SecurityGroupPolicyRequestMsg{
+		Request: secGroupPolicyRequests,
+	}
+	// add security group policies
+	_, err := hd.Hal.Sgclient.SecurityGroupPolicyUpdate(context.Background(), &sgPolicyRequestMsg)
+	if err != nil {
+		log.Errorf("Could not create SG Policy. %v", err)
+		return err
+	}
+
+	hd.Lock()
+	hd.DB.SgPolicyDB[objectKey(&sg.ObjectMeta)] = &sgPolicyRequestMsg
+	hd.Unlock()
 
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
@@ -729,19 +755,13 @@ func (hd *HalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 				SecurityGroupId: sg.Status.SecurityGroupID,
 			},
 		},
-		IngressPolicy: &halproto.IngressSGPolicy{
-			FwRules: inrules,
-		},
-		EgressPolicy: &halproto.EgressSGPolicy{
-			FwRules: outrules,
-		},
 	}
 	sgmsg := halproto.SecurityGroupRequestMsg{
 		Request: []*halproto.SecurityGroupSpec{&sgs},
 	}
 
 	// update security group
-	_, err := hd.Hal.Sgclient.SecurityGroupUpdate(context.Background(), &sgmsg)
+	_, err = hd.Hal.Sgclient.SecurityGroupUpdate(context.Background(), &sgmsg)
 	if err != nil {
 		log.Errorf("Error updating security group. Err: %v", err)
 		return err
@@ -787,17 +807,17 @@ func (hd *HalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 
 // CreateTenant creates a tenant
 func (hd *HalDatapath) CreateTenant(tn *netproto.Tenant) error {
-	tnSpec := halproto.TenantSpec{
+	vrfSpec := halproto.VrfSpec{
 		Meta: &halproto.ObjectMeta{
-			TenantId: tn.Status.TenantID,
+			VrfId: tn.Status.TenantID,
 		},
 	}
-	tnReqMsg := halproto.TenantRequestMsg{
-		Request: []*halproto.TenantSpec{&tnSpec},
+	vrfReqMsg := halproto.VrfRequestMsg{
+		Request: []*halproto.VrfSpec{&vrfSpec},
 	}
 
 	// create the tenant
-	_, err := hd.Hal.Tnclient.TenantCreate(context.Background(), &tnReqMsg)
+	_, err := hd.Hal.Tnclient.VrfCreate(context.Background(), &vrfReqMsg)
 	if err != nil {
 		log.Errorf("Error creating tenant. Err: %v", err)
 		return err
@@ -805,7 +825,7 @@ func (hd *HalDatapath) CreateTenant(tn *netproto.Tenant) error {
 
 	// save tenant create request message.
 	hd.Lock()
-	hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &tnReqMsg
+	hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &vrfReqMsg
 	hd.Unlock()
 	return nil
 }
@@ -813,18 +833,18 @@ func (hd *HalDatapath) CreateTenant(tn *netproto.Tenant) error {
 // DeleteTenant deletes a tenant
 func (hd *HalDatapath) DeleteTenant(tn *netproto.Tenant) error {
 
-	tnDelReq := halproto.TenantDeleteRequest{
+	vrfDelReq := halproto.VrfDeleteRequest{
 		Meta: &halproto.ObjectMeta{
-			TenantId: tn.Status.TenantID,
+			VrfId: tn.Status.TenantID,
 		},
 	}
 
-	tnDelReqMsg := halproto.TenantDeleteRequestMsg{
-		Request: []*halproto.TenantDeleteRequest{&tnDelReq},
+	vrfDelReqMsg := halproto.VrfDeleteRequestMsg{
+		Request: []*halproto.VrfDeleteRequest{&vrfDelReq},
 	}
 
-	// delete security group
-	_, err := hd.Hal.Tnclient.TenantDelete(context.Background(), &tnDelReqMsg)
+	// delete the tenant
+	_, err := hd.Hal.Tnclient.VrfDelete(context.Background(), &vrfDelReqMsg)
 	if err != nil {
 		log.Errorf("Error deleting tenant. Err: %v", err)
 		return err
@@ -832,7 +852,7 @@ func (hd *HalDatapath) DeleteTenant(tn *netproto.Tenant) error {
 
 	// save the tenant delete message
 	hd.Lock()
-	hd.DB.TenantDelDB[objectKey(&tn.ObjectMeta)] = &tnDelReqMsg
+	hd.DB.TenantDelDB[objectKey(&tn.ObjectMeta)] = &vrfDelReqMsg
 	delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
 	hd.Unlock()
 
@@ -841,17 +861,17 @@ func (hd *HalDatapath) DeleteTenant(tn *netproto.Tenant) error {
 
 // UpdateTenant deletes a tenant
 func (hd *HalDatapath) UpdateTenant(tn *netproto.Tenant) error {
-	tnSpec := halproto.TenantSpec{
+	vrfSpec := halproto.VrfSpec{
 		Meta: &halproto.ObjectMeta{
-			TenantId: tn.Status.TenantID,
+			VrfId: tn.Status.TenantID,
 		},
 	}
-	tnReqMsg := halproto.TenantRequestMsg{
-		Request: []*halproto.TenantSpec{&tnSpec},
+	vrfReqMsg := halproto.VrfRequestMsg{
+		Request: []*halproto.VrfSpec{&vrfSpec},
 	}
 
-	// delete security group
-	_, err := hd.Hal.Tnclient.TenantUpdate(context.Background(), &tnReqMsg)
+	// update the tenant
+	_, err := hd.Hal.Tnclient.VrfUpdate(context.Background(), &vrfReqMsg)
 	if err != nil {
 		log.Errorf("Error deleting tenant. Err: %v", err)
 		return err
@@ -859,14 +879,15 @@ func (hd *HalDatapath) UpdateTenant(tn *netproto.Tenant) error {
 
 	// save the tenant delete message
 	hd.Lock()
-	hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &tnReqMsg
+	hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &vrfReqMsg
 	delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
 	hd.Unlock()
 
 	return nil
 }
 
-func (hd *HalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.FirewallRuleSpec, error) {
+func (hd *HalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.SecurityGroupPolicySpec, error) {
+	//var policyRules *halproto.SGPolicy
 	// convert the action
 	act := halproto.FirewallAction_FIREWALL_ACTION_NONE
 	switch rule.Action {
@@ -907,13 +928,51 @@ func (hd *HalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.Se
 		srvs = append(srvs, &sr)
 	}
 
-	// build security rule
-	rl := halproto.FirewallRuleSpec{
-		PeerSecurityGroup: rule.PeerGroupID,
-		Svc:               srvs,
-		Action:            act,
-		Log:               rule.Log,
-	}
+	if strings.ToLower(rule.Direction) == "incoming" {
+		var policyRules = halproto.SGPolicy{
+			InFwRules: []*halproto.FirewallRuleSpec{
+				{
+					Svc:    srvs,
+					Action: act,
+					Log:    rule.Log,
+				},
+			},
+		}
+		sgPolicy := halproto.SecurityGroupPolicySpec{
+			Meta: &halproto.ObjectMeta{},
+			KeyOrHandle: &halproto.SecurityGroupPolicyKeyHandle{
+				PolicyKeyOrHandle: &halproto.SecurityGroupPolicyKeyHandle_SecurityGroupPolicyId{
+					SecurityGroupPolicyId: &halproto.SecurityGroupPolicyId{
+						SecurityGroupId:     sg.Status.SecurityGroupID,
+						PeerSecurityGroupId: rule.PeerGroupID,
+					},
+				},
+			},
+			PolicyRules: &policyRules,
+		}
+		return &sgPolicy, nil
 
-	return &rl, nil
+	}
+	var policyRules = halproto.SGPolicy{
+		EgFwRules: []*halproto.FirewallRuleSpec{
+			{
+				Svc:    srvs,
+				Action: act,
+				Log:    rule.Log,
+			},
+		},
+	}
+	sgPolicy := halproto.SecurityGroupPolicySpec{
+		Meta: &halproto.ObjectMeta{},
+		KeyOrHandle: &halproto.SecurityGroupPolicyKeyHandle{
+			PolicyKeyOrHandle: &halproto.SecurityGroupPolicyKeyHandle_SecurityGroupPolicyId{
+				SecurityGroupPolicyId: &halproto.SecurityGroupPolicyId{
+					SecurityGroupId:     sg.Status.SecurityGroupID,
+					PeerSecurityGroupId: rule.PeerGroupID,
+				},
+			},
+		},
+		PolicyRules: &policyRules,
+	}
+	return &sgPolicy, nil
 }

@@ -532,8 +532,8 @@ message InterfaceGetResponseMsg {
 message InterfaceL2SegmentSpec {
   types.ObjectMeta                meta             = 1;    // object meta
   kh.L2SegmentKeyHandle    l2segment_key_or_handle = 2;    // L2 segment Id corresponding to the vlan
-  kh.InterfaceKeyHandle              if_key_handle = 3 [(gogoproto.jsontag) = "ref"];    // Uplink/Uplink PC key or handle
-  kh.VrfKeyHandle      vrf_key_handle              = 4 [(gogoproto.jsontag) = "ref"];
+  kh.InterfaceKeyHandle              if_key_handle = 3 [(gogoproto.jsontag) = "interface_ref"];    // Uplink/Uplink PC key or handle
+  kh.VrfKeyHandle      vrf_key_handle              = 4 [(gogoproto.jsontag) = "vrf_ref"];
 }
 
 // InterfaceL2SegmentRequestMsg is batched request message to bring vlans

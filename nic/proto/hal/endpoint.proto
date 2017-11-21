@@ -39,8 +39,8 @@ message EndpointAttributes {
     repeated types.IPAddress    ip_address           = 3;    // IP address(es) of endpoint
     repeated uint64             sg_handle            = 4;    // list of security group handles
     EndpointVMotionState        vmotion_state        = 5;    // Vmotion state
-    kh.InterfaceKeyHandle       interface_key_handle = 6 [(gogoproto.jsontag) = "ref"];
-    repeated kh.SecurityGroupKeyHandle sg_key_handle = 7 [(gogoproto.jsontag) = "ref"];
+    kh.InterfaceKeyHandle       interface_key_handle = 6 [(gogoproto.jsontag) = "interface_ref"];
+    repeated kh.SecurityGroupKeyHandle sg_key_handle = 7 [(gogoproto.jsontag) = "sg_ref"];
 }
 
 
@@ -106,8 +106,8 @@ message EndpointUpdateResponseMsg {
 message EndpointFilter {
   fixed64               l2_segment_handle    = 1;        // L2 segment handle
   fixed64               interface_handle     = 2;        // interface handle
-  kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.jsontag) = "ref"];
-  kh.L2SegmentKeyHandle l2Segment_key_handle = 4 [(gogoproto.jsontag) = "ref"];
+  kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.jsontag) = "vrf_ref"];
+  kh.L2SegmentKeyHandle l2Segment_key_handle = 4 [(gogoproto.jsontag) = "l2seg_ref"];
 }
 
 // EndpointDeleteRequest is used to delete an endpoint
@@ -148,8 +148,8 @@ message EndpointGetRequestMsg {
 message EndpointGetByInterfaceRequestMsg {
   types.ObjectMeta      meta                 = 1;    // object meta
   fixed64               interface_handle     = 2;    // interface of interest
-  kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.jsontag) = "ref"];
-  kh.InterfaceKeyHandle interface_key_handle = 4 [(gogoproto.jsontag) = "ref"];
+  kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.jsontag) = "vrf_ref"];
+  kh.InterfaceKeyHandle interface_key_handle = 4 [(gogoproto.jsontag) = "interface_ref"];
 }
 
 // EndpointGetAllRequestMsg is used to GET all the endpoints

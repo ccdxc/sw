@@ -5,7 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
-import public "gogo.proto";
+//import public "gogo.proto";
 //import "google/protobuf/descriptor.proto";
 
 package cryptoapis;

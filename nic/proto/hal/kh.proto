@@ -13,7 +13,7 @@ option go_package="halproto";
 
 // import public "protos/github/gogo/protobuf/gogoproto/gogo.proto";
 import "types.proto";
-import public "gogo.proto";
+//import public "gogo.proto";
 
 // SecurityProfileKeyHandle is used to operate on a security profile
 // either by its id or HAL allocated handle
