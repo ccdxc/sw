@@ -112,7 +112,7 @@ typedef struct buf_pool_s {
 static inline hal_ret_t
 buf_pool_free (buf_pool_t *buf_pool)
 {
-    buf_pool->spec.cos_bmp ? delete buf_pool->spec.cos_bmp : HAL_NOP;
+    buf_pool->spec.cos_bmp ? bitmap::destroy(buf_pool->spec.cos_bmp) : HAL_NOP;
 
     HAL_SPINLOCK_DESTROY(&buf_pool->slock);
     g_hal_state->buf_pool_slab()->free(buf_pool);

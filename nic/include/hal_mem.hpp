@@ -103,6 +103,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_RSVD,  // all non-delay delete slabs can use this
 
     HAL_SLAB_MAX,
+    HAL_SLAB_ALL = 0xFFFFFFFF,     // reserved and shouldn't be used
 } hal_slab_t;
 
 enum {
@@ -130,7 +131,7 @@ enum {
     HAL_MEM_ALLOC_BLOCK_LIST,
     HAL_MEM_ALLOC_BLOCK_LIST_NODE,
     HAL_MEM_ALLOC_OTHER,
-    HAL_MEM_ALLOC_RSVD = 0xFFFFFFFF,    // reserved and shouldn't be used
+    HAL_MEM_ALLOC_ALL = 0xFFFFFFFF,    // reserved and shouldn't be used
 };
 
 //------------------------------------------------------------------------------

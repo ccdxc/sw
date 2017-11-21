@@ -695,7 +695,7 @@ hal_oper_db::~hal_oper_db()
 
     for (i = 0; i < HAL_ARRAY_SIZE(cos_in_use_bmp_); i++) {
         if (cos_in_use_bmp_[i]) {
-            delete cos_in_use_bmp_[i];
+            bitmap::destroy(cos_in_use_bmp_[i]);
         }
     }
 

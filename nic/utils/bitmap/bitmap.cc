@@ -39,17 +39,23 @@ bitmap::init(uint32_t size, bool thread_safe)
 // factory method for this class
 //------------------------------------------------------------------------------
 bitmap *
-bitmap::factory(uint32_t size, bool thread_safe) {
+bitmap::factory(uint32_t size, bool thread_safe)
+{
     hal_ret_t    ret;
+    void         *mem;
     bitmap       *new_bmap;
 
     new_bmap = new bitmap();
-    if (new_bmap == NULL) {
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_BITMAP, sizeof(bitmap));
+    if (mem == NULL) {
         return NULL;
     }
+    new_bmap = new (mem) bitmap();
+
     ret = new_bmap->init(size, thread_safe);
     if (ret != HAL_RET_OK) {
-        delete new_bmap;
+        new_bmap->~bitmap();
+        HAL_FREE(HAL_MEM_ALLOC_LIB_BITMAP, mem);
         return NULL;
     }
 
@@ -71,6 +77,13 @@ bitmap::~bitmap()
     if (thread_safe_) {
         HAL_SPINLOCK_DESTROY(&slock_);
     }
+}
+
+void
+bitmap::destroy(bitmap *bmap)
+{
+    bmap->~bitmap();
+    HAL_FREE(HAL_MEM_ALLOC_LIB_BITMAP, bmap);
 }
 
 //------------------------------------------------------------------------------

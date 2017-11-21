@@ -65,7 +65,7 @@ hal_test_utils_collect_slab_stats()
     memset(stats, 0, sizeof(slab_stats_t) * hal::HAL_SLAB_MAX);
 
     t_stats = stats;
-    for (int i = hal::HAL_SLAB_NONE; i < hal::HAL_SLAB_MAX; i++) {
+    for (uint32_t i = hal::HAL_SLAB_NONE; i < hal::HAL_SLAB_MAX; i++) {
         slab = hal_test_utils_get_slab((hal::hal_slab_t)i);
         if (slab) {
             hal_test_utils_populate(t_stats, slab);
@@ -117,7 +117,7 @@ hal_test_utils_check_slab_leak(slab_stats_t *pre, slab_stats_t *post, bool *is_l
     if (pre == NULL || post == NULL) {
         return;
     }
-    for (int i = hal::HAL_SLAB_NONE; i < hal::HAL_SLAB_MAX; i++) {
+    for (uint32_t i = hal::HAL_SLAB_NONE; i < hal::HAL_SLAB_MAX; i++) {
         // if (memcmp(pre, post, sizeof(slab_stats_t))) {
         if (pre->num_in_use != post->num_in_use) {
             *is_leak = true;

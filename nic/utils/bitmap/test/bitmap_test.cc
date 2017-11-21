@@ -40,7 +40,7 @@ TEST_F(bitmap_test, test1) {
     rs = bmp->clear(i);
     ASSERT_EQ(rs, HAL_RET_OK);
 
-    delete bmp;
+    bitmap::destroy(bmp);
 }
 
 // ----------------------------------------------------------------------------
@@ -71,7 +71,7 @@ TEST_F(bitmap_test, test2) {
     rs = bmp1->clear(j);
     ASSERT_EQ(rs, HAL_RET_OK);
 
-    delete bmp1;
+    bitmap::destroy(bmp1);
 }
 
 // ----------------------------------------------------------------------------
@@ -101,7 +101,7 @@ TEST_F(bitmap_test, test3) {
     rs = bmp1->clear(j);
     ASSERT_EQ(rs, HAL_RET_OK);
 
-    delete bmp1;
+    bitmap::destroy(bmp1);
 }
 
 // ----------------------------------------------------------------------------
@@ -115,7 +115,7 @@ TEST_F(bitmap_test, test4) {
     hal_ret_t rs  = bmp->set(10);
     ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
 
-    delete bmp;
+    bitmap::destroy(bmp);
 }
 
 
@@ -134,7 +134,7 @@ TEST_F(bitmap_test, test5) {
         ASSERT_EQ(rs, HAL_RET_OK);
     }
 
-    delete bmp;
+    bitmap::destroy(bmp);
 }
 
 // ----------------------------------------------------------------------------
@@ -154,7 +154,7 @@ TEST_F(bitmap_test, test6) {
     rs  = bmp->set(i);
     ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
 
-    delete bmp;
+    bitmap::destroy(bmp);
 }
 
 // ----------------------------------------------------------------------------
@@ -204,7 +204,7 @@ TEST_F(bitmap_test, test7) {
     rs = bmp->clear(99);
     ASSERT_EQ(rs, HAL_RET_OK);
 
-    delete bmp;
+    bitmap::destroy(bmp);
 }
 
 static void 
@@ -322,7 +322,7 @@ test_one(int seed_, int no_bits)
         }
     }
     std::cout << "Random seed used " << seed_ << std::endl;
-    delete bmp;
+    bitmap::destroy(bmp);
 }
 
 // ----------------------------------------------------------------------------

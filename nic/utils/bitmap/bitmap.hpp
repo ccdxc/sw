@@ -12,7 +12,7 @@ namespace utils {
 class bitmap {
 public:
     static bitmap *factory(uint32_t size, bool thread_safe=false);
-    ~bitmap();
+    static void destroy(bitmap *bmap);
     hal_ret_t set(uint32_t posn);
     bool is_set(uint32_t posn);
     hal_ret_t clear(uint32_t posn);
@@ -40,6 +40,7 @@ private:
 
 private:
     bitmap() {};
+    ~bitmap();
     hal_ret_t init(uint32_t size, bool thread_safe);
     hal_ret_t first_set_(uint32_t posn, uint32_t *first_set_p);
     hal_ret_t last_set_(uint32_t posn, uint32_t *last_set_p);

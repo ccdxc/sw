@@ -47,7 +47,7 @@ acl_tcam::init(std::string table_name, uint32_t table_id, uint32_t table_size,
                                        priority_0_lowest_compare : priority_0_highest_compare);
     if (!tcam_prio_map_) {
         HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, tcam_entries_); 
-        delete inuse_bmp_;
+        bitmap::destroy(inuse_bmp_);
         return HAL_RET_OOM;
     }
 
@@ -97,7 +97,7 @@ acl_tcam::factory(std::string table_name, uint32_t table_id, uint32_t table_size
 
 acl_tcam::~acl_tcam()
 {
-    delete inuse_bmp_;
+    bitmap::destroy(inuse_bmp_);
     delete tcam_prio_map_;
     if (tcam_entries_) { HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, tcam_entries_); }
 }
