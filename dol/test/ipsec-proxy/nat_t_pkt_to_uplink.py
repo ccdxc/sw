@@ -17,6 +17,7 @@ ipseccbq = 0
 ipseccb = 0
 iv = 0
 seq = 0
+
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
     elem = module.iterator.Get()
@@ -41,8 +42,6 @@ def TestCaseSetup(tc):
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
     key_size = 16
     key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-    sip6 = b'\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
-    dip6 = b'\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02'
     ipseccb.crypto_key.Update(key_type, key_size, key)
 
     ipseccb.tunnel_sip4               = 0x0A010001
@@ -57,14 +56,13 @@ def TestCaseSetup(tc):
     ipseccb.esn_hi                    = 0
     ipseccb.esn_lo                    = 0
     ipseccb.spi                       = 0
+    ipseccb.is_nat_t                  = 1
     ipseccb.key_index                 = ipseccb.crypto_key.keyindex
-    ipseccb.sip6.ip_af                = 2
-    ipseccb.sip6.v6_addr              = sip6 
-    ipseccb.dip6.ip_af                = 2
-    ipseccb.dip6.v6_addr              = dip6 
-    ipseccb.is_v6                     = 1
-    ipseccb.is_nat_t                  = 0
     ipseccb.SetObjValPd()
+
+    seq = ipseccb.esn_lo
+    iv = ipseccb.iv
+
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
@@ -79,9 +77,6 @@ def TestCaseSetup(tc):
 
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
     brq.Configure()
-
-    iv = ipseccb.iv
-    seq = ipseccb.esn_lo
 
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
@@ -123,44 +118,45 @@ def TestCaseVerify(tc):
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
     tnmpr_cur.Configure()
 
-    # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+2):
+    # 2. Verify PI for RNMDR got incremented by 1
+    if (rnmdr_cur.pi - rnmdr.pi > 2):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
-    # 6. Verify pi/ci got update got updated for BRQ
+    # 4. Verify pi/ci got update got updated for BRQ
     brq = tc.pvtdata.db["BRQ_ENCRYPT"]
     brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     brq_cur.Configure()
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    if (brq_cur.pi != (brq.pi+1) or brq_cur.ci != (brq.ci+1)):
+    if (brq_cur.pi != (brq.pi+1)):
         print("brq pi/ci not as expected")
         #needs fix in HAL and support in model/p4+ for this check to work/pass
-        #return False
+        return False
 
     print("BRQ:")
-    print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
-    print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)
-    print("command 0x%x" % brq_cur.ring_entries[0].command)
-    print("key_desc_index 0x%x" % brq_cur.ring_entries[0].key_desc_index)
-    print("iv_addr 0x%x" % brq_cur.ring_entries[0].iv_addr)
-    print("status_addr 0x%x" % brq_cur.ring_entries[0].status_addr)
+    print("ilist_addr 0x%x" % brq_cur.ring_entries[brq.pi].ilist_addr)
+    print("olist_addr 0x%x" % brq_cur.ring_entries[brq.pi].olist_addr)
+    print("command 0x%x" % brq_cur.ring_entries[brq.pi].command)
+    print("key_desc_index 0x%x" % brq_cur.ring_entries[brq.pi].key_desc_index)
+    print("iv_addr 0x%x" % brq_cur.ring_entries[brq.pi].iv_addr)
+    print("status_addr 0x%x" % brq_cur.ring_entries[brq.pi].status_addr)
     # There is an offset of 64 to go past scratch when queuing to barco. Pls modify
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
-    # 7. Verify brq input desc and rnmdr
+    # 5. Verify brq input desc and rnmdr
+    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
     if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].ilist_addr - 0x40)):
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
         return False
-    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
 
-    # 5. Verify descriptor
+    # 6. Verify descriptor
     if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle))
         return False
-
     print("Descriptor handle expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle))
+
+    # 7. Verify descriptor
     if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr:
         print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr))
         return False
@@ -177,14 +173,17 @@ def TestCaseVerify(tc):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+
     # 10. Verify SeqNo increment
     if (ipseccb_cur.esn_lo != seq+1):
         print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
         return False
 
+    # 11. Verify IV increment
     if (ipseccb_cur.iv != iv+1):
         print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
         return False
+    print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
     if (rnmpr.ringentries[rnmpr.pi].handle != brq_cur.ring_entries[brq.pi].iv_addr):
         print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
         return False

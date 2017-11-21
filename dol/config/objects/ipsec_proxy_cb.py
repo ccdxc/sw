@@ -60,6 +60,7 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.dip6.ip_af                = haldefs.common.IP_AF_INET6
             req_spec.dip6.v6_addr              = self.dip6.v6_addr
             req_spec.is_v6                     = self.is_v6
+            req_spec.is_nat_t                  = self.is_nat_t
             req_spec.vrf_vlan                  = self.vrf_vlan
         return
 
@@ -85,6 +86,7 @@ class IpsecCbObject(base.ConfigObjectBase):
             self.expected_seq_no   = resp_spec.spec.expected_seq_no
             self.seq_no_bmp        = resp_spec.spec.seq_no_bmp
             self.is_v6             = resp_spec.spec.is_v6
+            self.is_nat_t          = resp_spec.spec.is_nat_t
             self.vrf_vlan          = resp_spec.spec.vrf_vlan
         return
 
