@@ -391,6 +391,11 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 }
             }
         } else {
+
+            // add to lif
+            ret = lif_add_if(app_ctxt->lif, hal_if);
+            HAL_ABORT(ret == HAL_RET_OK);
+
             // Add to uplink's back refs
             if (hal_if->pinned_uplink != HAL_HANDLE_INVALID) {
                 uplink = find_if_by_handle(hal_if->pinned_uplink);
@@ -2596,6 +2601,15 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 // goto end;
             }
         } else {
+            // Remove from lif
+            lif = find_lif_by_handle(intf->lif_handle);
+            ret = lif_del_if(lif, intf);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("pi-enicif:{}:unable to remove if from lif",
+                              __FUNCTION__);
+                goto end;
+            }
+
             // Del to uplink's back refs
             if (intf->pinned_uplink != HAL_HANDLE_INVALID) {
                 uplink = find_if_by_handle(intf->pinned_uplink);

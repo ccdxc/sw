@@ -326,6 +326,16 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Update vlan strip en
+    lif_spec.set_vlan_strip_en(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close();
+    // hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+
+
     // Update classic enic - Change native l2seg
     // Update classic enic - Change l2seg list
 

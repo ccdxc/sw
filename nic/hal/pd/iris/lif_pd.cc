@@ -375,7 +375,7 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
                               table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    uint8_t                     p4plus_app_id = 0;
+    uint8_t                     p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     output_mapping_actiondata   data;
     DirectMap                   *dm_omap = NULL;
 
