@@ -256,6 +256,7 @@ header_type scratch_metadata_t {
 
         size32                        : 32;
         size16                        : 16;
+        size14                        : 14;
         size8                         : 8;
         size6                         : 6;
     }
