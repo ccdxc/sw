@@ -41,12 +41,14 @@ tcp_options_fixup:
   nop  
   .brcase      1
   phvwr        p.tcp_option_nop_valid, 1
+  phvwr        p.tcp_option_nop_optType, 1
   phvwr        p.tcp_option_nop_1_valid, 1
   phvwr        p.tcp_option_eol_valid, 1
   b            lb_padding_done
   add          r1, r1, 3
   .brcase      2
   phvwr        p.tcp_option_nop_valid, 1
+  phvwr        p.tcp_option_nop_optType, 1
   phvwr        p.tcp_option_eol_valid, 1
   b            lb_padding_done
   add          r1, r1, 2

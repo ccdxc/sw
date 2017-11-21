@@ -375,6 +375,26 @@ profiles:
       fields:
          tcp_nonsyn_noack_drop: 0
 
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_1
+      fields:
+         tcp_unexpected_ts_option_action: EDIT
+
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_2
+      fields:
+         tcp_unexpected_ts_option_action: EDIT
+
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_3
+      fields:
+         tcp_unexpected_ts_option_action: EDIT
+
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_WS_SACK_1
+      fields:
+         tcp_unexpected_ts_option_action: EDIT
+
+    - id: SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_SACK_4
+      fields:
+         tcp_unexpected_win_scale_action: EDIT
+
     - id: SEC_PROF_FIREWALL
       fields:
         cnxn_tracking_en: True

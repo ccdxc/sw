@@ -74,6 +74,19 @@ modules:
               flow       : filter://type=IPV4,proto=TCP,label=NORM_SACK
             - profile    : SEC_PROF_TCP_UNEXPECTED_SACK_OPTION_NEG_ACTION_EDIT
               flow       : filter://type=IPV4,proto=TCP,label=NORM_SACK
+            # Test cases to excerize some ASM code where we strip of some options like
+            # timestamp and have to recompute the length for various other options present
+            # and insert the NOP and EOLs as necessary.
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_1
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_2
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_3
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+            #- profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_WS_SACK_1
+            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+ 
+        
 
     - module:
         name    : IP
@@ -225,4 +238,8 @@ modules:
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
               flow: filter://type=IPV4,proto=TCP
-
+            # Test cases to excerize some ASM code where we strip of some options like
+            # Window Scale and have to recompute the length for various other options present
+            # and insert the NOP and EOLs as necessary.
+            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_SACK_4
+              flow: filter://type=IPV4,proto=TCP
