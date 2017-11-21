@@ -1,0 +1,32 @@
+meta:
+    id      : ISCSI
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x800
+   
+    - header:
+        id      : ipv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/6
+
+    - header:
+        id      : tcp
+        template: ref://store/headers/id=TCP
+        fields:
+            sport: 0
+            dport: 3260
+
+    - header:
+        id      : iscsi
+        template: ref://store/headers/id=ISCSI
+        fields:
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:

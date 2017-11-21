@@ -11,6 +11,7 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/cpucb.hpp"
 #include "nic/hal/src/rawrcb.hpp"
+#include "nic/hal/src/p4pt.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/tls/tls_api.hpp"
@@ -53,6 +54,10 @@ proxy_meta_init() {
         (proxy_meta_t) {true, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX,
             {{APP_REDIR_RAWR_QTYPE, 2, 10}, {APP_REDIR_RAWC_QTYPE, 2, 10},
              {APP_REDIR_PROXYR_QTYPE, 2, 10}, {APP_REDIR_PROXYC_QTYPE, 2, 10}}}};
+
+    // 128 bytes of P4PT state per connection (e.g. dir) and a total of 2^12 connections
+    g_meta[types::PROXY_TYPE_P4PT] =
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_P4PT, 1, {0, 1, 12}}};
 
     return HAL_RET_OK;
 }
@@ -294,6 +299,9 @@ proxy_post_lif_program_init(proxy_t* proxy)
         break;
     case types::PROXY_TYPE_CPU:
         ret = proxy_create_cpucb();
+        break;
+    case types::PROXY_TYPE_P4PT:
+        ret = pd::p4pt_pd_init();
         break;
     default:
         break;

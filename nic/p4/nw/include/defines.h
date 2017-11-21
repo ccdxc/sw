@@ -521,6 +521,7 @@
 #define P4_NW_MCAST_INDEX_FIN_COPY                     1
 #define P4_NW_MCAST_INDEX_RST_COPY                     2
 #define P4_NW_MCAST_INDEX_FLOW_REL_COPY                3
+#define P4_NW_MCAST_INDEX_P4PT_COPY                    4
 
 
 /*****************************************************************************/

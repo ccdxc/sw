@@ -42,6 +42,15 @@ entries:
             port : const/19695
 
     - entry:
+        label: p4pt
+        tracking: False
+        timestamp: False
+        responder:
+            port : const/3260
+        initiator:
+            port : const/45443
+
+    - entry:
         label: tcp-proxy-e2e
         tracking: False
         timestamp: False

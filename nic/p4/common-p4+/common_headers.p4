@@ -28,6 +28,7 @@
 #define P4PLUS_APPTYPE_STORAGE      6
 #define P4PLUS_APPTYPE_TELEMETRY    7
 #define P4PLUS_APPTYPE_CPU          8
+#define P4PLUS_APPTYPE_P4PT         10
 
 #define LIF_TABLE_SIZE 2048
 

@@ -218,6 +218,7 @@ enum ProxyType {
   PROXY_TYPE_CPU           = 5;
   PROXY_TYPE_IPFIX         = 6;
   PROXY_TYPE_APP_REDIR     = 7;
+  PROXY_TYPE_P4PT          = 8;
 }
 
 // Types of Cryptographic keys

@@ -45,6 +45,10 @@ class ProxyServiceObject(base.ConfigObjectBase):
             reqspec.key_or_handle.proxy_id = 4
             reqspec.proxy_type = 7
 
+        if self.type == "P4PT":
+            reqspec.key_or_handle.proxy_id = 5
+            reqspec.proxy_type = 8
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

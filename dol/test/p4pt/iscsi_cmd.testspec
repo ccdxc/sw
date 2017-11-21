@@ -1,0 +1,54 @@
+# iscsi command read transaction testspec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        qpair       : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        qpair       : filter://any 
+    flow        : filter://proto=TCP,label=P4PT,fwtype=L2,direction=IFLOW
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : ISCSI_CMD
+        template    : ref://factory/packets/id=ISCSI
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+                prio    : 0
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=ISCSI_CMD
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=ISCSI_CMD
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+    delay: 1
+

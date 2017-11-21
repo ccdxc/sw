@@ -29,6 +29,7 @@ inline hal_ret_t register_pipelines() {
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,
         fte::FTE_FEATURE_APP_REDIR_FINI,
+        fte::FTE_FEATURE_P4PT,
     };
 
     // inbound features - applied to pkts destined to local host 
@@ -48,6 +49,7 @@ inline hal_ret_t register_pipelines() {
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,
         fte::FTE_FEATURE_APP_REDIR_FINI,
+        fte::FTE_FEATURE_P4PT,
     };
 
     register_pipeline("flow-miss", fte::FLOW_MISS_LIFQ,

@@ -2,6 +2,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/lif_pd.hpp"
 #include "nic/hal/pd/iris/scheduler_pd.hpp"
+#include "nic/hal/src/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
@@ -396,6 +397,17 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
     } else if (((lif_t *)pd_lif->pi_lif)->lif_id == SERVICE_LIF_IPSEC_ESP) {
         p4plus_app_id = P4PLUS_APPTYPE_IPSEC;
     }
+
+    if (((lif_t *)pd_lif->pi_lif)->lif_id == SERVICE_LIF_P4PT) {
+      /*
+       * P4PT goes to a separate monitoring service lif
+       */
+       p4plus_app_id = P4PLUS_APPTYPE_P4PT;
+       pd_lif->lif_lport_id = SERVICE_LIF_P4PT;
+       pd_lif->hw_lif_id = SERVICE_LIF_P4PT;
+       HAL_TRACE_ERR("pd-lif:{}:setting p4pt tm_port = %d", __FUNCTION__, SERVICE_LIF_P4PT);
+    }
+
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;

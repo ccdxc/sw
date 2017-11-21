@@ -15,6 +15,9 @@ entries:
     - entry:
         name        : SERVICE_LIF
         type        : APP_REDIR
+    - entry:
+        name        : SERVICE_LIF
+        type        : P4PT
 #    - entry:
 #        name        : SERVICE_LIF
 #        type        : CPU_PROXY

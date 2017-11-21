@@ -1,0 +1,15 @@
+feature:
+    id          : p4pt 
+    sub         : p4pt 
+    package     : test.p4pt
+    module      : p4pt
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : ISCSI_CMD
+        spec    : iscsi_cmd.testspec
+    - module:
+        name    : ISCSI_RESP
+        spec    : iscsi_cmd_resp.testspec

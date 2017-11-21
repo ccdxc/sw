@@ -1345,6 +1345,7 @@ capri_repl_pgm_def_entries (void)
     hal::pd::g_hal_state_pd->met_table()->create_repl_list_with_id(P4_NW_MCAST_INDEX_FIN_COPY);
     hal::pd::g_hal_state_pd->met_table()->create_repl_list_with_id(P4_NW_MCAST_INDEX_RST_COPY);
     hal::pd::g_hal_state_pd->met_table()->create_repl_list_with_id(P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    hal::pd::g_hal_state_pd->met_table()->create_repl_list_with_id(P4_NW_MCAST_INDEX_P4PT_COPY);
 
     /* Add 1st repication copy for list 1*/
     memset(&data, 0, sizeof(data));
@@ -1385,6 +1386,19 @@ capri_repl_pgm_def_entries (void)
     data.is_qid = 1;
     data.qid_or_vnid = types::CPUCB_ID_RELIABLE_COPY;
     hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_FLOW_REL_COPY, &data);
+
+    /* Add 1st repication copy for list 1*/
+    memset(&data, 0, sizeof(data));
+    data.repl_type = TM_REPL_TYPE_HONOR_INGRESS;
+    hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_P4PT_COPY, &data);
+
+    /* Add 2nd repication copy for list 1*/
+    memset(&data, 0, sizeof(data));
+    data.lport = 1008;  // SERVICE_LIF_P4PT as defined in nic/hal/src/proxy.hpp
+    data.is_qid = 0;
+    data.qid_or_vnid = 0;
+    hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_P4PT_COPY, &data);
+
     return HAL_RET_OK;
 }
 

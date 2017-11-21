@@ -1,0 +1,26 @@
+meta:
+    id      : ISCSI
+    scapy   : ISCSI
+    size    : 36
+
+fields:
+    reserved0                         : 0
+    imm_delivery                      : 1
+    opcode                            : 1
+    final                             : 1
+    read_data                         : 1
+    write_data                        : 0
+    bidir_overflow                    : 0
+    bidir_underflow                   : 0
+    attributes                        : 2
+    status                            : 0
+    response                          : 0
+    total_ahs_length                  : 12
+    data_seg_length                   : 14
+    lun                               : 88442211
+    tag_id                            : 12345667
+    exp_data_xfer_len_or_snack_tag    : 0
+    cmd_or_stat_seq_number            : 0
+    exp_stats_or_exp_cmd_seq_number   : 0
+    max_cmd_seq_number                : 0
+    expected_data_seq_number          : 0

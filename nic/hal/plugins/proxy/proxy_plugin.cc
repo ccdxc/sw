@@ -16,6 +16,8 @@ void init() {
     fte::register_feature(fte::FTE_FEATURE_APP_REDIR_MISS, "app.redirect.miss", app_redir_miss_exec);
     fte::register_feature(fte::FTE_FEATURE_APP_REDIR, "app.redirect", app_redir_exec);
     fte::register_feature(fte::FTE_FEATURE_APP_REDIR_FINI, "app.redirect.fini", app_redir_exec_fini);
+    fte::register_feature(fte::FTE_FEATURE_P4PT, "app.p4pt", p4pt_exec);
+
 }
 
 }

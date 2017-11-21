@@ -27,6 +27,7 @@ const feature_id_t FTE_FEATURE_APP_REDIR_FINI= 15;
 const feature_id_t FTE_FEATURE_INGRESS_CHECKS= 16;
 const feature_id_t FTE_FEATURE_QUIESCE       = 17;
 const feature_id_t FTE_FEATURE_EP_LEARN      = 18;
+const feature_id_t FTE_FEATURE_P4PT          = 19;
 
 // FTE pipeline progress action codes
 //  continue - continue the pipeline
