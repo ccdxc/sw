@@ -36,11 +36,9 @@ def build_symbols():
         if re.match("(.*) Successfully resolved program: name (.*)", line, re.I):
             fields = re.split(r'(.*) Successfully resolved program: name (.*)\.bin, base address 0x(.*), size(.*)', line)
             symbols['0x'+fields[3].upper()] =  fields[2]
-            #print '0x'+fields[3].upper(), "----->", fields[2]
         elif re.match("(.*) label: name (.*)", line, re.I):
             fields = re.split(r'(.*) label: name (.*) addr 0x(.*)', line)
             symbols['0x'+fields[3].upper()] =  fields[2]
-            #print '0x'+fields[3].upper(), "----->", fields[2]
     return
 
 # parse_logs and create a new file with symbols resolved
@@ -54,7 +52,6 @@ def parse_logs():
     os.remove(inscount_sort_log) if os.path.exists(inscount_sort_log) else None
     inscount_sort_file  = open(inscount_sort_log, "a+")
     program = ""
-    programline = 0
     for linenum, line in enumerate(modelfile):
         if re.match("(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)", line, re.I):
             fields = re.split(r'(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)', line)

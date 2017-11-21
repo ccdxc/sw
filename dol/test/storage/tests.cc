@@ -2351,8 +2351,14 @@ int test_run_rdma_e2e_write() {
   };
   Poller poll;
   rc = poll(func1);
+
+  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
   PostTargetRcvBuf1();
   PostInitiatorRcvBuf1();
+
+  // Increment the Buffer pointers
+  IncrTargetRcvBufPtr();
+  IncrInitiatorRcvBufPtr();
 
   return rc;
 }
@@ -2394,8 +2400,8 @@ int test_run_rdma_e2e_read() {
     };
 
     rc = poll(func2);
-// Enble this to debug as needed
-#if 0
+// Enable this to debug as needed
+#if 1
     printf("Dumping data buffer which contains NVME read data\n");
     utils::dump(data_buf);
     uint8_t *orig_buf = rdma_get_target_write_data_buf();
@@ -2404,8 +2410,13 @@ int test_run_rdma_e2e_read() {
 #endif
   }
 
+  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
   PostTargetRcvBuf1();
   PostInitiatorRcvBuf1();
+
+  // Increment the Buffer pointers
+  IncrTargetRcvBufPtr();
+  IncrInitiatorRcvBufPtr();
 
   return rc;
 }

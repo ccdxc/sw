@@ -62,6 +62,8 @@ std::vector<tests::TestEntry> test_suite = {
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
   {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
   {&tests::test_run_rdma_e2e_write, "E2E write over RDMA", false},
+  // Don't enable more than RDMA test case until ROCE resolves
+  // the p_ndx update vs increment issue
   //{&tests::test_run_rdma_e2e_read, "E2E read over RDMA", false},
 };
 
