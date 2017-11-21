@@ -51,6 +51,7 @@ storage_tx_pvm_roce_sq_cb_push_start:
  
    // Jump to pushing status without checking queue full or updating the table
    // as it has already been done
+   b		push_status
    
 check_push_status:
    // Check queue full condition for pushing only status and exit if full. 
