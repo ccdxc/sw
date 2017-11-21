@@ -6,6 +6,7 @@ feature:
     module      : classic
     spec        : rx.testspec
     enable      : True
+    runorder    : 10
     ignore      : False
 
 modules:

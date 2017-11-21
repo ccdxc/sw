@@ -1,10 +1,10 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : rxaccess
+    sub         : txins
     package     : test.classic
     module      : classic
-    spec        : rx_access.testspec
+    spec        : tx_vlan_insert.testspec
     enable      : True
     ignore      : False
     runorder    : 10
@@ -17,7 +17,7 @@ modules:
               segment   : filter://native=False
             - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
               segment   : filter://native=False
-    
+
     - module:
         name    : ICMP_QTAG
         iterate:
@@ -40,7 +40,8 @@ modules:
 
     - module:
         name    : NONIP_QTAG
-        spec    : rx_nonip_access.testspec
-        iterate:
+        spec    : tx_nonip_vlan_insert.testspec
+        iterate :
             - segment   : filter://native=False
               flow      : filter://label=CLASSIC
+

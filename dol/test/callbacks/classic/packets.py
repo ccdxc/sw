@@ -50,3 +50,15 @@ def GetExpectedPacketEncaps(testcase, packet):
     testcase.pvtdata.priotag = ptag
     return encaps
 
+def GetExpectedPacketQtag(testcase, args=None):
+    assert(testcase.config.dst.endpoint.remote == False)    # Always Host RX
+    if testcase.config.src.segment.native is False or IsPriorityTagged(testcase.pvtdata):
+        pri = testcase.config.flow.txqos.cos
+        vlan_id = testcase.config.dst.endpoint.intf.encap_vlan_id
+    else:
+        pri = 0
+        vlan_id = 0
+    qtag = (pri << 13) + vlan_id
+    assert(qtag <= 0xffff)
+    return qtag
+

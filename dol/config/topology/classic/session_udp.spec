@@ -8,7 +8,6 @@ proto: udp
 entries:
     - entry:
         label: classic
-        fte: True
         responder:
             port : const/128
         initiator: 

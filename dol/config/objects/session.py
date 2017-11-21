@@ -18,9 +18,10 @@ import config.objects.collector       as collector
 import config.objects.l4lb            as l4lb
 import config.objects.multicast_group as multicast_group
 
-from config.store                      import Store
-from infra.common.logging              import cfglogger
-from config.objects.proxycb_service    import ProxyCbServiceHelper
+from config.store                       import Store
+from infra.common.logging               import cfglogger
+from infra.common.glopts                import GlobalOptions as GlobalOptions
+from config.objects.proxycb_service     import ProxyCbServiceHelper
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -276,6 +277,7 @@ class SessionObject(base.ConfigObjectBase):
 class SessionObjectHelper:
     def __init__(self):
         self.objs = []
+        self.classicssns = []
         self.ftessns = []
         self.ssns = []
         self.fep_pairs = {}
@@ -323,6 +325,9 @@ class SessionObjectHelper:
         if session.IsFteEnabled():
             cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
             self.ftessns.append(session)
+        elif GlobalOptions.classic:
+            cfglogger.info("Adding Session:%s to Classic Session List" % session.GID())
+            self.classicssns.append(session)
         else:
             cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
             self.ssns.append(session)
@@ -369,6 +374,9 @@ class SessionObjectHelper:
                 if session.IsFteEnabled():
                     cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
                     self.ftessns.append(session)
+                elif GlobalOptions.classic:
+                    cfglogger.info("Adding Session:%s to Classic Session List" % session.GID())
+                    self.classicssns.append(session)
                 else:
                     cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
                     self.ssns.append(session)

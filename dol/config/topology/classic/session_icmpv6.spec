@@ -8,7 +8,6 @@ proto: icmpv6
 entries:
     - entry:
         label: classic
-        fte: True
         initiator:
             type: const/128   # Echo
             code: const/0

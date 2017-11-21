@@ -1,13 +1,13 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : tx
+    sub         : rxstrip
     package     : test.classic
-    module      : classic
-    spec        : tx.testspec
+    module      : rx_vlan_strip
+    spec        : rx_vlan_strip.testspec
     enable      : True
     ignore      : False
-    runorder    : 10
+    runorder    : 100
 
 modules:
     - module:
@@ -17,7 +17,7 @@ modules:
               segment   : filter://native=False
             - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
               segment   : filter://native=False
-
+    
     - module:
         name    : ICMP_QTAG
         iterate:
@@ -40,8 +40,8 @@ modules:
 
     - module:
         name    : NONIP_QTAG
-        spec    : tx_nonip.testspec
-        iterate :
+        spec    : rx_nonip_vlan_strip.testspec
+        iterate:
             - segment   : filter://native=False
               flow      : filter://label=CLASSIC
 
@@ -75,9 +75,7 @@ modules:
 
     - module:
         name    : NONIP_UTAG
-        spec    : tx_nonip.testspec
-        iterate :
+        spec    : rx_nonip_vlan_strip.testspec
+        iterate:
             - segment   : filter://native=True
               flow      : filter://label=CLASSIC
-
-

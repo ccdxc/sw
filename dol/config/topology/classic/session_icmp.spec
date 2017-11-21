@@ -7,7 +7,6 @@ proto: icmp
 entries:
     - entry:
         label: classic
-        fte: True
         initiator:
             type: const/8   # Echo
             code: const/0

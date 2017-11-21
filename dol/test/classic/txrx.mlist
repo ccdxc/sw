@@ -7,6 +7,7 @@ feature:
     spec        : txrx.testspec
     enable      : True
     ignore      : False
+    runorder    : 10
 
 modules:
     - module:

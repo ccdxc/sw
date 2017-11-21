@@ -8,7 +8,6 @@ proto: tcp
 entries:
     - entry:
         label: classic
-        fte: True
         tracking: False
         timestamp: False
         responder:

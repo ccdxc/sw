@@ -1,31 +1,31 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : rxaccess
+    sub         : txaccess
     package     : test.classic
     module      : classic
-    spec        : rx_access.testspec
+    spec        : tx_access.testspec
     enable      : True
     ignore      : False
     runorder    : 10
 
 modules:
     - module:
-        name    : IPV4_QTAG
+        name    : IPV4
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=False
             - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
               segment   : filter://native=False
-    
+
     - module:
-        name    : ICMP_QTAG
+        name    : ICMP
         iterate:
             - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
               segment   : filter://native=False
 
     - module:
-        name    : IPV6_QTAG
+        name    : IPV6
         iterate:
             - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
               segment   : filter://native=False
@@ -33,14 +33,15 @@ modules:
               segment   : filter://native=False
 
     - module:
-        name    : ICMPV6_QTAG
+        name    : ICMPV6
         iterate:
             - flow      : filter://type=IPV6,proto=ICMPV6,label=CLASSIC
               segment   : filter://native=False
 
     - module:
-        name    : NONIP_QTAG
-        spec    : rx_nonip_access.testspec
-        iterate:
+        name    : NONIP
+        spec    : tx_nonip_access.testspec
+        iterate :
             - segment   : filter://native=False
               flow      : filter://label=CLASSIC
+
