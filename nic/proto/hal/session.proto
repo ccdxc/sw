@@ -7,6 +7,7 @@ syntax = "proto3";
 import "types.proto";
 import "qos.proto";
 import "telemetry.proto";
+import "nwsec.proto";
 
 package session;
 option go_package="halproto";
@@ -194,11 +195,34 @@ message FlowStatus {
   uint32              flow_hash       = 4;    // TODO: REMOVE flow hash. Only for DOL testing
 }
 
+// TFTPInfo captures the operational status of TFTP ALG session
+message TFTPALGInfo {
+  uint32               parse_error    = 1; // Number of parse errors recorded for this session
+  uint32               unknown_opcode = 2; // Number of unknown opcode received
+}
+
+// RPCInfo captures the operational status of SUNRPC/MSFT RPC ALG session
+message RPCALGInfo {
+  uint32               parse_error    = 1; // Number of parse errors recorded for this session
+  uint32               num_data_sess  = 2; // Number of active data sessions associated with this control session
+} 
+
+// SIPInfo captures the operational status of SIP ALG session
+message SIPALGInfo {
+  uint32               parse_error    = 1; // Number of parse errors recorded for this session
+}
+
 // SessionStatus captures the operational status of the session
 message SessionStatus {
   fixed64                session_handle    = 1;    // id of the session (returned by HAL)
   FlowStatus             iflow_status      = 2;    // operational status of iflow
   FlowStatus             rflow_status      = 3;    // operational status of rflow
+  nwsec.ALGName          alg               = 4;    // ALG applied on the session
+  oneof alg_info {
+      TFTPALGInfo        tftp_info          = 5;   
+      RPCALGInfo         rpc_info           = 6;
+      SIPALGInfo         sip_info           = 7;
+  } 
 }
 
 // SessionResponse is the response to one SessionSpec

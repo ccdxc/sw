@@ -1,10 +1,20 @@
 #include "nic/hal/plugins/network/alg/alg_tftp.hpp"
 #include "nic/hal/plugins/network/alg/alg_utils.hpp"
 
-#define TFTPOP_OFFSET 0x1
-
 namespace hal {
 namespace net {
+
+static void
+incr_parse_error(session_t *sess)
+{
+    HAL_ATOMIC_INC_UINT32(&sess->app_session->alg_info.parse_errors, 1);
+}
+
+static void
+incr_unknown_opcode(session_t *sess)
+{
+    HAL_ATOMIC_INC_UINT32(&sess->app_session->alg_info.unknown_opcode, 1);
+}
 
 hal_ret_t
 process_tftp_first_packet(fte::ctx_t& ctx)
@@ -13,13 +23,14 @@ process_tftp_first_packet(fte::ctx_t& ctx)
     fte::alg_proto_state_t  state = fte::ALG_PROTO_STATE_NONE;
     const uint8_t          *pkt = ctx.pkt();
     uint8_t                 offset = 0;
+    uint16_t                tftpop = 0;
     fte::alg_entry_t        newentry = ctx.alg_entry();
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
 
-    // Opcode offset
-    offset += TFTPOP_OFFSET;
+    // Fetch 2-byte opcode
+    tftpop = __pack_uint16(pkt, &offset);
 
     if (ctx.pkt_len() < offset) {
         // Should we drop the packet at this point ?
@@ -29,10 +40,13 @@ process_tftp_first_packet(fte::ctx_t& ctx)
     }
 
     // Only act on it if there is a known opcode
-    if (pkt[offset] == 1) { /* RRQ */
+    if (tftpop == 1) { /* RRQ */
         state = fte::ALG_PROTO_STATE_TFTP_RRQ;
-    } else if (pkt[offset] == 2) { /* WRQ */
+    } else if (tftpop == 2) { /* WRQ */
         state = fte::ALG_PROTO_STATE_TFTP_WRQ;
+    } else {
+        HAL_TRACE_DEBUG("Unknown Opcode -- parse error");
+        return ret;
     } 
 
     if (state != fte::ALG_PROTO_STATE_NONE) {
@@ -57,18 +71,26 @@ process_tftp(fte::ctx_t& ctx)
     hal::flow_key_t       key = ctx.key();
     const uint8_t        *pkt = ctx.pkt();
     uint8_t               offset = 0;
+    uint16_t              tftpop = 0;
     fte::alg_entry_t      *entry;
+    hal::session_t        *session = ctx.session();
+
+    if (session == NULL) {
+        HAL_TRACE_ERR("Session is null for existing session -- bailing");
+        return HAL_RET_ERR;
+    }
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
  
-    // Opcode offset
-    offset += TFTPOP_OFFSET;
+    // Fetch 2-byte opcode
+    tftpop = __pack_uint16(pkt, &offset);
 
     if (ctx.pkt_len() < offset) {
         // Should we drop the packet at this point ?
         HAL_TRACE_ERR("Packet len: {} is less than payload offset: {}", \
                       ctx.pkt_len(),  offset);
+        incr_parse_error(session);
         return ret;
     }
 
@@ -77,22 +99,22 @@ process_tftp(fte::ctx_t& ctx)
         case fte::ALG_PROTO_STATE_TFTP_RRQ:
             HAL_TRACE_DEBUG("Received response for RRQ offset: {} opcode: {}",
                             offset, pkt[offset+1]);
-            if (pkt[offset] != 3 && /* DATA */
-                pkt[offset] != 6 && /* OACK */
-                pkt[offset] != 5) { /* ERROR */
-                // Dont do any action based on Opcode. Just log for now
+            if (tftpop != 3 && /* DATA */
+                tftpop != 6 && /* OACK */
+                tftpop != 5) { /* ERROR */
                 HAL_TRACE_DEBUG("TFTP Unknown Opcode response received");
+                incr_unknown_opcode(session);
             }
             break;
 
         case fte::ALG_PROTO_STATE_TFTP_WRQ:
             HAL_TRACE_DEBUG("Received response for WRQ offset: {} opcode: {}",
                             offset, pkt[offset+1]);
-            if (pkt[offset] != 4 && /* ACK */
-                pkt[offset] != 6 && /* OACK */
-                pkt[offset] != 5) { /* ERROR */
-                // Dont do any action based on Opcode. Just log for now
+            if (tftpop != 4 && /* ACK */
+                tftpop != 6 && /* OACK */
+                tftpop != 5) { /* ERROR */
                 HAL_TRACE_DEBUG("TFTP Unknown Opcode response received");
+                incr_unknown_opcode(session);
             }
             break;
 

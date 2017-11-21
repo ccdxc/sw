@@ -30,7 +30,7 @@ IsAlgExistingFlow(fte::ctx_t& ctx)
 fte::pipeline_action_t
 alg_exec(fte::ctx_t& ctx)
 {
-    hal_ret_t    ret = HAL_RET_OK;
+    hal_ret_t          ret = HAL_RET_OK;
   
     if (ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
@@ -89,11 +89,6 @@ alg_exec(fte::ctx_t& ctx)
             default:
                 break;
         };
-    }
-
-    if (ret != HAL_RET_OK) { 
-        //return fte::PIPELINE_END;
-        ret = HAL_RET_OK;
     }
 
     ctx.set_feature_status(ret);
