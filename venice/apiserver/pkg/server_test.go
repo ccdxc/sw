@@ -148,9 +148,9 @@ func TestRunApiSrv(t *testing.T) {
 	a.RegisterHooksCb("test-service1", s1.hooksCb)
 	a.RegisterHooksCb("test-service2", s1.hooksCb)
 	// Add a dummy service hook without the service.
-	a.RegisterHooksCb("dumm-service2", s1.hooksCb)
+	a.RegisterHooksCb("dummy-service2", s1.hooksCb)
 	if len(a.hookregs) != 3 {
-		t.Errorf("Was expecting [2] hooks found [%d]", len(a.hookregs))
+		t.Errorf("Was expecting [3] hooks found [%d]", len(a.hookregs))
 	}
 	go a.Run(config)
 	a.WaitRunning()
@@ -175,9 +175,14 @@ func TestRunApiSrv(t *testing.T) {
 		t.Fatal("Timeout waiting on lock")
 	}
 
+	// test if the hooks are called; only the hooks that're asssociated with the service is invoked.
+	if s1.hookcbCalled != 2 {
+		t.Errorf("Was expecting [2] hooks invocation found [%d]", s1.hookcbCalled)
+	}
+
 	c := a.getKvConn()
 	if c == nil {
-		t.Fatalf("Connction is nil")
+		t.Fatalf("Connection is nil")
 	}
 	// Add a few more connections
 	err = a.addKvConnToPool()
@@ -190,9 +195,6 @@ func TestRunApiSrv(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "Stop called by user") {
 		t.Errorf("APIServer Run did not close on error")
-	}
-	if s1.hookcbCalled != 2 {
-		t.Errorf("Was expecting [2] hooks invocation found [%d]", s1.hookcbCalled)
 	}
 	if len(singletonAPISrv.kvPool) != 0 {
 		t.Fatalf("expecing no kv connections in pool got %d", len(singletonAPISrv.kvPool))

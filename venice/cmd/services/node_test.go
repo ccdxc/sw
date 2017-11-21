@@ -35,7 +35,7 @@ func TestNodeServiceStartBeforeSystemdService(t *testing.T) {
 	t.Parallel()
 	s, n := setupNode("TestNodeServiceStartBeforeSystemdService")
 
-	n.Start()
+	n.Start() // node service in turn starts systemd service. so, the nodes services should come up fine
 	s.Start()
 
 	checkAllNodeServiceStarted(t, s)

@@ -44,7 +44,7 @@ type k8sService struct {
 	cancel    context.CancelFunc
 	running   bool
 	isLeader  bool
-	modCh     chan types.Module
+	modCh     chan types.Module // set of modules(deployments, ds, etc.) that needs to be deployed
 	observers []types.K8sPodEventObserver
 }
 
@@ -552,7 +552,7 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) (err erro
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
-	d := &v1beta1.DaemonSet{
+	dsConfig := &v1beta1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: module.Name,
 		},
@@ -571,17 +571,17 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) (err erro
 			},
 		},
 	}
-	d, err = client.Extensions().DaemonSets(defaultNS).Create(d)
+
+	d, err := client.Extensions().DaemonSets(defaultNS).Create(dsConfig)
 	if err == nil {
 		log.Infof("Created DaemonSet %+v", d)
-		return
 	} else if errors.IsAlreadyExists(err) {
-		log.Infof("DaemonSet %+v already exists", d)
-		return
+		log.Infof("DaemonSet %+v already exists", dsConfig)
 	} else {
-		log.Errorf("Failed to create DaemonSet %+v with error: %v", d, err)
-		return
+		log.Errorf("Failed to create DaemonSet %+v with error: %v", dsConfig, err)
 	}
+
+	return
 }
 
 // createDeployment creates a Deployment object.
@@ -589,7 +589,7 @@ func createDeployment(client k8sclient.Interface, module *types.Module) (err err
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
-	d := &v1beta1.Deployment{
+	dConfig := &v1beta1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: module.Name,
 		},
@@ -608,17 +608,17 @@ func createDeployment(client k8sclient.Interface, module *types.Module) (err err
 			},
 		},
 	}
-	d, err = client.Extensions().Deployments(defaultNS).Create(d)
+
+	d, err := client.Extensions().Deployments(defaultNS).Create(dConfig)
 	if err == nil {
 		log.Infof("Created Deployment %+v", d)
-		return
 	} else if errors.IsAlreadyExists(err) {
-		log.Infof("Deployment %+v already exists", d)
-		return
+		log.Infof("Deployment %+v already exists", dConfig)
 	} else {
-		log.Errorf("Failed to create Deployment %+v with error: %v", d, err)
-		return
+		log.Errorf("Failed to create Deployment %+v with error: %v", dConfig, err)
 	}
+
+	return
 }
 
 // deleteModules deletes modules using k8s.

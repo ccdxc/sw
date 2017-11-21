@@ -32,6 +32,8 @@ var (
 		"pen-kube-controller-manager",
 		"pen-elasticsearch",
 	}
+	// cluster status will be updated every 30 seconds or
+	// when any leader event is observed or when cluster is created/updated
 	clusterStatusUpdateTime = 30 * time.Second
 )
 
@@ -47,8 +49,12 @@ type masterService struct {
 	virtualIP     string // virtualIP for services which can listed on only one VIP
 	configs       configs.Interface
 
+	// this channel will be updated to indicate any change in the cluster or leader.
+	// On leader/cluster event, the cluster status is updated to reflect the changes.
+	// refer handleClusterEvent() and updateClusterStatus()
 	updateCh chan bool
-	closeCh  chan bool
+
+	closeCh chan bool
 }
 
 // MasterOption fills the optional params

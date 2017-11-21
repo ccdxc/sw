@@ -105,7 +105,7 @@ func TestLeaderServiceWithObserverError(t *testing.T) {
 
 	m1 := &mockObserver{}
 	l.Register(m1)
-	m1.ForceError = true
+	m1.ForceError = true // this will fail observer's OnNotifyLeaderEvent() and thus the leader event
 
 	go l.Start()
 	defer l.Stop()
@@ -147,7 +147,7 @@ func TestLeaderRegisterService(t *testing.T) {
 	if m.LeaderChangeCount != 0 {
 		t.Fatalf("Expected LeaderStartCount of 0. Got %d", m.LeaderChangeCount)
 	}
-	l.UnRegister(m)
+	l.UnRegister(m) // observer will be no more notified of the leader events
 
 	l.Stop()
 

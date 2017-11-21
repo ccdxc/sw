@@ -15,7 +15,7 @@ func TestSvcAddMethod(t *testing.T) {
 	svc.AddMethod("AutoWatchMethod2", newFakeMethod(true))
 
 	if len(svc.Methods) != 3 {
-		t.Errorf("Expecting [2] methods found [%v]", len(svc.Methods))
+		t.Errorf("Expecting [3] methods found [%v]", len(svc.Methods))
 	}
 
 	if svc.GetMethod("Method1") == nil {

@@ -30,7 +30,6 @@ func TestResolverService(t *testing.T) {
 	mo := &mockServiceInstanceObserver{}
 	r := NewResolverService(m)
 	r.Start()
-	r.Start()
 	r.Register(mo)
 
 	p1 := v1.Pod{

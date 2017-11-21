@@ -110,21 +110,24 @@ func TestPreflightHandler(t *testing.T) {
 	}
 	hdr := resp.Header()
 	// Check that all the right headers have been set.
-	if v, ok := hdr["Access-Control-Allow-Headers"]; !ok {
+	if v, ok := hdr["Access-Control-Allow-Headers"]; ok {
 		found := false
 		for _, h := range v {
-			if h == "Content-Type" {
+			if h == "Content-Type,Accept" {
 				found = true
+				break
 			}
 		}
+
 		if !found {
 			t.Errorf("Content-Type not set [%v][%s]", ok, v)
 		}
 	}
 
-	if v, ok := hdr["Access-Control-Allow-Methods"]; !ok {
+	// allowed methods should be [GET,POST,PUT,DELETE,OPTIONS]
+	if v, ok := hdr["Access-Control-Allow-Methods"]; ok {
 		for _, h := range v {
-			if strings.Contains(h, "GET") || !strings.Contains(h, "POST") || !strings.Contains(h, "PUT") ||
+			if !strings.Contains(h, "GET") || !strings.Contains(h, "POST") || !strings.Contains(h, "PUT") ||
 				!strings.Contains(h, "DELETE") || !strings.Contains(h, "OPTIONS") {
 				t.Errorf("Allow Methods not set [%v]", h)
 			}

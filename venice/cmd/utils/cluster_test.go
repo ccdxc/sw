@@ -47,6 +47,7 @@ func TestClusterConfigFileErrorCases(t *testing.T) {
 		VirtualIP: "192.168.30.10",
 	}
 	if err := SaveCluster(&cluster); err == nil {
+		// cannot write a config to a directory (/tmp)
 		t.Fatalf("Saving cluster succeeded writing to invalid config file")
 	}
 	if _, err := GetCluster(); err == nil {

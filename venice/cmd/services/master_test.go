@@ -47,6 +47,9 @@ func checkAllServiceStopped(t *testing.T, s types.SystemdService) {
 		t.Errorf("All Services should have been stopped. Instead %v are running", u)
 	}
 }
+
+// NOTE: master service starts systemd, leader and other required service.
+// So, the order of starting the services should not impact the behavior.
 func TestMasterServiceGiveupLeadership(t *testing.T) {
 	t.Parallel()
 	l, s, _, m := setupMaster(t)
@@ -94,6 +97,7 @@ func TestMasterServiceSetStatus(t *testing.T) {
 	t.Parallel()
 	l, s, cw, m := setupMaster(t)
 
+	// master status gets updated by master's cfgWatcherService handlers
 	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == "", "Leader is non-nil at start of test")
 	s.Start()
 	l.Start()
@@ -131,12 +135,15 @@ func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {
 	clusterStatusUpdateTime = time.Second
 
 	s.Start()
-	l.Start()
-	m.Start()
+	l.Start() // node t.Name() will always become the leader. refer mock leader service
+	m.Start() // leader event from above will be observed at master only when the master starts
+
+	// leaderSvc(l).LeaderID is the source of truth. So, the cluster status should be updated to this
+	// whenever the cluster/leader event is observed
 
 	// master should update the Leader to himself if he sees a kvstore Created/Updated event on Cluster
 	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
-	cw.ClusterHandler(kvstore.Created, &cmd.Cluster{})
+	cw.ClusterHandler(kvstore.Created, &cmd.Cluster{}) // handlers are set when master starts
 	testutils.AssertEventually(t,
 		func() (bool, []interface{}) {
 			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
@@ -157,6 +164,11 @@ func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {
 		}, "Leadership not corrected in timer at the end of the test")
 
 	l.GiveupLeadership()
+
+	// only leader can update the status.
+	// In this test scenario, once the leadership is given up or changed there is no valid
+	// master(leader) to update the status (refer mock leader service).
+	// so, it will remain dummy.
 	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
 	cw.ClusterHandler(kvstore.Updated, &cmd.Cluster{})
 	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == "dummy", "Non-Leader reacting to cluster object creation")

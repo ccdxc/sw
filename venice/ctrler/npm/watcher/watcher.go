@@ -20,7 +20,7 @@ const watcherQueueLen = 1000
 // Watcher watches api server for changes
 type Watcher struct {
 	waitGrp         sync.WaitGroup          // wait group to wait on all go routines to exit
-	statemgr        *statemgr.Statemgr      // reference to network manager
+	statemgr        *statemgr.Statemgr      // reference to state manager
 	netWatcher      chan kvstore.WatchEvent // network object watcher
 	vmmEpWatcher    chan kvstore.WatchEvent // vmm endpoint watcher
 	sgWatcher       chan kvstore.WatchEvent // sg object watcher

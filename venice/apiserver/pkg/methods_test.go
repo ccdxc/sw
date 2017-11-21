@@ -91,7 +91,7 @@ func TestMethodWiths(t *testing.T) {
 		t.Errorf("Expecting 3 precommit invocations found %v", f.pres)
 	}
 	if f.posts != 2 {
-		t.Errorf("Expecting 3 precommit invocations found %v", f.posts)
+		t.Errorf("Expecting 2 postcommit invocations found %v", f.posts)
 	}
 	// There should be no KV operations involved since the precommit skipped KV
 	if req.kvreads != 0 {
@@ -125,7 +125,6 @@ func TestMethodKvWrite(t *testing.T) {
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
 
-	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
 	reqmsg := TestType1{}
 
@@ -133,6 +132,8 @@ func TestMethodKvWrite(t *testing.T) {
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "GET")
 	ctx := metadata.NewIncomingContext(context.Background(), md)
+	// this call should fail because the data is not added to the kvstore yet
+	// fakemessage implements a dummy kv read/write
 	if respmsg, _ := m.HandleInvocation(ctx, reqmsg); respmsg != nil {
 		t.Errorf("Expecting err but succeded")
 	}
@@ -153,7 +154,7 @@ func TestMethodKvWrite(t *testing.T) {
 	ctx2 := metadata.NewIncomingContext(context.Background(), md2)
 	m.HandleInvocation(ctx2, reqmsg)
 	if req.kvwrites != 2 {
-		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
+		t.Errorf("Expecting [2] kvwrite but found [%v]", req.kvwrites)
 	}
 	// Now delete the object and check
 	md3 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
@@ -270,6 +271,6 @@ func TestTxn(t *testing.T) {
 		t.Fatalf("Invocation failed (%s)", err)
 	}
 	if req.txndels != 1 {
-		t.Fatalf("Txn Write: expecting [2] saw [%d]", req.txnwrites)
+		t.Fatalf("Txn Del: expecting [1] saw [%d]", req.txndels)
 	}
 }

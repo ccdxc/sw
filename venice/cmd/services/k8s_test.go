@@ -18,7 +18,7 @@ func checkForServices(t *testing.T, client *k8sclient.Clientset, stopCh, doneCh 
 		select {
 		case <-time.After(time.Millisecond * 100):
 			done := true
-			foundModules, err := getModules(client)
+			foundModules, err := getModules(client) // get all the DS and deployments from default namespace
 			if err != nil {
 				t.Fatalf("Failed to get modules, error: %v", err)
 			}
@@ -65,6 +65,10 @@ func (p *podObserver) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 	return nil
 }
 
+// NOTE: anything that gets deployed other than default `k8sModules` will be deleted
+// default namespace should only run pen's k8s services.
+
+// Below tests ensure that the dummy deployments are deleted
 func TestK8sService(t *testing.T) {
 	client := k8sclient.NewSimpleClientset()
 
@@ -137,7 +141,8 @@ func TestK8sService(t *testing.T) {
 				&logVolume,
 			},
 		},
-	})
+	}) // duplicate daemonset
+
 	verifyK8sServices(t, client)
 
 	// Create a dummy Deployment.

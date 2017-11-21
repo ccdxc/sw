@@ -236,7 +236,7 @@ func TestMessageWith(t *testing.T) {
 	m.Validate(nil, "", true)
 	var kv kvstore.Interface
 	if f.validateCalled != 1 {
-		t.Errorf("Expecting validation count of %v found", f.validateCalled)
+		t.Errorf("Expecting 1 validation found %d", f.validateCalled)
 	}
 	m.Default(nil)
 	if f.defaultCalled != 1 {
@@ -255,7 +255,7 @@ func TestMessageWith(t *testing.T) {
 
 	m.WriteToKvTxn(context.TODO(), nil, nil, "testprefix", true)
 	if f.txnwrites != 1 {
-		t.Errorf("Expecting 1 call to Txn write found %d", f.kvdels)
+		t.Errorf("Expecting 1 call to Txn write found %d", f.txnwrites)
 	}
 	m.DelFromKv(context.TODO(), kv, "testKey")
 	if f.kvdels != 1 {
@@ -264,7 +264,7 @@ func TestMessageWith(t *testing.T) {
 
 	m.DelFromKvTxn(context.TODO(), nil, "testKey")
 	if f.txndels != 1 {
-		t.Errorf("Expecting 1 call to KV Del found %d", f.kvdels)
+		t.Errorf("Expecting 1 call to Txn Del found %d", f.txndels)
 	}
 	m.CreateUUID(nil)
 	if f.uuidwrite != 1 {

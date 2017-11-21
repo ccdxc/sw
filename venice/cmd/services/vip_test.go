@@ -51,7 +51,7 @@ func TestVIPServiceAfterLeaderStart(t *testing.T) {
 		t.Errorf("expected %v not returned from GetConfiguredVirtualIPs(). got %v", testIP, configuredVIPs)
 	}
 
-	i.SetError()
+	i.SetError() // this mock error will prevent the IP to get configured
 	if err := vipSvc.AddVirtualIPs(testIP2); err == nil {
 		t.Errorf("Expected AddVirtualIPS to return an error. Didnt get error	")
 	}
@@ -81,6 +81,7 @@ func TestVIPServiceBeforeLeaderStart(t *testing.T) {
 	}
 
 	l.Start()
+	// Once the master(leader) is elected, VIP service gets notified and any pending VIPs get configured on the master
 	configuredVIPs = vipSvc.GetConfiguredVirtualIPs()
 	if len(configuredVIPs) != 1 || configuredVIPs[0] != testIP {
 		t.Errorf("expected %v not returned from GetConfiguredVirtualIPs(). got %v", testIP, configuredVIPs)
@@ -132,9 +133,12 @@ func TestVIPServiceWithIPLayerErrors(t *testing.T) {
 		t.Errorf("expected %v got %v", nil, configuredVIPs)
 	}
 
-	i.ClearError()
+	i.ClearError() // IPs should be configured as the mocking error is cleared
 	if err := l.BecomeLeader(); err != nil {
 		t.Errorf("BecomeLeader failed with error %v", err)
 	}
-
+	configuredVIPs = vipSvc.GetConfiguredVirtualIPs()
+	if len(configuredVIPs) != 1 || configuredVIPs[0] != testIP {
+		t.Errorf("expected %v not returned from GetConfiguredVirtualIPs(). got %v", testIP, configuredVIPs)
+	}
 }

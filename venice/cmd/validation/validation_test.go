@@ -22,6 +22,7 @@ func TestValidateCluster(t *testing.T) {
 		isExpectedFailure bool
 		cluster           *cmd.Cluster
 	}{
+		// quorum nodes cannot be empty in the request
 		"bad-cluster-no-nodes": {
 			isExpectedFailure: true,
 			cluster: testCluster("foo",
@@ -51,6 +52,7 @@ func TestValidateCluster(t *testing.T) {
 				&cmd.ClusterStatus{},
 			),
 		},
+		// status must be empty in the request object
 		"bad-cluster-with-status": {
 			isExpectedFailure: true,
 			cluster: testCluster("foo",
