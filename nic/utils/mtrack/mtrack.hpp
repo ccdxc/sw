@@ -36,6 +36,7 @@ public:
 
     void enable(void) { enabled_ = true; }
     bool enabled(void) const { return enabled_; }
+    void disable(void) { enabled_ = false; }
 
     void *mtrack_alloc(uint32_t alloc_id, bool zero,
                        uint32_t size, const char *func, uint32_t line) {

@@ -21,9 +21,10 @@ mtrack_map_walk_cb (void *ctxt, uint32_t alloc_id,
         // memory allocation failure, stop walking !!
         return true;
     }
-    response->set_alloc_id(alloc_id);
-    response->set_num_allocs(minfo->num_allocs);
-    response->set_num_frees(minfo->num_frees);
+    response->set_api_status(types::API_STATUS_OK);
+    response->mutable_spec()->set_alloc_id(alloc_id);
+    response->mutable_stats()->set_num_allocs(minfo->num_allocs);
+    response->mutable_stats()->set_num_frees(minfo->num_frees);
 
     return false;
 }
@@ -33,7 +34,6 @@ mtrack_get (debug::MemTrackGetRequest& req,
             debug::MemTrackGetResponseMsg *rsp)
 {
     utils::g_hal_mem_mgr.walk(rsp, mtrack_map_walk_cb);
-    rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 

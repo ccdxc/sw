@@ -15,6 +15,7 @@ option go_package="halproto";
 service Debug {
     rpc DebugInvoke (DebugRequestMsg) returns (DebugResponseMsg) {}
     rpc MemTrackGet (MemTrackGetRequestMsg) returns (MemTrackGetResponseMsg) {}
+    rpc SlabGet (SlabGetRequestMsg) returns (SlabGetResponseMsg){}
 }
 
 // DebugKeyHandle uniquely identfies the table/register to access
@@ -61,9 +62,14 @@ message DebugResponseMsg {
     repeated DebugResponse    response = 1;
 }
 
+message MemTrackSpec {
+  uint32    alloc_id = 1;    // allocation id stats are requested for (0xFFFFFFFF for all)
+}
+
 // MemTrackGetRequest is request msg with allocation id that info is requested for
 message MemTrackGetRequest {
-  uint32    alloc_id = 1;    // allocation id stats are requested for (0xFFFFFFFF for all)
+  types.ObjectMeta      meta             = 1;    // object meta
+  MemTrackSpec          spec             = 2;    // qualifiers
 }
 
 // MemTrackGetRequestMsg is batched MemTrackGetRequest
@@ -71,15 +77,74 @@ message MemTrackGetRequestMsg {
   repeated MemTrackGetRequest    request = 1;    // individual request
 }
 
+// operational status of memory tracker object
+message MemTrackStatus {
+}
+
+// stats per memory tracker object
+message MemTrackStats {
+  uint32    num_allocs    = 1;    // number of allocations with alloc_id
+  uint32    num_frees     = 2;    // number of frees with alloc_id
+}
+
 // MemTrackGetResponse captures debug information per allocation id
 message MemTrackGetResponse {
-  uint32    alloc_id      = 1;    // unique allocation id
-  uint32    num_allocs    = 2;    // number of allocations with alloc_id
-  uint32    num_frees     = 3;    // number of frees with alloc_id
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  MemTrackSpec       spec       = 2;    // spec (aka. identifier of mem track object)
+  MemTrackStatus     status     = 3;    // oper status, if any
+  MemTrackStats      stats      = 4;    // statistics
 }
 
 // MemTrackGetResponseMsg is batched MemTrackGetResponse
 message MemTrackGetResponseMsg {
-  types.ApiStatus                 api_status = 1;    // API status code
-  repeated MemTrackGetResponse    response   = 2;    // response per allocation id
+  repeated MemTrackGetResponse    response   = 1;    // response per allocation id
+}
+
+// SlabSpec identifies a slab
+message SlabSpec {
+  string name                 = 1;    // name of the slab
+  uint32 id                   = 2;    // slab identifier
+  uint32 element_size         = 3;    // size of each element
+  uint32 elements_per_block   = 4;    // # of elements per block
+  bool   thread_safe          = 5;    // thread safe allocation/free, if TRUE
+  bool   grow_on_demand       = 6;    // grow the slab on demand, if TRUE
+  bool   delay_delete         = 7;    // delay delete each element, if TRUE, instead of freeing immediately
+  bool   zero_on_allocation   = 8;    // zero allocated mem. if TRUE
+}
+
+// operational status of slab, if any
+message SlabStatus {
+}
+
+// per slab statistics
+message SlabStats {
+  uint32 num_elements_in_use = 1;    // number of elements in use
+  uint32 num_allocs          = 2;    // number of alloc operations
+  uint32 num_frees           = 3;    // number of free operations
+  uint32 num_alloc_errors    = 4;    // number of alloc errors
+  uint32 num_blocks          = 5;    // number of blocks allocated
+}
+
+// SlabGetRequest is GET request per slab
+message SlabGetRequest {
+  types.ObjectMeta      meta = 1;    // object meta
+  uint32 id                  = 2;    // slab identifier
+}
+
+// SlabGetResponse is batched GET request
+message SlabGetRequestMsg {
+  repeated SlabGetRequest    request = 1;    // batched get request
+}
+
+// SlabGetResponse captures all information about a slab
+message SlabGetResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  SlabSpec           spec       = 2;    // slab attributes
+  SlabStatus         status     = 3;    // operational status of the slab
+  SlabStats          stats      = 4;    // stats of the slab
+}
+
+// SlabGetResponseMsg is batched response for GET operation
+message SlabGetResponseMsg {
+  repeated SlabGetResponse     response = 1;    // batched get response
 }
