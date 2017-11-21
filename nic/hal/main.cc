@@ -54,6 +54,7 @@
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/quiesce_svc.hpp"
 #include "nic/hal/svc/barco_rings_svc.hpp"
+#include "nic/hal/svc/multicast_svc.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -97,6 +98,7 @@ svc_reg (const std::string& server_addr)
     EventServiceImpl         event_svc;
     QuiesceServiceImpl       quiesce_svc;
     BarcoRingsServiceImpl    barco_rings_svc;
+    MulticastServiceImpl     multicast_svc;
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
 
@@ -134,6 +136,7 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&event_svc);
     server_builder.RegisterService(&quiesce_svc);
     server_builder.RegisterService(&barco_rings_svc);
+    server_builder.RegisterService(&multicast_svc);
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
 

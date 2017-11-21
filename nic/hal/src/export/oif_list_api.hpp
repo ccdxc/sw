@@ -11,6 +11,8 @@ namespace hal {
 
     // Place for all public definitions of the OIF List manager.
 
+    #define OIF_LIST_ID_INVALID (0)
+
     typedef struct oif_s {
         // if_id_t  if_id;
         // l2seg_id_t  l2_seg_id;

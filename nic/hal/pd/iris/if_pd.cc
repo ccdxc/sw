@@ -325,10 +325,21 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
             data->is_qid = 1;
             data->qid_or_vnid = 0; // TODO refer to update_fwding_info()
             data->qtype = lif_get_qtype(lif, intf::LIF_QUEUE_PURPOSE_RX);
-            data->rewrite_index = g_hal_state_pd->rwr_tbl_decap_vlan_idx();
-            data->tunnel_rewrite_index = (is_tagged) ?
-                                         (g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx()):
-                                         (0);
+
+            switch (pi_if->enic_type) {
+                case intf::IF_ENIC_TYPE_CLASSIC:
+                    data->rewrite_index = (is_tagged) ?
+                                          (0):
+                                          (g_hal_state_pd->rwr_tbl_decap_vlan_idx());
+                    data->tunnel_rewrite_index = 0;
+                    break;
+                default:
+                    data->rewrite_index = g_hal_state_pd->rwr_tbl_decap_vlan_idx();
+                    data->tunnel_rewrite_index = (is_tagged) ?
+                                                 (g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx()):
+                                                 (0);
+                    break;
+            }
             HAL_TRACE_DEBUG("Replication to Enic: lif_id: {}", lif->lif_id);
             break;
         }

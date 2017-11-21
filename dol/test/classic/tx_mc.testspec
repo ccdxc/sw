@@ -63,10 +63,10 @@ packets:
     - packet:
         id          : EXP_PKT_ENIC     # Expected packet on Enics
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncaps
+        encaps      : callback://networking/packets/GetClassicEnicPacketEncapsForMulticastCopy
         headers     :
             qtag:
-                vlan: callback://classic/callbacks/GetEncapVlanIdForMulticastCopy/idx=0
+                vlan: ref://testcase/config/src/segment/vlan_id # Retain/Strip
 
 buffers:
     - buffer:

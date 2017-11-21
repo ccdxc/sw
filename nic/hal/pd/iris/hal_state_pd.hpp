@@ -86,6 +86,9 @@ public:
     ht *l2seg_hwid_ht(void) const { return l2seg_hwid_ht_; }
     indexer *l2seg_cpu_idxr(void) const { return l2seg_cpu_idxr_; }
 
+    // get APIs for mc entry related state
+    slab *mc_entry_slab(void) const { return mc_entry_slab_; }
+
     // get API for lport indexer
     indexer *lport_idxr(void) const { return lport_idxr_; }
 
@@ -286,6 +289,11 @@ private:
         slab       *l2seg_slab_;
         ht         *l2seg_hwid_ht_;
         indexer    *l2seg_cpu_idxr_;
+    } __PACK__;
+
+    // mc entry related state
+    struct {
+        slab       *mc_entry_slab_;
     } __PACK__;
 
     // Lport Indexer

@@ -2,6 +2,7 @@
 #include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/hal/pd/iris/nwsec_pd.hpp"
 #include "nic/hal/pd/iris/l2seg_pd.hpp"
+#include "nic/hal/pd/iris/multicast_pd.hpp"
 #include "nic/hal/pd/iris/lif_pd.hpp"
 #include "nic/hal/pd/iris/endpoint_pd.hpp"
 #include "nic/hal/pd/iris/uplinkif_pd.hpp"
@@ -86,6 +87,12 @@ hal_state_pd::init(void)
                                               true, /* thread safe */
                                               true);/* skip zero */
     HAL_ASSERT_RETURN((l2seg_cpu_idxr_ != NULL), false);
+
+    // initialize mc entry related data structures
+    mc_entry_slab_ = slab::factory("mc entry PD", HAL_SLAB_MC_ENTRY_PD,
+                                   sizeof(hal::pd::pd_mc_entry_t), 8,
+                                   false, true, true, true);
+    HAL_ASSERT_RETURN((mc_entry_slab_ != NULL), false);
 
     // initialize lport indexer
     lport_idxr_ = new hal::utils::indexer(HAL_MAX_LPORTS, 
@@ -429,6 +436,8 @@ hal_state_pd::hal_state_pd()
     l2seg_hwid_ht_ = NULL; 
     l2seg_cpu_idxr_ = NULL;
 
+    mc_entry_slab_ = NULL;
+
     lport_idxr_ = NULL;
 
     lif_pd_slab_ = NULL;
@@ -526,6 +535,8 @@ hal_state_pd::~hal_state_pd()
     l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
     l2seg_hwid_ht_ ? delete l2seg_hwid_ht_ : HAL_NOP;
     l2seg_cpu_idxr_ ? delete l2seg_cpu_idxr_ : HAL_NOP;
+
+    mc_entry_slab_ ? delete mc_entry_slab_ : HAL_NOP;
 
     lport_idxr_ ? delete lport_idxr_ : HAL_NOP;
 
@@ -688,6 +699,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(vrf_slab_);
     GET_SLAB(port_slab_);
     GET_SLAB(l2seg_slab_);
+    GET_SLAB(mc_entry_slab_);
     GET_SLAB(lif_pd_slab_);
     GET_SLAB(uplinkif_pd_slab_);
     GET_SLAB(uplinkpc_pd_slab_);
@@ -1221,6 +1233,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_L2SEG_PD:
         g_hal_state_pd->l2seg_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_MC_ENTRY_PD:
+        g_hal_state_pd->mc_entry_slab()->free_(elem);
         break;
 
     case HAL_SLAB_LIF_PD:

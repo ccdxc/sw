@@ -17,13 +17,12 @@ service Multicast {
 }
 
 message MulticastEntryKeyIP {
-  fixed64                  l2_segment_handle = 1;    // L2 segment handle
-  types.IPAddress          src               = 2;    // Source IP
-  types.IPAddress          grp               = 3;    // Destination IP
+  types.IPAddress          source = 1;              // Source IP
+  types.IPAddress          group  = 2;              // Destination IP
 }
 
 message MulticastEntryKeyMac {
-  fixed64 grp = 1;                                   // Multicast MAC
+  fixed64 group = 1;                                // Multicast MAC
 }
 
 message MulticastEntryKey {
@@ -31,20 +30,21 @@ message MulticastEntryKey {
     MulticastEntryKeyIP  ip  = 1;
     MulticastEntryKeyMac mac = 2;
   }
+  fixed64 l2_segment_handle  = 3;                   // L2 segment handle
 }
 
 // MulticastEntryKeyHandle
 message MulticastEntryKeyHandle {
   oneof key_or_handle {
-    MulticastEntryKey key              = 1;
-    fixed64           multicast_handle = 2;
+    MulticastEntryKey key    = 1;
+    fixed64 multicast_handle = 2;
   }
 }
 
 message MulticastEntrySpec {
-  types.ObjectMeta        meta        = 1;
-  MulticastEntryKeyHandle key         = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  repeated fixed64        oif_handles = 3;          // output interface handles
+  types.ObjectMeta        meta          = 1;
+  MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  repeated fixed64        oif_handles   = 3;        // output interface handles
 }
 
 message MulticastEntryRequestMsg {
@@ -61,7 +61,7 @@ message MulticastEntryResponse {
 }
 
 message MulticastEntryResponseMsg {
-  repeated MulticastEntryResponse resp = 1;         // batched reponse
+  repeated MulticastEntryResponse response = 1;         // batched reponse
 }
 
 message MulticastEntryDeleteRequest {
@@ -92,5 +92,5 @@ message MulticastEntryGetResponse {
 }
 
 message MulticastEntryGetResponseMsg {
-  repeated MulticastEntryGetResponse resp = 1;      // batched reponse
+  repeated MulticastEntryGetResponse response = 1;      // batched reponse
 }

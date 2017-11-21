@@ -54,6 +54,7 @@ typedef uint32_t        ifindex_t;
 typedef uint32_t        seg_id_t;
 typedef uint32_t        l2seg_id_t;
 typedef uint32_t        encap_id_t;
+typedef uint32_t        encap_id_t;
 typedef uint32_t        oif_list_id_t;
 
 //------------------------------------------------------------------------------

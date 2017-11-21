@@ -8,6 +8,7 @@
 #include "nic/hal/src/dos.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/network.hpp"
+#include "nic/hal/src/multicast.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/tlscb.hpp"
@@ -56,6 +57,7 @@ using hal::cpucb_t;
 using hal::rawrcb_t;
 using hal::rawccb_t;
 
+typedef uint32_t    mc_entry_hw_id_t;
 typedef uint32_t    l2seg_hw_id_t;
 
 typedef struct pd_vrf_args_s {
@@ -677,6 +679,21 @@ hal_ret_t oif_list_is_member(oif_list_id_t list, oif_t *oif);
 hal_ret_t oif_list_get_num_oifs(oif_list_id_t list, uint32_t &num_oifs);
 hal_ret_t oif_list_get_oif_array(oif_list_id_t list, uint32_t &num_oifs, oif_t *oifs);
 hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list);
+
+typedef struct pd_mc_entry_args_s {
+    mc_entry_t      *mc_entry;
+} __PACK__ pd_mc_entry_args_t;
+
+static inline void
+pd_mc_entry_args_init (pd_mc_entry_args_t *args)
+{
+    args->mc_entry = NULL;
+    return;
+}
+
+hal_ret_t pd_mc_entry_create(pd_mc_entry_args_t *mc_entry_args);
+hal_ret_t pd_mc_entry_update(pd_mc_entry_args_t *mc_entry_args);
+hal_ret_t pd_mc_entry_delete(pd_mc_entry_args_t *mc_entry_args);
 
 }    // namespace pd
 }    // namespace hal

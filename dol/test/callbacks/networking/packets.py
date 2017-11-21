@@ -358,3 +358,11 @@ def GetEnicPacketEncapsForMulticastCopy(testcase, packet):
     encaps = []
     encaps.append(__get_template('ENCAP_QTAG'))
     return encaps
+
+def GetClassicEnicPacketEncapsForMulticastCopy(testcase, packet):
+    encaps = []
+
+    if testcase.config.src.segment.native == False:
+        encaps.append(__get_template('ENCAP_QTAG'))
+
+    return encaps

@@ -75,6 +75,8 @@ public:
 
     ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
 
+    ht *mc_key_ht(void) const { return mc_key_ht_; }
+
     ht *lif_id_ht(void) const { return lif_id_ht_; }
 
     ht *if_id_ht(void) const { return if_id_ht_; }
@@ -180,6 +182,12 @@ private:
     struct {
         ht         *l2seg_id_ht_;
         // ht         *l2seg_hal_handle_ht_;
+    } __PACK__;
+
+    // mc_entry related config
+    struct {
+        ht         *mc_key_ht_;
+        // ht         *mc_entry_hal_handle_ht_;
     } __PACK__;
 
     // LIF related config
@@ -364,6 +372,7 @@ public:
     slab *nwsec_policy_svc_slab(void) const { return nwsec_policy_svc_slab_; }
     slab *dos_policy_slab(void) const { return dos_policy_slab_; }
     slab *l2seg_slab(void) const { return l2seg_slab_; }
+    slab *mc_entry_slab(void) const { return mc_entry_slab_; }
     slab *lif_slab(void) const { return lif_slab_; }
     slab *if_slab(void) const { return if_slab_; }
     slab *enic_l2seg_entry_slab(void) { return enic_l2seg_entry_slab_; }
@@ -406,6 +415,7 @@ private:
     slab    *nwsec_policy_svc_slab_;
     slab    *dos_policy_slab_;
     slab    *l2seg_slab_;
+    slab    *mc_entry_slab_;
     slab    *lif_slab_;
     slab    *if_slab_;
     slab    *enic_l2seg_entry_slab_;
@@ -490,6 +500,10 @@ public:
     // get APIs for L2 segment state
     slab *l2seg_slab(void) const { return mem_db_->l2seg_slab(); }
     ht *l2seg_id_ht(void) const { return cfg_db_->l2seg_id_ht(); }
+
+    // get APIs for multicast entry state
+    slab *mc_entry_slab(void) const { return mem_db_->mc_entry_slab(); }
+    ht *mc_key_ht(void) const { return cfg_db_->mc_key_ht(); }
 
     // get APIs for LIF state
     slab *lif_slab(void) const { return mem_db_->lif_slab(); }

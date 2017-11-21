@@ -6,6 +6,7 @@
 #include "nic/hal/src/network.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/multicast.hpp"
 #include "nic/hal/src/port.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/session.hpp"
@@ -72,6 +73,13 @@ hal_cfg_db::init(void)
                                hal::l2seg_id_compute_hash_func,
                                hal::l2seg_id_compare_key_func);
     HAL_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
+
+    // initialize mc entry related data structures
+    mc_key_ht_ = ht::factory(HAL_MAX_MC_ENTRIES,
+                             hal::mc_entry_get_key_func,
+                             hal::mc_entry_compute_hash_func,
+                             hal::mc_entry_compare_key_func);
+    HAL_ASSERT_RETURN((mc_key_ht_ != NULL), false);
 
     // initialize LIF related data structures
     lif_id_ht_ = ht::factory(HAL_MAX_LIFS,
@@ -338,6 +346,7 @@ hal_cfg_db::hal_cfg_db()
     nwsec_profile_hal_handle_ht_ = NULL;
 
     l2seg_id_ht_ = NULL;
+    mc_key_ht_ = NULL;
 
     lif_id_ht_ = NULL;
     if_id_ht_ = NULL;
@@ -439,6 +448,7 @@ hal_cfg_db::~hal_cfg_db()
     nwsec_group_ht_ ? delete nwsec_group_ht_ : HAL_NOP;
 
     l2seg_id_ht_ ? delete l2seg_id_ht_ : HAL_NOP;
+    mc_key_ht_ ? delete mc_key_ht_ : HAL_NOP;
 
     lif_id_ht_ ? delete lif_id_ht_ : HAL_NOP;
     if_id_ht_ ? delete if_id_ht_ : HAL_NOP;
@@ -767,6 +777,12 @@ hal_mem_db::init(void)
                                 false, true, true, true);
     HAL_ASSERT_RETURN((l2seg_slab_ != NULL), false);
 
+    // initialize multicast related data structures
+    mc_entry_slab_ = slab::factory("mc_entry", HAL_SLAB_MC_ENTRY,
+                                   sizeof(hal::mc_entry_t), 16,
+                                   false, true, true, true);
+    HAL_ASSERT_RETURN((mc_entry_slab_ != NULL), false);
+
     // initialize LIF related data structures
     lif_slab_ = slab::factory("LIF", HAL_SLAB_LIF,
                               sizeof(hal::lif_t), 8,
@@ -933,6 +949,7 @@ hal_mem_db::hal_mem_db()
     nwsec_policy_cfg_slab_ = NULL;
     nwsec_policy_svc_slab_ = NULL;
     l2seg_slab_ = NULL;
+    mc_entry_slab_ = NULL;
     lif_slab_ = NULL;
     if_slab_ = NULL;
     enic_l2seg_entry_slab_ = NULL;
@@ -998,6 +1015,7 @@ hal_mem_db::~hal_mem_db()
     nwsec_policy_cfg_slab_ ? delete nwsec_policy_cfg_slab_ : HAL_NOP;
     nwsec_policy_svc_slab_ ? delete nwsec_policy_svc_slab_ : HAL_NOP;
     l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
+    mc_entry_slab_ ? delete mc_entry_slab_ : HAL_NOP;
     lif_slab_ ? delete lif_slab_ : HAL_NOP;
     if_slab_ ? delete if_slab_ : HAL_NOP;
     enic_l2seg_entry_slab_ ? delete enic_l2seg_entry_slab_ : HAL_NOP;
@@ -1049,6 +1067,7 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(nwsec_policy_cfg_slab_);
     GET_SLAB(nwsec_policy_svc_slab_);
     GET_SLAB(l2seg_slab_);
+    GET_SLAB(mc_entry_slab_);
     GET_SLAB(lif_slab_);
     GET_SLAB(if_slab_);
     GET_SLAB(port_slab_);
@@ -1216,6 +1235,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_L2SEG:
         g_hal_state->l2seg_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_MC_ENTRY:
+        g_hal_state->mc_entry_slab()->free_(elem);
         break;
 
     case HAL_SLAB_LIF:

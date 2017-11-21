@@ -11,3 +11,11 @@ entries:
             ethertype: 0xCCC0
         responder:
             ethertype: 0xCCC0
+
+    - entry:
+        label: classicl2bc
+        fte: True
+        initiator:
+            ethertype: 0xCCC2
+        responder:
+            ethertype: 0xCCC2

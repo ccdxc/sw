@@ -19,6 +19,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_VRF,
     HAL_SLAB_NETWORK,
     HAL_SLAB_L2SEG,
+    HAL_SLAB_MC_ENTRY,
     HAL_SLAB_LIF,
     HAL_SLAB_IF,
     HAL_SLAB_ENIC_L2SEG_ENTRY,
@@ -64,6 +65,7 @@ typedef enum hal_slab_e {
     // PD Slabs
     HAL_SLAB_VRF_PD,
     HAL_SLAB_L2SEG_PD,
+    HAL_SLAB_MC_ENTRY_PD,
     HAL_SLAB_LIF_PD,
     HAL_SLAB_UPLINKIF_PD,
     HAL_SLAB_UPLINKPC_PD,

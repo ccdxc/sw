@@ -15,17 +15,16 @@ modules:
         name    : BCAST
         enable  : False
         spec    : tx_bc.testspec
+        ignore  : True
         iterate :
             - type  : BCAST
-              flow  : filter://label=CLASSICL2MC
+              flow  : filter://label=CLASSICL2BC
 
     - module:
         name    : MCAST
-        enable  : False
+        enable  : True
         spec    : tx_mc.testspec
-        ignore  : True
+        ignore  : False
         iterate :
-            - type  : MCAST
-              flow  : filter://type=MAC,label=CLASSICL2MC
             - type  : MCAST
               flow  : filter://type=MAC,label=CLASSICL2MC

@@ -41,8 +41,8 @@ enum ApiStatus {
   API_STATUS_NOT_FOUND                    = 5;     // object not found
   API_STATUS_OUT_OF_RESOURCE              = 6;     // out of resource
   API_STATUS_ENCAP_INVALID                = 7;     // encap invalid
-  API_STATUS_VRF_ID_INVALID            = 8;     // invalid tenant id
-  API_STATUS_VRF_NOT_FOUND             = 9;     // tenant not found
+  API_STATUS_VRF_ID_INVALID               = 8;     // invalid tenant id
+  API_STATUS_VRF_NOT_FOUND                = 9;     // tenant not found
   API_STATUS_L2_SEGMENT_ID_INVALID        = 10;    // invalid L2 segment id
   API_STATUS_L2_SEGMENT_NOT_FOUND         = 11;    // invalid L2 segment id
   API_STATUS_INTERFACE_ID_INVALID         = 12;    // invalid interface id
@@ -107,6 +107,8 @@ enum ApiStatus {
   API_STATUS_PORT_SPEED_INVALID           = 71;    // invalid port speed
   API_STATUS_PORT_NUM_LANES_INVALID       = 72;    // invalid num lanes for port
   API_STATUS_PORT_NOT_FOUND               = 73;    // port not found
+  API_STATUS_MC_ENTRY_ID_INVALID          = 74;    // invalid mc_entry id
+  API_STATUS_MC_ENTRY_NOT_FOUND           = 75;    // mc_entry not found
 }
 
 // common meta object that is part of all other top level objects

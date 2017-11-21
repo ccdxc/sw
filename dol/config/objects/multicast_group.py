@@ -103,18 +103,23 @@ class MulticastGroupObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.vrf_id = self.segment.tenant.id
         
+        req_spec.key_or_handle.key.l2_segment_handle = self.segment.hal_handle
         if self.IsMacGroup():
-            req_spec.key.key.mac.grp = self.group.getnum()
+            req_spec.key_or_handle.key.mac.group = self.group.getnum()
         elif self.IsIpv4Group():
-            req_spec.key.key.ip.src.ip_af = haldefs.common.IP_AF_INET
-            req_spec.key.key.ip.src.v4_addr = self.source.getnum()
-            req_spec.key.key.ip.grp.ip_af = haldefs.common.IP_AF_INET
-            req_spec.key.key.ip.grp.v4_addr = self.group.getnum()
+            req_spec.key_or_handle.key.ip.source.ip_af = haldefs.common.IP_AF_INET
+            req_spec.key_or_handle.key.ip.source.v4_addr = self.source.getnum()
+            req_spec.key_or_handle.key.ip.group.ip_af = haldefs.common.IP_AF_INET
+            req_spec.key_or_handle.key.ip.group.v4_addr = self.group.getnum()
         elif self.IsIpv6Group():
-            req_spec.key.key.ip.src.ip_af = haldefs.common.IP_AF_INET
-            req_spec.key.key.ip.src.v6_addr = self.source.getnum().to_bytes(16, 'big')
-            req_spec.key.key.ip.grp.ip_af = haldefs.common.IP_AF_INET
-            req_spec.key.key.ip.grp.v6_addr = self.group.getnum().to_bytes(16, 'big')
+            req_spec.key_or_handle.key.ip.source.ip_af = haldefs.common.IP_AF_INET
+            req_spec.key_or_handle.key.ip.source.v6_addr = self.source.getnum().to_bytes(16, 'big')
+            req_spec.key_or_handle.key.ip.group.ip_af = haldefs.common.IP_AF_INET
+            req_spec.key_or_handle.key.ip.group.v6_addr = self.group.getnum().to_bytes(16, 'big')
+
+        for intf in self.oifs.GetAllInList():
+            req_spec.oif_handles.append(intf.hal_handle)
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -161,6 +166,5 @@ class MulticastGroupObjectHelper:
 
     def Configure(self):
         cfglogger.info("Configuring %d Multicast Groups." % len(self.groups))
-        return
         halapi.ConfigureMulticastGroups(self.groups)
         return

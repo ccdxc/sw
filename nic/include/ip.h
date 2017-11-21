@@ -163,5 +163,22 @@ inline void ipv6_prefix_len_to_mask(ipv6_addr_t *v6_addr, uint8_t len) {
     }
 }
 
+inline bool ipv4_addr_is_multicast(ipv4_addr_t *ipv4_addr)
+{
+    return (((*ipv4_addr) & 0xF0000000) == 0xE0000000);
+}
+
+inline bool ipv6_addr_is_multicast(ipv6_addr_t *ipv6_addr)
+{
+    return (ipv6_addr->addr8[0]  == 0xFF);
+}
+
+inline bool ip_addr_is_multicast(ip_addr_t *ip_addr)
+{
+    if (ip_addr->af == IP_AF_IPV4)
+        return ipv4_addr_is_multicast(&(ip_addr->addr.v4_addr));
+    else
+        return ipv6_addr_is_multicast(&(ip_addr->addr.v6_addr));
+}
 #endif    // __IP_H__
 

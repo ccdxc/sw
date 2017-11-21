@@ -88,7 +88,7 @@ TEST_F(met_test, test2) {
     Met test_met = Met(table_name, (uint32_t)1, 100, 6, 
                        sizeof(entry));
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 1; i < 100; i++) {
         rs = test_met.create_repl_list(&repl_list_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
@@ -96,17 +96,17 @@ TEST_F(met_test, test2) {
     rs = test_met.create_repl_list(&tmp_idx);
     ASSERT_TRUE(rs == HAL_RET_NO_RESOURCE);
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 1; i < 100; i++) {
         rs = test_met.delete_repl_list(repl_list_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 1; i < 100; i++) {
         rs = test_met.create_repl_list(&repl_list_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 1; i < 100; i++) {
         rs = test_met.delete_repl_list(repl_list_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }

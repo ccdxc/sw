@@ -17,8 +17,8 @@ Met::Met(std::string table_name, uint32_t table_id,
     max_num_repls_per_entry_    = max_num_repls_per_entry;
     repl_entry_data_len_        = repl_entry_data_len;
 
-    repl_table_indexer_         = new indexer(repl_table_capacity_);
-    
+    repl_table_indexer_         = new indexer(repl_table_capacity_, TRUE, TRUE);
+
     // Initialize for Stats
     stats_ = new uint64_t[STATS_MAX]();
 }

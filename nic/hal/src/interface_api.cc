@@ -442,23 +442,37 @@ if_l2seg_get_encap(if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
 
     switch(pi_if->if_type) {
         case intf::IF_TYPE_ENIC:
-            if (pi_if->enic_type == intf::IF_ENIC_TYPE_USEG || 
-                    pi_if->enic_type == intf::IF_ENIC_TYPE_PVLAN) {
-                *vlan_v = 1;
-                *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
-            } else {
-                // Direct
-                *vlan_v = 0;
-                *vlan_id = 0;
+            switch (pi_if->enic_type) {
+                case intf::IF_ENIC_TYPE_USEG:
+                case intf::IF_ENIC_TYPE_PVLAN:
+                    *vlan_v = TRUE;
+                    *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
+                    break;
+                case intf::IF_ENIC_TYPE_CLASSIC:
+                    if (pi_if->native_l2seg_clsc == pi_l2seg->hal_handle) {
+                        *vlan_v = FALSE;
+                        *vlan_id = 0;
+                    } else {
+                        *vlan_v = TRUE;
+                        *vlan_id = 0; // Retain original vlan for classic case
+                    }
+                    break;
+                case intf::IF_ENIC_TYPE_DIRECT:
+                    *vlan_v = FALSE;
+                    *vlan_id = 0;
+                    break;
+                default:
+                    HAL_ASSERT(0);
+                    break;
             }
             break;
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
             if (is_l2seg_native(pi_l2seg, pi_if)) {
-                *vlan_v = 0;
+                *vlan_v = FALSE;
                 *vlan_id = 0;
             } else {
-                *vlan_v = 1;
+                *vlan_v = TRUE;
                 *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
             }
             break;

@@ -17,34 +17,11 @@ packets:
     - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateByFlow
+        template    : ref://factory/packets/id=ETH
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
-            udp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                flags   : ack
-            icmp:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
-            icmpv6:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
+                dst     : ff:ff:ff:ff:ff:ff
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -55,8 +32,6 @@ packets:
         headers     :
             qtag    :
                 vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
-            tcp:
-                flags: ack
 
     - packet:
         id          : EXP_PKT # Base packet
@@ -66,12 +41,6 @@ packets:
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: ref://testcase/config/flow/txqos/cos
-            ipv4:
-                tos : ref://testcase/config/flow/txqos/dscp
-            ipv6:
-                tc  : ref://testcase/config/flow/txqos/dscp
-            tcp:
-                flags: ack
 
 buffers:
     - buffer:
