@@ -155,6 +155,7 @@ class PacketSpec(objects.FrameworkObject):
         self.clone          = spec.clone
         self.headers        = PacketHeaders(None)
         self.pendol         = getattr(spec, 'pendol', False)
+        self.icrc           = getattr(spec, 'icrc', False)
         self.ConvertHeaders(spec)
         return
 
@@ -180,10 +181,13 @@ class Packet(objects.FrameworkObject):
         #self.tc = tc
         self.rawbytes = None
         self.pendol = None
+        self.icrc   = False
         self.LockAttributes()
 
         pktspec = PacketSpec(testspec_packet)
         self.pktspec = pktspec
+        self.icrc = pktspec.icrc
+
         self.__get_packet_base(tc, pktspec)
         self.encaps = []
         self.__get_packet_encaps(tc, pktspec)
@@ -369,12 +373,19 @@ class Packet(objects.FrameworkObject):
             hdr.Build(tc, self)
         return
 
+    def IsIcrcEnabled(self):
+        return self.icrc
+
+    def GetScapyPacket(self):
+        return self.spktobj.GetScapyPacket()
+
     def Build(self, tc):
         if self.spktobj is not None:
             return
         self.__resolve(tc)
         self.spktobj = scapyfactory.ScapyPacketObject()
         self.spktobj.Build(packet = self)
+
         self.rawbytes = self.spktobj.GetRawBytes()
         self.size = self.spktobj.GetSize()
         return

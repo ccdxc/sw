@@ -1,0 +1,6 @@
+meta:
+    id      : ICRC
+    scapy   : ICRC
+    size    : 4
+fields:
+    icrc : const/0

@@ -56,8 +56,19 @@ class CRC(Packet):
         print("%s  crc      = 0x%x" % (label_lvl, self.crc))
         self.payload.show(indent, lvl, label_lvl)
         return
-
 CRC_LENGTH = len(CRC())
+
+class ICRC(CRC):
+    name = "ICRC"
+    fields_desc = [
+        IntField("icrc", 0)
+    ]
+    def show(self, indent=3, lvl="", label_lvl=""):
+        print("%s###[ ICRC ]###" % label_lvl)
+        print("%s  icrc      = 0x%x" % (label_lvl, self.crc))
+        self.payload.show(indent, lvl, label_lvl)
+        return
+ICRC_LENGTH = len(ICRC())
 
 PENDOL_SIGNATURE = 0x900D900D
 class PENDOL(Packet):

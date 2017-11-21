@@ -241,7 +241,44 @@ class ScapyHeaderBuilder_IPFIX(ScapyHeaderBuilder_BASE):
         hdr.fields.records = records
         return super().build(hdr)
 IPFIX_builder = ScapyHeaderBuilder_IPFIX()
-        
+
+class IcrcHeaderBuilder:
+    def __init__(self, packet):
+        spkt = packet.GetScapyPacket()
+        self.spkt = spkt.copy()
+        return
+
+    def __get_icrc(self):
+        self.rawbytes = bytes(self.spkt)
+        self.icrc = binascii.crc32(self.rawbytes)
+        #self.icrc = penscapy.struct.pack("I", val)
+        return
+
+    def __add_for_ipv6(self):
+        self.spkt[penscapy.IPv6].nh = 0xFF
+        self.spkt[penscapy.IPv6].tc = 0xFF
+        self.spkt[penscapy.IPv6].fl = 0xFFFFF
+        self.spkt[penscapy.UDP].chksum = 0xFFFF
+        self.__get_icrc()
+        return
+
+    def __add_for_ipv4(self):
+        self.spkt[penscapy.IP].tos = 0xFF
+        self.spkt[penscapy.IP].ttl = 0xFF
+        self.spkt[penscapy.IP].chksum = 0xFFFF
+        self.spkt[penscapy.UDP].chksum = 0xFFFF
+        self.__get_icrc()
+        return
+
+    def GetIcrc(self):
+        if penscapy.IPv6 in self.spkt:
+            self.__add_for_ipv6()
+        elif penscapy.IP in self.spkt:
+            self.__add_for_ipv4()
+        else:
+            assert(0)
+        return self.icrc
+
 class ScapyPacketObject:
     def __init__(self):
         self.spkt       = None
@@ -253,6 +290,9 @@ class ScapyPacketObject:
 
         self.curroffset = 0
         return
+
+    def GetScapyPacket(self):
+        return self.spkt
 
     def __build_header(self, hdr):
         builder_name = '%s_builder' % hdr.meta.id
@@ -287,6 +327,15 @@ class ScapyPacketObject:
         self.rawbytes += penscapy.struct.pack("I", crc)
         return
 
+    def __add_icrc_header(self, packet):
+        hdr = FactoryStore.headers.Get('ICRC')
+        builder = IcrcHeaderBuilder(packet)
+        hdr.fields.icrc = builder.GetIcrc()
+        
+        #pdb.set_trace()
+        self.__add_header(hdr)
+        return
+        
     def __build_from_packet_meta(self, packet):
         logger.debug("Generating SCAPY Packet.")
         for hdrid in packet.hdrsorder:
@@ -297,9 +346,13 @@ class ScapyPacketObject:
         if packet.IsDolHeaderRequired():
             self.__add_dol_header()
 
+        if packet.IsIcrcEnabled():
+            self.__add_icrc_header(packet)
+
         self.pktbytes = bytes(self.spkt)
         self.rawbytes = bytes(self.spkt)
         #self.__add_crc_header()
+
         return
 
     def __build_from_scapypacket(self, spkt):
@@ -433,7 +486,6 @@ class RawPacketParser:
         self.__process_vxlan(pkt) 
         return pkt
 
-
 def Parse(rawpkt):
     prs = RawPacketParser()
     spkt = prs.Parse(rawpkt)
@@ -442,3 +494,5 @@ def Parse(rawpkt):
     obj = ScapyPacketObject()
     obj.Build(scapypacket = spkt)
     return obj
+
+

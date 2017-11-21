@@ -69,3 +69,7 @@ modules:
     - module:
         name    : IPFIX
         spec    : sample_pkt_ipfix.testspec
+
+    - module:
+        name    : ICRC
+        spec    : sample_pkt_icrc.testspec
