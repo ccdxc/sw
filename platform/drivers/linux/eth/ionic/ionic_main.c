@@ -2001,8 +2001,28 @@ static void ionic_remove(struct pci_dev *pdev)
 		ionic_forget_identity(ionic);
 		ionic_unmap_bars(ionic);
 		pci_release_regions(pdev);
+		pci_disable_sriov(pdev);
 		pci_disable_device(pdev);
 	}
+}
+
+static int ionic_sriov_configure(struct pci_dev *pdev, int numvfs)
+{
+	int err;
+
+	if (numvfs > 0) {
+		err = pci_enable_sriov(pdev, numvfs);
+		if (err) {
+			dev_err(&pdev->dev, "Cannot enable SRIOV, err=%d\n",
+				err);
+			return err;
+		}
+	}
+
+	if (numvfs == 0)
+		pci_disable_sriov(pdev);
+
+	return numvfs;
 }
 
 static struct pci_driver ionic_driver = {
@@ -2010,6 +2030,7 @@ static struct pci_driver ionic_driver = {
 	.id_table = ionic_id_table,
 	.probe = ionic_probe,
 	.remove = ionic_remove,
+	.sriov_configure = ionic_sriov_configure,
 };
 
 static int __init ionic_init_module(void)
