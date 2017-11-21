@@ -10,6 +10,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/list:list_includes",
+        "//nic/utils/iterator:iterator",
     ],
 )
 

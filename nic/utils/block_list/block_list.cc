@@ -211,7 +211,7 @@ block_list::remove(void *elem)
     }
 
     last_node = this->get_last_node_();
-    if (node == last_node && node->num_in_use_ == elem_id) {
+    if (node == last_node && node->num_in_use_ == (elem_id + 1)) {
         // Last element, no need to consolidate
         node->num_in_use_--;
 
@@ -230,25 +230,56 @@ end:
     return ret;
 }
 
+hal_ret_t
+block_list::remove_elem_(list_node_t *node, uint32_t elem_id, bool *last_elem) 
+{
+    list_node_t         *last_node = NULL;
+
+    *last_elem = false;
+
+    last_node = this->get_last_node_();
+    if (node == last_node && node->num_in_use_ == (elem_id + 1)) {
+        // Last element, no need to consolidate
+        node->num_in_use_--;
+        *last_elem = true;
+
+        if (!node->num_in_use_) {
+            // Last element of Last node
+            // Delete & free last node
+            dllist_del(&node->ctxt_);
+            HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, node);
+        }
+    } else {
+        this->consolidate_(node, elem_id, last_node);
+    }
+
+    return HAL_RET_OK;
+}
+
 //-----------------------------------------------------------------------------
 // Iterate the elements
 //-----------------------------------------------------------------------------
 hal_ret_t 
-block_list::iterate(block_list_cb_t cb)
+block_list::iterate(block_list_cb_t cb, void *data)
 {
-    hal_ret_t       ret = HAL_RET_OK;
+    hal_ret_t       ret           = HAL_RET_OK;
     dllist_ctxt_t   *curr, *next;
-    list_node_t     *node = NULL;
-    uint8_t         *loc = NULL;
+    list_node_t     *node         = NULL;
+    uint8_t         *loc          = NULL;
+    bool            rv            = true;
 
     dllist_for_each_safe(curr, next, &list_head_) {
         node = dllist_entry(curr, list_node_t, ctxt_);
         for (int i = 0; i<node->num_in_use_; i++) {
             loc = element_location_(node, i);
-            cb(loc);
+            rv = cb(loc, data);
+            if (!rv) {
+                goto end;
+            }
         }
     }
 
+end:
     return ret;
 }
 

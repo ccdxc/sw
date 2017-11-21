@@ -12,6 +12,7 @@
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/lif.hpp"
 #include "nic/hal/src/utils.hpp"
+// #include "nic/utils/block_list/block_list.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
@@ -109,6 +110,7 @@ typedef struct if_s {
             // uplink PC if
             struct {
                 // uint32_t      uplink_pc_num;         // uplink port channel number
+                // block_list      *pc_mbr_list;
             } __PACK__;
         } __PACK__;
         // tunnel interface info
