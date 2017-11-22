@@ -64,7 +64,7 @@ eventmgr::init(uint32_t max_events)
                                     sizeof(event_state_t), 16, true,
                                     true, true, true);
     if (event_map_slab_ == NULL) {
-        delete event_map_;
+        ht::destroy(event_map_);
         event_map_ = NULL;
         return -1;
     }
@@ -73,7 +73,7 @@ eventmgr::init(uint32_t max_events)
                                                sizeof(event_listener_state_t), 16,
                                                true, true, true, true);
     if (event_listener_state_slab_ == NULL) {
-        delete event_map_;
+        ht::destroy(event_map_);
         event_map_ = NULL;
         slab::destroy(event_map_slab_);
         event_map_slab_ = NULL;
@@ -91,13 +91,13 @@ eventmgr::init(uint32_t max_events)
                                    sizeof(listener_state_t), 8, true, true,
                                    true, true);
     if (listener_slab_ == NULL) {
-        delete event_map_;
+        ht::destroy(event_map_);
         event_map_ = NULL;
         slab::destroy(event_map_slab_);
         event_map_slab_ = NULL;
         slab::destroy(event_listener_state_slab_);
         event_listener_state_slab_ = NULL;
-        delete listener_map_;
+        ht::destroy(listener_map_);
         listener_map_ = NULL;
         return -1;
     }
@@ -135,10 +135,10 @@ eventmgr::factory(uint32_t max_events)
 eventmgr::~eventmgr()
 {
     if (event_map_) {
-        delete event_map_;
+        ht::destroy(event_map_);
     }
     if (listener_map_) {
-        delete listener_map_;
+        ht::destroy(listener_map_);
     }
     if (event_map_slab_) {
         slab::destroy(event_map_slab_);

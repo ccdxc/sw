@@ -33,7 +33,7 @@ fte_db::init(void)
 
 fte_db::~fte_db(void)
 {
-    alg_flow_key_ht_ ? delete alg_flow_key_ht_ : HAL_NOP;
+    alg_flow_key_ht_ ? hal::utils::ht::destroy(alg_flow_key_ht_) : HAL_NOP;
 }
 
 fte_db *

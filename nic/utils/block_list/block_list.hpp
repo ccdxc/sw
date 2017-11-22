@@ -31,7 +31,7 @@ class block_list {
 public:
     static block_list *factory(uint32_t elem_size, 
                                uint32_t elems_per_block = 8);
-    ~block_list();
+    static void destroy(block_list *blist);
 
     /* Insert element in the list */
     hal_ret_t insert(void *elem);
@@ -105,6 +105,7 @@ private:
 
 private:
     block_list() {};
+    ~block_list();
     int init(uint32_t elem_size, uint32_t elems_per_block); 
     list_node_t *get_last_node_();
     hal_ret_t find_(void *elem, list_node_t **elem_in_node, 

@@ -33,7 +33,7 @@ class pt {
 public:
     // max_key_len is the maximum possible key length of this tree
     static pt *factory(const char *name, uint16_t max_key_len, bool thread_safe);
-    ~pt();
+    static void destroy(pt *ptree);
     // key length should be in number of bits (not bytes)
     hal_ret_t insert(uint8_t *key, uint16_t key_len, void *entry);
     void *remove(uint8_t *key, uint16_t key_len);
@@ -64,6 +64,7 @@ private:
 
 private:
     pt() {}
+    ~pt();
     bool init(const char *name, uint16_t max_key_len, bool thread_safe);
     ptnode_t *alloc_ptnode_(uint8_t *key, uint16_t key_len,
                              void *entry, bool internal);

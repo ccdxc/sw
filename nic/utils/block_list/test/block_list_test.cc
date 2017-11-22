@@ -99,7 +99,7 @@ TEST_F(block_list_test, test1) {
         test_block_list->iterate(cb);
     }
     
-    delete test_block_list;
+    block_list::destroy(test_block_list);
 }
 
 TEST_F(block_list_test, test2) {
@@ -124,7 +124,7 @@ TEST_F(block_list_test, test2) {
         test_block_list->iterate(cb);
         hdl_id++;
     }
-    delete test_block_list;
+    block_list::destroy(test_block_list);
 }
 
 TEST_F(block_list_test, test3) {
@@ -165,8 +165,9 @@ TEST_F(block_list_test, test3) {
         test_block_list->iterate(cb);
         hdl_id++;
     }
-    delete test_block_list;
+    block_list::destroy(test_block_list);
 }
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

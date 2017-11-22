@@ -17,7 +17,7 @@ block_list::factory (uint32_t elem_size, uint32_t elems_per_block)
         return NULL;
     }
 
-    void *mem = HAL_MALLOC(HAL_MEM_ALLOC_BLOCK_LIST, sizeof(block_list));
+    void *mem = HAL_CALLOC(HAL_MEM_ALLOC_BLOCK_LIST, sizeof(block_list));
     if (mem == NULL) {
         return NULL;
     }
@@ -25,7 +25,8 @@ block_list::factory (uint32_t elem_size, uint32_t elems_per_block)
     new_block_list = new (mem) block_list();
     rv = new_block_list->init(elem_size, elems_per_block);
     if (rv < 0) {
-        delete new_block_list;
+        new_block_list->~block_list();
+        HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST, mem);
         return NULL;
     }
 
@@ -58,6 +59,19 @@ block_list::~block_list()
         dllist_del(&node->ctxt_);
         HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST_NODE, node);
     }
+}
+
+//-----------------------------------------------------------------------------
+// Destroy method to free back the block list instance
+//-----------------------------------------------------------------------------
+void
+block_list::destroy(block_list *blist)
+{
+    if (!blist) {
+        return;
+    }
+    blist->~block_list();
+    HAL_FREE(HAL_MEM_ALLOC_BLOCK_LIST, blist);
 }
 
 //-----------------------------------------------------------------------------

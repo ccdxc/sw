@@ -90,7 +90,7 @@ public:
                        ht_compute_hash_func_t hash_func,
                        ht_compare_key_func_t compare_func,
                        bool thread_safe=true);
-    ~ht();
+    static void destroy(ht *htable);
 
     // lookup() will return entry given its key or NULL if entry is not found
     void *lookup(void *key);
@@ -142,6 +142,7 @@ private:
 
 private:
     ht() { }
+    ~ht();
     bool init(uint32_t ht_size, ht_get_key_func_t key_func,
               ht_compute_hash_func_t hash_func,
               ht_compare_key_func_t compare_func,

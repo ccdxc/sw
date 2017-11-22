@@ -51,13 +51,17 @@ pt::init(const char *name, uint16_t max_key_len, bool thread_safe)
 pt *
 pt::factory(const char *name, uint16_t max_key_len, bool thread_safe)
 {
-    pt    *new_pt;
+    void    *mem;
+    pt      *new_pt;
 
-    new_pt = new pt();
-    if (new_pt == NULL) {
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_SLAB, sizeof(pt));
+    if (!mem) {
         return NULL;
     }
+    new_pt = new (mem) pt();
     if (new_pt->init(name, max_key_len, thread_safe) == false) {
+        new_pt->~pt();
+        HAL_FREE(HAL_MEM_ALLOC_LIB_SLAB, new_pt);
         return NULL;
     }
 
@@ -76,6 +80,16 @@ pt::~pt()
     if (thread_safe_) {
         HAL_SPINLOCK_DESTROY(&slock_);
     }
+}
+
+void
+pt::destroy(pt *ptree)
+{
+    if (!ptree) {
+        return;
+    }
+    ptree->~pt();
+    HAL_FREE(HAL_MEM_ALLOC_LIB_SLAB, ptree);
 }
 
 //------------------------------------------------------------------------------

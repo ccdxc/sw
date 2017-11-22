@@ -437,72 +437,72 @@ hal_cfg_db::factory(void)
 //------------------------------------------------------------------------------
 hal_cfg_db::~hal_cfg_db()
 {
-    vrf_id_ht_ ? delete vrf_id_ht_ : HAL_NOP;
+    vrf_id_ht_ ? ht::destroy(vrf_id_ht_) : HAL_NOP;
 
-    network_key_ht_ ? delete network_key_ht_ : HAL_NOP;
+    network_key_ht_ ? ht::destroy(network_key_ht_) : HAL_NOP;
 
-    nwsec_profile_id_ht_ ? delete nwsec_profile_id_ht_ : HAL_NOP;
-    nwsec_profile_hal_handle_ht_ ? delete nwsec_profile_hal_handle_ht_ : HAL_NOP;
+    nwsec_profile_id_ht_ ? ht::destroy(nwsec_profile_id_ht_) : HAL_NOP;
+    nwsec_profile_hal_handle_ht_ ? ht::destroy(nwsec_profile_hal_handle_ht_) : HAL_NOP;
 
-    nwsec_policy_cfg_ht_ ? delete nwsec_policy_cfg_ht_ : HAL_NOP;
-    nwsec_group_ht_ ? delete nwsec_group_ht_ : HAL_NOP;
+    nwsec_policy_cfg_ht_ ? ht::destroy(nwsec_policy_cfg_ht_) : HAL_NOP;
+    nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
 
-    l2seg_id_ht_ ? delete l2seg_id_ht_ : HAL_NOP;
-    mc_key_ht_ ? delete mc_key_ht_ : HAL_NOP;
+    l2seg_id_ht_ ? ht::destroy(l2seg_id_ht_) : HAL_NOP;
+    mc_key_ht_ ? ht::destroy(mc_key_ht_) : HAL_NOP;
 
-    lif_id_ht_ ? delete lif_id_ht_ : HAL_NOP;
-    if_id_ht_ ? delete if_id_ht_ : HAL_NOP;
-    port_id_ht_ ? delete port_id_ht_ : HAL_NOP;
+    lif_id_ht_ ? ht::destroy(lif_id_ht_) : HAL_NOP;
+    if_id_ht_ ? ht::destroy(if_id_ht_) : HAL_NOP;
+    port_id_ht_ ? ht::destroy(port_id_ht_) : HAL_NOP;
 
-    ep_hal_handle_ht_ ? delete ep_hal_handle_ht_ : HAL_NOP;
+    ep_hal_handle_ht_ ? ht::destroy(ep_hal_handle_ht_) : HAL_NOP;
 
-    session_id_ht_ ? delete session_id_ht_ : HAL_NOP;
-    session_hal_handle_ht_ ? delete session_hal_handle_ht_ : HAL_NOP;
-    session_hal_iflow_ht_ ? delete session_hal_iflow_ht_ : HAL_NOP;
-    session_hal_rflow_ht_ ? delete session_hal_rflow_ht_ : HAL_NOP;
+    session_id_ht_ ? ht::destroy(session_id_ht_) : HAL_NOP;
+    session_hal_handle_ht_ ? ht::destroy(session_hal_handle_ht_) : HAL_NOP;
+    session_hal_iflow_ht_ ? ht::destroy(session_hal_iflow_ht_) : HAL_NOP;
+    session_hal_rflow_ht_ ? ht::destroy(session_hal_rflow_ht_) : HAL_NOP;
 
-    l4lb_ht_ ? delete l4lb_ht_ : HAL_NOP;
-    l4lb_hal_handle_ht_ ? delete l4lb_hal_handle_ht_ : HAL_NOP;
+    l4lb_ht_ ? ht::destroy(l4lb_ht_) : HAL_NOP;
+    l4lb_hal_handle_ht_ ? ht::destroy(l4lb_hal_handle_ht_) : HAL_NOP;
 
-    buf_pool_id_ht_ ? delete buf_pool_id_ht_ : HAL_NOP;
-    buf_pool_hal_handle_ht_ ? delete buf_pool_hal_handle_ht_ : HAL_NOP;
+    buf_pool_id_ht_ ? ht::destroy(buf_pool_id_ht_) : HAL_NOP;
+    buf_pool_hal_handle_ht_ ? ht::destroy(buf_pool_hal_handle_ht_) : HAL_NOP;
 
-    tlscb_id_ht_ ? delete tlscb_id_ht_ : HAL_NOP;
-    tlscb_hal_handle_ht_ ? delete tlscb_hal_handle_ht_ : HAL_NOP;
+    tlscb_id_ht_ ? ht::destroy(tlscb_id_ht_) : HAL_NOP;
+    tlscb_hal_handle_ht_ ? ht::destroy(tlscb_hal_handle_ht_) : HAL_NOP;
  
-    tcpcb_id_ht_ ? delete tcpcb_id_ht_ : HAL_NOP;
-    tcpcb_hal_handle_ht_ ? delete tcpcb_hal_handle_ht_ : HAL_NOP;
+    tcpcb_id_ht_ ? ht::destroy(tcpcb_id_ht_) : HAL_NOP;
+    tcpcb_hal_handle_ht_ ? ht::destroy(tcpcb_hal_handle_ht_) : HAL_NOP;
 
-    queue_id_ht_ ? delete queue_id_ht_ : HAL_NOP;
-    queue_hal_handle_ht_ ? delete queue_hal_handle_ht_ : HAL_NOP;
+    queue_id_ht_ ? ht::destroy(queue_id_ht_) : HAL_NOP;
+    queue_hal_handle_ht_ ? ht::destroy(queue_hal_handle_ht_) : HAL_NOP;
 
-    ingress_policer_id_ht_ ? delete ingress_policer_id_ht_ : HAL_NOP;
-    ingress_policer_hal_handle_ht_ ? delete ingress_policer_hal_handle_ht_ : HAL_NOP;
-    egress_policer_id_ht_ ? delete egress_policer_id_ht_ : HAL_NOP;
-    egress_policer_hal_handle_ht_ ? delete egress_policer_hal_handle_ht_ : HAL_NOP;
+    ingress_policer_id_ht_ ? ht::destroy(ingress_policer_id_ht_) : HAL_NOP;
+    ingress_policer_hal_handle_ht_ ? ht::destroy(ingress_policer_hal_handle_ht_) : HAL_NOP;
+    egress_policer_id_ht_ ? ht::destroy(egress_policer_id_ht_) : HAL_NOP;
+    egress_policer_hal_handle_ht_ ? ht::destroy(egress_policer_hal_handle_ht_) : HAL_NOP;
 
-    wring_id_ht_ ? delete wring_id_ht_ : HAL_NOP;
-    wring_hal_handle_ht_ ? delete wring_hal_handle_ht_ : HAL_NOP;
+    wring_id_ht_ ? ht::destroy(wring_id_ht_) : HAL_NOP;
+    wring_hal_handle_ht_ ? ht::destroy(wring_hal_handle_ht_) : HAL_NOP;
     
     proxy_slab_ ? slab::destroy(proxy_slab_) : HAL_NOP;
     proxy_flow_info_slab_ ? slab::destroy(proxy_flow_info_slab_) : HAL_NOP;
-    proxy_type_ht_ ? delete proxy_type_ht_ : HAL_NOP;
-    proxy_hal_handle_ht_ ? delete proxy_hal_handle_ht_ : HAL_NOP;
+    proxy_type_ht_ ? ht::destroy(proxy_type_ht_) : HAL_NOP;
+    proxy_hal_handle_ht_ ? ht::destroy(proxy_hal_handle_ht_) : HAL_NOP;
     
-    acl_id_ht_ ? delete acl_id_ht_ : HAL_NOP;
-    acl_hal_handle_ht_ ? delete acl_hal_handle_ht_ : HAL_NOP;
+    acl_id_ht_ ? ht::destroy(acl_id_ht_) : HAL_NOP;
+    acl_hal_handle_ht_ ? ht::destroy(acl_hal_handle_ht_) : HAL_NOP;
 
-    ipseccb_id_ht_ ? delete ipseccb_id_ht_ : HAL_NOP;
-    ipseccb_hal_handle_ht_ ? delete ipseccb_hal_handle_ht_ : HAL_NOP;
+    ipseccb_id_ht_ ? ht::destroy(ipseccb_id_ht_) : HAL_NOP;
+    ipseccb_hal_handle_ht_ ? ht::destroy(ipseccb_hal_handle_ht_) : HAL_NOP;
 
-    cpucb_id_ht_ ? delete cpucb_id_ht_ : HAL_NOP;
-    cpucb_hal_handle_ht_ ? delete cpucb_hal_handle_ht_ : HAL_NOP;
+    cpucb_id_ht_ ? ht::destroy(cpucb_id_ht_) : HAL_NOP;
+    cpucb_hal_handle_ht_ ? ht::destroy(cpucb_hal_handle_ht_) : HAL_NOP;
 
-    rawrcb_id_ht_ ? delete rawrcb_id_ht_ : HAL_NOP;
-    rawrcb_hal_handle_ht_ ? delete rawrcb_hal_handle_ht_ : HAL_NOP;
+    rawrcb_id_ht_ ? ht::destroy(rawrcb_id_ht_) : HAL_NOP;
+    rawrcb_hal_handle_ht_ ? ht::destroy(rawrcb_hal_handle_ht_) : HAL_NOP;
 
-    rawccb_id_ht_ ? delete rawccb_id_ht_ : HAL_NOP;
-    rawccb_hal_handle_ht_ ? delete rawccb_hal_handle_ht_ : HAL_NOP;
+    rawccb_id_ht_ ? ht::destroy(rawccb_id_ht_) : HAL_NOP;
+    rawccb_hal_handle_ht_ ? ht::destroy(rawccb_hal_handle_ht_) : HAL_NOP;
 }
 
 void
@@ -682,16 +682,14 @@ hal_oper_db::~hal_oper_db()
 {
     uint32_t    i;
 
-    hal_handle_id_ht_ ? delete hal_handle_id_ht_ : HAL_NOP;
+    hal_handle_id_ht_ ? ht::destroy(hal_handle_id_ht_) : HAL_NOP;
 
     infra_l2seg_ = NULL;
 
-    // if_hwid_ht_ ? delete if_hwid_ht_ : HAL_NOP;
+    ep_l2_ht_ ? ht::destroy(ep_l2_ht_) : HAL_NOP;
+    ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_) : HAL_NOP;
 
-    ep_l2_ht_ ? delete ep_l2_ht_ : HAL_NOP;
-    ep_l3_entry_ht_ ? delete ep_l3_entry_ht_ : HAL_NOP;
-
-    flow_ht_ ? delete flow_ht_ : HAL_NOP;
+    flow_ht_ ? ht::destroy(flow_ht_) : HAL_NOP;
 
     for (i = 0; i < HAL_ARRAY_SIZE(cos_in_use_bmp_); i++) {
         if (cos_in_use_bmp_[i]) {

@@ -1,5 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/utils/thread/thread.hpp"
 
 namespace hal {
@@ -42,6 +43,7 @@ thread::factory(const char *name, uint32_t thread_id, uint32_t core_id,
                 uint32_t prio, int sched_policy, bool can_yield)
 {
     int       rv;
+    void      *mem;
     thread    *new_thread;
 
     if (!name || !entry_func) {
@@ -52,15 +54,16 @@ thread::factory(const char *name, uint32_t thread_id, uint32_t core_id,
         return NULL;
     }
 
-    new_thread = new thread();
-    if (new_thread == NULL) {
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_THREAD, sizeof(thread));
+    if (!mem) {
         return NULL;
     }
-
+    new_thread = new (mem) thread();
     rv = new_thread->init(name, thread_id, core_id, entry_func,
                           prio, sched_policy, can_yield);
     if (rv < 0) {
-        delete new_thread;
+        new_thread->~thread();
+        HAL_FREE(HAL_MEM_ALLOC_LIB_THREAD, new_thread);
         return NULL;
     }
 
@@ -75,6 +78,16 @@ thread::~thread()
     if (running_) {
         this->stop();
     }
+}
+
+void
+thread::destroy(thread *th)
+{
+    if (!th) {
+        return;
+    }
+    th->~thread();
+    HAL_FREE(HAL_MEM_ALLOC_LIB_THREAD, th);
 }
 
 //------------------------------------------------------------------------------

@@ -49,19 +49,23 @@ ht::factory(uint32_t ht_size, ht_get_key_func_t get_key_func,
             ht_compute_hash_func_t hash_func,
             ht_compare_key_func_t compare_func, bool thread_safe)
 {
-    ht    *hash_table;
+    void    *mem;
+    ht      *hash_table;
 
     HAL_ASSERT_RETURN((ht_size > 0), NULL);
     HAL_ASSERT_RETURN(((get_key_func != NULL) && (hash_func != NULL) &&
                        (compare_func != NULL)), NULL);
 
-    hash_table = new ht();
-    if (hash_table == NULL) {
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_HT, sizeof(ht));
+    if (!mem) {
         return NULL;
     }
+    hash_table = new (mem) ht();
     if (hash_table->init(ht_size, get_key_func, hash_func,
                          compare_func, thread_safe) == false) {
-        delete hash_table;
+
+        hash_table->~ht();
+        HAL_FREE(HAL_MEM_ALLOC_LIB_HT, hash_table);
         return NULL;
     }
     return hash_table;
@@ -70,11 +74,21 @@ ht::factory(uint32_t ht_size, ht_get_key_func_t get_key_func,
 ht::~ht()
 {
     if (ht_buckets_) {
-        delete ht_buckets_;
+        HAL_FREE(HAL_MEM_ALLOC_LIB_HT, ht_buckets_);
     }
     if (thread_safe_) {
         HAL_SPINLOCK_DESTROY(&slock_);
     }
+}
+
+void
+ht::destroy(ht *htable)
+{
+    if (!htable) {
+        return;
+    }
+    htable->~ht();
+    HAL_FREE(HAL_MEM_ALLOC_LIB_HT, htable);
 }
 
 // internal helper function that looks up an entry given its key and the bucket

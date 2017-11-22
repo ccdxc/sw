@@ -60,7 +60,7 @@ TEST_F(pt_test, create_delete) {
     test_pt = pt::factory("test-pt", PT_MAX_KEY_LEN, true);
     ASSERT_TRUE(test_pt != NULL);
 
-    delete test_pt;
+    pt::destroy(test_pt);
 }
 
 // test node insertion deletion
@@ -160,7 +160,7 @@ TEST_F(pt_test, insert_deletes) {
     ASSERT_EQ(test_pt->num_entries(), 0);
     ASSERT_EQ(test_pt->num_internal_entries(), 0);
 
-    delete test_pt;
+    pt::destroy(test_pt);
 }
 
 // test multiple prefixes of same length to build multiple internal nodes
@@ -230,7 +230,7 @@ TEST_F(pt_test, insert_leaves) {
     ASSERT_EQ(test_pt->num_entries(), 9);
     ASSERT_EQ(test_pt->num_internal_entries(), 4);
 
-    delete test_pt;
+    pt::destroy(test_pt);
 }
 
 int main(int argc, char **argv) {

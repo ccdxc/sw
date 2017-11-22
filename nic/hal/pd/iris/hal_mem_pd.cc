@@ -533,7 +533,7 @@ hal_state_pd::~hal_state_pd()
     nwsec_profile_hwid_idxr_ ? delete nwsec_profile_hwid_idxr_ : HAL_NOP;
 
     l2seg_slab_ ? slab::destroy(l2seg_slab_) : HAL_NOP;
-    l2seg_hwid_ht_ ? delete l2seg_hwid_ht_ : HAL_NOP;
+    l2seg_hwid_ht_ ? ht::destroy(l2seg_hwid_ht_) : HAL_NOP;
     l2seg_cpu_idxr_ ? delete l2seg_cpu_idxr_ : HAL_NOP;
 
     mc_entry_slab_ ? slab::destroy(mc_entry_slab_) : HAL_NOP;
@@ -555,10 +555,10 @@ hal_state_pd::~hal_state_pd()
     session_slab_ ? slab::destroy(session_slab_) : HAL_NOP;
     
     tlscb_slab_ ? slab::destroy(tlscb_slab_) : HAL_NOP;
-    tlscb_hwid_ht_ ? delete tlscb_hwid_ht_ : HAL_NOP;
+    tlscb_hwid_ht_ ? ht::destroy(tlscb_hwid_ht_) : HAL_NOP;
     
     tcpcb_slab_ ? slab::destroy(tcpcb_slab_) : HAL_NOP;
-    tcpcb_hwid_ht_ ? delete tcpcb_hwid_ht_ : HAL_NOP;
+    tcpcb_hwid_ht_ ? ht::destroy(tcpcb_hwid_ht_) : HAL_NOP;
 
     buf_pool_pd_slab_ ? slab::destroy(buf_pool_pd_slab_) : HAL_NOP;
     for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
@@ -579,19 +579,19 @@ hal_state_pd::~hal_state_pd()
     acl_pd_slab_ ? slab::destroy(acl_pd_slab_) : HAL_NOP;
 
     wring_slab_ ? slab::destroy(wring_slab_) : HAL_NOP;
-    wring_hwid_ht_ ? delete wring_hwid_ht_ : HAL_NOP;
+    wring_hwid_ht_ ? ht::destroy(wring_hwid_ht_) : HAL_NOP;
 
     ipseccb_slab_ ? slab::destroy(ipseccb_slab_) : HAL_NOP;
-    ipseccb_hwid_ht_ ? delete ipseccb_hwid_ht_ : HAL_NOP;
+    ipseccb_hwid_ht_ ? ht::destroy(ipseccb_hwid_ht_) : HAL_NOP;
     
     ipseccb_decrypt_slab_ ? slab::destroy(ipseccb_decrypt_slab_) : HAL_NOP;
-    ipseccb_decrypt_hwid_ht_ ? delete ipseccb_decrypt_hwid_ht_ : HAL_NOP;
+    ipseccb_decrypt_hwid_ht_ ? ht::destroy(ipseccb_decrypt_hwid_ht_) : HAL_NOP;
     
     cpucb_slab_ ? slab::destroy(cpucb_slab_) : HAL_NOP;
-    cpucb_hwid_ht_ ? delete cpucb_hwid_ht_ : HAL_NOP;
+    cpucb_hwid_ht_ ? ht::destroy(cpucb_hwid_ht_) : HAL_NOP;
 
     rw_entry_slab_ ? slab::destroy(rw_entry_slab_) : HAL_NOP;
-    rw_table_ht_ ? delete rw_table_ht_ : HAL_NOP;
+    rw_table_ht_ ? ht::destroy(rw_table_ht_) : HAL_NOP;
     rw_tbl_idxr_ ? delete rw_tbl_idxr_ : HAL_NOP;
     
     cpupkt_slab_ ? slab::destroy(cpupkt_slab_) : HAL_NOP;
@@ -600,10 +600,10 @@ hal_state_pd::~hal_state_pd()
     cpupkt_page_hwid_idxr_ ? delete  cpupkt_page_hwid_idxr_ : HAL_NOP;
 
     rawrcb_slab_ ? slab::destroy(rawrcb_slab_) : HAL_NOP;
-    rawrcb_hwid_ht_ ? delete rawrcb_hwid_ht_ : HAL_NOP;
+    rawrcb_hwid_ht_ ? ht::destroy(rawrcb_hwid_ht_) : HAL_NOP;
 
     rawccb_slab_ ? slab::destroy(rawccb_slab_) : HAL_NOP;
-    rawccb_hwid_ht_ ? delete rawccb_hwid_ht_ : HAL_NOP;
+    rawccb_hwid_ht_ ? ht::destroy(rawccb_hwid_ht_) : HAL_NOP;
 
     directmap_entry_slab_ ? slab::destroy(directmap_entry_slab_) : HAL_NOP;
 

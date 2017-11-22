@@ -31,8 +31,8 @@ public:
     static thread *factory(const char *name, uint32_t thread_id,
                            uint32_t core_id, hal_thread_entry_func_t entry_func,
                            uint32_t prio, int sched_policy, bool can_yield);
+    static void destroy(thread *th);
     static void *dummy_entry_func(void *ctxt) { return NULL; }
-    ~thread();
     hal_ret_t start(void *ctxt);
     hal_ret_t stop(void);
     const char *name(void) const { return name_; }
@@ -75,6 +75,7 @@ private:
 
 private:
     thread() {};
+    ~thread();
     int init(const char *name, uint32_t thread_id, uint32_t core_id,
              hal_thread_entry_func_t entry_func,
              uint32_t prio, int sched_policy, bool can_yield);
