@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package test;
-
-message SampleObject {
-  int32 i = 1;
-}
