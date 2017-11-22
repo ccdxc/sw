@@ -326,6 +326,12 @@ capri_load_mpu_programs(const char *handle,
                            program_info[i].size, 
                            program_info[i].copy.valid,
                            program_info[i].copy.complete);
+
+           HAL_TRACE_DEBUG("MPU symbol table: ");
+           program_info[i].copy.symtab.dump();
+           HAL_TRACE_DEBUG("MPU reloctab: ");
+           program_info[i].copy.reloctab.dump();
+
            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
        } else {
            HAL_TRACE_DEBUG("Successfully resolved program: name {}, "
