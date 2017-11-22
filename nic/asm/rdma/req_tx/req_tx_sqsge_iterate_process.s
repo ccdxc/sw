@@ -33,9 +33,19 @@ req_tx_sqsge_iterate_process:
     nop
 
 trigger_stg3_sqsge_process:
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, in_progress, inv_key, k.{args.in_progress...args.inv_key})
+
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7) // Branch Delay Slot
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6) // Branch Delay Slot
+    //mfspr          r1, spr_tbladdr
+
+    // sge_offset = TXWQE_SGE_OFFSET + sqcb0_p->current_sge_id * sizeof(sge_t);
+    add            r1, TXWQE_SGE_OFFSET, k.args.current_sge_id, LOG_SIZEOF_SGE_T
+    // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
+    add            r1, r1, k.to_stage.sq.wqe_addr
+
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1) // Branch Delay Slot
     CAPRI_SET_TABLE_3_VALID(0)
 
     nop.e

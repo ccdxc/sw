@@ -14,7 +14,7 @@ modules:
         package : test.rdma
         module  : req_tx_send_only
         spec    : req_tx_send_only.testspec
-        ignore  : True
+        ignore  : False
 
     - module:
         name    : RDMA_TX_SEND_ONLY_REXMIT_TIMEOUT
@@ -32,14 +32,6 @@ modules:
         spec    : req_tx_send_only_2sges.testspec
         ignore  : False
  
-    - module:
-        name    : RDMA_TX_SEND_ONLY_4SGES
-        enable  : True
-        package : test.rdma
-        module  : req_tx_send_only_4sges
-        spec    : req_tx_send_only_4sges.testspec
-        ignore  : False
-
     - module:
         name    : RDMA_TX_SEND_FIRST_LAST
         enable  : True
@@ -120,14 +112,6 @@ modules:
        spec    : req_tx_send_first_mid_last_inv.testspec
        ignore  : False
 
-    #- module:
-    #    name    : RDMA_TX_SEND_FIRST_MID_LAST_4SGES
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : req_tx_send_first_mid_last_4sges
-    #    spec    : req_tx_send_first_mid_last_4sges.testspec
-    #    ignore  : False
- 
     - module:
         name    : RDMA_TX_WRITE_ONLY
         enable  : True
@@ -326,6 +310,62 @@ modules:
         spec    : req_tx_ud_send_only_imm.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_TX_SEND_ONLY_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_4sges
+        spec    : req_tx_send_only_4sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_3SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_3sges
+        spec    : req_tx_send_only_3sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_IMM_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_imm_4sges
+        spec    : req_tx_send_only_imm_4sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INV_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inv_4sges
+        spec    : req_tx_send_only_inv_4sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_4sges
+        spec    : req_tx_send_first_mid_last_4sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_IMM_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_imm_4sges
+        spec    : req_tx_send_first_mid_last_imm_4sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_INV_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_inv_4sges
+        spec    : req_tx_send_first_mid_last_inv_4sges.testspec
+        ignore  : False
+ 
     - module:
         name    : RDMA_RX_SEND_ONLY
         enable  : True
