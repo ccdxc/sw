@@ -148,6 +148,16 @@ func TestRPCBalancing(t *testing.T) {
 	// create TLS provider
 	tlsProvider, err := NewCKMBasedProvider("ckm", km, WithBalancer(b))
 	AssertOk(t, err, "Error instantiating CKMBasedProvider")
+	defer tlsProvider.Close()
+
+	// Wait until grpc connects to both the servers
+	AssertEventually(t, func() (bool, []interface{}) {
+		return b.NumUpConns() == 2, nil
+	}, "Unexpected up servers")
+
+	// Clear the counters for the 2 RPCs that were triggered by NewCKMBasedProvider
+	srv1.ClearRPCCounts()
+	srv2.ClearRPCCounts()
 
 	// getServerCertificate() is the callback that is invoked by the server to get a certificate
 	// to present to the client during the TLS handshake.

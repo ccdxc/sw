@@ -12,7 +12,13 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
-// balancer implements grpc.Balancer interface.
+// Balancer extends grpc.Balancer interface.
+type Balancer interface {
+	grpc.Balancer
+	NumUpConns() int
+}
+
+// balancer implements Balancer interface.
 type balancer struct {
 	sync.RWMutex
 	service  string             // name of the service
@@ -25,7 +31,7 @@ type balancer struct {
 }
 
 // New creates a new balancer.
-func New(resolver resolver.Interface) grpc.Balancer {
+func New(resolver resolver.Interface) Balancer {
 	return &balancer{
 		resolver: resolver,
 		upConns:  make([]grpc.Address, 0),
@@ -141,7 +147,7 @@ func (b *balancer) Close() error {
 	return nil
 }
 
-// notifyServiceInstances looks up instances of the service and updates the  notify channel
+// notifyServiceInstances looks up instances of the service and updates the notify channel
 func (b *balancer) notifyServiceInstances() {
 	// gRPC wants the whole list, not incrementals.
 	siList := b.resolver.Lookup(b.service)
@@ -164,4 +170,11 @@ func (b *balancer) OnNotifyResolver(event types.ServiceInstanceEvent) error {
 	b.Unlock()
 	b.notifyServiceInstances()
 	return nil
+}
+
+// NumUpConns returns the number of up connections.
+func (b *balancer) NumUpConns() int {
+	b.Lock()
+	defer b.Unlock()
+	return len(b.upConns)
 }

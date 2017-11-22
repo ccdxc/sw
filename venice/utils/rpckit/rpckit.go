@@ -361,7 +361,7 @@ func (c *RPCClient) Reconnect() error {
 	}
 
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(c.remoteURL, opts, grpc.WithBlock(), grpc.WithTimeout(time.Second*5),
+	conn, err := grpc.Dial(c.remoteURL, opts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
 		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(c)),
 		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(c)))
 	if err != nil {

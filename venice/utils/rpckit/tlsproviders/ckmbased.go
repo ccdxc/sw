@@ -29,6 +29,9 @@ type CKMBasedProvider struct {
 	// the remote URL of the CKM endpoint
 	ckmEndpointURL string
 
+	// conn is the gRPC client connection
+	conn *grpc.ClientConn
+
 	// the CKM gRPC client
 	ckmClient ckmproto.CertificatesClient
 
@@ -177,6 +180,7 @@ func NewCKMBasedProvider(ckmEpNameOrURL string, km *keymgr.KeyMgr, opts ...CKMPr
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to dial CKM Endpoint %s", provider.ckmEndpointURL)
 	}
+	provider.conn = conn
 	provider.ckmClient = ckmproto.NewCertificatesClient(conn)
 
 	err = provider.fetchCaCertificates()
@@ -233,4 +237,12 @@ func (p *CKMBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, e
 
 	tlsConfig := getTLSClientConfig(serverName, p.clientCertificate, p.trustRoots)
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
+}
+
+// Close closes the client.
+func (p *CKMBasedProvider) Close() {
+	if p.conn != nil {
+		p.conn.Close()
+	}
+	p.conn = nil
 }

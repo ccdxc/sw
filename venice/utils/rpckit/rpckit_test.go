@@ -478,7 +478,13 @@ func TestRPCBalancing(t *testing.T) {
 	b := balancer.New(r)
 	client, err := NewRPCClient("RPCBalanceTest", "testService", WithBalancer(b))
 	AssertOk(t, err, "Failed to create RPC Client")
+	defer client.Close()
 	testClient := NewTestClient(client.ClientConn)
+
+	// Wait until grpc connects to both the servers
+	AssertEventually(t, func() (bool, []interface{}) {
+		return b.NumUpConns() == 2, nil
+	}, "Unexpected up servers")
 
 	// Send a bunch of RPCs
 	respMap := make(map[string]int)

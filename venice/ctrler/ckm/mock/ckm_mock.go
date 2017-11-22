@@ -173,3 +173,8 @@ func (c *CKMctrler) GetRPCSuccessCount() uint64 {
 func (c *CKMctrler) GetRPCErrorCount() uint64 {
 	return atomic.LoadUint64(&c.rpcError)
 }
+
+func (c *CKMctrler) ClearRPCCounts() {
+	atomic.StoreUint64(&c.rpcSuccess, 0)
+	atomic.StoreUint64(&c.rpcError, 0)
+}
