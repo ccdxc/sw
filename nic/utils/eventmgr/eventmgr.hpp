@@ -42,7 +42,7 @@ typedef struct listener_state_s {
 class eventmgr {
 public:
     static eventmgr *factory(uint32_t max_events);
-    ~eventmgr();
+    static void destroy(eventmgr *evntmgr);
     hal_ret_t subscribe(event_id_t event_id, void *lctxt);
     hal_ret_t unsubscribe(event_id_t event_id, void *lctxt);
     hal_ret_t unsubscribe_listener(void *lctxt);
@@ -64,6 +64,7 @@ private:
 
 private:
     eventmgr();
+    ~eventmgr();
     int init(uint32_t max_events);
     event_state_t *event_state_alloc_init_(event_id_t event_id);
     listener_state_t *listener_alloc_init_(void *lctxt);

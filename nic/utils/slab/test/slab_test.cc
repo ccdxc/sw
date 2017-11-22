@@ -28,7 +28,7 @@ TEST_F(slab_test, create_fail) {
     test_slab = slab::factory("test", hal::HAL_SLAB_RSVD, 0, 0);
     ASSERT_TRUE(test_slab == NULL);
 
-    delete test_slab;
+    slab::destroy(test_slab);
 }
 
 TEST_F(slab_test, create_ok) {
@@ -36,7 +36,7 @@ TEST_F(slab_test, create_ok) {
 
     test_slab = slab::factory("test", hal::HAL_SLAB_RSVD, 12, 2, false, true);
     ASSERT_TRUE(test_slab != NULL);
-    delete test_slab;
+    slab::destroy(test_slab);
 }
 
 TEST_F(slab_test, deplete_slab_blocks) {
@@ -80,7 +80,7 @@ TEST_F(slab_test, deplete_slab_blocks) {
     ASSERT_TRUE(obj3 == NULL);
     ASSERT_EQ(2U, test_slab->num_alloc_fails());
 
-    delete test_slab;
+    slab::destroy(test_slab);
 }
 
 TEST_F(slab_test, grow_on_demand) {
@@ -110,7 +110,7 @@ TEST_F(slab_test, grow_on_demand) {
     ASSERT_EQ(3, test_slab->num_frees());
     ASSERT_EQ(0, test_slab->num_in_use());
 
-    delete test_slab;
+    slab::destroy(test_slab);
 }
 
 int main(int argc, char **argv) {

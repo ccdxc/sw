@@ -61,6 +61,7 @@ typedef struct catalog_s {
 class catalog {
 public:
     static catalog *factory(std::string catalog_file);
+    static void destroy(catalog *clog);
 
     static ::port::PortSpeed catalog_speed_to_port_speed(std::string speed);
 
@@ -80,13 +81,13 @@ public:
 
     bool access_mock_mode() { return catalog_db_.access_mock_mode; }
 
-    ~catalog();
 
 private:
     catalog_t    catalog_db_;   // catalog instance
 
 private:
     catalog() {};
+    ~catalog();
 
     hal_ret_t init(std::string catalog_file);
 

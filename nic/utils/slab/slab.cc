@@ -205,7 +205,8 @@ slab::factory(const char *name, hal_slab_t slab_id,
     rv = new_slab->init(name, slab_id, elem_sz, elems_per_block, thread_safe,
                         grow_on_demand, delay_delete, zero_on_alloc);
     if (rv < 0) {
-        delete new_slab;
+        new_slab->~slab();
+        HAL_FREE(HAL_MEM_ALLOC_LIB_SLAB, new_slab);
         return NULL;
     }
 
@@ -232,6 +233,16 @@ slab::~slab()
     if (thread_safe_) {
         HAL_SPINLOCK_DESTROY(&slock_);
     }
+}
+
+void
+slab::destroy(slab *slb)
+{
+    if (!slb) {
+        return;
+    }
+    slb->~slab();
+    HAL_FREE(HAL_MEM_ALLOC_LIB_SLAB, slb);
 }
 
 //------------------------------------------------------------------------------

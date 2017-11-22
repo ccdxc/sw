@@ -46,7 +46,7 @@ TEST_F(twheel_test, fire_periodic_timer) {
     test_twheel->tick(1000);
     ASSERT_EQ(test_twheel->num_entries(), 1);
 
-    delete test_twheel;
+    twheel::destroy(test_twheel);
 }
 
 TEST_F(twheel_test, fire_timer) {
@@ -62,7 +62,7 @@ TEST_F(twheel_test, fire_timer) {
     test_twheel->tick(1000);
     ASSERT_EQ(test_twheel->num_entries(), 0);
 
-    delete test_twheel;
+    twheel::destroy(test_twheel);
 }
 
 // test creation and deletion of timerwheel
@@ -72,7 +72,7 @@ TEST_F(twheel_test, create_delete) {
     test_twheel = twheel::factory(10, 100, true);
     ASSERT_TRUE(test_twheel != NULL);
 
-    delete test_twheel;
+    twheel::destroy(test_twheel);
 }
 
 int main(int argc, char **argv) {

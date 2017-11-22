@@ -43,7 +43,7 @@ public:
     static twheel *factory(uint64_t slice_intvl=TWHEEL_DEFAULT_SLICE_DURATION,
                            uint32_t wheel_duration=TWHEEL_DEFAULT_DURATION,
                            bool thread_safe=false);
-    ~twheel();
+    static void destroy(twheel *twh);
     void tick(uint32_t msecs_elapsed);
     void *add_timer(uint32_t timer_id, uint64_t timeout, void *ctxt,
                     twheel_cb_t cb, bool periodic=false);
@@ -64,6 +64,7 @@ private:
 
 private:
     twheel() {};
+    ~twheel();
     hal_ret_t init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe);
     void init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
                        bool periodic, void *ctxt, twheel_cb_t cb);

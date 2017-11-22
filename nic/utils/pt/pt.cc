@@ -70,7 +70,7 @@ pt::factory(const char *name, uint16_t max_key_len, bool thread_safe)
 pt::~pt()
 {
     if (ptnode_slab_) {
-        delete ptnode_slab_;
+        slab::destroy(ptnode_slab_);
     }
 
     if (thread_safe_) {

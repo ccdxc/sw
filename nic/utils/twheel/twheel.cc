@@ -26,7 +26,7 @@ twheel::init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe)
     twheel_ = (tw_slice_t *)HAL_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL,
                                        nslices_ * sizeof(tw_slice_t));
     if (twheel_ == NULL) {
-        delete twentry_slab_;
+        slab::destroy(twentry_slab_);
         return HAL_RET_OOM;
     }
     if (thread_safe_) {
@@ -46,16 +46,22 @@ twheel *
 twheel::factory(uint64_t slice_intvl, uint32_t wheel_duration,
                 bool thread_safe)
 {
+    void      *mem;
     twheel    *new_twheel = NULL;
 
     if ((slice_intvl == 0) || (wheel_duration == 0) ||
         (wheel_duration <= slice_intvl)) {
         return NULL;
     }
-    new_twheel = new twheel();
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL, sizeof(twheel));
+    if (!mem) {
+        return NULL;
+    }
+    new_twheel = new (mem) twheel();
     if (new_twheel->init(slice_intvl, wheel_duration, thread_safe) !=
             HAL_RET_OK) {
-        delete new_twheel;
+        new_twheel->~twheel();
+        HAL_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, mem);
         return NULL;
     }
     return new_twheel;
@@ -68,13 +74,25 @@ twheel::~twheel()
 {
     uint32_t    i;
 
-    delete twentry_slab_;
+    if (twentry_slab_) {
+        slab::destroy(twentry_slab_);
+    }
     if (thread_safe_) {
         for (i = 0; i < nslices_; i++) {
             HAL_SPINLOCK_DESTROY(&twheel_[i].slock_);
         }
     }
     HAL_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twheel_);
+}
+
+void
+twheel::destroy(twheel *twh)
+{
+    if (!twh) {
+        return;
+    }
+    twh->~twheel();
+    HAL_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twh);
 }
 
 //------------------------------------------------------------------------------

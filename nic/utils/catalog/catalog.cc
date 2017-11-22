@@ -195,6 +195,7 @@ catalog::factory(std::string catalog_file) {
     new_catalog = new (mem) catalog();
     ret = new_catalog->init(catalog_file);
     if (ret != HAL_RET_OK) {
+        new_catalog->~catalog();
         HAL_FREE(hal::HAL_MEM_ALLOC_CATALOG, new_catalog);
         return NULL;
     }
@@ -207,6 +208,16 @@ catalog::factory(std::string catalog_file) {
 //------------------------------------------------------------------------------
 catalog::~catalog()
 {
+}
+
+void
+catalog::destroy(catalog *clog)
+{
+    if (!clog) {
+        return;
+    }
+    clog->~catalog();
+    HAL_FREE(hal::HAL_MEM_ALLOC_CATALOG, clog);
 }
 
 catalog_uplink_port_t*

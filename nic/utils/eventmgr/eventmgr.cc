@@ -75,7 +75,7 @@ eventmgr::init(uint32_t max_events)
     if (event_listener_state_slab_ == NULL) {
         delete event_map_;
         event_map_ = NULL;
-        delete event_map_slab_;
+        slab::destroy(event_map_slab_);
         event_map_slab_ = NULL;
         return -1;
     }
@@ -93,9 +93,9 @@ eventmgr::init(uint32_t max_events)
     if (listener_slab_ == NULL) {
         delete event_map_;
         event_map_ = NULL;
-        delete event_map_slab_;
+        slab::destroy(event_map_slab_);
         event_map_slab_ = NULL;
-        delete event_listener_state_slab_;
+        slab::destroy(event_listener_state_slab_);
         event_listener_state_slab_ = NULL;
         delete listener_map_;
         listener_map_ = NULL;
@@ -141,14 +141,24 @@ eventmgr::~eventmgr()
         delete listener_map_;
     }
     if (event_map_slab_) {
-        delete event_map_slab_;
+        slab::destroy(event_map_slab_);
     }
     if (event_listener_state_slab_) {
-        delete event_listener_state_slab_;
+        slab::destroy(event_listener_state_slab_);
     }
     if (listener_slab_) {
-        delete listener_slab_;
+        slab::destroy(listener_slab_);
     }
+}
+
+void
+eventmgr::destroy(eventmgr *evntmgr)
+{
+    if (!evntmgr) {
+        return;
+    }
+    evntmgr->~eventmgr();
+    HAL_FREE(HAL_MEM_ALLOC_EVENT_MGR, evntmgr);
 }
 
 event_state_t *

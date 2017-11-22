@@ -525,87 +525,87 @@ hal_state_pd::~hal_state_pd()
     uint32_t    tid;
     uint32_t    p, n;
 
-    vrf_slab_ ? delete vrf_slab_ : HAL_NOP;
+    vrf_slab_ ? slab::destroy(vrf_slab_) : HAL_NOP;
     vrf_hwid_idxr_ ? delete vrf_hwid_idxr_ : HAL_NOP;
 
-    port_slab_ ? delete port_slab_ : HAL_NOP;
+    port_slab_ ? slab::destroy(port_slab_) : HAL_NOP;
 
     nwsec_profile_hwid_idxr_ ? delete nwsec_profile_hwid_idxr_ : HAL_NOP;
 
-    l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
+    l2seg_slab_ ? slab::destroy(l2seg_slab_) : HAL_NOP;
     l2seg_hwid_ht_ ? delete l2seg_hwid_ht_ : HAL_NOP;
     l2seg_cpu_idxr_ ? delete l2seg_cpu_idxr_ : HAL_NOP;
 
-    mc_entry_slab_ ? delete mc_entry_slab_ : HAL_NOP;
+    mc_entry_slab_ ? slab::destroy(mc_entry_slab_) : HAL_NOP;
 
     lport_idxr_ ? delete lport_idxr_ : HAL_NOP;
 
-    lif_pd_slab_ ? delete lif_pd_slab_ : HAL_NOP;
+    lif_pd_slab_ ? slab::destroy(lif_pd_slab_) : HAL_NOP;
     lif_hwid_idxr_ ? delete lif_hwid_idxr_ : HAL_NOP;
 
-    uplinkif_pd_slab_ ? delete uplinkif_pd_slab_ : HAL_NOP;
-    uplinkpc_pd_slab_ ? delete uplinkpc_pd_slab_ : HAL_NOP;
+    uplinkif_pd_slab_ ? slab::destroy(uplinkif_pd_slab_) : HAL_NOP;
+    uplinkpc_pd_slab_ ? slab::destroy(uplinkpc_pd_slab_) : HAL_NOP;
     uplinkifpc_idxr_ ? delete uplinkifpc_idxr_ : HAL_NOP;
 
-    tunnelif_pd_slab_ ? delete tunnelif_pd_slab_ : HAL_NOP;
+    tunnelif_pd_slab_ ? slab::destroy(tunnelif_pd_slab_) : HAL_NOP;
 
-    nwsec_pd_slab_ ? delete nwsec_pd_slab_ : HAL_NOP;
-    dos_pd_slab_ ? delete dos_pd_slab_ : HAL_NOP;
+    nwsec_pd_slab_ ? slab::destroy(nwsec_pd_slab_) : HAL_NOP;
+    dos_pd_slab_ ? slab::destroy(dos_pd_slab_) : HAL_NOP;
 
-    session_slab_ ? delete session_slab_ : HAL_NOP;
+    session_slab_ ? slab::destroy(session_slab_) : HAL_NOP;
     
-    tlscb_slab_ ? delete tlscb_slab_ : HAL_NOP;
+    tlscb_slab_ ? slab::destroy(tlscb_slab_) : HAL_NOP;
     tlscb_hwid_ht_ ? delete tlscb_hwid_ht_ : HAL_NOP;
     
-    tcpcb_slab_ ? delete tcpcb_slab_ : HAL_NOP;
+    tcpcb_slab_ ? slab::destroy(tcpcb_slab_) : HAL_NOP;
     tcpcb_hwid_ht_ ? delete tcpcb_hwid_ht_ : HAL_NOP;
 
-    buf_pool_pd_slab_ ? delete buf_pool_pd_slab_ : HAL_NOP;
+    buf_pool_pd_slab_ ? slab::destroy(buf_pool_pd_slab_) : HAL_NOP;
     for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
         buf_pool_hwid_idxr_[p] ? delete buf_pool_hwid_idxr_[p] : HAL_NOP;
     }
 
-    queue_pd_slab_ ? delete queue_pd_slab_ : HAL_NOP;
+    queue_pd_slab_ ? slab::destroy(queue_pd_slab_) : HAL_NOP;
     for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
         for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
             queue_hwid_idxr_[p][n] ? delete queue_hwid_idxr_[p][n] : HAL_NOP;
         }
     }
 
-    policer_pd_slab_ ? delete policer_pd_slab_ : HAL_NOP;
+    policer_pd_slab_ ? slab::destroy(policer_pd_slab_) : HAL_NOP;
     ingress_policer_hwid_idxr_ ? delete ingress_policer_hwid_idxr_ : HAL_NOP;
     egress_policer_hwid_idxr_ ? delete egress_policer_hwid_idxr_ : HAL_NOP;
 
-    acl_pd_slab_ ? delete acl_pd_slab_ : HAL_NOP;
+    acl_pd_slab_ ? slab::destroy(acl_pd_slab_) : HAL_NOP;
 
-    wring_slab_ ? delete wring_slab_ : HAL_NOP;
+    wring_slab_ ? slab::destroy(wring_slab_) : HAL_NOP;
     wring_hwid_ht_ ? delete wring_hwid_ht_ : HAL_NOP;
 
-    ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
+    ipseccb_slab_ ? slab::destroy(ipseccb_slab_) : HAL_NOP;
     ipseccb_hwid_ht_ ? delete ipseccb_hwid_ht_ : HAL_NOP;
     
-    ipseccb_decrypt_slab_ ? delete ipseccb_decrypt_slab_ : HAL_NOP;
+    ipseccb_decrypt_slab_ ? slab::destroy(ipseccb_decrypt_slab_) : HAL_NOP;
     ipseccb_decrypt_hwid_ht_ ? delete ipseccb_decrypt_hwid_ht_ : HAL_NOP;
     
-    cpucb_slab_ ? delete cpucb_slab_ : HAL_NOP;
+    cpucb_slab_ ? slab::destroy(cpucb_slab_) : HAL_NOP;
     cpucb_hwid_ht_ ? delete cpucb_hwid_ht_ : HAL_NOP;
 
-    rw_entry_slab_ ? delete rw_entry_slab_ : HAL_NOP;
+    rw_entry_slab_ ? slab::destroy(rw_entry_slab_) : HAL_NOP;
     rw_table_ht_ ? delete rw_table_ht_ : HAL_NOP;
     rw_tbl_idxr_ ? delete rw_tbl_idxr_ : HAL_NOP;
     
-    cpupkt_slab_ ? delete cpupkt_slab_ : HAL_NOP;
-    cpupkt_qinst_info_slab_ ? delete cpupkt_qinst_info_slab_ : HAL_NOP;
+    cpupkt_slab_ ? slab::destroy(cpupkt_slab_) : HAL_NOP;
+    cpupkt_qinst_info_slab_ ? slab::destroy(cpupkt_qinst_info_slab_) : HAL_NOP;
     cpupkt_descr_hwid_idxr_ ? delete  cpupkt_descr_hwid_idxr_ : HAL_NOP;
     cpupkt_page_hwid_idxr_ ? delete  cpupkt_page_hwid_idxr_ : HAL_NOP;
 
-    rawrcb_slab_ ? delete rawrcb_slab_ : HAL_NOP;
+    rawrcb_slab_ ? slab::destroy(rawrcb_slab_) : HAL_NOP;
     rawrcb_hwid_ht_ ? delete rawrcb_hwid_ht_ : HAL_NOP;
 
-    rawccb_slab_ ? delete rawccb_slab_ : HAL_NOP;
+    rawccb_slab_ ? slab::destroy(rawccb_slab_) : HAL_NOP;
     rawccb_hwid_ht_ ? delete rawccb_hwid_ht_ : HAL_NOP;
 
-    directmap_entry_slab_ ? delete directmap_entry_slab_ : HAL_NOP;
+    directmap_entry_slab_ ? slab::destroy(directmap_entry_slab_) : HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -739,6 +739,7 @@ p4pd_table_type2str (p4pd_table_type_en table_type)
     case P4_TBL_TYPE_HASH:
         return "EXACT_HASH";
         break;
+
     case P4_TBL_TYPE_HASHTCAM:
         return "EXACT_HASH_OTCAM";
         break;

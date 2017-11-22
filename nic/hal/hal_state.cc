@@ -484,8 +484,8 @@ hal_cfg_db::~hal_cfg_db()
     wring_id_ht_ ? delete wring_id_ht_ : HAL_NOP;
     wring_hal_handle_ht_ ? delete wring_hal_handle_ht_ : HAL_NOP;
     
-    proxy_slab_ ? delete proxy_slab_ : HAL_NOP;
-    proxy_flow_info_slab_ ? delete proxy_flow_info_slab_ : HAL_NOP;
+    proxy_slab_ ? slab::destroy(proxy_slab_) : HAL_NOP;
+    proxy_flow_info_slab_ ? slab::destroy(proxy_flow_info_slab_) : HAL_NOP;
     proxy_type_ht_ ? delete proxy_type_ht_ : HAL_NOP;
     proxy_hal_handle_ht_ ? delete proxy_hal_handle_ht_ : HAL_NOP;
     
@@ -699,7 +699,7 @@ hal_oper_db::~hal_oper_db()
         }
     }
 
-    event_mgr_ ? delete event_mgr_ : HAL_NOP;
+    event_mgr_ ? eventmgr::destroy(event_mgr_) : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------
@@ -1000,44 +1000,44 @@ hal_mem_db::factory(void)
 //------------------------------------------------------------------------------
 hal_mem_db::~hal_mem_db()
 {
-    hal_handle_slab_ ? delete hal_handle_slab_ : HAL_NOP;
-    hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
-    hal_handle_list_entry_slab_ ? delete hal_handle_list_entry_slab_ : HAL_NOP;
-    hal_handle_id_ht_entry_slab_ ? delete hal_handle_id_ht_entry_slab_ : HAL_NOP;
-    hal_handle_id_list_entry_slab_ ? delete hal_handle_id_list_entry_slab_ : HAL_NOP;
-    vrf_slab_ ? delete vrf_slab_ : HAL_NOP;
-    network_slab_ ? delete network_slab_ : HAL_NOP;
-    nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
-    dos_policy_slab_ ? delete dos_policy_slab_ : HAL_NOP;
-    dos_policy_sg_list_entry_slab_ ? delete dos_policy_sg_list_entry_slab_ : HAL_NOP;
-    nwsec_group_slab_ ? delete nwsec_group_slab_ : HAL_NOP;
-    nwsec_policy_rules_slab_ ? delete nwsec_policy_rules_slab_ : HAL_NOP;
-    nwsec_policy_cfg_slab_ ? delete nwsec_policy_cfg_slab_ : HAL_NOP;
-    nwsec_policy_svc_slab_ ? delete nwsec_policy_svc_slab_ : HAL_NOP;
-    l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
-    mc_entry_slab_ ? delete mc_entry_slab_ : HAL_NOP;
-    lif_slab_ ? delete lif_slab_ : HAL_NOP;
-    if_slab_ ? delete if_slab_ : HAL_NOP;
-    enic_l2seg_entry_slab_ ? delete enic_l2seg_entry_slab_ : HAL_NOP;
-    port_slab_ ? delete port_slab_ : HAL_NOP;
-    ep_slab_ ? delete ep_slab_ : HAL_NOP;
-    ep_ip_entry_slab_ ? delete ep_ip_entry_slab_ : HAL_NOP;
-    ep_l3_entry_slab_ ? delete ep_l3_entry_slab_ : HAL_NOP;
-    flow_slab_ ? delete flow_slab_ : HAL_NOP;
-    session_slab_ ? delete session_slab_ : HAL_NOP;
-    l4lb_slab_ ? delete l4lb_slab_ : HAL_NOP;
-    tlscb_slab_ ? delete tlscb_slab_ : HAL_NOP;
-    tcpcb_slab_ ? delete tcpcb_slab_ : HAL_NOP;
-    buf_pool_slab_ ? delete buf_pool_slab_ : HAL_NOP;
-    queue_slab_ ? delete queue_slab_ : HAL_NOP;
-    policer_slab_ ? delete policer_slab_ : HAL_NOP;
-    wring_slab_ ? delete wring_slab_ : HAL_NOP;
-    acl_slab_ ? delete acl_slab_ : HAL_NOP;
-    ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
-    cpucb_slab_ ? delete cpucb_slab_ : HAL_NOP;
-    rawrcb_slab_ ? delete rawrcb_slab_ : HAL_NOP;
+    hal_handle_slab_ ? slab::destroy(hal_handle_slab_) : HAL_NOP;
+    hal_handle_ht_entry_slab_ ? slab::destroy(hal_handle_ht_entry_slab_) : HAL_NOP;
+    hal_handle_list_entry_slab_ ? slab::destroy(hal_handle_list_entry_slab_) : HAL_NOP;
+    hal_handle_id_ht_entry_slab_ ? slab::destroy(hal_handle_id_ht_entry_slab_) : HAL_NOP;
+    hal_handle_id_list_entry_slab_ ? slab::destroy(hal_handle_id_list_entry_slab_) : HAL_NOP;
+    vrf_slab_ ? slab::destroy(vrf_slab_) : HAL_NOP;
+    network_slab_ ? slab::destroy(network_slab_) : HAL_NOP;
+    nwsec_profile_slab_ ? slab::destroy(nwsec_profile_slab_) : HAL_NOP;
+    dos_policy_slab_ ? slab::destroy(dos_policy_slab_) : HAL_NOP;
+    dos_policy_sg_list_entry_slab_ ? slab::destroy(dos_policy_sg_list_entry_slab_) : HAL_NOP;
+    nwsec_group_slab_ ? slab::destroy(nwsec_group_slab_) : HAL_NOP;
+    nwsec_policy_rules_slab_ ? slab::destroy(nwsec_policy_rules_slab_) : HAL_NOP;
+    nwsec_policy_cfg_slab_ ? slab::destroy(nwsec_policy_cfg_slab_) : HAL_NOP;
+    nwsec_policy_svc_slab_ ? slab::destroy(nwsec_policy_svc_slab_) : HAL_NOP;
+    l2seg_slab_ ? slab::destroy(l2seg_slab_) : HAL_NOP;
+    mc_entry_slab_ ? slab::destroy(mc_entry_slab_) : HAL_NOP;
+    lif_slab_ ? slab::destroy(lif_slab_) : HAL_NOP;
+    if_slab_ ? slab::destroy(if_slab_) : HAL_NOP;
+    enic_l2seg_entry_slab_ ? slab::destroy(enic_l2seg_entry_slab_) : HAL_NOP;
+    port_slab_ ? slab::destroy(port_slab_) : HAL_NOP;
+    ep_slab_ ? slab::destroy(ep_slab_) : HAL_NOP;
+    ep_ip_entry_slab_ ? slab::destroy(ep_ip_entry_slab_) : HAL_NOP;
+    ep_l3_entry_slab_ ? slab::destroy(ep_l3_entry_slab_) : HAL_NOP;
+    flow_slab_ ? slab::destroy(flow_slab_) : HAL_NOP;
+    session_slab_ ? slab::destroy(session_slab_) : HAL_NOP;
+    l4lb_slab_ ? slab::destroy(l4lb_slab_) : HAL_NOP;
+    tlscb_slab_ ? slab::destroy(tlscb_slab_) : HAL_NOP;
+    tcpcb_slab_ ? slab::destroy(tcpcb_slab_) : HAL_NOP;
+    buf_pool_slab_ ? slab::destroy(buf_pool_slab_) : HAL_NOP;
+    queue_slab_ ? slab::destroy(queue_slab_) : HAL_NOP;
+    policer_slab_ ? slab::destroy(policer_slab_) : HAL_NOP;
+    wring_slab_ ? slab::destroy(wring_slab_) : HAL_NOP;
+    acl_slab_ ? slab::destroy(acl_slab_) : HAL_NOP;
+    ipseccb_slab_ ? slab::destroy(ipseccb_slab_) : HAL_NOP;
+    cpucb_slab_ ? slab::destroy(cpucb_slab_) : HAL_NOP;
+    rawrcb_slab_ ? slab::destroy(rawrcb_slab_) : HAL_NOP;
     rawrcb_slab_ = NULL;
-    rawccb_slab_ ? delete rawccb_slab_ : HAL_NOP;
+    rawccb_slab_ ? slab::destroy(rawccb_slab_) : HAL_NOP;
     rawccb_slab_ = NULL;
 }
 

@@ -82,6 +82,9 @@ bitmap::~bitmap()
 void
 bitmap::destroy(bitmap *bmap)
 {
+    if (!bmap) {
+        return;
+    }
     bmap->~bitmap();
     HAL_FREE(HAL_MEM_ALLOC_LIB_BITMAP, bmap);
 }
