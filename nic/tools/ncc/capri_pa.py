@@ -573,7 +573,10 @@ class capri_flit:
             a_cs = floc + start_pad
             if not cross_512b:
                 if a_cs < 512 and (a_cs+csize) > 512:
-                    a_cs = 512+start_pad
+                    if justify == JUSTIFY_RIGHT:
+                        a_cs = 512+start_pad
+                    else:
+                        a_cs = 512
             if cs+cw-a_cs < csize:
                 # not enough after alignment
                 continue

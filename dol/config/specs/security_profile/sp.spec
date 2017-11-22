@@ -395,6 +395,18 @@ profiles:
       fields:
          tcp_unexpected_win_scale_action: EDIT
 
+    - id: SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_MSS_SACK_PERM
+      fields:
+         tcp_unexpected_win_scale_action: EDIT
+
+    - id: SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_SACK_PERM
+      fields:
+         tcp_unexpected_mss_action: EDIT
+
+    - id: SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_ONLY
+      fields:
+         tcp_unexpected_mss_action: EDIT
+
     - id: SEC_PROF_FIREWALL
       fields:
         cnxn_tracking_en: True

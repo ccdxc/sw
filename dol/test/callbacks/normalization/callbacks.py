@@ -292,8 +292,29 @@ def GetInputTcpOptions(testcase, packet):
     ts_ws_sack_1.append(TcpOptions('NOP', None))
     ts_ws_sack_1.append(TcpOptions('Timestamp', '0x3 0x4'))
     ts_ws_sack_1.append(TcpOptions('SAck', '100 200'))
+    ws_mss_sack_perm = []
+    ws_mss_sack_perm.append(TcpOptions('WScale', '0x2'))
+    ws_mss_sack_perm.append(TcpOptions('MSS', '0x2'))
+    ws_mss_sack_perm.append(TcpOptions('SAckOK', 'None'))
+    ws_mss_sack_perm.append(TcpOptions('NOP', None))
+    mss_ws_sack_perm = []
+    mss_ws_sack_perm.append(TcpOptions('MSS', '0x2'))
+    mss_ws_sack_perm.append(TcpOptions('WScale', '0x2'))
+    mss_ws_sack_perm.append(TcpOptions('SAckOK', 'None'))
+    mss_ws_sack_perm.append(TcpOptions('NOP', None))
+    mss_ws_only = []
+    mss_ws_only.append(TcpOptions('MSS', '0x1'))
+    mss_ws_only.append(TcpOptions('WScale', '0x2'))
 
-    if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
+    if 'SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_SACK_4' in profile_name:
+        return ws_sack_4
+    elif 'SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_MSS_SACK_PERM' in profile_name:
+        return ws_mss_sack_perm
+    elif 'SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_ONLY' in profile_name:
+        return mss_ws_only
+    elif 'SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_SACK_PERM' in profile_name:
+        return mss_ws_sack_perm
+    elif 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
         return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
         return [TcpOptions('MSS', '0x1')]
@@ -347,8 +368,6 @@ def GetInputTcpOptions(testcase, packet):
         return ts_sack_2
     elif 'SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_3' in profile_name:
         return ts_sack_3
-    elif 'SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_SACK_4' in profile_name:
-        return ws_sack_4
     elif 'SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_WS_SACK_1' in profile_name:
         return ts_ws_sack_1
     elif 'TCP_TS_NOT_PRESENT_DROP_ENABLE' in profile_name:
@@ -480,8 +499,27 @@ def GetExpectedTcpOptions(testcase, packet):
     ts_ws_sack_1.append(TcpOptions('SAck', '100 200'))
     ts_ws_sack_1.append(TcpOptions('NOP', None))
     ts_ws_sack_1.append(TcpOptions('NOP', None))
+    ws_mss_sack_perm = []
+    ws_mss_sack_perm.append(TcpOptions('MSS', '0x2'))
+    ws_mss_sack_perm.append(TcpOptions('SAckOK', 'None'))
+    ws_mss_sack_perm.append(TcpOptions('NOP', None))
+    mss_ws_sack_perm = []
+    mss_ws_sack_perm.append(TcpOptions('WScale', '0x2'))
+    mss_ws_sack_perm.append(TcpOptions('SAckOK', 'None'))
+    mss_ws_sack_perm.append(TcpOptions('NOP', None))
+    mss_ws_sack_perm.append(TcpOptions('NOP', None))
+    mss_ws_only = []
+    mss_ws_only.append(TcpOptions('WScale', '0x2'))
 
-    if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
+    if 'SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_MSS_SACK_PERM' in profile_name:
+        return ws_mss_sack_perm
+    elif 'SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_SACK_PERM' in profile_name:
+        return mss_ws_sack_perm
+    elif 'SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT_WIN_SCALE_ONLY' in profile_name:
+        return mss_ws_only
+    elif 'SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_SACK_4' in profile_name:
+        return ws_sack_4
+    elif 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
         return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
         return [TcpOptions('MSS', '0x1')]
@@ -535,8 +573,6 @@ def GetExpectedTcpOptions(testcase, packet):
         return ts_sack_2
     elif 'SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_SACK_3' in profile_name:
         return ts_sack_3
-    elif 'SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT_SACK_4' in profile_name:
-        return ws_sack_4
     elif 'SEC_PROF_TCP_UNEXPECTED_TS_OPTION_EDIT_WS_SACK_1' in profile_name:
         return ts_ws_sack_1
     elif 'TCP_TS_NOT_PRESENT_DROP_ENABLE' in profile_name:

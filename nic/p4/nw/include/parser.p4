@@ -119,7 +119,7 @@ header tcp_option_unknown_t tcp_option_unknown;
 header tcp_option_eol_t tcp_option_eol;
 @pragma no_ohi xgress
 header tcp_option_nop_t tcp_option_nop;
-@pragma no_ohi xgress:
+@pragma no_ohi xgress
 header tcp_option_nop_t tcp_option_nop_1;
 @pragma no_ohi xgress
 header tcp_option_mss_t tcp_option_mss;
