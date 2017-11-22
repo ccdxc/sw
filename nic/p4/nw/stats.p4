@@ -23,8 +23,7 @@ table ingress_tx_stats {
 /*****************************************************************************/
 /* Drop accounting per reason code                                           */
 /*****************************************************************************/
-action drop_stats(stats_idx, drop_pkts, mirror_en, mirror_session_id, 
-                   pad_count1, pad_count2, pad_count3, pad_stats_6_bits) {
+action drop_stats(stats_idx, drop_pkts, mirror_en, mirror_session_id) {
     if (mirror_en == TRUE) {
         modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
     }
@@ -33,10 +32,6 @@ action drop_stats(stats_idx, drop_pkts, mirror_en, mirror_session_id,
     modify_field(scratch_metadata.stats_packets, drop_pkts);
     modify_field(scratch_metadata.stats_idx, stats_idx);
     modify_field(scratch_metadata.ingress_mirror_en, mirror_en);
-    modify_field(scratch_metadata.size32, pad_count1);
-    modify_field(scratch_metadata.size32, pad_count2);
-    modify_field(scratch_metadata.size32, pad_count3);
-    modify_field(scratch_metadata.size6, pad_stats_6_bits);
 
     // TCP options padding - required due to normalization
     if ((tcp.valid == TRUE) and (tcp.dataOffset > 5)) {
@@ -165,10 +160,8 @@ control process_stats {
 /*****************************************************************************/
 action tx_stats(tx_ucast_pkts, tx_mcast_pkts, tx_bcast_pkts,
                 tx_ucast_bytes, tx_mcast_bytes, tx_bcast_bytes,
-                tx_egress_drops, pad_stats1, pad_stats_14_bits) {
+                tx_egress_drops) {
 
-    modify_field(scratch_metadata.size32, pad_stats1);
-    modify_field(scratch_metadata.size14, pad_stats_14_bits);
     if (capri_intrinsic.drop == TRUE) {
         modify_field(scratch_metadata.tx_drop_count, tx_egress_drops);
     }

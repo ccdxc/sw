@@ -599,8 +599,23 @@ class capri_p4pd:
             kdict['wide_key_len']           = 0
         # Build all table action data fields
         tblactions = []
-        for actionname,adatafields in ctable.action_data.items():
-            tblactions.append((actionname, adatafields))
+        if ctable.is_writeback and not ctable.is_raw and not ctable.is_raw_index:
+            #Pad actiondata so that sum of all action data fields and action-id
+            #is next multiple of 128b
+            action_pc_size = 8 if len(ctable.action_data) > 1 else 0
+            for actionname,adatafields in ctable.action_data.items():
+                adata_size = action_pc_size
+                actiondata_flds = []
+                for actiondata_fld, actiondata_fld_width in adatafields:
+                    actiondata_flds.append((actiondata_fld, actiondata_fld_width))
+                    adata_size += actiondata_fld_width
+                if (adata_size % 128) > 0:
+                    pad_size = 128 - (adata_size % 128)
+                    actiondata_flds.append(('__' + actionname + '_wb_pad', pad_size))
+                tblactions.append((actionname, actiondata_flds))
+        else:
+            for actionname,adatafields in ctable.action_data.items():
+                tblactions.append((actionname, adatafields))
 
         kdict['actions'] = tblactions
 

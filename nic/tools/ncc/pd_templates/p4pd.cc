@@ -737,6 +737,7 @@ ${table}_pack_action_data(uint32_t tableid,
     (void)mat_key_bit_length;
     (void)bits_to_copy;
     (void)source_start_bit;
+    (void)dest_start_bit;
 
     dest_start_bit = 0;
     *actiondata_len_before_key = 0;
@@ -2186,6 +2187,7 @@ hash_${table}_unpack_action_data(uint32_t tableid,
     (void)*packed_action_data;
     (void)bits_to_copy;
     (void)dest_start_bit;
+    (void)copy_before_key;
 
     actiondatalen = 0;
     src_start_bit = 0; /* TODO: When mat-key start bit is in middle of byte ?? */
