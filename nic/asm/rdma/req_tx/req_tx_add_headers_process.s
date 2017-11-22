@@ -161,7 +161,7 @@ req_tx_add_headers_process:
         phvwr          RRQWQE_MSN, r1 
         
         // dma_cmd[3]
-        DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+        DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
         b              op_type_end
@@ -264,7 +264,7 @@ req_tx_add_headers_process:
         phvwr          RRQWQE_MSN, r1 
         
         // dma_cmd[3] 
-        DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+        DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
         b              op_type_end
@@ -288,7 +288,7 @@ req_tx_add_headers_process:
         phvwr          RRQWQE_MSN, r1 
         
         // dma_cmd[3] - rrqwqe
-        DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+        DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
         b              op_type_end
@@ -349,7 +349,7 @@ rrq_p_index_chk:
     phvwr           p.rrq_p_index, r7.hx
 
     // dma_cmd[4] - incr rrq_p_index for read/atomic
-    addi           r6, r6, DMA_SWITCH_TO_NEXT_FLIT_BITS
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQ_PINDEX)
     DMA_HBM_PHV2MEM_SETUP(r6, rrq_p_index, rrq_p_index, r3)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 

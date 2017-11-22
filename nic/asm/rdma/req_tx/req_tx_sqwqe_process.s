@@ -97,7 +97,7 @@ set_sge_arg:
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, first, 1)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, num_valid_sges, d.base.num_sges)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
-    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_DMA_CMD_PAYLOAD_BASE)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_DMA_CMD_PYLD_BASE)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, op_type, d.base.op_type)
     CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, imm_data, inv_key, d.{send.imm_data...send.inv_key})
     // if UD copy ah_handle
@@ -106,17 +106,6 @@ set_sge_arg:
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
-
-    #doing these steps to aid sqsge process next stage
-    //SQCB1_ADDR_GET(r1)
-    //CAPRI_GET_TABLE_2_K_NO_VALID(req_tx_phv_t, r7)
-    //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
-
-    SQCB0_ADDR_GET(r1)
-    CAPRI_GET_TABLE_3_K_NO_VALID(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
     nop.e
     nop
@@ -162,7 +151,7 @@ read:
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
@@ -207,7 +196,7 @@ atomic:
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
@@ -215,7 +204,7 @@ atomic:
 
 inline_data:
     phvwr          p.inline_data, d.inline_data
-    DMA_CMD_STATIC_BASE_GET(r4, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_PAYLOAD_BASE)
+    DMA_CMD_STATIC_BASE_GET(r4, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_PYLD_BASE)
     DMA_PHV2PKT_START_LEN_SETUP(r4, r5, inline_data, d.send.length)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r4)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r4)  //BD Slot
@@ -252,7 +241,7 @@ inline_data:
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e

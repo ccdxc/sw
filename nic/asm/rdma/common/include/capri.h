@@ -16,6 +16,7 @@
 #define CAPRI_RXDMA_INTRINSIC_QID k.p4_rxdma_intr_qid
 #define CAPRI_RXDMA_INTRINSIC_QID_QTYPE k.{p4_rxdma_intr_qid...p4_rxdma_intr_qtype}
 #define CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT k.p4_intr_recirc_count
+#define CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT k.p4_intr_recirc_count
 
 #define CAPRI_RXDMA_RETH_VA(_r) \
     add _r, k.{rdma_bth_reth_reth_va_sbit56_ebit63}, k.{rdma_bth_reth_reth_va_sbit0_ebit7...rdma_bth_reth_reth_va_sbit40_ebit55}, 8
@@ -188,9 +189,16 @@ struct capri_intrinsic_ring_t {
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r[63:CAPRI_RAW_TABLE_PC_SHIFT]; \
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
 
+#define CAPRI_NEXT_TABLE_I_READ_SET_SIZE(_base_r, _lock_en, _table_read_size) \
+    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);
+
 #define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_C(_base_r, _lock_en, _table_read_size, _c) \
     phvwrpi._c  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);
 
+#define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC(_base_r, _lock_en, _table_read_size, _table_pc_r) \
+    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \
+    phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r[63:CAPRI_RAW_TABLE_PC_SHIFT]; \
+     
 #define CAPRI_SET_TABLE_0_VALID(_vld) \
     phvwri   p.common.app_header_table0_valid, _vld;
 #define CAPRI_SET_TABLE_1_VALID(_vld) \

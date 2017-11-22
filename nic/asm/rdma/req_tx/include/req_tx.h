@@ -9,7 +9,10 @@
 #define REQ_TX_DMA_CMD_PHV_INTRINSIC 0
 #define REQ_TX_DMA_CMD_HEADER_TEMPLATE 1
 #define REQ_TX_DMA_CMD_RDMA_HEADERS 2
-#define REQ_TX_DMA_CMD_PAYLOAD_BASE 3
+#define REQ_TX_DMA_CMD_RRQWQE 3
+#define REQ_TX_DMA_CMD_RRQ_PINDEX 4
+#define REQ_TX_DMA_CMD_PYLD_BASE 3
+#define REQ_TX_DMA_CMD_PYLD_BASE_END 14
 #define REQ_TX_DMA_CMD_RDMA_FEEDBACK 15
 #define REQ_TX_DMA_CMD_START_FLIT_ID 8
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
@@ -45,6 +48,9 @@
 #define RRQWQE_ATOMIC_SGE_LEN             p.rrqwqe.atomic.sge.len
 #define RRQWQE_ATOMIC_SGE_LKEY            p.rrqwqe.atomic.sge.l_key
 #define RRQWQE_ATOMIC_OP_TYPE             p.rrqwqe.atomic.op_type
+
+#define REQ_RX_RECIRC_REASON_NONE                0
+#define REQ_TX_RECIRC_REASON_SGE_WORK_PENDING    1
 
 // phv 
 struct req_tx_phv_t {

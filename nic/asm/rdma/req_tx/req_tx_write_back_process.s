@@ -11,13 +11,19 @@ struct sqcb0_t d;
 
 .align
 req_tx_write_back_process:
+    // Pin write_back_process to stage 4
+    mfspr         r1, spr_mpuid
+    seq           c1, r1[6:2], STAGE_4
+
+    bcf           [!c1], bubble_to_next_stage
+
     // if speculative cindex matches cindex, then this wqe is being
     // processed in the right order and state update is allowed. Otherwise
     // discard and continue with speculation until speculative cindex 
     // matches current cindex. If sepculative cindex doesn't match cindex, then
     // revert speculative cindex to cindex , which would allow next speculation
     // to continue from yet to be processed wqe
-    seq           c1, k.to_stage.sq.spec_cindex, SQ_C_INDEX
+    seq           c1, k.to_stage.sq.spec_cindex, SQ_C_INDEX // Branch Delay Slot
     bcf           [!c1], revert_spec_cindex
     nop           // Branch Delay Slot    
 
@@ -73,3 +79,17 @@ revert_spec_cindex:
 
     nop.e
     nop
+
+bubble_to_next_stage:
+    seq           c1, r1[6:2], STAGE_3
+    bcf           [!c1], exit
+    nop           // Branch Delay Slot
+
+    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS)
+    
+    nop.e
+    nop
+
+
+

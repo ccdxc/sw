@@ -7,13 +7,14 @@ struct req_tx_sqsge_process_k_t k;
 
 #define SGE_TO_LKEY_T struct req_tx_sge_to_lkey_info_t
 #define SQCB_WRITE_BACK_T struct req_tx_sqcb_write_back_info_t
+#define WQE_TO_SGE_T struct req_tx_wqe_to_sge_info_t
 
 #define LOG_PAGE_SIZE  10
 
 %%
     .param    req_tx_sqlkey_process
-    //.param    req_tx_add_headers_process
     .param    req_tx_write_back_process
+    .param    req_tx_sqsge_iterate_process
 
 .align
 req_tx_sqsge_process:
@@ -74,8 +75,6 @@ sge_loop:
     slt            c3, 1, k.args.num_valid_sges
    
     setcf          c4, [!c2 & c3 & c7]
-    // set dma_cmd_eop in last dma cmd for the pkt
-    CAPRI_SET_FIELD_C(r7, SGE_TO_LKEY_T, dma_cmd_eop, 1, !c4)
 
     GET_NUM_PAGES(r6, r4, LOG_PAGE_SIZE, r5, r4)
 
@@ -116,8 +115,8 @@ sge_loop:
     //       (num_valid_sges > 1) &&
     //       (sge_index == 0)
     bcf            [c4], sge_loop
-    // sge_index = 1
-    setcf.c1       c7, [!c0] // branch delay slot
+    // sge_index = 1, if looping
+    setcf.c4       c7, [!c0] // branch delay slot
 
     // if (index == num_valid_sges)
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
@@ -130,9 +129,6 @@ sge_loop:
     // current_sge_offset = 0
     add.c1         r2, r0, r0
 
-    // if (index == num_valid_sges) last = TRUE else last = FALSE;
-    cmov           r3, c1, 1, 0
-
     // else
 
     // current_sge_id = k.args.current_sge_id + sge_index
@@ -141,8 +137,17 @@ sge_loop:
     // in_progress = TRUE
     cmov           r4, c1, 0, 1
 
+    bcf            [!c2 & !c1], iterate_sges
     // num_sges = k.args.current_sge_id + k.args.num_valid_sges
-    add            r5, k.args.current_sge_id, k.args.num_valid_sges
+    add            r5, k.args.current_sge_id, k.args.num_valid_sges // Branch Delay Slot
+
+    // Get Table 0/1 arg base pointer as it was modified to 0/1 K base
+    CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(req_tx_phv_t, r7, c7)
+    // set dma_cmd_eop in last dma cmd for pkt, if no more sges to read
+    CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, dma_cmd_eop, 1)
+
+    // if (index == num_valid_sges) last = TRUE else last = FALSE;
+    cmov           r3, c1, 1, 0
 
     CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, in_progress, r4)
@@ -154,19 +159,54 @@ sge_loop:
     CAPRI_SET_FIELD_RANGE(r7, SQCB_WRITE_BACK_T, op.send_wr.imm_data, op.send_wr.inv_key, k.{args.imm_data...args.inv_key})
     // rest of the fields are initialized to default
 
-#if 0 //moved this piece code to previous stage sqwqe process
-    //SQCB1_ADDR_GET(r1)
-    //CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
-    //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    mfspr          r1, spr_mpuid
+    seq            c1, r1[6:2], STAGE_3
 
-    SQCB0_ADDR_GET(r1)
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
+
+    bcf            [c1], write_back
+    SQCB0_ADDR_GET(r1) // Branch Delay Slot
+
+write_back_mpu_only:
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r1)
+ 
+    nop.e
+    nop
+
+write_back:
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
-#endif
-    //only set the valid bits here
-    CAPRI_SET_TABLE_3_VALID(1)
 
     nop.e
     nop
+
+iterate_sges:
+    // increment dma_cmd_start index by num of DMA cmds consumed for 2 SGEs per pass
+    add            r4, k.args.dma_cmd_start_index, (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
+    // Error if there are no dma cmd space to compose
+    beqi           r4, REQ_TX_DMA_CMD_PYLD_BASE_END, err_no_dma_cmds
+    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7) // Branch Delay Slot
+    
+    CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, in_progress, inv_key, k.{args.in_progress...args.inv_key})
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, current_sge_id, r1)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, current_sge_offset, r2)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, remaining_payload_bytes, r3)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, r4)
+    sub            r5, k.args.num_valid_sges, 2 
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, num_valid_sges, r5)
+
+    mfspr          r1, spr_tbladdr
+    add            r1, r1, 2, LOG_SIZEOF_SGE_T
+
+    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_iterate_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r1)
+
+end:
+    nop.e
+    nop
+
+err_no_dma_cmds:
+    nop.e
+    nop
+

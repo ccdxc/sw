@@ -26,10 +26,7 @@ skip_credit_flag_update:
     tblwr          d.cb1_busy, 0
 
     CAPRI_SET_TABLE_0_VALID(0)
-    nop.e
-    nop
-
-chk_bktrack:
+    phvwr  p.common.p4_intr_global_drop, 1
 
     nop.e
     nop

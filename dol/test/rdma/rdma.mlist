@@ -33,6 +33,14 @@ modules:
         ignore  : False
  
     - module:
+        name    : RDMA_TX_SEND_ONLY_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_4sges
+        spec    : req_tx_send_only_4sges.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_FIRST_LAST
         enable  : True
         package : test.rdma
@@ -112,6 +120,14 @@ modules:
        spec    : req_tx_send_first_mid_last_inv.testspec
        ignore  : False
 
+    #- module:
+    #    name    : RDMA_TX_SEND_FIRST_MID_LAST_4SGES
+    #    enable  : True
+    #    package : test.rdma
+    #    module  : req_tx_send_first_mid_last_4sges
+    #    spec    : req_tx_send_first_mid_last_4sges.testspec
+    #    ignore  : False
+ 
     - module:
         name    : RDMA_TX_WRITE_ONLY
         enable  : True

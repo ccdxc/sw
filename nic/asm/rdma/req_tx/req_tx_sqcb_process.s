@@ -17,7 +17,7 @@ struct rdma_stage0_table_k k;
 %%
     .param    req_tx_sqpt_process
     .param    req_tx_sqwqe_process
-    .param    req_tx_sqsge_process
+    .param    req_tx_sqsge_iterate_process
     .param    req_tx_sqcb1_process
     .param    req_tx_bktrack_sqcb1_process
     //.param    req_tx_add_headers_process
@@ -30,8 +30,11 @@ req_tx_sqcb_process:
     seq            c1, r7[MAX_SQ_HOST_RINGS-1:0], r0
     bcf            [c1], all_rings_empty
 
+    seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0 // Branch Delay Slot
+    bcf            [!c1], process_recirc
+    
     // copy intrinsic to global
-    add            r1, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
+    add            r1, r0, offsetof(struct phv_, common_global_global_data) //Branch Delay Slot
 
     // enable below code after spr_tbladdr special purpose register is available in capsim
     #mfspr         r1, spr_tbladdr
@@ -240,14 +243,14 @@ in_progress:
     add            r4, r0, d.log_pmtu
     sllv           r4, 1, r4
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, remaining_payload_bytes, r4)
-    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_DMA_CMD_PAYLOAD_BASE)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_DMA_CMD_PYLD_BASE)
     //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, wqe_addr, d.curr_wqe_ptr)
     //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, first, 0)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, op_type, d.curr_op_type)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_iterate_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
@@ -279,16 +282,19 @@ in_progress:
     //CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
     //CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
 
-    #doing these steps to aid sqsge process next stage
-    //add    r1, CB_UNIT_SIZE_BYTES, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, 0
-    //CAPRI_GET_TABLE_2_K_NO_VALID(req_tx_phv_t, r7)
-    //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    nop.e
+    nop
 
-    CAPRI_GET_TABLE_3_K_NO_VALID(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR)
+process_recirc:
+    seq            c1, CAPRI_APP_DATA_RECIRC_REASON, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
+    bcf            [c1], process_sge_recirc
+    phvwr          p.common.p4_intr_recirc, 0 // Branch Delay Slot
+    
+    nop.e
+    nop
 
+process_sge_recirc:
+    // nothing to be done here, table 3 is programmed to execute req_tx_sqsge_process
     nop.e
     nop
 

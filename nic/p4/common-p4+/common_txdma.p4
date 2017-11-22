@@ -548,6 +548,8 @@ action tx_table_s0_t0_cfg_action(data0, data1,
     modify_field(app_header_scratch.table1_valid, app_header.table1_valid);
     modify_field(app_header_scratch.table2_valid, app_header.table2_valid);
     modify_field(app_header_scratch.table3_valid, app_header.table3_valid);
+
+    modify_field(app_header_scratch.app_data1, app_header.app_data1);
 }
 
 
