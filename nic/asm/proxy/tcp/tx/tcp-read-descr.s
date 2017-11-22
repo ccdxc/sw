@@ -17,7 +17,7 @@ struct s3_t0_read_descr_read_descr_d d;
 
 %%
     .align
-    .param          tcp_tx_process_start
+    .param          tcp_retx_process_start
 
 tcp_tx_read_descr_start:
 
@@ -30,8 +30,8 @@ tcp_tx_read_descr_start:
     phvwr           p.t0_s2s_next_addr, d.{next_addr}.dx
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                        tcp_tx_process_start,
+                        tcp_retx_process_start,
                         k.common_phv_qstate_addr,
-                        TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
+                        TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
     nop

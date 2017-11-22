@@ -101,7 +101,7 @@ struct s3_t0_tcp_fra_k k;
 struct s3_t0_tcp_fra_tcp_fra_d d;
 
 %%
-    .param          tcp_rx_cc_stage4_start
+    .param          tcp_rx_s4_bubble_start
     .align
 tcp_rx_fra_stage3_start:
     CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
@@ -157,7 +157,7 @@ no_do_lost:
     bcf         [c1 | c2], no_clear_sacked_out
     nop
     /* tp->sack.sacked_out = 0 */
-     phvwr      p.s4_s2s_sacked_out, r0
+     //phvwr      p.s4_s2s_sacked_out, r0
 no_clear_sacked_out:
     /* c1 = tp->tx.sacked_out */
     sne         c1, k.to_s3_sacked_out, r0
@@ -341,7 +341,7 @@ tcp_undo_cwnd_reduction:
     */
     slt         c1, d.snd_cwnd, d.loss_cwnd
     add.c1      r1, d.loss_cwnd, r0
-    phvwr.c1    p.to_s4_snd_cwnd, r1
+    //phvwr.c1    p.to_s4_snd_cwnd, r1
 
     /* if (tp->cc.prior_ssthresh > tp->cc.snd_ssthresh) { */
     slt         c1, d.prior_ssthresh, d.snd_ssthresh
@@ -375,13 +375,11 @@ switch_done_1:
 check_E:    
     
 flow_fra_process_done:
-    phvwr       p.to_s4_snd_ssthresh, d.snd_ssthresh
+    //phvwr       p.to_s4_snd_ssthresh, d.snd_ssthresh
     
 table_read_CC:
-    phvwr       p.s4_s2s_debug_stage4_7_thread, 0
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                    tcp_rx_cc_stage4_start, k.common_phv_qstate_addr,
-                    TCP_TCB_CC_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr       p.s6_s2s_debug_stage4_7_thread, 0
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_rx_s4_bubble_start)
     nop.e
     nop
 

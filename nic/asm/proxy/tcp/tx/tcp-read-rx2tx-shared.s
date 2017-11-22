@@ -23,10 +23,10 @@ tcp_tx_read_rx2tx_shared_process:
     phvwr           p.common_phv_fid, k.p4_txdma_intr_qid
     phvwr           p.common_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     phvwr           p.common_phv_snd_una, d.snd_una
-    phvwr           p.to_s5_rcv_nxt, d.rcv_nxt
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
     CAPRI_OPERAND_DEBUG(d.snd_wnd)
-    CAPRI_OPERAND_DEBUG(d.snd_cwnd)
-    phvwr           p.t0_s2s_snd_cwnd, d.snd_cwnd
+    //CAPRI_OPERAND_DEBUG(d.snd_cwnd)
+    //phvwr           p.t0_s2s_snd_cwnd, d.snd_cwnd
     phvwr           p.t0_s2s_snd_wnd, d.snd_wnd
     phvwr           p.t0_s2s_rto, d.rto
 

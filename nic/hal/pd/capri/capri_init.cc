@@ -486,7 +486,7 @@ capri_p4p_asm_init()
     symbols[45].params[0].name = RNMPR_SMALL_TABLE_BASE;
     symbols[45].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
-    symbols[46].name = "tcp-tx.bin";
+    symbols[46].name = "tcp-retx.bin";
     symbols[46].num_params = 2;
     symbols[46].params[0].name = RNMDR_GC_TABLE_BASE;
     symbols[46].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC);

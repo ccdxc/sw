@@ -12,8 +12,8 @@
 #include "defines.h"
 
 struct phv_ p    ;
-struct s5_t0_tso_k k    ;
-struct s5_t0_tso_tso_d d    ;
+struct s6_t0_tcp_tx_k k    ;
+struct s6_t0_tcp_tx_tso_d d    ;
 
 
 %%
@@ -23,7 +23,7 @@ struct s5_t0_tso_tso_d d    ;
 tcp_tso_process_start:
     /* check SESQ for pending data to be transmitted */
     sne             c6, k.common_phv_debug_dol_dont_tx, r0
-    or              r1, k.to_s5_pending_tso_data, k.to_s5_pending_tso_retx
+    or              r1, k.to_s6_pending_tso_data, k.to_s6_pending_tso_retx
     or              r1, r1, k.common_phv_pending_ack_send
     sne             c1, r1, r0
     bal.c1          r7, tcp_write_xmit
@@ -35,7 +35,7 @@ tcp_write_xmit:
     seq             c1, k.common_phv_pending_ack_send, 1
     bcf             [c1], dma_cmd_intrinsic
 
-    seq             c1, k.to_s5_xmit_cursor_addr, r0
+    seq             c1, k.to_s6_xmit_cursor_addr, r0
     bcf             [c1], flow_tso_process_done
     nop
 
@@ -69,7 +69,7 @@ dma_cmd_tcp_header:
     phvwr           p.tcp_header_source_port, d.source_port
     phvwr           p.tcp_header_dest_port, d.dest_port
     phvwr           p.tcp_header_seq_no, k.t0_s2s_snd_nxt
-    phvwr           p.tcp_header_ack_no, k.to_s5_rcv_nxt
+    phvwr           p.tcp_header_ack_no, k.to_s6_rcv_nxt
     phvwr           p.tcp_header_data_ofs, 5
     phvwr           p.tcp_header_flags, TCPHDR_ACK
     phvwr           p.tcp_header_window, k.t0_s2s_snd_wnd
@@ -78,7 +78,7 @@ dma_cmd_tcp_header:
     CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_header_urg)
 
 dma_cmd_data:
-    seq             c2, k.to_s5_xmit_cursor_addr, r0
+    seq             c2, k.to_s6_xmit_cursor_addr, r0
     /* r6 has tcp data len being sent */
     addi            r6, r0, 0
     /* We can end up taking this branch if we ended up here
@@ -92,12 +92,12 @@ dma_cmd_data:
 
     /* Write A = xmit_cursor_addr + xmit_cursor_offset */
 
-    add             r2, k.to_s5_xmit_cursor_addr, k.to_s5_xmit_cursor_offset
+    add             r2, k.to_s6_xmit_cursor_addr, k.to_s6_xmit_cursor_offset
 
     /* Write L = min(mss, descriptor entry len) */
-    slt             c1, k.to_s5_rcv_mss, k.to_s5_xmit_cursor_len
-    add.c1          r6, k.to_s5_rcv_mss, r0
-    add.!c1         r6, k.to_s5_xmit_cursor_len, r0
+    slt             c1, k.to_s6_rcv_mss, k.to_s6_xmit_cursor_len
+    add.c1          r6, k.to_s6_rcv_mss, r0
+    add.!c1         r6, k.to_s6_xmit_cursor_len, r0
 
     bcf             [c6], bytes_sent_stats_update_start
     nop
@@ -107,25 +107,25 @@ dma_cmd_data:
 bytes_sent_stats_update_start:
     CAPRI_STATS_INC(bytes_sent, 16, r6, d.bytes_sent)
 bytes_sent_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.bytes_sent, p.to_s6_bytes_sent)
+    CAPRI_STATS_INC_UPDATE(r1, d.bytes_sent, p.to_s7_bytes_sent)
 bytes_sent_stats_update_end:
 
 pkts_sent_stats_update_start:
     CAPRI_STATS_INC(pkts_sent, 16, 1, d.pkts_sent)
 pkts_sent_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.pkts_sent, p.to_s6_pkts_sent)
+    CAPRI_STATS_INC_UPDATE(r1, d.pkts_sent, p.to_s7_pkts_sent)
 pkts_sent_stats_update_end:
 
 debug_num_phv_to_pkt_stats_update_start:
     CAPRI_STATS_INC(debug_num_phv_to_pkt, 16, 2, d.debug_num_phv_to_pkt)
 debug_num_phv_to_pkt_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.debug_num_phv_to_pkt, p.to_s6_debug_num_phv_to_pkt)
+    CAPRI_STATS_INC_UPDATE(r1, d.debug_num_phv_to_pkt, p.to_s7_debug_num_phv_to_pkt)
 debug_num_phv_to_pkt_stats_update_end:
 
 debug_num_mem_to_pkt_stats_update_start:
     CAPRI_STATS_INC(debug_num_mem_to_pkt, 16, 2, d.debug_num_mem_to_pkt)
 debug_num_mem_to_pkt_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.debug_num_mem_to_pkt, p.to_s6_debug_num_mem_to_pkt)
+    CAPRI_STATS_INC_UPDATE(r1, d.debug_num_mem_to_pkt, p.to_s7_debug_num_mem_to_pkt)
 debug_num_mem_to_pkt_stats_update_end:
     bcf             [c6], flow_tso_process_done
     nop
@@ -133,7 +133,7 @@ debug_num_mem_to_pkt_stats_update_end:
      * if (tcp_in_cwnd_reduction(tp))
      *    tp->cc.prr_out += 1
      */
-    and             r1, k.to_s5_ca_state, (TCPF_CA_CWR | TCPF_CA_Recovery)
+    and             r1, k.to_s6_ca_state, (TCPF_CA_CWR | TCPF_CA_Recovery)
     seq             c1, r1, r0
     addi.!c1        r1, r0, 1
     tbladd.!c1      d.prr_out, r1
@@ -154,21 +154,21 @@ move_xmit_cursor:
     /* This clearing of xmit_cursor_addr will cause read of retx_xmit_cursor for
      * next pass after tcp-tx stage
      */
-    phvwri          p.to_s5_xmit_cursor_addr, 0 // TODO : which stage needs this?
+    phvwri          p.to_s6_xmit_cursor_addr, 0 // TODO : which stage needs this?
     b               tcp_read_xmit_cursor
     nop
 
 
 update_xmit_cursor:
     /* Move offset of descriptor entry by xmit len */
-    add             r4, k.to_s5_xmit_cursor_offset, r6
+    add             r4, k.to_s6_xmit_cursor_offset, r6
 
     addi            r2, r0, NIC_DESC_ENTRY_OFF_OFFSET
     //add             r1, d.retx_xmit_cursor, r2
     //memwr.h         r1, r4
 
     /* Decrement length of descriptor entry by xmit len */
-    sub             r4, k.to_s5_xmit_cursor_len, r6
+    sub             r4, k.to_s6_xmit_cursor_len, r6
 
     addi            r2, r0, NIC_DESC_ENTRY_LEN_OFFSET
     add             r1, d.retx_xmit_cursor, r2

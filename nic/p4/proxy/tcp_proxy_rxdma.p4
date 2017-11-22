@@ -26,7 +26,7 @@
 #define rx_table_s3_t2 s3_t2_rpage_alloc
 #define rx_table_s3_t3 s3_t3_l7_rdesc_alloc
 
-#define rx_table_s4_t0 s4_t0_tcp_cc
+//#define rx_table_s4_t0 s4_t0_tcp_cc
 
 #define rx_table_s5_t0 s5_t0_tcp_fc
 
@@ -55,7 +55,7 @@
 #define rx_table_s3_t2_action rpage_alloc
 #define rx_table_s3_t3_action l7_rdesc_alloc
 
-#define rx_table_s4_t0_action tcp_cc
+//#define rx_table_s4_t0_action tcp_cc
 
 #define rx_table_s5_t0_action tcp_fc
 
@@ -244,6 +244,7 @@ header_type rpage_alloc_d_t {
     }
 }
 
+#if 0
 // d for stage 4 table 0
 header_type tcp_cc_d_t {
     fields {
@@ -265,6 +266,7 @@ header_type tcp_cc_d_t {
         is_cwnd_limited         : 8;
     }
 }
+#endif
 
 // d for stage 5 table 0
 header_type tcp_fc_d_t {
@@ -453,6 +455,7 @@ header_type s3_t2_s2s_phv_t {
     }
 }
 
+#if 0
 header_type s4_s2s_phv_t {
     fields {
         payload_len             : 16;
@@ -465,6 +468,7 @@ header_type s4_s2s_phv_t {
         lost_out                : 8;
     }
 }
+#endif
 
 header_type s6_s2s_phv_t {
     fields {
@@ -500,8 +504,8 @@ metadata read_rnmdr_d_t l7_read_rnmdr_d;
 metadata read_serq_d_t read_serq_d;
 @pragma scratch_metadata
 metadata tcp_fra_d_t tcp_fra_d;
-@pragma scratch_metadata
-metadata tcp_cc_d_t tcp_cc_d;
+//@pragma scratch_metadata
+//metadata tcp_cc_d_t tcp_cc_d;
 @pragma scratch_metadata
 metadata tcp_fc_d_t tcp_fc_d;
 @pragma scratch_metadata
@@ -578,8 +582,8 @@ metadata s1_s2s_phv_t s1_s2s_scratch;
 metadata s3_t1_s2s_phv_t s3_t1_s2s_scratch;
 @pragma scratch_metadata
 metadata s3_t2_s2s_phv_t s3_t2_s2s_scratch;
-@pragma scratch_metadata
-metadata s4_s2s_phv_t s4_s2s_scratch;
+//@pragma scratch_metadata
+//metadata s4_s2s_phv_t s4_s2s_scratch;
 @pragma scratch_metadata
 metadata s6_s2s_phv_t s6_s2s_scratch;
 @pragma scratch_metadata
@@ -587,9 +591,9 @@ metadata s6_t2_s2s_phv_t s6_t2_s2s_scratch;
 @pragma scratch_metadata
 metadata common_global_phv_t common_global_scratch;
 
-@pragma pa_header_union ingress common_t0_s2s s4_s2s s6_s2s
+@pragma pa_header_union ingress common_t0_s2s s6_s2s
 metadata s1_s2s_phv_t s1_s2s;
-metadata s4_s2s_phv_t s4_s2s;
+//metadata s4_s2s_phv_t s4_s2s;
 metadata s6_s2s_phv_t s6_s2s;
 
 @pragma pa_header_union ingress common_t1_s2s
@@ -984,6 +988,7 @@ action l7_rdesc_alloc(desc, pad) {
 }
 
 
+#if 0
 /*
  * Stage 4 table 0 action
  */
@@ -1032,6 +1037,7 @@ action tcp_cc(curr_ts, prr_delivered, last_time, epoch_start, cnt,
     modify_field(tcp_cc_d.max_packets_out, max_packets_out);
     modify_field(tcp_cc_d.is_cwnd_limited, is_cwnd_limited);
 }
+#endif
 
 /*
  * Stage 5 table 0 action

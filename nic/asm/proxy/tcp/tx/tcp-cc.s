@@ -1,5 +1,5 @@
 /*
- *  Implements the CC stage of the RxDMA P4+ pipeline
+ *  Implements the CC stage of the TxDMA P4+ pipeline
  */
 
 
@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
     
 struct phv_ p;
-struct s4_t0_tcp_cc_k k;
-struct s4_t0_tcp_cc_tcp_cc_d d;
+struct s5_t0_tcp_cc_k k;
+struct s5_t0_tcp_cc_tcp_cc_d d;
     
 %%
     .param          tcp_rx_fc_stage5_start

@@ -45,7 +45,8 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-read-descr.s \
     $(SRC_DIR)/tcp-s3-bubble.s \
     $(SRC_DIR)/tcp-sesq-consume.s \
-    $(SRC_DIR)/tcp-tx.s \
+    $(SRC_DIR)/tcp-retx.s \
+    $(SRC_DIR)/tcp-cc-and-xmit.s \
     $(SRC_DIR)/tcp-tso.s \
     $(SRC_DIR)/tcp-tx-stats.s
 
