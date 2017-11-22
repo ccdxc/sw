@@ -3,6 +3,7 @@
 
 #include <list>
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 using namespace std;
 
 namespace hal {
@@ -24,9 +25,14 @@ private:
     std::list<FlowEntry*> flow_entry_list_; // non-anchor flow entries.             
     std::list<FlowEntry*> anchor_list_;     // anchors go only here
 
-public:
     FlowHintGroup(uint32_t hint_bits, FlowSpineEntry *fs_entry);
     ~FlowHintGroup();
+public:
+    static FlowHintGroup *factory(uint32_t hint_bits, 
+                                  FlowSpineEntry *fs_entry,
+                                  uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_HINT_GROUP);
+    static void destroy(FlowHintGroup *fhg, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_HINT_GROUP);
 
     void add_flow_entry(FlowEntry *f_entry);
     void del_flow_entry(FlowEntry *f_entry);

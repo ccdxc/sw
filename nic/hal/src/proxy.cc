@@ -334,7 +334,7 @@ proxy_factory(types::ProxyType type)
     HAL_ASSERT(proxy->flow_ht_ != NULL);
 
     // Instantiate QID indexer
-    proxy->qid_idxr_ = new hal::utils::indexer(HAL_MAX_QID);
+    proxy->qid_idxr_ = hal::utils::indexer::factory(HAL_MAX_QID);
     HAL_ASSERT(NULL != proxy->qid_idxr_);
 
    // initialize default params

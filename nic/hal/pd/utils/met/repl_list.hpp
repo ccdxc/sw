@@ -2,6 +2,7 @@
 #define __REPL_LIST_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 
 
 namespace hal {
@@ -29,9 +30,13 @@ private:
 
     Met             *met_;                      // Back Pointer to MET
 
-public:
     ReplList(uint32_t repl_tbl_index, Met *met);
     ~ReplList();
+public:
+    static ReplList *factory(uint32_t repl_tbl_index, Met *met,
+                             uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_LIST);
+    static void destroy(ReplList *repl_list, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_LIST);
 
     // Getters & Setters
     uint32_t get_repl_tbl_index() { return repl_tbl_index_; }

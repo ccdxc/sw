@@ -6,6 +6,46 @@
 
 using hal::pd::utils::Flow;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+Flow *
+Flow::factory(std::string table_name, uint32_t table_id,
+           uint32_t oflow_table_id,
+           uint32_t flow_hash_capacity,             // 2M
+           uint32_t flow_coll_capacity,             // 16k
+           uint32_t key_len,                   
+           uint32_t data_len,                 
+           uint32_t num_hints_per_flow_entry,
+           Flow::HashPoly hash_poly,
+           uint32_t mtrack_id)
+{
+    void    *mem = NULL;
+    Flow    *flow = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(Flow));
+    if (!mem) {
+        return NULL;
+    }
+
+    flow = new (mem) Flow(table_name, table_id, oflow_table_id, 
+                          flow_hash_capacity, flow_coll_capacity, key_len,
+                          data_len, num_hints_per_flow_entry, hash_poly);
+    return flow;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+Flow::destroy(Flow *re, uint32_t mtrack_id) 
+{
+    if (re) {
+        re->~Flow();
+        HAL_FREE(mtrack_id, re);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Constructor - Flow
 // ---------------------------------------------------------------------------
@@ -42,10 +82,16 @@ Flow::Flow(std::string table_name, uint32_t table_id,
                     hint_len_, flow_hash_capacity_, flow_coll_capacity);
 
     // Allocate indexer for Flow Collision Table, skip zero
-    flow_coll_indexer_ = new indexer(flow_coll_capacity_, true, true);
+    // flow_coll_indexer_ = new indexer(flow_coll_capacity_, true, true);
+    flow_coll_indexer_ = indexer::factory(flow_coll_capacity_, true, 
+                                          true, 
+                                          HAL_MEM_ALLOC_FLOW_COLL_INDEXER);
 
     // Assumption: Max. number of flow entries will be hash table cap.
-    flow_entry_indexer_ = new indexer(flow_hash_capacity_);
+    // flow_entry_indexer_ = new indexer(flow_hash_capacity_);
+    flow_entry_indexer_ = indexer::factory(flow_hash_capacity_, true,
+                                           true,
+                                           HAL_MEM_ALLOC_FLOW_ENTRY_INDEXER);
 
     // Assumption: Delayed Delete is disabled.
     enable_delayed_del_ = FALSE;
@@ -60,7 +106,9 @@ Flow::Flow(std::string table_name, uint32_t table_id,
             __FUNCTION__, hwkey_len_, hwdata_len_);
 
     // Initialize for Stats
-    stats_ = new uint64_t[STATS_MAX]();
+    // stats_ = new uint64_t[STATS_MAX]();
+    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_FLOW_STATS,
+                                    sizeof(uint64_t) * STATS_MAX);
 }
            
 // ---------------------------------------------------------------------------
@@ -68,8 +116,10 @@ Flow::Flow(std::string table_name, uint32_t table_id,
 // ---------------------------------------------------------------------------
 Flow::~Flow()
 {
-    delete flow_coll_indexer_;
-    delete flow_entry_indexer_;
+    // delete flow_coll_indexer_;
+    // delete flow_entry_indexer_;
+    indexer::destroy(flow_coll_indexer_);
+    indexer::destroy(flow_entry_indexer_);
 }
 
 // ---------------------------------------------------------------------------
@@ -130,20 +180,25 @@ Flow::calc_hash_(void *key, void *data)
     void                            *hwkey = NULL;
 
     // create a flow entry
-    entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, false);
+    // entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, false);
+    entry = FlowEntry::factory(key, key_len_, data, data_len_, 
+                               hwkey_len_, false);
 
     // call P4 API to get hw key
-    hwkey = ::operator new(hwkey_len_);
-	memset(hwkey, 0, hwkey_len_);
+    // hwkey = ::operator new(hwkey_len_);
+	// memset(hwkey, 0, hwkey_len_);
+    hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey_len_);
 
     rs = entry->form_hw_key(table_id_, hwkey);
 	if (rs != HAL_RET_OK) HAL_ASSERT(0);
 
     // cal. hash
     hash_val = generate_hash_(hwkey, hwkey_len_, false);
-    ::operator delete(hwkey);
+    // ::operator delete(hwkey);
+    HAL_FREE(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey);
 
-    delete entry;
+    // delete entry;
+    FlowEntry::destroy(entry);
 
     return hash_val;
 }
@@ -169,18 +224,22 @@ Flow::insert(void *key, void *data, uint32_t *index)
                     __FUNCTION__, fe_idx);
 
     // create a flow entry
-    entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, true);
+    // entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, true);
+    entry = FlowEntry::factory(key, key_len_, data, data_len_, 
+                               hwkey_len_, true);
 
     // call P4 API to get hw key
-    hwkey = ::operator new(hwkey_len_);
-	memset(hwkey, 0, hwkey_len_);
+    // hwkey = ::operator new(hwkey_len_);
+	// memset(hwkey, 0, hwkey_len_);
+    hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey_len_);
 
     rs = entry->form_hw_key(table_id_, hwkey);
 	if (rs != HAL_RET_OK) goto end;
 
     // cal. hash
     hash_val = generate_hash_(hwkey, hwkey_len_);
-    ::operator delete(hwkey);
+    // ::operator delete(hwkey);
+    HAL_FREE(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey);
 
     entry->set_hash_val(hash_val);
 
@@ -204,14 +263,16 @@ Flow::insert(void *key, void *data, uint32_t *index)
     } else {
         // flow table entry doesnt exist
         HAL_TRACE_DEBUG("Flow::{}: New FT Entry ...", __FUNCTION__);
-        ft_entry = new FlowTableEntry(ft_bits, this);
+        // ft_entry = new FlowTableEntry(ft_bits, this);
+        ft_entry = FlowTableEntry::factory(ft_bits, this);
         rs = ft_entry->insert(entry);
 
         // If insert is SUCCESS, put ft_entry into the map
         if (rs == HAL_RET_OK) {
             flow_table_[ft_bits] = ft_entry;
         } else {
-            delete ft_entry;
+            // delete ft_entry;
+            FlowTableEntry::destroy(ft_entry);
         }
     }
 
@@ -227,7 +288,8 @@ Flow::insert(void *key, void *data, uint32_t *index)
         HAL_TRACE_DEBUG("Flow::{}: Insert FAIL ...", __FUNCTION__);
 
         // delete flow entry
-        delete entry;
+        // delete entry;
+        FlowEntry::destroy(entry);
 
         // free index alloced
 		rs1 = free_flow_entry_index_(fe_idx);
@@ -298,7 +360,8 @@ Flow::remove(uint32_t index)
         if (rs == HAL_RET_OK) {
 
             // Free the flow entry
-            delete f_entry;
+            // delete f_entry;
+            FlowEntry::destroy(f_entry);
             // Remove it from Flow entry map.
             flow_entry_map_.erase(index);
             // Free the index in indexer
@@ -310,7 +373,8 @@ Flow::remove(uint32_t index)
                 // Remove from FTE map
                 flow_table_.erase(ft_entry->get_ft_bits());
                 // Free up the Flow Table Entry.
-                delete ft_entry;
+                // delete ft_entry;
+                FlowTableEntry::destroy(ft_entry);
             }
 
         }

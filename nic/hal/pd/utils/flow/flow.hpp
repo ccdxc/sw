@@ -50,6 +50,7 @@
 #include <queue>
 #include "nic/utils/indexer/indexer.hpp"
 #include <boost/crc.hpp>
+#include "nic/include/hal_mem.hpp"
 
 using namespace std;
 using hal::utils::indexer;
@@ -155,9 +156,6 @@ private:
         ITERATE
     };
     void stats_update(api ap, hal_ret_t rs); 
-public:
-
-
     // Public Methods
     Flow(std::string table_name, uint32_t table_id, uint32_t oflow_table_id,
             uint32_t flow_hash_capacity,         
@@ -169,6 +167,15 @@ public:
             Flow::HashPoly hash_poly = HASH_POLY0);
     ~Flow();
 
+public:
+    static Flow *factory(std::string table_name, uint32_t table_id, 
+                         uint32_t oflow_table_id, uint32_t flow_hash_capacity,
+                         uint32_t oflow_capacity, uint32_t flow_key_len,
+                         uint32_t flow_data_len, uint32_t num_hints_per_flow_entry = 6,
+                         Flow::HashPoly hash_poly = HASH_POLY0,
+                         uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW);
+    static void destroy(Flow *flow,
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW);
 
     // Debug Info
     uint32_t table_id(void) { return table_id_; }

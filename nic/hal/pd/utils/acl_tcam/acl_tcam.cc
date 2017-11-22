@@ -148,9 +148,9 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
 
     // Allocate a handle and the tcam_entry
     handle = alloc_handle_();
-    tentry = new TcamEntry(key, key_mask, swkey_len_, data, swdata_len_,
-                           TCAM_ENTRY_INVALID_INDEX,
-                           priority = priority);
+    tentry = TcamEntry::factory(key, key_mask, swkey_len_, data, swdata_len_,
+                                TCAM_ENTRY_INVALID_INDEX,
+                                priority = priority);
 
     // Find the range of indexes allowed for this priority
     // by figuring out the prev and next priority entry indexes
@@ -245,7 +245,7 @@ end:
         HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, move_chain);
     }
     if (ret != HAL_RET_OK) {
-        tentry ? delete tentry : HAL_NOP;
+        tentry ? TcamEntry::destroy(tentry) : HAL_NOP;
     }
     return ret;
 }
@@ -324,7 +324,8 @@ acl_tcam::remove(acl_tcam_entry_handle_t handle)
 
     // Clean up the software data structures
     clear_entry_(tentry);
-    delete itr->second;
+    TcamEntry::destroy(tentry);
+    // delete itr->second;
     tcam_entry_map_.erase(itr);
 
     return ret;

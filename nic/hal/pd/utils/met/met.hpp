@@ -14,6 +14,7 @@
 #include <map>
 #include "nic/include/base.h"
 #include "nic/utils/indexer/indexer.hpp"
+#include "nic/include/hal_mem.hpp"
 
 
 using hal::utils::indexer;
@@ -73,12 +74,19 @@ private:
         ITERATE
     };
     void stats_update(api ap, hal_ret_t rs); 
-public:
 
     Met(std::string table_name, uint32_t table_id,
         uint32_t repl_table_capacity, uint32_t num_repl_entries,
         uint32_t repl_entry_data_len);
     ~Met();
+
+public:
+    static Met *factory(std::string table_name, uint32_t table_id,
+                        uint32_t repl_table_capacity, uint32_t num_repl_entries,
+                        uint32_t repl_entry_data_len,
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_MET);
+    static void destroy(Met *met, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_MET);
 
     // Debug Info
     uint32_t table_id(void) { return table_id_; }

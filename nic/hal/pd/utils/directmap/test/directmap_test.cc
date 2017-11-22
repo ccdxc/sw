@@ -51,7 +51,7 @@ typedef struct dm_data_s {
 TEST_F(dm_test, test1) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
@@ -59,7 +59,7 @@ TEST_F(dm_test, test1) {
     dm.actionid = 1;
 
     hal_ret_t rt;
-    rt = test_dm.insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
 }
@@ -75,7 +75,7 @@ TEST_F(dm_test, test1) {
 TEST_F(dm_test, test2) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
@@ -84,16 +84,16 @@ TEST_F(dm_test, test2) {
 
     hal_ret_t rt;
     for (uint32_t i = 0; i < 101; i++) {
-        rt = test_dm.insert(&dm, &index); 
+        rt = test_dm->insert(&dm, &index); 
         if (i < 100) {
             ASSERT_TRUE(rt == HAL_RET_OK);
         } else {
             ASSERT_TRUE(rt == HAL_RET_NO_RESOURCE);
             // Remove one entry and try to insert again
-            rt = test_dm.remove(99);
+            rt = test_dm->remove(99);
             ASSERT_TRUE(rt == HAL_RET_OK);
 
-            rt = test_dm.insert(&dm, &index); 
+            rt = test_dm->insert(&dm, &index); 
             ASSERT_TRUE(rt == HAL_RET_OK);
         }
     }
@@ -111,7 +111,7 @@ TEST_F(dm_test, test2) {
 TEST_F(dm_test, test3) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
@@ -120,19 +120,19 @@ TEST_F(dm_test, test3) {
     dm.actionid = 1;
 
     hal_ret_t rt;
-    rt = test_dm.insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.update(index, &dm); 
+    rt = test_dm->update(index, &dm); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.update(index + 1, &dm); 
+    rt = test_dm->update(index + 1, &dm); 
     ASSERT_TRUE(rt == HAL_RET_ENTRY_NOT_FOUND);
 	
-    rt = test_dm.update(index + 1000, &dm); 
+    rt = test_dm->update(index + 1000, &dm); 
     ASSERT_TRUE(rt == HAL_RET_INVALID_ARG);
 
-    rt = test_dm.fetch_stats(&stats);
+    rt = test_dm->fetch_stats(&stats);
     ASSERT_TRUE(rt == HAL_RET_OK);
 
 #if 0
@@ -160,7 +160,7 @@ TEST_F(dm_test, test3) {
 TEST_F(dm_test, test4) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
@@ -168,22 +168,22 @@ TEST_F(dm_test, test4) {
     dm.actionid = 1;
 
     hal_ret_t rt;
-    rt = test_dm.insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.update(index, &dm); 
+    rt = test_dm->update(index, &dm); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.remove(index + 1);
+    rt = test_dm->remove(index + 1);
     ASSERT_TRUE(rt == HAL_RET_ENTRY_NOT_FOUND);
 	
-    rt = test_dm.remove(index + 1000);
+    rt = test_dm->remove(index + 1000);
     ASSERT_TRUE(rt == HAL_RET_INVALID_ARG);
 
-    rt = test_dm.remove(index);
+    rt = test_dm->remove(index);
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.remove(index);
+    rt = test_dm->remove(index);
     ASSERT_TRUE(rt == HAL_RET_ENTRY_NOT_FOUND);
 }
 
@@ -199,7 +199,7 @@ TEST_F(dm_test, test4) {
 TEST_F(dm_test, test5) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm, retr_dm;
@@ -207,19 +207,19 @@ TEST_F(dm_test, test5) {
     dm.actionid = 1;
 
     hal_ret_t rt;
-    rt = test_dm.insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.update(index, &dm); 
+    rt = test_dm->update(index, &dm); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.retrieve(index + 1, &retr_dm);
+    rt = test_dm->retrieve(index + 1, &retr_dm);
     ASSERT_TRUE(rt == HAL_RET_ENTRY_NOT_FOUND);
 	
-    rt = test_dm.retrieve(index + 1000, &retr_dm);
+    rt = test_dm->retrieve(index + 1000, &retr_dm);
     ASSERT_TRUE(rt == HAL_RET_INVALID_ARG);
 
-    rt = test_dm.retrieve(index, &retr_dm);
+    rt = test_dm->retrieve(index, &retr_dm);
     ASSERT_TRUE(rt == HAL_RET_OK);
 }
 
@@ -238,7 +238,7 @@ bool print_fn(uint32_t index, void *data, const void *cb_data)
 TEST_F(dm_test, test6) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
@@ -246,10 +246,10 @@ TEST_F(dm_test, test6) {
     dm.actionid = 1;
 
     hal_ret_t rt;
-    rt = test_dm.insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-	rt = test_dm.iterate(print_fn, NULL);
+	rt = test_dm->iterate(print_fn, NULL);
     ASSERT_TRUE(rt == HAL_RET_OK);
 }
 
@@ -266,7 +266,7 @@ TEST_F(dm_test, test6) {
 TEST_F(dm_test, test7) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 25,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 25,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
@@ -275,19 +275,19 @@ TEST_F(dm_test, test7) {
 
     hal_ret_t rt;
     for (uint32_t i = 0; i < 25; i++) {
-        rt = test_dm.insert(&dm, &index[i]); 
+        rt = test_dm->insert(&dm, &index[i]); 
 		ASSERT_TRUE(rt == HAL_RET_OK);
     }
     for (uint32_t i = 0; i < 25; i++) {
-        rt = test_dm.remove(index[i]); 
+        rt = test_dm->remove(index[i]); 
 		ASSERT_TRUE(rt == HAL_RET_OK);
     }
     for (uint32_t i = 0; i < 25; i++) {
-        rt = test_dm.insert(&dm, &index[i]); 
+        rt = test_dm->insert(&dm, &index[i]); 
 		ASSERT_TRUE(rt == HAL_RET_OK);
     }
     for (uint32_t i = 0; i < 25; i++) {
-        rt = test_dm.remove(index[i]); 
+        rt = test_dm->remove(index[i]); 
 		ASSERT_TRUE(rt == HAL_RET_OK);
     }
 
@@ -305,7 +305,7 @@ TEST_F(dm_test, test7) {
 TEST_F(dm_test, test8) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
@@ -313,22 +313,22 @@ TEST_F(dm_test, test8) {
     dm.actionid = 1;
 
     hal_ret_t rt;
-    rt = test_dm.insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.insert_withid(&dm, index+1); 
+    rt = test_dm->insert_withid(&dm, index+1); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.insert_withid(&dm, index+1); 
+    rt = test_dm->insert_withid(&dm, index+1); 
     ASSERT_TRUE(rt == HAL_RET_DUP_INS_FAIL);
 
-    rt = test_dm.remove(index); 
+    rt = test_dm->remove(index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.remove(index+1); 
+    rt = test_dm->remove(index+1); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.insert_withid(&dm, 100); 
+    rt = test_dm->insert_withid(&dm, 100); 
     ASSERT_TRUE(rt == HAL_RET_OOB);
 }
 
@@ -341,7 +341,7 @@ TEST_F(dm_test, test8) {
 TEST_F(dm_test, test9) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
@@ -351,50 +351,50 @@ TEST_F(dm_test, test9) {
 
     hal_ret_t rt;
     for (uint32_t i = 0; i < 101; i++) {
-        rt = test_dm.insert(&dm, &index); 
+        rt = test_dm->insert(&dm, &index); 
         if (i < 100) {
             ASSERT_TRUE(rt == HAL_RET_OK);
         } else {
             ASSERT_TRUE(rt == HAL_RET_NO_RESOURCE);
         }
     }
-    rt = test_dm.fetch_stats(&stats);
+    rt = test_dm->fetch_stats(&stats);
     ASSERT_TRUE(rt == HAL_RET_OK);
 
     ASSERT_TRUE(stats[DirectMap::STATS_INS_SUCCESS] == 100);
     ASSERT_TRUE(stats[DirectMap::STATS_INS_FAIL_NO_RES] == 1);
 
 
-    rt = test_dm.remove(index); 
+    rt = test_dm->remove(index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.insert_withid(&dm, index); 
+    rt = test_dm->insert_withid(&dm, index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.insert_withid(&dm, index); 
+    rt = test_dm->insert_withid(&dm, index); 
     ASSERT_TRUE(rt == HAL_RET_DUP_INS_FAIL);
 
-    rt = test_dm.insert_withid(&dm, 1000); 
+    rt = test_dm->insert_withid(&dm, 1000); 
     ASSERT_TRUE(rt == HAL_RET_OOB);
 
 
-    rt = test_dm.update(index, &dm); 
+    rt = test_dm->update(index, &dm); 
     ASSERT_TRUE(rt == HAL_RET_OK);
     
-    rt = test_dm.remove(index); 
+    rt = test_dm->remove(index); 
     ASSERT_TRUE(rt == HAL_RET_OK);
 
-    rt = test_dm.update(1000, &dm); 
+    rt = test_dm->update(1000, &dm); 
     ASSERT_TRUE(rt == HAL_RET_INVALID_ARG);
 
-    rt = test_dm.update(index, &dm); 
+    rt = test_dm->update(index, &dm); 
     ASSERT_TRUE(rt == HAL_RET_ENTRY_NOT_FOUND);
 
 
-    rt = test_dm.remove(1000); 
+    rt = test_dm->remove(1000); 
     ASSERT_TRUE(rt == HAL_RET_INVALID_ARG);
 
-    rt = test_dm.remove(index); 
+    rt = test_dm->remove(index); 
     ASSERT_TRUE(rt == HAL_RET_ENTRY_NOT_FOUND);
 
     ASSERT_TRUE(stats[DirectMap::STATS_INS_SUCCESS] == 100);
@@ -412,10 +412,10 @@ TEST_F(dm_test, test9) {
     HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, num_in_use:{}, "
                     "num_inserts:{}, num_insert_errors:{}, "
                     "num_deletes:{}, num_delete_errors:{}",
-                    test_dm.table_id(), test_dm.table_name(),
-                    test_dm.table_capacity(), test_dm.table_num_entries_in_use(),
-                    test_dm.table_num_inserts(), test_dm.table_num_insert_errors(),
-                    test_dm.table_num_deletes(), test_dm.table_num_delete_errors());
+                    test_dm->table_id(), test_dm->table_name(),
+                    test_dm->table_capacity(), test_dm->table_num_entries_in_use(),
+                    test_dm->table_num_inserts(), test_dm->table_num_insert_errors(),
+                    test_dm->table_num_deletes(), test_dm->table_num_delete_errors());
 }
 
 /*
@@ -424,7 +424,7 @@ TEST_F(dm_test, test9) {
  */
 TEST_F(dm_test, test10) {
     std::string table_name = "Twice_Nat";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_TWICE_NAT, 100,
+    DirectMap *test_dm = DirectMap::factory(table_name, P4TBL_ID_TWICE_NAT, 100,
             sizeof(twice_nat_actiondata), true, true);
 
     twice_nat_actiondata    data = { 0 };
@@ -437,58 +437,58 @@ TEST_F(dm_test, test10) {
     data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.l4_port = 10;
 
     // Insert an entry
-    ret = test_dm.insert(&data, &index);
+    ret = test_dm->insert(&data, &index);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete the entry
-    ret = test_dm.remove(0, &data);
+    ret = test_dm->remove(0, &data);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Insert an entry
-    ret = test_dm.insert(&data, &index);
+    ret = test_dm->insert(&data, &index);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Insert an entry
-    ret = test_dm.insert(&data, &index);
+    ret = test_dm->insert(&data, &index);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete an entry - Should not delete from HW & SW
-    ret = test_dm.remove(0, &data);
+    ret = test_dm->remove(0, &data);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete an entry - Should delete from HW
-    ret = test_dm.remove(0, &data);
+    ret = test_dm->remove(0, &data);
     HAL_TRACE_DEBUG("ret:{}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Insert with id
-    ret = test_dm.insert_withid(&data, 10);
+    ret = test_dm->insert_withid(&data, 10);
     ASSERT_TRUE(ret == HAL_RET_OK);
     // Insert with id
-    ret = test_dm.insert_withid(&data, 10);
+    ret = test_dm->insert_withid(&data, 10);
     ASSERT_TRUE(ret == HAL_RET_OK);
     // Delete
-    ret = test_dm.remove(0, &data);
+    ret = test_dm->remove(0, &data);
     ASSERT_TRUE(ret == HAL_RET_OK);
     // Delete
-    ret = test_dm.remove(0, &data);
+    ret = test_dm->remove(0, &data);
     HAL_TRACE_DEBUG("ret:{}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Insert
-    ret = test_dm.insert(&data, &index);
+    ret = test_dm->insert(&data, &index);
     ASSERT_TRUE(ret == HAL_RET_OK);
     // Insert with id
     data.actionid = 0;
-    ret = test_dm.insert_withid(&data, 20);
+    ret = test_dm->insert_withid(&data, 20);
     HAL_TRACE_DEBUG("ret:{}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
     // Delete
-    ret = test_dm.remove(0, &data);
+    ret = test_dm->remove(0, &data);
     ASSERT_TRUE(ret == HAL_RET_OK);
     // Delete
     data.actionid = TWICE_NAT_TWICE_NAT_REWRITE_INFO_ID;
-    ret = test_dm.remove(0, &data);
+    ret = test_dm->remove(0, &data);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 

@@ -2,6 +2,7 @@
 #define __REPL_TABLE_ENTRY_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 
 
 namespace hal {
@@ -33,10 +34,14 @@ private:
 
     ReplTableEntry  *prev_, *next_;			// linked list ptrs
 
-public:
-
     ReplTableEntry(uint32_t repl_table_index, ReplList *repl_list);
     ~ReplTableEntry();
+public:
+    static ReplTableEntry *factory(uint32_t repl_table_index, 
+                                   ReplList *repl_list, 
+                                   uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_TABLE_ENTRY);
+    static void destroy(ReplTableEntry *rte, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_TABLE_ENTRY);
 
     // Getters & Setters
     uint32_t get_num_repl_entries() { return num_repl_entries_; }

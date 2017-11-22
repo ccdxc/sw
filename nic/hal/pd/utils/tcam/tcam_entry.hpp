@@ -10,6 +10,7 @@
 #define __TCAM_ENTRY_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 
 using hal::pd::utils::priority_t;
@@ -40,11 +41,17 @@ private:
     priority_t  priority_;      // tcam entry priority
     int         refcnt_;        // tcam entry reference count
 
-public:
     TcamEntry (void *key, void *key_mask, uint32_t key_len, 
                void *data, uint32_t data_len, uint32_t index,
                priority_t priority = 0);
     ~TcamEntry();
+public:
+    static TcamEntry *factory(void *key, void *key_mask, uint32_t key_len,
+                              void *data, uint32_t data_len, uint32_t index,
+                              priority_t priority = 0, 
+                              uint32_t mtrack_id = HAL_MEM_ALLOC_TCAM_ENTRY);
+    static void destroy(TcamEntry *te, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_TCAM_ENTRY); 
 
     void update_data(void *data);
 

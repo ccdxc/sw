@@ -4,6 +4,12 @@
 
 using hal::utils::indexer;
 
+namespace hal {
+    namespace utils {
+        hal::utils::mem_mgr     g_hal_mem_mgr;
+    }
+}
+
 class indexer_test : public ::testing::Test {
 protected:
   indexer_test() {
@@ -31,13 +37,13 @@ protected:
 //      - Free index.
 // ----------------------------------------------------------------------------
 TEST_F(indexer_test, test1) {
-    indexer ind = indexer(100);
+    indexer *ind = indexer::factory(100);
 
     uint32_t i;
-    indexer::status rs  = ind.alloc(&i);
+    indexer::status rs  = ind->alloc(&i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind.free(i);
+    rs = ind->free(i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 }
 
@@ -52,18 +58,18 @@ TEST_F(indexer_test, test1) {
 TEST_F(indexer_test, test2) {
     indexer::status rs = indexer::SUCCESS;
     uint32_t i,j;
-    indexer ind1 = indexer(100);
+    indexer *ind1 = indexer::factory(100);
 
-    rs  = ind1.alloc(&i);
+    rs  = ind1->alloc(&i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs  = ind1.alloc(&j);
+    rs  = ind1->alloc(&j);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind1.free(i);
+    rs = ind1->free(i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind1.free(j);
+    rs = ind1->free(j);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 }
 
@@ -78,18 +84,18 @@ TEST_F(indexer_test, test2) {
 TEST_F(indexer_test, test3) {
     indexer::status rs = indexer::SUCCESS;
     uint32_t i,j;
-    indexer ind1 = indexer(100);
+    indexer *ind1 = indexer::factory(100);
 
-    rs  = ind1.alloc(&i);
+    rs  = ind1->alloc(&i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind1.free(i);
+    rs = ind1->free(i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs  = ind1.alloc(&j);
+    rs  = ind1->alloc(&j);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind1.free(j);
+    rs = ind1->free(j);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 }
 
@@ -99,10 +105,10 @@ TEST_F(indexer_test, test3) {
 //      - Alloc index. Returns failure
 // ----------------------------------------------------------------------------
 TEST_F(indexer_test, test4) {
-    indexer ind = indexer(0);
+    indexer *ind = indexer::factory(0);
 
     uint32_t i;
-    indexer::status rs  = ind.alloc(&i);
+    indexer::status rs  = ind->alloc(&i);
     ASSERT_TRUE(rs == indexer::INVALID_INDEXER);
 }
 
@@ -113,13 +119,13 @@ TEST_F(indexer_test, test4) {
 //      - 10 indices
 // ----------------------------------------------------------------------------
 TEST_F(indexer_test, test5) {
-    indexer ind = indexer(10);
+    indexer *ind = indexer::factory(10);
     indexer::status rs;
 
     uint32_t id;
 
     for (int i = 0; i < 10; i++) {
-        rs  = ind.alloc(&id);
+        rs  = ind->alloc(&id);
         ASSERT_TRUE(rs == indexer::SUCCESS);
     }
 }
@@ -130,16 +136,16 @@ TEST_F(indexer_test, test5) {
 //      - 11 indices
 // ----------------------------------------------------------------------------
 TEST_F(indexer_test, test6) {
-    indexer ind = indexer(10);
+    indexer *ind = indexer::factory(10);
     indexer::status rs;
 
     uint32_t id;
 
     for (int i = 0; i < 10; i++) {
-        rs  = ind.alloc(&id);
+        rs  = ind->alloc(&id);
         ASSERT_TRUE(rs == indexer::SUCCESS);
     }
-    rs  = ind.alloc(&id);
+    rs  = ind->alloc(&id);
     ASSERT_TRUE(rs == indexer::INDEXER_FULL);
 }
 
@@ -151,16 +157,16 @@ TEST_F(indexer_test, test6) {
 //      - Free index.
 // ----------------------------------------------------------------------------
 TEST_F(indexer_test, test7) {
-    indexer ind = indexer(100);
+    indexer *ind = indexer::factory(100);
 
     uint32_t i;
-    indexer::status rs  = ind.alloc(&i);
+    indexer::status rs  = ind->alloc(&i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind.free(i);
+    rs = ind->free(i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind.free(i);
+    rs = ind->free(i);
     ASSERT_TRUE(rs == indexer::DUPLICATE_FREE);
 }
 
@@ -171,26 +177,26 @@ TEST_F(indexer_test, test7) {
 //      - Alloc index with id
 // ----------------------------------------------------------------------------
 TEST_F(indexer_test, test8) {
-    indexer ind = indexer(100);
+    indexer *ind = indexer::factory(100);
 
     uint32_t i;
-    indexer::status rs  = ind.alloc(&i);
+    indexer::status rs  = ind->alloc(&i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
 
-    rs  = ind.alloc_withid(i);
+    rs  = ind->alloc_withid(i);
     ASSERT_TRUE(rs == indexer::DUPLICATE_ALLOC);
 
-    rs  = ind.alloc_withid(++i);
+    rs  = ind->alloc_withid(++i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs  = ind.alloc_withid(i);
+    rs  = ind->alloc_withid(i);
     ASSERT_TRUE(rs == indexer::DUPLICATE_ALLOC);
 
-    rs = ind.free(i);
+    rs = ind->free(i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind.free(--i);
+    rs = ind->free(--i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 }
 
@@ -201,28 +207,28 @@ TEST_F(indexer_test, test8) {
 //      - -ve cases
 // ----------------------------------------------------------------------------
 TEST_F(indexer_test, test9) {
-    indexer ind = indexer(100);
+    indexer *ind = indexer::factory(100);
 
     uint32_t i;
-    indexer::status rs  = ind.alloc(&i);
+    indexer::status rs  = ind->alloc(&i);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind.alloc_withid(101);
+    rs = ind->alloc_withid(101);
     ASSERT_TRUE(rs == indexer::INDEX_OOB);
 
-    rs = ind.free(101);
+    rs = ind->free(101);
     ASSERT_TRUE(rs == indexer::INDEX_OOB);
 
-    rs = ind.alloc_withid(100);
+    rs = ind->alloc_withid(100);
     ASSERT_TRUE(rs == indexer::INDEX_OOB);
 
-    rs = ind.free(100);
+    rs = ind->free(100);
     ASSERT_TRUE(rs == indexer::INDEX_OOB);
 
-    rs = ind.alloc_withid(99);
+    rs = ind->alloc_withid(99);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 
-    rs = ind.free(99);
+    rs = ind->free(99);
     ASSERT_TRUE(rs == indexer::SUCCESS);
 }
 
@@ -236,68 +242,68 @@ TEST_F(indexer_test, test10) {
     indexer::status rs;
     uint32_t i;
 
-    indexer ind1 = indexer(128);
-    indexer ind2 = indexer(100);
+    indexer *ind1 = indexer::factory(128);
+    indexer *ind2 = indexer::factory(100);
 
-    rs  = ind1.alloc(&i, FALSE);
+    rs  = ind1->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 127);
 
-    rs = ind1.alloc_withid(130);
+    rs = ind1->alloc_withid(130);
     EXPECT_EQ(rs, indexer::INDEX_OOB);
 
-    rs  = ind1.alloc(&i, FALSE);
+    rs  = ind1->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 126);
 
-    rs = ind1.free(127);
+    rs = ind1->free(127);
     EXPECT_EQ(rs, indexer::SUCCESS);
 
-    rs  = ind1.alloc(&i, FALSE);
+    rs  = ind1->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 125);
 
-    rs  = ind1.alloc(&i);
+    rs  = ind1->alloc(&i);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 0);
     
-    rs = ind1.free(125);
+    rs = ind1->free(125);
     EXPECT_EQ(rs, indexer::SUCCESS);
 
-    rs = ind1.free(127);
+    rs = ind1->free(127);
     EXPECT_EQ(rs, indexer::DUPLICATE_FREE);
 
-    rs  = ind1.alloc(&i, FALSE);
+    rs  = ind1->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 125);
 
     // Second indexer
-    rs  = ind2.alloc(&i, FALSE);
+    rs  = ind2->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 99);
 
-    rs = ind2.alloc_withid(130);
+    rs = ind2->alloc_withid(130);
     EXPECT_EQ(rs, indexer::INDEX_OOB);
 
-    rs = ind2.alloc_withid(128);
+    rs = ind2->alloc_withid(128);
     EXPECT_EQ(rs, indexer::INDEX_OOB);
 
-    rs  = ind2.alloc(&i, FALSE);
+    rs  = ind2->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 98);
 
-    rs  = ind2.alloc(&i, FALSE);
+    rs  = ind2->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 97);
 
-    rs  = ind2.alloc(&i);
+    rs  = ind2->alloc(&i);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 0);
 
-    rs = ind2.free(99);
+    rs = ind2->free(99);
     EXPECT_EQ(rs, indexer::SUCCESS);
 
-    rs  = ind2.alloc(&i, FALSE);
+    rs  = ind2->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 96);
 }

@@ -19,6 +19,7 @@
 #include "nic/include/base.h"
 #include <string>
 #include <map>
+#include "nic/include/hal_mem.hpp"
 #include "nic/utils/indexer/indexer.hpp"
 
 using hal::utils::indexer;
@@ -119,12 +120,18 @@ private:
     };
     void stats_update(api ap, hal_ret_t rs); 
     hal_ret_t entry_trace_(TcamEntry *te);
-public:
 
     Tcam(std::string table_name, uint32_t table_id, uint32_t tcam_capacity, 
          uint32_t swkey_len, uint32_t swdata_len, 
          bool allow_dup_insert = false);
     ~Tcam();
+public:
+    static Tcam *factory(std::string table_name, uint32_t table_id, 
+                         uint32_t tcam_capacity, uint32_t swkey_len, 
+                         uint32_t swdata_len, bool allow_dup_insert = false,
+                         uint32_t mtrack_id = HAL_MEM_ALLOC_TCAM);
+    static void destroy(Tcam *tcam, uint32_t mtrack_id = HAL_MEM_ALLOC_TCAM);
+
 
     // Debug Info
     uint32_t table_id(void) { return table_id_; }

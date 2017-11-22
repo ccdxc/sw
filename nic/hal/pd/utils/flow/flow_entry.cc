@@ -13,6 +13,37 @@ using hal::pd::utils::FlowEntry;
 using hal::pd::utils::FlowTableEntry;
 using hal::pd::utils::FlowSpineEntry;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+FlowEntry *
+FlowEntry::factory(void *key, uint32_t key_len, void *data, uint32_t data_len,
+                   uint32_t hwkey_len, bool log, uint32_t mtrack_id)
+{
+    void        *mem = NULL;
+    FlowEntry   *fe = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(FlowEntry));
+    if (!mem) {
+        return NULL;
+    }
+
+    fe = new (mem) FlowEntry(key, key_len, data, data_len, hwkey_len, log);
+    return fe;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+FlowEntry::destroy(FlowEntry *re, uint32_t mtrack_id) 
+{
+    if (re) {
+        re->~FlowEntry();
+        HAL_FREE(mtrack_id, re);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Constructor - Flow Entry
 // ---------------------------------------------------------------------------
@@ -24,9 +55,10 @@ FlowEntry::FlowEntry(void *key, uint32_t key_len,
     data_len_ = data_len;
     hwkey_len_ = hwkey_len;
 
-    key_    = ::operator new(key_len);
-    data_   = ::operator new(data_len);
-
+    // key_    = ::operator new(key_len);
+    // data_   = ::operator new(data_len);
+    key_ = HAL_MALLOC(HAL_MEM_ALLOC_FLOW_ENTRY_KEY, key_len);
+    data_ = HAL_MALLOC(HAL_MEM_ALLOC_FLOW_ENTRY_DATA, data_len);
 
     std::memcpy(key_, key, key_len);
     std::memcpy(data_, data, data_len);
@@ -49,8 +81,10 @@ FlowEntry::FlowEntry(void *key, uint32_t key_len,
 // ---------------------------------------------------------------------------
 FlowEntry::~FlowEntry()
 {
-    ::operator delete(key_);
-    ::operator delete(data_);
+    // ::operator delete(key_);
+    // ::operator delete(data_);
+    HAL_FREE(HAL_MEM_ALLOC_FLOW_ENTRY_KEY, key_);
+    HAL_FREE(HAL_MEM_ALLOC_FLOW_ENTRY_DATA, data_);
 }
 
 // ---------------------------------------------------------------------------
@@ -333,7 +367,8 @@ FlowEntry::remove()
                         last_fse->program_table();
                         // Free FHCT index of last_fse
                         free_fhct_index(last_fse, last_fse->get_fhct_index());
-                        delete last_fse;
+                        // delete last_fse;
+                        FlowSpineEntry::destroy(last_fse);
                         eff_spine_entry->get_ft_entry()->dec_num_spine_entries();
                     }
                 }
@@ -466,7 +501,8 @@ FlowEntry::remove()
                             fse_last->program_table();
                             // Free FHCT index of fse_last
                             free_fhct_index(fse_last, fse_last->get_fhct_index());
-                            delete fse_last;
+                            // delete fse_last;
+                            FlowSpineEntry::destroy(fse_last);
                             eff_spine_entry->get_ft_entry()->dec_num_spine_entries();
                         }
                     }
@@ -541,9 +577,12 @@ FlowEntry::free_fhct_index(FlowSpineEntry *fse, uint32_t fhct_index)
 FlowEntry *
 FlowEntry::create_new_flow_entry(FlowEntry *fe)
 {
-    FlowEntry *new_fe = new FlowEntry(fe->get_key(), fe->get_key_len(),
-                                      fe->get_data(), fe->get_data_len(), 
-                                      hwkey_len_, true);
+    // FlowEntry *new_fe = new FlowEntry(fe->get_key(), fe->get_key_len(),
+    //                                   fe->get_data(), fe->get_data_len(), 
+    //                                   hwkey_len_, true);
+    FlowEntry *new_fe = FlowEntry::factory(fe->get_key(), fe->get_key_len(),
+                                           fe->get_data(), fe->get_data_len(),
+                                           hwkey_len_, true);
     *new_fe = *fe;
 
     // Take location information from "this"
@@ -610,8 +649,9 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
                     __FUNCTION__, oflow_table_id, fhct_index_);
     // FlowEntry *next_fe = fh_group_->get_next_flow_entry(this);
 
-    hwkey = ::operator new(hwkey_len_);
-    memset(hwkey, 0, hwkey_len_);
+    // hwkey = ::operator new(hwkey_len_);
+    // memset(hwkey, 0, hwkey_len_);
+    hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_ENTRY_HW_KEY, hwkey_len_);
     p4pd_hwkey_hwmask_build(oflow_table_id, key_,
                             NULL, (uint8_t *)hwkey, NULL);
 
@@ -621,7 +661,8 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
     pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, (uint8_t*)hwkey, NULL,
                               (void *)&oflow_act_data);
     HAL_TRACE_DEBUG("Done programming Flow Hash Overflow {}", pd_err);
-    ::operator delete(hwkey);
+    // ::operator delete(hwkey);
+    HAL_FREE(HAL_MEM_ALLOC_FLOW_ENTRY_HW_KEY, hwkey);
 
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
 }

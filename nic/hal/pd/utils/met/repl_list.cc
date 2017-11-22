@@ -7,6 +7,36 @@ using hal::pd::utils::ReplList;
 using hal::pd::utils::ReplTableEntry;
 using hal::pd::utils::Met;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+ReplList *
+ReplList::factory(uint32_t repl_tbl_index, Met *met,
+                  uint32_t mtrack_id)
+{
+    void        *mem = NULL;
+    ReplList    *re = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(ReplList));
+    if (!mem) {
+        return NULL;
+    }
+
+    re = new (mem) ReplList(repl_tbl_index, met);
+    return re;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+ReplList::destroy(ReplList *re, uint32_t mtrack_id) 
+{
+    if (re) {
+        re->~ReplList();
+        HAL_FREE(mtrack_id, re);
+    }
+}
 // ----------------------------------------------------------------------------
 // Constructor
 // ----------------------------------------------------------------------------
@@ -28,7 +58,7 @@ ReplList::ReplList(uint32_t repl_tbl_index, Met *met)
 // ----------------------------------------------------------------------------
 ReplList::~ReplList() 
 {
-    delete first_repl_tbl_entry_;
+    // delete first_repl_tbl_entry_;
 }
 
 
@@ -46,12 +76,16 @@ ReplList::add_replication(void *data)
     HAL_TRACE_DEBUG("{}: Adding replication entry to repl_list: {}",
             __FUNCTION__, repl_tbl_index_);
 
-    repl_entry = new ReplEntry(data, met_->get_repl_entry_data_len());
+    // repl_entry = new ReplEntry(data, met_->get_repl_entry_data_len());
+    repl_entry = ReplEntry::factory(data, 
+                                    met_->get_repl_entry_data_len());
+
 
     // Check if we have to create ReplTableEntry
     rs = get_repl_table_entry(&repl_te);
     if (rs != HAL_RET_OK) {
-        delete repl_entry;
+        // delete repl_entry;
+        ReplEntry::destroy(repl_entry);
         goto end;
     }
 
@@ -93,7 +127,8 @@ ReplList::del_replication(void *data)
                     HAL_ASSERT(rs == HAL_RET_OK);
                 }
 
-                delete repl_te;
+                // delete repl_te;
+                ReplTableEntry::destroy(repl_te);
                 num_repl_tbl_entries_--;
             }
             goto end;
@@ -237,7 +272,8 @@ ReplList::get_repl_table_entry(ReplTableEntry **rte)
     HAL_TRACE_DEBUG("ReplList::{}: Create RTE: {}", __FUNCTION__, 
                     repl_tbl_idx);
     // Create a new replication table entry
-    tmp_rte = new ReplTableEntry(repl_tbl_idx, this);
+    // tmp_rte = new ReplTableEntry(repl_tbl_idx, this);
+    tmp_rte = ReplTableEntry::factory(repl_tbl_idx, this);
     if (first_repl_tbl_entry_ == NULL) {
         first_repl_tbl_entry_ = tmp_rte;
         last_repl_tbl_entry_ = tmp_rte;

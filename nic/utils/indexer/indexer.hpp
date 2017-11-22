@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_lock.hpp"
 
 namespace hal {
@@ -49,10 +50,16 @@ private:
         return index64_[((v & (-v)) * debruijn64_) >> 58];
     }
 
-public:
     indexer(uint32_t size, bool thread_safe = true, bool skip_zero = false);
     ~indexer();
-    indexer::status alloc(uint32_t *index, bool lowest = TRUE, uint32_t block_size = 1);
+public:
+    static indexer *factory(uint32_t size, bool thread_safe = true, 
+                            bool skip_zero = false, 
+                            uint32_t mtrack_id = HAL_MEM_ALLOC_LIB_INDEXER);
+    static void destroy(indexer *idx, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_LIB_INDEXER);
+    indexer::status alloc(uint32_t *index, bool lowest = TRUE, 
+                          uint32_t block_size = 1);
     indexer::status alloc_withid(uint32_t index, uint32_t block_size = 1);
     indexer::status free(uint32_t index);
     bool is_alloced(uint32_t index);

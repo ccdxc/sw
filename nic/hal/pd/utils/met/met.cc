@@ -4,6 +4,39 @@
 using hal::pd::utils::Met;
 using hal::pd::utils::ReplList;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+Met *
+Met::factory(std::string table_name, uint32_t table_id,
+             uint32_t repl_table_capacity, uint32_t num_repl_entries,
+             uint32_t repl_entry_data_len, uint32_t mtrack_id)
+{
+    void        *mem = NULL;
+    Met   *met = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(Met));
+    if (!mem) {
+        return NULL;
+    }
+
+    met = new (mem) Met(table_name, table_id, repl_table_capacity, 
+                        num_repl_entries, repl_entry_data_len);
+    return met;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+Met::destroy(Met *met, uint32_t mtrack_id) 
+{
+    if (met) {
+        met->~Met();
+        HAL_FREE(mtrack_id, met);
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Constructor
 // ----------------------------------------------------------------------------
@@ -17,10 +50,14 @@ Met::Met(std::string table_name, uint32_t table_id,
     max_num_repls_per_entry_    = max_num_repls_per_entry;
     repl_entry_data_len_        = repl_entry_data_len;
 
-    repl_table_indexer_         = new indexer(repl_table_capacity_, TRUE, TRUE);
+    // repl_table_indexer_         = new indexer(repl_table_capacity_, TRUE, TRUE);
+    repl_table_indexer_ = indexer::factory(repl_table_capacity_, TRUE, TRUE,
+                                           HAL_MEM_ALLOC_MET_REPL_TABLE_INDEXER);
 
     // Initialize for Stats
-    stats_ = new uint64_t[STATS_MAX]();
+    // stats_ = new uint64_t[STATS_MAX]();
+    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_MET_STATS, 
+                                    sizeof(uint64_t) * STATS_MAX);
 }
 
 // ----------------------------------------------------------------------------
@@ -28,7 +65,10 @@ Met::Met(std::string table_name, uint32_t table_id,
 // ----------------------------------------------------------------------------
 Met::~Met() 
 {
-    delete repl_table_indexer_;
+    // delete repl_table_indexer_;
+    indexer::destroy(repl_table_indexer_, 
+                     HAL_MEM_ALLOC_MET_REPL_TABLE_INDEXER);
+    HAL_FREE(HAL_MEM_ALLOC_MET_STATS, stats_);
 }
 
 // ----------------------------------------------------------------------------
@@ -49,7 +89,8 @@ Met::create_repl_list_with_id(uint32_t repl_list_idx)
 
     HAL_TRACE_DEBUG("Met:{}: Alloc repl table id: {}", __FUNCTION__, repl_list_idx);
 
-    repl_list = new ReplList(repl_list_idx, this);
+    // repl_list = new ReplList(repl_list_idx, this);
+    repl_list = ReplList::factory(repl_list_idx, this);
 
     repl_list_map_[repl_list_idx] = repl_list;
 
@@ -75,7 +116,9 @@ Met::create_repl_list(uint32_t *repl_list_idx)
         goto end;
     }
 
-    repl_list = new ReplList(*repl_list_idx, this);
+    // repl_list = new ReplList(*repl_list_idx, this);
+    repl_list = ReplList::factory(*repl_list_idx, this);
+
 
     repl_list_map_[*repl_list_idx] = repl_list;
 
@@ -102,7 +145,8 @@ Met::delete_repl_list(uint32_t repl_list_idx)
         goto end;
     }
 
-    delete itr->second;
+    // delete itr->second;
+    ReplList::destroy(itr->second);
     repl_list_map_.erase(repl_list_idx);
     rs = free_repl_table_index(repl_list_idx);
 

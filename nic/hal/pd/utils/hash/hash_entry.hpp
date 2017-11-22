@@ -2,6 +2,7 @@
 #define __HASH_ENTRY_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace pd {
@@ -25,10 +26,15 @@ private:
     uint32_t    data_len_;      // sw/hw data len
     uint32_t    index_;         // hash index
 
-public:
     HashEntry (void *key, uint32_t key_len, void *data, uint32_t data_len,
                uint32_t index);
     ~HashEntry();
+public:
+    static HashEntry *factory(void *key, uint32_t key_len, void *data, 
+                              uint32_t data_len, uint32_t index,
+                              uint32_t mtrack_id = HAL_MEM_ALLOC_HASH_ENTRY);
+    static void destroy(HashEntry *he, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_HASH_ENTRY);
 
     void update_data(void *data);
 

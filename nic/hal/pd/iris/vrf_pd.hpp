@@ -1,5 +1,5 @@
-#ifndef __HAL_PD_vrf_HPP__
-#define __HAL_PD_vrf_HPP__
+#ifndef __HAL_PD_VRF_HPP__
+#define __HAL_PD_VRF_HPP__
 
 #include "nic/include/base.h"
 #include "nic/utils/ht/ht.hpp"
@@ -55,7 +55,7 @@ vrf_pd_init (pd_vrf_t *vrf_pd)
     vrf_pd->ten_hw_id = INVALID_INDEXER_INDEX;
 
     vrf_pd->l2seg_hw_id_idxr_ = 
-        new hal::utils::indexer(HAL_MAX_HW_L2SEGMENTS);
+        hal::utils::indexer::factory(HAL_MAX_HW_L2SEGMENTS);
     HAL_ASSERT_RETURN((vrf_pd->l2seg_hw_id_idxr_ != NULL), NULL);
 
     // Prevention of usage of 0
@@ -80,7 +80,7 @@ vrf_pd_alloc_init (void)
 static inline hal_ret_t
 vrf_pd_free (pd_vrf_t *ten)
 {
-    ten->l2seg_hw_id_idxr_ ? delete ten->l2seg_hw_id_idxr_ : HAL_NOP;
+    ten->l2seg_hw_id_idxr_ ? indexer::destroy(ten->l2seg_hw_id_idxr_) : HAL_NOP;
     g_hal_state_pd->vrf_slab()->free(ten);
     return HAL_RET_OK;
 }
@@ -114,4 +114,4 @@ hal_ret_t vrf_pd_free_l2seg_hw_id(pd_vrf_t *vrf_pd,
 }   // namespace pd
 }   // namespace hal
 
-#endif    // __HAL_PD_vrf_HPP__
+#endif    // __HAL_PD_VRF_HPP__

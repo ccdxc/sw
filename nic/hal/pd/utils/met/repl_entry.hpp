@@ -2,6 +2,7 @@
 #define __REPL_ENTRY_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace pd {
@@ -23,9 +24,13 @@ private:
 
     ReplEntry *prev_, *next_;   // linked List
 
-public:
     ReplEntry(void *data, uint32_t data_len);
     ~ReplEntry();
+public:
+    static ReplEntry *factory(void *data, uint32_t data_len,
+                              uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_ENTRY);
+    static void destroy(ReplEntry *re, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_ENTRY);
 
     // Getters & Setters
     void *get_data() { return data_; }

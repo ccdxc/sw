@@ -17,6 +17,7 @@
 #include "nic/utils/indexer/indexer.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/utils/ht/ht.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 
 using hal::pd::utils::directmap_entry_t;
@@ -110,10 +111,19 @@ private:
     void *del_directmap_entry_from_db(directmap_entry_t *dme);
     directmap_entry_t *find_directmap_entry(directmap_entry_t *key);
 
-public:
-    DirectMap(std::string table_name, uint32_t table_id, uint32_t num_entries, uint32_t swdata_len,
-              bool thread_safe = true, bool sharing_en = false);
+    DirectMap(std::string table_name, uint32_t table_id, uint32_t num_entries, 
+              uint32_t swdata_len, bool thread_safe = true, 
+              bool sharing_en = false);
     ~DirectMap();
+public:
+    // Instantiate object
+    static DirectMap *factory(std::string table_name, uint32_t table_id, 
+                              uint32_t num_entries, uint32_t swdata_len, 
+                              bool thread_safe = true, bool sharing_en = false,
+                              uint32_t mtrack_id = HAL_MEM_ALLOC_DIRECT_MAP);
+    // Destroy object
+    static void destroy(DirectMap *dm, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_DIRECT_MAP);
 
     // Debug Info
     uint32_t table_id(void) { return table_id_; }

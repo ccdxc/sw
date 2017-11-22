@@ -7,6 +7,37 @@ using hal::pd::utils::FlowSpineEntry;
 using hal::pd::utils::FlowHintGroup;
 using hal::pd::utils::FlowEntry;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+FlowHintGroup *
+FlowHintGroup::factory(uint32_t hint_bits, FlowSpineEntry *fs_entry, 
+                       uint32_t mtrack_id)
+{
+    void            *mem = NULL;
+    FlowHintGroup   *fhg = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(FlowHintGroup));
+    if (!mem) {
+        return NULL;
+    }
+
+    fhg = new (mem) FlowHintGroup(hint_bits, fs_entry);
+    return fhg;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+FlowHintGroup::destroy(FlowHintGroup *fhg, uint32_t mtrack_id) 
+{
+    if (fhg) {
+        fhg->~FlowHintGroup();
+        HAL_FREE(mtrack_id, fhg);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Constructor - Flow Hint Group
 // ---------------------------------------------------------------------------

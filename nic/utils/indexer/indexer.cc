@@ -1,4 +1,6 @@
 #include "indexer.hpp"
+#include "nic/utils/mtrack/mtrack.hpp"
+
 
 namespace hal{
 namespace utils {
@@ -9,9 +11,41 @@ namespace utils {
 #define WORD_SIZE_MODULO        64
 #define ALL_ONES_64BIT          UINT64_MAX
 
-// ---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+indexer *
+indexer::factory(uint32_t size, bool thread_safe,
+                 bool skip_zero, uint32_t mtrack_id) 
+{
+    void        *mem     = NULL;
+    indexer     *indxr = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(indexer));
+    if (!mem) {
+        return NULL;
+    }
+
+    indxr = new (mem) indexer(size, thread_safe, skip_zero);
+    return indxr;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+indexer::destroy(indexer *indxr, uint32_t mtrack_id)
+{
+    if (indxr) {
+        indxr->~indexer();
+        HAL_FREE(mtrack_id, indxr);
+    }
+}
+
+//---------------------------------------------------------------------------
 // Constructor - indexer
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
 {
     int mod = size & WORD_SIZE_MASK;
@@ -45,9 +79,9 @@ indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
 
 }
 
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // Destructor - indexer
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 indexer::~indexer() 
 {
     delete[] bits_;

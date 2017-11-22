@@ -9,9 +9,44 @@
 using hal::pd::utils::HashEntry;
 using hal::pd::utils::Hash;
 
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+Hash *
+Hash::factory(std::string table_name, uint32_t dleft_table_id,
+			  uint32_t otcam_table_id, uint32_t dleft_capacity,
+			  uint32_t otcam_capacity, uint32_t swkey_len,
+			  uint32_t swdata_len, Hash::HashPoly hash_poly,
+			  uint32_t mtrack_id)
+{
+    void   *mem = NULL;
+    Hash   *hash = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(Hash));
+    if (!mem) {
+        return NULL;
+    }
+
+    hash = new (mem) Hash(table_name, dleft_table_id, otcam_table_id,
+						  dleft_capacity, otcam_capacity, swkey_len,
+						  swdata_len, hash_poly);
+    return hash;
+}
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+Hash::destroy(Hash *hash, uint32_t mtrack_id) 
+{
+    if (hash) {
+        hash->~Hash();
+        HAL_FREE(mtrack_id, hash);
+    }
+}
+
+//---------------------------------------------------------------------------
 // Constructor - Hash
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 Hash::Hash(std::string table_name, 
            uint32_t dleft_table_id, uint32_t otcam_table_id,
            uint32_t dleft_capacity, uint32_t otcam_capacity,
@@ -29,8 +64,10 @@ Hash::Hash(std::string table_name,
     // Initialize the Overflow Tcam
     otcam_ = NULL;
     if (otcam_capacity) {
-        otcam_ = new Tcam(table_name + "_otcam", otcam_table_id, otcam_capacity,
-                swkey_len_, swdata_len_);
+		otcam_ = Tcam::factory(table_name + "_otcam", otcam_table_id, 
+							   otcam_capacity, swkey_len_, swdata_len_);
+        // otcam_ = new Tcam(table_name + "_otcam", otcam_table_id, otcam_capacity,
+        //        swkey_len_, swdata_len_);
         if (!otcam_) {
             HAL_ASSERT_RETURN_VOID(FALSE);
         }
@@ -51,7 +88,9 @@ Hash::Hash(std::string table_name,
                     hwkeylen_bits, hwkey_len_, hwdatalen_bits, hwdata_len_);
 
     // Initialize Stats
-    stats_ = new uint64_t[STATS_MAX]();
+    // stats_ = new uint64_t[STATS_MAX]();
+    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_HASH_STATS, 
+                                    sizeof(uint64_t) * STATS_MAX);
 }
 
 // ---------------------------------------------------------------------------
@@ -61,9 +100,11 @@ Hash::~Hash()
 {
     // Freeing up OTcam
     if (otcam_) {
-        delete otcam_;
+        // delete otcam_;
+		Tcam::destroy(otcam_);
     }
-    delete[] stats_;
+    // delete[] stats_;
+    HAL_FREE(HAL_MEM_ALLOC_HASH_STATS, stats_);
 }
 
 // ---------------------------------------------------------------------------
@@ -90,8 +131,9 @@ Hash::insert(void *key, void *data, uint32_t *index,
 
     // build hw keys & masks
     // TODO: Uncomment once P4-PD APIs are implemented
-    hwkey = ::operator new(hwkey_len_);
-    memset(hwkey, 0, hwkey_len_);
+    // hwkey = ::operator new(hwkey_len_);
+    // memset(hwkey, 0, hwkey_len_);
+    hwkey = HAL_CALLOC(HAL_MEM_ALLOC_HASH_HW_KEY_INS, hwkey_len_);
     pd_err = p4pd_hwkey_hwmask_build(table_id_, key, NULL,
                                      (uint8_t *)hwkey, NULL);
     // HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
@@ -107,7 +149,9 @@ Hash::insert(void *key, void *data, uint32_t *index,
     itr = hash_entry_map_.find(dleft_index);
     if (itr == hash_entry_map_.end()) {
         HAL_TRACE_DEBUG("Hash::{}: dleft Insert ", __FUNCTION__);
-        he = new HashEntry(key, swkey_len_, data, swdata_len_, dleft_index);
+        // he = new HashEntry(key, swkey_len_, data, swdata_len_, dleft_index);
+		he = HashEntry::factory(key, swkey_len_, data,
+								swdata_len_, dleft_index);
         *index = form_hash_idx_from_dleft_id_(dleft_index);
 
         // program hw
@@ -118,7 +162,8 @@ Hash::insert(void *key, void *data, uint32_t *index,
             hash_entry_map_[dleft_index] = he;
             stats_incr(STATS_NUM_HASH);
         } else {
-            delete he;
+            // delete he;
+			HashEntry::destroy(he);
         }
 
     } else {
@@ -131,12 +176,14 @@ Hash::insert(void *key, void *data, uint32_t *index,
 
         if (has_otcam_()) {
             // initialize mask
-            void *key_mask = ::operator new(swkey_len_);
+            // void *key_mask = ::operator new(swkey_len_);
+            void *key_mask = HAL_MALLOC(HAL_MEM_ALLOC_HASH_SW_KEY_MASK_INS, swkey_len_);
             memset(key_mask, ~0, swkey_len_); 
             
             // otcam insert
             rs = otcam_->insert(key, key_mask, data, &tcam_index);
-            ::operator delete(key_mask);
+            // ::operator delete(key_mask);
+            HAL_FREE(HAL_MEM_ALLOC_HASH_SW_KEY_MASK_INS, key_mask);
             if (rs == HAL_RET_OK) {
                 *index = form_hash_idx_from_otcam_id_(tcam_index);
                 stats_incr(STATS_NUM_TCAM);
@@ -150,7 +197,8 @@ Hash::insert(void *key, void *data, uint32_t *index,
 end:
     if (hwkey) {
         // TODO: Uncomment once P4-PD APIs are implemented
-        ::operator delete(hwkey); 
+        // ::operator delete(hwkey); 
+        HAL_FREE(HAL_MEM_ALLOC_HASH_HW_KEY_INS, hwkey);
     }
 
     // return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
@@ -197,8 +245,9 @@ Hash::update(uint32_t hash_idx, void *data)
         itr->second->update_data(data);
 
         // build hw key & mask
-        hwkey = ::operator new(hwkey_len_);
-        memset(hwkey, 0, hwkey_len_);
+        // hwkey = ::operator new(hwkey_len_);
+        // memset(hwkey, 0, hwkey_len_);
+        hwkey = HAL_CALLOC(HAL_MEM_ALLOC_HASH_HW_KEY_UPD, hwkey_len_);
         pd_err = p4pd_hwkey_hwmask_build(table_id_, itr->second->get_key(), 
                                          NULL, (uint8_t *)hwkey, NULL);
         // HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
@@ -222,7 +271,8 @@ Hash::update(uint32_t hash_idx, void *data)
 
 end:
    
-    if (hwkey) ::operator delete(hwkey);
+    // if (hwkey) ::operator delete(hwkey);
+    if (hwkey) HAL_FREE(HAL_MEM_ALLOC_HASH_HW_KEY_UPD, hwkey);
     // return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
     stats_update(UPDATE, rs);
     return rs;
@@ -268,7 +318,8 @@ Hash::remove(uint32_t hash_idx)
 
         if (rs == HAL_RET_OK) {
             // free & remove from sw DS
-            delete itr->second;
+            // delete itr->second;
+			HashEntry::destroy(itr->second);
             hash_entry_map_.erase(itr);
         }
 
@@ -541,9 +592,9 @@ Hash::deprogram_table_(HashEntry *he)
     }
 
     // Build Hw Keys/KeyMasks
-    hwkey       = ::operator new(hwkey_len_);
-
-    std::memset(hwkey, 0, hwkey_len_);
+    // hwkey       = ::operator new(hwkey_len_);
+    // std::memset(hwkey, 0, hwkey_len_);
+    hwkey = HAL_CALLOC(HAL_MEM_ALLOC_HASH_HW_KEY_DEPGM, hwkey_len_);
     std::memset(he->get_data(), 0, swdata_len_);
 
     // P4-API: Write 
@@ -552,7 +603,8 @@ Hash::deprogram_table_(HashEntry *he)
     HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
 end:
-    ::operator delete(hwkey);
+    // ::operator delete(hwkey);
+    HAL_FREE(HAL_MEM_ALLOC_HASH_HW_KEY_DEPGM, hwkey);
 
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : HAL_RET_OK;
 }

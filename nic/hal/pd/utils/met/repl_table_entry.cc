@@ -7,6 +7,37 @@
 
 using hal::pd::utils::ReplTableEntry;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+ReplTableEntry *
+ReplTableEntry::factory(uint32_t repl_table_index, ReplList *repl_list,
+                        uint32_t mtrack_id)
+{
+    void            *mem = NULL;
+    ReplTableEntry  *rte = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(ReplTableEntry));
+    if (!mem) {
+        return NULL;
+    }
+
+    rte = new (mem) ReplTableEntry(repl_table_index, repl_list);
+    return rte;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+ReplTableEntry::destroy(ReplTableEntry *re, uint32_t mtrack_id) 
+{
+    if (re) {
+        re->~ReplTableEntry();
+        HAL_FREE(mtrack_id, re);
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Constructor
 // ----------------------------------------------------------------------------
@@ -100,7 +131,8 @@ ReplTableEntry::del_replication(void *data)
                 program_table();
             }
 
-            delete re;
+            // delete re;
+            ReplEntry::destroy(re);
             rs = HAL_RET_OK;
             goto end;
         }

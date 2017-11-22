@@ -171,7 +171,7 @@ print_fn (const void *key,
 TEST_F(hash_test, test1) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -196,20 +196,20 @@ TEST_F(hash_test, test1) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     data.actionid = 2;
-    rs = test_hash.update(hash_idx, &data);
+    rs = test_hash->update(hash_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_OK);
     sent_set.insert(InputPropertiesHashEntry(key,data));
 
-    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    rs = test_hash->iterate(populate_ip_fn, &hash_set, Hash::BOTH);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == hash_set);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -226,7 +226,7 @@ TEST_F(hash_test, test1) {
 TEST_F(hash_test, test2) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -245,19 +245,19 @@ TEST_F(hash_test, test2) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
     sent_set.insert(InputPropertiesHashEntry(key,data));
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 
-    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    rs = test_hash->iterate(populate_ip_fn, &hash_set, Hash::BOTH);
     ASSERT_TRUE(rs == HAL_RET_OK);
     
     ASSERT_TRUE(sent_set == hash_set);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -274,7 +274,7 @@ TEST_F(hash_test, test2) {
 TEST_F(hash_test, test3) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -293,20 +293,20 @@ TEST_F(hash_test, test3) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     sent_set.insert(InputPropertiesHashEntry(key,data));
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    rs = test_hash->iterate(populate_ip_fn, &hash_set, Hash::BOTH);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == hash_set);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 }
 
@@ -322,7 +322,7 @@ TEST_F(hash_test, test3) {
 TEST_F(hash_test, test4) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -340,26 +340,26 @@ TEST_F(hash_test, test4) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    rs = test_hash.retrieve(hash_idx + 1000, (void *)&retr_key, (void *)&retr_data);
+    rs = test_hash->retrieve(hash_idx + 1000, (void *)&retr_key, (void *)&retr_data);
     ASSERT_TRUE(rs == HAL_RET_OOB);
 
-    rs = test_hash.retrieve(hash_idx + 1, (void *)&retr_key, (void *)&retr_data);
+    rs = test_hash->retrieve(hash_idx + 1, (void *)&retr_key, (void *)&retr_data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
 
-    rs = test_hash.retrieve(1 << 28 /*otcam_bit_ in Hash*/, (void *)&retr_key, (void *)&retr_data);
+    rs = test_hash->retrieve(1 << 28 /*otcam_bit_ in Hash*/, (void *)&retr_key, (void *)&retr_data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
-    rs = test_hash.retrieve(hash_idx, (void *)&retr_key, (void *)&retr_data);
+    rs = test_hash->retrieve(hash_idx, (void *)&retr_key, (void *)&retr_data);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(key.capri_intrinsic_lif == retr_key.capri_intrinsic_lif);
     ASSERT_TRUE(data.actionid == retr_data.actionid);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -376,7 +376,7 @@ TEST_F(hash_test, test4) {
 TEST_F(hash_test, test5) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -393,26 +393,26 @@ TEST_F(hash_test, test5) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 
     data.actionid = 3;
-    rs = test_hash.update(hash_idx, &data);
+    rs = test_hash->update(hash_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     hash_idx++;
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
 
-    rs = test_hash.update(hash_idx, &data);
+    rs = test_hash->update(hash_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
     hash_idx--;
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -428,7 +428,7 @@ TEST_F(hash_test, test5) {
 TEST_F(hash_test, test6) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)20, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -448,7 +448,7 @@ TEST_F(hash_test, test6) {
     data.actionid = 1;
 
     for (int i = 0; i < 50; i++) {
-        rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx[i], FALSE);
+        rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx[i], FALSE);
         ASSERT_TRUE(rs == HAL_RET_OK);
         sent_set.insert(InputPropertiesHashEntry(key,data));
         key.capri_intrinsic_lif++;
@@ -456,13 +456,13 @@ TEST_F(hash_test, test6) {
     
     printf("Done with inserts \n");
 
-    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    rs = test_hash->iterate(populate_ip_fn, &hash_set, Hash::BOTH);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == hash_set);
 
     for (int i = 0; i < 50; i++) {
-        rs = test_hash.remove(hash_idx[i]);
+        rs = test_hash->remove(hash_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
@@ -470,11 +470,11 @@ TEST_F(hash_test, test6) {
                     "num_in_use:{}, oflow_num_in_use:{}"
                     "num_inserts:{}, num_insert_errors:{}, "
                     "num_deletes:{}, num_delete_errors:{}",
-                    test_hash.table_id(), test_hash.table_name(),
-                    test_hash.table_capacity(), test_hash.oflow_table_capacity(),
-                    test_hash.table_num_entries_in_use(), test_hash.oflow_table_num_entries_in_use(),
-                    test_hash.table_num_inserts(), test_hash.table_num_insert_errors(),
-                    test_hash.table_num_deletes(), test_hash.table_num_delete_errors());
+                    test_hash->table_id(), test_hash->table_name(),
+                    test_hash->table_capacity(), test_hash->oflow_table_capacity(),
+                    test_hash->table_num_entries_in_use(), test_hash->oflow_table_num_entries_in_use(),
+                    test_hash->table_num_inserts(), test_hash->table_num_insert_errors(),
+                    test_hash->table_num_deletes(), test_hash->table_num_delete_errors());
 }
 
 /* ---------------------------------------------------------------------------
@@ -488,7 +488,7 @@ TEST_F(hash_test, test6) {
 TEST_F(hash_test, test7) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -508,13 +508,13 @@ TEST_F(hash_test, test7) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -526,7 +526,7 @@ TEST_F(hash_test, test7) {
 TEST_F(hash_test, test8) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -544,14 +544,14 @@ TEST_F(hash_test, test8) {
 
     memset(hash_idx, ~0, sizeof(uint32_t) * 100);
     for (int i = 0; i < 100; i++) {
-        rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx[i], FALSE);
+        rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx[i], FALSE);
         ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_NO_RESOURCE);
         key.capri_intrinsic_lif++;
     }
 
     for (int i = 0; i < 100; i++) {
         if (hash_idx[i] != 0xFFFFFFFF) {
-            rs = test_hash.remove(hash_idx[i]);
+            rs = test_hash->remove(hash_idx[i]);
             ASSERT_TRUE(rs == HAL_RET_OK);
         }
     }
@@ -565,7 +565,7 @@ TEST_F(hash_test, test8) {
 TEST_F(hash_test, test9) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -582,21 +582,21 @@ TEST_F(hash_test, test9) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    rs = test_hash.update(hash_idx+1000, &data);
+    rs = test_hash->update(hash_idx+1000, &data);
     ASSERT_TRUE(rs == HAL_RET_OOB);
 
-    rs = test_hash.update(hash_idx+1, &data);
+    rs = test_hash->update(hash_idx+1, &data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
-    rs = test_hash.update(1 << 28 /*otcam_bit_ in Hash*/, &data);
+    rs = test_hash->update(1 << 28 /*otcam_bit_ in Hash*/, &data);
     printf("rs: %d\n", rs);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
     // ASSERT_TRUE(rs == HAL_RET_INVALID_ARG);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -608,7 +608,7 @@ TEST_F(hash_test, test9) {
 TEST_F(hash_test, test10) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -624,27 +624,27 @@ TEST_F(hash_test, test10) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    rs = test_hash.remove(hash_idx+1000);
+    rs = test_hash->remove(hash_idx+1000);
     ASSERT_TRUE(rs == HAL_RET_OOB);
 
-    rs = test_hash.remove(hash_idx+1);
+    rs = test_hash->remove(hash_idx+1);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
-    rs = test_hash.remove(1 << 28 /*otcam_bit_ in Hash*/);
+    rs = test_hash->remove(1 << 28 /*otcam_bit_ in Hash*/);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
     // ASSERT_TRUE(rs == HAL_RET_INVALID_ARG);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
 TEST_F(hash_test, test11) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -669,27 +669,27 @@ TEST_F(hash_test, test11) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     data.actionid = 2;
-    rs = test_hash.update(hash_idx, &data);
+    rs = test_hash->update(hash_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_OK);
     sent_set.insert(InputPropertiesHashEntry(key,data));
 
-    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    rs = test_hash->iterate(populate_ip_fn, &hash_set, Hash::BOTH);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == hash_set);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
 TEST_F(hash_test, test12) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -714,27 +714,27 @@ TEST_F(hash_test, test12) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     data.actionid = 2;
-    rs = test_hash.update(hash_idx, &data);
+    rs = test_hash->update(hash_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_OK);
     sent_set.insert(InputPropertiesHashEntry(key,data));
 
-    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    rs = test_hash->iterate(populate_ip_fn, &hash_set, Hash::BOTH);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == hash_set);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
 TEST_F(hash_test, test13) {
 
     std::string table_name = "Input_Properties";
-    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+    Hash *test_hash = Hash::factory(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
             (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
             (uint32_t)100, 
             (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
@@ -759,20 +759,20 @@ TEST_F(hash_test, test13) {
     key.capri_intrinsic_lif = 10;
     data.actionid = 1;
 
-    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     data.actionid = 2;
-    rs = test_hash.update(hash_idx, &data);
+    rs = test_hash->update(hash_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_OK);
     sent_set.insert(InputPropertiesHashEntry(key,data));
 
-    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    rs = test_hash->iterate(populate_ip_fn, &hash_set, Hash::BOTH);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == hash_set);
 
-    rs = test_hash.remove(hash_idx);
+    rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 

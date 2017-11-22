@@ -1,14 +1,46 @@
 #include "nic/hal/pd/utils/directmap/directmap.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/include/hal_mem.hpp"
 #include "nic/utils/thread/thread.hpp"
 #include "nic/utils/ht/ht.hpp"
 
 using hal::pd::utils::DirectMap;
 
-namespace hal {
+
+//----------------------------------------------------------------------------
+// Factory method to instantiate the class
+//----------------------------------------------------------------------------
+DirectMap *
+DirectMap::factory(std::string table_name, uint32_t table_id,
+                   uint32_t num_entries, uint32_t swdata_len,
+                   bool thread_safe, bool sharing_en, 
+                   uint32_t mtrack_id)
+{
+    void        *mem = NULL;
+    DirectMap   *dm = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(DirectMap));
+    if (!mem) {
+        return NULL;
+    }
+
+    dm = new (mem) DirectMap(table_name, table_id, num_entries, swdata_len,
+                             thread_safe, sharing_en);
+    return dm;
 }
+
+//----------------------------------------------------------------------------
+// Method to free & delete the object
+//----------------------------------------------------------------------------
+void
+DirectMap::destroy(DirectMap *dm, uint32_t mtrack_id)
+{
+    if (dm) {
+        dm->~DirectMap();
+        HAL_FREE(mtrack_id, dm);
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Constructor - DirectMap
 // ----------------------------------------------------------------------------
@@ -43,7 +75,9 @@ DirectMap::DirectMap(std::string table_name, uint32_t table_id,
                     sharing_en_);
 
     // Initialize the indexer
-    dm_indexer_ = new indexer(num_entries, thread_safe = thread_safe_);
+    // dm_indexer_ = new indexer(num_entries, thread_safe = thread_safe_);
+    dm_indexer_ = indexer::factory(num_entries, thread_safe_, false, 
+                                   HAL_MEM_ALLOC_DIRECT_MAP_INDEXER);
 
     // Initialize hash table if sharing is enabled
 
@@ -55,7 +89,9 @@ DirectMap::DirectMap(std::string table_name, uint32_t table_id,
     }
     
     // Initialize for stats
-    stats_ = new uint64_t[STATS_MAX]();
+    // stats_ = new uint64_t[STATS_MAX]();
+    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_DIRECT_MAP_STATS, 
+                                    sizeof(uint64_t) * STATS_MAX);
 }
 
 // ----------------------------------------------------------------------------
@@ -63,8 +99,10 @@ DirectMap::DirectMap(std::string table_name, uint32_t table_id,
 // ----------------------------------------------------------------------------
 DirectMap::~DirectMap()
 {
-    delete dm_indexer_;
-    delete[] stats_;
+    // delete dm_indexer_;
+    // delete[] stats_;
+    indexer::destroy(dm_indexer_);
+    HAL_FREE(HAL_MEM_ALLOC_DIRECT_MAP_STATS, stats_);
 }
 
 // ----------------------------------------------------------------------------

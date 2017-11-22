@@ -9,6 +9,36 @@ using hal::pd::utils::FlowHintGroup;
 using hal::pd::utils::FlowSpineEntry;
 using hal::pd::utils::FlowEntry;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+FlowSpineEntry *
+FlowSpineEntry::factory(FlowTableEntry *ft_entry, uint32_t mtrack_id)
+{
+    void            *mem = NULL;
+    FlowSpineEntry  *fse = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(FlowSpineEntry));
+    if (!mem) {
+        return NULL;
+    }
+
+    fse = new (mem) FlowSpineEntry(ft_entry);
+    return fse;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+FlowSpineEntry::destroy(FlowSpineEntry *fse, uint32_t mtrack_id) 
+{
+    if (fse) {
+        fse->~FlowSpineEntry();
+        HAL_FREE(mtrack_id, fse);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Constructor - Flow Spine Entry
 // ---------------------------------------------------------------------------
@@ -159,15 +189,19 @@ FlowSpineEntry::program_table()
     hw_key_len = get_ft_entry()->get_flow()->get_hwkey_len();
     sw_key_len = get_ft_entry()->get_flow()->get_key_len();
 
-    sw_key = ::operator new(sw_key_len);
-    memset(sw_key, 0, sw_key_len);
+    // sw_key = ::operator new(sw_key_len);
+    // memset(sw_key, 0, sw_key_len);
+    sw_key = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_SW_KEY, 
+                        sw_key_len);
 
     HAL_TRACE_DEBUG("FSE::{}: Before forming action data", __FUNCTION__);
     if (is_in_ft_) {
         form_action_data(&action_data);
         // Form Hw key for anchor
-        hwkey = ::operator new(hw_key_len);
-        memset(hwkey, 0, hw_key_len);
+        // hwkey = ::operator new(hw_key_len);
+        // memset(hwkey, 0, hw_key_len);
+        hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY,
+                           hw_key_len);
         if (anchor_entry_) {
             p4pd_hwkey_hwmask_build(table_id, anchor_entry_->get_key(),
                                     NULL, (uint8_t *)hwkey, NULL);
@@ -185,12 +219,15 @@ FlowSpineEntry::program_table()
 		// P4-API: Flow Table Write
         pd_err = p4pd_entry_write(table_id, ft_index, (uint8_t*)hwkey, NULL,
                                   (void *)&action_data);
-        ::operator delete(hwkey);
+        // ::operator delete(hwkey);
+        HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hwkey);
 	} else {
         form_oflow_action_data(&oflow_act_data);
         // Form Hw key for anchor
-        hwkey = ::operator new(hw_key_len);
-        memset(hwkey, 0, hw_key_len);
+        // hwkey = ::operator new(hw_key_len);
+        // memset(hwkey, 0, hw_key_len);
+        hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY,
+                           hw_key_len);
         if (anchor_entry_) {
             p4pd_hwkey_hwmask_build(oflow_table_id, anchor_entry_->get_key(),
                                     NULL, (uint8_t *)hwkey, NULL);
@@ -210,12 +247,13 @@ FlowSpineEntry::program_table()
 		// P4-API: OFlow Table Write
         pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, (uint8_t*)hwkey, NULL,
                                   (void *)&oflow_act_data);
-        ::operator delete(hwkey);
+        // ::operator delete(hwkey);
+        HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hwkey);
 	}
 
+    HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_SW_KEY, sw_key);
 	return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
 }
-
 
 // ---------------------------------------------------------------------------
 // De-Program the entry into HW
@@ -237,8 +275,9 @@ FlowSpineEntry::deprogram_table()
     oflow_table_id = get_ft_entry()->get_flow()->get_oflow_table_id();
 
 	if (is_in_ft_) {
-        hw_key = ::operator new(hw_key_len);
-        memset(hw_key, 0, hw_key_len);
+        // hw_key = ::operator new(hw_key_len);
+        // memset(hw_key, 0, hw_key_len);
+        hw_key = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hw_key_len);
         memset(&action_data, 0, sizeof(action_data));
         uint32_t ft_index = get_ft_entry()->get_ft_bits();
 
@@ -248,7 +287,8 @@ FlowSpineEntry::deprogram_table()
 		// P4-API: Flow Table Write
         pd_err = p4pd_entry_write(table_id, ft_index, (uint8_t *)hw_key, NULL, 
                                   (void *)&action_data);
-        ::operator delete(hw_key);
+        // ::operator delete(hw_key);
+        HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hw_key);
     } else {
         memset(&oflow_act_data, 0, sizeof(oflow_act_data));
 

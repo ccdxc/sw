@@ -11,6 +11,36 @@ using hal::pd::utils::FlowHintGroup;
 using hal::pd::utils::FlowEntry;
 using hal::pd::utils::Flow;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+FlowTableEntry *
+FlowTableEntry::factory(uint32_t ft_bits, Flow *flow, uint32_t mtrack_id)
+{
+    void            *mem = NULL;
+    FlowTableEntry  *fte = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(FlowTableEntry));
+    if (!mem) {
+        return NULL;
+    }
+
+    fte = new (mem) FlowTableEntry(ft_bits, flow);
+    return fte;
+}
+
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+FlowTableEntry::destroy(FlowTableEntry *fte, uint32_t mtrack_id) 
+{
+    if (fte) {
+        fte->~FlowTableEntry();
+        HAL_FREE(mtrack_id, fte);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Constructor - Flow Table Entry
 // ---------------------------------------------------------------------------
@@ -21,7 +51,6 @@ FlowTableEntry::FlowTableEntry(uint32_t ft_bits, Flow *flow)
     spine_entry_        = NULL;
     num_spine_entries_  = 0;
 }
-
 
 // ---------------------------------------------------------------------------
 // Destructor - Flow Table Entry
@@ -61,7 +90,8 @@ FlowTableEntry::insert(FlowEntry *f_entry)
         rs = f_entry->insert(fh_grp, fse);
         if (rs != HAL_RET_OK) {
             if (is_new_fse) {
-                delete fse;
+                // delete fse;
+                FlowSpineEntry::destroy(fse);
                 num_spine_entries_--;
             }
         }
@@ -71,16 +101,19 @@ FlowTableEntry::insert(FlowEntry *f_entry)
         // Check if we can put this new HG in the existing Spine Entry
         fse = get_spine_entry_for_new_hg(&is_new_fse);
         //   - Create Hint Group
-        fh_grp = new FlowHintGroup(hint_bits, NULL);
+        // fh_grp = new FlowHintGroup(hint_bits, NULL);
+        fh_grp = FlowHintGroup::factory(hint_bits, NULL);
         rs = f_entry->insert(fh_grp, fse);
 
         // If insert is SUCCESS, put fh_grp into the map and list
         if (rs == HAL_RET_OK) {
             hint_groups_map_[hint_bits] = fh_grp;
         } else {
-            delete fh_grp;
+            // delete fh_grp;
+            FlowHintGroup::destroy(fh_grp);
             if (is_new_fse) {
-                delete fse;
+                // delete fse;
+                FlowSpineEntry::destroy(fse);
                 num_spine_entries_--;
             }
         }
@@ -129,7 +162,8 @@ FlowTableEntry::remove(FlowEntry *f_entry)
         // Reset & Programming of Prev would have been done in FlowEntry.
         // Just free up
         HAL_TRACE_DEBUG("{}: Removing spine entry", __FUNCTION__);
-        delete fspe;
+        // delete fspe;
+        FlowSpineEntry::destroy(fspe);
         num_spine_entries_--;
         if (!num_spine_entries_) {
             spine_entry_ = NULL;
@@ -170,7 +204,8 @@ FlowTableEntry::get_spine_entry_for_new_hg(bool *is_new)
             flow_->get_num_hints_per_flow_entry())) {
         HAL_TRACE_DEBUG("FlowTE::{}: New Spine Entry ...", __FUNCTION__);
         *is_new = TRUE;
-        new_sp_entry = new FlowSpineEntry(this);
+        // new_sp_entry = new FlowSpineEntry(this);
+        new_sp_entry = FlowSpineEntry::factory(this);
         if (!sp_entry) {
             // Spine Entry will go in Flow Table
             new_sp_entry->set_is_in_ft(TRUE);
@@ -296,7 +331,8 @@ FlowTableEntry::remove_fhg(FlowHintGroup *fhg)
         // Remove Hint Group
         hint_groups_map_.erase(fhg->get_hint_bits());
         // Free Hint Group
-        delete fhg;
+        // delete fhg;
+        FlowHintGroup::destroy(fhg);
     } else {
         // Dont call this api if fhg still has flow entries
         HAL_ASSERT(0);

@@ -7,6 +7,39 @@
 using hal::pd::utils::TcamEntry;
 using hal::pd::utils::Tcam;
 
+//---------------------------------------------------------------------------
+// Factory method to instantiate the class
+//---------------------------------------------------------------------------
+Tcam *
+Tcam::factory(std::string table_name, uint32_t table_id,
+              uint32_t tcam_capacity, uint32_t swkey_len,
+              uint32_t swdata_len, bool allow_dup_insert,
+              uint32_t mtrack_id)
+{
+    void   *mem = NULL;
+    Tcam   *tcam = NULL;
+
+    mem = HAL_CALLOC(mtrack_id, sizeof(Tcam));
+    if (!mem) {
+        return NULL;
+    }
+
+    tcam = new (mem) Tcam(table_name, table_id, tcam_capacity, swkey_len,
+                          swdata_len, allow_dup_insert);
+    return tcam;
+}
+//---------------------------------------------------------------------------
+// Method to free & delete the object
+//---------------------------------------------------------------------------
+void
+Tcam::destroy(Tcam *te, uint32_t mtrack_id) 
+{
+    if (te) {
+        te->~Tcam();
+        HAL_FREE(mtrack_id, te);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Constructor - Tcam
 // ---------------------------------------------------------------------------
@@ -21,7 +54,9 @@ Tcam::Tcam(std::string table_name, uint32_t table_id,
     swdata_len_         = swdata_len;
     allow_dup_insert_   = allow_dup_insert;
 
-    tcam_indexer_       = new indexer(tcam_capacity_);
+    // tcam_indexer_       = new indexer(tcam_capacity_);
+    tcam_indexer_ = indexer::factory(tcam_capacity_, false, false, 
+                                     HAL_MEM_ALLOC_TCAM_INDEXER);
 
     hwkey_len_ = 0;
     hwkeymask_len_ = 0;
@@ -44,7 +79,9 @@ Tcam::Tcam(std::string table_name, uint32_t table_id,
     // hwdata_len_ = swdata_len;
 
     // Initialize for Stats
-    stats_ = new uint64_t[STATS_MAX]();
+    // stats_ = new uint64_t[STATS_MAX]();
+    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_TCAM_STATS, 
+                                    sizeof(uint64_t) * STATS_MAX);
 }
 
 // ---------------------------------------------------------------------------
@@ -52,8 +89,10 @@ Tcam::Tcam(std::string table_name, uint32_t table_id,
 // ---------------------------------------------------------------------------
 Tcam::~Tcam() 
 {
-    delete tcam_indexer_;
-    delete[] stats_;
+    // delete tcam_indexer_;
+    // delete[] stats_;
+    indexer::destroy(tcam_indexer_, HAL_MEM_ALLOC_TCAM_INDEXER);
+    HAL_FREE(HAL_MEM_ALLOC_TCAM_STATS, stats_);
 }
 
 // ---------------------------------------------------------------------------
@@ -95,7 +134,8 @@ Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest
     }
 
     HAL_TRACE_DEBUG("TCAM: Table: {} Insert at {}", table_name_.c_str(), *index);
-    te = new TcamEntry(key, key_mask, swkey_len_, data, swdata_len_, *index); 
+    te = TcamEntry::factory(key, key_mask, swkey_len_, data, swdata_len_, *index);
+    // te = new TcamEntry(key, key_mask, swkey_len_, data, swdata_len_, *index); 
 
     // program hw
     rs = program_table_(te);
@@ -104,7 +144,8 @@ Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest
         // insert in sw DS
         tcam_entry_map_[*index] = te;
     } else {
-        delete te;
+        // delete te;
+        TcamEntry::destroy(te);
         free_index_(*index);
     }
 
@@ -151,7 +192,9 @@ Tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
         goto end;
     }
 
-    te = new TcamEntry(key, key_mask, swkey_len_, data, swdata_len_, index); 
+    // te = new TcamEntry(key, key_mask, swkey_len_, data, swdata_len_, index); 
+    te = TcamEntry::factory(key, key_mask, swkey_len_, data, 
+                            swdata_len_, index);
 
     // program hw
     rs = program_table_(te);
@@ -160,7 +203,8 @@ Tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
         // insert in sw DS
         tcam_entry_map_[index] = te;
     } else {
-        delete te;
+        // delete te;
+        TcamEntry::destroy(te);
         free_index_(index);
     }
 
@@ -249,7 +293,8 @@ Tcam::remove(uint32_t tcam_idx)
 
     if (rs == HAL_RET_OK) {
         // free & remove from sw DS
-        delete itr->second;
+        // delete itr->second;
+        TcamEntry::destroy(itr->second);
         tcam_entry_map_.erase(itr);
 
         // free index

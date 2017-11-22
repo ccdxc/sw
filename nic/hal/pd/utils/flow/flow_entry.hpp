@@ -2,6 +2,7 @@
 #define __FLOW_ENTRY_HPP__
 
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace pd {
@@ -41,11 +42,16 @@ private:
     FlowSpineEntry      *spine_entry_;      // back-ptr to spine if its anchor
     uint32_t            fhct_index_;        // non-anchor's flow coll. tbl idx
 
-public:
     FlowEntry (void *key, uint32_t key_len, void *data, uint32_t data_len, 
                uint32_t hwkey_len, bool log);
     ~FlowEntry ();
 
+public:
+    static FlowEntry *factory(void *key, uint32_t key_len, void *data, 
+                              uint32_t data_len, uint32_t hwkey_len, bool log,
+                              uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_ENTRY);
+    static void destroy(FlowEntry *fe,
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_ENTRY);
 
     hal_ret_t insert(FlowHintGroup *fhg, FlowSpineEntry *fse);
     hal_ret_t update(void *data);

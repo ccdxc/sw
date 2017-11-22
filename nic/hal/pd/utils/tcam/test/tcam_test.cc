@@ -164,7 +164,7 @@ populate_im_fn (const void *key, const void *key_mask,
 TEST_F(tcam_test, test1) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -185,21 +185,21 @@ TEST_F(tcam_test, test1) {
     data.actionid = 1;
     memset(&key_mask, ~0, sizeof(tcam_key_t));
 
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     data.actionid = 2;
-    rs = test_tcam.update(tcam_idx, &data);
+    rs = test_tcam->update(tcam_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_OK);
     sent_set.insert(InputMappingNativeTcamEntry(key, key_mask, data));
 
-    rs = test_tcam.iterate(populate_im_fn, &tcam_set);
+    rs = test_tcam->iterate(populate_im_fn, &tcam_set);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == tcam_set);
 
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
 }
@@ -215,7 +215,7 @@ TEST_F(tcam_test, test1) {
 TEST_F(tcam_test, test2) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -235,21 +235,21 @@ TEST_F(tcam_test, test2) {
     memset(&key_mask, ~0, sizeof(tcam_key_t));
 
 
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
 
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx2);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx2);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 
 
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -265,7 +265,7 @@ TEST_F(tcam_test, test2) {
 TEST_F(tcam_test, test3) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -284,21 +284,21 @@ TEST_F(tcam_test, test3) {
     data.actionid = 1;
     memset(&key_mask, ~0, sizeof(tcam_key_t));
 
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     sent_set.insert(InputMappingNativeTcamEntry(key, key_mask, data));
 
-    rs = test_tcam.iterate(populate_im_fn, &tcam_set);
+    rs = test_tcam->iterate(populate_im_fn, &tcam_set);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == tcam_set);
 
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
 
@@ -316,7 +316,7 @@ TEST_F(tcam_test, test3) {
 TEST_F(tcam_test, test4) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -336,20 +336,20 @@ TEST_F(tcam_test, test4) {
     memset(&key_mask, ~0, sizeof(input_mapping_native_swkey_mask_t));
 
 
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
 
-    rs = test_tcam.retrieve(tcam_idx+1, (void *)&retr_key, (void *)&retr_key_mask, 
+    rs = test_tcam->retrieve(tcam_idx+1, (void *)&retr_key, (void *)&retr_key_mask, 
             (void *)&retr_data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
-    rs = test_tcam.retrieve(tcam_idx+1000, (void *)&retr_key, (void *)&retr_key_mask, 
+    rs = test_tcam->retrieve(tcam_idx+1000, (void *)&retr_key, (void *)&retr_key_mask, 
             (void *)&retr_data);
     ASSERT_TRUE(rs == HAL_RET_OOB);
 
-    rs = test_tcam.retrieve(tcam_idx, (void *)&retr_key, (void *)&retr_key_mask, 
+    rs = test_tcam->retrieve(tcam_idx, (void *)&retr_key, (void *)&retr_key_mask, 
             (void *)&retr_data);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
@@ -362,7 +362,7 @@ TEST_F(tcam_test, test4) {
     ASSERT_TRUE(data.q == retr_data.q);
 #endif
 
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -379,7 +379,7 @@ TEST_F(tcam_test, test4) {
 TEST_F(tcam_test, test5) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -398,23 +398,23 @@ TEST_F(tcam_test, test5) {
     memset(&key_mask, ~0, sizeof(input_mapping_native_swkey_t));
 
 
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     data.actionid = 2;
-    rs = test_tcam.update(tcam_idx, &data);
+    rs = test_tcam->update(tcam_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     tcam_idx++;
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
-    rs = test_tcam.update(tcam_idx, &data);
+    rs = test_tcam->update(tcam_idx, &data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
     tcam_idx--;
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -427,7 +427,7 @@ TEST_F(tcam_test, test5) {
 TEST_F(tcam_test, test6) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -448,20 +448,20 @@ TEST_F(tcam_test, test6) {
     memset(&key_mask, ~0, sizeof(input_mapping_native_swkey_t));
 
     for (int i = 0; i < 50; i++) {
-        rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+        rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                 (void *)&data, &tcam_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
         sent_set.insert(InputMappingNativeTcamEntry(key, key_mask, data));
         key.tunnel_metadata_tunnel_type++;
     }
 
-    rs = test_tcam.iterate(populate_im_fn, &tcam_set);
+    rs = test_tcam->iterate(populate_im_fn, &tcam_set);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     ASSERT_TRUE(sent_set == tcam_set);
 
     for (int i = 0; i < 50; i++) {
-        rs = test_tcam.remove(tcam_idx[i]);
+        rs = test_tcam->remove(tcam_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 }
@@ -477,7 +477,7 @@ TEST_F(tcam_test, test6) {
 TEST_F(tcam_test, test7) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -499,45 +499,45 @@ TEST_F(tcam_test, test7) {
     memset(&key_mask, ~0, sizeof(tcam_key_t));
 
     // insert
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // insert again
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 
     // remove
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // 100 inserts
     for (int i = 0; i < 100; i++) {
-        rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+        rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                               (void *)&data, &idx[i]);
         key.tunnel_metadata_tunnel_type++;
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
     // insert
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_NO_RESOURCE);
 
     // 100 removes
     for (int i = 0; i < 100; i++) {
-        rs = test_tcam.remove(idx[i]);
+        rs = test_tcam->remove(idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
     HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, num_in_use:{}, "
                     "num_inserts:{}, num_insert_errors:{}, "
                     "num_deletes:{}, num_delete_errors:{}",
-                    test_tcam.table_id(), test_tcam.table_name(),
-                    test_tcam.table_capacity(), test_tcam.table_num_entries_in_use(),
-                    test_tcam.table_num_inserts(), test_tcam.table_num_insert_errors(),
-                    test_tcam.table_num_deletes(), test_tcam.table_num_delete_errors());
+                    test_tcam->table_id(), test_tcam->table_name(),
+                    test_tcam->table_capacity(), test_tcam->table_num_entries_in_use(),
+                    test_tcam->table_num_inserts(), test_tcam->table_num_insert_errors(),
+                    test_tcam->table_num_deletes(), test_tcam->table_num_delete_errors());
 }
 
 /* ---------------------------------------------------------------------------
@@ -551,7 +551,7 @@ TEST_F(tcam_test, test7) {
 TEST_F(tcam_test, test8) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -573,24 +573,24 @@ TEST_F(tcam_test, test8) {
 
 
     // insert
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // update
-    rs = test_tcam.update(tcam_idx, (void *)&data);
+    rs = test_tcam->update(tcam_idx, (void *)&data);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // update
-    rs = test_tcam.update(tcam_idx + 1000, (void *)&data);
+    rs = test_tcam->update(tcam_idx + 1000, (void *)&data);
     ASSERT_TRUE(rs == HAL_RET_OOB);
 
     // update
-    rs = test_tcam.update(tcam_idx + 1, (void *)&data);
+    rs = test_tcam->update(tcam_idx + 1, (void *)&data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
     // remove
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -605,7 +605,7 @@ TEST_F(tcam_test, test8) {
 TEST_F(tcam_test, test9) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -627,20 +627,20 @@ TEST_F(tcam_test, test9) {
 
 
     // insert
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // update
-    rs = test_tcam.remove(tcam_idx + 1000);
+    rs = test_tcam->remove(tcam_idx + 1000);
     ASSERT_TRUE(rs == HAL_RET_OOB);
 
     // update
-    rs = test_tcam.remove(tcam_idx + 1);
+    rs = test_tcam->remove(tcam_idx + 1);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
     // remove
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -654,7 +654,7 @@ TEST_F(tcam_test, test9) {
 TEST_F(tcam_test, test10) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -677,7 +677,7 @@ TEST_F(tcam_test, test10) {
 
     // 100 inserts
     for (int i = 0; i < 100; i++) {
-        rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+        rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                               (void *)&data, &idx[i]);
         key.tunnel_metadata_tunnel_type++;
         ASSERT_TRUE(rs == HAL_RET_OK);
@@ -685,13 +685,13 @@ TEST_F(tcam_test, test10) {
 
     // 100 removes
     for (int i = 0; i < 100; i++) {
-        rs = test_tcam.remove(idx[i]);
+        rs = test_tcam->remove(idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
     // 100 inserts
     for (int i = 0; i < 100; i++) {
-        rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+        rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                               (void *)&data, &idx[i]);
         key.tunnel_metadata_tunnel_type++;
         ASSERT_TRUE(rs == HAL_RET_OK);
@@ -699,7 +699,7 @@ TEST_F(tcam_test, test10) {
 
     // 100 removes
     for (int i = 0; i < 100; i++) {
-        rs = test_tcam.remove(idx[i]);
+        rs = test_tcam->remove(idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 }
@@ -714,7 +714,7 @@ TEST_F(tcam_test, test10) {
 TEST_F(tcam_test, test11) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -737,7 +737,7 @@ TEST_F(tcam_test, test11) {
 
     // 100 inserts
     for (int i = 0; i < 100; i++) {
-        rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+        rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                               (void *)&data, &idx[i]);
         key.tunnel_metadata_tunnel_type++;
         ASSERT_TRUE(rs == HAL_RET_OK);
@@ -745,13 +745,13 @@ TEST_F(tcam_test, test11) {
 
     // 50 removes
     for (int i = 0; i < 50; i++) {
-        rs = test_tcam.remove(idx[i]);
+        rs = test_tcam->remove(idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
     // 50 inserts
     for (int i = 0; i < 50; i++) {
-        rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+        rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                               (void *)&data, &idx[i]);
         key.tunnel_metadata_tunnel_type++;
         ASSERT_TRUE(rs == HAL_RET_OK);
@@ -759,7 +759,7 @@ TEST_F(tcam_test, test11) {
 
     // 100 removes
     for (int i = 0; i < 100; i++) {
-        rs = test_tcam.remove(idx[i]);
+        rs = test_tcam->remove(idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 }
@@ -774,7 +774,7 @@ TEST_F(tcam_test, test11) {
 TEST_F(tcam_test, test12) {
 
     std::string table_name = "Input_Mapping_Native";
-    Tcam test_tcam = Tcam(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
+    Tcam *test_tcam = Tcam::factory(table_name, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, (uint32_t)100,
                           (uint32_t)sizeof(input_mapping_native_swkey_t), 
                           (uint32_t)sizeof(input_mapping_native_actiondata));
 
@@ -796,32 +796,32 @@ TEST_F(tcam_test, test12) {
 
 
     // insert 0th entry
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // insert withid 1st entry
     key.tunnel_metadata_tunnel_type++;
-    rs = test_tcam.insert_withid((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert_withid((void *)&key, (void *)&key_mask,
                           (void *)&data, tcam_idx+1);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // insert with same key
-    rs = test_tcam.insert((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 
     // insert with same key
-    rs = test_tcam.insert_withid((void *)&key, (void *)&key_mask,
+    rs = test_tcam->insert_withid((void *)&key, (void *)&key_mask,
                           (void *)&data, tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 
     // remove 0th entry
-    rs = test_tcam.remove(tcam_idx);
+    rs = test_tcam->remove(tcam_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // remove 1st entry
-    rs = test_tcam.remove(tcam_idx + 1);
+    rs = test_tcam->remove(tcam_idx + 1);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 

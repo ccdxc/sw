@@ -18,6 +18,7 @@
 #include <string>
 #include <map>
 #include <boost/crc.hpp>
+#include "nic/include/hal_mem.hpp"
 
 using namespace std;
 
@@ -141,13 +142,18 @@ private:
     // Entry Trace
     hal_ret_t entry_trace_(HashEntry *he);
 
-public:
-
     Hash(std::string table_name, uint32_t dleft_table_id, 
          uint32_t otcam_table_id, uint32_t dleft_capacity,
          uint32_t otcam_capacity, uint32_t swkey_len, uint32_t swdata_len, 
          Hash::HashPoly hash_poly = HASH_POLY0);
     ~Hash();
+public:
+	static Hash *factory(std::string table_name, uint32_t dleft_table_id,
+						 uint32_t otcam_table_id, uint32_t dleft_capacity,
+						 uint32_t otcam_capacity, uint32_t swkey_len,
+						 uint32_t swdata_len, Hash::HashPoly hash_poly = HASH_POLY0,
+						 uint32_t mtrack_id = HAL_MEM_ALLOC_HASH);
+	static void destroy(Hash *hash, uint32_t mtrack_id = HAL_MEM_ALLOC_HASH);
 
     // Debug Info
     uint32_t table_id(void) { return table_id_; }

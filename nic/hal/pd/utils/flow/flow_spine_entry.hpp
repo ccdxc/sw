@@ -4,6 +4,7 @@
 #include <list>
 #include "nic/include/base.h"
 #include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 
 namespace hal {
@@ -22,18 +23,7 @@ typedef struct hg_root_ {
     uint16_t hint;
 } hg_root_t;
 
-
-
-/** ---------------------------------------------------------------------------
-  *
-  * class FlowSpineEntry
-  *
-  * - Identifies a spine entry.
-  *
-  * ---------------------------------------------------------------------------
-*/
 class FlowSpineEntry {
-
 private:
     FlowTableEntry *ft_entry_;      // Back Pointer to FT Entry        
     FlowEntry *anchor_entry_; 		// Anchor entry if is_in_ft_:TRUE
@@ -42,9 +32,13 @@ private:
     uint32_t fhct_index_;           // Valid only if is_in_ft is FALSE
     FlowSpineEntry *prev_, *next_;  // Linked List
 
-public:
     FlowSpineEntry(FlowTableEntry *ft_entry);
     ~FlowSpineEntry() {}
+public:
+    static FlowSpineEntry *factory(FlowTableEntry *ft_entry,
+                                   uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_SPINE_ENTRY);
+    static void destroy(FlowSpineEntry *fse, 
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_SPINE_ENTRY);
 
     void form_action_data(flow_hash_actiondata *action_data);
     void form_oflow_action_data(flow_hash_overflow_actiondata *action_data);

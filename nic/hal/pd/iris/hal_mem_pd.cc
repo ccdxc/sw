@@ -60,15 +60,15 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((vrf_slab_ != NULL), false);
 
-    vrf_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_VRFS,
-                                                true, /* thread safe */ 
-                                                true); /*skip zero */
+    vrf_hwid_idxr_ = hal::utils::indexer::factory(HAL_MAX_HW_VRFS,
+                                                  true, /* thread safe */ 
+                                                  true); /*skip zero */
     HAL_ASSERT_RETURN((vrf_hwid_idxr_ != NULL), false);
     // vrf_hwid_idxr_->alloc_withid(0);
 
     // initialize security related data structures
     nwsec_profile_hwid_idxr_ =
-        new hal::utils::indexer(HAL_MAX_HW_NWSEC_PROFILES);
+        hal::utils::indexer::factory(HAL_MAX_HW_NWSEC_PROFILES);
     HAL_ASSERT_RETURN((nwsec_profile_hwid_idxr_ != NULL), false);
 
     // initialize l2seg related data structures
@@ -83,9 +83,9 @@ hal_state_pd::init(void)
                                  hal::pd::l2seg_pd_hwid_compare_hw_key_func);
     HAL_ASSERT_RETURN((l2seg_hwid_ht_ != NULL), false);
 
-    l2seg_cpu_idxr_ = new hal::utils::indexer(HAL_MAX_HW_L2SEGMENTS, 
-                                              true, /* thread safe */
-                                              true);/* skip zero */
+    l2seg_cpu_idxr_ = hal::utils::indexer::factory(HAL_MAX_HW_L2SEGMENTS, 
+                                                   true, /* thread safe */
+                                                   true);/* skip zero */
     HAL_ASSERT_RETURN((l2seg_cpu_idxr_ != NULL), false);
 
     // initialize mc entry related data structures
@@ -95,9 +95,9 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((mc_entry_slab_ != NULL), false);
 
     // initialize lport indexer
-    lport_idxr_ = new hal::utils::indexer(HAL_MAX_LPORTS, 
-                                          true,     /* thread safe */
-                                          true);    /* skip zero */
+    lport_idxr_ = hal::utils::indexer::factory(HAL_MAX_LPORTS, 
+                                               true,     /* thread safe */
+                                               true);    /* skip zero */
     HAL_ASSERT_RETURN((lport_idxr_ != NULL), false);
 
     // initialize LIF PD related data structures
@@ -106,7 +106,7 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((lif_pd_slab_ != NULL), false);
 
-    lif_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_LIFS);
+    lif_hwid_idxr_ = hal::utils::indexer::factory(HAL_MAX_HW_LIFS);
     HAL_ASSERT_RETURN((lif_hwid_idxr_ != NULL), false);
 
     // initialize Uplink If PD related data structures
@@ -121,7 +121,7 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((uplinkpc_pd_slab_ != NULL), false);
 
-    uplinkifpc_idxr_ = new hal::utils::indexer(HAL_MAX_UPLINK_IF_PCS);
+    uplinkifpc_idxr_ = hal::utils::indexer::factory(HAL_MAX_UPLINK_IF_PCS);
     HAL_ASSERT_RETURN((uplinkifpc_idxr_ != NULL), false);
 
     // initialize ENIC If PD related data structures
@@ -192,7 +192,7 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((buf_pool_pd_slab_ != NULL), false);
 
     for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
-        buf_pool_hwid_idxr_[p] = new hal::utils::indexer(HAL_MAX_HW_BUF_POOLS_PER_PORT);
+        buf_pool_hwid_idxr_[p] = hal::utils::indexer::factory(HAL_MAX_HW_BUF_POOLS_PER_PORT);
         HAL_ASSERT_RETURN((buf_pool_hwid_idxr_[p] != NULL), false);
     }
 
@@ -205,7 +205,7 @@ hal_state_pd::init(void)
     for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
         for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
             queue_hwid_idxr_[p][n] = 
-                new hal::utils::indexer(queue_count_by_node_type(p, (queue_node_type_e)n));
+                hal::utils::indexer::factory(queue_count_by_node_type(p, (queue_node_type_e)n));
             HAL_ASSERT_RETURN((queue_hwid_idxr_[p][n] != NULL), false);
         }
     }
@@ -216,10 +216,10 @@ hal_state_pd::init(void)
                                      false, true, true, true);
     HAL_ASSERT_RETURN((policer_pd_slab_ != NULL), false);
 
-    ingress_policer_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_INGRESS_POLICERS);
+    ingress_policer_hwid_idxr_ = hal::utils::indexer::factory(HAL_MAX_HW_INGRESS_POLICERS);
     HAL_ASSERT_RETURN((ingress_policer_hwid_idxr_ != NULL), false);
 
-    egress_policer_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_EGRESS_POLICERS);
+    egress_policer_hwid_idxr_ = hal::utils::indexer::factory(HAL_MAX_HW_EGRESS_POLICERS);
     HAL_ASSERT_RETURN((egress_policer_hwid_idxr_ != NULL), false);
     
     // initialize TLSCB related data structures
@@ -265,19 +265,19 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((wring_hwid_ht_ != NULL), false);
 
     // Indexer based allocator to manage the crypto session keys
-    session_keys_idxr_ = new hal::utils::indexer(CRYPTO_KEY_COUNT_MAX);
+    session_keys_idxr_ = hal::utils::indexer::factory(CRYPTO_KEY_COUNT_MAX);
     HAL_ASSERT_RETURN((session_keys_idxr_ != NULL), false);
 
-    crypto_asym_dma_descr_idxr_ = new hal::utils::indexer(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
+    crypto_asym_dma_descr_idxr_ = hal::utils::indexer::factory(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
     HAL_ASSERT_RETURN((crypto_asym_dma_descr_idxr_ != NULL), false);
 
-    crypto_sym_msg_descr_idxr_ = new hal::utils::indexer(CRYPTO_SYM_MSG_DESCR_COUNT_MAX);
+    crypto_sym_msg_descr_idxr_ = hal::utils::indexer::factory(CRYPTO_SYM_MSG_DESCR_COUNT_MAX);
     HAL_ASSERT_RETURN((crypto_sym_msg_descr_idxr_ != NULL), false);
 
-    hbm_mem_idxr_ = new hal::utils::indexer(CRYPTO_HBM_MEM_COUNT_MAX);
+    hbm_mem_idxr_ = hal::utils::indexer::factory(CRYPTO_HBM_MEM_COUNT_MAX);
     HAL_ASSERT_RETURN((hbm_mem_idxr_!= NULL), false);
 
-    crypto_asym_key_descr_idxr_ = new hal::utils::indexer(CRYPTO_ASYM_KEY_DESCR_COUNT_MAX);
+    crypto_asym_key_descr_idxr_ = hal::utils::indexer::factory(CRYPTO_ASYM_KEY_DESCR_COUNT_MAX);
     HAL_ASSERT_RETURN((crypto_asym_key_descr_idxr_!= NULL), false);
     
     // initialize IPSECCB related data structures
@@ -321,7 +321,7 @@ hal_state_pd::init(void)
                                hal::pd::rw_entry_pd_compare_key_func);
     HAL_ASSERT_RETURN((rw_table_ht_ != NULL), false);
 
-    rw_tbl_idxr_ = new hal::utils::indexer(HAL_MAX_RW_TBL_ENTRIES);
+    rw_tbl_idxr_ = hal::utils::indexer::factory(HAL_MAX_RW_TBL_ENTRIES);
     HAL_ASSERT_RETURN((rw_tbl_idxr_ != NULL), false);
 
     // initialize tunnel rw table management structures
@@ -336,7 +336,7 @@ hal_state_pd::init(void)
                                hal::pd::tnnl_rw_entry_pd_compare_key_func);
     HAL_ASSERT_RETURN((tnnl_rw_table_ht_ != NULL), false);
 
-    tnnl_rw_tbl_idxr_ = new hal::utils::indexer(HAL_TUNNEL_RW_TABLE_SIZE);
+    tnnl_rw_tbl_idxr_ = hal::utils::indexer::factory(HAL_TUNNEL_RW_TABLE_SIZE);
     HAL_ASSERT_RETURN((tnnl_rw_tbl_idxr_ != NULL), false);
     
     // initialize CPUCB related data structures
@@ -361,9 +361,9 @@ hal_state_pd::init(void)
                                             true, true, true, true);
     HAL_ASSERT_RETURN((cpupkt_qinst_info_slab_ != NULL), false);
 
-    cpupkt_descr_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_CPU_PKT_DESCR_ENTRIES);
+    cpupkt_descr_hwid_idxr_ = hal::utils::indexer::factory(HAL_MAX_CPU_PKT_DESCR_ENTRIES);
     HAL_ASSERT_RETURN((cpupkt_descr_hwid_idxr_ != NULL), false);
-    cpupkt_page_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_CPU_PKT_PAGE_ENTRIES);
+    cpupkt_page_hwid_idxr_ = hal::utils::indexer::factory(HAL_MAX_CPU_PKT_PAGE_ENTRIES);
     HAL_ASSERT_RETURN((cpupkt_page_hwid_idxr_ != NULL), false);
 
     // initialize RAWRCB related data structures
@@ -526,26 +526,26 @@ hal_state_pd::~hal_state_pd()
     uint32_t    p, n;
 
     vrf_slab_ ? slab::destroy(vrf_slab_) : HAL_NOP;
-    vrf_hwid_idxr_ ? delete vrf_hwid_idxr_ : HAL_NOP;
+    vrf_hwid_idxr_ ? indexer::destroy(vrf_hwid_idxr_) : HAL_NOP;
 
     port_slab_ ? slab::destroy(port_slab_) : HAL_NOP;
 
-    nwsec_profile_hwid_idxr_ ? delete nwsec_profile_hwid_idxr_ : HAL_NOP;
+    nwsec_profile_hwid_idxr_ ? indexer::destroy(nwsec_profile_hwid_idxr_) : HAL_NOP;
 
     l2seg_slab_ ? slab::destroy(l2seg_slab_) : HAL_NOP;
     l2seg_hwid_ht_ ? ht::destroy(l2seg_hwid_ht_) : HAL_NOP;
-    l2seg_cpu_idxr_ ? delete l2seg_cpu_idxr_ : HAL_NOP;
+    l2seg_cpu_idxr_ ? indexer::destroy(l2seg_cpu_idxr_) : HAL_NOP;
 
     mc_entry_slab_ ? slab::destroy(mc_entry_slab_) : HAL_NOP;
 
-    lport_idxr_ ? delete lport_idxr_ : HAL_NOP;
+    lport_idxr_ ? indexer::destroy(lport_idxr_) : HAL_NOP;
 
     lif_pd_slab_ ? slab::destroy(lif_pd_slab_) : HAL_NOP;
-    lif_hwid_idxr_ ? delete lif_hwid_idxr_ : HAL_NOP;
+    lif_hwid_idxr_ ? indexer::destroy(lif_hwid_idxr_) : HAL_NOP;
 
     uplinkif_pd_slab_ ? slab::destroy(uplinkif_pd_slab_) : HAL_NOP;
     uplinkpc_pd_slab_ ? slab::destroy(uplinkpc_pd_slab_) : HAL_NOP;
-    uplinkifpc_idxr_ ? delete uplinkifpc_idxr_ : HAL_NOP;
+    uplinkifpc_idxr_ ? indexer::destroy(uplinkifpc_idxr_): HAL_NOP;
 
     tunnelif_pd_slab_ ? slab::destroy(tunnelif_pd_slab_) : HAL_NOP;
 
@@ -562,19 +562,19 @@ hal_state_pd::~hal_state_pd()
 
     buf_pool_pd_slab_ ? slab::destroy(buf_pool_pd_slab_) : HAL_NOP;
     for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
-        buf_pool_hwid_idxr_[p] ? delete buf_pool_hwid_idxr_[p] : HAL_NOP;
+        buf_pool_hwid_idxr_[p] ? indexer::destroy(buf_pool_hwid_idxr_[p]) : HAL_NOP;
     }
 
     queue_pd_slab_ ? slab::destroy(queue_pd_slab_) : HAL_NOP;
     for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
         for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
-            queue_hwid_idxr_[p][n] ? delete queue_hwid_idxr_[p][n] : HAL_NOP;
+            queue_hwid_idxr_[p][n] ? indexer::destroy(queue_hwid_idxr_[p][n]) : HAL_NOP;
         }
     }
 
     policer_pd_slab_ ? slab::destroy(policer_pd_slab_) : HAL_NOP;
-    ingress_policer_hwid_idxr_ ? delete ingress_policer_hwid_idxr_ : HAL_NOP;
-    egress_policer_hwid_idxr_ ? delete egress_policer_hwid_idxr_ : HAL_NOP;
+    ingress_policer_hwid_idxr_ ? indexer::destroy(ingress_policer_hwid_idxr_) : HAL_NOP;
+    egress_policer_hwid_idxr_ ? indexer::destroy(egress_policer_hwid_idxr_) : HAL_NOP;
 
     acl_pd_slab_ ? slab::destroy(acl_pd_slab_) : HAL_NOP;
 
@@ -592,12 +592,12 @@ hal_state_pd::~hal_state_pd()
 
     rw_entry_slab_ ? slab::destroy(rw_entry_slab_) : HAL_NOP;
     rw_table_ht_ ? ht::destroy(rw_table_ht_) : HAL_NOP;
-    rw_tbl_idxr_ ? delete rw_tbl_idxr_ : HAL_NOP;
+    rw_tbl_idxr_ ? indexer::destroy(rw_tbl_idxr_) : HAL_NOP;
     
     cpupkt_slab_ ? slab::destroy(cpupkt_slab_) : HAL_NOP;
     cpupkt_qinst_info_slab_ ? slab::destroy(cpupkt_qinst_info_slab_) : HAL_NOP;
-    cpupkt_descr_hwid_idxr_ ? delete  cpupkt_descr_hwid_idxr_ : HAL_NOP;
-    cpupkt_page_hwid_idxr_ ? delete  cpupkt_page_hwid_idxr_ : HAL_NOP;
+    cpupkt_descr_hwid_idxr_ ? indexer::destroy(cpupkt_descr_hwid_idxr_) : HAL_NOP;
+    cpupkt_page_hwid_idxr_ ? indexer::destroy(cpupkt_page_hwid_idxr_) : HAL_NOP;
 
     rawrcb_slab_ ? slab::destroy(rawrcb_slab_) : HAL_NOP;
     rawrcb_hwid_ht_ ? ht::destroy(rawrcb_hwid_ht_) : HAL_NOP;
@@ -610,7 +610,8 @@ hal_state_pd::~hal_state_pd()
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
             if (dm_tables_[tid]) {
-                delete dm_tables_[tid];
+                DirectMap::destroy(dm_tables_[tid]);
+                // delete dm_tables_[tid];
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, dm_tables_);
@@ -620,7 +621,8 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4TBL_ID_HASH_OTCAM_MIN;
              tid < P4TBL_ID_HASH_OTCAM_MAX; tid++) {
             if (hash_tcam_tables_[tid]) {
-                delete hash_tcam_tables_[tid];
+                Hash::destroy(hash_tcam_tables_[tid]);
+                // delete hash_tcam_tables_[tid];
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, hash_tcam_tables_);
@@ -629,18 +631,21 @@ hal_state_pd::~hal_state_pd()
     if (tcam_tables_) {
         for (tid = P4TBL_ID_TCAM_MIN; tid < P4TBL_ID_TCAM_MIN; tid++) {
             if (tcam_tables_[tid]) {
-                delete tcam_tables_[tid];
+                Tcam::destroy(tcam_tables_[tid]);
+                // delete tcam_tables_[tid];
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, tcam_tables_);
     }
 
     if (flow_table_) {
-        delete flow_table_;
+        Flow::destroy(flow_table_);
+        // delete flow_table_;
     }
 
     if (met_table_) {
-        delete met_table_;
+        Met::destroy(met_table_);
+        // delete met_table_;
     }
 
     if (acl_table_) {
@@ -651,7 +656,9 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN;
              tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
-                delete p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN];
+                // delete p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN];
+                DirectMap::destroy(p4plus_rxdma_dm_tables_[tid - 
+                                   P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, p4plus_rxdma_dm_tables_);
@@ -661,7 +668,9 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN;
              tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
-                delete p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN];
+                // delete p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN];
+                DirectMap::destroy(p4plus_txdma_dm_tables_[tid - 
+                                   P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, p4plus_txdma_dm_tables_);
@@ -852,8 +861,8 @@ hal_state_pd::init_tables(void)
                             (P4TBL_ID_TCAM_MAX - P4TBL_ID_TCAM_MIN + 1));
     HAL_ASSERT(tcam_tables_ != NULL);
 
-    met_table_ = new Met(P4_REPL_TABLE_NAME, P4_REPL_TABLE_ID, P4_REPL_TABLE_DEPTH,
-                            CAPRI_REPL_NUM_P4_ENTRIES_PER_NODE, P4_REPL_ENTRY_WIDTH);
+    met_table_ = Met::factory(P4_REPL_TABLE_NAME, P4_REPL_TABLE_ID, P4_REPL_TABLE_DEPTH,
+                              CAPRI_REPL_NUM_P4_ENTRIES_PER_NODE, P4_REPL_ENTRY_WIDTH);
     HAL_ASSERT(met_table_ != NULL);
 
     // for debugging
@@ -872,13 +881,13 @@ hal_state_pd::init_tables(void)
                 p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
             }
             hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] =
-                new Hash(tinfo.tablename, tid,
-                         tinfo.oflow_table_id,
-                         tinfo.tabledepth,
-                         tinfo.has_oflow_table ? ctinfo.tabledepth : 0,
-                         tinfo.key_struct_size,
-                         tinfo.actiondata_struct_size,
-                         static_cast<Hash::HashPoly>(tinfo.hash_type));
+                Hash::factory(tinfo.tablename, tid,
+                              tinfo.oflow_table_id,
+                              tinfo.tabledepth,
+                              tinfo.has_oflow_table ? ctinfo.tabledepth : 0,
+                              tinfo.key_struct_size,
+                              tinfo.actiondata_struct_size,
+                              static_cast<Hash::HashPoly>(tinfo.hash_type));
             HAL_ASSERT(hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] != NULL);
             break;
 
@@ -894,15 +903,15 @@ hal_state_pd::init_tables(void)
                 /* Allow dup entries must be set to true for ddos tcam tables */
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
-                        new Tcam(tinfo.tablename, tid, tinfo.tabledepth,
-                                 tinfo.key_struct_size, tinfo.actiondata_struct_size, true);
+                        Tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                                      tinfo.key_struct_size, tinfo.actiondata_struct_size, true);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }
             } else {
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
-                        new Tcam(tinfo.tablename, tid, tinfo.tabledepth,
-                                 tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
+                        Tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                                      tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }
             }
@@ -912,13 +921,12 @@ hal_state_pd::init_tables(void)
         case P4_TBL_TYPE_INDEX:
             if (tid == P4TBL_ID_TWICE_NAT) {
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                    new DirectMap(tinfo.tablename, tid, tinfo.tabledepth,
-                                  tinfo.actiondata_struct_size, true, true);
-
+                    DirectMap::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                                       tinfo.actiondata_struct_size, true, true);
             } else {
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                    new DirectMap(tinfo.tablename, tid, tinfo.tabledepth, 
-                                  tinfo.actiondata_struct_size);
+                    DirectMap::factory(tinfo.tablename, tid, tinfo.tabledepth, 
+                                       tinfo.actiondata_struct_size);
             }
             HAL_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
             break;
@@ -932,11 +940,11 @@ hal_state_pd::init_tables(void)
                 p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
             }
             flow_table_ =
-                new Flow(tinfo.tablename, tid, tinfo.oflow_table_id,
-                         tinfo.tabledepth, ctinfo.tabledepth,
-                         tinfo.key_struct_size,
-                         sizeof(p4pd_flow_hash_data_t), 6,    // no. of hints
-                         static_cast<Flow::HashPoly>(tinfo.hash_type));
+                Flow::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
+                              tinfo.tabledepth, ctinfo.tabledepth,
+                              tinfo.key_struct_size,
+                              sizeof(p4pd_flow_hash_data_t), 6,    // no. of hints
+                              static_cast<Flow::HashPoly>(tinfo.hash_type));
             HAL_ASSERT(flow_table_ != NULL);
             break;
 
@@ -1033,7 +1041,7 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
 
         case P4_TBL_TYPE_INDEX:
             p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
+                DirectMap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
             HAL_ASSERT(p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 
@@ -1130,7 +1138,7 @@ hal_state_pd::p4plus_txdma_init_tables(void)
 
         case P4_TBL_TYPE_INDEX:
             p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
+                DirectMap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
             HAL_ASSERT(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 

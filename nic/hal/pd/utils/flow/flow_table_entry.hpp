@@ -13,6 +13,7 @@
 
 #include <map>
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace pd {
@@ -35,9 +36,14 @@ private:
     FlowSpineEntry *spine_entry_;
     uint32_t num_spine_entries_;
 
-public:
     FlowTableEntry(uint32_t ft_bits, Flow *flow);
     ~FlowTableEntry();
+public:
+    static FlowTableEntry *factory(uint32_t ft_bits, 
+                                   Flow *flow,
+                                   uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_TABLE_ENTRY);
+    static void destroy(FlowTableEntry *fte,
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_TABLE_ENTRY);
 
     hal_ret_t insert(FlowEntry *f_entry);
     hal_ret_t remove(FlowEntry *f_entry);

@@ -55,25 +55,25 @@ TEST_F(flow_test, test1) {
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
 
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
                    2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
     data.actionid = 1;
 
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
     printf("flow idx: %d\n", flow_idx);
 
     key.flow_lkp_metadata_lkp_sport = 30;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     printf("rs: %d\n", rs);
     ASSERT_TRUE(rs == HAL_RET_OK);
     printf("flow idx: %d\n", flow_idx);
 
     key.flow_lkp_metadata_lkp_sport = 20;
     key.flow_lkp_metadata_lkp_dport = 20;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     printf("rs: %d\n", rs);
     ASSERT_TRUE(rs == HAL_RET_OK);
     printf("flow idx: %d\n", flow_idx);
@@ -93,18 +93,18 @@ TEST_F(flow_test, test2) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
     data.actionid = 1;
 
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
     printf("flow idx: %d\n", flow_idx);
 
     data.actionid = 2;
-    rs = fl.update(flow_idx, (void *)&data);
+    rs = fl->update(flow_idx, (void *)&data);
     ASSERT_TRUE(rs == HAL_RET_OK);
     printf("flow idx: %d\n", flow_idx);
 }
@@ -123,7 +123,7 @@ TEST_F(flow_test, test3) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
@@ -132,7 +132,7 @@ TEST_F(flow_test, test3) {
     for (int i = 10; i < 20; i++) {
         key.flow_lkp_metadata_lkp_sport++;
         data.actionid = 1;
-        rs = fl.insert((void *)&key, (void *)&data,  &flow_idx);
+        rs = fl->insert((void *)&key, (void *)&data,  &flow_idx);
         ASSERT_TRUE(rs == HAL_RET_OK);
         printf("flow idx: %d\n", flow_idx);
     }
@@ -154,17 +154,17 @@ TEST_F(flow_test, test4) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
     data.actionid = 1;
 
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
     printf("flow idx: %d\n", flow_idx);
 
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 }
 
@@ -182,7 +182,7 @@ TEST_F(flow_test, test5) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
@@ -191,7 +191,7 @@ TEST_F(flow_test, test5) {
     for (int i = 0; i < 100; i++) {
         key.flow_lkp_metadata_lkp_sport = key.flow_lkp_metadata_lkp_sport + 10;
         data.actionid = 2;
-        rs = fl.insert((void *)&key, (void *)&data,  &flow_idx);
+        rs = fl->insert((void *)&key, (void *)&data,  &flow_idx);
         printf("rs: %d \n", rs);
         ASSERT_TRUE(rs == HAL_RET_OK);
         printf("flow idx: %d\n", flow_idx);
@@ -213,7 +213,7 @@ TEST_F(flow_test, test6) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
@@ -221,16 +221,16 @@ TEST_F(flow_test, test6) {
 
     for (int i = 0; i < 3; i++) {
         key.flow_lkp_metadata_lkp_sport = key.flow_lkp_metadata_lkp_sport + 10;
-        rs = fl.insert((void *)&key, (void *)&data, &flow_idx[i]);
+        rs = fl->insert((void *)&key, (void *)&data, &flow_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
     data.actionid = 2;
-    rs = fl.update(flow_idx[2] + 1, (void *)&data);
+    rs = fl->update(flow_idx[2] + 1, (void *)&data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
     for (int i = 0; i < 3; i++) {
-        rs = fl.update(flow_idx[i], (void *)&data);
+        rs = fl->update(flow_idx[i], (void *)&data);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
@@ -252,7 +252,7 @@ TEST_F(flow_test, DISABLED_test7) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -267,7 +267,7 @@ TEST_F(flow_test, DISABLED_test7) {
         key.flow_lkp_metadata_lkp_dport = rand() % 65536;
         key.flow_lkp_metadata_lkp_proto = rand() % 256;
 
-        ft_bits = fl.calc_hash_(&key, &data);
+        ft_bits = fl->calc_hash_(&key, &data);
         HAL_TRACE_DEBUG("Checking:{:#x}", ft_bits);
 
         if (ft_bits == 0x10001) {
@@ -325,7 +325,7 @@ TEST_F(flow_test, test8) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -345,7 +345,7 @@ TEST_F(flow_test, test8) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -353,15 +353,15 @@ TEST_F(flow_test, test8) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Remove Entry 1
-    rs = fl.remove(flow_idx[0]);
+    rs = fl->remove(flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 2
-    rs = fl.remove(flow_idx[1]);
+    rs = fl->remove(flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -378,7 +378,7 @@ TEST_F(flow_test, test9) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -398,7 +398,7 @@ TEST_F(flow_test, test9) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -406,15 +406,15 @@ TEST_F(flow_test, test9) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Remove Entry 2
-    rs = fl.remove(flow_idx[1]);
+    rs = fl->remove(flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 1
-    rs = fl.remove(flow_idx[0]);
+    rs = fl->remove(flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -437,7 +437,7 @@ TEST_F(flow_test, test10) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -457,7 +457,7 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -465,7 +465,7 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 3:
@@ -473,19 +473,19 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Remove Entry 1
-    rs = fl.remove(flow_idx[0]);
+    rs = fl->remove(flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 1
-    rs = fl.remove(flow_idx[1]);
+    rs = fl->remove(flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 2
-    rs = fl.remove(flow_idx[2]);
+    rs = fl->remove(flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -508,7 +508,7 @@ TEST_F(flow_test, test11) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -528,7 +528,7 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -536,7 +536,7 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 3:
@@ -544,19 +544,19 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Remove Entry 1
-    rs = fl.remove(flow_idx[0]);
+    rs = fl->remove(flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 1
-    rs = fl.remove(flow_idx[2]);
+    rs = fl->remove(flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 2
-    rs = fl.remove(flow_idx[1]);
+    rs = fl->remove(flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 // ----------------------------------------------------------------------------
@@ -580,7 +580,7 @@ TEST_F(flow_test, test12) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -600,7 +600,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -608,7 +608,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 3:
@@ -616,7 +616,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 4:
@@ -624,23 +624,23 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Remove Entry 1
-    rs = fl.remove(flow_idx[0]);
+    rs = fl->remove(flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 2
-    rs = fl.remove(flow_idx[1]);
+    rs = fl->remove(flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 3
-    rs = fl.remove(flow_idx[2]);
+    rs = fl->remove(flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 4
-    rs = fl.remove(flow_idx[3]);
+    rs = fl->remove(flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 // ----------------------------------------------------------------------------
@@ -664,7 +664,7 @@ TEST_F(flow_test, test13) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -684,7 +684,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -692,7 +692,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 3:
@@ -700,7 +700,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 4:
@@ -708,23 +708,23 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Remove Entry 1
-    rs = fl.remove(flow_idx[4]);
+    rs = fl->remove(flow_idx[4]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 2
-    rs = fl.remove(flow_idx[3]);
+    rs = fl->remove(flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 3
-    rs = fl.remove(flow_idx[2]);
+    rs = fl->remove(flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
     // Remove Entry 4
-    rs = fl.remove(flow_idx[1]);
+    rs = fl->remove(flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -758,7 +758,7 @@ TEST_F(flow_test, test14) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -778,7 +778,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -786,7 +786,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 3:
@@ -794,7 +794,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 4:
@@ -802,12 +802,12 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
 	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
 		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl.remove(flow_idx[*it]);
+		rs = fl->remove(flow_idx[*it]);
 		ASSERT_TRUE(rs == HAL_RET_OK);
 	}
 }
@@ -843,7 +843,7 @@ TEST_F(flow_test, test15) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -863,7 +863,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -871,7 +871,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 3:
@@ -879,7 +879,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 4:
@@ -887,7 +887,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 5:
@@ -895,12 +895,12 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[4]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
 	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
 		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl.remove(flow_idx[*it]);
+		rs = fl->remove(flow_idx[*it]);
 		ASSERT_TRUE(rs == HAL_RET_OK);
 	}
 }
@@ -942,7 +942,7 @@ TEST_F(flow_test, test16) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -962,7 +962,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -970,7 +970,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 3:
@@ -978,7 +978,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 4:
@@ -986,7 +986,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 5:
@@ -994,7 +994,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[4]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 6:
@@ -1002,7 +1002,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_sport = 3;
     key.flow_lkp_metadata_lkp_dport = 0xd125;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[5]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[5]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 7:
@@ -1010,7 +1010,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0xc430;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[6]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[6]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 8:
@@ -1018,12 +1018,12 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_sport = 1;
     key.flow_lkp_metadata_lkp_dport = 0xc8c3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[7]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[7]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
 	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
 		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl.remove(flow_idx[*it]);
+		rs = fl->remove(flow_idx[*it]);
 		ASSERT_TRUE(rs == HAL_RET_OK);
 	}
 }
@@ -1059,7 +1059,7 @@ TEST_F(flow_test, test17) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -1079,7 +1079,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 2:
@@ -1087,7 +1087,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 3:
@@ -1095,7 +1095,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 4:
@@ -1103,7 +1103,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 5:
@@ -1111,7 +1111,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[4]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 6:
@@ -1119,7 +1119,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 3;
     key.flow_lkp_metadata_lkp_dport = 0xd125;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[5]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[5]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 7:
@@ -1127,7 +1127,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0xc430;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[6]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[6]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 8:
@@ -1135,7 +1135,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 1;
     key.flow_lkp_metadata_lkp_dport = 0xc8c3;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[7]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[7]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 9:
@@ -1143,7 +1143,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_sport = 2;
     key.flow_lkp_metadata_lkp_dport = 0x2f4b;
     data.actionid = 0;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[8]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[8]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
 
@@ -1160,7 +1160,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dst[2] = 0x7e;
     key.flow_lkp_metadata_lkp_dst[3] = 0x3b;
     key.flow_lkp_metadata_lkp_proto = 0xbe;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[9]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[9]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Entry 11:
@@ -1176,12 +1176,12 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dst[1] = 0x85;
     key.flow_lkp_metadata_lkp_dst[2] = 0x13;
     key.flow_lkp_metadata_lkp_dst[3] = 0x11;
-    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[10]);
+    rs = fl->insert((void *)&key, (void *)&data, &flow_idx[10]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
 	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
 		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl.remove(flow_idx[*it]);
+		rs = fl->remove(flow_idx[*it]);
 		ASSERT_TRUE(rs == HAL_RET_OK);
 	}
 
@@ -1189,11 +1189,11 @@ TEST_F(flow_test, test17) {
                     "num_in_use:{}, oflow_num_in_use:{}"
                     "num_inserts:{}, num_insert_errors:{}, "
                     "num_deletes:{}, num_delete_errors:{}",
-                    fl.table_id(), fl.table_name(),
-                    fl.table_capacity(), fl.oflow_table_capacity(),
-                    fl.table_num_entries_in_use(), fl.oflow_table_num_entries_in_use(),
-                    fl.table_num_inserts(), fl.table_num_insert_errors(),
-                    fl.table_num_deletes(), fl.table_num_delete_errors());
+                    fl->table_id(), fl->table_name(),
+                    fl->table_capacity(), fl->oflow_table_capacity(),
+                    fl->table_num_entries_in_use(), fl->oflow_table_num_entries_in_use(),
+                    fl->table_num_inserts(), fl->table_num_insert_errors(),
+                    fl->table_num_deletes(), fl->table_num_delete_errors());
 }
 
 // ----------------------------------------------------------------------------
@@ -1225,7 +1225,7 @@ TEST_F(flow_test, DISABLED_test18) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -1240,7 +1240,7 @@ TEST_F(flow_test, DISABLED_test18) {
         key.flow_lkp_metadata_lkp_dport = rand() % 65536;
         key.flow_lkp_metadata_lkp_proto = rand() % 256;
 
-        ft_bits = fl.calc_hash_(&key, &data);
+        ft_bits = fl->calc_hash_(&key, &data);
         HAL_TRACE_DEBUG("Checking:{:#x}", ft_bits);
 
         if (ft_bits == 0x10001) {
@@ -1254,7 +1254,7 @@ TEST_F(flow_test, DISABLED_test18) {
                     key.flow_lkp_metadata_lkp_sport,
                     key.flow_lkp_metadata_lkp_dport,
                     key.flow_lkp_metadata_lkp_proto);
-            rs = fl.insert((void *)&key, (void *)&data, &flow_idx[count]);
+            rs = fl->insert((void *)&key, (void *)&data, &flow_idx[count]);
             ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
             count++;
             if (count == max) {
@@ -1265,7 +1265,7 @@ TEST_F(flow_test, DISABLED_test18) {
     // Remvoe the entries
 	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
 		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl.remove(flow_idx[*it]);
+		rs = fl->remove(flow_idx[*it]);
 		ASSERT_TRUE(rs == HAL_RET_OK);
 	}
 
@@ -1273,11 +1273,11 @@ TEST_F(flow_test, DISABLED_test18) {
                     "num_in_use:{}, oflow_num_in_use:{}"
                     "num_inserts:{}, num_insert_errors:{}, "
                     "num_deletes:{}, num_delete_errors:{}",
-                    fl.table_id(), fl.table_name(),
-                    fl.table_capacity(), fl.oflow_table_capacity(),
-                    fl.table_num_entries_in_use(), fl.oflow_table_num_entries_in_use(),
-                    fl.table_num_inserts(), fl.table_num_insert_errors(),
-                    fl.table_num_deletes(), fl.table_num_delete_errors());
+                    fl->table_id(), fl->table_name(),
+                    fl->table_capacity(), fl->oflow_table_capacity(),
+                    fl->table_num_entries_in_use(), fl->oflow_table_num_entries_in_use(),
+                    fl->table_num_inserts(), fl->table_num_insert_errors(),
+                    fl->table_num_deletes(), fl->table_num_delete_errors());
 }
 
 int main(int argc, char **argv) {
