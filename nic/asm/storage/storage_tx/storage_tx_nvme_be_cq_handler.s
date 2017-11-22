@@ -31,8 +31,7 @@ storage_tx_nvme_be_cq_handler_start:
    phvwri	p.nvme_be_sta_hdr_rsvd, 0
 
    // Store the SSD's c_ndx value for DMA to the NVME backend SQ
-   add		r1, r0, d.sq_head
-   phvwr	p.ssd_ci_c_ndx, r1.hx
+   phvwr	p.ssd_ci_c_ndx, d.sq_head
 
    // Setup the DMA command to push the sq_head to the c_ndx of the SSD
    DMA_PHV2MEM_SETUP(ssd_ci_c_ndx, ssd_ci_c_ndx, 

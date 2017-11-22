@@ -219,7 +219,6 @@
 // Setup the doorbell data. Write back the data in little endian format
 #define DOORBELL_DATA_SETUP(_db_data, _index, _ring, _qid, _pid)	\
    add		r1, r0, _index;						\
-   add		r1, r0, r1.hx;						\
    sll		r2, _ring, DOORBELL_DATA_RING_SHIFT;			\
    or		r1, r1, r2;						\
    sll		r2, _qid, DOORBELL_DATA_QID_SHIFT;			\
@@ -243,12 +242,9 @@
    or		r7, r7, r1;						\
 
 // DMA write w_ndx to c_ndx via to pop the entry. Doorbell update is needed 
-// to reset the scheduler bit.
-// HACK: Till we fix the pragmas with little endian
+// to reset the scheduler bit. 
 #define QUEUE_POP_ROCE_DOORBELL_UPDATE					\
-   add		r6, r0, STORAGE_KIVEC0_W_NDX;				\
-   add		r6, r0, r6.hx;						\
-   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r6,			\
+   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX,	\
                        r0, STORAGE_KIVEC1_SRC_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,\
                        DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_C_NDX)	\
@@ -314,13 +310,9 @@
                              STORAGE_KIVEC0_DST_QTYPE,			\
                              STORAGE_KIVEC0_DST_QID)			\
 
-// TODO: Remove the hack of .hx once all endian issues are fixed
-//       At that time replace r1 with d.p_ndx
 #define ROCE_QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)			\
-   add		r1, r0, d.p_ndx;					\
-   add		r1, r0, r1.hx;						\
    _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,	\
-                             DOORBELL_UPDATE_P_NDX, r1,			\
+                             DOORBELL_UPDATE_P_NDX, d.p_ndx,		\
                              d.rsq_lif,	d.rsq_qtype, d.rsq_qid)		\
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O

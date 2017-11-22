@@ -709,7 +709,7 @@ void get_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 
   if (!db_addr || !db_data) return;
 
-  *db_data = (qid << kNvmeDbQidShift) | bswap_16(index);
+  *db_data = (qid << kNvmeDbQidShift) | index;
   *db_addr = kDbAddrNvme |  (kDbAddrUpdate << kNvmeDbUpdateShift) | 
              (lif << kNvmeDbLifShift) | (qtype << kNvmeDbTypeShift);
 }
@@ -720,7 +720,7 @@ void get_host_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 
   if (!db_addr || !db_data) return;
 
-  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | bswap_16(index);
+  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | index;
   *db_addr = kDbAddrHost |  (kDbAddrUpdate << kDbUpdateShift) | 
              (lif << kDbLifShift) | (qtype << kDbTypeShift);
 }
@@ -731,7 +731,7 @@ void get_capri_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 
   if (!db_addr || !db_data) return;
 
-  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | bswap_16(index);
+  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | index;
   *db_addr = kDbAddrCapri |  (kDbAddrUpdate << kDbUpdateShift) | 
              (lif << kDbLifShift) | (qtype << kDbTypeShift);
 }

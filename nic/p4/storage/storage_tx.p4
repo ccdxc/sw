@@ -266,7 +266,7 @@ action exit() {
  *                popped. If so increment the working index and load the
  *                queue entry.
  *****************************************************************************/
-
+@pragma little_endian p_ndx c_ndx
 action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                    total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                    num_entries, base_addr, entry_size, next_pc, dst_qaddr,
@@ -316,6 +316,7 @@ action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                pushed is in DMA command 1.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx
 action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                     total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                     num_entries, base_addr, entry_size, next_pc, dst_qaddr,
@@ -383,6 +384,7 @@ action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                    and trigger the MSI-X interrupt.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx
 action pci_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                         total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                         num_entries, base_addr, entry_size, push_addr,
@@ -447,6 +449,7 @@ action pci_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                       index and load the queue entry.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx
 action pvm_roce_sq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                           total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                           page_size, entry_size, num_entries, rsvd0, roce_msn, 
@@ -499,6 +502,7 @@ action pvm_roce_sq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                   the queue entry.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx
 action roce_cq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                       total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                       page_size, entry_size, num_entries, rsvd0, cq_id, eq_id,
@@ -538,6 +542,7 @@ action roce_cq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *  roce_cq_cb_push : Dummy push function to generate the D vector.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx
 action roce_cq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                        total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                        page_size, entry_size, num_entries, rsvd0, cq_id, eq_id,
@@ -555,6 +560,7 @@ action roce_cq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                       in DMA command 1. 
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx
 action pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                            total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                            page_size, entry_size, num_entries, rsvd0, roce_msn, 
@@ -635,6 +641,7 @@ action pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                This is used to post the R2N buffer to ROCE RQ.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx
 action roce_rq_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                     total_rings, host_rings, pid, p_ndx, c_ndx, extra_rings,
                     base_addr, rsvd0, pmtu, page_size, entry_size, num_entries,
@@ -694,6 +701,7 @@ action roce_rq_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                    working index for that ring and load the queue entry.
  *****************************************************************************/
 
+@pragma little_endian p_ndx_hi c_ndx_hi p_ndx_med c_ndx_med p_ndx_lo c_ndx_lo
 action pri_q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                        total_rings, host_rings, pid, p_ndx_hi, c_ndx_hi, 
                        p_ndx_med, c_ndx_med, p_ndx_lo, c_ndx_lo, w_ndx_hi,
@@ -753,6 +761,7 @@ action pri_q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                    Load the table to save the R2N WQE in the next stage.
  *****************************************************************************/
 
+@pragma little_endian p_ndx_hi c_ndx_hi p_ndx_med c_ndx_med p_ndx_lo c_ndx_lo
 action pri_q_state_incr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                         total_rings, host_rings, pid, p_ndx_hi, c_ndx_hi, 
                         p_ndx_med, c_ndx_med, p_ndx_lo, c_ndx_lo, w_ndx_hi,
@@ -799,6 +808,7 @@ action pri_q_state_incr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                    Load the table to release the bitmap in the next stage.
  *****************************************************************************/
 
+@pragma little_endian p_ndx_hi c_ndx_hi p_ndx_med c_ndx_med p_ndx_lo c_ndx_lo
 action pri_q_state_decr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                         total_rings, host_rings, pid, p_ndx_hi, c_ndx_hi, 
                         p_ndx_med, c_ndx_med, p_ndx_lo, c_ndx_lo, w_ndx_hi,
@@ -846,6 +856,7 @@ action pri_q_state_decr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                    Assumes that data to be pushed is in DMA command 1.
  *****************************************************************************/
 
+@pragma little_endian p_ndx_hi c_ndx_hi p_ndx_med c_ndx_med p_ndx_lo c_ndx_lo
 action pri_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                         total_rings, host_rings, pid, p_ndx_hi, c_ndx_hi, 
                         p_ndx_med, c_ndx_med, p_ndx_lo, c_ndx_lo, w_ndx_hi,
@@ -973,6 +984,7 @@ action nvme_sq_handler(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
  *                  load the address for the next stage based on that.
  *****************************************************************************/
 
+@pragma little_endian sq_head
 action pvm_cq_handler(cspec, rsvd, sq_head, sq_id, cid, phase, status,
                       dst_lif, dst_qtype, dst_qid, dst_qaddr) {
 
@@ -1489,6 +1501,7 @@ action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
  *                    its source in DMA cmd 1 and destination in DMA cmd 2.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx 
 action seq_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                         total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                         num_entries, base_addr, entry_size, next_pc, dst_qaddr,
@@ -1550,6 +1563,7 @@ action seq_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                           and destination in DMA cmd 2.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx 
 action seq_pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, 
                                eval_last, total_rings, host_rings, pid, 
                                p_ndx, c_ndx, base_addr, page_size, entry_size, 
@@ -1664,6 +1678,7 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_pndx_size,
  *                       source in DMA cmd 1 and destination in DMA cmd 2.
  *****************************************************************************/
 
+@pragma little_endian p_ndx
 action seq_barco_ring_push(p_ndx) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -1844,6 +1859,7 @@ action roce_r2n_wqe_prep(next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, pad) {
  *                         reclaim the entries for further use.
  *****************************************************************************/
 
+@pragma little_endian p_ndx c_ndx
 action pvm_roce_sq_cb_update(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                              total_rings, host_rings, pid, p_ndx, c_ndx, base_addr,
                              page_size, entry_size, num_entries, rsvd0, roce_msn, 

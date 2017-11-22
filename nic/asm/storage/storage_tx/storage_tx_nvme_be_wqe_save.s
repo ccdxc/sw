@@ -29,7 +29,8 @@ storage_tx_nvme_be_wqe_save_start:
    // Store the command index (in GPR r6) in PHV
    phvwr	p.storage_kivec0_cmd_index, r6
 
-   // Store the command index (in GPR r6) in the NVME command as well
+   // Store the command index (in GPR r6) in the NVME command as well.
+   // Need to half word swap this as the cid is in little endian.
    phvwr	p.nvme_cmd_cid, r6.hx
 
    // Calculate the address to save R2N WQE based on the command index offset into

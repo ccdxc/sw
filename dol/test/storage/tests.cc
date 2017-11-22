@@ -497,6 +497,22 @@ int form_write_cmd_no_buf(uint8_t *nvme_cmd)
   return 0;
 }
 
+int check_nvme_status(struct NvmeStatus *nvme_status, struct NvmeCmd *nvme_cmd) {
+  // Process the status
+
+  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid ||
+      NVME_STATUS_GET_STATUS(*nvme_status)) {
+    /*printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n",
+           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
+           nvme_cmd->dw0.cid);*/
+    return -1;
+  }
+  printf("nvme status: cid %x, sq head %x, status_phase %x \n",
+         nvme_status->dw3.cid, nvme_status->dw2.sq_head,
+         nvme_status->dw3.status_phase);
+  return 0;
+}
+
 int test_run_nvme_pvm_admin_cmd() {
   int rc;
   uint16_t nvme_index, pvm_index;
@@ -1107,27 +1123,17 @@ int test_run_nvme_e2e_io(uint16_t io_priority, uint16_t is_read) {
   queues::ring_nvme_e2e_ssd();
 #endif
 
-  // Wait for a bit as SSD backend runs in a different thread
-  sleep(4);
-
-  //printf("Recv status \n");
-  //utils::dump(status_buf);
-  
   // Process the status
   struct NvmeStatus *nvme_status = 
               (struct NvmeStatus *) (status_buf + kR2nStatusNvmeOffset);
-  printf("nvme status: cid %x, sq head %x, status_phase %x \n", 
-         nvme_status->dw3.cid, nvme_status->dw2.sq_head, 
-         nvme_status->dw3.status_phase);
-  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid || 
-      NVME_STATUS_GET_STATUS(*nvme_status)) {
-    rc = -1;
-    printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n", 
-           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
-           nvme_cmd->dw0.cid);
-  } else {
-    rc = 0;
-  }
+
+  // Poll for status
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  rc = poll(func1);
+
   return rc;
 }
 
@@ -1235,6 +1241,7 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   uint16_t pvm_status_q = 2;
   uint16_t pvm_status_index;
   uint8_t *status_buf;
+  int rc;
 
   // Reset the SLBA and sequencer doorbell data for this test
   reset_slba();
@@ -1289,26 +1296,18 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   // Kickstart the sequencer 
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
   
-  // Wait for a bit as SSD backend runs in a different thread
-  sleep(4);
-
-  //printf("Recv status \n");
-  //utils::dump(status_buf);
-  
   // Process the status
   struct NvmeStatus *nvme_status = 
               (struct NvmeStatus *) (status_buf + kR2nStatusNvmeOffset);
-  printf("nvme status: cid %x, sq head %x, status_phase %x \n", 
-         nvme_status->dw3.cid, nvme_status->dw2.sq_head, 
-         nvme_status->dw3.status_phase);
-  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid || 
-      NVME_STATUS_GET_STATUS(*nvme_status)) {
-    printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n", 
-           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
-           nvme_cmd->dw0.cid);
-    return -1;
-  }
-  return 0;
+
+  // Poll for status
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  return rc;
 }
 
 int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle, 
@@ -1323,6 +1322,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   uint16_t pvm_status_q = 2;
   uint16_t pvm_status_index;
   uint8_t *status_buf;
+  int rc;
 
   // Reset the SLBA and sequencer doorbell data for this test
   reset_slba();
@@ -1370,30 +1370,31 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   // trigger the sequencer) 
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
   
-  // Wait for a bit as SSD backend runs in a different thread
-  sleep(4);
-
-  //printf("Recv status \n");
-  //utils::dump(status_buf);
-  
   // Process the status
   struct NvmeStatus *nvme_status = 
               (struct NvmeStatus *) (status_buf + kR2nStatusNvmeOffset);
-  printf("nvme status: cid %x, sq head %x, status_phase %x \n", 
-         nvme_status->dw3.cid, nvme_status->dw2.sq_head, 
-         nvme_status->dw3.status_phase);
-  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid || 
-      NVME_STATUS_GET_STATUS(*nvme_status)) {
-    printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n", 
-           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
-           nvme_cmd->dw0.cid);
-    return -1;
+
+  // Poll for status
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  // Poll for DMA completion of read data only if status is successful
+  if (rc >= 0) {
+    auto func2 = [] () {
+      if  (*((uint64_t *) seq_db_data) != kSeqDbDataMagic) {
+        //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data));
+        return -1;
+      }
+      return 0;
+    };
+
+    rc = poll(func2);
   }
-  if  (*((uint64_t *) seq_db_data) != kSeqDbDataMagic) {
-    printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data));
-    return -1;
-  }
-  return 0;
+
+  return rc;
 }
 
 int test_seq_e2e_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q, 
@@ -2002,22 +2003,6 @@ int add_xts_tests(std::vector<TestEntry>& test_suite) {
     delete ctx;
   }
 
-  return 0;
-}
-
-int check_nvme_status(struct NvmeStatus *nvme_status, struct NvmeCmd *nvme_cmd) {
-  // Process the status
-
-  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid ||
-      NVME_STATUS_GET_STATUS(*nvme_status)) {
-    /*printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n",
-           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
-           nvme_cmd->dw0.cid);*/
-    return -1;
-  }
-  printf("nvme status: cid %x, sq head %x, status_phase %x \n",
-         nvme_status->dw3.cid, nvme_status->dw2.sq_head,
-         nvme_status->dw3.status_phase);
   return 0;
 }
 

@@ -542,7 +542,7 @@ void PostTargetRcvBuf1() {
   target_rq_pindex++;
   if (target_rq_pindex >= kNumRQWQEs)
     target_rq_pindex = 0;
-  tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 1, 0, bswap_16(target_rq_pindex));
+  tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 1, 0, target_rq_pindex);
 }
 
 void IncrTargetRcvBufPtr() {
@@ -588,7 +588,7 @@ void PostInitiatorRcvBuf1() {
   initiator_rq_pindex++;
   if (initiator_rq_pindex >= kNumRQWQEs)
     initiator_rq_pindex = 0;
-  tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 0, 0, bswap_16(initiator_rq_pindex));
+  tests::test_ring_doorbell(g_rdma_hw_lif_id, kRQType, 0, 0, initiator_rq_pindex);
 }
 
 void IncrInitiatorRcvBufPtr() {
@@ -664,7 +664,7 @@ void SendSmallUspaceBuf() {
   initiator_sq_pindex++;
   if (initiator_sq_pindex >= kNumSQWQEs)
     initiator_sq_pindex = 0;
-  tests::test_ring_doorbell(g_rdma_hw_lif_id, kSQType, 0, 0, bswap_16(initiator_sq_pindex));
+  tests::test_ring_doorbell(g_rdma_hw_lif_id, kSQType, 0, 0, initiator_sq_pindex);
 }
 
 int GetR2NHbmBuf(uint64_t *pa, uint32_t *size) {
@@ -838,7 +838,7 @@ int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read
   // Now kickstart the sequencer
   tests::test_seq_read_roce(seq_pdma_q, r2n_hbm_buf_pa, host_mem_v2p((void *) read_data_buf),
                             kR2NDataSize, g_rdma_hw_lif_id, kSQType, 0, 0, 
-                            bswap_16(initiator_sq_pindex));
+                            initiator_sq_pindex);
 
   return 0;
 }
