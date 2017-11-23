@@ -20,12 +20,12 @@ header_type parser_metadata_t {
         parse_ipv4_counter              : 8;
         parse_inner_ipv4_counter        : 8;
         parse_tcp_counter               : 8;
-        l4_options_length               : 8;
         ipv6_nextHdr                    : 8;
         l4_trailer                      : 16;
         l4_len                          : 16;
         //Parser local field to specify destination field 
         //to store icrc value. No PHV allocated.
+        ipv6_options_len                : 16;
         icrc                            : 32; 
     }
 }
@@ -34,13 +34,27 @@ metadata parser_metadata_t parser_metadata;
 
 header_type parser_csum_t {
     fields {
-        ipv4hdr_len                     : 16;
-        inner_ipv4hdr_len               : 16;
-        inner_ipv6_payloadLen           : 16;
-        //l4_trailer variable is used instead of ipv6_payloadLen
-        //ipv6_payloadLen                 : 16;
+        ipv4___hdr_len                     : 16;
+        inner_ipv4___hdr_len               : 16;
+        inner_ipv6_payloadLen              : 16;
     }
 }
+
+header_type parser_ohi_t {
+    // These are write-only variables
+    // Each header can have upto two variables - <hdrname>___start_off and <hdr>___hdr_len
+    // In most cases start_offset and len is computed internally whenever header is extracted 
+    // via OHI slots. User should define fields here only if they are written outside of header
+    // extraction
+    // In addition, some of the checksum  related variables can use this feature to store checksum
+    // start/len information to write-only variables
+    fields {
+        ipv6_options_blob___hdr_len : 16;
+    }
+}
+@pragma pa_parser_local
+@pragma parser_write_only
+metadata parser_ohi_t ohi;
 
 @pragma pa_parser_local
 @pragma parser_no_reg
@@ -435,7 +449,7 @@ field_list ipv4_checksum_list {
     ipv4.dstAddr;
 }
 
-@pragma checksum hdr_len_expr parser_csum.ipv4hdr_len + 20
+@pragma checksum hdr_len_expr parser_csum.ipv4___hdr_len + 20
 field_list_calculation ipv4_checksum {
     input {
         ipv4_checksum_list;
@@ -551,7 +565,7 @@ parser parse_inner_ipv4_frag {
 parser parse_base_ipv4 {
     // option-blob parsing - parse_ipv4 does not extract ipv4 header
     extract(ipv4);
-    set_metadata(parser_csum.ipv4hdr_len, (ipv4.ihl << 2) - 20);
+    set_metadata(parser_csum.ipv4___hdr_len, (ipv4.ihl << 2) - 20);
     return select(ipv4.flags, ipv4.fragOffset, ipv4.protocol) {
         IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
         IP_PROTO_TCP mask 0x3fffff : parse_tcp;
@@ -642,7 +656,7 @@ parser parse_ipv4_options_blob {
 
     // set hdr len same as option header len. In csum profile
     // standard IP hdr len of 20 bytes is adjusted.
-    set_metadata(parser_csum.ipv4hdr_len, (ipv4.ihl << 2) - 20);
+    set_metadata(parser_csum.ipv4___hdr_len, (ipv4.ihl << 2) - 20);
 
     // All options are extracted as a single header
     extract(ipv4_options_blob);
@@ -688,10 +702,14 @@ header ipv6_extn_generic_t v6_generic;
 header ipv6_extn_frag_t v6_frag;
 header ipv6_extn_ah_esp_t v6_ah_esp;
 
+// use no_extract pragma to simply move the packet offset forward w/o extraction
+// similar to advance() feature in P4-16
+@pragma no_extract
 parser parse_v6_generic_ext_hdr {
     extract(v6_generic);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - (v6_generic.len << 3) + 8);
+    set_metadata(parser_metadata.ipv6_options_len, \
+            parser_metadata.ipv6_options_len + (v6_generic.len << 3) + 8);
     return parse_ipv6_extn_hdrs;
 }
 
@@ -730,28 +748,54 @@ parser parse_fragment_hdr {
     return parse_ipv6_extn_hdrs;
 }
 
-@pragma header_ordering v6_generic v6_frag
-parser parse_ipv6_extn_hdrs {
-    set_metadata(l3_metadata.ip_option_seen, 1);
-    // To store back into OHI payloadLen - Sum of option hdr len,
-    // use set_metadata with zero len
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer + 0);
+@pragma hdr_len parser_metadata.ipv6_options_len
+header ipv6_options_blob_t ipv6_options_blob;
+
+@pragma dont_advance_packet
+parser parse_ipv6_option_blob {
+    // ipv6_option_blob header uses ipv6_option_len as variable header len
+    // setup the ipv6_option_len = 0 and keep updating the len as options are
+    // parsed.
+    // Note1: that options are parsed using 'no_extract' state i.e. they are not
+    // individually extracted to phv/ohi (but hv bits will be set)
+    // Note2: ipv6_options_len value used to setup ohi slot is previous value (before init)
+    set_metadata(parser_metadata.ipv6_options_len, 0);
+    extract(ipv6_options_blob);
+    return parse_ipv6_extn_hdrs;
+}
+
+parser parse_ipv6_ulp {
+    // update the header len of the ipv6_options_blob header
+    // must use expression to update ohi variable.
+    set_metadata(ohi.ipv6_options_blob___hdr_len, parser_metadata.ipv6_options_len+0);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - parser_metadata.ipv6_options_len);
     return select(parser_metadata.ipv6_nextHdr) {
-        0x00: ingress; // hop-by-hop option, not supported
-        0x2b: parse_v6_generic_ext_hdr;
-        0x2c: parse_fragment_hdr;
-        0x32: parse_v6_ipsec_esp_hdr;
-        0x33: parse_v6_ipsec_ah_hdr;
-        0x3c: parse_v6_generic_ext_hdr;
-        0x87: parse_v6_generic_ext_hdr;
-        0x3b: ingress;
         IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_udp;
         IP_PROTO_GRE : parse_gre;
         IP_PROTO_IPV4 : parse_ipv4_in_ip;
         IP_PROTO_IPV6 : parse_ipv6_in_ip;
+        0x33 : parse_v6_ipsec_ah_hdr;
+        0x32 : parse_v6_ipsec_esp_hdr;
         default: ingress;
+    }
+}
+
+@pragma header_ordering v6_generic 
+parser parse_ipv6_extn_hdrs {
+    set_metadata(l3_metadata.ip_option_seen, 1);
+    // To store back into OHI payloadLen - Sum of option hdr len,
+    // use set_metadata with zero len
+    // set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer + 0);
+    return select(parser_metadata.ipv6_nextHdr) {
+        0x00: ingress; // hop-by-hop option, not supported
+        0x2b: parse_v6_generic_ext_hdr;
+        // Note2: ipv6_options_len value used to setup ohi slot is previous value (before init)
+        0x2c: parse_v6_generic_ext_hdr;
+        0x3c: parse_v6_generic_ext_hdr;
+        0x87: parse_v6_generic_ext_hdr;
+        default: parse_ipv6_ulp;
     }
 }
 
@@ -767,7 +811,14 @@ parser parse_ipv6 {
         IP_PROTO_GRE : parse_gre;
         IP_PROTO_IPV4 : parse_ipv4_in_ip;
         IP_PROTO_IPV6 : parse_ipv6_in_ip;
-        default: parse_ipv6_extn_hdrs;
+        0x33 : parse_v6_ipsec_ah_hdr;
+        0x32 : parse_v6_ipsec_esp_hdr;
+        // add other known options ipsec etc here
+        0x2b: parse_ipv6_option_blob;
+        0x2c: parse_ipv6_option_blob;
+        0x3c: parse_ipv6_option_blob;   // dest_option
+        0x87: parse_ipv6_option_blob;
+        default: ingress;
     }
 }
 
@@ -966,8 +1017,6 @@ parser parse_tcp_option_mss {
     extract(tcp_option_mss);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 4);
-    set_metadata(parser_metadata.l4_options_length,
-                 parser_metadata.l4_options_length+4);
     return parse_tcp_options;
 }
 
@@ -975,8 +1024,6 @@ parser parse_tcp_option_ws {
     extract(tcp_option_ws);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 3);
-    set_metadata(parser_metadata.l4_options_length,
-                 parser_metadata.l4_options_length + 3);
     return parse_tcp_options;
 }
 
@@ -984,7 +1031,6 @@ parser parse_tcp_option_sack_perm {
     extract(tcp_option_sack_perm);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 2);
-    set_metadata(parser_metadata.l4_options_length, parser_metadata.l4_options_length + 2);
     return parse_tcp_options;
 }
 
@@ -992,8 +1038,6 @@ parser parse_tcp_timestamp {
     extract(tcp_option_timestamp);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 10);
-    set_metadata(parser_metadata.l4_options_length,
-                 parser_metadata.l4_options_length + 10);
     return parse_tcp_options;
 }
 
@@ -1001,10 +1045,6 @@ parser parse_tcp_unknown_option {
     extract(tcp_option_unknown);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - tcp_option_unknown.optLength);
-#if 0
-    set_metadata(parser_metadata.l4_options_length,
-                 parser_metadata.l4_options_length + tcp_option_unknown.optLength);
-#endif /* 0 */
     return parse_tcp_options;
 }
 
@@ -1037,8 +1077,8 @@ parser parse_roce_v2 {
     return select(latest.opCode) {
         0x64 : parse_roce_deth;
         0x65 : parse_roce_deth_immdt;
-        //default : parse_udp_trailer;
-        default : ingress;
+        default : parse_udp_trailer;
+        //default : ingress;
     }
 }
 
@@ -1046,8 +1086,8 @@ parser parse_roce_deth {
     extract(roce_deth);
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len-8);
     return select(latest.reserved) {
-        default : ingress;
-        //default : parse_udp_trailer;
+        //default : ingress;
+        default : parse_udp_trailer;
         0x1 mask 0x0 : parse_roce_eth;
     }
 }
@@ -1056,12 +1096,13 @@ parser parse_roce_deth_immdt {
     extract(roce_deth_immdt);
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len-12);
     return select(latest.reserved) {
-        //default : parse_udp_trailer;
-        default : ingress;
+        default : parse_udp_trailer;
+        //default : ingress;
         0x1 mask 0x0 : parse_roce_eth;
     }
 }
 
+@pragma xgress egress
 parser parse_udp_trailer {
     return select(parser_metadata.l4_trailer) {
         0x0000 mask 0xffff: ingress;
@@ -1070,6 +1111,7 @@ parser parse_udp_trailer {
     }
 }
 
+@pragma xgress egress
 parser parse_udp_payload {
     // dummy set_metadata to make ncc compiler reserve a register (wka)
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len + 0);
@@ -1077,6 +1119,7 @@ parser parse_udp_payload {
     return parse_udp_options;
 }
 
+@pragma xgress egress
 parser parse_udp_options {
     return select (current(0,8)) {
        0x02 : parse_udp_option_ocs;
@@ -1085,6 +1128,7 @@ parser parse_udp_options {
     }
 }
 
+@pragma xgress egress
 header udp_opt_ocs_t udp_opt_ocs;
 parser parse_udp_option_ocs {
     extract(udp_opt_ocs);
@@ -1238,7 +1282,7 @@ field_list inner_ipv4_checksum_list {
     inner_ipv4.dstAddr;
 }
 
-@pragma checksum hdr_len_expr parser_csum.inner_ipv4hdr_len + 20
+@pragma checksum hdr_len_expr parser_csum.inner_ipv4___hdr_len + 20
 field_list_calculation inner_ipv4_checksum {
     input {
         inner_ipv4_checksum_list;
@@ -1255,7 +1299,7 @@ calculated_field inner_ipv4.hdrChecksum {
 parser parse_base_inner_ipv4 {
     // option-blob parsing - extract inner_ipv4 here
     extract(inner_ipv4);
-    set_metadata(parser_csum.inner_ipv4hdr_len, (inner_ipv4.ihl << 2) - 20);
+    set_metadata(parser_csum.inner_ipv4___hdr_len, (inner_ipv4.ihl << 2) - 20);
     return select(inner_ipv4.flags, inner_ipv4.fragOffset, inner_ipv4.protocol) {
         IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
         IP_PROTO_TCP mask 0x3fffff : parse_tcp;
@@ -1337,7 +1381,7 @@ parser parse_inner_ipv4_options_blob {
     extract(inner_ipv4);
     // set hdr len same as option header len. In csum profile
     // standard IP hdr len of 20 bytes is adjusted.
-    set_metadata(parser_csum.inner_ipv4hdr_len, (inner_ipv4.ihl << 2) - 20);
+    set_metadata(parser_csum.inner_ipv4___hdr_len, (inner_ipv4.ihl << 2) - 20);
     // All options are extracted as a single header
     extract(inner_ipv4_options_blob);
     set_metadata(l3_metadata.inner_ip_option_seen, 1);
@@ -1501,7 +1545,7 @@ parser parse_inner_ipv6 {
     extract(inner_ipv6);
     set_metadata(flow_lkp_metadata.lkp_src, latest.srcAddr);
     set_metadata(flow_lkp_metadata.lkp_dst, latest.dstAddr);
-    set_metadata(parser_csum.inner_ipv6_payloadLen, inner_ipv6.payloadLen);
+    set_metadata(parser_csum.inner_ipv6_payloadLen, inner_ipv6.payloadLen+0);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;

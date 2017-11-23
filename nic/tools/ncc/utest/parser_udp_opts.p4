@@ -293,13 +293,6 @@ parser parse_udp {
         UDP_PORT_ROCE_V2: parse_roce_v2;
         default: ingress;
     }
-#if 0
-    return select (parser_metadata.l4_trailer) {
-        0x0000 : ingress;
-        //0x8000 mask 0x8000 : ingress_error;
-        default : parse_udp_payload;
-    }
-#endif
 }
 
 header_type roce_bth_t {
@@ -358,6 +351,7 @@ parser parse_roce_deth {
     }
 }
 
+@pragma xgress egress
 parser parse_trailer {
     return select(parser_metadata.l4_trailer) {
         0x0000 mask 0xffff: ingress;
@@ -366,12 +360,14 @@ parser parse_trailer {
     }
 }
 
+//@pragma xgress egress
 parser parse_udp_payload {
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len + 0);
     extract(udp_payload);
     return parse_udp_options;
 }
 
+//@pragma xgress egress
 parser parse_udp_options {
     // XXX
     return ingress;

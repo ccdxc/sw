@@ -91,7 +91,7 @@ def _parser_topo_sort(parser, d, parse_states, node, marker, sorted_list, depth=
     else:
         marker[node] = 1
         node_list = node.branch_to.values()
-        if 'header_ordering' in node.p4_state._parsed_pragmas:
+        if node.p4_state and 'header_ordering' in node.p4_state._parsed_pragmas:
             # handle header ordering pragma to enforce the specified order
             # create a state list in the reverse order so that topo-sort will
             # build the header order correctly by visiting last header state first
@@ -106,7 +106,7 @@ def _parser_topo_sort(parser, d, parse_states, node, marker, sorted_list, depth=
                 continue
             if not isinstance(next_node, capri_parse_state):
                 continue
-            if 'xgress' in next_node.p4_state._parsed_pragmas:
+            if next_node.p4_state and 'xgress' in next_node.p4_state._parsed_pragmas:
                 if next_node.p4_state._parsed_pragmas['xgress'].keys()[0].upper() != d.name:
                     continue # skip - specified only for parser in other direction
             if _parser_topo_sort(parser, d, parse_states, next_node, marker, sorted_list, depth+1):
@@ -201,7 +201,7 @@ class capri_parser_set_op:
                 self.capri_expr.op3 = '+'
                 self.capri_expr.const = src
             else:
-                # metaPhv <- const 
+                # metaPhv <- const
                 self.op_type = meta_op.EXTRACT_CONST
                 self.const = src
                 if (dst.width % 8):
@@ -218,7 +218,7 @@ class capri_parser_set_op:
                                 (cstate.parser.d.name, cstate.name, dst.hfname, dst.width))
                         cstate.parser.logger.debug("%s:%s:set_metadata to %s will use OR instn" % \
                             (cstate.parser.d.name, cstate.name, dst.hfname))
-                    
+
             return
 
         if isinstance(src, p4.p4_field):
@@ -247,7 +247,7 @@ class capri_parser_set_op:
                     src_eoff = (src_soff + cf.width) % 16
                     if src_eoff:
                         self.capri_expr = capri_parser_expr(cstate.parser, None)
-                        self.capri_expr.op1 = '>>' 
+                        self.capri_expr.op1 = '>>'
                         self.capri_expr.shft = 0    # output function handles this 16 - src_eoff
                         self.capri_expr.src1 = cf
                 else:
@@ -258,7 +258,7 @@ class capri_parser_set_op:
                     # checked for byte alignment. Any bits on both sides of the field are added
                     # to the field's width and dst width is set to that.
                     # E.g. if a fld occupies bits 3-11 (w=9), the dst width is set to 16. (9+3+4)
-                    # If dst.width > new_width, it is only aligned to byte boundary. This is 
+                    # If dst.width > new_width, it is only aligned to byte boundary. This is
                     # needed when larger containers are used. (e.g. lkp_src)
                     self.op_type = meta_op.EXTRACT_FIELD
                     src_boff = cf.p4_fld.offset % 8
@@ -388,7 +388,7 @@ class capri_lkp_reg:
     def __repr__(self):
         return "\n%s pkt_off %d, pkt_off2 %d, is_key %s, store_en %s, expr %s, first_pkt_fld: %s flds: %s" % \
                 (self.type.name, self.pkt_off, self.pkt_off2, self.is_key, self.store_en, self.capri_expr,
-                 self.first_pkt_fld.hfname if self.first_pkt_fld else None, 
+                 self.first_pkt_fld.hfname if self.first_pkt_fld else None,
                  [(f[0],f[1][0].hfname) for f in self.flds.items()])
 
 class capri_parse_state:
@@ -439,10 +439,10 @@ class capri_parse_state:
         self.csum_payloadlen_ohi_instr_gen = (False, -1, None)
                                                 #When true, in the parse-state
                                                 #also generate OHI instruction
-                                                #to load OHI slot 
+                                                #to load OHI slot
                                                 #(totalLen_ohi_id) with
                                                 #l4_verify_len value
-        self.verify_cal_field_objs = [] # List of objects (At most 2 supported 
+        self.verify_cal_field_objs = [] # List of objects (At most 2 supported
                                         # in a parse state)
         self.phdr_offset_ohi_id = -1    # In case of phdr capture IP hdr offset
                                         # start in this ohi_sel.
@@ -488,7 +488,7 @@ class capri_parse_state:
         self.parser.logger.critical("%s:%s:No free lkp register - regs used: %s" % \
                         (self.parser.d.name, self.name, self.lkp_regs))
         assert 0, pdb.set_trace()
-            
+
     def get_hdr_off(self, hdr):
         for cf in self.extracted_fields:
             h = cf.get_p4_hdr()
@@ -511,6 +511,12 @@ class capri_parse_state:
         if self.is_end:
             return True
         return False
+
+    def no_extract(self):
+        if self.p4_state and 'no_extract' in self.p4_state._parsed_pragmas:
+            return True
+        else:
+            return False
 
     def __repr__(self):
         return self.name
@@ -543,7 +549,7 @@ class _saved_lkp_reg:
     # one register and one register can contain only one field XXX
     def __init__(self, cf):
         self.flds = [cf] # list of flds in this reg
-    
+
     def add_fld(self, cf):
         self.flds.append(cf)
 
@@ -556,11 +562,11 @@ class capri_parser_expr:
         # reg = reg1 +/- ((reg2 & mask) <</>> shft) +/- c (TBD)
         # The generic expression is defined as -
         # dst = src_reg OP2 (src1 OP1 shft) OP3 c
-        # NOTE: 
+        # NOTE:
         # 1. src1 & mask is not supported as user programmble,
         #   it is computed and used internally to handle field alignements in h/w
         # 2. src1 is expected to be pkt_data (not register)
-        # 
+        #
     def __init__(self, parser, p4_expr):
         self.parser = parser
         self.p4_expr = p4_expr     # original expr
@@ -574,7 +580,7 @@ class capri_parser_expr:
 
         self.op3 = None
         self.const = 0
-        
+
         # fields programmed later, based on usage and field alignment
         self.pkt_offset = -1    # applicable for op1
         self.mask = None        # applicable for op1, user supplied mask is not supported
@@ -764,105 +770,6 @@ class capri_parser_expr:
                 else:
                     self.src_reg = cf2
 
-        '''
-        # traverse p4_expressions - ensure that only supported operations
-        # are used, translate p4_field to capri_field, derive op_type..
-        # supported expressions are
-        # src_reg OP2 ((src1 OP1 shft) OP3 c
-
-        supported_ops1 = ['<<', '>>']
-        supported_ops2 = ['+', '-',]
-        supported_ops = supported_ops1 + supported_ops2
-        assert p4_expr.op in supported_ops, \
-            "%s:Unsupported operation %s in p4_expression %s" % \
-                (self.parser.d.name, p4_expr.op, p4_expr)
-
-        if isinstance(p4_expr.left, p4.p4_field):
-            hf_name = get_hfname(p4_expr.left)
-            cf = self.parser.be.pa.get_field(hf_name, self.parser.d)
-            p4_expr.left = cf
-
-        if isinstance(p4_expr.right, p4.p4_field):
-            hf_name = get_hfname(p4_expr.right)
-            cf = self.parser.be.pa.get_field(hf_name, self.parser.d)
-            p4_expr.right = cf
-
-        if p4_expr.op in supported_ops1:
-            # left must be pkt_field/[reg - not supported] and right must be int
-            # XXXX support reg
-            self.op1 = p4_expr.op
-            assert isinstance(p4_expr.left, capri_field) or \
-                   isinstance(p4_expr.left, tuple), \
-                   "%s:unsupported left oprand - Must refer to packet data (found %s)" % \
-                   (self.parser.d.name, p4_expr.left)
-            self.src1 = p4_expr.left
-            assert isinstance(p4_expr.right, int), "invalid operand %s for as shift val" % \
-                (p4_expr.right)
-            self.shft = p4_expr.right
-        else:
-            # top level is +-, left or right can be expr involving << >>
-            # src_reg OP2 ((src1 OP1 shft) OP3 c
-            # OP2 if one of the operands is reg
-            # OP3 if no operand is a register
-            cf1 = None
-            cf2 = None
-            if isinstance(p4_expr.left, capri_field):
-                cf1 = p4_expr.left
-            if isinstance(p4_expr.right, capri_field):
-                cf2 = p4_expr.right
-
-            # handle a case : reg +- pkt_fld
-            if cf1 and cf2:
-                if cf1.parser_local:
-                    self.src_reg = cf1
-                    assert not cf2.parser_local, pdb.set_trace()
-                    self.src1 = cf2
-                    self.op1 = '<<'
-                    self.shft = 0
-                else:
-                    assert cf2.parser_local, pdb.set_trace()
-                    self.src_reg = cf2
-                    self.src1 = cf1
-                    self.op1 = '<<'
-                    self.shft = 0
-                self.op2 = p4_expr.op
-            elif cf1:
-                if cf1.parser_local:
-                    # other operand could be expr or const
-                    self.op2 = p4_expr.op
-                    self.src_reg = cf1
-                else:
-                    # this is an expr like: cf +/- const and cf is pkt field
-                    self.src1 = cf1
-                    self.op1 = '<<'
-                    self.shft = 0
-                    self.op3 = p4_expr.op
-            elif cf2 and cf2.parser_local:
-                # other operand could be expr or const
-                self.op2 = p4_expr.op
-                self.src_reg = cf2
-            else:
-                self.op3 = p4_expr.op
-
-            if isinstance(p4_expr.left, int):
-                assert not self.const, pdb.set_trace()
-                self.const = p4_expr.left
-
-            elif isinstance(p4_expr.right, int):
-                assert not self.const, pdb.set_trace()
-                self.const = p4_expr.right
-
-            if isinstance(p4_expr.left, p4.p4_expression):
-                p4_expr.left = copy.copy(p4_expr.left)
-                self.process_p4_expr(p4_expr.left)
-
-            elif isinstance(p4_expr.right, p4.p4_expression):
-                p4_expr.right = copy.copy(p4_expr.right)
-                self.process_p4_expr(p4_expr.right)
-            else:
-                pass
-        '''
-
     def add_signed_const(self, s_val):
         # s_val is a signed value
         if self.op3:
@@ -897,13 +804,13 @@ class capri_parser_expr:
             # no numerical value but all other part.
             pstr = 'EXPR:%s %s (%s %s %s) %s\n' % \
                 (self.src_reg.hfname if isinstance(self.src_reg, capri_field) else self.src_reg, self.op2,
-                 self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
+                 self.src1.hfname if isinstance(self.src1, capri_field) else self.src1,
                  self.op1, self.shft, self.op3)
-                 
+
         else:
             pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
                 (self.src_reg.hfname if isinstance(self.src_reg, capri_field) else self.src_reg, self.op2,
-                 self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
+                 self.src1.hfname if isinstance(self.src1, capri_field) else self.src1,
                  self.op1, self.shft,
                  self.op3, self.const)
         return pstr
@@ -912,12 +819,12 @@ class capri_parser_expr:
     def __repr__(self):
         pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
                 (self.src_reg.hfname if isinstance(self.src_reg, capri_field) else self.src_reg, self.op2,
-                 self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
+                 self.src1.hfname if isinstance(self.src1, capri_field) else self.src1,
                  self.op1, self.shft,
                  self.op3, self.const)
         #pstr += 'pkt_offset %d, mask 0x%x, lkp_sel %d' % \
         #            (self.pkt_offset, self.mask if self.mask != None else 0, self.lkp_sel)
-        return pstr        
+        return pstr
 
 class capri_parser:
     # one per direction
@@ -936,6 +843,7 @@ class capri_parser:
         self.longest_path_size = 0
         self.ohi = None
         self.ohi_used = 0
+        self.wr_only_ohi = OrderedDict()    # {wr_only_fld_name : ohi_slot}
         self.hdr_ext_states = OrderedDict() # {hdr : [ states where it is extracted ] }
         self.meta_ext_states = OrderedDict() # {meta_fld : [ states where it is extracted ] }
         self.hdr_order_groups = []  # header groups specified using header_ordering pragma
@@ -944,7 +852,7 @@ class capri_parser:
         self.hdr_hv_bit = OrderedDict() # ordered so it is easy to debug when printed
         self.csum_hdr_hv_bit = OrderedDict()
         self.icrc_hdr_hv_bit = OrderedDict()
-        self.hv_bit_header = [ None for _ in range(self.be.hw_model['parser']['max_hv_bits']) ]     
+        self.hv_bit_header = [ None for _ in range(self.be.hw_model['parser']['max_hv_bits']) ]
 
         self.var_len_headers = OrderedDict() # {hdr_name : var_len_exp|str}
 
@@ -953,9 +861,6 @@ class capri_parser:
         for fl in range(parser_flits):
             self.flit_hv_idx_start[fl] = hv_start_bit
             hv_start_bit += hv_per_flit[fl]
-
-        self.lf_scope = OrderedDict()  # { cf : _scope() } - scope of a local_field (reg)
-        self.lf_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
 
         self.saved_lkp_scope = OrderedDict()  # { cf : _scope() } - scope of a saved_lkp_field
         self.saved_lkp_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
@@ -987,11 +892,16 @@ class capri_parser:
             capri_parse_states[k] = capri_parse_state(self, v)
 
         # init branch_to dictionaries to point to capri_parse_states
+        end_state = capri_parse_state(self, None, "__END__")
+        end_state.is_end = True
         for k,v in capri_parse_states.items():
             for bkey,bv in v.p4_state.branch_to.items():
                 if isinstance(bv, p4.p4_parse_state):
                     if bv.name not in capri_parse_states:
                         # this state was not included (could be because xgress pragma)
+                        # Need to replace it with END state if this was a default transition
+                        if bkey == p4.P4_DEFAULT:
+                            v.branch_to[bkey] = end_state
                         continue
                     v.branch_to[bkey] = capri_parse_states[bv.name]
                 else:
@@ -1066,6 +976,8 @@ class capri_parser:
 
         for s in self.states:
             if s.is_virtual:
+                continue
+            if not s.p4_state:
                 continue
             s_ohi_flds = OrderedDict()
             for c in s.p4_state.call_sequence:
@@ -1196,6 +1108,10 @@ class capri_parser:
                     set_op = capri_parser_set_op(s, cfield, c[2])
                     if cfield.no_register():
                         s.no_reg_set_ops.append(set_op)
+                        if cfield.hfname not in self.wr_only_ohi:
+                            # do not include hdr name in the key
+                            hfname = cfield.hfname.split('.')
+                            self.wr_only_ohi[hfname[1]] = None
                     else:
                         s.set_ops.append(set_op)
                     hf_name = cfield.hfname
@@ -1208,7 +1124,7 @@ class capri_parser:
                             (self.d.name, s.name, hf_name, s.local_flds[hf_name][0].hfname, \
                              s.local_flds[hf_name][1], \
                              s.local_flds[hf_name][2]))
-                    
+
                     if set_op.op_type == meta_op.EXTRACT_REG and set_op.src_reg and \
                         set_op.src_reg.is_meta:
                         hf_name = set_op.src_reg.hfname
@@ -1253,6 +1169,8 @@ class capri_parser:
         deparse_only_hdrs = []
         # change branch_on fields to capri_fields
         for cs in self.states:
+            if not cs.p4_state:
+                continue
             # checke deparser-only states
             if 'deparse_only' in cs.p4_state._parsed_pragmas:
                 cs.deparse_only = True
@@ -1355,6 +1273,8 @@ class capri_parser:
                 # ingress and egrss.. for now assume that we process ingress before egress
                 # and remove the hdr field only on egress (XXX this will be a problem in msft
                 # mode where each pipeline is used by itself.) Best to have capri_hdr
+                # Since build ohi is called before egress processing it is a problem, currently
+                # build_ohi is called multiple times which fixes the problem
                 if self.d == xgress.EGRESS:
                     hdr.fields.remove(p4f)
                     assert len(hdr.fields) == 1, pdb.set_trace() # HACK only 2 flds allowed, 1 removed
@@ -1373,19 +1293,11 @@ class capri_parser:
             self.logger.debug("%s:Variable hdr %s len %s" % (self.d.name, hdr.name, v_size_exp))
             self.var_len_headers[hdr.name] = v_size_exp
 
-        # TBD - build ohi later - not part of init
         self.logger.debug("%s: States %s" % (self.d.name, [s.name for s in self.states]))
         self.logger.info("%s: Total Headers : %d" % (self.d.name, len(self.headers)))
         self.logger.info("Total Fixed Headers size: %d Bytes" % \
             sum([get_header_fixed_size(h) for h in self.headers]))
         self.logger.debug('Headers: %s' % self.headers)
-
-        self.ohi = self._build_ohi(ohi_flds)
-
-        self.logger.info("%s: Totals extracted fields %d, ohi_fields %d, union_fields %d" % \
-            (self.d.name, len(self.extracted_fields), \
-            len([f for f in self.extracted_fields if f.is_ohi]), \
-            len([f for f in self.extracted_fields if f.is_union()])))
 
         self.paths, self.path_states = self._find_parser_paths(self.start_state)
         self.logger.info("%s: Total parse paths %d" % (self.d.name, len(self.paths)))
@@ -1431,6 +1343,10 @@ class capri_parser:
 
         # recompute the paths after removing the dummy(impossible) branches
         self.paths, self.path_states = self._find_parser_paths(self.start_state)
+
+    def init_ohi(self):
+        # Do this after both ingress and egress inits are done
+        self.ohi = self._build_ohi(None)
 
     def create_hw_start_state(self):
         # NOT USED
@@ -1625,7 +1541,7 @@ class capri_parser:
         '''
         Every Csum engine needs atleast 2 OHIs. One for storing offset and
         second for storing csum  len. Hence for 5 csum engines first 10
-        OHI slots are used. 
+        OHI slots are used.
         In some cases a csum unit needs more than 2 slots. Storing phdr offset
         tcp offset, tcp len.
         '''
@@ -1644,6 +1560,7 @@ class capri_parser:
         return ohid
 
     def assign_ohi_slots(self):
+        self.assign_wr_only_ohi_slots()
         # go thru' longest parse_path and assign ohi slots to headers as needed
         # keep doing it until all headers are done
         paths = sorted(self.paths, key=lambda p: len(p), reverse=True)
@@ -1660,6 +1577,11 @@ class capri_parser:
             ohi_used = 0
             # collect all pre-allocated slots
             # a given header must use the same slot on all paths
+            # also collect all globally allocated slots
+            for v in self.wr_only_ohi.values():
+                if v != None:
+                    free_slots[v] = False
+                    ohi_used += 1
             for hdr in path:
                 if hdr not in self.ohi:
                     # header is in phv no ohi needed
@@ -1680,13 +1602,21 @@ class capri_parser:
                 # allocate additional slot for variable len ohi
                 fixed_ohi_id = self.ohi[hdr][0].id
                 if fixed_ohi_id == -1:
-                    try:
-                        ohid = free_slots.index(True)
-                        free_slots[ohid] = False
-                        ohi_used += 1
-                    except:
-                        slot_overflow = True
-                        break
+                    # check if this is globally allocated
+                    wr_only_ohi_name = hdr.name + '___start_off'
+                    if wr_only_ohi_name in self.wr_only_ohi:
+                        ohid = self.wr_only_ohi[wr_only_ohi_name]
+                        assert ohid != None, pdb.set_trace()
+                        self.logger.debug("%s:%s use global ohi slot %d" % \
+                                (self.d.name, wr_only_ohi_name, ohid))
+                    else:
+                        try:
+                            ohid = free_slots.index(True)
+                            free_slots[ohid] = False
+                            ohi_used += 1
+                        except:
+                            slot_overflow = True
+                            break
                     self.ohi[hdr][0].id = ohid
                     fixed_ohi_id = ohid
 
@@ -1697,13 +1627,21 @@ class capri_parser:
                     # needs to be adjusted based on first offset - TBD
                     # for now use an additional slot
                     if oh.var_id == -1:
-                        try:
-                            ohid = free_slots.index(True)
-                            free_slots[ohid] = False
-                            ohi_used += 1
-                        except:
-                            slot_overflow = True
-                            break
+                        # check if this is globally allocated
+                        wr_only_ohi_name = hdr.name + '___hdr_len'
+                        if wr_only_ohi_name in self.wr_only_ohi:
+                            ohid = self.wr_only_ohi[wr_only_ohi_name]
+                            self.logger.debug("%s:%s use global ohi slot %d" % \
+                                (self.d.name, wr_only_ohi_name, ohid))
+                            assert ohid != None, pdb.set_trace()
+                        else:
+                            try:
+                                ohid = free_slots.index(True)
+                                free_slots[ohid] = False
+                                ohi_used += 1
+                            except:
+                                slot_overflow = True
+                                break
                         oh.var_id = ohid
 
                     if i==0:
@@ -1728,6 +1666,59 @@ class capri_parser:
         self.logger.debug("%s: OHI allocation %s" % (self.d.name, self.ohi))
         self.ohi_used = max_ohi_used
         return (max_ohi_used, max_ohi_path)
+
+    def assign_wr_only_ohi_slots(self):
+        # since wr_only variable will not appear in the path-headers, there is a small
+        # chance that ohi-slot used for a wr-only variable will conflict with another header
+        # on that path (same ohi slot can be used by different headers on different mutually
+        # exclusive paths), but that cannot be checked for wr_only variable as it does not appear
+        # on a path.. since wr_only variables are not visible on path-headers
+        # for not do a global allocation for wr_only variables
+        for k,v in self.wr_only_ohi.items():
+            # reset
+            self.wr_only_ohi[k] = None
+
+        ohi_slot = 0
+        for k in self.wr_only_ohi.keys():
+            self.wr_only_ohi[k] = ohi_slot
+            ohi_slot += 1
+
+    def get_ohi_hdr_start_off(self, hdr):
+        # return ohi slot assigned to capture header start offset (if allocated)
+        ohi_name = hdr.name + '___start_off'
+        if hdr in self.ohi:
+            return self.ohi[hdr].id
+        elif ohi_name in self.wr_only_ohi:
+            return self.wr_only_ohi[ohi_name]
+        else:
+            return None
+
+    def get_ohi_hdr_len(self, hdr):
+        # return ohi slot assigned to capture header len. (if allocated)
+        ohi_name = hdr.name + '___hdr_len'
+        if hdr in self.ohi:
+            return self.ohi[hdr].var_id
+        elif ohi_name in self.wr_only_ohi:
+            return self.wr_only_ohi[ohi_name]
+        else:
+            return None
+
+    def get_ohi_slot_wr_only_cf(self, cf):
+        ohi_name = cf.hfname.split('.')[1]
+        ohi_names = ohi_name.split('___')
+        if len(ohi_names) > 1:
+            hdr_name = ohi_names[0]
+            hdr = self.be.h.p4_header_instances[hdr_name]
+            if ohi_names[1] == 'start_off':
+                return self.get_ohi_hdr_start_off(hdr)
+            elif ohi_names[1] == 'hdr_len':
+                return self.get_ohi_hdr_len(hdr)
+            else:
+                return None
+        else:
+            if ohi_names[0] in self.wr_only_ohi:
+                return self.wr_only_ohi[ohi_names[0]]
+        return None
 
     def _find_parser_paths(self, start_state):
         paths=[]
@@ -1772,7 +1763,7 @@ class capri_parser:
         extracted_hdrs += node.headers
 
         for next_node in node_list:
-            if not isinstance(next_node, capri_parse_state):
+            if not isinstance(next_node, capri_parse_state) or not next_node.p4_state:
                 # terminate
                 paths.append(path_hdrs+extracted_hdrs)
                 path_states.append(current_path+traversed_nodes)
@@ -1826,7 +1817,7 @@ class capri_parser:
             for ohi in oh:
                 if self._hdr_ohi_to_phv(hdr, ohi):
                     h_ohi += 1
-                    
+
             if h_ohi == len(oh):
                 self.logger.debug("%s:Hdr %s from will be removed from ohi, count %d" % \
                     (self.d.name, hdr.name, h_ohi))
@@ -1851,7 +1842,7 @@ class capri_parser:
         if self.d == xgress.INGRESS and self.be.pa.gress_pa[xgress.INGRESS].i2e_hdr:
             # ingress deparser needs to insert i2e header as expected by egress parser
             # It is assumed to be in this order intrinsic -> [tm_replication_data] -> i2e -> ..
-            # tm_replication data is only seen by egress parser so insert i2e right after 
+            # tm_replication data is only seen by egress parser so insert i2e right after
             # intrinsic header
             # New: Add i2e header after p4_intr
             if self.be.pa.gress_pa[xgress.INGRESS].capri_p4_intr_hdr in hv_headers:
@@ -1956,7 +1947,12 @@ class capri_parser:
             cs.id = id+1 # zero is not used - easy to debug
 
     def setup_saved_lkp(self):
-        # Algorithm same as setup_local_regs
+        # Algorithm is not same as setup_local_regs anymore
+        # register saving is still done based on topo sort. That means some saved regs will
+        # be occupied on states where they are not used/needed.. but it is faster and we are
+        # not yet running out of saved regs.
+        # Also only lkp fields are moved to saved regs (not parser local vars that sure used
+        # for computation)
         reversed_topo_states = self.states[:]
         reversed_topo_states.reverse()
         for cs in reversed_topo_states:
@@ -1998,17 +1994,16 @@ class capri_parser:
         # do data flow ananlysis per path and create in(down) and out(up) variables for each state
         # do not share in, out objects between states (multiple down stream states can clobber each
         # others data
-        # ALGO: Register allocation is done by doing liveness calcualtion and creating 
+        # ALGO: Register allocation is done by doing liveness calcualtion and creating
         # up(out)/down(in) variables for each state. Since a given parse state can be on multiple
         # paths, collect the proallocated register information while performing the liveness
         # analysis on each path.
-        # Perform register allocation on each path top->bottom, allocate register for any 
+        # Perform register allocation on each path top->bottom, allocate register for any
         # un-allocated variables
-        # This code does not create RIG (register interference graph).. need to see if that is 
+        # This code does not create RIG (register interference graph).. need to see if that is
         # a better way to handle this.
         cs_lfs = OrderedDict() # {cs: {in_lfs, out_lfs]}
         for path in path_states:
-            #lf_scope = OrderedDict()
             out_lfs = OrderedDict() # {lf: reg}
             for cs in reversed(path):
                 # if cs.name == 'parse_trailer': pdb.set_trace()
@@ -2054,15 +2049,6 @@ class capri_parser:
                 #pdb.set_trace()
                 pass
 
-            '''
-            # XXXX remove printing
-            for cs in path:
-                if cs not in cs_lfs:
-                    continue
-                self.logger.debug("%s:state %s:In LFs %s, Out LFs %s" % \
-                            (self.d.name, cs.name, [(k.hfname,t) for k,t in cs_lfs[cs][0].items()],
-                            [(k.hfname,t) for k,t in cs_lfs[cs][1].items()]))
-            '''
             # allocate reg ids for new lfs
             upstream_lfs = OrderedDict() #out_lfs
             for cs in path:
@@ -2072,7 +2058,7 @@ class capri_parser:
                 # take the reg assignments from upstream node for local and downstream lfs
                 for lf,r in upstream_lfs.items():
                     if r == None:
-                        assert 0, pdb.set_trace() 
+                        assert 0, pdb.set_trace()
                         continue
                     if lf in downstream_lfs or lf.hfname in cs.local_flds:
                         r_used = cs.active_reg_find(lf)
@@ -2092,7 +2078,7 @@ class capri_parser:
 
                     if lf in upstream_lfs:
                         # reg should come from top, if not ignore
-                        rid = upstream_lfs[lf] 
+                        rid = upstream_lfs[lf]
                         if rid == None:
                             continue
                         _ = cs.active_reg_alloc(lf, rid)
@@ -2104,7 +2090,7 @@ class capri_parser:
 
                     if lf in downstream_lfs:
                         downstream_lfs[lf] = rid
-                
+
                 for lf,r in downstream_lfs.items()[:]:
                     if r == None:
                         #self.logger.debug("%s:%s Prune LF %s" % \
@@ -2117,146 +2103,12 @@ class capri_parser:
 
                 upstream_lfs = OrderedDict()
                 upstream_lfs = copy.copy(downstream_lfs)
-            '''
-            lf_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
-            for cs in path:
-                for lf, rid in cs.reserved_lf_regs.items():
-                    # check top-level out_lfs for un-assigned lfs - ignore those
-                    if rid == None and lf not in out_lfs:
-                        if lf in lf_reg_allocation:
-                            rid = lf_reg_allocation.index(lf)
-                            cs.reserved_lf_regs[lf] = rid
-                        else:
-                            # allocate register if it is wr[2] and not rd[1]
-                            if lf.hfname in cs.local_flds and \
-                                cs.local_flds[lf.hfname][2] and not cs.local_flds[lf.hfname][1]:
-                                if None not in lf_reg_allocation:
-                                    assert 0, pdb.set_trace()
-                                rid = lf_reg_allocation.index(None)
-                                cs.reserved_lf_regs[lf] = rid
-                                lf_reg_allocation[rid] = lf 
-
-                # reset and re-create lf_reg_allocation for downstream node
-                lf_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
-                for lf, rid in cs.reserved_lf_regs.items():
-                    self.logger.debug("%s:state %s:Reserve LF %s reg %d" % \
-                            (self.d.name, cs.name, lf.hfname, rid))
-                    if lf in cs_lfs[cs][0] and rid != None:
-                        lf_reg_allocation[rid] = lf
-
-            '''
         for cs in self.states:
             if cs not in cs_lfs:
                 continue
             self.logger.debug("%s:state %s:In LFs %s, Out LFs %s" % \
                             (self.d.name, cs.name, [(k.hfname,t) for k,t in cs_lfs[cs][0].items()],
                             [(k.hfname,t) for k,t in cs_lfs[cs][1].items()]))
-
-    def _setup_local_regs(self):
-        # XXX: Old code - will be removed once new code goes thru some testing
-        # Perform backward search to determine scope of each local register along every path
-        # for simplicity/speed, assume/allow a single-scope for a given variable so that 
-        # all (thousands - 6K for nic.p4 for example) paths need not be traversed
-        reversed_topo_states = self.states[:]
-        reversed_topo_states.reverse()
-
-        for cs in reversed_topo_states:
-            for (lf,rd,wr) in cs.local_flds.values():
-                # rd/wr flags are not checked.. in either case keep updating the start_state
-                # when entry is created first time, end_state is set
-                if lf not in self.lf_scope:
-                    self.lf_scope[lf] = _scope(cs, cs)
-                else:
-                    # update start state
-                    self.lf_scope[lf].start_cs = cs
-
-        # Ideally we need to keep register scope per path. Since the scope is expanded based
-        # on topo ordering, reservation also should be done based on topo order
-        for lf, scope in self.lf_scope.items():
-            self.logger.debug("%s:lf_scope %s: %s[%d] -> %s[%d], %d" % \
-                (self.d.name, lf.hfname, scope.start_cs, self.states.index(scope.start_cs),
-                 scope.end_cs, self.states.index(scope.end_cs), scope.reg_id))
-            start_found = False
-            # XXX optimize by traversing thru' topo list once XXX
-            # Go thru each path that contains start and end states and make reservations
-            # only along the path
-            lf_reservations = {} #{lf:[cs]}
-            for path in self.path_states:
-                if scope.start_cs not in path or scope.end_cs not in path:
-                    path_cs = None
-                    # Since only one scope is maintained per LF, there are new cases
-                    # where same LF name must be used on different paths. This causes
-                    # problem when both start and end states are not on the same path,
-                    # as a work-aournd,
-                    # save register only in the start/end state that is on a give path
-                    # XXX - keep multiple scopes per LF
-                    if scope.start_cs in path:
-                        path_cs = scope.start_cs
-                    if scope.end_cs in path:
-                        path_cs = scope.end_cs
-                    if path_cs == None:
-                        continue
-
-                    if lf not in lf_reservations:
-                        lf_reservations[lf] = []
-                    if path_cs in lf_reservations[lf]:
-                        continue
-                    path_cs.reserved_lfs.append(lf)
-                    self.logger.debug("%s:state %s:Reserve LF(only one state on path) %s" % \
-                        (self.d.name, path_cs.name, lf.hfname))
-                    lf_reservations[lf].append(path_cs)
-                    continue
-                #if lf.hfname == 'parser_metadata.ipv6_nextHdr': pdb.set_trace()
-                # when header_ordring pragma is used, the path_states order is not as per the topo
-                # order, consult both
-                start_idx = self.states.index(scope.start_cs)
-                end_idx = self.states.index(scope.end_cs)
-                for c in range(start_idx, end_idx+1):
-                    cs = self.states[c]
-                    if cs not in path:
-                        continue
-                    if lf not in lf_reservations:
-                        lf_reservations[lf] = []
-
-                    if cs in lf_reservations[lf]:
-                        continue
-
-                    cs.reserved_lfs.append(lf)
-                    self.logger.debug("%s:state %s:Reserve LF %s" % \
-                        (self.d.name, cs.name, lf.hfname))
-                    lf_reservations[lf].append(cs)
-
-
-    def lf_reg_find(self, lf):
-        assert 0, "Depricated function lf_reg_find"
-        for i, reg_lf in enumerate(self.lf_reg_allocation):
-            if lf == reg_lf:
-                return i
-        return None
-
-    def lf_reg_alloc(self, lf):
-        assert 0, "Depricated function lf_reg_alloc"
-        for i, reg_lf in enumerate(self.lf_reg_allocation):
-            if not reg_lf:
-                self.lf_reg_allocation[i] = lf
-                self.logger.debug("%s:lf_reg_alloc(), lf= %s, rid= %d" % \
-                    (self.d.name, lf.hfname, i))
-                return i
-        pdb.set_trace()
-        assert 0, "No lkp reg avaialable for local field %s Used %s" % \
-                    (lf.hfname, [f.hfname for f in self.lf_reg_allocation])
-        return None
-
-    def lf_reg_free(self, lf):
-        assert 0
-        for i, reg_lf in enumerate(self.lf_reg_allocation):
-            if lf == reg_lf:
-                self.lf_reg_allocation[i] = None
-                self.logger.debug("%s:lf_reg_free(), lf= %s, rid= %d" % \
-                    (self.d.name, lf.hfname, i))
-                return i
-        assert 0
-        return None
 
     def saved_lkp_reg_find(self, lf):
         if lf in self.saved_lkp_fld:
@@ -2369,80 +2221,6 @@ class capri_parser:
                 roff = (sf.p4_fld.offset % 8)
             cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, sf.width)
 
-    def _reserve_lkp_regs(self, cs):
-        # Reserve all the lkp_registers that are dictated by upstream reservations
-        # 1. saved_lkp (if field is used for lookup)
-        # 2. reserved_lfs
-        # 3. Then allocate registers to save future lkp.
-        # After all reservations are done, allocate remaining for lookups in current state
-        for cf in cs.saved_lkp:
-            if cf not in cs.branch_on:
-                # lkp field is not used 
-                continue
-            rid, sr = self.saved_lkp_reg_find(cf)
-            assert cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_NONE, \
-                "Lkp register is double-booked"
-            cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_STORED
-            # create lkp_fld - used for l2p key mapping
-            lkp_fld = capri_lkp_fld(cf, lkp_fld_type.FLD_SAVED_REG)
-            lkp_fld.reg_id = rid
-            cs.lkp_flds[cf.hfname] = lkp_fld
-            if cf.is_meta:
-                roff = cs.lkp_regs[rid].size - cf.width
-                self.logger.debug("%s:roff for REG fld %s is set to %d" % \
-                    (cs.name, cf.hfname, roff))
-            else:
-                roff = (cf.p4_fld.offset % 8)
-            cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, cf.width)
-
-        for cf in cs.reserved_lfs:
-            rid = self.lf_reg_find(cf)
-            reg_type = lkp_reg_type.LKP_REG_RETAIN
-            if rid == None:
-                assert cs == self.lf_scope[cf].start_cs, pdb.set_trace()
-                rid = self.lf_reg_alloc(cf)
-                reg_type = lkp_reg_type.LKP_REG_LOAD
-                if not cf.is_meta:
-                    cs.lkp_regs[rid].first_pkt_fld = cf
-
-            assert cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_NONE, \
-                "Lkp register is double-booked"
-            cs.lkp_regs[rid].type = reg_type
-            # create lkp_fld - used for l2p key mapping
-            lkp_fld = capri_lkp_fld(cf, lkp_fld_type.FLD_LOCAL)
-            lkp_fld.reg_id = rid
-            cs.lkp_flds[cf.hfname] = lkp_fld
-
-            if cf.is_meta:
-                roff = cs.lkp_regs[rid].size - cf.width
-                self.logger.debug("%s:roff for REG fld %s is set to %d" % \
-                    (cs.name, cf.hfname, roff))
-            else:
-                roff = (cf.p4_fld.offset % 8)
-
-            cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, cf.width)
-
-        for sf in cs.load_saved_lkp:
-            rid = cs.lkp_reg_alloc()
-            cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_LOAD
-            cs.lkp_regs[rid].store_en = True
-            self.saved_lkp_reg_alloc(sf, rid)
-            # create lkp_fld - used for l2p key mapping
-            if sf.is_meta:
-                lkp_fld = capri_lkp_fld(sf, lkp_fld_type.FLD_LOCAL)
-            else:
-                lkp_fld = capri_lkp_fld(sf, lkp_fld_type.FLD_PKT)
-                cs.lkp_regs[rid].first_pkt_fld = sf
-            lkp_fld.reg_id = rid
-            cs.lkp_flds[sf.hfname] = lkp_fld
-            if sf.is_meta:
-                roff = cs.lkp_regs[rid].size - sf.width
-                self.logger.debug("%s:roff for REG fld %s is set to %d" % \
-                    (cs.name, sf.hfname, roff))
-            else:
-                roff = (sf.p4_fld.offset % 8)
-            cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, sf.width)
-                
     def process_state_set_ops(self, cs):
         # assign lkp registers to set_metadata operations
         for op in cs.set_ops:
@@ -2489,6 +2267,7 @@ class capri_parser:
                 # allocate/find lkp_reg, set capri-expression
                 # allocation is done up-front
                 rid = cs.active_reg_find(op.dst)
+                assert rid != None, pdb.set_trace()
                 cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_UPDATE
                 cs.lkp_regs[rid].capri_expr = op.capri_expr
                 if op.capri_expr:
@@ -2507,7 +2286,7 @@ class capri_parser:
                 if (cs.fld_off[cf]/8) < split_off:
                     split_cf = cf
                 break
-            # field below split 
+            # field below split
             split_cf = cf
 
         split_off = cs.fld_off[split_cf] / 8
@@ -2630,7 +2409,7 @@ class capri_parser:
                     max_ohi = self.be.hw_model['parser']['num_ohi']
                     assert self.ohi_used < max_ohi
                     self.logger.warning("Allocate new ohi slots for %s %s" % (new_cs.name, cf.hfname))
-                    new_ohi = capri_ohi(cf.p4_fld.offset/8, 
+                    new_ohi = capri_ohi(cf.p4_fld.offset/8,
                                         ohi.start + ohi.length - (cf.p4_fld.offset / 8))
                     new_ohi.id = self.ohi_used
                     self.ohi[hdr].insert(i+1, new_ohi)
@@ -2671,7 +2450,7 @@ class capri_parser:
                 "No split for %s, %s due to variable len header extraction (goes to OHI)" %\
                 (cs.name, add_cs.name if add_cs else None))
             return
-        
+
         num_extracts = self.be.hw_model['parser']['num_extracts']
         max_extract = self.be.hw_model['parser']['max_extract']
         total_extract = (add_cs.extract_len if add_cs else 0) + cs.extract_len
@@ -2746,7 +2525,7 @@ class capri_parser:
         end_state.is_end = True
         self.states.append(end_state)
         # init branch_to dictionaries to point to end state
-        # branch to deparse_only state is also replaced with END so these will not be programmed 
+        # branch to deparse_only state is also replaced with END so these will not be programmed
         for cs in self.states:
             for bkey,bv in cs.branch_to.items():
                 if not isinstance(bv, capri_parse_state) or \
@@ -2784,7 +2563,7 @@ class capri_parser:
                         koff += b_on.width
                         continue
                     elif hdr not in cs.headers:
-                        # use saved lookup - must be the same lkp register that was 
+                        # use saved lookup - must be the same lkp register that was
                         # used earlier state to save the value.. also align it on 16b
                         assert b_on in cs.saved_lkp, "%s:saved lookup error for %s in %s" % \
                             (self.d.name, b_on.hfname, cs.name)
@@ -2891,7 +2670,7 @@ class capri_parser:
 
                 assert l==0, "Not enough registers for lkp_val"
 
-            # fix pkt_off for all lkp_regs that load from pkt    
+            # fix pkt_off for all lkp_regs that load from pkt
             for lkp_reg in cs.lkp_regs:
                 if lkp_reg.type == lkp_reg_type.LKP_REG_NONE or \
                     lkp_reg.type == lkp_reg_type.LKP_REG_STORED or \
@@ -2910,7 +2689,7 @@ class capri_parser:
                             assert lkp_reg.capri_expr.src_reg in cs.fld_off, pdb.set_trace()
                             off = cs.fld_off[lkp_reg.capri_expr.src_reg]
                         lkp_reg.pkt_off2 = off
-                        
+
                     if lkp_reg.capri_expr.src1 and \
                             (not isinstance(lkp_reg.capri_expr.src_reg, capri_field) or \
                              not lkp_reg.capri_expr.src1.is_meta):
@@ -2930,7 +2709,7 @@ class capri_parser:
             # create logical->physical key bit mapping based on how key flds were placed
             # into lkp registers
             # phys key comprises of registers key_val0-2..=>48 bits
-            # p4 key bits are mapped to bits in phys key. Due to 16bit reg size, some 
+            # p4 key bits are mapped to bits in phys key. Due to 16bit reg size, some
             # bits in phv key can be un-used, mask bits for those are set to 0 to ignore those)
             self.logger.debug("%s:%s Build l2p keymap size %d" % (self.d.name, cs.name, cs.key_len))
             cs.key_l2p_map = [-1 for i in range(cs.key_len)]
@@ -3169,7 +2948,7 @@ class capri_parser:
                 extractions[-1] = (p[0], p[1]+t[1], p[2])
             else:
                 extractions.append(t)
-                
+
         self.logger.debug("%s:extraction_tuples=%s" % (nxt_cs.name, extractions))
 
         flit_size = self.be.hw_model['parser']['flit_size']
@@ -3212,7 +2991,7 @@ class capri_parser:
             for i,ex_list in enumerate(exclude_set_names):
                 if cs.name in ex_list:
                     exclude_lists[i].append(cs)
-                
+
         paths = self.path_states
         for lp in paths:
             exclude = False
@@ -3232,7 +3011,7 @@ class capri_parser:
             if len(lp) > 8 and len(lp) <= 14:
                 self.logger.debug("%s: Good Path len %02d, %s" % \
                     (self.d.name, len(lp), lp))
-                
+
             if bin_count[len(lp)/bin_size] == 0:
                 self.logger.debug("%s: Sample Path len %02d, %s" % \
                     (self.d.name, len(lp), lp))
@@ -3289,7 +3068,7 @@ class capri_parser:
 
                 for cf in cs.meta_extracted_fields:
                     cs_flit = cf.phv_bit / flit_sz
-                    if cs_flit < last_flit: 
+                    if cs_flit < last_flit:
                         self.logger.critical( \
                         "%s:Flit violation at %s phv %d, last_cs %s last_flit %d on path:\n %s" % \
                             (self.d.name, hdr.name, hdr_phv_bit, last_cs.name, last_flit, path))

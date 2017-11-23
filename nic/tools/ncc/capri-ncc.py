@@ -106,6 +106,7 @@ class capri_backend:
         self.tables.initialize_tables()
         for p in self.parsers:
             p.initialize()
+            p.init_ohi()
         for dp in self.deparsers:
             dp.initialize()
         self.pa.init_synthetic_headers()

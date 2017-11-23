@@ -185,6 +185,16 @@ header_type ipv6_extn_generic_t {
     max_length : 72;
 }
 
+// special header where hdr_len must be the first field
+header_type ipv6_options_blob_t {
+    fields {
+        hdr_len : 16;
+        data    : *;
+    }
+    length : hdr_len;
+    max_length : 256;   // not used
+}
+
 header_type ipv6_extn_frag_t {
     fields {
         nextHdr : 8;

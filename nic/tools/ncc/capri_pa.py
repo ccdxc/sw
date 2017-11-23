@@ -96,7 +96,11 @@ class capri_field:
 
     def no_register(self):
         # HACK - revisit
-        return True if 'parser_no_reg' in self.p4_fld.instance._parsed_pragmas else False
+        if 'parser_no_reg' in self.p4_fld.instance._parsed_pragmas or \
+           'parser_write_only' in self.p4_fld.instance._parsed_pragmas:
+            return True
+        else:
+            return False
 
     def is_wide_ki(self):
         return self.is_wide_key or self.is_wide_input
