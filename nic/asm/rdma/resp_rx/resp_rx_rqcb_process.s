@@ -79,8 +79,9 @@ resp_rx_rqcb_process:
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID) //BD Slot
 
     //Check if ECN bits are set in Packet and congestion management is enabled.                      
-    sne      c7, k.rdma_bth_ecn, 3
-    bbne.!c7 d.congestion_mgmt_enable, 1, skip_cnp_send
+    sne      c2, k.rdma_bth_ecn, 3  //c2 is not used after assignment above. Re-using it.
+    sne      c7, d.congestion_mgmt_enable, 1
+    bcf     [c2 | c7], skip_cnp_send
 
     //Process sending CNP packet to the requester.
     CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, r4)

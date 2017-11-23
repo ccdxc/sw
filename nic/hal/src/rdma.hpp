@@ -891,7 +891,8 @@ typedef struct sqcb0_s {
     uint16_t spec_sq_cindex;
     uint8_t  cb1_byte;
     uint8_t  busy: 1;        //tx
-    uint8_t  rsvd0: 7;
+    uint8_t  congestion_mgmt_enable: 1;
+    uint8_t  rsvd0: 6;
     uint32_t pd;
     uint8_t  bktrack_in_progress:1;
     uint8_t  retry_timer_on:1;

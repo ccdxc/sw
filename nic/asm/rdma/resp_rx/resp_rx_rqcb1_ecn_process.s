@@ -9,9 +9,6 @@ struct resp_rx_ecn_process_k_t k;
 
 #define RAW_TABLE_PC r5
 
-// r6 is pre-loaded with PHV timestamp
-#define PHV_TIMESTAMP r6
-
 %%
     .param    resp_rx_dcqcn_ecn_process
 

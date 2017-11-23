@@ -24,10 +24,6 @@ resp_tx_rqcb1_cnp_process:
     add         BTH_OPCODE, RDMA_PKT_OPC_CNP, RDMA_SERV_TYPE_CNP, BTH_OPC_SVC_SHIFT
     phvwr       p.bth.opcode, BTH_OPCODE
     phvwr       p.bth.dst_qp, d.dst_qp
-    phvwr       p.bth.psn,  r0
-    phvwr       p.bth.se, r0
-    phvwr       p.bth.m, r0
-
 
 add_headers:
     // intrinsic

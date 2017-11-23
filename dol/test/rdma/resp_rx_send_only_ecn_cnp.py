@@ -23,8 +23,8 @@ def TestCaseSetup(tc):
     # CNP delay timer is set to 50us. Capri clock runs at 1 tick per ns.
     # So below clock values should generate CNP packet.
     rs.lqp.ReadDcqcnCb()
-    rs.lqp.data.last_cnp_timestamp = 0xC350 # 50k ticks
-    rs.lqp.data.cur_timestamp = 0x186A0 # 100k ticks
+    rs.lqp.dcqcn_data.last_cnp_timestamp = 0xC350 # 50k ticks
+    rs.lqp.dcqcn_data.cur_timestamp = 0x186A0 # 100k ticks
     rs.lqp.WriteDcqcnCb()
 
     # Read CQ pre state

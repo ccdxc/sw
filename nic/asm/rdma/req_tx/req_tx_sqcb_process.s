@@ -22,6 +22,7 @@ struct rdma_stage0_table_k k;
     .param    req_tx_bktrack_sqcb1_process
     //.param    req_tx_add_headers_process
     .param    req_tx_write_back_process
+    .param    req_tx_sqcb1_cnp_process
 
 .align
 req_tx_sqcb_process:
@@ -55,13 +56,28 @@ req_tx_sqcb_process:
     // if either of the busy flags are set, give up the scheduler opportunity
     crestore [c2,c1], d.{busy...cb1_busy}, 0x3 // Branch Delay Slot
     bcf            [c1 | c2], exit
-    
+
+    // Process CNP packet ring first as its the highest priority.
+    seq            c1, CNP_C_INDEX, CNP_P_INDEX
+    bcf            [c1], process_credits
+    // sqcb1
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r4) 
+    tblwr          CNP_C_INDEX, CNP_P_INDEX
+    add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
+    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqcb1_cnp_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
+    nop.e
+    nop
+
+ 
+process_credits: 
     ARE_ALL_RINGS_EMPTY(c1, r7[MAX_SQ_HOST_RINGS-1:0], FC_RING_ID_BITMAP)
     bcf          [c1], process_sq_or_sq_bktrack
     // take both the busy flags
     tblwr          d.{busy...cb1_busy}, 0x3 //Branch Delay Slot
 
-process_credits:
     // set cindex same as pindex without ringing doorbell, as stage0
     // can get scheduled again while doorbell memwr is still in the queue
     // to be processed. This will cause credits to get updated again. Instead,

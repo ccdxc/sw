@@ -8,6 +8,7 @@ struct rdma_stage0_table_k k;
 
 #define SQCB0_TO_SQCB1_T struct req_rx_sqcb0_to_sqcb1_info_t
 #define SQCB0_TO_STAGE_T struct req_rx_to_stage_t
+#define TABLE_0_ARG r5
 
 %%
 
@@ -28,9 +29,20 @@ req_rx_sqcb_process:
     // set DMA CMD ptr
     RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID)
 
-    // raw_flags
-    add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS
+    CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, TABLE_0_ARG)  
 
+    //Check if ECN bits are set in Packet and congestion management is enabled.                      
+    sne      c5, k.rdma_bth_ecn, 3
+    sne      c6, d.congestion_mgmt_enable, 1
+    bcf     [c5 | c6], skip_cnp_send
+
+    //Process sending CNP packet to the requester.
+    CAPRI_SET_FIELD(TABLE_0_ARG, SQCB0_TO_SQCB1_T, p_key, CAPRI_APP_DATA_BTH_P_KEY) //BD-slot
+    CAPRI_SET_FIELD(TABLE_0_ARG, SQCB0_TO_SQCB1_T, ecn_set, 1)
+    
+skip_cnp_send:
+    // raw_flags
+    add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS 
 
     beqi           r1, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
     // initialize cqwqe 
@@ -101,14 +113,12 @@ read:
     nop            // Branch Delay Slot
 
 next_stage_arg:
-
-    CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, remaining_payload_bytes, r2)
-    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, rrq_cindex, RRQ_C_INDEX)
+    CAPRI_SET_FIELD(TABLE_0_ARG, SQCB0_TO_SQCB1_T, remaining_payload_bytes, r2)
+    CAPRI_SET_FIELD(TABLE_0_ARG, SQCB0_TO_SQCB1_T, rrq_cindex, RRQ_C_INDEX)
     cmov           r4, c4, 1, 0
-    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, rrq_empty, r4)
-    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, dma_cmd_start_index, REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START)
-    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, need_credits, d.need_credits)
+    CAPRI_SET_FIELD(TABLE_0_ARG, SQCB0_TO_SQCB1_T, rrq_empty, r4)
+    CAPRI_SET_FIELD(TABLE_0_ARG, SQCB0_TO_SQCB1_T, dma_cmd_start_index, REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START)
+    CAPRI_SET_FIELD(TABLE_0_ARG, SQCB0_TO_SQCB1_T, need_credits, d.need_credits)
 
     CAPRI_GET_STAGE_1_ARG(req_rx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB0_TO_STAGE_T, msn, CAPRI_APP_DATA_AETH_MSN)

@@ -131,6 +131,7 @@ struct req_tx_sqcb0_to_sqcb1_info_t {
     pad                           : 76;
 };
 
+
 struct req_tx_sqcb1_to_credits_info_t {
     need_credits                 : 1;
     pad                          : 159;

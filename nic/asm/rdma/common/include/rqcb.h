@@ -132,11 +132,4 @@ struct rqcb_t {
     struct rqcb4_t rqcb4;
 };
 
-struct dcqcn_cb_t {
-    last_cnp_timestamp: 48;
-    partition_key: 16;
-    cur_timestamp: 48; // For debugging on Model since model doesnt have timestamps
-    pad : 400;
-};
-
 #endif // __RQCB_H

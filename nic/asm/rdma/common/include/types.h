@@ -852,6 +852,15 @@ struct p4_to_p4plus_roce_header_t {
     payload_len : 14;
 };
 
+//Common DCQCN CB for both req and resp paths.
+struct dcqcn_cb_t {
+    last_cnp_timestamp: 48;
+    partition_key: 16;
+    cur_timestamp: 48; // For debugging on Model since model doesnt have timestamps
+    pad : 400;
+};
+
+
 #define RDMA_UD_FEEDBACK          0x1
 #define RDMA_RC_FEEDBACK          0x2
 

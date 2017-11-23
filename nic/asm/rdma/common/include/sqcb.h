@@ -9,6 +9,7 @@
 #define FC_RING_ID              1
 #define SQ_BKTRACK_RING_ID      2
 #define TIMER_RING_ID           3
+#define CNP_RING_ID             4
 #define RRQ_RING_ID	        (MAX_SQ_RINGS - 1)
 
 #define SQ_RING_ID_BITMAP            0x01 // (1 << SQ_RING_ID)
@@ -26,6 +27,8 @@
 #define SQ_TIMER_C_INDEX             d.{ring3.cindex}.hx
 #define RRQ_P_INDEX                  d.{ring5.pindex}.hx
 #define RRQ_C_INDEX                  d.{ring5.cindex}.hx
+#define CNP_P_INDEX                  d.{ring4.pindex}.hx
+#define CNP_C_INDEX                  d.{ring4.cindex}.hx
 
 #define SPEC_SQ_C_INDEX              d.spec_sq_cindex
 
@@ -72,7 +75,8 @@ struct sqcb0_t {
     retry_timer_on: 1;
     bktrack_in_progress: 1;
     pd: 32;
-    rsvd0: 7;
+    rsvd0: 6;
+    congestion_mgmt_enable: 1;
     busy: 1;
     // a byte field located in sqcb0, but manipulated from
     // add_headers stage (operating on sqcb1) using memwr/DMA

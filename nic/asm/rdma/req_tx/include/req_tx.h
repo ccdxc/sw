@@ -103,6 +103,7 @@ struct req_tx_phv_t {
     union {
         struct rdma_reth_t reth;
         struct rdma_deth_t deth;    
+        struct rdma_cnp_rsvd_t cnp_rsvd;
     };
 
     struct rdma_bth_t bth;  // should be from a byte boundary

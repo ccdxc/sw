@@ -223,6 +223,22 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_REQ_RX_READ_ONLY_ECN_CNP
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_ecn_cnp
+        spec    : req_rx_read_only_ecn_cnp.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_ONLY_ECN_NO_CNP
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_ecn_no_cnp
+        spec    : req_rx_read_only_ecn_no_cnp.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_REQ_RX_READ_ONLY_2SGES
         enable  : True
         package : test.rdma
@@ -375,19 +391,19 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_RX_SEND_ONLY_ECN
+        name    : RDMA_RX_SEND_ONLY_ECN_CNP
         enable  : True
         package : test.rdma
-        module  : resp_rx_send_only_ecn
-        spec    : resp_rx_send_only_ecn.testspec
+        module  : resp_rx_send_only_ecn_cnp
+        spec    : resp_rx_send_only_ecn_cnp.testspec
         ignore  : False
 
     - module:
-        name    : RDMA_RX_SEND_ONLY_ECN_TIMESTAMP
+        name    : RDMA_RX_SEND_ONLY_ECN_NO_CNP
         enable  : True
         package : test.rdma
-        module  : resp_rx_send_only_ecn_timestamp
-        spec    : resp_rx_send_only_ecn_timestamp.testspec
+        module  : resp_rx_send_only_ecn_no_cnp
+        spec    : resp_rx_send_only_ecn_no_cnp.testspec
         ignore  : False
 
     - module:

@@ -17,7 +17,9 @@ struct req_rx_sqcb0_to_sqcb1_info_t {
     rrq_empty               : 1;
     need_credits            : 1;
     dma_cmd_start_index     : 4;
-    pad                     : 114;
+    ecn_set                 : 1;
+    p_key                   : 16;
+    pad                     : 97;
 };
 
 struct req_rx_sqcb1_to_rrqwqe_info_t {
@@ -111,6 +113,11 @@ struct req_rx_cqcb_to_eq_info_t {
     dma_cmd_index           : 8;
     cq_id                   : 24;
     pad                     : 120;
+};
+
+struct req_rx_ecn_info_t { 
+    p_key: 16;              
+    pad : 144;              
 };
 
 #endif //__REQ_RX_ARGS_H

@@ -7,15 +7,28 @@ struct req_rx_sqcb1_process_k_t k;
 
 #define SQCB1_TO_RRQWQE_T struct req_rx_sqcb1_to_rrqwqe_info_t
 #define RRQWQE_TO_CQ_T struct req_rx_rrqwqe_to_cq_info_t
-
+#define ECN_INFO_T struct req_rx_ecn_info_t
 
 %%
 
     .param    req_rx_rrqwqe_process
     .param    req_rx_cqcb_process
+    .param    req_rx_dcqcn_ecn_process
 
 .align
 req_rx_sqcb1_process:
+
+    bbeq      k.args.ecn_set, 0, skip_cnp_send
+    // Load dcqcn_cb to store timestamps and trigger Doorbell to generate CNP.
+    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, ECN_INFO_T, p_key, k.args.p_key)
+
+    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_dcqcn_ecn_process)
+    add     r2, d.header_template_addr, HDR_TEMPLATE_T_SIZE_BYTES //dcqcn_cb addr
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+
+skip_cnp_send:
     add            r2, r0, k.global.flags
     beqi           r2, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
     // TODO Check valid PSN

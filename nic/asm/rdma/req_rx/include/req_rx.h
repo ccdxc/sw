@@ -116,4 +116,11 @@ struct req_rx_eqcb_process_k_t {
     struct phv_global_common_t global;
 };
 
+struct req_rx_ecn_process_k_t {
+    struct capri_intrinsic_s0_k_t intrinsic;
+    struct req_rx_ecn_info_t args;
+    struct req_rx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
 #endif //__REQ_RX_H
