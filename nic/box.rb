@@ -9,11 +9,6 @@ end
 
 workdir "/sw"
 
-# in the CI this block is triggered; in the Makefiles it is not.
-if getenv("NO_COPY") == ""
-  copy ".", "/sw", ignore_list: %w[.git]
-end
-
 copy "nic/entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"
 
