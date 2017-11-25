@@ -2,7 +2,6 @@
 targets:
   venice: [ "sh", "-c", "pwd && ls -l && mount -t tmpfs -o size=1G swap /tmp && cd /go/src/github.com/pensando/sw && make jobd-test" ]
 image:
-  name: "pensando/venice"
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"
 rebase: true

@@ -19,4 +19,3 @@ workdir DIR
 
 entrypoint []
 cmd %w[/bin/bash]
-tag "pensando/sw:dependencies"
