@@ -129,7 +129,7 @@ enum DropReason {
   TCP_DATA_AFTER_FIN__DROP              = 27;
   TCP_NON_RST_PKT_AFTER_RST__DROP       = 28;
   TCP_INVALID_RESPONDER_FIRST_PKT__DROP = 29;
-  TCP_UNEXPECTED_SYN__DROP              = 30;
+  TCP_UNEXPECTED_PKT__DROP              = 30;
 }
 
 // AclInternalSelector has match criteria which are for internal use only with 

@@ -199,9 +199,9 @@ lb_tss_i_4:
   smeqb        c2, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   bcf          ![c1 & c2], lb_tss_i_5
   // Delay slot Instruction for lb_tss_i_5
-  slt          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_ESTABLISHED
-  ori          r2, r2, TCP_UNEXPECTED_SYN
-  phvwr        p.control_metadata_drop_reason[DROP_TCP_UNEXPECTED_SYN], 1
+  smeqb        c2, k.tcp_flags, TCP_FLAG_FIN, TCP_FLAG_FIN
+  ori          r2, r2, TCP_UNEXPECTED_PKT
+  phvwr        p.control_metadata_drop_reason[DROP_TCP_UNEXPECTED_PKT], 1
   b            lb_tss_i_exit
   phvwr        p.capri_intrinsic_drop, 1
 
@@ -210,10 +210,13 @@ lb_tss_i_4:
 // TBD
 lb_tss_i_5:
   smeqb        c2, k.tcp_flags, TCP_FLAG_FIN, TCP_FLAG_FIN
-  bcf          ![c1 & c2], lb_tss_i_6
+  bcf          ![!c1 & c2], lb_tss_i_6
   add          r1, r0, d.u.tcp_session_state_info_d.iflow_tcp_state
-  nop.e
-  nop
+  // We got a FIN in pre-established state.
+  ori          r2, r2, TCP_UNEXPECTED_PKT
+  phvwr        p.control_metadata_drop_reason[DROP_TCP_UNEXPECTED_PKT], 1
+  b            lb_tss_i_exit
+  phvwr        p.capri_intrinsic_drop, 1
 
 
 lb_tss_i_6:
@@ -474,20 +477,22 @@ lb_tss_r_4:
   smeqb        c2, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   bcf          ![c1 & c2], lb_tss_r_5
   // Delay slot Instruction for lb_tss_r_5
-  slt          c1, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_ESTABLISHED
-  ori          r2, r2, TCP_UNEXPECTED_SYN
-  phvwr        p.control_metadata_drop_reason[DROP_TCP_UNEXPECTED_SYN], 1
+  smeqb        c2, k.tcp_flags, TCP_FLAG_FIN, TCP_FLAG_FIN
+  ori          r2, r2, TCP_UNEXPECTED_PKT
+  phvwr        p.control_metadata_drop_reason[DROP_TCP_UNEXPECTED_PKT], 1
   b            lb_tss_r_exit
   phvwr        p.capri_intrinsic_drop, 1
 
 // Packets with FIN before we are in established state.
 // TBD
 lb_tss_r_5:
-  smeqb        c2, k.tcp_flags, TCP_FLAG_FIN, TCP_FLAG_FIN
-  bcf          ![c1 & c2], lb_tss_r_6
+  bcf          ![!c1 & c2], lb_tss_r_6
   add          r1, r0, d.u.tcp_session_state_info_d.rflow_tcp_state
-  nop.e
-  nop
+  // We got a FIN in pre-established state.
+  ori          r2, r2, TCP_UNEXPECTED_PKT
+  phvwr        p.control_metadata_drop_reason[DROP_TCP_UNEXPECTED_PKT], 1
+  b            lb_tss_r_exit
+  phvwr        p.capri_intrinsic_drop, 1
 
 lb_tss_r_6:
   // switch case based on the rflow_tcp_state.

@@ -1652,6 +1652,29 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_RETRANSMIT
 
     - module:
+        name    : INIT_FIN_BEFORE_CONN_SETUP
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_FIN_DROP
+
+    - module:
+        name    : RES_FIN_BEFORE_CONN_SETUP
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=RFLOW_FIN_DROP
+
+
+    - module:
         name    : INIT_SYN_RESP_RST
         tracker : True
         args    :

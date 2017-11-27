@@ -328,6 +328,13 @@ steps:
             ack     : callback://firewall/alu/Sub/val=1
 
     - step:
+        id          : IFLOW_FIN_DROP
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        permit      : False
+        fields      :
+            flags   : fin,ack
+
+    - step:
         id          : RFLOW_FIN
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
@@ -339,6 +346,13 @@ steps:
         fields      :
             flags   : fin,ack
             ack     : callback://firewall/alu/Sub/val=1
+
+    - step:
+        id          : RFLOW_FIN_DROP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        permit      : False
+        fields      :
+            flags   : fin,ack
 
     - step:
         id          : IFLOW_DATA_OVERLAP_LEFT

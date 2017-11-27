@@ -229,7 +229,7 @@
 #define DROP_TCP_DATA_AFTER_FIN        27
 #define DROP_TCP_NON_RST_PKT_AFTER_RST 28
 #define DROP_TCP_INVALID_RESPONDER_FIRST_PKT 29
-#define DROP_TCP_UNEXPECTED_SYN        30
+#define DROP_TCP_UNEXPECTED_PKT        30
 #define DROP_SRC_LIF_MISMATCH          31
 #define DROP_MIN                       DROP_INPUT_MAPPING
 #define DROP_MAX                       DROP_SRC_LIF_MISMATCH
@@ -272,7 +272,7 @@
 #define TCP_DATA_AFTER_FIN             0x0200
 #define TCP_NON_RST_PKT_AFTER_RST      0x0400
 #define TCP_INVALID_RESPONDER_FIRST_PKT 0x0800
-#define TCP_UNEXPECTED_SYN             0x1000
+#define TCP_UNEXPECTED_PKT             0x1000
 #define TCP_RST_WITH_INVALID_ACK_NUM   0x2000
 
 

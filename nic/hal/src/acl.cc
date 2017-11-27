@@ -481,8 +481,8 @@ drop_reason_to_define (const acl::DropReason drop_reason)
             return DROP_TCP_NON_RST_PKT_AFTER_RST;
         case acl::TCP_INVALID_RESPONDER_FIRST_PKT__DROP:
             return DROP_TCP_INVALID_RESPONDER_FIRST_PKT;
-        case acl::TCP_UNEXPECTED_SYN__DROP:
-            return DROP_TCP_UNEXPECTED_SYN;
+        case acl::TCP_UNEXPECTED_PKT__DROP:
+            return DROP_TCP_UNEXPECTED_PKT;
         default:
             return 0;
     }

@@ -159,7 +159,7 @@ pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
     stats_entry->set_drop_tcp_invalid_responder_first_pkt(
             key->control_metadata_drop_reason & DROP_TCP_INVALID_RESPONDER_FIRST_PKT);
     stats_entry->set_drop_tcp_unexpected_syn(
-            key->control_metadata_drop_reason & DROP_TCP_UNEXPECTED_SYN);
+            key->control_metadata_drop_reason & DROP_TCP_UNEXPECTED_PKT);
 
     stats_entry->set_drop_count(
             hbm_counter + 

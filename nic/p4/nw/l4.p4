@@ -455,15 +455,18 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        }
        if (scratch_metadata.iflow_tcp_state >= FLOW_STATE_ESTABLISHED and
            tcp.flags & TCP_FLAG_SYN == TCP_FLAG_SYN) {
-           bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_UNEXPECTED_SYN);
-           modify_field(control_metadata.drop_reason, DROP_TCP_UNEXPECTED_SYN);
+           bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_UNEXPECTED_PKT);
+           modify_field(control_metadata.drop_reason, DROP_TCP_UNEXPECTED_PKT);
            drop_packet();
           // INITIATOR_TCP_SESSION_STATE_INFO_EXIT:
        }
        // If we receive FIN in any pre-established state,
        if (iflow_tcp_state < FLOW_STATE_ESTABLISHED) {
            if (tcp.flags & TCP_FLAG_FIN == TCP_FLAG_FIN) {
-               // TBD
+               bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_UNEXPECTED_PKT);
+               modify_field(control_metadata.drop_reason, DROP_TCP_UNEXPECTED_PKT);
+               drop_packet();
+               // INITIATOR_TCP_SESSION_STATE_INFO_EXIT:
            }
        }
        // we will do a switch case based on iflow_tcp_state for reducing the number
@@ -495,6 +498,10 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        }
        if (scratch_metadata.iflow_tcp_state == FLOW_STATE_TCP_SYN_ACK_RCVD)  {
            // Do we have to handle FIN in this case ?
+           // If initator is in this state then no packet from initiator
+           // will the state to established, It should be a ACK packet 
+           // from responder which can move to established state which is
+           // is handled later in responder section.
            // goto INITIATOR_TCP_SESSION_STATE_INFO_EXIT
        }
        if (scratch_metadata.iflow_tcp_state == FLOW_STATE_TCP_ACK_RCVD)  {
@@ -772,15 +779,18 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        }
        if (scratch_metadata.rflow_tcp_state >= FLOW_STATE_ESTABLISHED and
            tcp.flags & TCP_FLAG_SYN == TCP_FLAG_SYN) {
-           bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_UNEXPECTED_SYN);
-           modify_field(control_metadata.drop_reason, DROP_TCP_UNEXPECTED_SYN);
+           bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_UNEXPECTED_PKT);
+           modify_field(control_metadata.drop_reason, DROP_TCP_UNEXPECTED_PKT);
            drop_packet();
           // RESPONDER_TCP_SESSION_STATE_INFO_EXIT:
        }
        // If we receive FIN in any pre-established state,
-       if (iflow_tcp_state < FLOW_STATE_ESTABLISHED) {
+       if (rflow_tcp_state < FLOW_STATE_ESTABLISHED) {
            if (tcp.flags & TCP_FLAG_FIN == TCP_FLAG_FIN) {
-               // TBD
+               bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_UNEXPECTED_PKT);
+               modify_field(control_metadata.drop_reason, DROP_TCP_UNEXPECTED_PKT);
+               drop_packet();
+              // RESPONDER_TCP_SESSION_STATE_INFO_EXIT:
            }
        }
        // we will do a switch case based on rflow_tcp_state for reducing the number
