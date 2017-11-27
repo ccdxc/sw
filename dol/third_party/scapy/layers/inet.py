@@ -315,7 +315,7 @@ UDPOptions = (
      2: ("OCS", "!H"),
      3: ("ACS", "!I"),
      4: ("LITE", "!I"),
-     5: ("MSS", "!I"),
+     5: ("MSS", "!H"),
      6: ("TIME", "!II"),
      7: ("FRAG", "!III"),
      8: ("AE", "!p"),

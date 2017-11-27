@@ -64,7 +64,7 @@ packets:
                     - kind   : NOP
                       data   : 0x00
                     - kind   : MSS
-                      data   : 0x01020304
+                      data   : 0x0102
                     - kind   : TIME
                       data   : 0x01020304 0x05060708
                     - kind   : PEN1
