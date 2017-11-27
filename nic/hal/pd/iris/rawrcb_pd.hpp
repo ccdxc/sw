@@ -4,14 +4,15 @@
 #include "nic/include/base.h"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/app_redir_shared.h"
 
 using hal::utils::ht_ctxt_t;
 
 namespace hal {
 namespace pd {
 
-#define HAL_MAX_HW_RAWRCBS                        4
-#define P4PD_HBM_RAWR_CB_ENTRY_SIZE               128
+#define HAL_MAX_HW_RAWRCB_HT_SIZE       1024
+#define P4PD_HBM_RAWR_CB_ENTRY_SIZE     128
 
 typedef uint64_t    rawrcb_hw_id_t;
 

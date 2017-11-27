@@ -86,21 +86,17 @@
     modify_field(common_global_scratch.chain_ring_base, common_phv.chain_ring_base); \
     modify_field(common_global_scratch.packet_len, common_phv.packet_len); \
     modify_field(common_global_scratch.chain_to_rxq, common_phv.chain_to_rxq); \
-    modify_field(common_global_scratch.chain_doorbell_no_sched, common_phv.chain_doorbell_no_sched); \
     modify_field(common_global_scratch.desc_sem_pindex_full, common_phv.desc_sem_pindex_full); \
     modify_field(common_global_scratch.ppage_sem_pindex_full, common_phv.ppage_sem_pindex_full); \
     modify_field(common_global_scratch.mpage_sem_pindex_full, common_phv.mpage_sem_pindex_full); \
-    modify_field(common_global_scratch.ppage_valid, common_phv.ppage_valid); \
-    modify_field(common_global_scratch.mpage_valid, common_phv.mpage_valid); \
     modify_field(common_global_scratch.chain_ring_size_shift, common_phv.chain_ring_size_shift); \
     modify_field(common_global_scratch.chain_entry_size_shift, common_phv.chain_entry_size_shift); \
     modify_field(common_global_scratch.chain_ring_index_select, common_phv.chain_ring_index_select); \
     modify_field(common_global_scratch.chain_lif, common_phv.chain_lif); \
     modify_field(common_global_scratch.chain_qtype, common_phv.chain_qtype); \
     modify_field(common_global_scratch.chain_qid, common_phv.chain_qid); \
-    modify_field(common_global_scratch.desc_valid_bit_req, common_phv.desc_valid_bit_req); \
-    modify_field(common_global_scratch.redir_pipeline_lpbk_enable, common_phv.redir_pipeline_lpbk_enable); \
     modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
+    modify_field(common_global_scratch.rawrcb_flags, common_phv.rawrcb_flags); \
 
 
 
@@ -125,6 +121,14 @@ header_type rawrcb_t {
          */
          
         /*
+         * Sentinel to indicate CB has been de-activated, allowing P4+ code
+         * to early detect and enter cleanup.
+         */
+        rawrcb_deactivated              : 8;  // must be first in CB after header common
+        pad                             : 8;
+        rawrcb_flags                    : 16; // DOL flags and others
+         
+        /*
          * For a given flow, one of 2 types of redirection can apply:
          *   a) Redirect to ARM CPU RxQ, or
          *   b) Redirect to a P4+ TxQ
@@ -138,6 +142,7 @@ header_type rawrcb_t {
          * programs must coordinate so that they lock a given table in
          * the same stage. For the ARM ARQ, that is stage 6.
          */     
+        
         chain_rxq_base                  : HBM_ADDRESS_WIDTH;
         chain_rxq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
         
@@ -160,9 +165,11 @@ header_type rawrcb_t {
         chain_rxq_entry_size_shift      : 8;
         chain_rxq_ring_index_select     : 8;
         
-        chain_txq_doorbell_no_sched     : 8;    // set to update DB but skip scheduler bit
-        desc_valid_bit_req              : 8;
-        redir_pipeline_lpbk_enable      : 8;    // redir pipeline loopback indicator
+        /*
+         * Sentinel to indicate all bytes in CB have been written and P4+ code
+         * can start normal processing.
+         */
+        rawrcb_activated                : 8; // must be last in CB
     }
 }
 
@@ -237,22 +244,18 @@ header_type common_global_phv_t {
         // p4plus_common_global_t (max is GLOBAL_WIDTH or 128)
         chain_ring_base                 : HBM_ADDRESS_WIDTH;
         chain_to_rxq                    : 1;
-        chain_doorbell_no_sched         : 1;
+        redir_span_instance             : 1;
         desc_sem_pindex_full            : 1;
         ppage_sem_pindex_full           : 1;
         mpage_sem_pindex_full           : 1;
-        ppage_valid                     : 1;
-        mpage_valid                     : 1;
-        desc_valid_bit_req              : 1;
+        chain_ring_index_select         : 3;
+        rawrcb_flags                    : 16;
         packet_len                      : 16;
         chain_lif                       : 11;
         chain_qtype                     : 3;
         chain_qid                       : 24;
         chain_ring_size_shift           : 5;
         chain_entry_size_shift          : 5;
-        chain_ring_index_select         : 3;
-        redir_pipeline_lpbk_enable      : 1;
-        redir_span_instance             : 1;
     }
 }
 
@@ -288,18 +291,18 @@ header_type to_stage_5_phv_t {
 header_type to_stage_6_phv_t {
     fields {
         // (max 128 bits)
-        desc                            : 32;
-        ppage                           : 32;
-        mpage                           : 32;
+        desc                            : 34;
+        ppage                           : 34;
+        mpage                           : 34;
     }
 }
 
 header_type to_stage_7_phv_t {
     fields {
         // (max 128 bits)
-        desc                            : 32;
-        ppage                           : 32;
-        mpage                           : 32;
+        desc                            : 34;
+        ppage                           : 34;
+        mpage                           : 34;
     }
 }
 
@@ -416,16 +419,15 @@ metadata dma_phv_pad_256_t              dma_pad_256;
  */
 action rawr_rx_start(rsvd, cosA, cosB, cos_sel, 
                      eval_last, host, total, pid,
-                     chain_rxq_base, chain_rxq_ring_indices_addr,
-                     chain_rxq_ring_size_shift, chain_rxq_entry_size_shift,
-                     chain_rxq_ring_index_select,
+                     rawrcb_deactivated, chain_rxq_base,
+                     chain_rxq_ring_indices_addr, chain_rxq_ring_size_shift,
+                     chain_rxq_entry_size_shift, chain_rxq_ring_index_select,
                      chain_txq_base, chain_txq_ring_indices_addr,
                      chain_txq_ring_size_shift, chain_txq_entry_size_shift,
                      chain_txq_lif, chain_txq_qtype, chain_txq_qid,
                      chain_txq_ring_index_select,
-                     chain_txq_doorbell_no_sched, 
-                     desc_valid_bit_req,
-                     redir_pipeline_lpbk_enable) {
+                     rawrcb_flags, rawrcb_activated) {
+                     
     // k + i for stage 0
 
     // from intrinsic
@@ -466,6 +468,7 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawrcb_d.total, total);
     modify_field(rawrcb_d.pid, pid);
     
+    modify_field(rawrcb_d.rawrcb_deactivated, rawrcb_deactivated);
     modify_field(rawrcb_d.chain_rxq_base, chain_rxq_base);
     modify_field(rawrcb_d.chain_rxq_ring_indices_addr, chain_rxq_ring_indices_addr);
     modify_field(rawrcb_d.chain_rxq_ring_size_shift, chain_rxq_ring_size_shift);
@@ -479,9 +482,8 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawrcb_d.chain_txq_qtype, chain_txq_qtype);
     modify_field(rawrcb_d.chain_txq_qid, chain_txq_qid);
     modify_field(rawrcb_d.chain_txq_ring_index_select, chain_txq_ring_index_select);
-    modify_field(rawrcb_d.chain_txq_doorbell_no_sched, chain_txq_doorbell_no_sched);
-    modify_field(rawrcb_d.desc_valid_bit_req, desc_valid_bit_req);
-    modify_field(rawrcb_d.redir_pipeline_lpbk_enable, redir_pipeline_lpbk_enable);
+    modify_field(rawrcb_d.rawrcb_flags, rawrcb_flags);
+    modify_field(rawrcb_d.rawrcb_activated, rawrcb_activated);
 }
 
 /*
@@ -562,19 +564,19 @@ action mpage_post_alloc(page, pad) {
 /*
  * Stage 3 table 0 action
  */
-action chain_qidxr_stage_advance_a(void) {
+action chain_qidxr_stage_advance_a() {
 }
 
 /*
  * Stage 4 table 0 action
  */
-action chain_qidxr_stage_advance_b(void) {
+action chain_qidxr_stage_advance_b() {
 }
 
 /*
  * Stage 5 table 0 action
  */
-action chain_pindex_pre_alloc(void) {
+action chain_pindex_pre_alloc() {
 
     // k + i for stage 5 table 0
 
@@ -592,7 +594,8 @@ action chain_pindex_pre_alloc(void) {
 /*
  * Stage 6 table 0 action
  */
-action cleanup_discard(void) {
+action cleanup_discard() {
+
     // k + i for stage 6
 
     // from to_stage 6
@@ -648,7 +651,8 @@ action chain_qidxr_pindex_post_read(pi_0, pi_1, pi_2) {
 /*
  * Stage 6 table 3 action
  */
-action chain_xfer(void) {
+action chain_xfer() {
+
     // k + i for stage 6
 
     // from to_stage 6

@@ -4,6 +4,14 @@ struct phv_                     p;
 struct rawc_tx_start_k          k;
 struct rawc_tx_start_start_d    d;
 
+/*
+ * Registers usage
+ */
+#define r_ci                        r1  // my_txq onsumer index
+#define r_pi                        r2  // my_txq producer index
+#define r_return                    r3
+#define r_scratch                   r4
+
 %%
     .param          rawc_s1_my_txq_entry_consume
     
@@ -28,12 +36,6 @@ rawc_s0_tx_start:
     CAPRI_CLEAR_TABLE0_VALID
     
     /*
-     * do nothing if my_txq not configured
-     */
-    seq         c1, d.my_txq_base, r0
-    bcf         [c1], my_txq_not_cfg
-     
-    /*
      * qid is our flow ID context
      */
     phvwr       p.to_s1_my_txq_lif, CAPRI_INTRINSIC_LIF     // delay slot
@@ -50,45 +52,67 @@ rawc_s0_tx_start:
     
     phvwr       p.to_s1_chain_txq_ring_indices_addr, d.chain_txq_ring_indices_addr
     phvwr       p.to_s1_my_txq_ring_size_shift, d.my_txq_ring_size_shift
+
+    /*
+     * Two sentinels surround the programming of CB byte sequence:
+     * rawccb_deactivated must be false and rawccb_activated must
+     * be true to indicate readiness.
+     */
+    seq         c1, d.rawccb_deactivated, r0
+    sne         c2, d.rawccb_activated, r0
+    setcf       c3, [c1 & c2]
+    bal.!c3     r_return, _rawccb_not_ready
+    phvwr       p.common_phv_rawccb_flags, d.{rawccb_flags}.hx // delay slot
     
     /*
      * PI assumed to have been incremented by doorbell write by a producer program;
      * double check for queue not empty in case we somehow got erroneously scheduled.
      */
-    add         r3, r0, d.{ci_0}.hx
-    mincr       r3, d.my_txq_ring_size_shift, r0
-    add         r4, r0, d.{pi_0}.hx
-    mincr       r4, d.my_txq_ring_size_shift, r0
-    beq         r3, r4, my_txq_ring_empty
-    phvwr       p.to_s1_my_txq_ci_curr, r3        // delay slot
+    add         r_ci, r0, d.{ci_0}.hx   // delay slot
+    mincr       r_ci, d.my_txq_ring_size_shift, r0
+    add         r_pi, r0, d.{pi_0}.hx
+    mincr       r_pi, d.my_txq_ring_size_shift, r0
+    beq         r_ci, r_pi, _my_txq_ring_empty
+    phvwr       p.to_s1_my_txq_ci_curr, r_ci        // delay slot
 
     /*
-     * Launch read of descriptor at current CI
+     * Launch read of descriptor at current CI.
+     * Note that my_txq_base and corresponding CI/PI, once programmed,
+     * are never cleared (because doing so can cause Tx scheduler lockup).
+     * What can get altered are the rawccb_deactivated and rawccb_activated
+     * flags which would tell this program to properly consume and free
+     * the descriptor along with any pages embedded within.
      */    
-    add         r4, r0, d.my_txq_entry_size_shift
-    sllv        r3, r3, r4
-    add         r3, r3, d.{my_txq_base}.wx
+    add         r_scratch, r0, d.my_txq_entry_size_shift
+    sllv        r_ci, r_ci, r_scratch
+    add         r_ci, r_ci, d.{my_txq_base}.wx
     CAPRI_NEXT_TABLE_READ(0,
                           TABLE_LOCK_DIS,
                           rawc_s1_my_txq_entry_consume,
-                          r3,
+                          r_ci,
                           TABLE_SIZE_64_BITS)
     nop.e
     nop    
-    
-my_txq_not_cfg:
 
+    
+/*
+ * CB has been de-activated or never made ready
+ */
+_rawccb_not_ready:
+ 
     /*
-     * Discard packet due to error in qstate configuration
      * TODO: add stats here
      */
-    nop.e
-    nop
-
-my_txq_ring_empty:
+    jr          r_return
+    phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot
+     
+ 
+/*
+ * Early exit: my TxQ ring actually empty when entered
+ */
+_my_txq_ring_empty:
 
     /*
-     * Early exit: my TxQ ring actually empty when entered
      * TODO: add stats here
      */
     nop.e

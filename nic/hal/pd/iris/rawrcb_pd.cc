@@ -73,7 +73,15 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
     // hardware index for this entry
     rawrcb_hw_id_t hwid = rawrcb_pd->hw_id;
 
-    if(!del) {
+    /*
+     * Caller must have invoked pd_rawrcb_get() to get current
+     * programmed values for the delete case. We keep all values
+     * intact and only modify the sentinel values.
+     */
+    data.u.rawr_rx_start_d.rawrcb_deactivated = true;
+    data.u.rawr_rx_start_d.rawrcb_activated = false;
+    if (!del) {
+
         // get pc address
         if(p4pd_get_rawr_rx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to get pc address");
@@ -99,7 +107,6 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
             data.u.rawr_rx_start_d.chain_txq_lif = rawrcb->chain_txq_lif;
             data.u.rawr_rx_start_d.chain_txq_qtype = rawrcb->chain_txq_qtype;
             data.u.rawr_rx_start_d.chain_txq_qid = rawrcb->chain_txq_qid;
-            data.u.rawr_rx_start_d.chain_txq_doorbell_no_sched = rawrcb->chain_txq_doorbell_no_sched;
 
         } else {
             if (rawrcb->chain_rxq_base) {
@@ -139,15 +146,24 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
                 } else {
                     HAL_TRACE_ERR("Failed to receive ARQRX ring {} info for RAWRCB",
                                   rawrcb->chain_rxq_ring_index_select);
+                    ret = HAL_RET_WRING_NOT_FOUND;
                 }
             }
         }
 
-        data.u.rawr_rx_start_d.redir_pipeline_lpbk_enable = 
-                               rawrcb->redir_pipeline_lpbk_enable;
-        data.u.rawr_rx_start_d.desc_valid_bit_req = TRUE;
-        if (rawrcb->desc_valid_bit_upd) {
-            data.u.rawr_rx_start_d.desc_valid_bit_req = rawrcb->desc_valid_bit_req;
+        /*
+         * desc_valid_bit_req defaults to true unless specifically
+         * updated by the caller.
+         */
+        data.u.rawr_rx_start_d.rawrcb_flags = rawrcb->rawrcb_flags |
+                                              APP_REDIR_DESC_VALID_BIT_REQ;
+        if (rawrcb->rawrcb_flags & APP_REDIR_DESC_VALID_BIT_UPD) {
+            data.u.rawr_rx_start_d.rawrcb_flags = rawrcb->rawrcb_flags;
+        }
+
+        if (ret == HAL_RET_OK) {
+            data.u.rawr_rx_start_d.rawrcb_deactivated = false;
+            data.u.rawr_rx_start_d.rawrcb_activated = true;
         }
     }
     HAL_TRACE_DEBUG("RAWRCB Programming stage0 at hw-id: 0x{0:x}", hwid); 
@@ -188,6 +204,8 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
         return HAL_RET_HW_FAIL;
     }
     rawrcb = rawrcb_pd->rawrcb;
+    rawrcb->rawrcb_deactivated = data.u.rawr_rx_start_d.rawrcb_deactivated;
+    rawrcb->rawrcb_flags = data.u.rawr_rx_start_d.rawrcb_flags;
     rawrcb->chain_rxq_base = data.u.rawr_rx_start_d.chain_rxq_base;
     rawrcb->chain_rxq_ring_indices_addr = data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr;
     rawrcb->chain_rxq_ring_size_shift = data.u.rawr_rx_start_d.chain_rxq_ring_size_shift;
@@ -202,11 +220,7 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
     rawrcb->chain_txq_lif = data.u.rawr_rx_start_d.chain_txq_lif;
     rawrcb->chain_txq_qtype = data.u.rawr_rx_start_d.chain_txq_qtype;
     rawrcb->chain_txq_qid = data.u.rawr_rx_start_d.chain_txq_qid;
-    rawrcb->chain_txq_doorbell_no_sched = data.u.rawr_rx_start_d.chain_txq_doorbell_no_sched;
-
-    rawrcb->desc_valid_bit_upd = FALSE;
-    rawrcb->desc_valid_bit_req = data.u.rawr_rx_start_d.desc_valid_bit_req;
-    rawrcb->redir_pipeline_lpbk_enable = data.u.rawr_rx_start_d.redir_pipeline_lpbk_enable;
+    rawrcb->rawrcb_activated = data.u.rawr_rx_start_d.rawrcb_activated;
 
     return HAL_RET_OK;
 }
@@ -320,6 +334,45 @@ cleanup:
     return ret;
 }
 
+static hal_ret_t
+pd_rawrcb_deactivate (pd_rawrcb_args_t *args)
+{
+    hal_ret_t               ret;
+    
+    if(!args) {
+       return HAL_RET_INVALID_ARG; 
+    }
+
+    rawrcb_t            old_rawrcb;
+    pd_rawrcb_t         old_rawrcb_pd;
+    pd_rawrcb_args_t    old_args;
+    rawrcb_t*           rawrcb = args->rawrcb;
+    pd_rawrcb_t*        rawrcb_pd = (pd_rawrcb_t*)rawrcb->pd;
+
+    memset(&old_args, 0, sizeof(old_args));
+    old_rawrcb.cb_id = rawrcb->cb_id;
+    old_args.rawrcb = &old_rawrcb;
+
+    rawrcb_pd_init(&old_rawrcb_pd);
+    old_rawrcb_pd.rawrcb = &old_rawrcb;
+    old_rawrcb_pd.hw_id = rawrcb_pd->hw_id;
+
+    HAL_TRACE_DEBUG("RAWRCB pd deactivate");
+    
+    // fetch current programmed values
+    ret = pd_rawrcb_get(&old_args);
+    if (ret == HAL_RET_OK) {
+    
+        // program rawrcb
+        ret = p4pd_add_or_del_rawrcb_entry(&old_rawrcb_pd, true);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to deactivate rawrcb entry"); 
+        }
+    }
+    
+    return ret;
+}
+
 hal_ret_t
 pd_rawrcb_update (pd_rawrcb_args_t *args)
 {
@@ -329,14 +382,22 @@ pd_rawrcb_update (pd_rawrcb_args_t *args)
        return HAL_RET_INVALID_ARG; 
     }
 
-    rawrcb_t*                rawrcb = args->rawrcb;
-    pd_rawrcb_t*             rawrcb_pd = (pd_rawrcb_t*)rawrcb->pd;
+    rawrcb_t*       rawrcb = args->rawrcb;
+    pd_rawrcb_t*    rawrcb_pd = (pd_rawrcb_t*)rawrcb->pd;
 
     HAL_TRACE_DEBUG("RAWRCB pd update");
     
-    // program rawrcb
-    ret = p4pd_add_or_del_rawrcb_entry(rawrcb_pd, false);
-    if(ret != HAL_RET_OK) {
+    /*
+     * First, deactivate the current rawrcb
+     */
+    ret = pd_rawrcb_deactivate(args);
+    if (ret == HAL_RET_OK) {
+
+        // program rawrcb
+        ret = p4pd_add_or_del_rawrcb_entry(rawrcb_pd, false);
+    }
+
+    if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update rawrcb");
     }
     return ret;
@@ -351,14 +412,13 @@ pd_rawrcb_delete (pd_rawrcb_args_t *args)
        return HAL_RET_INVALID_ARG; 
     }
 
-    rawrcb_t*                rawrcb = args->rawrcb;
-    pd_rawrcb_t*             rawrcb_pd = (pd_rawrcb_t*)rawrcb->pd;
+    rawrcb_t*       rawrcb = args->rawrcb;
+    pd_rawrcb_t*    rawrcb_pd = (pd_rawrcb_t*)rawrcb->pd;
 
     HAL_TRACE_DEBUG("RAWRCB pd delete");
     
-    // program rawrcb
-    ret = p4pd_add_or_del_rawrcb_entry(rawrcb_pd, true);
-    if(ret != HAL_RET_OK) {
+    ret = pd_rawrcb_deactivate(args);
+    if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete rawrcb entry"); 
     }
     

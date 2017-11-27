@@ -1,8 +1,8 @@
 #include "app_redir_common.h"
 
-struct phv_                                     p;
-struct proxyc_cpu_flags_k                       k;
-struct proxyc_cpu_flags_cpu_flags_post_read_d   d;
+struct phv_                                         p;
+struct proxyc_cpu_flags_post_k                      k;
+struct proxyc_cpu_flags_post_cpu_flags_post_read_d  d;
 
 /*
  * Registers usage
@@ -15,7 +15,7 @@ struct proxyc_cpu_flags_cpu_flags_post_read_d   d;
     .align
 
 /*
- * Save cpu_to_p4plus_header_t which tells us how to free the AOL
+ * Save cpu_to_p4plus_header_t flags which tell us how to free the AOL
  * pages in the current descriptor, that is, if we need to do so
  * as indicated in k.to_s3_do_cleanup_discard.
  */
@@ -47,9 +47,9 @@ _cleanup_discard_check:
  * Entered as a stage transition when cpu_to_p4plus_header_t flags
  * were not available to be read.
  */         
-proxyc_s3_cpu_flags_not_read:
+proxyc_s3_cpu_flags_skip_read:
 
-    CAPRI_CLEAR_TABLE1_VALID
+    CAPRI_CLEAR_TABLE2_VALID
     b           _cleanup_discard_check
     nop
 

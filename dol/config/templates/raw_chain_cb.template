@@ -16,6 +16,8 @@ id                              : 0 # RAWC CB Local ID
 spec                            : None # (REF) RAWC CB Spec from Base Config.
 pi                              : 0
 ci                              : 0
+rawccb_deactivated              : 0
+rawccb_flags                    : 0
 my_txq_base                     : 0
 my_txq_ring_size_shift          : 0
 my_txq_entry_size_shift         : 0
@@ -27,4 +29,5 @@ chain_txq_lif                   : 0
 chain_txq_qtype                 : 0
 chain_txq_qid                   : 0
 chain_txq_ring                  : 0
+rawccb_activated                : 0
 

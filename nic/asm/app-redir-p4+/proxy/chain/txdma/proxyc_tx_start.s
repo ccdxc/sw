@@ -9,7 +9,8 @@ struct proxyc_tx_start_start_d  d;
  */
 #define r_ci                        r1  // my_txq onsumer index
 #define r_pi                        r2  // my_txq producer index
-#define r_scratch                   r3
+#define r_return                    r3
+#define r_scratch                   r4
 
 %%
     .param          proxyc_s1_my_txq_entry_consume
@@ -53,6 +54,17 @@ proxyc_s0_tx_start:
     phvwr       p.to_s1_my_txq_ring_size_shift, d.my_txq_ring_size_shift
     
     /*
+     * Two sentinels surround the programming of CB byte sequence:
+     * proxyccb_deactivated must be false and proxyccb_activated must
+     * be true to indicate readiness.
+     */
+    seq         c1, d.proxyccb_deactivated, r0
+    sne         c2, d.proxyccb_activated, r0
+    setcf       c3, [c1 & c2]
+    bal.!c3     r_return, _proxyccb_not_ready
+    phvwr       p.common_phv_proxyccb_flags, d.{proxyccb_flags}.hx // delay slot
+    
+    /*
      * PI assumed to have been incremented by doorbell write by a producer program;
      * double check for queue not empty in case we somehow got erroneously scheduled.
      */
@@ -64,7 +76,12 @@ proxyc_s0_tx_start:
     phvwr       p.to_s1_my_txq_ci_curr, r_ci    // delay slot
 
     /*
-     * Launch read of descriptor at current CI
+     * Launch read of descriptor at current CI.
+     * Note that my_txq_base and corresponding CI/PI, once programmed,
+     * are never cleared (because doing so can cause Tx scheduler lockup).
+     * What can get cleared is the proxyccb_active flag which would tell this
+     * program to properly consume and free the descriptor along with 
+     * any pages embedded within.
      */    
     add         r_scratch, r0, d.my_txq_entry_size_shift
     sllv        r_ci, r_ci, r_scratch
@@ -77,6 +94,18 @@ proxyc_s0_tx_start:
     nop.e
     nop    
 
+
+/*
+ * CB has been de-activated or never made ready
+ */
+_proxyccb_not_ready:
+ 
+    /*
+     * TODO: add stats here
+     */
+    jr          r_return
+    phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot
+     
     
 /*
  * Early exit: my TxQ ring actually empty when entered

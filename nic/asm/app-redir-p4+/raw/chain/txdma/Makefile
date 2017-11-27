@@ -29,6 +29,11 @@ SRC_FILES := \
     $(SRC_DIR)/rawc_chain_txq_desc_enqueue.s \
     $(SRC_DIR)/rawc_pkt_txdma_prep.s \
     $(SRC_DIR)/rawc_pkt_txdma_post.s \
+    $(SRC_DIR)/rawc_cleanup_discard.s \
+    $(SRC_DIR)/rawc_desc_free.s \
+    $(SRC_DIR)/rawc_page0_free.s \
+    $(SRC_DIR)/rawc_page1_free.s \
+    $(SRC_DIR)/rawc_page2_free.s \
 	
 
 

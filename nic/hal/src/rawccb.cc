@@ -111,6 +111,7 @@ rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
     }
 
     rawccb->cb_id = spec.key_or_handle().rawccb_id();
+    rawccb->rawccb_flags = spec.rawccb_flags(); 
     rawccb->my_txq_base = spec.my_txq_base(); 
     rawccb->my_txq_ring_size_shift = spec.my_txq_ring_size_shift();
     rawccb->my_txq_entry_size_shift = spec.my_txq_entry_size_shift();
@@ -173,6 +174,7 @@ rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
     rawccb->my_txq_ring_size_shift = spec.my_txq_ring_size_shift();
     rawccb->my_txq_entry_size_shift = spec.my_txq_entry_size_shift();
 
+    rawccb->rawccb_flags = spec.rawccb_flags(); 
     rawccb->chain_txq_base = spec.chain_txq_base(); 
     rawccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
     rawccb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
@@ -232,6 +234,8 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponse *rsp)
     // fill config spec of this RAWC CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_rawccb_id(rrawccb.cb_id);
     
+    rsp->mutable_spec()->set_rawccb_deactivated(rrawccb.rawccb_deactivated);
+    rsp->mutable_spec()->set_rawccb_flags(rrawccb.rawccb_flags);
     rsp->mutable_spec()->set_my_txq_base(rrawccb.my_txq_base);
     rsp->mutable_spec()->set_my_txq_ring_size_shift(rrawccb.my_txq_ring_size_shift);
     rsp->mutable_spec()->set_my_txq_entry_size_shift(rrawccb.my_txq_entry_size_shift);
@@ -244,6 +248,7 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_txq_qtype(rrawccb.chain_txq_qtype);
     rsp->mutable_spec()->set_chain_txq_qid(rrawccb.chain_txq_qid);
     rsp->mutable_spec()->set_chain_txq_ring(rrawccb.chain_txq_ring);
+    rsp->mutable_spec()->set_rawccb_activated(rrawccb.rawccb_activated);
 
     rsp->mutable_spec()->set_pi(rrawccb.pi);
     rsp->mutable_spec()->set_ci(rrawccb.ci);

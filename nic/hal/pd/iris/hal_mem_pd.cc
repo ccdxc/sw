@@ -372,10 +372,10 @@ hal_state_pd::init(void)
                                  true, true, true, true);
     HAL_ASSERT_RETURN((rawrcb_slab_ != NULL), false);
 
-    rawrcb_hwid_ht_ = ht::factory(HAL_MAX_HW_RAWRCBS,
-                                 hal::pd::rawrcb_pd_get_hw_key_func,
-                                 hal::pd::rawrcb_pd_compute_hw_hash_func,
-                                 hal::pd::rawrcb_pd_compare_hw_key_func);
+    rawrcb_hwid_ht_ = ht::factory(HAL_MAX_HW_RAWRCB_HT_SIZE,
+                                  hal::pd::rawrcb_pd_get_hw_key_func,
+                                  hal::pd::rawrcb_pd_compute_hw_hash_func,
+                                  hal::pd::rawrcb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((rawrcb_hwid_ht_ != NULL), false);
 
     // BMAllocator based bmp range allocator to manage txs scheduler mapping
@@ -388,10 +388,10 @@ hal_state_pd::init(void)
                                  true, true, true, true);
     HAL_ASSERT_RETURN((rawccb_slab_ != NULL), false);
 
-    rawccb_hwid_ht_ = ht::factory(HAL_MAX_HW_RAWCCBS,
-                                 hal::pd::rawccb_pd_get_hw_key_func,
-                                 hal::pd::rawccb_pd_compute_hw_hash_func,
-                                 hal::pd::rawccb_pd_compare_hw_key_func);
+    rawccb_hwid_ht_ = ht::factory(HAL_MAX_HW_RAWCCB_HT_SIZE,
+                                  hal::pd::rawccb_pd_get_hw_key_func,
+                                  hal::pd::rawccb_pd_compute_hw_hash_func,
+                                  hal::pd::rawccb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((rawccb_hwid_ht_ != NULL), false);
 
     directmap_entry_slab_ = slab::factory("DIRECTMAP ENTRY", HAL_SLAB_DIRECTMAP_ENTRY,

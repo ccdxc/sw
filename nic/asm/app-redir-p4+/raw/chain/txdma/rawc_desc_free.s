@@ -1,8 +1,8 @@
 #include "app_redir_common.h"
 
 struct phv_                         p;
-struct proxyc_desc_free_k           k;
-struct proxyc_desc_free_desc_free_d d;
+struct rawc_desc_free_k             k;
+struct rawc_desc_free_desc_free_d   d;
 
 /*
  * Registers usage
@@ -19,7 +19,7 @@ struct proxyc_desc_free_desc_free_d d;
  * Entered after having acquired a descriptor free index semaphore,
  * this function invokes a common function to free page 0.
  */    
-proxyc_s5_desc_free:
+rawc_s5_desc_free:
 
     CAPRI_CLEAR_TABLE0_VALID
 

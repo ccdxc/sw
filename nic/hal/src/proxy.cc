@@ -52,8 +52,8 @@ proxy_meta_init() {
 
     g_meta[types::PROXY_TYPE_APP_REDIR] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX,
-            {{APP_REDIR_RAWR_QTYPE, 2, 10}, {APP_REDIR_RAWC_QTYPE, 2, 10},
-             {APP_REDIR_PROXYR_QTYPE, 2, 10}, {APP_REDIR_PROXYC_QTYPE, 2, 10}}}};
+            {{APP_REDIR_RAWR_QTYPE, 2, 12}, {APP_REDIR_RAWC_QTYPE, 2, 12},
+             {APP_REDIR_PROXYR_QTYPE, 2, 12}, {APP_REDIR_PROXYC_QTYPE, 2, 12}}}};
 
     // 128 bytes of P4PT state per connection (e.g. dir) and a total of 2^12 connections
     g_meta[types::PROXY_TYPE_P4PT] =

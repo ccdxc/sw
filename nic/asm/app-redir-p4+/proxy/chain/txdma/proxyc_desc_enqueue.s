@@ -34,7 +34,7 @@ proxyc_s3_desc_enqueue:
     add         r_ci, r0, d.{ci_curr}.hx
     mincr       r_pi, k.common_phv_chain_txq_ring_size_shift, 1
     mincr       r_ci, k.common_phv_chain_txq_ring_size_shift, r0
-    beq         r_pi, r_ci, proxyc_s3_cleanup_discard_prep
+    beq         r_pi, r_ci, _txq_ring_full_discard
     mincr       r_qentry_addr, k.common_phv_chain_txq_ring_size_shift, r0 // delay slot
     phvwri      p.p4_txdma_intr_dma_cmd_ptr, \
                 CAPRI_PHV_START_OFFSET(dma_chain_dma_cmd_type) / 16
@@ -99,3 +99,14 @@ proxyc_s3_cleanup_discard_prep:
     nop.e
     nop
 
+
+/*
+ * TxQ ring full discard
+ */                       
+_txq_ring_full_discard:
+
+    /*
+     * TODO: add stats here
+     */
+    b           proxyc_s3_cleanup_discard_prep
+    phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot

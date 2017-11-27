@@ -32,6 +32,8 @@
     .param      gc_tx_tnmdr_s0_start
     .param      storage_tx_pvm_roce_sq_cb_pop_start
     .param      storage_tx_roce_cq_cb_pop_start
+    .param      proxyr_s0_tx_start
+    .param      proxyc_s0_tx_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -129,4 +131,14 @@ gc_tx_rnmdr_stage0:
 .align
 gc_tx_tnmdr_stage0:
     j   gc_tx_tnmdr_s0_start
+    nop
+    
+.align
+proxyr_tx_stage0:
+    j   proxyr_s0_tx_start
+    nop
+    
+.align
+proxyc_tx_stage0:
+    j   proxyc_s0_tx_start
     nop
