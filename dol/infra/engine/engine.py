@@ -17,6 +17,8 @@ from infra.engine.verif     import VerifEngine
 from config.store           import Store
 from infra.engine.modmgr    import ModuleStore
 
+SUMMARY_NCOLS = 81
+
 def init():
     feature.Init()
     return
@@ -41,10 +43,10 @@ def ExecuteAllModules():
  
 def GetSummaryAndResult():
     print("\nResult Summary:")
-    print("=" * 78)
-    print("%-16s %-32s %-6s %-6s %-6s %-6s" %\
+    print("=" * SUMMARY_NCOLS)
+    print("%-16s %-32s %-9s %-6s %-6s %-6s" %\
           ('Feature/Sub', 'Name', 'Result', 'Passed', 'Failed', ' Total'))
-    print("=" * 78)
+    print("=" * SUMMARY_NCOLS)
 
     npass = 0
     nfail = 0
@@ -59,10 +61,10 @@ def GetSummaryAndResult():
         nfail += module.stats.failed
         ntotal += module.stats.total
     
-    print("-" * 78)
+    print("-" * SUMMARY_NCOLS)
     totstr = 'Total (Num Modules = %d)' % len(ModuleStore)
-    print("%-56s %6d %6d %6d" % (totstr, npass, nfail, ntotal))
-    print("-" * 78)
+    print("%-59s %6d %6d %6d" % (totstr, npass, nfail, ntotal))
+    print("-" * SUMMARY_NCOLS)
 
     #if ntotal == 0:
     #    print("ERROR: No Testcases run !!!")

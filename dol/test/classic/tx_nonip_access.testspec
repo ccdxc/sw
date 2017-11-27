@@ -9,7 +9,7 @@ selectors:
         segment : filter://any
         endpoint: filter://remote=True
     flow        : filter://fwtype=L2,type=MAC
-    maxflows    : 8
+    maxflows    : None
 
 packets:
     - packet:
@@ -28,10 +28,8 @@ packets:
     - packet:
         id          : IN_PKT    # Input packet 
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncaps
+        encaps      : None #callback://networking/packets/GetPacketEncaps
         headers     :
-            qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
 
     - packet:
         id          : EXP_PKT    # Expected packet 

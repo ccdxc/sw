@@ -1,16 +1,12 @@
 # Test Spec
 selectors:
     src:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
-        endpoint: filter://remote=False,access=False
-    dst:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
-        endpoint: filter://remote=False
-    flow        : filter://fwtype=L2,type=MAC
-    maxflows    : None
-
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=False,access=True
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : None
 packets:
     - packet:
         id          : BASE_PKT # Base packet
@@ -19,18 +15,15 @@ packets:
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-                type    : ref://testcase/config/flow/ethertype
+                dst     : ff:ff:ff:ff:ff:ff
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
         id          : PKT1 # Base packet
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncaps
+        encaps      : None 
         headers     :
-            qtag    :
-                vlan: ref://testcase/config/src/segment/vlan_id
 
     - packet:
         id          : EXP_PKT # Base packet
@@ -38,7 +31,7 @@ packets:
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
-                vlan: ref://testcase/config/dst/segment/vlan_id
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: ref://testcase/config/flow/txqos/cos
 
 buffers:
@@ -122,4 +115,3 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=EX_RXDESCR
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
-

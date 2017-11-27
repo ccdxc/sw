@@ -3,7 +3,7 @@ selectors:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=False
+        endpoint    : filter://remote=False,access=False
         interface   : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=True
         interface   : filter://any
     flow            : filter://fwtype=L2
-    maxflows        : 8
+    maxflows        : None
 
 packets:
     - packet:
@@ -54,7 +54,7 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+                vlan: ref://testcase/config/src/segment/vlan_id
             tcp:
                 flags: ack
 

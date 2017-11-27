@@ -12,4 +12,4 @@ endpoints   :
     enics   : False
     access  : True
     classic : 2
-    remote  : 8
+    remote  : 1

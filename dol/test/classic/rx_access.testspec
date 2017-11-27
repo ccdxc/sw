@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=False,access=True
         interface   : filter://any
     flow            : filter://fwtype=L2
-    maxflows        : 8
+    maxflows        : None
 
 packets:
     - packet:

@@ -58,6 +58,7 @@ class Module(objects.FrameworkObject):
         self.name       = spec.name
         self.feature    = getattr(spec, 'feature', '')
         self.GID("%s_%s" % (self.feature, self.name))
+        self.enable     = spec.enable
         self.package    = spec.package
         self.module     = spec.module
         self.spec       = spec.spec
@@ -152,6 +153,8 @@ class Module(objects.FrameworkObject):
         return
 
     def GetFinalResult(self):
+        if self.enable == False:
+            return 0
         if self.stats.total == 0:
             return 1
 
@@ -168,7 +171,9 @@ class Module(objects.FrameworkObject):
 
     def PrintResultSummary(self):
         status = ''
-        if self.stats.total == 0:
+        if self.enable == False:
+            status = 'Disabled'
+        elif self.stats.total == 0:
             status = 'Error'
         elif self.ignore:
             status = 'Ignore'
@@ -179,7 +184,7 @@ class Module(objects.FrameworkObject):
 
         feature = self.feature[:16]
         name = self.name[:32]
-        print("%-16s %-32s %-6s %6d %6d %6d" %\
+        print("%-16s %-32s %-9s %6d %6d %6d" %\
               (feature, name, status,
                self.stats.passed, self.stats.failed,
                self.stats.total))
@@ -251,6 +256,9 @@ class Module(objects.FrameworkObject):
         return
 
     def main(self, infra_data):
+        if self.enable == False:
+            return
+
         self.infra_data = infra_data
         prefix = "%s/%s" % (self.feature, self.name)
         self.logger = logging.Logger(level=logging.levels.INFO, stdout=True,
@@ -319,8 +327,8 @@ class ModuleDatabase:
         if GlobalOptions.pkglist and pmod.package in GlobalOptions.pkglist:
             pmod.enable = True
 
-        if pmod.enable == False:
-            return
+        #if pmod.enable == False:
+        #    return
 
         if 'ignore' not in pmod.__dict__:
             pmod.ignore = False

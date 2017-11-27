@@ -10,7 +10,7 @@ enics:
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_CLASSIC_DEFAULT
-      count : 2
+      count : 1
     - spec  : ref://store/specs/id=SEGMENT_CLASSIC_NATIVE
       count : 1
 

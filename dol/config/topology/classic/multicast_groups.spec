@@ -11,7 +11,6 @@ entries:
         gip     : ipstep/228.64.64.1/0.0.0.1/64
         session :
             label           : classicl2mc
-            fte             : True
             multicast       : True
             initiator       :
                 ethertype   : 0x800
@@ -24,7 +23,6 @@ entries:
         gip     : ipv6step/FF05::0040:4001/0::1/64
         session :
             label           : classicl2mc
-            fte             : True
             multicast       : True
             initiator       :
                 ethertype   : 0x86DD

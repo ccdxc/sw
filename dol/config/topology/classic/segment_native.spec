@@ -12,4 +12,4 @@ groups      : ref://store/specs/id=MULTICAST_GROUPS_CLASSIC
 endpoints   :
     enics   : False
     classic : 2
-    remote  : 8
+    remote  : 1

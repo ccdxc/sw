@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://fwtype=L2,type=MAC,label=ARP
-    maxflows        : 8
+    maxflows        : None
 
 packets:
     - packet:
@@ -39,7 +39,7 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+                vlan: ref://testcase/config/src/segment/vlan_id
 
     - packet:
         id          : EXP_PKT # Base packet
@@ -47,7 +47,7 @@ packets:
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
-                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                vlan: ref://testcase/config/dst/segment/vlan_id
                 prio: ref://testcase/config/flow/txqos/cos
 
 buffers:

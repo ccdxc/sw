@@ -1,0 +1,66 @@
+# Feature Test Modules List
+feature:
+    id          : classicl2mc
+    sub         : tx
+    package     : test.classicl2mc
+    module      : classic
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : BCAST
+        enable  : False
+        spec    : tx_bc.testspec
+        ignore  : True
+        iterate :
+            - type  : BCAST
+              flow  : filter://label=CLASSICL2BC
+
+    - module:
+        name    : BCAST_ACCESS
+        enable  : False
+        spec    : tx_bc_access.testspec
+        ignore  : False
+        iterate :
+            - type  : BCAST
+              flow  : filter://label=CLASSICL2BC
+
+    - module:
+        name    : BCAST_VLAN_INSERT
+        enable  : False
+        spec    : tx_bc_vlan_insert.testspec
+        ignore  : False
+        iterate :
+            - type  : BCAST
+              flow  : filter://label=CLASSICL2BC
+
+    - module:
+        name    : MCAST
+        enable  : True
+        spec    : tx_mc.testspec
+        ignore  : False
+        iterate :
+            - type      : MCAST
+              flow      : filter://type=MAC,label=CLASSICL2MC
+              segment   : filter://native=False
+
+    - module:
+        name    : MCAST_ACCESS
+        enable  : True
+        spec    : tx_mc_access.testspec
+        ignore  : False
+        iterate :
+            - type  : MCAST
+              flow  : filter://type=MAC,label=CLASSICL2MC
+
+
+    - module:
+        name    : MCAST_VLAN_INSERT
+        enable  : False
+        spec    : tx_mc_vlan_insert.testspec
+        ignore  : False
+        iterate :
+            - type      : MCAST
+              flow      : filter://type=MAC,label=CLASSICL2MC
+              segment   : filter://native=False

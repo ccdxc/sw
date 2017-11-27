@@ -1,0 +1,164 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://broadcast_policy=2,fabencap=VLAN,access=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://fwtype=L2
+    maxflows    : None
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : callback://classic/callbacks/GetMulticastPacketDMAC
+            ipv4:
+                src     : callback://classic/callbacks/GetMulticastPacketSIP
+                dst     : callback://classic/callbacks/GetMulticastPacketDIP
+                ttl     : 64
+            ipv6:
+                src     : callback://classic/callbacks/GetMulticastPacketSIP6
+                dst     : callback://classic/callbacks/GetMulticastPacketDIP6
+                hlim    : 64
+            udp:
+                sport   : callback://classic/callbacks/GetMulticastPacketUdpSport
+                dport   : callback://classic/callbacks/GetMulticastPacketUdpDport
+            tcp:
+                sport   : callback://classic/callbacks/GetMulticastPacketTcpSport
+                dport   : callback://classic/callbacks/GetMulticastPacketTcpDport
+            icmp:
+                code    : callback://classic/callbacks/GetMulticastPacketIcmpCode
+                type    : callback://classic/callbacks/GetMulticastPacketIcmpType
+                id      : callback://classic/callbacks/GetMulticastPacketIcmpId
+            icmpv6:
+                code    : callback://classic/callbacks/GetMulticastPacketIcmp6Code
+                type    : callback://classic/callbacks/GetMulticastPacketIcmp6Type
+                id      : callback://classic/callbacks/GetMulticastPacketIcmp6Id
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TX_PKT     # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            qtag    :
+                vlan: ref://testcase/config/src/segment/vlan_id
+
+    - packet:
+        id          : EXP_PKT_COPY0     # Expected packet on Enics
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetEnicPacketEncapsForMulticastCopy
+        headers     :
+            qtag:
+                vlan: callback://classic/callbacks/GetEncapVlanIdForMulticastCopy/idx=0
+                prio: callback://networking/packets/GetExpectedPacketCos
+
+
+    - packet:
+        id          : EXP_PKT_COPY1     # Expected packet on Enics
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetEnicPacketEncapsForMulticastCopy
+        headers     :
+            qtag:
+                vlan: callback://classic/callbacks/GetEncapVlanIdForMulticastCopy/idx=1
+                prio: callback://networking/packets/GetExpectedPacketCos
+
+
+buffers:
+    - buffer:
+        id      : RX_BUF_COPY0  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : RX_BUF_COPY1  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : EXP_BUF_COPY0  # Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : callback://classic/callbacks/GetExpectedBufferSizeForMulticastCopy/id=EXP_PKT_COPY0
+            data  : callback://classic/callbacks/GetExpectedBufferDataForMulticastCopy/id=EXP_PKT_COPY0
+
+    - buffer:
+        id      : EXP_BUF_COPY1  # Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : callback://classic/callbacks/GetExpectedBufferSizeForMulticastCopy/id=EXP_PKT_COPY1
+            data  : callback://classic/callbacks/GetExpectedBufferDataForMulticastCopy/id=EXP_PKT_COPY1
+
+
+descriptors:
+    - descriptor:
+        id      : RX_DESC_COPY0
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=RX_BUF_COPY0
+            addr  : ref://testcase/buffers/id=RX_BUF_COPY0/addr
+            len   : ref://testcase/buffers/id=RX_BUF_COPY0/size
+
+    - descriptor:
+        id      : RX_DESC_COPY1
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=RX_BUF_COPY1
+            addr  : ref://testcase/buffers/id=RX_BUF_COPY1/addr
+            len   : ref://testcase/buffers/id=RX_BUF_COPY1/size
+
+    - descriptor:
+        id      : EXP_DESC_COPY0 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXP_BUF_COPY0
+            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY0/size
+
+    - descriptor:
+        id      : EXP_DESC_COPY1 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXP_BUF_COPY1
+            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY1/size
+
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RX_DESC_COPY0
+            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=0
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RX_DESC_COPY1
+            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=1
+
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TX_PKT
+            port    : callback://classic/callbacks/GetRxUplinkPorts
+
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC_COPY0
+            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=0
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC_COPY1
+            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=1
+

@@ -35,6 +35,7 @@ class SegmentObject(base.ConfigObjectBase):
         if self.label is not None:
             self.label      = self.label.upper()
         self.spec       = spec
+        self.access     = getattr(spec.endpoints, 'access', False)
         self.tenant     = tenant
         self.type       = spec.type.upper()
         self.native     = spec.native
