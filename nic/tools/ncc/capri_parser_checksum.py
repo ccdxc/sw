@@ -352,7 +352,7 @@ class ParserCalField:
         self.phdr_type                  = ''
         self.payload_hdr_type           = ''
         self.l4_verify_len_field        = ''
-        self.csum_hdrlen_parser_local_var = ''
+        self.hdrlen_verify_field        = ''
 
         self.P4FieldListCalculation       = self.be.h.\
                                             p4_field_list_calculations\
@@ -380,14 +380,20 @@ class ParserCalField:
                 self.be.checksum.ProcessCalFields(\
                                             self.P4FieldListCalculation,\
                                             self.dstField)
+            assert self.l4_verify_len_field  != '', pdb.set_trace()
         elif 'checksum' in self.P4FieldListCalculation._parsed_pragmas.keys():
             #TODO: Process constant from pragma expression
             if 'hdr_len_expr' in self.P4FieldListCalculation.\
                                     _parsed_pragmas['checksum'].keys():
-                self.csum_hdrlen_parser_local_var = \
+                self.hdrlen_verify_field = \
                    self.P4FieldListCalculation.\
                     _parsed_pragmas['checksum']['hdr_len_expr'].keys()[0]
-            assert self.csum_hdrlen_parser_local_var != '', pdb.set_trace()
+            if 'verify_len' in \
+                self.P4FieldListCalculation._parsed_pragmas['checksum']:
+                self.l4_verify_len_field = self.P4FieldListCalculation._parsed_pragmas\
+                                   ['checksum']['verify_len'].keys()[0]
+            assert self.hdrlen_verify_field != '', pdb.set_trace()
+            assert self.l4_verify_len_field  != '', pdb.set_trace()
 
         assert(self.P4FieldListCalculation != None)
         assert(self.P4FieldListCalculation.algorithm == 'csum16')

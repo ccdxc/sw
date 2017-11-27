@@ -880,6 +880,13 @@ class capri_parser:
             return self.var_len_headers[hdr.name]
 
     def initialize(self):
+
+        #Collect write_only ohi fields
+        for hdr_name, hdr in self.be.h.p4_header_instances.items():
+            if 'parser_write_only' in hdr._parsed_pragmas:
+                for field in hdr.fields:
+                    self.wr_only_ohi[field.name] = None
+
         # create the state dictionary using capri_parse_state class
         capri_parse_states = OrderedDict()
         for k,v in self.be.h.p4_parse_states.items():
@@ -1108,10 +1115,6 @@ class capri_parser:
                     set_op = capri_parser_set_op(s, cfield, c[2])
                     if cfield.no_register():
                         s.no_reg_set_ops.append(set_op)
-                        if cfield.hfname not in self.wr_only_ohi:
-                            # do not include hdr name in the key
-                            hfname = cfield.hfname.split('.')
-                            self.wr_only_ohi[hfname[1]] = None
                     else:
                         s.set_ops.append(set_op)
                     hf_name = cfield.hfname
@@ -1537,7 +1540,7 @@ class capri_parser:
         return ohi
 
 
-    def assign_ohi_slots_for_checksum(self, csum_unit, instance):
+    def assign_ohi_slots_for_checksum(self, csum_unit, instance, ohi_field, ohi_type):
         '''
         Every Csum engine needs atleast 2 OHIs. One for storing offset and
         second for storing csum  len. Hence for 5 csum engines first 10
@@ -1545,19 +1548,33 @@ class capri_parser:
         In some cases a csum unit needs more than 2 slots. Storing phdr offset
         tcp offset, tcp len.
         '''
-        if instance != -1:
-            ohid = self.be.hw_model['parser']['ohi_threshold'] + 1 + \
-                   (csum_unit * 2) + instance
-        else:
-            try:
-                ohid = self.free_chksum_ohi_slots.index(True)
-                self.free_chksum_ohi_slots[ohid] = False
-                ohid += self.be.hw_model['parser']['ohi_threshold'] + 1 +\
-                        + (self.be.hw_model['parser']['max_csum_engines'] * 2)
-            except:
-                assert(0), pdb.set_trace()
 
-        return ohid
+        ohi_id = None
+        if ohi_field != '':
+            #Lookup  in write-only OHIs matching write_only_var
+            if ohi_type == ohi_write_only_type.OHI_WR_ONLY_TYPE_HDR_OFFSET:
+                #Get OHI ID of write only header start offset variable
+                ohi_id = self.get_ohi_hdr_start_off(self.be.h.p4_header_instances[ohi_field])
+            elif ohi_type == ohi_write_only_type.OHI_WR_ONLY_TYPE_HDR_LEN:
+                #Get OHI ID of write only length variable
+                ohi_id = self.get_ohi_hdr_len(self.be.h.p4_header_instances[ohi_field])
+            else:
+                ohi_id = self.get_ohi_slot_wr_only_field_name(ohi_field)
+
+        if ohi_id == None or ohi_field == '':
+            if instance != -1:
+                ohi_id = self.be.hw_model['parser']['ohi_threshold'] + 1 + \
+                       (csum_unit * 2) + instance
+            else:
+                try:
+                    ohi_id = self.free_chksum_ohi_slots.index(True)
+                    self.free_chksum_ohi_slots[ohi_id] = False
+                    ohi_id += self.be.hw_model['parser']['ohi_threshold'] + 1 +\
+                            + (self.be.hw_model['parser']['max_csum_engines'] * 2)
+                except:
+                    assert(0), pdb.set_trace()
+
+        return ohi_id
 
     def assign_ohi_slots(self):
         self.assign_wr_only_ohi_slots()
@@ -1687,7 +1704,7 @@ class capri_parser:
         # return ohi slot assigned to capture header start offset (if allocated)
         ohi_name = hdr.name + '___start_off'
         if hdr in self.ohi:
-            return self.ohi[hdr].id
+            return self.ohi[hdr][0].id
         elif ohi_name in self.wr_only_ohi:
             return self.wr_only_ohi[ohi_name]
         else:
@@ -1718,6 +1735,11 @@ class capri_parser:
         else:
             if ohi_names[0] in self.wr_only_ohi:
                 return self.wr_only_ohi[ohi_names[0]]
+        return None
+
+    def get_ohi_slot_wr_only_field_name(self, ohi_field):
+        if ohi_field in self.wr_only_ohi:
+            return self.wr_only_ohi[ohi_field]
         return None
 
     def _find_parser_paths(self, start_state):

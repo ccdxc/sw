@@ -34,9 +34,17 @@ metadata parser_metadata_t parser_metadata;
 
 header_type parser_csum_t {
     fields {
+        ipv4___start_off                   : 16;
+        ipv6___start_off                   : 16;
+        inner_ipv4___start_off             : 16;
+        inner_ipv6___start_off             : 16;
+        udp___start_off                    : 16;
+        inner_udp___start_off              : 16;
+        tcp___start_off                    : 16;
         ipv4___hdr_len                     : 16;
         inner_ipv4___hdr_len               : 16;
-        inner_ipv6_payloadLen              : 16;
+        l4_len                             : 16;
+        inner_l4_len                       : 16;
     }
 }
 
@@ -50,6 +58,18 @@ header_type parser_ohi_t {
     // start/len information to write-only variables
     fields {
         ipv6_options_blob___hdr_len : 16;
+        ipv4___start_off            : 16;
+        ipv6___start_off            : 16;
+        inner_ipv4___start_off      : 16;
+        inner_ipv6___start_off      : 16;
+        udp___start_off             : 16;
+        inner_udp___start_off       : 16;
+        tcp___start_off             : 16;
+        // Write only variable to capture length value from pkt for csum puporses into OHI.
+        ipv4___hdr_len              : 16;
+        inner_ipv4___hdr_len        : 16;
+        l4_len                      : 16;
+        inner_l4_len                : 16;
     }
 }
 @pragma pa_parser_local
@@ -450,6 +470,7 @@ field_list ipv4_checksum_list {
 }
 
 @pragma checksum hdr_len_expr parser_csum.ipv4___hdr_len + 20
+@pragma checksum verify_len parser_csum.l4_len
 field_list_calculation ipv4_checksum {
     input {
         ipv4_checksum_list;
@@ -566,6 +587,7 @@ parser parse_base_ipv4 {
     // option-blob parsing - parse_ipv4 does not extract ipv4 header
     extract(ipv4);
     set_metadata(parser_csum.ipv4___hdr_len, (ipv4.ihl << 2) - 20);
+    set_metadata(parser_csum.l4_len, ipv4.totalLen + 0);
     return select(ipv4.flags, ipv4.fragOffset, ipv4.protocol) {
         IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
         IP_PROTO_TCP mask 0x3fffff : parse_tcp;
@@ -657,6 +679,7 @@ parser parse_ipv4_options_blob {
     // set hdr len same as option header len. In csum profile
     // standard IP hdr len of 20 bytes is adjusted.
     set_metadata(parser_csum.ipv4___hdr_len, (ipv4.ihl << 2) - 20);
+    set_metadata(parser_csum.l4_len, ipv4.totalLen + 0);
 
     // All options are extracted as a single header
     extract(ipv4_options_blob);
@@ -891,6 +914,7 @@ field_list ipv4_tcp_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.inner_l4_payload_len
+@pragma checksum verify_len parser_csum.l4_len
 field_list_calculation ipv4_tcp_checksum {
     input {
         ipv4_tcp_checksum_list;
@@ -1155,6 +1179,7 @@ field_list ipv4_udp_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum verify_len  parser_csum.l4_len
 field_list_calculation ipv4_udp_checksum {
     input {
         ipv4_udp_checksum_list;
@@ -1193,6 +1218,7 @@ calculated_field udp.checksum {
 parser parse_udp {
     extract(udp);
     set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - udp.len);
+    set_metadata(parser_csum.l4_len, udp.len + 0);
     set_metadata(parser_metadata.l4_len, udp.len-8);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan;
@@ -1283,6 +1309,7 @@ field_list inner_ipv4_checksum_list {
 }
 
 @pragma checksum hdr_len_expr parser_csum.inner_ipv4___hdr_len + 20
+@pragma checksum verify_len parser_csum.inner_l4_len
 field_list_calculation inner_ipv4_checksum {
     input {
         inner_ipv4_checksum_list;
@@ -1300,6 +1327,7 @@ parser parse_base_inner_ipv4 {
     // option-blob parsing - extract inner_ipv4 here
     extract(inner_ipv4);
     set_metadata(parser_csum.inner_ipv4___hdr_len, (inner_ipv4.ihl << 2) - 20);
+    set_metadata(parser_csum.inner_l4_len, inner_ipv4.totalLen + 0);
     return select(inner_ipv4.flags, inner_ipv4.fragOffset, inner_ipv4.protocol) {
         IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
         IP_PROTO_TCP mask 0x3fffff : parse_tcp;
@@ -1382,6 +1410,7 @@ parser parse_inner_ipv4_options_blob {
     // set hdr len same as option header len. In csum profile
     // standard IP hdr len of 20 bytes is adjusted.
     set_metadata(parser_csum.inner_ipv4___hdr_len, (inner_ipv4.ihl << 2) - 20);
+    set_metadata(parser_csum.inner_l4_len, inner_ipv4.totalLen + 0);
     // All options are extracted as a single header
     extract(inner_ipv4_options_blob);
     set_metadata(l3_metadata.inner_ip_option_seen, 1);
@@ -1423,6 +1452,7 @@ field_list inner_ipv4_tcp_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.inner_l4_payload_len
+@pragma checksum verify_len parser_csum.inner_l4_len
 field_list_calculation inner_ipv4_tcp_checksum {
     input {
         inner_ipv4_tcp_checksum_list;
@@ -1450,7 +1480,7 @@ field_list inner_ipv6_tcp_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.inner_l4_payload_len
-@pragma checksum verify_len parser_csum.inner_ipv6_payloadLen
+@pragma checksum verify_len parser_csum.inner_l4_len
 field_list_calculation inner_ipv6_tcp_checksum {
     input {
         inner_ipv6_tcp_checksum_list;
@@ -1478,6 +1508,7 @@ field_list inner_ipv4_udp_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.inner_l4_payload_len
+@pragma checksum verify_len parser_csum.inner_l4_len
 field_list_calculation inner_ipv4_udp_checksum {
     input {
         inner_ipv4_udp_checksum_list;
@@ -1497,7 +1528,7 @@ field_list inner_ipv6_udp_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.inner_l4_payload_len
-@pragma checksum verify_len parser_csum.inner_ipv6_payloadLen
+@pragma checksum verify_len parser_csum.inner_l4_len
 field_list_calculation inner_ipv6_udp_checksum {
     input {
         inner_ipv6_udp_checksum_list;
@@ -1517,6 +1548,7 @@ parser parse_inner_udp {
     extract(inner_udp);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.dstPort);
+    set_metadata(parser_csum.inner_l4_len, inner_udp.len + 0);
     return parse_dummy;
     //return ingress;
 }
@@ -1545,7 +1577,7 @@ parser parse_inner_ipv6 {
     extract(inner_ipv6);
     set_metadata(flow_lkp_metadata.lkp_src, latest.srcAddr);
     set_metadata(flow_lkp_metadata.lkp_dst, latest.dstAddr);
-    set_metadata(parser_csum.inner_ipv6_payloadLen, inner_ipv6.payloadLen+0);
+    set_metadata(parser_csum.inner_l4_len, inner_ipv6.payloadLen+0);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;

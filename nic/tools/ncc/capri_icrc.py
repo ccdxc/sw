@@ -1228,10 +1228,7 @@ class Icrc:
         return calfldobj
 
     def IcrcParserConfigGenerate(self, parser, parse_states_in_path,\
-                                 parse_state, sram, ohi_instr_inst,\
-                                 lkp_instr_inst, mux_idx_allocator, \
-                                 mux_inst_allocator, reuse_mux_instr_id,\
-                                 reuse_mux_idx_id, reuse_option_len_ohi_id):
+                                 parse_state, sram):
 
         from_parse_state = parse_states_in_path[-2]
         headers_in_parse_path = []
@@ -1284,7 +1281,6 @@ class Icrc:
 
         calfldobj.IcrcAddLog(log_str)
 
-        return ohi_instr_inst
 
     def ParserIcrcProfileGenerate(self, parser, parse_states_in_path,\
                                   parse_state, icrc_t):

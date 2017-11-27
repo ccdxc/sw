@@ -107,7 +107,6 @@ class ParserCsumEngine:
         assert csumUnit != -1, pdb.set_trace()
         self.allocated_csum_units[csumUnit] = True
         self.csum_units_in_use += 1
-        
 
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
@@ -169,7 +168,6 @@ class DeParserCsumEngine:
         assert csumUnit != -1, pdb.set_trace()
         self.allocated_csum_units[csumUnit] = True
         self.csum_units_in_use += 1
-        
 
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
@@ -406,13 +404,18 @@ class Checksum:
                                     if phdr_offset_ohi_id == -1 and \
                                        phdr_parse_state.phdr_offset_ohi_id == -1:
                                         phdr_offset_ohi_id = \
-                                            parser.assign_ohi_slots_for_checksum(\
-                                                                    csum_unit, -1)
+                                            parser.assign_ohi_slots_for_checksum(   \
+                                                       csum_unit, -1, phdr_name,    \
+                                                       ohi_write_only_type.         \
+                                                        OHI_WR_ONLY_TYPE_HDR_OFFSET)
                                     if total_len_ohi_id == -1 and \
                                        phdr_parse_state.totalLen_ohi_id == -1:
                                         total_len_ohi_id = \
-                                            parser.assign_ohi_slots_for_checksum(\
-                                                                     csum_unit, 1)
+                                            parser.assign_ohi_slots_for_checksum(   \
+                                                      csum_unit, 1,                 \
+                                                      calfldobj.l4_verify_len_field,\
+                                                        ohi_write_only_type.        \
+                                                         OHI_WR_ONLY_TYPE_OTHER)
                                     if phdr_parse_state.phdr_offset_ohi_id == -1:
                                         phdr_parse_state.phdr_offset_ohi_id = \
                                                             phdr_offset_ohi_id
@@ -436,7 +439,7 @@ class Checksum:
                                 # store result of l4_verify_len parser local.
                                 # variable into OHI
                                 #pdb.set_trace()
-                                
+
                                 l4hdr_parse_states = parser.get_ext_cstates(\
                                     self.be.h.p4_header_instances[hdr.name])
 
@@ -465,6 +468,14 @@ class Checksum:
             checksum is retrieved from IP parse state where IP hdr start offset
             is captured and stored in the OHI slot.
         '''
+
+        #Log write only Ohi allocation
+        logstr = ''
+        for k, v in parser.wr_only_ohi.items():
+            logstr += '{:25s}{:35s}{:s}\n'.format('Write Only Ohi Field: ', k, str(v))
+        logstr += '\n\n'
+        self.CalFldListAddLog(logstr)
+
         csum_hdrs = set()
         csum_phdrs = set()
         payload_calfld_hdr = []
@@ -542,10 +553,15 @@ class Checksum:
                         csum_unit = calfldobj.ParserCsumObjGet().CsumUnitNumGet()
                         calfldobj.ParserCsumObjGet().\
                             CsumOhiStartSelSet(parser.assign_ohi_slots_for_checksum(\
-                                                                csum_unit, 0))
+                                                        csum_unit, 0, hdr.name,     \
+                                                        ohi_write_only_type.        \
+                                                        OHI_WR_ONLY_TYPE_HDR_OFFSET))
                         calfldobj.ParserCsumObjGet().\
-                            CsumOhiLenSelSet(parser.assign_ohi_slots_for_checksum(
-                                                                csum_unit, 1))
+                            CsumOhiLenSelSet(parser.assign_ohi_slots_for_checksum(      \
+                                                        csum_unit, 1,                   \
+                                                        calfldobj.hdrlen_verify_field,  \
+                                                        ohi_write_only_type.            \
+                                                        OHI_WR_ONLY_TYPE_OTHER))
                         #Since pseudo header start and IPv4 header start are the same,
                         #set phdr_ohi_sel ID same as OHI id used for capturing
                         #hdr start to compute header checksum.
@@ -553,8 +569,12 @@ class Checksum:
                                                ParserCsumObjGet().CsumOhiStartSelGet())
                         #when no payload checksum, it is only possible for ipv4
                         #Allocate OHI slot for storing TotalLen
-                        calfldobj.ParserCsumObjGet().CsumOhiTotalLenSet(parser.\
-                                           assign_ohi_slots_for_checksum(csum_unit, -1))
+                        calfldobj.ParserCsumObjGet().\
+                             CsumOhiTotalLenSet(parser.assign_ohi_slots_for_checksum(   \
+                                                        csum_unit, -1,                  \
+                                                        calfldobj.l4_verify_len_field,  \
+                                                        ohi_write_only_type.            \
+                                                        OHI_WR_ONLY_TYPE_OTHER))
                         self.csum_verify_logger.debug(\
                             'Checksum Assignment along path %s' % (str(parse_path)))
                         self.csum_verify_logger.debug(\
@@ -618,10 +638,16 @@ class Checksum:
                             csum_unit = pl_calfldobj.ParserCsumObjGet().CsumUnitNumGet()
                             pl_calfldobj.ParserCsumObjGet().\
                                 CsumOhiStartSelSet(parser.assign_ohi_slots_for_checksum(\
-                                                                    csum_unit, 0))
+                                                          csum_unit, 0,                 \
+                                                          hdr.name,                     \
+                                                          ohi_write_only_type.          \
+                                                            OHI_WR_ONLY_TYPE_HDR_OFFSET))
                             pl_calfldobj.ParserCsumObjGet().\
-                                CsumOhiLenSelSet(parser.assign_ohi_slots_for_checksum(
-                                                                    csum_unit, 1))
+                                CsumOhiLenSelSet(parser.assign_ohi_slots_for_checksum(  \
+                                                        csum_unit, 1,                   \
+                                                        calfldobj.l4_verify_len_field,  \
+                                                        ohi_write_only_type.            \
+                                                            OHI_WR_ONLY_TYPE_OTHER))
                             self.csum_verify_logger.debug(\
                                 'Checksum Assignment along path %s' \
                                 % (str(parse_path)))
@@ -653,10 +679,11 @@ class Checksum:
         #Parser block can be programmed to trigger csum verification.
         self.InsertCsumObjReferenceInParseState(parser)
 
- 
+
     def CsumParserPayloadLenUpdateInstrGenerate(self, parse_state, sram,\
                                                 ohi_instr_inst,         \
-                                                mux_inst_allocator,
+                                                ohi_inst_allocator,     \
+                                                mux_inst_allocator,     \
                                                 mux_idx_allocator):
         '''
         When option length has to be decremented from phdr, this
@@ -733,7 +760,7 @@ class Checksum:
 
 
     def CsumParserPhdrOffsetInstrGenerate(self, parse_state, sram, 
-                                          ohi_instr_inst, lkp_instr_inst,\
+                                          ohi_instr_inst, ohi_inst_allocator,\
                                           mux_idx_allocator, \
                                           mux_inst_allocator):
         '''
@@ -750,7 +777,7 @@ class Checksum:
         return ohi_instr_inst
 
     def CsumParserPayloadLenGenerate(self, parse_state, sram, ohi_instr_inst,\
-                                     lkp_instr_inst, mux_idx_allocator, \
+                                     ohi_inst_allocator, mux_idx_allocator, \
                                      mux_inst_allocator, reuse_mux_idx_id):
         '''
         if pseudo hdr type is v4
@@ -795,13 +822,14 @@ class Checksum:
             # packet into variable, generate OHI instruction to load it.
             self.CsumParserPayloadLenUpdateInstrGenerate(parse_state, sram, \
                                                          ohi_instr_inst,    \
+                                                         ohi_inst_allocator, \
                                                          mux_inst_allocator,\
                                                          mux_idx_allocator)
         else:
             assert(0), pdb.set_trace()
 
         self.CalFldListAddLog(log_str)
-        
+
         return ohi_instr_inst
 
     def _CsumFindCalFldObjMatchingPhdr(self, parse_state, parse_states_in_path):
@@ -850,11 +878,11 @@ class Checksum:
         return calfldobj, phdr_parse_state
 
 
-    def CsumParserConfigGenerate(self, parser, parse_states_in_path,\
-                                 parse_state, sram, ohi_instr_inst,\
-                                 lkp_instr_inst, mux_idx_allocator, \
-                                 mux_inst_allocator, reuse_mux_instr_id,\
-                                 reuse_mux_idx_id, reuse_option_len_ohi_id):
+    def CsumParserConfigGenerate(self, parser, parse_states_in_path,    \
+                                 parse_state, sram, ohi_instr_inst,     \
+                                 ohi_inst_allocator, mux_idx_allocator, \
+                                 mux_inst_allocator, l4len_mux_instr_id,\
+                                 l4len_mux_idx_id, hdrlen_mux_idx_id):
         '''
          The parser state (branch to) where header is extracted, fill in
          parser sram with ohi instructions so as to build checksum related
@@ -904,10 +932,12 @@ class Checksum:
                                 CsumOhiTotalLenGet()
             elif calfldobj.payload_checksum:
                 assert(0), pdb.set_trace()
+
         hdr_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiStartSelGet()
         len_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiLenSelGet()
         assert hdr_ohi_id != -1, pdb.set_trace()
         assert len_ohi_id != -1, pdb.set_trace()
+
         if calfldobj.payload_checksum:
             assert phdr_ohi_id != -1, pdb.set_trace()
             assert totalLen_ohi_id != -1, pdb.set_trace()
@@ -916,33 +946,38 @@ class Checksum:
             calfldobj.ParserCsumObjGet().CsumOhiPhdrSelSet(phdr_ohi_id)
             calfldobj.ParserCsumObjGet().CsumOhiTotalLenSet(totalLen_ohi_id)
 
-        # Ohi Instr to capture HdrStart Offset
-        select          = 1 # Load current offset + index
-        na              = 0 # NA
-        index           = 0
-        log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, \
-                                         na, index, hdr_ohi_id)
-        ohi_instr_inst += 1
+        ohi_id = parser.get_ohi_hdr_start_off(self.be.h.p4_header_instances[\
+                                              calfldobj.CalculatedFieldHdrGet()])
+        if ohi_id == None:
+            assert ohi_instr_inst < len(sram['ohi_inst']), pdb.set_trace()
+            # Ohi Instr to capture HdrStart Offset
+            select          = 1 # Load current offset + index
+            na              = 0 # NA
+            index           = 0
+            log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, \
+                                                       na, index, hdr_ohi_id)
+            ohi_instr_inst += 1
+        else:
+            assert hdr_ohi_id == ohi_id, pdb.set_trace()
 
         if not calfldobj.payload_checksum:
             # When no payload, assume its always ipv4 hdr checksum. Its not
             # expected to have cal fld on any collection of p4 fields.
             # Target doesn't support it; Instead target only takes
             # (start-offset, size) to compute checksum.
+            assert(l4len_mux_instr_id != -1), pdb.set_trace()
+            assert(l4len_mux_idx_id != -1), pdb.set_trace()
+            assert(hdrlen_mux_idx_id != -1), pdb.set_trace()
 
-            assert(reuse_mux_instr_id != -1), pdb.set_trace()
-            assert(reuse_mux_idx_id != -1), pdb.set_trace()
-            mux_sel_ihl = reuse_mux_idx_id
-            mux_instr_sel_ihl = reuse_mux_instr_id 
-
-            if reuse_option_len_ohi_id == -1:
+            '''
+            if reuse_len_ohi_id == -1:
                 # OhiInstr to capture HdrLength for IPv4 Hdr checksum
                 log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst,\
                                   3, mux_instr_sel_ihl, 0, len_ohi_id)
                 ohi_instr_inst += 1
             else:
-                #reuse_option_len_ohi_id
-                calfldobj.ParserCsumObjGet().CsumOhiLenSelSet(reuse_option_len_ohi_id)
+                #reuse_len_ohi_id
+                calfldobj.ParserCsumObjGet().CsumOhiLenSelSet(reuse_len_ohi_id)
 
             #Allocate Instr to calculate payloadLen
             # Capture total pkt len which will be used for payload checksum
@@ -952,6 +987,8 @@ class Checksum:
                                                      index)
             mux_instr_sel_PayloadLen = ParserCalField.\
                                         mux_inst_allocate(mux_inst_allocator, None)
+            '''
+
             index       = 0
             mask        = 0x0F00
             shift_left  = 0
@@ -959,12 +996,13 @@ class Checksum:
             add_sub     = 0
             add_sub_val = 0
             load_mux_pkt = 1
-            log_str += ParserCalField._build_mux_instr(sram, 1, \
-                                             mux_instr_sel_PayloadLen,\
-                                             mux_sel_ihl, mask, add_sub,\
-                                             add_sub_val, shift_val,\
-                                             shift_left, load_mux_pkt,\
-                                             mux_sel_totalLen)
+            log_str += ParserCalField._build_mux_instr(sram, 1,                 \
+                                             l4len_mux_instr_id,                \
+                                             hdrlen_mux_idx_id, mask, add_sub,  \
+                                             add_sub_val, shift_val,            \
+                                             shift_left, load_mux_pkt,          \
+                                             l4len_mux_idx_id)
+            '''
             #Save (TotalLen-IHL*4) in OHI so that it can be used in TCP/UDP
             #parse state to set checksum len.
             totalLen_ohi_slot_id = calfldobj.ParserCsumObjGet().\
@@ -976,6 +1014,8 @@ class Checksum:
                                   select, mux_instr_sel_PayloadLen,\
                                   na, totalLen_ohi_slot_id)
             ohi_instr_inst += 1
+            '''
+
             #Configure checksum profile.
             csum_profile_obj = calfldobj.ParserCsumProfileGet()
             csum_profile_obj.CsumProfileShiftLeftSet(shift_left=0,\
@@ -1023,6 +1063,7 @@ class Checksum:
                                                    csum_loc_adj)
 
         calfldobj.ParserCsumObjAddLog(log_str)
+
         #Program Csum unit
         csum_instr = 0
         log_str = ''
@@ -1035,13 +1076,8 @@ class Checksum:
             phdr_profile = calfldobj.ParserPhdrProfileGet().\
                                         CsumPhdrProfileUnitNumGet()
             assert(phdr_profile != None), pdb.set_trace()
-            #Get ohi id that has totalLen/PayloadLen - v6-option-size
+            #Get ohi id that has totalLen/PayloadLen - v6-option-size or ihl * 4
             len_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiTotalLenGet()
-            #Incase of UDP checksum and pseudo hdr = v4, udp_hdr.length
-            #is same as ipv4hdr.totalLen - (ihl * 4), udp_hdr.length is
-            #not read from packet and used as payload checksum len; 
-            #totalLen_ohi_id would have captured ipv4hdr.totalLen-ihl*4.
-            #Use that value even in case of UDP checksum.
         else:
             phdr_ohi_id = -1
             phdr_profile = -1
@@ -1195,7 +1231,7 @@ class Checksum:
         cf_l4_update_len = self.be.pa.get_field(calfldobj.l4_update_len_field, eg_parser.d)
         pl_slot = (cf_l4_update_len.phv_bit - 
                    self.be.hw_model['deparser']['len_phv_start']) / 16
-        
+
         return pl_slot
 
     def DeParserInnerPayLoadCsumInclude(self, outer_csum_objs, csum_hdr,\
@@ -1577,6 +1613,11 @@ class Checksum:
         ofile = open('%s/csum.out' % (out_dir), "w")
         ofile.write("Checksum Verification Config in Ingress parser\n")
         ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
+        ofile.write("   Ohi Slot Allocation\n")
+        ofile.write("   ~~~~~~~~~~~~~~~~~~~\n\n")
+        for log_str in self.CalFldListLogStrTableGet():
+            ofile.write(log_str)
+
         for calfldobj in self.verify_cal_fieldlist:
             for log_str in calfldobj.ParserCsumObjLogStrTableGet():
                 ofile.write(log_str)
@@ -1589,7 +1630,7 @@ class Checksum:
         ofile.write("Summary: Checksum Compute Config in Egress Deparser\n")
         ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
 
-        
+
         pstr = '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
                '{:5s}{:5s}{:5s}\n'.format("Hdr", "csum#", "  csum", "  csum", "  HV", \
                                                "Csum", "Phdr", "Phdr", "Phdr",\
@@ -1615,12 +1656,6 @@ class Checksum:
             ofile.write(_calfldobj.DeparserCsumConfigMatrixRowLog(is_phdr))
         ofile.write("\n\n")
 
-        '''
-        ofile.write("Checksum Verify/Compute Config\n")
-        ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
-        for log_str in self.CalFldListLogStrTableGet():
-            ofile.write(log_str)
-        '''
 
         ofile.close()
 

@@ -1676,6 +1676,98 @@ def _allocate_mux_inst_resoures(capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
 
     return reg_id1, reg_id2, mux_id1, mux_id2
 
+def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,            \
+                                     parser, all_set_ops,                           \
+                                     ohi_instr_allocated_count, ohi_inst_allocator, \
+                                     mux_idx_allocator, mux_inst_allocator,         \
+                                     mux_inst_id_to_mux_index_id_map,               \
+                                     mux_inst_id_to_capri_expr_map,                 \
+                                     mux_inst_id_to_ohi_id_map):
+
+    csum_hdrlen_expr_found      = 0
+    csum_l4len_expr_found       = 0
+    csum_hdrlen_expr            = None
+    csum_l4len_expr             = None
+
+    for calfldobj in nxt_cs.verify_cal_field_objs:
+        if calfldobj.hdrlen_verify_field != '':
+            for s_ops, set_ops_field in enumerate(all_set_ops):
+                if set_ops_field.dst.hfname == calfldobj.hdrlen_verify_field:
+                    csum_hdrlen_expr_found = 1
+                    break
+            if csum_hdrlen_expr_found:
+                hdrlen_const        = set_ops_field.const
+                csum_hdrlen_expr    = set_ops_field.capri_expr
+                break
+    for calfldobj in nxt_cs.verify_cal_field_objs:
+        if calfldobj.l4_verify_len_field != '':
+            for s_ops, set_ops_field in enumerate(all_set_ops):
+                if set_ops_field.dst.hfname == calfldobj.l4_verify_len_field:
+                    csum_l4len_expr_found = 1
+                    break
+            if csum_l4len_expr_found:
+                l4len_const         = set_ops_field.const
+                csum_l4len_expr     = set_ops_field.capri_expr
+                break
+
+    csum_hdrlen_ohi_id          = -1
+    csum_hdrlen_mux_instr_id    = -1
+    csum_l4len_ohi_id           = -1
+    csum_l4len_mux_instr_id     = -1
+    if csum_hdrlen_expr:
+        csum_hdrlen_mux_instr_id, _ = mux_inst_alloc(mux_inst_allocator, csum_hdrlen_expr)
+        if csum_hdrlen_mux_instr_id in mux_inst_id_to_ohi_id_map:
+            csum_hdrlen_ohi_id = mux_inst_id_to_ohi_id_map[csum_hdrlen_mux_instr_id]
+    if csum_l4len_expr:
+        csum_l4len_mux_instr_id, _ = mux_inst_alloc(mux_inst_allocator, csum_l4len_expr)
+        if csum_l4len_mux_instr_id in mux_inst_id_to_ohi_id_map:
+            csum_l4len_ohi_id = mux_inst_id_to_ohi_id_map[csum_l4len_mux_instr_id]
+
+    csum_l4len_mux_idx_id       = -1
+    csum_hdrlen_mux_idx_id      = -1
+    if csum_l4len_ohi_id != -1 and csum_hdrlen_ohi_id != -1:
+        #parse state updates l4 len and hdr len.
+        csum_l4len_mux_idx_id, mux_id2 = mux_inst_id_to_mux_index_id_map[csum_l4len_mux_instr_id]
+        csum_hdrlen_mux_idx_id, mux_id2 = mux_inst_id_to_mux_index_id_map[csum_hdrlen_mux_instr_id]
+        assert (csum_l4len_mux_idx_id != -1 and csum_hdrlen_mux_idx_id != -1), pdb.set_trace()
+
+    if len(nxt_cs.verify_cal_field_objs) > 0:
+        ohi_instr_allocated_count = parser.be.checksum.CsumParserConfigGenerate(parser, \
+                                               parse_states_in_path, nxt_cs, sram,\
+                                               ohi_instr_allocated_count,\
+                                               ohi_inst_allocator, mux_idx_allocator,\
+                                               mux_inst_allocator, \
+                                               csum_l4len_mux_instr_id, csum_l4len_mux_idx_id, \
+                                               csum_hdrlen_mux_idx_id)
+    elif nxt_cs.phdr_offset_ohi_id != -1:
+        # Case where parse state is moving into ipv4/ipv6
+        # and ipv4 hdr is not part of header checksum verification
+        #   - an ohi_slot is allocated to capture start of IP hdr which
+        #     serves as start of phdr
+        #   - store payloadLen in OhiSlot used in case of ipv4 -> tcp;
+        #     In case of v6 -> TCP, since v6 options need to be decremented
+        #     from payloadLen, store v6.payload in stored lookup register.
+        ohi_instr_allocated_count = parser.be.checksum.CsumParserPhdrOffsetInstrGenerate(\
+                                           nxt_cs, sram, ohi_instr_allocated_count,\
+                                           ohi_inst_allocator, mux_idx_allocator,\
+                                           mux_inst_allocator)
+        # Also capture PayloadLen in ohi slot or stored lookup reg
+        ohi_instr_allocated_count = parser.be.checksum.CsumParserPayloadLenGenerate(\
+                                           nxt_cs, sram, ohi_instr_allocated_count,\
+                                           ohi_inst_allocator, mux_idx_allocator,\
+                                           mux_inst_allocator, csum_l4len_mux_idx_id)
+    '''
+    if nxt_cs.csum_payloadlen_ohi_instr_gen[0]:
+        #In case of option parsing, parse states where l4_verify_len is updated,
+        #store the expression result back into OHI.
+        _ = parser.be.checksum.CsumParserPayloadLenUpdateInstrGenerate(\
+                                                        nxt_cs, sram, s, ohi_inst_allocator,\
+                                                        mux_inst_allocator, mux_idx_allocator)
+    '''
+
+    return ohi_instr_allocated_count 
+
+
 def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = None):
     parser.logger.debug("%s:fill_sram_entry for %s + %s" % \
         (parser.d.name, bi.nxt_state, add_cs))
@@ -1692,6 +1784,9 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     mux_idx_allocator = [None for _ in sram['mux_idx']]
     mux_inst_allocator = [(None, None, None) for _ in sram['mux_inst']]
+    mux_inst_id_to_mux_index_id_map = {} # mux_instr_id ->  mux_idx map. 
+    mux_inst_id_to_capri_expr_map = {}
+    mux_inst_id_to_ohi_id_map = {}
 
     nxt_cs = bi.nxt_state
     sram['action']['value'] = str(1) if nxt_cs.is_end else str(0)
@@ -1699,44 +1794,11 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     current_flit = None
 
-    # As there is instruction pressure in entering into ipv4 or
-    # inner_ipv4 state, for CSUM try to reuse instructions when
-    # csum verify len expression matches with another expression
-    # (used for lookup) in the same state.
-    csum_len_expr_found = 0
-    reuse_instr_of_lkp_reg = -1
-    csum_mux_instr_id = -1
-    csum_mux_idx_id = -1
-    csum_len_ohi_id = -1
     all_set_ops = []
     for elem in nxt_cs.set_ops:
         all_set_ops.append(elem)
     for elem in nxt_cs.no_reg_set_ops:
         all_set_ops.append(elem)
-    if len(nxt_cs.verify_cal_field_objs) > 0:
-        for calfldobj in nxt_cs.verify_cal_field_objs:
-            if calfldobj.csum_hdrlen_parser_local_var != '':
-                for s_ops, set_ops_field in enumerate(all_set_ops):
-                    if set_ops_field.dst.hfname == \
-                        calfldobj.csum_hdrlen_parser_local_var:
-                        csum_len_expr_found = 1
-                        break
-                if csum_len_expr_found:
-                    len_const = set_ops_field.const
-                    csum_len_expr = set_ops_field.capri_expr
-                    break
-    if csum_len_expr_found:
-        len_expr_str = csum_len_expr.flatten_capri_expr()
-        #Check if csum len expr is same as any other expr
-        #used for lookup. When computing ip option
-        #blob len, there is overlap in expr used for
-        #calculating ip hdr len and option len that is also
-        #for lookup purposes to jump to option parsing state.
-        for l_reg, lkp_reg  in enumerate(nxt_cs.lkp_regs):
-            if lkp_reg != None and lkp_reg.capri_expr and \
-                lkp_reg.capri_expr.flatten_capri_expr() == hdr_len_expr_str:
-                reuse_instr_of_lkp_reg = l_reg
-                break
 
     # lkp_val_inst
     for r,lkp_reg in enumerate(nxt_cs.lkp_regs):
@@ -1788,15 +1850,11 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, lkp_reg.capri_expr)
                 _build_mux_inst2(parser, nxt_cs, sram['mux_inst'][mux_inst_id], reg_id1, reg_id2,
                     mux_id1, mux_id2, lkp_reg.capri_expr)
+                mux_inst_id_to_capri_expr_map[mux_inst_id] = lkp_reg.capri_expr
+                mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id1, mux_id2)
                 sram['lkp_val_inst'][r]['sel']['value'] = str(1)
                 sram['lkp_val_inst'][r]['muxsel']['value'] = str(mux_inst_id)
 
-                if reuse_instr_of_lkp_reg == r:
-                    csum_mux_instr_id = mux_inst_id
-                    if mux_id1 != None:
-                        csum_mux_idx_id = mux_id1
-                    else:
-                        csum_mux_idx_id = 0
             else:
                 # local var load from pkt
                 if lkp_reg.first_pkt_fld:
@@ -1822,46 +1880,39 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     lkp_instr_inst = r
 
     #Generate instructions to evaluate expressions that are not
-    #used for lookup purposes but other pursposes (csum, icrc).
+    #used for lookup purposes but other pursposes (csum, icrc, option len computation etc).
     for set_op in nxt_cs.no_reg_set_ops:
         assert set_op.capri_expr, pdb.set_trace()
         if set_op.capri_expr:
+            #if set_op.capri_expr.src_reg:
+            pkt_off2=0; pkt_off1=0
+            r = -1
             if set_op.capri_expr.src_reg:
-                pkt_off2=0; pkt_off1=0
-                r = -1
-                if set_op.capri_expr.src_reg:
-                    if isinstance(set_op.capri_expr.src_reg, tuple):
-                        pkt_off2 = set_op.capri_expr.src_reg[0] + (add_off*8)
-                    elif not set_op.capri_expr.src_reg.is_meta:
-                        pkt_off2 = nxt_cs.fld_off[set_op.capri_expr.src_reg] + (add_off*8)
-                    else:
-                        pkt_off2=0
-                        r = nxt_cs.active_reg_find(set_op.capri_expr.src_reg)
-                if set_op.capri_expr.src1:
-                    if isinstance(set_op.capri_expr.src1, tuple):
-                        pkt_off1 = set_op.capri_expr.src1[0] + (add_off*8)
-                    elif not set_op.capri_expr.src1.is_meta:
-                        pkt_off1 = nxt_cs.fld_off[set_op.capri_expr.src1] + (add_off*8)
-                    else:
-                        pkt_off1=0
-                        r = nxt_cs.active_reg_find(set_op.capri_expr.src1)
+                if isinstance(set_op.capri_expr.src_reg, tuple):
+                    pkt_off2 = set_op.capri_expr.src_reg[0] + (add_off*8)
+                elif not set_op.capri_expr.src_reg.is_meta:
+                    pkt_off2 = nxt_cs.fld_off[set_op.capri_expr.src_reg] + (add_off*8)
+                else:
+                    pkt_off2=0
+                    r = nxt_cs.active_reg_find(set_op.capri_expr.src_reg)
+            if set_op.capri_expr.src1:
+                if isinstance(set_op.capri_expr.src1, tuple):
+                    pkt_off1 = set_op.capri_expr.src1[0] + (add_off*8)
+                elif not set_op.capri_expr.src1.is_meta:
+                    pkt_off1 = nxt_cs.fld_off[set_op.capri_expr.src1] + (add_off*8)
+                else:
+                    pkt_off1=0
+                    r = nxt_cs.active_reg_find(set_op.capri_expr.src1)
 
-                reg_id1, reg_id2, mux_id1, mux_id2 = \
-                    _allocate_mux_inst_resoures(set_op.capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
-                        mux_idx_allocator, sram)
+            reg_id1, reg_id2, mux_id1, mux_id2 = \
+                _allocate_mux_inst_resoures(set_op.capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
+                    mux_idx_allocator, sram)
 
-                mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
-                _build_mux_inst2(parser, nxt_cs, sram['mux_inst'][mux_inst_id], reg_id1, reg_id2,
-                    mux_id1, mux_id2, set_op.capri_expr)
-
-    if csum_len_expr_found and reuse_instr_of_lkp_reg == -1:
-        #This parse state has set-metadata to compute csum len expr
-        #and csum len expression is not used by lookup purposes.
-        #In this case csum_len_expr should be in no_reg_set_ops list.
-        #Look up in no_reg_set_ops list and reuse mux_instr, mux_id
-        offset = nxt_cs.fld_off[csum_len_expr.src1] / 8
-        csum_mux_idx_id = mux_idx_alloc(mux_idx_allocator, offset)
-        csum_mux_instr_id, _ = mux_inst_alloc(mux_inst_allocator, csum_len_expr)
+            mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
+            _build_mux_inst2(parser, nxt_cs, sram['mux_inst'][mux_inst_id], reg_id1, reg_id2,
+                mux_id1, mux_id2, set_op.capri_expr)
+            mux_inst_id_to_capri_expr_map[mux_inst_id] = set_op.capri_expr
+            mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id1, mux_id2)
 
     # extract_inst
     # For all fields that go to phv, check if fields can be combined to extract
@@ -1894,6 +1945,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     #pdb.set_trace()
     # ohi_inst
+
     hw_max_ohi_per_state = len(sram['ohi_inst'])
     s = 0
     headers = []
@@ -1952,16 +2004,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
             if not isinstance(ohi.length, int):
                 # ohi.length is a capri expression
-                if csum_len_expr_found:
-                    #When option hdr len expression is specified in parse-state,
-                    #lets reuse same instructions allocated to evaluate the expr
-                    #to specify option len in OHI
-                    mux_inst_id = csum_mux_instr_id
-                    csum_len_ohi_id = ohi.var_id
-                else:
-                    #need to allocate mux_idx and inst
-                    mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, ohi.length)
-                    csum_len_ohi_id = -1
+                mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, ohi.length)
 
                 #pdb.set_trace()
                 # special case for option_blob where ohi len comes from another header field
@@ -1984,11 +2027,14 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
                 _build_mux_inst(parser, cs, reg_id,
                     sram['mux_inst'][mux_inst_id], mux_id, ohi.length)
+                mux_inst_id_to_capri_expr_map[mux_inst_id] = ohi.length
+                mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id, None)
                 # slot[1] : ohi_len
                 sram['ohi_inst'][s]['sel']['value'] = str(3)  # len using mux_inst_data
                 sram['ohi_inst'][s]['muxsel']['value'] = str(mux_inst_id)
                 sram['ohi_inst'][s]['idx_val']['value'] = str(0) # NA
                 sram['ohi_inst'][s]['slot_num']['value'] = str(ohi.var_id)
+                mux_inst_id_to_ohi_id_map[mux_inst_id] = s
                 ohi_inst_allocator[s] = (hdr.name + '___hdr_len', ohi.var_id)
                 parser.logger.debug('OHI instruction[%d]: ohi_slot %d off %d, len %s' % \
                     (s, ohi.var_id, ohi.start + hdr_off, ohi.length))
@@ -2018,6 +2064,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         # create new ohi instruction, mux inst is already allocated
         assert s < hw_max_ohi_per_state, pdb.set_trace()
         mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
+        mux_inst_id_to_capri_expr_map[mux_inst_id] = set_op.capri_expr
 
         #pdb.set_trace()
         if dst_name not in parser.wr_only_ohi:
@@ -2029,6 +2076,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         sram['ohi_inst'][s]['muxsel']['value'] = str(mux_inst_id)
         sram['ohi_inst'][s]['idx_val']['value'] = str(0) # NA
         sram['ohi_inst'][s]['slot_num']['value'] = str(ohi_id)
+        mux_inst_id_to_ohi_id_map[mux_inst_id] = ohi_id
         parser.logger.debug('OHI (wr-only) instruction[%d]: ohi_slot %d, %s=%s' %
                             (s, ohi_id, dst_name, set_op))
         s += 1
@@ -2055,6 +2103,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             mux_inst_id, adjusted_const = mux_inst_alloc(mux_inst_allocator,\
                                                          nxt_cs.extract_len,\
                                                          adjust_const=True)
+            mux_inst_id_to_capri_expr_map[mux_inst_id] = nxt_cs.extract_len
             off = 0
             if nxt_cs.extract_len.src1:
                 off = nxt_cs.fld_off[nxt_cs.extract_len.src1]
@@ -2074,6 +2123,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 assert 0, pdb.set_trace()
             _build_mux_inst(parser, nxt_cs, reg_id,
                 sram['mux_inst'][mux_inst_id], mux_id, nxt_cs.extract_len)
+            mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id, None)
 
             offset_inst['sel']['value'] = str(1)
             offset_inst['muxsel']['value'] = str(mux_inst_id)
@@ -2090,67 +2140,20 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     # as 'stop'
     sram['offset_jump_chk_en']['value'] = str(1)
 
-
     #Generate Checksum related Configuration in parser.
-    if len(nxt_cs.verify_cal_field_objs) > 0:
-        # Check for availability of OHI instr in this parse state.
-        assert s < hw_max_ohi_per_state, pdb.set_trace()
-
-
-        if reuse_instr_of_lkp_reg != -1:
-            #Use same instrucstions that were used for
-            assert(csum_mux_instr_id != -1), pdb.set_trace()
-            assert(csum_mux_idx_id != -1), pdb.set_trace()
-
-        # Genearate Checksum config since transition to parser state 'nxt_cs'
-        # will extract header which has checksum field (p4 cal fld for verification)
-        s = parser.be.checksum.CsumParserConfigGenerate(parser, \
-                                               parse_states_in_path, nxt_cs, sram, s,\
-                                               lkp_instr_inst, mux_idx_allocator,\
-                                               mux_inst_allocator, \
-                                               csum_mux_instr_id, csum_mux_idx_id, \
-                                               csum_len_ohi_id)
-        if nxt_cs.is_end:
-            assert(s < hw_max_ohi_per_state), pdb.set_trace()
-    elif nxt_cs.phdr_offset_ohi_id != -1:
-        #TODO : Remove this code and add phdr object as reference in parse state
-        # Case where parse state is moving into ipv4/ipv6
-        # and ipv4 hdr is not part of header checksum verification
-        #   - an ohi_slot is allocated to capture start of IP hdr which
-        #     serves as start of phdr
-        #   - store payloadLen in OhiSlot used in case of ipv4 -> tcp;
-        #     In case of v6 -> TCP, since v6 options need to be decremented
-        #     from payloadLen, store v6.payload in stored lookup register.
-        s = parser.be.checksum.CsumParserPhdrOffsetInstrGenerate(\
-                                               nxt_cs, sram, s,\
-                                               lkp_instr_inst, mux_idx_allocator,\
-                                               mux_inst_allocator)
-        # Also capture PayloadLen in ohi slot or stored lookup reg
-        s = parser.be.checksum.CsumParserPayloadLenGenerate(\
-                                               nxt_cs, sram, s,\
-                                               lkp_instr_inst, mux_idx_allocator,\
-                                               mux_inst_allocator, csum_mux_idx_id)
-    if nxt_cs.csum_payloadlen_ohi_instr_gen[0]:
-        #In case of option parsing, parse states where l4_verify_len is updated,
-        #store the expression result back into OHI.
-        _ = parser.be.checksum.CsumParserPayloadLenUpdateInstrGenerate(\
-                                                        nxt_cs, sram, s, mux_inst_allocator,\
-                                                        mux_idx_allocator)
+    s = _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs, parser,\
+                                         all_set_ops, s, ohi_inst_allocator,        \
+                                         mux_idx_allocator, mux_inst_allocator,     \
+                                         mux_inst_id_to_mux_index_id_map,           \
+                                         mux_inst_id_to_capri_expr_map,             \
+                                         mux_inst_id_to_ohi_id_map)
 
     #Generate ICRC related Configuration in parser.
     if len(nxt_cs.icrc_verify_cal_field_objs):
-        # Genearate Checksum config since transition to parser state 'nxt_cs'
-        # will extract header which has checksum field (p4 cal fld for verification)
-        parser.be.icrc.IcrcParserConfigGenerate(parser, \
-                                                parse_states_in_path, nxt_cs, sram, s,\
-                                                lkp_instr_inst, mux_idx_allocator,\
-                                                mux_inst_allocator, \
-                                                csum_mux_instr_id, csum_mux_idx_id, \
-                                                csum_len_ohi_id)
-        if nxt_cs.is_end:
-            assert(s < hw_max_ohi_per_state), pdb.set_trace()
+        parser.be.icrc.IcrcParserConfigGenerate(parser, parse_states_in_path, nxt_cs, sram)
 
-
+    if nxt_cs.is_end:
+        assert(s < hw_max_ohi_per_state), pdb.set_trace()
 
     if nxt_cs.capture_payload_offset():
         # need to capture current_offset where parser stops parsing. This is needed for the

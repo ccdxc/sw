@@ -57,6 +57,11 @@ class lkp_fld_type(IntEnum):
 class memory_base_addr(IntEnum):
     HBM             = 0x80000000
 
+class ohi_write_only_type(IntEnum):
+    OHI_WR_ONLY_TYPE_HDR_OFFSET     = 0
+    OHI_WR_ONLY_TYPE_HDR_LEN        = 1
+    OHI_WR_ONLY_TYPE_OTHER          = 2
+
 def get_i2e_fname(cf):
     return '_i2e_meta__' + cf.hfname.replace('.','_')
 
