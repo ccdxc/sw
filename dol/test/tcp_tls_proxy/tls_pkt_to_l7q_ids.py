@@ -64,9 +64,9 @@ def TestCaseSetup(tc):
     tlscb.l7_proxy_type = tcp_proxy.l7_proxy_type_SPAN 
 
     if tc.module.args.key_size == 16:
-        tcp_tls_proxy.tls_aes128_gcm_decrypt_setup(tc, tlscb)
+        tcp_tls_proxy.tls_aes128_decrypt_setup(tc, tlscb)
     elif tc.module.args.key_size == 32:
-        tcp_tls_proxy.tls_aes256_gcm_decrypt_setup(tc, tlscb)
+        tcp_tls_proxy.tls_aes256_decrypt_setup(tc, tlscb)
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdr)

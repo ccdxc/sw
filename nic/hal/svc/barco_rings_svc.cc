@@ -22,3 +22,44 @@ Status BarcoRingsServiceImpl::GetOpaqueTagAddr(ServerContext* context,
     return Status::OK;
 }
 
+Status
+BarcoRingsServiceImpl::BarcoGetReqDescrEntry(ServerContext *context,
+					     const BarcoGetReqDescrEntryRequestMsg *req,
+					     BarcoGetReqDescrEntryResponseMsg *rsp)
+{
+    uint32_t            i, nreqs = req->request_size();
+    BarcoGetReqDescrEntryResponse    *response;
+
+    HAL_TRACE_DEBUG("Rcvd Barco Get Descriptor Request ");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto request = req->request(i);
+        hal::BarcoGetReqDescrEntry(request, response);
+    }
+    return Status::OK;
+}
+
+Status
+BarcoRingsServiceImpl::BarcoGetRingMeta(ServerContext *context,
+					const BarcoGetRingMetaRequestMsg *req,
+					BarcoGetRingMetaResponseMsg *rsp)
+{
+    uint32_t                  i, nreqs = req->request_size();
+    BarcoGetRingMetaResponse  *response;
+
+    HAL_TRACE_DEBUG("Rcvd Barco Get Ring Meta Request ");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto request = req->request(i);
+        hal::BarcoGetRingMeta(request, response);
+    }
+    return Status::OK;
+}

@@ -101,6 +101,10 @@
             "size_kb": 128
         },
         {
+            "name": "brq-ring-mpp1",
+            "size_kb": 128
+        },
+        {
             "name": "crypto-sym-msg-descr",
             "size_kb": 64
         },

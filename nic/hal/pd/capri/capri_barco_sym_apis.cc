@@ -20,7 +20,7 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     uint64_t                    ilist_msg_descr_addr = 0, olist_msg_descr_addr = 0;
     uint64_t                    ilist_mem_addr = 0, auth_tag_mem_addr = 0, curr_ptr = 0;
     uint64_t                    status_addr = 0, status = 0;
-    barco_mpp_req_descriptor_t  sym_req_descr;
+    barco_symm_req_descriptor_t sym_req_descr;
     barco_sym_msg_descriptor_t  ilist_msg_descr;
     uint32_t                    req_tag = 0;
     int32_t                     hmac_key_descr_idx = -1;
@@ -145,9 +145,9 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     if (!generate) {
         if (capri_hbm_write_mem(auth_tag_mem_addr, (uint8_t*)digest,
 				digest_len)) {
-	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write ilist MSG Descr @ {:x}",
+	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write input digest @ {:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-			  (uint64_t) ilist_msg_descr_addr);
+			  (uint64_t) auth_tag_mem_addr);
 	    ret = HAL_RET_INVALID_ARG;
 	    goto cleanup;
 	}
@@ -157,9 +157,9 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
 	 */
         if (capri_hbm_write_mem(status_addr, (uint8_t*)&status,
 				sizeof(status))) {
-	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write ilist MSG Descr @ {:x}",
+	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to initialize status value @ {:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-			  (uint64_t) ilist_msg_descr_addr);
+			  (uint64_t) status_addr);
 	    ret = HAL_RET_INVALID_ARG;
 	    goto cleanup;
 	}
@@ -264,9 +264,9 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
 	}
     } else {
         if (capri_hbm_read_mem(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
-	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read output digest at Auth-tag addr @ {:x}",
+	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read status at Status addr @ {:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-			  (uint64_t) auth_tag_mem_addr);
+			  (uint64_t) status_addr);
 	    ret = HAL_RET_INVALID_ARG;
 	    goto cleanup;
 	}
@@ -323,6 +323,464 @@ cleanup:
 
     return generate ? ret : (status == 0 ? (hal_ret_t )0 : (hal_ret_t)-1);
 }
+
+#if 1
+
+hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type, bool encrypt,
+						       uint8_t *key, int key_len,
+						       uint8_t *header, int header_len,
+						       uint8_t *plaintext, int plaintext_len,
+						       uint8_t *iv, int iv_len,
+						       uint8_t *ciphertext, int ciphertext_len,
+						       uint8_t *auth_tag, int auth_tag_len)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    uint64_t                    ilist_msg_descr_addr = 0, olist_msg_descr_addr = 0;
+    uint64_t                    ilist_mem_addr = 0, olist_mem_addr = 0, auth_tag_mem_addr = 0;
+    uint64_t                    iv_addr = 0, status_addr = 0, status = 0, curr_ptr = 0;
+    barco_symm_req_descriptor_t sym_req_descr;
+    barco_sym_msg_descriptor_t  ilist_msg_descr, olist_msg_descr;
+    uint32_t                    req_tag = 0;
+    int32_t                     aes_key_descr_idx = -1;
+
+    HAL_TRACE_DEBUG("Running {}-{} test:\n",
+                    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+
+    if (encrypt) {
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Input Data bytes", (char *)plaintext, plaintext_len);
+    } else {
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Input Data bytes", (char *)ciphertext, ciphertext_len);
+    }
+
+    if (key_len) {
+        CAPRI_BARCO_API_PARAM_HEXDUMP(key_len == 16 ?
+				      ((char *)"Input AES-128 Key") : ((char *)"Input AES-256 Key:"),
+				      (char *)key, key_len);
+    }
+
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
+				NULL, &ilist_msg_descr_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for ilist MSG Descr",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        goto cleanup;
+    }
+    HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for ilist DMA Descr @ {:x}",
+		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		    ilist_msg_descr_addr);
+
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
+				NULL, &ilist_mem_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for ilist content",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        goto cleanup;
+    }
+    HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for input mem @ {:x}",
+		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		    ilist_mem_addr); 
+
+
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
+				NULL, &olist_msg_descr_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for olist MSG Descr",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        goto cleanup;
+    }
+    HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for olist DMA Descr @ {:x}",
+		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		    olist_msg_descr_addr);
+
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
+				NULL, &olist_mem_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for olist content",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        goto cleanup;
+    }
+    HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for output mem @ {:x}",
+		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		    olist_mem_addr);
+
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
+				NULL, &iv_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for IV address content",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        goto cleanup;
+    }
+    HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for IV content @ {:x}",
+		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		    iv_addr);
+
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
+				NULL, &auth_tag_mem_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for auth-tag content",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        goto cleanup;
+    }
+    HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for auth-tag mem @ {:x}",
+		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		    auth_tag_mem_addr); 
+
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
+				NULL, &status_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for storing status",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        goto cleanup;
+    }
+    HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for status mem @ {:x}",
+		    capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		    status_addr);
+
+    if (key_len) {
+        ret = pd_crypto_alloc_key(&aes_key_descr_idx);
+	if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate key descriptor",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+	    goto cleanup;
+	}
+	HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated AES128 Key Descr @ {:x}",
+			capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			aes_key_descr_idx);
+
+	ret = capri_barco_setup_key(aes_key_descr_idx, types::CRYPTO_KEY_TYPE_AES256,
+				    (uint8_t *)key, (uint32_t) key_len);
+	if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write AES Key @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  aes_key_descr_idx);
+	    goto cleanup;
+	}
+	HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Setup AES Key @ {:x}",
+			capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			aes_key_descr_idx);
+    }
+
+    /* Copy the header+data input to the ilist memory */
+    curr_ptr = ilist_mem_addr;
+
+    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)header, header_len)) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write header bytes into ilist memory @ {:x}",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		      (uint64_t) curr_ptr);
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
+    }
+
+    curr_ptr +=  header_len;
+
+    if (encrypt) {
+        if (capri_hbm_write_mem(curr_ptr, (uint8_t*)plaintext, plaintext_len)) {
+	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write plaintext bytes into ilist memory @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) curr_ptr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+    } else {
+        if (capri_hbm_write_mem(curr_ptr, (uint8_t*)ciphertext, ciphertext_len)) {
+	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ciphertext bytes into ilist memory @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) curr_ptr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+    }
+
+    /* Copy the IV content */
+    if (capri_hbm_write_mem(iv_addr, (uint8_t*)iv, iv_len)) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write IV bytes into ilist memory @ {:x}",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		      (uint64_t) curr_ptr);
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
+    }
+
+    /* Setup Input list SYM MSG descriptor */
+    memset(&ilist_msg_descr, 0, sizeof(ilist_msg_descr));
+    ilist_msg_descr.A0_addr = ilist_mem_addr;
+    ilist_msg_descr.O0_addr_offset = 0;
+    ilist_msg_descr.L0_data_length = header_len + plaintext_len;
+    ilist_msg_descr.A1_addr = 0;
+    ilist_msg_descr.O1_addr_offset = 0;
+    ilist_msg_descr.L1_data_length = 0;
+    ilist_msg_descr.A2_addr = 0;
+    ilist_msg_descr.O2_addr_offset = 0;
+    ilist_msg_descr.L2_data_length = 0;
+    ilist_msg_descr.next_address = 0;
+    ilist_msg_descr.reserved = 0;
+
+    if (capri_hbm_write_mem(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
+			    sizeof(ilist_msg_descr))) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ilist MSG Descr @ {:x}",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		      (uint64_t) ilist_msg_descr_addr);
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
+    }
+
+    /* Setup Output list SYM MSG descriptor */
+    memset(&olist_msg_descr, 0, sizeof(olist_msg_descr));
+    olist_msg_descr.A0_addr = olist_mem_addr;
+    olist_msg_descr.O0_addr_offset = 0;
+    olist_msg_descr.L0_data_length = header_len + plaintext_len;
+    olist_msg_descr.A1_addr = 0;
+    olist_msg_descr.O1_addr_offset = 0;
+    olist_msg_descr.L1_data_length = 0;
+    olist_msg_descr.A2_addr = 0;
+    olist_msg_descr.O2_addr_offset = 0;
+    olist_msg_descr.L2_data_length = 0;
+    olist_msg_descr.next_address = 0;
+    olist_msg_descr.reserved = 0;
+
+    if (capri_hbm_write_mem(olist_msg_descr_addr, (uint8_t*)&olist_msg_descr,
+			    sizeof(olist_msg_descr))) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write olist MSG Descr @ {:x}",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		      (uint64_t) olist_msg_descr_addr);
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
+    }
+
+    /*
+     * If it is a "Decrypt" operation, we want to write the input auth-tag at the
+     * auth-tag-addr for barco to read.
+     */
+#if 1
+    if (!encrypt) {
+        if (capri_hbm_write_mem(auth_tag_mem_addr, (uint8_t*)auth_tag,
+				auth_tag_len)) {
+	    HAL_TRACE_ERR("SYMM Decrypt {}-{}: Failed to write input auth-tag @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) auth_tag_mem_addr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+
+	/*
+	 * Also initialize status to 0 at the status-address before we invoke barco.
+	 */
+        if (capri_hbm_write_mem(status_addr, (uint8_t*)&status,
+				sizeof(status))) {
+	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ilist MSG Descr @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) ilist_msg_descr_addr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+    }
+#endif
+
+    /* Setup Symmetric Request Descriptor */
+    memset(&sym_req_descr, 0, sizeof(sym_req_descr));
+    sym_req_descr.input_list_addr = ilist_msg_descr_addr;
+    sym_req_descr.output_list_addr = olist_msg_descr_addr;
+
+    switch (enc_type) {
+    case CAPRI_SYMM_ENCTYPE_AES_CCM:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_CCM_Encrypt(iv_len, auth_tag_len) :
+	CAPRI_BARCO_SYM_COMMAND_AES_CCM_Decrypt(iv_len, auth_tag_len);
+      break;
+    case CAPRI_SYMM_ENCTYPE_AES_SHA256_CBC:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_HASH_SHA256_CBC_Encrypt:
+        CAPRI_BARCO_SYM_COMMAND_AES_HASH_SHA256_CBC_Decrypt;
+      break;
+    case CAPRI_SYMM_ENCTYPE_AES_SHA384_CBC:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_HASH_SHA384_CBC_Encrypt:
+        CAPRI_BARCO_SYM_COMMAND_AES_HASH_SHA384_CBC_Decrypt;
+      break;
+    case CAPRI_SYMM_ENCTYPE_AES_CBC_SHA256:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_HASH_CBC_SHA256_Encrypt:
+        CAPRI_BARCO_SYM_COMMAND_AES_HASH_CBC_SHA256_Decrypt;
+      break;
+    case CAPRI_SYMM_ENCTYPE_AES_CBC_SHA384:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_HASH_CBC_SHA384_Encrypt:
+        CAPRI_BARCO_SYM_COMMAND_AES_HASH_CBC_SHA384_Decrypt;
+      break;
+    case CAPRI_SYMM_ENCTYPE_AES_HMAC_SHA256_CBC:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_HASH_HMAC_SHA256_CBC_Encrypt:
+        CAPRI_BARCO_SYM_COMMAND_AES_HASH_HMAC_SHA256_CBC_Decrypt;
+      break;
+    case CAPRI_SYMM_ENCTYPE_AES_HMAC_SHA384_CBC:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_HASH_HMAC_SHA384_CBC_Encrypt:
+        CAPRI_BARCO_SYM_COMMAND_AES_HASH_HMAC_SHA384_CBC_Decrypt;
+      break;
+    case CAPRI_SYMM_ENCTYPE_AES_CBC_HMAC_SHA256:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_HASH_CBC_HMAC_SHA256_Encrypt:
+        CAPRI_BARCO_SYM_COMMAND_AES_HASH_CBC_HMAC_SHA256_Decrypt;
+      break;
+    case CAPRI_SYMM_ENCTYPE_AES_CBC_HMAC_SHA384:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_HASH_CBC_HMAC_SHA384_Encrypt:
+        CAPRI_BARCO_SYM_COMMAND_AES_HASH_CBC_HMAC_SHA384_Decrypt;
+      break;
+    default:
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Invalid Hash request",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;      
+    }
+
+    sym_req_descr.key_descr_idx = aes_key_descr_idx;
+    sym_req_descr.iv_address = iv_addr;
+    sym_req_descr.auth_tag_addr = auth_tag_mem_addr;
+    sym_req_descr.header_size = header_len;
+    sym_req_descr.status_addr = status_addr;
+    sym_req_descr.opaque_tag_value = 0;
+    sym_req_descr.rsvd = 0;
+    sym_req_descr.opaque_tag_wr_en = 0;
+    sym_req_descr.sector_size = 0;
+    sym_req_descr.application_tag = 0;
+    sym_req_descr.sector_num = 0;
+    sym_req_descr.doorbell_addr = 0; // Currently we use consumer-index to track completions
+    sym_req_descr.doorbell_data = 0;
+
+    ciphertext_len = plaintext_len;
+
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_MPP0, (void *)&sym_req_descr,
+					 &req_tag);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to enqueue request",
+		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        ret = HAL_RET_ERR;
+        goto cleanup;
+    }
+
+    /* Poll for completion */
+    while (capri_barco_ring_poll(types::BARCO_RING_MPP0, req_tag) != TRUE) {
+        //HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Waiting for Barco completion...",
+        //                capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+    }
+    //sleep(5);
+    //abort();
+
+    /* Copy out the results */
+    if (encrypt) {
+        if (capri_hbm_read_mem(auth_tag_mem_addr, (uint8_t*)auth_tag, auth_tag_len)) {
+	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to read output Auth-tag at addr @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) auth_tag_mem_addr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+
+        if (capri_hbm_read_mem(olist_mem_addr + header_len, (uint8_t*)ciphertext, ciphertext_len)) {
+	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to read output ciphertext at addr @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) olist_mem_addr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+
+    } else {
+        if (capri_hbm_read_mem(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
+	    HAL_TRACE_ERR("SYMM Decrypt {}-{}: Failed to read status at Status addr @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) status_addr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+	HAL_TRACE_DEBUG("SYMM Decrypt {}-{}:  Decrypt - got STATUS {:x}-{} from barco",
+			capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			status, barco_symm_err_status_str(status));
+
+        if (capri_hbm_read_mem(olist_mem_addr + header_len, (uint8_t*)plaintext, plaintext_len)) {
+	    HAL_TRACE_ERR("SYMM Decrypt {}-{}: Failed to read output decrypted plaintext @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) (olist_mem_addr + header_len));
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+    }
+
+cleanup:
+
+    if (status_addr) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, status_addr);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for status addr content:{:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  status_addr);
+        }
+    }
+
+    if (iv_addr) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, iv_addr);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for IV addr content:{:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  iv_addr);
+        }
+    }
+
+    if (auth_tag_mem_addr) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, auth_tag_mem_addr);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for auth-tag addr content:{:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  auth_tag_mem_addr);
+        }
+    }
+
+    if (olist_mem_addr) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, olist_mem_addr);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for olist content:{:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  olist_mem_addr);
+        }
+    }
+
+    if (ilist_mem_addr) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for ilist content:{:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  ilist_mem_addr);
+        }
+    }
+
+    if (olist_msg_descr_addr) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR, olist_msg_descr_addr);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for olist MSG Descr:{:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  olist_msg_descr_addr);
+        }
+    }
+
+    if (ilist_msg_descr_addr) {
+        ret = capri_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR, ilist_msg_descr_addr);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for ilist MSG Descr:{:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  ilist_msg_descr_addr);
+        }
+    }
+
+    if (aes_key_descr_idx != -1) {
+        ret = pd_crypto_free_key(aes_key_descr_idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free key descriptor @ {:x}",
+			  aes_key_descr_idx);
+        }
+    }
+
+    return encrypt ? ret : (status == 0 ? (hal_ret_t )0 : (hal_ret_t)-1);
+}
+#endif
 
 }    // namespace pd
 }    // namespace hal

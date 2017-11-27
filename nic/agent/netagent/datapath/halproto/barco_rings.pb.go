@@ -99,11 +99,516 @@ func (m *GetOpaqueTagAddrResponseMsg) GetResponse() []*GetOpaqueTagAddrResponse 
 	return nil
 }
 
+// BarcoGetReqDescrEntryRequest - get request descriptor entry from a barco ring slot
+type BarcoGetReqDescrEntryRequest struct {
+	RingType  BarcoRings `protobuf:"varint,1,opt,name=ring_type,json=ringType,proto3,enum=types.BarcoRings" json:"ring_type,omitempty"`
+	SlotIndex uint32     `protobuf:"varint,2,opt,name=slot_index,json=slotIndex,proto3" json:"slot_index,omitempty"`
+}
+
+func (m *BarcoGetReqDescrEntryRequest) Reset()         { *m = BarcoGetReqDescrEntryRequest{} }
+func (m *BarcoGetReqDescrEntryRequest) String() string { return proto.CompactTextString(m) }
+func (*BarcoGetReqDescrEntryRequest) ProtoMessage()    {}
+func (*BarcoGetReqDescrEntryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorBarcoRings, []int{4}
+}
+
+func (m *BarcoGetReqDescrEntryRequest) GetRingType() BarcoRings {
+	if m != nil {
+		return m.RingType
+	}
+	return BarcoRings_BARCO_RING_ASYM
+}
+
+func (m *BarcoGetReqDescrEntryRequest) GetSlotIndex() uint32 {
+	if m != nil {
+		return m.SlotIndex
+	}
+	return 0
+}
+
+// BarcoGetReqDescrEntryRequestMsg is batched GET requests for barco rings
+type BarcoGetReqDescrEntryRequestMsg struct {
+	Request []*BarcoGetReqDescrEntryRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *BarcoGetReqDescrEntryRequestMsg) Reset()         { *m = BarcoGetReqDescrEntryRequestMsg{} }
+func (m *BarcoGetReqDescrEntryRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*BarcoGetReqDescrEntryRequestMsg) ProtoMessage()    {}
+func (*BarcoGetReqDescrEntryRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorBarcoRings, []int{5}
+}
+
+func (m *BarcoGetReqDescrEntryRequestMsg) GetRequest() []*BarcoGetReqDescrEntryRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// Required fields of the Barco Symmetric crypto Request descriptor
+type BarcoSymmReqDescrMsg struct {
+	IlistAddr    uint64 `protobuf:"fixed64,1,opt,name=ilist_addr,json=ilistAddr,proto3" json:"ilist_addr,omitempty"`
+	OlistAddr    uint64 `protobuf:"fixed64,2,opt,name=olist_addr,json=olistAddr,proto3" json:"olist_addr,omitempty"`
+	Command      uint32 `protobuf:"varint,3,opt,name=command,proto3" json:"command,omitempty"`
+	KeyDescIndex uint32 `protobuf:"varint,4,opt,name=key_desc_index,json=keyDescIndex,proto3" json:"key_desc_index,omitempty"`
+	IvAddr       uint64 `protobuf:"fixed64,5,opt,name=iv_addr,json=ivAddr,proto3" json:"iv_addr,omitempty"`
+	StatusAddr   uint64 `protobuf:"fixed64,6,opt,name=status_addr,json=statusAddr,proto3" json:"status_addr,omitempty"`
+	DoorbellAddr uint64 `protobuf:"fixed64,7,opt,name=doorbell_addr,json=doorbellAddr,proto3" json:"doorbell_addr,omitempty"`
+	DoorbellData uint64 `protobuf:"fixed64,8,opt,name=doorbell_data,json=doorbellData,proto3" json:"doorbell_data,omitempty"`
+	Salt         uint32 `protobuf:"varint,9,opt,name=salt,proto3" json:"salt,omitempty"`
+	ExplicitIv   uint64 `protobuf:"fixed64,10,opt,name=explicit_iv,json=explicitIv,proto3" json:"explicit_iv,omitempty"`
+	HeaderSize   uint32 `protobuf:"varint,11,opt,name=header_size,json=headerSize,proto3" json:"header_size,omitempty"`
+	BarcoStatus  uint32 `protobuf:"varint,12,opt,name=barco_status,json=barcoStatus,proto3" json:"barco_status,omitempty"`
+}
+
+func (m *BarcoSymmReqDescrMsg) Reset()                    { *m = BarcoSymmReqDescrMsg{} }
+func (m *BarcoSymmReqDescrMsg) String() string            { return proto.CompactTextString(m) }
+func (*BarcoSymmReqDescrMsg) ProtoMessage()               {}
+func (*BarcoSymmReqDescrMsg) Descriptor() ([]byte, []int) { return fileDescriptorBarcoRings, []int{6} }
+
+func (m *BarcoSymmReqDescrMsg) GetIlistAddr() uint64 {
+	if m != nil {
+		return m.IlistAddr
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetOlistAddr() uint64 {
+	if m != nil {
+		return m.OlistAddr
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetCommand() uint32 {
+	if m != nil {
+		return m.Command
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetKeyDescIndex() uint32 {
+	if m != nil {
+		return m.KeyDescIndex
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetIvAddr() uint64 {
+	if m != nil {
+		return m.IvAddr
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetStatusAddr() uint64 {
+	if m != nil {
+		return m.StatusAddr
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetDoorbellAddr() uint64 {
+	if m != nil {
+		return m.DoorbellAddr
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetDoorbellData() uint64 {
+	if m != nil {
+		return m.DoorbellData
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetSalt() uint32 {
+	if m != nil {
+		return m.Salt
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetExplicitIv() uint64 {
+	if m != nil {
+		return m.ExplicitIv
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetHeaderSize() uint32 {
+	if m != nil {
+		return m.HeaderSize
+	}
+	return 0
+}
+
+func (m *BarcoSymmReqDescrMsg) GetBarcoStatus() uint32 {
+	if m != nil {
+		return m.BarcoStatus
+	}
+	return 0
+}
+
+// Required fields of the Barco ASymmetric crypto Request descriptor
+type BarcoASymReqDescrMsg struct {
+	IlistAddr      uint64 `protobuf:"fixed64,1,opt,name=ilist_addr,json=ilistAddr,proto3" json:"ilist_addr,omitempty"`
+	OlistAddr      uint64 `protobuf:"fixed64,2,opt,name=olist_addr,json=olistAddr,proto3" json:"olist_addr,omitempty"`
+	KeyDescIndex   uint32 `protobuf:"varint,3,opt,name=key_desc_index,json=keyDescIndex,proto3" json:"key_desc_index,omitempty"`
+	StatusAddr     uint64 `protobuf:"fixed64,4,opt,name=status_addr,json=statusAddr,proto3" json:"status_addr,omitempty"`
+	OpaqueTagValue uint32 `protobuf:"varint,5,opt,name=opaque_tag_value,json=opaqueTagValue,proto3" json:"opaque_tag_value,omitempty"`
+	OpaqueTagWrEn  uint32 `protobuf:"varint,6,opt,name=opaque_tag_wr_en,json=opaqueTagWrEn,proto3" json:"opaque_tag_wr_en,omitempty"`
+	FlagA          uint32 `protobuf:"varint,7,opt,name=flag_a,json=flagA,proto3" json:"flag_a,omitempty"`
+	FlagB          uint32 `protobuf:"varint,8,opt,name=flag_b,json=flagB,proto3" json:"flag_b,omitempty"`
+}
+
+func (m *BarcoASymReqDescrMsg) Reset()                    { *m = BarcoASymReqDescrMsg{} }
+func (m *BarcoASymReqDescrMsg) String() string            { return proto.CompactTextString(m) }
+func (*BarcoASymReqDescrMsg) ProtoMessage()               {}
+func (*BarcoASymReqDescrMsg) Descriptor() ([]byte, []int) { return fileDescriptorBarcoRings, []int{7} }
+
+func (m *BarcoASymReqDescrMsg) GetIlistAddr() uint64 {
+	if m != nil {
+		return m.IlistAddr
+	}
+	return 0
+}
+
+func (m *BarcoASymReqDescrMsg) GetOlistAddr() uint64 {
+	if m != nil {
+		return m.OlistAddr
+	}
+	return 0
+}
+
+func (m *BarcoASymReqDescrMsg) GetKeyDescIndex() uint32 {
+	if m != nil {
+		return m.KeyDescIndex
+	}
+	return 0
+}
+
+func (m *BarcoASymReqDescrMsg) GetStatusAddr() uint64 {
+	if m != nil {
+		return m.StatusAddr
+	}
+	return 0
+}
+
+func (m *BarcoASymReqDescrMsg) GetOpaqueTagValue() uint32 {
+	if m != nil {
+		return m.OpaqueTagValue
+	}
+	return 0
+}
+
+func (m *BarcoASymReqDescrMsg) GetOpaqueTagWrEn() uint32 {
+	if m != nil {
+		return m.OpaqueTagWrEn
+	}
+	return 0
+}
+
+func (m *BarcoASymReqDescrMsg) GetFlagA() uint32 {
+	if m != nil {
+		return m.FlagA
+	}
+	return 0
+}
+
+func (m *BarcoASymReqDescrMsg) GetFlagB() uint32 {
+	if m != nil {
+		return m.FlagB
+	}
+	return 0
+}
+
+// BarcoGetReqDescrEntryResponse returns the barco request descriptor content
+// only if api_status indicates success, other fields are valid
+type BarcoGetReqDescrEntryResponse struct {
+	ApiStatus ApiStatus  `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	RingType  BarcoRings `protobuf:"varint,2,opt,name=ring_type,json=ringType,proto3,enum=types.BarcoRings" json:"ring_type,omitempty"`
+	SlotIndex uint32     `protobuf:"varint,3,opt,name=slot_index,json=slotIndex,proto3" json:"slot_index,omitempty"`
+	// Types that are valid to be assigned to ReqDescrMsg:
+	//	*BarcoGetReqDescrEntryResponse_SymmReqDescr
+	//	*BarcoGetReqDescrEntryResponse_AsymReqDescr
+	ReqDescrMsg isBarcoGetReqDescrEntryResponse_ReqDescrMsg `protobuf_oneof:"ReqDescrMsg"`
+}
+
+func (m *BarcoGetReqDescrEntryResponse) Reset()         { *m = BarcoGetReqDescrEntryResponse{} }
+func (m *BarcoGetReqDescrEntryResponse) String() string { return proto.CompactTextString(m) }
+func (*BarcoGetReqDescrEntryResponse) ProtoMessage()    {}
+func (*BarcoGetReqDescrEntryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorBarcoRings, []int{8}
+}
+
+type isBarcoGetReqDescrEntryResponse_ReqDescrMsg interface {
+	isBarcoGetReqDescrEntryResponse_ReqDescrMsg()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type BarcoGetReqDescrEntryResponse_SymmReqDescr struct {
+	SymmReqDescr *BarcoSymmReqDescrMsg `protobuf:"bytes,4,opt,name=symm_req_descr,json=symmReqDescr,oneof"`
+}
+type BarcoGetReqDescrEntryResponse_AsymReqDescr struct {
+	AsymReqDescr *BarcoASymReqDescrMsg `protobuf:"bytes,5,opt,name=asym_req_descr,json=asymReqDescr,oneof"`
+}
+
+func (*BarcoGetReqDescrEntryResponse_SymmReqDescr) isBarcoGetReqDescrEntryResponse_ReqDescrMsg() {}
+func (*BarcoGetReqDescrEntryResponse_AsymReqDescr) isBarcoGetReqDescrEntryResponse_ReqDescrMsg() {}
+
+func (m *BarcoGetReqDescrEntryResponse) GetReqDescrMsg() isBarcoGetReqDescrEntryResponse_ReqDescrMsg {
+	if m != nil {
+		return m.ReqDescrMsg
+	}
+	return nil
+}
+
+func (m *BarcoGetReqDescrEntryResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *BarcoGetReqDescrEntryResponse) GetRingType() BarcoRings {
+	if m != nil {
+		return m.RingType
+	}
+	return BarcoRings_BARCO_RING_ASYM
+}
+
+func (m *BarcoGetReqDescrEntryResponse) GetSlotIndex() uint32 {
+	if m != nil {
+		return m.SlotIndex
+	}
+	return 0
+}
+
+func (m *BarcoGetReqDescrEntryResponse) GetSymmReqDescr() *BarcoSymmReqDescrMsg {
+	if x, ok := m.GetReqDescrMsg().(*BarcoGetReqDescrEntryResponse_SymmReqDescr); ok {
+		return x.SymmReqDescr
+	}
+	return nil
+}
+
+func (m *BarcoGetReqDescrEntryResponse) GetAsymReqDescr() *BarcoASymReqDescrMsg {
+	if x, ok := m.GetReqDescrMsg().(*BarcoGetReqDescrEntryResponse_AsymReqDescr); ok {
+		return x.AsymReqDescr
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*BarcoGetReqDescrEntryResponse) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _BarcoGetReqDescrEntryResponse_OneofMarshaler, _BarcoGetReqDescrEntryResponse_OneofUnmarshaler, _BarcoGetReqDescrEntryResponse_OneofSizer, []interface{}{
+		(*BarcoGetReqDescrEntryResponse_SymmReqDescr)(nil),
+		(*BarcoGetReqDescrEntryResponse_AsymReqDescr)(nil),
+	}
+}
+
+func _BarcoGetReqDescrEntryResponse_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*BarcoGetReqDescrEntryResponse)
+	// ReqDescrMsg
+	switch x := m.ReqDescrMsg.(type) {
+	case *BarcoGetReqDescrEntryResponse_SymmReqDescr:
+		_ = b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.SymmReqDescr); err != nil {
+			return err
+		}
+	case *BarcoGetReqDescrEntryResponse_AsymReqDescr:
+		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.AsymReqDescr); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("BarcoGetReqDescrEntryResponse.ReqDescrMsg has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _BarcoGetReqDescrEntryResponse_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*BarcoGetReqDescrEntryResponse)
+	switch tag {
+	case 4: // ReqDescrMsg.symm_req_descr
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(BarcoSymmReqDescrMsg)
+		err := b.DecodeMessage(msg)
+		m.ReqDescrMsg = &BarcoGetReqDescrEntryResponse_SymmReqDescr{msg}
+		return true, err
+	case 5: // ReqDescrMsg.asym_req_descr
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(BarcoASymReqDescrMsg)
+		err := b.DecodeMessage(msg)
+		m.ReqDescrMsg = &BarcoGetReqDescrEntryResponse_AsymReqDescr{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _BarcoGetReqDescrEntryResponse_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*BarcoGetReqDescrEntryResponse)
+	// ReqDescrMsg
+	switch x := m.ReqDescrMsg.(type) {
+	case *BarcoGetReqDescrEntryResponse_SymmReqDescr:
+		s := proto.Size(x.SymmReqDescr)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *BarcoGetReqDescrEntryResponse_AsymReqDescr:
+		s := proto.Size(x.AsymReqDescr)
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// BarcoGetReqDescrEntryResponseMsg is batched response to BarcoGetReqDescrEntryRequestMsg
+type BarcoGetReqDescrEntryResponseMsg struct {
+	Response []*BarcoGetReqDescrEntryResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *BarcoGetReqDescrEntryResponseMsg) Reset()         { *m = BarcoGetReqDescrEntryResponseMsg{} }
+func (m *BarcoGetReqDescrEntryResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*BarcoGetReqDescrEntryResponseMsg) ProtoMessage()    {}
+func (*BarcoGetReqDescrEntryResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorBarcoRings, []int{9}
+}
+
+func (m *BarcoGetReqDescrEntryResponseMsg) GetResponse() []*BarcoGetReqDescrEntryResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// BarcoGetRingMetaRequest - get ring meta data for a barco ring
+type BarcoGetRingMetaRequest struct {
+	RingType BarcoRings `protobuf:"varint,1,opt,name=ring_type,json=ringType,proto3,enum=types.BarcoRings" json:"ring_type,omitempty"`
+}
+
+func (m *BarcoGetRingMetaRequest) Reset()         { *m = BarcoGetRingMetaRequest{} }
+func (m *BarcoGetRingMetaRequest) String() string { return proto.CompactTextString(m) }
+func (*BarcoGetRingMetaRequest) ProtoMessage()    {}
+func (*BarcoGetRingMetaRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorBarcoRings, []int{10}
+}
+
+func (m *BarcoGetRingMetaRequest) GetRingType() BarcoRings {
+	if m != nil {
+		return m.RingType
+	}
+	return BarcoRings_BARCO_RING_ASYM
+}
+
+// BarcoGetRingMetaRequestMsg is batched GET requests for barco rings
+type BarcoGetRingMetaRequestMsg struct {
+	Request []*BarcoGetRingMetaRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *BarcoGetRingMetaRequestMsg) Reset()         { *m = BarcoGetRingMetaRequestMsg{} }
+func (m *BarcoGetRingMetaRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*BarcoGetRingMetaRequestMsg) ProtoMessage()    {}
+func (*BarcoGetRingMetaRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorBarcoRings, []int{11}
+}
+
+func (m *BarcoGetRingMetaRequestMsg) GetRequest() []*BarcoGetRingMetaRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// BarcoGetRingMetaResponse returns the barco ring meta data
+// only if api_status indicates success, other fields are valid
+type BarcoGetRingMetaResponse struct {
+	ApiStatus ApiStatus  `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	RingType  BarcoRings `protobuf:"varint,2,opt,name=ring_type,json=ringType,proto3,enum=types.BarcoRings" json:"ring_type,omitempty"`
+	Pi        uint32     `protobuf:"varint,3,opt,name=pi,proto3" json:"pi,omitempty"`
+	Ci        uint32     `protobuf:"varint,4,opt,name=ci,proto3" json:"ci,omitempty"`
+}
+
+func (m *BarcoGetRingMetaResponse) Reset()         { *m = BarcoGetRingMetaResponse{} }
+func (m *BarcoGetRingMetaResponse) String() string { return proto.CompactTextString(m) }
+func (*BarcoGetRingMetaResponse) ProtoMessage()    {}
+func (*BarcoGetRingMetaResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorBarcoRings, []int{12}
+}
+
+func (m *BarcoGetRingMetaResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *BarcoGetRingMetaResponse) GetRingType() BarcoRings {
+	if m != nil {
+		return m.RingType
+	}
+	return BarcoRings_BARCO_RING_ASYM
+}
+
+func (m *BarcoGetRingMetaResponse) GetPi() uint32 {
+	if m != nil {
+		return m.Pi
+	}
+	return 0
+}
+
+func (m *BarcoGetRingMetaResponse) GetCi() uint32 {
+	if m != nil {
+		return m.Ci
+	}
+	return 0
+}
+
+// BarcoGetRingMetaResponseMsg is batched response to BarcoGetRingMetaRequestMsg
+type BarcoGetRingMetaResponseMsg struct {
+	Response []*BarcoGetRingMetaResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *BarcoGetRingMetaResponseMsg) Reset()         { *m = BarcoGetRingMetaResponseMsg{} }
+func (m *BarcoGetRingMetaResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*BarcoGetRingMetaResponseMsg) ProtoMessage()    {}
+func (*BarcoGetRingMetaResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorBarcoRings, []int{13}
+}
+
+func (m *BarcoGetRingMetaResponseMsg) GetResponse() []*BarcoGetRingMetaResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GetOpaqueTagAddrRequest)(nil), "barcoRings.GetOpaqueTagAddrRequest")
 	proto.RegisterType((*GetOpaqueTagAddrRequestMsg)(nil), "barcoRings.GetOpaqueTagAddrRequestMsg")
 	proto.RegisterType((*GetOpaqueTagAddrResponse)(nil), "barcoRings.GetOpaqueTagAddrResponse")
 	proto.RegisterType((*GetOpaqueTagAddrResponseMsg)(nil), "barcoRings.GetOpaqueTagAddrResponseMsg")
+	proto.RegisterType((*BarcoGetReqDescrEntryRequest)(nil), "barcoRings.BarcoGetReqDescrEntryRequest")
+	proto.RegisterType((*BarcoGetReqDescrEntryRequestMsg)(nil), "barcoRings.BarcoGetReqDescrEntryRequestMsg")
+	proto.RegisterType((*BarcoSymmReqDescrMsg)(nil), "barcoRings.BarcoSymmReqDescrMsg")
+	proto.RegisterType((*BarcoASymReqDescrMsg)(nil), "barcoRings.BarcoASymReqDescrMsg")
+	proto.RegisterType((*BarcoGetReqDescrEntryResponse)(nil), "barcoRings.BarcoGetReqDescrEntryResponse")
+	proto.RegisterType((*BarcoGetReqDescrEntryResponseMsg)(nil), "barcoRings.BarcoGetReqDescrEntryResponseMsg")
+	proto.RegisterType((*BarcoGetRingMetaRequest)(nil), "barcoRings.BarcoGetRingMetaRequest")
+	proto.RegisterType((*BarcoGetRingMetaRequestMsg)(nil), "barcoRings.BarcoGetRingMetaRequestMsg")
+	proto.RegisterType((*BarcoGetRingMetaResponse)(nil), "barcoRings.BarcoGetRingMetaResponse")
+	proto.RegisterType((*BarcoGetRingMetaResponseMsg)(nil), "barcoRings.BarcoGetRingMetaResponseMsg")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -118,6 +623,8 @@ const _ = grpc.SupportPackageIsVersion4
 
 type BarcoRingsClient interface {
 	GetOpaqueTagAddr(ctx context.Context, in *GetOpaqueTagAddrRequestMsg, opts ...grpc.CallOption) (*GetOpaqueTagAddrResponseMsg, error)
+	BarcoGetReqDescrEntry(ctx context.Context, in *BarcoGetReqDescrEntryRequestMsg, opts ...grpc.CallOption) (*BarcoGetReqDescrEntryResponseMsg, error)
+	BarcoGetRingMeta(ctx context.Context, in *BarcoGetRingMetaRequestMsg, opts ...grpc.CallOption) (*BarcoGetRingMetaResponseMsg, error)
 }
 
 type barcoRingsClient struct {
@@ -137,10 +644,30 @@ func (c *barcoRingsClient) GetOpaqueTagAddr(ctx context.Context, in *GetOpaqueTa
 	return out, nil
 }
 
+func (c *barcoRingsClient) BarcoGetReqDescrEntry(ctx context.Context, in *BarcoGetReqDescrEntryRequestMsg, opts ...grpc.CallOption) (*BarcoGetReqDescrEntryResponseMsg, error) {
+	out := new(BarcoGetReqDescrEntryResponseMsg)
+	err := grpc.Invoke(ctx, "/barcoRings.BarcoRings/BarcoGetReqDescrEntry", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *barcoRingsClient) BarcoGetRingMeta(ctx context.Context, in *BarcoGetRingMetaRequestMsg, opts ...grpc.CallOption) (*BarcoGetRingMetaResponseMsg, error) {
+	out := new(BarcoGetRingMetaResponseMsg)
+	err := grpc.Invoke(ctx, "/barcoRings.BarcoRings/BarcoGetRingMeta", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for BarcoRings service
 
 type BarcoRingsServer interface {
 	GetOpaqueTagAddr(context.Context, *GetOpaqueTagAddrRequestMsg) (*GetOpaqueTagAddrResponseMsg, error)
+	BarcoGetReqDescrEntry(context.Context, *BarcoGetReqDescrEntryRequestMsg) (*BarcoGetReqDescrEntryResponseMsg, error)
+	BarcoGetRingMeta(context.Context, *BarcoGetRingMetaRequestMsg) (*BarcoGetRingMetaResponseMsg, error)
 }
 
 func RegisterBarcoRingsServer(s *grpc.Server, srv BarcoRingsServer) {
@@ -165,6 +692,42 @@ func _BarcoRings_GetOpaqueTagAddr_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BarcoRings_BarcoGetReqDescrEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BarcoGetReqDescrEntryRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BarcoRingsServer).BarcoGetReqDescrEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/barcoRings.BarcoRings/BarcoGetReqDescrEntry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BarcoRingsServer).BarcoGetReqDescrEntry(ctx, req.(*BarcoGetReqDescrEntryRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BarcoRings_BarcoGetRingMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BarcoGetRingMetaRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BarcoRingsServer).BarcoGetRingMeta(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/barcoRings.BarcoRings/BarcoGetRingMeta",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BarcoRingsServer).BarcoGetRingMeta(ctx, req.(*BarcoGetRingMetaRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _BarcoRings_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "barcoRings.BarcoRings",
 	HandlerType: (*BarcoRingsServer)(nil),
@@ -172,6 +735,14 @@ var _BarcoRings_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOpaqueTagAddr",
 			Handler:    _BarcoRings_GetOpaqueTagAddr_Handler,
+		},
+		{
+			MethodName: "BarcoGetReqDescrEntry",
+			Handler:    _BarcoRings_BarcoGetReqDescrEntry_Handler,
+		},
+		{
+			MethodName: "BarcoGetRingMeta",
+			Handler:    _BarcoRings_BarcoGetRingMeta_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -289,6 +860,419 @@ func (m *GetOpaqueTagAddrResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *BarcoGetReqDescrEntryRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoGetReqDescrEntryRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.RingType != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.RingType))
+	}
+	if m.SlotIndex != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.SlotIndex))
+	}
+	return i, nil
+}
+
+func (m *BarcoGetReqDescrEntryRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoGetReqDescrEntryRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintBarcoRings(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *BarcoSymmReqDescrMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoSymmReqDescrMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.IlistAddr != 0 {
+		dAtA[i] = 0x9
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.IlistAddr))
+	}
+	if m.OlistAddr != 0 {
+		dAtA[i] = 0x11
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.OlistAddr))
+	}
+	if m.Command != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.Command))
+	}
+	if m.KeyDescIndex != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.KeyDescIndex))
+	}
+	if m.IvAddr != 0 {
+		dAtA[i] = 0x29
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.IvAddr))
+	}
+	if m.StatusAddr != 0 {
+		dAtA[i] = 0x31
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.StatusAddr))
+	}
+	if m.DoorbellAddr != 0 {
+		dAtA[i] = 0x39
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.DoorbellAddr))
+	}
+	if m.DoorbellData != 0 {
+		dAtA[i] = 0x41
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.DoorbellData))
+	}
+	if m.Salt != 0 {
+		dAtA[i] = 0x48
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.Salt))
+	}
+	if m.ExplicitIv != 0 {
+		dAtA[i] = 0x51
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.ExplicitIv))
+	}
+	if m.HeaderSize != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.HeaderSize))
+	}
+	if m.BarcoStatus != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.BarcoStatus))
+	}
+	return i, nil
+}
+
+func (m *BarcoASymReqDescrMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoASymReqDescrMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.IlistAddr != 0 {
+		dAtA[i] = 0x9
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.IlistAddr))
+	}
+	if m.OlistAddr != 0 {
+		dAtA[i] = 0x11
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.OlistAddr))
+	}
+	if m.KeyDescIndex != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.KeyDescIndex))
+	}
+	if m.StatusAddr != 0 {
+		dAtA[i] = 0x21
+		i++
+		i = encodeFixed64BarcoRings(dAtA, i, uint64(m.StatusAddr))
+	}
+	if m.OpaqueTagValue != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.OpaqueTagValue))
+	}
+	if m.OpaqueTagWrEn != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.OpaqueTagWrEn))
+	}
+	if m.FlagA != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.FlagA))
+	}
+	if m.FlagB != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.FlagB))
+	}
+	return i, nil
+}
+
+func (m *BarcoGetReqDescrEntryResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoGetReqDescrEntryResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.RingType != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.RingType))
+	}
+	if m.SlotIndex != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.SlotIndex))
+	}
+	if m.ReqDescrMsg != nil {
+		nn1, err := m.ReqDescrMsg.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn1
+	}
+	return i, nil
+}
+
+func (m *BarcoGetReqDescrEntryResponse_SymmReqDescr) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.SymmReqDescr != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.SymmReqDescr.Size()))
+		n2, err := m.SymmReqDescr.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+func (m *BarcoGetReqDescrEntryResponse_AsymReqDescr) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.AsymReqDescr != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.AsymReqDescr.Size()))
+		n3, err := m.AsymReqDescr.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	return i, nil
+}
+func (m *BarcoGetReqDescrEntryResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoGetReqDescrEntryResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintBarcoRings(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *BarcoGetRingMetaRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoGetRingMetaRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.RingType != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.RingType))
+	}
+	return i, nil
+}
+
+func (m *BarcoGetRingMetaRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoGetRingMetaRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintBarcoRings(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *BarcoGetRingMetaResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoGetRingMetaResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.RingType != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.RingType))
+	}
+	if m.Pi != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.Pi))
+	}
+	if m.Ci != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintBarcoRings(dAtA, i, uint64(m.Ci))
+	}
+	return i, nil
+}
+
+func (m *BarcoGetRingMetaResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BarcoGetRingMetaResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintBarcoRings(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeFixed64BarcoRings(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -350,6 +1334,201 @@ func (m *GetOpaqueTagAddrResponse) Size() (n int) {
 }
 
 func (m *GetOpaqueTagAddrResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovBarcoRings(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BarcoGetReqDescrEntryRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.RingType != 0 {
+		n += 1 + sovBarcoRings(uint64(m.RingType))
+	}
+	if m.SlotIndex != 0 {
+		n += 1 + sovBarcoRings(uint64(m.SlotIndex))
+	}
+	return n
+}
+
+func (m *BarcoGetReqDescrEntryRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovBarcoRings(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BarcoSymmReqDescrMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.IlistAddr != 0 {
+		n += 9
+	}
+	if m.OlistAddr != 0 {
+		n += 9
+	}
+	if m.Command != 0 {
+		n += 1 + sovBarcoRings(uint64(m.Command))
+	}
+	if m.KeyDescIndex != 0 {
+		n += 1 + sovBarcoRings(uint64(m.KeyDescIndex))
+	}
+	if m.IvAddr != 0 {
+		n += 9
+	}
+	if m.StatusAddr != 0 {
+		n += 9
+	}
+	if m.DoorbellAddr != 0 {
+		n += 9
+	}
+	if m.DoorbellData != 0 {
+		n += 9
+	}
+	if m.Salt != 0 {
+		n += 1 + sovBarcoRings(uint64(m.Salt))
+	}
+	if m.ExplicitIv != 0 {
+		n += 9
+	}
+	if m.HeaderSize != 0 {
+		n += 1 + sovBarcoRings(uint64(m.HeaderSize))
+	}
+	if m.BarcoStatus != 0 {
+		n += 1 + sovBarcoRings(uint64(m.BarcoStatus))
+	}
+	return n
+}
+
+func (m *BarcoASymReqDescrMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.IlistAddr != 0 {
+		n += 9
+	}
+	if m.OlistAddr != 0 {
+		n += 9
+	}
+	if m.KeyDescIndex != 0 {
+		n += 1 + sovBarcoRings(uint64(m.KeyDescIndex))
+	}
+	if m.StatusAddr != 0 {
+		n += 9
+	}
+	if m.OpaqueTagValue != 0 {
+		n += 1 + sovBarcoRings(uint64(m.OpaqueTagValue))
+	}
+	if m.OpaqueTagWrEn != 0 {
+		n += 1 + sovBarcoRings(uint64(m.OpaqueTagWrEn))
+	}
+	if m.FlagA != 0 {
+		n += 1 + sovBarcoRings(uint64(m.FlagA))
+	}
+	if m.FlagB != 0 {
+		n += 1 + sovBarcoRings(uint64(m.FlagB))
+	}
+	return n
+}
+
+func (m *BarcoGetReqDescrEntryResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovBarcoRings(uint64(m.ApiStatus))
+	}
+	if m.RingType != 0 {
+		n += 1 + sovBarcoRings(uint64(m.RingType))
+	}
+	if m.SlotIndex != 0 {
+		n += 1 + sovBarcoRings(uint64(m.SlotIndex))
+	}
+	if m.ReqDescrMsg != nil {
+		n += m.ReqDescrMsg.Size()
+	}
+	return n
+}
+
+func (m *BarcoGetReqDescrEntryResponse_SymmReqDescr) Size() (n int) {
+	var l int
+	_ = l
+	if m.SymmReqDescr != nil {
+		l = m.SymmReqDescr.Size()
+		n += 1 + l + sovBarcoRings(uint64(l))
+	}
+	return n
+}
+func (m *BarcoGetReqDescrEntryResponse_AsymReqDescr) Size() (n int) {
+	var l int
+	_ = l
+	if m.AsymReqDescr != nil {
+		l = m.AsymReqDescr.Size()
+		n += 1 + l + sovBarcoRings(uint64(l))
+	}
+	return n
+}
+func (m *BarcoGetReqDescrEntryResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovBarcoRings(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BarcoGetRingMetaRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.RingType != 0 {
+		n += 1 + sovBarcoRings(uint64(m.RingType))
+	}
+	return n
+}
+
+func (m *BarcoGetRingMetaRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovBarcoRings(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BarcoGetRingMetaResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovBarcoRings(uint64(m.ApiStatus))
+	}
+	if m.RingType != 0 {
+		n += 1 + sovBarcoRings(uint64(m.RingType))
+	}
+	if m.Pi != 0 {
+		n += 1 + sovBarcoRings(uint64(m.Pi))
+	}
+	if m.Ci != 0 {
+		n += 1 + sovBarcoRings(uint64(m.Ci))
+	}
+	return n
+}
+
+func (m *BarcoGetRingMetaResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -693,6 +1872,1244 @@ func (m *GetOpaqueTagAddrResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *BarcoGetReqDescrEntryRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoGetReqDescrEntryRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoGetReqDescrEntryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RingType", wireType)
+			}
+			m.RingType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RingType |= (BarcoRings(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SlotIndex", wireType)
+			}
+			m.SlotIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SlotIndex |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoGetReqDescrEntryRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoGetReqDescrEntryRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoGetReqDescrEntryRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &BarcoGetReqDescrEntryRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoSymmReqDescrMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoSymmReqDescrMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoSymmReqDescrMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IlistAddr", wireType)
+			}
+			m.IlistAddr = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.IlistAddr = uint64(dAtA[iNdEx-8])
+			m.IlistAddr |= uint64(dAtA[iNdEx-7]) << 8
+			m.IlistAddr |= uint64(dAtA[iNdEx-6]) << 16
+			m.IlistAddr |= uint64(dAtA[iNdEx-5]) << 24
+			m.IlistAddr |= uint64(dAtA[iNdEx-4]) << 32
+			m.IlistAddr |= uint64(dAtA[iNdEx-3]) << 40
+			m.IlistAddr |= uint64(dAtA[iNdEx-2]) << 48
+			m.IlistAddr |= uint64(dAtA[iNdEx-1]) << 56
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OlistAddr", wireType)
+			}
+			m.OlistAddr = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.OlistAddr = uint64(dAtA[iNdEx-8])
+			m.OlistAddr |= uint64(dAtA[iNdEx-7]) << 8
+			m.OlistAddr |= uint64(dAtA[iNdEx-6]) << 16
+			m.OlistAddr |= uint64(dAtA[iNdEx-5]) << 24
+			m.OlistAddr |= uint64(dAtA[iNdEx-4]) << 32
+			m.OlistAddr |= uint64(dAtA[iNdEx-3]) << 40
+			m.OlistAddr |= uint64(dAtA[iNdEx-2]) << 48
+			m.OlistAddr |= uint64(dAtA[iNdEx-1]) << 56
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Command", wireType)
+			}
+			m.Command = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Command |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyDescIndex", wireType)
+			}
+			m.KeyDescIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.KeyDescIndex |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IvAddr", wireType)
+			}
+			m.IvAddr = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.IvAddr = uint64(dAtA[iNdEx-8])
+			m.IvAddr |= uint64(dAtA[iNdEx-7]) << 8
+			m.IvAddr |= uint64(dAtA[iNdEx-6]) << 16
+			m.IvAddr |= uint64(dAtA[iNdEx-5]) << 24
+			m.IvAddr |= uint64(dAtA[iNdEx-4]) << 32
+			m.IvAddr |= uint64(dAtA[iNdEx-3]) << 40
+			m.IvAddr |= uint64(dAtA[iNdEx-2]) << 48
+			m.IvAddr |= uint64(dAtA[iNdEx-1]) << 56
+		case 6:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StatusAddr", wireType)
+			}
+			m.StatusAddr = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.StatusAddr = uint64(dAtA[iNdEx-8])
+			m.StatusAddr |= uint64(dAtA[iNdEx-7]) << 8
+			m.StatusAddr |= uint64(dAtA[iNdEx-6]) << 16
+			m.StatusAddr |= uint64(dAtA[iNdEx-5]) << 24
+			m.StatusAddr |= uint64(dAtA[iNdEx-4]) << 32
+			m.StatusAddr |= uint64(dAtA[iNdEx-3]) << 40
+			m.StatusAddr |= uint64(dAtA[iNdEx-2]) << 48
+			m.StatusAddr |= uint64(dAtA[iNdEx-1]) << 56
+		case 7:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DoorbellAddr", wireType)
+			}
+			m.DoorbellAddr = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.DoorbellAddr = uint64(dAtA[iNdEx-8])
+			m.DoorbellAddr |= uint64(dAtA[iNdEx-7]) << 8
+			m.DoorbellAddr |= uint64(dAtA[iNdEx-6]) << 16
+			m.DoorbellAddr |= uint64(dAtA[iNdEx-5]) << 24
+			m.DoorbellAddr |= uint64(dAtA[iNdEx-4]) << 32
+			m.DoorbellAddr |= uint64(dAtA[iNdEx-3]) << 40
+			m.DoorbellAddr |= uint64(dAtA[iNdEx-2]) << 48
+			m.DoorbellAddr |= uint64(dAtA[iNdEx-1]) << 56
+		case 8:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DoorbellData", wireType)
+			}
+			m.DoorbellData = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.DoorbellData = uint64(dAtA[iNdEx-8])
+			m.DoorbellData |= uint64(dAtA[iNdEx-7]) << 8
+			m.DoorbellData |= uint64(dAtA[iNdEx-6]) << 16
+			m.DoorbellData |= uint64(dAtA[iNdEx-5]) << 24
+			m.DoorbellData |= uint64(dAtA[iNdEx-4]) << 32
+			m.DoorbellData |= uint64(dAtA[iNdEx-3]) << 40
+			m.DoorbellData |= uint64(dAtA[iNdEx-2]) << 48
+			m.DoorbellData |= uint64(dAtA[iNdEx-1]) << 56
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Salt", wireType)
+			}
+			m.Salt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Salt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExplicitIv", wireType)
+			}
+			m.ExplicitIv = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.ExplicitIv = uint64(dAtA[iNdEx-8])
+			m.ExplicitIv |= uint64(dAtA[iNdEx-7]) << 8
+			m.ExplicitIv |= uint64(dAtA[iNdEx-6]) << 16
+			m.ExplicitIv |= uint64(dAtA[iNdEx-5]) << 24
+			m.ExplicitIv |= uint64(dAtA[iNdEx-4]) << 32
+			m.ExplicitIv |= uint64(dAtA[iNdEx-3]) << 40
+			m.ExplicitIv |= uint64(dAtA[iNdEx-2]) << 48
+			m.ExplicitIv |= uint64(dAtA[iNdEx-1]) << 56
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderSize", wireType)
+			}
+			m.HeaderSize = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HeaderSize |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BarcoStatus", wireType)
+			}
+			m.BarcoStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BarcoStatus |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoASymReqDescrMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoASymReqDescrMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoASymReqDescrMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IlistAddr", wireType)
+			}
+			m.IlistAddr = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.IlistAddr = uint64(dAtA[iNdEx-8])
+			m.IlistAddr |= uint64(dAtA[iNdEx-7]) << 8
+			m.IlistAddr |= uint64(dAtA[iNdEx-6]) << 16
+			m.IlistAddr |= uint64(dAtA[iNdEx-5]) << 24
+			m.IlistAddr |= uint64(dAtA[iNdEx-4]) << 32
+			m.IlistAddr |= uint64(dAtA[iNdEx-3]) << 40
+			m.IlistAddr |= uint64(dAtA[iNdEx-2]) << 48
+			m.IlistAddr |= uint64(dAtA[iNdEx-1]) << 56
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OlistAddr", wireType)
+			}
+			m.OlistAddr = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.OlistAddr = uint64(dAtA[iNdEx-8])
+			m.OlistAddr |= uint64(dAtA[iNdEx-7]) << 8
+			m.OlistAddr |= uint64(dAtA[iNdEx-6]) << 16
+			m.OlistAddr |= uint64(dAtA[iNdEx-5]) << 24
+			m.OlistAddr |= uint64(dAtA[iNdEx-4]) << 32
+			m.OlistAddr |= uint64(dAtA[iNdEx-3]) << 40
+			m.OlistAddr |= uint64(dAtA[iNdEx-2]) << 48
+			m.OlistAddr |= uint64(dAtA[iNdEx-1]) << 56
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyDescIndex", wireType)
+			}
+			m.KeyDescIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.KeyDescIndex |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StatusAddr", wireType)
+			}
+			m.StatusAddr = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.StatusAddr = uint64(dAtA[iNdEx-8])
+			m.StatusAddr |= uint64(dAtA[iNdEx-7]) << 8
+			m.StatusAddr |= uint64(dAtA[iNdEx-6]) << 16
+			m.StatusAddr |= uint64(dAtA[iNdEx-5]) << 24
+			m.StatusAddr |= uint64(dAtA[iNdEx-4]) << 32
+			m.StatusAddr |= uint64(dAtA[iNdEx-3]) << 40
+			m.StatusAddr |= uint64(dAtA[iNdEx-2]) << 48
+			m.StatusAddr |= uint64(dAtA[iNdEx-1]) << 56
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpaqueTagValue", wireType)
+			}
+			m.OpaqueTagValue = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OpaqueTagValue |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpaqueTagWrEn", wireType)
+			}
+			m.OpaqueTagWrEn = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OpaqueTagWrEn |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FlagA", wireType)
+			}
+			m.FlagA = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FlagA |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FlagB", wireType)
+			}
+			m.FlagB = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FlagB |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoGetReqDescrEntryResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoGetReqDescrEntryResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoGetReqDescrEntryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RingType", wireType)
+			}
+			m.RingType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RingType |= (BarcoRings(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SlotIndex", wireType)
+			}
+			m.SlotIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SlotIndex |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SymmReqDescr", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &BarcoSymmReqDescrMsg{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.ReqDescrMsg = &BarcoGetReqDescrEntryResponse_SymmReqDescr{v}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsymReqDescr", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &BarcoASymReqDescrMsg{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.ReqDescrMsg = &BarcoGetReqDescrEntryResponse_AsymReqDescr{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoGetReqDescrEntryResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoGetReqDescrEntryResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoGetReqDescrEntryResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &BarcoGetReqDescrEntryResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoGetRingMetaRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoGetRingMetaRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoGetRingMetaRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RingType", wireType)
+			}
+			m.RingType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RingType |= (BarcoRings(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoGetRingMetaRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoGetRingMetaRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoGetRingMetaRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &BarcoGetRingMetaRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoGetRingMetaResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoGetRingMetaResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoGetRingMetaResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RingType", wireType)
+			}
+			m.RingType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RingType |= (BarcoRings(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pi", wireType)
+			}
+			m.Pi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Pi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ci", wireType)
+			}
+			m.Ci = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ci |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BarcoGetRingMetaResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBarcoRings
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BarcoGetRingMetaResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BarcoGetRingMetaResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBarcoRings
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &BarcoGetRingMetaResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBarcoRings(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBarcoRings
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipBarcoRings(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -801,24 +3218,57 @@ var (
 func init() { proto.RegisterFile("barco_rings.proto", fileDescriptorBarcoRings) }
 
 var fileDescriptorBarcoRings = []byte{
-	// 304 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xc1, 0x4a, 0xc3, 0x40,
-	0x10, 0xed, 0xaa, 0x68, 0x3b, 0x45, 0x6d, 0xf7, 0x62, 0x88, 0x10, 0x4a, 0x94, 0xda, 0x53, 0x84,
-	0x78, 0x16, 0x6c, 0x2f, 0xe2, 0x21, 0x08, 0x6b, 0x4f, 0x7a, 0x58, 0xb6, 0x66, 0x59, 0x03, 0xd2,
-	0xdd, 0xee, 0x6e, 0x0e, 0xfd, 0x13, 0x3f, 0xc9, 0xa3, 0x9f, 0x20, 0xf1, 0x47, 0x24, 0x9b, 0xb4,
-	0x15, 0x25, 0xd2, 0x53, 0x32, 0x6f, 0xde, 0x7b, 0x33, 0x6f, 0x58, 0xe8, 0xcf, 0x98, 0x7e, 0x96,
-	0x54, 0x67, 0x73, 0x61, 0x22, 0xa5, 0xa5, 0x95, 0x18, 0x1c, 0x44, 0x4a, 0xc4, 0xef, 0xda, 0xa5,
-	0xe2, 0x75, 0x23, 0xbc, 0x83, 0x93, 0x5b, 0x6e, 0xef, 0x15, 0x5b, 0xe4, 0x7c, 0xca, 0xc4, 0x38,
-	0x4d, 0x35, 0xe1, 0x8b, 0x9c, 0x1b, 0x8b, 0x23, 0xe8, 0x94, 0x16, 0xb4, 0xa4, 0x7b, 0x68, 0x80,
-	0x46, 0x47, 0x71, 0x3f, 0xaa, 0xb4, 0x93, 0xb5, 0x1b, 0x69, 0x97, 0x9c, 0xe9, 0x52, 0xf1, 0xf0,
-	0x09, 0xfc, 0x06, 0xab, 0xc4, 0x08, 0x7c, 0x0d, 0x07, 0xba, 0xaa, 0x3c, 0x34, 0xd8, 0x1d, 0x75,
-	0xe3, 0xb3, 0x68, 0xb3, 0x53, 0xd4, 0x20, 0x24, 0x2b, 0x4d, 0x68, 0xc0, 0xfb, 0xcb, 0x31, 0x4a,
-	0xce, 0x0d, 0xc7, 0x43, 0x38, 0x96, 0xae, 0x41, 0x2d, 0x13, 0x94, 0xa5, 0xa9, 0x76, 0xeb, 0xee,
-	0x91, 0x43, 0xf9, 0x93, 0x8f, 0x2f, 0x01, 0x98, 0xca, 0xa8, 0xb1, 0xcc, 0xe6, 0xc6, 0xdb, 0x71,
-	0x89, 0x7a, 0x75, 0xa2, 0xb1, 0xca, 0x1e, 0x1c, 0x4e, 0x3a, 0x6c, 0xf5, 0x1b, 0x52, 0x38, 0x6d,
-	0x1a, 0x5a, 0x46, 0xba, 0x81, 0xb6, 0xae, 0xcb, 0x3a, 0xd3, 0xf9, 0xff, 0x99, 0x2a, 0x2e, 0x59,
-	0xab, 0x62, 0x03, 0xb0, 0x39, 0x25, 0xe6, 0xd0, 0xfb, 0xad, 0xc1, 0xc3, 0x2d, 0xae, 0x94, 0x18,
-	0xe1, 0x5f, 0x6c, 0x33, 0x39, 0x31, 0x22, 0x6c, 0x4d, 0xfc, 0xf7, 0x22, 0x40, 0x1f, 0x45, 0x80,
-	0x3e, 0x8b, 0x00, 0xbd, 0x7d, 0x05, 0xad, 0xc7, 0xf6, 0x0b, 0x7b, 0x75, 0xcf, 0x61, 0xb6, 0xef,
-	0x3e, 0x57, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xac, 0xf3, 0x7e, 0xde, 0x43, 0x02, 0x00, 0x00,
+	// 826 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xcb, 0x6e, 0xf3, 0x44,
+	0x14, 0x8e, 0x9d, 0x34, 0x97, 0x93, 0x0b, 0xe9, 0x88, 0xaa, 0x56, 0x20, 0x69, 0x70, 0xab, 0x36,
+	0x08, 0x14, 0xa4, 0xb0, 0x46, 0x22, 0x51, 0xab, 0x36, 0x8b, 0x0a, 0xc9, 0xa9, 0x40, 0x82, 0x85,
+	0x35, 0x89, 0x87, 0x74, 0x54, 0xc7, 0x76, 0x3c, 0x93, 0x50, 0xf7, 0x2d, 0xd8, 0x21, 0xc1, 0xd3,
+	0xb0, 0x62, 0xd9, 0x47, 0x40, 0xe5, 0x45, 0xd0, 0x8c, 0x9d, 0xab, 0xeb, 0x34, 0xf0, 0xff, 0xfa,
+	0x57, 0xc9, 0x7c, 0xe7, 0x3b, 0x67, 0xe6, 0xdc, 0x0d, 0x87, 0x43, 0xec, 0x8f, 0x5c, 0xd3, 0xa7,
+	0xce, 0x98, 0xb5, 0x3d, 0xdf, 0xe5, 0x2e, 0x02, 0x09, 0x19, 0x02, 0xa9, 0x15, 0x79, 0xe0, 0x91,
+	0x48, 0xa0, 0xf7, 0xe1, 0xf8, 0x9a, 0xf0, 0xef, 0x3c, 0x3c, 0x9d, 0x91, 0x3b, 0x3c, 0xee, 0x5a,
+	0x96, 0x6f, 0x90, 0xe9, 0x8c, 0x30, 0x8e, 0xda, 0x50, 0x10, 0x26, 0x4c, 0x41, 0xd7, 0x94, 0xa6,
+	0xd2, 0xaa, 0x74, 0x0e, 0xdb, 0xa1, 0x6e, 0x6f, 0x69, 0xcd, 0xc8, 0x0b, 0xce, 0x5d, 0xe0, 0x11,
+	0xfd, 0x27, 0xa8, 0x25, 0x98, 0xba, 0x65, 0x63, 0xf4, 0x0d, 0xe4, 0xfc, 0xf0, 0xa4, 0x29, 0xcd,
+	0x74, 0xab, 0xd8, 0x39, 0x6d, 0xaf, 0xde, 0xd4, 0x4e, 0x50, 0x34, 0x16, 0x3a, 0x3a, 0x03, 0x2d,
+	0xce, 0x61, 0x9e, 0xeb, 0x30, 0x82, 0xce, 0xe1, 0x23, 0x57, 0x0a, 0x4c, 0x8e, 0xc7, 0x26, 0xb6,
+	0x2c, 0x5f, 0x3e, 0x37, 0x63, 0x94, 0xdd, 0x75, 0x3e, 0xfa, 0x0a, 0x00, 0x7b, 0xd4, 0x64, 0x1c,
+	0xf3, 0x19, 0xd3, 0x54, 0xe9, 0x51, 0x35, 0xf2, 0xa8, 0xeb, 0xd1, 0x81, 0xc4, 0x8d, 0x02, 0x5e,
+	0xfc, 0xd5, 0x4d, 0xf8, 0x24, 0xe9, 0x52, 0xe1, 0xd2, 0xb7, 0x90, 0xf7, 0xa3, 0x63, 0xe4, 0xd3,
+	0xd9, 0x6e, 0x9f, 0x42, 0xae, 0xb1, 0xd4, 0xd2, 0x27, 0xf0, 0xa9, 0x0c, 0xe5, 0x35, 0xe1, 0x06,
+	0x99, 0x5e, 0x12, 0x36, 0xf2, 0xaf, 0x1c, 0xee, 0x07, 0xff, 0x33, 0x05, 0xa8, 0x0e, 0xc0, 0x6c,
+	0x97, 0x9b, 0xd4, 0xb1, 0xc8, 0xa3, 0xf4, 0xb0, 0x6c, 0x14, 0x04, 0xd2, 0x17, 0x80, 0x4e, 0xe0,
+	0x64, 0xd7, 0x75, 0xc2, 0xa7, 0xde, 0x76, 0x9a, 0x5a, 0xeb, 0x2e, 0xed, 0xd2, 0x5e, 0xe5, 0xea,
+	0xd7, 0x34, 0x7c, 0x2c, 0x99, 0x83, 0x60, 0x32, 0x59, 0x50, 0x85, 0xf1, 0x3a, 0x00, 0xb5, 0x29,
+	0xe3, 0xab, 0x1c, 0x65, 0x8d, 0x82, 0x44, 0x64, 0x7e, 0xea, 0x00, 0xee, 0x4a, 0xac, 0x86, 0x62,
+	0x77, 0x29, 0xd6, 0x20, 0x37, 0x72, 0x27, 0x13, 0xec, 0x58, 0x5a, 0x5a, 0x7a, 0xb6, 0x38, 0xa2,
+	0x33, 0xa8, 0x3c, 0x90, 0xc0, 0xb4, 0x08, 0x1b, 0x45, 0xae, 0x67, 0x24, 0xa1, 0xf4, 0x40, 0x02,
+	0x71, 0xb9, 0xf4, 0x1e, 0x1d, 0x43, 0x8e, 0xce, 0x43, 0xdb, 0x07, 0xd2, 0x76, 0x96, 0xce, 0xa5,
+	0xe1, 0x13, 0x28, 0x86, 0x35, 0x11, 0x0a, 0xb3, 0x52, 0x08, 0x21, 0x24, 0x09, 0xa7, 0x50, 0xb6,
+	0x5c, 0xd7, 0x1f, 0x12, 0xdb, 0x0e, 0x29, 0x39, 0x49, 0x29, 0x2d, 0xc0, 0x18, 0xc9, 0xc2, 0x1c,
+	0x6b, 0xf9, 0x4d, 0xd2, 0x25, 0xe6, 0x18, 0x21, 0xc8, 0x30, 0x6c, 0x73, 0xad, 0x20, 0xdf, 0x27,
+	0xff, 0x8b, 0xeb, 0xc9, 0xa3, 0x67, 0xd3, 0x11, 0xe5, 0x26, 0x9d, 0x6b, 0x10, 0x5e, 0xbf, 0x80,
+	0xfa, 0x73, 0x41, 0xb8, 0x27, 0xd8, 0x22, 0xbe, 0xc9, 0xe8, 0x13, 0xd1, 0x8a, 0x52, 0x17, 0x42,
+	0x68, 0x40, 0x9f, 0x08, 0xfa, 0x0c, 0x4a, 0x61, 0xcb, 0x47, 0xa5, 0x5d, 0x92, 0x8c, 0xa2, 0xc4,
+	0xa2, 0x52, 0xfe, 0x43, 0x8d, 0x72, 0xd2, 0x1d, 0x04, 0xef, 0x31, 0x27, 0xf1, 0xc8, 0xa7, 0x5f,
+	0x89, 0xfc, 0x56, 0x80, 0x33, 0xb1, 0x00, 0xb7, 0xa0, 0xba, 0xd6, 0xc1, 0x73, 0x6c, 0xcf, 0x88,
+	0xcc, 0x51, 0xd9, 0xa8, 0x2c, 0x5b, 0xf8, 0x7b, 0x81, 0xa2, 0x8b, 0x0d, 0xe6, 0x2f, 0xbe, 0x49,
+	0x1c, 0x99, 0xb0, 0xf2, 0x5a, 0xb3, 0xff, 0xe0, 0x5f, 0x39, 0xe8, 0x08, 0xb2, 0x3f, 0xdb, 0x62,
+	0x1c, 0xc8, 0x64, 0x95, 0x8d, 0x03, 0x71, 0xea, 0x2e, 0xe1, 0xa1, 0x4c, 0x4f, 0x04, 0xf7, 0xf4,
+	0x3f, 0x55, 0xa8, 0x27, 0x14, 0x77, 0x34, 0x64, 0x36, 0x87, 0x87, 0xf2, 0xe6, 0xf0, 0xd8, 0xec,
+	0x5d, 0xf5, 0xbf, 0xf6, 0x6e, 0x7a, 0xab, 0x77, 0xd1, 0x0d, 0x54, 0x58, 0x30, 0x99, 0x98, 0x3e,
+	0x99, 0xca, 0x70, 0x87, 0x61, 0x2c, 0x76, 0x9a, 0xb1, 0xfe, 0xdc, 0xea, 0xba, 0x9b, 0x94, 0x51,
+	0x62, 0x6b, 0x90, 0xb0, 0x84, 0x59, 0xb0, 0x6e, 0xe9, 0x20, 0xc1, 0xd2, 0x56, 0xad, 0x08, 0x4b,
+	0x42, 0x73, 0x01, 0xf5, 0xca, 0x50, 0x5c, 0x13, 0xeb, 0x14, 0x9a, 0x3b, 0x63, 0x28, 0xca, 0xed,
+	0x2a, 0x36, 0x33, 0x3f, 0xdf, 0x63, 0xc0, 0xc4, 0x06, 0x67, 0x1f, 0x8e, 0x97, 0x54, 0xea, 0x8c,
+	0x6f, 0x09, 0xc7, 0xef, 0xb0, 0xb6, 0x12, 0x4c, 0xbd, 0xbd, 0xb6, 0x12, 0x14, 0x57, 0xa3, 0xf0,
+	0x77, 0x05, 0xb4, 0x38, 0xe9, 0x43, 0x95, 0x54, 0x05, 0x54, 0x8f, 0x46, 0xa5, 0xa4, 0x7a, 0x54,
+	0x9c, 0x47, 0x34, 0x9a, 0x8d, 0xea, 0x88, 0x8a, 0xfd, 0x96, 0xf4, 0xb8, 0x3d, 0xf6, 0x5b, 0x92,
+	0xea, 0x2a, 0x4d, 0x9d, 0x67, 0x15, 0x60, 0xf5, 0x32, 0x44, 0xa0, 0xba, 0xbd, 0x14, 0xd1, 0xf9,
+	0x1e, 0x9f, 0x01, 0xb7, 0x6c, 0x5c, 0xbb, 0xd8, 0x67, 0xb5, 0x8a, 0x2a, 0x4c, 0x21, 0x0e, 0x47,
+	0xaf, 0xd6, 0x11, 0xfa, 0x62, 0xdf, 0x5d, 0x26, 0x2e, 0xfc, 0x72, 0xef, 0xba, 0x0c, 0x6f, 0x25,
+	0x50, 0xdd, 0x8e, 0xc8, 0xa6, 0x73, 0xc9, 0x55, 0xb6, 0xe9, 0xdc, 0x8e, 0x94, 0xe8, 0xa9, 0x5e,
+	0xed, 0xaf, 0x97, 0x86, 0xf2, 0xfc, 0xd2, 0x50, 0xfe, 0x7e, 0x69, 0x28, 0xbf, 0xfd, 0xd3, 0x48,
+	0xfd, 0x98, 0xbf, 0xc7, 0xb6, 0xfc, 0x98, 0x1b, 0x66, 0xe5, 0xcf, 0xd7, 0xff, 0x06, 0x00, 0x00,
+	0xff, 0xff, 0x38, 0xa0, 0xc1, 0x13, 0x01, 0x0a, 0x00, 0x00,
 }

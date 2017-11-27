@@ -76,6 +76,16 @@
 		GetOpaqueTagAddrRequestMsg
 		GetOpaqueTagAddrResponse
 		GetOpaqueTagAddrResponseMsg
+		BarcoGetReqDescrEntryRequest
+		BarcoGetReqDescrEntryRequestMsg
+		BarcoSymmReqDescrMsg
+		BarcoASymReqDescrMsg
+		BarcoGetReqDescrEntryResponse
+		BarcoGetReqDescrEntryResponseMsg
+		BarcoGetRingMetaRequest
+		BarcoGetRingMetaRequestMsg
+		BarcoGetRingMetaResponse
+		BarcoGetRingMetaResponseMsg
 		CpuCbKeyHandle
 		CpuCbSpec
 		CpuCbRequestMsg

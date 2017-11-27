@@ -60,6 +60,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_BARCO_RING_XTS1    "brq-ring-xts1"
 #define CAPRI_HBM_REG_CRYPTO_ASYM_DMA_DESCR "crypto-asym-dma-descr"
 #define CAPRI_HBM_REG_BARCO_RING_MPP0    "brq-ring-mpp0"
+#define CAPRI_HBM_REG_BARCO_RING_MPP1    "brq-ring-mpp1"
 #define CAPRI_HBM_REG_CRYPTO_SYM_MSG_DESCR "crypto-sym-msg-descr"
 #define CAPRI_HBM_REG_CRYPTO_HBM_MEM     "crypto-hbm-mem"
 #define CAPRI_BARCO_KEY_DESC             "key-desc-array"

@@ -59,17 +59,18 @@ def TestCaseSetup(tc):
     tlscb.other_fid = 0xffff
 
     if tc.module.args.key_size == 16:
-        tcp_tls_proxy.tls_aes128_gcm_encrypt_setup(tc, tlscb)
+        tcp_tls_proxy.tls_aes128_encrypt_setup(tc, tlscb)
     elif tc.module.args.key_size == 32:
-        tcp_tls_proxy.tls_aes256_gcm_encrypt_setup(tc, tlscb)
+        tcp_tls_proxy.tls_aes256_encrypt_setup(tc, tlscb)
 
     tlscb.GetObjValPd()
     print("snapshot1: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
     print("snapshot1: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
 
-
-    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
-
+    if tc.module.args.cipher_suite == "CCM":
+        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"])
+    else:
+        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
 
 
     tcpcb = copy.deepcopy(tcb)
@@ -154,7 +155,11 @@ def TestCaseVerify(tc):
     tnmdr_cur.Configure()
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
     tnmpr_cur.Configure()
-    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
+
+    if tc.module.args.cipher_suite == "CCM":
+        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"]
+    else:
+        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     brq_cur.Configure()
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]

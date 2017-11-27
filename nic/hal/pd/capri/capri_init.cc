@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 53
+#define CAPRI_P4PLUS_NUM_SYMBOLS 55
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -531,6 +531,19 @@ capri_p4p_asm_init()
     symbols[52].num_params = 1;
     symbols[52].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
     symbols[52].params[0].val = 50000;
+
+    symbols[53].name = "tls-enc-queue-brq-mpp.bin";
+    symbols[53].num_params = 1;
+    symbols[53].params[0].name = BRQ_BASE;
+    symbols[53].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP1);
+
+    symbols[54].name = "tls-dec-queue-brq-mpp.bin";
+    symbols[54].num_params = 1;
+    symbols[54].params[0].name = BRQ_BASE;
+    symbols[54].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP1);
+
+    //symbols[53].name = "tls-enc-bld-barco-req.bin";
+    //symbols[53].num_params = 0;
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

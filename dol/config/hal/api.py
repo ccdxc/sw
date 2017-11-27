@@ -33,6 +33,7 @@ import cpucb_pb2            as cpucb_pb2
 import rawrcb_pb2           as rawrcb_pb2
 import rawccb_pb2           as rawccb_pb2
 import multicast_pb2        as multicast_pb2
+import barco_rings_pb2      as barco_rings_pb2
 
 #import endpoint_pb2_grpc        as endpoint_pb2_grpc
 #import l2segment_pb2_grpc       as l2segment_pb2_grpc
@@ -611,3 +612,16 @@ def ConfigureMulticastGroups(objlist, update = False):
     __config(objlist, multicast_pb2.MulticastEntryRequestMsg, api)
     return
 
+def GetBarcoRingEntries(objlist):
+    if IsHalDisabled(): return
+    stub = barco_rings_pb2.BarcoRingsStub(HalChannel)
+    __config(objlist, barco_rings_pb2.BarcoGetReqDescrEntryRequestMsg,
+             stub.BarcoGetReqDescrEntry)
+    return
+
+def GetBarcoRingMeta(objlist):
+    if IsHalDisabled(): return
+    stub = barco_rings_pb2.BarcoRingsStub(HalChannel)
+    __config(objlist, barco_rings_pb2.BarcoGetRingMetaRequestMsg,
+             stub.BarcoGetRingMeta)
+    return

@@ -18,6 +18,7 @@ struct tx_table_s4_t0_d d	;
 	
 %%
 	    .param      tls_enc_queue_brq_process
+	    .param      tls_enc_queue_brq_mpp_process	
 #	    .param		BRQ_QPCB_BASE
         
 tls_enc_bld_barco_req_process:        
@@ -73,12 +74,27 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_doorbell_data, r3.dx
     CAPRI_OPERAND_DEBUG(r3.dx)
 
-        
+    /* The barco-command[31:24] is checked for GCM/CCM/CBC. endian-swapped */
+    smeqb  c4, d.u.tls_bld_brq4_d.barco_command[7:0], 0xf0, 0x30
+    bcf    [!c4], tls_enc_queue_to_brq_mpp_ring
+    nop
+
     addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
     /* FIXME: The Capri model currently does not support a read of 8 bytes from register space
      * enable this once it is fixed
      *  CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_process, r3, TABLE_SIZE_64_BITS);
      */
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_process, r3, TABLE_SIZE_32_BITS);
+    nop.e
+    nop
+
+tls_enc_queue_to_brq_mpp_ring:
+	
+    addi        r3, r0, CAPRI_BARCO_MP_MPNS_REG_MPP1_PRODUCER_IDX
+    /* FIXME: The Capri model currently does not support a read of 8 bytes from register space
+     * enable this once it is fixed
+     *  CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_mpp_process, r3, TABLE_SIZE_64_BITS);
+     */
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_mpp_process, r3, TABLE_SIZE_32_BITS);
 	nop.e
 	nop

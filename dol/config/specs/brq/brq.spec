@@ -15,3 +15,15 @@ entries :
         count: 16
         entry_defn: "BRQ_GCM_ENTRY"
         type: 9
+    - entry:
+        name: "BRQ_ENCRYPT_CCM"
+        defn: "BRQ_CCM"
+        count: 16
+        entry_defn: "BRQ_CCM_ENTRY"
+        type: 6
+    - entry:
+        name: "BRQ_DECRYPT_CCM"
+        defn: "BRQ_CCM"
+        count: 16
+        entry_defn: "BRQ_CCM_ENTRY"
+        type: 6

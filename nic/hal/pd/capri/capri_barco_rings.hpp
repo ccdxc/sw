@@ -1,6 +1,8 @@
 #ifndef __CAPRI_BARCO_RINGS_H__
 #define __CAPRI_BARCO_RINGS_H__
 
+#include "nic/hal/src/barco_rings.hpp"
+
 namespace hal {
 namespace pd {
 /* Asymmetric engine related definitions */
@@ -24,8 +26,6 @@ typedef struct barco_asym_descriptor_s {
     uint8_t                 opage_tag_wr_en:1;
 #endif
 } __attribute__((__packed__)) barco_asym_descriptor_t;
-
-
 
 typedef struct barco_asym_dma_descriptor_s {
     uint64_t                address;
@@ -53,7 +53,7 @@ typedef struct barco_asym_dma_descriptor_s {
     uint32_t                tag;
 } __attribute__((__packed__)) barco_asym_dma_descriptor_t;
 
-typedef struct barco_mpp_req_descriptor_s {
+typedef struct barco_symm_req_descriptor_s {
     uint64_t                input_list_addr;
     uint64_t                output_list_addr;
     uint32_t                command;
@@ -76,7 +76,7 @@ typedef struct barco_mpp_req_descriptor_s {
     uint64_t                doorbell_addr;
     uint64_t                doorbell_data;
     uint8_t                 reserved[44];
-}  __attribute__((__packed__)) barco_mpp_req_descriptor_t;
+}  __attribute__((__packed__)) barco_symm_req_descriptor_t;
 
 typedef struct barco_sym_msg_descriptor_s {
     uint64_t   A0_addr;
@@ -134,10 +134,15 @@ typedef struct capri_barco_ring_s {
 #define BARCO_RING_XTS0_STR     "Barco XTS0"
 #define BARCO_RING_XTS1_STR     "Barco XTS1"
 #define BARCO_RING_MPP0_STR     "Barco MPP0"
+#define BARCO_RING_MPP1_STR     "Barco MPP1"
 
 
 hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag);
 bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag);
+  hal_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, hal::barco_asym_descr_t *asym_req_descr);
+hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t slot_index,
+					 hal::barco_symm_descr_t *symm_req_descr);
+hal_ret_t capri_barco_ring_meta_get(types::BarcoRings ring_type, uint32_t *pi, uint32_t *ci);
 
 typedef int (*barco_response_cb)(void *user_ctx, void *response);
 

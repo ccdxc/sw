@@ -30,7 +30,7 @@ def tls_cb_verify (fwdata, usrdata):
 # This is already part of the actual payload
 
 tls_aes128_gcm_explicit_iv = 0x627788b54033b07f
-def tls_aes128_gcm_decrypt_setup(tc, tlscb):
+def tls_aes128_decrypt_setup(tc, tlscb):
     tc.module.logger.info("AES128-GCM Decrypt Setup:")
     
     # Key Setup
@@ -40,7 +40,11 @@ def tls_aes128_gcm_decrypt_setup(tc, tlscb):
     tlscb.crypto_key.Update(key_type, key_size, key)
 
     # TLS-CB Setup
-    tlscb.command = 0x30100000
+    if tc.module.args.cipher_suite == "CCM":
+        tlscb.command = 0x05100c10
+    else:
+        tlscb.command = 0x30100000
+
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
     # Salt: 0xaf 0x98 0xc5 0xe2
     tlscb.salt = 0xe2c598af
@@ -53,7 +57,7 @@ def tls_aes128_gcm_decrypt_setup(tc, tlscb):
     print("IS Decrypt Flow: %s" % tlscb.is_decrypt_flow)
     return
 
-def tls_aes128_gcm_encrypt_setup(tc, tlscb):
+def tls_aes128_encrypt_setup(tc, tlscb):
     tc.module.logger.info("AES128-GCM Encrypt Setup:")
     
     # Key Setup
@@ -63,10 +67,13 @@ def tls_aes128_gcm_encrypt_setup(tc, tlscb):
     tlscb.crypto_key.Update(key_type, key_size, key)
 
     # TLS-CB Setup
-    tlscb.command = 0x30000000
+    if tc.module.args.cipher_suite == "CCM":
+        tlscb.command = 0x05000c10
+    else:
+        tlscb.command = 0x30000000
+
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
     tlscb.salt = 0x12345678
-
     # IV: 
     tlscb.explicit_iv = 0x0100000000000000
     tlscb.is_decrypt_flow = False
@@ -76,7 +83,7 @@ def tls_aes128_gcm_encrypt_setup(tc, tlscb):
 
 # Explicit IV : 0x94 0xcb 0x98 0x62 0x80 0xff 0xdb 0x23
 tls_aes256_gcm_explicit_iv = 0x23dbff806298cb94
-def tls_aes256_gcm_decrypt_setup(tc, tlscb):
+def tls_aes256_decrypt_setup(tc, tlscb):
     tc.module.logger.info("AES256-GCM Decrypt Setup:")
     
     # Key Setup
@@ -86,7 +93,11 @@ def tls_aes256_gcm_decrypt_setup(tc, tlscb):
     tlscb.crypto_key.Update(key_type, key_size, key)
 
     # TLS-CB Setup
-    tlscb.command = 0x30100000
+    if tc.module.args.cipher_suite == "CCM":
+        tlscb.command = 0x05100c10
+    else:
+        tlscb.command = 0x30100000
+
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
     # Salt: 0x1a 0x8c 0x86 0x99
     tlscb.salt = 0x99868c1a
@@ -99,7 +110,7 @@ def tls_aes256_gcm_decrypt_setup(tc, tlscb):
     print("IS Decrypt Flow: %s" % tlscb.is_decrypt_flow)
     return
 
-def tls_aes256_gcm_encrypt_setup(tc, tlscb):
+def tls_aes256_encrypt_setup(tc, tlscb):
     tc.module.logger.info("AES256-GCM Encrypt Setup:")
     
     # Key Setup
@@ -109,7 +120,11 @@ def tls_aes256_gcm_encrypt_setup(tc, tlscb):
     tlscb.crypto_key.Update(key_type, key_size, key)
 
     # TLS-CB Setup
-    tlscb.command = 0x30000000
+    if tc.module.args.cipher_suite == "CCM":
+        tlscb.command = 0x05000c10
+    else:
+        tlscb.command = 0x30000000
+
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
     tlscb.salt = 0x12345678
 

@@ -50,7 +50,10 @@ def TestCaseSetup(tc):
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     tnmpr.Configure()
 
-    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
+    if tc.module.args.cipher_suite == "CCM":
+        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"])
+    else:
+        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
     brq.Configure()
 
     tlscbid = "TlsCb%04d" % id
@@ -60,11 +63,10 @@ def TestCaseSetup(tc):
                             tcp_tls_proxy.tls_debug_dol_sesq_stop
     tlscb.other_fid = 0xffff
 
-
     if tc.module.args.key_size == 16:
-        tcp_tls_proxy.tls_aes128_gcm_decrypt_setup(tc, tlscb)
+        tcp_tls_proxy.tls_aes128_decrypt_setup(tc, tlscb)
     elif tc.module.args.key_size == 32:
-        tcp_tls_proxy.tls_aes256_gcm_decrypt_setup(tc, tlscb)
+        tcp_tls_proxy.tls_aes256_decrypt_setup(tc, tlscb)
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdr)
@@ -89,7 +91,10 @@ def TestCaseVerify(tc):
     rnmpr = tc.pvtdata.db["RNMPR"]
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]
-    brq = tc.pvtdata.db["BRQ_ENCRYPT"]
+    if tc.module.args.cipher_suite == "CCM":
+        brq = tc.pvtdata.db["BRQ_ENCRYPT_CCM"]
+    else:
+        brq = tc.pvtdata.db["BRQ_ENCRYPT"]
 
     #  Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -107,7 +112,10 @@ def TestCaseVerify(tc):
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.GetObjValPd()
 
-    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
+    if tc.module.args.cipher_suite == "CCM":
+        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"]
+    else:
+        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     brq_cur.Configure()
 
     # 1. Verify PI for RNMDR got incremented by 1

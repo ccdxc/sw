@@ -188,6 +188,7 @@ modules:
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
         args    :
+            cipher_suite: GCM
             maxflows: 1
             same_flow : 1
             key_size : 16
@@ -200,6 +201,7 @@ modules:
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes128_gcm_record_pkt.testspec
         args    :
+            cipher_suite: GCM
             maxflows: 1
             key_size : 16
         iterate  :
@@ -211,6 +213,7 @@ modules:
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
         args    :
+            cipher_suite: GCM
             maxflows: 1
             same_flow : 1
             key_size : 32
@@ -223,6 +226,32 @@ modules:
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes256_gcm_record_pkt.testspec
         args    :
+            cipher_suite: GCM
+            maxflows: 1
+            key_size : 32
+        iterate  :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_BSQ_AES256_CCM_ENCRYPT
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_encrypt
+        spec    : one_pkt.testspec
+        args    :
+            cipher_suite: CCM
+            maxflows: 1
+            same_flow : 1
+            key_size : 32
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_BSQ_AES256_CCM_DECRYPT
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_decrypt
+        spec    : one_tls_aes256_ccm_record_pkt.testspec
+        args    :
+            cipher_suite: CCM
             maxflows: 1
             key_size : 32
         iterate  :
@@ -743,6 +772,7 @@ modules:
         module  : tls_pkt_to_l7q_ids
         spec    : one_tls_aes128_gcm_record_pkt.testspec
         args    :
+            cipher_suite: GCM
             maxflows: 1
             key_size : 16
         iterate  :
@@ -753,6 +783,7 @@ modules:
         module  : tls_pkt_to_l7q_ips
         spec    : one_tls_aes128_gcm_record_pkt.testspec
         args    :
+            cipher_suite: GCM
             maxflows: 1
             key_size : 16
         iterate  :
