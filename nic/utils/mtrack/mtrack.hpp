@@ -45,6 +45,7 @@ public:
         void                *mem;
         bool                free_mem = false;
 
+        // HAL_ASSERT(alloc_id < hal::HAL_MEM_ALLOC_OTHER);
         mem = zero ? calloc(1, size) : malloc(size);
         if (!mem) {
             return NULL;
@@ -59,6 +60,8 @@ public:
         it = mtrack_map_.find(alloc_id);
         if (it != mtrack_map_.end()) {
             it->second->num_allocs++;
+            HAL_TRACE_DEBUG("mem_allocation for id: {}, allocs:{}", 
+                            alloc_id, it->second->num_allocs);
         } else {
             mtrack_info = (mtrack_info_t *)calloc(1, sizeof(mtrack_info_t));
             if (mtrack_info == NULL) {
@@ -97,6 +100,8 @@ public:
         it = mtrack_map_.find(alloc_id);
         if (it != mtrack_map_.end()) {
             it->second->num_frees++;
+            HAL_TRACE_DEBUG("mem_free for id: {}, frees:{}", 
+                            alloc_id, it->second->num_frees);
             if (it->second->num_frees == it->second->num_allocs) {
                 // we can free this state now
                 free_mem = true;
@@ -118,9 +123,9 @@ public:
         mtrack_map_it_t     it;
 
         HAL_SPINLOCK_LOCK(&mtrack_map_slock_);
-        for (it = mtrack_map_.begin(); it != mtrack_map_.end(); ) {
+        for (it = mtrack_map_.begin(); it != mtrack_map_.end(); ++it) {
             if (!walk_cb(ctxt, it->first, it->second)) {
-                // if callback returns true, stop iterating
+                // if callback returns false, stop iterating
                 break;
             }
         }

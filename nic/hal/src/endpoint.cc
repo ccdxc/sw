@@ -59,6 +59,9 @@ ep_compare_l2_key_func (void *key1, void *key2)
     return false;
 }
 
+//------------------------------------------------------------------------------
+// Get l3 key function
+//------------------------------------------------------------------------------
 void *
 ep_get_l3_key_func (void *entry)
 {
@@ -66,6 +69,9 @@ ep_get_l3_key_func (void *entry)
     return (void *)&(((ep_l3_entry_t *)entry)->l3_key);
 }
 
+//------------------------------------------------------------------------------
+// Compute l3 hash
+//------------------------------------------------------------------------------
 uint32_t
 ep_compute_l3_hash_func (void *key, uint32_t ht_size)
 {
@@ -76,6 +82,9 @@ ep_compute_l3_hash_func (void *key, uint32_t ht_size)
     return utils::hash_algo::fnv_hash(key, sizeof(ep_l3_key_t)) % ht_size;
 }
 
+//------------------------------------------------------------------------------
+// Compare l3 key
+//------------------------------------------------------------------------------
 bool
 ep_compare_l3_key_func (void *key1, void *key2)
 {

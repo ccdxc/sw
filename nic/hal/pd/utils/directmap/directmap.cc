@@ -202,7 +202,8 @@ DirectMap::insert(void *data, uint32_t *index)
 
             // Allocate DM entry
             dme_elem = directmap_entry_alloc_init();
-            dme_elem->data = (void *)HAL_MALLOC(hal::HAL_SLAB_DIRECTMAP_DATA, swdata_len_);
+            dme_elem->data = (void *)HAL_MALLOC(HAL_MEM_ALLOC_DIRECT_MAP_DATA, 
+                                                swdata_len_);
             memcpy(dme_elem->data, data, swdata_len_);
             dme_elem->len = swdata_len_;
             dme_elem->index = *index;
@@ -284,7 +285,8 @@ DirectMap::insert_withid(void *data, uint32_t index)
 
             // Allocate DM entry
             dme_elem = directmap_entry_alloc_init();
-            dme_elem->data = (void *)HAL_MALLOC(hal::HAL_SLAB_DIRECTMAP_DATA, swdata_len_);
+            dme_elem->data = (void *)HAL_MALLOC(HAL_MEM_ALLOC_DIRECT_MAP_DATA, 
+                                                swdata_len_);
             memcpy(dme_elem->data, data, swdata_len_);
             dme_elem->len = swdata_len_;
             dme_elem->index = index;
@@ -390,8 +392,9 @@ DirectMap::remove(uint32_t index, void *data)
     void            *tmp_data = NULL;
     directmap_entry_t   dme   = { 0 }, *dme_elem = NULL;
 
-    tmp_data = ::operator new(swdata_len_);
-    memset(tmp_data, 0, swdata_len_);
+    // tmp_data = ::operator new(swdata_len_);
+    // memset(tmp_data, 0, swdata_len_);
+    tmp_data = HAL_CALLOC(HAL_MEM_ALLOC_DIRECT_MAP_SW_DATA, swdata_len_);
 
     if (sharing_en_) {
         // For sharing_en DM, remove is supported only with data
@@ -432,6 +435,9 @@ DirectMap::remove(uint32_t index, void *data)
         // Remove from hash table
         dme_elem = (directmap_entry_t *)del_directmap_entry_from_db(dme_elem);
 
+        // Free data
+        HAL_FREE(HAL_MEM_ALLOC_DIRECT_MAP_DATA, dme_elem->data);
+
         // Free DM entry
         rs = directmap_entry_free(dme_elem);
         HAL_ASSERT(rs == HAL_RET_OK);
@@ -466,7 +472,8 @@ DirectMap::remove(uint32_t index, void *data)
     }
 
 end:
-    if (tmp_data) ::operator delete(tmp_data);
+    // if (tmp_data) ::operator delete(tmp_data);
+    if (tmp_data) HAL_FREE(HAL_MEM_ALLOC_DIRECT_MAP_SW_DATA, tmp_data);
 
     stats_update(REMOVE, rs);
     return rs;
@@ -514,7 +521,8 @@ DirectMap::iterate(direct_map_iterate_func_t iterate_func, const void *cb_data)
     hal_ret_t       rs = HAL_RET_OK;
     void            *tmp_data = NULL;
 
-    tmp_data = ::operator new(hwdata_len_);
+    // tmp_data = ::operator new(hwdata_len_);
+    tmp_data = HAL_CALLOC(HAL_MEM_ALLOC_DIRECT_MAP_HW_DATA, hwdata_len_);
 
     for (uint32_t i = 0; i < num_entries_; i++) {
         if (dm_indexer_->is_alloced(i)) {
@@ -526,7 +534,8 @@ DirectMap::iterate(direct_map_iterate_func_t iterate_func, const void *cb_data)
     }
 
 end:
-    ::operator delete(tmp_data);
+    // ::operator delete(tmp_data);
+    HAL_FREE(HAL_MEM_ALLOC_DIRECT_MAP_HW_DATA, tmp_data);
     // return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : HAL_RET_OK;
     if (pd_err != P4PD_SUCCESS) {
         rs = HAL_RET_HW_FAIL;

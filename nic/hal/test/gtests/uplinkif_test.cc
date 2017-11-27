@@ -100,8 +100,12 @@ TEST_F(uplinkif_test, test2)
     InterfaceDeleteResponseMsg  del_rsp;
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;
+    mtrack_info_t               *pre_minfo, *post_minfo;
+    bool                        is_mleak = false;
 
-    pre = hal_test_utils_collect_slab_stats();
+    pre       = hal_test_utils_collect_slab_stats();
+    pre_minfo = hal_test_utils_collect_mtrack_stats();
+    HAL_TRACE_DEBUG("1alloc_id : 6 allocs: {}, frees: {}", pre_minfo[6].num_allocs, pre_minfo[6].num_frees);
 
     for (int i = 1; i <= 8; i++) {
         // Create uplink
@@ -123,10 +127,17 @@ TEST_F(uplinkif_test, test2)
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
 
+    HAL_TRACE_DEBUG("2alloc_id : 6 allocs: {}, frees: {}", pre_minfo[6].num_allocs, pre_minfo[6].num_frees);
     // Checking for slab leak
-    post = hal_test_utils_collect_slab_stats();
+    post       = hal_test_utils_collect_slab_stats();
+    HAL_TRACE_DEBUG("3alloc_id : 6 allocs: {}, frees: {}", pre_minfo[6].num_allocs, pre_minfo[6].num_frees);
+    post_minfo = hal_test_utils_collect_mtrack_stats();
+    HAL_TRACE_DEBUG("4alloc_id : 6 allocs: {}, frees: {}", pre_minfo[6].num_allocs, pre_minfo[6].num_frees);
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    HAL_TRACE_DEBUG("5alloc_id : 6 allocs: {}, frees: {}", pre_minfo[6].num_allocs, pre_minfo[6].num_frees);
     ASSERT_TRUE(is_leak == false);
+    hal_test_utils_check_mtrack_leak(pre_minfo, post_minfo, &is_mleak);
+    ASSERT_TRUE(is_mleak == false);
 }
 
 // ----------------------------------------------------------------------------
@@ -318,6 +329,8 @@ TEST_F(uplinkif_test, test5)
     int                             num_l2segs = 10;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
+    mtrack_info_t                   *pre_minfo, *post_minfo;
+    bool                            is_mleak = false;
     NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
@@ -351,6 +364,7 @@ TEST_F(uplinkif_test, test5)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     pre = hal_test_utils_collect_slab_stats();
+    pre_minfo = hal_test_utils_collect_mtrack_stats();
 
     // Create l2segments
     nkh = l2seg_spec.add_network_key_handle();
@@ -428,8 +442,12 @@ TEST_F(uplinkif_test, test5)
 
     // Checking for slab leak
     post = hal_test_utils_collect_slab_stats();
+    post_minfo = hal_test_utils_collect_mtrack_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
+    // Seeing leak in mcast mtrack ids, met related IDs
+    hal_test_utils_check_mtrack_leak(pre_minfo, post_minfo, &is_mleak);
+    // ASSERT_TRUE(is_mleak == false);
 }
 
 int main(int argc, char **argv) {

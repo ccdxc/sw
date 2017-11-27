@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 using hal::g_hal_state;
+using hal::utils::g_hal_mem_mgr;
 using hal::pd::g_hal_state_pd;
 
 // extern class hal_state_pd    *g_hal_state_pd;
@@ -153,3 +154,88 @@ hal_test_utils_trace(slab_stats_t *pre, slab_stats_t *post)
 
     return;
 }
+
+bool 
+mtrack_cb(void *ctxt, uint32_t alloc_id, mtrack_info_t *minfo) 
+{
+    mtrack_info_t       *mtrack_stats = (mtrack_info_t *)ctxt;
+
+    HAL_ASSERT(alloc_id < hal::HAL_MEM_ALLOC_OTHER);
+
+    mtrack_stats[alloc_id] = *minfo;
+    HAL_TRACE_DEBUG("{}:alloc_id:{} -> allocs: {}, frees: {}; allocs: {}, frees: {}", __FUNCTION__, alloc_id,
+                    minfo->num_allocs, minfo->num_frees, mtrack_stats[alloc_id].num_allocs, mtrack_stats[alloc_id].num_frees);
+    return true;
+}
+
+
+mtrack_info_t *
+hal_test_utils_collect_mtrack_stats()
+{
+    mtrack_info_t       *mtrack_stats;
+
+    mtrack_stats = (mtrack_info_t *)malloc(sizeof(mtrack_info_t) * 
+                                           
+                                           hal::HAL_MEM_ALLOC_OTHER);
+    memset(mtrack_stats, 0, sizeof(mtrack_info_t) * hal::HAL_MEM_ALLOC_OTHER);
+    g_hal_mem_mgr.walk(mtrack_stats, mtrack_cb); 
+
+    return mtrack_stats;
+
+}
+
+void 
+hal_test_utils_mtrack_info_free(mtrack_info_t *minfo)
+{
+    free(minfo);
+}
+
+void 
+hal_test_utils_mtrack_trace (uint32_t i, mtrack_info_t *pre, mtrack_info_t *post)
+{
+    if (pre == NULL || post == NULL) {
+        return;
+    }
+    HAL_TRACE_DEBUG("mtrack_id: {}", i);
+
+    HAL_TRACE_DEBUG("           Pre             Post");
+    HAL_TRACE_DEBUG(" In-Use    {}              {}  ", 
+            (pre->num_allocs - pre->num_frees), 
+            (post->num_allocs - post->num_frees));
+    HAL_TRACE_DEBUG(" Allocs    {}              {}  ", 
+            pre->num_allocs, post->num_allocs);       
+    HAL_TRACE_DEBUG(" Frees     {}              {}  ", 
+            pre->num_frees, post->num_frees);       
+
+    return;
+}
+
+void
+hal_test_utils_check_mtrack_leak(mtrack_info_t *pre, mtrack_info_t *post, bool *is_leak)
+{
+    *is_leak = false;
+    if (pre == NULL || post == NULL) {
+        return;
+    }
+    HAL_TRACE_DEBUG("check leak alloc_id : 6 allocs: {}, frees: {}, other:{}", 
+                    pre[6].num_allocs, pre[6].num_frees, hal::HAL_MEM_ALLOC_OTHER);
+    for (uint32_t i = hal::HAL_MEM_ALLOC_NONE; i < hal::HAL_MEM_ALLOC_OTHER; i++) {
+        // if (memcmp(pre, post, sizeof(slab_stats_t))) {
+        if ((pre->num_allocs - pre->num_frees) != (post->num_allocs - post->num_frees)) {
+            *is_leak = true;
+            HAL_TRACE_DEBUG("-----  Leaked  ------");
+            hal_test_utils_mtrack_trace(i, pre, post);
+        } else {
+#if 0
+            HAL_TRACE_DEBUG("-----  Passed  ------");
+            hal_test_utils_mtrack_trace(i, pre, post);
+#endif
+        }
+        pre++;
+        post++;
+    }
+
+    return;
+}
+
+

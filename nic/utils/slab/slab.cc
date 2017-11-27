@@ -111,10 +111,11 @@ slab::alloc_block_(void)
     *(void **)ptr = NULL;
     this->num_blocks_++;
 
-#if 0
+    HAL_TRACE_DEBUG("{}:slab_id:{} Allocated new block:{:#x}", __FUNCTION__, 
+                    slab_id_, 
+                    (uint64_t)block);
     HAL_TRACE_DEBUG("{}:slab_id:{} free elems:", __FUNCTION__, slab_id_);
     print_free_elem_ptrs_(block);
-#endif
 
     return block;
 }
@@ -125,7 +126,7 @@ slab::print_free_elem_ptrs_(slab_block_t *block)
     uint64_t                *ptr = NULL;
     // uint64_t            tmp = (uint64_t)NULL;
 
-    if (slab_id_ != 10) {
+    if (slab_id_ != 55) {
         return;
     }
 
@@ -173,6 +174,8 @@ slab::init(const char *name, hal_slab_t slab_id, uint32_t elem_sz,
     this->num_blocks_ = 0;
 
     this->block_head_ = alloc_block_();
+    HAL_TRACE_DEBUG("{}:slab_id:{} block_head:{:#x}", __FUNCTION__, slab_id, 
+                    (uint64_t)this->block_head_);
     if (this->block_head_ == NULL) {
         return -1;
     }
@@ -266,6 +269,8 @@ slab::alloc(void)
         block = block->next_;
     }
 
+    HAL_TRACE_DEBUG("{}:block_head: {:#x}, block: {:#x}", __FUNCTION__, 
+                    (uint64_t)this->block_head_, (uint64_t)block);
     // allocate a new block if all blocks are fully utilized
     if (block == NULL) {
         if (grow_on_demand_) {
@@ -293,10 +298,10 @@ slab::alloc(void)
         HAL_SPINLOCK_UNLOCK(&slock_);
     }
 
-#if 0
+    HAL_TRACE_DEBUG("{}:slab_id:{} num_in_use:{}", __FUNCTION__, slab_id_, 
+                    block->num_in_use_);
     HAL_TRACE_DEBUG("{}:slab_id:{} free elems:", __FUNCTION__, slab_id_);
     print_free_elem_ptrs_(block);
-#endif
     if (this->zero_on_alloc_) {
         memset(elem, 0, this->elem_sz_);
     }
@@ -337,19 +342,31 @@ slab::free_(void *elem)
         this->num_in_use_--;
         block->num_in_use_--;
 
-#if 0
         HAL_TRACE_DEBUG("{}:slab_id:{} free elems:", __FUNCTION__, slab_id_);
         print_free_elem_ptrs_(block);
-#endif
 
-        if ((block->num_in_use_ == 0) && grow_on_demand_ && block->prev_) {
-            // except 1st block, we can release all other blocks while shrinking
-            block->prev_->next_ = block->next_;
-            if (block->next_) {
-                block->next_->prev_ = block->prev_;
+        HAL_TRACE_DEBUG("{}:slab_id:{} num_in_use:{}, grow_on_demand_:{}, prev:{:#x}, block_head:{:#x}", 
+                        __FUNCTION__, slab_id_, 
+                        block->num_in_use_, grow_on_demand_, (uint64_t)block->prev_,
+                        (uint64_t)this->block_head_);
+
+        if ((block->num_in_use_ == 0) && grow_on_demand_ && block->next_) {
+            HAL_TRACE_DEBUG("{}:slab_id:{} Freeing block:{:#x}", __FUNCTION__, 
+                            slab_id_, 
+                            (uint64_t)block);
+
+            if (block_head_ == block) {
+                block_head_ = block->next_;
+            } else {
+                block->prev_->next_ = block->next_;
+                if (block->next_) {
+                    block->next_->prev_ = block->prev_;
+                }
             }
             HAL_FREE(HAL_MEM_ALLOC_LIB_SLAB, block);
             this->num_blocks_--;
+            HAL_TRACE_DEBUG("After freeing the block: block_head:{:#x}",
+                            (uint64_t)this->block_head_);
         }
     } else {
         // this elem doesn't belong to any of this slab's active blocks
