@@ -20,7 +20,7 @@ message TenantStatus {
     repeated api.ObjectMeta NetworkHandle          = 1;     // Networks belonging to the tenant
     repeated api.ObjectMeta EndpointHandle         = 2;     // Endpoints belonging to the tenant
     repeated api.ObjectMeta SecurityGroupHandle    = 3;     // SecurityGroups belonging to the tenant
-    uint32 TenantID                              = 4;     // Network identifier
+    uint64 TenantID                              = 4;     // Network identifier
 }
 
 // TenantSpec captures all the tenant level configuration

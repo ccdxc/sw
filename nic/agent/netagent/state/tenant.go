@@ -26,9 +26,12 @@ func (na *NetAgent) CreateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	// allocate tenant id
-	tn.Status.TenantID = na.currentTenantID
-	na.currentTenantID++
+	tn.Status.TenantID, err = na.store.GetNextID(TenantID)
+
+	if err != nil {
+		log.Errorf("Could not allocate tenant id. {%+v}", err)
+		return err
+	}
 
 	// create it in datapath
 	err = na.datapath.CreateTenant(tn)

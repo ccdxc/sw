@@ -24,7 +24,7 @@ message NetworkSpec {
 message NetworkStatus {
     uint32 AllocatedVlanID   = 1;  // allocated Vlan ID
     uint32 AllocatedVxlanVNI = 2;  // Allocated VXLAN VNI
-    uint32 NetworkID         = 3;  // Network identifier
+    uint64 NetworkID         = 3;  // Network identifier
     uint64 NetworkHandle     = 4;  // datapath handle for the network
 }
 

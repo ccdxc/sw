@@ -10,6 +10,13 @@ import (
 	"github.com/pensando/sw/venice/utils/emstore"
 )
 
+// ID types
+const (
+	NetworkID       = "networkID"
+	SecurityGroupID = "sgID"
+	TenantID        = "tenantID"
+)
+
 // IntfInfo has the interface names to be plumbed into container
 type IntfInfo struct {
 	ContainerIntfName string //  Name of container side of the interface
@@ -18,18 +25,15 @@ type IntfInfo struct {
 
 // NetAgent is the network agent instance
 type NetAgent struct {
-	sync.Mutex                                          // global lock for the agent
-	store            emstore.Emstore                    // embedded db
-	nodeUUID         string                             // Node's UUID
-	datapath         NetDatapathAPI                     // network datapath
-	ctrlerif         CtrlerAPI                          // controller object
-	networkDB        map[string]*netproto.Network       // Network object db
-	endpointDB       map[string]*netproto.Endpoint      // Endpoint object db
-	secgroupDB       map[string]*netproto.SecurityGroup // security group object db
-	tenantDB         map[string]*netproto.Tenant        // tenant object db
-	currentNetworkID uint32                             // poor man's id allocation FIXME:
-	currentSgID      uint32                             // poor man's id allocation FIXME:
-	currentTenantID  uint32                             // poor man's id allocation FIXME: Replace these with a single uuid allocator in emstore
+	sync.Mutex                                    // global lock for the agent
+	store      emstore.Emstore                    // embedded db
+	nodeUUID   string                             // Node's UUID
+	datapath   NetDatapathAPI                     // network datapath
+	ctrlerif   CtrlerAPI                          // controller object
+	networkDB  map[string]*netproto.Network       // Network object db
+	endpointDB map[string]*netproto.Endpoint      // Endpoint object db
+	secgroupDB map[string]*netproto.SecurityGroup // security group object db
+	tenantDB   map[string]*netproto.Tenant        // tenant object db
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent

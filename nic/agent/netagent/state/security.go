@@ -61,16 +61,19 @@ func (na *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 		// check if sg contents are same
 		if !proto.Equal(oldSg, sg) {
 			log.Errorf("Security group %+v already exists", oldSg)
-			return errors.New("Security group already exists")
+			return errors.New("security group already exists")
 		}
 
 		log.Infof("Received duplicate sg create {%+v}", sg)
 		return nil
 	}
 
-	// allocate an id
-	sg.Status.SecurityGroupID = na.currentSgID
-	na.currentSgID++
+	sg.Status.SecurityGroupID, err = na.store.GetNextID(SecurityGroupID)
+
+	if err != nil {
+		log.Errorf("Could not allocate security group id. {%+v}", err)
+		return err
+	}
 
 	// create it in datapath
 	err = na.datapath.CreateSecurityGroup(sg)

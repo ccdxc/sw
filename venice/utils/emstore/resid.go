@@ -23,7 +23,7 @@ type resourceIDAllocator struct {
 
 // ResourceID is the type of resource
 
-func (r *resourceIDAllocator) getNextID(resource ResourceID) (nextID uint64, err error) {
+func (r *resourceIDAllocator) getNextID(resource ResourceType) (nextID uint64, err error) {
 	r.Lock()
 	defer r.Unlock()
 	curID, loaded := r.id.LoadOrStore(resource, new(uInt64))

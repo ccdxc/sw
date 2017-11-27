@@ -28,6 +28,9 @@ type Object interface {
 // DbType is embedded store types
 type DbType string
 
+// ResourceType is the ID type for the resource
+type ResourceType string
+
 // db type enums
 const (
 	BoltDBType   DbType = "boltdb"
@@ -44,7 +47,7 @@ type Emstore interface {
 	Write(obj Object) error
 	Delete(obj Object) error
 	Close() error
-	GetNextID(r ResourceID) (uint64, error)
+	GetNextID(r ResourceType) (uint64, error)
 }
 
 // BoltdbStore hold bolt db instance members
@@ -53,11 +56,11 @@ type BoltdbStore struct {
 	boltDb *bolt.DB // boltdb instance
 }
 
-// ResourceID holds id for the a particular resource
-type ResourceID struct {
-	ResType string
-	ID      uint64
-}
+//// ResourceID holds id for the a particular resource
+//type ResourceID struct {
+//	ResType string
+//	ID      uint64
+//}
 
 // kindStore stores all keys for a kind
 type kindStore struct {
@@ -237,22 +240,22 @@ func (bdb *BoltdbStore) Delete(obj Object) error {
 }
 
 // GetNextID gets the next id for the resource boltdb resource type
-func (bdb *BoltdbStore) GetNextID(r ResourceID) (uint64, error) {
-	err := bdb.boltDb.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte(r.ResType))
+func (bdb *BoltdbStore) GetNextID(r ResourceType) (nextID uint64, err error) {
+	err = bdb.boltDb.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(r))
 		if err != nil {
 			return err
 		}
 
-		b := tx.Bucket([]byte(r.ResType))
+		b := tx.Bucket([]byte(r))
 		// NextSequence gets an auto incrementing sequence for the bucket. Each resource type is maintained as a separate bucket to allow
 		// concurrency. IDs are unique (auto-incremented) per resource type.
 		id, _ := b.NextSequence()
 
-		r.ID = uint64(id)
+		nextID = uint64(id)
 		return nil
 	})
-	return r.ID, err
+	return nextID, err
 }
 
 // Close closes the database
@@ -352,7 +355,7 @@ func (mdb *MemStore) Delete(obj Object) error {
 }
 
 // GetNextID gets the next id for the resource memDB resource type
-func (mdb *MemStore) GetNextID(r ResourceID) (uint64, error) {
+func (mdb *MemStore) GetNextID(r ResourceType) (uint64, error) {
 	return mdb.resID.getNextID(r)
 }
 

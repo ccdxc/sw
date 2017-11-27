@@ -27,19 +27,7 @@ func TestBoltDBResourceID(t *testing.T) {
 	defer cleanup(boltDBPath)
 	AssertOk(t, err, fmt.Sprintf("Could not create bolt db. Err: %v", err))
 
-	netResource := ResourceID{
-		ResType: NetworkID,
-	}
-
-	sgResource := ResourceID{
-		ResType: SecurityGroupID,
-	}
-
-	tnResource := ResourceID{
-		ResType: TenantID,
-	}
-
-	resourceIDAllocationTest(db, t, netResource, sgResource, tnResource)
+	resourceIDAllocationTest(db, t, NetworkID, SecurityGroupID, TenantID)
 }
 
 func TestMemDBResourceID(t *testing.T) {
@@ -47,19 +35,7 @@ func TestMemDBResourceID(t *testing.T) {
 	db, err := NewMemStore()
 	AssertOk(t, err, fmt.Sprintf("Could not create bolt db. Err: %v", err))
 
-	netResource := ResourceID{
-		ResType: NetworkID,
-	}
-
-	sgResource := ResourceID{
-		ResType: SecurityGroupID,
-	}
-
-	tnResource := ResourceID{
-		ResType: TenantID,
-	}
-
-	resourceIDAllocationTest(db, t, netResource, sgResource, tnResource)
+	resourceIDAllocationTest(db, t, NetworkID, SecurityGroupID, TenantID)
 }
 
 func TestBoltDBConcurrentIDGeneration(t *testing.T) {
@@ -70,18 +46,7 @@ func TestBoltDBConcurrentIDGeneration(t *testing.T) {
 
 	var genIDs []uint64
 
-	netResource := ResourceID{
-		ResType: NetworkID,
-	}
-
-	sgResource := ResourceID{
-		ResType: SecurityGroupID,
-	}
-
-	tnResource := ResourceID{
-		ResType: TenantID,
-	}
-	concurrentResourceIDAllocationTest(db, t, genIDs, netResource, sgResource, tnResource)
+	concurrentResourceIDAllocationTest(db, t, genIDs, NetworkID, SecurityGroupID, TenantID)
 }
 
 func TestMemDBConcurrentIDGeneration(t *testing.T) {
@@ -90,18 +55,7 @@ func TestMemDBConcurrentIDGeneration(t *testing.T) {
 	AssertOk(t, err, fmt.Sprintf("Could not create mem db. Err: %v", err))
 	var genIDs []uint64
 
-	netResource := ResourceID{
-		ResType: NetworkID,
-	}
-
-	sgResource := ResourceID{
-		ResType: SecurityGroupID,
-	}
-
-	tnResource := ResourceID{
-		ResType: TenantID,
-	}
-	concurrentResourceIDAllocationTest(db, t, genIDs, netResource, sgResource, tnResource)
+	concurrentResourceIDAllocationTest(db, t, genIDs, NetworkID, SecurityGroupID, TenantID)
 }
 
 func validateConcurrency(genids *[]uint64) error {
@@ -135,7 +89,7 @@ func validateConcurrency(genids *[]uint64) error {
 	return nil
 }
 
-func resourceIDAllocationTest(db Emstore, t *testing.T, n, s, tn ResourceID) {
+func resourceIDAllocationTest(db Emstore, t *testing.T, n, s, tn ResourceType) {
 	// test net id allocation
 
 	nextID, err := db.GetNextID(n)
@@ -162,7 +116,7 @@ func resourceIDAllocationTest(db Emstore, t *testing.T, n, s, tn ResourceID) {
 	AssertEquals(t, uint64(2), nextID, "Getting next id for network failed.")
 }
 
-func concurrentResourceIDAllocationTest(db Emstore, t *testing.T, genIDs []uint64, n, s, tn ResourceID) {
+func concurrentResourceIDAllocationTest(db Emstore, t *testing.T, genIDs []uint64, n, s, tn ResourceType) {
 	randSrc := rand.NewSource(time.Now().UnixNano())
 	randGen := rand.New(randSrc)
 

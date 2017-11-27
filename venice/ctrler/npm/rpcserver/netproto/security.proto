@@ -15,7 +15,7 @@ import "github.com/pensando/sw/api/meta.proto";
 message SecurityRule {
     string  Direction = 1;  // direction incoming/outgoing
     string  PeerGroup = 2;  // From/To security group
-    uint32  PeerGroupID = 3; // Peer security group id
+    uint64  PeerGroupID = 3; // Peer security group id
     message Service {
         string protocol = 1;   // IP prootocol (tcp/udp/icmp)
         uint32 port     = 2;   // port number
@@ -38,7 +38,7 @@ message SecurityGroupSpec {
 
 // security group status
 message SecurityGroupStatus {
-    uint32 SecurityGroupID = 1; // security group id
+    uint64 SecurityGroupID = 1; // security group id
 }
 
 // security group object

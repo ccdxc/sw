@@ -114,7 +114,7 @@ enum ApiStatus {
 // common meta object that is part of all other top level objects
 // TODO: should we add last updated timestamp, revision etc. here ?
 message ObjectMeta {
-  fixed32        vrf_id = 1;     // vrf identifier
+  fixed64        vrf_id = 1;     // vrf identifier
 }
 
 // Types of Vrfs

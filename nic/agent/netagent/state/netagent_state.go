@@ -27,16 +27,13 @@ func NewNetAgent(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) 
 	}
 
 	nagent := NetAgent{
-		store:            emdb,
-		nodeUUID:         nodeUUID,
-		datapath:         dp,
-		networkDB:        make(map[string]*netproto.Network),
-		endpointDB:       make(map[string]*netproto.Endpoint),
-		secgroupDB:       make(map[string]*netproto.SecurityGroup),
-		tenantDB:         make(map[string]*netproto.Tenant),
-		currentNetworkID: 1,
-		currentSgID:      1,
-		currentTenantID:  1,
+		store:      emdb,
+		nodeUUID:   nodeUUID,
+		datapath:   dp,
+		networkDB:  make(map[string]*netproto.Network),
+		endpointDB: make(map[string]*netproto.Endpoint),
+		secgroupDB: make(map[string]*netproto.SecurityGroup),
+		tenantDB:   make(map[string]*netproto.Tenant),
 	}
 
 	err = dp.SetAgent(&nagent)

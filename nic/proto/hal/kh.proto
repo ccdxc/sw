@@ -1,3 +1,4 @@
+
 //------------------------------------------------------------------------------
 // protobuf specification for global objects. HAL's static global configuration
 // comes from hal.json that HAL uses when it comes up. However, there are few
@@ -28,7 +29,7 @@ message SecurityProfileKeyHandle {
 // VrfKeyHandle is used to operate on a vrf either by its key or handle
 message VrfKeyHandle {
   oneof key_or_handle {
-    uint32     vrf_id     = 1  [(gogoproto.jsontag) = "unique"];   // unique vrf id allocated by app
+    uint64     vrf_id     = 1  [(gogoproto.jsontag) = "unique"];   // unique vrf id allocated by app
     fixed64    vrf_handle = 2 [(gogoproto.jsontag) = "handle"];    // vrf handle returned by HAL
   }
 }
@@ -45,7 +46,7 @@ message NetworkKeyHandle {
 // segment id or HAL allocated handle
 message L2SegmentKeyHandle {
   oneof key_or_handle {
-    uint32     segment_id        = 1 [(gogoproto.jsontag) = "unique"];   // App allocated unique L2 segment id
+    uint64     segment_id        = 1 [(gogoproto.jsontag) = "unique"];   // App allocated unique L2 segment id
                                          // NOTE:
                                          // 1. this is unique across all types of L2 segments
                                          // 2. this is allocated by the HAL app
@@ -54,8 +55,8 @@ message L2SegmentKeyHandle {
 }
 
 message SecurityGroupPolicyId {
-    uint32     security_group_id         = 1;    // security group id or label
-    uint32     peer_security_group_id    = 2;    // peer security group id
+    uint64     security_group_id         = 1;    // security group id or label
+    uint64     peer_security_group_id    = 2;    // peer security group id
 }
 
 // SecurityGroupKeyPolicyHandle uniquely identifies a security group and is used
@@ -72,7 +73,7 @@ message SecurityGroupPolicyKeyHandle {
 // to create/update/delete/get security groups
 message SecurityGroupKeyHandle {
   oneof key_or_handle {
-    uint32     security_group_id      = 1;    // security group id or label
+    uint64     security_group_id      = 1;    // security group id or label
     fixed64    security_group_handle  = 2;    // id of security group returned by HAL
   }
 }

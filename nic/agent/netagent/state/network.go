@@ -20,16 +20,18 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 		// check if network contents are same
 		if !proto.Equal(oldNt, nt) {
 			log.Errorf("Network %+v already exists", oldNt)
-			return errors.New("Network already exists")
+			return errors.New("network already exists")
 		}
 
 		log.Infof("Received duplicate network create for ep {%+v}", nt)
 		return nil
 	}
 
-	// allocate network id
-	nt.Status.NetworkID = na.currentNetworkID
-	na.currentNetworkID++
+	nt.Status.NetworkID, err = na.store.GetNextID(NetworkID)
+	if err != nil {
+		log.Errorf("Could not allocate network id. {%+v}", err)
+		return err
+	}
 
 	// create it in datapath
 	err = na.datapath.CreateNetwork(nt)
