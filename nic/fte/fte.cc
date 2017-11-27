@@ -42,12 +42,12 @@ fte_db::factory(void)
     void         *mem;
     fte_db       *db;
 
-    mem = HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA, sizeof(fte_db));
+    mem = HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(fte_db));
     HAL_ABORT(mem != NULL);
     db = new (mem) fte_db();
     if (db->init() == HAL_RET_ERR) {
         db->~fte_db();
-        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, mem);
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, mem);
             return NULL;
     }
 
@@ -62,7 +62,6 @@ fte_db::factory(void)
 typedef struct feature_s feature_t;
 struct feature_s {
     STAILQ_ENTRY(feature_s) entries;
-    feature_id_t id;
     std::string name;
     exec_handler_t exec_handler;
 };
@@ -72,7 +71,7 @@ static STAILQ_HEAD(feature_list_s_, feature_s) g_feature_list_ =
 
 static inline feature_t *feature_alloc_()
 {
-    return (feature_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA, sizeof(feature_t));
+    return (feature_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(feature_t));
 }
 
 static inline void feature_add_(feature_t *feature)
@@ -80,45 +79,94 @@ static inline void feature_add_(feature_t *feature)
     STAILQ_INSERT_TAIL(&g_feature_list_, feature, entries);
 }
 
-static inline feature_t *feature_lookup_(feature_id_t fid)
+static inline feature_t *feature_lookup_(std::string name)
 {
     feature_t *feature;
     STAILQ_FOREACH(feature, &g_feature_list_, entries) {
-        if (feature->id == fid) {
+        if (feature->name == name) {
             return feature;
         }
     }
     return nullptr;
 }
 
-hal_ret_t register_feature(const feature_id_t& fid, const std::string& name,
-                           const exec_handler_t &exec_handler)
+//------------------------------------------------------------------------------
+// Dummy FTE feature handler for plugins not yet loaded
+//------------------------------------------------------------------------------
+fte::pipeline_action_t dummy_handler(fte::ctx_t&)
+{
+    return fte::PIPELINE_CONTINUE;
+}
+
+
+//------------------------------------------------------------------------------
+// Add an fte feature
+//------------------------------------------------------------------------------
+hal_ret_t add_feature(const std::string& name)
 {
     feature_t *feature;
 
-    HAL_TRACE_DEBUG("fte::{}: id={}, name={}", __FUNCTION__, fid, name);
+    HAL_TRACE_DEBUG("fte::{}: name={}", __FUNCTION__, name);
 
-    if (!exec_handler) {
-        HAL_TRACE_ERR("fte: skipping invalid feature id={} name={} - null exec_handler",
-                      fid, name);
+    if (feature_lookup_(name) != nullptr) {
+        HAL_TRACE_ERR("fte::{}: name={} - duplicate feature", __FUNCTION__, name);
         return HAL_RET_INVALID_ARG;
     }
 
-    if ((feature = feature_lookup_(fid)) != nullptr) {
-        HAL_TRACE_ERR("fte: skipping duplicate feature id={} name={} old-name={}",
-                      fid, name, feature->name);
-        return HAL_RET_DUP_INS_FAIL;
-    }
-
     feature = feature_alloc_();
-    feature->id = fid;
     feature->name = name;
-    feature->exec_handler = exec_handler;
-
+    feature->exec_handler = dummy_handler;
     feature_add_(feature);
 
     return HAL_RET_OK;
 }
+
+//------------------------------------------------------------------------------
+// Register a feature handler
+//------------------------------------------------------------------------------
+hal_ret_t register_feature(const std::string& name,
+                           const exec_handler_t &exec_handler)
+
+{
+    feature_t *feature;
+
+    HAL_TRACE_DEBUG("fte::{}: name={}", __FUNCTION__, name);
+
+    if (!exec_handler) {
+        HAL_TRACE_ERR("fte: skipping invalid feature name={} - null exec_handler",
+                      name);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if ((feature = feature_lookup_(name)) == nullptr) {
+        HAL_TRACE_ERR("fte::{}: name={} - no such feature", __FUNCTION__, name);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    feature->exec_handler = exec_handler;
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Unregister a featurte handler
+//------------------------------------------------------------------------------
+hal_ret_t unregister_feature(const std::string& name)
+
+{
+    feature_t *feature;
+
+    HAL_TRACE_DEBUG("fte::{}: name={}", __FUNCTION__, name);
+
+    if ((feature = feature_lookup_(name)) == nullptr) {
+        HAL_TRACE_ERR("fte::{}: name={} - no such feature", __FUNCTION__, name);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    feature->exec_handler = dummy_handler;
+
+    return HAL_RET_OK;
+}
+
 
 // FTE pipelines
 // A list is used instead of a map for pipelines. It is most likely faster
@@ -143,8 +191,7 @@ static STAILQ_HEAD(pipeline_list_s_, pipeline_s) g_pipeline_list_ =
 static inline pipeline_t *
 pipeline_alloc_(uint16_t num_features)
 {
-    return (pipeline_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA,
-                                    sizeof(pipeline_t) +
+    return (pipeline_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(pipeline_t) +
                                     num_features * sizeof(feature_t *));
 }
 
@@ -196,8 +243,8 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, uint8_t e
 
 hal_ret_t
 register_pipeline(const std::string& name, const lifqid_t& lifq,
-                  feature_id_t features_outbound[], uint16_t num_features_outbound,
-                  feature_id_t features_inbound[], uint16_t num_features_inbound,
+                  const std::vector<std::string> &features_outbound,
+                  const std::vector<std::string> &features_inbound,
                   const lifqid_t& lifq_mask)
 {
     pipeline_t *pipeline;
@@ -209,35 +256,35 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
         return HAL_RET_DUP_INS_FAIL;
     }
 
-    pipeline = pipeline_alloc_(num_features_outbound+num_features_inbound);
+    pipeline = pipeline_alloc_(features_outbound.size()+features_inbound.size());
     pipeline->lifq = lifq;
     pipeline->lifq_mask = lifq_mask;
     pipeline->name = name;
 
     // Initialize feature blocks
-    pipeline->num_features_outbound =num_features_outbound;
-    for (int i = 0; i < num_features_outbound; i++) {
-        feature_t *feature = feature_lookup_(features_outbound[i]);
+    pipeline->num_features_outbound = features_outbound.size();
+    feature_t **features = pipeline->features;
+    for (const std::string& fname: features_outbound) {
+        feature_t *feature = feature_lookup_(fname);
         if (!feature) {
-            HAL_TRACE_ERR("fte: unknown feature-id {} in outbound pipeline {} - skipping",
-                          features_outbound[i], name);
-            HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, pipeline);
+            HAL_TRACE_ERR("fte: unknown feature {} in outbound pipeline {} - skipping",
+                          fname, name);
+            HAL_FREE(hal::HAL_MEM_ALLOC_FTE, pipeline);
             return HAL_RET_INVALID_ARG;
         }
         HAL_TRACE_DEBUG("fte: outbound pipeline feature {}/{}", name, feature->name);
-        pipeline->features[i] = feature;
+        *features++ = feature;
     }
 
-    pipeline->num_features_inbound =num_features_inbound;
-    for (int i = 0; i < num_features_inbound; i++) {
-        feature_t *feature = feature_lookup_(features_inbound[i]);
+    pipeline->num_features_inbound = features_inbound.size();
+    for (const std::string& fname: features_inbound) {
+        feature_t *feature = feature_lookup_(fname);
         if (!feature) {
-            HAL_TRACE_ERR("fte: unknown feature-id {} in inbound pipeline {} - skipping",
-                          features_inbound[i], name);
-            continue;
+            HAL_TRACE_ERR("fte: unknown feature {} in inbound pipeline {} - skipping",
+                          fname, name);
         }
         HAL_TRACE_DEBUG("fte: inbound pipeline feature {}/{}", name, feature->name);
-        pipeline->features[i+num_features_outbound] = feature;
+        *features++ = feature;
     }
 
     // Add to global pipline list
@@ -305,12 +352,12 @@ void unregister_features_and_pipelines() {
     while (!STAILQ_EMPTY(&g_pipeline_list_)) {
         pipeline_t *pipeline = STAILQ_FIRST(&g_pipeline_list_);
         STAILQ_REMOVE_HEAD(&g_pipeline_list_, entries);
-        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, pipeline);
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, pipeline);
     }
     while (!STAILQ_EMPTY(&g_feature_list_)) {
         feature_t *feature = STAILQ_FIRST(&g_feature_list_);
         STAILQ_REMOVE_HEAD(&g_feature_list_, entries);
-        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, feature);
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature);
     }
 }
 

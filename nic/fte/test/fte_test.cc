@@ -34,60 +34,81 @@ protected:
             return action;
         };
     }
+
+    hal_ret_t add_register_feature(std::string name, exec_handler_t handler) {
+        add_feature(name);
+        return register_feature(name, handler);
+    }
+    
 };
+
+// add feature
+TEST_F(fte_test, add_feature) {
+    auto rc = add_feature("f1");
+    EXPECT_EQ(rc, HAL_RET_OK);
+}
+
+// add dup feature
+TEST_F(fte_test, add_dup_feature) {
+    auto rc = add_feature("f1");
+    EXPECT_EQ(rc, HAL_RET_OK);
+
+    rc = add_feature("f1");
+    EXPECT_EQ(rc, HAL_RET_INVALID_ARG);
+}
+
+// register non existing feature
+TEST_F(fte_test, register_unk_feature) {
+    auto rc = register_feature("f1", exec_handler("f1"));
+    EXPECT_EQ(rc, HAL_RET_INVALID_ARG);
+}
+
 
 //  register valid feature
 TEST_F(fte_test, register_feature) {
-    auto rc = register_feature(1, "f1", exec_handler("f1"));
+    auto rc = add_register_feature("f1", exec_handler("f1"));
     EXPECT_EQ(rc, HAL_RET_OK);
 }
 
 //  register-feature with null exec handler
 TEST_F(fte_test, register_feature_nil) {
-    auto rc = register_feature(1, "f1", nullptr);
+    auto rc = add_register_feature("f1", nullptr);
     EXPECT_EQ(rc, HAL_RET_INVALID_ARG);
-}
-
-//  register duplicate feature 
-TEST_F(fte_test, register_feature_dup) {
-    register_feature(1, "f1", exec_handler("f1"));
-    auto rc = register_feature(1, "f2", exec_handler("f2"));
-    EXPECT_EQ(rc, HAL_RET_DUP_INS_FAIL);
 }
 
 //  register-pipeline
 TEST_F(fte_test, register_pipeline) {
-    register_feature(1, "f1", exec_handler("f1"));
-    vector<feature_id_t> features {1};
-    auto rc = register_pipeline("p1", {1,1,1}, &features[0], features.size());
+    add_register_feature( "f1", exec_handler("f1"));
+    vector<string> features {"f1"};
+    auto rc = register_pipeline("p1", {1,1,1}, features);
     EXPECT_EQ(rc, HAL_RET_OK);
 }
 
 // register duplicate pipeline
 TEST_F(fte_test, register_pipeline_dup) {
-    auto rc = register_pipeline("p1", {1,1,1}, nullptr, 0);
-    rc = register_pipeline("p2", {1,1,1}, nullptr, 0);
+    auto rc = register_pipeline("p1", {1,1,1}, {});
+    rc = register_pipeline("p2", {1,1,1}, {});
     EXPECT_EQ(rc, HAL_RET_DUP_INS_FAIL);
 }
 
 // Register pipeline wih Unknown feature
 TEST_F(fte_test, register_pipeline_unk) {
-    register_feature(1, "f1", exec_handler("f1"));
-    vector<feature_id_t> features {1, 2};
-    auto rc = register_pipeline("p1", {1,1,1}, &features[0], features.size());
+    add_register_feature( "f1", exec_handler("f1"));
+    vector<string> features {"f1", "f2"};
+    auto rc = register_pipeline("p1", {1,1,1}, features);
     EXPECT_EQ(rc, HAL_RET_INVALID_ARG);
 }
 
 // execute pipeline
 TEST_F(fte_test, execute_pipeline) {
-    register_feature(1, "f1", exec_handler("f1"));
-    register_feature(2, "f2", exec_handler("f2"));
-    register_feature(3, "f3", exec_handler("f3"));
+    add_register_feature("f1", exec_handler("f1"));
+    add_register_feature("f2", exec_handler("f2"));
+    add_register_feature("f3", exec_handler("f3"));
 
-    vector<feature_id_t> features {1,2,3};
-    register_pipeline("p1", {1,1,1}, &features[0], features.size());
-    features = {1,3};
-    register_pipeline("p2", {1,1,2}, &features[0], features.size());
+    vector<string> features {"f1", "f2", "f3"};
+    register_pipeline("p1", {1,1,1}, features);
+    features = {"f1","f3"};
+    register_pipeline("p2", {1,1,2}, features);
 
     ctx_t ctx = {};
 
@@ -115,13 +136,13 @@ TEST_F(fte_test, execute_pipeline_unk) {
 
 // pipeline with a block with PIPELINE_END action
 TEST_F(fte_test, execute_pipeline_end) {
-    register_feature(1, "f1", exec_handler("f1"));
-    register_feature(2, "f2", exec_handler("f2"));
-    register_feature(3, "f3", exec_handler("f3"));
-    register_feature(4, "f4", exec_handler("f4", PIPELINE_END));
+    add_register_feature("f1", exec_handler("f1"));
+    add_register_feature("f2", exec_handler("f2"));
+    add_register_feature("f3", exec_handler("f3"));
+    add_register_feature("f4", exec_handler("f4", PIPELINE_END));
 
-    vector<feature_id_t> features{1,2,4,3};
-    register_pipeline("p1", {2,1,1}, &features[0], features.size());
+    vector<string> features{"f1", "f2", "f4", "f3"};
+    register_pipeline("p1", {2,1,1}, features);
 
     ctx_t ctx = {};
     ctx.set_arm_lifq({2,1,1});
@@ -132,29 +153,29 @@ TEST_F(fte_test, execute_pipeline_end) {
 
 // pipeline with a block with PIPELINE_RESTART action
 TEST_F(fte_test, execute_pipeline_restart) {
-    register_feature(1, "f1", exec_handler("f1"));
-    register_feature(2, "f2", exec_handler("f2"));
-    register_feature(3, "f3", exec_handler("f3"));
+    add_register_feature("f1", exec_handler("f1"));
+    add_register_feature("f2", exec_handler("f2"));
+    add_register_feature("f3", exec_handler("f3"));
 
     // p1 - run f1
-    vector<feature_id_t> features{1};
-    register_pipeline("p1", {1,1,1}, &features[0], features.size());
+    vector<string> features{"f1"};
+    register_pipeline("p1", {1,1,1}, features);
 
     // p2 - run f2 and goto p1
-    register_feature(111, "restart-p1", [](ctx_t &ctx) {
+    add_register_feature("restart-p1", [](ctx_t &ctx) {
             ctx.set_arm_lifq({1,1,1});
             return PIPELINE_RESTART;
         });
-    features = {2, 111}; 
-    register_pipeline("p2", {1,1,2}, &features[0], features.size());
+    features = {"f2", "restart-p1"}; 
+    register_pipeline("p2", {1,1,2}, features);
 
     // p3 - run f3 and goto p2
-    register_feature(112, "restart-p2", [](ctx_t &ctx) {
+    add_register_feature("restart-p2", [](ctx_t &ctx) {
             ctx.set_arm_lifq({1,1,2});
             return PIPELINE_RESTART;
         });
-    features = {3, 112}; 
-    register_pipeline("p3", {1,1,3}, &features[0], features.size());
+    features = {"f3", "restart-p2"}; 
+    register_pipeline("p3", {1,1,3}, features);
 
     // execute p3
     ctx_t ctx={};
@@ -166,28 +187,28 @@ TEST_F(fte_test, execute_pipeline_restart) {
 
 // pipeline with wildcard LIFs
 TEST_F(fte_test, execute_pipeline_wildcard) {
-    register_feature(1, "f1", exec_handler("f1"));
-    register_feature(2, "f2", exec_handler("f2"));
-    register_feature(3, "f3", exec_handler("f3"));
-    register_feature(4, "f4", exec_handler("f4"));
+    add_register_feature("f1", exec_handler("f1"));
+    add_register_feature("f2", exec_handler("f2"));
+    add_register_feature("f3", exec_handler("f3"));
+    add_register_feature("f4", exec_handler("f4"));
 
-    vector<feature_id_t> features;
+    vector<string> features;
 
     // p1 - {1, 1, 1} f1
-    features = {1};
-    register_pipeline("p1", {1,1,1}, &features[0], features.size());
+    features = {"f1"};
+    register_pipeline("p1", {1,1,1}, features);
 
     // p2 - {1, 1, *} f2
-    features = {2};
-    register_pipeline("p2", {1,1,0}, &features[0], features.size(), {}, 0, {0x7FF, 0x7, 0});
+    features = {"f2"};
+    register_pipeline("p2", {1,1,0}, features, {}, {0x7FF, 0x7, 0});
 
     // p3 - {1, *, *} f3
-    features = {3};
-    register_pipeline("p3", {1,0,0}, &features[0], features.size(), {}, 0, {0x7FF, 0, 0});
+    features = {"f3"};
+    register_pipeline("p3", {1,0,0}, features, {}, {0x7FF, 0, 0});
 
     // p4 - {*, *, *} f4
-    features  = {4};
-    register_pipeline("p4", {0,0,0}, &features[0], features.size(), {}, 0, {0, 0, 0});
+    features  = {"f4"};
+    register_pipeline("p4", {0,0,0}, features, {}, {0, 0, 0});
 
     ctx_t ctx={};
 

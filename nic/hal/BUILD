@@ -24,6 +24,7 @@ cc_binary(
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem",
+        "//nic/hal/plugins:plugins",
         "//nic/hal/plugins/proxy:proxyplugin",
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",

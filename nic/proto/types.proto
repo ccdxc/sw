@@ -264,3 +264,4 @@ enum CpucbId {
     CPUCB_ID_QUIESCE       = 4;
     CPUCB_ID_NACL_LOG      = 5;
 }
+

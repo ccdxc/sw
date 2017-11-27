@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name = "network",
+    name = "lb",
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.hpp"]),
     deps = [
@@ -11,12 +11,7 @@ cc_library(
         "//nic/fte",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic:gen_proto_includes",
-     ],
+    ],
     alwayslink = 1,
 )
 
-cc_library(
-    name = "network_includes",
-    hdrs = ["net_plugin.hpp"],
-)

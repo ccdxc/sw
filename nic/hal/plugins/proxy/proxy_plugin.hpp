@@ -5,7 +5,7 @@
 namespace hal {
 namespace proxy {
 
-void init();
+extern "C" hal_ret_t proxy_plugin_init();
 
 fte::pipeline_action_t tcp_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t quiesce_exec(fte::ctx_t &ctx);

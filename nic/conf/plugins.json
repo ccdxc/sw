@@ -1,0 +1,186 @@
+{
+    "plugins": [
+        {
+            "name"      : "network",
+            "provider"  : "pensando.io",
+            "lib"       : "network/libnetwork.so",
+            "init_func" : "network_init",
+            "exit_func" : "network_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : [
+                "stage-marker",
+                "fwding",
+                "tunnel",
+                "qos",
+                "ingress-checks"
+            ]
+        },
+        {
+            "name"      : "firewall",
+            "provider"  : "pensando.io",
+            "lib"       : "firewall/libfirewall.so",
+            "init_func" : "firewall_init",
+            "exit_func" : "firewall_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["firewall"]
+        },
+        {
+            "name"      : "alg",
+            "provider"  : "pensando.io",
+            "lib"       : "network/alg/libalg.so",
+            "init_func" : "alg_init",
+            "exit_func" : "alg_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/firewall"],
+            "features"  : ["alg"]
+        },
+        {
+            "name"      : "eplearn",
+            "provider"  : "pensando.io",
+            "lib"       : "eplearn/libeplearn.so",
+            "init_func" : "eplearn_init",
+            "exit_func" : "eplearn_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["eplearn"]
+        },
+        {
+            "name"      : "lb",
+            "provider"  : "pensando.io",
+            "lib"       : "lb/liblb.so",
+            "init_func" : "lb_init",
+            "exit_func" : "lb_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["lb"]
+        },
+        {
+            "name"      : "dol",
+            "provider"  : "pensando.io",
+            "lib"       : "dol/libdol.so",
+            "init_func" : "dol_init",
+            "exit_func" : "dol_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["test"]
+        },
+        {
+            "name"      : "proxy",
+            "provider"  : "pensando.io",
+            "lib"       : "dol/libproxy.so",
+            "init_func" : "proxy_plugin_init",
+            "exit_func" : "proxy_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : [
+                "tcp", 
+                "quiesce",
+                "tls", 
+                "ipsec", 
+                "app-redir-miss",
+                "app-redir", 
+                "app-redir-fini", 
+                "app-p4pt"
+            ]
+        }
+    ],
+
+    "pipelines": [
+        {
+            "name": "flow-miss",
+            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
+            "outbound_features": [
+                "pensando.io/dol:test",
+                "pensando.io/network:ingress-checks",
+                "pensando.io/firewall:firewall",
+                "pensando.io/alg:alg",
+                "pensando.io/proxy:tcp",
+                "pensando.io/proxy:ipsec",
+                "pensando.io/proxy:app-redir-miss",
+                "pensando.io/network:stage-marker",
+                "pensando.io/lb:lb",
+                "pensando.io/network:qos",
+                "pensando.io/network:fwding",
+                "pensando.io/network:tunnel",
+                "pensando.io/proxy:app-redir-fini",
+                "pensando.io/proxy:app-p4pt"
+            ],
+            "inbound_features": [
+                "pensando.io/dol:test",
+                "pensando.io/network:ingress-checks",
+                "pensando.io/lb:lb",
+                "pensando.io/proxy:tcp",
+                "pensando.io/proxy:ipsec",
+                "pensando.io/proxy:app-redir-miss",
+                "pensando.io/network:stage-marker",
+                "pensando.io/firewall:firewall",
+                "pensando.io/alg:alg",
+                "pensando.io/network:qos",
+                "pensando.io/network:fwding",
+                "pensando.io/network:tunnel",
+                "pensando.io/proxy:app-redir-fini",
+                "pensando.io/proxy:app-p4pt"
+           ]
+        },
+        {
+            "name": "tcp-close",
+            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_TCP_CLOSE" },
+            "outbound_features": [
+                 "pensando.io/dol:test"
+            ]
+        },
+        {
+            "name": "app-redir",
+            "selector": { "lif": "SERVICE_LIF_APP_REDIR"},
+            "outbound_features": [
+                "pensando.io/proxy:app-redir",
+                "pensando.io/proxy:app-redir-fini"
+            ]
+        },
+        {
+            "name": "alg-cflow",
+            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_RELIABLE_COPY" },
+            "outbound_features": [
+                "pensando.io/alg:alg"
+            ]
+        },
+        {
+            "name": "tcp-proxy",
+            "selector": { "lif": "SERVICE_LIF_TCP_PROXY" },
+            "outbound_features": [
+                "pensando.io/proxy:tcp"
+            ]
+        },
+        {
+            "name": "tls-proxy",
+            "selector": { "lif": "SERVICE_LIF_TLS_PROXY"},
+            "outbound_features": [
+                "pensando.io/proxy:tls"
+            ]
+        },
+        {
+            "name": "nacl-redirect",
+            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_NACL_REDIRECT" },
+            "outbound_features": [
+                "pensando.io/dol:test"
+            ]
+        },
+        {
+            "name": "nacl-log",
+            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_NACL_LOG" },
+            "outbound_features": [
+                "pensando.io/dol:test"
+            ]
+        },
+        {
+            "name": "quiesce",
+            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_QUIESCE" },
+            "outbound_features": [
+                "pensando.io/dol:test",
+                "pensando.io/proxy:quiesce"
+            ]
+        }
+    ]
+}

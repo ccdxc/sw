@@ -1,22 +1,35 @@
 #include "nic/hal/plugins/network/net_plugin.hpp"
 
-extern "C" void __plugin_init() {
-    hal::net::init();
-}
-
 namespace hal {
 namespace net {
 
-void init() {
-    fte::register_feature(fte::FTE_FEATURE_STAGE_MARKER, "net.stage-marker", stage_exec);
-    fte::register_feature(fte::FTE_FEATURE_FWDING, "net.fwding", fwding_exec);
-    fte::register_feature(fte::FTE_FEATURE_TUNNEL, "net.tunnel", tunnel_exec);
-    fte::register_feature(fte::FTE_FEATURE_DFW, "net.firewall", dfw_exec);
-    fte::register_feature(fte::FTE_FEATURE_LB, "net.load-balancer", lb_exec);
-    fte::register_feature(fte::FTE_FEATURE_QOS, "net.qos", qos_exec);
-    fte::register_feature(fte::FTE_FEATURE_DOL_TEST_ONLY, "net.doltest", dol_test_exec);
-    fte::register_feature(fte::FTE_FEATURE_INGRESS_CHECKS, "net.ingress-checks", ingress_checks_exec);
+//------------------------------------------------------------------------------
+// Network plugin
+//------------------------------------------------------------------------------
+const std::string FTE_FEATURE_STAGE_MARKER("pensando.io/network:stage-marker");
+const std::string FTE_FEATURE_FWDING("pensando.io/network:fwding");
+const std::string FTE_FEATURE_TUNNEL("pensando.io/network:tunnel");
+const std::string FTE_FEATURE_QOS("pensando.io/network:qos");
+const std::string FTE_FEATURE_INGRESS_CHECKS("pensando.io/network:ingress-checks");
+
+extern "C" hal_ret_t network_init() {
+    fte::register_feature(FTE_FEATURE_STAGE_MARKER,  stage_exec);
+    fte::register_feature(FTE_FEATURE_FWDING, fwding_exec);
+    fte::register_feature(FTE_FEATURE_TUNNEL, tunnel_exec);
+    fte::register_feature(FTE_FEATURE_QOS,  qos_exec);
+    fte::register_feature(FTE_FEATURE_INGRESS_CHECKS,  ingress_checks_exec);
+
+    return HAL_RET_OK;
 }
+
+extern "C" void network_exit() {
+    fte::unregister_feature(FTE_FEATURE_STAGE_MARKER);
+    fte::unregister_feature(FTE_FEATURE_FWDING);
+    fte::unregister_feature(FTE_FEATURE_TUNNEL);
+    fte::unregister_feature(FTE_FEATURE_QOS);
+    fte::unregister_feature(FTE_FEATURE_INGRESS_CHECKS);
+}
+
 
 }
 }

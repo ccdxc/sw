@@ -4,7 +4,8 @@
 
 using session::FlowAction;
 using nwsec::ALGName;
-namespace fte {
+namespace hal {
+namespace firewall {
     
 typedef struct net_dfw_match_result_s {
     bool            valid;
@@ -13,4 +14,5 @@ typedef struct net_dfw_match_result_s {
     bool            log;
 } net_dfw_match_result_t;
 
+}
 }

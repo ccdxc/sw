@@ -1,12 +1,12 @@
-#include "nic/hal/plugins/network/net_plugin.hpp"
+#include "nic/fte/fte.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/src/nwsec_group.hpp"
 #include "nic/hal/src/nwsec.hpp"
-#include "nic/hal/plugins/network/net_dfw.hpp"
+#include "firewall.hpp"
 
 namespace hal {
-namespace net {
+namespace firewall {
 
 #define DEFAULT_MSS 536 // RFC6691
 #define DEFAULT_WINDOW_SIZE 512
@@ -14,7 +14,7 @@ namespace net {
 hal_ret_t
 net_dfw_match_rules(fte::ctx_t                  &ctx,
                     nwsec_policy_rules_t        *nwsec_plcy_rules,
-                    fte::net_dfw_match_result_t *match_rslt)
+                    net_dfw_match_result_t *match_rslt)
 {
     flow_key_t          flow_key;
     nwsec_policy_svc_t  *nwsec_plcy_svc = NULL;
@@ -71,7 +71,7 @@ hal_ret_t
 net_dfw_check_policy_pair(fte::ctx_t                    &ctx,
                           uint32_t                      src_sg,
                           uint32_t                      dst_sg,
-                          fte::net_dfw_match_result_t   *match_rslt)
+                          net_dfw_match_result_t   *match_rslt)
 {
     nwsec_policy_cfg_t    *nwsec_plcy_cfg = NULL;
     dllist_ctxt_t         *lnode = NULL;
@@ -103,7 +103,7 @@ net_dfw_check_policy_pair(fte::ctx_t                    &ctx,
 
 hal_ret_t
 net_dfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
-                            fte::net_dfw_match_result_t *match_rslt)
+                            net_dfw_match_result_t *match_rslt)
 {
     ep_t        *sep = NULL;
     ep_t        *dep = NULL;
@@ -207,7 +207,7 @@ fte::pipeline_action_t
 dfw_exec(fte::ctx_t& ctx)
 {
     hal_ret_t                      ret;
-    fte::net_dfw_match_result_t    match_rslt;
+    net_dfw_match_result_t    match_rslt;
 
     // security policy action
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
@@ -312,5 +312,5 @@ dfw_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-} // namespace net
+} // namespace firewall
 } // namespace hal

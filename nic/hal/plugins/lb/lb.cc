@@ -1,8 +1,8 @@
-#include "nic/hal/plugins/network/net_plugin.hpp"
+#include "nic/fte/fte.hpp"
 #include "nic/hal/src/l4lb.hpp"
 
 namespace hal {
-namespace net {
+namespace lb {
 
 static inline hal_ret_t
 update_flow_from_nat_spec(fte::ctx_t& ctx, const session::FlowInfo& flow_info)

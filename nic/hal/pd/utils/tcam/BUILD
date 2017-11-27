@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
+load("//nic/bazel:common_deps.bzl", "gl_deps_list")
+load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
 
 cc_library(
     name = "tcam",
@@ -26,37 +28,6 @@ cc_library(
 cc_test(
     name = "tcam_test",
     srcs = ["test/tcam_test.cc"],
-    linkopts = [
-        "-lzmq",
-        "-lpthread",
-        "-pthread",
-        "-lprotobuf"
-    ],
-    deps = [
-        ":tcam",
-        "//:gtest",
-        "//nic/utils/trace",
-        "//nic/fte:fte",
-        "//nic/hal/plugins/network:network",
-        "//nic/hal/plugins/classic:classic",
-        "//nic/hal/plugins/proxy:proxyplugin",
-        "//nic/utils/host_mem:host_mem",
-        "//nic/hal/test/utils:haltestutils",
-        "//nic/hal/lkl:lkl_api",
-        "//nic:lkl",
-
-        # PD
-        "//nic/hal/pd/common:pdcommon",
-        "//nic/hal/pd/iris/p4pd:p4pdapi",
-        "//nic/hal/pd/iris",
-        "//nic:capricsr_int",
-        "//nic/hal/pd/capri",
-        "//nic/hal/pd/control",
-        "//nic/model_sim:model_client",
-        "//nic:p4pd",
-        "//nic:p4pluspd_txdma",
-        "//nic:p4pluspd_rxdma",
-        "//nic:asic_libs",
-        "//nic/hal/pd/utils/p4pd_mock:p4pd_mock"
-    ],
+    deps = gl_deps_list,
+    linkopts = gl_linkopts_list
 )

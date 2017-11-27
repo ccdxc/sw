@@ -1,9 +1,9 @@
-#include "net_plugin.hpp"
 #include <stdint.h>
+#include "nic/include/fte.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 
 namespace hal {
-namespace net {
+namespace dol {
 
 thread_local bool g_handler_registered;
 
@@ -24,5 +24,5 @@ dol_test_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-} // namespace net
+} // namespace dol
 } // namespace hal

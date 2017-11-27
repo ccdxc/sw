@@ -1,0 +1,23 @@
+{
+    "plugins": [
+        {
+            "name"      : "classic",
+            "provider"  : "pensando.io",
+            "lib"       : "classic/libclassic.so",
+            "init_func" : "classic_init",
+            "exit_func" : "classic_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["fwding"]
+        }
+    ],
+    "pipelines": [
+        {
+            "name": "flow-miss",
+            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
+            "outbound_features": [
+                "pensando.io/classic:fwding"
+            ]
+        }
+    ]
+}
