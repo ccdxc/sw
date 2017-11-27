@@ -33,6 +33,11 @@ func Stats() *expvar.Map {
 	return singletonMap
 }
 
+// ClearStats clears all RPC statistics.
+func ClearStats() {
+	singletonMap = singletonMap.Init()
+}
+
 // These are options that are common to both client and server
 type options struct {
 	stats        *statsMiddleware  // Stats middleware for the server instance

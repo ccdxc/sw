@@ -79,6 +79,8 @@ func validateStats(t *testing.T, svc, prefix, method, suffix string, reqs, resps
 
 // test basic RPC
 func TestRPCBasic(t *testing.T) {
+	ClearStats()
+
 	// create an rpc handler object
 	testHandler := NewTestRPCHandler("dummy message", "test response")
 
@@ -125,6 +127,8 @@ func TestRPCBasic(t *testing.T) {
 
 // test rpc client connection closing and reconnecting
 func TestRPCClientReconnect(t *testing.T) {
+	ClearStats()
+
 	// create an rpc handler object
 	testHandler := NewTestRPCHandler("dummy message", "test response")
 
@@ -171,6 +175,8 @@ func TestRPCClientReconnect(t *testing.T) {
 
 // test RPC server restart
 func TestRPCServerRestart(t *testing.T) {
+	ClearStats()
+
 	// create an rpc handler object
 	testHandler := NewTestRPCHandler("dummy message", "test response")
 
