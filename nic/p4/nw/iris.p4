@@ -76,6 +76,7 @@ header_type control_metadata_t {
         nic_mode                       : 1;
         parse_tcp_option_error         : 1;
         allow_flood                    : 1;
+        compute_icrc                   : 1;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;

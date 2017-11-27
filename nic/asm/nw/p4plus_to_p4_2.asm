@@ -29,6 +29,10 @@ f_p4plus_to_p4_2:
                   P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN
   phvwr.c2    p.udp_len, r2
 
+  // set compute_icrc flag
+  seq         c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
+  // phvwr.c1    p.control_metadata_compute_icrc, TRUE
+
   // remove the headers
   phvwr.e     p.capri_txdma_intrinsic_valid, FALSE
   phvwr       p.p4plus_to_p4_valid, FALSE
