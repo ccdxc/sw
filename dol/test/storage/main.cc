@@ -10,7 +10,7 @@
 
 #include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/rdma.hpp"
-
+#include "dol/test/storage/compression_test.hpp"
 
 namespace queues {
 void queues_shutdown();
@@ -61,6 +61,14 @@ std::vector<tests::TestEntry> test_suite = {
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
   {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
+  {&tests::compress_host_flat, "Host->Host flat buf", false},
+  {&tests::compress_hbm_flat, "HBM->HBM flat buf", false},
+  {&tests::compress_host_to_hbm_flat, "Host->HBM flat buf", false},
+  {&tests::compress_hbm_to_host_flat, "HBM->Host flat buf", false},
+  {&tests::compress_host_sgl, "Host->Host sgl buf", false},
+  {&tests::compress_hbm_sgl, "HBM->HBM sgl buf", false},
+  //{&tests::compress_host_nested_sgl, "Host->Host nested sgl buf", false},
+  //{&tests::compress_hbm_nested_sgl, "HBM->HBM nested sgl buf", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
@@ -94,6 +102,9 @@ int main(int argc, char**argv) {
     return 1;
   }
   printf("Setup completed\n");
+
+  printf("Going to init compression\n");
+  tests::compression_init();
 
   if (rdma_init() < 0) {
     printf("RDMA Setup failed\n");

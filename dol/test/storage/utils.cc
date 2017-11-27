@@ -23,33 +23,25 @@ void write_bit_fields(void *ptr, unsigned start_bit_offset,
   }
 }
 
-void dump(uint8_t *buf) {
+void dump(uint8_t *buf, int size) {
   int i;
 
-  for (i = 0; i < 64; i++) {
-    printf("%2.2x ", buf[i]);
+  for (i = 0; i < size; i++) {
+    printf("0x%2.2x ", buf[i]);
     if ((i & 7) == 7) {
       printf(" ");
     }
     if ((i & 0xf) == 0xf) {
       printf("\n");
     }
+  }
+  if (!((i & 0xf) == 0xf)) {
+    printf("\n");
   }
 }
 
 void dump1K(uint8_t *buf) {
-  int i;
-
-  printf("Dumping 1K of %p \n", buf);
-  for (i = 0; i < 1024; i++) {
-    printf("%2.2x ", buf[i]);
-    if ((i & 7) == 7) {
-      printf(" ");
-    }
-    if ((i & 0xf) == 0xf) {
-      printf("\n");
-    }
-  }
+  dump(buf, 1024);
 }
 
 uint64_t storage_hbm_addr;

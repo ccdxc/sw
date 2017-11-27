@@ -63,6 +63,24 @@ cc_library(
 )
 
 cc_library(
+    name = "compression",
+    srcs = [
+        "compression.cc",
+        "compression.hpp",
+        "compression_test.hpp",
+        "compression_data.cc",
+        "utils.hpp",
+    ],
+    hdrs = ["compression.hpp"],
+    copts = [ "-g" ],
+    deps = [
+        "//nic:compression_asic_hdrs",
+        "//nic/utils/host_mem",
+        "//nic/model_sim:model_client",
+    ],
+)
+
+cc_library(
     name= "r2n",
     srcs = [
         "r2n.cc",
@@ -152,8 +170,10 @@ cc_binary(
         ":qstate_if",
         ":tests",
         ":rdma",
+        ":compression",
         "//nic:grpc",
     ],
+    copts = [ "-g" ],
     linkopts = [
         "-lpthread",
         "-pthread",

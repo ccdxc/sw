@@ -10,7 +10,7 @@ namespace utils {
 void write_bit_fields(void *ptr, unsigned start_bit_offset,
                       unsigned size_in_bits, uint64_t value);
 
-void dump(uint8_t *buf);
+void dump(uint8_t *buf, int size=64);
 
 void dump1K(uint8_t *buf);
 

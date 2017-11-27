@@ -381,3 +381,12 @@ cc_library(
         "third-party/libtirpc/export"
         ],
 )
+
+# Used by dol/test/storage/BUILD
+cc_inc_library(
+    name = "compression_asic_hdrs",
+    hdrs = [
+      "asic/capri/design/common/cap_addr_define.h",
+      "asic/capri/model/cap_he/readonly/cap_hens_csr_define.h",
+    ],
+)
