@@ -16,10 +16,13 @@
  */
 #define tx_table_s0_t0          proxyr_tx_start
 #define tx_table_s1_t0          proxyr_my_txq_entry
+#define tx_table_s1_t1          proxyr_flow_key
 #define tx_table_s2_t0          proxyr_desc
-#define tx_table_s3_t0          proxyr_mpage_sem
-#define tx_table_s4_t0          proxyr_mpage
-#define tx_table_s5_t0          proxyr_flow_key
+#define tx_table_s3_t0          proxyr_mpage_sem_post
+#define tx_table_s3_t1          proxyr_mpage_sem_skip
+#define tx_table_s4_t0          proxyr_mpage_post
+#define tx_table_s4_t1          proxyr_mpage_skip
+#define tx_table_s5_t0          proxyr_chain_pindex
 #define tx_table_s6_t0          proxyr_cleanup_discard
 #define tx_table_s6_t1          proxyr_chain_xfer
 #define tx_table_s7_t0          proxyr_desc_free
@@ -30,6 +33,7 @@
  * L7 proxy redirect stage 1
  */
 #define tx_table_s1_t0_action   consume
+#define tx_table_s1_t1_action   flow_key_post_read
 
 /*
  * L7 Proxy Chain stage 2
@@ -40,16 +44,18 @@
  * L7 Proxy Chain stage 3
  */
 #define tx_table_s3_t0_action   mpage_pindex_post_update
+#define tx_table_s3_t1_action   mpage_pindex_skip
 
 /*
  * L7 Proxy Chain stage 4
  */
 #define tx_table_s4_t0_action   mpage_post_alloc
+#define tx_table_s4_t1_action   mpage_skip_alloc
 
 /*
  * L7 Proxy Chain stage 5
  */
-#define tx_table_s5_t0_action   flow_key_post_read
+#define tx_table_s5_t0_action   chain_pindex_pre_alloc
 
 /*
  * L7 Proxy Chain stage 6
@@ -71,16 +77,13 @@
 
 #define GENERATE_GLOBAL_K \
     modify_field(common_global_scratch.chain_ring_base, common_phv.chain_ring_base); \
+    modify_field(common_global_scratch.do_cleanup_discard, common_phv.do_cleanup_discard); \
     modify_field(common_global_scratch.mpage_sem_pindex_full, common_phv.mpage_sem_pindex_full); \
-    modify_field(common_global_scratch.mpage_valid, common_phv.mpage_valid); \
-    modify_field(common_global_scratch.ppage_valid, common_phv.ppage_valid); \
-    modify_field(common_global_scratch.desc_valid, common_phv.desc_valid); \
     modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
     modify_field(common_global_scratch.chain_ring_size_shift, common_phv.chain_ring_size_shift); \
     modify_field(common_global_scratch.chain_entry_size_shift, common_phv.chain_entry_size_shift); \
     modify_field(common_global_scratch.chain_ring_index_select, common_phv.chain_ring_index_select); \
-    modify_field(common_global_scratch.pad, common_phv.pad); \
-    modify_field(common_global_scratch.dol_flags, common_phv.dol_flags); \
+    modify_field(common_global_scratch.proxyrcb_flags, common_phv.proxyrcb_flags); \
 
 
 
@@ -99,15 +102,20 @@ header_type proxyrcb_t {
     fields {
         CAPRI_QSTATE_HEADER_COMMON
         CAPRI_QSTATE_HEADER_RING(0)
-        CAPRI_QSTATE_HEADER_RING(1)
 
         /*
          * NOTE: cb is programmed by HAL and would work best when
          * fields are aligned on whole byte boundary.
          */
+         
+        /*
+         * Sentinel to indicate CB has been de-activated, allowing P4+ code
+         * to early detect and enter cleanup.
+         */
+        proxyrcb_deactivated            : 8;  // must be first in CB after header rings
+        pad                             : 8;
+        proxyrcb_flags                  : 16; // DOL flags and others
         my_txq_base                     : HBM_ADDRESS_WIDTH;
-        my_txq_ring_size_shift          : 8;
-        my_txq_entry_size_shift         : 8;
 
         /*
          * For a given flow, one of 2 types of redirection can apply:
@@ -128,7 +136,9 @@ header_type proxyrcb_t {
         chain_rxq_ring_size_shift       : 8;
         chain_rxq_entry_size_shift      : 8;
         chain_rxq_ring_index_select     : 8;
-        dol_flags                       : 8;
+        
+        my_txq_ring_size_shift          : 8;
+        my_txq_entry_size_shift         : 8;
     }
 }
 
@@ -140,8 +150,8 @@ header_type proxyrcb_extra_t {
          * NOTE: cb is programmed by HAL and would work best when
          * fields are aligned on whole byte boundary.
          *
-	 * Fixed flow values for building Proxy meta header
-	 */
+         * Fixed flow values for building Proxy meta header
+         */
         ip_sa                           : 128;
         ip_da                           : 128;
         sport                           : 16;
@@ -149,6 +159,12 @@ header_type proxyrcb_extra_t {
         vrf                             : 16;
         af                              : 8;
         ip_proto                        : 8;
+        
+        /*
+         * Sentinel to indicate all bytes in CB have been written and P4+ code
+         * can start normal processing.
+         */
+        proxyrcb_activated              : 8; // must be last in CB
     }
 }
 
@@ -215,19 +231,16 @@ header_type common_global_phv_t {
         chain_ring_size_shift           : 5;
         chain_entry_size_shift          : 5;
         chain_ring_index_select         : 3;
+        do_cleanup_discard              : 1;
         mpage_sem_pindex_full           : 1;
-        mpage_valid                     : 1;
-        ppage_valid                     : 1;
-        desc_valid                      : 1;
         redir_span_instance             : 1;
-        pad             		: 6;
-	dol_flags			: 8;
+        proxyrcb_flags                  : 16;
     }
 }
 
-header_type header_phv_pad_80_t {
+header_type header_phv_pad_224_t {
     fields {
-        hdr_pad                         : 80;    
+        hdr_pad                         : 224;
     }    
 }
 
@@ -250,13 +263,14 @@ header_type to_stage_1_phv_t {
         my_txq_qid                      : 24;
         my_txq_lif                      : 11;
         my_txq_qtype                    : 3;
+        proxyrcb_deactivated            : 1;
     }
 }
 
 header_type to_stage_4_phv_t {
     fields {
         // (max 128 bits)
-        qstate_addr         		: 34;
+        qstate_addr                     : 34;
     }
 }
 
@@ -271,18 +285,18 @@ header_type to_stage_5_phv_t {
 header_type to_stage_6_phv_t {
     fields {
         // (max 128 bits)
-        desc                            : 32;
-        ppage                           : 32;
-        mpage                           : 32;
+        desc                            : 34;
+        ppage                           : 34;
+        mpage                           : 34;
     }
 }
 
 header_type to_stage_7_phv_t {
     fields {
         // (max 128 bits)
-        desc                            : 32;
-        ppage                           : 32;
-        mpage                           : 32;
+        desc                            : 34;
+        ppage                           : 34;
+        mpage                           : 34;
     }
 }
 
@@ -367,22 +381,22 @@ metadata to_stage_7_phv_t               to_s7_scratch;
  */
  
 @pragma dont_trim
-metadata p4_to_p4plus_cpu_pkt_t		p4plus_cpu_pkt;
+metadata p4_to_p4plus_cpu_pkt_t         p4plus_cpu_pkt;
+
+/*
+ * The above p4plus_cpu_pkt + pen_app_redir_hdr + pen_app_redir_version_hdr +
+ * pen_proxyr_hdr_v1 would cause pen_proxyr_hdr_v1 to be split across 2 flits
+ * with some intervening bits. Hence, insert a pad to push L7 headers
+ * to a completely new flit.
+ */
+@pragma dont_trim
+metadata header_phv_pad_224_t           header_phv_pad_224;
 
 @pragma dont_trim
 metadata pen_app_redir_header_t         pen_app_redir_hdr;
 
 @pragma dont_trim
 metadata pen_app_redir_version_header_t pen_app_redir_version_hdr;
-
-/*
- * The above p4plus_cpu_pkt + pen_app_redir_hdr + pen_app_redir_version_hdr +
- * pen_proxyr_hdr_v1 would cause pen_proxyr_hdr_v1 to be split across 2 flits
- * with some intervening bits. Hence, insert a pad to push pen_proxyr_hdr_v1
- * to a completely new flit.
- */
-@pragma dont_trim
-metadata header_phv_pad_80_t 		header_phv_pad_80;
 
 @pragma dont_trim
 metadata pen_proxy_redir_header_v1_t    pen_proxyr_hdr_v1;
@@ -423,11 +437,12 @@ metadata dma_cmd_phv2mem_t              dma_chain;
 action start(rsvd, cosA, cosB, cos_sel, 
              eval_last, host, total, pid,
              pi_0, ci_0,
-             pi_1, ci_1,
+             proxyrcb_deactivated,
              my_txq_base, my_txq_ring_size_shift, my_txq_entry_size_shift,
              chain_rxq_base, chain_rxq_ring_indices_addr,
              chain_rxq_ring_size_shift, chain_rxq_entry_size_shift,
-             chain_rxq_ring_index_select, dol_flags) {
+             chain_rxq_ring_index_select, 
+             proxyrcb_flags) {
 
     // k + i for stage 0
 
@@ -451,9 +466,8 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(proxyrcb_d.pid, pid);
     modify_field(proxyrcb_d.pi_0, pi_0);
     modify_field(proxyrcb_d.ci_0, ci_0);
-    modify_field(proxyrcb_d.pi_1, pi_1);
-    modify_field(proxyrcb_d.ci_1, ci_1);
     
+    modify_field(proxyrcb_d.proxyrcb_deactivated, proxyrcb_deactivated);
     modify_field(proxyrcb_d.my_txq_base, my_txq_base);
     modify_field(proxyrcb_d.my_txq_ring_size_shift, my_txq_ring_size_shift);
     modify_field(proxyrcb_d.my_txq_entry_size_shift, my_txq_entry_size_shift);
@@ -462,7 +476,7 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(proxyrcb_d.chain_rxq_ring_size_shift, chain_rxq_ring_size_shift);
     modify_field(proxyrcb_d.chain_rxq_entry_size_shift, chain_rxq_entry_size_shift);
     modify_field(proxyrcb_d.chain_rxq_ring_index_select, chain_rxq_ring_index_select);
-    modify_field(proxyrcb_d.dol_flags, dol_flags);
+    modify_field(proxyrcb_d.proxyrcb_flags, proxyrcb_flags);
 }
 
 
@@ -477,6 +491,7 @@ action consume(desc) {
     modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
     modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
     modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
+    modify_field(to_s1_scratch.proxyrcb_deactivated, to_s1.proxyrcb_deactivated);
     
     // from ki global
     GENERATE_GLOBAL_K
@@ -487,12 +502,46 @@ action consume(desc) {
 
 
 /*
+ * Stage 1 table 1 action
+ */
+action flow_key_post_read(ip_sa, ip_da, sport, dport, 
+                          vrf, af, ip_proto,
+                          proxyrcb_activated) {
+
+    // k + i for stage 1 table 1
+
+    // from to_stage 1
+    modify_field(to_s1_scratch.my_txq_ci_curr, to_s1.my_txq_ci_curr);
+    modify_field(to_s1_scratch.my_txq_ring_size_shift, to_s1.my_txq_ring_size_shift);
+    modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
+    modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
+    modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
+    modify_field(to_s1_scratch.proxyrcb_deactivated, to_s1.proxyrcb_deactivated);
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from stage to stage
+
+    // d for stage 1 table 1
+    modify_field(proxyrcb_extra_d.ip_sa, ip_sa);
+    modify_field(proxyrcb_extra_d.ip_da, ip_da);
+    modify_field(proxyrcb_extra_d.sport, sport);
+    modify_field(proxyrcb_extra_d.dport, dport);
+    modify_field(proxyrcb_extra_d.vrf, vrf);
+    modify_field(proxyrcb_extra_d.af, af);
+    modify_field(proxyrcb_extra_d.ip_proto, ip_proto);
+    modify_field(proxyrcb_extra_d.proxyrcb_activated, proxyrcb_activated);
+}
+
+
+/*
  * Stage 2 table 0 action
  */
 action desc_post_read(A0, O0, L0,
                       A1, O1, L1,
                       A2, O2, L2,
-		      next_addr, next_pkt) {
+                      next_addr, next_pkt) {
 
     // from to_stage
     //modify_field(to_s6_scratch.ppage, to_s6.ppage);
@@ -527,10 +576,25 @@ action mpage_pindex_post_update(pindex, pindex_full) {
 
 
 /*
+ * Stage 3 table 1 action
+ */
+action mpage_pindex_skip() {
+    // k + i for stage 3 table 1
+
+    // from to_stage 3
+    
+    // from ki global
+    //GENERATE_GLOBAL_K
+
+    // d for stage 3 table 1
+}
+
+
+/*
  * Stage 4 table 0 action
  */
 action mpage_post_alloc(page, pad) {
-    // k + i for stage 2 table 2
+    // k + i for stage 4 table 0
 
     // from to_stage 4
     modify_field(to_s4_scratch.qstate_addr, to_s4.qstate_addr);
@@ -545,10 +609,25 @@ action mpage_post_alloc(page, pad) {
 
 
 /*
+ * Stage 4 table 1 action
+ */
+action mpage_skip_alloc() {
+
+    // k + i for stage 4 table 1
+
+    // from to_stage 4
+    
+    // from ki global
+    //GENERATE_GLOBAL_K
+
+    // d for stage 4 table 1
+}
+
+
+/*
  * Stage 5 table 0 action
  */
-action flow_key_post_read(ip_sa, ip_da, sport, dport, 
-                          vrf, af, ip_proto) {
+action chain_pindex_pre_alloc() {
 
     // k + i for stage 5 table 0
 
@@ -561,13 +640,6 @@ action flow_key_post_read(ip_sa, ip_da, sport, dport,
     // from stage to stage
 
     // d for stage 5 table 0
-    modify_field(proxyrcb_extra_d.ip_sa, ip_sa);
-    modify_field(proxyrcb_extra_d.ip_da, ip_da);
-    modify_field(proxyrcb_extra_d.sport, sport);
-    modify_field(proxyrcb_extra_d.dport, dport);
-    modify_field(proxyrcb_extra_d.vrf, vrf);
-    modify_field(proxyrcb_extra_d.af, af);
-    modify_field(proxyrcb_extra_d.ip_proto, ip_proto);
 }
 
 
@@ -575,6 +647,7 @@ action flow_key_post_read(ip_sa, ip_da, sport, dport,
  * Stage 6 table 0 action
  */
 action cleanup_discard() {
+
     // k + i for stage 6
 
     // from to_stage 6
@@ -593,6 +666,7 @@ action cleanup_discard() {
  * Stage 6 table 1 action
  */
 action chain_xfer(pi_0, pi_1, pi_2) {
+
     // k + i for stage 6 table 1
 
     // from to_stage 6
@@ -602,6 +676,7 @@ action chain_xfer(pi_0, pi_1, pi_2) {
 
     // from stage to stage
     modify_field(to_s6_scratch.desc,  to_s6.desc);
+    modify_field(to_s6_scratch.ppage, to_s6.ppage);
     modify_field(to_s6_scratch.mpage, to_s6.mpage);
 
     // d for stage 6 table 2
@@ -615,6 +690,7 @@ action chain_xfer(pi_0, pi_1, pi_2) {
  * Stage 7 table 0 action
  */
 action desc_free(pindex, pindex_full) {
+
     // k + i for stage 7 table 0
     
     // from to_stage 7
@@ -635,6 +711,7 @@ action desc_free(pindex, pindex_full) {
  * Stage 7 table 1 action
  */
 action ppage_free(pindex, pindex_full) {
+
     // k + i for stage 7 table 2
     
     // from to_stage 7
@@ -655,6 +732,7 @@ action ppage_free(pindex, pindex_full) {
  * Stage 7 table 2 action
  */
 action mpage_free(pindex, pindex_full) {
+
     // k + i for stage 7 table 2
     
     // from to_stage 7

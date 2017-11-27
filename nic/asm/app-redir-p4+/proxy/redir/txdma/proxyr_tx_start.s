@@ -4,8 +4,19 @@ struct phv_                     p;
 struct proxyr_tx_start_k        k;
 struct proxyr_tx_start_d        d;
 
+/*
+ * Registers usage
+ */
+#define r_ci                        r1  // my_txq onsumer index
+#define r_pi                        r2  // my_txq producer index
+#define r_my_txq_qid                r3
+#define r_qstate_addr               r4
+#define r_return                    r5
+#define r_scratch                   r6
+
 %%
     .param          proxyr_s1_my_txq_entry_consume
+    .param          proxyr_s1_flow_key_post_read
     
     .align
 
@@ -28,19 +39,14 @@ proxyr_s0_tx_start:
     CAPRI_CLEAR_TABLE0_VALID
     
     /*
-     * do nothing if my_txq not configured
-     */
-    seq         c1, d.u.start_d.my_txq_base, r0
-    bcf         [c1], my_txq_cfg_err
-     
-    /*
      * qid is our flow ID context
      */
     phvwr       p.to_s1_my_txq_lif, CAPRI_INTRINSIC_LIF     // delay slot
     phvwr       p.to_s1_my_txq_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE
     phvwr       p.to_s1_my_txq_qid, CAPRI_TXDMA_INTRINSIC_QID
-    phvwr       p.to_s4_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
 
+    phvwr       p.common_phv_proxyrcb_flags, d.{u.start_d.proxyrcb_flags}.hx
+    
     /*
      * Also prefill certain meta header fields;
      * FTE expects p4plus_cpu_pkt_lif/qtype/qid in host order,
@@ -48,9 +54,9 @@ proxyr_s0_tx_start:
      */
     phvwr       p.p4plus_cpu_pkt_lif, CAPRI_INTRINSIC_LIF.hx
     phvwr       p.p4plus_cpu_pkt_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE
-    add         r3, r0, CAPRI_TXDMA_INTRINSIC_QID
-    phvwr       p.p4plus_cpu_pkt_qid, r3.wx
-    phvwr       p.pen_proxyr_hdr_v1_flow_id, r3
+    add         r_my_txq_qid, r0, CAPRI_TXDMA_INTRINSIC_QID
+    phvwr       p.p4plus_cpu_pkt_qid, r_my_txq_qid.wx
+    phvwr       p.pen_proxyr_hdr_v1_flow_id, r_my_txq_qid
 
     phvwr.c1    p.common_phv_chain_ring_base, d.u.start_d.chain_rxq_base
     phvwr.c1    p.common_phv_chain_ring_size_shift, d.u.start_d.chain_rxq_ring_size_shift
@@ -58,46 +64,71 @@ proxyr_s0_tx_start:
     phvwr.c1    p.common_phv_chain_ring_index_select, d.u.start_d.chain_rxq_ring_index_select
     phvwr.c1    p.to_s5_chain_ring_indices_addr, d.u.start_d.chain_rxq_ring_indices_addr
     
-    phvwr       p.common_phv_dol_flags, d.u.start_d.dol_flags
-    
+    /*
+     * Two sentinels surround the programming of CB byte sequence:
+     * proxyrcb_deactivated must be false and proxyrcb_activated must
+     * be true to indicate readiness.
+     *
+     * Note that proxyrcb_activated is part of proxyrcb_extra_t and
+     * its evaluation will be deferred until proxyrcb_extra_t is read
+     * in stage 1.
+     */
+    phvwr       p.to_s1_proxyrcb_deactivated, d.u.start_d.proxyrcb_deactivated
+    add         r_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, \
+                PROXYR_CB_TABLE_FLOW_KEY_OFFSET                  
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
+                          proxyr_s1_flow_key_post_read,
+                          r_qstate_addr,
+                          TABLE_SIZE_512_BITS)
     /*
      * PI assumed to have been incremented by doorbell write by a producer program;
      * double check for queue not empty in case we somehow got erroneously scheduled.
      */
-    add         r3, r0, d.{u.start_d.ci_0}.hx
-    mincr       r3, d.u.start_d.my_txq_ring_size_shift, r0
-    add         r4, r0, d.{u.start_d.pi_0}.hx
-    mincr       r4, d.u.start_d.my_txq_ring_size_shift, r0
-    beq         r3, r4, my_txq_ring_empty
-    phvwr       p.to_s1_my_txq_ci_curr, r3        // delay slot
+    add         r_ci, r0, d.{u.start_d.ci_0}.hx
+    mincr       r_ci, d.u.start_d.my_txq_ring_size_shift, r0
+    add         r_pi, r0, d.{u.start_d.pi_0}.hx
+    mincr       r_pi, d.u.start_d.my_txq_ring_size_shift, r0
+    beq         r_ci, r_pi, _my_txq_ring_empty
+    phvwr       p.to_s1_my_txq_ci_curr, r_ci    // delay slot
 
     /*
-     * Launch read of descriptor at current CI
+     * Launch read of descriptor at current CI.
+     * Note that my_txq_base and corresponding CI/PI, once programmed,
+     * are never cleared (because doing so can cause Tx scheduler lockup).
+     * What can get cleared is the proxyrcb_active flag which would tell this
+     * program to properly consume and free the descriptor along with 
+     * any pages embedded within.
      */    
-    add         r4, r0, d.u.start_d.my_txq_entry_size_shift
-    sllv        r3, r3, r4
-    add         r3, r3, d.{u.start_d.my_txq_base}.wx
+    add         r_scratch, r0, d.u.start_d.my_txq_entry_size_shift
+    sllv        r_ci, r_ci, r_scratch
+    add         r_ci, r_ci, d.{u.start_d.my_txq_base}.wx
     CAPRI_NEXT_TABLE_READ(0,
                           TABLE_LOCK_DIS,
                           proxyr_s1_my_txq_entry_consume,
-                          r3,
+                          r_ci,
                           TABLE_SIZE_64_BITS)
     nop.e
     nop    
     
-my_txq_cfg_err:
-
+/*
+ * CB has been de-activated or never made ready
+ */
+_proxyrcb_not_ready:
+ 
     /*
-     * My TxQ not configured
      * TODO: add stats here
      */
-    nop.e
-    nop
+    jr          r_return
+    phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot
 
-my_txq_ring_empty:
+
+     
+/*
+ * Early exit: my TxQ ring actually empty when entered
+ */
+_my_txq_ring_empty:
 
     /*
-     * Early exit: my TxQ ring actually empty when entered
      * TODO: add stats here
      */
     nop.e

@@ -3,6 +3,11 @@
 struct phv_                             p;
 struct rawr_chain_pindex_pre_alloc_k    k;
 
+/*
+ * Registers usage
+ */
+#define r_ring_indices_addr         r1
+
 %%
 
     .param      rawr_s6_chain_txq_pindex_post_read
@@ -24,47 +29,48 @@ rawr_s5_chain_pindex_pre_alloc:
     sne         c1, k.common_phv_desc_sem_pindex_full, r0
     sne         c2, k.common_phv_ppage_sem_pindex_full, r0
     sne         c3, k.common_phv_mpage_sem_pindex_full, r0
-    bcf         [c1 | c2 | c3], cleanup_discard_launch
+    bcf         [c1 | c2 | c3], _cleanup_discard_launch
 
     /*
      * Based on redirection type, launch the corresponding read
      * of ring indices.
      */
-    add         r3, r0, k.{to_s5_chain_ring_indices_addr}.wx    // delay slot
-    beq         r3, r0, cleanup_discard_launch
-    add         r4, r0, k.common_phv_chain_to_rxq               // delay slot
-    seq         c1, r4, r0
-    bcf         [c1], chain_txq_ring_indices_launch
-    nop
+    seq         c1, k.common_phv_chain_to_rxq, r0   // delay slot
+    bcf         [c1], _chain_txq_ring_indices_launch
+    add         r_ring_indices_addr, r0, k.{to_s5_chain_ring_indices_addr}.wx    // delay slot
 
     /*
      * Chain to ARM RxQ: access HBM queue index table directly
      */
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN,
                           rawr_s6_chain_qidxr_pindex_post_read,
-                          r3,
-                          TABLE_SIZE_512_BITS)
+                          r_ring_indices_addr,
+                          TABLE_SIZE_256_BITS)
     nop.e
     nop
 
-chain_txq_ring_indices_launch:
+
+/*
+ * Launch read of chain TxQ's current PI/CI, each index is 16 bits wide.
+ * For the current flow, the assumption is we are the only producer
+ * for the corresponding TxQ ring.
+ */
+_chain_txq_ring_indices_launch:
      
-    /*
-     * Launch read of chain TxQ's current PI/CI, each index is 16 bits wide.
-     * For the current flow, the assumption is we are the only producer
-     * for the corresponding TxQ ring.
-     */
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
                           rawr_s6_chain_txq_pindex_post_read,
-                          r3,
+                          r_ring_indices_addr,
                           TABLE_SIZE_32_BITS)
     nop.e
     nop                          
     
-cleanup_discard_launch:    
+
+/*
+ * Launch common cleanup code for next stage
+ */
+_cleanup_discard_launch:    
 
     /*
-     * Launch common cleanup code for next stage
      * TODO: add stats here
      */
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, rawr_s6_cleanup_discard)

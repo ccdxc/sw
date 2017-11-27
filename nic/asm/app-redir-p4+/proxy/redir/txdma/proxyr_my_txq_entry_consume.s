@@ -4,10 +4,13 @@ struct phv_                             p;
 struct proxyr_my_txq_entry_k            k;
 struct proxyr_my_txq_entry_consume_d    d;
 
-#define CI_R                        r1
-#define DB_ADDR_SCRATCH_R           r2
-#define DB_DATA_SCRATCH_R           r3
-#define DESC_R                      r4
+/*
+ * Registers usage
+ */
+#define r_ci                        r1
+#define r_db_addr_scratch           r2
+#define r_db_data_scratch           r3
+#define r_desc                      r4
 
 %%
 
@@ -29,27 +32,26 @@ proxyr_s1_my_txq_entry_consume:
      * doorbell address includes: pid_chk (FALSE), lif, qtype.
      * Doorbell data include: pid, qid, ring, CI.
      */
-    add         CI_R, r0, k.to_s1_my_txq_ci_curr
-    mincr       CI_R, k.to_s1_my_txq_ring_size_shift, 1
+    add         r_ci, r0, k.to_s1_my_txq_ci_curr
+    mincr       r_ci, k.to_s1_my_txq_ring_size_shift, 1
 
     DOORBELL_WRITE_CINDEX(k.{to_s1_my_txq_lif_sbit0_ebit7...\
                              to_s1_my_txq_lif_sbit8_ebit10},
                           k.to_s1_my_txq_qtype,
                           k.to_s1_my_txq_qid,
                           PROXYR_MY_TXQ_RING_DEFAULT,
-                          CI_R,
-                          DB_ADDR_SCRATCH_R,
-                          DB_DATA_SCRATCH_R)
+                          r_ci,
+                          r_db_addr_scratch,
+                          r_db_data_scratch)
     /*
      * Advance past the descriptor scratch area and launch descriptor AOLs read.
      */
-    phvwr       p.to_s6_desc, d.desc
-    phvwri      p.common_phv_desc_valid, TRUE
-    add         DESC_R, r0, d.{desc}.dx
-    addi        DESC_R, DESC_R, NIC_DESC_ENTRY_0_OFFSET
+    add         r_desc, r0, d.desc
+    phvwr       p.to_s6_desc, r_desc
+    add         r_desc, r_desc.dx, NIC_DESC_ENTRY_0_OFFSET
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           proxyr_s2_desc_post_read,
-                          DESC_R,
+                          r_desc,
                           TABLE_SIZE_512_BITS)
     nop.e
     nop                          

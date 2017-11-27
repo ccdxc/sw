@@ -35,12 +35,15 @@ typedef struct rawccb_s {
 
     /*
      * Note that ordering of fields below does not matter;
-     * data will get written to HBM according to P4+ table entry
+     * data will get written to HBM according to P4+ table entry's
      * ordering defined in rawc_txdma_p4plus_ingress.h
      * see hal/pd/iris/rawccb_pd.cc)
      */
     uint16_t              pi;
     uint16_t              ci;
+    uint8_t               rawccb_deactivated;
+    uint8_t               rawccb_activated;
+    uint16_t              rawccb_flags;
     uint32_t              my_txq_base;
     uint8_t               my_txq_ring_size_shift;
     uint8_t               my_txq_entry_size_shift;
@@ -63,8 +66,8 @@ typedef struct rawccb_s {
     ht_ctxt_t             hal_handle_ht_ctxt;       // hal handle based hash table ctxt
 } __PACK__ rawccb_t;
 
-// max. number of RAWC CBs supported  (TODO: we can take this from cfg file)
-#define HAL_MAX_RAWCCB                           2048
+// RAWCCB hash table size
+#define HAL_MAX_RAWCCB_HT_SIZE          1024
 
 // allocate a RAWCCB instance
 static inline rawccb_t *

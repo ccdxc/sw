@@ -4,6 +4,9 @@ struct phv_                             p;
 struct proxyc_my_txq_entry_k            k;
 struct proxyc_my_txq_entry_consume_d    d;
 
+/*
+ * Registers usage
+ */
 #define r_ci                        r1
 #define r_db_addr_scratch           r2
 #define r_db_data_scratch           r3

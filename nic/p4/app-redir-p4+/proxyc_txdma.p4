@@ -18,7 +18,8 @@
 #define tx_table_s1_t0          proxyc_my_txq_entry
 #define tx_table_s2_t0          proxyc_meta_strip
 #define tx_table_s3_t0          proxyc_desc_enqueue
-#define tx_table_s3_t1          proxyc_cpu_flags
+#define tx_table_s3_t1          proxyc_cpu_flags_post
+#define tx_table_s3_t2          proxyc_cpu_flags_skip
 #define tx_table_s4_t1          proxyc_cleanup_discard
 #define tx_table_s5_t0          proxyc_desc_free
 #define tx_table_s5_t1          proxyc_page0_free
@@ -40,6 +41,7 @@
  */
 #define tx_table_s3_t0_action   desc_enqueue
 #define tx_table_s3_t1_action   cpu_flags_post_read
+#define tx_table_s3_t2_action   cpu_flags_skip
 
 /*
  * L7 Proxy Chain stage 4
@@ -75,6 +77,7 @@
     modify_field(common_global_scratch.chain_txq_qid, common_phv.chain_txq_qid); \
     modify_field(common_global_scratch.chain_txq_ring, common_phv.chain_txq_ring); \
     modify_field(common_global_scratch.do_cleanup_discard, common_phv.do_cleanup_discard); \
+    modify_field(common_global_scratch.proxyccb_flags, common_phv.proxyccb_flags); \
 
 
 
@@ -96,22 +99,37 @@ header_type proxyccb_t {
          * NOTE: cb is programmed by HAL and would work best when
          * fields are aligned on whole byte boundary.
          */
+         
+        /*
+         * Sentinel to indicate CB has been de-activated, allowing P4+ code
+         * to early detect and enter cleanup.
+         */
+        proxyccb_deactivated            : 8;  // must be first in CB after header rings
+        pad                             : 8;
+        proxyccb_flags                  : 16; // DOL flags and others
         my_txq_base                     : HBM_ADDRESS_WIDTH;
-        my_txq_ring_size_shift          : 8;
-        my_txq_entry_size_shift         : 8;
         
         /*
          * Next service chain TxQ info.
          */     
-        chain_txq_ring_size_shift       : 8;
-        chain_txq_entry_size_shift      : 8;
         chain_txq_base                  : HBM_ADDRESS_WIDTH;
         chain_txq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
+        chain_txq_ring_size_shift       : 8;
+        chain_txq_entry_size_shift      : 8;
         
-        chain_txq_qid                   : 32;
-        chain_txq_lif                   : 16;
         chain_txq_qtype                 : 8;
         chain_txq_ring                  : 8;
+        chain_txq_qid                   : 32;
+        chain_txq_lif                   : 16;
+        
+        my_txq_ring_size_shift          : 8;
+        my_txq_entry_size_shift         : 8;
+        
+        /*
+         * Sentinel to indicate all bytes in CB have been written and P4+ code
+         * can start normal processing.
+         */
+        proxyccb_activated              : 8; // must be last in CB
     }
 }
 
@@ -138,10 +156,10 @@ header_type chain_txq_ring_indices_d_t {
 // d for stage 3 table 1
 header_type cpu_to_p4plus_header_t {
     fields {
-        flags                   	: 16;
-        src_lif                 	: 16;
-        hw_vlan_id              	: 16;
-        l2_offset               	: 16;
+        flags                           : 16;
+        src_lif                         : 16;
+        hw_vlan_id                      : 16;
+        l2_offset                       : 16;
     }    
 }
 
@@ -180,33 +198,23 @@ header_type common_global_phv_t {
         chain_txq_base                  : HBM_ADDRESS_WIDTH;
         chain_txq_ring_size_shift       : 8;
         chain_txq_entry_size_shift      : 8;
+        proxyccb_flags                  : 16;
         
         chain_txq_lif                   : 11;
         chain_txq_qtype                 : 3;
         chain_txq_qid                   : 24;
         chain_txq_ring                  : 3;
         
-        do_cleanup_discard             	: 1;
+        do_cleanup_discard              : 1;
     }
 }
 
-header_type dma_phv_pad_448_t {
+header_type dma_phv_pad_128_t {
     fields {
-        dma_pad                         : 448;    
+        dma_pad                         : 128;
     }    
 }
 
-header_type dma_phv_pad_384_t {
-    fields {
-        dma_pad                         : 384;
-    }    
-}
-
-header_type dma_phv_pad_16_t {
-    fields {
-        dma_pad                         : 16;    
-    }    
-}
 
 /*
  * to_stage PHV definitions
@@ -233,7 +241,7 @@ header_type to_stage_2_phv_t {
 header_type to_stage_3_phv_t {
     fields {
         // (max 128 bits)
-        desc     			: 64;
+        desc                            : 64;
     }
 }
 
@@ -268,7 +276,7 @@ metadata cpu_to_p4plus_header_t         cpu_to_p4plus_header_d;
 header_type common_t0_s2s_phv_t {
     fields {
         // (max is STAGE_2_STAGE_WIDTH or 160 bits)
-	desc			: 64;
+        desc                    : 64;
     }
 }
 
@@ -333,9 +341,6 @@ metadata ring_entry_t                   chain_txq_desc_addr;
 @pragma dont_trim
 metadata doorbell_data_raw_t            chain_txq_db_data; 
 
-@pragma dont_trim
-metadata dma_phv_pad_384_t              dma_phv_pad_384_t;
-
 /*
  * DMA descriptors for enqueuing to next service TxQ
  */
@@ -345,7 +350,7 @@ metadata dma_cmd_phv2mem_t              dma_chain;
 metadata dma_cmd_phv2mem_t              dma_doorbell;
 
 @pragma dont_trim
-metadata dma_phv_pad_16_t               dma_pad_16;
+metadata dma_phv_pad_128_t              dma_pad_128;
 
 
 
@@ -362,10 +367,12 @@ metadata dma_phv_pad_16_t               dma_pad_16;
 action start(rsvd, cosA, cosB, cos_sel, 
              eval_last, host, total, pid,
              pi_0, ci_0,
+             proxyccb_deactivated,
              my_txq_base, my_txq_ring_size_shift, my_txq_entry_size_shift,
              chain_txq_ring_size_shift, chain_txq_entry_size_shift,
              chain_txq_base, chain_txq_ring_indices_addr,
-             chain_txq_qid, chain_txq_lif, chain_txq_qtype, chain_txq_ring) {
+             chain_txq_qid, chain_txq_lif, chain_txq_qtype, chain_txq_ring,
+             proxyccb_flags, proxyccb_activated) {
 
     // k + i for stage 0
 
@@ -397,6 +404,7 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(proxyccb_d.pi_0, pi_0);
     modify_field(proxyccb_d.ci_0, ci_0);
     
+    modify_field(proxyccb_d.proxyccb_deactivated, proxyccb_deactivated);
     modify_field(proxyccb_d.my_txq_base, my_txq_base);
     modify_field(proxyccb_d.my_txq_ring_size_shift, my_txq_ring_size_shift);
     modify_field(proxyccb_d.my_txq_entry_size_shift, my_txq_entry_size_shift);
@@ -408,6 +416,8 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(proxyccb_d.chain_txq_qtype, chain_txq_qtype);
     modify_field(proxyccb_d.chain_txq_qid, chain_txq_qid);
     modify_field(proxyccb_d.chain_txq_ring, chain_txq_ring);
+    modify_field(proxyccb_d.proxyccb_flags, proxyccb_flags);
+    modify_field(proxyccb_d.proxyccb_activated, proxyccb_activated);
 }
 
 
@@ -484,6 +494,7 @@ action desc_enqueue(pi_curr, ci_curr) {
 action cpu_flags_post_read(flags, src_lif, hw_vlan_id, l2_offset) {
 
     // from to_stage
+    modify_field(to_s3_scratch.desc, to_s3.desc);
     
     // from ki global
     GENERATE_GLOBAL_K
@@ -505,10 +516,27 @@ action cpu_flags_post_read(flags, src_lif, hw_vlan_id, l2_offset) {
 
 
 /*
+ * Stage 3 table 2 action
+ */
+action cpu_flags_skip() {
+
+    // from to_stage
+    modify_field(to_s3_scratch.desc, to_s3.desc);
+    
+    // from ki global
+    GENERATE_GLOBAL_K
+    
+    // from stage to stage
+    
+    // d for stage and table
+}
+
+
+/*
  * Stage 4 table 1 action
  */
 action cleanup_discard(A0, O0, L0,
-		       A1, O1, L1,
+                       A1, O1, L1,
                        A2, O2, L2) {
 
     // k + i for stage 4

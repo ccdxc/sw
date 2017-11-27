@@ -291,13 +291,13 @@ hal_cfg_db::init(void)
     HAL_ASSERT_RETURN((cpucb_hal_handle_ht_ != NULL), false);
 
     // initialize Raw Redirect CB related data structures
-    rawrcb_id_ht_ = ht::factory(HAL_MAX_RAWRCB,
+    rawrcb_id_ht_ = ht::factory(HAL_MAX_RAWRCB_HT_SIZE,
                                 hal::rawrcb_get_key_func,
                                 hal::rawrcb_compute_hash_func,
                                 hal::rawrcb_compare_key_func);
     HAL_ASSERT_RETURN((rawrcb_id_ht_ != NULL), false);
 
-    rawrcb_hal_handle_ht_ = ht::factory(HAL_MAX_RAWRCB,
+    rawrcb_hal_handle_ht_ = ht::factory(HAL_MAX_RAWRCB_HT_SIZE,
                                         hal::rawrcb_get_handle_key_func,
                                         hal::rawrcb_compute_handle_hash_func,
                                         hal::rawrcb_compare_handle_key_func);
@@ -305,13 +305,13 @@ hal_cfg_db::init(void)
 
  
     // initialize Raw Chain CB related data structures
-    rawccb_id_ht_ = ht::factory(HAL_MAX_RAWCCB,
+    rawccb_id_ht_ = ht::factory(HAL_MAX_RAWCCB_HT_SIZE,
                                 hal::rawccb_get_key_func,
                                 hal::rawccb_compute_hash_func,
                                 hal::rawccb_compare_key_func);
     HAL_ASSERT_RETURN((rawccb_id_ht_ != NULL), false);
 
-    rawccb_hal_handle_ht_ = ht::factory(HAL_MAX_RAWCCB,
+    rawccb_hal_handle_ht_ = ht::factory(HAL_MAX_RAWCCB_HT_SIZE,
                                         hal::rawccb_get_handle_key_func,
                                         hal::rawccb_compute_handle_hash_func,
                                         hal::rawccb_compare_handle_key_func);

@@ -11,7 +11,6 @@ rawr_s2_ppage_post_alloc:
 
     CAPRI_CLEAR_TABLE1_VALID
 
-    phvwri      p.common_phv_ppage_valid, TRUE
     phvwr.e     p.to_s6_ppage, d.page
     nop
     

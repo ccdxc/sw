@@ -69,7 +69,6 @@ enum {
     APP_REDIR_NUM_QTYPES_MAX
 };
 
-
 typedef uint32_t lif_id_t;
 typedef uint8_t  qtype_t;
 typedef uint32_t  qid_t;

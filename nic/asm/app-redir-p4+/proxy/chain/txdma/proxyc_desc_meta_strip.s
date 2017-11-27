@@ -33,7 +33,7 @@ struct descr_aol_single_t {
 
     .param      proxyc_s3_desc_enqueue
     .param      proxyc_s3_cpu_flags_post_read
-    .param      proxyc_s3_cpu_flags_not_read
+    .param      proxyc_s3_cpu_flags_skip_read
     .align
     
 /*
@@ -71,14 +71,13 @@ proxyc_s2_desc_meta_strip:
      * Ensure valid evaluation of r_cpu_header_addr
      */
     beq         r_cpu_header_addr, r0, _aol_error
-    seq         c1, k.common_phv_chain_txq_base, r0         // delay slot
     
     /*
-     * If the next service chain's TxQ is not configured, treat like
-     * queue full and handle it in a subsequent stage
+     * If cleanup had been set, treat like queue full and 
+     * handle it in a subsequent stage
      */
+    sne         c1, k.common_phv_do_cleanup_discard, r0 // delay slot
     bcf         [c1], _aol_cpu_flags_read
-    phvwri.c1   p.common_phv_do_cleanup_discard, TRUE       // delay slot
     
     /*
      * Launch read of chain TxQ's current PI/CI, each index is 16 bits wide.
@@ -86,7 +85,7 @@ proxyc_s2_desc_meta_strip:
      * for the corresponding TxQ ring.
      */
     add         r_chain_indices_addr, r0, \
-                k.{to_s2_chain_txq_ring_indices_addr}.wx
+                k.{to_s2_chain_txq_ring_indices_addr}.wx    // delay slot
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           proxyc_s3_desc_enqueue,
                           r_chain_indices_addr,
@@ -100,7 +99,7 @@ _aol_cpu_flags_read:
     /*
      * Read flags from r_cpu_header_addr to determine how to free each
      * of the pages in desc (just in case). If r_cpu_header_addr is not 
-     * available, will assumes pages are from RNMPR (as opposed to
+     * available, will assume pages are from RNMPR (as opposed to
      * RNMPR_SMALL).
      */
     beq         r_cpu_header_addr, r0, _aol_cpu_flags_missing
@@ -115,7 +114,7 @@ _aol_cpu_flags_read:
 
 _aol_cpu_flags_missing:
 
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, proxyc_s3_cpu_flags_not_read)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(2, proxyc_s3_cpu_flags_skip_read)
     nop.e
     nop
 
@@ -170,6 +169,9 @@ _aol_meta_strip:
  */
 _aol_error:
 
+    /*
+     * TODO: add stats here
+     */
     APP_REDIR_TXDMA_INVALID_AOL_TRAP()
     b           _aol_cpu_flags_read
     phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot

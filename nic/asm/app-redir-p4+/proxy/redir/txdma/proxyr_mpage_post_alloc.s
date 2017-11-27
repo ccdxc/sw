@@ -1,14 +1,19 @@
 #include "app_redir_common.h"
 
-struct phv_                             p;
-struct proxyr_mpage_k                   k;
-struct proxyr_mpage_mpage_post_alloc_d  d;
+struct phv_                                 p;
+struct proxyr_mpage_post_k                  k;
+struct proxyr_mpage_post_mpage_post_alloc_d d;
+
+/*
+ * Registers usage
+ */
+#define r_qstate_addr               r1
+
 
 %%
 
-    .param      proxyr_s5_flow_key_post_read
+    .param      proxyr_s5_chain_pindex_pre_alloc
     .align
-
 
 proxyr_s4_mpage_post_alloc:
 
@@ -18,15 +23,22 @@ proxyr_s4_mpage_post_alloc:
     
     /*
      * Advance to next stage which is stage 5 to eventually arrive
-     * at a pre-agreed upon stage for handling chain pindex atomic update,
-     * at the same time fetch the flow key info from our qstate.
+     * at a pre-agreed upon stage for handling chain pindex atomic update.
      */
-    add         r3, r0, k.{to_s4_qstate_addr_sbit0_ebit31...\
-                           to_s4_qstate_addr_sbit32_ebit33}
-    addi        r3, r3, PROXYR_CB_TABLE_FLOW_KEY_OFFSET
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
-                          proxyr_s5_flow_key_post_read,
-                          r3,
-                          TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, proxyr_s5_chain_pindex_pre_alloc)
     nop.e
     nop
+
+    .align
+    
+/*
+ * Entered as a stage transition which skipped the meta page allocation
+ * (when an error condition was detected)
+ */    
+proxyr_s4_mpage_skip_alloc:
+
+    CAPRI_CLEAR_TABLE1_VALID
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, proxyr_s5_chain_pindex_pre_alloc)
+    nop.e
+    nop
+

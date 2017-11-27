@@ -1,8 +1,8 @@
 #include "app_redir_common.h"
 
-struct phv_                             p;
-struct proxyc_page0_free_k              k;
-struct proxyc_page0_free_page0_free_d   d;
+struct phv_                         p;
+struct rawc_page0_free_k            k;
+struct rawc_page0_free_page0_free_d d;
 
 /*
  * Registers usage
@@ -17,8 +17,8 @@ struct proxyc_page0_free_page0_free_d   d;
 %%
     .param      RNMPR_TABLE_BASE
     .param      RNMPR_SMALL_TABLE_BASE
-    .param      proxyc_s6_page1_no_free
-    .param      proxyc_s6_page1_free
+    .param      rawc_s6_page1_no_free
+    .param      rawc_s6_page1_free
     
     .align
 
@@ -26,7 +26,7 @@ struct proxyc_page0_free_page0_free_d   d;
  * Entered as a stage transition to launch a page 1 free index
  * semaphore acquisition when there was no page 0 to free.
  */    
-proxyc_s5_page0_no_free:
+rawc_s5_page0_no_free:
 
     CAPRI_CLEAR_TABLE1_VALID
     
@@ -40,7 +40,7 @@ _page1_free_applic_check:
                            t1_s2s_aol_A1_sbit4_ebit51}
     bcf         [!c1], _page1_sem_free_idx_launch
     nop
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, proxyc_s6_page1_no_free)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, rawc_s6_page1_no_free)
     nop.e
     nop
 
@@ -53,7 +53,7 @@ _page1_sem_free_idx_launch:
     addi.c1     r_scratch, r0, CAPRI_SEM_RNMPR_SMALL_FREE_INF_ADDR
     addi.!c1    r_scratch, r0, CAPRI_SEM_RNMPR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
-                          proxyc_s6_page1_free,
+                          rawc_s6_page1_free,
                           r_scratch,
                           TABLE_SIZE_64_BITS)
     nop.e
@@ -66,7 +66,7 @@ _page1_sem_free_idx_launch:
  * Entered after having acquired a page free index semaphore,
  * this function invokes a common function to free page 0.
  */    
-proxyc_s5_page0_free:
+rawc_s5_page0_free:
 
     CAPRI_CLEAR_TABLE1_VALID
 
@@ -74,11 +74,11 @@ proxyc_s5_page0_free:
      * page free semaphore should never be full
      */
     sne         c1, d.pindex_full, r0
-    bcf         [c1], proxyc_page_free_sem_pindex_full
+    bcf         [c1], rawc_page_free_sem_pindex_full
     add         r_page_is_small, r0, k.t1_s2s_aol_A0_small  // delay slot
     add         r_page_addr, r0, k.{t1_s2s_aol_A0_sbit0_ebit47...\
                                     t1_s2s_aol_A0_sbit48_ebit51}
-    bal         r_return, proxyc_page_free
+    bal         r_return, rawc_page_free
     add         r_table_idx, r0, d.pindex                   // delay slot
     b           _page1_free_applic_check
     nop
@@ -88,7 +88,7 @@ proxyc_s5_page0_free:
 /*
  * A free semaphore index was unexpectedly full
  */                                   
-proxyc_page_free_sem_pindex_full:
+rawc_page_free_sem_pindex_full:
 
     /*
      * TODO: add stats here
@@ -108,7 +108,7 @@ proxyc_page_free_sem_pindex_full:
  * Both page addr and index come in as they were read which
  * are in in host order (little endian)
  */
-proxyc_page_free:
+rawc_page_free:
 
     bne         r_page_is_small, r0, _small_page_free
     add         r_scratch, r0, r_table_idx.wx   // delay slot

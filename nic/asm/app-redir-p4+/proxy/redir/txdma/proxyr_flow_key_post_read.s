@@ -5,52 +5,53 @@ struct proxyr_flow_key_k                    k;
 struct proxyr_flow_key_flow_key_post_read_d d;
 
 %%
-
-    .param      proxyr_s6_chain_xfer
-    .param      proxyr_s6_cleanup_discard
     .align
-    
-proxyr_s5_flow_key_post_read:
 
-    CAPRI_CLEAR_TABLE0_VALID
+/*
+ * Flow key 6-tuple and other flags have been read from qstate.
+ * These are now used to populate the proxy V1 header.
+ */    
+proxyr_s1_flow_key_post_read:
+
+    CAPRI_CLEAR_TABLE1_VALID
 
     /*
-     * Proceed only if mpage successfully allocated
+     * Two sentinels surround the programming of CB byte sequence:
+     * proxyrcb_deactivated must be false and proxyrcb_activated must
+     * be true to indicate readiness.
      */
-    sne         c1, k.common_phv_mpage_sem_pindex_full, r0
-    bcf         [c1], cleanup_discard_launch
-    add         r3, r0, k.{to_s5_chain_ring_indices_addr}.wx    // delay slot
-    beq         r3, r0, cleanup_discard_launch
-    nop
-
+    seq         c1, k.to_s1_proxyrcb_deactivated, r0
+    sne         c2, d.proxyrcb_activated, r0
+    setcf       c3, [c1 & c2]
+    b.!c3       _proxyrcb_not_ready
+    
     /*
      * Populate more meta header fields with flow key
      */
-    phvwr       p.pen_proxyr_hdr_v1_vrf, d.vrf
+    phvwr       p.pen_proxyr_hdr_v1_vrf, d.vrf  // delay slot
     phvwr       p.pen_proxyr_hdr_v1_ip_sa, d.ip_sa
     phvwr       p.pen_proxyr_hdr_v1_ip_da, d.ip_da
     phvwr       p.pen_proxyr_hdr_v1_sport, d.sport
     phvwr       p.pen_proxyr_hdr_v1_dport, d.dport
     phvwr       p.pen_proxyr_hdr_v1_af, d.af
-    phvwr       p.pen_proxyr_hdr_v1_ip_proto, d.ip_proto
-    //phvwr       p.pen_proxyr_hdr_v1_tcp_flags, ???
-     
+
     /*
-     * Chain to ARM RxQ: access HBM queue index table directly
+     * TCP flags not currently sent from TCP/TLS proxy
+     * but will be at some point so we will add it then.
      */
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN,
-                          proxyr_s6_chain_xfer,
-                          r3,
-                          TABLE_SIZE_512_BITS)
-    nop.e
+    //phvwr     p.pen_proxyr_hdr_v1_tcp_flags, ???
+    phvwr.e     p.pen_proxyr_hdr_v1_ip_proto, d.ip_proto
     nop
 
-cleanup_discard_launch:    
-
+    .align
+    
+/*
+ * CB has been de-activated or never made ready
+ */
+_proxyrcb_not_ready:
+ 
     /*
-     * Launch common cleanup code for next stage
      * TODO: add stats here
      */
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, proxyr_s6_cleanup_discard)
-    nop.e
+    phvwri.e    p.common_phv_do_cleanup_discard, TRUE
     nop

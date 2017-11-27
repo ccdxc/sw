@@ -4,6 +4,15 @@ struct phv_                                     p;
 struct common_p4plus_stage0_app_header_table_k  k;
 struct common_p4plus_stage0_app_header_table_d  d;
 
+/*
+ * Registers usage
+ */
+#define r_chain_rxq_base            r1
+#define r_chain_txq_base            r2
+#define r_pkt_len                   r3
+#define r_alloc_inf_addr            r4
+#define r_ring_indices_addr         r5
+
 %%
     .param          rawr_s1_desc_sem_pindex_post_update
     .param          rawr_s1_ppage_sem_pindex_post_update
@@ -28,7 +37,18 @@ rawr_s0_rx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
-    
+
+    /*
+     * Two sentinels surround the programming of CB byte sequence:
+     * rawccb_deactivated must be false and rawccb_activated must
+     * be true to indicate readiness.
+     */
+    seq         c1, d.u.rawr_rx_start_d.rawrcb_deactivated, r0
+    sne         c2, d.u.rawr_rx_start_d.rawrcb_activated, r0
+    setcf       c3, [c1 & c2]
+    b.!c3       _rawrcb_not_ready
+    phvwr       p.common_phv_rawrcb_flags,\
+                d.{u.rawr_rx_start_d.rawrcb_flags}.hx // delay slot
     /*
      * qid is our flow ID context:
      */
@@ -46,94 +66,116 @@ rawr_s0_rx_start:
      *   1) Redirect to ARM CPU RxQ, or
      *   2) Redirect to a P4+ TxQ
      */
-    add         r3, r0, d.u.rawr_rx_start_d.chain_rxq_base
-    add         r4, r0, d.u.rawr_rx_start_d.chain_txq_base
-    sne         c1, r3, r0
-    sne         c2, r4, r0
-    bcf         [c1 & c2],   qstate_cfg_err_discard
+    add         r_chain_rxq_base, r0, d.u.rawr_rx_start_d.chain_rxq_base
+    add         r_chain_txq_base, r0, d.u.rawr_rx_start_d.chain_txq_base
+    sne         c1, r_chain_rxq_base, r0
+    sne         c2, r_chain_txq_base, r0
+    bcf         [c1 & c2], _qstate_cfg_err_discard
     nop
-    bcf         [!c1 & !c2], qstate_cfg_err_discard
+    bcf         [!c1 & !c2], _qstate_cfg_err_discard
     phvwr.c1    p.common_phv_chain_to_rxq, TRUE         // delay slot
-    phvwr.c1    p.common_phv_chain_ring_base, r3
+    phvwr.c1    p.common_phv_chain_ring_base, r_chain_rxq_base
     phvwr.c1    p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_rxq_ring_size_shift
     phvwr.c1    p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_rxq_entry_size_shift
     phvwr.c1    p.common_phv_chain_ring_index_select, d.u.rawr_rx_start_d.chain_rxq_ring_index_select
-    phvwr.c1    p.to_s5_chain_ring_indices_addr, d.u.rawr_rx_start_d.chain_rxq_ring_indices_addr
+    add.c1      r_ring_indices_addr, r0, d.u.rawr_rx_start_d.chain_rxq_ring_indices_addr
+    beq.c1      r_ring_indices_addr, r0, _qstate_cfg_err_discard
+    phvwr.c1    p.to_s5_chain_ring_indices_addr, r_ring_indices_addr    // delay slot
     
-    phvwr.!c1   p.common_phv_chain_ring_base, r4
+    phvwr.!c1   p.common_phv_chain_ring_base, r_chain_txq_base
     phvwr.!c1   p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_txq_ring_size_shift
     phvwr.!c1   p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_txq_entry_size_shift
     phvwr.!c1   p.common_phv_chain_lif, d.u.rawr_rx_start_d.chain_txq_lif
     phvwr.!c1   p.common_phv_chain_qtype, d.u.rawr_rx_start_d.chain_txq_qtype
     phvwr.!c1   p.common_phv_chain_qid, d.u.rawr_rx_start_d.chain_txq_qid
     phvwr.!c1   p.common_phv_chain_ring_index_select, d.u.rawr_rx_start_d.chain_txq_ring_index_select
-    phvwr.!c1   p.to_s5_chain_ring_indices_addr, d.u.rawr_rx_start_d.chain_txq_ring_indices_addr
-    
-    phvwr       p.common_phv_chain_doorbell_no_sched, d.u.rawr_rx_start_d.chain_txq_doorbell_no_sched
-    phvwr       p.common_phv_desc_valid_bit_req, d.u.rawr_rx_start_d.desc_valid_bit_req
-    phvwr       p.common_phv_redir_pipeline_lpbk_enable, d.u.rawr_rx_start_d.redir_pipeline_lpbk_enable
+    add.!c1     r_ring_indices_addr, r0, d.u.rawr_rx_start_d.chain_txq_ring_indices_addr
+    beq.!c1     r_ring_indices_addr, r0, _qstate_cfg_err_discard
+    phvwr.!c1   p.to_s5_chain_ring_indices_addr, r_ring_indices_addr    // delay slot
     
     /*
      * Packet_len field contains
      *   sizeof(p4_to_p4plus_cpu_pkt_t) + complete packet length
      * to which we will add an app header of size P4PLUS_RAW_REDIR_HDR_SZ
      */
-    add         r3, r0, k.rawr_app_header_packet_len
-    ble.s       r3, r0, packet_len_err_discard
-    addi        r3, r3, P4PLUS_RAW_REDIR_HDR_SZ         // delay slot
-    phvwr       p.common_phv_packet_len, r3
+    add         r_pkt_len, r0, k.rawr_app_header_packet_len
+    ble.s       r_pkt_len, r0, _packet_len_err_discard
+    addi        r_pkt_len, r_pkt_len, P4PLUS_RAW_REDIR_HDR_SZ   // delay slot
+    phvwr       p.common_phv_packet_len, r_pkt_len
 
     /*
      * Allocate either one meta page, or one packet page, or both.
      */
-    blei        r3, APP_REDIR_MPAGE_SIZE, mpage_sem_pindex_fetch_update
+    blei        r_pkt_len, APP_REDIR_MPAGE_SIZE, _mpage_sem_pindex_fetch_update
     nop
     
-ppage_sem_pindex_fetch_update:
+_ppage_sem_pindex_fetch_update:
 
     /*
      * Fetch/update memory page pindex for storing packet
      */
-    APP_REDIR_ALLOC_SEM_PINDEX_FETCH_UPDATE(1, r4,
-                                            APP_REDIR_RNMPR_ALLOC_IDX,
-                                            rawr_s1_ppage_sem_pindex_post_update)
-                                       
-    blei        r3, APP_REDIR_PPAGE_SIZE, desc_sem_pindex_fetch_update
+    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMPR_ALLOC_INF_ADDR
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
+                          rawr_s1_ppage_sem_pindex_post_update,
+                          r_alloc_inf_addr,
+                          TABLE_SIZE_64_BITS)
+    blei        r_pkt_len, APP_REDIR_PPAGE_SIZE, _desc_sem_pindex_fetch_update
     nop
     
-mpage_sem_pindex_fetch_update:
+/*
+ * Fetch/update memory page pindex for storing metaheader
+ */
+_mpage_sem_pindex_fetch_update:
 
-    /*
-     * Fetch/update memory page pindex for storing metaheader
-     */
-    APP_REDIR_ALLOC_SEM_PINDEX_FETCH_UPDATE(2, r4,
-                                            APP_REDIR_RNMPR_SMALL_ALLOC_IDX,
-                                            rawr_s1_mpage_sem_pindex_post_update)
-desc_sem_pindex_fetch_update:
+    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_ALLOC_INF_ADDR
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS,
+                          rawr_s1_mpage_sem_pindex_post_update,
+                          r_alloc_inf_addr,
+                          TABLE_SIZE_64_BITS)
 
-    /*
-     * Fetch/update buffer descriptor pindex for queuing to chain ring
-     */
-    APP_REDIR_ALLOC_SEM_PINDEX_FETCH_UPDATE(0, r4,
-                                            APP_REDIR_RNMDR_ALLOC_IDX,
-                                            rawr_s1_desc_sem_pindex_post_update)
+/*
+ * Fetch/update buffer descriptor pindex for queuing to chain ring
+ */
+_desc_sem_pindex_fetch_update:
+
+    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMDR_ALLOC_INF_ADDR
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
+                          rawr_s1_desc_sem_pindex_post_update,
+                          r_alloc_inf_addr,
+                          TABLE_SIZE_64_BITS)
     nop.e
     nop
 
-packet_len_err_discard:
+/*
+ * Discard packet due to invalid packet length;
+ */
+_packet_len_err_discard:
 
     /*
-     * Discard packet due to invalid packet length;
      * TODO: add stats here
      */
     phvwr.e     p.p4_intr_global_drop, 1
     nop    
 
     
-qstate_cfg_err_discard:
+/*
+ * Discard packet due to error in qstate configuration
+ */
+_qstate_cfg_err_discard:
 
     /*
-     * Discard packet due to error in qstate configuration
+     * TODO: add stats here
+     */
+    phvwr.e     p.p4_intr_global_drop, 1
+    nop
+
+
+/*
+ * CB has been deactivated
+ */
+_rawrcb_not_ready:     
+
+    /*
      * TODO: add stats here
      */
     phvwr.e     p.p4_intr_global_drop, 1

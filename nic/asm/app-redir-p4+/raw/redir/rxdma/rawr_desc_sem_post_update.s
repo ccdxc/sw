@@ -4,6 +4,12 @@ struct phv_                                     p;
 struct rawr_desc_sem_k                          k;
 struct rawr_desc_sem_desc_pindex_post_update_d  d;
 
+/*
+ * Registers usage
+ */
+#define r_pi                        r1  // semaphore producer index
+#define r_table_base                r2  // semaphore table base
+
 %%
     .param      rawr_s2_desc_post_alloc
     .param      RNMDR_TABLE_BASE
@@ -23,16 +29,16 @@ rawr_s1_desc_sem_pindex_post_update:
      * If semaphore full, handle it in a later stage but
      * launch a desc fetch now anyway (at pindex 0)
      */    
-    add         r3, r0, d.{pindex}.wx
-    mincr       r3, CAPRI_RNMDR_RING_SHIFT, r0
+    add         r_pi, r0, d.{pindex}.wx
+    mincr       r_pi, CAPRI_RNMDR_RING_SHIFT, r0
     sne         c1, d.pindex_full, r0
-    add.c1      r3, r0, r0
+    add.c1      r_pi, r0, r0
 
-    APP_REDIR_IMM64_LOAD(r4, RNMDR_TABLE_BASE)
-    CAPRI_NEXT_TABLE_READ_INDEX(0, r3,
+    APP_REDIR_IMM64_LOAD(r_table_base, RNMDR_TABLE_BASE)
+    CAPRI_NEXT_TABLE_READ_INDEX(0, r_pi,
                                 TABLE_LOCK_DIS,
                                 rawr_s2_desc_post_alloc,
-                                r4, 
+                                r_table_base, 
                                 RNMDR_TABLE_ENTRY_SIZE_SHFT,
                                 TABLE_SIZE_64_BITS)
     nop.e
