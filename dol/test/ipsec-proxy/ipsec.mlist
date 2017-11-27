@@ -80,6 +80,15 @@ modules:
         iterate :
             - flow: filter://type=IPV4,proto=UDP
     - module:
+        name    : NAT_T_PKT_FROM_UPLINK
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : nat_t_pkt_from_uplink
+        spec    : nat_t_pkt_from_uplink.testspec
+        ignore  : True 
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP
+    - module:
         name    : DECRYPT_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy

@@ -79,11 +79,20 @@ action native_ipv4_packet() {
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
     modify_field(l4_metadata.tcp_data_len,
                  (ipv4.totalLen - ((ipv4.ihl + tcp.dataOffset) * 4)));
-    if (ipv4.protocol == IP_PROTO_UDP) {
-        modify_field(flow_lkp_metadata.lkp_sport, udp.srcPort);
-        modify_field(flow_lkp_metadata.lkp_dport, udp.dstPort);
+    if (esp.valid == TRUE) {
+        modify_field(flow_lkp_metadata.lkp_proto, IP_PROTO_IPSEC_ESP);
+    } else {
+        if (ipv4.protocol == IP_PROTO_UDP) {
+            modify_field(flow_lkp_metadata.lkp_sport, udp.srcPort);
+            modify_field(flow_lkp_metadata.lkp_dport, udp.dstPort);
+        }
     }
+
     set_packet_type(ethernet.dstAddr);
+
+    // adding the following to avoid splitting ipv4_totalLen
+    // in the K structure (reduces instruction count by 1)
+    modify_field(scratch_metadata.flag, ah.valid);
 }
 
 action native_ipv6_packet() {

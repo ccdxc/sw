@@ -30,23 +30,26 @@ native_ipv4_packet_common:
   sub           r7, k.ipv4_totalLen, r6, 2
   phvwr         p.l4_metadata_tcp_data_len, r7
 
-  seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  //phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
-  // more than 128 bits apart in K structure
-  phvwr.c1      p.flow_lkp_metadata_lkp_dport[15:8], k.udp_dstPort_sbit0_ebit7
-  phvwr.c1      p.flow_lkp_metadata_lkp_dport[7:0], k.udp_dstPort_sbit8_ebit15
-  phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
-
-  phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwrpair     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr, \
                     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr
-  phvwr         p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
   phvwrpair     p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags, \
                     p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
   phvwr         p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
 
-  phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
+  phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+
+  bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
+  phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
+
+  seq           c1, k.ipv4_protocol, IP_PROTO_UDP
+  phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
+  phvwr.e       p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
+  phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
+
+native_ipv4_esp_packet:
+  phvwr.e       p.flow_lkp_metadata_lkp_proto, IP_PROTO_IPSEC_ESP
+  nop
 
 .align
 native_ipv6_packet:
@@ -62,8 +65,7 @@ native_ipv6_packet_common:
   phvwr         p.l4_metadata_tcp_data_len, r7
 
   seq           c1, k.ipv6_nextHdr, IP_PROTO_UDP
-  phvwr.c1      p.flow_lkp_metadata_lkp_dport[15:8], k.udp_dstPort_sbit0_ebit7
-  phvwr.c1      p.flow_lkp_metadata_lkp_dport[7:0], k.udp_dstPort_sbit8_ebit15
+  phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
   phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
