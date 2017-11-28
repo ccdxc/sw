@@ -130,13 +130,22 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
 static hal_ret_t 
 p4pd_add_or_del_ipsec_decrypt_part2(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
 {
+    hal_ret_t   ret = HAL_RET_OK;
+    pd_ipseccb_decrypt_part2_t  decrypt_part2;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_PART2);
 
+    decrypt_part2.spi = ipseccb_pd->ipseccb->spi;
+    decrypt_part2.new_spi = ipseccb_pd->ipseccb->new_spi;
+
     HAL_TRACE_DEBUG("Programming Decrypt part2 at hw-id: 0x{0:x}", hwid); 
-    return HAL_RET_OK;
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2))){
+        HAL_TRACE_ERR("Failed to create part2 entry for IPSECCB");
+        ret = HAL_RET_HW_FAIL;
+    }
+    return ret;
 }
 
 hal_ret_t 

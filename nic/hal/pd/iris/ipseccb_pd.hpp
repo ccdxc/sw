@@ -88,6 +88,12 @@ typedef struct pd_ipseccb_udp_nat_t_hdr_s {
     uint16_t csum;
 } __PACK__ pd_ipseccb_udp_nat_t_hdr_t;
 
+typedef struct pd_ipseccb_decrypt_part2_s {
+    uint32_t spi;
+    uint32_t new_spi;
+} __PACK__ pd_ipseccb_decrypt_part2_t;
+
+ 
 // allocate a ipseccb pd instance
 static inline pd_ipseccb_encrypt_t *
 ipseccb_pd_alloc (void)
