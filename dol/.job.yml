@@ -6,7 +6,6 @@ cache:
   name: "sw"
   mount_dir: "/root/.cache"
 image:
-  name: "pensando/dol"
   bind_dir: "/sw"
   work_dir: "/sw/dol"
 rebase: true

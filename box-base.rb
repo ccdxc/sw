@@ -10,13 +10,8 @@ run "apt-get install net-tools"
 run "apt-get install -y libltdl-dev softhsm2"
 run "go get golang.org/x/tools/cmd/goimports"
 
-if getenv("NO_COPY") == ""
-  copy ".", DIR, ignore_list: [ ".git", "box.rb" ]
-end
-
 run "mkdir -p '#{DIR}'"
 workdir DIR
 
 entrypoint []
 cmd %w[/bin/bash]
-tag "pensando/sw:dependencies"

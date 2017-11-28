@@ -39,7 +39,6 @@ cache:
   name: "sw"
   mount_dir: "/root/.cache"
 image:
-  name: "pensando/nic"
   bind_dir: "/sw"
   work_dir: "/sw/nic"
 rebase: true
