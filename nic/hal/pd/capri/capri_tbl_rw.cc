@@ -1016,7 +1016,6 @@ int capri_table_entry_read(uint32_t tableid,
 
     *hwentry_bit_len = tbl_ctx.sram_layout.entry_width_bits;
 
-
     return (CAPRI_OK);
 }
 
@@ -1079,9 +1078,10 @@ int capri_table_hw_entry_read(uint32_t tableid,
         } else {
             to_copy = (copy_bits > 128) ? 128 : copy_bits;
         }
-        memcpy(_hwentry, temp + (entry_start_word << 1), (to_copy + 7) / 8);
+        uint8_t to_copy_bytes = ((((to_copy - 1) >> 4) + 1) << 4) / 8;
+        memcpy(_hwentry, temp + (entry_start_word << 1), to_copy_bytes);
         copy_bits -= to_copy;
-        _hwentry += (to_copy + 7)/8;
+        _hwentry += to_copy_bytes;
         entry_start_word = 0;
     }
 #endif
