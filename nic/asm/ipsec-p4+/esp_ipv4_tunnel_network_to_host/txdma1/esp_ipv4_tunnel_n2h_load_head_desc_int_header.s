@@ -19,6 +19,9 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     addi r1, r1, 64
     phvwr p.barco_req_output_list_address, r1.dx
 
+    seq c1, d.spi, k.ipsec_to_stage2_spi
+    phvwri.!c1 p.ipsec_to_stage3_new_key, 1 
+     
     // iv_address = in_page+payload_start-4
     add r1, r0, d.in_page
     add r1, r1, d.headroom_offset

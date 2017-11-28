@@ -17,7 +17,8 @@ header_type ipsec_cb_metadata_t {
         rxdma_ring_cindex : RING_INDEX_WIDTH;
         barco_ring_pindex : RING_INDEX_WIDTH;
         barco_ring_cindex : RING_INDEX_WIDTH;
-        key_index : 32;
+        key_index : 16;
+        new_key_index : 16;
         iv_size   : 8;
         icv_size  : 8;
         expected_seq_no   : 32;
@@ -175,6 +176,7 @@ header_type barco_request_t {
     modify_field(ipsec_cb_scratch.barco_ring_pindex, barco_ring_pindex); \
     modify_field(ipsec_cb_scratch.barco_ring_cindex, barco_ring_cindex); \
     modify_field(ipsec_cb_scratch.key_index, key_index); \
+    modify_field(ipsec_cb_scratch.new_key_index, new_key_index); \
     modify_field(ipsec_cb_scratch.iv_size, iv_size); \
     modify_field(ipsec_cb_scratch.icv_size, icv_size); \
     modify_field(ipsec_cb_scratch.last_replay_seq_no, last_replay_seq_no); \

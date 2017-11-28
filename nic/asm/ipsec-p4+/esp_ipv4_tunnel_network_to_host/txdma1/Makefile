@@ -21,6 +21,7 @@ SRC_FILES := \
     esp_ipv4_tunnel_n2h_allocate_barco_req_pindex.s \
     esp_ipv4_tunnel_n2h_load_head_desc_int_header.s \
     esp_ipv4_tunnel_n2h_txdma_initial_table.s \
+    esp_v4_tunnel_n2h_load_part2.s \
     esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex.s \
     esp_v4_tunnel_n2h_txdma1_update_cb.s \
     esp_ipv4_tunnel_n2h_stage0.s \

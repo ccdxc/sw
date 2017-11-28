@@ -16,7 +16,9 @@ esp_v4_tunnel_n2h_write_barco_req:
     phvwr p.brq_req_write_dma_cmd_addr, r1
     phvwri p.brq_req_write_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
     phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END 
-
+    seq c1, k.ipsec_to_stage3_new_key, 1
+    phvwr.c1 p.barco_req_key_desc_index, d.new_key_index
+    phvwr.!c1 p.barco_req_key_desc_index, d.key_index
 esp_v4_tunnel_n2h_post_to_barco_ring:
     add r2, r0, d.barco_ring_base_addr
     add r3, r0, d.barco_pindex

@@ -9,6 +9,7 @@ struct phv_ p;
 %%
         .param esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex 
         .param esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
+        .param esp_v4_tunnel_n2h_load_part2
         .param IPSEC_CB_BASE
         .align
 esp_ipv4_tunnel_n2h_txdma1_initial_table:
@@ -21,7 +22,7 @@ esp_ipv4_tunnel_n2h_txdma1_initial_table:
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33} 
     
     phvwr p.barco_req_command, d.barco_enc_cmd
-    phvwr p.barco_req_key_desc_index, d.key_index
+    //phvwr p.barco_req_key_desc_index, d.key_index
     phvwr p.t0_s2s_iv_size, d.iv_size
     phvwr p.t0_s2s_icv_size, d.icv_size
 
@@ -55,6 +56,15 @@ esp_ipv4_tunnel_n2h_txdma1_initial_table:
     phvwri p.common_te1_phv_table_pc, esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 2
     phvwr p.common_te1_phv_table_addr, r3 
+
+    phvwri p.app_header_table2_valid, 1 
+    phvwri p.common_te2_phv_table_lock_en, 1 
+    phvwri p.common_te2_phv_table_pc, esp_v4_tunnel_n2h_load_part2[33:6] 
+    phvwri p.common_te2_phv_table_raw_table_size, 3
+    add r4, r0, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    addi r4, r4, 64
+    phvwr p.common_te2_phv_table_addr, r4 
+
     nop.e
     nop
     
