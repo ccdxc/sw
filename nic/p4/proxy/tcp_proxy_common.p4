@@ -97,9 +97,9 @@
 
 #define TCB_CC_AND_XMIT_SHARED_STATE \
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
-        xmit_desc                       : HBM_ADDRESS_WIDTH     ;\
         xmit_cursor_addr                : HBM_ADDRESS_WIDTH     ;\
         xmit_next_desc                  : HBM_ADDRESS_WIDTH     ;\
+        prr_out                 : 16;   \
         prr_delivered           : 16;   \
         last_time               : 32;   \
         epoch_start             : 32;   \
@@ -108,6 +108,9 @@
         snd_cwnd_cnt            : 16;   \
         snd_cwnd_clamp          : 16;   \
         snd_cwnd                : 16;   \
+        prior_cwnd              : 16;   \
+        last_cwnd               : 16;   \
+        snd_wnd_cnt             : 16;   \
         tune_reordering         : 8;    \
         sack_reordering         : 8;    \
         max_packets_out         : 8;    \
@@ -120,6 +123,8 @@
         rto_pi                          : 16                    ;\
         retrans_out                     : 16                    ;\
         lost_out                        : 16                    ;\
+        flag                            : 16                    ;\
+        ca_state                        : 8                     ;\
         rto_backoff                     : 4                     ;\
         pending_ack_tx                  : 1                     ;\
         pending_delayed_ack_tx          : 1                     ;\
@@ -130,7 +135,6 @@
         source_lif                      : 16                    ;\
         source_port                     : 16                    ;\
         dest_port                       : 16                    ;\
-        prr_out                         : 32                    ;\
         header_len                      : 8                     ;\
         bytes_sent                      : 16                    ;\
         pkts_sent                       : 8                     ;\
@@ -144,18 +148,20 @@ retx_xmit_cursor, retx_next_desc,\
 retx_head_offset, retx_head_len
 
 #define CC_AND_XMIT_SHARED_PARAMS \
-snd_nxt, xmit_desc,\
-xmit_cursor_addr, xmit_next_desc,\
+snd_nxt,\
+xmit_cursor_addr, xmit_next_desc, prr_out,\
 prr_delivered, last_time, epoch_start, cnt,\
 last_max_cwnd, snd_cwnd_cnt, snd_cwnd_clamp,\
-snd_cwnd, tune_reordering, sack_reordering,\
+snd_cwnd, prior_cwnd, last_cwnd, snd_wnd_cnt,\
+tune_reordering, sack_reordering,\
 max_packets_out, is_cwnd_limited, delayed_ack,\
 xmit_offset, xmit_len,\
-packets_out, sacked_out, rto_pi, retrans_out, lost_out, rto_backoff,\
+packets_out, sacked_out, rto_pi, retrans_out, lost_out,\
+flag, ca_state, rto_backoff,\
 pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad
 
 #define TSO_PARAMS                                                        \
-source_lif, source_port, dest_port, prr_out, header_len,\
+source_lif, source_port, dest_port, header_len,\
 bytes_sent,pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt,\
 quick_acks_decr
 
@@ -171,9 +177,9 @@ quick_acks_decr
 
 #define GENERATE_CC_AND_XMIT_SHARED_D \
     modify_field(cc_and_xmit_d.snd_nxt, snd_nxt); \
-    modify_field(cc_and_xmit_d.xmit_desc, xmit_desc); \
     modify_field(cc_and_xmit_d.xmit_cursor_addr, xmit_cursor_addr); \
     modify_field(cc_and_xmit_d.xmit_next_desc, xmit_next_desc); \
+    modify_field(cc_and_xmit_d.prr_out, prr_out); \
     modify_field(cc_and_xmit_d.prr_delivered, prr_delivered); \
     modify_field(cc_and_xmit_d.last_time, last_time); \
     modify_field(cc_and_xmit_d.epoch_start, epoch_start); \
@@ -182,6 +188,9 @@ quick_acks_decr
     modify_field(cc_and_xmit_d.snd_cwnd_cnt, snd_cwnd_cnt); \
     modify_field(cc_and_xmit_d.snd_cwnd_clamp, snd_cwnd_clamp); \
     modify_field(cc_and_xmit_d.snd_cwnd, snd_cwnd); \
+    modify_field(cc_and_xmit_d.prior_cwnd, prior_cwnd); \
+    modify_field(cc_and_xmit_d.last_cwnd, last_cwnd); \
+    modify_field(cc_and_xmit_d.snd_wnd_cnt, snd_wnd_cnt); \
     modify_field(cc_and_xmit_d.tune_reordering, tune_reordering); \
     modify_field(cc_and_xmit_d.sack_reordering, sack_reordering); \
     modify_field(cc_and_xmit_d.max_packets_out, max_packets_out); \
@@ -194,6 +203,8 @@ quick_acks_decr
     modify_field(cc_and_xmit_d.rto_pi, rto_pi); \
     modify_field(cc_and_xmit_d.retrans_out, retrans_out); \
     modify_field(cc_and_xmit_d.lost_out, lost_out); \
+    modify_field(cc_and_xmit_d.flag, flag); \
+    modify_field(cc_and_xmit_d.ca_state, ca_state); \
     modify_field(cc_and_xmit_d.rto_backoff, rto_backoff); \
     modify_field(cc_and_xmit_d.pending_ack_tx, pending_ack_tx); \
     modify_field(cc_and_xmit_d.pending_delayed_ack_tx, pending_delayed_ack_tx); \
@@ -204,7 +215,6 @@ quick_acks_decr
     modify_field(tso_d.source_lif, source_lif); \
     modify_field(tso_d.source_port, source_port); \
     modify_field(tso_d.dest_port, dest_port); \
-    modify_field(tso_d.prr_out, prr_out); \
     modify_field(tso_d.header_len, header_len); \
     modify_field(tso_d.bytes_sent, bytes_sent);\
     modify_field(tso_d.pkts_sent, pkts_sent);\

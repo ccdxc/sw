@@ -18,6 +18,11 @@ struct s5_t0_tcp_tx_cc_and_xmit_d d;
 %%
     .align
     .param          tcp_tso_process_start
+    .param          bictcp_cong_avoid
+
+    /*
+     * r4 = current timestamp. Do not use this register
+     */
 
 tcp_cc_and_xmit_process_start:
     seq             c1, k.common_phv_pending_snd_una_update, 1
@@ -108,9 +113,9 @@ rearm_rto:
     CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_RTO, r1)
 
     // TODO : using slow timer just for testing
-    addi            r4, r0, CAPRI_SLOW_TIMER_ADDR(LIF_TCP)
+    addi            r5, r0, CAPRI_SLOW_TIMER_ADDR(LIF_TCP)
     seq             c1, k.common_phv_debug_dol_dont_start_retx_timer, 1
-    memwr.dx.!c1    r4, r3
+    memwr.dx.!c1    r5, r3
     tbladd          d.rto_pi, 1
 
     // TODO : this needs to account for TSO, for now assume one packet
@@ -157,9 +162,9 @@ tcp_cwnd_test:
     add             r6, d.snd_cwnd, r0
     srl             r6, r6, 1
 
-    addi            r4, r0, 1
-    slt             c2, r6,r4
-    add.c2          r6, r4, r0
+    addi            r5, r0, 1
+    slt             c2, r6,r5
+    add.c2          r6, r5, r0
     /* at this point r6 = max(cwnd >> 1, 1) */
     /* r5 = cwnd - in_flight */
     sub             r5, d.snd_cwnd, r1
@@ -189,7 +194,7 @@ tcp_init_xmit:
     seq             c1, d.xmit_cursor_addr, r0
     jr.!c1          r7
     nop
-    tblwr           d.xmit_desc, k.to_s5_sesq_desc_addr
+    //tblwr           d.xmit_desc, k.to_s5_sesq_desc_addr
     tblwr           d.xmit_cursor_addr, k.to_s5_addr
     tblwr           d.xmit_offset, k.to_s5_offset
     tblwr           d.xmit_len, k.to_s5_len
@@ -209,11 +214,140 @@ tcp_tx_end_program:
 
 tcp_tx_snd_una_update:
     CAPRI_CLEAR_TABLE_VALID(0)
-    // TODO : CC algorithm here
     tblsub          d.packets_out, k.t0_s2s_packets_out_decr
     tbladd          d.rto_pi, k.t0_s2s_rto_pi_incr
+
+tcp_cong_control:
+    /*
+     * Check if we are in congestion window reduction state
+     */
+    smeqb           c1, d.ca_state, TCPF_CA_CWR | TCPF_CA_Recovery, TCPF_CA_CWR | TCPF_CA_Recovery
+    bcf             [c1], tcp_cwnd_reduction
+    nop
+
+    /*
+     * Decide whether to run the increase function of congestion control
+     * TODO : tcp_may_raise_cwnd() - until then set c1 to TRUE unconditionally
+     */
+    seq             c1, r0, r0
+    jal.c1          r7, bictcp_cong_avoid
+
+tcp_cwnd_reduction_done:
     nop.e
     nop
+
+/* The cwnd reduction in CWR and Recovery uses the PRR algorithm in RFC 6937.
+ * It computes the number of packets to send (sndcnt) based on packets newly
+ * delivered:
+ *   1) If the packets in flight is larger than ssthresh, PRR spreads the
+ *      cwnd reductions across a full RTT.
+ *   2) Otherwise PRR uses packet conservation to send as much as delivered.
+ *      But when the retransmits are acked without further losses, PRR
+ *      slow starts cwnd up to ssthresh to speed up the recovery.
+ */
+tcp_cwnd_reduction:
+    /*
+     * if (newly_acked_sacked <= 0 || WARN_ON_ONCE(!tp->prior_cwnd))
+     *      return;
+     */
+     sle            c1, k.t0_s2s_pkts_acked, r0
+     sne            c2, d.prior_cwnd, r0
+     bcf            [c1 | !c2], tcp_cwnd_reduction_done
+     nop
+
+    /*
+     * r6 = tcp_packets_in_flight = packets_out + retrans_out - (sacked_out + lost_out)
+     */
+     add            r6, d.packets_out, d.retrans_out
+     add            r5, d.sacked_out, d.lost_out
+     sub            r6, r6, r5
+
+     /*
+      * r3 = delta = snd_ssthresh - tcp_packets_in_flight
+      */
+      sub           r3, k.t0_s2s_snd_ssthresh, r6
+
+    /*
+     * tp->prr_delivered += newly_acked_sacked
+     */
+     tbladd         d.prr_delivered, k.t0_s2s_pkts_acked
+
+    /*
+     * r5 = sndcnt
+     */
+
+    /*
+     *  if (delta < 0) {
+     *          u64 dividend = (u64)tp->snd_ssthresh * tp->prr_delivered +
+     *                         tp->prior_cwnd - 1;
+     *          sndcnt = div_u64(dividend, tp->prior_cwnd) - tp->prr_out;
+     *  } else if ((flag & FLAG_RETRANS_DATA_ACKED) &&
+     *             !(flag & FLAG_LOST_RETRANS)) {
+     *          sndcnt = min_t(int, delta,
+     *                         max_t(int, tp->prr_delivered - tp->prr_out,
+     *                               newly_acked_sacked) + 1);
+     *  } else {
+     *          sndcnt = min(delta, newly_acked_sacked);
+     *  }
+     *  // Force a fast retransmit upon entering fast recovery
+     *  sndcnt = max(sndcnt, (tp->prr_out ? 0 : 1));
+     *  tp->snd_cwnd = tcp_packets_in_flight(tp) + sndcnt;
+     */
+
+    slt             c1, r3, r0
+    b.!c1           packets_in_flight_less_than_ssthresh
+
+    //      u64 dividend = (u64)tp->snd_ssthresh * tp->prr_delivered +
+    //                     tp->prior_cwnd - 1;
+    //      sndcnt = div_u64(dividend, tp->prior_cwnd) - tp->prr_out;
+    mul             r5, k.t0_s2s_snd_ssthresh, d.prr_delivered
+    add             r5, r5, d.prior_cwnd
+    sub             r5, r5, 1
+
+    div             r5, r5, d.prior_cwnd
+    sub             r5, r5, d.prr_out
+    b               update_sndcnt
+
+packets_in_flight_less_than_ssthresh:
+    add             r1, r0, k.common_phv_process_ack_flag
+    smeqh           c1, r1, FLAG_RETRANS_DATA_ACKED, FLAG_RETRANS_DATA_ACKED
+    smeqh           c2, r1, FLAG_LOST_RETRANS, FLAG_LOST_RETRANS
+    bcf             [c1 & !c2], sndcnt_retx_data_acked_not_lost_retrans
+
+    // else {
+    //      sndcnt = min(delta, newly_acked_sacked);
+
+    add             r5, r0, k.t0_s2s_pkts_acked
+    slt             c1, r3, r5
+    add.c1          r5, r0, r3
+    b               update_sndcnt
+
+sndcnt_retx_data_acked_not_lost_retrans:
+    // else if flag & FLAG_RETRANS_DATA_ACKED && !(flag & FLAG_LOST_RETRANS)
+    //      sndcnt = min_t(int, delta,
+    //                     max_t(int, tp->prr_delivered - tp->prr_out,
+    //                           newly_acked_sacked) + 1);
+    sub             r2, d.prr_delivered, d.prr_out
+    slt             c1, r2, k.t0_s2s_pkts_acked
+    add.!c1         r2, r0, k.t0_s2s_pkts_acked
+    add             r5, r2, 1
+
+    slt             c1, r3, r5
+    add.c4          r5, r0, r3
+
+update_sndcnt:
+    // sndcnt = max(sndcnt, (tp->prr_out ? 0 : 1));
+    sne             c1, d.prr_out, r0
+    add.c1          r1, r0, r0
+    add.!c1         r1, r0, 1
+    slt             c1, r5, r1
+    add.c1          r5, r0, r1
+
+    // tp->snd_cwnd = tcp_packets_in_flight(tp) + sndcnt;
+    add             r5, r6, r5
+    tbladd          d.snd_cwnd, r5
+
+    b               tcp_cwnd_reduction_done
 
 tcp_tx_retransmit:
     seq             c1, d.rto_pi, k.t0_s2s_rto_pi

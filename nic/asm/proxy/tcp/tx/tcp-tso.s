@@ -129,6 +129,9 @@ debug_num_mem_to_pkt_stats_update:
 debug_num_mem_to_pkt_stats_update_end:
     bcf             [c6], flow_tso_process_done
     nop
+
+#if 0
+    // TODO : move to tcp-cc-and-xmit
     /*
      * if (tcp_in_cwnd_reduction(tp))
      *    tp->cc.prr_out += 1
@@ -137,6 +140,7 @@ debug_num_mem_to_pkt_stats_update_end:
     seq             c1, r1, r0
     addi.!c1        r1, r0, 1
     tbladd.!c1      d.prr_out, r1
+#endif
 
 dma_cmd_write_tx2rx_shared:
     /* Set the DMA_WRITE CMD for copying tx2rx shared data from phv to mem */
