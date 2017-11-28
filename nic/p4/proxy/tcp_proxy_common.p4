@@ -110,7 +110,6 @@
         snd_cwnd                : 16;   \
         prior_cwnd              : 16;   \
         last_cwnd               : 16;   \
-        snd_wnd_cnt             : 16;   \
         tune_reordering         : 8;    \
         sack_reordering         : 8;    \
         max_packets_out         : 8;    \
@@ -152,7 +151,7 @@ snd_nxt,\
 xmit_cursor_addr, xmit_next_desc, prr_out,\
 prr_delivered, last_time, epoch_start, cnt,\
 last_max_cwnd, snd_cwnd_cnt, snd_cwnd_clamp,\
-snd_cwnd, prior_cwnd, last_cwnd, snd_wnd_cnt,\
+snd_cwnd, prior_cwnd, last_cwnd,\
 tune_reordering, sack_reordering,\
 max_packets_out, is_cwnd_limited, delayed_ack,\
 xmit_offset, xmit_len,\
@@ -190,7 +189,6 @@ quick_acks_decr
     modify_field(cc_and_xmit_d.snd_cwnd, snd_cwnd); \
     modify_field(cc_and_xmit_d.prior_cwnd, prior_cwnd); \
     modify_field(cc_and_xmit_d.last_cwnd, last_cwnd); \
-    modify_field(cc_and_xmit_d.snd_wnd_cnt, snd_wnd_cnt); \
     modify_field(cc_and_xmit_d.tune_reordering, tune_reordering); \
     modify_field(cc_and_xmit_d.sack_reordering, sack_reordering); \
     modify_field(cc_and_xmit_d.max_packets_out, max_packets_out); \

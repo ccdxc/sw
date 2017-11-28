@@ -28,7 +28,8 @@ sesq        : 0
 sesq_pi     : 0
 sesq_ci     : 0
 snd_wnd     : 1000
-snd_cwnd    : 1000
+snd_cwnd    : 10
+snd_cwnd_cnt : 9
 rcv_mss     : 9216
 source_port : 47273
 source_lif  : 0

@@ -121,6 +121,11 @@ rearm_rto:
     // TODO : this needs to account for TSO, for now assume one packet
     tbladd          d.packets_out, 1
 
+    /*
+     * TODO: init is_cwnd_limited and call tcp_cwnd_validate
+     */
+     tblwr          d.is_cwnd_limited, 1
+
     // TODO : Lot of stuff to do here:
     //      if window size is smaller, move xmit_cursor_addr by appropriate amount
     //      if we have more data than one descriptor, adjust next pointer and
@@ -231,6 +236,7 @@ tcp_cong_control:
      */
     seq             c1, r0, r0
     jal.c1          r7, bictcp_cong_avoid
+    nop
 
 tcp_cwnd_reduction_done:
     nop.e

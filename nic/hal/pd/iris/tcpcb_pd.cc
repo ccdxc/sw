@@ -208,34 +208,6 @@ p4pd_add_or_del_tcp_rx_tcp_fra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 }
 
 
-#if 0
-hal_ret_t 
-p4pd_add_or_del_tcp_rx_tcp_cc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
-{
-    //s4_t0_tcp_cc_d          data = {0};
-    hal_ret_t               ret = HAL_RET_OK;
-
-    // hardware index for this entry
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_CC);
-
-    if(!del) {
-        //data.u.tcp_cc_d.snd_cwnd = 0x10;
-        //data.u.tcp_cc_d.max_packets_out = 0x07;
-        //data.u.tcp_cc_d.is_cwnd_limited = 0x00;
-        //data.u.tcp_cc_d.last_max_cwnd = 0x16;
-        //data.u.tcp_cc_d.snd_cwnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_cwnd);
-        //HAL_TRACE_DEBUG("TCPCB snd_cwnd: 0x{0:x}", data.u.tcp_cc_d.snd_cwnd);
-    }
-    
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
-        HAL_TRACE_ERR("Failed to create rx: tcp_cc entry for TCP CB");
-        ret = HAL_RET_HW_FAIL;
-    }
-    return ret;
-}
-#endif
-
 hal_ret_t 
 p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
@@ -421,29 +393,6 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
 
     return HAL_RET_OK;
 }
-
-#if 0
-hal_ret_t 
-p4pd_get_tcp_rx_tcp_cc_entry(pd_tcpcb_t* tcpcb_pd)
-{
-    s4_t0_tcp_cc_d      data = {0};
-
-    // hardware index for this entry
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_CC);
-
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
-        HAL_TRACE_ERR("Failed to create rx: tcp_cc entry for TCP CB");
-        return HAL_RET_HW_FAIL;
-    }
-
-    tcpcb_pd->tcpcb->snd_cwnd = ntohs(data.u.tcp_cc_d.snd_cwnd);
-    HAL_TRACE_DEBUG("TCPCB snd_cwnd: 0x{0:x}", tcpcb_pd->tcpcb->snd_cwnd);
-
-    
-    return HAL_RET_OK;
-}
-#endif
 
 hal_ret_t 
 p4pd_get_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd)
@@ -637,14 +586,12 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_FT;
         data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_ST;
         data.u.read_rx2tx_d.snd_wnd = htonl(tcpcb_pd->tcpcb->snd_wnd);
-        //data.u.read_rx2tx_d.snd_cwnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_cwnd);
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcpcb_pd->tcpcb->debug_dol_tx);
         data.u.read_rx2tx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.read_rx2tx_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
         // TODO : fix this hardcoding
         data.u.read_rx2tx_d.rto = htons(100);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: 0x{0:x}", data.u.read_rx2tx_d.snd_wnd);
-        //HAL_TRACE_DEBUG("TCPCB rx2tx snd_cwnd: 0x{0:x}", data.u.read_rx2tx_d.snd_cwnd);
         HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: 0x{0:x}", data.u.read_rx2tx_d.debug_dol_tx);
 
         // get sesq address
@@ -741,12 +688,14 @@ p4pd_add_or_del_tcp_tx_cc_and_xmit_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     
     if(!del) {
         data.snd_nxt = htonl(tcpcb_pd->tcpcb->snd_nxt);
-        data.snd_cwnd = 0x10;
         data.max_packets_out = 0x07;
         data.is_cwnd_limited = 0x00;
         data.last_max_cwnd = 0x16;
         data.snd_cwnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_cwnd);
+        data.snd_cwnd_cnt = htons((uint16_t)tcpcb_pd->tcpcb->snd_cwnd_cnt);
+        data.snd_cwnd_clamp = htons(0x7fff);
         HAL_TRACE_DEBUG("TCPCB snd_cwnd: 0x{0:x}", data.snd_cwnd);
+        HAL_TRACE_DEBUG("TCPCB snd_cwnd_cnt: 0x{0:x}", data.snd_cwnd_cnt);
     }
     
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
@@ -943,7 +892,9 @@ p4pd_get_tcp_tx_cc_and_xmit_entry(pd_tcpcb_t* tcpcb_pd)
     }
 
     tcpcb_pd->tcpcb->snd_cwnd = ntohs(data.snd_cwnd);
+    tcpcb_pd->tcpcb->snd_cwnd_cnt = ntohs(data.snd_cwnd_cnt);
     HAL_TRACE_DEBUG("TCPCB snd_cwnd: 0x{0:x}", tcpcb_pd->tcpcb->snd_cwnd);
+    HAL_TRACE_DEBUG("TCPCB snd_cwnd_cnt: 0x{0:x}", tcpcb_pd->tcpcb->snd_cwnd_cnt);
 
     return HAL_RET_OK;
 

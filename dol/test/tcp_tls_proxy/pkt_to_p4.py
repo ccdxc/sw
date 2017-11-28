@@ -301,6 +301,15 @@ def TestCaseVerify(tc):
                     (other_tcpcb_cur.retx_snd_una, tc.packets.Get('PKT1').payloadsize + \
                             tc.packets.Get('PKT2').payloadsize))
             return False
+
+    if tc.pvtdata.test_cong_avoid:
+        if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + 1:
+            print("cong_avoid: failed to increment cwnd (%d)" % \
+                    other_tcpcb_cur.snd_cwnd)
+            return False
+        if other_tcpcb_cur.snd_cwnd_cnt != 0:
+            print("cong_avoid: failed to set snd_cwnd_cnt to 0")
+            return False
     return True
 
 def TestCaseTeardown(tc):

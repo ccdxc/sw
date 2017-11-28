@@ -76,11 +76,11 @@ bictcp_update:
     tblwr.c1        d.epoch_start, r4
 
     /*
-     *      // start off normal
-     *      if (cwnd <= low_window) {
-     *              ca->cnt = cwnd;
-     *              return;
-     *      }
+     * // start off normal
+     * if (cwnd <= low_window) {
+     *         ca->cnt = cwnd;
+     *         return;
+     * }
      */
     sle             c1, d.snd_cwnd, LOW_WINDOW
     tblwr.c1        d.cnt, d.snd_cwnd
@@ -222,16 +222,25 @@ tcp_cong_avoid_ai:
      * tp->snd_cwnd = min(tp->snd_cwnd, tp->snd_cwnd_clamp);
      */
 
-    sle             c1, d.cnt, d.snd_wnd_cnt
+    sle             c1, d.cnt, d.snd_cwnd_cnt
     tblwr.c1        d.snd_cwnd_cnt, r0
     tbladd.c1       d.snd_cwnd, 1
-
-    tbladd          d.snd_cwnd_cnt, k.t0_s2s_pkts_acked
+    tbladd          d.snd_cwnd_cnt, 1 // acked = 1 passed to tcp_cong_avoid_ai
+    nop // delay slot to make the table write visible below
 
     /*
      * r1 = delta
      * r2 = delta * d.cnt
+     *
+     * TBD : Why do we need div/mul here, it seems snd_cwnd_cnt is always
+     * incremented by 1, so when snd_cwnd_cnt >= w, div operation will always
+     * yield 1. So below logic could be simplified as
+     * tblwr.c1     d.snd_cwnd_cnt, r0
+     * tbladd.c1    d.snd_cwnd, 1
+     * FIX later. For now we will use this to verify div/mul operations are
+     * working as expected
      */
+    sle             c1, d.cnt, d.snd_cwnd_cnt
     div.c1          r1, d.snd_cwnd_cnt, d.cnt
     mul.c1          r2, r1, d.cnt
     tblsub.c1       d.snd_cwnd_cnt, r2

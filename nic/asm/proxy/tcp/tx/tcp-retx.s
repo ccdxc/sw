@@ -156,6 +156,7 @@ tcp_retx_snd_una_update_free_head:
     // This effectively cancels retransmission timer
     //tbladd          d.rto_pi, 1
     phvwr           p.t0_s2s_rto_pi_incr, 1
+    phvwr           p.t0_s2s_pkts_acked, 1
     
     // If we have completely cleaned up, set tail to NULL
     seq             c1, d.retx_head_desc, r0

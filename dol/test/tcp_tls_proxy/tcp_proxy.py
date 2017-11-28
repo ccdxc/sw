@@ -52,6 +52,7 @@ def SetupProxyArgs(tc):
     num_pkts = 1
     test_retx = None
     sem_full = None
+    test_cong_avoid = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -83,6 +84,8 @@ def SetupProxyArgs(tc):
         test_retx = tc.module.args.test_retx
     if hasattr(tc.module.args, 'sem_full'):
         sem_full = tc.module.args.sem_full
+    if hasattr(tc.module.args, 'test_cong_avoid'):
+        test_cong_avoid = tc.module.args.test_cong_avoid
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -117,6 +120,9 @@ def SetupProxyArgs(tc):
         if 'sem_full' in iterelem.__dict__:
             sem_full = iterelem.sem_full
             tc.module.logger.info("- sem_full %s" % iterelem.sem_full)
+        if 'test_cong_avoid' in iterelem.__dict__:
+            test_cong_avoid = iterelem.test_cong_avoid
+            tc.module.logger.info("- test_cong_avoid %s" % iterelem.test_cong_avoid)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack = send_ack
@@ -128,6 +134,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.num_pkts = num_pkts
     tc.pvtdata.test_retx = test_retx
     tc.pvtdata.sem_full = sem_full
+    tc.pvtdata.test_cong_avoid = test_cong_avoid
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -139,7 +146,9 @@ def init_tcb_inorder(tc, tcb):
     tcb.rcv_tsval = 0x1AFAFAFA
     tcb.ts_recent = 0x1AFAFAF0
     tcb.snd_wnd = 1000
-    tcb.snd_cwnd = 1000
+    tcb.snd_cwnd = 10        # snd_cwnd is in packets
+    if tc.pvtdata.test_cong_avoid:
+        tcb.snd_cwnd_cnt = tcb.snd_cwnd - 1
     tcb.rcv_mss = 9216
     tcb.debug_dol = 0
     if tc.pvtdata.send_ack:
@@ -222,7 +231,9 @@ def init_tcb_inorder2(tc, tcb):
     tcb.rcv_tsval = 0x2AFAFAFA
     tcb.ts_recent = 0x2AFAFAF0
     tcb.snd_wnd = 1000
-    tcb.snd_cwnd = 1000
+    tcb.snd_cwnd = 10        # snd_cwnd is in packets
+    if tc.pvtdata.test_cong_avoid:
+        tcb.snd_cwnd_cnt = tcb.snd_cwnd - 1
     tcb.rcv_mss = 9216
     tcb.debug_dol = 0
     if tc.pvtdata.send_ack:
