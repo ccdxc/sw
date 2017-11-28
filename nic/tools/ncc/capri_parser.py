@@ -1559,7 +1559,7 @@ class capri_parser:
                 #Get OHI ID of write only length variable
                 ohi_id = self.get_ohi_hdr_len(self.be.h.p4_header_instances[ohi_field])
             else:
-                ohi_id = self.get_ohi_slot_wr_only_field_name(ohi_field)
+                ohi_id = self.get_ohi_slot_wr_only_field_name(ohi_field.split('.')[1])
 
         if ohi_id == None or ohi_field == '':
             if instance != -1:

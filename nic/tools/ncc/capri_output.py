@@ -1751,11 +1751,13 @@ def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,        
                                            nxt_cs, sram, ohi_instr_allocated_count,\
                                            ohi_inst_allocator, mux_idx_allocator,\
                                            mux_inst_allocator)
+        '''
         # Also capture PayloadLen in ohi slot or stored lookup reg
         ohi_instr_allocated_count = parser.be.checksum.CsumParserPayloadLenGenerate(\
                                            nxt_cs, sram, ohi_instr_allocated_count,\
                                            ohi_inst_allocator, mux_idx_allocator,\
                                            mux_inst_allocator, csum_l4len_mux_idx_id)
+        '''
     '''
     if nxt_cs.csum_payloadlen_ohi_instr_gen[0]:
         #In case of option parsing, parse states where l4_verify_len is updated,

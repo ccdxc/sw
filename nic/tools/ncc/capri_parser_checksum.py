@@ -210,7 +210,7 @@ class ParserCsumProfile:
         self.addsub_csum_loc    = 0
         self.csum_loc_adj       = 0
         self.align              = 0
-        
+
     def CsumProfileUnitNumGet(self):
         return self.csum_profile
 
@@ -256,17 +256,17 @@ class ParserCsumProfile:
         log_str += 'Csum Profile\n'
         log_str += '    Profile#  %d \n'             % (self.csum_profile)
         log_str += '        len_mask        = 0x%x\n'% (self.len_mask)
-        log_str += '        len_shift_left  = %d \n' % (self.len_shift_left)
-        log_str += '        len_shift_val   = %d \n' % (self.len_shift_val)
-        log_str += '        addsub_start    = %d \n' % (self.addsub_start)
-        log_str += '        start_adj       = %d \n' % (self.start_adj)
-        log_str += '        addsub_end      = %d \n' % (self.addsub_end)
-        log_str += '        end_adj         = %d \n' % (self.end_adj)
-        log_str += '        addsub_phdr     = %d \n' % (self.addsub_phdr)
-        log_str += '        phdr_adj        = %d \n' % (self.phdr_adj)
-        log_str += '        addsub_csum_loc = %d \n' % (self.addsub_csum_loc)
-        log_str += '        csum_loc_adj    = %d \n' % (self.csum_loc_adj)
-        log_str += '        align           = %d \n' % (self.align)
+        log_str += '        len_shift_left  = %d\n' % (self.len_shift_left)
+        log_str += '        len_shift_val   = %d\n' % (self.len_shift_val)
+        log_str += '        addsub_start    = %d\n' % (self.addsub_start)
+        log_str += '        start_adj       = %d\n' % (self.start_adj)
+        log_str += '        addsub_end      = %d\n' % (self.addsub_end)
+        log_str += '        end_adj         = %d\n' % (self.end_adj)
+        log_str += '        addsub_phdr     = %d\n' % (self.addsub_phdr)
+        log_str += '        phdr_adj        = %d\n' % (self.phdr_adj)
+        log_str += '        addsub_csum_loc = %d\n' % (self.addsub_csum_loc)
+        log_str += '        csum_loc_adj    = %d\n' % (self.csum_loc_adj)
+        log_str += '        align           = %d\n' % (self.align)
         log_str += '\n'
 
         return log_str
@@ -455,16 +455,16 @@ class ParserCalField:
     @staticmethod
     def _build_mux_idx(sram, mux_sel, index):
         # Load 16b from current offset + idx(in bytes)
-        sram['mux_idx'][mux_sel]['sel']['value']    = str(0)   
+        sram['mux_idx'][mux_sel]['sel']['value']    = str(0)
         sram['mux_idx'][mux_sel]['lkpsel']['value'] = str(0)
         sram['mux_idx'][mux_sel]['idx']['value']    = str(index)
 
         log_str = ''
         log_str += 'Instruction: mux_idx\n'
-        log_str += '    Instruction#  %d \n' % (mux_sel)
-        log_str += '        sel     = %d  [ Load Current offset + Index ]\n' % (0)
-        log_str += '        lkpsel  = %d \n' % (0)
-        log_str += '        index   = %d \n' % (index)
+        log_str += '    Instruction#  %d\n' % (mux_sel)
+        log_str += '        sel     = %d [ Load Current offset + Index ]\n' % (0)
+        log_str += '        lkpsel  = %d\n' % (0)
+        log_str += '        index   = %d\n' % (index)
         log_str += '\n'
 
         return log_str
@@ -486,16 +486,16 @@ class ParserCalField:
         log_str = ''
         log_str += 'Instruction: mux_Instr\n'
         log_str += '    Instruction#  %d \n' % (mux_instr_sel)
-        log_str += '        sel         = %d \n' % (sel)
-        log_str += '        muxsel      = %d \n' % (mux_sel)
+        log_str += '        sel         = %d\n' % (sel)
+        log_str += '        muxsel      = %d\n' % (mux_sel)
         log_str += '        mask_val    = 0x%x\n'% (mask)
-        log_str += '        addsub      = %d \n' % (add_sub)
-        log_str += '        addsub_val  = %d \n' % (add_sub_val)
-        log_str += '        shiftleft   = %d \n' % (shift_left)
-        log_str += '        shift_val   = %d \n' % (shift_val)
-        log_str += '        shift_val   = %d \n' % (shift_val)
-        log_str += '        load_mux_pkt= %d \n' % (load_mux_pkt)
-        log_str += '        lkp_sel     = %d \n' % (lkpsel)
+        log_str += '        addsub      = %d\n' % (add_sub)
+        log_str += '        addsub_val  = %d\n' % (add_sub_val)
+        log_str += '        shiftleft   = %d\n' % (shift_left)
+        log_str += '        shift_val   = %d\n' % (shift_val)
+        log_str += '        shift_val   = %d\n' % (shift_val)
+        log_str += '        load_mux_pkt= %d\n' % (load_mux_pkt)
+        log_str += '        lkp_sel     = %d\n' % (lkpsel)
         log_str += '\n'
 
         return log_str
@@ -514,10 +514,10 @@ class ParserCalField:
             log_str = ''
             log_str += 'Instruction: Ohi_Instr\n'
             log_str += '    Instruction#  %d \n'     % (ohi_instr_inst)
-            log_str += '        sel         = %d \n' % (select)
-            log_str += '        muxsel      = %d \n' % (mux_instr_sel)
-            log_str += '        idx_value   = %d \n' % (index)
-            log_str += '        ohiSlot     = %d \n' % (ohi_slot_num)
+            log_str += '        sel         = %d\n' % (select)
+            log_str += '        muxsel      = %d\n' % (mux_instr_sel)
+            log_str += '        idx_value   = %d\n' % (index)
+            log_str += '        ohiSlot     = %d\n' % (ohi_slot_num)
             log_str += '\n'
             return log_str
         except:
@@ -552,16 +552,16 @@ class ParserCalField:
         log_str = ''
         log_str += 'Csum Instruction\n'
         log_str += '    Instruction#  %d \n'         % (csum_instr)
-        log_str += '        enable          = %d \n' % (enable)
-        log_str += '        unit_sel        = %d \n' % (csum_unit)
-        log_str += '        prof_sel        = %d \n' % (csum_profile)
-        log_str += '        ohiID_start_sel = %d \n' % (hdr_ohi_id)
-        log_str += '        ohiID_len_sel   = %d \n' % (len_ohi_id)
-        log_str += '        phdr_en         = %d \n' % (phdr_en)
-        log_str += '        phdr_sel        = %d \n' % (phdr_profile)
-        log_str += '        phdr_ohiID_sel  = %d \n' % (phdr_ohi_id)
+        log_str += '        enable          = %d\n' % (enable)
+        log_str += '        unit_sel        = %d\n' % (csum_unit)
+        log_str += '        prof_sel        = %d\n' % (csum_profile)
+        log_str += '        ohiID_start_sel = %d\n' % (hdr_ohi_id)
+        log_str += '        ohiID_len_sel   = %d\n' % (len_ohi_id)
+        log_str += '        phdr_en         = %d\n' % (phdr_en)
+        log_str += '        phdr_sel        = %d\n' % (phdr_profile)
+        log_str += '        phdr_ohiID_sel  = %d\n' % (phdr_ohi_id)
         log_str += '\n'
-    
+
         return log_str
 
 
