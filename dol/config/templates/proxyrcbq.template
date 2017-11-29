@@ -1,0 +1,8 @@
+# App Redir Proxy Redirect CB Object Template File.
+meta:
+    id: PROXYRCBQ
+
+id                    : None
+pi                    : 0
+ci                    : 0
+count                 : 0

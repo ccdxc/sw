@@ -1,0 +1,35 @@
+# PROXYR CB Object Template File.
+meta:
+    id: PROXYRCB
+    grpc:
+        package                       : proxyrcb
+        service                       : ProxyrCb
+        apis:
+            create:
+                name                  : ProxyrCbCreate
+                message               : ProxyrCbRequestMsg
+            get:
+                name                  : ProxyrCbGet
+                message               : ProxyrCbGetRequestMsg
+
+id                              : 0 # PROXYR CB Local ID
+spec                            : None # (REF) PROXYR CB Spec from Base Config.
+pi                              : 0
+ci                              : 0
+proxyrcb_flags                  : 0
+my_txq_base                     : 0
+my_txq_ring_size_shift          : 0
+my_txq_entry_size_shift         : 0
+chain_rxq_base                  : 0
+chain_rxq_ring_indices_addr     : 0
+chain_rxq_ring_size_shift       : 0
+chain_rxq_entry_size_shift      : 0
+chain_rxq_ring_index_select     : 0
+ip_sa                           : 0
+ip_da                           : 0
+sport                           : 0
+dport                           : 0
+vrf                             : 0
+af                              : 0
+ip_proto                        : 0
+

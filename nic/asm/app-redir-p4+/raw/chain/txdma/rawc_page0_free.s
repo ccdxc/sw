@@ -6,6 +6,9 @@ struct rawc_page0_free_page0_free_d d;
 
 /*
  * Registers usage
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers
+ * so ensure program stage ends after invoking it.
  */
 #define r_page_addr                 r1  // page address to free
 #define r_page_is_small             r2  // small page indicator

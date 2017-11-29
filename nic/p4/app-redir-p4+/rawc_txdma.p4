@@ -105,7 +105,7 @@ header_type rawccb_t {
          * Sentinel to indicate CB has been de-activated, allowing P4+ code
          * to early detect and enter cleanup.
          */
-        rawccb_deactivated              : 8;  // must be first in CB after header rings
+        rawccb_deactivate               : 8;  // must be first in CB after header rings
         pad                             : 8;
         rawccb_flags                    : 16; // DOL flags and others
         my_txq_base                     : HBM_ADDRESS_WIDTH;
@@ -132,7 +132,7 @@ header_type rawccb_t {
          * Sentinel to indicate all bytes in CB have been written and P4+ code
          * can start normal processing.
          */
-        rawccb_activated                : 8; // must be last in CB
+        rawccb_activate                 : 8; // must be last in CB
     }
 }
 
@@ -377,12 +377,12 @@ metadata dma_phv_pad_128_t              dma_pad_128;
 action start(rsvd, cosA, cosB, cos_sel, 
              eval_last, host, total, pid,
              pi_0, ci_0,
-             rawccb_deactivated,
+             rawccb_deactivate,
              my_txq_base, my_txq_ring_size_shift, my_txq_entry_size_shift,
              chain_txq_ring_size_shift, chain_txq_entry_size_shift,
              chain_txq_base, chain_txq_ring_indices_addr,
              chain_txq_qid, chain_txq_lif, chain_txq_qtype, chain_txq_ring,
-             rawccb_flags, rawccb_activated) {
+             rawccb_flags, rawccb_activate) {
 
     // k + i for stage 0
 
@@ -414,7 +414,7 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawccb_d.pi_0, pi_0);
     modify_field(rawccb_d.ci_0, ci_0);
     
-    modify_field(rawccb_d.rawccb_deactivated, rawccb_deactivated);
+    modify_field(rawccb_d.rawccb_deactivate, rawccb_deactivate);
     modify_field(rawccb_d.my_txq_base, my_txq_base);
     modify_field(rawccb_d.my_txq_ring_size_shift, my_txq_ring_size_shift);
     modify_field(rawccb_d.my_txq_entry_size_shift, my_txq_entry_size_shift);
@@ -427,7 +427,7 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawccb_d.chain_txq_qid, chain_txq_qid);
     modify_field(rawccb_d.chain_txq_ring, chain_txq_ring);
     modify_field(rawccb_d.rawccb_flags, rawccb_flags);
-    modify_field(rawccb_d.rawccb_activated, rawccb_activated);
+    modify_field(rawccb_d.rawccb_activate, rawccb_activate);
 }
 
 

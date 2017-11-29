@@ -66,10 +66,7 @@ proxyr_s6_chain_xfer:
      * none of the L2/L3/L4 headers will be read. These offsets are set
      * to invalid to catch any FTE read attempts.
      */
-    phvwri      p.p4plus_cpu_pkt_l2_offset, 0xffff
-    phvwri      p.p4plus_cpu_pkt_l3_offset, 0xffff
-    phvwri      p.p4plus_cpu_pkt_l4_offset, 0xffff
-    phvwri      p.p4plus_cpu_pkt_payload_offset, 0xffff
+    phvwri      p.{p4plus_cpu_pkt_l2_offset...p4plus_cpu_pkt_payload_offset}, -1
      
     /*
      * Continue to fill out meta headers

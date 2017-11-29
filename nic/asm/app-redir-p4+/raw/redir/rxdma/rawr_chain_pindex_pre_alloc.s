@@ -5,8 +5,10 @@ struct rawr_chain_pindex_pre_alloc_k    k;
 
 /*
  * Registers usage
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
-#define r_ring_indices_addr         r1
+#define r_ring_indices_addr         r3
 
 %%
 

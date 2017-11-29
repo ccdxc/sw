@@ -6,6 +6,9 @@ struct rawc_pkt_prep_pkt_prep_d d;
 
 /*
  * Registers for phvwrp accesses to DMA_MEM2PKT descriptors
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers
+ * so ensure program stage ends after invoking it.
  */
 #define r_num_dma                   r1  // # of DMA descriptors written
 #define r_dma_base                  r2  // DMA descriptor base offset

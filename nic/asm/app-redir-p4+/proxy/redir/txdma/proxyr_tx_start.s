@@ -66,16 +66,16 @@ proxyr_s0_tx_start:
     
     /*
      * Two sentinels surround the programming of CB byte sequence:
-     * proxyrcb_deactivated must be false and proxyrcb_activated must
+     * proxyrcb_deactivate must be false and proxyrcb_activate must
      * be true to indicate readiness.
      *
-     * Note that proxyrcb_activated is part of proxyrcb_extra_t and
+     * Note that proxyrcb_activate is part of proxyrcb_extra_t and
      * its evaluation will be deferred until proxyrcb_extra_t is read
      * in stage 1.
      */
-    phvwr       p.to_s1_proxyrcb_deactivated, d.u.start_d.proxyrcb_deactivated
+    phvwr       p.to_s1_proxyrcb_deactivate, d.u.start_d.proxyrcb_deactivate
     add         r_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, \
-                PROXYR_CB_TABLE_FLOW_KEY_OFFSET                  
+                PROXYRCB_TABLE_FLOW_KEY_OFFSET                  
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
                           proxyr_s1_flow_key_post_read,
                           r_qstate_addr,

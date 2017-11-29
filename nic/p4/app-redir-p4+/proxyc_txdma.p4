@@ -104,7 +104,7 @@ header_type proxyccb_t {
          * Sentinel to indicate CB has been de-activated, allowing P4+ code
          * to early detect and enter cleanup.
          */
-        proxyccb_deactivated            : 8;  // must be first in CB after header rings
+        proxyccb_deactivate             : 8;  // must be first in CB after header rings
         pad                             : 8;
         proxyccb_flags                  : 16; // DOL flags and others
         my_txq_base                     : HBM_ADDRESS_WIDTH;
@@ -129,7 +129,7 @@ header_type proxyccb_t {
          * Sentinel to indicate all bytes in CB have been written and P4+ code
          * can start normal processing.
          */
-        proxyccb_activated              : 8; // must be last in CB
+        proxyccb_activate               : 8; // must be last in CB
     }
 }
 
@@ -367,12 +367,12 @@ metadata dma_phv_pad_128_t              dma_pad_128;
 action start(rsvd, cosA, cosB, cos_sel, 
              eval_last, host, total, pid,
              pi_0, ci_0,
-             proxyccb_deactivated,
+             proxyccb_deactivate,
              my_txq_base, my_txq_ring_size_shift, my_txq_entry_size_shift,
              chain_txq_ring_size_shift, chain_txq_entry_size_shift,
              chain_txq_base, chain_txq_ring_indices_addr,
              chain_txq_qid, chain_txq_lif, chain_txq_qtype, chain_txq_ring,
-             proxyccb_flags, proxyccb_activated) {
+             proxyccb_flags, proxyccb_activate) {
 
     // k + i for stage 0
 
@@ -404,7 +404,7 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(proxyccb_d.pi_0, pi_0);
     modify_field(proxyccb_d.ci_0, ci_0);
     
-    modify_field(proxyccb_d.proxyccb_deactivated, proxyccb_deactivated);
+    modify_field(proxyccb_d.proxyccb_deactivate, proxyccb_deactivate);
     modify_field(proxyccb_d.my_txq_base, my_txq_base);
     modify_field(proxyccb_d.my_txq_ring_size_shift, my_txq_ring_size_shift);
     modify_field(proxyccb_d.my_txq_entry_size_shift, my_txq_entry_size_shift);
@@ -417,7 +417,7 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(proxyccb_d.chain_txq_qid, chain_txq_qid);
     modify_field(proxyccb_d.chain_txq_ring, chain_txq_ring);
     modify_field(proxyccb_d.proxyccb_flags, proxyccb_flags);
-    modify_field(proxyccb_d.proxyccb_activated, proxyccb_activated);
+    modify_field(proxyccb_d.proxyccb_activate, proxyccb_activate);
 }
 
 

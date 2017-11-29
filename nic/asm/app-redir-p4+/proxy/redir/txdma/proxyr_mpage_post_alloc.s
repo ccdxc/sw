@@ -4,12 +4,6 @@ struct phv_                                 p;
 struct proxyr_mpage_post_k                  k;
 struct proxyr_mpage_post_mpage_post_alloc_d d;
 
-/*
- * Registers usage
- */
-#define r_qstate_addr               r1
-
-
 %%
 
     .param      proxyr_s5_chain_pindex_pre_alloc

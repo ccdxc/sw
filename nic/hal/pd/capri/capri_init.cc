@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 68
+#define CAPRI_P4PLUS_NUM_SYMBOLS 70
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -456,196 +456,176 @@ capri_p4p_asm_init()
     symbols[39].params[1].name = P4_FLOW_ATOMIC_STATS_BASE;
     symbols[39].params[1].val = get_start_offset(JP4_ATOMIC_STATS);
 
-    symbols[40].name = "rawr_desc_sem_post_update.bin";
-    symbols[40].num_params = 1;
-    symbols[40].params[0].name = RNMDR_TABLE_BASE;
-    symbols[40].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[40].name = "tcp-retx.bin";
+    symbols[40].num_params = 2;
+    symbols[40].params[0].name = RNMDR_GC_TABLE_BASE;
+    symbols[40].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC);
+    symbols[40].params[1].name = TNMDR_GC_TABLE_BASE;
+    symbols[40].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX_GC);
 
-    symbols[41].name = "rawr_desc_free.bin";
-    symbols[41].num_params = 1;
+    symbols[41].name = "gc_tx_inc_descr_free_pair_pi.bin";
+    symbols[41].num_params = 2;
     symbols[41].params[0].name = RNMDR_TABLE_BASE;
     symbols[41].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[41].params[1].name = TNMDR_TABLE_BASE;
+    symbols[41].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
 
-    symbols[42].name = "rawr_ppage_sem_post_update.bin";
-    symbols[42].num_params = 1;
+    symbols[42].name = "gc_tx_inc_page_free_pair_pi.bin";
+    symbols[42].num_params = 2;
     symbols[42].params[0].name = RNMPR_TABLE_BASE;
     symbols[42].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[42].params[1].name = TNMPR_TABLE_BASE;
+    symbols[42].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
-    symbols[43].name = "rawr_mpage_sem_post_update.bin";
+    symbols[43].name = "tcp-l7-read-rnmdr-alloc-idx.bin";
     symbols[43].num_params = 1;
-    symbols[43].params[0].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[43].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[43].params[0].name = RNMDR_TABLE_BASE;
+    symbols[43].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
-    symbols[44].name = "rawr_mpage_free.bin";
-    symbols[44].num_params = 2;
-    symbols[44].params[0].name = RNMPR_TABLE_BASE;
-    symbols[44].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
-    symbols[44].params[1].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[44].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[44].name = "tls-dec-read-l7-rnmdr-pidx.bin";
+    symbols[44].num_params = 1;
+    symbols[44].params[0].name = RNMDR_TABLE_BASE;
+    symbols[44].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
-    symbols[45].name = "tcp-tx.bin";
-    symbols[45].num_params = 2;
-    symbols[45].params[0].name = RNMDR_GC_TABLE_BASE;
-    symbols[45].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC);
-    symbols[45].params[1].name = TNMDR_GC_TABLE_BASE;
-    symbols[45].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX_GC);
+    // TODO: This is a placeholder. Replace this with appropriate value based on 
+    // clock frequency.
+    symbols[45].name = "resp_rx_dcqcn_ecn_process.bin";
+    symbols[45].num_params = 1;
+    symbols[45].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
+    symbols[45].params[0].val = 50000; 
 
-    symbols[46].name = "gc_tx_inc_descr_free_pair_pi.bin";
-    symbols[46].num_params = 2;
-    symbols[46].params[0].name = RNMDR_TABLE_BASE;
-    symbols[46].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
-    symbols[46].params[1].name = TNMDR_TABLE_BASE;
-    symbols[46].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
 
-    symbols[47].name = "gc_tx_inc_page_free_pair_pi.bin";
-    symbols[47].num_params = 2;
-    symbols[47].params[0].name = RNMPR_TABLE_BASE;
-    symbols[47].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
-    symbols[47].params[1].name = TNMPR_TABLE_BASE;
-    symbols[47].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+    // TODO: This is a placeholder. Replace this with appropriate value based on 
+    // clock frequency.
+    symbols[46].name = "req_rx_dcqcn_ecn_process.bin";
+    symbols[46].num_params = 1;
+    symbols[46].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
+    symbols[46].params[0].val = 50000;
 
-    symbols[48].name = "tcp-l7-read-rnmdr-alloc-idx.bin";
+    symbols[47].name = "tls-enc-queue-brq-mpp.bin";
+    symbols[47].num_params = 1;
+    symbols[47].params[0].name = BRQ_BASE;
+    symbols[47].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP1);
+
+    symbols[48].name = "tls-dec-queue-brq-mpp.bin";
     symbols[48].num_params = 1;
-    symbols[48].params[0].name = RNMDR_TABLE_BASE;
-    symbols[48].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[48].params[0].name = BRQ_BASE;
+    symbols[48].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP1);
 
-    symbols[49].name = "tls-dec-read-l7-rnmdr-pidx.bin";
+    symbols[49].name = "resp_rx_eqcb_process.bin";
     symbols[49].num_params = 1;
-    symbols[49].params[0].name = RNMDR_TABLE_BASE;
-    symbols[49].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[49].params[0].name = RDMA_EQ_INTR_TABLE_BASE;
+    symbols[49].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
 
-    symbols[50].name = "rawc_desc_free.bin";
+    symbols[50].name = "req_rx_eqcb_process.bin";
     symbols[50].num_params = 1;
-    symbols[50].params[0].name = RNMDR_TABLE_BASE;
-    symbols[50].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[50].params[0].name = RDMA_EQ_INTR_TABLE_BASE;
+    symbols[50].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
 
-    // TODO: This is a placeholder. Replace this with appropriate value based on 
-    // clock frequency.
-    symbols[51].name = "resp_rx_dcqcn_ecn_process.bin";
+    symbols[51].name = "resp_rx_rqcb_process.bin";
     symbols[51].num_params = 1;
-    symbols[51].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
-    symbols[51].params[0].val = 50000; 
+    symbols[51].params[0].name = RDMA_ATOMIC_RESOURCE_ADDR;
+    symbols[51].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR);
 
+    symbols[52].name = "resp_rx_atomic_resource_process.bin";
+    symbols[52].num_params = 2;
+    symbols[52].params[0].name = RDMA_ATOMIC_RESOURCE_ADDR;
+    symbols[52].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR);
+    symbols[52].params[1].name = RDMA_PCIE_ATOMIC_BASE_ADDR;
+    symbols[52].params[1].val = CAPRI_PCIE_ATOMIC_BASE_ADDR;
 
-    // TODO: This is a placeholder. Replace this with appropriate value based on 
-    // clock frequency.
-    symbols[52].name = "req_rx_dcqcn_ecn_process.bin";
-    symbols[52].num_params = 1;
-    symbols[52].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
-    symbols[52].params[0].val = 50000;
-
-    symbols[53].name = "tls-enc-queue-brq-mpp.bin";
+    symbols[53].name = "p4pt.bin";
     symbols[53].num_params = 1;
-    symbols[53].params[0].name = BRQ_BASE;
-    symbols[53].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP1);
+    symbols[53].params[0].name = P4PT_TCB_BASE;
+    symbols[53].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_MEM);
 
-    symbols[54].name = "tls-dec-queue-brq-mpp.bin";
+    symbols[54].name = "p4pt_update_tcb.bin";
     symbols[54].num_params = 1;
-    symbols[54].params[0].name = BRQ_BASE;
-    symbols[54].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP1);
+    symbols[54].params[0].name = P4PT_TCB_ISCSI_REC_BASE;
+    symbols[54].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_REC_MEM);
 
-    symbols[55].name = "resp_rx_eqcb_process.bin";
+    symbols[55].name = "p4pt_update_tcb_rec.bin";
     symbols[55].num_params = 1;
-    symbols[55].params[0].name = RDMA_EQ_INTR_TABLE_BASE;
-    symbols[55].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
+    symbols[55].params[0].name = P4PT_TCB_ISCSI_STATS_BASE;
+    symbols[55].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_STATS_MEM);
 
-    symbols[56].name = "req_rx_eqcb_process.bin";
+    symbols[56].name = "p4pt_update_tcb_stats.bin";
     symbols[56].num_params = 1;
-    symbols[56].params[0].name = RDMA_EQ_INTR_TABLE_BASE;
-    symbols[56].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
+    symbols[56].params[0].name = P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE;
+    symbols[56].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_MEM);
 
-    symbols[57].name = "resp_rx_rqcb_process.bin";
+    symbols[57].name = "p4pt_update_read_latency_distribution.bin";
     symbols[57].num_params = 1;
-    symbols[57].params[0].name = RDMA_ATOMIC_RESOURCE_ADDR;
-    symbols[57].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR);
+    symbols[57].params[0].name = P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_BASE;
+    symbols[57].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_MEM);
 
-    symbols[58].name = "resp_rx_atomic_resource_process.bin";
-    symbols[58].num_params = 2;
-    symbols[58].params[0].name = RDMA_ATOMIC_RESOURCE_ADDR;
-    symbols[58].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR);
-    symbols[58].params[1].name = RDMA_PCIE_ATOMIC_BASE_ADDR;
-    symbols[58].params[1].val = CAPRI_PCIE_ATOMIC_BASE_ADDR;
+    symbols[58].name = "rawr_desc_sem_post_update.bin";
+    symbols[58].num_params = 1;
+    symbols[58].params[0].name = RNMDR_TABLE_BASE;
+    symbols[58].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
-    symbols[59].name = "p4pt.bin";
+    symbols[59].name = "rawr_desc_free.bin";
     symbols[59].num_params = 1;
-    symbols[59].params[0].name = P4PT_TCB_BASE;
-    symbols[59].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_MEM);
+    symbols[59].params[0].name = RNMDR_TABLE_BASE;
+    symbols[59].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
-    symbols[60].name = "p4pt_update_tcb.bin";
+    symbols[60].name = "rawr_ppage_sem_post_update.bin";
     symbols[60].num_params = 1;
-    symbols[60].params[0].name = P4PT_TCB_ISCSI_REC_BASE;
-    symbols[60].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_REC_MEM);
+    symbols[60].params[0].name = RNMPR_TABLE_BASE;
+    symbols[60].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
 
-    symbols[61].name = "p4pt_update_tcb_rec.bin";
+    symbols[61].name = "rawr_mpage_sem_post_update.bin";
     symbols[61].num_params = 1;
-    symbols[61].params[0].name = P4PT_TCB_ISCSI_STATS_BASE;
-    symbols[61].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_STATS_MEM);
+    symbols[61].params[0].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[61].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
-    symbols[62].name = "p4pt_update_tcb_stats.bin";
-    symbols[62].num_params = 1;
-    symbols[62].params[0].name = P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE;
-    symbols[62].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_MEM);
+    symbols[62].name = "rawr_mpage_free.bin";
+    symbols[62].num_params = 2;
+    symbols[62].params[0].name = RNMPR_TABLE_BASE;
+    symbols[62].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[62].params[1].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[62].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
-    symbols[63].name = "p4pt_update_read_latency_distribution.bin";
+    symbols[63].name = "rawc_desc_free.bin";
     symbols[63].num_params = 1;
-    symbols[63].params[0].name = P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_BASE;
-    symbols[63].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_MEM);
+    symbols[63].params[0].name = RNMDR_TABLE_BASE;
+    symbols[63].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
-    symbols[64].name = "proxyr_mpage_sem_pindex_post_update.bin";
-    symbols[64].num_params = 1;
-    symbols[64].params[0].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[64].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[64].name = "rawc_page0_free.bin";
+    symbols[64].num_params = 2;
+    symbols[64].params[0].name = RNMPR_TABLE_BASE;
+    symbols[64].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[64].params[1].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[64].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
-    symbols[65].name = "proxyr_desc_free.bin";
+    symbols[65].name = "proxyr_mpage_sem_pindex_post_update.bin";
     symbols[65].num_params = 1;
-    symbols[65].params[0].name = RNMDR_TABLE_BASE;
-    symbols[65].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[65].params[0].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[65].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
-    symbols[66].name = "proxyr_ppage_free.bin";
+    symbols[66].name = "proxyr_desc_free.bin";
     symbols[66].num_params = 1;
-    symbols[66].params[0].name = RNMPR_TABLE_BASE;
-    symbols[66].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[66].params[0].name = RNMDR_TABLE_BASE;
+    symbols[66].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
     symbols[67].name = "proxyr_mpage_free.bin";
-    symbols[67].num_params = 1;
-    symbols[67].params[0].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[67].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[67].num_params = 2;
+    symbols[67].params[0].name = RNMPR_TABLE_BASE;
+    symbols[67].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[67].params[1].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[67].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
-    symbols[51].name = "rawc_page0_free.bin";
-    symbols[51].num_params = 2;
-    symbols[51].params[0].name = RNMPR_TABLE_BASE;
-    symbols[51].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
-    symbols[51].params[1].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[51].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[68].name = "proxyc_desc_free.bin";
+    symbols[68].num_params = 1;
+    symbols[68].params[0].name = RNMDR_TABLE_BASE;
+    symbols[68].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
-    symbols[52].name = "proxyr_mpage_sem_pindex_post_update.bin";
-    symbols[52].num_params = 1;
-    symbols[52].params[0].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[52].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
-
-    symbols[53].name = "proxyr_desc_free.bin";
-    symbols[53].num_params = 1;
-    symbols[53].params[0].name = RNMDR_TABLE_BASE;
-    symbols[53].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
-
-    symbols[54].name = "proxyr_mpage_free.bin";
-    symbols[54].num_params = 2;
-    symbols[54].params[0].name = RNMPR_TABLE_BASE;
-    symbols[54].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
-    symbols[54].params[1].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[54].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
-
-    symbols[55].name = "proxyc_desc_free.bin";
-    symbols[55].num_params = 1;
-    symbols[55].params[0].name = RNMDR_TABLE_BASE;
-    symbols[55].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
-
-    symbols[56].name = "proxyc_page0_free.bin";
-    symbols[56].num_params = 2;
-    symbols[56].params[0].name = RNMPR_TABLE_BASE;
-    symbols[56].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
-    symbols[56].params[1].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[56].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[69].name = "proxyc_page0_free.bin";
+    symbols[69].num_params = 2;
+    symbols[69].params[0].name = RNMPR_TABLE_BASE;
+    symbols[69].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[69].params[1].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[69].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

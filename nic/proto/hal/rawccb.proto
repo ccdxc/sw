@@ -30,20 +30,18 @@ message RawcCbSpec {
   RawcCbKeyHandle       key_or_handle              = 2;    // rawccb being created/updated
   uint32                pi                         = 3;
   uint32                ci                         = 4;
-  uint32                rawccb_deactivated         = 5;
-  uint32                rawccb_flags               = 6;
-  uint32                my_txq_base                = 7;
-  uint32                my_txq_ring_size_shift     = 8;
-  uint32                my_txq_entry_size_shift    = 9;
-  uint32                chain_txq_base             = 10;   // next service chain TxQ base
-  uint32                chain_txq_ring_indices_addr= 11;
-  uint32                chain_txq_ring_size_shift  = 12;
-  uint32                chain_txq_entry_size_shift = 13;
-  uint32                chain_txq_lif              = 14;
-  uint32                chain_txq_qtype            = 15;
-  uint32                chain_txq_qid              = 16;
-  uint32                chain_txq_ring             = 17;
-  uint32                rawccb_activated           = 18;
+  uint32                rawccb_flags               = 5;
+  uint32                my_txq_base                = 6;
+  uint32                my_txq_ring_size_shift     = 7;
+  uint32                my_txq_entry_size_shift    = 8;
+  uint32                chain_txq_base             = 9;    // next service chain TxQ base
+  uint32                chain_txq_ring_indices_addr= 10;
+  uint32                chain_txq_ring_size_shift  = 11;
+  uint32                chain_txq_entry_size_shift = 12;
+  uint32                chain_txq_lif              = 13;
+  uint32                chain_txq_qtype            = 14;
+  uint32                chain_txq_qid              = 15;
+  uint32                chain_txq_ring             = 16;
 }
 
 // RawcCbRequestMsg is batched add or modify rawccb request

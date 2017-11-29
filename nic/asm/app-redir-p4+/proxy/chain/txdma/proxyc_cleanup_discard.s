@@ -6,8 +6,10 @@ struct proxyc_cleanup_discard_cleanup_discard_d d;
 
 /*
  * Registers usage
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
-#define r_free_inf_addr             r1
+#define r_free_inf_addr             r3
 
 %%
     .param      proxyc_s5_desc_free

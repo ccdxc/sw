@@ -6,8 +6,10 @@ struct proxyr_desc_desc_post_read_d     d;
 
 /*
  * Registers usage
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
-#define r_alloc_inf_addr            r1
+#define r_alloc_inf_addr            r3
 
 %%
 

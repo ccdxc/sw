@@ -44,7 +44,6 @@ class RawcCbObject(base.ConfigObjectBase):
         #req_spec.meta.rawccb_id             = self.id
         req_spec.key_or_handle.rawccb_id    = self.id
         if req_spec.__class__.__name__ != 'RawcCbGetRequest':
-           req_spec.rawccb_deactivated           = self.rawccb_deactivated
            req_spec.rawccb_flags                 = self.rawccb_flags
            req_spec.my_txq_base                  = self.my_txq_base
            req_spec.my_txq_ring_size_shift       = self.my_txq_ring_size_shift
@@ -58,7 +57,6 @@ class RawcCbObject(base.ConfigObjectBase):
            req_spec.chain_txq_qtype              = self.chain_txq_qtype
            req_spec.chain_txq_qid                = self.chain_txq_qid
            req_spec.chain_txq_ring               = self.chain_txq_ring
-           req_spec.rawccb_activated             = self.rawccb_activated
 
         return
 
@@ -67,7 +65,6 @@ class RawcCbObject(base.ConfigObjectBase):
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'RawcCbResponse':
-            self.rawccb_deactivated           = resp_spec.spec.rawccb_deactivated
             self.rawccb_flags                 = resp_spec.spec.rawccb_flags
             self.my_txq_base                  = resp_spec.spec.my_txq_base
             self.my_txq_ring_size_shift       = resp_spec.spec.my_txq_ring_size_shift
@@ -81,7 +78,6 @@ class RawcCbObject(base.ConfigObjectBase):
             self.chain_txq_qtype              = resp_spec.spec.chain_txq_qtype
             self.chain_txq_qid                = resp_spec.spec.chain_txq_qid
             self.chain_txq_ring               = resp_spec.spec.chain_txq_ring
-            self.rawccb_activated             = resp_spec.spec.rawccb_activated
             self.pi                           = resp_spec.spec.pi
             self.ci                           = resp_spec.spec.ci
 

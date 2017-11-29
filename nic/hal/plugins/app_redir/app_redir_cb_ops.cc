@@ -36,8 +36,6 @@ app_redir_rawrcb_spec_build(uint32_t cb_id,
         spec.set_chain_rxq_ring_index_select(rawrcb->chain_rxq_ring_index_select);
     }
 
-    spec.set_rawrcb_deactivated(rawrcb->rawrcb_deactivated);
-    spec.set_rawrcb_activated(rawrcb->rawrcb_activated);
     spec.set_rawrcb_flags(rawrcb->rawrcb_flags);
 }
 
@@ -104,8 +102,6 @@ app_redir_rawccb_spec_build(uint32_t cb_id,
     spec.set_chain_txq_qid(rawccb->chain_txq_qid);
     spec.set_chain_txq_ring(rawccb->chain_txq_ring);
 
-    spec.set_rawccb_deactivated(rawccb->rawccb_deactivated);
-    spec.set_rawccb_activated(rawccb->rawccb_activated);
     spec.set_rawccb_flags(rawccb->rawccb_flags);
 }
 

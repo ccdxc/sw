@@ -98,12 +98,12 @@
  * Load 64-bit immediate
  */
 #define APP_REDIR_IMM64_LOAD(reg, imm64)                                        \
-        addui       reg, r0,  hiword(imm64);                                    \
-        addi        reg, reg, loword(imm64);
+        addi        reg, r0,  loword(imm64);                                    \
+        addui       reg, reg, hiword(imm64);
     
 #define APP_REDIR_IMM64_LOAD_CF(cf, reg, imm64)                                 \
-        addui.cf    reg, r0,  hiword(imm64);                                    \
-        addi.cf     reg, reg, loword(imm64);
+        addi.cf    reg, r0,  loword(imm64);                                     \
+        addui.cf   reg, reg, hiword(imm64);
         
 /*
  * Free semaphore pindex full trap

@@ -55,11 +55,11 @@ rawc_s0_tx_start:
 
     /*
      * Two sentinels surround the programming of CB byte sequence:
-     * rawccb_deactivated must be false and rawccb_activated must
+     * rawccb_deactivate must be false and rawccb_activate must
      * be true to indicate readiness.
      */
-    seq         c1, d.rawccb_deactivated, r0
-    sne         c2, d.rawccb_activated, r0
+    sne         c1, d.rawccb_deactivate, RAWCCB_DEACTIVATE
+    seq         c2, d.rawccb_activate, RAWCCB_ACTIVATE
     setcf       c3, [c1 & c2]
     bal.!c3     r_return, _rawccb_not_ready
     phvwr       p.common_phv_rawccb_flags, d.{rawccb_flags}.hx // delay slot

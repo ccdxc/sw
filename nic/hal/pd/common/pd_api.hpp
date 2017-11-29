@@ -26,6 +26,8 @@
 #include "nic/include/oif_list_api.hpp"
 #include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/src/rawccb.hpp"
+#include "nic/hal/src/proxyrcb.hpp"
+#include "nic/hal/src/proxyccb.hpp"
 #include "nic/hal/src/port.hpp"
 #include "nic/hal/src/barco_rings.hpp"
 
@@ -56,6 +58,8 @@ using hal::l4lb_service_entry_t;
 using hal::cpucb_t;
 using hal::rawrcb_t;
 using hal::rawccb_t;
+using hal::proxyrcb_t;
+using hal::proxyccb_t;
 
 typedef uint32_t    mc_entry_hw_id_t;
 typedef uint32_t    l2seg_hw_id_t;
@@ -232,6 +236,14 @@ typedef struct pd_rawrcb_args_s {
 typedef struct pd_rawccb_args_s {
     rawccb_t           *rawccb;
 } __PACK__ pd_rawccb_args_t;
+
+typedef struct pd_proxyrcb_args_s {
+    proxyrcb_t         *proxyrcb;
+} __PACK__ pd_proxyrcb_args_t;
+
+typedef struct pd_proxyccb_args_s {
+    proxyccb_t         *proxyccb;
+} __PACK__ pd_proxyccb_args_t;
 
 typedef struct pd_rw_entry_args_s {
     mac_addr_t          mac_sa;
@@ -430,6 +442,20 @@ pd_rawccb_args_init (pd_rawccb_args_t *args)
     return;
 }
 
+static inline void
+pd_proxyrcb_args_init (pd_proxyrcb_args_t *args)
+{
+    args->proxyrcb = NULL;
+    return;
+}
+
+static inline void
+pd_proxyccb_args_init (pd_proxyccb_args_t *args)
+{
+    args->proxyccb = NULL;
+    return;
+}
+
 hal_ret_t pd_vrf_create(pd_vrf_args_t *vrf);
 hal_ret_t pd_vrf_update(pd_vrf_args_t *vrf);
 hal_ret_t pd_vrf_delete(pd_vrf_args_t *vrf);
@@ -557,13 +583,26 @@ hal_ret_t pd_twice_nat_add(pd_twice_nat_entry_args_t *args,
 hal_ret_t pd_twice_nat_del(pd_twice_nat_entry_args_t *args);
 hal_ret_t pd_rawrcb_create(pd_rawrcb_args_t *rawrcb);
 hal_ret_t pd_rawrcb_update(pd_rawrcb_args_t *rawrcb);
-hal_ret_t pd_rawrcb_delete(pd_rawrcb_args_t *rawrcb);
+hal_ret_t pd_rawrcb_delete(pd_rawrcb_args_t *rawrcb,
+                           bool retain_in_db = true);
 hal_ret_t pd_rawrcb_get(pd_rawrcb_args_t *rawrcb);
 
 hal_ret_t pd_rawccb_create(pd_rawccb_args_t *rawccb);
 hal_ret_t pd_rawccb_update(pd_rawccb_args_t *rawccb);
-hal_ret_t pd_rawccb_delete(pd_rawccb_args_t *rawccb);
+hal_ret_t pd_rawccb_delete(pd_rawccb_args_t *rawccb,
+                           bool retain_in_db = true);
 hal_ret_t pd_rawccb_get(pd_rawccb_args_t *rawccb);
+hal_ret_t pd_proxyrcb_create(pd_proxyrcb_args_t *proxyrcb);
+hal_ret_t pd_proxyrcb_update(pd_proxyrcb_args_t *proxyrcb);
+hal_ret_t pd_proxyrcb_delete(pd_proxyrcb_args_t *proxyrcb,
+                             bool retain_in_db = true);
+hal_ret_t pd_proxyrcb_get(pd_proxyrcb_args_t *proxyrcb);
+
+hal_ret_t pd_proxyccb_create(pd_proxyccb_args_t *proxyccb);
+hal_ret_t pd_proxyccb_update(pd_proxyccb_args_t *proxyccb);
+hal_ret_t pd_proxyccb_delete(pd_proxyccb_args_t *proxyccb,
+                             bool retain_in_db = true);
+hal_ret_t pd_proxyccb_get(pd_proxyccb_args_t *proxyccb);
 
 typedef struct pd_buf_pool_args_s {
     buf_pool_t    *buf_pool;
@@ -637,7 +676,7 @@ hal_ret_t pd_wring_set_meta (pd_wring_args_t *wring);
 
 
 typedef struct pd_descr_aol_s {
-	uint64_t	scratch[8];
+    uint64_t    scratch[8];
     uint64_t    a0;
     uint32_t    o0;
     uint32_t    l0;
