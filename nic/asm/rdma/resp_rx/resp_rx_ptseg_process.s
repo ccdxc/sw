@@ -18,6 +18,7 @@ struct resp_rx_ptseg_process_k_t k;
 #define F_FIRST_PASS c7
 #define OVERRIDE_LIF_VLD c3
 #define DISABLE_QP c1
+#define IS_ATOMIC c4
 
 %%
 
@@ -31,6 +32,8 @@ resp_rx_ptseg_process:
     // do not perform any payload xfers if qp was err disabled
     IS_ANY_FLAG_SET(DISABLE_QP, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP)
     bcf     [DISABLE_QP], exit
+
+    IS_ANY_FLAG_SET(IS_ATOMIC, GLOBAL_FLAGS, RESP_RX_FLAG_ATOMIC_CSWAP|RESP_RX_FLAG_ATOMIC_FNA)
 
     add         r1, r0, k.args.log_page_size
 
@@ -67,9 +70,10 @@ transfer_loop:
     tblrdp.dx           DMA_ADDR, r2, 0, CAPRI_SIZEOF_U64_BITS
     // r2 has page ptr, add page offset for DMA addr
     add                 DMA_ADDR, DMA_ADDR, PAGE_OFFSET
+    bcf                 [IS_ATOMIC], atomic
     
     //STORAGE_USE_CASE
-    seq                 OVERRIDE_LIF_VLD, k.args.override_lif_vld, 1
+    seq                 OVERRIDE_LIF_VLD, k.args.override_lif_vld, 1 //BD Slot
     DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR, OVERRIDE_LIF_VLD, k.args.override_lif)
     
     add                 PAGE_OFFSET, r0, r0
@@ -96,3 +100,7 @@ exit:
     nop.e
     nop
 
+atomic:
+    phvwr               p.pcie_atomic.host_addr, DMA_ADDR.dx
+    nop.e
+    nop

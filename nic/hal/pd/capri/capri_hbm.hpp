@@ -85,6 +85,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_APP_REDIR_PROXYR   "app-redir-proxyr"
 #define CAPRI_HBM_REG_APP_REDIR_PROXYC   "app-redir-proxyc"
 #define CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE   "rdma-eq-intr-table"
+#define CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR "rdma-atomic-resource-addr"
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512
@@ -119,6 +120,9 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define P4_FLOW_ATOMIC_STATS_BASE       "p4_flow_atomic_stats_base"
 #define NUM_CLOCK_TICKS_PER_CNP         "rdma_num_clock_ticks_per_cnp"
 #define RDMA_EQ_INTR_TABLE_BASE         "hbm_rdma_eq_intr_table_base"
+
+#define RDMA_ATOMIC_RESOURCE_ADDR   "rdma_atomic_resource_addr"
+#define RDMA_PCIE_ATOMIC_BASE_ADDR  "rdma_pcie_atomic_base_addr"
 
 typedef struct capri_descr_s {
         uint64_t        scratch[8];

@@ -10,7 +10,6 @@ struct rqwqe_base_t d;
 
 #define INFO_LKEY_T struct resp_rx_key_info_t
 #define INFO_WBCB0_T struct resp_rx_rqcb0_write_back_info_t
-#define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t    
 #define TO_S_RECIRC_T struct resp_rx_to_stage_recirc_info_t
 #define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
 

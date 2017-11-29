@@ -21,6 +21,9 @@
 #define CAPRI_RXDMA_RETH_VA(_r) \
     add _r, k.{rdma_bth_reth_reth_va_sbit56_ebit63}, k.{rdma_bth_reth_reth_va_sbit0_ebit7...rdma_bth_reth_reth_va_sbit40_ebit55}, 8
 
+#define CAPRI_RXDMA_BTH_ATOMICETH_CMP_DATA k.{rdma_bth_atomiceth_atomiceth_cmp_data_sbit0_ebit23...rdma_bth_atomiceth_atomiceth_cmp_data_sbit32_ebit63}
+#define CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA k.{rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit0_ebit15...rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit48_ebit63}
+
 //#define CAPRI_RXDMA_RETH_DMA_LEN k.rdma_bth_reth_reth_dma_len
 #define CAPRI_RXDMA_RETH_DMA_LEN k.{rdma_bth_reth_reth_dma_len1...rdma_bth_reth_reth_dma_len2}
 #define CAPRI_RXDMA_RETH_R_KEY k.rdma_bth_reth_reth_r_key
@@ -474,9 +477,9 @@ _I_K_next:;
 #define DMA_CMD_TYPE_MEM2MEM        6       //TX-RX mem read/mem write
 
 
-#define DMA_CMD_MEM2MEM_TYPE_SRC    0
-#define DMA_CMD_MEM2MEM_TYPE_DST    1
-#define DMA_CMD_MEM2MEM_PHV2MEM     2
+#define DMA_CMD_MEM2MEM_TYPE_SRC        0
+#define DMA_CMD_MEM2MEM_TYPE_DST        1
+#define DMA_CMD_MEM2MEM_TYPE_PHV2MEM    2
 
 #define DMA_CMD_MEM2PKT_T                struct capri_dma_cmd_mem2pkt_t
 #define MEM2PKT_HOST_ADDR_OFFSET         offsetof(DMA_CMD_MEM2PKT_T, host_addr)
@@ -572,6 +575,11 @@ struct capri_dma_cmd_skip_t {
 
 //TX - axi read, then write to mem
 #define DMA_CMD_MEM2MEM_T struct capri_dma_cmd_mem2mem_t
+#define MEM2MEM_PHV_START_OFFSET  offsetof(DMA_CMD_MEM2MEM_T, phv_start)
+#define MEM2MEM_PHV_END_OFFSET offsetof(DMA_CMD_MEM2MEM_T, phv_end)
+#define MEM2MEM_HOST_ADDR_OFFSET offsetof(DMA_CMD_MEM2MEM_T, host_addr)
+#define MEM2MEM_CMDTYPE_OFFSET offsetof(DMA_CMD_MEM2MEM_T, cmdtype)
+#define MEM2MEM_TYPE_OFFSET offsetof(DMA_CMD_MEM2MEM_T, mem2mem_type)
 struct capri_dma_cmd_mem2mem_t {
     rsvd: 16;
     size: 14;
@@ -738,6 +746,40 @@ addi _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FL
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, size), sizeof(DMA_CMD_MEM2PKT_T.size), _size;                      \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, addr), sizeof(DMA_CMD_MEM2PKT_T.addr), _addr;                      \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2PKT_T, host_addr, cmdtype), (1 << MEM2PKT_HOST_ADDR_OFFSET) | (DMA_CMD_TYPE_MEM2PKT << MEM2PKT_CMDTYPE_OFFSET);
+
+#define DMA_MEM2MEM_PHV2MEM_SETUP(_base_r, _cf, _start, _end, _addr)        \
+    phvwrpi       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << MEM2MEM_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << MEM2MEM_PHV_START_OFFSET) | (DMA_CMD_MEM2MEM_TYPE_PHV2MEM << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET); \
+    phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
+    seq          _cf, _addr[63], 1;                      \
+    phvwrp._cf   _base_r, offsetof(DMA_CMD_MEM2MEM_T, host_addr), sizeof(DMA_CMD_MEM2MEM_T.host_addr), 1; \
+
+#define DMA_HBM_MEM2MEM_PHV2MEM_SETUP(_base_r, _start, _end, _addr)        \
+    phvwrpi       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << MEM2MEM_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << MEM2MEM_PHV_START_OFFSET) | (DMA_CMD_MEM2MEM_TYPE_PHV2MEM << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET); \
+    phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
+
+#define DMA_HOST_MEM2MEM_PHV2MEM_SETUP(_base_r, _start, _end, _addr)        \
+    phvwrpi       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << MEM2MEM_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << MEM2MEM_PHV_START_OFFSET) | (1 << MEM2MEM_HOST_ADDR_OFFSET) | (DMA_CMD_MEM2MEM_TYPE_PHV2MEM << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET); \
+    phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
+
+#define DMA_HBM_MEM2MEM_SRC_SETUP(_base_r, _size, _addr) \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, size), sizeof(DMA_CMD_MEM2MEM_T.size), _size; \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
+    phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, mem2mem_type, cmdtype), (DMA_CMD_MEM2MEM_TYPE_SRC << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET);
+
+#define DMA_HOST_MEM2MEM_SRC_SETUP(_base_r, _size, _addr) \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, size), sizeof(DMA_CMD_MEM2MEM_T.size), _size; \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
+    phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, host_addr, cmdtype), (1 << MEM2MEM_HOST_ADDR_OFFSET) | (DMA_CMD_MEM2MEM_TYPE_SRC << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET);
+
+#define DMA_HBM_MEM2MEM_DST_SETUP(_base_r, _size, _addr) \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, size), sizeof(DMA_CMD_MEM2MEM_T.size), _size; \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
+    phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, mem2mem_type, cmdtype), (DMA_CMD_MEM2MEM_TYPE_DST << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET);
+
+#define DMA_HOST_MEM2MEM_DST_SETUP(_base_r, _size, _addr) \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, size), sizeof(DMA_CMD_MEM2MEM_T.size), _size; \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
+    phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, host_addr, cmdtype), (1 << MEM2MEM_HOST_ADDR_OFFSET) | (DMA_CMD_MEM2MEM_TYPE_DST << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET);
 
 #define DMA_SET_END_OF_CMDS(_cmd_t, _base_r)                                  \
     phvwrp     _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 1

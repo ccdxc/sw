@@ -17,8 +17,13 @@
 // used only by storage folks, their case wouldn't be needing 4 SGEs
 // anyway.
 #define RESP_RX_DMA_CMD_PYLD_BASE   2
-#define RESP_RX_DMA_CMD_RSQWQE      4
-#define RESP_RX_DMA_CMD_RSQ_DB      5
+#define RESP_RX_DMA_CMD_RSQWQE      2
+#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_WR          3
+#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_RD          4
+#define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_TO_RSQWQE   5
+#define RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE     6
+#define RESP_RX_DMA_CMD_RSQ_DB                      7
+
 #define RESP_RX_DMA_CMD_PYLD_BASE_END 14
 
 #define RESP_RX_DMA_CMD_START       0
@@ -32,21 +37,27 @@
 //TODO: put ack_info.aeth, ack_info.psn adjacent to each other in PHV and also
 //      adjacent to each other in rqcb1, in right order. This will eliminate
 //      one DMA instruction
-#define RESP_RX_POST_ACK_INFO_TO_TXDMA(_dma_base_r, _rqcb1_addr_r, _tmp_r, \
-                                       _lif, _qtype, _qid, \
-                                       _db_addr_r, _db_data_r) \
+#define RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb1_addr_r, _tmp_r) \
     add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.aeth.msn, _tmp_r); \
+
+#define RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(_dma_base_r, \
+                                       _lif, _qtype, _qid, \
+                                       _db_addr_r, _db_data_r) \
     DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
     PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, ACK_NAK_RING_ID, _db_addr_r, _db_data_r);\
     phvwr       p.db_data1, _db_data_r.dx; \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data1, db_data1, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
     
-#define RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb1_addr_r, _tmp_r) \
-    add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
-    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.aeth.msn, _tmp_r); \
-
+#define RESP_RX_POST_ACK_INFO_TO_TXDMA(_dma_base_r, _rqcb1_addr_r, _tmp_r, \
+                                       _lif, _qtype, _qid, \
+                                       _db_addr_r, _db_data_r) \
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb1_addr_r, _tmp_r); \
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(_dma_base_r, \
+                                       _lif, _qtype, _qid, \
+                                       _db_addr_r, _db_data_r); \
+    
 #ring-id assumed as 0
 #define RESP_RX_POST_IMMDT_AS_DOORBELL(_dma_base_r, \
                                        _lif, _qtype, _qid, \
@@ -66,14 +77,34 @@
 #define RSQ_EVAL_MIDDLE     0
 #define RSQ_WALK_FORWARD    1
 #define RSQ_WALK_BACKWARD   2
+
+struct resp_rx_dma_cmds_flit_t {
+    dma_cmd0 : 128;
+    dma_cmd1 : 128;
+    dma_cmd2 : 128;
+    dma_cmd3 : 128;
+};
+
     
 // phv 
 struct resp_rx_phv_t {
-    // dma commands (flit 8 - 11)
+    /* flit 11 */
+    struct resp_rx_dma_cmds_flit_t flit_11;
 
+    /* flit 10 */
+    union {
+        struct resp_rx_dma_cmds_flit_t  flit_10;
+        struct rdma_pcie_atomic_reg_t   pcie_atomic;
+    };
+
+    /* flit 9 */
+    struct resp_rx_dma_cmds_flit_t flit_9;
+ 
+    /* flit 8 */
+    struct resp_rx_dma_cmds_flit_t flit_8;
+    
     // scratch (flit 7):
-
-    // size: 40 =  2 + 2 + 8 + 8 + 2 + 5 + 4 + 1 + 8
+    // size: 41 =  2 + 2 + 8 + 8 + 2 + 5 + 4 + 1 + 8 + 1
     spec_cindex: 16;
     eq_int_num: 16;
     db_data1: 64;
@@ -83,6 +114,7 @@ struct resp_rx_phv_t {
     struct eqwqe_t eqwqe;
     my_token_id: 8;
     immdt_as_dbell_data: 64;
+    atomic_release_byte: 8;
 
     // scratch (flit 6)
     // size: 64  = 32 + 32
@@ -133,6 +165,11 @@ struct resp_rx_to_stage_recirc_info_t {
     current_sge_offset: 32;
 };
 
+struct resp_rx_to_stage_atomic_info_t {
+    rsqwqe_ptr: 64;
+    pad: 64; 
+};
+
 struct resp_rx_s0_info_t {
     union {
         struct resp_rx_to_stage_backtrack_info_t backtrack;
@@ -143,6 +180,7 @@ struct resp_rx_s1_info_t {
     union {
         struct resp_rx_to_stage_backtrack_info_t backtrack;
         struct resp_rx_to_stage_recirc_info_t recirc;
+        struct resp_rx_to_stage_atomic_info_t atomic;
     };
 };
 
@@ -249,14 +287,17 @@ struct resp_rx_key_info_t {
     va: 64;
     //keep len...tbl_id in the same order
     //aligning with resp_rx_lkey_to_pt_info_t
-    len: 16;
+    len: 32;
     dma_cmd_start_index: 8;
     tbl_id: 8;
     acc_ctrl: 8;
     dma_cmdeop: 1;
-    cq_dma_cmd_index: 7;
     nak_code: 8;
-    pad:40;
+    incr_nxt_to_go_token_id: 1;
+    incr_c_index: 1;
+    skip_pt: 1;
+    invoke_writeback: 1;
+    pad:27;
 };
 
 struct resp_rx_key_process_k_t {
@@ -316,7 +357,7 @@ struct resp_rx_lkey_to_pt_info_t {
     pt_offset: 32;
     //keep pt_bytes...sge_index in the same order
     //aligning with resp_rx_key_info_t
-    pt_bytes: 16;
+    pt_bytes: 32;
     dma_cmd_start_index: 8;
     sge_index: 8;
     log_page_size: 5;
@@ -324,28 +365,12 @@ struct resp_rx_lkey_to_pt_info_t {
     rsvd: 2;
     override_lif_vld: 1;
     override_lif: 12;
-    pad: 75;
+    pad: 59;
 };
 
 struct resp_rx_ptseg_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct resp_rx_lkey_to_pt_info_t args;
-    struct resp_rx_to_stage_t to_stage;
-    struct phv_global_common_t global;
-};
-
-//20
-struct resp_rx_compl_or_inv_rkey_info_t {
-    r_key:  32;
-    dma_cmd_index: 8;
-    tbl_id: 3;
-    rsvd: 5;
-    pad: 112;
-};
-
-struct resp_rx_compl_or_inv_rkey_process_k_t {
-    struct capri_intrinsic_raw_k_t intrinsic;
-    struct resp_rx_compl_or_inv_rkey_info_t args;
     struct resp_rx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
@@ -431,6 +456,24 @@ struct resp_rx_rqcb_to_write_rkey_info_t {
 struct resp_rx_write_dummy_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct resp_rx_rqcb_to_write_rkey_info_t args;
+    struct resp_rx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+//20
+struct resp_rx_rqcb_to_read_atomic_rkey_info_t {
+    va: 64;
+    len: 32;
+    r_key: 32;
+    rsq_p_index: 16;
+    skip_rsq_dbell: 1;
+    read_or_atomic: 1;
+    pad: 14;
+};
+
+struct resp_rx_read_atomic_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_rx_rqcb_to_read_atomic_rkey_info_t args;
     struct resp_rx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };

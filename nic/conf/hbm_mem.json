@@ -165,6 +165,10 @@
             "size_kb": 131072
         },
         {
+            "name": "rdma-atomic-resource-addr",
+            "size_kb": 1
+        },
+        {
             "name": "key-desc-array",
             "size_kb": 1024
         },

@@ -110,7 +110,7 @@ struct rdma_atomiceth_t {
     AETH_SYNDROME_GET(_dst, AETH_CODE_NAK, _nak_code)
 
 #define AETH_NAK_SYNDROME_INLINE_GET(_nak_code) \
-    ((AETH_CODE_NAK << AETH_SYNDROME_CODE_SHIFT) | (_nak_code));
+    ((AETH_CODE_NAK << AETH_SYNDROME_CODE_SHIFT) | (_nak_code))
 
 
 #define AETH_ACK_SYNDROME_GET(_dst, _credits) \
@@ -268,17 +268,19 @@ struct app_data0_0_t {
 };
 
 struct req_rx_flags_t {
-    _error_disable_qp:1;
-    _first:1;
-    _middle:1;
-    _last:1;
-    _only:1;
-    _read_resp:1;
-    _ack:1;
-    _atomic_ack:1;
-    _completion:1;
-    _aeth:1;
+    _feedback: 1;
+    _rsvd: 4;
     _atomic_aeth:1;
+    _aeth:1;
+    _completion:1;
+    _atomic_ack:1;
+    _ack:1;
+    _read_resp:1;
+    _only:1;
+    _last:1;
+    _middle:1;
+    _first:1;
+    _error_disable_qp:1;
 };
 
 #define REQ_RX_FLAG_ERR_DIS_QP         0x0001
@@ -296,19 +298,22 @@ struct req_rx_flags_t {
 #define REQ_RX_FLAG_RDMA_FEEDBACK      0x8000
 
 struct resp_rx_flags_t {
-    _error_disable_qp:1;
-    _first:1;
-    _middle:1;
-    _last:1;
-    _only:1;
-    _send:1;
-    _read_req:1;
-    _write:1;
-    _atomic_fna:1;
-    _atomic_cswap:1;
-    _immdt:1;
-    _inv_rkey:1;
+    _ud:1;
+    _ring_dbell:1;
+    _ack_req:1;
     _completion:1;
+    _inv_rkey:1;
+    _immdt:1;
+    _atomic_cswap:1;
+    _atomic_fna:1;
+    _write:1;
+    _read_req:1;
+    _send:1;
+    _only:1;
+    _last:1;
+    _middle:1;
+    _first:1;
+    _error_disable_qp:1;
 };
 
 #define RESP_RX_FLAG_ERR_DIS_QP         0x0001
@@ -638,6 +643,8 @@ struct rsqwqe_d_t {
     pad: 256; 
 };
 
+#define RSQWQE_ORIG_DATA_OFFSET  24
+
 struct rsqwqe_t {
     read_or_atomic: 1;
     rsvd1: 7;
@@ -878,5 +885,35 @@ struct rdma_feedback_t {
 #define RDMA_FEEDBACK_SPLITTER_OFFSET  \
     ((sizeof(struct phv_intr_global_t) + sizeof(struct phv_intr_p4_t) + sizeof(struct phv_intr_rxdma_t) + sizeof(struct p4_to_p4plus_roce_header_t) + sizeof(struct rdma_feedback_t)) >> 3)
 
+
+struct rdma_atomic_resource_t {
+    data0: 64;
+    data1: 64;
+    data2: 64;
+    data3: 64;
+    pad0: 64;
+    pad1: 64;
+    pad2: 64;
+    pad3: 64;
+};
+
+#define PCIE_ATOMIC_TYPE_FNA    0xc
+#define PCIE_ATOMIC_TYPE_SWAP   0xd
+#define PCIE_ATOMIC_TYPE_CSWAP  0xe
+
+#define PCIE_TLP_LEN_FNA    2   //2 double words = 8B
+#define PCIE_TLP_LEN_CSWAP  4   //4 double words = 16B
+
+struct rdma_pcie_atomic_reg_t {
+    rsvd3: 156;
+    tlp_len: 4;
+    rsvd2: 27;
+    atomic_type: 5;
+    rsvd1: 12;
+    host_addr: 52;
+    rsvd_operand_data: 128;
+    swap_data: 64;
+    compare_data_or_add_data: 64;
+};
 
 #endif //__TYPES_H

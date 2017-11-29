@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 57
+#define CAPRI_P4PLUS_NUM_SYMBOLS 59
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -542,8 +542,6 @@ capri_p4p_asm_init()
     symbols[54].params[0].name = BRQ_BASE;
     symbols[54].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP1);
 
-    //symbols[53].name = "tls-enc-bld-barco-req.bin";
-    //symbols[53].num_params = 0;
     symbols[55].name = "resp_rx_eqcb_process.bin";
     symbols[55].num_params = 1;
     symbols[55].params[0].name = RDMA_EQ_INTR_TABLE_BASE;
@@ -553,6 +551,18 @@ capri_p4p_asm_init()
     symbols[56].num_params = 1;
     symbols[56].params[0].name = RDMA_EQ_INTR_TABLE_BASE;
     symbols[56].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
+
+    symbols[57].name = "resp_rx_rqcb_process.bin";
+    symbols[57].num_params = 1;
+    symbols[57].params[0].name = RDMA_ATOMIC_RESOURCE_ADDR;
+    symbols[57].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR);
+
+    symbols[58].name = "resp_rx_atomic_resource_process.bin";
+    symbols[58].num_params = 2;
+    symbols[58].params[0].name = RDMA_ATOMIC_RESOURCE_ADDR;
+    symbols[58].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR);
+    symbols[58].params[1].name = RDMA_PCIE_ATOMIC_BASE_ADDR;
+    symbols[58].params[1].val = CAPRI_PCIE_ATOMIC_BASE_ADDR;
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

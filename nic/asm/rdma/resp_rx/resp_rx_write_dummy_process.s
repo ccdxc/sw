@@ -44,21 +44,17 @@ resp_rx_write_dummy_process:
     tblwr   d.r_key, R_KEY
 
     KT_BASE_ADDR_GET(KT_BASE_ADDR, r1)
-
-    //key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
-    // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
-    //andi        r2, R_KEY, KEY_INDEX_MASK
-    //sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
-    //add         KEY_ADDR, r2, KT_BASE_ADDR
-
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
 
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmd_start_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, tbl_id, TABLE_1)
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmdeop, 1)
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, acc_ctrl, ACC_CTRL_REMOTE_WRITE)
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, nak_code, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))
+    // tbl_id: 1, acc_ctrl: REMOTE_WRITE, cmdeop: 1, nak_code: REM_ACC_ERR
+    CAPRI_SET_FIELD_RANGE(r4, RKEY_INFO_T, tbl_id, nak_code, ((TABLE_1 << 17) | (ACC_CTRL_REMOTE_WRITE << 9) | (1 << 8) | (AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))))
+
+    // set write back related params
+    CAPRI_SET_FIELD(r4, RKEY_INFO_T, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD(r4, RKEY_INFO_T, incr_c_index, k.args.incr_c_index)
+    CAPRI_SET_FIELD(r4, RKEY_INFO_T, invoke_writeback, 1)
 
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)
@@ -69,17 +65,6 @@ resp_rx_write_dummy_process:
     tblwr.c1    d.va, 0
     tblwr.c1    d.r_key, 0
     tblwr.c1    d.len, 0
-
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RQCB0_WB_T, tbl_id, TABLE_2)
-    //CAPRI_SET_FIELD(r4, RQCB0_WB_T, in_progress, 0)
-    CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_c_index, k.args.incr_c_index)
-
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb0_write_back_process)   
-    RQCB0_ADDR_GET(RQCB0_ADDR)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB0_ADDR)
 
     nop.e
     nop

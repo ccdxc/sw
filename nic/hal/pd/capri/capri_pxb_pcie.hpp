@@ -15,10 +15,10 @@
 
 #define CAPRI_PCIE_MAX_LIFS 1024
 
-#define CAPRI_PCIE_ATOMIC_PAGE_ID 0x3ff
-#define CAPRI_PCIE_ATOMIC_REGION_ID 0xf
-#define CAPRI_PCIE_ATOMIC_BASE_ADDR_GET (_region_id, _page_id) \
-            ((1 << 33) | (_region_id << 29) | (_page_id << 12) | 0x000)
+#define CAPRI_PCIE_ATOMIC_PAGE_ID 0x3ffUL
+#define CAPRI_PCIE_ATOMIC_REGION_ID 0xfUL
+#define CAPRI_PCIE_ATOMIC_BASE_ADDR_GET(_region_id, _page_id) \
+            ((1UL << 33) | (_region_id << 29) | (_page_id << 12) | 0x000)
 #define CAPRI_PCIE_ATOMIC_BASE_ADDR \
             CAPRI_PCIE_ATOMIC_BASE_ADDR_GET(CAPRI_PCIE_ATOMIC_REGION_ID, CAPRI_PCIE_ATOMIC_PAGE_ID)
 

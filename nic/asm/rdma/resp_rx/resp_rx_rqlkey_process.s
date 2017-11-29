@@ -20,15 +20,16 @@ struct key_entry_aligned_t d;
 #define DB_DATA r5
 #define GLOBAL_FLAGS r6
 #define RQCB1_ADDR r7
+#define RQCB0_ADDR r7
 #define T2_ARG r5
 #define T2_KEY r6
 
 #define LKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
-#define COMPL_R_INV_RKEY_INFO_T struct resp_rx_compl_or_inv_rkey_info_t
+#define INFO_WBCB0_T struct resp_rx_rqcb0_write_back_info_t
 
 %%
     .param  resp_rx_ptseg_process
-    .param  resp_rx_compl_or_inv_rkey_process
+    .param  resp_rx_rqcb0_write_back_process
 
 .align
 resp_rx_rqlkey_process:
@@ -47,6 +48,10 @@ resp_rx_rqlkey_process:
     sslt        c2, r1, k.args.va, k.args.len
     bcf         [c1 | c2], error_completion
     
+    seq         c1, k.args.skip_pt, 1   //BD Slot
+    bcf         [c1], skip_pt
+    CAPRI_SET_TABLE_1_VALID_C(c1, 0)    //BD Slot
+
     // my_pt_base_addr = (void *)
     //     (hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
     //         (lkey_p->pt_base * sizeof(u64)));
@@ -118,28 +123,27 @@ invoke_pt:
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, k.{args.len...args.tbl_id})
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
-    CAPRI_SET_FIELD_RANGE(T2_ARG, LKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
+    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
 
+skip_pt:
     seq         c3, k.args.dma_cmdeop, 1
-    bcf         [!c3], exit
+    bcf         [!c3], check_write_back
     add         GLOBAL_FLAGS, r0, k.global.flags // BD Slot
 
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_RING_DBELL)
 
-    bcf         [!c2], exit
-    CAPRI_SET_FIELD_C(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1, !c2) //BD Slot
+    CAPRI_SET_FIELD_C(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1, !c2)
     
-    //CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-    //CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
+check_write_back:
+    bbeq        k.args.invoke_writeback, 0, exit
+    RQCB0_ADDR_GET(RQCB0_ADDR)      //BD Slot
 
-    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
-    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
-    
-    //CAPRI_SET_FIELD_RANGE(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, tbl_id, ((RESP_RX_DMA_CMD_CQ << 3) | TABLE_2))
-
-    //RQCB1_ADDR_GET(RQCB1_ADDR)
-    //CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
-    //CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, k.args.incr_nxt_to_go_token_id)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, k.args.incr_c_index)
+    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb0_write_back_process)
+    CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB0_ADDR)
 
 exit:
     nop.e
@@ -175,23 +179,9 @@ error_completion:
                                    k.global.qid,
                                    DB_ADDR, DB_DATA)
     
-    bcf     [!c1],  exit
+    bcf     [!c1],  check_write_back
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, !c1) //BD Slot
-
-    
-    //CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-    //CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
-
-    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
-    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
-    //CAPRI_SET_FIELD_RANGE(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, tbl_id, ((RESP_RX_DMA_CMD_CQ << 3) | TABLE_2))
-
-    //CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
-    //CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
-
     //clear both lkey0 and lkey1 table valid bits
     CAPRI_SET_TABLE_0_VALID(0)
-    CAPRI_SET_TABLE_1_VALID(0)
-    
-    nop.e
-    nop
+    b       check_write_back
+    CAPRI_SET_TABLE_1_VALID(0)  //BD Slot

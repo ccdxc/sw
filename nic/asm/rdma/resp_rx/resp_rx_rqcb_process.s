@@ -19,6 +19,8 @@ struct rdma_stage0_table_k k;
 #define STATS_INFO_T struct resp_rx_stats_info_t
 #define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
 #define ECN_INFO_T  struct resp_rx_ecn_info_t
+#define RQCB_TO_RD_ATOMIC_T struct resp_rx_rqcb_to_read_atomic_rkey_info_t
+#define TO_S_ATOMIC_INFO_T struct resp_rx_to_stage_atomic_info_t
 
 #define RAW_TABLE_PC r2
 
@@ -40,6 +42,9 @@ struct rdma_stage0_table_k k;
     .param    resp_rx_rqcb1_recirc_sge_process
     .param    resp_rx_stats_process
     .param    resp_rx_rqcb1_ecn_process
+    .param    rdma_atomic_resource_addr
+    .param    resp_rx_read_mpu_only_process
+    .param    resp_rx_atomic_resource_process
 
 .align
 resp_rx_rqcb_process:
@@ -407,21 +412,6 @@ wr_only_skip_immdt_as_dbell:
 
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:
-    // populate rsqwqe in phv and then DMA
-    phvwr   p.rsqwqe.psn, d.e_psn
-    CAPRI_RXDMA_RETH_VA(r5)
-    phvwr   p.rsqwqe.read.va, r5
-    phvwr   p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY
-    phvwr   p.rsqwqe.read.len, CAPRI_RXDMA_RETH_DMA_LEN
-    // phv is already initialized to 0, don't need below instructions
-    //phvwr   p.rsqwqe.read_or_atomic, RSQ_OP_TYPE_READ
-    //phvwr   p.rsqwqe.read.offset, 0
-
-    // DMA for copying phv.ack_info to RQCB1 
-    add     RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
-    RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(DMA_CMD_BASE, RQCB1_ADDR, TMP)
-
     // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
     //                      (sizeof(rsqwqe_t) * p_index));
     seq         c1, d.rsq_quiesce, 1
@@ -441,25 +431,31 @@ process_read_atomic:
     // requests while duplicate requests are being handled. If needed, we can
     // stop dropping new requests if quiesce mode is on.
     // 
-    bcf         [c1], skip_rsq_doorbell
-    tblwr.c1    RSQ_P_INDEX_PRIME, NEW_RSQ_P_INDEX      //BD Slot
+    tblwr.c1    RSQ_P_INDEX_PRIME, NEW_RSQ_P_INDEX
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, c1)
 
-    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, CAPRI_RXDMA_INTRINSIC_LIF, CAPRI_RXDMA_INTRINSIC_QTYPE, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(CAPRI_RXDMA_INTRINSIC_QID, RSQ_RING_ID, NEW_RSQ_P_INDEX, DB_DATA)
-    // store db_data in LE format
-    phvwr   p.db_data1, DB_DATA.dx
+    // common params for both read/atomic
+    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
+    CAPRI_RXDMA_RETH_VA(r5)
+    phvwr       p.rsqwqe.read.va, r5
+    phvwr       p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY
+    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, va, r5)
+    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
+    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, rsq_p_index, NEW_RSQ_P_INDEX)
+    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, skip_rsq_dbell, d.rsq_quiesce)
 
-    // DMA for RSQ DoorBell
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
-    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data1, db_data1, DB_ADDR)
-    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    bcf         [c6 | c5], process_atomic
+    phvwr       p.rsqwqe.psn, d.e_psn   //BD Slot
 
-skip_rsq_doorbell:
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
-
-    // increment nxt_to_go_token_id to give control to next pkt
-    tbladd  d.nxt_to_go_token_id, 1  
-
+process_read:
+    phvwr       p.rsqwqe.read.len, CAPRI_RXDMA_RETH_DMA_LEN
+    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, len, CAPRI_RXDMA_RETH_DMA_LEN)
+    // do a MPU-only lookup
+    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_read_mpu_only_process)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, RAW_TABLE_PC, r0)
+    
+    //increment e_psn by 'n'
     // e_psn += read_len >> log_pmtu
     add            r3, d.log_pmtu, r0
     srlv           r3, CAPRI_RXDMA_RETH_DMA_LEN, r3
@@ -468,21 +464,40 @@ skip_rsq_doorbell:
     // e_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0
     add            r3, CAPRI_RXDMA_RETH_DMA_LEN, r0
     mincr          r3, d.log_pmtu, r0
-    sle            c6, r3, r0
-    tblmincri.!c6  d.e_psn, 24, 1
+    sle.e          c6, r3, r0
+    tblmincri.!c6  d.e_psn, 24, 1       //Exit Slot
 
-stats:
+process_atomic:
+    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, read_or_atomic, RSQ_OP_TYPE_ATOMIC)
+    CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, TO_S_ATOMIC_INFO_T, rsqwqe_ptr, RSQWQE_P)
 
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, STATS_INFO_T, bubble_count, 5)
-
+    // do a MPU-only lookup
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
-    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, (LOG_CB_UNIT_SIZE_BYTES + 2) #RQCB4 address
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_stats_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, RAW_TABLE_PC, r5)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_atomic_resource_process)
+    addui           r3, r0, hiword(rdma_atomic_resource_addr)
+    addi            r3, r3, loword(rdma_atomic_resource_addr)            
+    // load 32 Bytes (256-bits) of atomic resource
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, r3)
+    
+    phvwr           p.rsqwqe.read_or_atomic, RSQ_OP_TYPE_ATOMIC
 
-    nop.e
-    nop
+    bcf             [c6], process_cswap
+    // increment e_psn
+    tblmincri   d.e_psn, 24, 1      //BD Slot
+
+process_fna:
+    //c5:fna
+    phvwr           p.pcie_atomic.compare_data_or_add_data, CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA.dx
+    phvwr.e         p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_FNA
+    phvwr           p.pcie_atomic.tlp_len, PCIE_TLP_LEN_FNA //Exit slot
+
+process_cswap:
+    //c6:cswap
+    phvwr           p.pcie_atomic.compare_data_or_add_data, CAPRI_RXDMA_BTH_ATOMICETH_CMP_DATA.dx
+    phvwr           p.pcie_atomic.swap_data, CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA.dx
+    phvwr.e         p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_CSWAP
+    phvwr           p.pcie_atomic.tlp_len, PCIE_TLP_LEN_CSWAP   //Exit Slot
 
 /****** Logic for handling out-of-order packets ******/
 seq_err_or_duplicate:

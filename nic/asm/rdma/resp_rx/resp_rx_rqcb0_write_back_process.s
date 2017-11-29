@@ -30,8 +30,6 @@ resp_rx_rqcb0_write_back_process:
     seq             c1, k.to_stage.s3.wb0.my_token_id, d.nxt_to_go_token_id
     bcf             [!c1], recirc
     
-    crestore        [c7, c6, c5], k.global.flags, (RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST)
-
     tblwr           d.in_progress, k.args.in_progress
     seq             c1, k.args.incr_nxt_to_go_token_id, 1
 
@@ -43,9 +41,11 @@ resp_rx_rqcb0_write_back_process:
 incr_c_index_exit:
 
     // Skip ACK generation for UD
-    crestore    [c3], k.global.flags, (RESP_RX_FLAG_UD)
-    bcf         [c3], invoke_wb1
+    bbeq        k.global.flags.resp_rx._ud, 1, invoke_wb1
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
+
+    crestore        [c7, c6, c5, c4, c3, c2], k.global.flags, (RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST)
+    //c7: ack c6: cswap c5: fna c4: read c3: only c2: last
 
     // RQCB0 writeback is called for SEND/WRITE/ATOMIC as well.
     // also this stage has very few instructions.
@@ -56,22 +56,25 @@ incr_c_index_exit:
     //  rx_post_ack_info_to_txdma(phv_p, dma_cmd_index, RESP_RX_GET_RQCB1_ADDR());
     //
 
-    setcf       c4, [c6 | c5]
+    setcf       c1, [c6 | c5 | c4 | c3 | c2]
 
     // TODO: for now, generate ack only when it is a last/only packet AND 
     // ack req bit is also set. This will help in controlling DOL test cases
     // to generate ACK only when needed. Remove ACK_REQ bit check later ?
-    bcf         [!c7 & !c4], invoke_wb1
+    bcf         [!c7 & !c1], invoke_wb1
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)    //BD Slot
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 
     // prepare for acknowledgement
-    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB1_ADDR, TMP, \
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(DMA_CMD_BASE, RQCB1_ADDR, TMP)
+    // for read/atomic operations, do not ring doorbell
+    bcf         [c6 | c5 | c4], invoke_wb1
+    nop         //BD Slot
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
                                    k.global.lif,
                                    k.global.qtype,
                                    k.global.qid,
                                    DB_ADDR, DB_DATA)
-
 
 invoke_wb1:
     // invoke rqcb1 write back from rqcb0 write back
