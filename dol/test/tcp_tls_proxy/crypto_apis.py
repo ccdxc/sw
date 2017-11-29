@@ -65,6 +65,10 @@ def TestCaseVerify(tc):
         return crypto_sym_apis.hmac_sha512_generate_test()
     elif tc.module.args.api == "CRYPTO_API_HMAC_SHA512_VERIFY":
         return crypto_sym_apis.hmac_sha512_verify_test()
+    elif tc.module.args.api == "CRYPTO_API_ASYM_RSA2K_SIG_GEN":
+        return crypto_asym_apis.rsa2k_sig_gen_test()
+    elif tc.module.args.api == "CRYPTO_API_ASYM_RSA2K_SIG_VERIFY":
+        return crypto_asym_apis.rsa2k_sig_verify_test()
     else:
         print("Invalid API in module definition")
         return False

@@ -475,6 +475,27 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt_test(void)
     return ret;
 }
 
+uint8_t             out_s[256];
+hal_ret_t capri_barco_asym_rsa2k_sig_gen_test(void)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+
+    ret = capri_barco_asym_rsa2k_sig_gen(modulo_n, rsa_d,
+            m /* h */, out_s);
+
+    return ret;
+}
+
+hal_ret_t capri_barco_asym_rsa2k_sig_verify_test(void)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+
+    ret = capri_barco_asym_rsa2k_sig_verify(modulo_n, e,
+            m /* h */, out_s);
+
+    return ret;
+}
+
 hal_ret_t capri_barco_asym_run_tests(void)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -502,6 +523,14 @@ hal_ret_t capri_barco_asym_run_tests(void)
     ret = capri_barco_asym_rsa2k_crt_decrypt_test();
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("capri_barco_asym_rsa2k_encrypt failed");
+    }
+    ret = capri_barco_asym_rsa2k_sig_gen_test();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("capri_barco_asym_rsa2k_sig_gen_test failed");
+    }
+    ret = capri_barco_asym_rsa2k_sig_verify_test();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("capri_barco_asym_rsa2k_sig_verify_test failed");
     }
 
     return ret;

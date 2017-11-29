@@ -113,6 +113,9 @@
 		CryptoAsymApiRespRSADecrypt
 		CryptoAsymApiReqRSACRTDecrypt
 		CryptoAsymApiRespRSACRTDecrypt
+		CryptoAsymApiReqRSASignatureGen
+		CryptoAsymApiRespRSASignatureGen
+		CryptoAsymApiReqRSASignatureVerify
 		CryptoSymmApiReqHashGenerate
 		CryptoSymmApiRespHashGenerate
 		CryptoSymmApiReqHashVerify

@@ -250,6 +250,73 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
+hal_ret_t crypto_asym_api_rsa_sig_gen(cryptoapis::CryptoApiRequest &req,
+        cryptoapis::CryptoApiResponse *resp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    uint32_t            key_size;
+    uint8_t             s[RSA_MAX_KEY_SIZE];
+
+    key_size = req.rsa_sig_gen().keysize();
+
+    switch (key_size) {
+        case 256:
+            ret = pd::capri_barco_asym_rsa2k_sig_gen(
+                    (uint8_t *)req.rsa_sig_gen().mod_n().data(),
+                    (uint8_t *)req.rsa_sig_gen().d().data(),
+                    (uint8_t *)req.rsa_sig_gen().h().data(),
+                    s
+                    );
+            break;
+        default:
+            HAL_TRACE_ERR("Unsupported key size: {}", key_size);
+            ret = HAL_RET_INVALID_ARG;
+            break;
+    }
+    if (ret == HAL_RET_OK) {
+        resp->mutable_rsa_sig_gen()->mutable_s()->assign(
+                (const char*)s, (size_t) key_size);
+        resp->set_api_status(types::API_STATUS_OK);
+    }
+    else {
+        resp->set_api_status(types::API_STATUS_ERR);
+    }
+
+    return ret;
+}
+
+hal_ret_t crypto_asym_api_rsa_sig_verify(cryptoapis::CryptoApiRequest &req,
+        cryptoapis::CryptoApiResponse *resp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    uint32_t            key_size;
+
+    key_size = req.rsa_sig_verify().keysize();
+
+    switch (key_size) {
+        case 256:
+            ret = pd::capri_barco_asym_rsa2k_sig_verify(
+                    (uint8_t *)req.rsa_sig_verify().mod_n().data(),
+                    (uint8_t *)req.rsa_sig_verify().e().data(),
+                    (uint8_t *)req.rsa_sig_verify().h().data(),
+                    (uint8_t *)req.rsa_sig_verify().s().data()
+                    );
+            break;
+        default:
+            HAL_TRACE_ERR("Unsupported key size: {}", key_size);
+            ret = HAL_RET_INVALID_ARG;
+            break;
+    }
+    if (ret == HAL_RET_OK) {
+        resp->set_api_status(types::API_STATUS_OK);
+    }
+    else {
+        resp->set_api_status(types::API_STATUS_ERR);
+    }
+
+    return ret;
+}
+
 hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
 				       cryptoapis::CryptoApiResponse *resp,
 				       bool generate)
@@ -365,6 +432,12 @@ hal_ret_t crypto_api_invoke(cryptoapis::CryptoApiRequest &req,
             break;
         case cryptoapis::SYMMAPI_HASH_VERIFY:
 	  ret = crypto_symm_api_hash_request(req, resp, false);
+            break;
+        case cryptoapis::ASYMAPI_RSA_SIG_GEN:
+            ret = crypto_asym_api_rsa_sig_gen(req, resp);
+            break;
+        case cryptoapis::ASYMAPI_RSA_SIG_VERIFY:
+            ret = crypto_asym_api_rsa_sig_verify(req, resp);
             break;
         default:
             HAL_TRACE_ERR("Invalid API: {}", req.api_type());

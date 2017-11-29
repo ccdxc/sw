@@ -615,6 +615,40 @@ cipher_text  = \
     b'\xbf\xc2\xeb\x9c\xa6\x87\x4c\xb2' \
     b'\xef\x6f\x21\x73\xb8\x1c\x91\xbd'
 
+rsa_sig = \
+    b'\x27\x55\xc9\x1d\x87\x7f\x8e\x62' \
+    b'\xc9\x11\x4c\x47\xcc\xec\x01\x19' \
+    b'\x30\x7e\xc1\xf8\xb9\xf1\xab\x97' \
+    b'\x4e\x58\x16\xa7\x35\x02\xf0\x01' \
+    b'\x07\x03\x22\x61\xd5\x58\xf7\xb6' \
+    b'\x6f\x3f\x53\x74\xf6\x50\xad\x48' \
+    b'\xe6\x2a\x9f\x73\x82\x8a\x3a\xb1' \
+    b'\xaf\xd7\xe2\xb5\x15\x75\x42\x92' \
+    b'\xe9\x4f\x30\xa8\xff\x83\x93\xf3' \
+    b'\xc5\x91\x6f\xb8\xa8\x01\x4e\xfc' \
+    b'\x1a\x3f\x25\x2a\x89\x83\x48\xcb' \
+    b'\x85\xd6\x1a\x33\x0b\x26\x8d\x02' \
+    b'\x97\xbd\x17\x98\xaf\x36\xe5\x62' \
+    b'\xc3\xab\xd6\xee\xcb\x06\x3c\x56' \
+    b'\x58\x5f\x54\x47\xbb\x09\x3c\xa0' \
+    b'\x96\xba\x38\x4e\xd0\x56\xfe\xd5' \
+    b'\x17\x8f\x81\x6d\x70\xc4\xe7\x69' \
+    b'\xda\xd6\x2d\xcb\xad\x52\x04\x8d' \
+    b'\x25\x6a\xf4\x3e\x18\xec\x8d\x04' \
+    b'\xb5\xfc\x96\x5f\xe3\x9a\x52\xa4' \
+    b'\x50\xeb\xe4\x5b\xb6\xc9\x54\xdc' \
+    b'\xca\x3c\xc6\x56\x9e\x2a\x45\x3b' \
+    b'\xc2\x70\x74\x8e\xd7\xed\x8d\xe4' \
+    b'\xf9\xa3\xd0\x35\x51\x9e\x94\xed' \
+    b'\xed\xa6\x00\xf9\xcf\xab\xc9\x23' \
+    b'\x97\xd8\x26\xb5\x2f\x05\xfa\x0f' \
+    b'\x8f\x02\xa2\x04\xa7\x49\x64\x0c' \
+    b'\x7b\xb4\x4d\x3c\x19\x72\xaa\x5b' \
+    b'\xb0\x48\x2d\xa4\x5c\x71\x51\x28' \
+    b'\x49\xf7\x32\xd2\x6e\x37\x49\x93' \
+    b'\x25\x49\xe2\x6d\x09\x75\xae\xdb' \
+    b'\x12\x52\xfe\x39\xe3\xd6\x59\xd2'
+
 # RSA 2K Encrypt
 def rsa2k_encrypt(mod_n, e, plain_text):
     stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
@@ -765,3 +799,92 @@ def rsa2k_crt_decrypt_test():
             print("Plain text as expected: %s" % \
                     binascii.hexlify(computed_plain_text))
             return True
+
+# RSA 2K Signature Generation
+def rsa2k_sig_gen(mod_n, d, h):
+    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
+    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    req_spec = req_msg.request.add()
+
+    req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_SIG_GEN
+    req_spec.rsa_sig_gen.KeySize = 256
+    req_spec.rsa_sig_gen.mod_n = mod_n
+    req_spec.rsa_sig_gen.d = d
+    req_spec.rsa_sig_gen.h = h
+
+    print("Invoking CryptoAPI: RSA 2K Signature Gen");
+    resp_msg = stub.CryptoApiInvoke(req_msg)
+
+    num_resp_specs = len(resp_msg.response)
+    if num_resp_specs != 1:
+        assert(0)
+
+    resp_spec = resp_msg.response[0]
+
+    if resp_spec.api_status == types_pb2.API_STATUS_OK:
+        return resp_spec.api_status, resp_spec.rsa_sig_gen.s
+    else:
+        print ("API Failed")
+        return resp_spec.api_status, 0
+
+
+def rsa2k_sig_gen_test():
+    global mod_n
+    global rsa_d
+    global plain_text
+
+    ret, computed_sig = rsa2k_sig_gen(mod_n, rsa_d, plain_text)
+    if (ret != types_pb2.API_STATUS_OK):
+        print("API rsa2k_sig_gen failed with error")
+        return False
+    else:
+        print("API rsa2k_sig_gen succeeded")
+        if (computed_sig != rsa_sig):
+            return False
+        else:
+            print("Sig as expected: %s" % \
+                    binascii.hexlify(computed_sig))
+            return True
+
+# RSA 2K Signature Verification
+def rsa2k_sig_verify(mod_n, e, h, s):
+    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
+    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    req_spec = req_msg.request.add()
+
+    req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_SIG_VERIFY
+    req_spec.rsa_sig_verify.KeySize = 256
+    req_spec.rsa_sig_verify.mod_n = mod_n
+    req_spec.rsa_sig_verify.e = e
+    req_spec.rsa_sig_verify.h = h
+    req_spec.rsa_sig_verify.s = s
+
+    print("Invoking CryptoAPI: RSA 2K Signature Verify");
+    resp_msg = stub.CryptoApiInvoke(req_msg)
+
+    num_resp_specs = len(resp_msg.response)
+    if num_resp_specs != 1:
+        assert(0)
+
+    resp_spec = resp_msg.response[0]
+
+    if resp_spec.api_status == types_pb2.API_STATUS_OK:
+        return resp_spec.api_status
+    else:
+        print ("API Failed")
+        return resp_spec.api_status
+
+
+def rsa2k_sig_verify_test():
+    global mod_n
+    global e
+    global plain_text
+    global rsa_sig
+
+    ret = rsa2k_sig_verify(mod_n, e, plain_text, rsa_sig)
+    if (ret != types_pb2.API_STATUS_OK):
+        print("API rsa2k_sig_verify failed with error")
+        return False
+    else:
+        print("API rsa2k_sig_verify succeeded")
+        return True

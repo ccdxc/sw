@@ -64,6 +64,12 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
 hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp,
         uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m);
 
+hal_ret_t capri_barco_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d,
+        uint8_t *h, uint8_t *s);
+
+hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
+        uint8_t *h, uint8_t *s);
+
 }    // namespace pd
 }    // namespace hal
 

@@ -47,6 +47,8 @@ enum CryptoApiType {
   ASYMAPI_RSA_CRT_DECRYPT               = 5;
   SYMMAPI_HASH_GENERATE                 = 6;
   SYMMAPI_HASH_VERIFY                   = 7;
+  ASYMAPI_RSA_SIG_GEN                   = 8;
+  ASYMAPI_RSA_SIG_VERIFY                = 9;
 }
 
 message ECCPoint {
@@ -136,6 +138,27 @@ message CryptoAsymApiRespRSACRTDecrypt {
   bytes                             plain_text         = 1;
 }
 
+// RSA Signature Generation
+message CryptoAsymApiReqRSASignatureGen {
+  uint32                            KeySize             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             d                   = 3;
+  bytes                             h                   = 4;
+}
+
+message CryptoAsymApiRespRSASignatureGen {
+  bytes                             s                   = 1;
+}
+
+// RSA Signature Verification
+message CryptoAsymApiReqRSASignatureVerify {
+  uint32                            KeySize             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             e                   = 3;
+  bytes                             h                   = 4;
+  bytes                             s                   = 5;
+}
+
 // Crypto Hash digest generate request
 message CryptoSymmApiReqHashGenerate {
   CryptoApiHashType                hashtype            = 1;
@@ -178,6 +201,8 @@ message CryptoApiRequest {
     CryptoAsymApiReqRSACRTDecrypt   rsa_crt_decrypt     = 7;
     CryptoSymmApiReqHashGenerate    hash_generate       = 8;
     CryptoSymmApiReqHashVerify      hash_verify         = 9;
+    CryptoAsymApiReqRSASignatureGen rsa_sig_gen         = 10;
+    CryptoAsymApiReqRSASignatureVerify  rsa_sig_verify  = 11;   
   }
 }
 
@@ -190,6 +215,7 @@ message CryptoApiResponse {
     CryptoAsymApiRespRSADecrypt     rsa_decrypt         = 5;
     CryptoAsymApiRespRSACRTDecrypt  rsa_crt_decrypt     = 6;
     CryptoSymmApiRespHashGenerate   hash_generate       = 7;
+    CryptoAsymApiRespRSASignatureGen    rsa_sig_gen     = 8;
   }
 }
 
