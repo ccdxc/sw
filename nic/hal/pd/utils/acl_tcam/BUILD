@@ -38,7 +38,7 @@ cc_test(
     srcs = ["test/acl_tcam_test.cc"],
     deps = gl_deps_list,
     linkopts = [
-         "-lzmq",
+        "-lzmq",
         "-lprotobuf"
      ],
 )

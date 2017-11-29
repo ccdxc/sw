@@ -26,6 +26,7 @@ gl_deps_list = [
         "//nic/hal/pd/iris",
         "//nic:capricsr_int",
         "//nic/hal/pd/capri",
+        "//nic/hal/pd/pal",
         "//nic/model_sim:model_client",
         "//nic:p4pd",
         "//nic:p4pluspd_txdma",

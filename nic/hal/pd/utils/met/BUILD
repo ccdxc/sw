@@ -25,6 +25,7 @@ cc_library(
     deps = [
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/pd/capri",
+        "//nic/hal/pd/pal",
         "//nic/hal/pd/control",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",

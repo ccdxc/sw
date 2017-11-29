@@ -10,6 +10,7 @@
 #include "nic/include/base.h"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/asic_pd.hpp"
+#include "nic/include/pal.hpp"
 
 #include "nic/utils/thread/thread.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
@@ -319,15 +320,15 @@ asic_rw_loop (void)
             rw_entry = &g_asic_rw_workq[qid].entries[cindx];
             switch (rw_entry->opn) {
             case HAL_ASIC_RW_OPERATION_MEM_READ:
-                rv = read_mem(rw_entry->addr, rw_entry->data, rw_entry->len);
+                rv = pal_mem_read(rw_entry->addr, rw_entry->data, rw_entry->len);
                 break;
 
             case HAL_ASIC_RW_OPERATION_MEM_WRITE:
-                rv = write_mem(rw_entry->addr, rw_entry->data, rw_entry->len);
+                rv = pal_mem_write(rw_entry->addr, rw_entry->data, rw_entry->len);
                 break;
 
             case HAL_ASIC_RW_OPERATION_REG_READ:
-                rv = read_reg(rw_entry->addr, regval);
+                rv = pal_reg_read(rw_entry->addr, regval);
                 if (rv) {
                     *(uint32_t *)rw_entry->data = regval;
                 }
@@ -335,7 +336,7 @@ asic_rw_loop (void)
 
             case HAL_ASIC_RW_OPERATION_REG_WRITE:
                 regval = rw_entry->reg_data;
-                rv = write_reg(rw_entry->addr, regval);
+                rv = pal_reg_write(rw_entry->addr, regval);
                 break;
 
             case HAL_ASIC_RW_OPERATION_PORT:
@@ -395,6 +396,9 @@ capri_asic_rw_asic_init(hal_cfg_t *hal_cfg)
 {
     asic_cfg_t asic_cfg;
     hal_ret_t ret;
+
+    // Initialize PAL
+    HAL_ABORT(pal_init(hal_cfg) == HAL_RET_OK);
 
     if (hal_cfg->sim) {
         do {

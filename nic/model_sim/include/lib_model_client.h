@@ -1,6 +1,7 @@
 #ifndef __LIB_MODEL_CLIENT_H__
 #define __LIB_MODEL_CLIENT_H__
 
+#include <stddef.h>
 #include <vector>
 #include "buf_hdr.h"
 
