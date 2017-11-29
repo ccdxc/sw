@@ -3,6 +3,7 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/asic_pd.hpp"
 
 namespace {
 
@@ -41,8 +42,10 @@ int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
   // 256 byte boundary.
   static uint8_t zeros[256] = {0};
   for (uint32_t i = 0; i < (size / sizeof(zeros)); i++) {
-    if (!write_mem(base_addr + (i * sizeof(zeros)), zeros, sizeof(zeros))) {
-      return -EIO;
+    hal_ret_t rc = hal::pd::asic_mem_write(base_addr + (i * sizeof(zeros)),
+                                           zeros, sizeof(zeros));
+    if (rc != HAL_RET_OK) {
+        return -EIO;
     }
   }
   return 0;
@@ -92,8 +95,10 @@ int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
 
 int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
 #ifndef HAL_GTEST
-  if (!write_mem(q_addr, (uint8_t *)buf, q_size))
+  hal_ret_t rc = hal::pd::asic_mem_write(q_addr, (uint8_t *)buf, q_size);
+  if (rc != HAL_RET_OK) {
     return -EIO;
+  }
 #endif
   return 0;
 }

@@ -138,11 +138,38 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
 // NOTE: this is always a blocking call and this API runs in the calling
 //       thread's context
 //------------------------------------------------------------------------------
+static hal_ret_t
+asic_reg_read_impl (uint64_t addr, uint32_t *data)
+{
+    hal_ret_t rc = HAL_RET_OK;
+
+    if (is_asic_rw_thread() == false) {
+        rc = asic_do_read(HAL_ASIC_RW_OPERATION_REG_READ,
+                          addr, (uint8_t *)data, 0);
+    } else {
+        pal_reg_read(addr, data);
+    }
+
+    if (rc != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading reg addr:{}", addr);
+        HAL_ASSERT(0);
+    }
+
+    return rc;
+}
+
+uint32_t
+asic_reg_read (uint64_t addr)
+{
+    uint32_t data = 0;
+    asic_reg_read_impl(addr, &data);
+    return data;
+}
+
 hal_ret_t
 asic_reg_read (uint64_t addr, uint32_t *data)
 {
-    return asic_do_read(HAL_ASIC_RW_OPERATION_REG_READ, addr,
-                        (uint8_t *)data, 0);
+    return asic_reg_read_impl(addr, data);
 }
 
 //------------------------------------------------------------------------------
@@ -153,7 +180,19 @@ asic_reg_read (uint64_t addr, uint32_t *data)
 hal_ret_t
 asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len)
 {
-    return asic_do_read(HAL_ASIC_RW_OPERATION_MEM_READ, addr, data, len);
+    hal_ret_t   rc = HAL_RET_OK;
+
+    if (is_asic_rw_thread() == false) {
+        rc = asic_do_read(HAL_ASIC_RW_OPERATION_MEM_READ, addr, data, len);
+    } else {
+        pal_ret_t prc = pal_mem_read(addr, data, len);
+        rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    }
+
+    if (rc != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading mem addr:{} data:{}", addr, data);
+    }
+    return rc;
 }
 
 //------------------------------------------------------------------------------
@@ -214,16 +253,30 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
     return ret;
 }
 
+
 //------------------------------------------------------------------------------
 // public API for register write operations
 // NOTE: this API runs in the calling thread's context and supports both
 // blocking and non-blocking writes
 //------------------------------------------------------------------------------
 hal_ret_t
-asic_reg_write (uint64_t addr, uint32_t *data, bool blocking)
+asic_reg_write (uint64_t addr, uint32_t data, bool blocking)
 {
-    return asic_do_write(HAL_ASIC_RW_OPERATION_REG_WRITE,
-                         addr, (uint8_t *)data, 0, blocking);
+    hal_ret_t rc = HAL_RET_OK;
+
+    if (is_asic_rw_thread() == false) {
+        rc = asic_do_write(HAL_ASIC_RW_OPERATION_REG_WRITE,
+                           addr, (uint8_t *)&data, 0, blocking);
+    } else {
+        pal_ret_t prc = pal_reg_write(addr, data);
+        rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    }
+    if (rc != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error writing addr:{} data:{}", addr, data);
+        HAL_ASSERT(0);
+    }
+
+    return rc;
 }
 
 //------------------------------------------------------------------------------
@@ -234,8 +287,22 @@ asic_reg_write (uint64_t addr, uint32_t *data, bool blocking)
 hal_ret_t
 asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len, bool blocking)
 {
-    return asic_do_write(HAL_ASIC_RW_OPERATION_MEM_WRITE,
-                         addr, data, len, blocking);
+    hal_ret_t rc = HAL_RET_OK;
+
+    if (is_asic_rw_thread() == false) {
+        rc = asic_do_write(HAL_ASIC_RW_OPERATION_MEM_WRITE,
+                           addr, data, len, blocking);
+    } else {
+        pal_ret_t prc = pal_mem_write(addr, data, len);
+        rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    }
+
+    if (rc != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error writing mem addr:{} data:{}", addr, data);
+        HAL_ASSERT(0);
+    }
+
+    return rc;
 }
 
 hal_ret_t
@@ -301,11 +368,12 @@ asic_port_cfg (uint32_t port_num,
 static void
 asic_rw_loop (void)
 {
-    uint32_t           qid;
-    uint16_t           cindx;
-    bool               work_done, rv;
-    asic_rw_entry_t    *rw_entry;
-    uint32_t           regval;
+    uint32_t            qid;
+    uint16_t            cindx;
+    bool                work_done;
+    pal_ret_t           rv;
+    asic_rw_entry_t     *rw_entry;
+    uint32_t            regval;
 
     while (TRUE) {
         work_done = false;
@@ -328,8 +396,8 @@ asic_rw_loop (void)
                 break;
 
             case HAL_ASIC_RW_OPERATION_REG_READ:
-                rv = pal_reg_read(rw_entry->addr, regval);
-                if (rv) {
+                rv = pal_reg_read(rw_entry->addr, &regval);
+                if (IS_PAL_API_SUCCESS(rv)) {
                     *(uint32_t *)rw_entry->data = regval;
                 }
                 break;
@@ -350,12 +418,12 @@ asic_rw_loop (void)
 
             default:
                 HAL_TRACE_ERR("Invalid operation {}", rw_entry->opn);
-                rv = false;
+                HAL_ASSERT(0);
                 break;
             }
 
             // populate the results
-            rw_entry->status =  rv ? HAL_RET_OK : HAL_RET_ERR;
+            rw_entry->status =  IS_PAL_API_SUCCESS(rv) ? HAL_RET_OK : HAL_RET_ERR;
             rw_entry->done.store(true);
 
             // advance to next entry in the queue
@@ -394,11 +462,13 @@ asic_sim_connect (hal_cfg_t *hal_cfg)
 void
 capri_asic_rw_asic_init(hal_cfg_t *hal_cfg)
 {
-    asic_cfg_t asic_cfg;
-    hal_ret_t ret;
+    asic_cfg_t  asic_cfg;
+    hal_ret_t   ret;
+    pal_ret_t   palrv;
 
     // Initialize PAL
-    HAL_ABORT(pal_init(hal_cfg) == HAL_RET_OK);
+    palrv = pal_init(hal_cfg);
+    HAL_ABORT(IS_PAL_API_SUCCESS(palrv));
 
     if (hal_cfg->sim) {
         do {

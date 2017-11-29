@@ -18,9 +18,11 @@ cc_library(
         "cpu_hal_if.h",
     ],
     hdrs = [
-        "cpu_hal_if.h"
+        "cpu_hal_if.h",
     ],
     deps = [
         "//nic:capricsr_int",
+        "//nic/include:base_includes",
+        "//nic/third-party/spdlog",
     ],
 )

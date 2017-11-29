@@ -3,6 +3,7 @@
 #include <iostream>
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/include/hal_mem.hpp"
+#include "nic/include/asic_pd.hpp"
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
@@ -130,14 +131,16 @@ get_hbm_region(char *reg_name)
     return NULL;
 }
 
-int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size) {
-  if (!read_mem(addr, buf, size))
-     return -EIO;
-  return 0;
+int32_t
+capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size)
+{
+    hal_ret_t rc = hal::pd::asic_mem_read(addr, buf, size);
+    return (rc == HAL_RET_OK) ? 0 : -EIO;
 }
 
-int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size) {
-  if (!write_mem(addr, buf, size))
-     return -EIO;
-  return 0;
+int32_t
+capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size)
+{
+    hal_ret_t rc = hal::pd::asic_mem_write(addr, buf, size, true);
+    return (rc == HAL_RET_OK) ? 0 : -EIO;
 }

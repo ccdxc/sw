@@ -8,23 +8,23 @@
 
 pal_cfg_t   gl_pal_cfg;
 
-static int
-pal_init_cfg(hal_cfg_t *hal_cfg)
+static pal_ret_t
+pal_init_cfg (hal_cfg_t *hal_cfg)
 {
     bzero(&gl_pal_cfg, sizeof(gl_pal_cfg));
     gl_pal_cfg.sim = hal_cfg->sim;
     gl_pal_cfg.baseaddr = NULL;
     gl_pal_cfg.devfd = -1;
-    return HAL_RET_OK;
+    return PAL_RET_OK;
 }
 
-static int
-pal_mmap_device()
+static pal_ret_t
+pal_mmap_device ()
 {
     gl_pal_cfg.devfd = open("/dev/mem", O_RDWR|O_SYNC);
     if (gl_pal_cfg.devfd < 0) {
         HAL_TRACE_ERR("Failed to open /dev/mem");
-        return HAL_RET_ERR;
+        return PAL_RET_NOK;
     }
     
     // Non HBM Region to mmap()
@@ -34,48 +34,60 @@ pal_mmap_device()
                                MAP_SHARED, gl_pal_cfg.devfd, 0);
     if (gl_pal_cfg.baseaddr == NULL) {
         HAL_TRACE_ERR("Failed to mmap /dev/mem");
-        return HAL_RET_ERR;
+        return PAL_RET_NOK;
     }
 
-    return HAL_RET_OK;
+    return PAL_RET_OK;
 }
 
-int
-pal_init(hal_cfg_t *hal_cfg)
+pal_ret_t
+pal_init (hal_cfg_t *hal_cfg)
 {
     pal_init_cfg(hal_cfg);
 
     if (gl_pal_cfg.sim) {
         HAL_TRACE_DEBUG("Initializing PAL in SIM mode.");
-        return HAL_RET_OK;
+        return PAL_RET_OK;
     } else {
         HAL_TRACE_DEBUG("Initializing PAL");
         return pal_mmap_device();
     }
 
-    return HAL_RET_OK;
+    return PAL_RET_OK;
 }
 
-bool
-pal_reg_read(uint64_t addr, uint32_t& data)
+pal_ret_t
+pal_reg_read (uint64_t addr, uint32_t *data)
 {
-    return read_reg(addr, data);
+    if (!read_reg(addr, *data)) {
+        return PAL_RET_NOK;
+    }
+    return PAL_RET_OK;
 }
 
-bool
-pal_reg_write(uint64_t addr, uint32_t  data)
+pal_ret_t
+pal_reg_write (uint64_t addr, uint32_t data)
 {
-    return write_reg(addr, data);
+    if (!write_reg(addr, data)) {
+        return PAL_RET_NOK;
+    }
+    return PAL_RET_OK;
 }
 
-bool
-pal_mem_read(uint64_t addr, uint8_t * data, uint32_t size)
+pal_ret_t
+pal_mem_read (uint64_t addr, uint8_t * data, uint32_t size)
 {
-    return read_mem(addr, data, size);
+    if (!read_mem(addr, data, size)) {
+        return PAL_RET_NOK;
+    }
+    return PAL_RET_OK;
 }
 
-bool
-pal_mem_write(uint64_t addr, uint8_t * data, uint32_t size)
+pal_ret_t
+pal_mem_write (uint64_t addr, uint8_t * data, uint32_t size)
 {
-    return write_mem(addr, data, size);
+    if (!write_mem(addr, data, size)) {
+        return PAL_RET_NOK;
+    }
+    return PAL_RET_OK;
 }

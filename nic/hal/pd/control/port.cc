@@ -436,9 +436,8 @@ hal_ret_t
 port::port_enable(port *pd_p)
 {
     hal_ret_t ret = HAL_RET_OK;
-    uint32_t  chip = 0;
 
-    if (is_hal_ctrl_thread(chip)) {
+    if (is_hal_ctrl_thread()) {
         ret = pd_p->port_enable();
     } else {
         // wake up the hal control thread to process port event
@@ -457,9 +456,8 @@ hal_ret_t
 port::port_disable(port *pd_p)
 {
     hal_ret_t ret = HAL_RET_OK;
-    uint32_t  chip = 0;
 
-    if (is_hal_ctrl_thread(chip)) {
+    if (is_hal_ctrl_thread()) {
         ret = pd_p->port_disable();
     } else {
         // wake up the hal control thread to process port event

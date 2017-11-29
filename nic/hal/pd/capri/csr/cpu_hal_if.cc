@@ -1,16 +1,14 @@
 #include "cpu_hal_if.h"
-
-extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
-extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
+#include "nic/include/asic_pd.hpp"
 
 uint32_t
 cpu_hal_if::read(uint32_t chip, uint64_t addr,
                  cpu_access_type_e do_backdoor, uint32_t flags) {
-    return read_reg_base(chip, addr);
+    return hal::pd::asic_reg_read(addr);
 }
 
 void
 cpu_hal_if::write(uint32_t chip, uint64_t addr, uint32_t data,
                   cpu_access_type_e do_backdoor, uint32_t flags) {
-    write_reg_base(chip, addr, data);
+    hal::pd::asic_reg_write(addr, data);
 }

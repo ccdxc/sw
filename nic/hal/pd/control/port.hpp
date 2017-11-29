@@ -6,6 +6,7 @@
 #include "nic/include/base.h"
 #include "nic/gen/proto/hal/port.pb.h"
 #include "nic/hal/src/port.hpp"
+#include "nic/include/asic_pd.hpp"
 
 extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
 extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
@@ -14,7 +15,7 @@ extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
     HAL_TRACE_DEBUG("PORT: {0:s}: chip {1:d} addr 0x{2:x} data 0x{3:x}",    \
                     __FUNCTION__, chip, addr, data);                        \
     if (g_hal_state->catalog()->access_mock_mode() == false) {              \
-        write_reg_base(chip, addr, data);                                   \
+        hal::pd::asic_reg_write(addr, data);                                \
     }                                                                       \
 }
 
@@ -22,7 +23,7 @@ extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
     HAL_TRACE_DEBUG("PORT: {0:s}: chip {1:d} addr 0x{2:x}",     \
                     __FUNCTION__, chip, addr);                  \
     if (g_hal_state->catalog()->access_mock_mode() == false) {  \
-        *data = read_reg_base(chip, addr);                      \
+        *data = hal::pd::asic_reg_read(addr);                   \
     }                                                           \
 }
 

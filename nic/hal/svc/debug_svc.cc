@@ -9,6 +9,7 @@
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug.hpp"
+#include "nic/include/asic_pd.hpp"
 
 extern uint32_t read_reg_base(uint32_t chip, uint64_t addr);
 extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t data);
@@ -22,7 +23,6 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
     int table_access = 0;
     int reg_access = 0;
     uint32_t data = 0x0;
-    int chip = 0;
     hal_ret_t ret = HAL_RET_OK;
 
     DebugSpec spec = req->request(0);
@@ -85,7 +85,7 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
         HAL_TRACE_DEBUG("{}: Address: 0x{0:x}", __FUNCTION__, spec.addr());
 
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
-            data = read_reg_base(chip, spec.addr());
+            data = hal::pd::asic_reg_read(spec.addr());
 
             HAL_TRACE_DEBUG("{}: Read Data: 0x{0:x}", __FUNCTION__, data);
 
@@ -93,7 +93,7 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
         } else {
             HAL_TRACE_DEBUG("{}: Writing Data: 0x{0:x}",
                             __FUNCTION__, spec.reg_data());
-            write_reg_base(chip, spec.addr(), spec.reg_data());
+            hal::pd::asic_reg_write(spec.addr(), spec.reg_data());
         }
 
         response->set_debug_status(types::API_STATUS_OK);

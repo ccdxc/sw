@@ -18,6 +18,8 @@ typedef struct asic_cfg_s {
 //       thread's context
 //------------------------------------------------------------------------------
 hal_ret_t asic_reg_read(uint64_t addr, uint32_t *data);
+uint32_t asic_reg_read(uint64_t addr);
+
 
 //------------------------------------------------------------------------------
 // public API for memory read operations
@@ -30,14 +32,14 @@ hal_ret_t asic_mem_read(uint64_t addr, uint8_t *data, uint32_t len);
 // public API for register write operations
 // write given data at specified address in the memory
 //------------------------------------------------------------------------------
-hal_ret_t asic_reg_write(uint64_t addr, uint32_t *data, bool blocking);
+hal_ret_t asic_reg_write(uint64_t addr, uint32_t data, bool blocking = true);
 
 //------------------------------------------------------------------------------
 // public API for memory write operations
 // write given data at specified address in the memory
 //------------------------------------------------------------------------------
 hal_ret_t asic_mem_write(uint64_t addr, uint8_t *data,
-                         uint32_t len, bool blocking);
+                         uint32_t len, bool blocking = true);
 
 // starting point for asic read-write thread
 void *asic_rw_start(void *ctxt);
@@ -57,7 +59,13 @@ asic_port_cfg (uint32_t port_num,
                uint32_t val);
 
 // check if the current thread is hal-control thread
-bool is_hal_ctrl_thread(uint32_t chip);
+bool is_hal_ctrl_thread();
+
+// check if this thread is the asic-rw thread
+// Returns true if:
+//    this thread's id matches with asic-rw thread's id
+bool
+is_asic_rw_thread();
 
 }    // namespace pd
 }    // namespace hal
