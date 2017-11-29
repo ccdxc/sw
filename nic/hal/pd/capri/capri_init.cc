@@ -384,7 +384,7 @@ capri_p4p_asm_init()
     symbols[27].params[0].name = RNMPR_TABLE_BASE;
     symbols[27].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
 
-    symbols[28].name = "cpu_initial_action.bin";
+    symbols[28].name = "cpu_read_arqrx_pindex.bin";
     symbols[28].num_params = 2;
     symbols[28].params[0].name = ARQRX_BASE;
     symbols[28].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);

@@ -366,6 +366,7 @@ static void capri_program_p4plus_table_mpu_pc(int tbl_id, cap_te_csr_t *te_csr,
 #define CAPRI_P4PLUS_HANDLE         "p4plus"
 #define CAPRI_P4PLUS_RXDMA_PROG		"rxdma_stage0.bin"
 #define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
+#define CAPRI_P4PLUS_CPU_HASH_PROG  "cpu_rx_hash.bin"
 
 static void capri_program_p4plus_sram_table_mpu_pc(int tbl_id, cap_te_csr_t *te_csr, 
                                                    uint32_t pc)
@@ -550,6 +551,58 @@ capri_p4plus_recirc_init() {
     cap0.pt.pt.psp.cfg_profile.write();
 }
 
+#define CPU_HASH_TBL_LEN 4
+#define CPU_HASH_TBL_ENTRY_SZ 7 // Special for MPU only table
+
+#ifndef GFT
+static int
+capri_p4plus_cpu_hash_init()
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_te_csr_t *te_csr = NULL;
+    uint64_t capri_action_p4plus_asm_base;
+    p4pd_table_properties_t tbl_ctx;
+    int tbl_id = 0;
+
+    // Resolve the p4plus txdma stage 0 program to its action pc
+    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+                                   (char *) CAPRI_P4PLUS_CPU_HASH_PROG,
+                                   &capri_action_p4plus_asm_base) < 0) {
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+                        (char *) CAPRI_P4PLUS_HANDLE,
+                        (char *) CAPRI_P4PLUS_CPU_HASH_PROG);
+        return CAPRI_FAIL;
+    }
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+                    (char *) CAPRI_P4PLUS_HANDLE,
+                    (char *) CAPRI_P4PLUS_CPU_HASH_PROG,
+                    capri_action_p4plus_asm_base);
+
+    // Program table config @(stage, stage_tableid) with the PC
+    p4pd_global_table_properties_get(
+                                P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_TABLE_CPU_HASH,
+                                 &tbl_ctx);
+    te_csr = &cap0.pcr.te[tbl_ctx.stage];
+    tbl_id = tbl_ctx.stage_tableid;
+    te_csr->cfg_table_property[tbl_id].read();
+    te_csr->cfg_table_property[tbl_id].mpu_pc((uint32_t) capri_action_p4plus_asm_base >> 6);
+    te_csr->cfg_table_property[tbl_id].mpu_pc_dyn(0);
+
+    // TE addr = hash
+    // TE mask = (1 << addr_sz) - 1
+    te_csr->cfg_table_property[tbl_id].addr_sz((uint8_t)log2(CPU_HASH_TBL_LEN));
+    // TE addr <<= addr_shift
+    //te_csr->cfg_table_property[tbl_id].addr_shift((uint8_t)log2(CPU_HASH_TBL_ENTRY_SZ));
+    // TE   if cycle_id > 0, addr = addr & ((1 << chain_shift) - 1)
+    te_csr->cfg_table_property[tbl_id].chain_shift(0);
+    // size of each indirection table entry
+    te_csr->cfg_table_property[tbl_id].lg2_entry_size(CPU_HASH_TBL_ENTRY_SZ);
+    te_csr->cfg_table_property[tbl_id].write();
+    
+    return CAPRI_OK;
+}
+#endif
+
 static void
 capri_timer_init(void)
 {
@@ -688,6 +741,9 @@ int capri_table_rw_init()
 
     /* Program p4plus recirc parameters. */
     capri_p4plus_recirc_init();
+
+    /* Program CPU hash table */
+    capri_p4plus_cpu_hash_init();
 
     /* Timers */
     capri_timer_init();

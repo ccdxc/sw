@@ -1127,6 +1127,94 @@ table common_p4plus_stage0_app_header_table_offset_64 {
         COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_ACTIONS
     }
 }
+
+// RSS Input Parts
+header_type toeplitz_input0_t {
+    fields {
+        data : 128;
+    }
+}
+
+header_type toeplitz_input1_t {
+    fields {
+        data : 128;
+    }
+}
+
+header_type toeplitz_input2_t {
+    fields {
+        data : 32;
+    }
+}
+
+// RSS Key Parts
+header_type toeplitz_key0_t {
+    fields {
+        data : 128;
+    }
+}
+
+header_type toeplitz_key1_t {
+    fields {
+        data : 128;
+    }
+}
+
+header_type toeplitz_key2_t {
+    fields {
+        data : 128;          // last 34 bits are qstate addr
+    }
+}
+
+// Input Parts
+@pragma pa_header_union ingress to_stage_2          // Flit 2
+metadata toeplitz_input0_t toeplitz_input0;
+
+@pragma pa_header_union ingress to_stage_3          // Flit 2
+metadata toeplitz_input1_t toeplitz_input1;
+
+@pragma pa_header_union ingress to_stage_6          // Flit 3
+metadata toeplitz_input2_t toeplitz_input2;
+
+// Key Parts
+@pragma pa_header_union ingress to_stage_4          // Flit 2
+metadata toeplitz_key0_t toeplitz_key0;
+
+@pragma pa_header_union ingress to_stage_5          // Flit 2
+metadata toeplitz_key1_t toeplitz_key1;
+
+@pragma pa_header_union ingress to_stage_7          // Flit 3
+metadata toeplitz_key2_t toeplitz_key2;
+
+// K-vector for rss indirection table
+@pragma scratch_metadata
+metadata toeplitz_key2_t toeplitz_key2_scratch;
+
+action rx_table_cpu_hash_action() {
+
+}
+
+@pragma stage 3
+@pragma hash_type 4
+@pragma toeplitz_key toeplitz_input0.data toeplitz_input1.data toeplitz_input2.data
+@pragma toeplitz_seed toeplitz_key0.data toeplitz_key1.data toeplitz_key2.data
+table rx_table_cpu_hash {
+    reads {
+        // Flit 2
+        toeplitz_input0.data      : exact;
+        toeplitz_input1.data      : exact;
+        toeplitz_key0.data        : exact;
+        toeplitz_key1.data        : exact;
+        // Flit 3
+        toeplitz_input2.data      : exact;
+        toeplitz_key2.data        : exact;
+    }
+    actions {
+        rx_table_cpu_hash_action;
+    }
+    size : 0;    
+}
+
 control common_p4plus_stage0 {
     if (app_header.table0_valid == 1) {
         apply(common_p4plus_stage0_app_header_table_offset_64);
@@ -1137,16 +1225,29 @@ control common_p4plus_stage0 {
 //    if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
 //        apply(common_p4plus_stage0_lif_table0);
 //    }
+
+    if(app_header.table0_valid == 0) {
+        if(app_header.table1_valid == 0) {
+            if(app_header.table2_valid == 0) {
+                if(app_header.table3_valid == 0) {
+                    apply(rx_table_cpu_hash);
+                }
+            }
+        }
+    }
+
     if (app_header.app_type == P4PLUS_APPTYPE_RDMA) {
         apply(rx_stage0_load_rdma_params);
         // apply(rx_table_s0_t0);
-        // apply(rx_table_s0_t1); 
+        // apply(rx_table_s0_t1);
+        
         if (app_header.table2_valid == 1) {
             apply(rx_table_s0_t2); 
         }
         if (app_header.table3_valid == 1) {
             apply(rx_table_s0_t3);
         }
+        
     }
 }   
 
