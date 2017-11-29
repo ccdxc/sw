@@ -22,6 +22,8 @@ input_properties:
                     p.control_metadata_flow_miss_idx, d.input_properties_d.flow_miss_idx
   phvwrpair     p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable, \
                     p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
+  phvwrpair     p.flow_miss_metadata_tunnel_vnid[23:8], d.input_properties_d.bounce_vnid_sbit0_ebit15, \
+                    p.flow_miss_metadata_tunnel_vnid[7:0], d.input_properties_d.bounce_vnid_sbit16_ebit23
   phvwrpair.e   p.qos_metadata_dscp, d.input_properties_d.dscp, \
                     p.control_metadata_allow_flood, d.input_properties_d.allow_flood
   phvwr         p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx

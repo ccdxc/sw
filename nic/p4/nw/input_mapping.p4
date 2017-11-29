@@ -182,9 +182,20 @@ table input_mapping_native {
     size : INPUT_MAPPING_TABLE_SIZE;
 }
 
+
+// bounce_vnid: vnid of the incoming l2 segment used when packets
+//              are vxlan encaped and sent to the node where the
+//              EP is moved to. Even when we are operating in
+//              underlay mode, we will have from config the vnid
+//              for each l2 segment and that will be programmed as
+//              bounce_vnid
+//              Same value is used for in case of flow miss for
+//              multiacast traffic in case we are in host pinning and
+//              overlay mode where one copy of packet is sent to uplink
+//              to GIPo with this VNID.
 action input_properties(vrf, dir, flow_miss_action, flow_miss_tm_oqueue,
                         flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
-                        dst_lport, src_lport, allow_flood) {
+                        dst_lport, src_lport, allow_flood, bounce_vnid) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.flow_miss_action, flow_miss_action);
@@ -197,6 +208,7 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_tm_oqueue,
     modify_field(control_metadata.src_lport, src_lport);
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.allow_flood, allow_flood);
+    modify_field(flow_miss_metadata.tunnel_vnid, bounce_vnid);
 
     // write nic mode (table constant)
     modify_field(control_metadata.nic_mode, scratch_metadata.flag);
@@ -260,16 +272,19 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
         drop_packet();
     }
 
+    // These tunnel related params are used for multicast/bradcast with
+    // host pinning and overlay enabled. 
+    // tunnel_vnid is common to both input_properties and 
+    // input_properties_mac_vlan table and used for bounce cases too.
     modify_field(flow_miss_metadata.rewrite_index, rewrite_index);
     modify_field(flow_miss_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
-    modify_field(flow_miss_metadata.tunnel_vnid, tunnel_vnid);
     modify_field(flow_miss_metadata.tunnel_originate, tunnel_originate);
 
     modify_field(control_metadata.src_lif, src_lif);
 
     input_properties(vrf, dir, flow_miss_action, flow_miss_tm_oqueue,
                      flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
-                     dst_lport, src_lport, allow_flood);
+                     dst_lport, src_lport, allow_flood, tunnel_vnid);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);
