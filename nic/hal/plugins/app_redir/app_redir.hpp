@@ -1,19 +1,18 @@
-#pragma once
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
+#ifndef __APP_REDIR_H__
+#define __APP_REDIR_H__
 
 #include "nic/include/fte.hpp"
-#include "nic/include/fte_ctx.hpp"
 #include "app_redir_headers.hpp"
-#include "app_redir_cb_ops.hpp"
 
 namespace hal {
-namespace proxy {
+namespace app_redir {
 
-fte::pipeline_action_t app_redir_miss_exec(fte::ctx_t& ctx);
-fte::pipeline_action_t app_redir_exec(fte::ctx_t& ctx);
-fte::pipeline_action_t app_redir_exec_fini(fte::ctx_t& ctx);
 void app_redir_pkt_verdict_set(fte::ctx_t& ctx,
                                fte::app_redir_verdict_t verdict);
 hal_ret_t app_redir_policy_applic_set(fte::ctx_t& ctx);
+hal_ret_t appid_cleanup_flow(fte::appid_info_t& appid_info);
 
 /*
  * Return pointer to current packet, taking into account of inserted
@@ -42,6 +41,7 @@ app_redir_pkt_len(fte::ctx_t& ctx)
 }
 
 
-} // namespace proxy 
+} // namespace app_redir 
 } // namespace hal
 
+#endif  // __APP_REDIR_H__

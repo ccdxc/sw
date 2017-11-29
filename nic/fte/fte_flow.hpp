@@ -90,6 +90,17 @@ public:
         return valid_.ingress_info;
     }
 
+    hal_ret_t set_appid_info(const appid_info_t& info) {
+        appid_info_ = info;
+        valid_.appid_info = true;
+        return HAL_RET_OK;
+    }
+    const appid_info_t& appid_info() const {
+        return appid_info_;
+    };
+    bool valid_appid_info() const {
+        return valid_.appid_info;
+    };
 
 
 private:
@@ -106,6 +117,7 @@ private:
         uint8_t fwding:1;
         uint8_t mcast_info:1;
         uint8_t ingress_info:1;
+        uint8_t appid_info:1;
     } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
@@ -117,6 +129,7 @@ private:
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];
+    appid_info_t              appid_info_;
 
     static hal_ret_t merge_header_rewrite(header_rewrite_info_t &dst,
                                           const  header_rewrite_info_t &src);

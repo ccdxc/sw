@@ -29,7 +29,7 @@ LCLEANFILES = $(OBJ_DIR)/lif_test $(OBJ_DIR)/internal_test $(OBJ_DIR)/uplinkif_t
 			  $(OBJ_DIR)/cpuif_test $(OBJ_DIR)/buf_pool_test $(OBJ_DIR)/queue_test $(OBJ_DIR)/policer_test \
 			  $(OBJ_DIR)/session_test $(OBJ_DIR)/acl_test $(OBJ_DIR)/bm_allocator_test $(OBJ_DIR)/lif_manager_test \
 			  $(OBJ_DIR)/tcpcb_test $(OBJ_DIR)/tlscb_test $(OBJ_DIR)/endpoint_test $(OBJ_DIR)/vrf_test  $(OBJ_DIR)/l2seg_test \
-			  $(OBJ_DIR)/scheduler_tx_test
+			  $(OBJ_DIR)/scheduler_tx_test $(OBJ_DIR)/appid_test
 
 CUS_SOURCES = $(wildcard *.cc)
 CUS_PFXES := $(basename $(CUS_SOURCES))

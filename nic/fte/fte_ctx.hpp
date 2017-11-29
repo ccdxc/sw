@@ -23,7 +23,8 @@ namespace fte {
     ENTRY(FLOWUPD_FWDING_INFO,   5, "fwding info")                      \
     ENTRY(FLOWUPD_KEY,           6, "flow key update")                  \
     ENTRY(FLOWUPD_MCAST_COPY,    7, "flow mcast copy update")           \
-    ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")            \
+    ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")                     \
+    ENTRY(FLOWUPD_APPID,         9, "update flow appid")                \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -257,6 +258,40 @@ typedef struct ingress_info_s {
 
 std::ostream& operator<<(std::ostream& os, const ingress_info_t& val);
 
+const size_t APPID_MAX_DEPTH = 4;
+
+typedef struct appid_info_s {
+    hal::appid_state_t state_;
+    hal::appid_id_t ids_[APPID_MAX_DEPTH];
+    void* cleanup_handle_;
+    uint8_t id_count_;
+} __PACK__ appid_info_t;
+
+inline void appid_info_clear_ids(appid_info_t& info) { info.id_count_ = 0; }
+
+inline void appid_info_init(appid_info_t& info) {
+    info.state_ = hal::APPID_STATE_INIT;
+    info.cleanup_handle_ = nullptr;
+    appid_info_clear_ids(info);
+}
+
+inline hal::appid_id_t appid_info_id(const appid_info_t& info) {
+    return info.id_count_ ? info.ids_[info.id_count_ - 1] : 0;
+}
+inline hal::appid_id_t appid_info_id(const appid_info_t& info, uint8_t idx) {
+    assert(idx < APPID_MAX_DEPTH);
+    return (idx < info.id_count_) ? info.ids_[idx] : 0;
+}
+inline void appid_info_set_id(appid_info_t& info, hal::appid_id_t id,
+                       uint8_t idx = APPID_MAX_DEPTH) {
+    assert(info.id_count_ < APPID_MAX_DEPTH);
+    if (idx >= APPID_MAX_DEPTH) idx = info.id_count_;
+    info.ids_[idx] = id;
+    info.id_count_++;
+}
+
+std::ostream& operator<<(std::ostream& os, const appid_info_t& val);
+
 typedef struct flow_update_s {
     flow_update_type_t type;
     union {
@@ -269,6 +304,7 @@ typedef struct flow_update_s {
         ingress_info_t ingress_info;
         hal::flow_key_t key;
         mcast_info_t mcast_info;
+        appid_info_t appid_info;
     };
 }__PACK__ flow_update_t;
 
@@ -476,6 +512,7 @@ public:
 
     // flow key of the current pkts flow
     const hal::flow_key_t& key() const { return key_; }
+    void set_key(const hal::flow_key_t& key) { key_ = key; }
 
     // Following are valid only for packets punted to ARM
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
@@ -554,6 +591,15 @@ public:
 
     app_redir_ctx_t& app_redir() { return app_redir_; }
 
+    bool appid_updated() const { return appid_updated_; }
+    void set_appid_updated(bool updated) { appid_updated_ = updated; }
+
+    appid_info_t &appid_info() { return appid_info_; };
+    void set_appid_info(appid_info_t &info) { appid_info_ = info; };
+
+    hal::appid_state_t appid_state() const { return appid_info_.state_; }
+    void set_appid_state(hal::appid_state_t state) {appid_info_.state_ = state; }
+
 
     void *feature_state(const std::string &name) {
         return feature_state_pointer(name, feature_state_, feature_state_size_);
@@ -615,6 +661,10 @@ private:
     hal::ep_t             *dep_;
     void*                 alg_entry_;         // ALG entry in the wildcard table
     app_redir_ctx_t       app_redir_;
+
+    /* appID state */
+    appid_info_t          appid_info_;
+    bool                  appid_updated_;
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();

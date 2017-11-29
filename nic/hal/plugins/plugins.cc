@@ -12,6 +12,7 @@ namespace plugins {
 
 typedef hal_ret_t (*init_handler_t)();
 typedef void (*exit_handler_t)();
+typedef void (*thread_handler_t)(int tid);
 
 enum plugin_state_t {
     PLUGIN_STATE_NONE = 0,
@@ -33,6 +34,8 @@ struct plugin_t {
     std::string lib;
     std::string init_func;
     std::string exit_func;
+    std::string thread_init_func;
+    std::string thread_exit_func;
     bool        auto_load;
     std::vector<std::string> deps;
     std::vector<std::string> features;
@@ -40,6 +43,8 @@ struct plugin_t {
     plugin_state_t state;
     init_handler_t init_handler;
     exit_handler_t exit_handler;
+    thread_handler_t thread_init_handler;
+    thread_handler_t thread_exit_handler;
 };
 
 static inline plugin_t* plugin_alloc()
@@ -58,6 +63,8 @@ std::ostream& operator<<(std::ostream& os, const plugin_t& val)
     os << ", lib=" << val.lib;
     os << ", init_func=" << val.init_func;
     os << ", exit_func=" << val.exit_func;
+    os << ", thread_init_func=" << val.thread_init_func;
+    os << ", thread_exit_func=" << val.thread_exit_func;
     os << ", auto_load=" << val.auto_load;
 
     os << ", deps=[";
@@ -113,6 +120,16 @@ static pipeline_t* pipeline_alloc()
                                     sizeof(pipeline_t));
 }
 
+static void plugin_default_thread_init_handler(int tid)
+{
+    (void) tid;
+}
+
+static void plugin_default_thread_exit_handler(int tid)
+{
+    (void) tid;
+}
+
 
 //------------------------------------------------------------------------------
 // Parse plugin info
@@ -148,6 +165,13 @@ bool plugin_manager_t::parse_plugin(const pt::ptree &tree, plugin_t *plugin,
     plugin->init_func = tree.get<std::string>("init_func", "");
     plugin->exit_func = tree.get<std::string>("exit_func", "");
     plugin->auto_load = tree.get<bool>("auto_load", false);
+
+    if (auto func = tree.get_optional<std::string>("thread_init_func")) {
+        plugin->thread_init_func = *func;
+    }
+    if (auto func = tree.get_optional<std::string>("thread_exit_func")) {
+        plugin->thread_exit_func = *func;
+    }
 
     // Parese deps
     auto deps = tree.get_child_optional("deps");
@@ -334,6 +358,22 @@ bool plugin_manager_t::load_symbols(void *so, plugin_t *plugin)
         return false;
     }
 
+    if (plugin->thread_init_func.length() > 0) {
+        if (!load_symbol(so, plugin->thread_init_func, (void **)&plugin->thread_init_handler)) {
+            return false;
+        }
+    } else {
+        plugin->thread_init_handler = plugin_default_thread_init_handler;
+    }
+
+    if (plugin->thread_exit_func.length() > 0) {
+        if (!load_symbol(so, plugin->thread_exit_func, (void **)&plugin->thread_exit_handler)) {
+            return false;
+        }
+    } else {
+        plugin->thread_exit_handler = plugin_default_thread_exit_handler;
+    }
+
     return true;
 }
 
@@ -416,6 +456,66 @@ bool plugin_manager_t::load_plugin(plugin_t *plugin)
     return true;
 }
 
+//------------------------------------------------------------------------------
+// Exit plugin
+//------------------------------------------------------------------------------
+void plugin_manager_t::exit_plugin(plugin_t *plugin)
+{
+    // return if plugin not loaded
+    if (plugin->state != PLUGIN_STATE_LOADED) {
+        return;
+    }
+
+    HAL_TRACE_INFO("plugins::exit_plugin {}", plugin->name);
+
+    // exit plugin
+    if (plugin->exit_handler) {
+        plugin->exit_handler();
+        HAL_TRACE_DEBUG("plugin::exit_handler {} complete", plugin->name);
+        // TODO: need dlclose?
+    }
+
+    plugin->state = PLUGIN_STATE_REGISTERED;
+}
+
+//------------------------------------------------------------------------------
+// Thread init plugin
+//------------------------------------------------------------------------------
+void plugin_manager_t::thread_init_plugin(plugin_t *plugin, int tid)
+{
+    // return if plugin not loaded
+    if (plugin->state != PLUGIN_STATE_LOADED) {
+        return;
+    }
+
+    HAL_TRACE_INFO("plugins::thread_init_plugin {} tid {}", plugin->name, tid);
+
+    // thread init for plugin
+    if (plugin->thread_init_handler) {
+        plugin->thread_init_handler(tid);
+        HAL_TRACE_DEBUG("plugin::thread_init_handler {} complete", plugin->name);
+    }
+}
+
+//------------------------------------------------------------------------------
+// Thread exit plugin
+//------------------------------------------------------------------------------
+void plugin_manager_t::thread_exit_plugin(plugin_t *plugin, int tid)
+{
+    // return if plugin not loaded
+    if (plugin->state != PLUGIN_STATE_LOADED) {
+        return;
+    }
+
+    HAL_TRACE_INFO("plugins::thread_exit_plugin {} tid {}", plugin->name, tid);
+
+    // thread exit for plugin
+    if (plugin->thread_exit_handler) {
+        plugin->thread_exit_handler(tid);
+        HAL_TRACE_DEBUG("plugin::thread_exit_handler {} complete", plugin->name);
+    }
+}
+
 
 //------------------------------------------------------------------------------
 //  parse plugin config
@@ -451,6 +551,50 @@ void plugin_manager_t::load()
         plugin_t *plugin = kv.second;
         if (plugin->auto_load) {
             load_plugin(plugin);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+//   exit (cleanup) plugins
+//------------------------------------------------------------------------------
+void plugin_manager_t::exit()
+{
+    // TODO: unregister features
+
+    // Exit all plugins with auto load
+    for (auto &kv : plugins_) {
+        plugin_t *plugin = kv.second;
+        if (plugin->auto_load) {
+            exit_plugin(plugin);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+//   thread init for plugins
+//------------------------------------------------------------------------------
+void plugin_manager_t::thread_init(int tid)
+{
+    // Thread init for all plugins with auto load
+    for (auto &kv : plugins_) {
+        plugin_t *plugin = kv.second;
+        if (plugin->auto_load) {
+            thread_init_plugin(plugin, tid);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+//   thread exit (cleanup) plugins
+//------------------------------------------------------------------------------
+void plugin_manager_t::thread_exit(int tid)
+{
+    // Thread cleanup for all plugins with auto load
+    for (auto &kv : plugins_) {
+        plugin_t *plugin = kv.second;
+        if (plugin->auto_load) {
+            thread_exit_plugin(plugin, tid);
         }
     }
 }

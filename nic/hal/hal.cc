@@ -64,9 +64,30 @@ fte_pkt_loop_start (void *ctxt)
     HAL_THREAD_INIT(ctxt);
 
     thread *curr_thread = hal::utils::thread::current_thread();
+    thread_init_plugins(curr_thread->thread_id());
     fte::fte_start(curr_thread->thread_id() - HAL_THREAD_ID_FTE_MIN);
+    thread_exit_plugins(curr_thread->thread_id());
     return NULL;
 }
+
+static void *
+hal_periodic_loop_start (void *ctxt)
+{
+    // initialize timer wheel
+    hal::periodic::periodic_thread_init(ctxt);
+
+    // do any plugin-specific thread initialization
+    thread_init_plugins(HAL_THREAD_ID_PERIODIC);
+
+    // run main loop
+    hal::periodic::periodic_thread_run(ctxt);
+
+    // loop exited, do plugin-specific thread cleanup
+    thread_exit_plugins(HAL_THREAD_ID_PERIODIC);
+
+    return NULL;
+}
+
 
 //------------------------------------------------------------------------------
 // return current thread pointer, for gRPC threads curr_thread is not set,
@@ -546,7 +567,7 @@ hal_thread_init (void)
         thread::factory(std::string("periodic-thread").c_str(),
                         HAL_THREAD_ID_PERIODIC,
                         HAL_CONTROL_CORE_ID,
-                        hal::periodic::periodic_thread_start,
+                        hal_periodic_loop_start,
                         thread_prio - 1, SCHED_RR, true);
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
     g_hal_threads[HAL_THREAD_ID_PERIODIC]->start(g_hal_threads[HAL_THREAD_ID_PERIODIC]);

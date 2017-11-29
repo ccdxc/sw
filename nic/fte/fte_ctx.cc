@@ -776,9 +776,15 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         ret = flow->set_mcast_info(flowupd.mcast_info);
         LOG_FLOW_UPDATE(mcast_info);
         break;
+
     case FLOWUPD_INGRESS_INFO:
         ret = flow->set_ingress_info(flowupd.ingress_info);
         LOG_FLOW_UPDATE(ingress_info);
+        break;
+
+    case FLOWUPD_APPID:
+        ret = flow->set_appid_info(flowupd.appid_info);
+        LOG_FLOW_UPDATE(appid_info);
         break;
     }
 
@@ -1109,6 +1115,17 @@ std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
     os << "{mcast_en=" << (bool)val.mcast_en;
     if (val.mcast_en) {
         os << " ,mcast_ptr=" << val.mcast_ptr;
+    }
+    return os << "}";
+}
+
+std::ostream& operator<<(std::ostream& os, const appid_info_t& val)
+{
+    os << "{state=" << val.state_;
+    if (val.id_count_) {
+        for (uint8_t i = 0; i < val.id_count_; i++) {
+            os << ",id=" << appid_info_id(val, i);
+        }
     }
     return os << "}";
 }

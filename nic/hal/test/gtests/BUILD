@@ -165,3 +165,14 @@ cc_test(
         "//nic:gft_p4pd"] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
 )
+
+cc_test(
+    name = "appid_test",
+    srcs = ["appid_test.cc"],
+    deps = [
+        "//nic/hal/plugins/app_redir:app_redir",
+        "//nic:snort3"
+    ] + gl_deps_list,
+    linkopts = ["-lsnort"] + 
+        gl_linkopts_list,
+)

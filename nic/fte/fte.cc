@@ -241,12 +241,16 @@ pipeline_lookup_(const lifqid_t& lifq)
 static inline pipeline_action_t
 pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, uint8_t end)
 {
-    pipeline_action_t rc;
+    pipeline_action_t rc = PIPELINE_CONTINUE;
 
     HAL_TRACE_DEBUG("Invoking pipeline with start: {} end: {}", start, end);
 
     for (int i = start; i < end; i++) {
         feature_t *feature = pipeline->features[i];
+        if (feature == nullptr) {
+            HAL_TRACE_DEBUG("fte:pipeline_invoke_exec skip invalid feature {}", i);
+            continue;
+        }
 
         ctx.set_feature_name(feature->name.c_str());
         ctx.set_feature_status(HAL_RET_OK);
@@ -291,10 +295,8 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
         if (!feature) {
             HAL_TRACE_ERR("fte: unknown feature {} in outbound pipeline {} - skipping",
                           fname, name);
-            HAL_FREE(hal::HAL_MEM_ALLOC_FTE, pipeline);
-            return HAL_RET_INVALID_ARG;
         }
-        HAL_TRACE_DEBUG("fte: outbound pipeline feature {}/{}", name, feature->name);
+        HAL_TRACE_DEBUG("fte: outbound pipeline feature {}/{}", name, fname);
         *features++ = feature;
     }
 
@@ -305,7 +307,7 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
             HAL_TRACE_ERR("fte: unknown feature {} in inbound pipeline {} - skipping",
                           fname, name);
         }
-        HAL_TRACE_DEBUG("fte: inbound pipeline feature {}/{}", name, feature->name);
+        HAL_TRACE_DEBUG("fte: inbound pipeline feature {}/{}", name, fname);
         *features++ = feature;
     }
 

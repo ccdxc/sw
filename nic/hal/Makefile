@@ -50,6 +50,7 @@ LDFLAGS +=	-lhal \
 			-lpdcommon \
 			-lhostmem \
 			-lproxyplugin \
+			-lapp_redir \
 			-llkl_api \
 
 LDFLAGS += -L$(LIBLKL_ROOT)/bin -llkl

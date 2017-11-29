@@ -17,7 +17,10 @@ namespace hal {
 
 namespace periodic {
 
-void *periodic_thread_start(void *ctxt);
+void *periodic_thread_init(void *ctxt);
+void *periodic_thread_run(void *ctxt);
+
+bool periodic_thread_is_running();
 
 //------------------------------------------------------------------------------
 // API invoked by other threads to trigger cb after timeout

@@ -1,11 +1,12 @@
 #include "nic/hal/src/proxy.hpp"
-#include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/p4/nw/include/defines.h"
-#include "app_redir.hpp"
+#include "app_redir_plugin.hpp"
+#include "app_redir_headers.hpp"
+#include "app_redir_cb_ops.hpp"
 
 namespace hal {
-namespace proxy {
+namespace app_redir {
 
 /*
  * Evaluate and set the reverse role
@@ -360,6 +361,7 @@ app_redir_test_flow_criteria_check(fte::ctx_t& ctx)
                     (flow_key.dport == APP_REDIR_MYSQL_PORT)) {
 
                     redir_ctx.set_redir_policy_applic(true);
+                    ctx.set_appid_state(APPID_STATE_NEEDED);
                     return true;
                 }
             }
@@ -526,6 +528,7 @@ app_redir_policy_applic_set(fte::ctx_t& ctx)
     hal_ret_t               ret = HAL_RET_OK;
 
     redir_ctx.set_redir_policy_applic(true);
+    ctx.set_appid_state(APPID_STATE_NEEDED);
 
     /*
      * Update flow to redirect to us.
@@ -647,5 +650,5 @@ app_redir_exec_fini(fte::ctx_t& ctx)
 }
 
 
-} // namespace proxy
+} // namespace app_redir
 } // namespace hal

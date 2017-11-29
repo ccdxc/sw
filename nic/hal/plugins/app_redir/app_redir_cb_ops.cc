@@ -1,7 +1,8 @@
 #include "app_redir.hpp"
+#include "app_redir_cb_ops.hpp"
 
 namespace hal {
-namespace proxy {
+namespace app_redir {
 
 static void
 app_redir_rawrcb_spec_build(uint32_t cb_id,
@@ -148,5 +149,5 @@ app_redir_rawccb_update(uint32_t cb_id,
 }
 
 
-} // namespace proxy
+} // namespace app_redir
 } // namespace hal
