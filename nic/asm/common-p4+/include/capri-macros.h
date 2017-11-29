@@ -255,7 +255,7 @@
 #define CAPRI_OPERAND_DEBUG(_x)         add r1, r0, _x
         
 #define RNMDR_TABLE_BASE                hbm_rnmdr_table_base
-#define RNMDR_TABLE_ENTRY_SIZE          7 /* 8B */
+#define RNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
 #define RNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
 #define RNMDR_TABLE_SIZE                255
 #define RNMDR_TABLE_SIZE_SHFT           8
