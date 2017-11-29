@@ -34,22 +34,20 @@ enum EndpointVMotionState {
 }
 
 message EndpointAttributes {
-    fixed64                     interface_handle     = 1;    // interface endpoint is reachable on
+    kh.InterfaceKeyHandle       interface_key_handle = 1 [(gogoproto.jsontag) = "ref"];
     uint32                      useg_vlan            = 2;    // microseg vlan assigned to this EP
     repeated types.IPAddress    ip_address           = 3;    // IP address(es) of endpoint
-    repeated uint64             sg_handle            = 4;    // list of security group handles
+    repeated kh.SecurityGroupKeyHandle sg_key_handle = 4 [(gogoproto.jsontag) = "ref"];
     EndpointVMotionState        vmotion_state        = 5;    // Vmotion state
-    kh.InterfaceKeyHandle       interface_key_handle = 6 [(gogoproto.jsontag) = "interface_ref"];
-    repeated kh.SecurityGroupKeyHandle sg_key_handle = 7 [(gogoproto.jsontag) = "sg_ref"];
 }
 
 
 // EndpointSpec is used to add or update an endpoint
 message EndpointSpec {
-    types.ObjectMeta   meta           = 1;    // common object meta
-    kh.EndpointL2Key   l2_key         = 2;    // l2 key
-    kh.VrfKeyHandle    vrf_key_handle = 3 [(gogoproto.jsontag) = "ref"];
-    EndpointAttributes endpoint_attrs = 4;    // endpoint's attributes
+    types.ObjectMeta   meta              = 1;    // common object meta
+    kh.EndpointKeyHandle   key_or_handle = 2 [(gogoproto.jsontag) = "key"];
+    kh.VrfKeyHandle    vrf_key_handle    = 3 [(gogoproto.jsontag) = "ref"];
+    EndpointAttributes endpoint_attrs    = 4;    // endpoint's attributes
 }
 
 // EndpointRequestMsg is batched add or modify endpoint request
@@ -71,7 +69,7 @@ message EndpointStatus {
 
 // EndpointResponse is response to EndpointSpec
 message EndpointResponse {
-  types.ApiStatus       api_status      = 1;    // API status code
+  types.ApiStatus       api_status      = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   EndpointStatus        endpoint_status = 2;    // endpoint status, if api succeeded
 }
 
@@ -104,10 +102,9 @@ message EndpointUpdateResponseMsg {
 // so that agent and HAL are less chatty when doing bulk deletes (e.g.
 // when a L2 segment is deleted or interfae goes down etc.)
 message EndpointFilter {
-  fixed64               l2_segment_handle    = 1;        // L2 segment handle
-  fixed64               interface_handle     = 2;        // interface handle
-  kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.jsontag) = "vrf_ref"];
-  kh.L2SegmentKeyHandle l2Segment_key_handle = 4 [(gogoproto.jsontag) = "l2seg_ref"];
+  kh.VrfKeyHandle       vrf_key_handle       = 1 [(gogoproto.jsontag) = "vrf_ref"];
+  kh.InterfaceKeyHandle interface_key_handle = 2 [(gogoproto.jsontag) = "ref"];
+  kh.L2SegmentKeyHandle l2Segment_key_handle = 3 [(gogoproto.jsontag) = "l2seg_ref"];
 }
 
 // EndpointDeleteRequest is used to delete an endpoint
@@ -126,9 +123,13 @@ message EndpointDeleteRequestMsg {
   repeated EndpointDeleteRequest    request = 1;    // batched request
 }
 
+message EndpointDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
 // EndpointDeleteResponseMsg is used to delete a batch of Endpoints
 message EndpointDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated EndpointDeleteResponse  response = 1;  
 }
 
 // EndpointGetRequest is used to get information about an endpoint
@@ -162,7 +163,7 @@ message EndpointStats {
 
 // EndpointGetResponse captures all the information about one Endpoint
 message EndpointGetResponse {
-  types.ApiStatus   api_status = 1;    // API status code
+  types.ApiStatus   api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   EndpointSpec      spec       = 2;    // Endpoint config
   EndpointStatus    status     = 3;    // Endpoint operational status
   EndpointStats     stats      = 4;    // Endpoint stats, if any
@@ -170,6 +171,6 @@ message EndpointGetResponse {
 
 // EndpointGetResponseMsg is batched response to EndpointGetRequestMsg
 message EndpointGetResponseMsg {
-  types.ApiStatus                 api_status = 1;    // API status code
+  types.ApiStatus                 api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   repeated EndpointGetResponse    response   = 2;    // batched get response
 }

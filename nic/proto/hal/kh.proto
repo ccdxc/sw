@@ -105,9 +105,8 @@ message InterfaceKeyHandle {
 // EndpointL2Key is L2 key of the endpoint
 // NOTE: An endpoint can have only one L2 key
 message EndpointL2Key {
-  fixed64    l2_segment_handle    = 1;
+  kh.L2SegmentKeyHandle l2segment_key_handle = 1 [(gogoproto.jsontag) = "ref"];
   uint64     mac_address          = 2;
-  kh.L2SegmentKeyHandle l2segment_key_handle = 3 [(gogoproto.jsontag) = "ref"];
 }
 
 // EndpointL3Key is the L3 key of the endpoint

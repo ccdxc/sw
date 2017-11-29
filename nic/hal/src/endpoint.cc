@@ -3,8 +3,10 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/endpoint.hpp"
+#include "nic/hal/src/interface.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/endpoint_api.hpp"
+#include "nic/hal/src/nwsec_group.hpp"
 // #include <netinet/ether.h>
 
 namespace hal {
@@ -221,14 +223,21 @@ ep_del_from_l3_db (ep_l3_key_t *l3_key)
 static hal_ret_t
 validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
-    if (!spec.has_meta() ||
-        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!spec.has_vrf_key_handle() ||
+        spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         HAL_TRACE_ERR("pi-ep:{}:vrf id not valid",
                       __FUNCTION__);
         return HAL_RET_VRF_ID_INVALID;
     }
 
-    if (!spec.has_l2_key()) {
+    if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("pi-ep:{}:ep doesn't have key or handle",
+                      __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if ((spec.key_or_handle().key_or_handle_case() != EndpointKeyHandle::kEndpointKey) ||
+        (spec.key_or_handle().endpoint_key().endpoint_l2_l3_key_case() != EndpointKey::kL2Key)) {
         HAL_TRACE_ERR("pi-ep:{}:ep doesnt have l2 key",
                       __FUNCTION__);
         return HAL_RET_INVALID_ARG;
@@ -240,13 +249,21 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
 
-    if (spec.l2_key().l2_segment_handle() == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-ep:{}:l2seg handle not valid",
+    if (!spec.key_or_handle().endpoint_key().l2_key().has_l2segment_key_handle() ||
+       ((spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle().key_or_handle_case() == L2SegmentKeyHandle::kSegmentId) &&
+        (spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle().segment_id() == HAL_L2SEGMENT_ID_INVALID)) ||
+       ((spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle().key_or_handle_case() == L2SegmentKeyHandle::kL2SegmentHandle) &&
+        (spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle().l2segment_handle() == HAL_HANDLE_INVALID))) {
+        HAL_TRACE_ERR("pi-ep:{}:l2seg key/handle not valid",
                       __FUNCTION__);
         return HAL_RET_HANDLE_INVALID;
     }
 
-    if (spec.endpoint_attrs().interface_handle() == HAL_HANDLE_INVALID) {
+    if (!spec.key_or_handle().endpoint_key().l2_key().has_l2segment_key_handle() ||
+       ((spec.endpoint_attrs().interface_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) &&
+        (spec.endpoint_attrs().interface_key_handle().interface_id() == HAL_IFINDEX_INVALID)) ||
+       ((spec.endpoint_attrs().interface_key_handle().key_or_handle_case() == InterfaceKeyHandle::kIfHandle) &&
+        (spec.endpoint_attrs().interface_key_handle().if_handle() == HAL_HANDLE_INVALID))) {
         HAL_TRACE_ERR("pi-ep:{}:interface handle not valid",
                       __FUNCTION__);
         return HAL_RET_HANDLE_INVALID;
@@ -568,10 +585,10 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     int                             i, num_ips = 0, num_sgs = 0;
-    vrf_id_t                     tid;
-    hal_handle_t                    if_handle, l2seg_handle;
+    vrf_id_t                        tid;
+    InterfaceKeyHandle              if_key_handle;
     ep_t                            *ep = NULL;
-    vrf_t                        *vrf = NULL;
+    vrf_t                           *vrf = NULL;
     l2seg_t                         *l2seg = NULL;
     if_t                            *hal_if = NULL;
     ep_l3_entry_t                   **l3_entry = NULL;
@@ -581,10 +598,11 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     nwsec_group_t                   *nwsec_group = NULL;
+    L2SegmentKeyHandle              l2seg_key_handle;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("pi-ep:{}: ep create for id {}", __FUNCTION__, 
-                    spec.meta().vrf_id());
+                    spec.vrf_key_handle().vrf_id());
 
     ret = validate_endpoint_create(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -592,7 +610,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     }
 
     // fetch the vrf information
-    tid = spec.meta().vrf_id();
+    tid = spec.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
         ret = HAL_RET_VRF_NOT_FOUND;
@@ -600,18 +618,18 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     }
 
     // fetch the L2 segment information
-    l2seg_handle = spec.l2_key().l2_segment_handle();
-    l2seg = find_l2seg_by_handle(l2seg_handle);
+    l2seg_key_handle = spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle();
+    l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
     if (l2seg == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:unable to find l2seg_hdl:{}",
-                      __FUNCTION__, l2seg_handle);
+        HAL_TRACE_ERR("pi-ep:{}:failed to find l2seg, id {}, handle {}",
+                      __FUNCTION__, l2seg_key_handle.segment_id(), l2seg_key_handle.l2segment_handle());
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
     }
 
     // fetch the interface information
-    if_handle = spec.endpoint_attrs().interface_handle();
-    hal_if = find_if_by_handle(if_handle);
+    if_key_handle = spec.endpoint_attrs().interface_key_handle();
+    hal_if = if_lookup_key_or_handle(if_key_handle);
     if (hal_if == NULL) {
         ret = HAL_RET_IF_NOT_FOUND;
         goto end;
@@ -629,13 +647,13 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     // initialize the EP record
     HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_PRIVATE);
     ep->l2_key.l2_segid = l2seg->seg_id;
-    MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.l2_key().mac_address());
+    MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
     HAL_TRACE_DEBUG("PI-EP:{}: Seg Id:{}, Mac: {} If: {}", __FUNCTION__, 
                     l2seg->seg_id, 
                     ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)),
                     hal_if->if_id);
-    ep->l2seg_handle = l2seg_handle;
-    ep->if_handle = if_handle;
+    ep->l2seg_handle = l2seg->hal_handle;
+    ep->if_handle = hal_if->hal_handle;
     ep->vrf_handle = vrf->hal_handle;
     ep->useg_vlan = spec.endpoint_attrs().useg_vlan();
     ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
@@ -700,12 +718,12 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         goto end;
     }
 
-    num_sgs = spec.endpoint_attrs().sg_handle_size();
+    num_sgs = spec.endpoint_attrs().sg_key_handle_size();
     if (num_sgs) {
         //To Do:Handle cases where the num_sgs greater that MAX_SG_PER_ARRAY
         for (i = 0; i < num_sgs; i++) {
             /* Lookup the SG by handle and then get the SG-id */
-            nwsec_group = nwsec_group_lookup_by_handle(spec.endpoint_attrs().sg_handle(i));
+            nwsec_group = nwsec_group_lookup_key_or_handle(spec.endpoint_attrs().sg_key_handle(i));
             HAL_ASSERT(nwsec_group);
             ep->sgs.arr_sg_id[i] = nwsec_group->sg_id;
             ep->sgs.sg_id_cnt++;
@@ -744,7 +762,7 @@ end:
 
     ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
-    return HAL_RET_OK;
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -756,8 +774,8 @@ validate_endpoint_update_spec (EndpointUpdateRequest& req, EndpointResponse *rsp
     hal_ret_t       ret = HAL_RET_OK;
 
     // Check if vrf id is valid
-    if (!req.has_meta() ||
-        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!req.has_vrf_key_handle() ||
+        req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         HAL_TRACE_ERR("pi-ep:{}:vrf id invalid", __FUNCTION__);
         ret = HAL_RET_VRF_ID_INVALID;
         goto end;
@@ -1026,13 +1044,15 @@ fetch_endpoint(vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep,
         if (ep_key.has_l2_key()) {
             auto ep_l2_key = ep_key.l2_key();
             MAC_UINT64_TO_ADDR(mac_addr, ep_l2_key.mac_address());
-            HAL_TRACE_DEBUG("pi-ep:{}:l2 key: seg:{}, mac:{}", __FUNCTION__,
-                            ep_l2_key.l2_segment_handle(),
+            HAL_TRACE_DEBUG("pi-ep:{}:l2 key: seg:{}, handle {}, mac:{}", __FUNCTION__,
+                            ep_l2_key.l2segment_key_handle().segment_id(), 
+                            ep_l2_key.l2segment_key_handle().l2segment_handle(),
                             macaddr2str(mac_addr));
-            l2seg = find_l2seg_by_handle(ep_l2_key.l2_segment_handle());
+            l2seg = l2seg_lookup_key_or_handle(ep_l2_key.l2segment_key_handle());
             if (l2seg == NULL) {
-                HAL_TRACE_ERR("pi-ep:{}:unable to find l2seg_hdl:{}",
-                              __FUNCTION__, ep_l2_key.l2_segment_handle());
+                HAL_TRACE_ERR("pi-ep:{}:failed to find l2seg, id {}, handle {}",
+                              __FUNCTION__, ep_l2_key.l2segment_key_handle().segment_id(),
+                              ep_l2_key.l2segment_key_handle().l2segment_handle());
                 return HAL_RET_L2SEG_NOT_FOUND;
             }
             *ep = find_ep_by_l2_key(l2seg->seg_id, mac_addr);
@@ -1050,6 +1070,11 @@ fetch_endpoint(vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep,
             EndpointKeyHandle::kEndpointHandle) {
         *ep = find_ep_by_handle(kh.endpoint_handle());
     } else {
+        *api_status = types::API_STATUS_INVALID_ARG;
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (!(*ep)) {
         *api_status = types::API_STATUS_INVALID_ARG;
         return HAL_RET_INVALID_ARG;
     }
@@ -1155,9 +1180,15 @@ endpoint_check_update(EndpointUpdateRequest& req, ep_t *ep, ep_update_app_ctxt_t
 
     if (req.has_endpoint_attrs()) {
         // Check if if changed
-        if (ep->if_handle != req.endpoint_attrs().interface_handle()) {
+        auto hal_if = if_lookup_key_or_handle((req.endpoint_attrs().interface_key_handle()));
+        if (!hal_if) {
+             ret = HAL_RET_INVALID_ARG;
+             goto end;
+        }
+      
+        if (ep->if_handle != hal_if->hal_handle) {
             app_ctxt->if_change = true;
-            app_ctxt->new_if_handle = req.endpoint_attrs().interface_handle();
+            app_ctxt->new_if_handle = hal_if->hal_handle;
         }
         
         // Check if vmotion state changed
@@ -1166,7 +1197,6 @@ endpoint_check_update(EndpointUpdateRequest& req, ep_t *ep, ep_update_app_ctxt_t
             app_ctxt->new_vmotion_state = req.endpoint_attrs().vmotion_state();
         }
     }
-
 
     // Validate changes
     ret = endpoint_validate_update_change(ep, app_ctxt);
@@ -1487,7 +1517,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     }
 
     // fetch the vrf information
-    tid = req.meta().vrf_id();
+    tid = req.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
         HAL_TRACE_ERR("pi-ep:{}:failed to find vrf for tid:{}", 
@@ -1596,7 +1626,7 @@ end:
 //------------------------------------------------------------------------------
 static hal_ret_t
 validate_endpoint_delete (EndpointDeleteRequest& req,
-                          EndpointDeleteResponseMsg *rsp)
+                          EndpointDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -1721,7 +1751,7 @@ endpoint_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 hal_ret_t
 endpoint_delete (EndpointDeleteRequest& req, 
-                 EndpointDeleteResponseMsg *rsp)
+                 EndpointDeleteResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     vrf_id_t                     tid;
@@ -1742,7 +1772,7 @@ endpoint_delete (EndpointDeleteRequest& req,
     }
 
     // fetch the vrf information
-    tid = req.meta().vrf_id();
+    tid = req.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
         HAL_TRACE_ERR("pi-ep:{}:failed to find vrf for tid:{}", 
@@ -1776,7 +1806,7 @@ endpoint_delete (EndpointDeleteRequest& req,
                              endpoint_delete_cleanup_cb);
 
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
@@ -1788,11 +1818,12 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
 {
     dllist_ctxt_t       *lnode = NULL;
     ep_ip_entry_t       *pi_ip_entry = NULL;
-
-    response->mutable_spec()->mutable_meta()->set_vrf_id(vrf_lookup_by_handle(ep->vrf_handle)->vrf_id);
-    response->mutable_spec()->mutable_l2_key()->set_l2_segment_handle(ep->l2seg_handle);
-    response->mutable_spec()->mutable_l2_key()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
-    response->mutable_spec()->mutable_endpoint_attrs()->set_interface_handle(ep->if_handle);
+    
+    auto vrf = vrf_lookup_by_handle(ep->vrf_handle);
+    response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf ? vrf->vrf_id : HAL_HANDLE_INVALID);
+    response->mutable_spec()->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(ep->l2seg_handle);
+    response->mutable_spec()->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
+    response->mutable_spec()->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(ep->if_handle);
     response->mutable_spec()->mutable_endpoint_attrs()->set_useg_vlan(ep->useg_vlan);
 
     response->mutable_status()->set_endpoint_handle(ep->hal_handle);
@@ -1823,8 +1854,8 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
     EndpointGetResponse    *response;
 
     response = rsp->add_response();
-    if (!req.has_meta() ||
-        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!req.has_vrf_key_handle() ||
+        req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -1836,10 +1867,10 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
             if (ep_key.has_l2_key()) {
                 auto ep_l2_key = ep_key.l2_key();
                 MAC_UINT64_TO_ADDR(mac_addr, ep_l2_key.mac_address());
-                ep = find_ep_by_l2_key(ep_l2_key.l2_segment_handle(), mac_addr);
+                ep = find_ep_by_l2_key(ep_l2_key.l2segment_key_handle().segment_id(), mac_addr);
             } else if (ep_key.has_l3_key()) {
                 auto ep_l3_key = ep_key.l3_key();
-                l3_key.vrf_id = req.meta().vrf_id();
+                l3_key.vrf_id = req.vrf_key_handle().vrf_id();
                 ip_addr_spec_to_ip_addr(&l3_key.ip_addr,
                                         ep_l3_key.ip_address());
                 ep = find_ep_by_l3_key(&l3_key);

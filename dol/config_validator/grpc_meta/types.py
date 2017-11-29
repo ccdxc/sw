@@ -11,7 +11,7 @@ import config_mgr
 
 _tag_checker_map = {
      "key_field"     : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "key" in y,
-     "ext_ref_field" : lambda x, y : x  == "gogoproto.jsontag" and  y == "ref",
+     "ext_ref_field" : lambda x, y : x  == "gogoproto.jsontag" and  "ref" in y,
      "api_field"     : lambda x, y : x  == "gogoproto.jsontag" and  y == "api_status",
      "handle_field"  : lambda x, y : x  == "gogoproto.jsontag" and y == "handle",
      "unique_field"  : lambda x, y : x  == "gogoproto.jsontag" and y == "unique",
@@ -54,6 +54,7 @@ class GrpcMetaField:
         self.options = grpc_field.GetOptions() if grpc_field else None
         self._grpc_field = grpc_field
         self._ext_ref = None
+        self.oneOf = False
     
     def __repr__(self):
         return json.dumps({"type" : str(self.type), "label" : self.label})
@@ -73,11 +74,11 @@ class GrpcMetaField:
             return subclass
         return decorator
     
-    def generate_data(self):
+    def generate_data(self, key=None, ext_refs=None, is_key_field=False):
         if self._ext_ref:
             #if There is an external Reference,
             return config_mgr.GetRandomConfigObjectByKeyType(self._ext_ref)
-        return self.type.generate_data()
+        return self.type.generate_data(key, ext_refs, self.is_key_field())
     
     def is_field_handle(self):
         return is_handle_field(self._grpc_field)
@@ -112,7 +113,7 @@ class GrpcMetaFieldUint32(GrpcMetaField):
         self.type = descriptor.FieldDescriptor.CPPTYPE_UINT32
         self._range = self.get_range()
         
-    def generate_data(self):
+    def generate_data(self, key, ext_refs, is_key_field=False):
         return  random.randint(self._range[0], self._range[1])
 
 @GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_UINT64)
@@ -122,7 +123,7 @@ class GrpcMetaFieldUint64(GrpcMetaField):
         super(GrpcMetaFieldUint64, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_UINT64
     
-    def generate_data(self):
+    def generate_data(self, key, ext_refs, is_key_field=False):
         return  random.randint(0, 99999)
 
 @GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_STRING)
@@ -132,7 +133,7 @@ class GrpcMetaFieldString(GrpcMetaField):
         super(GrpcMetaFieldString, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_STRING
     
-    def generate_data(self):
+    def generate_data(self, key, ext_refs, is_key_field=False):
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for _ in range(16))
         
@@ -143,7 +144,7 @@ class GrpcMetaFieldBool(GrpcMetaField):
         super(GrpcMetaFieldBool, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_BOOL
     
-    def generate_data(self):
+    def generate_data(self, key, ext_refs, is_key_field=False):
         return random.choice([True, False])
 
 @GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_ENUM)
@@ -153,6 +154,6 @@ class GrpcMetaFieldEnum(GrpcMetaField):
         super(GrpcMetaFieldEnum, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_ENUM
     
-    def generate_data(self):
+    def generate_data(self, key, ext_refs, is_key_field=False):
         enum_value = random.randint(0, len(self._grpc_field.enum_type.values) - 1)
         return self._grpc_field.enum_type.values[enum_value].name

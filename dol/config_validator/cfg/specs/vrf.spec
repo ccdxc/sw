@@ -8,6 +8,8 @@ objects:
         ignore:
             - op : Get
             - op : Update
+            - op : Create
+            - op : Delete
         create:
             api      : VrfCreate
             request  : VrfRequestMsg

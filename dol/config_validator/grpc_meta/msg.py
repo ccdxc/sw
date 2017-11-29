@@ -3,6 +3,8 @@ import config_mgr
 import types_pb2 # Used to override default object type behaviors.
 import grpc_meta.types as grpc_meta_types
 import infra.common.objects as objects
+from collections import defaultdict
+import random
 
 IpSubnetAllocator   = objects.TemplateFieldObject("ipstep/64.0.0.0/0.1.0.0")
 Ipv6SubnetAllocator = objects.TemplateFieldObject("ipv6step/2000::0:0/0::1:0:0")
@@ -13,9 +15,9 @@ class GrpcMetaMsg:
     _meta_objects_ = {}
     def __init__(self):
         self.fields = dict()
-        self.oneOf = False
         self._ext_refs = []
         self._ext_ref_key_handle = None
+        self.oneof_fields = defaultdict(list)
 
     @classmethod
     def factory(cls, meta_object):
@@ -42,31 +44,53 @@ class GrpcMetaMsg:
                 op_dict[field_name] = meta_field
         return str(op_dict)
     
-    def generate_data(self, key=None, ext_refs=None):
+    def generate_data(self, key=None, ext_refs=None, is_key_field=False):
         op_dict = {}
         #If this message is an external reference field, then return an
         #object. This can happen when there are repeated external reference objects.
         if self._ext_ref_key_handle:
             return config_mgr.GetRandomConfigObjectByKeyType(self._ext_ref_key_handle)
+        # Populate oneOf fields first by choosing a random object.
+        for oneOfKey in self.oneof_fields:
+            oneOfList = self.oneof_fields[oneOfKey]
+            if is_key_field:
+                # If this is a key field, then always choose the first object, because the
+                # convention is to define the key first in such keyHandle objects.
+                # TODO Determine a better way to achieve this.
+                oneOfObj = oneOfList[0]
+            else:
+                # Hack to make some creates work. These need to be moved to callback file.
+                if oneOfKey == 'enic_type_info':
+                    oneOfObj = [e for e in oneOfList if e == 'classicEnicInfo'][0]
+                elif oneOfKey == 'if_info':
+                    oneOfObj = [e for e in oneOfList if e == 'ifEnicInfo'][0]
+                elif oneOfKey == 'endpoint_l2_l3_key':
+                    oneOfObj = [e for e in oneOfList if e == 'l2Key'][0]
+                else:
+                    oneOfObj = random.choice(oneOfList)
+            op_dict[oneOfObj] = self.fields[oneOfObj].generate_data(key,ext_refs)
+            if is_key_field:
+                return op_dict
         for field_name in self.fields:
             meta_field = self.fields[field_name]
             if meta_field.label == descriptor.FieldDescriptor.LABEL_REPEATED:
-                meta_field.type._ext_ref_key_handle = meta_field._ext_ref
-                op_dict[field_name] = [meta_field.type.generate_data(key, ext_refs)]
+                if meta_field.is_ext_ref_field():
+                    assert meta_field._ext_ref in ext_refs
+                    op_dict[field_name] = [ext_refs[meta_field._ext_ref].key_or_handle]
             else:
                 if not meta_field.is_field_handle():
                     #We are generating Data, so don't bother to populate handle field.
-                    if key and  meta_field.is_key_field():
+                    if meta_field.oneOf: # Populated above already.
+                         continue
+                    elif key and  meta_field.is_key_field():
                         op_dict[field_name] = key
-                    elif ext_refs and meta_field.is_ext_ref_field() and \
-                         meta_field._grpc_field.name in ext_refs:
-                        op_dict[field_name] = ext_refs[meta_field._grpc_field.name]
+                    elif ext_refs and meta_field.is_ext_ref_field():
+                        assert meta_field._ext_ref in ext_refs
+                        op_dict[field_name] = ext_refs[meta_field._ext_ref].key_or_handle
                     elif meta_field.is_unique_field():
                         op_dict[field_name] = KeyIdAllocator.get()
                     else:
-                        op_dict[field_name] = meta_field.generate_data()
-                        if self.oneOf:
-                            break
+                        op_dict[field_name] = meta_field.generate_data(key,ext_refs)
         return op_dict
 
 @GrpcMetaMsg.register(types_pb2.IPPrefix)
@@ -85,7 +109,7 @@ class GrpcMetaMsgIpAddress(GrpcMetaMsg):
                 op_dict[field_name] = meta_field
         return str(op_dict)
     
-    def generate_data(self, key=None):
+    def generate_data(self, key=None, ext_refs=None, is_key_field=False):
         op_dict = {
                      "address" : {"ip_af" : 1, "v4_addr" :IpSubnetAllocator.get().getnum()},
                      "prefix_len" : 24
@@ -112,7 +136,7 @@ class GrpcReqRspMsg:
     
     def get_ext_refs(self):
         return self._ext_refs
-
+   
     @staticmethod
     def __get_fields_by_json_name(message):
         message_descriptor = message.DESCRIPTOR
@@ -124,7 +148,6 @@ class GrpcReqRspMsg:
     def __construct_meta_object(self, message):
         meta_obj = GrpcMetaMsg.factory(type(message))
         fields_by_json_name = self.__get_fields_by_json_name(message)
-        #print (fields_by_json_name)
         for field in fields_by_json_name:
             obj = grpc_meta_types.GrpcMetaField(fields_by_json_name[field])
             if fields_by_json_name[field].label == descriptor.FieldDescriptor.LABEL_REPEATED:
@@ -137,7 +160,6 @@ class GrpcReqRspMsg:
                         meta_obj.fields[field]._ext_ref = type(sub_message)
                         self._ext_refs.append(type(sub_message))
             else:
-                #print (field, fields_by_json_name[field].cpp_type)
                 if fields_by_json_name[field].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
                     sub_message = getattr(message, fields_by_json_name[field].name)
                     obj.type = self.__construct_meta_object(sub_message)
@@ -145,11 +167,17 @@ class GrpcReqRspMsg:
                     if grpc_meta_types.is_ext_ref_field(fields_by_json_name[field]):
                         meta_obj.fields[field]._ext_ref = type(sub_message)
                         self._ext_refs.append(type(sub_message))
-                else:
                     if fields_by_json_name[field].containing_oneof:
-                        meta_obj.oneOf = True
+                        obj.oneOf = True
+                        meta_obj.oneof_fields[fields_by_json_name[field].containing_oneof.name].append(field)
+                        meta_obj.fields[field].oneOf = True
+                else:
                     meta_obj.fields[field] = \
                         grpc_meta_types.GrpcMetaField.factory(fields_by_json_name[field].cpp_type)(fields_by_json_name[field])
+                    if fields_by_json_name[field].containing_oneof:
+                        obj.oneOf = True
+                        meta_obj.oneof_fields[fields_by_json_name[field].containing_oneof.name].append(field)
+                        meta_obj.fields[field].oneOf = True
         return meta_obj
     
     @staticmethod
@@ -160,14 +188,13 @@ class GrpcReqRspMsg:
             if fields_by_json_name[field].label == descriptor.FieldDescriptor.LABEL_REPEATED:
                 obj.label = descriptor.FieldDescriptor.LABEL_REPEATED
                 if fields_by_json_name[field].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
-                    #TOOD, for now don't create a new one as its already there.
+                    #TODO, for now don't create a new one as its already there.
                     try:
                         sub_message = getattr(message, fields_by_json_name[field].name)[0]
                     except:
                         return None
                     return GrpcReqRspMsg.__GetObjectHelper(sub_message, object_checker, matched_objs)
             else:
-                #print (field, fields_by_json_name[field].cpp_type)
                 if fields_by_json_name[field].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
                     if object_checker(fields_by_json_name[field]):
                         matched_obj = getattr(message, fields_by_json_name[field].name)

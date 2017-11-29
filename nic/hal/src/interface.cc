@@ -178,7 +178,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 
     if (if_type == intf::IF_TYPE_ENIC) {
         // fetch the vrf information
-        tid = spec.meta().vrf_id();
+        tid = spec.vrf_key_handle().vrf_id();
         vrf = vrf_lookup_by_id(tid);
         if (vrf == NULL) {
             HAL_TRACE_ERR("pi-enicif:{}: invalid tenanit id. tenid:{}, err:{} ",
@@ -402,6 +402,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 if (uplink == NULL) {
                     HAL_TRACE_ERR("pi-enicif:{}:unable to find uplink_hdl:{}",
                                   __FUNCTION__, hal_if->pinned_uplink);
+                    ret = HAL_RET_INVALID_ARG;
                     goto end;
                 }
                 ret = uplink_add_enicif(uplink, hal_if);
@@ -413,6 +414,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 if (nat_l2seg == NULL) {
                     HAL_TRACE_ERR("pi-enicif:{}:unable to find native_l2seg_hdl:{}",
                                   __FUNCTION__, hal_if->native_l2seg_clsc);
+                    ret = HAL_RET_INVALID_ARG;
                     goto end;
                 }
                 ret = l2seg_add_if(nat_l2seg, hal_if);
@@ -427,6 +429,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 HAL_TRACE_ERR("pi-enicif:{}:failed to add l2seg -> enicif "
                               "relation ret:{}", 
                               __FUNCTION__,  ret);
+                ret = HAL_RET_INVALID_ARG;
                 goto end;
             }
         }
@@ -636,7 +639,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     hal_ret_t                   ret = HAL_RET_OK;
     // l2seg_t                     *l2seg = NULL;
     lif_t                       *lif = NULL;
-    if_t                        *hal_if = NULL, *hal_if1 = NULL;
+    if_t                        *hal_if = NULL;
     if_create_app_ctxt_t        app_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
@@ -787,9 +790,6 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                              if_create_commit_cb,
                              if_create_abort_cb, 
                              if_create_cleanup_cb);
-
-    hal_if1 = find_if_by_handle(hal_if->hal_handle);
-    HAL_ASSERT(hal_if == hal_if1);
 
 end:
     if (ret != HAL_RET_OK && hal_if != NULL) {
@@ -1613,7 +1613,7 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     spec->mutable_key_or_handle()->set_interface_id(hal_if->if_id);
     spec->set_type(hal_if->if_type);
     spec->set_admin_status(hal_if->if_admin_status);
-    spec->mutable_meta()->set_vrf_id(hal_if->tid);
+    spec->mutable_vrf_key_handle()->set_vrf_id(hal_if->tid);
     spec->mutable_tx_qos_actions()->mutable_queue_key_or_handle()->
         mutable_queue_handle()->set_handle(hal_if->tx_qos_actions.queue_handle);
     spec->mutable_tx_qos_actions()->mutable_policer_key_or_handle()->
@@ -2137,7 +2137,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
     hal_ret_t           ret = HAL_RET_OK;
     l2seg_t             *l2seg;
     lif_t               *lif;
-    hal_handle_t        l2seg_clsc_handle;
+    L2SegmentKeyHandle  l2seg_clsc_key_handle;
 
     HAL_TRACE_DEBUG("pi-enicif:{}:enicif create for id {} type:{}",
                     __FUNCTION__, 
@@ -2154,7 +2154,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
 
     auto if_enic_info = spec.if_enic_info();
     hal_if->enic_type = if_enic_info.enic_type();
-    hal_if->tid = spec.meta().vrf_id();
+    hal_if->tid = spec.vrf_key_handle().vrf_id();
     hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_handle();
     lif = find_lif_by_handle(hal_if->lif_handle);
 
@@ -2202,16 +2202,16 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
         // Processing l2segments
         HAL_TRACE_DEBUG("pi-enicif:{}:Received {} number of l2segs",
                         __FUNCTION__, 
-                        clsc_enic_info->l2segment_handle_size());
+                        clsc_enic_info->l2segment_key_handle_size());
         utils::dllist_reset(&hal_if->l2seg_list_clsc_head);
-        for (int i = 0; i < clsc_enic_info->l2segment_handle_size();
+        for (int i = 0; i < clsc_enic_info->l2segment_key_handle_size();
                 i++) {
-            l2seg_clsc_handle = clsc_enic_info->l2segment_handle(i);
-            l2seg = find_l2seg_by_handle(l2seg_clsc_handle);
+            l2seg_clsc_key_handle = clsc_enic_info->l2segment_key_handle(i);
+            l2seg = l2seg_lookup_key_or_handle(l2seg_clsc_key_handle);
             if (l2seg == NULL) {
                 HAL_TRACE_ERR("pi-enicif:{}:failed to find l2seg_handle:{}",
                               __FUNCTION__, 
-                              l2seg_clsc_handle);
+                              l2seg_clsc_key_handle.l2segment_handle());
                 ret = HAL_RET_L2SEG_NOT_FOUND;
                 goto end;
             }
@@ -2359,7 +2359,7 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     HAL_TRACE_DEBUG("pi-tunnelif:{}:tunnelif create for id {}", __FUNCTION__, 
                     spec.key_or_handle().interface_id());
-    hal_if->tid = spec.meta().vrf_id();
+    hal_if->tid = spec.vrf_key_handle().vrf_id();
     auto if_tunnel_info = spec.if_tunnel_info();
     hal_if->encap_type = if_tunnel_info.encap_type();
     /* Both source addr and dest addr have to v4 or v6 */
@@ -2406,7 +2406,7 @@ end:
 // validate if delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_if_delete_req (InterfaceDeleteRequest& req, InterfaceDeleteResponseMsg *rsp)
+validate_if_delete_req (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -2722,7 +2722,7 @@ if_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // process a if delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponseMsg *rsp)
+interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     if_t                        *hal_if = NULL;
@@ -2774,7 +2774,7 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponseMsg *rsp)
                              if_delete_cleanup_cb);
 
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: interface delete ");
     return ret;
 }
@@ -2932,7 +2932,7 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
     dllist_ctxt_t                   *lnode = NULL;
     // ep_ip_entry_t                   *pi_ip_entry = NULL;
     bool                            l2seg_exists = false;
-    uint64_t                        l2seg_handle = 0;
+    L2SegmentKeyHandle              l2seg_key_handle;
     l2seg_t                         *l2seg = NULL;
     if_l2seg_entry_t                *entry = NULL, *lentry = NULL;
 
@@ -2951,22 +2951,22 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
     utils::dllist_reset(*add_l2seglist);
     utils::dllist_reset(*del_l2seglist);
 
-    num_l2segs = clsc_enic_info->l2segment_handle_size();
+    num_l2segs = clsc_enic_info->l2segment_key_handle_size();
     HAL_TRACE_DEBUG("pi-enicif:{}:number of l2segs:{}", 
                     __FUNCTION__, num_l2segs);
     for (i = 0; i < num_l2segs; i++) {
-        l2seg_handle = clsc_enic_info->l2segment_handle(i);
-        l2seg = find_l2seg_by_handle(l2seg_handle);
+        l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
+        l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
         HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_INVALID_ARG);
 
-        if (l2seg_in_classic_enicif(hal_if, l2seg_handle, NULL)) {
+        if (l2seg_in_classic_enicif(hal_if, l2seg->hal_handle, NULL)) {
             continue;
         } else {
             // Add to added list
-            enicif_add_to_l2seg_entry_list(*add_l2seglist, l2seg_handle);
+            enicif_add_to_l2seg_entry_list(*add_l2seglist, l2seg->hal_handle);
             *l2seglist_change = true;
             HAL_TRACE_DEBUG("pi-enicif:{}: added to add list hdl: {}", 
-                    __FUNCTION__, l2seg_handle);
+                    __FUNCTION__, l2seg->hal_handle);
         }
     }
 
@@ -2980,9 +2980,9 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
         HAL_TRACE_DEBUG("pi-enicif:{}: Checking for l2seg: {}", 
                 __FUNCTION__, entry->l2seg_handle);
         for (i = 0; i < num_l2segs; i++) {
-            l2seg_handle = clsc_enic_info->l2segment_handle(i);
-            HAL_TRACE_DEBUG("{}:grpc l2seg handle: {}", __FUNCTION__, l2seg_handle);
-            if (entry->l2seg_handle == l2seg_handle) {
+            l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
+            HAL_TRACE_DEBUG("{}:grpc l2seg handle: {}", __FUNCTION__, l2seg->hal_handle);
+            if (entry->l2seg_handle == l2seg_key_handle.l2segment_handle()) {
                 l2seg_exists = true;
                 break;
             } else {

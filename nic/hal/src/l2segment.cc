@@ -898,7 +898,10 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);
         nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
-        HAL_ASSERT_RETURN(nw != NULL, HAL_RET_INVALID_ARG);
+        if (nw == NULL ) {
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
 
         // Add to aggregated list
         hal_add_to_handle_list(*aggr_nwlist, nw->hal_handle);
@@ -1147,7 +1150,7 @@ l2seg_lookup_key_or_handle (const L2SegmentKeyHandle& kh)
 // validate l2seg delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_l2seg_delete_req (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg* rsp)
+validate_l2seg_delete_req (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -1343,7 +1346,7 @@ l2seg_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // process a l2seg delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg *rsp)
+l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     l2seg_t                     *l2seg = NULL;
@@ -1394,7 +1397,7 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg *rsp)
                              l2seg_delete_cleanup_cb);
 
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: l2segment delete ");
     return ret;
 }

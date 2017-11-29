@@ -606,7 +606,7 @@ pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif, dllist_ctxt_t *l2sege_list)
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-enicif:{}:unable to depgm input properties for "
                           "l2seg:{}, if{}",
-                          l2seg->seg_id, 
+                          l2seg ? l2seg->seg_id : HAL_L2SEGMENT_ID_INVALID, 
                           if_get_if_id((if_t *)pd_enicif->pi_if));
         }
     }
@@ -890,15 +890,15 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     om_tmoport.egress_mirror_en    = 1;
     om_tmoport.egress_port1        = tm_oport;
     om_tmoport.p4plus_app_id       = p4plus_app_id;
-    om_tmoport.dst_lif             = pd_lif->hw_lif_id;
-    om_tmoport.rdma_enabled        = lif_get_enable_rdma((lif_t *)
-                                                         pd_lif->pi_lif);
+    om_tmoport.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;
+    om_tmoport.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
+                                                         pd_lif->pi_lif) : false;
     om_tmoport.encap_vlan_id_valid = 1;
     om_tmoport.encap_vlan_id       = if_get_encap_vlan((if_t *)
                                                        pd_enicif->pi_if);
-    om_tmoport.vlan_strip          = pd_enicif_get_vlan_strip((lif_t *)
+    om_tmoport.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
                                                               pd_lif->pi_lif,
-                                                              lif_upd);
+                                                              lif_upd) : false;    
     om_tmoport.access_vlan_id      = access_vlan_classic;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);

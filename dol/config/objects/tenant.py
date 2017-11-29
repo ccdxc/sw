@@ -304,7 +304,7 @@ class TenantObject(base.ConfigObjectBase):
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):
         if get_resp_spec.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
-            self.id = get_resp_spec.spec.meta.vrf_id
+            self.id = get_resp_spec.spec.key_or_handle.vrf_id
             self.security_profile_handle = get_resp_spec.spec.security_profile_handle
         else:
             self.security_profile_handle = None

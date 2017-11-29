@@ -56,8 +56,12 @@ for config_spec in config_specs:
         logger.info("Adding config spec for service : " , config_spec.Service)
         config_mgr.AddConfigSpec(config_spec, hal_channel)
 
+logger.logfile = "./logfile"
 logger.info("Building Config dependency information")
+
 config_mgr.BuildConfigDeps()
+
+config_mgr.SortConfigExternalDeps()
 
 test_specs = parser.ParseDirectory("config_validator/test/specs", "*.spec")
 for test_spec in test_specs:

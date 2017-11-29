@@ -36,6 +36,7 @@ using intf::InterfaceResponseMsg;
 using intf::InterfaceDeleteRequestMsg;
 using intf::InterfaceDeleteRequest;
 using intf::InterfaceDeleteResponseMsg;
+using intf::InterfaceDeleteResponse;
 using intf::InterfaceGetRequest;
 using intf::InterfaceGetRequestMsg;
 using intf::InterfaceGetResponse;
@@ -417,7 +418,7 @@ hal_ret_t get_lif_handle_for_enic_if(intf::InterfaceSpec& spec,
 hal_ret_t get_lif_handle_for_cpu_if(intf::InterfaceSpec& spec,
                                     intf::InterfaceResponse *rsp,
                                     if_t *hal_if);
-if_t *if_get_from_id_handle(const kh::InterfaceKeyHandle *key_handle);
+if_t *if_lookup_key_or_handle(const kh::InterfaceKeyHandle& key_handle);
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
@@ -430,7 +431,7 @@ hal_ret_t interface_create(intf::InterfaceSpec& spec,
 hal_ret_t interface_update(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp);
 hal_ret_t interface_delete(intf::InterfaceDeleteRequest& req,
-                           intf::InterfaceDeleteResponseMsg *rsp);
+                           intf::InterfaceDeleteResponse *rsp);
 hal_ret_t interface_get(intf::InterfaceGetRequest& spec,
                         intf::InterfaceGetResponse *rsp);
 

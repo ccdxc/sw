@@ -91,9 +91,14 @@ message L2SegmentDeleteRequestMsg {
   repeated L2SegmentDeleteRequest request = 1;    // batched delete request
 }
 
+// L2SegmentDeleteResponse is response to L2SegmentDeleteRequest
+message L2SegmentDeleteResponse {
+    types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
 // L2SegmentDeleteResponseMsg is batched response to L2SegmentDeleteRequestMsg
 message L2SegmentDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  repeated L2SegmentDeleteResponse response = 1;
 }
 
 // L2SegmentGetRequest is used to get information about a L2 Segment

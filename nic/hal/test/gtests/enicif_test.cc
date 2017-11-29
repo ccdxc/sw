@@ -74,7 +74,7 @@ TEST_F(enicif_test, test1)
     NetworkSpec                 nw_spec;
     NetworkResponse             nw_rsp;
     InterfaceDeleteRequest      del_req;
-    InterfaceDeleteResponseMsg  del_rsp;
+    InterfaceDeleteResponse     del_rsp;
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;
     NetworkKeyHandle                *nkh = NULL;
@@ -97,7 +97,7 @@ TEST_F(enicif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -131,7 +131,7 @@ TEST_F(enicif_test, test1)
 
     pre = hal_test_utils_collect_slab_stats();
     // Create enicif
-    enicif_spec.mutable_meta()->set_vrf_id(1);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec.mutable_key_or_handle()->set_interface_id(1);
@@ -213,7 +213,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(2);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -288,7 +288,7 @@ TEST_F(enicif_test, test2)
     // pre = hal_test_utils_collect_slab_stats();
 
     // Create enicif with wrong enic info
-    enicif_spec.mutable_meta()->set_vrf_id(2);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
@@ -301,14 +301,16 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create classic enic
-    enicif_spec.mutable_meta()->set_vrf_id(2);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
     enicif_spec.mutable_if_enic_info()->set_pinned_uplink_if_handle(up_hdl);
-    enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_handle(l2seg_hdls[1]);
-    enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_handle(l2seg_hdls[2]);
+    auto l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh->set_l2segment_handle(l2seg_hdls[1]);
+    l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh->set_l2segment_handle(l2seg_hdls[2]);
     enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_hdls[3]);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec, &enicif_rsp);
@@ -316,7 +318,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Update classic enic - Change uplink
-    enicif_spec1.mutable_meta()->set_vrf_id(2);
+    enicif_spec1.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
@@ -385,7 +387,7 @@ TEST_F(enicif_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(3);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -447,7 +449,7 @@ TEST_F(enicif_test, test3)
     // pre = hal_test_utils_collect_slab_stats();
 
     // Create enicif with wrong enic info
-    enicif_spec.mutable_meta()->set_vrf_id(3);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(31);
     enicif_spec.mutable_key_or_handle()->set_interface_id(31);

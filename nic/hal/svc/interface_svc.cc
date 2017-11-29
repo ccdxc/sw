@@ -60,6 +60,7 @@ InterfaceServiceImpl::LifDelete(ServerContext *context,
                                 LifDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
+    LifDeleteResponse     *response;
 
     HAL_TRACE_DEBUG("Received lif delete");
     if (nreqs == 0) {
@@ -68,8 +69,9 @@ InterfaceServiceImpl::LifDelete(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
         auto spec = req->request(i);
-        hal::lif_delete(spec, rsp);
+        hal::lif_delete(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;
@@ -174,6 +176,7 @@ InterfaceServiceImpl::InterfaceDelete(ServerContext *context,
                                       InterfaceDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
+    InterfaceDeleteResponse     *response;
 
     HAL_TRACE_DEBUG("Received if delete");
     if (nreqs == 0) {
@@ -182,8 +185,9 @@ InterfaceServiceImpl::InterfaceDelete(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
         auto spec = req->request(i);
-        hal::interface_delete(spec, rsp);
+        hal::interface_delete(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

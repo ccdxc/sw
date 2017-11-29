@@ -550,6 +550,13 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
                              lif_create_abort_cb, 
                              lif_create_cleanup_cb);
 
+    if (ret != HAL_RET_OK && lif != NULL) {
+        HAL_TRACE_ERR("pi-lif:{}:error in creating lif with id ", __FUNCTION__, lif->lif_id);
+        // if there is an error, lif will be freed in abort CB
+        lif_prepare_rsp(rsp, ret, HAL_HANDLE_INVALID);
+        return ret;
+    }
+
     hw_lif_id = app_ctxt.hw_lif_id; // populated in lif_create_add_cb
     lif_prepare_rsp(rsp, ret, hal_handle);
     rsp->set_hw_lif_id(hw_lif_id);
@@ -569,7 +576,6 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->mutable_rdma_data()->set_pt_base_addr(rdma_lif_pt_base_addr(hw_lif_id));
         rsp->mutable_rdma_data()->set_kt_base_addr(rdma_lif_kt_base_addr(hw_lif_id));
     }
-
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
@@ -914,7 +920,7 @@ end:
 // validate lif delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_lif_delete_req (LifDeleteRequest& req, LifDeleteResponseMsg *rsp)
+validate_lif_delete_req (LifDeleteRequest& req, LifDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -1063,7 +1069,7 @@ lif_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // process a lif delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-lif_delete (LifDeleteRequest& req, LifDeleteResponseMsg *rsp)
+lif_delete (LifDeleteRequest& req, LifDeleteResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     lif_t                       *lif = NULL;
@@ -1114,7 +1120,7 @@ lif_delete (LifDeleteRequest& req, LifDeleteResponseMsg *rsp)
                              lif_delete_cleanup_cb);
 
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }

@@ -11,7 +11,6 @@
 #include "nic/hal/src/utils.hpp"
 
 using l2segment::L2SegmentDeleteRequest;
-using l2segment::L2SegmentDeleteResponseMsg;
 using l2segment::MulticastFwdPolicy;
 using l2segment::BroadcastFwdPolicy;
 using types::L2SegmentType;
@@ -27,6 +26,7 @@ using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponseMsg;
 using l2segment::L2SegmentDeleteRequestMsg;
 using l2segment::L2SegmentDeleteResponseMsg;
+using l2segment::L2SegmentDeleteResponse;
 using l2segment::L2SegmentGetRequest;
 using l2segment::L2SegmentGetRequestMsg;
 using l2segment::L2SegmentGetResponse;
@@ -219,7 +219,7 @@ hal_ret_t l2segment_create(L2SegmentSpec& spec,
 hal_ret_t l2segment_update(L2SegmentSpec& spec,
                            L2SegmentResponse *rsp);
 hal_ret_t l2segment_delete(L2SegmentDeleteRequest& req,
-                           L2SegmentDeleteResponseMsg *rsp);
+                           L2SegmentDeleteResponse *rsp);
 hal_ret_t l2segment_get(l2segment::L2SegmentGetRequest& req,
                         l2segment::L2SegmentGetResponse *rsp);
 

@@ -305,7 +305,7 @@ message SecurityGroupPolicyStatus {
 
 // SecurityGroupResponse is the response to SecurityGroupPolicySpec
 message SecurityGroupPolicyResponse {
-  types.ApiStatus              api_status  = 1;    // API status code
+  types.ApiStatus              api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   SecurityGroupPolicyStatus    status      = 2;    // operational status
 }
 
@@ -326,10 +326,13 @@ message SecurityGroupPolicyDeleteRequestMsg {
   repeated SecurityGroupPolicyDeleteRequest    request = 1;
 }
 
+message SecurityGroupPolicyDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
 // SecurityGroupPolicyDeleteResponseMsg is batched response to
 // SecurityGroupPolicyDeleteRequestMsg
 message SecurityGroupPolicyDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated SecurityGroupPolicyDeleteResponse response = 1;    // API status code
 }
 
 // SecurityGroupPolicyGetRequest is used to get information about a security group policy
@@ -351,7 +354,7 @@ message SecurityGroupPolicyStats {
 
 // SecurityGroupGetResponse captures all the information about a security group
 message SecurityGroupPolicyGetResponse {
-  types.ApiStatus              api_status = 1;    // API status code
+  types.ApiStatus              api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   SecurityGroupPolicySpec      spec       = 2;    // configuration of security policy
   SecurityGroupPolicyStatus    status     = 3;    // operational state of security policy
   SecurityGroupPolicyStats     stats      = 4;    // debug status of security policy
@@ -359,8 +362,8 @@ message SecurityGroupPolicyGetResponse {
 
 // SecurityGroupPolicyGetResponseMsg is batched response to SecurityGroupGetRequestMsg
 message SecurityGroupPolicyGetResponseMsg {
-  types.ApiStatus                            api_status = 1;    // Batch API Statu code
-  repeated SecurityGroupPolicyGetResponse    response   = 2;    // batched get response
+  repeated SecurityGroupPolicyGetResponse    response   = 1;    // batched get response
+  types.ApiStatus                            api_status = 2;    // Batch API Statu code
 }
 
 message SecurityGroupSpec {
@@ -381,7 +384,7 @@ message SecurityGroupStatus {
 
 // SecurityGroupResponse is the response to SecurityGroupSpec
 message SecurityGroupResponse {
-  types.ApiStatus        api_status  = 1;    // API status code
+  types.ApiStatus        api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   SecurityGroupStatus    status      = 2;    // operational status
 }
 
@@ -405,7 +408,7 @@ message SecurityGroupDeleteRequestMsg {
 // SecurityGroupDeleteResponseMsg is batched response to
 // SecurityGroupDeleteRequestMsg
 message SecurityGroupDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
 
 // SecurityGroupGetRequest is used to get information about a security group
@@ -426,7 +429,7 @@ message SecurityGroupStats {
 
 // SecurityGroupGetResponse captures all the information about a security group
 message SecurityGroupGetResponse {
-  types.ApiStatus        api_status = 1;    // API status code
+  types.ApiStatus        api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   SecurityGroupSpec      spec       = 2;    // configuration of security group
   SecurityGroupStatus    status     = 3;    // operational state of security group
   SecurityGroupStats     stats      = 4;    // debug status of security group
@@ -434,8 +437,8 @@ message SecurityGroupGetResponse {
 
 // SecurityGroupGetResponseMsg is batched response to SecurityGroupGetRequestMsg
 message SecurityGroupGetResponseMsg {
-  types.ApiStatus                      api_status = 1;    // batch status
-  repeated SecurityGroupGetResponse    response   = 2;    // batched get response
+  repeated SecurityGroupGetResponse    response   = 1;    // batched get response
+  types.ApiStatus                      api_status = 2;    // batch status
 }
 
 message ICMPMsg {
@@ -536,7 +539,7 @@ message DoSPolicyStatus {
 
 // DoSResponse is the response to DoSPolicySpec
 message DoSPolicyResponse {
-  types.ApiStatus       api_status  = 1;    // API status code
+  types.ApiStatus       api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   DoSPolicyStatus       status      = 2;    // operational status
 }
 
@@ -556,10 +559,14 @@ message DoSPolicyDeleteRequestMsg {
   repeated DoSPolicyDeleteRequest    request = 1;
 }
 
+message DoSPolicyDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
 // DoSPolicyDeleteResponseMsg is batched response to
 // DoSPolicyDeleteRequestMsg
 message DoSPolicyDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated DoSPolicyDeleteResponse response = 1;
 }
 
 // DoSGetRequest is used to get information about a DoS
@@ -579,7 +586,7 @@ message DoSPolicyStats {
 
 // DoSGetResponse captures all the information about a security group
 message DoSPolicyGetResponse {
-  types.ApiStatus         api_status = 1;    // API status code
+  types.ApiStatus         api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   DoSPolicySpec           spec       = 2;    // configuration of DoS
   DoSPolicyStatus         status     = 3;    // operational state of DoS
   DoSPolicyStats          stats      = 4;    // debug status of DoS

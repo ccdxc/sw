@@ -6,6 +6,10 @@ objects:
     - object : 
         name : SecurityProfile
         ignore:
+            - op : Create
+            - op : Get
+            - op : Delete
+            - op : Update
         create:
             api      : SecurityProfileCreate
             request  : SecurityProfileRequestMsg
@@ -33,6 +37,7 @@ objects:
     - object : 
         name : SecurityGroup
         ignore:
+            - op : Create
             - op : Get
             - op : Delete
             - op : Update
@@ -63,6 +68,7 @@ objects:
     - object : 
         name : SecurityGroupPolicy
         ignore:
+            - op : Create
             - op : Delete
             - op : Get
             - op : Update

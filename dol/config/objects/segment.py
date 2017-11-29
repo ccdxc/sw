@@ -287,7 +287,6 @@ class SegmentObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.vrf_id = self.tenant.id
         req_spec.key_or_handle.segment_id = self.id
         req_spec.vrf_key_handle.vrf_id = self.tenant.id
         if self.IsTenantSegment() or self.IsSpanSegment():

@@ -794,7 +794,7 @@ hal_mem_db::init(void)
     HAL_ASSERT_RETURN((if_slab_ != NULL), false);
 
     // initialize enic l2seg entry related data structures
-    enic_l2seg_entry_slab_ = slab::factory("interface", HAL_SLAB_IF,
+    enic_l2seg_entry_slab_ = slab::factory("interface", HAL_SLAB_ENIC_L2SEG_ENTRY,
                              sizeof(hal::if_l2seg_entry_t), 16,
                              false, true, true, true);
     HAL_ASSERT_RETURN((enic_l2seg_entry_slab_ != NULL), false);

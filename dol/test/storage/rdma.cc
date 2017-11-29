@@ -150,7 +150,7 @@ int CreateL2Segment(uint32_t ten_id, uint32_t l2_seg_id, uint64_t *handle) {
   l2segment::L2SegmentResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_meta()->set_vrf_id(ten_id);
+  req->mutable_vrf_key_handle()->set_vrf_id(ten_id);
   req->mutable_vrf_key_handle()->set_vrf_id(ten_id);
   req->mutable_key_or_handle()->set_segment_id(l2_seg_id);
   req->mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -172,7 +172,7 @@ int CreateEnicif(uint32_t ten_id, uint32_t lif_id, uint32_t if_id,
   intf::InterfaceResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_meta()->set_vrf_id(ten_id);
+  req->mutable_vrf_key_handle()->set_vrf_id(ten_id);
   req->set_type(intf::IF_TYPE_ENIC);
   req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
   req->mutable_key_or_handle()->set_interface_id(if_id);
@@ -196,10 +196,10 @@ int CreateEP(uint32_t ten_id, uint64_t l2seg_handle, uint64_t if_handle,
   endpoint::EndpointResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_meta()->set_vrf_id(ten_id);
-  req->mutable_l2_key()->set_l2_segment_handle(l2seg_handle);
-  req->mutable_endpoint_attrs()->set_interface_handle(if_handle);
-  req->mutable_l2_key()->set_mac_address(mac_addr);
+  req->mutable_vrf_key_handle()->set_vrf_id(ten_id);
+  req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_handle);
+  req->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_handle);
+  req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac_addr);
   req->mutable_endpoint_attrs()->add_ip_address();
   req->mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
   req->mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip_addr);

@@ -100,7 +100,7 @@ TEST_F(session_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -112,7 +112,7 @@ TEST_F(session_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(1);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -150,7 +150,7 @@ TEST_F(session_test, test1)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_vrf_id(1);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -160,7 +160,7 @@ TEST_F(session_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_vrf_id(1);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(2);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -171,10 +171,10 @@ TEST_F(session_test, test1)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_vrf_id(1);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
@@ -183,10 +183,10 @@ TEST_F(session_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_vrf_id(1);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
@@ -278,7 +278,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(2);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
@@ -289,7 +289,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(2);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(2);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xb0000000);
@@ -337,7 +337,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec1.mutable_meta()->set_vrf_id(2);
+    enicif_spec1.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
@@ -351,7 +351,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 if_hdl1 = enicif_rsp1.mutable_status()->if_handle();
 
-    enicif_spec2.mutable_meta()->set_vrf_id(2);
+    enicif_spec2.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec2.set_type(intf::IF_TYPE_ENIC);
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(22);
@@ -367,10 +367,10 @@ TEST_F(session_test, test2)
 
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_vrf_id(2);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl1);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
@@ -379,10 +379,10 @@ TEST_F(session_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_vrf_id(2);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
@@ -391,10 +391,10 @@ TEST_F(session_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ep_spec2.mutable_meta()->set_vrf_id(2);
-    ep_spec2.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec2.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
-    ep_spec2.mutable_l2_key()->set_mac_address(0x00000001ABCD);
+    ep_spec2.mutable_vrf_key_handle()->set_vrf_id(2);
+    ep_spec2.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec2.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl1);
+    ep_spec2.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000001ABCD);
     ep_spec2.mutable_endpoint_attrs()->add_ip_address();
     ep_spec2.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec2.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3);  // 10.0.0.1
@@ -403,10 +403,10 @@ TEST_F(session_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec3.mutable_meta()->set_vrf_id(2);
-    ep_spec3.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec3.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
-    ep_spec3.mutable_l2_key()->set_mac_address(0x000000011234);
+    ep_spec3.mutable_vrf_key_handle()->set_vrf_id(2);
+    ep_spec3.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec3.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl2);
+    ep_spec3.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000011234);
     ep_spec3.mutable_endpoint_attrs()->add_ip_address();
     ep_spec3.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec3.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip4);  // 10.0.0.1
@@ -520,7 +520,7 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(3);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
@@ -532,7 +532,7 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(3);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
@@ -577,7 +577,7 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec1.mutable_meta()->set_vrf_id(3);
+    enicif_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(5);
@@ -591,7 +591,7 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 if_hdl1 = enicif_rsp1.mutable_status()->if_handle();
 
-    enicif_spec2.mutable_meta()->set_vrf_id(3);
+    enicif_spec2.mutable_vrf_key_handle()->set_vrf_id(3);
     enicif_spec2.set_type(intf::IF_TYPE_ENIC);
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(6);
@@ -607,10 +607,10 @@ TEST_F(session_test, test3)
 
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_vrf_id(3);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(3);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl1);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
@@ -619,10 +619,10 @@ TEST_F(session_test, test3)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_vrf_id(3);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip2);
@@ -698,7 +698,7 @@ TEST_F(session_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(4);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -710,7 +710,7 @@ TEST_F(session_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(4);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(4);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -748,7 +748,7 @@ TEST_F(session_test, test4)
     uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_vrf_id(4);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(41);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -758,7 +758,7 @@ TEST_F(session_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_vrf_id(4);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(42);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -769,10 +769,10 @@ TEST_F(session_test, test4)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_vrf_id(4);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(4);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
@@ -781,10 +781,10 @@ TEST_F(session_test, test4)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_vrf_id(4);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(4);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
@@ -882,7 +882,7 @@ TEST_F(session_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(5);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -894,7 +894,7 @@ TEST_F(session_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(5);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -932,7 +932,7 @@ TEST_F(session_test, test5)
     uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_vrf_id(5);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(51);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -942,7 +942,7 @@ TEST_F(session_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_vrf_id(1);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(52);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -953,10 +953,10 @@ TEST_F(session_test, test5)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_vrf_id(5);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
@@ -965,10 +965,10 @@ TEST_F(session_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_vrf_id(5);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
@@ -1041,7 +1041,7 @@ TEST_F(session_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(6);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(6);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -1053,7 +1053,7 @@ TEST_F(session_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(6);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -1091,7 +1091,7 @@ TEST_F(session_test, test6)
     uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_vrf_id(6);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(6);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(61);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -1101,7 +1101,7 @@ TEST_F(session_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_vrf_id(6);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(6);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(62);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -1113,10 +1113,10 @@ TEST_F(session_test, test6)
 
     // Create 2 Endpoints
     // CIP
-    ep_spec.mutable_meta()->set_vrf_id(6);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(6);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);
@@ -1127,10 +1127,10 @@ TEST_F(session_test, test6)
     
 #if 0
     // VIP
-    ep_spec1.mutable_meta()->set_vrf_id(6);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);
@@ -1141,10 +1141,10 @@ TEST_F(session_test, test6)
 #endif
 
     // PIP
-    ep_spec1.mutable_meta()->set_vrf_id(6);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001235);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001235);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3); 
@@ -1229,7 +1229,7 @@ TEST_F(session_test, test7)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(7);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(7);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -1241,7 +1241,7 @@ TEST_F(session_test, test7)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(7);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(7);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -1279,7 +1279,7 @@ TEST_F(session_test, test7)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_vrf_id(7);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(7);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(71);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -1289,7 +1289,7 @@ TEST_F(session_test, test7)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_vrf_id(7);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(7);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(72);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -1300,10 +1300,10 @@ TEST_F(session_test, test7)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_vrf_id(7);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(7);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
@@ -1312,10 +1312,10 @@ TEST_F(session_test, test7)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_vrf_id(7);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(7);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
@@ -1392,7 +1392,7 @@ TEST_F(session_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(8);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -1404,7 +1404,7 @@ TEST_F(session_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(8);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(8);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -1442,7 +1442,7 @@ TEST_F(session_test, test8)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_vrf_id(8);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(81);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -1452,7 +1452,7 @@ TEST_F(session_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_vrf_id(8);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(82);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -1464,10 +1464,10 @@ TEST_F(session_test, test8)
 
     // Create 2 Endpoints
     // CIP
-    ep_spec.mutable_meta()->set_vrf_id(8);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(8);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);
@@ -1478,10 +1478,10 @@ TEST_F(session_test, test8)
     
 #if 0
     // VIP
-    ep_spec1.mutable_meta()->set_vrf_id(6);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);
@@ -1492,10 +1492,10 @@ TEST_F(session_test, test8)
 #endif
 
     // PIP
-    ep_spec1.mutable_meta()->set_vrf_id(8);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001235);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(8);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001235);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3); 
@@ -1597,7 +1597,7 @@ TEST_F(session_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(9);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(9);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -1609,7 +1609,7 @@ TEST_F(session_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(9);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(9);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -1647,7 +1647,7 @@ TEST_F(session_test, test9)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_vrf_id(9);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(9);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(91);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -1657,7 +1657,7 @@ TEST_F(session_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_vrf_id(9);
+    up_spec.mutable_vrf_key_handle()->set_vrf_id(9);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(92);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -1668,10 +1668,10 @@ TEST_F(session_test, test9)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_vrf_id(9);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(9);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
@@ -1680,10 +1680,10 @@ TEST_F(session_test, test9)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_vrf_id(9);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(9);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
@@ -1764,7 +1764,7 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(10);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(10);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
@@ -1776,7 +1776,7 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_vrf_id(10);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(10);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
@@ -1821,7 +1821,7 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec1.mutable_meta()->set_vrf_id(10);
+    enicif_spec1.mutable_vrf_key_handle()->set_vrf_id(10);
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(102);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(101);
@@ -1835,7 +1835,7 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 if_hdl1 = enicif_rsp1.mutable_status()->if_handle();
 
-    enicif_spec2.mutable_meta()->set_vrf_id(10);
+    enicif_spec2.mutable_vrf_key_handle()->set_vrf_id(10);
     enicif_spec2.set_type(intf::IF_TYPE_ENIC);
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(102);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(102);
@@ -1851,10 +1851,10 @@ TEST_F(session_test, test10)
 
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_vrf_id(10);
-    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
-    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(10);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl1);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
@@ -1863,10 +1863,10 @@ TEST_F(session_test, test10)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_vrf_id(10);
-    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
-    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_vrf_key_handle()->set_vrf_id(10);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(if_hdl2);
+    ep_spec1.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x000000001234);
     ep_spec1.mutable_endpoint_attrs()->add_ip_address();
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
     ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip2);

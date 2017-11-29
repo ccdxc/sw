@@ -72,7 +72,7 @@ TEST_F(nw_test, test1)
     L2SegmentSpec                   l2seg_spec, l2seg_spec1;
     L2SegmentResponse               l2seg_rsp, l2seg_rsp1;
     L2SegmentDeleteRequest          del_req;
-    L2SegmentDeleteResponseMsg      del_rsp;
+    L2SegmentDeleteResponse      del_rsp;
     InterfaceSpec                   enicif_spec;
     InterfaceResponse               enicif_rsp;
     NetworkSpec                     nw_spec, nw_spec_v6;
@@ -115,7 +115,7 @@ TEST_F(nw_test, test1)
 
 #if 0
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -127,7 +127,7 @@ TEST_F(nw_test, test1)
 
     for (int i = 0; i < 10; i++) {
         // Create network
-        nw_spec.mutable_meta()->set_vrf_id(1);
+        nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
         nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
         nw_spec.set_rmac(0x0000DEADBEEF);
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
@@ -140,7 +140,7 @@ TEST_F(nw_test, test1)
         nw_v4handles[i] = nw_rsp.mutable_status()->nw_handle();
 
         // Create v6 network
-        nw_spec_v6.mutable_meta()->set_vrf_id(1);
+        nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(1);
         nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(1);
         nw_spec_v6.set_rmac(0x0000DEADBEEF);
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
@@ -157,7 +157,7 @@ TEST_F(nw_test, test1)
 
     // Duplicate create
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
@@ -169,7 +169,7 @@ TEST_F(nw_test, test1)
     ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
 
     // Create v6 network
-    nw_spec_v6.mutable_meta()->set_vrf_id(1);
+    nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec_v6.set_rmac(0x0000DEADBEEF);
     nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
@@ -182,7 +182,7 @@ TEST_F(nw_test, test1)
 
     for (int i = 0; i < 10; i++) {
         // Remove network
-        nw_del_req.mutable_meta()->set_vrf_id(1);
+        nw_del_req.mutable_vrf_key_handle()->set_vrf_id(1);
         nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v4handles[i]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_delete(nw_del_req, &nw_del_rsp);
@@ -190,7 +190,7 @@ TEST_F(nw_test, test1)
         ASSERT_TRUE(ret == HAL_RET_OK);
 
         // Remove v6 network
-        nw_del_req.mutable_meta()->set_vrf_id(1);
+        nw_del_req.mutable_vrf_key_handle()->set_vrf_id(1);
         nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v6handles[i]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_delete(nw_del_req, &nw_del_rsp);

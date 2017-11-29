@@ -97,7 +97,7 @@ TEST_F(uplinkif_test, test2)
     InterfaceSpec               spec;
     InterfaceResponse           rsp;
     InterfaceDeleteRequest      del_req;
-    InterfaceDeleteResponseMsg  del_rsp;
+    InterfaceDeleteResponse  del_rsp;
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;
     mtrack_info_t               *pre_minfo, *post_minfo;
@@ -162,7 +162,7 @@ TEST_F(uplinkif_test, test3)
     InterfaceL2SegmentSpec          if_l2seg_spec;
     InterfaceL2SegmentResponse      if_l2seg_rsp;
     InterfaceDeleteRequest          del_req;
-    InterfaceDeleteResponseMsg      del_rsp;
+    InterfaceDeleteResponse      del_rsp;
     SecurityProfileSpec             sp_spec;
     SecurityProfileResponse         sp_rsp;
     NetworkSpec                     nw_spec;
@@ -187,7 +187,7 @@ TEST_F(uplinkif_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -269,7 +269,7 @@ TEST_F(uplinkif_test, test4)
     InterfaceSpec                   spec;
     InterfaceResponse               rsp;
     InterfaceDeleteRequest          del_req;
-    InterfaceDeleteResponseMsg      del_rsp;
+    InterfaceDeleteResponse      del_rsp;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
 
@@ -314,13 +314,13 @@ TEST_F(uplinkif_test, test5)
     L2SegmentSpec                   l2seg_spec;
     L2SegmentResponse               l2seg_rsp;
     L2SegmentDeleteRequest          l2seg_del_req;
-    L2SegmentDeleteResponseMsg      l2seg_del_rsp;
+    L2SegmentDeleteResponse      l2seg_del_rsp;
     VrfSpec                      ten_spec;
     VrfResponse                  ten_rsp;
     InterfaceL2SegmentSpec          if_l2seg_spec;
     InterfaceL2SegmentResponse      if_l2seg_rsp;
     InterfaceDeleteRequest          del_req;
-    InterfaceDeleteResponseMsg      del_rsp;
+    InterfaceDeleteResponse      del_rsp;
     SecurityProfileSpec             sp_spec;
     SecurityProfileResponse         sp_rsp;
     NetworkSpec                     nw_spec;
@@ -351,7 +351,7 @@ TEST_F(uplinkif_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(5);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);

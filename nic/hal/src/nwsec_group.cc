@@ -11,6 +11,21 @@
 
 namespace hal {
 
+nwsec_group_t *
+nwsec_group_lookup_key_or_handle(const kh::SecurityGroupKeyHandle& key_or_handle)
+{
+    if (key_or_handle.key_or_handle_case() == 
+            kh::SecurityGroupKeyHandle::kSecurityGroupId) {
+        return nwsec_group_lookup_by_key(key_or_handle.security_group_id());
+    }
+    if (key_or_handle.key_or_handle_case() == 
+            kh::SecurityGroupKeyHandle::kSecurityGroupHandle) {
+        return nwsec_group_lookup_by_handle(key_or_handle.security_group_handle());
+    }
+
+    return NULL;
+}
+
 // Security Group Policy Related
 void *
 nwsec_policy_cfg_get_key_func (void *entry)

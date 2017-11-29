@@ -140,7 +140,6 @@ message LifSpec {
   uint32                     rdma_max_keys           = 9;    // RDMA: max key entries
   uint32                     rdma_max_pt_entries     = 10;    // RDMA: max pt entries
   repeated QStateSetReq      lif_qstate              = 11;   // Initialize Qstate
-  kh.VrfKeyHandle            vrf_key_handle          = 12 [(gogoproto.jsontag) = "ref"];
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -168,7 +167,7 @@ message LifRdmaData {
 
 // LifResponse response to one LifSpec
 message LifResponse {
-  types.ApiStatus     api_status   = 1;    // API status code
+  types.ApiStatus     api_status   = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   LifStatus           status       = 2;    // operational status
   uint64              hw_lif_id    = 3;    // Hardware Lif Id
   repeated LifQState  qstate       = 4;    // Qstate Address info
@@ -251,7 +250,6 @@ message LifDeleteRequest {
   types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is LIF's unique identifier for deletion
   kh.LifKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.VrfKeyHandle vrf_key_handle = 3 [(gogoproto.jsontag) = "ref"];
 }
 
 // LifDeleteRequestMsg is used to delete a batch of LIFs
@@ -259,9 +257,14 @@ message LifDeleteRequestMsg {
   repeated LifDeleteRequest    request = 1;    // batched delete request
 }
 
+// LifDeleteResponse is response to LIF delete request
+message LifDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
 // LifDeleteResponseMsg is batched response to LifDeleteRequestMsg
 message LifDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated LifDeleteResponse response = 1;
 }
 
 // check which stats will be done by p4 and which will be done by p4+
@@ -312,7 +315,6 @@ message LifGetRequest {
   // key_or_handle  is lif's unique identifier for retrieval
   kh.LifKeyHandle  key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
   LifStats         stats          = 3;    // LIF statistics
-  kh.VrfKeyHandle  vrf_key_handle = 4 [(gogoproto.jsontag) = "ref"];
 }
 
 message LifGetRequestMsg {
@@ -321,7 +323,7 @@ message LifGetRequestMsg {
 
 // LifGetResponse captures all the information about a LIF
 message LifGetResponse {
-  types.ApiStatus           api_status = 1;    // API status code
+  types.ApiStatus           api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   LifSpec                   spec       = 2;    // LIF configuration
   LifStatus                 status     = 3;    // LIF operational status
   LifStats                  stats      = 4;    // LIF statistics
@@ -363,9 +365,8 @@ message EnicInfo {
 }
 
 message EnicClassicInfo {
-    repeated uint64       l2segment_handle              = 1; // classic: l2segs allowed on the enic
+    repeated kh.L2SegmentKeyHandle l2segment_key_handle = 1 [(gogoproto.jsontag) = "ref"]; // classic: l2segs allowed on the enic
     uint64                native_l2segment_handle       = 2; // classic: native l2seg on the enic
-    repeated kh.L2SegmentKeyHandle l2segment_key_handle = 3 [(gogoproto.jsontag) = "ref"];
 }
 
 // mandatory attributes expected if interface type is IF_TYPE_ENIC
@@ -439,18 +440,18 @@ message IfCPUInfo {
 message InterfaceSpec {
   types.ObjectMeta   meta              = 1;     // object meta
   kh.InterfaceKeyHandle key_or_handle  = 2 [(gogoproto.jsontag) = "key"];     // interface being created/updated
-  IfType             type              = 3;     // type of interface
-  IfStatus           admin_status      = 4;     // admin status of the interface
+  kh.VrfKeyHandle      vrf_key_handle  = 3 [(gogoproto.jsontag) = "ref"];
+  IfType             type              = 4;     // type of interface
+  IfStatus           admin_status      = 5;     // admin status of the interface
   oneof if_info {
-    IfEnicInfo       if_enic_info      = 5;     // enic data if interface type is IF_TYPE_ENIC
-    IfUplinkInfo     if_uplink_info    = 6;     // uplink port number if interface type is IF_TYPE_UPLINK
-    IfUplinkPCInfo   if_uplink_pc_info = 7;     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
-    IfTunnelInfo     if_tunnel_info    = 8;     // tunnel interface information
-    IfCPUInfo        if_cpu_info       = 9;     // cpu interface informaton 
+    IfEnicInfo       if_enic_info      = 6;     // enic data if interface type is IF_TYPE_ENIC
+    IfUplinkInfo     if_uplink_info    = 7;     // uplink port number if interface type is IF_TYPE_UPLINK
+    IfUplinkPCInfo   if_uplink_pc_info = 8;     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+    IfTunnelInfo     if_tunnel_info    = 9;     // tunnel interface information
+    IfCPUInfo        if_cpu_info       = 10;     // cpu interface informaton 
   }
-  qos.QOSActions     tx_qos_actions    = 10;    // QOS actions for packets transmitted from this interface
-  qos.QOSActions     rx_qos_actions    = 11;    // QOS actions for packets received on this interface
-  kh.VrfKeyHandle      vrf_key_handle  = 12 [(gogoproto.jsontag) = "ref"];
+  qos.QOSActions     tx_qos_actions    = 11;    // QOS actions for packets transmitted from this interface
+  qos.QOSActions     rx_qos_actions    = 12;    // QOS actions for packets received on this interface
 }
 
 // InterfaceRequestMsg is batched request message that is used to do
@@ -467,7 +468,7 @@ message InterfaceStatus {
 
 // InterfaceResponse is response to one InterfaceSpec
 message InterfaceResponse {
-  types.ApiStatus    api_status  = 1;    // API status code
+  types.ApiStatus    api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   InterfaceStatus    status      = 2;    // operational status
 }
 
@@ -488,9 +489,14 @@ message InterfaceDeleteRequestMsg {
   repeated InterfaceDeleteRequest    request = 1;   // batched delete request
 }
 
+// InterfaceDeleteResponse is batched response to InterfaceDeleteRequest
+message InterfaceDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];      // API status code 
+}
+
 // InterfaceDeleteResponseMsg is batched response to InterfaceDeleteRequestMsg
 message InterfaceDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;      // API status code
+  repeated InterfaceDeleteResponse response = 1;
 }
 
 // InterfaceStats captures all the statistics of given interface
@@ -515,7 +521,7 @@ message InterfaceGetRequestMsg {
 
 // InterfaceGetResponse captures all the information about a interface
 message InterfaceGetResponse {
-  types.ApiStatus    api_status = 1;    // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
   InterfaceSpec      spec       = 2;    // interface specification/configuration
   InterfaceStatus    status     = 3;    // interface status
   InterfaceStats     stats      = 4;    // interface statistics

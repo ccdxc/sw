@@ -1,5 +1,5 @@
 Name: Create_Update
-MaxObjects: 50
+MaxObjects: 10
 Enabled: True
 Steps :
     - step:

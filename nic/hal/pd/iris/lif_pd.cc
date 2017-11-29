@@ -50,7 +50,7 @@ end:
     if (ret != HAL_RET_OK) {
         lif_pd_cleanup(pd_lif);
     }
-    return HAL_RET_OK;
+    return ret;
 }
 
 //-----------------------------------------------------------------------------

@@ -16,7 +16,7 @@
 using intf::LifSpec;
 using intf::LifResponse;
 using intf::LifDeleteRequest;
-using intf::LifDeleteResponseMsg;
+using intf::LifDeleteResponse;
 using intf::LifGetRequest;
 using intf::LifGetResponse;
 
@@ -192,7 +192,7 @@ hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,
                      lif_hal_info_t *lif_hal_info);
 hal_ret_t lif_update(LifSpec& spec, LifResponse *rsp);
 hal_ret_t lif_delete(LifDeleteRequest& req,
-                     LifDeleteResponseMsg *rsp);
+                     LifDeleteResponse *rsp);
 hal_ret_t lif_get(LifGetRequest& req, LifGetResponse *rsp);
 
 }    // namespace hal

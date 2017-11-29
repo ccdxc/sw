@@ -936,7 +936,7 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
     }
 
     // retrieve network object
-    nw = network_lookup_key_or_handle(kh, spec.meta().vrf_id());
+    nw = network_lookup_key_or_handle(kh, spec.vrf_key_handle().vrf_id());
     if (nw == NULL) {
         HAL_TRACE_ERR("pi-network:{}:failed to find nw handle {}",
                       __FUNCTION__, kh.nw_handle());
@@ -995,8 +995,8 @@ network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
     ip_prefix_t           ip_pfx = { 0 };
     network_t             *nw;
 
-    if (!req.has_meta() ||
-        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!req.has_vrf_key_handle() ||
+        req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -1029,7 +1029,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
     }
 
     // fill config spec of this vrf
-    rsp->mutable_spec()->mutable_meta()->set_vrf_id(nw->nw_key.vrf_id);
+    rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
     rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
 
     rsp->set_api_status(types::API_STATUS_OK);

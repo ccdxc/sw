@@ -98,10 +98,17 @@ message PortDeleteRequestMsg {
 }
 
 //------------------------------------------------------------------------------
+// PortDeleteResponse is response to PortDeleteRequest
+//------------------------------------------------------------------------------
+message PortDeleteResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
+//------------------------------------------------------------------------------
 // PortDeleteResponseMsg is batched response to PortDeleteRequestMsg
 //------------------------------------------------------------------------------
 message PortDeleteResponseMsg {
-  repeated types.ApiStatus  api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  repeated PortDeleteResponse response = 1;
 }
 
 // PortStats captures all the statistics of given Port

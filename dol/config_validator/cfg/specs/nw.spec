@@ -8,6 +8,8 @@ objects:
         ignore:
             - op : Get
             - op : Update
+            - op : Delete
+            - op : Create
         create:
             api      : NetworkCreate
             request  : NetworkRequestMsg

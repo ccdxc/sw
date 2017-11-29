@@ -147,6 +147,9 @@ if_get_hw_lif_id(if_t *pi_if)
             HAL_ASSERT(pi_lif != NULL);
 
             pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
+            if (!pd_lif) {
+                return INVALID_INDEXER_INDEX;
+            }
             HAL_ASSERT(pi_lif != NULL);
 
             hw_lif_id =  pd_lif->hw_lif_id;

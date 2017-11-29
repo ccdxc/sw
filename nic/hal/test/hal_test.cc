@@ -40,6 +40,7 @@ using port::PortGetResponseMsg;
 using port::PortDeleteRequest;
 using port::PortDeleteRequestMsg;
 using port::PortDeleteResponseMsg;
+using port::PortDeleteResponse;
 
 using event::Event;
 using event::EventRequest;
@@ -198,7 +199,7 @@ public:
     int port_delete(uint32_t vrf_id, uint32_t port_id) {
         PortDeleteRequest      *req;
         PortDeleteRequestMsg   req_msg;
-        PortDeleteResponseMsg  rsp_msg;
+        PortDeleteResponseMsg     rsp_msg;
         ClientContext          context;
         Status                 status;
 
@@ -210,7 +211,7 @@ public:
         status = port_stub_->PortDelete(&context, req_msg, &rsp_msg);
         if (status.ok()) {
             if (port_handle_api_status(
-                    rsp_msg.api_status(0), port_id) == true) {
+                    rsp_msg.response(0).api_status(), port_id) == true) {
                 std::cout << "Port Delete succeeded for port "
                           << port_id << std::endl;
             }
@@ -221,7 +222,7 @@ public:
         std::cout << "Port Delete failed for port"
                   << port_id
                   << " , error = "
-                  << rsp_msg.api_status(0)
+                  << rsp_msg.response(0).api_status()
                   << std::endl;
         return -1;
     }

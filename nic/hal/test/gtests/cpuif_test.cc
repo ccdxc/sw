@@ -73,7 +73,7 @@ TEST_F(cpuif_test, test1)
     NetworkSpec                 nw_spec;
     NetworkResponse             nw_rsp;
     InterfaceDeleteRequest      del_req;
-    InterfaceDeleteResponseMsg  del_rsp;
+    InterfaceDeleteResponse     del_rsp;
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;
 
@@ -95,7 +95,7 @@ TEST_F(cpuif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -122,7 +122,7 @@ TEST_F(cpuif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create cpuif
-    cpuif_spec.mutable_meta()->set_vrf_id(1);
+    cpuif_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     cpuif_spec.set_type(intf::IF_TYPE_CPU);
     cpuif_spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     cpuif_spec.mutable_key_or_handle()->set_interface_id(1);

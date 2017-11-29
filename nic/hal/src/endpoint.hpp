@@ -22,6 +22,7 @@ using endpoint::EndpointRequestMsg;
 using endpoint::EndpointResponseMsg;
 using endpoint::EndpointDeleteRequestMsg;
 using endpoint::EndpointDeleteResponseMsg;
+using endpoint::EndpointDeleteResponse;
 using endpoint::EndpointGetRequest;
 using endpoint::EndpointGetRequestMsg;
 using endpoint::EndpointGetResponse;
@@ -31,7 +32,8 @@ using endpoint::EndpointUpdateResponseMsg;
 using endpoint::EndpointUpdateRequest;
 using kh::EndpointKeyHandle;
 using endpoint::EndpointDeleteRequest;
-using endpoint::EndpointDeleteResponseMsg;
+using kh::EndpointL2Key;
+using kh::EndpointKey;
 
 using hal::utils::ht_ctxt_t;
 using endpoint::EndpointVMotionState;
@@ -302,11 +304,10 @@ hal_ret_t endpoint_cleanup_ip_list(dllist_ctxt_t **list);
 void ep_print_ips(ep_t *ep);
 const char *ep_l2_key_to_str(ep_t *ep);
 
-// Endpoint service CRUD APIs
 hal_ret_t endpoint_create(EndpointSpec& spec, EndpointResponse *rsp);
 hal_ret_t endpoint_update(EndpointUpdateRequest& spec, EndpointResponse *rsp);
 hal_ret_t endpoint_delete(EndpointDeleteRequest& spec, 
-                          EndpointDeleteResponseMsg *rsp);
+                          EndpointDeleteResponse *rsp);
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
 }    // namespace hal

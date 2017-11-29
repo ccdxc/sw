@@ -1,6 +1,6 @@
 ProtoObject: l2segment_pb2
 Service: L2Segment
-enabled: False
+enabled: True
 graphEnabled : True
 objects:
     - object:
@@ -8,6 +8,8 @@ objects:
         ignore:
             - op : Get
             - op : Update
+            - op : Delete
+            - op : Create
         create:
             api      : L2SegmentCreate
             request  : L2SegmentRequestMsg

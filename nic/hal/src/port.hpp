@@ -10,8 +10,6 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 
-using port::PortDeleteRequest;
-using port::PortDeleteResponseMsg;
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
@@ -26,7 +24,9 @@ using port::PortResponse;
 using port::PortRequestMsg;
 using port::PortResponseMsg;
 using port::PortDeleteRequestMsg;
+using port::PortDeleteRequest;
 using port::PortDeleteResponseMsg;
+using port::PortDeleteResponse;
 using port::PortGetRequest;
 using port::PortGetRequestMsg;
 using port::PortGetResponse;
@@ -167,7 +167,7 @@ hal_ret_t port_create(PortSpec& spec,
 hal_ret_t port_update(PortSpec& spec,
                            PortResponse *rsp);
 hal_ret_t port_delete(PortDeleteRequest& req,
-                           PortDeleteResponseMsg *rsp);
+                           PortDeleteResponse *rsp);
 hal_ret_t port_get(port::PortGetRequest& req,
                         port::PortGetResponse *rsp);
 

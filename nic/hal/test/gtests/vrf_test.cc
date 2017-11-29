@@ -157,7 +157,7 @@ TEST_F(vrf_test, test2)
 
 #if 0
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -166,7 +166,7 @@ TEST_F(vrf_test, test2)
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(2);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -198,7 +198,7 @@ TEST_F(vrf_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec.mutable_meta()->set_vrf_id(2);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
@@ -270,7 +270,7 @@ TEST_F(vrf_test, test3)
 
 #if 0
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -279,7 +279,7 @@ TEST_F(vrf_test, test3)
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(3);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -381,7 +381,7 @@ TEST_F(vrf_test, test4)
 
 #if 0
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -390,7 +390,7 @@ TEST_F(vrf_test, test4)
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(4);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -422,7 +422,7 @@ TEST_F(vrf_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec.mutable_meta()->set_vrf_id(4);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(41);
     enicif_spec.mutable_key_or_handle()->set_interface_id(41);
@@ -494,7 +494,7 @@ TEST_F(vrf_test, test5)
 
 #if 0
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -503,7 +503,7 @@ TEST_F(vrf_test, test5)
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(5);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -535,7 +535,7 @@ TEST_F(vrf_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec.mutable_meta()->set_vrf_id(5);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(51);
     enicif_spec.mutable_key_or_handle()->set_interface_id(51);
@@ -590,7 +590,6 @@ TEST_F(vrf_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(6);
     del_req.mutable_key_or_handle()->set_vrf_id(6);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -708,7 +707,7 @@ TEST_F(vrf_test, test8)
 
 #if 0
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -717,7 +716,7 @@ TEST_F(vrf_test, test8)
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(8);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -753,7 +752,7 @@ TEST_F(vrf_test, test8)
     }
 
     // Create enicif
-    enicif_spec.mutable_meta()->set_vrf_id(8);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(81);
 
@@ -799,15 +798,15 @@ TEST_F(vrf_test, test9)
     LifSpec                         lif_spec;
     LifResponse                     lif_rsp;
     LifDeleteRequest                lif_del_req;
-    LifDeleteResponseMsg            lif_del_rsp;
+    LifDeleteResponse               lif_del_rsp;
     L2SegmentSpec                   l2seg_spec;
     L2SegmentResponse               l2seg_rsp;
     L2SegmentDeleteRequest          l2seg_del_req;
-    L2SegmentDeleteResponseMsg      l2seg_del_rsp;
+    L2SegmentDeleteResponse      l2seg_del_rsp;
     InterfaceSpec                   if_spec;
     InterfaceResponse               if_rsp;
     InterfaceDeleteRequest          enicif_del_req, up_del_req;
-    InterfaceDeleteResponseMsg      enicif_del_rsp, up_del_rsp;
+    InterfaceDeleteResponse         enicif_del_rsp, up_del_rsp;
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
     NetworkDeleteRequest            nw_del_req;
@@ -850,7 +849,7 @@ TEST_F(vrf_test, test9)
 
 #if 0
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_vrf_key_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -859,7 +858,7 @@ TEST_F(vrf_test, test9)
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_vrf_id(9);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(9);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -905,7 +904,7 @@ TEST_F(vrf_test, test9)
     }
 
     // Create enicif
-    enicif_spec.mutable_meta()->set_vrf_id(9);
+    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(9);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(91);
     enicif_spec.mutable_key_or_handle()->set_interface_id(921);
@@ -1022,7 +1021,7 @@ TEST_F(vrf_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Remove network
-    nw_del_req.mutable_meta()->set_vrf_id(9);
+    nw_del_req.mutable_vrf_key_handle()->set_vrf_id(9);
     nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_delete(nw_del_req, &nw_del_rsp);
@@ -1109,7 +1108,7 @@ TEST_F(vrf_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
 
     // Delete vrf
-    del_req.mutable_meta()->set_vrf_id(10);
+    del_req.mutable_key_or_handle()->set_vrf_id(10);
     del_req.mutable_key_or_handle()->set_vrf_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -1256,15 +1255,15 @@ TEST_F(vrf_test, test11)
     ASSERT_TRUE(ret == HAL_RET_SECURITY_PROFILE_NOT_FOUND);
 
     // Delete vrf with no key or handle
-    del_req.mutable_meta()->set_vrf_id(111);
+    del_req.mutable_key_or_handle()->set_vrf_id(111);
     // del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
 
     // Delete vrf with hdle which doesnt exist
-    del_req.mutable_meta()->set_vrf_id(11);
+    del_req.mutable_key_or_handle()->set_vrf_id(11);
     del_req.mutable_key_or_handle()->set_vrf_handle(2000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);

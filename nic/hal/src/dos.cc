@@ -688,7 +688,7 @@ end:
 //------------------------------------------------------------------------------
 static hal_ret_t
 validate_dos_policy_delete (DoSPolicyDeleteRequest& req, 
-                       DoSPolicyDeleteResponseMsg *rsp)
+                       DoSPolicyDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -812,7 +812,7 @@ dos_policy_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctx)
 //------------------------------------------------------------------------------
 hal_ret_t
 dos_policy_delete (DoSPolicyDeleteRequest& req, 
-                   DoSPolicyDeleteResponseMsg *rsp)
+                   DoSPolicyDeleteResponse *rsp)
 {
     hal_ret_t       ret = HAL_RET_OK;
     dos_policy_t    *dosp = NULL;
@@ -854,7 +854,7 @@ dos_policy_delete (DoSPolicyDeleteRequest& req,
                              dos_policy_delete_cleanup_cb);
 
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }

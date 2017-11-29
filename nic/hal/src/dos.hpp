@@ -19,6 +19,7 @@ using nwsec::DoSPolicyResponse;
 using nwsec::DoSPolicyResponseMsg;
 using nwsec::DoSPolicyDeleteRequest;
 using nwsec::DoSPolicyDeleteRequestMsg;
+using nwsec::DoSPolicyDeleteResponse;
 using nwsec::DoSPolicyDeleteResponseMsg;
 using nwsec::DoSPolicyGetRequest;
 using nwsec::DoSPolicyStats;
@@ -187,7 +188,7 @@ hal_ret_t dos_policy_update(nwsec::DoSPolicySpec& spec,
                             nwsec::DoSPolicyResponse *rsp);
 
 hal_ret_t dos_policy_delete(nwsec::DoSPolicyDeleteRequest& req,
-                            nwsec::DoSPolicyDeleteResponseMsg *rsp);
+                            nwsec::DoSPolicyDeleteResponse *rsp);
 
 hal_ret_t dos_policy_get(nwsec::DoSPolicyGetRequest& req,
                          nwsec::DoSPolicyGetResponse *rsp);

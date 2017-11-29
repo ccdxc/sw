@@ -69,7 +69,7 @@ void arp_topo_setup()
    ASSERT_TRUE(ret == HAL_RET_OK);
 
    // Create network
-   nw_spec.mutable_meta()->set_vrf_id(1);
+   nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
    nw_spec.set_rmac(0x0000DEADBEEE);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -81,7 +81,7 @@ void arp_topo_setup()
    ASSERT_TRUE(ret == HAL_RET_OK);
    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-   nw_spec1.mutable_meta()->set_vrf_id(1);
+   nw_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
    nw_spec1.set_rmac(0x0000DEADBEEF);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -119,7 +119,7 @@ void arp_topo_setup()
    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
    // Create an uplink
-   up_spec.mutable_meta()->set_vrf_id(1);
+   up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
    up_spec.set_type(intf::IF_TYPE_UPLINK);
    up_spec.mutable_key_or_handle()->set_interface_id(1);
    up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -129,7 +129,7 @@ void arp_topo_setup()
    ASSERT_TRUE(ret == HAL_RET_OK);
    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-   up_spec.mutable_meta()->set_vrf_id(1);
+   up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
    up_spec.set_type(intf::IF_TYPE_UPLINK);
    up_spec.mutable_key_or_handle()->set_interface_id(2);
    up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -142,10 +142,10 @@ void arp_topo_setup()
    ASSERT_TRUE(dummy_ten != NULL);
 
    // Create 2 Endpoints
-   ep_spec.mutable_meta()->set_vrf_id(1);
-   ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
-   ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
-   ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+   ep_spec.mutable_vrf_key_handle()->set_vrf_id(1);
+   ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+   ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+   ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
    ep_spec.mutable_endpoint_attrs()->add_ip_address();
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::endpoint_create(ep_spec, &ep_rsp);

@@ -1,6 +1,6 @@
 ProtoObject: port_pb2
 Service: Port
-enabled : False
+enabled : True
 graphEnabled : True
 objects:
     - object :
@@ -8,18 +8,20 @@ objects:
         ignore:
             - op : Get
             - op : Update
+            - op : Create
+            - op : Delete
         create:
             api      : PortCreate
             request  : PortRequestMsg
             response : PortResponseMsg
             pre_cb   : callback://port/PreCreateCb
-            post_cb  : callback://port/PostCreateCb
+            post_cb  : None
         update:
             api      : PortUpdate
             request  : PortRequestMsg
             response : PortResponseMsg
             pre_cb   : callback://port/PreUpdateCb
-            post_cb  : callback://port/PostUpdateCb
+            post_cb  : None
         delete:
             api      : PortDelete
             request  : PortDeleteRequestMsg
@@ -31,5 +33,5 @@ objects:
             request  : PortGetRequestMsg
             response : PortGetResponseMsg
             pre_cb   : None
-            post_cb  : callback://port/PostGetCb
+            post_cb  : None
 

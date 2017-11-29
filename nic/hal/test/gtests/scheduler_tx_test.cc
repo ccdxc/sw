@@ -163,7 +163,7 @@ TEST_F(scheduler_tx_test, test4)
     LifSpec                         spec;
     LifResponse                     rsp;
     LifDeleteRequest                del_req;
-    LifDeleteResponseMsg            del_rsp;
+    LifDeleteResponse            del_rsp;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
 

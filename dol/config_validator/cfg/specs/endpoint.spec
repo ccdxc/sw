@@ -1,6 +1,6 @@
 ProtoObject: endpoint_pb2
 Service: Endpoint
-enabled : False
+enabled : True
 graphEnabled : True
 objects:
     - object :
@@ -8,18 +8,20 @@ objects:
         ignore:
             - op : Get
             - op : Update
+            - op : Delete
+            - op : Create
         create:
             api      : EndpointCreate
             request  : EndpointRequestMsg
             response : EndpointResponseMsg
-            pre_cb   : callback://endpoint/PreCreateCb
-            post_cb  : callback://endpoint/PostCreateCb
+            pre_cb   : None
+            post_cb  : None
         update:
             api      : EndpointUpdate
             request  : EndpointRequestMsg
             response : EndpointResponseMsg
-            pre_cb   : callback://endpoint/PreUpdateCb
-            post_cb  : callback://endpoint/PostUpdateCb
+            pre_cb   : None
+            post_cb  : None
         delete:
             api      : EndpointDelete
             request  : EndpointDeleteRequestMsg
@@ -31,5 +33,5 @@ objects:
             request  : EndpointGetRequestMsg
             response : EndpointGetResponseMsg
             pre_cb   : None
-            post_cb  : callback://endpoint/PostGetCb
+            post_cb  : None
 

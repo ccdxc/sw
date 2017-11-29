@@ -1,6 +1,6 @@
 ProtoObject: interface_pb2
 Service: Interface
-enabled : False
+enabled : True
 graphEnabled : True
 objects:
     - object :
@@ -8,18 +8,20 @@ objects:
         ignore:
             - op : Get
             - op : Update
+            - op : Create
+            - op : Delete
         create:
             api      : InterfaceCreate
             request  : InterfaceRequestMsg
             response : InterfaceResponseMsg
             pre_cb   : callback://interface/PreCreateCb
-            post_cb  : callback://interface/PostCreateCb
+            post_cb  : None
         update:
             api      : InterfaceUpdate
             request  : InterfaceRequestMsg
             response : InterfaceResponseMsg
-            pre_cb   : callback://interface/PreUpdateCb
-            post_cb  : callback://interface/PostUpdateCb
+            pre_cb   : None
+            post_cb  : None
         delete:
             api      : InterfaceDelete
             request  : InterfaceDeleteRequestMsg
@@ -31,24 +33,26 @@ objects:
             request  : InterfaceGetRequestMsg
             response : InterfaceGetResponseMsg
             pre_cb   : None
-            post_cb  : callback://interface/PostGetCb
+            post_cb  : None
     - object :
         name : Lif
         ignore:
             - op : Get
             - op : Update
+            - op : Delete
+            - op : Create
         create:
             api      : LifCreate
             request  : LifRequestMsg
             response : LifResponseMsg
-            pre_cb   : callback://vrf/PreCreateCb
-            post_cb  : callback://vrf/PostCreateCb
+            pre_cb   : None
+            post_cb  : None
         update:
             api      : LifUpdate
             request  : LifRequestMsg
             response : LifResponseMsg
-            pre_cb   : callback://vrf/PreUpdateCb
-            post_cb  : callback://vrf/PostUpdateCb
+            pre_cb   : None
+            post_cb  : None
         delete:
             api      : LifDelete
             request  : LifDeleteRequestMsg
@@ -60,5 +64,5 @@ objects:
             request  : LifGetRequestMsg
             response : LifGetResponseMsg
             pre_cb   : None
-            post_cb  : callback://vrf/PostGetCb
+            post_cb  : None
 

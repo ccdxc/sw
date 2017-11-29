@@ -730,7 +730,7 @@ port_update (PortSpec& spec, PortResponse *rsp)
                              port_update_abort_cb,
                              port_update_cleanup_cb);
 end:
-    port_prepare_rsp(rsp, ret, pi_p->hal_handle_id);
+    port_prepare_rsp(rsp, ret, pi_p ? pi_p->hal_handle_id : HAL_HANDLE_INVALID);
 
     hal_api_trace(" API End: port update ");
     return ret;
@@ -740,7 +740,7 @@ end:
 // validate port delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_port_delete_req (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
+validate_port_delete_req (PortDeleteRequest& req, PortDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -882,7 +882,7 @@ port_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // process a port delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-port_delete (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
+port_delete (PortDeleteRequest& req, PortDeleteResponse *rsp)
 {
     hal_ret_t                  ret = HAL_RET_OK;
     port_t                     *pi_p = NULL;
@@ -926,7 +926,7 @@ port_delete (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
                              port_delete_abort_cb,
                              port_delete_cleanup_cb);
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
 
     hal_api_trace(" API End: port delete ");
     return ret;

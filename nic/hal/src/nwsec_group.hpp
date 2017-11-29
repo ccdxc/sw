@@ -403,7 +403,8 @@ nwsec_group_lookup_by_handle (hal_handle_t handle)
 }
 
 //APIs to be consumed by other features
-
+nwsec_group_t *
+nwsec_group_lookup_key_or_handle(const kh::SecurityGroupKeyHandle& key_or_handle);
 dllist_ctxt_t *
 get_ep_list_for_security_group(uint32_t sg_id);
 hal_ret_t

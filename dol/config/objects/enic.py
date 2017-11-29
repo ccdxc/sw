@@ -155,7 +155,7 @@ class EnicObject(base.ConfigObjectBase):
         return self.type == ENIC_TYPE_CLASSIC
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.vrf_id = self.tenant.id
+        req_spec.vrf_key_handle.vrf_id = self.tenant.id
         req_spec.type           = haldefs.interface.IF_TYPE_ENIC
         req_spec.admin_status   = haldefs.interface.IF_STATUS_UP
         req_spec.key_or_handle.interface_id = self.id
@@ -166,7 +166,8 @@ class EnicObject(base.ConfigObjectBase):
             if self.native_segment is not None:
                 req_spec.if_enic_info.classic_enic_info.native_l2segment_handle = self.native_segment.hal_handle
             for s in self.segments:
-                req_spec.if_enic_info.classic_enic_info.l2segment_handle.append(s.hal_handle)
+                l2seg_key_handle = req_spec.if_enic_info.classic_enic_info.l2segment_key_handle.add()
+                l2seg_key_handle.l2segment_handle = s.hal_handle
             req_spec.if_enic_info.pinned_uplink_if_handle = self.pinnedif.hal_handle
         else:
             assert(self.ep != None)

@@ -60,6 +60,7 @@ L2SegmentServiceImpl::L2SegmentDelete(ServerContext *context,
                                       L2SegmentDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
+    L2SegmentDeleteResponse   *response;
 
     HAL_TRACE_DEBUG("Rcvd L2Segment Delete Request");
     if (nreqs == 0) {
@@ -68,8 +69,9 @@ L2SegmentServiceImpl::L2SegmentDelete(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
         auto spec = req->request(i);
-        hal::l2segment_delete(spec, rsp);
+        hal::l2segment_delete(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

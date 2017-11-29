@@ -62,6 +62,7 @@ PortServiceImpl::PortDelete(ServerContext *context,
                             PortDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
+    PortDeleteResponse   *response;
 
     HAL_TRACE_DEBUG("Rcvd Port Delete Request");
     if (nreqs == 0) {
@@ -70,8 +71,9 @@ PortServiceImpl::PortDelete(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
         auto spec = req->request(i);
-        hal::port_delete(spec, rsp);
+        hal::port_delete(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

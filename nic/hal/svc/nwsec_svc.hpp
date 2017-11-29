@@ -39,6 +39,7 @@ using nwsec::DoSPolicyRequestMsg;
 using nwsec::DoSPolicyResponseMsg;
 using nwsec::DoSPolicyDeleteRequestMsg;
 using nwsec::DoSPolicyDeleteResponseMsg;
+using nwsec::DoSPolicyDeleteResponse;
 using nwsec::DoSPolicyGetRequestMsg;
 using nwsec::DoSPolicyGetResponseMsg;
 using nwsec::Service;
