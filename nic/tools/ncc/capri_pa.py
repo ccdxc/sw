@@ -1892,6 +1892,9 @@ class capri_gress_pa:
                             continue
                         used_offset = self.p4_plus_assign_phv_to_hdr_flds(uh, phv_bit)
                         if used_offset > max_offset:
+                            self.logger.critical("Header %s size %d cannot exceed size of %s %d" % \
+                                (uh.name, used_offset-phv_bit, hf.name, max_offset-phv_bit));
+                            #assert 0, pdb.set_trace()
                             max_offset = used_offset
                         assert uh not in self.allocated_hf, pdb.set_trace() # duplicate allocation
                         self.allocated_hf[uh] = phv_bit
@@ -2605,7 +2608,7 @@ class capri_pa:
             if f.instance and f.instance.metadata:
                 meta_hdr = f.instance
                 is_scratch = True if 'scratch_metadata' in meta_hdr._parsed_pragmas else False
-                if 'pa_parser_local' in meta_hdr._parsed_pragmas:
+                if is_parser_local_header(meta_hdr):
                     # create local field in both direction
                     _ = self.gress_pa[xgress.INGRESS].allocate_field(f)
                     _ = self.gress_pa[xgress.EGRESS].allocate_field(f)

@@ -25,6 +25,7 @@ class meta_op(Enum):
     EXTRACT_CONST   = 3
     LOAD_REG        = 4
     UPDATE_REG      = 5
+    EXTRACT_CURRENT_OFF = 6
 
 class lkp_reg_type(IntEnum):
     LKP_REG_NONE    = 0
@@ -122,7 +123,8 @@ def is_synthetic_header(h):
     return False
 
 def is_parser_local_header(h):
-    if h._parsed_pragmas and 'pa_parser_local' in h._parsed_pragmas:
+    if h._parsed_pragmas and 'pa_parser_local' in h._parsed_pragmas or \
+        h._parsed_pragmas and 'parser_write_only' in h._parsed_pragmas:
         return True
     return False
 

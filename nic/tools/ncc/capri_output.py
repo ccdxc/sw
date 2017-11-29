@@ -149,6 +149,8 @@ def _parser_sram_print(parser, se):
         elif mux_idx['sel']['value'] == '2':
             pstr += 'mux_idx[%d] = mux_pkt[current_off + lkp_val[%s]]\n' % \
                     (e, mux_idx['lkpsel']['value'])
+        elif mux_idx['sel']['value'] == '3':
+            pstr += 'mux_idx[%d] = current_offset\n' % (e)
         else:
             pass
     if used:
@@ -319,11 +321,30 @@ def _build_mux_inst(parser, cs, rid, mux_inst, mux_id, _capri_expr):
     if capri_expr.op1:
         # need to adjust mask and shift vals based on alignment
         # hw pull 16b from a specified byte boundary
-        off = cs.fld_off[capri_expr.src1]
-        eoff = off + capri_expr.src1.width
-        # lookup fields > 16 bits are not currently supported. That requires concatenation
-        # of multiple lkp regs - TBD
-        assert capri_expr.src1.width <= 16
+        if isinstance(capri_expr.src1, tuple) and capri_expr.src1[1] == 0:
+            # special case for using current_offset
+            assert not capri_expr.mask, pdb.set_trace()
+            mask = 0xFFFF
+            off = 0
+            eoff = 16
+        else:
+            if isinstance(capri_expr.src1, tuple):
+                off = capri_expr.src1[0]
+                eoff = capri_expr.src1[0] + capri_expr.src1[1]
+                if capri_expr.mask:
+                    mask = capri_expr.mask
+                else:
+                    mask = (1<<(eoff-off)) - 1
+            else:
+                off = cs.fld_off[capri_expr.src1]
+                eoff = off + capri_expr.src1.width
+                if capri_expr.mask:
+                    mask = capri_expr.mask
+                else:
+                    mask = (1<<capri_expr.src1.width) - 1
+            # lookup fields > 16 bits are not currently supported. That requires concatenation
+            # of multiple lkp regs - TBD
+            assert capri_expr.src1.width <= 16
         c_soff = (off / 8) * 8
         c_eoff = ((eoff+7)/8) * 8
         # since the lkp regs are 16bits each, end offset must be aligned to register
@@ -331,11 +352,6 @@ def _build_mux_inst(parser, cs, rid, mux_inst, mux_id, _capri_expr):
         if c_soff != off:
             # not aligned at the start of the container - nothing to do
             pass
-
-        if capri_expr.mask:
-            mask = capri_expr.mask
-        else:
-            mask = (1<<capri_expr.src1.width) - 1
 
         c_shft = c_eoff - eoff          # c_shft indicate >> to right justify the field
         if c_shft:
@@ -1866,9 +1882,16 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     sram['mux_idx'][mux_id]['sel']['value'] = str(0)
                     sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
                     sram['mux_idx'][mux_id]['idx']['value'] = str((lkp_reg.pkt_off/8) + add_off)
+                else:
+                    # Load current_offset
+                    assert lkp_reg.pkt_off == -1, pdb.set_trace()
+                    mux_id = mux_idx_alloc(mux_idx_allocator, 'current')
+                    sram['mux_idx'][mux_id]['sel']['value'] = str(3)
+                    sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
+                    sram['mux_idx'][mux_id]['idx']['value'] = str(0) # NA
 
-                    sram['lkp_val_inst'][r]['sel']['value'] = str(0)
-                    sram['lkp_val_inst'][r]['muxsel']['value'] = str(mux_id)
+                sram['lkp_val_inst'][r]['sel']['value'] = str(0)
+                sram['lkp_val_inst'][r]['muxsel']['value'] = str(mux_id)
 
 
         if lkp_reg.store_en:
@@ -1898,7 +1921,18 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     pkt_off2=0
                     r = nxt_cs.active_reg_find(set_op.capri_expr.src_reg)
             if set_op.capri_expr.src1:
-                if isinstance(set_op.capri_expr.src1, tuple):
+                if isinstance(set_op.capri_expr.src1, tuple) and set_op.capri_expr.src1[1] == 0:
+                    # XXX re-org the code to do it w/o continue
+                    # special case - src1 is current_offset
+                    mux_id = mux_idx_alloc(mux_idx_allocator, 'current')
+                    sram['mux_idx'][mux_id]['sel']['value'] = str(3)
+                    sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
+                    sram['mux_idx'][mux_id]['idx']['value'] = str(0)
+                    mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
+                    _build_mux_inst(parser, nxt_cs, None, sram['mux_inst'][mux_inst_id],
+                        mux_id, set_op.capri_expr)
+                    continue
+                elif isinstance(set_op.capri_expr.src1, tuple):
                     pkt_off1 = set_op.capri_expr.src1[0] + (add_off*8)
                 elif not set_op.capri_expr.src1.is_meta:
                     pkt_off1 = nxt_cs.fld_off[set_op.capri_expr.src1] + (add_off*8)
@@ -1915,6 +1949,8 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 mux_id1, mux_id2, set_op.capri_expr)
             mux_inst_id_to_capri_expr_map[mux_inst_id] = set_op.capri_expr
             mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id1, mux_id2)
+        else:
+            assert 0, "Must use expression when writing to write-only register"
 
     # extract_inst
     # For all fields that go to phv, check if fields can be combined to extract
@@ -1952,9 +1988,11 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     s = 0
     headers = []
     ohi_inst_allocator = [None for _ in range(hw_max_ohi_per_state)] # (fld_name, ohi_id)
-    if add_cs:
+    if add_cs and not add_cs.no_extract():
         headers += add_cs.headers
-    headers += nxt_cs.headers
+    if not nxt_cs.no_extract():
+        headers += nxt_cs.headers
+
     for hdr in headers:
         if hdr not in parser.ohi:
             continue
@@ -1963,8 +2001,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         else:
             cs = nxt_cs
 
-        if cs.no_extract():
-            continue
         for cf in cs.extracted_fields:
             if cf.get_p4_hdr() == hdr:
                 hdr_off = (cs.fld_off[cf] - cf.p4_fld.offset) / 8 # can be -ve
@@ -2255,6 +2291,18 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             sram['mux_idx'][mux_id]['sel']['value'] = str(0)
             sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
             sram['mux_idx'][mux_id]['idx']['value'] = str(fld_off)
+            _build_mux_inst(parser, op.cstate, None, sram['mux_inst'][mux_inst_id],
+                mux_id, op.capri_expr)
+            dst_phv = op.dst.phv_bit
+        elif op.op_type == meta_op.EXTRACT_CURRENT_OFF:
+            assert isinstance(op.src1, tuple), pdb.set_trace()
+            assert op.src1[1] == 0, pdb.set_trace()
+            assert op.capri_expr, "Must use expression"
+            mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, op.capri_expr)
+            mux_id = mux_idx_alloc(mux_idx_allocator, 'current')
+            sram['mux_idx'][mux_id]['sel']['value'] = str(3)
+            sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
+            sram['mux_idx'][mux_id]['idx']['value'] = str(0)
             _build_mux_inst(parser, op.cstate, None, sram['mux_inst'][mux_inst_id],
                 mux_id, op.capri_expr)
             dst_phv = op.dst.phv_bit

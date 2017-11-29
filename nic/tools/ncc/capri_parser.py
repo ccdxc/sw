@@ -293,22 +293,30 @@ class capri_parser_set_op:
 
                 self.src1 = cf
         elif isinstance(src, tuple):
+            # current(0,0) is used to indicate current_offset itself is loaded into reg or phv
+            # LOAD_REG always uses mux_idx instruction which allows for loading current_offset
+            # In case of extracting current_offset to phv, create a new op_type
             if dst.parser_local:
                 # reg <- (pkt_off, size) : Load
                 self.op_type = meta_op.LOAD_REG
             else:
+                if src[1] == 0:
+                    # extract current offset
+                    pdb.set_trace() # test case
+                    self.op_type = meta_op.EXTRACT_CURRENT_OFF
                 # metaPhv <- (pkt_off, size) : ExtractCopy
-                if (dst.width % 8):
+                elif (dst.width % 8):
                     assert dst.is_meta
                     pad = 8-(dst.width % 8)
                     dst.width += pad
                     cstate.parser.logger.warning("%s:%s:Pad Metadata %s to %d" % \
                             (cstate.parser.d.name, cstate.name, dst.hfname, dst.width))
-                self.op_type = meta_op.EXTRACT_FIELD
+                    self.op_type = meta_op.EXTRACT_FIELD
+                else:
+                    pass
             self.src1 = src
         elif isinstance(src, p4.p4_expression):
             # src is p4_expr
-            #node = copy.copy(src) XXXX
             self.capri_expr = capri_parser_expr(cstate.parser, src)
             if dst.parser_local:
                 self.op_type = meta_op.LOAD_REG
@@ -335,8 +343,11 @@ class capri_parser_set_op:
                     self.op_type = meta_op.EXTRACT_REG
                     self.src_reg = self.capri_expr.src_reg
                 else:
-                    self.op_type = meta_op.EXTRACT_META
-                    assert(self.capri_expr.src1), "Need pkt data oprand for set_metadata()"
+                    if isinstance(self.capri_expr.src1, tuple) and self.capri_expr.src1[1] == 0:
+                        self.op_type = meta_op.EXTRACT_CURRENT_OFF
+                    else:
+                        self.op_type = meta_op.EXTRACT_META
+                        assert(self.capri_expr.src1), "Need pkt data oprand for set_metadata()"
                     self.src1 = self.capri_expr.src1
         else:
             assert 0, "unknown source for set_metadata operation %s" % src
@@ -557,7 +568,7 @@ class capri_parser_expr:
         # Possible operations (supported by capri-parser hw):
         # reg = reg +/- ((src1 & mask) <</>> shft) +/- c
         # phv = reg +/- ((src1 & mask) <</>> shft) +/- c
-        # New: XXXX
+        # New:
         # reg = src2 +/- ((src1 & mask) <</>> shft) +/- c
         # reg = reg1 +/- ((reg2 & mask) <</>> shft) +/- c (TBD)
         # The generic expression is defined as -
@@ -617,11 +628,9 @@ class capri_parser_expr:
         return new_obj
 
     def process_p4_expr(self, p4_expr):
-        # XXXX <<
         # New format:
         # [cf2 +-] [(cf1 [<<>> shft])+-] [const]
         # [cf2 OP2] [(cf1 [OP1 shft]) OP3] [const]
-        # XXXX >>
         supported_ops1 = ['<<', '>>']
         supported_ops2 = ['+', '-',]    # op2 and op3
 
@@ -1115,6 +1124,8 @@ class capri_parser:
                     set_op = capri_parser_set_op(s, cfield, c[2])
                     if cfield.no_register():
                         s.no_reg_set_ops.append(set_op)
+                        self.logger.debug("%s:%s No_Reg set_op = %s" % \
+                            (self.d.name, s.name, set_op));
                     else:
                         s.set_ops.append(set_op)
                     hf_name = cfield.hfname
@@ -1390,6 +1401,8 @@ class capri_parser:
                 max_ohi_per_state = 0
             else:
                 max_ohi_per_state = num_ohi_per_state
+            if cs.no_extract():
+                continue
             num_ohis = sum([len(self.ohi[hdr]) for hdr in cs.headers if hdr in self.ohi])
             # each ohi requires two slots
             if num_ohis <= (max_ohi_per_state/2):
@@ -2282,8 +2295,10 @@ class capri_parser:
 
                 if op.capri_expr:
                     cs.lkp_regs[rid].capri_expr = op.capri_expr
-                else:
+                elif isinstance(op.src1, capri_field):
                     cs.lkp_regs[rid].first_pkt_fld = op.src1
+                else:
+                    cs.lkp_regs[rid].first_pkt_fld = None
 
             elif op.op_type == meta_op.UPDATE_REG:
                 # allocate/find lkp_reg, set capri-expression
@@ -2294,8 +2309,12 @@ class capri_parser:
                 cs.lkp_regs[rid].capri_expr = op.capri_expr
                 if op.capri_expr:
                     cs.lkp_regs[rid].capri_expr = op.capri_expr
-                else:
+                elif isinstance(op.src1, capri_field):
                     cs.lkp_regs[rid].first_pkt_fld = op.src1
+                else:
+                    cs.lkp_regs[rid].first_pkt_fld = None
+            elif op.op_type == meta_op.EXTRACT_CURRENT_OFF:
+                pass
             else:
                 assert(0), pdb.set_trace()
 
@@ -2350,6 +2369,7 @@ class capri_parser:
         for op in cs.set_ops:
             if op.op_type == meta_op.EXTRACT_REG or \
                 op.op_type == meta_op.EXTRACT_META or \
+                op.op_type == meta_op.EXTRACT_CURRENT_OFF or \
                 op.op_type == meta_op.EXTRACT_CONST:
                 continue
 

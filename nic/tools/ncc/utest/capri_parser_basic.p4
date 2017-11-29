@@ -68,6 +68,24 @@ header_type ipv6_t {
 header cap_phv_intr_global_t capri_intrinsic;                                                       
 metadata cap_phv_intr_p4_t capri_p4_intrinsic;                                                      
 
+header_type parser_metadata_t {
+    fields {
+        c_offset : 16;
+    }
+}
+header_type mau_metadata_t {
+    fields {
+        c_offset : 16;
+    }
+}
+@pragma pa_parser_local
+metadata parser_metadata_t parser_metadata;
+
+metadata mau_metadata_t mau_metadata;
+
+@pragma parser_write_only
+metadata mau_metadata_t ohi;
+
 header ethernet_t ethernet;
 header ipv4_t ipv4;
 header ipv6_t ipv6;
@@ -86,8 +104,10 @@ parser start {
 }
 
 parser parse_ethernet {
+    set_metadata(parser_metadata.c_offset, current);
+    set_metadata(mau_metadata.c_offset, current + 0);
     extract(ethernet);
-    return select(latest.etherType) {
+    return select(parser_metadata.c_offset, latest.etherType) {
         ETHERTYPE_IPV4: parse_ipv4;
         ETHERTYPE_IPV6: parse_ipv6;
         default : ingress;
@@ -98,6 +118,7 @@ parser parse_ethernet {
 #define IP_PROTOCOLS_UDP               17
 
 parser parse_ipv4 {
+    set_metadata(ohi.c_offset, current + 20);
     extract(ipv4);
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTOCOLS_TCP : parse_tcp;
@@ -127,12 +148,16 @@ parser parse_udp {
 
 action nop() {
 }
+action check_coffset() {
+    modify_field(mau_metadata.c_offset, 0);
+}
 
 table abc {
     reads {
         capri_p4_intrinsic.frame_size:exact;
     }
     actions {
+        check_coffset;
         nop;
     }
 }
