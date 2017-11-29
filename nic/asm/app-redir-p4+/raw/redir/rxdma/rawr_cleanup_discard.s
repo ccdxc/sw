@@ -27,10 +27,12 @@ rawr_s6_cleanup_discard:
     /*
      * Launch desc semaphore pindex free
      */
+    add         r_elem_addr, r0, k.{to_s6_desc_sbit0_ebit31...\
+                                    to_s6_desc_sbit32_ebit33}
     sne         c1, k.common_phv_desc_sem_pindex_full, r0
-    bcf         [c1], _ppage_cleanup_launch
-    phvwr       p.to_s7_desc, k.{to_s6_desc_sbit0_ebit31...\
-                                 to_s6_desc_sbit32_ebit33}  // delay slot
+    seq         c2, r_elem_addr, r0
+    bcf         [c1 | c2], _ppage_cleanup_launch
+    phvwr       p.to_s7_desc, r_elem_addr   // delay slot
     addi        r_free_inf_addr, r0, CAPRI_SEM_RNMDR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           rawr_s7_desc_free,

@@ -1,0 +1,8 @@
+# App Redir Proxy Chain CB Object Template File.
+meta:
+    id: PROXYCCBQ
+
+id                    : None
+pi                    : 0
+ci                    : 0
+count                 : 0

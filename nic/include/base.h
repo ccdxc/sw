@@ -198,7 +198,7 @@ do {                                                       \
     ENTRY(HAL_RET_SG_ID_INVALID,              50, "seg id invalid")            \
     ENTRY(HAL_RET_SG_NOT_FOUND,               51, "seg id not found")          \
     ENTRY(HAL_RET_NOOP,                       52, "Hal No operation")          \
-    ENTRY(HAL_RET_RAWC_CB_NOT_FOUND,          53, "Raw redirect CB not found") \
+    ENTRY(HAL_RET_RAWC_CB_NOT_FOUND,          53, "Raw chain CB not found")    \
     ENTRY(HAL_RET_FTE_RULE_NO_MATCH,          54, "Firewall rule no match")    \
     ENTRY(HAL_RET_APP_REDIR_FORMAT_UNKNOWN,   55, "App redir hdr fmt unknown") \
     ENTRY(HAL_RET_APP_REDIR_HDR_LEN_ERR,      56, "App redir hdr_len error")   \
@@ -207,6 +207,8 @@ do {                                                       \
     ENTRY(HAL_RET_NW_HANDLE_NOT_FOUND,        59, "nw handle not found")       \
     ENTRY(HAL_RET_EP_HANDLE_NOT_FOUND,        60, "ep handle not found")       \
     ENTRY(HAL_RET_EXISTING_PROXY_SESSION,     61, "Existing proxy session")       \
+    ENTRY(HAL_RET_PROXYR_CB_NOT_FOUND,        62, "Proxy redirect CB not found")\
+    ENTRY(HAL_RET_PROXYC_CB_NOT_FOUND,        63, "Proxy chain CB not found")  \
                                                                                \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

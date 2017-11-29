@@ -124,7 +124,7 @@ header_type rawrcb_t {
          * Sentinel to indicate CB has been de-activated, allowing P4+ code
          * to early detect and enter cleanup.
          */
-        rawrcb_deactivated              : 8;  // must be first in CB after header common
+        rawrcb_deactivate               : 8;  // must be first in CB after header common
         pad                             : 8;
         rawrcb_flags                    : 16; // DOL flags and others
          
@@ -169,7 +169,7 @@ header_type rawrcb_t {
          * Sentinel to indicate all bytes in CB have been written and P4+ code
          * can start normal processing.
          */
-        rawrcb_activated                : 8; // must be last in CB
+        rawrcb_activate                 : 8; // must be last in CB
     }
 }
 
@@ -419,14 +419,14 @@ metadata dma_phv_pad_256_t              dma_pad_256;
  */
 action rawr_rx_start(rsvd, cosA, cosB, cos_sel, 
                      eval_last, host, total, pid,
-                     rawrcb_deactivated, chain_rxq_base,
+                     rawrcb_deactivate, chain_rxq_base,
                      chain_rxq_ring_indices_addr, chain_rxq_ring_size_shift,
                      chain_rxq_entry_size_shift, chain_rxq_ring_index_select,
                      chain_txq_base, chain_txq_ring_indices_addr,
                      chain_txq_ring_size_shift, chain_txq_entry_size_shift,
                      chain_txq_lif, chain_txq_qtype, chain_txq_qid,
                      chain_txq_ring_index_select,
-                     rawrcb_flags, rawrcb_activated) {
+                     rawrcb_flags, rawrcb_activate) {
                      
     // k + i for stage 0
 
@@ -468,7 +468,7 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawrcb_d.total, total);
     modify_field(rawrcb_d.pid, pid);
     
-    modify_field(rawrcb_d.rawrcb_deactivated, rawrcb_deactivated);
+    modify_field(rawrcb_d.rawrcb_deactivate, rawrcb_deactivate);
     modify_field(rawrcb_d.chain_rxq_base, chain_rxq_base);
     modify_field(rawrcb_d.chain_rxq_ring_indices_addr, chain_rxq_ring_indices_addr);
     modify_field(rawrcb_d.chain_rxq_ring_size_shift, chain_rxq_ring_size_shift);
@@ -483,7 +483,7 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawrcb_d.chain_txq_qid, chain_txq_qid);
     modify_field(rawrcb_d.chain_txq_ring_index_select, chain_txq_ring_index_select);
     modify_field(rawrcb_d.rawrcb_flags, rawrcb_flags);
-    modify_field(rawrcb_d.rawrcb_activated, rawrcb_activated);
+    modify_field(rawrcb_d.rawrcb_activate, rawrcb_activate);
 }
 
 /*

@@ -70,6 +70,12 @@ struct pen_raw_redir_header_v1_t {
 struct pen_proxy_redir_header_v1_t {
     flow_id             : 32;
     flags               : 16;
+
+    /*
+     * The following static flow key fields (from vrf to ip_proto)
+     * must be sized and ordered exactly as defined in the structure
+     * proxyrcb_flow_key_t in p4/app-redir-p4+/proxyr_txdma.p4
+     */
     vrf                 : 16;
     ip_sa               : 128;
     ip_da               : 128;
@@ -77,6 +83,7 @@ struct pen_proxy_redir_header_v1_t {
     dport               : 16;
     af                  : 8;
     ip_proto            : 8;
+
     tcp_flags           : 8;
     end_pad             : 8;
 };

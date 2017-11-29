@@ -5,8 +5,10 @@ struct rawc_cleanup_discard_k                   k;
 
 /*
  * Registers usage
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
-#define r_free_inf_addr             r1
+#define r_free_inf_addr             r3
 
 %%
     .param      rawc_s5_desc_free

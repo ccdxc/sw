@@ -214,15 +214,15 @@
         },
         {
             "name": "app-redir-rawc",
-            "size_kb": 16384
+            "size_kb": 2048
         },
         {
             "name": "app-redir-proxyr",
-            "size_kb": 16384
+            "size_kb": 2048
         },
         {
             "name": "app-redir-proxyc",
-            "size_kb": 16384
+            "size_kb": 2048
         },
         {
             "_comment": "space = N/2 + 2N/3, N = Num timers",

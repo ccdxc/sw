@@ -55,11 +55,11 @@ proxyc_s0_tx_start:
     
     /*
      * Two sentinels surround the programming of CB byte sequence:
-     * proxyccb_deactivated must be false and proxyccb_activated must
+     * proxyccb_deactivate must be false and proxyccb_activate must
      * be true to indicate readiness.
      */
-    seq         c1, d.proxyccb_deactivated, r0
-    sne         c2, d.proxyccb_activated, r0
+    sne         c1, d.proxyccb_deactivate, PROXYCCB_DEACTIVATE
+    seq         c2, d.proxyccb_activate, PROXYCCB_ACTIVATE
     setcf       c3, [c1 & c2]
     bal.!c3     r_return, _proxyccb_not_ready
     phvwr       p.common_phv_proxyccb_flags, d.{proxyccb_flags}.hx // delay slot

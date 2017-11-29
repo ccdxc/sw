@@ -40,11 +40,11 @@ rawr_s0_rx_start:
 
     /*
      * Two sentinels surround the programming of CB byte sequence:
-     * rawccb_deactivated must be false and rawccb_activated must
+     * rawccb_deactivate must be false and rawccb_activate must
      * be true to indicate readiness.
      */
-    seq         c1, d.u.rawr_rx_start_d.rawrcb_deactivated, r0
-    sne         c2, d.u.rawr_rx_start_d.rawrcb_activated, r0
+    sne         c1, d.u.rawr_rx_start_d.rawrcb_deactivate, RAWRCB_DEACTIVATE
+    seq         c2, d.u.rawr_rx_start_d.rawrcb_activate, RAWRCB_ACTIVATE
     setcf       c3, [c1 & c2]
     b.!c3       _rawrcb_not_ready
     phvwr       p.common_phv_rawrcb_flags,\

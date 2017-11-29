@@ -12,16 +12,18 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_RAWCCB_HT_SIZE                 1024
-#define P4PD_HBM_RAWC_CB_ENTRY_SIZE               128
+#define P4PD_HBM_RAWCCB_ENTRY_SIZE                RAWCCB_TABLE_ENTRY_SIZE
 
-typedef uint64_t    rawccb_hw_id_t;
+typedef uint32_t    rawccb_hw_id_t;         // same as rawccb_id_t
+typedef uint64_t    rawccb_hw_addr_t;
 
 // rawccb pd state
 struct pd_rawccb_s {
     rawccb_t           *rawccb;             // PI RAWC CB
 
     // operational state of rawccb pd
-    rawccb_hw_id_t     hw_id;               // hw id for this rawccb
+    rawccb_hw_addr_t   hw_addr;             // hw address for this rawccb
+    rawccb_hw_id_t     hw_id;
 
     // meta data maintained for RAWC CB pd
     ht_ctxt_t          hw_ht_ctxt;          // h/w id based hash table ctxt
@@ -43,11 +45,13 @@ rawccb_pd_alloc (void)
 
 // initialize a rawccb pd instance
 static inline pd_rawccb_t *
-rawccb_pd_init (pd_rawccb_t *rawccb_pd)
+rawccb_pd_init (pd_rawccb_t *rawccb_pd,
+                rawccb_hw_id_t hw_id)
 {
     if (!rawccb_pd) {
         return NULL;
     }
+    rawccb_pd->hw_id = hw_id;
     rawccb_pd->rawccb = NULL;
 
     // initialize meta information
@@ -58,9 +62,9 @@ rawccb_pd_init (pd_rawccb_t *rawccb_pd)
 
 // allocate and initialize a rawccb pd instance
 static inline pd_rawccb_t *
-rawccb_pd_alloc_init (void)
+rawccb_pd_alloc_init (rawccb_hw_id_t hw_id)
 {
-    return rawccb_pd_init(rawccb_pd_alloc());
+    return rawccb_pd_init(rawccb_pd_alloc(), hw_id);
 }
 
 // free rawccb pd instance

@@ -37,6 +37,8 @@
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/iris/scheduler_pd.hpp"
 #include "nic/hal/pd/iris/rawccb_pd.hpp"
+#include "nic/hal/pd/iris/proxyrcb_pd.hpp"
+#include "nic/hal/pd/iris/proxyccb_pd.hpp"
 #include "nic/hal/pd/iris/dos_pd.hpp"
 #include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 #include "nic/hal/pd/control/port.hpp"
@@ -378,6 +380,18 @@ hal_state_pd::init(void)
                                   hal::pd::rawrcb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((rawrcb_hwid_ht_ != NULL), false);
 
+    // initialize PROXYRCB related data structures
+    proxyrcb_slab_ = slab::factory("PROXYRCB PD", HAL_SLAB_PROXYRCB_PD,
+                                   sizeof(hal::pd::pd_proxyrcb_t), 128,
+                                   true, true, true, true);
+    HAL_ASSERT_RETURN((proxyrcb_slab_ != NULL), false);
+
+    proxyrcb_hwid_ht_ = ht::factory(HAL_MAX_HW_PROXYRCB_HT_SIZE,
+                                    hal::pd::proxyrcb_pd_get_hw_key_func,
+                                    hal::pd::proxyrcb_pd_compute_hw_hash_func,
+                                    hal::pd::proxyrcb_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((proxyrcb_hwid_ht_ != NULL), false);
+
     // BMAllocator based bmp range allocator to manage txs scheduler mapping
     txs_scheduler_map_idxr_ = new hal::BMAllocator(TXS_SCHEDULER_MAP_MAX_ENTRIES);
     HAL_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
@@ -393,6 +407,18 @@ hal_state_pd::init(void)
                                   hal::pd::rawccb_pd_compute_hw_hash_func,
                                   hal::pd::rawccb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((rawccb_hwid_ht_ != NULL), false);
+
+    // initialize PROXYCCB related data structures
+    proxyccb_slab_ = slab::factory("PROXYCCB PD", HAL_SLAB_PROXYCCB_PD,
+                                   sizeof(hal::pd::pd_proxyccb_t), 128,
+                                   true, true, true, true);
+    HAL_ASSERT_RETURN((proxyccb_slab_ != NULL), false);
+
+    proxyccb_hwid_ht_ = ht::factory(HAL_MAX_HW_PROXYCCB_HT_SIZE,
+                                    hal::pd::proxyccb_pd_get_hw_key_func,
+                                    hal::pd::proxyccb_pd_compute_hw_hash_func,
+                                    hal::pd::proxyccb_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((proxyccb_hwid_ht_ != NULL), false);
 
     directmap_entry_slab_ = slab::factory("DIRECTMAP ENTRY", HAL_SLAB_DIRECTMAP_ENTRY,
                                           sizeof(hal::pd::utils::directmap_entry_t), 128,
@@ -514,6 +540,12 @@ hal_state_pd::hal_state_pd()
     rawccb_slab_ = NULL;
     rawccb_hwid_ht_ = NULL;
 
+    proxyrcb_slab_ = NULL;
+    proxyrcb_hwid_ht_ = NULL;
+
+    proxyccb_slab_ = NULL;
+    proxyccb_hwid_ht_ = NULL;
+
     directmap_entry_slab_ = NULL;
 }
 
@@ -604,6 +636,12 @@ hal_state_pd::~hal_state_pd()
 
     rawccb_slab_ ? slab::destroy(rawccb_slab_) : HAL_NOP;
     rawccb_hwid_ht_ ? ht::destroy(rawccb_hwid_ht_) : HAL_NOP;
+
+    proxyrcb_slab_ ? slab::destroy(proxyrcb_slab_) : HAL_NOP;
+    proxyrcb_hwid_ht_ ? ht::destroy(proxyrcb_hwid_ht_) : HAL_NOP;
+
+    proxyccb_slab_ ? slab::destroy(proxyccb_slab_) : HAL_NOP;
+    proxyccb_hwid_ht_ ? ht::destroy(proxyccb_hwid_ht_) : HAL_NOP;
 
     directmap_entry_slab_ ? slab::destroy(directmap_entry_slab_) : HAL_NOP;
 
@@ -734,6 +772,10 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(cpucb_slab_);
     GET_SLAB(cpupkt_slab_);
     GET_SLAB(cpupkt_qinst_info_slab_);
+    GET_SLAB(rawrcb_slab_);
+    GET_SLAB(rawccb_slab_);
+    GET_SLAB(proxyrcb_slab_);
+    GET_SLAB(proxyccb_slab_);
 
     return NULL;
 }
@@ -1344,6 +1386,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_RAWCCB_PD:
         g_hal_state_pd->rawccb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_PROXYRCB_PD:
+        g_hal_state_pd->proxyrcb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_PROXYCCB_PD:
+        g_hal_state_pd->proxyccb_slab()->free_(elem);
         break;
 
     case HAL_SLAB_CPUPKT_QINST_INFO_PD:

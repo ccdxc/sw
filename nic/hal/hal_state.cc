@@ -24,6 +24,8 @@
 #include "nic/hal/src/cpucb.hpp"
 #include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/src/rawccb.hpp"
+#include "nic/hal/src/proxyrcb.hpp"
+#include "nic/hal/src/proxyccb.hpp"
 #include "nic/hal/src/dos.hpp"
 namespace hal {
 
@@ -317,6 +319,33 @@ hal_cfg_db::init(void)
                                         hal::rawccb_compare_handle_key_func);
     HAL_ASSERT_RETURN((rawccb_hal_handle_ht_ != NULL), false);
 
+    // initialize Raw Redirect CB related data structures
+    proxyrcb_id_ht_ = ht::factory(HAL_MAX_PROXYRCB_HT_SIZE,
+                                  hal::proxyrcb_get_key_func,
+                                  hal::proxyrcb_compute_hash_func,
+                                  hal::proxyrcb_compare_key_func);
+    HAL_ASSERT_RETURN((proxyrcb_id_ht_ != NULL), false);
+
+    proxyrcb_hal_handle_ht_ = ht::factory(HAL_MAX_PROXYRCB_HT_SIZE,
+                                          hal::proxyrcb_get_handle_key_func,
+                                          hal::proxyrcb_compute_handle_hash_func,
+                                          hal::proxyrcb_compare_handle_key_func);
+    HAL_ASSERT_RETURN((proxyrcb_hal_handle_ht_ != NULL), false);
+
+ 
+    // initialize Raw Chain CB related data structures
+    proxyccb_id_ht_ = ht::factory(HAL_MAX_PROXYCCB_HT_SIZE,
+                                  hal::proxyccb_get_key_func,
+                                  hal::proxyccb_compute_hash_func,
+                                  hal::proxyccb_compare_key_func);
+    HAL_ASSERT_RETURN((proxyccb_id_ht_ != NULL), false);
+
+    proxyccb_hal_handle_ht_ = ht::factory(HAL_MAX_PROXYCCB_HT_SIZE,
+                                          hal::proxyccb_get_handle_key_func,
+                                          hal::proxyccb_compute_handle_hash_func,
+                                          hal::proxyccb_compare_handle_key_func);
+    HAL_ASSERT_RETURN((proxyccb_hal_handle_ht_ != NULL), false);
+
     nwsec_policy_cfg_ht_ = ht::factory(HAL_MAX_NW_SEC_POLICY_CFG,
                                        hal::nwsec_policy_cfg_get_key_func,
                                        hal::nwsec_policy_cfg_compute_hash_func,
@@ -405,6 +434,12 @@ hal_cfg_db::hal_cfg_db()
 
     rawccb_id_ht_ = NULL;
     rawccb_hal_handle_ht_ = NULL;
+
+    proxyrcb_id_ht_ = NULL;
+    proxyrcb_hal_handle_ht_ = NULL;
+
+    proxyccb_id_ht_ = NULL;
+    proxyccb_hal_handle_ht_ = NULL;
 
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
 }
@@ -502,6 +537,12 @@ hal_cfg_db::~hal_cfg_db()
 
     rawccb_id_ht_ ? ht::destroy(rawccb_id_ht_) : HAL_NOP;
     rawccb_hal_handle_ht_ ? ht::destroy(rawccb_hal_handle_ht_) : HAL_NOP;
+
+    proxyrcb_id_ht_ ? ht::destroy(proxyrcb_id_ht_) : HAL_NOP;
+    proxyrcb_hal_handle_ht_ ? ht::destroy(proxyrcb_hal_handle_ht_) : HAL_NOP;
+
+    proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
+    proxyccb_hal_handle_ht_ ? ht::destroy(proxyccb_hal_handle_ht_) : HAL_NOP;
 }
 
 void
@@ -901,6 +942,18 @@ hal_mem_db::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((rawccb_slab_ != NULL), false);
 
+    // initialize Raw Redirect CB related data structures
+    proxyrcb_slab_ = slab::factory("proxyrcb", HAL_SLAB_PROXYRCB,
+                                   sizeof(hal::proxyrcb_t), 16,
+                                   false, true, true, true);
+    HAL_ASSERT_RETURN((proxyrcb_slab_ != NULL), false);
+
+    // initialize Raw Chain CB related data structures
+    proxyccb_slab_ = slab::factory("proxyccb", HAL_SLAB_PROXYCCB,
+                                   sizeof(hal::proxyccb_t), 16,
+                                   false, true, true, true);
+    HAL_ASSERT_RETURN((proxyccb_slab_ != NULL), false);
+
     nwsec_policy_rules_slab_ = slab::factory("nwsec_policy_rules", HAL_SLAB_NWSEC_POLICY_RULES,
                                              sizeof(hal::nwsec_policy_rules_t), 64,
                                              true, true, true, true);
@@ -968,6 +1021,8 @@ hal_mem_db::hal_mem_db()
     cpucb_slab_ = NULL;
     rawrcb_slab_ = NULL;
     rawccb_slab_ = NULL;
+    proxyrcb_slab_ = NULL;
+    proxyccb_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -1036,6 +1091,10 @@ hal_mem_db::~hal_mem_db()
     rawrcb_slab_ = NULL;
     rawccb_slab_ ? slab::destroy(rawccb_slab_) : HAL_NOP;
     rawccb_slab_ = NULL;
+    proxyrcb_slab_ ? slab::destroy(proxyrcb_slab_) : HAL_NOP;
+    proxyrcb_slab_ = NULL;
+    proxyccb_slab_ ? slab::destroy(proxyccb_slab_) : HAL_NOP;
+    proxyccb_slab_ = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -1083,6 +1142,10 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(acl_slab_);
     GET_SLAB(ipseccb_slab_);
     GET_SLAB(cpucb_slab_);
+    GET_SLAB(rawrcb_slab_);
+    GET_SLAB(rawccb_slab_);
+    GET_SLAB(proxyrcb_slab_);
+    GET_SLAB(proxyccb_slab_);
 
     return NULL;
 }
@@ -1343,6 +1406,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_RAWCCB:
         g_hal_state->rawccb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_PROXYRCB:
+        g_hal_state->proxyrcb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_PROXYCCB:
+        g_hal_state->proxyccb_slab()->free_(elem);
         break;
 
     case HAL_SLAB_DHCP_LEARN:

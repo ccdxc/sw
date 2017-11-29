@@ -3,9 +3,9 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/rawccb.hpp"
-// #include "nic/hal/svc/rawccb_svc.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/app_redir_shared.h"
 
 namespace hal {
 void *
@@ -73,6 +73,10 @@ validate_rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_RAWC_CB_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
+    if (spec.key_or_handle().rawccb_id() >= RAWCCB_NUM_ENTRIES_MAX) {
+        rsp->set_api_status(types::API_STATUS_RAWC_CB_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
     return HAL_RET_OK;
 }
 
@@ -97,17 +101,21 @@ hal_ret_t
 rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    rawccb_t                *rawccb;
+    rawccb_t                *rawccb = NULL;
     pd::pd_rawccb_args_t    pd_rawccb_args;
 
     // validate the request message
     ret = validate_rawccb_create(spec, rsp);
+    if (ret != HAL_RET_OK) {
+        goto cleanup;
+    }
     
     // instantiate RAWC CB
     rawccb = rawccb_alloc_init();
     if (rawccb == NULL) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-        return HAL_RET_OOM;
+        ret = HAL_RET_OOM;
+        goto cleanup;
     }
 
     rawccb->cb_id = spec.key_or_handle().rawccb_id();
@@ -148,7 +156,9 @@ rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
 
 cleanup:
 
-    rawccb_free(rawccb);
+    if (rawccb) {
+        rawccb_free(rawccb);
+    }
     return ret;
 }
 
@@ -234,7 +244,6 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponse *rsp)
     // fill config spec of this RAWC CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_rawccb_id(rrawccb.cb_id);
     
-    rsp->mutable_spec()->set_rawccb_deactivated(rrawccb.rawccb_deactivated);
     rsp->mutable_spec()->set_rawccb_flags(rrawccb.rawccb_flags);
     rsp->mutable_spec()->set_my_txq_base(rrawccb.my_txq_base);
     rsp->mutable_spec()->set_my_txq_ring_size_shift(rrawccb.my_txq_ring_size_shift);
@@ -248,7 +257,6 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_txq_qtype(rrawccb.chain_txq_qtype);
     rsp->mutable_spec()->set_chain_txq_qid(rrawccb.chain_txq_qid);
     rsp->mutable_spec()->set_chain_txq_ring(rrawccb.chain_txq_ring);
-    rsp->mutable_spec()->set_rawccb_activated(rrawccb.rawccb_activated);
 
     rsp->mutable_spec()->set_pi(rrawccb.pi);
     rsp->mutable_spec()->set_ci(rrawccb.ci);

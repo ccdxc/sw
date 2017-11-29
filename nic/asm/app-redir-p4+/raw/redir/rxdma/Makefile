@@ -11,8 +11,9 @@ GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/app-redir-p4+
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
+COMMON_APP_REDIR_DIR = ../../../common/include
 INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../../../../common-p4+/include \
-           -I$(TOPDIR)/include -I../../../common/include
+           -I$(TOPDIR)/include -I$(COMMON_APP_REDIR_DIR)
 SRC_DIR = .
 CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim

@@ -6,8 +6,11 @@ struct rawc_pkt_post_pkt_post_d d;
 
 /*
  * Registers usage
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers
+ * so ensure program stage ends after invoking it.
  */
-#define r_cpu_flags                 r1
+#define r_cpu_flags                 r3
 
 %%
 

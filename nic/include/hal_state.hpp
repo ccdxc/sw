@@ -138,6 +138,14 @@ public:
     ht *rawccb_id_ht(void) const { return rawccb_id_ht_; }
     ht *rawccb_hal_handle_ht(void) const { return rawccb_hal_handle_ht_; }
 
+    // get APIs for Proxy Redirect CB state
+    ht *proxyrcb_id_ht(void) const { return proxyrcb_id_ht_; }
+    ht *proxyrcb_hal_handle_ht(void) const { return proxyrcb_hal_handle_ht_; }
+
+    // get APIs for Proxy Chain CB state
+    ht *proxyccb_id_ht(void) const { return proxyccb_id_ht_; }
+    ht *proxyccb_hal_handle_ht(void) const { return proxyccb_hal_handle_ht_; }
+
     void set_forwarding_mode(std::string modestr);
     hal_forwarding_mode_t forwarding_mode() { return forwarding_mode_; }
 
@@ -303,6 +311,18 @@ private:
         ht         *rawccb_hal_handle_ht_;
     } __PACK__;
 
+    // Raw Redirect CB related state
+    struct {
+        ht         *proxyrcb_id_ht_;
+        ht         *proxyrcb_hal_handle_ht_;
+    } __PACK__;
+
+    // Raw Chain CB related state
+    struct {
+        ht         *proxyccb_id_ht_;
+        ht         *proxyccb_hal_handle_ht_;
+    } __PACK__;
+
     // CFG parameters from JSON file.
     struct {
         hal_forwarding_mode_t   forwarding_mode_;
@@ -394,6 +414,8 @@ public:
     slab *cpucb_slab(void) const { return cpucb_slab_; }
     slab *rawrcb_slab(void) const { return rawrcb_slab_; }
     slab *rawccb_slab(void) const { return rawccb_slab_; }
+    slab *proxyrcb_slab(void) const { return proxyrcb_slab_; }
+    slab *proxyccb_slab(void) const { return proxyccb_slab_; }
 
 private:
     bool init(void);
@@ -437,6 +459,8 @@ private:
     slab    *cpucb_slab_;
     slab    *rawrcb_slab_;
     slab    *rawccb_slab_;
+    slab    *proxyrcb_slab_;
+    slab    *proxyccb_slab_;
 };
 
 //------------------------------------------------------------------------------
@@ -608,6 +632,16 @@ public:
     slab *rawccb_slab(void) const { return mem_db_->rawccb_slab(); }
     ht *rawccb_id_ht(void) const { return cfg_db_->rawccb_id_ht(); }
     ht *rawccb_hal_handle_ht(void) const { return cfg_db_->rawccb_hal_handle_ht(); }
+
+    // get APIs for Raw Redirect CB state
+    slab *proxyrcb_slab(void) const { return mem_db_->proxyrcb_slab(); }
+    ht *proxyrcb_id_ht(void) const { return cfg_db_->proxyrcb_id_ht(); }
+    ht *proxyrcb_hal_handle_ht(void) const { return cfg_db_->proxyrcb_hal_handle_ht(); }
+
+    // get APIs for Raw Chain CB state
+    slab *proxyccb_slab(void) const { return mem_db_->proxyccb_slab(); }
+    ht *proxyccb_id_ht(void) const { return cfg_db_->proxyccb_id_ht(); }
+    ht *proxyccb_hal_handle_ht(void) const { return cfg_db_->proxyccb_hal_handle_ht(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(std::string modestr) { 

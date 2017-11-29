@@ -6,9 +6,11 @@ struct proxyr_mpage_sem_post_mpage_pindex_post_update_d d;
 
 /*
  * Registers usage
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_INDEX uses r1/r2 as scratch registers!
  */
-#define r_pi                        r1  // semaphore producer index
-#define r_table_base                r2  // semaphore table base
+#define r_pi                        r3  // semaphore producer index
+#define r_table_base                r4  // semaphore table base
 
 
 %%

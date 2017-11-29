@@ -39,10 +39,8 @@ typedef struct rawccb_s {
      * ordering defined in rawc_txdma_p4plus_ingress.h
      * see hal/pd/iris/rawccb_pd.cc)
      */
-    uint16_t              pi;
-    uint16_t              ci;
-    uint8_t               rawccb_deactivated;
-    uint8_t               rawccb_activated;
+    uint16_t              pi;                       // if more PI/CI's are added, 
+    uint16_t              ci;                       // be sure to adjust HAL_RAWCCB_NUM_RINGS_MAX below
     uint16_t              rawccb_flags;
     uint32_t              my_txq_base;
     uint8_t               my_txq_ring_size_shift;
@@ -66,8 +64,12 @@ typedef struct rawccb_s {
     ht_ctxt_t             hal_handle_ht_ctxt;       // hal handle based hash table ctxt
 } __PACK__ rawccb_t;
 
-// RAWCCB hash table size
-#define HAL_MAX_RAWCCB_HT_SIZE          1024
+#define HAL_MAX_RAWCCB_HT_SIZE          1024        // hash table size
+
+/*
+ * Number of PI/CI pairs defined in rawccb_t above
+ */
+#define HAL_NUM_RAWCCB_RINGS_MAX        1
 
 // allocate a RAWCCB instance
 static inline rawccb_t *

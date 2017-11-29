@@ -20,26 +20,22 @@ proxyr_s1_flow_key_post_read:
      * proxyrcb_deactivated must be false and proxyrcb_activated must
      * be true to indicate readiness.
      */
-    seq         c1, k.to_s1_proxyrcb_deactivated, r0
-    sne         c2, d.proxyrcb_activated, r0
+    sne         c1, k.to_s1_proxyrcb_deactivate, PROXYRCB_DEACTIVATE
+    seq         c2, d.proxyrcb_activate, PROXYRCB_ACTIVATE
     setcf       c3, [c1 & c2]
     b.!c3       _proxyrcb_not_ready
     
     /*
-     * Populate more meta header fields with flow key
+     * Populate more meta header fields with flow key.
+     * Note: fields are written individually here due to NCC (though not
+     * all NCC versions apparently) reordering of fields in k-vec.
      */
-    phvwr       p.pen_proxyr_hdr_v1_vrf, d.vrf  // delay slot
+    phvwr       p.pen_proxyr_hdr_v1_vrf, d.vrf
     phvwr       p.pen_proxyr_hdr_v1_ip_sa, d.ip_sa
     phvwr       p.pen_proxyr_hdr_v1_ip_da, d.ip_da
     phvwr       p.pen_proxyr_hdr_v1_sport, d.sport
     phvwr       p.pen_proxyr_hdr_v1_dport, d.dport
     phvwr       p.pen_proxyr_hdr_v1_af, d.af
-
-    /*
-     * TCP flags not currently sent from TCP/TLS proxy
-     * but will be at some point so we will add it then.
-     */
-    //phvwr     p.pen_proxyr_hdr_v1_tcp_flags, ???
     phvwr.e     p.pen_proxyr_hdr_v1_ip_proto, d.ip_proto
     nop
 
