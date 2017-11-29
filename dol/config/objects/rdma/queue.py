@@ -271,14 +271,14 @@ class RdmaEQstate(Packet):
         ShortField("p_index0", 0),
         ShortField("c_index0", 0),
 
-        LongField("base_addr", 0),
+        LongField("eqe_base_addr", 0),
         IntField("int_num", 0),
-        IntField("eq_id", 0),
+        X3BytesField("eq_id", 0),
         BitField("log_num_wqes", 0, 5),
-        BitField("log_wqe_size", 6, 5),
+        BitField("log_wqe_size", 2, 5),
         BitField("int_enabled", 0, 1),
         BitField("color", 0, 1),
-        BitField("rsvd", 0, 4),
+        BitField("rsvd", 0, 28),
     ]
 
 qt_params = {
@@ -349,6 +349,16 @@ class RdmaQstateObject(object):
 
     def get_proxy_cindex(self):
         return getattr(self.data, 'proxy_cindex')
+
+    def reset_cindex(self, ring):
+        assert(ring < 7)
+        self.set_cindex(ring, self.get_pindex(ring))
+        self.Write()
+
+    def ArmCq(self):
+        assert(self.queue_type == 'RDMA_CQ')
+        setattr(self.data, 'arm', 1)
+        self.Write()
 
     def Show(self, lgh = cfglogger):
         lgh.ShowScapyObject(self.data) 

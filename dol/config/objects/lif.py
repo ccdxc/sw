@@ -75,6 +75,7 @@ class LifObject(base.ConfigObjectBase):
         if self.enable_rdma:
             self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
             self.cqid_allocator = objects.TemplateFieldObject("range/0/16384")
+            self.eqid_allocator = objects.TemplateFieldObject("range/0/256")
             self.pd_allocator = objects.TemplateFieldObject("range/0/128")
             self.mr_key_allocator = objects.TemplateFieldObject("range/0/1024")
 
@@ -90,6 +91,9 @@ class LifObject(base.ConfigObjectBase):
         cqid = self.cqid_allocator.get()
         self.cqid_allocator.get()
         return cqid
+
+    def GetEqid(self):
+        return self.eqid_allocator.get()
 
     def GetPd(self):
         return self.pd_allocator.get()

@@ -20,6 +20,9 @@ service Rdma {
   // Completion Q related APIs
   rpc RdmaCqCreate(RdmaCqRequestMsg) returns (RdmaCqResponseMsg) {}
 
+  // Completion Q related APIs
+  rpc RdmaEqCreate(RdmaEqRequestMsg) returns (RdmaEqResponseMsg) {}
+
   // Register Memory related APIs
   rpc RdmaMemReg(RdmaMemRegRequestMsg) returns (RdmaMemRegResponseMsg) {}
 }
@@ -163,7 +166,7 @@ message RdmaCqSpec {
   uint32                   num_cq_wqes     = 5;    // Num CQWQEs
   uint32                   hostmem_pg_size = 7;    // Path MTU
   uint32                   cq_lkey         = 8;    // CQ's lkey
-  uint32                   eq_num          = 9;    // EQ id
+  uint32                   eq_id           = 9;    // EQ id
 }
 
 // RdmaCqRequestMsg is batched request used to create/update of Rdma QPs
@@ -180,6 +183,34 @@ message RdmaCqResponse {
 // RdmaCqResponseMsg is response to RdmaCqRequestMsg
 message RdmaCqResponseMsg {
   repeated RdmaCqResponse    response = 1;    // batch of responses
+}
+
+//**********************   Event Queue  *****************************//
+// RdmaEq object
+message RdmaEqSpec {
+  types.ObjectMeta         meta               = 1;    // object meta
+  uint32                   eq_id              = 2;    // EQ Number
+  uint32                   hw_lif_id          = 3;    // LIF id
+  uint32                   eq_wqe_size        = 4;    // EQWQE size
+  uint32                   num_eq_wqes        = 5;    // Num EQWQEs
+  uint64                   eqe_base_addr_phy  = 6;    // EQE's base addres- physical
+  uint32                   int_num            = 9;    // Interrupt num
+}
+
+// RdmaEqRequestMsg is batched request used to create/update of Rdma QPs
+message RdmaEqRequestMsg {
+  repeated RdmaEqSpec    request = 1;    // batch of requests
+}
+
+// RdmaEqResponse response to one RdmaEqSpec
+message RdmaEqResponse {
+  types.ApiStatus     api_status       = 1;        // API status code
+  uint32              eq_intr_tbl_addr     = 2;    // EQ interrupt table addr
+}
+
+// RdmaEqResponseMsg is response to RdmaEqRequestMsg
+message RdmaEqResponseMsg {
+  repeated RdmaEqResponse    response = 1;    // batch of responses
 }
 
 //**********************   Memory Registratin(MR)  *********************//

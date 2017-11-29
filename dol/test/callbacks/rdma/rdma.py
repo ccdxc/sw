@@ -33,6 +33,12 @@ def GetCQExpColor (tc, desc, args = None):
     else:
        return (tc.pvtdata.rq_cq_pre_qstate.color)
 
+def GetRespRxEQExpColor (tc, desc, args = None):
+    if tc.pvtdata.eq_pre_qstate.p_index0 == 0:
+       return (not tc.pvtdata.eq_pre_qstate.color)
+    else:
+       return (tc.pvtdata.eq_pre_qstate.color)
+
 def GetReqRxCQExpColor (tc, desc, args = None):
     if tc.pvtdata.sq_cq_pre_qstate.p_index0 == 0:
        return (not tc.pvtdata.sq_cq_pre_qstate.color)

@@ -169,6 +169,10 @@
             "size_kb": 1024
         },
         {
+            "name": "rdma-eq-intr-table",
+            "size_kb": 32
+        },
+        {
             "name": "key-mem",
             "size_kb": 4096
         },

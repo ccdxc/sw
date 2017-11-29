@@ -28,6 +28,10 @@ class RdmaRingObject(ring.RingObject):
         self.mem_handle = mem_handle
         self.size = size
         self.desc_size = desc_size
+        cfglogger.info("SetRingParams: host %d eqe_base_addr: 0x%x" \
+                       " size %d desc_size %d " %\
+                       (self.host, self.address, self.size, self.desc_size))
+
 
     def Configure(self):
         pass
@@ -65,8 +69,9 @@ class RdmaRingObject(ring.RingObject):
         descriptor.Read()
         self.queue.qstate.Read()
 
-        # Increment consumer index for CQs
-        if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_CQ":
+        # Increment consumer index for CQs and EQs
+        if ((self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_CQ") or 
+            (self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_EQ")):
             cfglogger.info('incrementing cindex..')
             self.queue.qstate.incr_cindex(0, self.size)
 

@@ -27,6 +27,10 @@ using rdma::RdmaCqSpec;
 using rdma::RdmaCqRequestMsg;
 using rdma::RdmaCqResponse;
 using rdma::RdmaCqResponseMsg;
+using rdma::RdmaEqSpec;
+using rdma::RdmaEqRequestMsg;
+using rdma::RdmaEqResponse;
+using rdma::RdmaEqResponseMsg;
 using rdma::RdmaAhRequestMsg;
 using rdma::RdmaAhResponseMsg;
 using rdma::RdmaAhSpec;
@@ -39,6 +43,7 @@ extern hal_ret_t rdma_lif_init(intf::LifSpec& spec, uint32_t lif_id);
 extern  hal_ret_t rdma_qp_create(RdmaQpSpec& spec, RdmaQpResponse *rsp);
 extern  hal_ret_t rdma_qp_update(RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp);
 extern hal_ret_t rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp);
+extern hal_ret_t rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp);
 extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp);
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
@@ -638,27 +643,6 @@ typedef enum cq_status_e {
     CQ_STATUS_XRC_VIO_ERR,
 } cq_status_t;
 
-typedef struct cqwqe_s {
-    union {
-        uint64_t wrid;
-        uint32_t msn;
-    } id;
-    uint8_t  op_type;
-    uint8_t  status;
-    uint8_t  rkey_inv_vld:1;
-    uint8_t  imm_data_vld:1;
-    uint8_t  color:1;
-    uint8_t  rsvd1:5;
-    uint32_t qp:24;
-    uint32_t imm_data;
-    uint32_t r_key;
-} PACKED cqwqe_t;
-
-typedef struct eqwqe_s {
-    uint32_t cq_id;
-	uint8_t  color:1;
-} PACKED eqwqe_t;
-
 typedef struct rdma_bth_s {
     uint32_t opcode  : 8;
     uint32_t se      : 1;
@@ -1115,7 +1099,7 @@ typedef struct cqcb_s {
     uint32_t color:1;
     uint32_t arm:1;
 
-    uint32_t eq_num:24;
+    uint32_t eq_id:24;
     uint32_t cq_num:24;
     uint32_t rsvd1:1;
     uint32_t log_num_wqes:5;
@@ -1131,18 +1115,19 @@ typedef struct cqcb_s {
 } PACKED cqcb_t;
 
 #define EQ_RING_ID  RING_ID_0
-#define MAX_EQ_RINGS 6
+#define MAX_EQ_RINGS 1
 
 typedef struct eqcb_s {
-    uint8_t  color: 1;
-    uint8_t  int_enabled: 1;
-    uint16_t eq_id;
-
-    uint32_t int_num;
-    uint64_t base_addr;
+    uint32_t  rsvd: 28;
+    uint32_t  color: 1;
+    uint32_t  int_enabled: 1;
+    uint32_t  log_wqe_size: 5;
+    uint32_t  log_num_wqes: 5;
+    uint32_t  eq_id:24;
+    uint32_t  int_num;
+    uint64_t  eqe_base_addr;
 
     qpcb_ring_t           rings[MAX_EQ_RINGS];
-
     // intrinsic
     qpcb_intrinsic_base_t ring_header;
 } PACKED eqcb_t;

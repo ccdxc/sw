@@ -25,6 +25,10 @@ using rdma::RdmaCqSpec;
 using rdma::RdmaCqRequestMsg;
 using rdma::RdmaCqResponse;
 using rdma::RdmaCqResponseMsg;
+using rdma::RdmaEqSpec;
+using rdma::RdmaEqRequestMsg;
+using rdma::RdmaEqResponse;
+using rdma::RdmaEqResponseMsg;
 using rdma::RdmaMemRegSpec;
 using rdma::RdmaMemRegRequestMsg;
 using rdma::RdmaMemRegResponse;
@@ -56,6 +60,9 @@ public:
     Status RdmaCqCreate(ServerContext *context,
                         const RdmaCqRequestMsg *req,
                         RdmaCqResponseMsg *rsp) override;
+    Status RdmaEqCreate(ServerContext *context,
+                        const RdmaEqRequestMsg *req,
+                        RdmaEqResponseMsg *rsp) override;
 
     Status RdmaMemReg(ServerContext *context,
                       const RdmaMemRegRequestMsg *reqs,

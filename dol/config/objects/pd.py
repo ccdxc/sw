@@ -16,6 +16,7 @@ import rdma_pb2                 as rdma_pb2
 import config.objects.qp        as qp
 import config.objects.mr        as mr
 import config.objects.cq        as cq
+import config.objects.eq        as eq
 
 from infra.common.glopts import GlobalOptions
 
@@ -35,6 +36,7 @@ class PdObject(base.ConfigObjectBase):
         if len(self.obj_helper_mr.mrs):
             self.mrs.SetAll(self.obj_helper_mr.mrs)
 
+        #CQs
         self.cqs = objects.ObjectDatabase(cfglogger)
         self.obj_helper_cq = cq.CqObjectHelper()
         cq_spec = spec.cq.Get(Store)
@@ -42,6 +44,15 @@ class PdObject(base.ConfigObjectBase):
         if len(self.obj_helper_cq.cqs):
             self.cqs.SetAll(self.obj_helper_cq.cqs)
 
+        #EQs
+        self.eqs = objects.ObjectDatabase(cfglogger)
+        self.obj_helper_eq = eq.EqObjectHelper()
+        eq_spec = spec.eq.Get(Store)
+        self.obj_helper_eq.Generate(self, eq_spec)
+        if len(self.obj_helper_eq.eqs):
+            self.eqs.SetAll(self.obj_helper_eq.eqs)
+
+        #QPs
         self.qps = objects.ObjectDatabase(cfglogger)
         self.udqps = objects.ObjectDatabase(cfglogger)
         self.obj_helper_qp = qp.QpObjectHelper()
@@ -68,6 +79,8 @@ class PdObject(base.ConfigObjectBase):
             self.obj_helper_mr.Configure()
         if len(self.obj_helper_cq.cqs):
             self.obj_helper_cq.Configure()
+        if len(self.obj_helper_eq.eqs):
+            self.obj_helper_eq.Configure()
         if len(self.obj_helper_qp.qps):
             self.obj_helper_qp.Configure()
 
@@ -75,6 +88,7 @@ class PdObject(base.ConfigObjectBase):
         cfglogger.info('PD: %s EP: %s Remote: %s' %(self.GID(), self.ep.GID(), self.remote))
         cfglogger.info('Qps: %d Mrs: %d' %(len(self.obj_helper_qp.qps), len(self.obj_helper_mr.mrs)))
         cfglogger.info('UDQps: %d ' % (len(self.obj_helper_qp.udqps)))
+        cfglogger.info('CQs: %d EQs: %d' % (len(self.obj_helper_cq.cqs), len(self.obj_helper_eq.eqs)))
 
 class PdObjectHelper:
     def __init__(self):

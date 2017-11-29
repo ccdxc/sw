@@ -21,9 +21,17 @@ def TestCaseSetup(tc):
     rs.lqp.rq.qstate.data.immdt_as_dbell = 1
     rs.lqp.rq.qstate.Write();
 
+   # ARM CQ and Set EQ's CI=PI for EQ enablement
+    rs.lqp.rq_cq.qstate.ArmCq()
+    rs.lqp.eq.qstate.reset_cindex(0)
+
     # Read CQ pre state
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
+
+    # Read EQ pre state
+    rs.lqp.eq.qstate.Read()
+    tc.pvtdata.eq_pre_qstate = rs.lqp.eq.qstate.data
     return
 
 def TestCaseTrigger(tc):
@@ -70,6 +78,10 @@ def TestCaseVerify(tc):
 
     ############     CQ VALIDATIONS #################
     if not ValidateRespRxCQChecks(tc):
+        return False
+
+    ############     EQ VALIDATIONS #################
+    if not ValidateRespRxEQChecks(tc):
         return False
 
     return True

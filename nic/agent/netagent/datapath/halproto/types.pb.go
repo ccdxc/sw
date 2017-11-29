@@ -548,6 +548,10 @@
 		RdmaCqRequestMsg
 		RdmaCqResponse
 		RdmaCqResponseMsg
+		RdmaEqSpec
+		RdmaEqRequestMsg
+		RdmaEqResponse
+		RdmaEqResponseMsg
 		RdmaMemRegSpec
 		RdmaMemRegRequestMsg
 		RdmaMemRegResponse

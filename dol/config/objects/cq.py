@@ -80,6 +80,7 @@ class CqObject(base.ConfigObjectBase):
                          self.cq_mr.lkey, self.pd.ep.intf.lif.hw_lif_id))
         if (GlobalOptions.dryrun): return
         req_spec.cq_num = self.id
+        req_spec.eq_id = self.pd.id  # PD id is the EQ number
         req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
         req_spec.cq_wqe_size = self.cqwqe_size
         req_spec.num_cq_wqes = self.num_cq_wqes

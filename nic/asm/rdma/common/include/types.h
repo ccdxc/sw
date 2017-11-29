@@ -21,7 +21,7 @@
 #define LOG_CB_UNIT_SIZE_BYTES 6
 #define CB_UNIT_SIZE_BYTES  64
 
-#define LOG_SIZEOF_EQCB_T   6   // 2^6 = 64 Bytes
+#define LOG_SIZEOF_EQCB_T   5   // 2^5 = 32 Bytes
 
 #define SQCB0_ADDR_GET(_r)                         \
     sll     _r, k.global.cb_addr, SQCB_ADDR_SHIFT;

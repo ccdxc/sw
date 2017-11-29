@@ -90,6 +90,11 @@ class QpObject(base.ConfigObjectBase):
             if (self.sq_cq is None or self.rq_cq is None):
                 assert(0)
     
+            # allocating one EQ for one PD
+            self.eq = pd.ep.intf.lif.GetQ('RDMA_EQ', pd.id)  # PD id is the EQ number
+            if (self.eq is None):
+                assert(0)
+    
             # create sq/rq slabs
             self.sq_slab = slab.SlabObject(self.pd.ep, self.sq_size)
             self.rq_slab = slab.SlabObject(self.pd.ep, self.rq_size)

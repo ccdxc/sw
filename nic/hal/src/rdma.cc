@@ -822,6 +822,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     // For UD QPs, please add it to the Segment's Broadcast OIFs list
     // For testing purpose, please add only Queuepairs with QID less than or equal to 5
+    // In final implementation, we will be registering QPs to a Mcast group(ID'ed by IP address)
+    // but for now, we are testing this with Bcast/Flood functionality.
 
     HAL_TRACE_DEBUG("Check if this QP to be added to oif_list for LIF:{} PD:{} QP:{}, If_hdl: {}",
                     lif, spec.pd(), spec.qp_num(), spec.if_handle());
@@ -1018,9 +1020,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     HAL_TRACE_DEBUG("cqwqe_size: {} num_cq_wqes: {}", cqwqe_size, num_cq_wqes);
     
     memset(&cqcb, 0, sizeof(cqcb_t));
-    // RRQ is defined as last ring in the SQCB ring array
-    // We should skip scheduling for the RRQ, so set total
-    //  rings as one less than max/total
+    // EQ does not need scheduling, so set one less (meaning #rings as zero)
     cqcb.ring_header.total_rings = MAX_CQ_RINGS - 1;
     cqcb.pt_base_addr =
         rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.cq_lkey()));
@@ -1028,7 +1028,8 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.log_wqe_size = log2(cqwqe_size);
     cqcb.log_num_wqes = log2(num_cq_wqes);
     cqcb.cq_num = spec.cq_num();
-    cqcb.eq_num = spec.eq_num();
+    cqcb.eq_id = spec.eq_id();
+    cqcb.arm = 0;   // Dont arm by default, only Arm it for tests which post/validate EQ
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}", 
@@ -1044,6 +1045,58 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     return (HAL_RET_OK);
 }
 
+
+hal_ret_t
+rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
+{
+    uint32_t     lif = spec.hw_lif_id(), num_eq_wqes;
+    uint8_t      eqwqe_size;
+    eqcb_t       eqcb;
+    uint32_t     hbm_eq_intr_table_base;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-LIF:{}: RDMA EQ Create for lif {}", __FUNCTION__, lif);
+
+
+    HAL_TRACE_DEBUG("{}: Inputs: eq_id: {} eq_wqe_size: {} num_eq_wqes: {} "
+                    " eqe_base_addr_phy: {} ", __FUNCTION__, spec.eq_id(),
+                    spec.eq_wqe_size(), spec.num_eq_wqes(),
+                    spec.eqe_base_addr_phy());
+
+    eqwqe_size = roundup_to_pow_2(spec.eq_wqe_size());
+    num_eq_wqes = roundup_to_pow_2(spec.num_eq_wqes());
+
+    HAL_TRACE_DEBUG("eqwqe_size: {} num_eq_wqes: {}", eqwqe_size, num_eq_wqes);
+
+    
+    memset(&eqcb, 0, sizeof(eqcb_t));
+    // EQ does not need scheduling, so set one less (meaning #rings as zero)
+    eqcb.ring_header.total_rings = MAX_EQ_RINGS - 1;
+    eqcb.eqe_base_addr = spec.eqe_base_addr_phy();
+    eqcb.log_wqe_size = log2(eqwqe_size);
+    eqcb.log_num_wqes = log2(num_eq_wqes);
+    eqcb.int_enabled = 1;
+    eqcb.int_num = spec.int_num();
+    eqcb.eq_id = spec.eq_id();
+    eqcb.color = 0;
+
+    // write to hardware
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial EQCB State, eqcb_size: {}", 
+                    __FUNCTION__, lif, sizeof(eqcb_t));
+    // Convert data before writting to HBM
+    pd::memrev((uint8_t*)&eqcb, sizeof(eqcb_t));
+    g_lif_manager->WriteQState(lif, Q_TYPE_RDMA_EQ, spec.eq_id(), (uint8_t *)&eqcb, sizeof(eqcb_t));
+    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_EQ, spec.eq_id()));
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    // Fill the EQ Interrupt address = Intr_table base + 8 bytes for each intr_num
+    hbm_eq_intr_table_base = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
+    HAL_ASSERT(hbm_eq_intr_table_base > 0);
+    rsp->set_eq_intr_tbl_addr(hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t));
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+
+    return (HAL_RET_OK);
+}
 
 hal_ret_t
 rdma_hal_init()

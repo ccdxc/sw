@@ -174,6 +174,13 @@ class RdmaCqDescriptor(Packet):
         IntField("r_key", 0),
     ]
 
+class RdmaEqDescriptor(Packet):
+    fields_desc = [
+        X3BytesField("cq_id", 0),
+        BitField("color", 0, 1),
+        BitField("rsvd", 0, 7),
+    ]
+
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
@@ -192,7 +199,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         """
         inline_data_vld = self.spec.fields.inline_data_vld if hasattr(self.spec.fields, 'inline_data_vld') else 0
         num_sges = self.spec.fields.num_sges if hasattr(self.spec.fields, 'num_sges') else 0
-        cfglogger.info("Writing Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d" % 
+        cfglogger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d" % 
                        (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges))
         desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid,
                                     inline_data_vld = inline_data_vld, num_sges=num_sges)
@@ -356,7 +363,7 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
+        cfglogger.info("Writing RQ Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
                        (self.mem_handle.va, self.mem_handle.pa, self.wrid, self.spec.fields.num_sges))
         desc = RdmaRqDescriptorBase(wrid=self.wrid,
                                     num_sges=self.spec.fields.num_sges)
@@ -493,7 +500,7 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing Desciptor @0x%x = wrid: 0x%x " % 
+        cfglogger.info("Writing CQ Desciptor @0x%x = wrid: 0x%x " % 
                        (self.address, self.wrid))
         resmgr.HostMemoryAllocator.write(self.mem_handle, 
                                          bytes(self.desc))
@@ -548,6 +555,81 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
     def GetBuffer(self):
         cfglogger.info("GetBuffer() operator invoked on cq descriptor")
         # CQ is not associated with any buffer and hence simply create
+        # default RDMABuffer object so that ebuf == abuf check passes
+        return rdmabuffer.RdmaBufferObject()
+
+class RdmaEqDescriptorObject(base.FactoryObjectBase):
+    def __init__(self):
+        super().__init__()
+        self.Clone(FactoryStore.templates.Get('DESC_RDMA_EQ'))
+        self.logger = cfglogger
+
+    def Init(self, spec):
+        super().Init(spec)
+        if hasattr(spec.fields, 'cq_id'):
+            self.cq_id = spec.fields.cq_id
+        if hasattr(spec.fields, 'color'):
+            self.color = spec.fields.color
+        self.__create_desc()
+
+    def __create_desc(self):
+        self.desc = RdmaEqDescriptor(
+            cq_id=self.cq_id,
+            color=self.color)
+        
+    def __set_desc(self, desc):
+        self.desc = desc
+    
+    def Write(self):
+        """
+        Creates a Descriptor at "self.address"
+        :return:
+        """
+        cfglogger.info("Writing EQ Desciptor @0x%x = cq_id: %d " % 
+                       (self.address, self.cq_id))
+        resmgr.HostMemoryAllocator.write(self.mem_handle, 
+                                         bytes(self.desc))
+
+    def Read(self):
+        """
+        Reads a Descriptor from "self.address"
+        :return:
+        """
+        cfglogger.info("Reading EQ Desciptor @ 0x%x " % (self.address))
+        self.phy_address = resmgr.HostMemoryAllocator.get_v2p(self.address)
+        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        self.__set_desc(RdmaEqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaEqDescriptor()))))
+
+    def Show(self):
+        self.desc.show()
+
+    def __eq__(self, other):
+        cfglogger.info("__eq__ operator invoked on Eq descriptor..")
+
+        cfglogger.info('\nself(expected):')
+        self.Show()
+        cfglogger.info('\nother(actual):')
+        other.Show()
+
+        if self.desc.cq_id != other.desc.cq_id:
+            return False
+
+        cfglogger.info('cq_id matched\n')
+
+        if self.desc.color != other.desc.color:
+            return False
+
+        cfglogger.info('color matched\n')
+
+        cfglogger.info('EQ descriptor matched\n')
+        return True
+
+        #no need to compare other params as they are meaningful only incase of SUCCESS
+
+
+    def GetBuffer(self):
+        cfglogger.info("GetBuffer() operator invoked on EQ descriptor")
+        # EQ is not associated with any buffer and hence simply create
         # default RDMABuffer object so that ebuf == abuf check passes
         return rdmabuffer.RdmaBufferObject()
 

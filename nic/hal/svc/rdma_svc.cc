@@ -94,6 +94,28 @@ RdmaServiceImpl::RdmaCqCreate(ServerContext *context,
 }
 
 Status
+RdmaServiceImpl::RdmaEqCreate(ServerContext *context,
+                                const RdmaEqRequestMsg *req,
+                                RdmaEqResponseMsg *rsp)
+{
+    uint32_t             i, nreqs = req->request_size();
+    RdmaEqResponse          *response;
+
+    HAL_TRACE_DEBUG("Rcvd RdmaEq Create Request");
+    if (nreqs == 0) {
+        HAL_TRACE_DEBUG("Rcvd RdmaEq Create Request: Zero requests, returning");
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::rdma_eq_create(spec, response);
+    }
+    return Status::OK;
+}
+
+Status
 RdmaServiceImpl::RdmaMemReg(ServerContext *context,
                             const RdmaMemRegRequestMsg *req,
                             RdmaMemRegResponseMsg *rsp)

@@ -66,7 +66,6 @@
 #define CAPRI_RXDMA_DETH_IMMETH_SMAC          k.{rdma_bth_deth_immeth_smac_sbit0_ebit15...rdma_bth_deth_immeth_smac_sbit40_ebit47}
 
 #define CAPRI_RAW_TABLE_PC_SHIFT 6
-#define CAPRI_INTR_BASE 0x1234
 
 #define INTRINSIC_RAW_K_T struct capri_intrinsic_raw_k_t
 struct capri_intrinsic_raw_k_t {

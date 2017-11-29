@@ -73,6 +73,7 @@ QosDscpAllocator    = objects.TemplateFieldObject("range/32/48")
 
 SecurityGroupAllocator  = objects.TemplateFieldObject("range/1/128")
 DosPolicyAllocator      = objects.TemplateFieldObject("range/1/128")
+InterruptAllocator      = objects.TemplateFieldObject("range/1/4096")
 
 def CreateIpv4AddrPool(subnet):
     allocator = objects.TemplateFieldObject("ipstep/" + subnet + "/0.0.0.1")
@@ -170,7 +171,6 @@ class HostMemory(object):
 
     def __del__(self):
         self.delete_host_mem()
-
 
 def init():
     global HostMemoryAllocator

@@ -9,6 +9,7 @@ struct req_rx_cqpt_process_k_t k;
 //#define PHV_CQWQE_END   cqwqe.r_key
 
 #define EQ_INFO_T struct req_rx_cqcb_to_eq_info_t
+#define TMP r3
 
 %%
     .param  req_rx_eqcb_process
@@ -35,7 +36,7 @@ req_rx_cqpt_process:
     bcf             [!c2], cqpt_exit
     DMA_SET_END_OF_CMDS_C(struct capri_dma_cmd_phv2mem_t, r2, !c2) //BD slot
 
-    EQCB_ADDR_GET(r5, k.args.eq_id) // BD Slot
+    EQCB_ADDR_GET(r5, TMP, k.args.eq_id) // BD Slot
     CAPRI_GET_TABLE_I_K_AND_ARG(req_rx_phv_t, r6, r3, r7)
 
     CAPRI_SET_FIELD(r7, EQ_INFO_T, tbl_id, r6)

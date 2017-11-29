@@ -73,4 +73,27 @@ def ValidateNoCQChanges(tc):
 
     return True
 
+############     EQ VALIDATIONS #################
+def ValidateRespRxEQChecks(tc):
+    rs = tc.config.rdmasession
+    rs.lqp.eq.qstate.Read()
+    tc.pvtdata.eq_post_qstate = rs.lqp.eq.qstate.data
+    log_num_eq_wqes = getattr(tc.pvtdata.eq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_eq_wqes) - 1
+
+    # verify that p_index is incremented by 1, as eqwqe is posted
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.eq_pre_qstate, tc.pvtdata.eq_post_qstate, 'p_index0', ring0_mask, 1):
+        return False
+
+    # verify that c_index is incremented by 1, as eqwqe is consumed
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.eq_pre_qstate, tc.pvtdata.eq_post_qstate, 'c_index0', ring0_mask, 1):
+        return False
+
+    # verify that color bit in EQWQE and EQCB are same
+    #TODO Comment below one before the commit
+    tc.info('Color from Exp EQ Descriptor: %d' % tc.descriptors.Get('EXP_EQ_DESC').color)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.eq_post_qstate, 'color', tc.descriptors.Get('EXP_EQ_DESC').color):
+        return False
+
+    return True
 

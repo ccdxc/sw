@@ -2,6 +2,7 @@
 #include "resp_rx.h"
 #include "eqcb.h"
 #include "common_phv.h"
+#include "capri-macros.h"
 
 struct resp_rx_phv_t p;
 struct resp_rx_eqcb_process_k_t k;
@@ -22,6 +23,8 @@ struct eqcb_t d;
 
 %%
 
+   .param RDMA_EQ_INTR_TABLE_BASE
+
 .align
 resp_rx_eqcb_process:
 
@@ -37,16 +40,19 @@ resp_rx_eqcb_process:
 
     add             r1, r0, d.log_wqe_size
     sllv            r1, EQ_P_INDEX, r1
-    add             EQWQE_P, d.base_addr, r1
+    add             EQWQE_P, d.eqe_base_addr, r1
 
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, DMA_CMD_INDEX)
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQWQE_START, PHV_EQWQE_END, EQWQE_P)
     add             DMA_CMD_INDEX, DMA_CMD_INDEX, 1
     add             DMA_CMD_BASE, DMA_CMD_BASE, DMA_CMD_SIZE_BITS
 
-    //TODO: use proper interrupt base
-    add             EQ_INT_ADDR, CAPRI_INTR_BASE, d.int_num
-    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_NUM_START, PHV_EQ_INT_NUM_END, EQ_INT_ADDR)
+    // RDMA_EQ_INTR_TABLE_BASE is 34 bytes, so load it into register using 2 instructions
+    addui       EQ_INT_ADDR, r0, hiword(RDMA_EQ_INTR_TABLE_BASE)
+    addi        EQ_INT_ADDR, EQ_INT_ADDR, loword(RDMA_EQ_INTR_TABLE_BASE)
+
+    add             EQ_INT_ADDR, EQ_INT_ADDR, d.int_num, RDMA_EQ_INTR_TABLE_ENTRY_SIZE_SHFT
+    //DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_NUM_START, PHV_EQ_INT_NUM_END, EQ_INT_ADDR)
     
     CAPRI_SET_TABLE_I_VALID(TBL_ID, 0)
 
