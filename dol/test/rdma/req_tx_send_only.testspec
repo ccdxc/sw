@@ -131,6 +131,12 @@ descriptors:
             color  : callback://rdma/rdma/GetReqRxCQExpColor
             smac: callback://rdma/rdma/GetZeroMAC
 
+    - descriptor:
+        id      : EXP_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
+        fields:
+            cq_id  : ref://testcase/config/rdmasession/lqp/sq_cq/id
+            color  : callback://rdma/rdma/GetEQExpColor
 
 session:
     - step:
@@ -163,3 +169,6 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ

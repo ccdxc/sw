@@ -81,7 +81,7 @@ def TestCaseVerify(tc):
         return False
 
     ############     EQ VALIDATIONS #################
-    if not ValidateRespRxEQChecks(tc):
+    if not ValidateEQChecks(tc):
         return False
 
     return True

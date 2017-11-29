@@ -6,5 +6,5 @@ meta:
     module  : descriptor
     objname : RdmaEqDescriptorObject
 
-cq_id   : 1
+cq_id   : 0
 color   : 0

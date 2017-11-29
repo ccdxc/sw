@@ -158,7 +158,7 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_EQ
         fields:
             cq_id  : ref://testcase/config/rdmasession/lqp/rq_cq/id
-            color  : callback://rdma/rdma/GetRespRxEQExpColor
+            color  : callback://rdma/rdma/GetEQExpColor
 
 trigger:
     descriptors:

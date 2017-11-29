@@ -18,9 +18,18 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
 
+    # ARM CQ and Set EQ's CI=PI for EQ enablement
+    rs.lqp.sq_cq.qstate.ArmCq()
+    rs.lqp.eq.qstate.reset_cindex(0)
+
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
+
+    # Read EQ pre state
+    rs.lqp.eq.qstate.Read()
+    tc.pvtdata.eq_pre_qstate = rs.lqp.eq.qstate.data
+
     return
 
 def TestCaseTrigger(tc):
@@ -103,6 +112,10 @@ def TestCaseStepVerify(tc, step):
 
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
+            return False
+
+        ############     EQ VALIDATIONS #################
+        if not ValidateEQChecks(tc):
             return False
 
     # update current as pre_qstate ... so next step_id can use it as pre_qstate

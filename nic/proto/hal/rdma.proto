@@ -194,7 +194,7 @@ message RdmaEqSpec {
   uint32                   eq_wqe_size        = 4;    // EQWQE size
   uint32                   num_eq_wqes        = 5;    // Num EQWQEs
   uint64                   eqe_base_addr_phy  = 6;    // EQE's base addres- physical
-  uint32                   int_num            = 9;    // Interrupt num
+  uint32                   int_num            = 7;    // Interrupt num
 }
 
 // RdmaEqRequestMsg is batched request used to create/update of Rdma QPs
