@@ -150,13 +150,19 @@ bool plugin_manager_t::parse_plugin(const pt::ptree &tree, plugin_t *plugin,
     plugin->auto_load = tree.get<bool>("auto_load", false);
 
     // Parese deps
-    for (auto &node :  tree.get_child("deps", pt::ptree())) {
-        plugin->deps.push_back(node.second.data());
+    auto deps = tree.get_child_optional("deps");
+    if (deps) {
+        for (auto &node : *deps) {
+            plugin->deps.push_back(node.second.data());
+        }
     }
 
     // Parse features
-    for (auto &node :  tree.get_child("features", pt::ptree())) {
-        plugin->features.push_back(node.second.data());
+    auto features = tree.get_child_optional("features");
+    if (features){
+        for (auto &node : *features) {
+            plugin->features.push_back(node.second.data());
+        }
     }
 
     HAL_TRACE_DEBUG("plugins::parse_plugin plugin={}", *plugin);
@@ -170,7 +176,12 @@ bool plugin_manager_t::parse_plugin(const pt::ptree &tree, plugin_t *plugin,
 void plugin_manager_t::parse_plugins(const pt::ptree &tree,
                                      const std::string& plugin_path)
 {
-    for (auto &node : tree.get_child("plugins", pt::ptree())) {
+    auto plugins = tree.get_child_optional("plugins");
+    if (!plugins) {
+        return;
+    }
+
+    for (auto &node : *plugins) {
         plugin_t *plugin = plugin_alloc();
         if (parse_plugin(node.second, plugin, plugin_path)) {
             plugins_[plugin_name(plugin->provider, plugin->name)] = plugin;
@@ -215,13 +226,20 @@ bool plugin_manager_t::parse_pipeline(const pt::ptree &tree, pipeline_t *pipelin
     }
 
     // parse outbound-features
-    for (auto &node : tree.get_child("outbound_features", pt::ptree())) {
-        pipeline->outbound_features.push_back(node.second.data());
+    auto outbound_features = tree.get_child_optional("outbound_features");
+    if (outbound_features) {
+        for (auto &node : *outbound_features) {
+            pipeline->outbound_features.push_back(node.second.data());
+        }        
     }
 
+
     // parse inbound-features
-    for (auto &node : tree.get_child("inbound_features", pt::ptree())) {
-        pipeline->inbound_features.push_back(node.second.data());
+    auto inbound_features = tree.get_child_optional("inbound_features");
+    if (inbound_features) {
+        for (auto &node : *inbound_features) {
+            pipeline->inbound_features.push_back(node.second.data());
+        }
     }
 
     HAL_TRACE_DEBUG("plugins::parse_pipeline pipeline={}", *pipeline);
@@ -234,7 +252,12 @@ bool plugin_manager_t::parse_pipeline(const pt::ptree &tree, pipeline_t *pipelin
 //------------------------------------------------------------------------------
 void plugin_manager_t::parse_pipelines(const pt::ptree &tree)
 {
-    for (auto &node : tree.get_child("pipelines", pt::ptree())) {
+    auto pipelines =  tree.get_child_optional("pipelines");
+    if (!pipelines) {
+        return;
+    }
+
+    for (auto &node : *pipelines) {
         pipeline_t *pipeline = pipeline_alloc();
         if (parse_pipeline(node.second, pipeline)) {
             STAILQ_INSERT_TAIL(&pipelines_, pipeline, entries);
