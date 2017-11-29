@@ -11,49 +11,6 @@
 
 namespace fte {
 
-// global instance of all FTE data
-fte_db  *g_fte_db;
-
-/*-----------------------------------------------------
-    Begin FTE DB Constructor/Destructor APIs
-------------------------------------------------------*/
-
-hal_ret_t
-fte_db::init(void)
-{
-    // initialize vrf related data structures
-    alg_flow_key_ht_ = hal::utils::ht::factory(FTE_MAX_ALG_KEYS,
-                                               alg_flow_get_key_func,
-                                               alg_flow_compute_hash_func,
-                                               alg_flow_compare_key_func);
-    HAL_ASSERT_RETURN((alg_flow_key_ht_ != NULL), HAL_RET_ERR);
-
-    return HAL_RET_OK;
-}
-
-fte_db::~fte_db(void)
-{
-    alg_flow_key_ht_ ? hal::utils::ht::destroy(alg_flow_key_ht_) : HAL_NOP;
-}
-
-fte_db *
-fte_db::factory(void)
-{
-    void         *mem;
-    fte_db       *db;
-
-    mem = HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(fte_db));
-    HAL_ABORT(mem != NULL);
-    db = new (mem) fte_db();
-    if (db->init() == HAL_RET_ERR) {
-        db->~fte_db();
-        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, mem);
-            return NULL;
-    }
-
-    return db;
-}
-
 /*-----------------------------------------------------
     End FTE DB Constructor/Destructor APIs
 ------------------------------------------------------*/
@@ -367,9 +324,6 @@ void unregister_features_and_pipelines() {
 
 hal_ret_t init(void) 
 {
-    g_fte_db = fte_db::factory();
-    HAL_ASSERT_RETURN((g_fte_db != NULL), HAL_RET_ERR);
-
     return HAL_RET_OK;
 }
 

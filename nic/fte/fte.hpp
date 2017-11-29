@@ -18,13 +18,6 @@ namespace fte {
 DEFINE_ENUM(pipeline_action_t, FTE_PIPELINE_ACTION_ENTRIES)
 #undef FTE_PIPELINE_ACTION_ENTRIES
 
-hal_ret_t build_wildcard_key(hal::flow_key_t& key);
-void *lookup_alg_db(ctx_t *ctx);
-void insert_alg_entry(alg_entry_t *entry);
-void *remove_alg_entry(hal::flow_key_t key);
-hal_ret_t update_alg_entry(hal::flow_key_t key, void *new_entry, size_t sz);
-const void *lookup_alg_entry(hal::flow_key_t *key);
-
 typedef std::function<pipeline_action_t(ctx_t &ctx)> exec_handler_t;
 hal_ret_t add_feature(const std::string& name);
 hal_ret_t register_feature(const std::string& name,

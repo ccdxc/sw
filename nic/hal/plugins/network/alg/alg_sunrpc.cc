@@ -192,17 +192,22 @@ done:
 hal_ret_t
 parse_sunrpc_control_flow(fte::ctx_t& ctx)
 {
-    hal_ret_t                ret = HAL_RET_OK;
     const uint8_t           *pkt = ctx.pkt();
     uint8_t                  rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
     uint8_t                  pgm_offset = 0;
-    fte::alg_entry_t         newentry = ctx.alg_entry();
+    fte::alg_entry_t        *alg_entry = NULL;
     struct rpc_msg           rpc_msg;
     fte::RPCMap             *map = NULL;
     pmaplist                 pmap_list;
     rpcblist                 rpcb_list;
-    uint8_t                  idx = 0, update_entry = 0;
+    uint8_t                  idx = 0;
     char                     netid[128], uaddr[128], owner[128];
+
+    alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
+    if (alg_entry == NULL) {
+        HAL_TRACE_ERR("ALG entry is not found in the context -- bailing");
+        return HAL_RET_ERR;
+    }
 
     // Payload offset from CPU header
     if (ctx.pkt_len() == rpc_msg_offset && 
@@ -221,14 +226,13 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
         return HAL_RET_ERR;
     }
 
-    newentry.rpcinfo.rpc_frag_cont = 0;
+    alg_entry->rpcinfo.rpc_frag_cont = 0;
     if (ctx.key().proto == IP_PROTO_TCP) {
         // Do we need to maintain the record tracking state for TCP ?
         if (!(pkt[rpc_msg_offset] & LAST_RECORD_FRAG)) {
             HAL_TRACE_DEBUG("Fragmented packet detected");
-            newentry.rpcinfo.rpc_frag_cont = 1;
+            alg_entry->rpcinfo.rpc_frag_cont = 1;
         } 
-        update_entry = 1;
         rpc_msg_offset += WORD_BYTES;
     }
 
@@ -237,7 +241,7 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
         return HAL_RET_ERR;
     }
 
-    switch (ctx.alg_proto_state())
+    switch (alg_entry->alg_proto_state)
     {
         case fte::ALG_PROTO_STATE_RPC_INIT:
             HAL_TRACE_DEBUG("RPC Proc: {}", rpc_msg.rm_call.cb_proc);
@@ -245,7 +249,7 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                 rpc_msg.rm_call.cb_prog == PMAPPROG && \
                 (rpc_msg.rm_call.cb_proc == PMAPPROC_GETPORT || \
                  rpc_msg.rm_call.cb_proc == PMAPPROC_DUMP)) {
-                 map = &newentry.rpcinfo.rpc_map.maps[newentry.rpcinfo.rpc_map.num_map];
+                 map = &alg_entry->rpcinfo.rpc_map.maps[alg_entry->rpcinfo.rpc_map.num_map];
                 switch (rpc_msg.rm_call.cb_proc) {
                     case PMAPPROC_GETPORT:
                         if (rpc_msg.rm_call.cb_vers == RPCBVERS_3 ||
@@ -256,7 +260,7 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                             __parse_rpcb_entry(pkt, pgm_offset, 
                                                    &rpcb_list.rpcb_map);
                             map->xid = rpc_msg.rm_xid;
-                            map->rpcvers = rpc_msg.rm_call.cb_vers;
+                            alg_entry->rpcinfo.rpcvers = rpc_msg.rm_call.cb_vers;
                             map->prog_num = rpcb_list.rpcb_map.r_prog;
                             map->vers = rpcb_list.rpcb_map.r_vers;
                             map->prot = netid2proto(rpcb_list.rpcb_map.r_netid);
@@ -264,19 +268,20 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                         } else {
                             __parse_pmap_hdr(pkt, pgm_offset, &pmap_list);
                             map->xid = rpc_msg.rm_xid;
-                            map->rpcvers = 2;
+                            alg_entry->rpcinfo.rpcvers = 2;
                             map->prog_num = pmap_list.pml_map.pm_prog; 
                             map->prot  = pmap_list.pml_map.pm_prot;
                             map->dport = pmap_list.pml_map.pm_port;
                             map->vers  = pmap_list.pml_map.pm_vers;
                         }
 
-                        newentry.rpcinfo.rpc_map.num_map++;
-                        newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_GETPORT;
+                        alg_entry->rpcinfo.rpc_map.num_map++;
+                        alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_GETPORT;
                         break;
                   
                     case PMAPPROC_DUMP:
-                        newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_DUMP;
+                        alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_DUMP;
+                        alg_entry->rpcinfo.rpcvers = rpc_msg.rm_call.cb_vers;
                         break;
  
                     default:
@@ -290,8 +295,8 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                 rpc_msg.rm_reply.rp_stat == 0 && \
                 rpc_msg.rm_reply.rp_acpt.ar_stat == 0) {
  
-                map = ctx.alg_entry().rpcinfo.rpc_map.maps; 
-                for (idx = 0; idx < ctx.alg_entry().rpcinfo.rpc_map.num_map; idx++) {
+                map = alg_entry->rpcinfo.rpc_map.maps; 
+                for (idx = 0; idx < alg_entry->rpcinfo.rpc_map.num_map; idx++) {
                      if (map[idx].xid == rpc_msg.rm_xid) {
                          // Parse the header to save the details
                          if (map[idx].vers == RPCBVERS_3 ||
@@ -305,10 +310,9 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                      } 
                 }
 
-                update_entry = 1; 
                 // Insert an ALG entry for the DIP, Dport
                 insert_rpc_entry(ctx, &map[idx]);
-                newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
+                alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
             }
             break;
 
@@ -319,12 +323,13 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                 rpc_msg.rm_reply.rp_stat == 0 && \
                 rpc_msg.acpted_rply.ar_stat == 0) {
            
-                map = newentry.rpcinfo.rpc_map.maps;
+                map = alg_entry->rpcinfo.rpc_map.maps;
                 while (__pack_uint32(pkt, &pgm_offset) == 1) {
+                    HAL_TRACE_DEBUG("cb vers: {}", alg_entry->rpcinfo.rpcvers);
                     // Todo (Pavithra) search if the program already
                     // exists in the list
-                    if (rpc_msg.rm_call.cb_vers == RPCBVERS_3 ||
-                        rpc_msg.rm_call.cb_vers == RPCBVERS_4) { 
+                    if (alg_entry->rpcinfo.rpcvers == RPCBVERS_3 ||
+                        alg_entry->rpcinfo.rpcvers == RPCBVERS_4) { 
                         memset(&rpcb_list, 0, sizeof(rpcb_list));
                         rpcb_list.rpcb_map.r_netid = &netid[0];
                         rpcb_list.rpcb_map.r_addr = &uaddr[0];
@@ -334,29 +339,30 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                         memset(owner, 0, ADDR_NETID_BYTES);
                         pgm_offset = __parse_rpcb_entry(pkt, pgm_offset,
                                                     &rpcb_list.rpcb_map);
-                        map[newentry.rpcinfo.rpc_map.num_map].prog_num = 
+                        map[alg_entry->rpcinfo.rpc_map.num_map].prog_num = 
                                                     rpcb_list.rpcb_map.r_prog;
-                        map[newentry.rpcinfo.rpc_map.num_map].vers = 
+                        map[alg_entry->rpcinfo.rpc_map.num_map].vers = 
                                                    rpcb_list.rpcb_map.r_vers;
-                        map[newentry.rpcinfo.rpc_map.num_map].prot = 
+                        map[alg_entry->rpcinfo.rpc_map.num_map].prot = 
                                       netid2proto(rpcb_list.rpcb_map.r_netid);
-                        map[newentry.rpcinfo.rpc_map.num_map].dport = 
+                        map[alg_entry->rpcinfo.rpc_map.num_map].dport = 
                                        uaddr2dport(rpcb_list.rpcb_map.r_addr); 
+                        HAL_TRACE_DEBUG("Dump entry dport: {}", 
+                                          map[alg_entry->rpcinfo.rpc_map.num_map].dport);
                     } else {
                         __parse_pmap_hdr(pkt, pgm_offset, &pmap_list);
-                        map[newentry.rpcinfo.rpc_map.num_map].xid = rpc_msg.rm_xid;
-                        map[newentry.rpcinfo.rpc_map.num_map].prog_num = pmap_list.pml_map.pm_prog;
-                        map[newentry.rpcinfo.rpc_map.num_map].prot  = pmap_list.pml_map.pm_prot;
-                        map[newentry.rpcinfo.rpc_map.num_map].dport = pmap_list.pml_map.pm_port;
-                        map[newentry.rpcinfo.rpc_map.num_map].vers  = pmap_list.pml_map.pm_vers;    
+                        map[alg_entry->rpcinfo.rpc_map.num_map].xid = rpc_msg.rm_xid;
+                        map[alg_entry->rpcinfo.rpc_map.num_map].prog_num = pmap_list.pml_map.pm_prog;
+                        map[alg_entry->rpcinfo.rpc_map.num_map].prot  = pmap_list.pml_map.pm_prot;
+                        map[alg_entry->rpcinfo.rpc_map.num_map].dport = pmap_list.pml_map.pm_port;
+                        map[alg_entry->rpcinfo.rpc_map.num_map].vers  = pmap_list.pml_map.pm_vers;    
                     }
-                    update_entry = 1;
                     // Insert ALG Entry for DIP, Dport
-                    insert_rpc_entry(ctx, &map[newentry.rpcinfo.rpc_map.num_map]);
-                    newentry.rpcinfo.rpc_map.num_map++;        
+                    insert_rpc_entry(ctx, &map[alg_entry->rpcinfo.rpc_map.num_map]);
+                    alg_entry->rpcinfo.rpc_map.num_map++;        
                 };
-                if (!newentry.rpcinfo.rpc_frag_cont) {
-                    newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
+                if (!alg_entry->rpcinfo.rpc_frag_cont) {
+                    alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
                 }
             }
             break;
@@ -368,17 +374,9 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
             break;
     }
 
-    if (update_entry) {
-        HAL_TRACE_DEBUG("Updating the existing entry: {}", newentry);
-        //Update the existing entry
-        ret = fte::update_alg_entry(ctx.key(), (void *)&newentry, sizeof(fte::alg_entry_t));
-    } else {
-        HAL_TRACE_DEBUG("Setting a new entry: {}", newentry);
-        // Set the entry
-        ctx.set_alg_entry(newentry);
-    }
+    HAL_TRACE_DEBUG("Updated the existing entry: {}", *alg_entry);
 
-    return ret;
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -386,12 +384,21 @@ process_sunrpc_control_flow(fte::ctx_t& ctx)
 {
     hal_ret_t             ret = HAL_RET_OK;
     fte::flow_update_t    flowupd;
-    fte::alg_entry_t      newentry = ctx.alg_entry();
+    fte::alg_entry_t     *alg_entry = NULL;
+
+    alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
+    if (alg_entry == NULL) {
+        HAL_TRACE_ERR("ALG entry is not found in the context -- bailing");
+        return HAL_RET_ERR;
+    }
 
     if (ctx.alg_proto() == nwsec::APP_SVC_SUN_RPC && \
         ctx.role() == hal::FLOW_ROLE_INITIATOR) {
 
-        ctx.set_alg_proto_state(fte::ALG_PROTO_STATE_RPC_INIT);
+        flowupd.type = fte::FLOWUPD_MCAST_COPY;
+        flowupd.mcast_info.mcast_en = 1;
+        flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
+        alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
 
         // UDP could have the portmapper queries at the 
         // start of the session
@@ -401,20 +408,17 @@ process_sunrpc_control_flow(fte::ctx_t& ctx)
                 HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
                 return ret;
             }
-        } else {
-            newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
-            ctx.set_alg_entry(newentry);
-        }
-
-        ctx.register_completion_handler(fte::alg_completion_hdlr);
-        flowupd.type = fte::FLOWUPD_MCAST_COPY;
-        flowupd.mcast_info.mcast_en = 1;
-        flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY; 
-        ret = ctx.update_flow(flowupd);
-        if (ret == HAL_RET_OK) {
-            // Update Responder flow also to do a Mcast copy (redirect for now)
+            alg_entry->entry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
             ret = ctx.update_flow(flowupd, hal::FLOW_ROLE_RESPONDER);
+        } else {
+            alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
+            ret = ctx.update_flow(flowupd);
+            if (ret == HAL_RET_OK) {
+                // Update Responder flow also to do a Mcast copy (redirect for now)
+                ret = ctx.update_flow(flowupd, hal::FLOW_ROLE_RESPONDER);
+            }
         }
+        ctx.register_completion_handler(fte::alg_completion_hdlr);
     } 
 
     return ret;

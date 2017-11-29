@@ -4,207 +4,118 @@
 
 namespace fte {
 
-enum key_fields_t {
-    SIP=1,
-    SPORT=2,
-    DIR=3,
-    TID=4,
-    MAX_KEY_FIELDS,
-};
-
-/*-----------------------------------------------------
-    Begin Hash Utility APIs
-------------------------------------------------------*/
-void *
-alg_flow_get_key_func(void *entry)
+static void * expected_flow_get_key_func(void *entry)
 {
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((alg_entry_t *)entry)->key);
+    return (void *)&(((expected_flow_t *)entry)->key);
 }
 
-uint32_t
-alg_flow_compute_hash_func (void *key, uint32_t ht_size)
+static uint32_t expected_flow_compute_hash_func(void *key, uint32_t ht_size)
 {
-    return (hal::utils::hash_algo::fnv_hash(key, \
-                       sizeof(hal::flow_key_t)) % ht_size);
+    return (hal::utils::hash_algo::fnv_hash(key, 
+                                            sizeof(hal::flow_key_t)) % ht_size);
 }
 
-bool
-alg_flow_compare_key_func (void *key1, void *key2)
+static bool expected_flow_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(hal::flow_key_t))) {
-        return true;
-    }
-    return false;
+    return (memcmp(key1, key2, sizeof(hal::flow_key_t)) == 0);
 }
 
-/*-----------------------------------------------------
-    End Hash Utility APIs
-------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------
-- Builds wildcard keys for lookup into ALG table. This will be used when
-  a flow miss happens to check if we have any previously saved state for
-  the flow.
--------------------------------------------------------------------------*/
-static hal_ret_t
-build_wildcard_key(hal::flow_key_t *key, hal::flow_key_t key_, 
-                   key_fields_t *fields, uint8_t num_mask)
+//------------------------------------------------------------------------------
+// Expected flow entries hash table
+//------------------------------------------------------------------------------
+static hal::utils::ht *expected_flow_ht()
 {
-    memcpy(key, &key_, sizeof(hal::flow_key_t));
-
-    if (key->flow_type != hal::FLOW_TYPE_L2) {
-        for (int i=0; i<num_mask; i++) {
-            switch(fields[i]) {
-                case SPORT:
-                    key->sport = 0;
-                    break;
-
-                case SIP:
-                    memset(&key->sip, 0, sizeof(ipvx_addr_t));
-                    break;
- 
-                case DIR:
-                    key->dir = 0;
-                    break;
-
-                default:
-                    break;           
-            };
-        }
-    }
-
-    return HAL_RET_OK;
-}
-
-/*-----------------------------------------------------------------------
-- Performs lookup on ALG hash table with the given flow key and a wildcard
-  key on a flow miss.
--------------------------------------------------------------------------*/
-void *
-lookup_alg_db(ctx_t *ctx)
-{
-    uint8_t          i=0, num_keys=0, num_fields=0;
-    hal::flow_key_t  keys[MAX_FLOW_KEYS];
-    alg_entry_t     *entry = NULL;
-    key_fields_t     fields[MAX_KEY_FIELDS];
-
-    keys[num_keys++] = ctx->key();
-    if (ctx->arm_lifq() == ALG_CFLOW_LIFQ) {
-        // We insert one entry in the DB and get
-        // the info in case we have gotten for reverse flow
-        hal::flow_key_t key;
-   
-        key = ctx->key();
-        key.sport = ctx->key().dport;
-        key.dport = ctx->key().sport;
-        key.sip = ctx->key().dip;
-        key.dip = ctx->key().sip;
-        keys[num_keys++] = key;
-    }
+    static hal::utils::ht* ht_ =
+        hal::utils::ht::factory(FTE_MAX_EXPECTED_FLOWS,
+                                expected_flow_get_key_func,
+                                expected_flow_compute_hash_func,
+                                expected_flow_compare_key_func);
     
-    //ALG Variations
- 
-    // TFTP response
-    fields[num_fields++] = SPORT;
-    build_wildcard_key(&keys[num_keys++], ctx->key(), fields, 1);
-
-    // For RPC Data session
-    fields[num_fields++] = SIP;
-    fields[num_fields++] = DIR;
-    build_wildcard_key(&keys[num_keys++], ctx->key(), fields, 3);
-
-    while (i < num_keys) {
-        hal::flow_key_t key;
-
-        HAL_TRACE_DEBUG("Looking up ALG DB for key: {}", keys[i]);
-        key = keys[i++];
-        entry = (alg_entry_t *)lookup_alg_entry(&key);
-        if (!entry) {
-            continue;
-        } else {
-            // Todo (Pavithra) add a lock per entry to keep it thread-safe
-            HAL_TRACE_DEBUG("ALG Entry Found with key: {}", keys[i-1]);
-            break;
-        }
-    }
-
-    return (entry);
+    return ht_;
 }
 
-void
-insert_alg_entry(alg_entry_t *entry)
-{
-    g_fte_db->wlock();
-    g_fte_db->alg_flow_key_ht()->insert(entry, &entry->flow_key_ht_ctxt);
-    g_fte_db->wunlock();
-}
-
-/*-----------------------------------------------------------------------
-- This API can be used to remove an entry from ALG hash table when either
-  there was an error processing the reverse flow or the Iflow/Rflow has been
-  successfully installed and we do not need to keep this software entry
-  around.
--------------------------------------------------------------------------*/
-void *
-remove_alg_entry(hal::flow_key_t key)
-{
-    alg_entry_t   *entry = NULL;
-
-    g_fte_db->wlock();
-    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->remove((void *)std::addressof(key));
-    g_fte_db->wunlock();
-
-    return entry;
-}
-
-/*-----------------------------------------------------------------------
-- This API can be used to lookup an entry from ALG hash table.
--------------------------------------------------------------------------*/
-const void *
-lookup_alg_entry(hal::flow_key_t *key)
-{
-    alg_entry_t   *entry = NULL;
-
-    g_fte_db->rlock();
-    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup((void *)key);
-    g_fte_db->runlock();
-
-    return entry;
-}
-
-/*-----------------------------------------------------------------------
-- This API can be used to update an entry in ALG hash table.
--------------------------------------------------------------------------*/
+//------------------------------------------------------------------------------
+// Insert an expected flow
+//------------------------------------------------------------------------------
 hal_ret_t
-update_alg_entry(hal::flow_key_t key, void *new_entry, size_t sz)
+insert_expected_flow(expected_flow_t *entry)
 {
-    void   *entry = NULL;
-
-    g_fte_db->wlock();
-    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup((void *)std::addressof(key));
-    if (entry == NULL) {
-        HAL_TRACE_ERR("Entry not found in ALG table");
-        g_fte_db->wunlock();
-        return HAL_RET_ERR;
-    }
-
-    memcpy(entry, new_entry, sz);
-    g_fte_db->wunlock();
-
-    return HAL_RET_OK;
+    HAL_TRACE_DEBUG("fte::insert_expected_flow key={}", entry->key);
+    entry->expected_flow_ht_ctxt.reset();
+    return expected_flow_ht()->insert(entry, &entry->expected_flow_ht_ctxt);
 }
 
-std::ostream& operator<<(std::ostream& os, const alg_entry_t& val)
+//------------------------------------------------------------------------------
+// Remove an expected flow entry
+//------------------------------------------------------------------------------
+expected_flow_t *
+remove_expected_flow(const hal::flow_key_t &key)
 {
-    os << "{key=" << val.key;
-    os << " ,alg_proto_state=" << val.alg_proto_state;
-    os << " ,role=" << val.role;
-    os << " ,session_override=" << val.session_override;
-    os << " ,rpc_frag_cont=" << val.rpcinfo.rpc_frag_cont;
+    HAL_TRACE_DEBUG("fte::remove_expected_flow  key={}", key);
+    return (expected_flow_t *)expected_flow_ht()->remove((void *)&key);
+}
 
-    return os << "}";
+//------------------------------------------------------------------------------
+// Lookup a expected_flow entry
+// This will do the following lookupos
+//  1. Exact match
+//  2. Reverse key lookup - exact match
+//  3. Wildcard SPORT
+//  4. Wildcard SPORT, SIP and DIR
+//------------------------------------------------------------------------------
+expected_flow_t *
+lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
+{
+    expected_flow_t *entry;
+
+    hal::flow_key_t key = ikey;
+
+    // Exact match
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
+        HAL_TRACE_DEBUG("fte::lookup_expected_flow exact match key={}", key);
+        return entry;
+    }
+
+    if (exact_match) {
+        return NULL;
+    }
+
+    // wildcard matches are supported for tcp/udp only
+    if ((key.flow_type != hal::FLOW_TYPE_V4 && key.flow_type != hal::FLOW_TYPE_V6) ||
+        (key.proto != IPPROTO_TCP && key.proto != IPPROTO_UDP)) {
+        return NULL;
+    }
+
+    // Reverse lookup for Exact match
+    key.sport = ikey.dport;
+    key.dport = ikey.sport;
+    key.sip = ikey.dip;
+    key.dip = ikey.sip;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
+        HAL_TRACE_DEBUG("fte::lookup_expected_flow reverse exact match key={}", key);
+        return entry;
+    }
+
+    key = ikey;
+
+    // Mask SPORT and do lookup (tftp)
+    key.sport = 0;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
+        HAL_TRACE_DEBUG("fte::lookup_expected_flow widcard sport key={}", key);
+        return entry;
+    }
+
+    // Mask SIP, DIR and do lookup (RPC)
+    key.sip = {};
+    key.dir = 0;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
+        HAL_TRACE_DEBUG("fte::lookup_expected_flow wildcard sip/sport/dir key={}", key);
+        return entry;
+    }
+
+    return NULL;
 }
 
 }

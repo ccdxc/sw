@@ -1,37 +1,28 @@
 #include "nic/hal/plugins/network/net_plugin.hpp"
 #include "nic/hal/plugins/network/alg/alg_tftp.hpp"
 #include "nic/hal/plugins/network/alg/alg_rpc.hpp"
+#include "nic/hal/plugins/network/alg/alg_utils.hpp"
 
 namespace hal {
 namespace net {
 
-static void
-init_alg_entry(fte::ctx_t& ctx)
-{
-    fte::alg_entry_t entry;
-
-    memset(&entry, 0, sizeof(fte::alg_entry_t));
- 
-    entry.key = ctx.key();
-    entry.role = ctx.role();
-
-    ctx.set_alg_entry(entry);
-}
-
 static bool
-IsAlgExistingFlow(fte::ctx_t& ctx)
+IsAlgExistingFlow(fte::alg_entry_t *alg_entry)
 {
-    HAL_TRACE_DEBUG("ALG Exec role: {} alg_proto_state: {}", 
-                     ctx.role(), ctx.alg_proto_state());
+    HAL_TRACE_DEBUG("ALG Exec alg_proto_state: {}", 
+                     (alg_entry != NULL)?alg_entry->alg_proto_state:fte::ALG_PROTO_STATE_NONE);
 
-    return (ctx.alg_proto_state() != fte::ALG_PROTO_STATE_NONE);
+    return ((alg_entry != NULL) && 
+            (alg_entry->alg_proto_state != fte::ALG_PROTO_STATE_NONE));
 }
 
 fte::pipeline_action_t
 alg_exec(fte::ctx_t& ctx)
 {
     hal_ret_t          ret = HAL_RET_OK;
-  
+    fte::alg_entry_t  *alg_entry = NULL;
+
+    alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
     if (ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
@@ -39,9 +30,8 @@ alg_exec(fte::ctx_t& ctx)
     HAL_TRACE_DEBUG("ALG Proto: {}", ctx.alg_proto());
     if (ctx.alg_proto() != nwsec::APP_SVC_NONE) {
 
-        // Init the ALG entry 
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) 
-            init_alg_entry(ctx);
+            alg_entry = alloc_and_init_alg_entry(ctx);
 
         switch(ctx.alg_proto()) {
             case nwsec::APP_SVC_TFTP:
@@ -49,7 +39,7 @@ alg_exec(fte::ctx_t& ctx)
                 break;
 
             case nwsec::APP_SVC_SUN_RPC:
-                if (ctx.alg_proto_state() == fte::ALG_PROTO_STATE_RPC_DATA) {
+                if (alg_entry->alg_proto_state == fte::ALG_PROTO_STATE_RPC_DATA) {
                     ret = process_sunrpc_data_flow(ctx);
                 } else {
                     ret = process_sunrpc_control_flow(ctx); 
@@ -57,7 +47,7 @@ alg_exec(fte::ctx_t& ctx)
                 break;
   
             case nwsec::APP_SVC_MSFT_RPC:
-                if (ctx.alg_proto_state() == fte::ALG_PROTO_STATE_RPC_DATA) {
+                if (alg_entry->alg_proto_state == fte::ALG_PROTO_STATE_RPC_DATA) {
                     ret = process_msrpc_data_flow(ctx);
                 } else {
                     ret = process_msrpc_control_flow(ctx);
@@ -73,8 +63,10 @@ alg_exec(fte::ctx_t& ctx)
             default:
                 break;
         };
-    } else if (IsAlgExistingFlow(ctx)) {
-        switch(ctx.alg_proto_state()) {
+    } else if (IsAlgExistingFlow(alg_entry)) {
+        // Todo -- move this to callbacks from the alg_entry 
+        // avoid switch-case
+        switch(alg_entry->alg_proto_state) {
             case fte::ALG_PROTO_STATE_TFTP_RRQ:
             case fte::ALG_PROTO_STATE_TFTP_WRQ:
                 ret = process_tftp(ctx);

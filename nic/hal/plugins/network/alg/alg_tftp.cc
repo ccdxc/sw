@@ -24,7 +24,13 @@ process_tftp_first_packet(fte::ctx_t& ctx)
     const uint8_t          *pkt = ctx.pkt();
     uint8_t                 offset = 0;
     uint16_t                tftpop = 0;
-    fte::alg_entry_t        newentry = ctx.alg_entry();
+    fte::alg_entry_t         *alg_entry = NULL;
+
+    alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
+    if (alg_entry == NULL) {
+        HAL_TRACE_ERR("ALG entry is not found in the context -- bailing");
+        return HAL_RET_ERR;
+    }
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
@@ -54,10 +60,11 @@ process_tftp_first_packet(fte::ctx_t& ctx)
         // Set Rflow to be invalid and ALG proto state
         // We want the flow miss to happen on Rflow
         ctx.set_valid_rflow(false);
-        newentry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
-        newentry.alg_proto_state = state;
-        ctx.set_alg_entry(newentry);
-        HAL_TRACE_DEBUG("Alg Entry key: {}", ctx.alg_entry().key);
+        alg_entry->skip_firewall = TRUE;
+        alg_entry->entry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
+        alg_entry->entry.key.sport = 0;
+        alg_entry->alg_proto_state = state;
+        HAL_TRACE_DEBUG("Alg Entry key: {}", alg_entry->entry.key);
         ctx.register_completion_handler(fte::alg_completion_hdlr);
     }
 
@@ -72,9 +79,16 @@ process_tftp(fte::ctx_t& ctx)
     const uint8_t        *pkt = ctx.pkt();
     uint8_t               offset = 0;
     uint16_t              tftpop = 0;
-    fte::alg_entry_t      *entry;
-    hal::session_t        *session = ctx.session();
+    fte::alg_entry_t     *alg_entry = NULL;
+    hal::session_t       *session = NULL;
 
+    alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
+    if (alg_entry == NULL) {
+        HAL_TRACE_ERR("ALG entry is not found in the context -- bailing");
+        return HAL_RET_ERR;
+    }
+
+    session = alg_entry->session;
     if (session == NULL) {
         HAL_TRACE_ERR("Session is null for existing session -- bailing");
         return HAL_RET_ERR;
@@ -94,7 +108,7 @@ process_tftp(fte::ctx_t& ctx)
         return ret;
     }
 
-    switch (ctx.alg_proto_state())
+    switch (alg_entry->alg_proto_state)
     {
         case fte::ALG_PROTO_STATE_TFTP_RRQ:
             HAL_TRACE_DEBUG("Received response for RRQ offset: {} opcode: {}",
@@ -126,8 +140,8 @@ process_tftp(fte::ctx_t& ctx)
     // as we have processed the flow already and
     // installed/dropped.
     key.sport = 0;
-    entry = (fte::alg_entry_t *)fte::remove_alg_entry(key);
-    HAL_FREE(hal::HAL_MEM_ALLOC_ALG, entry);
+    alg_entry = (fte::alg_entry_t *)fte::remove_expected_flow(key);
+    HAL_FREE(hal::HAL_MEM_ALLOC_ALG, alg_entry);
 
     return ret;
 }

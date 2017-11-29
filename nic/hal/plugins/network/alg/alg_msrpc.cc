@@ -227,12 +227,17 @@ __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint8_t offset,
 hal_ret_t 
 parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
 {
-    hal_ret_t                ret = HAL_RET_OK;
     uint8_t                  rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
     msrpc_cn_common_hdr_t    rpc_hdr;
-    fte::alg_entry_t         newentry = ctx.alg_entry();
+    fte::alg_entry_t         *alg_entry = NULL;
     uint8_t                  pgm_offset = 0, idx = 0;
 
+    alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
+    if (alg_entry == NULL) {
+        HAL_TRACE_ERR("ALG entry is not found in the context -- bailing");
+        return HAL_RET_ERR;
+    }
+ 
     if (ctx.pkt_len() == rpc_msg_offset) {
         // The first iflow packet that get mcast copied could be an
         // ACK from the TCP handshake.
@@ -248,14 +253,14 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
 
     pgm_offset = __parse_cn_common_hdr(ctx.pkt(), rpc_msg_offset,  &rpc_hdr);
     if (rpc_hdr.rpc_ver_minor == 0 || rpc_hdr.flags & PFC_LAST_FRAG) {
-        newentry.rpcinfo.rpc_frag_cont = 0;
+        alg_entry->rpcinfo.rpc_frag_cont = 0;
     } else {
         // Todo (Pavithra) we need to save the packet until all the
         // L7 Fragments are received before we decode the header
-        newentry.rpcinfo.rpc_frag_cont = 1;
+        alg_entry->rpcinfo.rpc_frag_cont = 1;
     }
 
-    switch (ctx.alg_proto_state())
+    switch (alg_entry->alg_proto_state)
     {
         case fte::ALG_PROTO_STATE_RPC_INIT:
             if (rpc_hdr.ptype == PDU_BIND || 
@@ -268,8 +273,8 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
                 for (idx = 0; idx < bind_hdr.context_list.num_elm; idx++) { 
                     if (!memcmp(&epm_uuid, 
                         &bind_hdr.context_list.cont_elem[0].abs_syntax.if_uuid, UUID_BYTES)) {
-                        newentry.rpcinfo.msrpc_ctxt_id = idx;
-                        newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BIND;
+                        alg_entry->rpcinfo.msrpc_ctxt_id = idx;
+                        alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BIND;
                     }
                 }
             }
@@ -282,9 +287,9 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
  
                 __parse_msrpc_bind_ack_hdr(ctx.pkt(), pgm_offset, &bind_ack);
                 // Check if we the result was successful
-                if (bind_ack.rlist.num_rslts >= newentry.rpcinfo.msrpc_ctxt_id && 
-                    !bind_ack.rlist.rslts[newentry.rpcinfo.msrpc_ctxt_id].result) {
-                     newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BOUND;
+                if (bind_ack.rlist.num_rslts >= alg_entry->rpcinfo.msrpc_ctxt_id && 
+                    !bind_ack.rlist.rslts[alg_entry->rpcinfo.msrpc_ctxt_id].result) {
+                     alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BOUND;
                 }
             }
             break;
@@ -302,16 +307,16 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
                 twr_arr = epm_req.twr.twr_arr;
                 if (twr_arr.flrs[2].protocol == EPM_PROTO_CN || 
                     twr_arr.flrs[2].protocol == EPM_PROTO_DG) {
-                    uint8_t num_map = newentry.rpcinfo.rpc_map.num_map;
+                    uint8_t num_map = alg_entry->rpcinfo.rpc_map.num_map;
 
-                    newentry.rpcinfo.rpc_map.maps[num_map].call_id = rpc_hdr.call_id;
-                    memcpy(&newentry.rpcinfo.rpc_map.maps[num_map].uuid, 
+                    alg_entry->rpcinfo.rpc_map.maps[num_map].call_id = rpc_hdr.call_id;
+                    memcpy(&alg_entry->rpcinfo.rpc_map.maps[num_map].uuid, 
                             &twr_arr.flrs[0].uuid, UUID_BYTES);
-                    newentry.rpcinfo.rpc_map.maps[num_map].vers = twr_arr.flrs[0].version;
-                    newentry.rpcinfo.rpc_map.maps[num_map].prot = 
+                    alg_entry->rpcinfo.rpc_map.maps[num_map].vers = twr_arr.flrs[0].version;
+                    alg_entry->rpcinfo.rpc_map.maps[num_map].prot = 
                       (twr_arr.flrs[2].protocol == EPM_PROTO_TCP_PORT)?IP_PROTO_TCP:IP_PROTO_UDP;
-                    newentry.rpcinfo.rpc_map.maps[num_map].dport = twr_arr.flrs[3].port;
-                    newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
+                    alg_entry->rpcinfo.rpc_map.maps[num_map].dport = twr_arr.flrs[3].port;
+                    alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
                 }
             }
             break;
@@ -327,14 +332,14 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
                 __parse_msrpc_epm_rsp_hdr(ctx.pkt(), epm_offset, &epm_rsp);
              
                 twr_arr = epm_rsp.twr.twr_arr;
-                for (int i=0; i< (int)newentry.rpcinfo.rpc_map.num_map; i++) {
-                    if (newentry.rpcinfo.rpc_map.maps[i].xid == rpc_hdr.call_id &&
-                        (!memcmp(&twr_arr.flrs[0].uuid, &newentry.rpcinfo.rpc_map.maps[i].uuid, UUID_BYTES))) {
-                        newentry.rpcinfo.rpc_map.maps[i].dport = twr_arr.flrs[3].port;
-                        insert_rpc_entry(ctx, &newentry.rpcinfo.rpc_map.maps[i]);
+                for (int i=0; i< (int)alg_entry->rpcinfo.rpc_map.num_map; i++) {
+                    if (alg_entry->rpcinfo.rpc_map.maps[i].xid == rpc_hdr.call_id &&
+                        (!memcmp(&twr_arr.flrs[0].uuid, &alg_entry->rpcinfo.rpc_map.maps[i].uuid, UUID_BYTES))) {
+                        alg_entry->rpcinfo.rpc_map.maps[i].dport = twr_arr.flrs[3].port;
+                        insert_rpc_entry(ctx, &alg_entry->rpcinfo.rpc_map.maps[i]);
                     }
                 }
-                newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
+                alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
             }
             break;
 
@@ -342,12 +347,9 @@ parse_msrpc_cn_control_flow(fte::ctx_t& ctx)
             break;
     };   
         
-    HAL_TRACE_DEBUG("Updating the existing entry: {}", newentry);
+    HAL_TRACE_DEBUG("Updated the existing entry: {}", *alg_entry);
 
-    //Update the existing entry
-    ret = fte::update_alg_entry(ctx.key(), (void *)&newentry, sizeof(fte::alg_entry_t));
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -356,11 +358,16 @@ parse_msrpc_dg_control_flow(fte::ctx_t& ctx)
     hal_ret_t                ret = HAL_RET_OK;
     uint8_t                  rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
     msrpc_dg_common_hdr_t    rpc_hdr;
-    fte::alg_entry_t         newentry = ctx.alg_entry();
     hal::flow_key_t          key = ctx.key();
     uint8_t                  idx = 0, insert_entry = 0;
-    
+    fte::alg_entry_t         *alg_entry = NULL;
 
+    alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
+    if (alg_entry == NULL) {
+        HAL_TRACE_ERR("ALG entry is not found in the context -- bailing");
+        return HAL_RET_ERR;
+    }
+    
     if (ctx.pkt_len() == rpc_msg_offset) {
         // The first iflow packet that get mcast copied could be an
         // ACK from the TCP handshake.
@@ -376,46 +383,44 @@ parse_msrpc_dg_control_flow(fte::ctx_t& ctx)
     }
 
     __parse_dg_common_hdr(ctx.pkt(), rpc_msg_offset,  &rpc_hdr);
-    if (ctx.alg_proto_state() == fte::ALG_PROTO_STATE_RPC_INIT) {
+    if (alg_entry->alg_proto_state == fte::ALG_PROTO_STATE_RPC_INIT) {
         insert_entry = 1;
     } 
 
     if (rpc_hdr.flags1 & PFC_LAST_FRAG) {
-        newentry.rpcinfo.rpc_frag_cont = 0;
+        alg_entry->rpcinfo.rpc_frag_cont = 0;
     } else {
-        newentry.rpcinfo.rpc_frag_cont = 1;
+        alg_entry->rpcinfo.rpc_frag_cont = 1;
     }
 
-    switch (ctx.alg_proto_state())
+    switch (alg_entry->alg_proto_state)
     {
         case fte::ALG_PROTO_STATE_RPC_INIT:
             if (rpc_hdr.ptype == PDU_REQ) {
                 if ((insert_entry) ||
-                    (!newentry.rpcinfo.rpc_frag_cont && 
-                     newentry.rpcinfo.rpc_map.maps[0].call_id == rpc_hdr.seqnum &&
-                     !memcmp(&newentry.rpcinfo.rpc_map.maps[0].act_id, &rpc_hdr.act_id, UUID_BYTES) &&
-                     !memcmp(&newentry.rpcinfo.rpc_map.maps[0].uuid, &rpc_hdr.if_id, UUID_BYTES))) {
+                    (!alg_entry->rpcinfo.rpc_frag_cont && 
+                     alg_entry->rpcinfo.rpc_map.maps[0].call_id == rpc_hdr.seqnum &&
+                     !memcmp(&alg_entry->rpcinfo.rpc_map.maps[0].act_id, &rpc_hdr.act_id, UUID_BYTES) &&
+                     !memcmp(&alg_entry->rpcinfo.rpc_map.maps[0].uuid, &rpc_hdr.if_id, UUID_BYTES))) {
 
                     if (insert_entry) {
-                        newentry.rpcinfo.rpc_map.maps[0].call_id = rpc_hdr.seqnum;
-                        memcpy(&newentry.rpcinfo.rpc_map.maps[0].act_id, &rpc_hdr.act_id, UUID_BYTES);
-                        memcpy(&newentry.rpcinfo.rpc_map.maps[0].uuid, &rpc_hdr.if_id, UUID_BYTES);
-                        newentry.rpcinfo.rpc_map.num_map = 1;
-                        if (newentry.rpcinfo.rpc_frag_cont) {
-                            newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_FRAG_REQ;
+                        alg_entry->rpcinfo.rpc_map.maps[0].call_id = rpc_hdr.seqnum;
+                        memcpy(&alg_entry->rpcinfo.rpc_map.maps[0].act_id, &rpc_hdr.act_id, UUID_BYTES);
+                        memcpy(&alg_entry->rpcinfo.rpc_map.maps[0].uuid, &rpc_hdr.if_id, UUID_BYTES);
+                        alg_entry->rpcinfo.rpc_map.num_map = 1;
+                        if (alg_entry->rpcinfo.rpc_frag_cont) {
+                            alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_FRAG_REQ;
                         } else {
-                            newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
+                            alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
                         }
                         ctx.set_valid_rflow(false);
                     } 
                    
-                    if (!newentry.rpcinfo.rpc_frag_cont) {
-                        newentry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
-                        newentry.role = hal::FLOW_ROLE_INITIATOR;
-                        newentry.key.sport = 0;
-                        newentry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
-                        newentry.session_override = TRUE;
-                        newentry.skip_firewall = TRUE;
+                    if (!alg_entry->rpcinfo.rpc_frag_cont) {
+                        alg_entry->entry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
+                        alg_entry->entry.key.sport = 0;
+                        alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
+                        alg_entry->skip_firewall = TRUE;
 
                         // Insert an entry for Iflow when the first fragment is seen in case 
                         // of fragmented packet. Insert an entry for Rflow in case of Last 
@@ -423,26 +428,27 @@ parse_msrpc_dg_control_flow(fte::ctx_t& ctx)
                         ctx.register_completion_handler(fte::alg_completion_hdlr);
                     }
                 }
-
-                ctx.set_alg_entry(newentry);
             }
             break;
 
        case fte::ALG_PROTO_STATE_MSRPC_EPM:
             if (rpc_hdr.ptype == PDU_RESP) {
                 do {
-                    if (newentry.rpcinfo.rpc_map.maps[idx].call_id == rpc_hdr.seqnum && 
-                        (!memcmp(&newentry.rpcinfo.rpc_map.maps[idx].act_id, &rpc_hdr.act_id, UUID_BYTES))) {
-                        newentry.rpcinfo.rpc_map.maps[idx].dport = ctx.key().sport;
+                    if (alg_entry->rpcinfo.rpc_map.maps[idx].call_id == rpc_hdr.seqnum && 
+                        (!memcmp(&alg_entry->rpcinfo.rpc_map.maps[idx].act_id, &rpc_hdr.act_id, UUID_BYTES))) {
+                        alg_entry->rpcinfo.rpc_map.maps[idx].dport = ctx.key().sport;
                         HAL_TRACE_DEBUG("Received matching PDU response key: {}", ctx.key());
-
-                        // Cleanup the Rflow entry now that the state m/c
-                        // has moved to wait to response. Is session cleanup needed too ?
+                        // Todo - register completion handler to link this session to control session
+                        // Remove the ALG entry from wildcard table
+                        // as we have processed the flow already and
+                        // installed/dropped.
                         key.sport = 0;
-                        cleanup_alg_entry(ctx, key); 
+                        alg_entry = (fte::alg_entry_t *)fte::remove_expected_flow(key);
+                        HAL_FREE(hal::HAL_MEM_ALLOC_ALG, alg_entry);
                         break;
                     }
-                } while (idx < newentry.rpcinfo.rpc_map.num_map); 
+                } while (idx < alg_entry->rpcinfo.rpc_map.num_map); 
+               
             }
             break;
 
@@ -470,15 +476,20 @@ parse_msrpc_control_flow(fte::ctx_t& ctx)
 hal_ret_t
 process_msrpc_control_flow(fte::ctx_t& ctx)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t             ret = HAL_RET_OK;
+    fte::alg_entry_t     *alg_entry = NULL;
+    fte::flow_update_t    flowupd;    
 
-    fte::flow_update_t    flowupd;
+    alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
+    if (alg_entry == NULL) {
+        HAL_TRACE_ERR("ALG entry is not found in the context -- bailing");
+        return HAL_RET_ERR;
+    }
 
     if (ctx.alg_proto() == nwsec::APP_SVC_MSFT_RPC) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
 
-            ctx.set_alg_proto_state(fte::ALG_PROTO_STATE_RPC_INIT);
-
+            alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
             // UDP could have the portmapper queries at the
             // start of the session
             if (ctx.key().proto == IP_PROTO_UDP) {

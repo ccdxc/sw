@@ -535,14 +535,11 @@ public:
     hal::ep_t *sep() const { return sep_; }
     hal::ep_t *dep() const { return dep_; }
 
-    alg_proto_state_t alg_proto_state() const { return alg_proto_state_; }
-    void  set_alg_proto_state(alg_proto_state_t state) { alg_proto_state_ = state; }
-
     nwsec::ALGName alg_proto() const { return alg_proto_; }
     void set_alg_proto(nwsec::ALGName proto) { alg_proto_ = proto; }
 
-    alg_entry_t alg_entry() const { return alg_entry_; }
-    void set_alg_entry(const alg_entry_t entry) { alg_entry_ = entry; }
+    void* alg_entry() const { return alg_entry_; }
+    void set_alg_entry(void* entry) { alg_entry_ = entry; }
 
     bool hal_cleanup() const { return cleanup_hal_; }
     void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
@@ -596,8 +593,7 @@ private:
     hal::ep_t             *sep_;
     hal::ep_t             *dep_;
     nwsec::ALGName        alg_proto_;         // ALG Proto to be applied
-    alg_proto_state_t     alg_proto_state_;   // ALG Proto state machine state
-    alg_entry_t           alg_entry_;         // ALG entry in the wildcard table
+    void*                 alg_entry_;         // ALG entry in the wildcard table
     bool                  skip_firewall_;
     app_redir_ctx_t       app_redir_;
 
@@ -610,8 +606,6 @@ private:
     void invoke_completion_handlers(bool fail);
     hal_ret_t update_for_dnat(hal::flow_role_t role,
                               const header_rewrite_info_t& header);
-    hal_ret_t build_wildcard_key(hal::flow_key_t& key);
-    uint8_t construct_lookup_keys(hal::flow_key_t *key);
 };
 
 } // namespace fte
