@@ -1245,6 +1245,121 @@ ip_in_ep(ip_addr_t *ip, ep_t *ep, ep_ip_entry_t **ip_entry)
     return false;
 }
 
+
+#define IP_UPDATE_OP_ADD     0
+#define IP_UPDATE_OP_DELETE  1
+
+static hal_ret_t
+endpoint_update_ip_op(ep_t *ep, ip_addr_t *ip_addr, uint64_t learn_src_flag,
+        uint32_t op)
+{
+    dllist_ctxt_t           *add_iplist = NULL;
+    dllist_ctxt_t           *del_iplist = NULL;
+    cfg_op_ctxt_t           cfg_ctxt = { 0 };
+    dhl_entry_t             dhl_entry = { 0 };
+    ep_update_app_ctxt_t    app_ctxt = { 0 };
+    hal_ret_t               ret = HAL_RET_OK;
+    ep_ip_entry_t           *ep_ipe = NULL;
+    dllist_ctxt_t           *lnode = NULL;
+    ep_ip_entry_t           *pi_ip_entry = NULL;
+
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    add_iplist = (dllist_ctxt_t *)HAL_CALLOC(
+            HAL_MEM_ALLOC_DLLIST, sizeof(dllist_ctxt_t));
+    HAL_ABORT(add_iplist != NULL);
+    del_iplist = (dllist_ctxt_t *)HAL_CALLOC(
+            HAL_MEM_ALLOC_DLLIST, sizeof(dllist_ctxt_t));
+    HAL_ABORT(del_iplist != NULL);
+    utils::dllist_reset(add_iplist);
+    utils::dllist_reset(del_iplist);
+    ep_ipe = (ep_ip_entry_t *)g_hal_state->ep_ip_entry_slab()->alloc();
+    HAL_ABORT(ep_ipe != NULL);
+    memcpy(&ep_ipe->ip_addr, ip_addr, sizeof(ip_addr_t));
+    /*
+     * TODO: We have to check the source flags correctly.
+     * For instance, we can't just update the learn src flag blindly
+     * if we learn't if from config.
+     */
+    ep_ipe->ip_flags = learn_src_flag;
+    utils::dllist_reset(&ep_ipe->ep_ip_lentry);
+    if (op == IP_UPDATE_OP_ADD) {
+        utils::dllist_add(add_iplist, &ep_ipe->ep_ip_lentry);
+        ep_ipe->pd = NULL;
+    } else if (op == IP_UPDATE_OP_DELETE) {
+        utils::dllist_add(del_iplist, &ep_ipe->ep_ip_lentry);
+        dllist_for_each(lnode, &(ep->ip_list_head)) {
+            pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+            if (!memcmp(ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t))) {
+                if (!(pi_ip_entry->ip_flags & learn_src_flag)) {
+                    /* If learn source is different, don't delete it */
+                    goto out;
+                }
+                ep_ipe->pd = pi_ip_entry->pd;
+                break;
+            }
+        }
+        /* This API expects IP to be present */
+        if (ep_ipe->pd == NULL) {
+            HAL_ABORT(0);
+        }
+    } else {
+        HAL_ABORT(0);
+    }
+
+    app_ctxt.iplist_change = true;
+    app_ctxt.add_iplist = add_iplist;
+    app_ctxt.del_iplist = del_iplist;
+
+    ep_make_clone(ep, (ep_t **)&dhl_entry.cloned_obj);
+    // form ctxt and call infra update object
+    dhl_entry.handle = ep->hal_handle;
+    dhl_entry.obj = ep;
+    cfg_ctxt.app_ctxt = &app_ctxt;
+    utils::dllist_reset(&cfg_ctxt.dhl);
+    utils::dllist_reset(&dhl_entry.dllist_ctxt);
+    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_upd_obj(ep->hal_handle, &cfg_ctxt,
+                             endpoint_update_upd_cb,
+                             endpoint_update_commit_cb,
+                             endpoint_update_abort_cb,
+                             endpoint_update_cleanup_cb);
+
+ out:
+    HAL_FREE(HAL_MEM_ALLOC_DLLIST, add_iplist);
+    HAL_FREE(HAL_MEM_ALLOC_DLLIST, del_iplist);
+
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t
+endpoint_update_ip_add(ep_t *ep, ip_addr_t *ip_addr, uint64_t learn_src_flag)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+
+    /* Check if this IP is already part of this */
+    if (ip_in_ep(ip_addr, ep, NULL)) {
+        return ret;
+    }
+
+    return endpoint_update_ip_op(ep, ip_addr, learn_src_flag, IP_UPDATE_OP_ADD);
+}
+
+hal_ret_t
+endpoint_update_ip_delete(ep_t *ep, ip_addr_t *ip_addr, uint64_t learn_src_flag)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+
+    /* Proceed only if IP is part of this entry. */
+    if (!ip_in_ep(ip_addr, ep, NULL)) {
+        return ret;
+    }
+
+    return endpoint_update_ip_op(ep, ip_addr,
+            learn_src_flag, IP_UPDATE_OP_DELETE);
+}
+
 hal_ret_t
 endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
                         bool *iplist_change,

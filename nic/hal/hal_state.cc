@@ -25,7 +25,6 @@
 #include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/src/rawccb.hpp"
 #include "nic/hal/src/dos.hpp"
- 
 namespace hal {
 
 // global instance of all HAL state including config, operational states

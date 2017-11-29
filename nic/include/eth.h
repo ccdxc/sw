@@ -8,6 +8,11 @@
 #define L2_ETH_HDR_LEN                                 14
 #define L2_DOT1Q_HDR_LEN                               18
 
+#define ARPOP_REQUEST                                  1
+#define ARPOP_REPLY                                    2
+#define ARPOP_REVREQUEST                               3
+#define ARPOP_REVREPLY                                 4
+
 #define ETH_TYPE_IPV4                                  0x0800
 #define ETH_TYPE_ARP                                   0x0806
 #define ETH_TYPE_RARP                                  0x8035

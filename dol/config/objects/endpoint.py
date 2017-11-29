@@ -209,15 +209,17 @@ class EndpointObject(base.ConfigObjectBase):
         self.intf_hal_handle        = self.intf.hal_handle
 
         if GlobalOptions.classic is False:
-            for ipaddr in self.ipaddrs:
-                ip = req_spec.endpoint_attrs.ip_address.add()
-                ip.ip_af = haldefs.common.IP_AF_INET
-                ip.v4_addr = ipaddr.getnum()
+            if not self.segment.IsIPV4EpLearnEnabled():
+                for ipaddr in self.ipaddrs:
+                    ip = req_spec.endpoint_attrs.ip_address.add()
+                    ip.ip_af = haldefs.common.IP_AF_INET
+                    ip.v4_addr = ipaddr.getnum()
 
-            for ipv6addr in self.ipv6addrs:
-                ip = req_spec.endpoint_attrs.ip_address.add()
-                ip.ip_af = haldefs.common.IP_AF_INET6
-                ip.v6_addr = ipv6addr.getnum().to_bytes(16, 'big')
+            if not self.segment.IsIPV6EpLearnEnabled():
+                for ipv6addr in self.ipv6addrs:
+                    ip = req_spec.endpoint_attrs.ip_address.add()
+                    ip.ip_af = haldefs.common.IP_AF_INET6
+                    ip.v6_addr = ipv6addr.getnum().to_bytes(16, 'big')
 
             for sg in self.sgs:
                 sg_key_handle = req_spec.endpoint_attrs.sg_key_handle.add()
@@ -233,12 +235,12 @@ class EndpointObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.vrf_id = self.tenant.id
+        get_req_spec.vrf_key_handle.vrf_id = self.tenant.id
         get_req_spec.key_or_handle.endpoint_handle = self.hal_handle
         return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):
-        self.tenant_id = get_resp.spec.meta.vrf_id
+        self.tenant_id = get_resp.spec.vrf_key_handle.vrf_id
         self.segment_hal_handle = get_resp.spec.key_or_handle.endpoint_key.l2_key.l2segment_key_handle.l2segment_handle
         self.intf_hal_handle = get_resp.spec.endpoint_attrs.interface_key_handle.if_handle
         self.macaddr = objects.MacAddressBase(integer=get_resp.spec.key_or_handle.endpoint_key.l2_key.mac_address)
@@ -460,4 +462,12 @@ class EndpointObjectHelper:
 
 def GetMatchingObjects(selectors):
     endpoints =  Store.objects.GetAllByClass(EndpointObject)
-    return [ep for ep in endpoints if ep.IsFilterMatch(selectors.endpoint)]
+    eps = []
+    for ep in endpoints:
+        if ep.IsFilterMatch(selectors.endpoint) and \
+            ep.segment.IsFilterMatch(selectors.segment) and \
+            ep.segment.tenant.IsFilterMatch(selectors.tenant):
+            cfglogger.info("Selecting Endpoint : %s" % ep.GID())
+            eps.append(ep)
+
+    return eps

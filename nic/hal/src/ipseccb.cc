@@ -102,7 +102,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     l2seg_t *infra_seg;
-    hal::vrf_id_t tid;
+    vrf_id_t tid;
 
     // validate the request message
     ret = validate_ipseccb_create(spec, rsp);
@@ -210,7 +210,7 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     l2seg_t *infra_seg;
-    hal::vrf_id_t tid;
+    vrf_id_t tid;
 
     auto kh = spec.key_or_handle();
 

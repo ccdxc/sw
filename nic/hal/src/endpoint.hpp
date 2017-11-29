@@ -64,7 +64,7 @@ typedef struct ep_l3_key_s {
 
 // endpoint's L3/IP information -- an endpoint can have multiple IPs
 typedef struct ep_ip_entry_s {
-    ip_addr_t            ip_addr;             // IP address of the endponit
+    ip_addr_t            ip_addr;             // IP address of the endpoint
     uint64_t             ip_flags;            // IP flags
 
     // PD state
@@ -299,6 +299,11 @@ hal_ret_t endpoint_update_pi_with_iplist(ep_t *ep, dllist_ctxt_t *add_iplist,
                                          dllist_ctxt_t *del_iplist);  
 hal_ret_t endpoint_free_ip_list(dllist_ctxt_t *iplist);
 hal_ret_t endpoint_cleanup_ip_list(dllist_ctxt_t **list);
+hal_ret_t endpoint_update_ip_add(ep_t *ep, ip_addr_t *ip,
+        uint64_t learn_src_flag);
+hal_ret_t endpoint_update_ip_delete(ep_t *ep, ip_addr_t *ip,
+        uint64_t learn_src_flag);
+bool ip_in_ep(ip_addr_t *ip, ep_t *ep, ep_ip_entry_t **ip_entry);
 
 // Debug APIs
 void ep_print_ips(ep_t *ep);

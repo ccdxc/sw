@@ -39,6 +39,10 @@ class TenantObject(base.ConfigObjectBase):
         self.spec = copy.deepcopy(spec)
         self.type = self.spec.type.upper()
         self.qos_enable = getattr(topospec, 'qos_enable', False)
+        self.ep_learn = None
+        fte = getattr(self.spec , 'fte', None)
+        if fte:
+            self.ep_learn = getattr(fte, 'ep_learn', None)
 
         self.label = getattr(spec, 'label', None)
         self.overlay = spec.overlay.upper()
@@ -167,6 +171,12 @@ class TenantObject(base.ConfigObjectBase):
     def AllocL4LbBackend(self, remote, tnnled):
         return self.obj_helper_segment.AllocL4LbBackend(remote, tnnled)
 
+    def IsIPV4EpLearnEnabled(self):
+        return self.ep_learn and self.ep_learn.ipv4
+
+    def IsIPV6EpLearnEnabled(self):
+        return self.ep_learn and self.ep_learn.ipv6
+    
     def __create_l4lb_services(self):
         if 'l4lb' not in self.spec.__dict__:
             self.l4lb_enable = False
@@ -192,6 +202,9 @@ class TenantObject(base.ConfigObjectBase):
         return
 
     def __create_infra_tunnels(self):
+        #Don't create tunnels if Learning enabled for now.
+        if self.IsIPV4EpLearnEnabled() or self.IsIPV6EpLearnEnabled():
+            return        
         for entry in self.spec.tunnels:
             spec = entry.spec.Get(Store)
             self.obj_helper_tunnel.Generate(self, spec, self.GetEps())
@@ -199,6 +212,9 @@ class TenantObject(base.ConfigObjectBase):
         return
 
     def __create_tenant_tunnels(self):
+        #Don't create tunnels if Learning enabled for now.
+        if self.IsIPV4EpLearnEnabled() or self.IsIPV6EpLearnEnabled():
+            return
         reps = self.GetRemoteEps()
         id = 0
         for entry in self.spec.tunnels:

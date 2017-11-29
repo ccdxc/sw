@@ -129,7 +129,7 @@ ctx_t::extract_flow_key()
 hal_ret_t
 ctx_t::lookup_flow_objs()
 {
-    hal::vrf_id_t tid;
+    vrf_id_t tid;
 
     if (key_.flow_type == hal::FLOW_TYPE_L2) {
         hal::l2seg_t *l2seg = hal::find_l2seg_by_id(key_.l2seg_id);
@@ -375,7 +375,8 @@ ctx_t::update_flow_table()
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
     }
 
-    if (!flow_miss() && !app_redir().proxy_flow_info()) {
+    if ((!flow_miss() && !app_redir().proxy_flow_info())
+            || ignore_session_create()) {
       return HAL_RET_OK;
     }
 

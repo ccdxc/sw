@@ -78,11 +78,12 @@ class TestCaseSessionEntryObject:
 
 class TestCaseSessionStepTriggerExpectReceivedObject:
     def __init__(self):
-        self.delay          = 0
-        self.packets        = []
-        self.descriptors    = []
-        self.doorbell       = TestCaseTrigExpDoorbellObject()
-        self.configs        = []
+        self.delay                 = 0
+        self.packets               = []
+        self.descriptors           = []
+        self.doorbell              = TestCaseTrigExpDoorbellObject()
+        self.configs               = []
+        #self.ignore_excess_packets = False
         return
 
 class TestCaseSessionStepObject:
@@ -319,6 +320,9 @@ class TestCase(objects.FrameworkObject):
             tc_config.spec = getattr(spec_config_entry, "fields", None)
             tcsn.configs.append(tc_config)
    
+    #def __setup_ignore_excess_packets(self, tcsn, spsn):
+    #    tcsn.ignore_excess_packets = getattr(spsn, 'ignore_excess_packets', False)
+
     def __setup_delay(self, tcsn, spsn):
         spdelay = getattr(spsn, 'delay', 0)
         if objects.IsCallback(spdelay):
@@ -345,6 +349,7 @@ class TestCase(objects.FrameworkObject):
         self.info("- Setting up Expect.")
         if spstep.expect == None: return
         self.__setup_delay(tcstep.expect, spstep.expect)
+        #self.__setup_ignore_excess_packets(tcstep.expect, spstep.expect)
         self.__setup_packets(tcstep.step_id, tcstep.expect, spstep.expect)
         self.__setup_descriptors(tcstep.expect, spstep.expect)
         self.__setup_config_objects(tcstep.expect, spstep.expect)

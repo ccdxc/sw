@@ -3,7 +3,6 @@
 #include <netinet/in.h>
 #include <string>
 #include <netinet/if_ether.h>
-#include "nic/include/base.h"
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/fte/fte.hpp"
 #include "nic/include/hal_state.hpp"
@@ -40,14 +39,10 @@ class dhcp_trans_t;  // forward
 
 // DHCP transaction key
 typedef struct dhcp_trans_key_s {
+    vrf_id_t vrf_id;    //tenant id
     uint32_t xid;         // transaction ID.
     mac_addr_t mac_addr;  // MAC address of the endpoint
 } __PACK__ dhcp_trans_key_t;
-
-typedef struct dhcp_ip_entry_key_s {
-    vrf_id_t vrf_id;  // VRF id
-    ip_addr_t ip_addr;      // IP address of the endpoint
-} __PACK__ dhcp_ip_entry_key_t;
 
 enum dhcp_fsm_state_t {
     DHCP_INIT,
@@ -106,7 +101,6 @@ private:
 
     dhcp_ctx ctx_;
 
-    dhcp_ip_entry_key_t ip_entry_key_;
     ht_ctxt_t ht_ctxt_;           // id based hash table ctxt
     ht_ctxt_t ip_entry_ht_ctxt_;  // IP based hash table ctxt
 
@@ -118,6 +112,7 @@ private:
         }
 
         bool process_dhcp_discover(fsm_state_ctx ctx, fsm_event_data data);
+        bool process_dhcp_inform(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_request(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_release(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_request_after_bound(fsm_state_ctx ctx,
@@ -172,12 +167,9 @@ private:
         return HAL_RET_OK;
     }
     dhcp_trans_key_t* trans_key_ptr() { return &trans_key_; }
-    dhcp_ip_entry_key_t* ip_entry_key_ptr() { return &ip_entry_key_; }
     static void init_dhcp_trans_key(const uint8_t* chaddr, uint32_t xid,
+                                    const ep_t *ep,
                                     dhcp_trans_key_t* trans_key_);
-    static void init_dhcp_ip_entry_key(const uint8_t* protocol_address,
-                                       vrf_id_t vrf_id,
-                                       dhcp_ip_entry_key_t* ip_entry_key_);
     //static void process_transaction(dhcp_trans_t* trans, dhcp_fsm_event_t event,
       //                              fsm_event_data data);
     static dhcp_trans_t* find_dhcptrans_by_id(dhcp_trans_key_t id) {
@@ -199,10 +191,6 @@ private:
 void* dhcptrans_get_key_func(void* entry);
 uint32_t dhcptrans_compute_hash_func(void* key, uint32_t ht_size);
 bool dhcptrans_compare_key_func(void* key1, void* key2);
-
-void* dhcptrans_get_ip_entry_key_func(void* entry);
-uint32_t dhcptrans_compute_ip_entry_hash_func(void* key, uint32_t ht_size);
-bool dhcptrans_compare_ip_entry_key_func(void* key1, void* key2);
 
 void* dhcptrans_get_handle_key_func(void* entry);
 uint32_t dhcptrans_compute_handle_hash_func(void* key, uint32_t ht_size);

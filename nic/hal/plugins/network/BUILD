@@ -11,6 +11,8 @@ cc_library(
         "//nic/fte",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
+        "//nic/hal/plugins/eplearn:eplearn_includes",
+        "//nic/hal/plugins/eplearn:eplearn",
         "//nic:gen_proto_includes",
      ],
     alwayslink = 1,
@@ -20,3 +22,4 @@ cc_library(
     name = "network_includes",
     hdrs = ["net_plugin.hpp"],
 )
+

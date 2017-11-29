@@ -14,9 +14,7 @@ struct common_p4plus_stage0_app_header_table_eth_rx_fetch_desc_d d;
 .align
 eth_rx_fetch_desc:
   seq             c1, d.enable, 0                                            // Queue is not enabled
-  add             r1, r0, d.{p_index0}.hx                                    // Queue is full
-  mincr           r1, d.{ring_size}.hx, 1
-  seq             c2, r1, d.{c_index0}.hx
+  seq             c2, d.p_index0, d.c_index0
   bcf             [c1 | c2], abort_rx
   nop
 

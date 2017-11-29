@@ -46,17 +46,14 @@ class arp_trans_t;
 
 // ARP transaction key
 typedef struct arp_trans_key_s {
-    l2seg_id_t l2_segid;  // L2 segment id
-    mac_addr_t mac_addr;  // MAC address of the endpoint
+    vrf_id_t    vrf_id;    //tenant id
+    l2seg_id_t  l2_segid;  // L2 segment id
+    mac_addr_t  mac_addr;  // MAC address of the endpoint
 } __PACK__ arp_trans_key_t;
 
-typedef struct arp_ip_entry_key_s {
-    vrf_id_t vrf_id;  // VRF id
-    ip_addr_t ip_addr;      // IP address of the endpoint
-} __PACK__ arp_ip_entry_key_t;
-
 struct arp_event_data_t {
-    const fte::ctx_t    *fte_ctx;
+    const fte::ctx_t  *fte_ctx;
+    uint8_t           *protocol_address;
 };
 
 class arp_trans_t : public trans_t {
@@ -69,7 +66,6 @@ private:
     uint8_t hw_addr_[ETHER_ADDR_LEN]; /* hardware address */
     uint8_t protocol_addr_[4];        /* protocol address */
 
-    arp_ip_entry_key_t ip_entry_key_;  // HAL allocated handle
     ht_ctxt_t ht_ctxt_;           // id based hash table ctxt
     ht_ctxt_t ip_entry_ht_ctxt_;  // IP based hash table ctxt
 
@@ -89,6 +85,7 @@ private:
             this->sm_def = sm_def;
         }
         bool process_arp_request(fsm_state_ctx ctx, fsm_event_data data);
+        bool process_arp_renewal_request(fsm_state_ctx ctx, fsm_event_data data);
         void bound_entry_func(fsm_state_ctx ctx);
 
        public:
@@ -134,15 +131,15 @@ private:
     }
     static fsm_timer_t *get_timer_func() { return arp_timer_; }
     void process_event(arp_fsm_event_t event, fsm_event_data data);
+    ep_t* get_ep_entry();
 
    public:
     arp_trans_key_t *trans_key_ptr() { return &trans_key_; }
-    arp_ip_entry_key_t *ip_entry_key_ptr() { return &ip_entry_key_; }
+    void set_up_ip_entry_key(uint8_t *protocol_address);
+    bool protocol_address_match(uint8_t *protocol_address);
     static void init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
                                    arp_trans_key_t *trans_key);
-    static void init_arp_ip_entry_key(const uint8_t *protocol_address,
-                                            vrf_id_t vrf_id,
-                                             arp_ip_entry_key_t *ip_entry_key);
+
 
     static inline arp_trans_t *find_arptrans_by_id(arp_trans_key_t id) {
         return (arp_trans_t *)arplearn_key_ht_->lookup(&id);
@@ -155,11 +152,9 @@ private:
 
     void *operator new(size_t size);
     void operator delete(void *p);
-    //static void process_transaction(arp_trans_t *trans, arp_fsm_event_t event,
-      //                              fsm_event_data data);
-    explicit arp_trans_t(uint8_t *hw_address, uint8_t *protocol_address,
-                         fte::ctx_t &ctx);
+    explicit arp_trans_t(uint8_t *hw_address, fte::ctx_t &ctx);
     arp_fsm_state_t get_state();
+    void reset();
     virtual ~arp_trans_t();
 
 } __PACK__;
@@ -167,10 +162,6 @@ private:
 void *arptrans_get_key_func(void *entry);
 uint32_t arptrans_compute_hash_func(void *key, uint32_t ht_size);
 bool arptrans_compare_key_func(void *key1, void *key2);
-
-void *arptrans_get_ip_entry_key_func(void *entry);
-uint32_t arptrans_compute_ip_entry_hash_func(void *key, uint32_t ht_size);
-bool arptrans_compare_ip_entry_key_func(void *key1, void *key2);
 
 void *arptrans_get_handle_key_func(void *entry);
 uint32_t arptrans_compute_handle_hash_func(void *key, uint32_t ht_size);

@@ -1,0 +1,26 @@
+# Feature Test Modules List
+feature:
+    id       : fte2
+    sub      : eplearn
+    package  : test.fte.eplearn
+    module   : ep_learn
+    runorder : 0
+    enable   : True
+    ignore   : True
+    args     :
+
+modules:
+    - module:
+        name    : ARP_LOCAL_REQ
+        spec    : arp_learn_local.testspec
+        iterate :
+              - type     : ARP_REQ
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=False
+    - module:
+        name    : ARP_REMOTE_REQ
+        spec    : arp_learn_remote.testspec
+        iterate :
+              - type     : ARP_REQ
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=True

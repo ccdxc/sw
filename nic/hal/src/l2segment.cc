@@ -185,6 +185,10 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-l2seg:{}:create add CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
+
+    // create the broadcast/flood list for this l2seg
+    ret = oif_list_create(&l2seg->bcast_oif_list);
+    HAL_ASSERT(ret == HAL_RET_OK);
     // PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
@@ -263,10 +267,6 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-l2seg:{}:create commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
-
-    // create the broadcast/flood list for this l2seg
-    ret = oif_list_create(&l2seg->bcast_oif_list);
-    HAL_ASSERT(ret == HAL_RET_OK);
 
     if (is_forwarding_mode_host_pinned()) {
         ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list);

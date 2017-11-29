@@ -7,8 +7,8 @@
 
 #include <netinet/in.h>
 // clang-format off
-#include "dhcp_packet.hpp"
 #include "dhcp_trans.hpp"
+#include "dhcp_packet.hpp"
 // clang-format on
 
 // using namespace DHCP_EP_LEARN;
@@ -33,7 +33,8 @@ static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
     dhcp_trans_key_t trans_key;
     dhcp_event_data event_data;
 
-    dhcp_trans_t::init_dhcp_trans_key(raw_pkt->chaddr, xid, &trans_key);
+    dhcp_trans_t::init_dhcp_trans_key(raw_pkt->chaddr, xid,
+            ctx.sep(), &trans_key);
     trans = dhcp_trans_t::find_dhcptrans_by_id(trans_key);
     if (trans == NULL) {
         if (add_entry) {

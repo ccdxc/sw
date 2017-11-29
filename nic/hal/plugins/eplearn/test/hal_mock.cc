@@ -10,8 +10,10 @@ hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
                            flow_t iflow[], flow_t rflow[]) {
     this->pkt_ = pkt;
     this->pkt_len_ = pkt_len;
+    this->cpu_rxhdr_ = cpu_rxhdr;
     this->sep_ = temp_ep;
     this->vrf_ = temp_ten;
+    this->vlan_tag_valid_ = false;
     return HAL_RET_OK;
 }
 

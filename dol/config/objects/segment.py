@@ -139,6 +139,12 @@ class SegmentObject(base.ConfigObjectBase):
         return self.fabencap == 'VLAN'
     def IsFabEncapVxlan(self):
         return self.fabencap == 'VXLAN'
+    
+    def IsIPV4EpLearnEnabled(self):
+        return self.tenant.IsIPV4EpLearnEnabled()
+
+    def IsIPV6EpLearnEnabled(self):
+        return self.tenant.IsIPV6EpLearnEnabled()
 
     def __pin_interface_for_hostpin_mode(self):
         trunks = Store.GetTrunkingUplinks()

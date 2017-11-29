@@ -469,7 +469,7 @@ public:
 
     // flow key of the current pkts flow
     const hal::flow_key_t& key() const { return key_; }
-    
+
     // Following are valid only for packets punted to ARM
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
     uint8_t* pkt() const { return pkt_; }
@@ -525,6 +525,9 @@ public:
     bool valid_rflow() const { return valid_rflow_; }
     void set_valid_rflow(bool val) { valid_rflow_ = val; }
 
+    bool ignore_session_create() const { return ignore_session_create_; }
+    void set_ignore_session_create(bool val) { ignore_session_create_ = val; }
+
     hal::vrf_t *vrf() const { return vrf_; }
     hal::l2seg_t *sl2seg() const { return sl2seg_; }
     hal::l2seg_t *dl2seg() const { return dl2seg_; }
@@ -553,6 +556,7 @@ public:
 private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
+    bool                  vlan_tag_valid_;
 
     cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
     uint8_t               *pkt_;
@@ -582,6 +586,7 @@ private:
     uint8_t               istage_;          // current iflow stage
     uint8_t               rstage_;          // current rflow stage
     bool                  valid_rflow_;     // Is rflow valid
+    bool                  ignore_session_create_; //ignore session creation for the flow.
     flow_t                *iflow_[MAX_STAGES];       // iflow 
     flow_t                *rflow_[MAX_STAGES];       // rflow 
 

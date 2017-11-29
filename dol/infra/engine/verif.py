@@ -213,6 +213,9 @@ class VerifEngineObject:
         pcr.Compare()
         pcr.ShowResults()
         if pcr.IsMatch() == False:
+            #if getattr(step.expect, "ignore_excess_packets", False) and \
+            #    pcr.HasOnlyExcessPackets():
+            #    return defs.status.SUCCESS
             return defs.status.ERROR
         return defs.status.SUCCESS
 

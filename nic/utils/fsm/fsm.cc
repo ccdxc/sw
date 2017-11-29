@@ -113,6 +113,7 @@ void fsm_state_machine_t::_process_event_internal(uint32_t event,
 void fsm_state_machine_t::stop_state_timer() {
     if (this->cur_state_time_ctx_) {
         this->timer_get_func_()->delete_timer(this->cur_state_time_ctx_);
+        this->reset_timer();
     }
 }
 

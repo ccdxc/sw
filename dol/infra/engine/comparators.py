@@ -241,6 +241,12 @@ class CrPacketPair:
 
         return
 
+   #def IsExcessPacket(self):
+   #    return self.expkt is None
+  
+    def IsMatch(self):
+        return self.match 
+
 # Packet Comparator for Scapy packets.
 class PacketComparator:
     def __init__(self, lg = logger):
@@ -323,4 +329,13 @@ class PacketComparator:
 
     def IsMatch(self):
         return self.match
-
+    
+   #def HasOnlyExcessPackets(self):
+   #    if self.IsMatch():
+   #        return False
+   #    for pid,pair in self.pairs.items():
+   #        if pair.IsMatch():
+   #            continue
+   #        if not pair.IsExcessPacket():
+   #            return False
+   #    return True

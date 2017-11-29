@@ -1,7 +1,7 @@
 #include "nic/include/fte.hpp"
 
 namespace hal {
-namespace network {
+namespace net {
 
 fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx);
 
