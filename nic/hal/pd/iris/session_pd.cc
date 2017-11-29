@@ -297,7 +297,6 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
 
     // TBD: where do these come from ?
     // TBD: the following come when QoS model is defined
-    d.flow_info_action_u.flow_info_flow_info.ingress_policer_index = 0;
     d.flow_info_action_u.flow_info_flow_info.egress_policer_index = 0;
     d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = flow_cfg->ing_mirror_session;
     d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id = flow_cfg->eg_mirror_session;

@@ -325,11 +325,6 @@ static int capri_stats_region_init()
     p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
     stats_base_addr += tbl_ctx.tabledepth * 32;
 
-    capri_table_constant_write(P4TBL_ID_INGRESS_POLICER_ACTION,
-                               stats_base_addr);
-    p4pd_table_properties_get(P4TBL_ID_INGRESS_POLICER_ACTION, &tbl_ctx);
-    stats_base_addr += tbl_ctx.tabledepth * 32;
-
     capri_table_constant_write(P4TBL_ID_EGRESS_POLICER_ACTION, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_EGRESS_POLICER_ACTION, &tbl_ctx);
     stats_base_addr += tbl_ctx.tabledepth * 32;
@@ -799,7 +794,7 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
     //*entry_start_word = (CAPRI_SRAM_WORDS_PER_BLOCK - 1) - *entry_start_word;
 
     *entry_start_block = (tblctx->sram_layout.top_left_block * CAPRI_SRAM_ROWS)
-                         + (((tbl_col * tblctx->sram_layout.entry_width)
+                         + ((((tbl_col * tblctx->sram_layout.entry_width) + tblctx->sram_layout.top_left_x)
                               / CAPRI_SRAM_WORDS_PER_BLOCK) * CAPRI_SRAM_ROWS)
                          + tblctx->sram_layout.top_left_y
                          + (index/tblctx->sram_layout.num_buckets);

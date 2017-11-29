@@ -137,27 +137,7 @@ policer_pd_dealloc_res (pd_policer_t *pd_policer)
 static hal_ret_t
 policer_pd_pgm_ingress_policer_tbl (pd_policer_t *pd_policer)
 {
-    hal_ret_t                  ret = HAL_RET_OK;
-    DirectMap                  *policer_tbl = NULL;
-    ingress_policer_actiondata data;
-
-    memset(&data, 0, sizeof(data));
-
-    data.actionid = INGRESS_POLICER_EXECUTE_INGRESS_POLICER_ID;
-
-    policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_INGRESS_POLICER);
-    HAL_ASSERT_RETURN((policer_tbl != NULL), HAL_RET_ERR);
-
-    ret = policer_tbl->insert_withid(&data, pd_policer->hw_policer_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-POLICER::{}: Unable to program for ingress policer: {}",
-                __FUNCTION__, policer_get_policer_id((policer_t *)pd_policer->pi_policer));
-    } else {
-        HAL_TRACE_DEBUG("PD-POLICER::{}: Programmed for ingress policer: {}",
-                __FUNCTION__, policer_get_policer_id((policer_t *)pd_policer->pi_policer));
-    }
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 static hal_ret_t
@@ -186,43 +166,12 @@ policer_pd_pgm_egress_policer_tbl (pd_policer_t *pd_policer)
     return ret;
 }
 
-#define policer_action data.ingress_policer_action_action_u.ingress_policer_action_ingress_policer_action
 static hal_ret_t
 policer_pd_pgm_ingress_policer_action_tbl (pd_policer_t *pd_policer)
 {
     hal_ret_t                         ret = HAL_RET_OK;
-    DirectMap                         *policer_action_tbl = NULL;
-    ingress_policer_action_actiondata data;
-    qos_marking_action_t              marking_action;
-
-    memset(&data, 0, sizeof(data));
-
-    policer_get_marking_action((policer_t*)pd_policer->pi_policer, 
-                               &marking_action);
-
-    data.actionid = INGRESS_POLICER_ACTION_INGRESS_POLICER_ACTION_ID;
-
-
-    policer_action.cos_en = qos_marking_action_pcp_rewrite_en(&marking_action);
-    policer_action.cos = qos_marking_action_pcp(&marking_action);
-    policer_action.dscp_en = qos_marking_action_dscp_rewrite_en(&marking_action);
-    policer_action.dscp = qos_marking_action_dscp(&marking_action);
-
-    policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_INGRESS_POLICER_ACTION);
-    HAL_ASSERT_RETURN((policer_action_tbl != NULL), HAL_RET_ERR);
-
-    ret = policer_action_tbl->insert_withid(&data, pd_policer->hw_policer_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-POLICER::{}: Unable to program for ingress policer action: {}",
-                __FUNCTION__, policer_get_policer_id((policer_t *)pd_policer->pi_policer));
-    } else {
-        HAL_TRACE_DEBUG("PD-POLICER::{}: Programmed for ingress policer action: {}",
-                __FUNCTION__, policer_get_policer_id((policer_t *)pd_policer->pi_policer));
-    }
-
     return ret;
 }
-#undef policer_action
 
 #define policer_action data.egress_policer_action_action_u.egress_policer_action_egress_policer_action
 static hal_ret_t
@@ -282,20 +231,6 @@ static hal_ret_t
 policer_pd_cleanup_ingress_policer_tbl (pd_policer_t *pd_policer)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    DirectMap   *policer_tbl = NULL;
-    
-    policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_INGRESS_POLICER);
-    HAL_ASSERT_RETURN((policer_tbl != NULL), HAL_RET_ERR);
-
-    ret = policer_tbl->remove(pd_policer->hw_policer_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-POLICER::{}: Unable to cleanup for ingress policer: {}",
-                __FUNCTION__, policer_get_policer_id((policer_t *)pd_policer->pi_policer));
-    } else {
-        HAL_TRACE_DEBUG("PD-POLICER::{}: Programmed cleanup ingress policer: {}",
-                __FUNCTION__, policer_get_policer_id((policer_t *)pd_policer->pi_policer));
-    }
-
     return ret;
 }
 
@@ -324,20 +259,6 @@ static hal_ret_t
 policer_pd_cleanup_ingress_policer_action_tbl (pd_policer_t *pd_policer)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    DirectMap   *policer_action_tbl = NULL;
-    
-    policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_INGRESS_POLICER_ACTION);
-    HAL_ASSERT_RETURN((policer_action_tbl != NULL), HAL_RET_ERR);
-
-    ret = policer_action_tbl->remove(pd_policer->hw_policer_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-POLICER::{}: Unable to cleanup for ingress policer: {}",
-                __FUNCTION__, policer_get_policer_id((policer_t *)pd_policer->pi_policer));
-    } else {
-        HAL_TRACE_DEBUG("PD-POLICER::{}: Programmed cleanup ingress policer: {}",
-                __FUNCTION__, policer_get_policer_id((policer_t *)pd_policer->pi_policer));
-    }
-
     return ret;
 }
 

@@ -295,7 +295,6 @@ control ingress {
         process_flow_table();
         process_registered_macs();
         process_nacl();
-        process_ingress_policer();
         process_session_state();
         process_stats();
         process_ddos_ingress();

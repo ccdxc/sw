@@ -123,7 +123,7 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
 action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
-                 ingress_policer_index, egress_policer_index,
+                 egress_policer_index,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
                  tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
@@ -167,8 +167,7 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
         modify_field(capri_intrinsic.tm_cpu, TRUE);
     }
 
-    /* policer indicies */
-    modify_field(policer_metadata.ingress_policer_index, ingress_policer_index);
+    /* policer index */
     modify_field(policer_metadata.egress_policer_index, egress_policer_index);
 
     /* flow info */

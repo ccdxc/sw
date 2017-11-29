@@ -39,8 +39,6 @@ SRC_FILES := \
     $(SRC_DIR)/session_state.asm \
     $(SRC_DIR)/flow_stats.asm \
     $(SRC_DIR)/icmp_normalization.asm \
-    $(SRC_DIR)/ingress_policer_action.asm \
-    $(SRC_DIR)/ingress_policer.asm \
     $(SRC_DIR)/ingress_tx_stats.asm \
     $(SRC_DIR)/input_mapping_native.asm \
     $(SRC_DIR)/input_mapping_tunneled.asm \

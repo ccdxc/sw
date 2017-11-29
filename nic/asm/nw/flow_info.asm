@@ -42,7 +42,6 @@ flow_info:
   phvwr       p.capri_intrinsic_tm_cpu, d.u.flow_info_d.log_en
 
   /* policer indicies */
-  phvwr       p.policer_metadata_ingress_policer_index, d.u.flow_info_d.ingress_policer_index
   phvwr       p.policer_metadata_egress_policer_index, d.u.flow_info_d.egress_policer_index
 
   /* flow info */
@@ -71,12 +70,10 @@ flow_info:
 
   /* tunnel info */
   phvwr       p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
-  ASSERT_PHVWR(p, rewrite_metadata_tunnel_rewrite_index, rewrite_metadata_tunnel_vnid,
-               d, u.flow_info_d.tunnel_rewrite_index, u.flow_info_d.tunnel_vnid)
-  phvwr.e     p.{rewrite_metadata_tunnel_rewrite_index, \
-                 rewrite_metadata_tunnel_vnid}, \
-              d.{u.flow_info_d.tunnel_rewrite_index, \
-                 u.flow_info_d.tunnel_vnid}
+  phvwr       p.rewrite_metadata_tunnel_rewrite_index, \
+                d.u.flow_info_d.tunnel_rewrite_index
+  phvwr.e     p.rewrite_metadata_tunnel_vnid, \
+                d.u.flow_info_d.tunnel_vnid
 
   /* qos info */
   ASSERT_PHVWR(p, qos_metadata_cos_en, qos_metadata_dscp,
