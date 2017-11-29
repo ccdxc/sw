@@ -13,7 +13,6 @@ entries:
 
     - entry:
         label: classicl2bc
-        fte: True
         initiator:
             ethertype: 0xCCC2
         responder:

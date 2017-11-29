@@ -1,0 +1,33 @@
+# Feature Test Modules List
+feature:
+    id          : classicl2mc
+    sub         : rxmc
+    package     : test.classicl2mc
+    module      : classic
+    enable      : True
+    ignore      : False
+    runorder    : 20
+
+modules:
+    - module:
+        name    : MCAST
+        spec    : rx_mc.testspec
+        iterate :
+            - flow      : filter://type=MAC,label=CLASSICL2MC
+              segment   : filter://native=False
+
+    - module:
+        name    : MCAST_ACCESS
+        spec    : rx_mc_access.testspec
+        iterate :
+            - flow      : filter://type=MAC,label=CLASSICL2MC
+              segment   : filter://native=False
+
+    - module:
+        name    : MCAST_VLAN_STRIP
+        enable  : False
+        spec    : rx_mc_vlan_strip.testspec
+        iterate :
+            - flow      : filter://type=MAC,label=CLASSICL2MC
+              segment   : filter://native=False
+              vlan_strip: True

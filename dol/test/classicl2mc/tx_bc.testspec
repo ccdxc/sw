@@ -1,14 +1,9 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=False
-        interface   : filter://any
-    dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=False
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VLAN
+        endpoint    : filter://remote=False,access=False
         interface   : filter://any
     flow            : filter://fwtype=L2
     maxflows        : None
@@ -26,100 +21,96 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1 # Base packet
+        id          : TX_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+                vlan: ref://testcase/config/src/segment/vlan_id
 
     - packet:
-        id          : EXP_PKT # Base packet
+        id          : EXP_PKT     # Expected packet on Uplinks
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        encaps      : callback://networking/packets/GetUplinkPacketEncapsForMulticastCopy
         headers     :
             qtag:
-                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: ref://testcase/config/flow/txqos/cos
+                vlan: ref://testcase/config/src/segment/vlan_id
+
+    - packet:
+        id          : EXP_PKT_ENIC     # Expected packet on Enics
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetClassicEnicPacketEncapsForMulticastCopy
+        headers     :
+            qtag:
+                vlan: ref://testcase/config/src/segment/vlan_id # Retain/Strip
 
 buffers:
     - buffer:
-        id      : TXBUF
+        id      : TX_BUF # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
-           size : ref://testcase/packets/id=PKT1/size
-           data : ref://testcase/packets/id=PKT1/rawbytes
-
+           size : ref://testcase/packets/id=TX_PKT/size
+           data : ref://testcase/packets/id=TX_PKT/rawbytes
     - buffer:
-        id      : RXBUF
+        id      : RX_BUF  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
             size: 1518
             data: None
-
     - buffer:
-        id      : EXBUF
+        id      : EXP_BUF_ENIC16  # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind  : False
-            size  : ref://testcase/packets/id=EXP_PKT/size
-            data  : ref://testcase/packets/id=EXP_PKT/rawbytes
-
+            size  : ref://testcase/packets/id=EXP_PKT_ENIC/size
+            data  : ref://testcase/packets/id=EXP_PKT_ENIC/rawbytes
 
 descriptors:
     - descriptor:
-        id      : TXDESCR
+        id      : TX_DESC # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            _buf  : ref://testcase/buffers/id=TXBUF
-            addr  : ref://testcase/buffers/id=TXBUF/addr
-            len   : ref://testcase/buffers/id=TXBUF/size
-
+            _buf  : ref://testcase/buffers/id=TX_BUF
+            addr  : ref://testcase/buffers/id=TX_BUF/addr
+            len   : ref://testcase/buffers/id=TX_BUF/size
     - descriptor:
-        id      : RXDESCR
+        id      : RX_DESC # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            _buf  : ref://testcase/buffers/id=RXBUF
-            addr  : ref://testcase/buffers/id=RXBUF/addr
-            len   : ref://testcase/buffers/id=RXBUF/size
+            _buf  : ref://testcase/buffers/id=RX_BUF
+            addr  : ref://testcase/buffers/id=RX_BUF/addr
+            len   : ref://testcase/buffers/id=RX_BUF/size
 
     - descriptor:
-        id      : EX_TXDESCR
-        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
-        fields:
-            err_code : 0x0
-
-    - descriptor:
-        id      : EX_RXDESCR
+        id      : EXP_DESC # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            _buf          : ref://testcase/buffers/id=EXBUF
-            bytes_written : ref://testcase/buffers/id=EXBUF/size
-
+            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC16
+            bytes_written : ref://testcase/buffers/id=EXP_BUF_ENIC16/size
 
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=TXDESCR
+            object  : ref://testcase/descriptors/id=TX_DESC
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
-
         - descriptor:
-            object  : ref://testcase/descriptors/id=RXDESCR
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            object  : ref://testcase/descriptors/id=RX_DESC
+            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=0
 
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
 
-
 expect:
     delay   : callback://networking/packets/GetExpectDelay
+
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : callback://classic/callbacks/GetTxPortsForMulticastCopy/idx=0
+
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=EX_TXDESCR
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
-
-        - descriptor:
-            object  : ref://testcase/descriptors/id=EX_RXDESCR
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+            object  : ref://testcase/descriptors/id=EXP_DESC
+            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=0

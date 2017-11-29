@@ -86,9 +86,6 @@ class FeatureObjectHelper(parser.ParserBase):
         return GlobalOptions.subfeature == feature.sub
 
     def __is_enabled(self, feature):
-        if feature.enable is False:
-            return False
-
         if self.__is_subfeature_match(feature) is False:
             logger.info("  - Subfeature Mismatch....Skipping")
             return False

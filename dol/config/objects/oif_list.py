@@ -42,6 +42,9 @@ class OifListObject(base.ConfigObjectBase):
             self.enic_list.append(oif)
         return
 
+    def GetEnicOifList(self):
+        return self.enic_list
+
 # Helper Class to Generate/Configure/Manage OifList Objects.
 class OifListObjectHelper:
     def __init__(self):

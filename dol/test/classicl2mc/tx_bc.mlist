@@ -1,0 +1,36 @@
+# Feature Test Modules List
+feature:
+    id          : classicl2mc
+    sub         : txbc
+    package     : test.classicl2mc
+    module      : classic
+    enable      : False
+    ignore      : True
+    runorder    : 100
+
+modules:
+    - module:
+        name    : BCAST
+        spec    : tx_bc.testspec
+        iterate :
+            - flood     : True
+              flow      : filter://label=CLASSICL2BC
+              segment   : filter://native=False
+
+    - module:
+        name    : BCAST_ACCESS
+        spec    : tx_bc_access.testspec
+        iterate :
+            - flood     : True
+              flow      : filter://label=CLASSICL2BC
+              segment   : filter://native=False
+
+    - module:
+        name    : BCAST_VLAN_INSERT
+        spec    : tx_bc_vlan_insert.testspec
+        iterate :
+            - flood     : True
+              flow      : filter://type=MAC,label=CLASSICL2BC
+              segment   : filter://native=False
+
+

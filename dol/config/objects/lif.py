@@ -156,6 +156,8 @@ class LifObject(base.ConfigObjectBase):
         req_spec.rdma_max_keys = self.rdma_max_keys
         req_spec.rdma_max_pt_entries = self.rdma_max_pt_entries
         req_spec.vlan_strip_en = self.vlan_strip_en
+        if GlobalOptions.classic:
+            req_spec.packet_filter.receive_broadcast = True
         for queue_type in self.queue_types.GetAll():
             qstate_map_spec = req_spec.lif_qstate_map.add()
             queue_type.PrepareHALRequestSpec(qstate_map_spec)
