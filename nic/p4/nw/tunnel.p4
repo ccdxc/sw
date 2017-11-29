@@ -176,7 +176,7 @@ action f_encap_vlan(vlan_id, ethertype) {
 
 action encap_vlan() {
     f_encap_vlan(rewrite_metadata.tunnel_vnid, ethernet.etherType);
-    add(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
+    add_to_field(capri_p4_intrinsic.packet_len, 4);
 }
 
 /*****************************************************************************/
@@ -206,15 +206,18 @@ action encap_vxlan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+        add_to_field(capri_p4_intrinsic.packet_len, 50);
     } else {
 #ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv6.payloadLen, capri_p4_intrinsic.packet_len, 16);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+        add_to_field(capri_p4_intrinsic.packet_len, 70);
 #endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -253,15 +256,18 @@ action encap_vxlan_gpe(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_i
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+        add_to_field(capri_p4_intrinsic.packet_len, 50);
     } else {
 #ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv6.payloadLen, capri_p4_intrinsic.packet_len, 16);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+        add_to_field(capri_p4_intrinsic.packet_len, 70);
 #endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -304,16 +310,19 @@ action encap_genv(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+        add_to_field(capri_p4_intrinsic.packet_len, 50);
     } else {
 #ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv6.payloadLen, capri_p4_intrinsic.packet_len, 16);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+        add_to_field(capri_p4_intrinsic.packet_len, 70);
 #endif /* PHASE2 */
     }
 
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -355,15 +364,18 @@ action encap_nvgre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 28);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+        add_to_field(capri_p4_intrinsic.packet_len, 42);
     } else {
 #ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv6.payloadLen, capri_p4_intrinsic.packet_len, 8);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+        add_to_field(capri_p4_intrinsic.packet_len, 62);
 #endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -391,15 +403,18 @@ action encap_gre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 24);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+        add_to_field(capri_p4_intrinsic.packet_len, 38);
     } else {
 #ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv6.payloadLen, capri_p4_intrinsic.packet_len, 4);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+        add_to_field(capri_p4_intrinsic.packet_len, 58);
 #endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -440,15 +455,18 @@ action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) 
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+        add_to_field(capri_p4_intrinsic.packet_len, 50);
     } else {
 #ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv6.payloadLen, capri_p4_intrinsic.packet_len, 16);
         modify_field(ethernet.etherType, ETHERTYPE_IPV6);
+        add_to_field(capri_p4_intrinsic.packet_len, 70);
 #endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -467,15 +485,18 @@ action encap_ip(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         f_insert_ipv4_header(ip_sa, ip_da, tunnel_metadata.inner_ip_proto);
         add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 20);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+        add_to_field(capri_p4_intrinsic.packet_len, 20);
     } else {
 #ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, tunnel_metadata.inner_ip_proto);
         modify_field(ipv6.payloadLen, capri_p4_intrinsic.packet_len);
         modify_field(ethernet.etherType, ETHERTYPE_IPV6);
+        add_to_field(capri_p4_intrinsic.packet_len, 40);
 #endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }

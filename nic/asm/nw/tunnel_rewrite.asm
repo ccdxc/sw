@@ -42,7 +42,7 @@ encap_vxlan:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  // update packet length
+  // update capri_p4_intrinsic_packet_len
   cmov        r1, c1, 50, 70
   add.c2      r1, r1, 4
   add         r1, r1, r5
@@ -62,8 +62,8 @@ encap_vxlan:
 encap_vlan:
   or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
                   k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
-  add         r7, r5, 4
-  phvwr       p.capri_p4_intrinsic_packet_len, r7
+  add         r1, r5, 4
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
   phvwr       p.vlan_tag_etherType, k.ethernet_etherType
   phvwr       p.{vlan_tag_dei, vlan_tag_vid}, k.rewrite_metadata_tunnel_vnid[11:0]
   seq         c7, k.qos_metadata_cos_en, 1
@@ -99,6 +99,13 @@ encap_erspan:
   or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
                   k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
   add         r7, r5, 16
+
+  // update capri_p4_intrinsic_packet_len
+  cmov        r1, c1, 50, 70
+  add.c2      r1, r1, 4
+  add         r1, r1, r5
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
 #ifdef PHASE2
@@ -166,6 +173,12 @@ encap_vxlan_gpe:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
+  // update capri_p4_intrinsic_packet_len
+  cmov        r1, c1, 50, 70
+  add.c2      r1, r1, 4
+  add         r1, r1, r5
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x4011
   b.!c1       f_insert_ipv6_header
@@ -200,6 +213,12 @@ encap_genv:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
+  // update capri_p4_intrinsic_packet_len
+  cmov        r1, c1, 50, 70
+  add.c2      r1, r1, 4
+  add         r1, r1, r5
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x4011
   b.!c1       f_insert_ipv6_header
@@ -229,6 +248,13 @@ encap_nvgre:
   or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
                   k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
   add         r7, r5, 8
+
+  // update capri_p4_intrinsic_packet_len
+  cmov        r1, c1, 42, 62
+  add.c2      r1, r1, 4
+  add         r1, r1, r5
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
   b.!c1       f_insert_ipv6_header
@@ -252,6 +278,13 @@ encap_gre:
   or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
                   k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
   add         r7, r5, 4
+
+  // update capri_p4_intrinsic_packet_len
+  cmov        r1, c1, 38, 58
+  add.c2      r1, r1, 4
+  add         r1, r1, r5
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
     b.!c1       f_insert_ipv6_header
@@ -268,6 +301,13 @@ encap_ip:
   or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
                   k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
   sub         r7, r5, 14
+
+  // update capri_p4_intrinsic_packet_len
+  cmov        r1, c1, 20, 40
+  add.c2      r1, r1, 4
+  add         r1, r1, r5
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   bcf         [c1],  f_insert_ipv4_header
   add         r6, 0x4000, k.tunnel_metadata_inner_ip_proto, 8
   b.!c1       f_insert_ipv6_header
