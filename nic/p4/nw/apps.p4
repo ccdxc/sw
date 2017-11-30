@@ -560,9 +560,29 @@ action f_p4plus_to_p4_2() {
         modify_field(udp.len, scratch_metadata.packet_len);
     }
 
-    if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_RDMA) {
-        modify_field(control_metadata.compute_icrc, TRUE);
+    // update checksum/icrc compute flags
+    modify_field(scratch_metadata.size8, 0);
+    if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CLASSIC_NIC) {
+        if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM) != 0) {
+            bit_or(scratch_metadata.size8, scratch_metadata.size8,
+                   (1 << CHECKSUM_CTL_L4_CHECKSUM));
+        }
+        if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_COMPUTE_INNER_L4_CSUM) != 0) {
+            bit_or(scratch_metadata.size8, scratch_metadata.size8,
+                   (1 << CHECKSUM_CTL_INNER_L4_CHECKSUM));
+        }
+    } else {
+        if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_RDMA) {
+            bit_or(scratch_metadata.size8, scratch_metadata.size8,
+                   ((1 << CHECKSUM_CTL_IP_CHECKSUM) |
+                    (1 << CHECKSUM_CTL_ICRC)));
+        } else {
+            bit_or(scratch_metadata.size8, scratch_metadata.size8,
+                   ((1 << CHECKSUM_CTL_IP_CHECKSUM) |
+                    (1 << CHECKSUM_CTL_L4_CHECKSUM)));
+        }
     }
+    modify_field(control_metadata.checksum_ctl, scratch_metadata.size8);
 
     remove_header(p4plus_to_p4);
     remove_header(capri_txdma_intrinsic);

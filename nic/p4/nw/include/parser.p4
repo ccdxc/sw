@@ -907,7 +907,7 @@ field_list ipv4_tcp_checksum_list {
     ipv4.dstAddr;
     8'0;
     ipv4.protocol;
-    nat_metadata.tcp_checksum_len;
+    capri_deparser_len.inner_l4_payload_len;
     tcp.srcPort;
     tcp.dstPort;
     tcp.seqNo;
@@ -935,7 +935,7 @@ field_list ipv6_tcp_checksum_list {
     ipv6.dstAddr;
     8'0;
     ipv6.nextHdr;
-    nat_metadata.tcp_checksum_len;
+    capri_deparser_len.inner_l4_payload_len;
     tcp.srcPort;
     tcp.dstPort;
     tcp.seqNo;
@@ -961,7 +961,7 @@ field_list_calculation ipv6_tcp_checksum {
 calculated_field tcp.checksum {
     verify ipv4_tcp_checksum;
     verify ipv6_tcp_checksum;
-    update ipv4_tcp_checksum if (nat_metadata.update_checksum == TRUE);
+    update ipv4_tcp_checksum if (valid(ipv4));
     update ipv6_tcp_checksum if (valid(ipv6));
 }
 
@@ -1219,7 +1219,7 @@ field_list_calculation ipv6_udp_checksum {
 calculated_field udp.checksum {
     verify ipv4_udp_checksum;
     verify ipv6_udp_checksum;
-    update ipv4_udp_checksum if (nat_metadata.update_checksum == TRUE);
+    update ipv4_udp_checksum if (valid(ipv4));
     update ipv6_udp_checksum if (valid(ipv6));
 }
 
@@ -1450,7 +1450,7 @@ field_list inner_ipv4_tcp_checksum_list {
     inner_ipv4.dstAddr;
     8'0;
     inner_ipv4.protocol;
-    nat_metadata.tcp_checksum_len;
+    capri_deparser_len.inner_l4_payload_len;
     tcp.srcPort;
     tcp.dstPort;
     tcp.seqNo;
@@ -1478,7 +1478,7 @@ field_list inner_ipv6_tcp_checksum_list {
     inner_ipv6.dstAddr;
     8'0;
     inner_ipv6.nextHdr;
-    nat_metadata.tcp_checksum_len;
+    capri_deparser_len.inner_l4_payload_len;
     tcp.srcPort;
     tcp.dstPort;
     tcp.seqNo;
@@ -1504,7 +1504,7 @@ field_list_calculation inner_ipv6_tcp_checksum {
 calculated_field tcp.checksum {
     verify inner_ipv4_tcp_checksum;
     verify inner_ipv6_tcp_checksum;
-    update inner_ipv4_tcp_checksum if (nat_metadata.update_inner_checksum == TRUE);
+    update inner_ipv4_tcp_checksum if (valid(inner_ipv4));
     update inner_ipv6_tcp_checksum if (valid(inner_ipv6));
 }
 
@@ -1552,7 +1552,7 @@ field_list_calculation inner_ipv6_udp_checksum {
 calculated_field inner_udp.checksum {
     verify inner_ipv4_udp_checksum;
     verify inner_ipv6_udp_checksum;
-    update inner_ipv4_udp_checksum if (nat_metadata.update_inner_checksum == TRUE);
+    update inner_ipv4_udp_checksum if (valid(inner_ipv4));
     update inner_ipv6_udp_checksum if (valid(inner_ipv6));
 }
 

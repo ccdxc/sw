@@ -5,7 +5,7 @@ action compute_checksum1() {
     modify_field(scratch_metadata.packet_len, l4_metadata.tcp_data_len);
     modify_field(scratch_metadata.packet_len, udp.len);
     modify_field(scratch_metadata.packet_len, inner_udp.len);
-    modify_field(scratch_metadata.flag, control_metadata.compute_icrc);
+    modify_field(scratch_metadata.size8, control_metadata.checksum_ctl);
 }
 
 action compute_checksum2()  {}

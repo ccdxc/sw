@@ -29,9 +29,11 @@ rewrite:
   add         r6, r0, k.ipv4_valid
   or          r6, r6, k.ipv6_valid, 1
   smeqb       c1, k.rewrite_metadata_flags, REWRITE_FLAGS_TTL_DEC, REWRITE_FLAGS_TTL_DEC
+  seq         c2, k.qos_metadata_dscp_en, 1
+  setcf       c3, [c1 | c2]
   .brbegin
   br          r6[1:0]
-  seq         c2, k.qos_metadata_dscp_en, 1
+  phvwr.c3    p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
   .brcase 0
   nop.e
   nop
@@ -50,107 +52,150 @@ rewrite:
 
 .align
 ipv4_nat_src_rewrite:
-  b           rewrite
   phvwr       p.ipv4_srcAddr, k.nat_metadata_nat_ip
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv4_nat_dst_rewrite:
-  b           rewrite
   phvwr       p.ipv4_dstAddr, k.nat_metadata_nat_ip
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv4_nat_src_udp_rewrite:
   phvwr       p.ipv4_srcAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.udp_srcPort, k.nat_metadata_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv4_nat_dst_udp_rewrite:
   phvwr       p.ipv4_dstAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.udp_dstPort, k.nat_metadata_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv4_nat_src_tcp_rewrite:
   phvwr       p.ipv4_srcAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.tcp_srcPort, k.nat_metadata_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv4_nat_dst_tcp_rewrite:
   phvwr       p.ipv4_dstAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.tcp_dstPort, k.nat_metadata_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv4_twice_nat_rewrite:
   phvwr       p.ipv4_srcAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.ipv4_dstAddr, k.nat_metadata_twice_nat_ip
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv4_twice_nat_udp_rewrite:
   phvwr       p.ipv4_srcAddr, k.nat_metadata_nat_ip
   phvwr       p.udp_srcPort, k.nat_metadata_nat_l4_port
   phvwr       p.ipv4_dstAddr, k.nat_metadata_twice_nat_ip
-  b           rewrite
   phvwr       p.udp_dstPort, k.nat_metadata_twice_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv4_twice_nat_tcp_rewrite:
   phvwr       p.ipv4_srcAddr, k.nat_metadata_nat_ip
   phvwr       p.tcp_srcPort, k.nat_metadata_nat_l4_port
   phvwr       p.ipv4_dstAddr, k.nat_metadata_twice_nat_ip
-  b           rewrite
   phvwr       p.tcp_dstPort, k.nat_metadata_twice_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM)), \
+                ((1 << CHECKSUM_CTL_IP_CHECKSUM) | ( 1 << CHECKSUM_CTL_L4_CHECKSUM))
 
 .align
 ipv6_nat_src_rewrite:
-  b           rewrite
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
 
 .align
 ipv6_nat_dst_rewrite:
-  b           rewrite
   phvwr       p.ipv6_dstAddr, k.nat_metadata_nat_ip
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
 
 .align
 ipv6_nat_src_udp_rewrite:
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.udp_srcPort, k.nat_metadata_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
 
 .align
 ipv6_nat_dst_udp_rewrite:
   phvwr       p.ipv6_dstAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.udp_dstPort, k.nat_metadata_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
 
 .align
 ipv6_nat_src_tcp_rewrite:
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.tcp_srcPort, k.nat_metadata_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
 
 .align
 ipv6_nat_dst_tcp_rewrite:
   phvwr       p.ipv6_dstAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.tcp_dstPort, k.nat_metadata_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
 
 .align
 ipv6_twice_nat_rewrite:
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
-  b           rewrite
   phvwr       p.ipv6_dstAddr, k.nat_metadata_twice_nat_ip
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
 
 .align
 ipv6_twice_nat_udp_rewrite:
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
   phvwr       p.udp_srcPort, k.nat_metadata_nat_l4_port
   phvwr       p.ipv6_dstAddr, k.nat_metadata_twice_nat_ip
-  b           rewrite
   phvwr       p.udp_dstPort, k.nat_metadata_twice_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
@@ -158,5 +203,7 @@ ipv6_twice_nat_tcp_rewrite:
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
   phvwr       p.tcp_srcPort, k.nat_metadata_nat_l4_port
   phvwr       p.ipv6_dstAddr, k.nat_metadata_twice_nat_ip
-  b           rewrite
   phvwr       p.tcp_dstPort, k.nat_metadata_twice_nat_l4_port
+  b           rewrite
+  phvwrmi     p.control_metadata_checksum_ctl, \
+                ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)

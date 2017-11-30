@@ -522,6 +522,8 @@ action f_insert_ipv4_header(ip_sa, ip_da, proto) {
     modify_field(ipv4.version, 0x4);
     modify_field(ipv4.ihl, 0x5);
     modify_field(ipv4.identification, 0);
+    modify_field(control_metadata.checksum_ctl, (1 << CHECKSUM_CTL_IP_CHECKSUM),
+                 (1 << CHECKSUM_CTL_IP_CHECKSUM));
 }
 
 action f_insert_ipv6_header(ip_sa, ip_da, proto) {
@@ -638,10 +640,19 @@ action encap_inner_ipv4_udp_rewrite() {
     remove_header(ipv4);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 
-    /* move checksum update flag */
-    modify_field(nat_metadata.update_inner_checksum,
-                 nat_metadata.update_checksum);
-    modify_field(nat_metadata.update_checksum, FALSE);
+    /* update checksum flags */
+    if ((control_metadata.checksum_ctl & (1 << CHECKSUM_CTL_IP_CHECKSUM)) != 0) {
+        bit_or(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+               (1 << CHECKSUM_CTL_INNER_IP_CHECKSUM));
+        bit_and(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+                ~(1 << CHECKSUM_CTL_IP_CHECKSUM));
+    }
+    if ((control_metadata.checksum_ctl & (1 << CHECKSUM_CTL_L4_CHECKSUM)) != 0) {
+        bit_or(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+               (1 << CHECKSUM_CTL_INNER_L4_CHECKSUM));
+        bit_and(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+                ~(1 << CHECKSUM_CTL_L4_CHECKSUM));
+    }
 }
 
 action encap_inner_ipv4_tcp_rewrite() {
@@ -649,22 +660,47 @@ action encap_inner_ipv4_tcp_rewrite() {
     remove_header(ipv4);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 
-    /* move checksum update flag */
-    modify_field(nat_metadata.update_inner_checksum,
-                 nat_metadata.update_checksum);
-    modify_field(nat_metadata.update_checksum, FALSE);
+    /* update checksum flags */
+    if ((control_metadata.checksum_ctl & (1 << CHECKSUM_CTL_IP_CHECKSUM)) != 0) {
+        bit_or(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+               (1 << CHECKSUM_CTL_INNER_IP_CHECKSUM));
+        bit_and(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+                ~(1 << CHECKSUM_CTL_IP_CHECKSUM));
+    }
+    if ((control_metadata.checksum_ctl & (1 << CHECKSUM_CTL_L4_CHECKSUM)) != 0) {
+        bit_or(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+               (1 << CHECKSUM_CTL_INNER_L4_CHECKSUM));
+        bit_and(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+                ~(1 << CHECKSUM_CTL_L4_CHECKSUM));
+    }
 }
 
 action encap_inner_ipv4_icmp_rewrite() {
     copy_header(inner_ipv4, ipv4);
     remove_header(ipv4);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
+
+    /* update checksum flags */
+    if ((control_metadata.checksum_ctl & (1 << CHECKSUM_CTL_IP_CHECKSUM)) != 0) {
+        bit_or(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+               (1 << CHECKSUM_CTL_INNER_IP_CHECKSUM));
+        bit_and(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+                ~(1 << CHECKSUM_CTL_IP_CHECKSUM));
+    }
 }
 
 action encap_inner_ipv4_unknown_rewrite() {
     copy_header(inner_ipv4, ipv4);
     remove_header(ipv4);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
+
+    /* update checksum flags */
+    if ((control_metadata.checksum_ctl & (1 << CHECKSUM_CTL_IP_CHECKSUM)) != 0) {
+        bit_or(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+               (1 << CHECKSUM_CTL_INNER_IP_CHECKSUM));
+        bit_and(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+                ~(1 << CHECKSUM_CTL_IP_CHECKSUM));
+    }
 }
 
 action encap_inner_ipv6_udp_rewrite() {
@@ -673,12 +709,28 @@ action encap_inner_ipv6_udp_rewrite() {
     remove_header(udp);
     remove_header(ipv6);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV6);
+
+    /* update checksum flags */
+    if ((control_metadata.checksum_ctl & (1 << CHECKSUM_CTL_L4_CHECKSUM)) != 0) {
+        bit_or(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+               (1 << CHECKSUM_CTL_INNER_L4_CHECKSUM));
+        bit_and(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+                ~(1 << CHECKSUM_CTL_L4_CHECKSUM));
+    }
 }
 
 action encap_inner_ipv6_tcp_rewrite() {
     copy_header(inner_ipv6, ipv6);
     remove_header(ipv6);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV6);
+
+    /* update checksum flags */
+    if ((control_metadata.checksum_ctl & (1 << CHECKSUM_CTL_L4_CHECKSUM)) != 0) {
+        bit_or(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+               (1 << CHECKSUM_CTL_INNER_L4_CHECKSUM));
+        bit_and(control_metadata.checksum_ctl, control_metadata.checksum_ctl,
+                ~(1 << CHECKSUM_CTL_L4_CHECKSUM));
+    }
 }
 
 action encap_inner_ipv6_icmp_rewrite() {

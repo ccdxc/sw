@@ -19,22 +19,20 @@ encap_vxlan:
                   k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
   phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \
                   k.{ethernet_dstAddr...ethernet_etherType}
-  phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
-  phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
+  phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
+                p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_VXLAN
-  phvwr       p.udp_checksum, 0
   add         r7, r5, 16
-  phvwr       p.udp_len, r7
+  phvwrpair   p.udp_len, r7, p.udp_checksum, 0
 
   phvwri      p.{vxlan_flags,vxlan_reserved}, 0x08000000
-  phvwr       p.vxlan_vni, k.rewrite_metadata_tunnel_vnid
-  phvwr       p.vxlan_reserved2, 0
+  phvwrpair   p.vxlan_vni, k.rewrite_metadata_tunnel_vnid, \
+                p.vxlan_reserved2, 0
 
   phvwr       p.inner_ethernet_valid, 1
-  phvwr       p.udp_valid, 1
-  phvwr       p.vxlan_valid, 1
+  phvwrpair   p.vxlan_valid, 1, p.udp_valid, 1
 
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
@@ -117,9 +115,8 @@ encap_erspan:
 #endif /* PHASE2 */
 
 f_encap_vlan:
-  phvwr       p.vlan_tag_etherType, r6
-  phvwr       p.vlan_tag_vid, d.u.encap_vxlan_d.vlan_id
   phvwr       p.vlan_tag_valid, 1
+  phvwrpair   p.vlan_tag_vid, d.u.encap_vxlan_d.vlan_id, p.vlan_tag_etherType, r6
   seq         c7, k.qos_metadata_cos_en, 1
   phvwr.c7    p.vlan_tag_pcp, k.qos_metadata_cos
   phvwr       p.vlan_tag_dei, 0
@@ -128,13 +125,14 @@ f_encap_vlan:
 
 f_insert_ipv4_header:
   phvwr       p.{ipv4_version,ipv4_ihl,ipv4_diffserv}, 0x4500
-  phvwr       p.{ipv4_identification...ipv4_fragOffset}, 0
-  phvwr       p.{ipv4_ttl...ipv4_protocol}, r6
-  phvwr       p.ipv4_srcAddr, d.u.encap_vxlan_d.ip_sa
-  phvwr       p.ipv4_dstAddr, d.u.encap_vxlan_d.ip_da
+  phvwrpair   p.{ipv4_identification...ipv4_fragOffset}, 0, \
+                p.{ipv4_ttl...ipv4_protocol}, r6
+  phvwrpair   p.ipv4_srcAddr, d.u.encap_vxlan_d.ip_sa, \
+                p.ipv4_dstAddr, d.u.encap_vxlan_d.ip_da
   add         r7, r7, 20
-  phvwr.e     p.ipv4_totalLen, r7
-  phvwr       p.ipv4_valid, 1
+  phvwr       p.ipv4_totalLen, r7
+  phvwr.e     p.ipv4_valid, 1
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 #ifdef PHASE2
 f_insert_ipv6_header:

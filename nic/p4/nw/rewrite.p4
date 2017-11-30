@@ -42,6 +42,9 @@ action rewrite(mac_sa, mac_da) {
     if ((rewrite_metadata.flags & REWRITE_FLAGS_TTL_DEC) != 0) {
         if (ipv4.valid == TRUE) {
             subtract(ipv4.ttl, ipv4.ttl, 1);
+            modify_field(control_metadata.checksum_ctl,
+                         (1 << CHECKSUM_CTL_IP_CHECKSUM),
+                         (1 << CHECKSUM_CTL_IP_CHECKSUM));
         } else {
             if (ipv6.valid == TRUE) {
                 subtract(ipv6.hopLimit, ipv6.hopLimit, 1);
@@ -52,6 +55,9 @@ action rewrite(mac_sa, mac_da) {
     if (qos_metadata.dscp_en == TRUE) {
         if (ipv4.valid == TRUE) {
             modify_field(ipv4.diffserv, qos_metadata.dscp);
+            modify_field(control_metadata.checksum_ctl,
+                         (1 << CHECKSUM_CTL_IP_CHECKSUM),
+                         (1 << CHECKSUM_CTL_IP_CHECKSUM));
         } else {
             if (ipv6.valid == TRUE) {
                 modify_field(ipv6.trafficClass, qos_metadata.dscp);
