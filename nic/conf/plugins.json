@@ -78,7 +78,8 @@
                 "tcp", 
                 "quiesce",
                 "tls", 
-                "ipsec"
+                "ipsec",
+                "app-p4pt"
             ]
         },
         {
