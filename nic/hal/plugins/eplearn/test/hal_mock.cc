@@ -7,7 +7,8 @@ class phv_t;
 hal::ep_t *temp_ep;
 hal::vrf_t *temp_ten;
 hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
-                           flow_t iflow[], flow_t rflow[]) {
+                           flow_t iflow[], flow_t rflow[],
+                           uint8_t *feature_state, size_t feature_state_size) {
     this->pkt_ = pkt;
     this->pkt_len_ = pkt_len;
     this->cpu_rxhdr_ = cpu_rxhdr;
@@ -23,7 +24,7 @@ void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
 {
     temp_ep = ep;
     temp_ten = ten;
-    ctx.init(cpu_rxhdr, pkt, pkt_len, iflow, rflow);
+    ctx.init(cpu_rxhdr, pkt, pkt_len, iflow, rflow, NULL, 0);
 }
 
 hal_ret_t

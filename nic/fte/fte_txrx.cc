@@ -31,12 +31,15 @@ private:
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
     mpscq_t                *softq_;
 
-    ctx_t                   ctx_;
-    flow_t                  iflow_[ctx_t::MAX_STAGES];
-    flow_t                  rflow_[ctx_t::MAX_STAGES];
+    ctx_t                  *ctx_;
+    uint8_t                *feature_state_;
+    size_t                  feature_state_size_;
+    flow_t                 *iflow_;
+    flow_t                 *rflow_;
 
     void process_arq();
     void process_softq();
+    void ctx_mem_init();
 };
 
 //------------------------------------------------------------------------------
@@ -141,12 +144,48 @@ inst_t::inst_t(uint8_t fte_id) :
 }
 
 //------------------------------------------------------------------------------
+// Allocate memory for fte::ctx_t
+//------------------------------------------------------------------------------
+void inst_t::ctx_mem_init()
+{
+    size_t fstate_size = feature_state_size();
+
+    // Check if we need to realloc due to new feature registration
+    if (ctx_ && fstate_size != feature_state_size_) {
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, ctx_);
+        ctx_ = NULL;
+
+    }
+
+    if (!ctx_) {
+        // Alloc memory for context, feature_state, iflows, rflows in one
+        // contiguous area
+        uint8_t *buff = (uint8_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE,
+                                   sizeof(ctx_t) + fstate_size +
+                                   2*ctx_t::MAX_STAGES*sizeof(flow_t));
+        ctx_ = (ctx_t *)buff;
+        buff += sizeof(ctx_t);
+
+        iflow_ = (flow_t *)buff;
+        buff += ctx_t::MAX_STAGES*sizeof(flow_t);
+
+        rflow_ = (flow_t *)buff;
+        buff += ctx_t::MAX_STAGES*sizeof(flow_t);
+
+        feature_state_ = buff;
+        buff += fstate_size;
+        feature_state_size_ = fstate_size;
+    }
+}
+
+//------------------------------------------------------------------------------
 // FTE main loop
 //------------------------------------------------------------------------------
 void inst_t::start()
 {
     while(true) {
         usleep(1000000/3);
+        ctx_mem_init();
         process_arq();
         process_softq();
     }
@@ -240,22 +279,22 @@ void inst_t::process_arq()
 
     do {
         // Init ctx_t
-        ret = ctx_.init(cpu_rxhdr, pkt, pkt_len, iflow_, rflow_);
+        ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, iflow_, rflow_, feature_state_, feature_state_size_);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
             break;
         }
             
         // process the packet and update flow table
-        ctx_.app_redir().set_arm_ctx(arm_ctx_);
-        ret = ctx_.process();
+        ctx_->app_redir().set_arm_ctx(arm_ctx_);
+        ret = ctx_->process();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failied to process, ret={}", ret);
             break;
         }
 
         // write the packets
-        ctx_.send_queued_pkts(arm_ctx_);
+        ctx_->send_queued_pkts(arm_ctx_);
     } while(false);
 
     hal::hal_cfg_db_close();

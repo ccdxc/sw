@@ -624,12 +624,17 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 //------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
-            flow_t iflow[], flow_t rflow[])
+            flow_t iflow[], flow_t rflow[],
+            uint8_t *feature_state, size_t feature_state_size)
 {
     hal_ret_t ret;
 
     *this = {};
     app_redir().init();
+
+    feature_state_ = feature_state;
+    feature_state_size_ = feature_state_size;
+    feature_state_init(feature_state_, feature_state_size_);
 
     cpu_rxhdr_ = cpu_rxhdr;
     pkt_ = pkt;
@@ -653,12 +658,17 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
 // Initialize the context from GRPC protobuf
 //------------------------------------------------------------------------------
 hal_ret_t
-ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflow[])
+ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
+            uint8_t *feature_state, size_t feature_state_size)
 {
     hal_ret_t ret;
 
     *this = {};
     app_redir().init();
+
+    feature_state_ = feature_state;
+    feature_state_size_ = feature_state_size;
+    feature_state_init(feature_state_, feature_state_size_);
 
     sess_spec_ = spec;
     sess_resp_ = rsp;

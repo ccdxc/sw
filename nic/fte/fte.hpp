@@ -19,9 +19,26 @@ DEFINE_ENUM(pipeline_action_t, FTE_PIPELINE_ACTION_ENTRIES)
 #undef FTE_PIPELINE_ACTION_ENTRIES
 
 typedef std::function<pipeline_action_t(ctx_t &ctx)> exec_handler_t;
+typedef void (*feature_state_init_t)(void *state); // Init calback for feature specific state
+
+typedef struct feature_info_s {
+    // feature speicific per ctx state (this is not persisited
+    // across packets, only valid during processing of one packet)
+    size_t               state_size; 
+    feature_state_init_t state_init_fn;
+
+    // TODO(goli) need to define these
+    // grpc_session_create_handler_t
+    // grpc_session_get_handler_t
+    // session_update_handler_t
+    // session_delete_handler_t
+} feature_info_t;
+
 hal_ret_t add_feature(const std::string& name);
 hal_ret_t register_feature(const std::string& name,
-                           const exec_handler_t &exec_handler);
+                           const exec_handler_t &exec_handler,
+                           const feature_info_t &feature_info = {});
+
 hal_ret_t unregister_feature(const std::string& name);
 
 //  FTE Pipeline 

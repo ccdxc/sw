@@ -311,6 +311,11 @@ inline bool operator==(const lifqid_t& lifq1, const lifqid_t& lifq2)
             (lifq1.qid == lifq2.qid)));
 }
 
+// Feature specific state
+size_t feature_state_size();
+void *feature_state_pointer(const std::string &name, uint8_t *state, size_t sz);
+void feature_state_init(uint8_t *state, size_t sz);
+
 // Application redirect context
 typedef enum {
     APP_REDIR_VERDICT_PASS,     // pass the packet
@@ -438,9 +443,11 @@ public:
     static const uint8_t MAX_QUEUED_HANDLERS = 16; // max queued completion handlers
 
     hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
-                   flow_t iflow[], flow_t rflow[]);
+                   flow_t iflow[], flow_t rflow[],
+                   uint8_t *feature_state, size_t feature_state_size);
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
-                   flow_t iflow[], flow_t rflow[]);
+                   flow_t iflow[], flow_t rflow[],
+                   uint8_t *feature_state, size_t feature_state_size);
     hal_ret_t process();
 
     hal_ret_t update_flow(const flow_update_t& flowupd, const hal::flow_role_t role);
@@ -502,7 +509,7 @@ public:
 
     // name of the feature being executed
     const char* feature_name() const { return feature_name_; } 
-    void set_feature_name(const char* name) { feature_name_ = name; }
+    void set_feature_name(const char *name) { feature_name_ = name; }
 
     // return staus of the feature handler
     hal_ret_t feature_status() const { return feature_status_; } 
@@ -553,6 +560,18 @@ public:
     bool skip_firewall() const { return skip_firewall_; }
     void set_skip_firewall(bool val) { skip_firewall_ = val; }
 
+    void *feature_state(const std::string &name) {
+        return feature_state_pointer(name, feature_state_, feature_state_size_);
+    }
+
+    void *feature_state() {
+        if (!feature_name_) {
+            return nullptr;
+        }
+
+        return feature_state_pointer(feature_name_, feature_state_, feature_state_size_);
+    }
+
 private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
@@ -571,6 +590,8 @@ private:
 
     const char*           feature_name_;   // Name of the feature being executed (for logging)
     hal_ret_t             feature_status_; // feature exit status (set by features to pass the error status)
+    uint8_t*              feature_state_;  // Buffer of feature specific states
+    size_t                feature_state_size_; // Total size of all feature specific states
 
     //completion handlers
     uint8_t               num_handlers_;
@@ -590,7 +611,7 @@ private:
     flow_t                *iflow_[MAX_STAGES];       // iflow 
     flow_t                *rflow_[MAX_STAGES];       // rflow 
 
-    hal::vrf_t         *vrf_;
+    hal::vrf_t            *vrf_;
     hal::l2seg_t          *sl2seg_;
     hal::l2seg_t          *dl2seg_;
     hal::if_t             *sif_;

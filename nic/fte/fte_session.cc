@@ -11,21 +11,34 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     hal_ret_t ret;
     ctx_t ctx = {};
     flow_t iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
+    size_t fstate_size = feature_state_size();
+    uint8_t *feature_state;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("fte::{}: Session id {} Create in Vrf id {}", __FUNCTION__, 
                     spec.session_id(), spec.meta().vrf_id());
 
+
+    feature_state = (uint8_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
+    if (!feature_state) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
     //Init context
-    ret = ctx.init(&spec, rsp,  iflow, rflow);
+    ret = ctx.init(&spec, rsp,  iflow, rflow, feature_state, fstate_size);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
         goto end;
     }
-
+    
     ret = ctx.process();
 
  end:
+    if (feature_state) {
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
+    }
+
     //update api status
     switch (ret) {
     case HAL_RET_OK:

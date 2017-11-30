@@ -18,33 +18,80 @@ namespace fte {
 // FTE features
 typedef struct feature_s feature_t;
 struct feature_s {
-    STAILQ_ENTRY(feature_s) entries;
-    std::string name;
-    exec_handler_t exec_handler;
+    std::string            name;
+    bool                   registered;
+    feature_state_init_t   state_init_fn;  // handler to init feature specific state
+    size_t                 state_size;     // Size of the feature state
+    uint32_t               state_offset;   // Offset of the feature state in fte::ctx_t
+    exec_handler_t         exec_handler;   // Feature exec handler
 };
 
-static STAILQ_HEAD(feature_list_s_, feature_s) g_feature_list_ =
-    STAILQ_HEAD_INITIALIZER(g_feature_list_);
+static std::map<std::string, feature_t*> g_feature_list_;
+static size_t g_feature_state_size_; // Total size of all feature specific states
 
 static inline feature_t *feature_alloc_()
 {
     return (feature_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(feature_t));
 }
 
-static inline void feature_add_(feature_t *feature)
+static inline feature_t *feature_lookup_(const std::string &name)
 {
-    STAILQ_INSERT_TAIL(&g_feature_list_, feature, entries);
+    auto entry = g_feature_list_.find(name);
+    if (entry == g_feature_list_.end()) {
+        return nullptr;
+    }
+
+    return entry->second;
 }
 
-static inline feature_t *feature_lookup_(std::string name)
+//------------------------------------------------------------------------------
+// Returns total size of all feature specific states together
+//------------------------------------------------------------------------------
+size_t feature_state_size()
 {
-    feature_t *feature;
-    STAILQ_FOREACH(feature, &g_feature_list_, entries) {
-        if (feature->name == name) {
-            return feature;
+    return g_feature_state_size_;
+}
+
+//------------------------------------------------------------------------------
+// Returns pointer to feature specific state
+//------------------------------------------------------------------------------
+void *feature_state_pointer(const std::string &name, uint8_t *state, size_t sz)
+{
+    feature_t *feature = feature_lookup_(name);
+
+    if (!feature || !feature->registered || feature->state_size == 0) {
+        return NULL;
+    }
+
+    if ((feature->state_offset +  feature->state_size) <= sz) {
+        return (void *)(state + feature->state_offset);
+    }
+
+    return NULL;
+}
+
+//------------------------------------------------------------------------------
+// Init feature state
+//------------------------------------------------------------------------------
+void feature_state_init(uint8_t *state, size_t sz)
+{
+    void *feature_state;
+
+    for (auto node : g_feature_list_) {
+        feature_t *feature = node.second;
+
+        if ((feature->state_size == 0) ||
+            (feature->state_offset +  feature->state_size) > sz) {
+            continue;
+        }
+
+        feature_state = (void*)(state + feature->state_offset);
+        if (feature->state_init_fn) {
+            feature->state_init_fn(feature_state);
+        } else {
+            std::memset(feature_state, 0, feature->state_size);
         }
     }
-    return nullptr;
 }
 
 //------------------------------------------------------------------------------
@@ -73,7 +120,7 @@ hal_ret_t add_feature(const std::string& name)
     feature = feature_alloc_();
     feature->name = name;
     feature->exec_handler = dummy_handler;
-    feature_add_(feature);
+    g_feature_list_[name] = feature;
 
     return HAL_RET_OK;
 }
@@ -82,8 +129,8 @@ hal_ret_t add_feature(const std::string& name)
 // Register a feature handler
 //------------------------------------------------------------------------------
 hal_ret_t register_feature(const std::string& name,
-                           const exec_handler_t &exec_handler)
-
+                           const exec_handler_t &exec_handler,
+                           const feature_info_t &feature_info)
 {
     feature_t *feature;
 
@@ -101,6 +148,23 @@ hal_ret_t register_feature(const std::string& name,
     }
 
     feature->exec_handler = exec_handler;
+
+    if (feature->state_size != 0) {
+        // Previously registered
+        if (feature->state_size != feature_info.state_size) {
+            HAL_TRACE_ERR("fte::{}: invalid state size update feature={} old={} new={}",
+                          __FUNCTION__, name, feature->state_size, feature_info.state_size);
+            return HAL_RET_INVALID_ARG;
+        }
+    } else {
+        feature->state_offset = g_feature_state_size_;
+        feature->state_size = feature_info.state_size;
+        g_feature_state_size_ += feature_info.state_size;
+    }
+
+    feature->state_init_fn = feature_info.state_init_fn;
+    feature->registered = true;
+
     return HAL_RET_OK;
 }
 
@@ -119,6 +183,7 @@ hal_ret_t unregister_feature(const std::string& name)
         return HAL_RET_INVALID_ARG;
     }
 
+    feature->registered = false;
     feature->exec_handler = dummy_handler;
 
     return HAL_RET_OK;
@@ -311,9 +376,10 @@ void unregister_features_and_pipelines() {
         STAILQ_REMOVE_HEAD(&g_pipeline_list_, entries);
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, pipeline);
     }
-    while (!STAILQ_EMPTY(&g_feature_list_)) {
-        feature_t *feature = STAILQ_FIRST(&g_feature_list_);
-        STAILQ_REMOVE_HEAD(&g_feature_list_, entries);
+
+    for (auto it = g_feature_list_.begin(); it != g_feature_list_.end(); ) {
+        feature_t *feature = it->second;
+        it = g_feature_list_.erase(it);
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature);
     }
 }
