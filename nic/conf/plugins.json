@@ -69,7 +69,7 @@
         {
             "name"      : "proxy",
             "provider"  : "pensando.io",
-            "lib"       : "dol/libproxyplugin.so",
+            "lib"       : "proxy/libproxyplugin.so",
             "init_func" : "proxy_plugin_init",
             "exit_func" : "proxy_exit",
             "auto_load" : "true",
