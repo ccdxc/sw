@@ -1,6 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/hal/pd/capri/capri_config.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/asic_pd.hpp"
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -43,7 +43,7 @@ capri_load_config(char *config_dir)
         while ((readsz = read(fd, buff, sizeof(buff))) > 0) {
             nelems = readsz / sizeof(addr_data_t);
             for (int i = 0; i < nelems; i++) {
-                write_reg(buff[i].addr, buff[i].data);
+                hal::pd::asic_reg_write(buff[i].addr, buff[i].data);
             }
         }
     }

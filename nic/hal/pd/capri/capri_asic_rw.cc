@@ -434,12 +434,15 @@ asic_rw_loop (void)
                 break;
 
             case HAL_ASIC_RW_OPERATION_PORT:
+                // TODO: This needs to be moved to asic library.
+                #if 0
                 lib_model_mac_msg_send(
                         rw_entry->port_entry.port_num,
                         rw_entry->port_entry.speed,
                         rw_entry->port_entry.type,
                         rw_entry->port_entry.num_lanes,
                         rw_entry->port_entry.val);
+                #endif
                 break;
 
             case HAL_ASIC_RW_OPERATION_RING_DOORBELL:
@@ -477,41 +480,15 @@ asic_rw_loop (void)
 //------------------------------------------------------------------------------
 // attempt to connect to ASIC model in sim mode
 //------------------------------------------------------------------------------
-static hal_ret_t
-asic_sim_connect (hal_cfg_t *hal_cfg)
-{
-    int    rc;
-
-    HAL_TRACE_DEBUG("Connecting to ASIC SIM");
-    if ((rc = lib_model_connect()) == -1) {
-        HAL_TRACE_ERR("Failed to connect to ASIC. Return code: {}", rc);
-        return HAL_RET_ERR;
-    }
-    return HAL_RET_OK;
-}
-
 void
 capri_asic_rw_asic_init(hal_cfg_t *hal_cfg)
 {
     asic_cfg_t  asic_cfg;
-    hal_ret_t   ret;
     pal_ret_t   palrv;
 
     // Initialize PAL
     palrv = pal_init(hal_cfg);
     HAL_ABORT(IS_PAL_API_SUCCESS(palrv));
-
-    if (hal_cfg->sim) {
-        do {
-            ret = asic_sim_connect(hal_cfg);
-            if (ret == HAL_RET_OK) {
-                HAL_TRACE_DEBUG("Connected to the ASIC model...");
-                break;
-            }
-            HAL_TRACE_WARN("Failed to connect to asic, retrying in 1 sec ...");
-            sleep(1);
-        } while (ret != HAL_RET_OK);
-    }
 
     // do asic initialization
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;

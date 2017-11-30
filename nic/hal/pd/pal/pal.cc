@@ -40,6 +40,24 @@ pal_mmap_device ()
     return PAL_RET_OK;
 }
 
+static pal_ret_t
+pal_init_sim ()
+{
+    int    rc;
+    HAL_TRACE_DEBUG("Connecting to ASIC SIM");
+    do {
+        rc = lib_model_connect();
+        if (rc != -1) {
+            HAL_TRACE_DEBUG("Connected to the ASIC model...");
+            break;
+        }
+        HAL_TRACE_WARN("Failed to connect to asic, retrying in 1 sec ...");
+        sleep(1);
+    } while (1);
+
+    return PAL_RET_OK;
+}
+
 pal_ret_t
 pal_init (hal_cfg_t *hal_cfg)
 {
@@ -47,7 +65,7 @@ pal_init (hal_cfg_t *hal_cfg)
 
     if (gl_pal_cfg.sim) {
         HAL_TRACE_DEBUG("Initializing PAL in SIM mode.");
-        return PAL_RET_OK;
+        return pal_init_sim();
     } else {
         HAL_TRACE_DEBUG("Initializing PAL");
         return pal_mmap_device();

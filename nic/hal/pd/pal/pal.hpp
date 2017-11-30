@@ -14,10 +14,21 @@ typedef enum pal_ret_s {
 #define IS_PAL_API_SUCCESS(_ret) ((_ret) == PAL_RET_OK)
 #define IS_PAL_API_FAILURE(_ret) ((_ret) != PAL_RET_OK)
 
+typedef struct pal_rwvectors_s {
+    pal_ret_t   (*reg_read)(uint64_t addr, uint32_t *data);
+    pal_ret_t   (*reg_write)(uint64_t addr, uint32_t data);
+    pal_ret_t   (*mem_read)(uint64_t addr, uint8_t *data,
+                            uint32_t size);
+    pal_ret_t   (*mem_write)(uint64_t addr, uint8_t *data,
+                             uint32_t size);
+    pal_ret_t   (*ring_doorbell)(uint64_t addr, uint64_t data);
+} pal_rwvectors_t;
+
 typedef struct pal_cfg_s {
-    bool    sim;
-    void    *baseaddr;
-    int     devfd;
+    bool                sim;
+    void                *baseaddr;
+    int                 devfd;
+    pal_rwvectors_t    rwvecs;
 } pal_cfg_t;
 
 pal_ret_t

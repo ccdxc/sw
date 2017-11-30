@@ -2,7 +2,7 @@
 #include "nic/hal/src/lif_manager.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_loader.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/asic_pd.hpp"
 #include "nic/include/asic_pd.hpp"
 
 namespace {
@@ -87,8 +87,10 @@ void clear_qstate(hal::LIFQState *qstate) {
 
 int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
 #ifndef HAL_GTEST
-  if (!read_mem(q_addr, buf, q_size))
+  hal_ret_t rv = hal::pd::asic_mem_read(q_addr, buf, q_size);
+  if (rv != HAL_RET_OK) {
     return -EIO;
+  }
 #endif
   return 0;
 }
