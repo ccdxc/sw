@@ -637,7 +637,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
 
     if (!in) {
         HAL_TRACE_ERR("unable to open ini file ... "
-                      "setting default forwarding mode");
+                      "setting forwarding mode: smart-switch");
         hal_cfg->forwarding_mode = "smart-switch";
         return HAL_RET_OK;
     }

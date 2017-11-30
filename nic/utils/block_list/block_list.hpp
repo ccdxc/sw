@@ -37,8 +37,17 @@ public:
     hal_ret_t insert(void *elem);
     /* Remove element from the list */
     hal_ret_t remove(void *elem);
+    /* Remove all elements from the list */
+    hal_ret_t remove_all();
+    /* Number of elements in the list */
+    uint32_t num_elems();
+    /* Check for the presence of element */
+    bool is_present(void *elem);
     /* Iterate */
     hal_ret_t iterate(block_list_cb_t cb, void *data = NULL);
+
+    // Operator Overloading
+    block_list& operator+=(const block_list& rhs);
 
     class iterator_state {
         public:
@@ -69,7 +78,7 @@ public:
                 pos = 0;
             }
         }
-        inline uint8_t* get(block_list *ref) { 
+        inline void* get(block_list *ref) { 
             return ref->element_location_(node, pos);
         }
 
@@ -97,6 +106,8 @@ public:
         }
     };
     SETUP_ITERATORS(block_list, void*, iterator_state);
+    // SETUP_MUTABLE_ITERATOR(block_list, void*, iterator_state);
+
 
 private:
     uint8_t         elems_per_block_;
@@ -112,8 +123,8 @@ private:
                     uint32_t *elem_id);
     hal_ret_t consolidate_(list_node_t *node, uint32_t elem_id,
                            list_node_t *last_node);
-    uint8_t *element_location_(list_node_t *node, 
-                               uint32_t elem_id);
+    void *element_location_(list_node_t *node, 
+                            uint32_t elem_id);
     hal_ret_t remove_elem_(list_node_t *node, uint32_t elem_id, bool *last_elem);
 
 };

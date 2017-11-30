@@ -62,6 +62,7 @@ cc_library(
         "//nic:gen_proto_includes",
         "//nic:capricsr_int",
         "//nic/include:base_includes",
+        "//nic/utils/block_list:block_list",
         "//nic/model_sim/include:modelsim_includes",
         "//nic/p4/nw/include:p4_nw_includes",
         "//nic/third-party/spdlog",

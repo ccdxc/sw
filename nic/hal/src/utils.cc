@@ -235,6 +235,20 @@ hal_print_handles_list(dllist_ctxt_t  *list)
 }
 
 // ----------------------------------------------------------------------------
+// Prints handles from the block list
+// ----------------------------------------------------------------------------
+void
+hal_print_handles_block_list(block_list *bl)
+{
+    hal_handle_t    *p_hdl_id = NULL;
+
+    for (const void *ptr : *bl) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        HAL_TRACE_DEBUG("handle: {}", *p_hdl_id);
+    }
+}
+
+// ----------------------------------------------------------------------------
 // check if handle is present in handle list
 // ----------------------------------------------------------------------------
 bool
@@ -250,6 +264,26 @@ hal_handle_in_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
         }
     }
     return false;
+}
+
+// ----------------------------------------------------------------------------
+// check if handle is present in handle block list
+// ----------------------------------------------------------------------------
+bool
+hal_handle_in_block_list(block_list *bl, hal_handle_t handle)
+{
+    bool            is_present = false;
+
+    if (!bl || handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("{}:invalid args. bl:{:#x}, handle:{}",
+                      (uint64_t)bl, handle);
+        goto end;
+    }
+
+    is_present = bl->is_present(&handle);
+
+end:
+    return is_present;
 }
 
 // ----------------------------------------------------------------------------
@@ -277,6 +311,27 @@ end:
 }
 
 // ----------------------------------------------------------------------------
+// adds handle to the handles block list
+// ----------------------------------------------------------------------------
+hal_ret_t
+hal_add_to_handle_block_list(block_list *bl, hal_handle_t handle)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!bl || handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("{}:invalid args. bl:{:#x}, handle:{}",
+                      (uint64_t)bl, handle);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    ret = bl->insert(&handle);
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Free handle entries in a list. 
 // - Please take locks if necessary outside this call.
 // ----------------------------------------------------------------------------
@@ -297,6 +352,27 @@ hal_free_handles_list(dllist_ctxt_t *list)
 }
 
 // ----------------------------------------------------------------------------
+// Remove all elements from block list
+// ----------------------------------------------------------------------------
+hal_ret_t
+hal_remove_all_handles_block_list(block_list *bl)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    if (!bl) {
+        HAL_TRACE_ERR("{}:invalid args. bl:{:#x}",
+                      (uint64_t)bl);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+    
+    bl->remove_all();
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Clean up list
 // ----------------------------------------------------------------------------
 hal_ret_t
@@ -311,6 +387,30 @@ hal_cleanup_handle_list(dllist_ctxt_t **list)
     HAL_FREE(HAL_MEM_ALLOC_DLLIST, *list);
     *list = NULL;
 
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Free handle entries in a block list. 
+// - Please take locks if necessary outside this call.
+// ----------------------------------------------------------------------------
+hal_ret_t
+hal_cleanup_handle_block_list(block_list **bl)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    if (*bl == NULL) {
+        HAL_TRACE_ERR("{}:invalid args. bl:{:#x}",
+                      (uint64_t)bl);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+    
+
+    block_list::destroy(*bl);
+    *bl = NULL;
+
+end:
     return ret;
 }
 

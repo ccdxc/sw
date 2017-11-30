@@ -863,38 +863,5 @@ ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep,
     return 0;
 }
 
-network_t *
-ep_pd_get_nw(ep_t *pi_ep, l2seg_t *l2seg) 
-{
-    network_t                   *nw = NULL;
-    dllist_ctxt_t               *lnode = NULL, *nw_lnode = NULL;
-    ep_ip_entry_t               *pi_ip_entry = NULL;
-    hal_handle_id_list_entry_t  *entry = NULL;
-
-    // Get the first IP
-    if (dllist_empty(&pi_ep->ip_list_head)) {
-        goto end;
-    } else {
-        lnode = pi_ep->ip_list_head.next;
-        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - offsetof(ep_ip_entry_t, ep_ip_lentry));
-
-        dllist_for_each(nw_lnode, &(l2seg->nw_list_head)) {
-            entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-            nw = find_network_by_handle(entry->handle_id);
-#if 0
-            nw = (network_t *)((char *)nw_lnode -
-                    offsetof(network_t, l2seg_nw_lentry));
-#endif
-            // Check if ip is in prefix
-            if (hal::ip_addr_in_ip_pfx(&pi_ip_entry->ip_addr, &nw->nw_key.ip_pfx)) {
-                return nw;
-            }
-        }
-    }
-
-end:
-    return nw;
-}
-
 }    // namespace pd
 }    // namespace hal

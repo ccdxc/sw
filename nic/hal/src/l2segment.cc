@@ -176,11 +176,11 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (l2seg_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt  = (l2seg_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    l2seg = (l2seg_t *)dhl_entry->obj;
+    l2seg     = (l2seg_t *)dhl_entry->obj;
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:create add CB {}",
                     __FUNCTION__, l2seg->seg_id);
@@ -207,19 +207,18 @@ end:
 // Add/Del relation nw -> l2seg for all networks in the list
 // ----------------------------------------------------------------------------
 hal_ret_t
-l2seg_update_network_relation (dllist_ctxt_t *nw_list, l2seg_t *l2seg, bool add)
+l2seg_update_network_relation (block_list *nw_list, l2seg_t *l2seg, bool add)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *curr, *next;
-    hal_handle_id_list_entry_t  *entry = NULL;
     network_t                   *nw = NULL;
+    hal_handle_t                *p_hdl_id = NULL;
 
-    dllist_for_each_safe(curr, next, nw_list) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        nw = find_network_by_handle(entry->handle_id);
+    for (const void *ptr : *nw_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        nw = find_network_by_handle(*p_hdl_id);
         if (!nw) {
             HAL_TRACE_ERR("{}:unable to find network with handle:{}",
-                          __FUNCTION__, entry->handle_id);
+                          __FUNCTION__, *p_hdl_id);
             ret = HAL_RET_NETWORK_NOT_FOUND;
             goto end;
         }
@@ -291,7 +290,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Add l2seg to network's l2seg list
-    ret = l2seg_update_network_relation (&l2seg->nw_list_head, l2seg, true);
+    ret = l2seg_update_network_relation (l2seg->nw_list, l2seg, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to add network -> l2seg "
                       "relation ret:{}", 
@@ -348,15 +347,11 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
-    // clean up networks as these are inserted before callbacks
-    HAL_TRACE_DEBUG("pi-l2seg:{}:freeing up network list entries", __FUNCTION__);
-    hal_free_handles_list(&l2seg->nw_list_head);
-
     // remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // Free PI vrf
-    l2seg_free(l2seg);
+    // Free l2seg. This will also cleanup nws if there are any
+    l2seg_cleanup(l2seg);
 end:
     return ret;
 }
@@ -379,9 +374,13 @@ hal_ret_t
 l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
 {
     if (ret == HAL_RET_OK) {
+        // No error, hance l2seg is valid
+#if 0
         rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg ? 
                                                               l2seg->hal_handle : 
                                                               HAL_HANDLE_INVALID);
+#endif
+        rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg->hal_handle);
         // TODO: REMOVE DOL test only
         rsp->mutable_l2segment_status()->set_vrf_id(
             hal::pd::pd_l2seg_get_ten_hwid(l2seg));
@@ -405,11 +404,26 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
 
     num_nws = spec.network_key_handle_size();
 
-    HAL_TRACE_DEBUG("pi-network:{}:adding {} no. of sgs", __FUNCTION__,
-                    num_nws);
-
     HAL_TRACE_DEBUG("pi-l2seg:{}:received {} networks", 
             __FUNCTION__, num_nws);
+
+    for (i = 0; i < num_nws; i++) {
+        nw_key_handle = spec.network_key_handle(i);        
+        nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
+        if (nw == NULL) {
+            ret = HAL_RET_NETWORK_NOT_FOUND;
+            goto end;
+        }
+        HAL_TRACE_DEBUG("pi-l2seg:{}:adding network: {} with handle:{}", __FUNCTION__, 
+                        ippfx2str(&nw->nw_key.ip_pfx), nw->hal_handle);
+
+        // add nw to list
+        // hal_add_to_handle_list(&l2seg->nw_list_head, nw->hal_handle);
+        hal_add_to_handle_block_list(l2seg->nw_list, nw->hal_handle);
+    }
+    HAL_TRACE_DEBUG("pi-l2seg:{}:networks added:", __FUNCTION__);
+    hal_print_handles_block_list(l2seg->nw_list);
+#if 0
     utils::dllist_reset(&l2seg->nw_list_head);
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);        
@@ -427,6 +441,7 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:networks added:", __FUNCTION__);
     hal_print_handles_list(&l2seg->nw_list_head);
+#endif
 
 end:
     return ret;
@@ -441,10 +456,9 @@ hal_ret_t
 l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t                   ret;
-    vrf_t                    *vrf;
+    vrf_t                       *vrf;
     l2seg_t                     *l2seg    = NULL;
-    vrf_id_t                 tid;
-    // network_t                   *nw    = NULL;
+    vrf_id_t                    tid;
     l2seg_create_app_ctxt_t     app_ctxt  = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt  = { 0 };
@@ -559,10 +573,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 end:
     if (ret != HAL_RET_OK) {
         if (l2seg) {
-            // if there is an error, nw will be freed in abort CB.
-            // What about network list ??
-            // l2seg_free(nw);
-            hal_free_handles_list(&l2seg->nw_list_head);
+            // if there is an error, it will be cleaned up in abort CB
+            // l2seg_cleanup(l2seg);
             l2seg = NULL;
         }
     }
@@ -690,27 +702,38 @@ l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
 
     pd::pd_l2seg_make_clone(l2seg, *l2seg_clone);
 
-    // After clone always reset lists
-    dllist_reset(&(*l2seg_clone)->nw_list_head);
-    dllist_reset(&(*l2seg_clone)->if_list_head);
+    // Lists are copied into clone. 
+    //  - Update Success: 
+    //      - Destroy Add and Delete lists in app ctxt
+    //      - Destroy clone's list which is original's list as well
+    //      - Assign aggr list to clone's list
+    //      - Free original
+    //  - Update Failure: 
+    //      - Free clone
 
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+//  - Update Success: 
+//      - Destroy Add and Delete lists in app ctxt
+//      - Destroy clone's list which is original's list as well
+//      - Assign aggr list to clone's list
+//      - Free original
+//-----------------------------------------------------------------------------
 hal_ret_t
 l2seg_update_pi_with_nw_list (l2seg_t *l2seg, l2seg_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t                       ret = HAL_RET_OK;
 
-    // lock if. 
+    // lock l2seg
     // Revisit: this is a clone and may be we dont have to take the lock
     l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);
 
-    // Free list in clone
-    hal_free_handles_list(&l2seg->nw_list_head);
-
-    // Move aggregated list to clone
-    dllist_move(&l2seg->nw_list_head, app_ctxt->aggr_nwlist);
+    // Destroy clone's list which is original's list as well
+    hal_cleanup_handle_block_list(&l2seg->nw_list);
+    // Assign aggr list to clone's list
+    l2seg->nw_list = app_ctxt->aggr_nwlist;
 
     // add/del relations from member ports.
     ret = l2seg_update_network_relation(app_ctxt->add_nwlist,
@@ -733,9 +756,8 @@ l2seg_update_pi_with_nw_list (l2seg_t *l2seg, l2seg_update_app_ctxt_t *app_ctxt)
 
 end:
     // Free add & del list
-    hal_cleanup_handle_list(&app_ctxt->add_nwlist);
-    hal_cleanup_handle_list(&app_ctxt->del_nwlist);
-    hal_cleanup_handle_list(&app_ctxt->aggr_nwlist);
+    hal_cleanup_handle_block_list(&app_ctxt->add_nwlist);
+    hal_cleanup_handle_block_list(&app_ctxt->del_nwlist);
 
     // Unlock if
     l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);
@@ -774,6 +796,7 @@ l2seg_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-l2seg:{}:update commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
+#if 0
     // move lists to clone
     dllist_move(&l2seg_clone->nw_list_head, &l2seg->nw_list_head);
     dllist_move(&l2seg_clone->if_list_head, &l2seg->if_list_head);
@@ -787,6 +810,20 @@ l2seg_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                           __FUNCTION__, ret);
             goto end;
         }
+    }
+#endif
+
+    //  - Update Success: 
+    //      - Destroy Add and Delete lists in app ctxt
+    //      - Destroy clone's list which is original's list as well
+    //      - Assign aggr list to clone's list
+    //      - Free original
+    ret = l2seg_update_pi_with_nw_list(l2seg_clone, app_ctxt);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-l2seg:{}:failed to update pi with nwlists, "
+                      "ret:{}",
+                      __FUNCTION__, ret);
+        goto end;
     }
 
     // Free PD
@@ -844,11 +881,11 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Free nw lists
-    hal_cleanup_handle_list(&app_ctxt->add_nwlist);
-    hal_cleanup_handle_list(&app_ctxt->del_nwlist);
-    hal_cleanup_handle_list(&app_ctxt->aggr_nwlist);
+    hal_cleanup_handle_block_list(&app_ctxt->add_nwlist);
+    hal_cleanup_handle_block_list(&app_ctxt->del_nwlist);
+    hal_cleanup_handle_block_list(&app_ctxt->aggr_nwlist);
 
-    // Free PI
+    // Free Clone
     l2seg_free(l2seg);
 end:
 
@@ -864,33 +901,20 @@ l2seg_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 hal_ret_t
 l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
                          bool *nwlist_change,
-                         dllist_ctxt_t **add_nwlist, 
-                         dllist_ctxt_t **del_nwlist,
-                         dllist_ctxt_t **aggr_nwlist)
+                         block_list *add_nwlist, 
+                         block_list *del_nwlist,
+                         block_list *aggr_nwlist)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     uint16_t                        num_nws = 0, i = 0;
-    dllist_ctxt_t                   *lnode = NULL;
+    // dllist_ctxt_t                   *lnode = NULL;
     bool                            nw_exists = false;
     NetworkKeyHandle                nw_key_handle;
     network_t                       *nw = NULL;
-    hal_handle_id_list_entry_t      *entry = NULL, *lentry = NULL;
+    // hal_handle_id_list_entry_t      *entry = NULL, *lentry = NULL;
+    hal_handle_t                    *p_hdl_id = NULL;
 
     *nwlist_change = false;
-
-    *add_nwlist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST, 
-                                               sizeof(dllist_ctxt_t));
-    HAL_ABORT(*add_nwlist != NULL);
-    *del_nwlist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST, 
-                                               sizeof(dllist_ctxt_t));
-    HAL_ABORT(*del_nwlist != NULL);
-    *aggr_nwlist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST,
-                                                sizeof(dllist_ctxt_t));
-    HAL_ABORT(*aggr_nwlist != NULL);
-
-    utils::dllist_reset(*add_nwlist);
-    utils::dllist_reset(*del_nwlist);
-    utils::dllist_reset(*aggr_nwlist);
 
     num_nws = spec.network_key_handle_size();
     HAL_TRACE_DEBUG("pi-l2seg:{}:num. of nws:{}", 
@@ -904,13 +928,13 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
         }
 
         // Add to aggregated list
-        hal_add_to_handle_list(*aggr_nwlist, nw->hal_handle);
+        hal_add_to_handle_block_list(aggr_nwlist, nw->hal_handle);
 
-        if (hal_handle_in_list(&l2seg->nw_list_head, nw->hal_handle)) {
+        if (hal_handle_in_block_list(l2seg->nw_list, nw->hal_handle)) {
             continue;
         } else {
             // Add to added list
-            hal_add_to_handle_list(*add_nwlist, nw->hal_handle);
+            hal_add_to_handle_block_list(add_nwlist, nw->hal_handle);
             *nwlist_change = true;
             HAL_TRACE_DEBUG("pi-l2seg:{}: added to add list hdl: {}", 
                     __FUNCTION__, nw->hal_handle);
@@ -918,20 +942,22 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     }
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:Existing nws:", __FUNCTION__);
-    hal_print_handles_list(&l2seg->nw_list_head);
+    hal_print_handles_block_list(l2seg->nw_list);
     HAL_TRACE_DEBUG("pi-l2seg:{}:New Aggregated nws:", __FUNCTION__);
-    hal_print_handles_list(*aggr_nwlist);
+    hal_print_handles_block_list(aggr_nwlist);
     HAL_TRACE_DEBUG("pi-l2seg:{}:added nws:", __FUNCTION__);
-    hal_print_handles_list(*add_nwlist);
+    hal_print_handles_block_list(add_nwlist);
 
-    dllist_for_each(lnode, &(l2seg->nw_list_head)) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+    // dllist_for_each(lnode, &(l2seg->nw_list_head)) {
+    //     entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+    for (const void *ptr : *l2seg->nw_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
         HAL_TRACE_DEBUG("pi-l2seg:{}: Checking for nw: {}", 
-                __FUNCTION__, entry->handle_id);
+                __FUNCTION__, *p_hdl_id);
         for (i = 0; i < num_nws; i++) {
             nw_key_handle = spec.network_key_handle(i);
             HAL_TRACE_DEBUG("pi-l2seg:{}:grpc nw handle: {}", __FUNCTION__, nw->hal_handle);
-            if (entry->handle_id == nw->hal_handle) {
+            if (*p_hdl_id == nw->hal_handle) {
                 nw_exists = true;
                 break;
             } else {
@@ -939,6 +965,7 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
             }
         }
         if (!nw_exists) {
+#if 0
             // Have to delet the nw
             lentry = (hal_handle_id_list_entry_t *)g_hal_state->
                 hal_handle_id_list_entry_slab()->alloc();
@@ -946,26 +973,30 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
                 ret = HAL_RET_OOM;
                 goto end;
             }
-            lentry->handle_id = entry->handle_id;
+            lentry->handle_id = *p_hdl_id;
 
             // Insert into the list
             utils::dllist_add(*del_nwlist, &lentry->dllist_ctxt);
+#endif
+            hal_add_to_handle_block_list(del_nwlist, *p_hdl_id);
             *nwlist_change = true;
             HAL_TRACE_DEBUG("pi-l2seg:{}: added to delete list hdl: {}", 
-                    __FUNCTION__, lentry->handle_id);
+                    __FUNCTION__, *p_hdl_id);
         }
         nw_exists = false;
     }
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:deleted nws:", __FUNCTION__);
-    hal_print_handles_list(*del_nwlist);
+    hal_print_handles_block_list(del_nwlist);
 
+#if 0
     if (!*nwlist_change) {
         // Got same nws as existing
         hal_cleanup_handle_list(add_nwlist);
         hal_cleanup_handle_list(del_nwlist);
         hal_cleanup_handle_list(aggr_nwlist);
     }
+#endif
 end:
     return ret;
 }
@@ -979,8 +1010,6 @@ l2seg_check_update (L2SegmentSpec& spec, l2seg_t *l2seg,
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    memset(app_ctxt, 0, sizeof(l2seg_update_app_ctxt_t));
-
     // check for fwd policy change
     ret = l2seg_fwdpolicy_update(spec, l2seg, app_ctxt); 
     if (ret != HAL_RET_OK) {
@@ -991,9 +1020,9 @@ l2seg_check_update (L2SegmentSpec& spec, l2seg_t *l2seg,
 
     // check for network list change
     ret = l2seg_nw_list_update(spec, l2seg, &app_ctxt->nwlist_change,
-                               &app_ctxt->add_nwlist,
-                               &app_ctxt->del_nwlist,
-                               &app_ctxt->aggr_nwlist);
+                               app_ctxt->add_nwlist,
+                               app_ctxt->del_nwlist,
+                               app_ctxt->aggr_nwlist);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-uplinkpc:{}:failed to check nw list change. ret:{}",
                       __FUNCTION__, ret);
@@ -1047,6 +1076,33 @@ end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// Init update app ctxt
+//------------------------------------------------------------------------------
+hal_ret_t
+l2seg_update_app_ctxt_init(l2seg_update_app_ctxt_t *app_ctxt)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!app_ctxt) {
+        HAL_TRACE_ERR("pi-l2seg:{}: app ctxt is NULL", __FUNCTION__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    memset(app_ctxt, 0, sizeof(l2seg_update_app_ctxt_t));
+    app_ctxt->add_nwlist  = block_list::factory(sizeof(hal_handle_t));
+    app_ctxt->del_nwlist  = block_list::factory(sizeof(hal_handle_t));
+    app_ctxt->aggr_nwlist = block_list::factory(sizeof(hal_handle_t));
+
+    HAL_TRACE_DEBUG("nw lists: {:#x}, {:#x}, {:#x} ",
+                    (uint64_t)app_ctxt->add_nwlist, (uint64_t)app_ctxt->del_nwlist,
+                    (uint64_t)app_ctxt->aggr_nwlist);
+
+end:
+    return ret;
+}
+
 
 //------------------------------------------------------------------------------
 // process a L2 segment update request
@@ -1091,6 +1147,14 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:update l2seg {}", __FUNCTION__, 
                     l2seg->seg_id);
+
+    ret = l2seg_update_app_ctxt_init(&app_ctxt);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-l2seg:{}:l2seg unable to init upd app ctxt, "
+                      "ret : {}", 
+                      __FUNCTION__, ret);
+        goto end;
+    }
 
     ret = l2seg_check_update(spec, l2seg, &app_ctxt);
     if (ret != HAL_RET_OK) {
@@ -1172,10 +1236,10 @@ validate_l2seg_delete (l2seg_t *l2seg)
     hal_ret_t   ret = HAL_RET_OK;
 
     // check for no presence of back refernces
-    if (dllist_count(&l2seg->if_list_head)) {
+    if (l2seg->if_list->num_elems()) {
         ret = HAL_RET_OBJECT_IN_USE;
         HAL_TRACE_ERR("pi-l2seg:{}:ifs still referring:", __FUNCTION__);
-        hal_print_handles_list(&l2seg->if_list_head);
+        hal_print_handles_block_list(l2seg->if_list);
     }
 
     return ret;
@@ -1234,7 +1298,7 @@ l2seg_detach_from_networks (l2seg_t *l2seg)
 {
     hal_ret_t                   ret = HAL_RET_OK;
 
-    ret = l2seg_update_network_relation(&l2seg->nw_list_head, l2seg, false);
+    ret = l2seg_update_network_relation(l2seg->nw_list, l2seg, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to del network -/-> l2seg"
                 "relation ret:{}", 
@@ -1244,7 +1308,7 @@ l2seg_detach_from_networks (l2seg_t *l2seg)
 
     // clean up sgs list
     HAL_TRACE_DEBUG("{}:cleaning up network list", __FUNCTION__);
-    hal_free_handles_list(&l2seg->nw_list_head);
+    hal_remove_all_handles_block_list(l2seg->nw_list);
 
 end:
     return ret;
@@ -1310,7 +1374,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // c. Free PI l2seg
-    l2seg_free(l2seg);
+    l2seg_cleanup(l2seg);
 
     // TODO: Decrement the ref counts of dependent objects
     //  - vrf
@@ -1409,9 +1473,10 @@ hal_ret_t
 l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
 {
     l2seg_t                         *l2seg;
-    dllist_ctxt_t                   *lnode = NULL;
-    hal_handle_id_list_entry_t      *entry = NULL;
-    NetworkKeyHandle                *nkh = NULL;
+    // dllist_ctxt_t                   *lnode    = NULL;
+    // hal_handle_id_list_entry_t      *entry    = NULL;
+    NetworkKeyHandle                *nkh      = NULL;
+    hal_handle_t                    *p_hdl_id = NULL;
 
     if (!req.has_vrf_key_handle() || req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
@@ -1449,12 +1514,19 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     rsp->mutable_spec()->mutable_tunnel_encap()->set_encap_type(l2seg->tunnel_encap.type);
     rsp->mutable_spec()->mutable_tunnel_encap()->set_encap_value(l2seg->tunnel_encap.val);
 
+    for (const void *ptr : *l2seg->nw_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        nkh = rsp->mutable_spec()->add_network_key_handle();
+        nkh->set_nw_handle(*p_hdl_id);
+    }
+#if 0
     lnode = l2seg->nw_list_head.next;
     dllist_for_each(lnode, &(l2seg->nw_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         nkh = rsp->mutable_spec()->add_network_key_handle();
         nkh->set_nw_handle(entry->handle_id);
     }
+#endif
     // fill operational state of this L2 segment
     rsp->mutable_status()->set_l2segment_handle(l2seg->hal_handle);
 
@@ -1471,26 +1543,15 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
 hal_ret_t
 l2seg_add_if (l2seg_t *l2seg, if_t *hal_if)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    hal_handle_id_list_entry_t  *entry = NULL;
+    hal_ret_t ret = HAL_RET_OK;
 
     if (l2seg == NULL || hal_if == NULL) {
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    // Allocate the entry
-    entry = (hal_handle_id_list_entry_t *)g_hal_state->
-        hal_handle_id_list_entry_slab()->alloc();
-    if (entry == NULL) {
-        ret = HAL_RET_OOM;
-        goto end;
-    }
-    entry->handle_id = hal_if->hal_handle;
-
     l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
-    // Insert into the list
-    utils::dllist_add(&l2seg->if_list_head, &entry->dllist_ctxt);
+    ret = l2seg->if_list->insert(&hal_if->hal_handle);
     l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -1505,27 +1566,26 @@ end:
 hal_ret_t
 l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
 {
-    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    dllist_ctxt_t               *curr, *next;
+    hal_ret_t ret = HAL_RET_OK;
 
+    if (l2seg == NULL || hal_if == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
     l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &l2seg->if_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        if (entry->handle_id == hal_if->hal_handle) {
-            // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
-            // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-
-            ret = HAL_RET_OK;
-        }
-    }
+    ret = l2seg->if_list->remove(&hal_if->hal_handle);
     l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to remove from l2seg's if list. ret:{}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
 
     HAL_TRACE_DEBUG("pi-l2seg:{}: del l2seg =/=> if ,{} =/=> {}, ret:{}",
                     __FUNCTION__, l2seg->seg_id, hal_if->if_id, ret);
+
+end:
     return ret;
 }
 
@@ -1536,9 +1596,8 @@ hal_ret_t
 l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    hal_handle_id_list_entry_t  *entry = NULL;
     if_t                        *hal_if = NULL;
+    hal_handle_t                *p_hdl_id = NULL;
 
     if (l2seg == NULL) {
         return ret;
@@ -1547,14 +1606,14 @@ l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
     HAL_TRACE_DEBUG("pi-l2seg:{}:handling nwsec update seg_id: {}", 
                     __FUNCTION__, l2seg->seg_id);
     // Walk through Ifs and call respective functions
-    dllist_for_each(lnode, &l2seg->if_list_head) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+    for (const void *ptr : *l2seg->if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
         // TODO: Uncomment this after if is migrated to new scheme
         // hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
-        hal_if = find_if_by_handle(entry->handle_id);
+        hal_if = find_if_by_handle(*p_hdl_id);
         if (!hal_if) {
             HAL_TRACE_ERR("pi-l2seg:{}:unable to find if with handle:{}",
-                          __FUNCTION__, entry->handle_id);
+                          __FUNCTION__, *p_hdl_id);
             continue;
         }
         if_handle_nwsec_update(l2seg, hal_if, nwsec_prof);

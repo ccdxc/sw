@@ -16,7 +16,7 @@
 #include "nic/include/base.h"
 #include "nic/utils/indexer/indexer.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/utils/ht/ht.hpp"
+//#include "nic/utils/ht/ht.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 

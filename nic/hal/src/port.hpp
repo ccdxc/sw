@@ -32,7 +32,7 @@ using port::PortGetRequestMsg;
 using port::PortGetResponse;
 using port::PortGetResponseMsg;
 
-#include "nic/hal/src/utils.hpp"
+// #include "nic/hal/src/utils.hpp"
 
 namespace hal {
 

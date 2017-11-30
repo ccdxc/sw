@@ -53,9 +53,10 @@ typedef struct l2seg_s {
     hal_handle_t          hal_handle;              // HAL allocated handle
     uint32_t              num_ep;                  // no. of endpoints
     // forward references
-    dllist_ctxt_t         nw_list_head;            // network list
+    block_list            *nw_list;                // network list 
+    // dllist_ctxt_t         nw_list_head;            // network list
     // back references
-    dllist_ctxt_t         if_list_head;            // interface list
+    block_list            *if_list;                // interface list  
 
     // Looks like sessions need only if, ep, network
     // dllist_ctxt_t         ep_list_head;            // endpoint list
@@ -80,9 +81,9 @@ typedef struct l2seg_update_app_ctxt_s {
     MulticastFwdPolicy  new_mcast_fwd_policy;
     BroadcastFwdPolicy  new_bcast_fwd_policy;
     // nw list change
-    dllist_ctxt_t       *add_nwlist;
-    dllist_ctxt_t       *del_nwlist;
-    dllist_ctxt_t       *aggr_nwlist;
+    block_list          *add_nwlist;
+    block_list          *del_nwlist;
+    block_list          *aggr_nwlist;
 } __PACK__ l2seg_update_app_ctxt_t;
 
 // max. number of L2 segments supported  (TODO: we can take this from cfg file)
@@ -127,21 +128,19 @@ l2seg_init (l2seg_t *l2seg)
         return NULL;
     }
     HAL_SPINLOCK_INIT(&l2seg->slock, PTHREAD_PROCESS_PRIVATE);
-    l2seg->vrf_handle = 0;
-    l2seg->seg_id = 0;
-    l2seg->segment_type = types::L2_SEGMENT_TYPE_NONE;
+    l2seg->vrf_handle       = 0;
+    l2seg->seg_id           = 0;
+    l2seg->segment_type     = types::L2_SEGMENT_TYPE_NONE;
     l2seg->mcast_fwd_policy = l2segment::MULTICAST_FWD_POLICY_NONE;
     l2seg->bcast_fwd_policy = l2segment::BROADCAST_FWD_POLICY_NONE;
 
     // initialize the operational state
     l2seg->num_ep = 0;
-    l2seg->pd = NULL;
+    l2seg->pd     = NULL;
 
     // initialize meta information
-    utils::dllist_reset(&l2seg->if_list_head);
-    utils::dllist_reset(&l2seg->nw_list_head);
-    // utils::dllist_reset(&l2seg->ep_list_head);
-    // utils::dllist_reset(&l2seg->session_list_head);
+    l2seg->if_list = block_list::factory(sizeof(hal_handle_t));
+    l2seg->nw_list = block_list::factory(sizeof(hal_handle_t));
 
     return l2seg;
 }
@@ -153,11 +152,26 @@ l2seg_alloc_init (void)
     return l2seg_init(l2seg_alloc());
 }
 
+// anti l2seg_alloc
 static inline hal_ret_t
 l2seg_free (l2seg_t *l2seg)
 {
     HAL_SPINLOCK_DESTROY(&l2seg->slock);
     g_hal_state->l2seg_slab()->free(l2seg);
+    return HAL_RET_OK;
+}
+
+// anti l2seg_alloc_init
+static inline hal_ret_t
+l2seg_cleanup (l2seg_t *l2seg)
+{
+    if (l2seg->nw_list) {
+        block_list::destroy(l2seg->nw_list);
+    }
+    if (l2seg->if_list) {
+        block_list::destroy(l2seg->if_list);
+    }
+    l2seg_free(l2seg);
     return HAL_RET_OK;
 }
 

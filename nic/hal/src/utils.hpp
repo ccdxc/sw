@@ -2,9 +2,11 @@
 #define __UTILS_HPP__
 
 #include "nic/gen/proto/hal/types.pb.h"
+#include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/ip.h"
 
 using types::ApiStatus;
+using hal::utils::block_list;
 
 namespace hal {
 
@@ -31,6 +33,13 @@ hal_ret_t hal_add_to_handle_list(dllist_ctxt_t *handle_list,
                                  hal_handle_t handle);
 void hal_free_handles_list(dllist_ctxt_t *list);
 hal_ret_t hal_cleanup_handle_list(dllist_ctxt_t **list);
+
+// handle block list specific APIs
+void hal_print_handles_block_list(block_list *bl);
+bool hal_handle_in_block_list(block_list *bl, hal_handle_t handle);
+hal_ret_t hal_add_to_handle_block_list(block_list *bl, hal_handle_t handle);
+hal_ret_t hal_remove_all_handles_block_list(block_list *bl);
+hal_ret_t hal_cleanup_handle_block_list(block_list **bl);
 }    // namespace hal
 
 #endif    // __UTILS_HPP__

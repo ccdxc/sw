@@ -410,6 +410,8 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
         HAL_SPINLOCK_UNLOCK(&dif->slock);
     }
 
+#if 0
+    // session list is changed to block list
     utils::dllist_reset(&session->vrf_session_lentry);
     if (vrf) {
         HAL_SPINLOCK_LOCK(&vrf->slock);
@@ -417,6 +419,7 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                           &session->vrf_session_lentry);
         HAL_SPINLOCK_UNLOCK(&vrf->slock);
     }
+#endif
 
     return HAL_RET_OK;
 }

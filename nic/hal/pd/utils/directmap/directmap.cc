@@ -1,7 +1,7 @@
 #include "nic/hal/pd/utils/directmap/directmap.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/utils/thread/thread.hpp"
+// #include "nic/utils/thread/thread.hpp"
 #include "nic/utils/ht/ht.hpp"
 
 using hal::pd::utils::DirectMap;

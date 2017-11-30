@@ -143,7 +143,6 @@ uint32_t
 ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep, 
                           tunnel_rewrite_actions_en tnnl_rw_act);
 uint32_t ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act);
-network_t *ep_pd_get_nw(ep_t *pi_ep, l2seg_t *l2seg);
 hal_ret_t pd_ep_upd_iplist_change (pd_ep_upd_args_t *pd_ep_upd_args);
 hal_ret_t ep_pd_alloc_pd_ip_entries (dllist_ctxt_t *pi_ep_list);
 hal_ret_t ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, 

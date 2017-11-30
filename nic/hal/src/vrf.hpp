@@ -4,6 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/list.hpp"
 #include "nic/utils/ht/ht.hpp"
+#include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/vrf.pb.h"
@@ -14,6 +15,7 @@
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
+using hal::utils::block_list;
 using kh::VrfKeyHandle;
 
 using vrf::VrfSpec;
@@ -48,11 +50,11 @@ typedef struct vrf_s {
     uint32_t           num_l4lb_svc;         // no. of L4 LB services
     uint32_t           num_ep;               // no. of endpoints
     // Back references
-    dllist_ctxt_t      l2seg_list_head;      // L2 segment list
+    block_list         *l2seg_list;           // L2 segment list
 
     // TODO: Check 
-    dllist_ctxt_t      ep_list_head;         // endpoint list
-    dllist_ctxt_t      session_list_head;    // session list
+    // dllist_ctxt_t      ep_list_head;         // endpoint list
+    // dllist_ctxt_t      session_list_head;    // session list
 
     // PD state
     void               *pd;                  // all PD specific state
@@ -123,10 +125,10 @@ vrf_init (vrf_t *vrf)
     vrf->pd           = NULL;
 
     // initialize meta information
-    // vrf->ht_ctxt.reset();
-    utils::dllist_reset(&vrf->l2seg_list_head);
-    utils::dllist_reset(&vrf->ep_list_head);
-    utils::dllist_reset(&vrf->session_list_head);
+    vrf->l2seg_list = block_list::factory(sizeof(hal_handle_t));
+    // utils::dllist_reset(&vrf->l2seg_list_head);
+    // utils::dllist_reset(&vrf->ep_list_head);
+    // utils::dllist_reset(&vrf->session_list_head);
 
     return vrf;
 }
@@ -139,11 +141,25 @@ vrf_alloc_init (void)
 }
 
 // free vrf instance
+// Note: This is not a deep free wherein the list or other pointers have to
+//       be freed separately
 static inline hal_ret_t
 vrf_free (vrf_t *vrf)
 {
     HAL_SPINLOCK_DESTROY(&vrf->slock);
     g_hal_state->vrf_slab()->free(vrf);
+    return HAL_RET_OK;
+}
+
+// anti vrf_alloc_init
+static inline hal_ret_t
+vrf_cleanup(vrf_t *vrf)
+{
+    if (vrf->l2seg_list) {
+        block_list::destroy(vrf->l2seg_list);
+    }
+    vrf_free(vrf);
+
     return HAL_RET_OK;
 }
 

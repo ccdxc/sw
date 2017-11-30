@@ -745,6 +745,7 @@ TEST_F(l2seg_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+
     
     // Create l2seg which already exists
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);

@@ -22,6 +22,7 @@ cc_library(
             "//nic:gen_includes",
             "//nic/hal/pd/iris/p4pd:p4pdapi",
             "//nic/hal/pd/capri:capri_includes",
+            "//nic/hal/pd/control:control",
             ],
     alwayslink = 1,
 )
@@ -44,5 +45,6 @@ cc_library(
             "//nic/hal/pd/utils/hash:hash_includes",
             "//nic:gen_includes",
             "//nic/utils/bitmap",
+            "//nic/utils/bm_allocator:bm_allocator",
             ],
 )

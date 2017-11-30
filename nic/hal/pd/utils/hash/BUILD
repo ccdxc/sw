@@ -21,7 +21,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/indexer",
-        "//nic/utils/thread",
+        #"//nic/utils/thread",
     ],
 )
 

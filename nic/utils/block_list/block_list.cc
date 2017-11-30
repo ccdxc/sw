@@ -75,6 +75,18 @@ block_list::destroy(block_list *blist)
 }
 
 //-----------------------------------------------------------------------------
+// Remove all blocks
+//-----------------------------------------------------------------------------
+hal_ret_t 
+block_list::remove_all()
+{
+    // Make sure the destructor is just removing blocks
+    this->~block_list();
+
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
 // Gets last node in the list of nodes
 //-----------------------------------------------------------------------------
 list_node_t *
@@ -98,7 +110,14 @@ block_list::insert(void *elem)
 {
     hal_ret_t       ret = HAL_RET_OK;
     list_node_t     *last_node = NULL, *insert_in_node = NULL;
-    uint8_t         *loc = NULL;
+    void            *loc = NULL;
+
+    if (this->is_present(elem)) {
+        // element already present
+        ret = HAL_RET_DUP_INS_FAIL;
+        goto end;
+    }
+
 
     last_node = this->get_last_node_();
 
@@ -133,6 +152,27 @@ end:
     return ret;
 }
 
+
+//-----------------------------------------------------------------------------
+// Check for the presence of element
+//-----------------------------------------------------------------------------
+bool
+block_list::is_present(void *elem)
+{
+    list_node_t         *node = NULL;
+    uint32_t            elem_id = 0;
+    hal_ret_t           ret = HAL_RET_OK;
+
+    ret = this->find_(elem, &node, &elem_id);
+    if (ret == HAL_RET_OK) {
+        // Match
+        return true;
+    }
+
+    return false;
+}
+
+
 //-----------------------------------------------------------------------------
 // Find an element
 //-----------------------------------------------------------------------------
@@ -143,7 +183,7 @@ block_list::find_(void *elem, list_node_t **elem_in_node,
     hal_ret_t           ret = HAL_RET_ENTRY_NOT_FOUND;
     dllist_ctxt_t       *curr, *next;
     list_node_t         *node = NULL;
-    uint8_t             *loc = NULL;
+    void                *loc = NULL;
 
     *elem_in_node = NULL;
     *elem_id = 0;
@@ -169,7 +209,7 @@ end:
 //-----------------------------------------------------------------------------
 // Get element location within a node
 //-----------------------------------------------------------------------------
-uint8_t *
+void *
 block_list::element_location_(list_node_t *node, uint32_t elem_id)
 {
     return (uint8_t *)node + sizeof(list_node_t) + 
@@ -184,7 +224,7 @@ block_list::consolidate_(list_node_t *node, uint32_t elem_id,
                          list_node_t *last_node)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    uint8_t             *loc = NULL, *last_elem_loc = NULL;
+    void                *loc = NULL, *last_elem_loc = NULL;
 
     if (node == NULL || last_node == NULL) {
         return HAL_RET_INVALID_ARG;
@@ -244,6 +284,24 @@ end:
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// Get number of elements 
+//-----------------------------------------------------------------------------
+uint32_t
+block_list::num_elems()
+{
+    dllist_ctxt_t       *curr, *next;
+    list_node_t         *node = NULL;
+    uint32_t            count = 0;
+
+    dllist_for_each_safe(curr, next, &list_head_) {
+        node = dllist_entry(curr, list_node_t, ctxt_);
+        count += node->num_in_use_;
+    }
+
+    return count;
+}
+
 hal_ret_t
 block_list::remove_elem_(list_node_t *node, uint32_t elem_id, bool *last_elem) 
 {
@@ -279,7 +337,7 @@ block_list::iterate(block_list_cb_t cb, void *data)
     hal_ret_t       ret           = HAL_RET_OK;
     dllist_ctxt_t   *curr, *next;
     list_node_t     *node         = NULL;
-    uint8_t         *loc          = NULL;
+    void            *loc          = NULL;
     bool            rv            = true;
 
     dllist_for_each_safe(curr, next, &list_head_) {
@@ -295,6 +353,24 @@ block_list::iterate(block_list_cb_t cb, void *data)
 
 end:
     return ret;
+}
+
+block_list& 
+block_list::operator+=(const block_list& rhs) 
+{
+    dllist_ctxt_t   *curr, *next;
+    list_node_t     *node         = NULL;
+    void            *loc          = NULL;
+
+    dllist_for_each_safe(curr, next, &list_head_) {
+        node = dllist_entry(curr, list_node_t, ctxt_);
+        for (int i = 0; i<node->num_in_use_; i++) {
+            loc = element_location_(node, i);
+            this->insert(loc);
+        }
+    }
+
+    return *this;
 }
 
 

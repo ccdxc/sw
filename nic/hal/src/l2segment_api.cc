@@ -148,12 +148,11 @@ ip_addr_t
 mac_addr_t *l2seg_get_rtr_mac(l2seg_t *pi_l2seg)
 {
     network_t                   *nw = NULL;
-    dllist_ctxt_t               *curr, *next;
-    hal_handle_id_list_entry_t  *entry = NULL;
+    hal_handle_t                *p_hdl_id = NULL;
 
-    dllist_for_each_safe(curr, next, &pi_l2seg->nw_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        nw = find_network_by_handle(entry->handle_id);
+    for (const void *ptr : *pi_l2seg->nw_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        nw = find_network_by_handle(*p_hdl_id);
         return &nw->rmac_addr;
     }
 

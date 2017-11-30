@@ -160,8 +160,12 @@ mtrack_cb(void *ctxt, uint32_t alloc_id, mtrack_info_t *minfo)
 {
     mtrack_info_t       *mtrack_stats = (mtrack_info_t *)ctxt;
 
+#if 0
     HAL_ASSERT(alloc_id < hal::HAL_MEM_ALLOC_OTHER);
-
+    mtrack_stats[alloc_id] = *minfo;
+    HAL_TRACE_DEBUG("{}:alloc_id:{} -> allocs: {}, frees: {}; allocs: {}, frees: {}", __FUNCTION__, alloc_id,
+                    minfo->num_allocs, minfo->num_frees, mtrack_stats[alloc_id].num_allocs, mtrack_stats[alloc_id].num_frees);
+#endif
     mtrack_stats[alloc_id] = *minfo;
     HAL_TRACE_DEBUG("{}:alloc_id:{} -> allocs: {}, frees: {}; allocs: {}, frees: {}", __FUNCTION__, alloc_id,
                     minfo->num_allocs, minfo->num_frees, mtrack_stats[alloc_id].num_allocs, mtrack_stats[alloc_id].num_frees);

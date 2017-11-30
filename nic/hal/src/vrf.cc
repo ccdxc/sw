@@ -461,7 +461,6 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
                              vrf_create_abort_cb, 
                              vrf_create_cleanup_cb);
 
-
 end:
     if (ret != HAL_RET_OK) {
         if (vrf) {
@@ -483,10 +482,9 @@ end:
 hal_ret_t
 vrf_handle_nwsec_update (vrf_t *vrf, nwsec_profile_t *nwsec_prof)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    l2seg_t                     *l2seg = NULL;
+    hal_ret_t       ret       = HAL_RET_OK;
+    l2seg_t         *l2seg    = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
 
     if (vrf == NULL) {
         return ret;
@@ -495,12 +493,12 @@ vrf_handle_nwsec_update (vrf_t *vrf, nwsec_profile_t *nwsec_prof)
     HAL_TRACE_DEBUG("pi-vrf:{}:vrf_id: {}", 
                     __FUNCTION__, vrf->vrf_id);
     // Walk L2 segs
-    dllist_for_each(lnode, &vrf->l2seg_list_head) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        l2seg = find_l2seg_by_handle(entry->handle_id);
+    for (const void *ptr : *vrf->l2seg_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        l2seg = find_l2seg_by_handle(*p_hdl_id);
         if (!l2seg) {
             HAL_TRACE_ERR("pi-vrf:{}:unable to find l2seg with handle:{}",
-                          __FUNCTION__, entry->handle_id);
+                          __FUNCTION__, *p_hdl_id);
             continue;
         }
         l2seg_handle_nwsec_update(l2seg, nwsec_prof);
@@ -598,17 +596,13 @@ end:
 //------------------------------------------------------------------------------
 // Make a clone
 // - Both PI and PD objects cloned. 
+// - Clone will have the lists copied as its just a pointer
 //------------------------------------------------------------------------------
 hal_ret_t
 vrf_make_clone (vrf_t *ten, vrf_t **ten_clone)
 {
     *ten_clone = vrf_alloc_init();
     memcpy(*ten_clone, ten, sizeof(vrf_t));
-
-    // After clone always reset lists
-    dllist_reset(&(*ten_clone)->l2seg_list_head);
-    dllist_reset(&(*ten_clone)->ep_list_head);
-    dllist_reset(&(*ten_clone)->session_list_head);
 
     pd::pd_vrf_make_clone(ten, *ten_clone);
 
@@ -646,9 +640,6 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("pi-vrf:{}:update commit CB {}",
                     __FUNCTION__, vrf->vrf_id);
-
-    // move lists to clone
-    dllist_move(&vrf_clone->l2seg_list_head, &vrf->l2seg_list_head);
 
     // update clone with new attrs
     if (app_ctxt->nwsec_prof_change) {
@@ -692,7 +683,7 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                       __FUNCTION__, ret);
     }
 
-    // Free PI
+    // Free PI. Make sure the lists copied into clone are untouched
     vrf_free(vrf);
 end:
     return ret;
@@ -706,11 +697,10 @@ hal_ret_t
 vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
+    pd::pd_vrf_args_t           pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    vrf_t                    *vrf = NULL;
-    // vrf_update_app_ctxt_t    *app_ctxt = NULL;
+    vrf_t                       *vrf = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf{}:invalid cfg_ctxt", __FUNCTION__);
@@ -736,8 +726,8 @@ vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
                       __FUNCTION__, ret);
     }
 
-    // Free PI
-    vrf_free(vrf);
+    // Free Clone
+    vrf_cleanup(vrf);
 end:
 
     return ret;
@@ -932,11 +922,11 @@ vrf_lookup_key_or_handle (const VrfKeyHandle& kh)
 hal_ret_t
 vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    vrf_t                    *vrf = NULL;
+    hal_ret_t                   ret         = HAL_RET_OK;
+    pd::pd_vrf_args_t           pd_vrf_args = { 0 };
+    dllist_ctxt_t               *lnode      = NULL;
+    dhl_entry_t                 *dhl_entry  = NULL;
+    vrf_t                       *vrf        = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -1057,10 +1047,10 @@ validate_vrf_delete (vrf_t *vrf)
     hal_ret_t   ret = HAL_RET_OK;
 
     // check for no presence of l2segs
-    if (dllist_count(&vrf->l2seg_list_head)) {
+    if (vrf->l2seg_list->num_elems()) {
         ret = HAL_RET_OBJECT_IN_USE;
         HAL_TRACE_ERR("pi-vrf:{}:l2segs still referring:", __FUNCTION__);
-        hal_print_handles_list(&vrf->l2seg_list_head);
+        hal_print_handles_block_list(vrf->l2seg_list);
     }
 
     return ret;
@@ -1135,30 +1125,26 @@ hal_ret_t
 vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    hal_handle_id_list_entry_t  *entry = NULL;
-
+    
     if (vrf == NULL || l2seg == NULL) {
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    // Allocate the entry
-    entry = (hal_handle_id_list_entry_t *)g_hal_state->
-        hal_handle_id_list_entry_slab()->alloc();
-    if (entry == NULL) {
-        ret = HAL_RET_OOM;
+    vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
+    ret = vrf->l2seg_list->insert(&l2seg->hal_handle);
+    vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to insert into vrf's l2seg list. ret:{}",
+                      __FUNCTION__, ret);
         goto end;
     }
-    entry->handle_id = l2seg->hal_handle;
-
-    vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
-    // Insert into the list
-    utils::dllist_add(&vrf->l2seg_list_head, &entry->dllist_ctxt);
-    vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
     HAL_TRACE_DEBUG("pi-vrf:{}:add vrf => l2seg, {} => {}, ret:{}",
-                    __FUNCTION__, vrf->vrf_id, l2seg->seg_id, ret);
+                    __FUNCTION__, vrf ? vrf->vrf_id : 0, 
+                    l2seg ? l2seg->seg_id : 0, ret);
+
     return ret;
 }
 
@@ -1168,25 +1154,25 @@ end:
 hal_ret_t
 vrf_del_l2seg (vrf_t *vrf, l2seg_t *l2seg)
 {
-    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    dllist_ctxt_t               *curr, *next;
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (vrf == NULL || l2seg == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
     vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &vrf->l2seg_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        if (entry->handle_id == l2seg->hal_handle) {
-            // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
-            // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-            ret = HAL_RET_OK;
-        }
-    }
+    ret = vrf->l2seg_list->remove(&l2seg->hal_handle);
     vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to remove from vrf's l2seg list. ret:{}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
 
     HAL_TRACE_DEBUG("pi-vrf:{}:del vrf =/=> l2seg, {} =/=> {}, ret:{}",
                     __FUNCTION__, vrf->vrf_id, l2seg->seg_id, ret);
+end:
     return ret;
 }
 
