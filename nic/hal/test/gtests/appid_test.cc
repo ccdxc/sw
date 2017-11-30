@@ -692,7 +692,8 @@ TEST_F(appid_test, execute_flow_miss) {
 //    hal::app_redir::init();
 //    memset(&ctx, 0, sizeof(ctx));
     rxhdr.lif = hal::SERVICE_LIF_END; //hal::SERVICE_LIF_APP_REDIR;
-    ctx.init(&rxhdr, (uint8_t*) sample_syn1, sample_syn1_size, nullptr, nullptr);
+    ctx.init(&rxhdr, (uint8_t*) sample_syn1, sample_syn1_size,
+             nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
 //    ctx.set_appid_state(hal::APPID_STATE_NOT_NEEDED);
@@ -720,7 +721,8 @@ TEST_F(appid_test, execute_flow_hit) {
 //    hal::app_redir::init();
 //    memset(&ctx, 0, sizeof(ctx));
     rxhdr.lif = hal::SERVICE_LIF_END; //hal::SERVICE_LIF_APP_REDIR;
-    ctx.init(&rxhdr, (uint8_t*) sample_req1, sample_req1_size, nullptr, nullptr);
+    ctx.init(&rxhdr, (uint8_t*) sample_req1, sample_req1_size,
+             nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
     ctx.appid_info().state_ = hal::APPID_STATE_IN_PROGRESS;
@@ -746,7 +748,8 @@ TEST_F(appid_test, execute_flow_complete) {
     redir_headers_init((pen_app_redir_header_v1_full_t*)sample_syn1,
                        sample_syn1+PEN_RAW_REDIR_HEADER_V1_FULL_SIZE);
     rxhdr.lif = hal::SERVICE_LIF_END; //hal::SERVICE_LIF_APP_REDIR;
-    ctx.init(&rxhdr, (uint8_t*) sample_syn1, sample_syn1_size, nullptr, nullptr);
+    ctx.init(&rxhdr, (uint8_t*) sample_syn1, sample_syn1_size,
+             nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
     ctx.appid_info().state_ = hal::APPID_STATE_NEEDED;
@@ -762,7 +765,8 @@ TEST_F(appid_test, execute_flow_complete) {
     redir_headers_init((pen_app_redir_header_v1_full_t*)sample_req1,
                        sample_req1+PEN_RAW_REDIR_HEADER_V1_FULL_SIZE);
     rxhdr.lif = hal::SERVICE_LIF_END; //hal::SERVICE_LIF_APP_REDIR;
-    ctx.init(&rxhdr, (uint8_t*) sample_req1, sample_req1_size, nullptr, nullptr);
+    ctx.init(&rxhdr, (uint8_t*) sample_req1, sample_req1_size,
+             nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
     rc = hal::app_redir::exec_appid_continue(ctx);
@@ -790,7 +794,8 @@ void appid_test_transaction(appid_test_transaction_t& trans)
     for (uint32_t i = 0; i < trans.pkt_count; i++) {
         uint32_t pkt_len = flow_key_and_pkt_init(&flow_key, pkt, trans.pkts[i],
 						 trans.sport, trans.dport);
-        ctx.init(&rxhdr, pkt, pkt_len, nullptr, nullptr);
+        ctx.init(&rxhdr, pkt, pkt_len,
+                 nullptr, nullptr, nullptr, 0);
         ctx.set_key(flow_key);
 
         if (i == 0) {
@@ -838,7 +843,8 @@ TEST_F(appid_test, execute_dns_flow) {
     redir_headers_init((pen_app_redir_header_v1_full_t*)dns_req1,
                        dns_req1+PEN_RAW_REDIR_HEADER_V1_FULL_SIZE);
     rxhdr.lif = hal::SERVICE_LIF_END; //hal::SERVICE_LIF_APP_REDIR;
-    ctx.init(&rxhdr, (uint8_t*) dns_req1, dns_req1_size, nullptr, nullptr);
+    ctx.init(&rxhdr, (uint8_t*) dns_req1, dns_req1_size,
+             nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
     ctx.appid_info().state_ = hal::APPID_STATE_NEEDED;
@@ -854,7 +860,8 @@ TEST_F(appid_test, execute_dns_flow) {
     redir_headers_init((pen_app_redir_header_v1_full_t*)dns_resp1,
                        dns_resp1+PEN_RAW_REDIR_HEADER_V1_FULL_SIZE);
     rxhdr.lif = hal::SERVICE_LIF_END; //hal::SERVICE_LIF_APP_REDIR;
-    ctx.init(&rxhdr, (uint8_t*) dns_resp1, dns_resp1_size, nullptr, nullptr);
+    ctx.init(&rxhdr, (uint8_t*) dns_resp1, dns_resp1_size,
+             nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
     ctx.appid_info().state_ = hal::APPID_STATE_IN_PROGRESS;
