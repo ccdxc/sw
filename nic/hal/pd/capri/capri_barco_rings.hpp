@@ -10,11 +10,10 @@ namespace pd {
 typedef struct barco_asym_descriptor_s {
     uint64_t                input_list_addr;
     uint64_t                output_list_addr;
-    uint8_t                 key_descr_idx_lo;
-    uint16_t                key_descr_idx_hi;
     uint64_t                status_addr;
     uint32_t                opaque_tag_value;
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    uint32_t                key_descr_idx:24;
     uint8_t                 opage_tag_wr_en:1;
     uint8_t                 flag_a:1;
     uint8_t                 flag_b:1;
@@ -24,6 +23,7 @@ typedef struct barco_asym_descriptor_s {
     uint8_t                 flag_b:1;
     uint8_t                 flag_a:1;
     uint8_t                 opage_tag_wr_en:1;
+    uint32_t                key_descr_idx:24;
 #endif
 } __attribute__((__packed__)) barco_asym_descriptor_t;
 

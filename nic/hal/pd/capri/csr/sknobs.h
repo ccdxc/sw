@@ -16,5 +16,6 @@ static inline unsigned long long sknobs_get_value(char *name, unsigned long long
 }
 
 static inline void sknobs_dump(void) { }
+static inline void sknobs_set_value(char *name, unsigned long long value) {}
 
 #endif // _SKNOBS_H_

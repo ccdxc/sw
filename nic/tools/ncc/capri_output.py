@@ -2342,9 +2342,15 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     # fill unused instructions to do NOP - XXX
     # set up the unused meta instr to perform |= 0
     for m in range(mid, max_mid):
-        sram['meta_inst'][mid]['sel']['value'] = meta_ops['nop']
-        sram['meta_inst'][mid]['phv_idx']['value'] = str(0)
-        sram['meta_inst'][mid]['val']['value'] = str(0)
+        sram['meta_inst'][m]['sel']['value'] = meta_ops['nop']
+        sram['meta_inst'][m]['phv_idx']['value'] = str(0)
+        sram['meta_inst'][m]['val']['value'] = str(0)
+    
+
+    for m,used in enumerate(mux_idx_allocator):
+        if used != None:
+            continue
+        sram['mux_idx'][m]['sel']['value'] = str(3) # load offset - Do not access packet
 
     if current_flit != None:
         parser.logger.debug("%s:%s:Flit # %d" % (parser.d.name, nxt_cs.name, current_flit))
@@ -3243,7 +3249,7 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                 for field, attrib in conf.iteritems():
                     if ((field == 'word_size') or (field == 'inst_name') or
                         (field == 'addr_offset') or (field == 'decoder') or
-                        (field == 'is_array')):
+                        (field == 'is_array') or (field == '_width')):
                         continue
                     lsb  = int(attrib['field_lsb'])
                     msb  = int(attrib['field_msb'])
@@ -3261,7 +3267,7 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
             for field, attrib in conf.iteritems():
                 if ((field == 'word_size') or (field == 'inst_name') or
                     (field == 'addr_offset') or (field == 'decoder') or
-                    (field == 'is_array')):
+                    (field == 'is_array') or (field == '_width')):
                     continue
                 try:
                     lsb  = int(attrib['field_lsb'])

@@ -198,8 +198,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     /* Setup Asymmetric Request Descriptor */
     asym_req_descr.input_list_addr = ilist_dma_descr_addr;
     asym_req_descr.output_list_addr = olist_dma_descr_addr;
-    asym_req_descr.key_descr_idx_lo = (uint8_t) (ecc_pm_p256_key_idx & 0xff);
-    asym_req_descr.key_descr_idx_hi = (uint16_t) (ecc_pm_p256_key_idx >> 8);
+    asym_req_descr.key_descr_idx = ecc_pm_p256_key_idx;
     asym_req_descr.status_addr = curr_ptr;
     asym_req_descr.opaque_tag_value = 0;
     asym_req_descr.opage_tag_wr_en = 0;
@@ -513,8 +512,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(uint8_t *p, uint8_t *n,
     /* Setup Asymmetric Request Descriptor */
     asym_req_descr.input_list_addr = ilist_dma_descr_addr;
     asym_req_descr.output_list_addr = olist_dma_descr_addr;
-    asym_req_descr.key_descr_idx_lo = (uint8_t) (ecc_p256_key_idx & 0xff);
-    asym_req_descr.key_descr_idx_hi = (uint16_t) (ecc_p256_key_idx >> 8);
+    asym_req_descr.key_descr_idx = ecc_p256_key_idx;
     asym_req_descr.status_addr = curr_ptr;
     asym_req_descr.opaque_tag_value = 0;
     asym_req_descr.opage_tag_wr_en = 0;
@@ -863,8 +861,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     /* Setup Asymmetric Request Descriptor */
     asym_req_descr.input_list_addr = ilist_dma_descr_addr;
     asym_req_descr.output_list_addr = olist_dma_descr_addr;
-    asym_req_descr.key_descr_idx_lo = (uint8_t) (ecc_p256_key_idx & 0xff);
-    asym_req_descr.key_descr_idx_hi = (uint16_t) (ecc_p256_key_idx >> 8);
+    asym_req_descr.key_descr_idx = ecc_p256_key_idx;
     asym_req_descr.status_addr = curr_ptr;
     asym_req_descr.opaque_tag_value = 0;
     asym_req_descr.opage_tag_wr_en = 0;
@@ -1138,8 +1135,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     /* Setup Asymmetric Request Descriptor */
     asym_req_descr.input_list_addr = ilist_dma_descr_addr;
     asym_req_descr.output_list_addr = olist_dma_descr_addr;
-    asym_req_descr.key_descr_idx_lo = (uint8_t) (ecc_p256_key_idx & 0xff);
-    asym_req_descr.key_descr_idx_hi = (uint16_t) (ecc_p256_key_idx >> 8);
+    asym_req_descr.key_descr_idx = ecc_p256_key_idx;
     asym_req_descr.status_addr = olist_mem_addr + 256;
     asym_req_descr.opaque_tag_value = 0;
     asym_req_descr.opage_tag_wr_en = 0;
@@ -1419,8 +1415,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     /* Setup Asymmetric Request Descriptor */
     asym_req_descr.input_list_addr = ilist_dma_descr_addr;
     asym_req_descr.output_list_addr = olist_dma_descr_addr;
-    asym_req_descr.key_descr_idx_lo = (uint8_t) (ecc_p256_key_idx & 0xff);
-    asym_req_descr.key_descr_idx_hi = (uint16_t) (ecc_p256_key_idx >> 8);
+    asym_req_descr.key_descr_idx = ecc_p256_key_idx;
     asym_req_descr.status_addr = olist_mem_addr + 256;
     asym_req_descr.opaque_tag_value = 0;
     asym_req_descr.opage_tag_wr_en = 0;
@@ -1801,8 +1796,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
     /* Setup Asymmetric Request Descriptor */
     asym_req_descr.input_list_addr = ilist_dma_descr_addr;
     asym_req_descr.output_list_addr = olist_dma_descr_addr;
-    asym_req_descr.key_descr_idx_lo = (uint8_t) (ecc_p256_key_idx & 0xff);
-    asym_req_descr.key_descr_idx_hi = (uint16_t) (ecc_p256_key_idx >> 8);
+    asym_req_descr.key_descr_idx = ecc_p256_key_idx;
     asym_req_descr.status_addr = olist_mem_addr + 256;
     asym_req_descr.opaque_tag_value = 0;
     asym_req_descr.opage_tag_wr_en = 0;
