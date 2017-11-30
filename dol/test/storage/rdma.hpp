@@ -34,7 +34,7 @@ void PostInitiatorRcvBuf1();
 void IncrTargetRcvBufPtr();
 void IncrInitiatorRcvBufPtr();
 
-int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_ptr);
-int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read_buf_ptr);
+int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_ptr, uint64_t slba);
+int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read_buf_ptr, uint64_t slba);
 
 #endif  // _RDMA_HPP_

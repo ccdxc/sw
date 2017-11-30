@@ -473,25 +473,25 @@ int form_write_cmd_with_hbm_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
   return 0;
 }
 
-int form_read_cmd_no_buf(uint8_t *nvme_cmd)
+int form_read_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba)
 {
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   read_cmd->dw0.cid = get_next_cid(); 
   read_cmd->nsid = kDefaultNsid; 
-  read_cmd->slba = get_next_slba();
+  read_cmd->slba = slba;
   read_cmd->dw12.nlb = kDefaultNlb;
 
   return 0;
 }
 
-int form_write_cmd_no_buf(uint8_t *nvme_cmd)
+int form_write_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba)
 {
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   write_cmd->dw0.cid = get_next_cid(); 
   write_cmd->nsid = kDefaultNsid; 
-  write_cmd->slba = get_next_slba();
+  write_cmd->slba = slba;
   write_cmd->dw12.nlb = kDefaultNlb;
 
   return 0;
@@ -2313,13 +2313,19 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr,
   return 0;
 }
 
+// Keep a rolling write data buffer and slba to pair up with read case for comparison
+uint8_t *rolling_write_data_buf = NULL;
+uint64_t rolling_write_slba = 0;
+
 int test_run_rdma_e2e_write() {
   uint16_t ssd_handle = 2; // the SSD handle
   uint8_t *cmd_buf = NULL;
   int rc;
 
+  // Get the SLBA to write to and read from
+  rolling_write_slba = get_next_slba();
 
-  StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf);
+  StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf, rolling_write_slba);
   printf("Started sequencer to PDMA + write command send over ROCE \n");
 
   struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
@@ -2336,6 +2342,9 @@ int test_run_rdma_e2e_write() {
   };
   Poller poll;
   rc = poll(func1);
+
+  // Save the rolling write data buffer
+  rolling_write_data_buf = rdma_get_target_write_data_buf();
 
   // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
   PostTargetRcvBuf1();
@@ -2355,7 +2364,7 @@ int test_run_rdma_e2e_read() {
   int rc;
 
 
-  StartRoceReadSeq(ssd_handle, &cmd_buf, &data_buf);
+  StartRoceReadSeq(ssd_handle, &cmd_buf, &data_buf, rolling_write_slba);
   printf("Started read command send over ROCE \n");
 
   struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
@@ -2385,14 +2394,26 @@ int test_run_rdma_e2e_read() {
     };
 
     rc = poll(func2);
-// Enable this to debug as needed
-#if 1
-    printf("Dumping data buffer which contains NVME read data\n");
-    utils::dump(data_buf);
-    uint8_t *orig_buf = rdma_get_target_write_data_buf();
-    printf("Dumping orig write data buffer %p \n", orig_buf);
-    utils::dump(orig_buf);
-#endif
+
+    // Now compare the contents
+    if (rc >= 0) {
+      if (!rolling_write_data_buf) {
+        printf("No write data buffer for comparison \n");
+      } else {
+        // Enable this to debug as needed
+        //printf("Dumping data buffer which contains NVME read data\n");
+        //utils::dump(data_buf);
+        //printf("Dumping rolling NVME write data buffer\n");
+        //utils::dump(rolling_write_data_buf);
+        if (memcmp(data_buf, rolling_write_data_buf, kDefaultBufSize)) { 
+          printf("Comparison of RDMA read and write buffer failed \n");
+          rc = -1;
+        } else {
+          printf("Comparison of RDMA read and write buffer successful \n");
+          rc = 0;
+        } 
+      }
+    }
   }
 
   // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+

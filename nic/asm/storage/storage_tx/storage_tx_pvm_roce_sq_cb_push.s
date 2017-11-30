@@ -47,7 +47,7 @@ storage_tx_pvm_roce_sq_cb_push_start:
    
    // Increment the p_ndx stored in GPR r6 so that the status WQE descriptor
    // will occupy the next slot
-   addi		r6, r0, 1
+   addi		r6, r6, 1
  
    // Jump to pushing status without checking queue full or updating the table
    // as it has already been done

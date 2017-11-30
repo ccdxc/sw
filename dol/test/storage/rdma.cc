@@ -55,7 +55,7 @@ const uint32_t kR2NDataSize = 4096;
 const uint32_t kR2NDataBufOffset = 4096;
 
 const uint32_t kMaxRDMAKeys = 64;
-const uint32_t kMaxRDMAPTEntries = 64;
+const uint32_t kMaxRDMAPTEntries = 1024;
 const uint32_t kSQType = 0;
 const uint32_t kRQType = 1;
 const uint32_t kCQType = 5;
@@ -513,8 +513,8 @@ void PostTargetRcvBuf1() {
   // Correspondingly size is also lower by the same offset.
   r2n::r2n_buf_t *r2n_buf = (r2n::r2n_buf_t *) target_rcv_buf_ptr_va;
   uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
-  printf("Posting target buffer of size %d wrid %lx \n", 
-         size, host_mem_v2p((void *) &r2n_buf->cmd_buf));
+  printf("Posting target buffer of size %d VA %p wrid %lx \n", 
+         size, (void *) &r2n_buf->cmd_buf, host_mem_v2p((void *) &r2n_buf->cmd_buf));
 
   // Fill the RQ WQE to post the buffer (at the offset)
   utils::write_bit_fields(rqwqe, 64, 8, 1);  // num_sges = 1
@@ -570,8 +570,8 @@ void PostInitiatorRcvBuf1() {
   uint8_t rqwqe[64];
   bzero(rqwqe, 64);
 
-  printf("Posting initiator buffer of size %d wrid %lx \n", 
-         kR2NBufSize, host_mem_v2p((void *) initiator_rcv_buf_ptr_va));
+  printf("Posting initiator buffer of size %d VA %p wrid %lx \n", 
+         kR2NBufSize, (void *) initiator_rcv_buf_ptr_va, host_mem_v2p((void *) initiator_rcv_buf_ptr_va));
 
   // Fill the RQ WQE to post the buffer (at the offset)
   utils::write_bit_fields(rqwqe, 64, 8, 1);  // num_sges = 1
@@ -681,7 +681,7 @@ int GetR2NHbmBuf(uint64_t *pa, uint32_t *size) {
 }
 
 
-int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_ptr) {
+int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_ptr, uint64_t slba) {
   // Increment the LKey at the beginning of each API
   SendBufLKeyIncr();
 
@@ -693,7 +693,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_
 
   // Initialize and form the write command
   r2n::r2n_nvme_be_cmd_buf_init(r2n_buf_va, NULL, 0, ssd_handle, 0, 0, 0, nvme_cmd_ptr);
-  tests::form_write_cmd_no_buf(*nvme_cmd_ptr);
+  tests::form_write_cmd_no_buf(*nvme_cmd_ptr, slba);
 
   // Get the HBM buffer for the write data to be PDMA'ed to before sending over RDMA
   uint64_t r2n_hbm_buf_pa;
@@ -745,7 +745,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_
   return 0;
 }
 
-int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read_buf_ptr) {
+int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read_buf_ptr, uint64_t slba) {
 
   if (!nvme_cmd_ptr || !read_buf_ptr) return -1;
 
@@ -760,7 +760,7 @@ int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read
 
   // Initialize and form the read command
   r2n::r2n_nvme_be_cmd_buf_init(r2n_buf_va, NULL, 0, ssd_handle, 0, 1, 0, nvme_cmd_ptr);
-  tests::form_read_cmd_no_buf(*nvme_cmd_ptr);
+  tests::form_read_cmd_no_buf(*nvme_cmd_ptr, slba);
 
   // Register it with RDMA.
   RdmaMemRegister((void *) r2n_buf_va, r2n_buf_pa, r2n_buf_size, SendBufLKey, 0, false);
@@ -768,7 +768,7 @@ int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read
   // Initialize helper fields
   uint32_t r2n_data_len = sizeof(r2n::r2n_buf_t) - offsetof(r2n::r2n_buf_t, cmd_buf);
   uint8_t *read_data_buf = ((uint8_t *) r2n_buf_va) + kR2NDataBufOffset;
-  memset(read_data_buf, 0x23, kR2NDataSize);
+  memset(read_data_buf, 0, kR2NDataSize);
   *read_buf_ptr = read_data_buf;
 
   // Get the HBM buffer for the write back data for the read command

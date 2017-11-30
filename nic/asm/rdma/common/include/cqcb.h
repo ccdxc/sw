@@ -6,6 +6,7 @@
 #define CQ_RING_ID 	0
 
 #define CQ_P_INDEX  d.ring0.pindex
+#define CQ_P_INDEX_HX  d.{ring0.pindex}.hx
 #define CQ_C_INDEX  d.ring0.cindex
 
 #define CQ_COLOR    d.color
