@@ -12,20 +12,20 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct s4_t0_tcp_tx_k k;
-struct s4_t0_tcp_tx_retx_d d;
+struct s3_t0_tcp_tx_k k;
+struct s3_t0_tcp_tx_retx_d d;
 
 %%
     .align
-    .param          tcp_cc_and_xmit_process_start
+    .param          tcp_cc_and_fra_process_start
     .param          TNMDR_GC_TABLE_BASE
     .param          RNMDR_GC_TABLE_BASE
 
 tcp_retx_process_start:
-table_launch_cc_and_xmit:
+table_launch_cc_and_fra:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                        tcp_cc_and_xmit_process_start, k.common_phv_qstate_addr,
-                        TCP_TCB_CC_AND_XMIT_OFFSET, TABLE_SIZE_512_BITS)
+                        tcp_cc_and_fra_process_start, k.common_phv_qstate_addr,
+                        TCP_TCB_CC_AND_FRA_OFFSET, TABLE_SIZE_512_BITS)
 
     seq             c1, k.common_phv_pending_snd_una_update, 1
     bcf             [c1], tcp_retx_snd_una_update
@@ -44,11 +44,11 @@ table_launch_cc_and_xmit:
 
 
 tcp_retx_enqueue:
-    add             r2, k.to_s4_addr, k.to_s4_offset
-    phvwr           p.to_s5_sesq_desc_addr, k.to_s4_sesq_desc_addr
+    add             r2, k.to_s3_addr, k.to_s3_offset
+    phvwr           p.to_s5_sesq_desc_addr, k.to_s3_sesq_desc_addr
     phvwr           p.to_s5_addr, r2
-    phvwr           p.to_s5_offset, k.to_s4_offset
-    phvwr           p.to_s5_len, k.to_s4_len
+    phvwr           p.to_s5_offset, k.to_s3_offset
+    phvwr           p.to_s5_len, k.to_s3_len
 
     seq             c1, d.retx_tail_desc, r0
     bcf             [!c1], queue_to_tail
@@ -57,20 +57,20 @@ retx_empty:
     /*
      * retx empty, update head/tail/xmit desc and cursors
      */
-    tblwr           d.retx_head_desc, k.to_s4_sesq_desc_addr
-    tblwr           d.retx_tail_desc, k.to_s4_sesq_desc_addr
-    phvwr           p.to_s5_sesq_desc_addr, k.to_s4_sesq_desc_addr
+    tblwr           d.retx_head_desc, k.to_s3_sesq_desc_addr
+    tblwr           d.retx_tail_desc, k.to_s3_sesq_desc_addr
+    phvwr           p.to_s5_sesq_desc_addr, k.to_s3_sesq_desc_addr
     tblwr           d.retx_next_desc, r0
 
-    add             r2, k.to_s4_addr, k.to_s4_offset
+    add             r2, k.to_s3_addr, k.to_s3_offset
 
     tblwr           d.retx_xmit_cursor, r2
-    tblwr           d.retx_head_offset, k.to_s4_offset
-    tblwr           d.retx_head_len, k.to_s4_len
+    tblwr           d.retx_head_offset, k.to_s3_offset
+    tblwr           d.retx_head_len, k.to_s3_len
 
     phvwr           p.to_s5_addr, r2
-    phvwr           p.to_s5_offset, k.to_s4_offset
-    phvwr           p.to_s5_len, k.to_s4_len
+    phvwr           p.to_s5_offset, k.to_s3_offset
+    phvwr           p.to_s5_len, k.to_s3_len
     tblwr           d.retx_snd_una, k.common_phv_snd_una
     sne             c1, k.common_phv_debug_dol_free_rnmdr, r0
     bcf             [c1], free_rnmdr
@@ -83,17 +83,17 @@ queue_to_tail:
      * If retx_tail is not NULL, queue to tail, update tail and return
      */
     add             r1, d.retx_tail_desc, NIC_DESC_ENTRY_NEXT_ADDR_OFFSET
-    memwr.w         r1, k.to_s4_sesq_desc_addr
-    tblwr           d.retx_tail_desc, k.to_s4_sesq_desc_addr
+    memwr.w         r1, k.to_s3_sesq_desc_addr
+    tblwr           d.retx_tail_desc, k.to_s3_sesq_desc_addr
     seq             c1, d.retx_next_desc, r0
-    tblwr.c1        d.retx_next_desc, k.to_s4_sesq_desc_addr
+    tblwr.c1        d.retx_next_desc, k.to_s3_sesq_desc_addr
     nop.e
     nop
 
 
 free_rnmdr:
     // TODO: just for testing, fix this once retx is implemented
-    sub             r3, k.to_s4_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
+    sub             r3, k.to_s3_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
     phvwr           p.ring_entry_descr_addr, r3
     addui           r1, r0, hiword(RNMDR_GC_TABLE_BASE)
     addi            r1, r0, loword(RNMDR_GC_TABLE_BASE)
@@ -107,7 +107,7 @@ free_rnmdr:
 
 free_tnmdr:
     // TODO: just for testing, fix this once retx is implemented
-    sub             r3, k.to_s4_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
+    sub             r3, k.to_s3_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
     phvwr           p.ring_entry_descr_addr, r3
     addui           r1, r0, hiword(TNMDR_GC_TABLE_BASE)
     addi            r1, r0, loword(TNMDR_GC_TABLE_BASE)
@@ -145,9 +145,9 @@ tcp_retx_snd_una_update_free_head:
     // write new descriptor address, offset and length
     tblwr           d.retx_head_desc, d.retx_next_desc
     tblwr           d.retx_next_desc, k.t0_s2s_next_addr
-    tblwr           d.retx_head_offset, k.to_s4_offset
-    tblwr           d.retx_head_len, k.to_s4_len
-    add             r2, k.to_s4_addr, k.to_s4_offset
+    tblwr           d.retx_head_offset, k.to_s3_offset
+    tblwr           d.retx_head_len, k.to_s3_len
+    add             r2, k.to_s3_addr, k.to_s3_offset
     tblwr           d.retx_xmit_cursor, r2
     
     // TODO : this needs to account for MTU

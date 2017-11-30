@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
 	
 struct phv_ p;
-struct s1_t0_read_rx2tx_extra_k k;
-struct s1_t0_read_rx2tx_extra_read_rx2tx_extra_d d;
+struct s1_t0_tcp_tx_k k;
+struct s1_t0_tcp_tx_read_rx2tx_extra_d d;
 	
 %%
     .align
@@ -32,19 +32,22 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     nop.e
     nop
 tcp_tx_start_pending:
-    phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
-    phvwr           p.common_phv_pending_snd_una_update, d.pending_snd_una_update
-
     // Debug : Don't send ack based on dol flag
     seq             c1, k.common_phv_debug_dol_dont_send_ack, 1
-    seq             c2, d.pending_snd_una_update, 1
-    bcf             [c1 & !c2], tcp_tx_rx2tx_extra_end
-    CAPRI_CLEAR_TABLE_VALID(0)
+    seq             c2, k.common_phv_pending_snd_una_update, 1
 
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                        tcp_tx_process_pending_start,
-                        k.common_phv_qstate_addr,
-                        TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
+    /*
+     * For snd_una_update, the next stage is launched by pending stage,
+     * so skip launching the next stage here
+     */
+    phvwri.c1       p.app_header_table0_valid, 0
+    bcf             [c1 | c2], tcp_tx_rx2tx_extra_end
+
+    /*
+     * For pending_ack_send, we need to launch the bubble stage
+     */
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_tx_s2_bubble_start)
+
 tcp_tx_rx2tx_extra_end:
     nop.e
     nop

@@ -117,7 +117,7 @@ def TestCaseVerify(tc):
         return False
 
     # 7. Verify parallel counter
-    if (tcb_cur.debug_stage0_7_thread != 0x11001177):
+    if (tcb_cur.debug_stage0_7_thread != 0xbb1a1177):
         print("parallel counter verification failed")
         return False
 

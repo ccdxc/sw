@@ -11,7 +11,7 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct s2_t1_sesq_consume_k k;
+struct s2_t1_tcp_tx_k k;
 
 %%
     .align

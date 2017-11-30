@@ -28,8 +28,7 @@ NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
 
 SRC_FILES := \
-    $(SRC_DIR)/tcp-rx-s4-bubble.s \
-    $(SRC_DIR)/tcp-fastretx-alert.s \
+    $(SRC_DIR)/tcp-rx-s3-bubble.s \
     $(SRC_DIR)/tcp-rdesc-alloc.s \
     $(SRC_DIR)/tcp-read-idx.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \

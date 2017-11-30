@@ -16,12 +16,12 @@
 #define TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET     128
 #define TCP_TCB_RX_OFFSET               192
 #define TCP_TCB_RTT_OFFSET              256
-#define TCP_TCB_FRA_OFFSET              320
 #define TCP_TCB_RETX_OFFSET             384
 #define TCP_TCB_FC_OFFSET               448
 #define TCP_TCB_WRITE_SERQ_OFFSET       512
 
-#define TCP_TCB_CC_AND_XMIT_OFFSET      576
+#define TCP_TCB_CC_AND_FRA_OFFSET       320
+#define TCP_TCB_XMIT_OFFSET             576
 #define TCP_TCB_TSO_OFFSET              640
 #define TCP_TCB_HEADER_TEMPLATE_OFFSET  704
 #define TCP_TCB_RX_STATS_OFFSET         768

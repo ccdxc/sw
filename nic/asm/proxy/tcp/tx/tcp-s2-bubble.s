@@ -12,14 +12,17 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct s2_t0_pending_k k;
+struct s2_t0_tcp_tx_k k;
 
 %%
     .align
-    .param          tcp_tx_s3_bubble_start
+    .param          tcp_retx_process_start
 
 tcp_tx_s2_bubble_start:
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_tx_s3_bubble_start)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+                        tcp_retx_process_start,
+                        k.common_phv_qstate_addr,
+                        TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
 
     nop.e
     nop

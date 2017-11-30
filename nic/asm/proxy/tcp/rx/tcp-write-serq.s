@@ -11,25 +11,25 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct s6_t0_write_serq_k k;
-struct s6_t0_write_serq_write_serq_d d;
+struct s5_t0_tcp_rx_k k;
+struct s5_t0_tcp_rx_write_serq_d d;
 
 %%
-    .param          tcp_rx_stats_stage7_start
+    .param          tcp_rx_stats_stage_start
     .align
 
     /*
      * Global conditional variables
      * c7 drop packet and don't send to arm
      */
-tcp_rx_write_serq_stage6_start:
+tcp_rx_write_serq_stage_start:
     CAPRI_CLEAR_TABLE0_VALID
-    CAPRI_OPERAND_DEBUG(k.s6_s2s_debug_stage0_3_thread)
-    CAPRI_OPERAND_DEBUG(k.s6_s2s_debug_stage4_7_thread)
-    tblwr       d.debug_stage0_3_thread, k.s6_s2s_debug_stage0_3_thread
-    tblwr       d.debug_stage4_7_thread, k.s6_s2s_debug_stage4_7_thread
+    CAPRI_OPERAND_DEBUG(k.s5_s2s_debug_stage0_3_thread)
+    CAPRI_OPERAND_DEBUG(k.s5_s2s_debug_stage4_7_thread)
+    tblwr       d.debug_stage0_3_thread, k.s5_s2s_debug_stage0_3_thread
+    tblwr       d.debug_stage4_7_thread, k.s5_s2s_debug_stage4_7_thread
     sne         c1, k.common_phv_write_arq, r0
-    seq         c2, k.to_s6_payload_len, r0
+    seq         c2, k.to_s5_payload_len, r0
     setcf       c7, [!c1 & c2]
     seq         c3, k.common_phv_fatal_error, 1
     bcf         [c7 | c3], flow_write_serq_drop
@@ -48,27 +48,27 @@ dma_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
 
     /* Set the DMA_WRITE CMD for data */
-    add         r1, k.to_s6_page, k.s6_s2s_ooo_offset
+    add         r1, k.to_s5_page, k.s5_s2s_ooo_offset
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
     /*
-     * TODO : for SACK case, to_s6_payload_len constitutes the total
+     * TODO : for SACK case, to_s5_payload_len constitutes the total
      * accumulated payload len. We need to pass only the current
      * packet length. For now the DMA works if we pass a larger length
      */
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, k.to_s6_payload_len)
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, k.to_s5_payload_len)
     sne         c1, k.common_phv_ooo_rcv, r0
     bcf         [c1], dma_ooo_process
 
 dma_cmd_descr:
     /* Set the DMA_WRITE CMD for descr */
-    add         r5, k.to_s6_descr, r0
+    add         r5, k.to_s5_descr, r0
     addi        r1, r5, NIC_DESC_ENTRY_0_OFFSET
 
-    phvwr       p.aol_A0, k.{to_s6_page}.dx
+    phvwr       p.aol_A0, k.{to_s5_page}.dx
     addi        r3, r0, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
     phvwr       p.aol_O0, r3.wx
-    phvwr       p.aol_L0, k.{to_s6_payload_len}.wx
+    phvwr       p.aol_L0, k.{to_s5_payload_len}.wx
     phvwr       p.aol_A1, r0
     phvwr       p.aol_O1, r0
     phvwr       p.aol_L1, r0
@@ -87,10 +87,10 @@ dma_cmd_serq_slot:
     CAPRI_OPERAND_DEBUG(d.{serq_pidx}.hx)
     sll         r5, d.{serq_pidx}.hx, NIC_SERQ_ENTRY_SIZE_SHIFT
     /* Set the DMA_WRITE CMD for SERQ slot */
-    add         r1, r5, k.to_s6_xrq_base
+    add         r1, r5, k.to_s5_xrq_base
     // increment serq pi as a part of ringing dorrbell
 
-    phvwr       p.ring_entry_descr_addr, k.to_s6_descr
+    phvwr       p.ring_entry_descr_addr, k.to_s5_descr
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1, ring_entry_descr_addr, ring_entry_descr_addr)
     addi        r7, r7, 1
 dma_cmd_write_rx2tx_shared:
@@ -133,8 +133,8 @@ dma_cmd_start_del_ack_timer:
     tbladd      d.ft_pi, 1
     phvwri      p.dma_cmd5_dma_cmd_addr, CAPRI_FAST_TIMER_ADDR(LIF_TCP)
     // result will be in r3
-    CAPRI_OPERAND_DEBUG(k.s6_s2s_ato)
-    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_FT, k.s6_s2s_ato)
+    CAPRI_OPERAND_DEBUG(k.s5_s2s_ato)
+    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_FT, k.s5_s2s_ato)
     phvwr       p.{db_data2_pid...db_data2_index}, r3.dx
     phvwri      p.dma_cmd5_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(db_data2_pid)
     phvwri      p.dma_cmd5_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(db_data2_index)
@@ -160,7 +160,7 @@ ring_doorbell:
     tbladd      d.{serq_pidx}.hx, 1
 
     CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd6_dma_cmd, LIF_TLS, 0, k.common_phv_fid, 0,
-                                 k.to_s6_xrq_pidx, db_data_pid, db_data_index)
+                                 k.to_s5_xrq_pidx, db_data_pid, db_data_index)
     sne         c1, k.common_phv_l7_proxy_en, r0
     bcf         [c1], flow_write_serq_process_done
     nop
@@ -175,11 +175,11 @@ stats:
     nop
     // Debug: Force increment of atomic stats
 debug_pkts_rcvd_stats_update_start:
-    phvwr       p.to_s7_pkts_rcvd, 1
-    phvwr       p.to_s7_pages_alloced, 1
-    phvwr       p.to_s7_desc_alloced, 1
-    phvwr       p.to_s7_debug_num_phv_to_mem, r7
-    phvwr       p.to_s7_debug_num_pkt_to_mem, 1
+    phvwr       p.to_s6_pkts_rcvd, 1
+    phvwr       p.to_s6_pages_alloced, 1
+    phvwr       p.to_s6_desc_alloced, 1
+    phvwr       p.to_s6_debug_num_phv_to_mem, r7
+    phvwr       p.to_s6_debug_num_pkt_to_mem, 1
     // End debug stats increment, skip regular stats update
     b           tcp_write_serq_stats_end
     nop
@@ -188,7 +188,7 @@ debug_pkts_rcvd_stats_update_start:
 pkts_rcvd_stats_update_start:
     CAPRI_STATS_INC(pkts_rcvd, 8, 1, d.pkts_rcvd)
 pkts_rcvd_stats_update:
-    CAPRI_STATS_INC_UPDATE(1, d.pkts_rcvd, p.to_s7_pkts_rcvd)
+    CAPRI_STATS_INC_UPDATE(1, d.pkts_rcvd, p.to_s6_pkts_rcvd)
 pkts_rcvd_stats_update_end:
 
     sne         c1, k.common_phv_ooo_in_rx_q, r0
@@ -196,29 +196,29 @@ pkts_rcvd_stats_update_end:
 pages_alloced_stats_update_start:
     CAPRI_STATS_INC(pages_alloced, 8, 1, d.pages_alloced)
 pages_alloced_stats_update:
-    CAPRI_STATS_INC_UPDATE(1, d.pages_alloced, p.to_s7_pages_alloced)
+    CAPRI_STATS_INC_UPDATE(1, d.pages_alloced, p.to_s6_pages_alloced)
 pages_alloced_stats_update_end:
 
 desc_alloced_stats_update_start:
     CAPRI_STATS_INC(desc_alloced, 8, 1, d.desc_alloced)
 desc_alloced_stats_update:
-    CAPRI_STATS_INC_UPDATE(1, d.desc_alloced, p.to_s7_desc_alloced)
+    CAPRI_STATS_INC_UPDATE(1, d.desc_alloced, p.to_s6_desc_alloced)
 desc_alloced_stats_update_end:
 
 debug_num_phv_to_mem_stats_update_start:
     CAPRI_STATS_INC(debug_num_phv_to_mem, 8, r7, d.debug_num_phv_to_mem)
 debug_num_phv_to_mem_stats_update:
-    CAPRI_STATS_INC_UPDATE(r7, d.debug_num_phv_to_mem, p.to_s7_debug_num_phv_to_mem)
+    CAPRI_STATS_INC_UPDATE(r7, d.debug_num_phv_to_mem, p.to_s6_debug_num_phv_to_mem)
 debug_num_phv_to_mem_stats_update_end:
 
 debug_num_pkt_to_mem_stats_update_start:
     CAPRI_STATS_INC(debug_num_pkt_to_mem, 8, 1, d.debug_num_pkt_to_mem)
 debug_num_pkt_to_mem_stats_update:
-    CAPRI_STATS_INC_UPDATE(1, d.debug_num_pkt_to_mem, p.to_s7_debug_num_pkt_to_mem)
+    CAPRI_STATS_INC_UPDATE(1, d.debug_num_pkt_to_mem, p.to_s6_debug_num_pkt_to_mem)
 debug_num_pkt_to_mem_stats_update_end:
 tcp_write_serq_stats_end:
 
-    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_stats_stage7_start)
+    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_stats_stage_start)
     nop.e
     nop
 

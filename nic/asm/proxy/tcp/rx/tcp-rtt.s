@@ -10,17 +10,17 @@
 #include "INGRESS_p.h"
     
 struct phv_ p;
-struct s2_t0_tcp_rtt_k k;
-struct s2_t0_tcp_rtt_tcp_rtt_d d;
+struct s2_t0_tcp_rx_k k;
+struct s2_t0_tcp_rx_tcp_rtt_d d;
 
     
 %%
-    .param          tcp_rx_fra_stage3_start
+    .param          tcp_rx_s3_bubble_start
     .align
 tcp_rx_rtt_stage2_start:
 
     CAPRI_CLEAR_TABLE0_VALID
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
 
     sne         c1, k.common_phv_write_arq, r0
     bcf         [c1], flow_rtt_process_done
@@ -223,10 +223,7 @@ tcp_set_rto:
      */
 flow_rtt_process_done:
     
-table_read_FRA:
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_fra_stage3_start,
-                        k.common_phv_qstate_addr, TCP_TCB_FRA_OFFSET,
-                        TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_s3_bubble_start)
     nop.e
     nop
 

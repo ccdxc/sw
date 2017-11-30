@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct s2_t1_read_rnmdr_k k;
-struct s2_t1_read_rnmdr_read_rnmdr_d d;
+struct s2_t1_tcp_rx_k k;
+struct s2_t1_tcp_rx_read_rnmdr_d d;
     
 %%
     .param          tcp_rx_rdesc_alloc_stage_3_start
@@ -21,7 +21,7 @@ struct s2_t1_read_rnmdr_read_rnmdr_d d;
 tcp_rx_read_rnmdr_stage2_start:
 
     CAPRI_CLEAR_TABLE1_VALID
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_1)
+    CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_1)
 
     seq             c1, d.rnmdr_pidx_full, 1
     b.c1            tcp_read_rnmdr_fatal_error

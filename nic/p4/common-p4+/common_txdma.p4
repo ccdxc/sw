@@ -894,6 +894,7 @@ table tx_table_s1_t1 {
     }
     actions {
         tx_table_s1_t1_action;
+        tx_table_s1_t1_action1;
         tx_table_s1_t1_cfg_action;
     }
 }

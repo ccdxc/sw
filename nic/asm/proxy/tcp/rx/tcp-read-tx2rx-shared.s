@@ -20,7 +20,7 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
     .align
 tcp_rx_read_shared_stage0_start:
     CAPRI_CLEAR_TABLE0_VALID
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
     /* Debug instruction */
     tblwr           d.rx_ts, r4
     phvwr           p.common_phv_debug_dol, d.debug_dol
@@ -76,7 +76,7 @@ tcp_rx_read_shared_stage0_start:
     tblwr           d.quick_acks_decr_old, d.quick_acks_decr
     phvwr           p.s1_s2s_quick_acks_decr, r1
 
-    phvwr        p.to_s6_payload_len, k.tcp_app_header_payload_len
+    phvwr        p.to_s5_payload_len, k.tcp_app_header_payload_len
     phvwr        p.s1_s2s_payload_len, k.tcp_app_header_payload_len
     CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)
 

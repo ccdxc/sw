@@ -11,13 +11,15 @@
 #include "INGRESS_p.h"
 	
 struct phv_ p;
-struct s0_t0_read_rx2tx_k k;
-struct s0_t0_read_rx2tx_read_rx2tx_d d;
+struct s0_t0_tcp_tx_k k;
+struct s0_t0_tcp_tx_read_rx2tx_d d;
 	
 %%
     .align
     .param          tcp_tx_read_rx2tx_shared_extra_stage1_start
     .param          tcp_tx_sesq_read_ci_stage1_start
+    .param          tcp_tx_process_pending_start
+    .param          tcp_tx_process_read_xmit_start
 
 tcp_tx_read_rx2tx_shared_process:
     phvwr           p.common_phv_fid, k.p4_txdma_intr_qid
@@ -95,6 +97,9 @@ tcp_tx_launch_asesq:
     nop
 
 tcp_tx_pending_rx2tx:
+    phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
+    phvwr           p.common_phv_pending_snd_una_update, d.pending_snd_una_update
+
     // TODO check pi against ci
     phvwr           p.to_s1_pending_cidx, d.{ci_1}.hx
     phvwri          p.common_phv_pending_rx2tx, 1
@@ -106,6 +111,25 @@ tcp_tx_pending_rx2tx:
     tbladd          d.{ci_1}.hx, 1
     add             r3, r3, 1
     memwr.dx        r4, r3
+
+    /*
+     * pending stage is only to read retx_next_desc currently, which is
+     * only used in retx cleanup, so don't launch the stage if this
+     * is not a snd_una_update
+     */
+    seq             c1, d.pending_snd_una_update, 1
+    b.!c1           tcp_tx_pending_rx2tx_end
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
+                        tcp_tx_process_pending_start,
+                        k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33},
+                        TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS,
+                        tcp_tx_process_read_xmit_start,
+                        k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33},
+                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
+tcp_tx_pending_rx2tx_end:
     nop.e
     nop
 
@@ -126,6 +150,7 @@ tcp_tx_st_expired:
 tcp_tx_ft_expired:
     // TODO check pi against ci
     phvwri          p.common_phv_pending_rx2tx, 1
+    phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
     /* Check if SW PI (ft_pi) == timer pi
      * If TRUE, we want to process this timer, else its an old timer expiry and we can
      * ignore it

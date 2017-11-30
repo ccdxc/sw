@@ -33,7 +33,7 @@ struct s1_t0_tcp_rx_d d;
      * c7 = Drop packet
      */
 tcp_rx_process_stage1_start:
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
 
     /*
      * Adjust quick based on acks sent in tx pipeline
@@ -52,7 +52,7 @@ tcp_rx_process_stage1_start:
      * s2s variable that has different meaning in s0-->s1. May not be 0
      * so overwrite it
      */
-    phvwr           p.s6_s2s_ooo_offset, r0
+    phvwr           p.s5_s2s_ooo_offset, r0
 
 tcp_rx_fast_path:
     /* tcp_store_ts_recent(tp)
@@ -68,7 +68,7 @@ tcp_rcv_nxt_update:
 bytes_rcvd_stats_update_start:
     CAPRI_STATS_INC(bytes_rcvd, 16, k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd)
 bytes_rcvd_stats_update:
-    CAPRI_STATS_INC_UPDATE(k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
+    CAPRI_STATS_INC_UPDATE(k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s6_bytes_rcvd)
 bytes_rcvd_stats_update_end:
 
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
@@ -83,7 +83,7 @@ bytes_rcvd_stats_update_end:
      * is set in the rx2tx shared state. In this case we need an
      * ack to be sent
      */
-    phvwr           p.rx2tx_extra_pending_ack_send, 1
+    phvwr           p.rx2tx_pending_ack_send, 1
 
 tcp_event_data_recv:
     /* Initialize the delayed ack engine if first ack
@@ -142,7 +142,7 @@ delack_engine_init_done:
     slt.c2          c3, d.u.tcp_rx_d.rto, d.u.tcp_rx_d.ato
     /*     tp->fto.ato = tp->fto.rto */
     tblwr.c3        d.u.tcp_rx_d.ato, d.u.tcp_rx_d.rto
-    phvwr.c3        p.s6_s2s_ato, d.u.tcp_rx_d.rto
+    phvwr.c3        p.s5_s2s_ato, d.u.tcp_rx_d.rto
     /* if (m > tp->fto.rto */
     slt.c2          c4, d.u.tcp_rx_d.rto, r1
     bal.c2          r7, tcp_incr_quickack
@@ -274,7 +274,7 @@ fast_tcp_snd_una_update:
 
     phvwr           p.common_phv_process_ack_flag, r5
     phvwr.c1        p.common_phv_pending_txdma, 1
-    phvwr.c1        p.rx2tx_extra_pending_snd_una_update, 1
+    phvwr.c1        p.rx2tx_pending_snd_una_update, 1
 fast_tcp_in_ack_event:
      tblwr          d.u.tcp_rx_d.rcv_tstamp, r4
      jr             r7
@@ -424,7 +424,7 @@ tcp_snd_una_update:
      * and in FreeBSD. NetBSD's one is even worse.) is wrong.
      */
     phvwr           p.common_phv_pending_txdma, 1
-    phvwr           p.rx2tx_extra_pending_snd_una_update, 1
+    phvwr           p.rx2tx_pending_snd_una_update, 1
 tcp_ack_update_window:
     /* r2 contains nwin */
     /* nwin = cp->window */
@@ -617,7 +617,7 @@ tcp_incr_quickack:
 
     tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
     jr              r7
-    phvwr           p.s6_s2s_ato, TCP_ATO_MIN
+    phvwr           p.s5_s2s_ato, TCP_ATO_MIN
 
 /* Restart timer after forward progress on connection.
  * RFC2988 recommends to restart timer to now+rto.
@@ -681,7 +681,7 @@ tcp_enter_quickack_mode:
     tblwr           d.u.tcp_rx_d.pingpong, r0
     phvwr           p.common_phv_pingpong, d.u.tcp_rx_d.pingpong
     tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
-    phvwr           p.s6_s2s_ato, TCP_ATO_MIN
+    phvwr           p.s5_s2s_ato, TCP_ATO_MIN
     sne             c4, r7, r0
     jr.c4           r7
     add             r7, r0, r0
@@ -776,7 +776,7 @@ tcp_queue_rcv:
     sll             r3, r3, TCP_OOO_CELL_SIZE_SHIFT
     slt             c1, r1, r3
     add.c1          r1, r3, r0
-    phvwr           p.to_s6_payload_len, r1
+    phvwr           p.to_s5_payload_len, r1
     tbladd          d.u.tcp_rx_d.rcv_nxt, r1
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.common_phv_ooo_in_rx_q, 1
@@ -807,7 +807,7 @@ tcp_queue_rcv:
 ooo_bytes_rcvd_stats_update_start:
     CAPRI_STATS_INC(bytes_rcvd, 16, r1, d.u.tcp_rx_d.bytes_rcvd)
 ooo_bytes_rcvd_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
+    CAPRI_STATS_INC_UPDATE(r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s6_bytes_rcvd)
     b               bytes_rcvd_stats_update_end
     setcf           c6, [c0]
 
@@ -853,7 +853,7 @@ ooo_received:
 
     fsetv           r5, d.u.tcp_rx_d.ooo_rcv_bitmap, r4, r3
     tblwr           d.u.tcp_rx_d.ooo_rcv_bitmap, r5
-    phvwr           p.s6_s2s_ooo_offset, r1
+    phvwr           p.s5_s2s_ooo_offset, r1
     tblwr           d.u.tcp_rx_d.ooo_in_rx_q, 1
     b               flow_rx_process_done
     phvwr           p.common_phv_ooo_rcv, 1

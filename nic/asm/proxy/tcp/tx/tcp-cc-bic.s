@@ -12,8 +12,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct s5_t0_tcp_tx_k k;
-struct s5_t0_tcp_tx_cc_and_xmit_d d;
+struct s4_t0_tcp_tx_k k;
+struct s4_t0_tcp_tx_cc_and_fra_d d;
 
 %%
 
@@ -36,7 +36,7 @@ tcp_is_cwnd_limited:
     add             r2, r0, d.max_packets_out, 2
     slt             c2, d.snd_cwnd, r2
 
-    sne.!c1         c2, d.is_cwnd_limited, r0
+    sne.!c1         c2, k.to_s4_is_cwnd_limited, r0
 
     /*
      *   if (!tcp_is_cwnd_limited(sk))

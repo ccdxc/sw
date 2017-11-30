@@ -9,8 +9,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct s3_t3_l7_rdesc_alloc_k k;
-struct s3_t3_l7_rdesc_alloc_l7_rdesc_alloc_d d;
+struct s3_t3_tcp_rx_k k;
+struct s3_t3_tcp_rx_l7_rdesc_alloc_d d;
 
 %%
     .align
@@ -20,7 +20,7 @@ tcp_rx_l7_rdesc_alloc_stage_3_start:
 
     CAPRI_OPERAND_DEBUG(d.desc)
     sne             c1, k.common_phv_ooo_rcv, r0
-    phvwr.c1        p.to_s5_l7_descr, d.desc
-    phvwr.e         p.s6_t2_s2s_l7_descr, d.desc
+    phvwr.c1        p.to_s4_l7_descr, d.desc
+    phvwr.e         p.s5_t2_s2s_l7_descr, d.desc
     nop
 

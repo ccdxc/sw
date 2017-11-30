@@ -37,7 +37,9 @@
         rto                             : 16                    ;\
         pending_ft_clear                : 1                     ;\
         pending_ft_reset                : 1                     ;\
-        pad1_rx2tx                      : 30                    ;
+        pending_ack_send                : 1                     ;\
+        pending_snd_una_update          : 1                     ;\
+        pad1_rx2tx                      : 28                    ;
 
 
 #define RX2TX_SHARED_EXTRA_STATE \
@@ -63,8 +65,6 @@
         ca_state                        : 8                     ;\
         ecn_flags                       : 8                     ;\
         num_sacks                       : 8                     ;\
-        pending_ack_send                : 1                     ;\
-        pending_snd_una_update          : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
         pending_sync_mss                : 1                     ;\
         pending_tso_keepalive           : 1                     ;\
@@ -84,7 +84,7 @@
         pingpong                        : 1                     ;\
         pending_reset_backoff           : 1                     ;\
         dsack                           : 1                     ;\
-        pad_rx2tx_extra                 : 11                    ;\
+        pad_rx2tx_extra                 : 13                    ;\
 
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
@@ -95,10 +95,7 @@
         retx_head_offset                : 16                    ;\
         retx_head_len                   : 16                    ;\
 
-#define TCB_CC_AND_XMIT_SHARED_STATE \
-        snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
-        xmit_cursor_addr                : HBM_ADDRESS_WIDTH     ;\
-        xmit_next_desc                  : HBM_ADDRESS_WIDTH     ;\
+#define TCB_CC_AND_FRA_SHARED_STATE \
         prr_out                 : 16;   \
         prr_delivered           : 16;   \
         last_time               : 32;   \
@@ -113,8 +110,13 @@
         tune_reordering         : 8;    \
         sack_reordering         : 8;    \
         max_packets_out         : 8;    \
-        is_cwnd_limited         : 8;    \
-        delayed_ack             : 8;    \
+        ca_state                : 8;    \
+        delayed_ack             : 8;
+
+#define TCB_XMIT_SHARED_STATE \
+        snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
+        xmit_cursor_addr                : HBM_ADDRESS_WIDTH     ;\
+        xmit_next_desc                  : HBM_ADDRESS_WIDTH     ;\
         xmit_offset                     : 16                    ;\
         xmit_len                        : 16                    ;\
         packets_out                     : 16                    ;\
@@ -123,7 +125,7 @@
         retrans_out                     : 16                    ;\
         lost_out                        : 16                    ;\
         flag                            : 16                    ;\
-        ca_state                        : 8                     ;\
+        is_cwnd_limited                 : 8                     ;\
         rto_backoff                     : 4                     ;\
         pending_ack_tx                  : 1                     ;\
         pending_delayed_ack_tx          : 1                     ;\
@@ -146,17 +148,20 @@ retx_snd_una, retx_head_desc, retx_tail_desc,\
 retx_xmit_cursor, retx_next_desc,\
 retx_head_offset, retx_head_len
 
-#define CC_AND_XMIT_SHARED_PARAMS \
-snd_nxt,\
-xmit_cursor_addr, xmit_next_desc, prr_out,\
+#define CC_AND_FRA_SHARED_PARAMS \
+prr_out,\
 prr_delivered, last_time, epoch_start, cnt,\
 last_max_cwnd, snd_cwnd_cnt, snd_cwnd_clamp,\
 snd_cwnd, prior_cwnd, last_cwnd,\
 tune_reordering, sack_reordering,\
-max_packets_out, is_cwnd_limited, delayed_ack,\
+max_packets_out, ca_state, delayed_ack
+
+#define XMIT_SHARED_PARAMS \
+snd_nxt,\
+xmit_cursor_addr, xmit_next_desc,\
 xmit_offset, xmit_len,\
 packets_out, sacked_out, rto_pi, retrans_out, lost_out,\
-flag, ca_state, rto_backoff,\
+is_cwnd_limited, flag, ca_state, rto_backoff,\
 pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad
 
 #define TSO_PARAMS                                                        \
@@ -174,40 +179,42 @@ quick_acks_decr
     modify_field(retx_d.retx_head_offset, retx_head_offset); \
     modify_field(retx_d.retx_head_len, retx_head_len);
 
-#define GENERATE_CC_AND_XMIT_SHARED_D \
-    modify_field(cc_and_xmit_d.snd_nxt, snd_nxt); \
-    modify_field(cc_and_xmit_d.xmit_cursor_addr, xmit_cursor_addr); \
-    modify_field(cc_and_xmit_d.xmit_next_desc, xmit_next_desc); \
-    modify_field(cc_and_xmit_d.prr_out, prr_out); \
-    modify_field(cc_and_xmit_d.prr_delivered, prr_delivered); \
-    modify_field(cc_and_xmit_d.last_time, last_time); \
-    modify_field(cc_and_xmit_d.epoch_start, epoch_start); \
-    modify_field(cc_and_xmit_d.cnt, cnt); \
-    modify_field(cc_and_xmit_d.last_max_cwnd, last_max_cwnd); \
-    modify_field(cc_and_xmit_d.snd_cwnd_cnt, snd_cwnd_cnt); \
-    modify_field(cc_and_xmit_d.snd_cwnd_clamp, snd_cwnd_clamp); \
-    modify_field(cc_and_xmit_d.snd_cwnd, snd_cwnd); \
-    modify_field(cc_and_xmit_d.prior_cwnd, prior_cwnd); \
-    modify_field(cc_and_xmit_d.last_cwnd, last_cwnd); \
-    modify_field(cc_and_xmit_d.tune_reordering, tune_reordering); \
-    modify_field(cc_and_xmit_d.sack_reordering, sack_reordering); \
-    modify_field(cc_and_xmit_d.max_packets_out, max_packets_out); \
-    modify_field(cc_and_xmit_d.is_cwnd_limited, is_cwnd_limited); \
-    modify_field(cc_and_xmit_d.delayed_ack, delayed_ack); \
-    modify_field(cc_and_xmit_d.xmit_offset, xmit_offset); \
-    modify_field(cc_and_xmit_d.xmit_len, xmit_len); \
-    modify_field(cc_and_xmit_d.packets_out, packets_out); \
-    modify_field(cc_and_xmit_d.sacked_out, sacked_out); \
-    modify_field(cc_and_xmit_d.rto_pi, rto_pi); \
-    modify_field(cc_and_xmit_d.retrans_out, retrans_out); \
-    modify_field(cc_and_xmit_d.lost_out, lost_out); \
-    modify_field(cc_and_xmit_d.flag, flag); \
-    modify_field(cc_and_xmit_d.ca_state, ca_state); \
-    modify_field(cc_and_xmit_d.rto_backoff, rto_backoff); \
-    modify_field(cc_and_xmit_d.pending_ack_tx, pending_ack_tx); \
-    modify_field(cc_and_xmit_d.pending_delayed_ack_tx, pending_delayed_ack_tx); \
-    modify_field(cc_and_xmit_d.pending_tso_data, pending_tso_data);\
-    modify_field(cc_and_xmit_d.pending_pad, pending_pad);\
+#define GENERATE_CC_AND_FRA_SHARED_D \
+    modify_field(cc_and_fra_d.prr_out, prr_out); \
+    modify_field(cc_and_fra_d.prr_delivered, prr_delivered); \
+    modify_field(cc_and_fra_d.last_time, last_time); \
+    modify_field(cc_and_fra_d.epoch_start, epoch_start); \
+    modify_field(cc_and_fra_d.cnt, cnt); \
+    modify_field(cc_and_fra_d.last_max_cwnd, last_max_cwnd); \
+    modify_field(cc_and_fra_d.snd_cwnd_cnt, snd_cwnd_cnt); \
+    modify_field(cc_and_fra_d.snd_cwnd_clamp, snd_cwnd_clamp); \
+    modify_field(cc_and_fra_d.snd_cwnd, snd_cwnd); \
+    modify_field(cc_and_fra_d.prior_cwnd, prior_cwnd); \
+    modify_field(cc_and_fra_d.last_cwnd, last_cwnd); \
+    modify_field(cc_and_fra_d.tune_reordering, tune_reordering); \
+    modify_field(cc_and_fra_d.sack_reordering, sack_reordering); \
+    modify_field(cc_and_fra_d.max_packets_out, max_packets_out); \
+    modify_field(cc_and_fra_d.ca_state, ca_state); \
+    modify_field(cc_and_fra_d.delayed_ack, delayed_ack); \
+
+#define GENERATE_XMIT_SHARED_D \
+    modify_field(xmit_d.snd_nxt, snd_nxt); \
+    modify_field(xmit_d.xmit_cursor_addr, xmit_cursor_addr); \
+    modify_field(xmit_d.xmit_next_desc, xmit_next_desc); \
+    modify_field(xmit_d.xmit_offset, xmit_offset); \
+    modify_field(xmit_d.xmit_len, xmit_len); \
+    modify_field(xmit_d.packets_out, packets_out); \
+    modify_field(xmit_d.sacked_out, sacked_out); \
+    modify_field(xmit_d.rto_pi, rto_pi); \
+    modify_field(xmit_d.retrans_out, retrans_out); \
+    modify_field(xmit_d.lost_out, lost_out); \
+    modify_field(xmit_d.flag, flag); \
+    modify_field(xmit_d.is_cwnd_limited, is_cwnd_limited); \
+    modify_field(xmit_d.rto_backoff, rto_backoff); \
+    modify_field(xmit_d.pending_ack_tx, pending_ack_tx); \
+    modify_field(xmit_d.pending_delayed_ack_tx, pending_delayed_ack_tx); \
+    modify_field(xmit_d.pending_tso_data, pending_tso_data);\
+    modify_field(xmit_d.pending_pad, pending_pad);\
 
 #define GENERATE_TSO_SHARED_D                                                                               \
     modify_field(tso_d.source_lif, source_lif); \

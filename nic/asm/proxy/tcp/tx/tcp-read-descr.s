@@ -12,8 +12,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct s3_t0_read_descr_k k;
-struct s3_t0_read_descr_read_descr_d d;
+struct s2_t0_tcp_tx_k k;
+struct s2_t0_tcp_tx_read_descr_d d;
 
 %%
     .align
@@ -24,9 +24,9 @@ tcp_tx_read_descr_start:
     CAPRI_OPERAND_DEBUG(d.A0)
     CAPRI_OPERAND_DEBUG(d.O0)
     CAPRI_OPERAND_DEBUG(d.L0)
-    phvwr           p.to_s4_addr, d.{A0}.dx
-    phvwr           p.to_s4_offset, d.{O0}.wx
-    phvwr           p.to_s4_len, d.{L0}.wx
+    phvwr           p.to_s3_addr, d.{A0}.dx
+    phvwr           p.to_s3_offset, d.{O0}.wx
+    phvwr           p.to_s3_len, d.{L0}.wx
     phvwr           p.t0_s2s_next_addr, d.{next_addr}.dx
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
