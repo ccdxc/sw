@@ -69,7 +69,7 @@
         {
             "name"      : "proxy",
             "provider"  : "pensando.io",
-            "lib"       : "dol/libproxy.so",
+            "lib"       : "dol/libproxyplugin.so",
             "init_func" : "proxy_plugin_init",
             "exit_func" : "proxy_exit",
             "auto_load" : "true",
@@ -84,7 +84,7 @@
         {
             "name"      : "app-redir",
             "provider"  : "pensando.io",
-            "lib"       : "dol/libapp_redir.so",
+            "lib"       : "app_redir/libapp_redir.so",
             "init_func" : "app_redir_init",
             "exit_func" : "app_redir_exit",
             "thread_init_func" : "app_redir_thread_init",
