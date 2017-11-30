@@ -44,17 +44,21 @@ def TestCaseVerify(tc):
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
+    # Read CQ post state
+    rs.lqp.rq_cq.qstate.Read()
+    tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+
     ############     RQ VALIDATIONS #################
     # verify that e_psn is incremented by 3
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
         return False
 
-    # verify that pindex is incremented by 2 - one by the user posting... and one by immdt as dbell
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'p_index0', ring0_mask,  2):
+    # verify that pindex is set to that of CQ (send imm as dbell behavior)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'p_index0', tc.pvtdata.rq_cq_post_qstate.p_index0):
         return False
 
-    # verify that cindex is incremented by 2 - one by the user posting... and one by immdt as dbell
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index0', ring0_mask,  2):
+    # verify that cindex is set to that of CQ (send imm as dbell behavior), cindex catches up to pindex before the test finishes
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'c_index0', tc.pvtdata.rq_cq_post_qstate.p_index0):
         return False
 
     # verify that proxy_cindex is incremented by 1 - immdt as dbell doesn't touch proxy_cindex
