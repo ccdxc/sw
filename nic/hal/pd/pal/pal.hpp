@@ -35,4 +35,7 @@ pal_mem_read(uint64_t addr, uint8_t *data, uint32_t size);
 pal_ret_t
 pal_mem_write(uint64_t addr, uint8_t *data, uint32_t size);
 
+pal_ret_t
+pal_ring_doorbell(uint64_t addr, uint64_t data);
+
 #endif // __PAL_H_

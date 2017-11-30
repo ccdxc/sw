@@ -29,6 +29,7 @@ static std::atomic<bool> g_asic_rw_ready_;
 #define HAL_ASIC_RW_OPERATION_REG_READ               2
 #define HAL_ASIC_RW_OPERATION_REG_WRITE              3
 #define HAL_ASIC_RW_OPERATION_PORT                   4
+#define HAL_ASIC_RW_OPERATION_RING_DOORBELL          5
 
 //------------------------------------------------------------------------------
 // custom struct passed between control thread and asic-rw thread
@@ -305,6 +306,31 @@ asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len, bool blocking)
     return rc;
 }
 
+//------------------------------------------------------------------------------
+// public API for ringing doorbell
+//------------------------------------------------------------------------------
+hal_ret_t
+asic_ring_doorbell (uint64_t addr, uint64_t data, bool blocking)
+{
+    hal_ret_t rc = HAL_RET_OK;
+
+    if (is_asic_rw_thread() == false) {
+        rc = asic_do_write(HAL_ASIC_RW_OPERATION_RING_DOORBELL,
+                           addr, (uint8_t *)&data, sizeof(data), blocking);
+    } else {
+        pal_ret_t prc = pal_ring_doorbell(addr, data);
+        rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    }
+
+    if (rc != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error ringing doorbell addr:{} data:{}", addr, data);
+        HAL_ASSERT(0);
+    }
+
+    return rc;
+}
+
+
 hal_ret_t
 asic_port_cfg (uint32_t port_num,
                uint32_t speed,
@@ -414,6 +440,11 @@ asic_rw_loop (void)
                         rw_entry->port_entry.type,
                         rw_entry->port_entry.num_lanes,
                         rw_entry->port_entry.val);
+                break;
+
+            case HAL_ASIC_RW_OPERATION_RING_DOORBELL:
+                rv = pal_ring_doorbell(rw_entry->addr,
+                                       *(uint64_t *)rw_entry->data);
                 break;
 
             default:

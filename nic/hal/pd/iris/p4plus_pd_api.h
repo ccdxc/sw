@@ -6,7 +6,7 @@
 #define __P4PLUS_PD_API_H__
 
 #include <stdint.h>
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/asic_pd.hpp"
 
 /* PC address offset coming out of stage 0 CB is shifted left by 6 bits as stage0 pc
  * start is assumed to be 64B cacheline aligned
@@ -22,25 +22,29 @@ typedef int p4pd_error_t;
 static inline bool
 p4plus_hbm_write(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
 {
-    return write_mem(addr, data, size_in_bytes);
+    hal_ret_t rv = hal::pd::asic_mem_write(addr, data, size_in_bytes);
+    return rv == HAL_RET_OK ? true : false;
 }
 
 static inline bool
 p4plus_hbm_read(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
 {
-    return read_mem(addr, data, size_in_bytes);
+    hal_ret_t rv = hal::pd::asic_mem_read(addr, data, size_in_bytes);
+    return rv == HAL_RET_OK ? true : false;
 }
 
 static inline bool
 p4plus_reg_read(uint64_t addr, uint32_t& data)
 {
-    return read_reg(addr, data);
+    hal_ret_t rv = hal::pd::asic_reg_read(addr, &data);
+    return rv == HAL_RET_OK ? true : false;
 }
 
 static inline bool
 p4plus_reg_write(uint64_t addr, uint32_t data)
 {
-    return write_reg(addr, data);
+    hal_ret_t rv = hal::pd::asic_reg_write(addr, data);
+    return rv == HAL_RET_OK ? true : false;
 }
 
 #endif

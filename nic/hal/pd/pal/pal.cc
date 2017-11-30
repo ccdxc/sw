@@ -91,3 +91,10 @@ pal_mem_write (uint64_t addr, uint8_t * data, uint32_t size)
     }
     return PAL_RET_OK;
 }
+
+pal_ret_t
+pal_ring_doorbell (uint64_t addr, uint64_t data)
+{
+    step_doorbell(addr, data);
+    return PAL_RET_OK;
+}

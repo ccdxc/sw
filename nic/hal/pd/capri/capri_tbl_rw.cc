@@ -21,7 +21,7 @@
 
 #ifndef P4PD_CLI
 #include "nic/hal/pd/capri/capri_loader.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/asic_pd.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_pic/cap_pict_csr.h"
@@ -1429,8 +1429,8 @@ int capri_hbm_table_entry_write(uint32_t tableid,
 
 
 #ifndef P4PD_CLI
-    write_mem(get_start_offset(tbl_ctx.tablename) + entry_start_addr, 
-              hwentry, (entry_size >> 3));
+    hal::pd::asic_mem_write(get_start_offset(tbl_ctx.tablename) + entry_start_addr, 
+                            hwentry, (entry_size >> 3));
 #endif
 #ifdef HAL_LOG_TBL_UPDATES
     char    buffer[2048];
@@ -1464,8 +1464,8 @@ int capri_hbm_table_entry_read(uint32_t tableid,
     uint64_t entry_start_addr = (index * tbl_ctx.hbm_layout.entry_width);
 
 #ifndef P4PD_CLI
-    read_mem(get_start_offset(tbl_ctx.tablename) + entry_start_addr, hwentry,
-             tbl_ctx.hbm_layout.entry_width);
+    hal::pd::asic_mem_read(get_start_offset(tbl_ctx.tablename) + entry_start_addr,
+                           hwentry, tbl_ctx.hbm_layout.entry_width);
 #endif
     *entry_size = tbl_ctx.hbm_layout.entry_width;
     return (CAPRI_OK);

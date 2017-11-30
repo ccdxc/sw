@@ -41,6 +41,12 @@ hal_ret_t asic_reg_write(uint64_t addr, uint32_t data, bool blocking = true);
 hal_ret_t asic_mem_write(uint64_t addr, uint8_t *data,
                          uint32_t len, bool blocking = true);
 
+//------------------------------------------------------------------------------
+// public API for ringing doorbells.
+//------------------------------------------------------------------------------
+hal_ret_t asic_ring_doorbell(uint64_t addr, uint64_t data,
+                             bool blocking = true);
+
 // starting point for asic read-write thread
 void *asic_rw_start(void *ctxt);
 

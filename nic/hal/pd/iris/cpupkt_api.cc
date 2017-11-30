@@ -461,7 +461,7 @@ cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
 
     HAL_TRACE_DEBUG("Ringing Doorbell with addr: {:#x} data: {:#x}",
                     addr, data);
-    step_doorbell(addr, data);
+    hal::pd::asic_ring_doorbell(addr, data);
     return HAL_RET_OK;
 }
 

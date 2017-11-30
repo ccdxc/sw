@@ -9,7 +9,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include <assert.h>
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/asic_pd.hpp"
 #include <boost/unordered_map.hpp>
 
 /* TODO: Declaring these as globals for now. Figure out usage and define
@@ -141,7 +141,7 @@ capri_load_mpu_programs(const char *handle,
     capri_program_info_t *program_info;
     MpuSymbol *symbol, *param_u, *param_r;
     uint64_t val;
-    bool rv;
+    hal_ret_t rv;
     MpuSymbolTable global_labels;
 
     /* ISA library initialization */
@@ -344,10 +344,10 @@ capri_load_mpu_programs(const char *handle,
        }
 
        /* Write program to HBM */
-       rv = write_mem(program_info[i].base_addr,
-                      (uint8_t *) program_info[i].copy.text.data(),
-                      program_info[i].size);
-       if (rv != true) {
+       rv = hal::pd::asic_mem_write(program_info[i].base_addr,
+                                    (uint8_t *) program_info[i].copy.text.data(),
+                                    program_info[i].size);
+       if (rv != HAL_RET_OK) {
            HAL_TRACE_ERR("HBM program write failed");
            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
        }
