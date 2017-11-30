@@ -2,6 +2,7 @@
 #include "nic/hal/plugins/network/alg/alg_tftp.hpp"
 #include "nic/hal/plugins/network/alg/alg_rpc.hpp"
 #include "nic/hal/plugins/network/alg/alg_utils.hpp"
+#include "nic/hal/plugins/firewall/firewall.hpp"
 
 namespace hal {
 namespace net {
@@ -21,19 +22,21 @@ alg_exec(fte::ctx_t& ctx)
 {
     hal_ret_t          ret = HAL_RET_OK;
     fte::alg_entry_t  *alg_entry = NULL;
+    hal::firewall::firewall_info_t *firewall_info =
+        (hal::firewall::firewall_info_t*)ctx.feature_state(hal::firewall::FTE_FEATURE_FIREWALL);
 
     alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
     if (ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
    
-    HAL_TRACE_DEBUG("ALG Proto: {}", ctx.alg_proto());
-    if (ctx.alg_proto() != nwsec::APP_SVC_NONE) {
+    HAL_TRACE_DEBUG("ALG Proto: {}", firewall_info->alg_proto);
+    if (firewall_info->alg_proto != nwsec::APP_SVC_NONE) {
 
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) 
             alg_entry = alloc_and_init_alg_entry(ctx);
 
-        switch(ctx.alg_proto()) {
+        switch(firewall_info->alg_proto) {
             case nwsec::APP_SVC_TFTP:
                 ret = process_tftp_first_packet(ctx);
                 break;

@@ -7,6 +7,7 @@
 #include "nic/hal/src/session.hpp"
 #include "nic/include/fte_db.hpp"
 #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/plugins/firewall/firewall.hpp"
 
 #define WORD_BYTES   4
 #define ADDR_NETID_BYTES 128
@@ -385,6 +386,8 @@ process_sunrpc_control_flow(fte::ctx_t& ctx)
     hal_ret_t             ret = HAL_RET_OK;
     fte::flow_update_t    flowupd;
     fte::alg_entry_t     *alg_entry = NULL;
+    hal::firewall::firewall_info_t *firewall_info =
+        (hal::firewall::firewall_info_t*)ctx.feature_state(hal::firewall::FTE_FEATURE_FIREWALL);
 
     alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
     if (alg_entry == NULL) {
@@ -392,7 +395,7 @@ process_sunrpc_control_flow(fte::ctx_t& ctx)
         return HAL_RET_ERR;
     }
 
-    if (ctx.alg_proto() == nwsec::APP_SVC_SUN_RPC && \
+    if (firewall_info->alg_proto == nwsec::APP_SVC_SUN_RPC &&  
         ctx.role() == hal::FLOW_ROLE_INITIATOR) {
 
         flowupd.type = fte::FLOWUPD_MCAST_COPY;

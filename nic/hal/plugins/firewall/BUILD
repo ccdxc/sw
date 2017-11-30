@@ -16,3 +16,7 @@ cc_library(
     alwayslink = 1,
 )
 
+cc_library(
+    name = "firewall_includes",
+    hdrs = ["firewall.hpp"],
+)    

@@ -2,6 +2,7 @@
 #include "nic/hal/plugins/network/alg/alg_utils.hpp"
 #include "nic/hal/plugins/network/alg/msrpc_proto_def.hpp"
 #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/plugins/firewall/firewall.hpp"
 
 #define UUID_BYTES (sizeof(uuid_t))
 #define DREP_LENDIAN 0x10
@@ -478,7 +479,9 @@ process_msrpc_control_flow(fte::ctx_t& ctx)
 {
     hal_ret_t             ret = HAL_RET_OK;
     fte::alg_entry_t     *alg_entry = NULL;
-    fte::flow_update_t    flowupd;    
+    fte::flow_update_t    flowupd;
+    hal::firewall::firewall_info_t *firewall_info =
+        (hal::firewall::firewall_info_t*)ctx.feature_state(hal::firewall::FTE_FEATURE_FIREWALL);
 
     alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
     if (alg_entry == NULL) {
@@ -486,7 +489,7 @@ process_msrpc_control_flow(fte::ctx_t& ctx)
         return HAL_RET_ERR;
     }
 
-    if (ctx.alg_proto() == nwsec::APP_SVC_MSFT_RPC) {
+    if (firewall_info->alg_proto == nwsec::APP_SVC_MSFT_RPC) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
 
             alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;

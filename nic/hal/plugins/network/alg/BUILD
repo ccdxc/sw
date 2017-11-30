@@ -9,6 +9,7 @@ cc_library(
     deps = [
         "//nic:gen_includes",
         "//nic/fte",
+        "//nic/hal/plugins/firewall:firewall_includes",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
         "//nic/third-party/spdlog",

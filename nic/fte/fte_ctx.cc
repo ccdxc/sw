@@ -283,7 +283,6 @@ ctx_t::create_session()
  
     cleanup_hal_ = false;
     num_handlers_ = 0;
-    alg_proto_  = nwsec::APP_SVC_NONE;
    
     // read rkey from spec
     if (protobuf_request()) {

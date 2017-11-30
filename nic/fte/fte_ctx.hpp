@@ -545,9 +545,6 @@ public:
     hal::ep_t *sep() const { return sep_; }
     hal::ep_t *dep() const { return dep_; }
 
-    nwsec::ALGName alg_proto() const { return alg_proto_; }
-    void set_alg_proto(nwsec::ALGName proto) { alg_proto_ = proto; }
-
     void* alg_entry() const { return alg_entry_; }
     void set_alg_entry(void* entry) { alg_entry_ = entry; }
 
@@ -557,8 +554,6 @@ public:
 
     app_redir_ctx_t& app_redir() { return app_redir_; }
 
-    bool skip_firewall() const { return skip_firewall_; }
-    void set_skip_firewall(bool val) { skip_firewall_ = val; }
 
     void *feature_state(const std::string &name) {
         return feature_state_pointer(name, feature_state_, feature_state_size_);
@@ -618,9 +613,7 @@ private:
     hal::if_t             *dif_;
     hal::ep_t             *sep_;
     hal::ep_t             *dep_;
-    nwsec::ALGName        alg_proto_;         // ALG Proto to be applied
     void*                 alg_entry_;         // ALG entry in the wildcard table
-    bool                  skip_firewall_;
     app_redir_ctx_t       app_redir_;
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

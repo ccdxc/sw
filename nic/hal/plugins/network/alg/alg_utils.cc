@@ -2,6 +2,7 @@
 #include "nic/include/fte_db.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/hal/plugins/network/alg/alg_utils.hpp"
+#include "nic/hal/plugins/firewall/firewall.hpp"
 
 namespace fte {
 
@@ -17,8 +18,10 @@ std::ostream& operator<<(std::ostream& os, const fte::alg_entry_t& val)
 hal_ret_t
 expected_flow_handler(fte::ctx_t &ctx, fte::expected_flow_t *wentry)
 {
+    hal::firewall::firewall_info_t *firewall_info =
+        (hal::firewall::firewall_info_t*)ctx.feature_state(hal::firewall::FTE_FEATURE_FIREWALL);
     fte::alg_entry_t *entry = (fte::alg_entry_t*)wentry;
-    ctx.set_skip_firewall(entry->skip_firewall);
+    firewall_info->skip_firewall = entry->skip_firewall;
     ctx.set_alg_entry((void *)entry);
     return HAL_RET_OK;
 }
@@ -77,6 +80,8 @@ alg_completion_hdlr (fte::ctx_t& ctx, bool status)
 {
     hal::app_session_t    *app = NULL;
     HAL_TRACE_DEBUG("Invoked ALG Completion Handler status: {}", status);
+    hal::firewall::firewall_info_t *firewall_info =
+        (hal::firewall::firewall_info_t*)ctx.feature_state(hal::firewall::FTE_FEATURE_FIREWALL);
 
     // Insert ALG entry on completion
     if (status) {
@@ -84,7 +89,7 @@ alg_completion_hdlr (fte::ctx_t& ctx, bool status)
             // Todo (Pavithra) -- cleanup during session timeout callback
             app = (hal::app_session_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, 
                                                       sizeof(hal::app_session_t));
-            app->alg_info.alg = ctx.alg_proto();
+            app->alg_info.alg = firewall_info->alg_proto;
             ctx.session()->app_session = app;
         }
         insert_alg_entry(ctx);

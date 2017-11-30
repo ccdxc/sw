@@ -208,19 +208,20 @@ dfw_exec(fte::ctx_t& ctx)
 {
     hal_ret_t                      ret;
     net_dfw_match_result_t    match_rslt;
+    firewall_info_t           *firewall_info = (firewall_info_t*)ctx.feature_state();
 
     // security policy action
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
 
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction
-    HAL_TRACE_DEBUG("Firewall lookup {}", (ctx.skip_firewall())?"skipped":"begin");
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !ctx.skip_firewall()) {
+    HAL_TRACE_DEBUG("Firewall lookup {}", (firewall_info->skip_firewall)?"skipped":"begin");
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !firewall_info->skip_firewall) {
         ret = net_dfw_pol_check_sg_policy(ctx, &match_rslt);
         if (ret == HAL_RET_OK) {
             if (match_rslt.valid) {
                 flowupd.action  = match_rslt.action;
-                ctx.set_alg_proto(match_rslt.alg);
+                firewall_info->alg_proto = match_rslt.alg;
                 //ctx.log         = match_rslt.log;
             } else {
                 // ToDo ret value was ok but match_rslt.valid is 0
