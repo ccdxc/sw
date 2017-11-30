@@ -23,7 +23,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     memset(&pbar, 0, sizeof(pbar));
     memset(&preg, 0, sizeof(preg));
     preg.flags = PCIEHBARREGF_RW;
-    preg.paddr = 0;
+    preg.paddr = 0xc1000000;
     preg.size = 0x1000;
     preg.align = 0;
     pciehbar_add_reg(&pbar, &preg);
@@ -34,15 +34,15 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     /* bar mem64 */
     memset(&pbar, 0, sizeof(pbar));
     memset(&preg, 0, sizeof(preg));
-    preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_TBL);
-    preg.paddr = 0;
+    preg.flags = PCIEHBARREGF_RW;
+    preg.paddr = 0xc1000000;
     preg.size = 0x1000;
     preg.align = 0;
     pciehbar_add_reg(&pbar, &preg);
 
     memset(&preg, 0, sizeof(preg));
-    preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_PBA);
-    preg.paddr = 0;
+    preg.flags = PCIEHBARREGF_RW;
+    preg.paddr = 0xc1000000;
     preg.size = 0x1000;
     preg.align = 0;
     pciehbar_add_reg(&pbar, &preg);
@@ -54,7 +54,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     memset(&pbar, 0, sizeof(pbar));
     memset(&preg, 0, sizeof(preg));
     preg.flags = PCIEHBARREGF_RW;
-    preg.paddr = 0;
+    preg.paddr = 0xc1000000;
     preg.size = 0x10;
     preg.align = 0;
     pciehbar_add_reg(&pbar, &preg);
@@ -74,7 +74,6 @@ init_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
     pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
     pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
-    pciehcfg_setconf_dsn(pcfg, 0x123456789abcdeffULL);
     pciehcfg_setconf_fnn(pcfg, pres->fnn);
 
     pciehcfg_sethdr_type0(pcfg, pbars);
@@ -104,7 +103,7 @@ initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
 pciehdev_t *
 pciehdev_debug_new(const char *name, const pciehdevice_resources_t *pres)
 {
-    pciehdev_t *pdev = pciehdev_new(name, 0);
+    pciehdev_t *pdev = pciehdev_new(name, pres);
     initialize_bars(pdev, pres);
     initialize_cfg(pdev, pres);
     return pdev;

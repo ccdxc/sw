@@ -12,6 +12,7 @@ LIBRARIES = \
 	-lpciehw \
 	-lpciehost \
 	-lcfgspace \
+	-lpal \
 	-lmisc \
 	$(NULL)
 

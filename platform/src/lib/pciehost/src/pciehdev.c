@@ -12,6 +12,7 @@
 #include "misc.h"
 #include "bdf.h"
 #include "pci_ids.h"
+#include "pciehdevices.h"
 #include "pciehdev.h"
 #include "pciehdev_impl.h"
 #include "pciehcfg.h"
@@ -64,6 +65,9 @@ pciehdev_open(pciehdev_params_t *devparams)
     memset(&hwparams, 0, sizeof(hwparams));
     hwparams.inithw = pdevdata->devparams.inithw;
     hwparams.fake_bios_scan = pdevdata->devparams.fake_bios_scan;
+    hwparams.force_notify_cfg = pdevdata->devparams.force_notify_cfg;
+    hwparams.force_notify_bar = pdevdata->devparams.force_notify_bar;
+    hwparams.first_bus = pdevdata->devparams.first_bus;
     if ((r = pciehw_open(&hwparams)) < 0) {
         return r;
     }
@@ -84,14 +88,18 @@ pciehdev_setconf_defaults(pciehdev_t *pdev)
 }
 
 pciehdev_t *
-pciehdev_new(const char *name, const size_t privsz)
+pciehdev_new(const char *name, const pciehdevice_resources_t *pres)
 {
-    pciehdev_t *pdev = pciehsys_zalloc(sizeof(pciehdev_t) + privsz);
+    pciehdev_t *pdev = pciehsys_zalloc(sizeof(pciehdev_t));
     assert(pdev != NULL);
 
     pciehdev_setconf_defaults(pdev);
-    if (privsz) {
-        pdev->priv = pdev + 1;
+    if (pres) {
+        if (pres->lif_valid) {
+            pdev->lif = pres->lif;
+            pdev->lif_valid = pres->lif_valid;
+        }
+        pdev->intrbase = pres->intrbase;
     }
     strncpy0(pdev->name, name, sizeof(pdev->name));
     return pdev;
@@ -180,10 +188,16 @@ int
 pciehdev_finalize(void)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
-    u_int8_t nextbus = 1;
+    u_int8_t nextbus = pdevdata->devparams.first_bus;
 
     if (pdevdata->finalized) {
         return -EALREADY;
+    }
+    if (pdevdata->root == NULL) {
+        pciehdev_t *pbrdn;
+        pdevdata->root = pciehdev_bridgeup_new();
+        pbrdn = pciehdev_bridgedn_new();
+        pciehdev_addchild(pdevdata->root, pbrdn);
     }
     pciehdev_finalize_dev(pdevdata->root, bdf_make(0, 0, 0), &nextbus);
     pciehw_finalize_topology(pdevdata->root);
@@ -223,7 +237,7 @@ pciehdev_get_bars(pciehdev_t *pdev)
 }
 
 int
-pciehdev_add_child(pciehdev_t *pdev, pciehdev_t *pchild)
+pciehdev_addchild(pciehdev_t *pdev, pciehdev_t *pchild)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
     pciehdev_t **ppdev;
@@ -255,8 +269,8 @@ pciehdev_add(pciehdev_t *pdev)
         pdevdata->root = pciehdev_bridgeup_new();
     }
     pbrdn = pciehdev_bridgedn_new();
-    pciehdev_add_child(pdevdata->root, pbrdn);
-    return pciehdev_add_child(pbrdn, pdev);
+    pciehdev_addchild(pdevdata->root, pbrdn);
+    return pciehdev_addchild(pbrdn, pdev);
 }
 
 int
@@ -269,7 +283,7 @@ pciehdev_addfn(pciehdev_t *pdev, pciehdev_t *pfn, const int fnc)
     }
     pciehdev_make_fn0(pdev);
     pciehdev_make_fnn(pfn, fnc);
-    return pciehdev_add_child(pdev, pfn);
+    return pciehdev_addchild(pdev, pfn);
 }
 
 int
@@ -387,6 +401,12 @@ pciehdev_get_bdf(pciehdev_t *pdev)
     return pdev->bdf;
 }
 
+int
+pciehdev_get_lif(pciehdev_t *pdev)
+{
+    return pdev->lif_valid ? pdev->lif : -1;
+}
+
 char *
 pciehdev_get_name(pciehdev_t *pdev)
 {
@@ -399,4 +419,3 @@ pciehdev_get_params(void)
     pciehdev_data_t *pdevdata = pciehdev_get_data();
     return &pdevdata->devparams;
 }
-

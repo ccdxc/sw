@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017, Pensando Systems Inc.
+ */
+
 #include <assert.h>
 #include <sys/types.h>
 
@@ -44,10 +48,6 @@ cfgspace_set_revid(cfgspace_t *cs, const u_int8_t revid)
 }
 
 void
-/*
- * Copyright (c) 2017, Pensando Systems Inc.
- */
-
 cfgspace_set_class(cfgspace_t *cs, const u_int32_t classcode)
 {
     cfgspace_setb(cs, 0x9, classcode);

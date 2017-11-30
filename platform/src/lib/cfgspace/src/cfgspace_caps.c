@@ -66,7 +66,7 @@ cfgspace_linkcap(cfgspace_t *cs, const u_int8_t capaddr)
     } while (cap && --loops);
     assert(loops > 0);
     // Link in new cap at capaddr to last cap in the list.
-    cfgspace_setb(cs, lastcap + 1, capaddr); // lastcap->next = capadr
+    cfgspace_setb(cs, lastcap + 1, capaddr); // lastcap->next = capaddr
 }
 
 /*

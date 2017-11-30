@@ -234,7 +234,7 @@ diff -uprN pciutils-3.5.5-orig/Makefile pciutils-3.5.5/Makefile
 +LIBPCIEDIR = $(PEN_TOP)/gen/$(BUILD_ARCH)/lib
 +LIBPCIE = $(LIBPCIEDIR)/libpciehsvc.a $(LIBPCIEDIR)/libpciehw.a \
 +	  $(LIBPCIEDIR)/libpciehost.a $(LIBPCIEDIR)/libcfgspace.a \
-+	  $(LIBPCIEDIR)/libmisc.a
++	  $(LIBPCIEDIR)/libpal.a $(LIBPCIEDIR)/libmisc.a
 +lspci: LDLIBS+=$(LIBPCIE)
 +lspci: $(LIBPCIE)
 +setpci: LDLIBS+=$(LIBPCIE)

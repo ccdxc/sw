@@ -4,12 +4,15 @@
 
 LIBRARY = libpciehdevices.a libpciehdevices.so
 SOURCES = \
-	enet.c \
+	eth.c \
 	nvme.c \
 	debug.c \
+	utils.c \
 	$(NULL)
 
 LCFLAGS = \
+	-I $(ASIC_ROOT)/capri/model/cap_top \
+	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
 	-I ../../../../include/common \
 	-I ../../include \
 	-I ../../pciehost/include \

@@ -156,6 +156,11 @@ include $(TOPDIR)/make/Makefile-ARCH-$(BUILD_ARCH).inc
 #
 BUILD_OS := $(shell uname)
 
+#
+# Set ASIC_ROOT for access to asic header files
+#
+ASIC_ROOT := $(TOPDIR)/../nic/asic
+
 # ================
 
 #
@@ -179,7 +184,11 @@ GENDIR = $(GENTOP)/$(SRCDIR)
 # OPT is separate to allow override on command line, e.g. "make OPT=-g"
 OPT ?= -O3
 
-BUILD_PARAMS = -DBUILD_OS_$(BUILD_OS) -DBUILD_ARCH=$(BUILD_ARCH)
+BUILD_PARAMS = $(NULL)
+BUILD_PARAMS += -DBUILD_OS_$(BUILD_OS)
+BUILD_PARAMS += -DBUILD_ARCH=$(BUILD_ARCH)
+BUILD_PARAMS += -DBUILD_ARCH_$(BUILD_ARCH)
+BUILD_PARAMS = -DBUILD_OS_$(BUILD_OS) -DBUILD_ARCH=$(BUILD_ARCH) -DBUILD_ARCH_$(BUILD_ARCH)
 CCWARN_FLAGS ?= -Wall -Werror -Wuninitialized
 CCDEPEND_FLAGS = -MT $@ -MMD -MP -MF $(@:.o=.d)
 INCLUDE_DIRS = -I$(TOPDIR)
@@ -200,7 +209,7 @@ CXXFLAGS += $(LCXXFLAGS)
 
 ASFLAGS += $(LASFLAGS)
 
-LDFLAGS += $(LLDFLAGS)
+LDFLAGS += $(OPT) $(LLDFLAGS)
 
 YACC = bison -y
 

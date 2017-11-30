@@ -19,6 +19,7 @@ LCFLAGS += \
 	-I ../../misc/include \
 	-I ../../cfgspace/include \
 	-I ../../pciehw/include \
+	-I ../../pciehdevices/include \
 	-I ../include \
 	$(NULL)
 

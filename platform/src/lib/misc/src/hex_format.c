@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <sys/types.h>
 #include "misc.h"
 
 char *

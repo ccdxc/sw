@@ -27,7 +27,7 @@ bridgeup_initialize_cfg(pciehdev_t *pdev)
 pciehdev_t *
 pciehdev_bridgeup_new(void)
 {
-    pciehdev_t *pdev = pciehdev_new("bridgeup", 0);
+    pciehdev_t *pdev = pciehdev_new("bridgeup", NULL);
     bridgeup_initialize_cfg(pdev);
     return pdev;
 }

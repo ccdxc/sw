@@ -3,6 +3,8 @@
  */
 
 #include <string.h>
+#include <sys/types.h>
+
 #include "misc.h"
 
 char *

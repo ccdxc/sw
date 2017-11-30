@@ -4,14 +4,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/mman.h>
+#include <inttypes.h>
 
+#include "misc.h"
+#include "pal.h"
 #include "pciehost.h"
 #include "cfgspace.h"
 #include "pciehw.h"
@@ -21,19 +22,19 @@
 
 static pciehw_t pciehw;
 
-static pciehw_t *
+pciehw_t *
 pciehw_get(void)
 {
     return &pciehw;
 }
 
-static pciehw_mem_t *
+pciehw_mem_t *
 pciehw_get_hwmem(pciehw_t *phw)
 {
     return phw->pciehwmem;
 }
 
-static pciehwdev_t *
+pciehwdev_t *
 pciehwdev_get(pciehwdevh_t hwdevh)
 {
     pciehw_t *phw = pciehw_get();
@@ -41,7 +42,7 @@ pciehwdev_get(pciehwdevh_t hwdevh)
     return hwdevh ? &phwmem->dev[hwdevh] : NULL;
 }
 
-static pciehwdevh_t
+pciehwdevh_t
 pciehwdev_geth(pciehwdev_t *phwdev)
 {
     pciehw_t *phw = pciehw_get();
@@ -49,7 +50,30 @@ pciehwdev_geth(pciehwdev_t *phwdev)
     return phwdev ? phwdev - phwmem->dev : 0;
 }
 
-static void
+char *
+pciehwdev_get_name(pciehwdev_t *phwdev)
+{
+    return phwdev->name;
+}
+
+pciehwdev_t *
+pciehwdev_find_by_name(const char *name)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehwdev_t *phwdev;
+    int i;
+
+    phwdev = &phwmem->dev[1];
+    for (i = 1; i <= phwmem->allocdev; i++, phwdev++) {
+        if (strcmp(name, pciehwdev_get_name(phwdev)) == 0) {
+            return phwdev;
+        }
+    }
+    return NULL;
+}
+
+void
 pciehwdev_get_cfgspace(pciehwdev_t *phwdev, cfgspace_t *cs)
 {
     pciehw_t *phw = pciehw_get();
@@ -90,12 +114,56 @@ pciehwdev_cfgwr(pciehwdev_t *phwdev,
 }
 
 static int
+pciehw_openregs(pciehw_t *phw)
+{
+#define PCIEHW_BASE     CAP_ADDR_BASE_PXB_PXB_OFFSET
+#define PCIEHW_SIZE     CAP_PXB_CSR_BYTE_SIZE
+
+    return 0;
+}
+
+static void
+pciehw_closeregs(pciehw_t *phw)
+{
+}
+
+static int
 pciehw_initmem(pciehw_mem_t *phwmem)
 {
-    memset(phwmem, 0, sizeof(*phwmem));
+    pciehw_memset(phwmem, 0, sizeof(*phwmem));
     phwmem->version = PCIEHW_VERSION;
     phwmem->magic = PCIEHW_MAGIC;
     return 0;
+}
+
+static int
+pciehw_openmem(pciehw_t *phw)
+{
+    pciehw_mem_t *pciehwmem;
+
+    pciehwmem = pal_mem_map(0xc0000000, sizeof(pciehw_mem_t));
+    if (pciehwmem == NULL) {
+        return -1;
+    }
+    phw->pciehwmem = pciehwmem;
+    return 0;
+}
+
+static void
+pciehw_closemem(pciehw_t *phw)
+{
+    pal_mem_unmap(phw->pciehwmem);
+    phw->pciehwmem = NULL;
+}
+
+static void
+pciehw_init(pciehw_t *phw)
+{
+    pciehw_cfg_init(phw);
+    pciehw_bar_init(phw);
+    pciehw_vfstride_init(phw);
+    pciehw_hdrt_init(phw);
+    pciehw_notify_init(phw);
 }
 
 int
@@ -103,38 +171,47 @@ pciehw_open(pciehw_params_t *hwparams)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem;
-    int inithw, r;
+    int r;
 
     /* already open */
-    if (phw->flags & PCIEHWF_OPEN) {
+    if (phw->open) {
         phw->clients++;
         return 0;
     }
+    phw->is_asic = 0; /* XXX runtime? */
+    phw->nports = phw->is_asic ? PCIEHW_NPORTS : 4;
     if (hwparams) {
         phw->hwparams = *hwparams;
     }
-    inithw = phw->hwparams.inithw;
-    if ((r = pciehw_openmem(phw, inithw)) < 0) {
+
+    if ((r = pciehw_openregs(phw)) < 0) {
+        return r;
+    }
+    if ((r = pciehw_openmem(phw)) < 0) {
+        pciehw_closeregs(phw);
         return r;
     }
 
     /* Is mem initialized? */
     phwmem = pciehw_get_hwmem(phw);
-    if (phwmem->magic != PCIEHW_MAGIC) {
-        if (!inithw) {
-            pciehw_closemem(phw);
-            return -EINVAL;
-        }
+    if (phw->hwparams.inithw) {
         pciehw_initmem(phwmem);
+    } else if (phwmem->magic != PCIEHW_MAGIC) {
+        return -EINVAL;
     }
 
     /* Do we understand this version? */
     if (phwmem->version != PCIEHW_VERSION) {
+        pciehw_closeregs(phw);
         pciehw_closemem(phw);
         return -ENOEXEC;
     }
 
-    phw->flags |= PCIEHWF_OPEN;
+    if (phw->hwparams.inithw) {
+        pciehw_init(phw);
+    }
+
+    phw->open = 1;
     phw->clients++;
     return 0;
 }
@@ -144,10 +221,10 @@ pciehw_close(void)
 {
     pciehw_t *phw = pciehw_get();
 
-    if (phw->flags & PCIEHWF_OPEN) {
+    if (phw->open) {
         if (--phw->clients) {
             pciehw_closemem(phw);
-            phw->flags &= ~PCIEHWF_OPEN;
+            phw->open = 0;
         }
     }
 }
@@ -157,12 +234,13 @@ pciehwdev_alloc(pciehdev_t *pdev)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const char *name = pciehdev_get_name(pdev);
     pciehwdev_t *phwdev;
 
     assert(phwmem->allocdev < PCIEHW_NDEVS - 1);
     phwdev = &phwmem->dev[++phwmem->allocdev];
-    memset(phwdev, 0, sizeof(*phwdev));
-    phwdev->pdev = pdev;
+    pciehw_memset(phwdev, 0, sizeof(*phwdev));
+    pciehw_memcpy(phwdev->name, name, strlen(name) + 1);
     pciehdev_set_hwdev(pdev, phwdev);
     return phwdev;
 }
@@ -175,6 +253,7 @@ pciehw_initialize_topology(void)
 
     if (phwmem) {
         phwmem->allocdev = 0;
+        phwmem->allocprt = 0;
         phwmem->rooth = 0;
     }
 }
@@ -263,29 +342,33 @@ static pciehwdev_t *
 pciehw_finalize_dev(pciehdev_t *pdev)
 {
     pciehw_t *phw = pciehw_get();
-    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehwdev_t *phwdev = pciehwdev_alloc(pdev);
-    pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
-    pciehcfg_t *pcfg = pciehdev_get_cfg(pdev);
     pciehdev_t *parent, *peer, *child;
-    cfgspace_t cs;
-    u_int16_t cfgsz;
-
-    /*
-     * Init config space contents from device config space.
-     * Init config reset contents from device config space.
-     * Init config write mask from device config space.
-     */
-    pciehcfg_get_cfgspace(pcfg, &cs);
-    cfgsz = cfgspace_size(&cs);
-    assert(cfgsz <= PCIEHW_CFGSZ);
-    memcpy(phwmem->cfgcur[hwdevh], cs.cur, cfgsz); /* config space */
-    memcpy(phwmem->cfgrst[hwdevh], cs.cur, cfgsz); /* reset space */
-    memcpy(phwmem->cfgmsk[hwdevh], cs.msk, cfgsz); /* write mask */
+    int lif;
 
     phwdev->bdf = pciehdev_get_bdf(pdev);
+
+    lif = pciehdev_get_lif(pdev);
+    if (lif >= 0) {
+        phwdev->lif_valid = 1;
+        phwdev->lif = lif;
+    }
     parent = pciehdev_get_parent(pdev);
     phwdev->parenth = parent ? pciehwdev_geth(pciehdev_get_hwdev(parent)) : 0;
+
+    pciehw_cfg_finalize(pdev);
+
+    /*
+     * Don't load the root into hardware.  root represents the
+     * upstream port bridge which is provided by hardware so no
+     * need to add to hw tables to virtualize.
+     */
+    if (parent) {
+        pciehw_bar_finalize(pdev);
+        if (phwdev->lif_valid) {
+            pciehw_hdrt_load(phw, phwdev->lif, phwdev->bdf);
+        }
+    }
 
     child = pciehdev_get_child(pdev);
     if (child) {
@@ -342,6 +425,119 @@ pciehw_finalize_topology(pciehdev_t *proot)
         int nextbus = 1;
         fake_bios_scan(0, &nextbus);
     }
+}
+
+/******************************************************************
+ * debug
+ */
+
+static void
+cmd_bar(int argc, char *argv[])
+{
+    pciehw_bar_dbg(argc, argv);
+}
+
+static void
+cmd_pmt(int argc, char *argv[])
+{
+    pciehw_pmt_dbg(argc, argv);
+}
+
+static void
+cmd_prt(int argc, char *argv[])
+{
+    pciehw_prt_dbg(argc, argv);
+}
+
+static void
+cmd_romsk(int argc, char *argv[])
+{
+    pciehw_romsk_dbg(argc, argv);
+}
+
+static void
+cmd_hdrt(int argc, char *argv[])
+{
+    pciehw_hdrt_dbg(argc, argv);
+}
+
+static void
+cmd_notify(int argc, char *argv[])
+{
+    pciehw_notify_dbg(argc, argv);
+}
+
+static void
+cmd_meminfo(int argc, char *argv[])
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    u_int64_t hwmempa = pal_mem_vtop(phwmem);
+    const int w = 16;
+
+    pciehsys_log("%-*s: 0x%08x\n", w, "magic", phwmem->magic);
+    pciehsys_log("%-*s: %d\n", w, "version", phwmem->version);
+    pciehsys_log("%-*s: %d\n", w, "allocdev", phwmem->allocdev);
+    pciehsys_log("%-*s: %d\n", w, "allocprt", phwmem->allocprt);
+    pciehsys_log("%-*s: 0x%08"PRIx64"\n", w, "physaddr", hwmempa);
+    pciehsys_log("%-*s: 0x%08"PRIx64" size %lu\n", w, "cfgcur",
+                 hwmempa + offsetof(pciehw_mem_t, cfgcur),
+                 sizeof(phwmem->cfgcur));
+    pciehsys_log("%-*s: 0x%08"PRIx64" size %lu\n", w, "notify_area",
+                 hwmempa + offsetof(pciehw_mem_t, notify_area),
+                 sizeof(phwmem->notify_area));
+    pciehsys_log("%-*s: %lu\n", w, "mem size", sizeof(pciehw_mem_t));
+}
+
+typedef struct cmd_s {
+    const char *name;
+    void (*f)(int argc, char *argv[]);
+    const char *desc;
+    const char *helpstr;
+} cmd_t;
+
+static cmd_t cmdtab[] = {
+#define CMDENT(name, desc, helpstr) \
+    { #name, cmd_##name, desc, helpstr }
+    CMDENT(bar, "bar", ""),
+    CMDENT(pmt, "pmt", ""),
+    CMDENT(prt, "prt", ""),
+    CMDENT(romsk, "romsk", ""),
+    CMDENT(hdrt, "hdrt", ""),
+    CMDENT(meminfo, "meminfo", ""),
+    CMDENT(notify, "notify", ""),
+    { NULL, NULL }
+};
+
+static cmd_t *
+cmd_lookup(cmd_t *cmdtab, const char *name)
+{
+    cmd_t *c;
+
+    for (c = cmdtab; c->name; c++) {
+        if (strcmp(c->name, name) == 0) {
+            return c;
+        }
+    }
+    return NULL;
+}
+
+void
+pciehw_dbg(int argc, char *argv[])
+{
+    cmd_t *c;
+
+    if (argc < 2) {
+        pciehsys_log("Usage: pciehw <subcmd>\n");
+        return;
+    }
+
+    c = cmd_lookup(cmdtab, argv[1]);
+    if (c == NULL) {
+        pciehsys_log("%s: %s not found\n", argv[0], argv[1]);
+        return;
+    }
+    c->f(argc - 1, argv + 1);
 }
 
 int
@@ -406,4 +602,52 @@ pciehw_get_params(void)
 {
     pciehw_t *phw = pciehw_get();
     return &phw->hwparams;
+}
+
+int
+pciehw_poll(void)
+{
+    pciehw_t *phw = pciehw_get();
+
+    pciehw_notify_poll(phw);
+    return 0;
+}
+
+void *
+pciehw_memset(void *s, int c, size_t n)
+{
+#if 0
+    u_int8_t *p;
+    int i;
+
+    for (p = s, i = 0; i < n; i++, p++) {
+        *p = c;
+    }
+#else
+    u_int32_t *p;
+    int i;
+
+    c &= 0xff;
+    c = ((c << 0) |
+         (c << 8) |
+         (c << 16) |
+         (c << 24));
+    for (p = s, i = 0; i < n >> 2; i++, p++) {
+        *p = c;
+    }
+#endif
+    return s;
+}
+
+void *
+pciehw_memcpy(void *dst, const void *src, size_t n)
+{
+    u_int8_t *d = dst;
+    const u_int8_t *s = src;
+    int i;
+
+    for (i = 0; i < n; i++) {
+        *d++ = *s++;
+    }
+    return dst;
 }

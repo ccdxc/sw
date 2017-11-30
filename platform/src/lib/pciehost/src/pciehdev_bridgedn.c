@@ -31,7 +31,7 @@ pciehdev_bridgedn_new(void)
     char name[32];
 
     snprintf(name, sizeof (name), "bridgedn%d", instance++);
-    pciehdev_t *pdev = pciehdev_new(name, 0);
+    pciehdev_t *pdev = pciehdev_new(name, NULL);
     bridgedn_initialize_cfg(pdev);
     return pdev;
 }

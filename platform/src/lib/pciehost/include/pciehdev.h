@@ -18,6 +18,8 @@ struct pciehcfg_s;
 typedef struct pciehcfg_s pciehcfg_t;
 struct pciehbars_s;
 typedef struct pciehbars_s pciehbars_t;
+struct pciehdevice_resources_s;
+typedef struct pciehdevice_resources_s pciehdevice_resources_t;
 
 typedef struct pciehdev_params_s {
     u_int8_t cap_gen;           /* default GenX capability (1,2,3,4) */
@@ -25,8 +27,11 @@ typedef struct pciehdev_params_s {
     u_int16_t vendorid;         /* default vendorid */
     u_int16_t subvendorid;      /* default subvendorid */
     u_int16_t subdeviceid;      /* default subdeviceid */
+    u_int8_t first_bus;         /* first bus number for virtual devices bdf */
     u_int32_t inithw:1;         /* initialize hw */
     u_int32_t fake_bios_scan:1; /* scan finalized topology, assign bus #'s */
+    u_int32_t force_notify_cfg:1;/* force notify on cfg PMT entries */
+    u_int32_t force_notify_bar:1;/* force notify on bar PMT entries */
     u_int32_t noexttag:1;       /* no extended tags capable */
     u_int32_t noexttag_en:1;    /* no extended tags enabled */
     u_int32_t nomsicap:1;       /* no msi cap */
@@ -37,7 +42,8 @@ int pciehdev_open(pciehdev_params_t *devparams);
 void pciehdev_close(void);
 pciehdev_params_t *pciehdev_get_params(void);
 
-pciehdev_t *pciehdev_new(const char *name, const size_t privsz);
+pciehdev_t *pciehdev_new(const char *name,
+                         const pciehdevice_resources_t *pres);
 void pciehdev_delete(pciehdev_t *pdev);
 
 pciehdev_t *pciehdev_bridgeup_new(void);
@@ -71,6 +77,7 @@ pciehdev_t *pciehdev_get_by_name(const char *name);
 void *pciehdev_get_hwdev(pciehdev_t *pdev);
 void pciehdev_set_hwdev(pciehdev_t *pdev, void *phwdev);
 u_int16_t pciehdev_get_bdf(pciehdev_t *pdev);
+int pciehdev_get_lif(pciehdev_t *pdev);
 char *pciehdev_get_name(pciehdev_t *pdev);
 
 #ifdef __cplusplus

@@ -10,11 +10,15 @@
 #include <getopt.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#ifdef BUILD_ARCH_x86_64
+//#define USE_READLINE
+#endif
 #ifdef USE_READLINE
 #ifdef BUILD_OS_Darwin
 #include <editline/readline.h>
 #endif
 #ifdef BUILD_OS_Linux
+#include <readline/history.h>
 #include <readline/readline.h>
 #endif
 #endif
@@ -25,9 +29,12 @@
 #include "cfgspace.h"
 #include "pciehost.h"
 #include "pciehdevices.h"
+#include "pciehw.h"
+#include "pcieport.h"
 
 typedef struct pciemgrenv_s {
     pciehdev_t *current_dev;
+    pcieport_t *pport;
 } pciemgrenv_t;
 
 static pciemgrenv_t pciemgrenv;
@@ -94,10 +101,10 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
     char lname[32], *name;
     pciehdev_t *pdev;
 
-    if (strcmp(type, "enet") == 0) {
+    if (strcmp(type, "eth") == 0) {
         if (namearg == NULL) {
-            static int enet_instance;
-            snprintf(lname, sizeof(lname), "enet%d", enet_instance++);
+            static int eth_instance;
+            snprintf(lname, sizeof(lname), "eth%d", eth_instance++);
             name = lname;
         } else {
             name = namearg;
@@ -107,7 +114,7 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
             printf("pciehdev_enet_new failed\n");
             return NULL;
         }
-    } else if (strcmp(type, "enetvf") == 0) {
+    } else if (strcmp(type, "ethvf") == 0) {
         pdev = NULL; // XXX
     } else if (strcmp(type, "nvme") == 0) {
         if (namearg == NULL) {
@@ -166,7 +173,11 @@ cmd_initialize(int argc, char *argv[])
 static void
 cmd_finalize(int argc, char *argv[])
 {
+    pciemgrenv_t *pme = pciemgrenv_get();
+    int off = 0;
+
     pciehdev_finalize();
+    pcieport_ctrl(pme->pport, PCIEPORT_CMD_CRS, &off);
 }
 
 static void
@@ -193,8 +204,15 @@ cmd_add(int argc, char *argv[])
     name = NULL;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "i:n:")) != -1) {
+    while ((opt = getopt(argc, argv, "I:L:i:n:")) != -1) {
         switch (opt) {
+        case 'I':
+            r.intrbase = strtoul(optarg, NULL, 0);
+            break;
+        case 'L':
+            r.lif = strtoul(optarg, NULL, 0);
+            r.lif_valid = 1;
+            break;
         case 'i':
             r.nintrs = strtoul(optarg, NULL, 0);
             break;
@@ -413,13 +431,62 @@ cmd_cfg(int argc, char *argv[])
     }
 }
 
+static int poll_enabled;
+
+static void
+polling_sighand(int s)
+{
+    poll_enabled = 0;
+}
+
+static void
+cmd_poll(int argc, char *argv[])
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+    sighandler_t osigint, osigterm, osigquit;
+    useconds_t polltm_us = 500000;
+    int opt;
+
+    getopt_reset(1, 1);
+    while ((opt = getopt(argc, argv, "t:")) != -1) {
+        switch (opt) {
+        case 't':
+            polltm_us = strtoull(optarg, NULL, 0);
+            break;
+        }
+    }
+
+    osigint  = signal(SIGINT,  polling_sighand);
+    osigterm = signal(SIGTERM, polling_sighand);
+    osigquit = signal(SIGQUIT, polling_sighand);
+
+    printf("Polling enabled every %dus, ^C to exit...\n", polltm_us);
+    poll_enabled = 1;
+    while (poll_enabled) {
+        pcieport_poll(pme->pport);
+        if (polltm_us) usleep(polltm_us);
+    }
+    printf("Polling stopped\n");
+
+    signal(SIGINT,  osigint);
+    signal(SIGTERM, osigterm);
+    signal(SIGQUIT, osigquit);
+}
+
 static void
 cmd_exit(int argc, char *argv[])
 {
     exit_request = 1;
 }
 
+static void
+cmd_quit(int argc, char *argv[])
+{
+    cmd_exit(argc, argv);
+}
+
 static void cmd_help(int argc, char *argv[]);
+static void cmd_dbg(int argc, char *argv[]);
 
 typedef struct cmd_s {
     const char *name;
@@ -442,12 +509,15 @@ static cmd_t cmdtab[] = {
     CMDENT(show, "show device info", ""),
     CMDENT(bars, "show bar info for device", "[<args>] <vdev> ..."),
     CMDENT(cfg, "show cfg info for device", "[-m] <vdev> ..."),
+    CMDENT(poll, "poll for intrs", ""),
+    CMDENT(dbg, "invoke debug interface", ""),
     CMDENT(exit, "exit program", ""),
+    CMDENT(quit, "exit program", ""),
     { NULL, NULL }
 };
 
-cmd_t *
-cmd_lookup(const char *name)
+static cmd_t *
+cmd_lookup(cmd_t *cmdtab, const char *name)
 {
     cmd_t *c;
 
@@ -459,13 +529,13 @@ cmd_lookup(const char *name)
     return NULL;
 }
 
-void
+static void
 cmd_help(int argc, char *argv[])
 {
     cmd_t *c;
 
     if (argc > 1) {
-        c = cmd_lookup(argv[1]);
+        c = cmd_lookup(cmdtab, argv[1]);
         if (c == NULL) {
             printf("command not found\n");
             return;
@@ -479,8 +549,40 @@ cmd_help(int argc, char *argv[])
     }
 }
 
+static void
+dbg_pciehw(int argc, char *argv[])
+{
+    pciehw_dbg(argc, argv);
+}
+
+static cmd_t dbgtab[] = {
+#define DBGENT(name, desc, helpstr) \
+    { #name, dbg_##name, desc, helpstr }
+    DBGENT(pciehw, "pciehw debug", ""),
+    { NULL, NULL }
+};
+
+static void
+cmd_dbg(int argc, char *argv[])
+{
+    cmd_t *c;
+
+    if (argc < 2) {
+        printf("Usage: dbg <subcmd>\n");
+        return;
+    }
+
+    c = cmd_lookup(dbgtab, argv[1]);
+    if (c == NULL) {
+        printf("%s: %s not found\n", argv[0], argv[1]);
+        return;
+    }
+    c->f(argc - 1, argv + 1);
+}
+
 /******************************************************************/
 
+#ifndef USE_READLINE
 static char *
 readline(const char *prompt)
 {
@@ -495,9 +597,15 @@ readline(const char *prompt)
 }
 
 static void
+add_history(const char *line)
+{
+}
+#endif
+
+static void
 process(int argc, char *argv[])
 {
-    cmd_t *c = cmd_lookup(argv[0]);
+    cmd_t *c = cmd_lookup(cmdtab, argv[0]);
     if (c == NULL) {
         printf("command not found\n");
         return;
@@ -508,6 +616,7 @@ process(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
+    pciemgrenv_t *pme = pciemgrenv_get();
     int opt;
     char *line, prompt[32], *av[16];
     int ac;
@@ -518,13 +627,36 @@ main(int argc, char *argv[])
     p.fake_bios_scan = 1;
     p.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
 
-    while ((opt = getopt(argc, argv, "FnP:s:v")) != -1) {
+    /*
+     * For simulation we want the virtual upstream port bridge
+     * at 00:00.0, but on "real" systems the upstream port bridge
+     * is in hw and our first virtual device is 00:00.0.
+     */
+#ifdef __aarch64__
+    p.first_bus = 0;
+#else
+    p.first_bus = 1;
+#endif
+
+    while ((opt = getopt(argc, argv, "b:BCFhHP:s:v")) != -1) {
         switch (opt) {
+        case 'b':
+            p.first_bus = strtoul(optarg, NULL, 0);
+            break;
         case 'F':
             p.fake_bios_scan = 0;
             break;
-        case 'n':
-            p.inithw = 0;
+        case 'h':
+            p.inithw = 1;       /* init hw */
+            break;
+        case 'H':
+            p.inithw = 0;       /* no init hw */
+            break;
+        case 'C':
+            p.force_notify_cfg = 1;
+            break;
+        case 'B':
+            p.force_notify_bar = 1;
             break;
         case 'P':
             if (!parse_linkspec(optarg, &p.cap_gen, &p.cap_width)) {
@@ -546,11 +678,17 @@ main(int argc, char *argv[])
         }
     }
 
+    if ((pme->pport = pcieport_open(0)) == NULL) {
+        printf("pcieport_open failed\n");
+        exit(1);
+    }
+    if (pcieport_ctrl(pme->pport, PCIEPORT_CMD_HOSTCONFIG, NULL) < 0) {
+        printf("pcieport_ctrl(HOSTCONFIG) failed\n");
+    }
     if (pciehdev_open(&p) < 0) {
         printf("pciehdev_open failed\n");
         exit(1);
     }
-
     if (pciehdev_initialize() < 0) {
         printf("pciehdev_initialize failed\n");
         exit(1);
@@ -559,13 +697,16 @@ main(int argc, char *argv[])
     strncpy0(prompt, "pciemgr> ", sizeof(prompt));
     while (!exit_request && (line = readline(prompt)) != NULL) {
         if (line[0] != '\0') {
+            add_history(line);
             ac = strtoargv(line, av, sizeof(av) / sizeof(av[0]));
-            process(ac, av);
+            if (ac) {
+                process(ac, av);
+            }
         }
         free(line);
     }
 
     pciehdev_close();
+    pcieport_close(pme->pport);
     exit(0);
-    if (0) pciemgrenv_get();
 }

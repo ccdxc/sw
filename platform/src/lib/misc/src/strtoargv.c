@@ -4,6 +4,8 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <sys/types.h>
+
 #include "misc.h"
 
 int

@@ -48,8 +48,10 @@ bdf_to_buf(const int bdf, char *buf, size_t bufsz)
 static inline char *
 bdf_to_str(const int bdf)
 {
-    static char buf[8];
-    return bdf_to_buf(bdf, buf, sizeof(buf));
+#define NBUFS 8
+    static char buf[NBUFS][16];
+    static int bufi;
+    return bdf_to_buf(bdf, buf[bufi++ % NBUFS], sizeof(buf[0]));
 }
 
 static inline int

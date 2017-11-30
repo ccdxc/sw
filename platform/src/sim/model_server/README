@@ -88,7 +88,7 @@ start up qemu
 ----------------
 
 cd $SW/platform
-sim/qemu/qemu-run <path-to-qemu.img>
+src/sim/qemu/qemu-run <path-to-qemu.img>
 
 # telnet to serial console
 telnet 127.0.0.1 1034

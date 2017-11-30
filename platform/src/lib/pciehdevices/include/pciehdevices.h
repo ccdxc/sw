@@ -17,7 +17,10 @@ typedef struct pciehdev_s pciehdev_t;
 
 typedef struct pciehdevice_resources_s {
     u_int32_t fnn:1;
-    u_int32_t nintrs;
+    u_int32_t lif_valid:1;      /* lif id is valid */
+    u_int32_t lif;              /* lif id */
+    u_int32_t intrbase;         /* interrupt start */
+    u_int32_t nintrs;           /* interrupt count */
 } pciehdevice_resources_t;
 
 pciehdev_t *pciehdev_enet_new(const char *name,

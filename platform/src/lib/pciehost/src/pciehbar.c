@@ -109,18 +109,13 @@ pciehbars_finalize(pciehbars_t *pbars)
     cfgidx = 0;
     for (b = pbars->bars, bi = 0; bi < pbars->nbars; bi++, b++) {
 
-        /* If this bar has msix_tbl, find region offset. */
-        if (b->msix_tbl) {
+        /* If this bar has msix_tbl/pba, find region offset. */
+        if (b->msix_tbl || b->msix_pba) {
             for (r = b->regs, i = 0; i < b->nregs; i++, r++) {
                 if (r->flags & PCIEHBARREGF_MSIX_TBL) {
                     pbars->msix_tblbir = b->cfgidx;
                     pbars->msix_tbloff = r->baroff;
                 }
-            }
-        }
-        /* If this bar has msix_pba, find region offset. */
-        if (b->msix_pba) {
-            for (r = b->regs, i = 0; i < b->nregs; i++, r++) {
                 if (r->flags & PCIEHBARREGF_MSIX_PBA) {
                     pbars->msix_pbabir = b->cfgidx;
                     pbars->msix_pbaoff = r->baroff;
@@ -129,6 +124,7 @@ pciehbars_finalize(pciehbars_t *pbars)
         }
 
         /* Config space index 0-5 of this bar. */
+        assert(cfgidx < 6);
         b->cfgidx = cfgidx;
 
         switch (b->type) {

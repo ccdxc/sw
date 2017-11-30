@@ -102,7 +102,7 @@ nvme_initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
 pciehdev_t *
 pciehdev_nvme_new(const char *name, const pciehdevice_resources_t *pres)
 {
-    pciehdev_t *pdev = pciehdev_new(name, 0);
+    pciehdev_t *pdev = pciehdev_new(name, pres);
     nvme_initialize_bars(pdev, pres);
     nvme_initialize_cfg(pdev, pres);
     return pdev;

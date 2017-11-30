@@ -15,7 +15,7 @@ extern "C" {
 /*
  * Several PCI-SIG specifications from pcisig.com are used as references.
  *
- *     PCIe Base Spec, Rev 4.0v0.7
+ *     PCIe Base Spec, Rev 4.0v1.0
  *     PCIe Base Spec, Rev 3.1a
  *     PCI Local Bus Spec, Rev 3.0
  *     PCI-to-PCI Bridge Architecture Spec, Rev 1.2
@@ -54,10 +54,10 @@ void cfgspace_setdm(cfgspace_t *cs, u_int16_t off, u_int32_t v, u_int32_t m);
 /*
  * Access specific config space registers.
  */
-u_int16_t cfgspace_get_status(cfgspace_t *pcfg);
-u_int8_t cfgspace_get_cap(cfgspace_t *pcfg);
-u_int8_t cfgspace_get_headertype(cfgspace_t *pcfg);
-u_int8_t cfgspace_get_intpin(cfgspace_t *pcfg);
+u_int16_t cfgspace_get_status(cfgspace_t *cs);
+u_int8_t cfgspace_get_cap(cfgspace_t *cs);
+u_int8_t cfgspace_get_headertype(cfgspace_t *cs);
+u_int8_t cfgspace_get_intpin(cfgspace_t *cs);
 
 void cfgspace_set_vendorid(cfgspace_t *cs, const u_int16_t vendorid);
 void cfgspace_set_deviceid(cfgspace_t *cs, const u_int16_t deviceid);

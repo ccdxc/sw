@@ -17,11 +17,19 @@ typedef struct pciehbars_s pciehbars_t;
 
 typedef struct pciehbarreg_s {
     u_int16_t flags;                    /* PCIEHBARREGF_* flags below */
+    u_int16_t regtype;                  /* PCIEHBARREGTYPE_* below */
     u_int64_t paddr;                    /* physical address */
     u_int32_t size;                     /* actual size of region */
     u_int32_t align;                    /* alignment of this region in bar */
     u_int32_t baroff;                   /* offset from beginning of bar */
+    u_int8_t upd[8];                    /* db*: upd vector for qtypes */
+    u_int8_t idxshift;                  /* db32/16: shift data for index */
+    u_int8_t idxwidth;                  /* db32/16: index width in data */
+    u_int8_t qidshift;                  /* db32/16: shift data for qid */
+    u_int8_t qidwidth;                  /* db32/16: qid width in data */
 } pciehbarreg_t;
+
+/* BAR region flags - flags */
 #define PCIEHBARREGF_RD         0x0001  /* read permission */
 #define PCIEHBARREGF_WR         0x0002  /* write permission */
 #define PCIEHBARREGF_RW         (PCIEHBARREGF_RD | PCIEHBARREGF_WR)
@@ -30,6 +38,26 @@ typedef struct pciehbarreg_s {
 #define PCIEHBARREGF_NOTIFYRW   (PCIEHBARREGF_NOTIFYRD | PCIEHBARREGF_NOTIFYWR)
 #define PCIEHBARREGF_MSIX_TBL   0x0010  /* region contains msix table */
 #define PCIEHBARREGF_MSIX_PBA   0x0020  /* region contains msix pba */
+#define PCIEHBARREGF_DB64       0x0040  /* 64-bit doorbells */
+#define PCIEHBARREGF_DBQIDADDR  0x0080  /* qid source: address */
+
+/* BAR region type - regtype */
+#define PCIEHBARREGT_RES        0       /* resource region */
+#define PCIEHBARREGT_DB64       1       /* 64-bit doorbell region */
+#define PCIEHBARREGT_DB32       2       /* 32-bit doorbell region */
+#define PCIEHBARREGT_DB16       3       /* 16-bit doorbell region */
+
+/* BAR region "update" functions - upd[] */
+#define PCIEHBARUPD_NONE        0x00
+#define PCIEHBARUPD_SCHED_EVAL  0x01    /* schedule if evaluate rings */
+#define PCIEHBARUPD_SCHED_CLEAR 0x02    /* schedule always clear */
+#define PCIEHBARUPD_SCHED_SET   0x04    /* schedule always set */
+#define PCIEHBARUPD_SCHED_BITS  0x07
+#define PCIEHBARUPD_PICI_CISET  0x08    /* set ci */
+#define PCIEHBARUPD_PICI_PISET  0x10    /* set pi */
+#define PCIEHBARUPD_PICI_PIINC  0x20    /* increment pi */
+#define PCIEHBARUPD_PICI_BITS   0x38
+#define PCIEHBARUPD_PID_CHECK   0x80    /* check pid */
 
 typedef enum pciehbartype_e {
     PCIEHBARTYPE_NONE,          /* invalid bar type */
@@ -56,9 +84,9 @@ pciehbars_t *pciehbars_new(void);
 void pciehbars_delete(pciehbars_t *pbars);
 void pciehbars_add_bar(pciehbars_t *pbars, const pciehbar_t *pbar);
 void pciehbars_finalize(pciehbars_t *pbars);
-u_int8_t pciehbars_get_msix_tblbir(pciehbars_t *pbars);
+u_int8_t  pciehbars_get_msix_tblbir(pciehbars_t *pbars);
 u_int32_t pciehbars_get_msix_tbloff(pciehbars_t *pbars);
-u_int8_t pciehbars_get_msix_pbabir(pciehbars_t *pbars);
+u_int8_t  pciehbars_get_msix_pbabir(pciehbars_t *pbars);
 u_int32_t pciehbars_get_msix_pbaoff(pciehbars_t *pbars);
 pciehbar_t *pciehbars_get_first(pciehbars_t *pbars);
 pciehbar_t *pciehbars_get_next(pciehbars_t *pbars, pciehbar_t *pbar);

@@ -9,6 +9,11 @@
 
 #include "pciehsys.h"
 
+void
+pciehsys_init(void)
+{
+}
+
 void *
 pciehsys_zalloc(const size_t size)
 {
@@ -41,11 +46,12 @@ pciehsys_log(const char *fmt, ...)
     va_end(ap);
 }
 
-void pciehsys_error(const char *fmt, ...)
+void
+pciehsys_error(const char *fmt, ...)
 {
     va_list ap;
 
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    vfprintf(stderr, fmt, ap);
     va_end(ap);
 }
