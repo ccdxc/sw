@@ -2272,7 +2272,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         assert mid < max_mid
         if op.op_type == meta_op.EXTRACT_REG:
             #pdb.set_trace() # un-tested so far
-            assert op.rid
+            assert op.rid != None
             mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, op.capri_expr)
             _build_mux_inst(parser, op.cstate, op.rid, sram['mux_inst'][mux_inst_id],
                 0, op.capri_expr)

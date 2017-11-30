@@ -5,7 +5,7 @@ feature:
     package : test.parser
     module  : parser
     enable  : True
-    ignore  : True
+    ignore  : False
     spec    : ip.testspec
 
 modules:

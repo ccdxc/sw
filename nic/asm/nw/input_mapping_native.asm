@@ -64,7 +64,7 @@ native_ipv6_packet_common:
   sub           r7, k.ipv6_payloadLen, k.tcp_dataOffset, 2
   phvwr         p.l4_metadata_tcp_data_len, r7
 
-  seq           c1, k.ipv6_nextHdr, IP_PROTO_UDP
+  seq           c1, k.l3_metadata_ipv6_ulp, IP_PROTO_UDP
   phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
   phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
@@ -75,7 +75,7 @@ native_ipv6_packet_common:
                                                ipv6_dstAddr_sbit32_ebit127}
   phvwr         p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
 
-  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.ipv6_nextHdr, \
+  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
 

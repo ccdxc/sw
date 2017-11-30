@@ -99,7 +99,7 @@ action native_ipv6_packet() {
     modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6);
     modify_field(flow_lkp_metadata.lkp_src, ipv6.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dst, ipv6.dstAddr);
-    modify_field(flow_lkp_metadata.lkp_proto, ipv6.nextHdr);
+    modify_field(flow_lkp_metadata.lkp_proto, l3_metadata.ipv6_ulp);
     modify_field(flow_lkp_metadata.ip_ttl, ipv6.hopLimit);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);

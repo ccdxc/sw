@@ -1142,11 +1142,12 @@ class capri_parser:
                     if set_op.op_type == meta_op.EXTRACT_REG and set_op.src_reg and \
                         set_op.src_reg.is_meta:
                         hf_name = set_op.src_reg.hfname
-                        s.local_flds[hf_name] = (set_op.src_reg, 1, 0) # rd=1 wr=0
-                        self.logger.debug("%s:%s Add local field(Ext) %s: %d:%d" % \
-                            (self.d.name, s.name, hf_name, \
-                             s.local_flds[hf_name][1], \
-                             s.local_flds[hf_name][2]))
+                        if hf_name not in s.local_flds:
+                            s.local_flds[hf_name] = (set_op.src_reg, 1, 0) # rd=1 wr=0
+                            self.logger.debug("%s:%s Add local field(Ext) %s: %d:%d" % \
+                                (self.d.name, s.name, hf_name, \
+                                 s.local_flds[hf_name][1], \
+                                 s.local_flds[hf_name][2]))
 
                     # Add any RHS variables to local_flds
                     if set_op.capri_expr:
@@ -1986,7 +1987,7 @@ class capri_parser:
         # register saving is still done based on topo sort. That means some saved regs will
         # be occupied on states where they are not used/needed.. but it is faster and we are
         # not yet running out of saved regs.
-        # Also only lkp fields are moved to saved regs (not parser local vars that sure used
+        # Also only lkp fields are moved to saved regs (not parser local vars that are used
         # for computation)
         reversed_topo_states = self.states[:]
         reversed_topo_states.reverse()
@@ -2268,14 +2269,14 @@ class capri_parser:
                 # meta instruction - find lkp_reg holding this local variable
                 cf = op.src_reg
                 rid = cs.active_reg_find(cf)
-                assert rid, "Invalid src reg  %s for EXTRACT_REG" % (cf.hfname)
+                assert rid != None, "Invalid src reg  %s for EXTRACT_REG" % (cf.hfname)
                 op.rid = rid
             elif op.op_type == meta_op.EXTRACT_META:
                 # meta instruction - phv <- expr(pkt_data) or parser_local (reg)
                 cf = op.src1
                 if cf.parser_local:
                     rid = cs.active_reg_find(cf)
-                    assert rid, "Invalid src %s for EXTRACT_META" % (cf.hfname)
+                    assert rid != None, "Invalid src %s for EXTRACT_META" % (cf.hfname)
                     op.rid = rid
             elif op.op_type == meta_op.EXTRACT_CONST:
                 # meta instruction - handled by output generation

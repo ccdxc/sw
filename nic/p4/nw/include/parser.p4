@@ -796,6 +796,7 @@ parser parse_ipv6_ulp {
     // must use expression to update ohi variable.
     set_metadata(ohi.ipv6_options_blob___hdr_len, parser_metadata.ipv6_options_len+0);
     set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - parser_metadata.ipv6_options_len);
+    set_metadata(l3_metadata.ipv6_ulp, parser_metadata.ipv6_nextHdr);
     return select(parser_metadata.ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;
@@ -816,12 +817,12 @@ parser parse_ipv6_extn_hdrs {
     // use set_metadata with zero len
     // set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer + 0);
     return select(parser_metadata.ipv6_nextHdr) {
-        0x00: ingress; // hop-by-hop option, not supported
-        0x2b: parse_v6_generic_ext_hdr;
+        0x0:  parse_v6_generic_ext_hdr; // hop-by-hop Hdr
+        0x2b: parse_v6_generic_ext_hdr; // Routing Hdr
         // Note2: ipv6_options_len value used to setup ohi slot is previous value (before init)
-        0x2c: parse_v6_generic_ext_hdr;
-        0x3c: parse_v6_generic_ext_hdr;
-        0x87: parse_v6_generic_ext_hdr;
+        0x2c: parse_v6_generic_ext_hdr; // Fragment Hdr
+        0x3c: parse_v6_generic_ext_hdr; // Dest_option Hdr
+        0x87: parse_v6_generic_ext_hdr; // Mobility Hdr
         default: parse_ipv6_ulp;
     }
 }
@@ -830,6 +831,7 @@ parser parse_ipv6 {
     extract(ipv6);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
     set_metadata(parser_metadata.l4_trailer, ipv6.payloadLen);
+    set_metadata(l3_metadata.ipv6_ulp, latest.nextHdr);
     return select(parser_metadata.ipv6_nextHdr) {
         // go to ulp if no extention headers to avoid a state transition
         IP_PROTO_ICMPV6 : parse_icmpv6;
@@ -841,10 +843,11 @@ parser parse_ipv6 {
         0x33 : parse_v6_ipsec_ah_hdr;
         0x32 : parse_v6_ipsec_esp_hdr;
         // add other known options ipsec etc here
-        0x2b: parse_ipv6_option_blob;
-        0x2c: parse_ipv6_option_blob;
+        0x0:  parse_ipv6_option_blob;   // Hop by Hop Hdr
+        0x2b: parse_ipv6_option_blob;   // Routing Hdr
+        0x2c: parse_ipv6_option_blob;   // Fragment Hdr
         0x3c: parse_ipv6_option_blob;   // dest_option
-        0x87: parse_ipv6_option_blob;
+        0x87: parse_ipv6_option_blob;   // Mobility Hdr
         default: ingress;
     }
 }
