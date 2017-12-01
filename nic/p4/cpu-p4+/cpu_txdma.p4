@@ -192,7 +192,7 @@ metadata quiesce_pkt_trlr_t quiesce_pkt_trlr;
 
 header_type dma_phv_pad_t {
     fields {
-        dma_pad                 : 448;
+        dma_pad                 : 192;
     }    
 }
 

@@ -168,7 +168,7 @@ header_type barco_result_t {
     fields {
         status                              : 32;
         output_list_address                 : 64;
-        pad                                 : 416;
+        pad                                 : 160;
     }
 }
 
@@ -181,7 +181,7 @@ header_type tls_stage_pre_crypto_stats_d_t {
         debug_stage0_3_thread           : 16;
         debug_stage4_7_thread           : 16;
         // TBD: Total used   : 96 bits, pending: 416
-        pad                             : 416;
+        pad                             : 160;
     }
 }
 #define STG_PRE_CRYPTO_STATS_ACTION_PARAMS                                                          \
@@ -207,7 +207,7 @@ header_type tls_stage_post_crypto_stats_d_t {
         debug_stage0_3_thread           : 16;
         debug_stage4_7_thread           : 16;
         // TBD: Total used   : 96 bits, pending: 416
-        pad                             : 416;
+        pad                             : 160;
     }
 }
 

@@ -5,7 +5,7 @@
 // Take dma_cmd0_dma_cmd_type field from struct phv_ and divide by 128 to
 // derive the following values.
 
-#define ADMINQ_DMA_CMD_PTR                24
+#define ADMINQ_DMA_CMD_PTR                22
 
 #define LOAD_NEXT_PC(_phv, _prog_name, _n) \
   addi            r2, r0, loword(_prog_name); \

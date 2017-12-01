@@ -79,7 +79,6 @@ header_type p4plus_to_p4_ipsec_header_t {
         tcp_seq_delta       : 32;
         vlan_tag            : 16;
         ipsec_pad1 : 184;
-        ipsec_pad2 : 256;
     }
 }
 

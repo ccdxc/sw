@@ -71,6 +71,9 @@ metadata storage_kivec2_t storage_kivec2;
 @pragma pa_header_union ingress to_stage_3
 metadata storage_kivec3_t storage_kivec3;
 
+@pragma dont_trim
+metadata storage_pad0_t storage_pad0;
+
 // Keep the WQEs/commands that occupy full flit first) 
 
 // NVME command (occupies full flit)
@@ -85,12 +88,6 @@ metadata pvm_cmd_trailer_t pvm_cmd_trailer;
 // R2N work queue entry 
 @pragma dont_trim
 metadata r2n_wqe_t r2n_wqe;
-
-#if 0
-// TODO: Remove this if NCC does not add pads to DMA regions with pragma
-@pragma dont_trim
-metadata storage_pad0_t storage_pad0;
-#endif
 
 // NVME backend status 
 @pragma dont_trim

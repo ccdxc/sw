@@ -16,6 +16,7 @@ header_type ipsec_int_header_t {
         payload_size      : 16;
         pad_size          : 8;
         l4_protocol       : 8;
+        //ipsec_int_pad     : 96;
     }
 }
 
@@ -145,7 +146,6 @@ header_type p4plus_to_p4_ipsec_header_t {
         tcp_seq_delta       : 32;
         vlan_tag            : 16;
         ipsec_pad1 : 184;
-        ipsec_pad2 : 256;
     }
 }
 

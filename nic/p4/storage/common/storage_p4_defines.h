@@ -858,7 +858,7 @@ header_type ssd_ci_t {
 // to 16 byte boundary, not to have NCC generated pads in DMA regions etc.
 header_type storage_pad0_t {
   fields {
-    pad		: 16;	
+    pad		: 256;	
   }
 }
 header_type storage_pad1_t {

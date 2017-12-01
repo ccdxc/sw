@@ -79,8 +79,6 @@ header_type p4plus_2_p4_app_header_t {
         table2_valid : 1;
         table3_valid : 1;
         app_data1 : 256;
-        app_data2 : 104;
-        app_data_pad : 144;
     }
 }
 
