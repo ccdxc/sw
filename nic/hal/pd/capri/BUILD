@@ -38,7 +38,6 @@ cc_library(
         "capri_qstate.cc",
         "capri_config.cc",
         "capri_hbm.cc",
-        "capri_asic_rw.cc",
         "capri_barco_crypto.cc",
         "capri_tm_rw.cc",
         "capri_init.cc",
