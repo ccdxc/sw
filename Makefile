@@ -1,7 +1,10 @@
 # Makefile for building packages
 
 EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts|netagent/datapath/halproto"
-
+# Has venice protos and all things auto generated.
+TO_GEN := venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
+venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \
+venice/utils/runtime/test venice/utils/apigen/annotations venice/orch
 #
 # Note: Excluded api/generated directory on purpose to avoid golint errors
 #
@@ -63,6 +66,7 @@ qbuild:
 build:
 	$(MAKE) deps
 	$(MAKE) ws-tools
+	$(MAKE) protogen
 	$(MAKE) checks
 	$(MAKE) qbuild
 
@@ -161,6 +165,9 @@ ci-test:
 	make dev-clean
 
 jobd-test: build unit-test-verbose cover
+
+protogen:
+	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; make -C $${c} || exit 1; done
 
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
