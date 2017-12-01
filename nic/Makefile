@@ -120,8 +120,8 @@ post-make:
 
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
-CMD_OPTS = cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf HAL_PLUGIN_PATH=$(TOPDIR_ABS)/../bazel-bin/nic/hal/plugins
-PD_CMD_OPTS = cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf HAL_PLUGIN_PATH=$(TOPDIR_ABS)/../bazel-bin/nic/hal/plugins
+CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR_ABS)/../bazel-bin/nic/model_sim/ CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf HAL_PLUGIN_PATH=$(TOPDIR_ABS)/../bazel-bin/nic/hal/plugins
+PD_CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR_ABS)/../bazel-bin/nic/model_sim/ CAPRI_MOCK_MODE=1 LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf HAL_PLUGIN_PATH=$(TOPDIR_ABS)/../bazel-bin/nic/hal/plugins
 run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	# PI gtests
 	$(CMD_OPTS) ./nic/hal/test/gtests/acl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_test.xml"

@@ -46,7 +46,6 @@ cc_binary(
         "//nic/hal/pd/capri",
         "//nic/hal/pd/pal",
         "//nic/hal/pd/control",
-        "//nic/model_sim:model_client",
         "//nic:p4pd",
         "//nic:gft_p4pd",
         "//nic:p4pluspd_txdma",

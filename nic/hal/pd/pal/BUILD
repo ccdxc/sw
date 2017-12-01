@@ -7,6 +7,7 @@ cc_library(
 
     srcs = [
         "pal.cc",
+        "pal_sim.cc",
     ],
 
     hdrs = [

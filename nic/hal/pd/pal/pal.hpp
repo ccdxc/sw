@@ -22,17 +22,21 @@ typedef struct pal_rwvectors_s {
     pal_ret_t   (*mem_write)(uint64_t addr, uint8_t *data,
                              uint32_t size);
     pal_ret_t   (*ring_doorbell)(uint64_t addr, uint64_t data);
+    pal_ret_t   (*step_cpu_pkt)(const uint8_t* pkt, size_t pkt_len);
 } pal_rwvectors_t;
 
-typedef struct pal_cfg_s {
+typedef struct pal_info_s {
     bool                sim;
     void                *baseaddr;
     int                 devfd;
     pal_rwvectors_t    rwvecs;
-} pal_cfg_t;
+} pal_info_t;
 
 pal_ret_t
-pal_init(hal_cfg_t *hal_cfg);
+pal_init(bool sim);
+
+pal_ret_t
+pal_init_sim();
 
 pal_ret_t
 pal_reg_read(uint64_t addr, uint32_t *data);
@@ -48,5 +52,8 @@ pal_mem_write(uint64_t addr, uint8_t *data, uint32_t size);
 
 pal_ret_t
 pal_ring_doorbell(uint64_t addr, uint64_t data);
+
+pal_ret_t
+pal_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
 
 #endif // __PAL_H_

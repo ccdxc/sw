@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include "nic/include/fte.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/asic_pd.hpp"
 
 namespace hal {
 namespace dol {
@@ -10,7 +10,7 @@ thread_local bool g_handler_registered;
 static void
 completion_handler(fte::ctx_t& ctx, bool fail)
 {
-    step_cpu_pkt(ctx.pkt(), ctx.pkt_len());
+    hal::pd::asic_step_cpu_pkt(ctx.pkt(), ctx.pkt_len());
     g_handler_registered = false;
 }
 

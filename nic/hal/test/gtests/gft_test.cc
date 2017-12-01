@@ -4,6 +4,7 @@
 #ifdef GFT
 #include <boost/crc.hpp>
 #include "nic/model_sim/include/lib_model_client.h"
+#include "nic/include/pal.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -577,7 +578,7 @@ TEST_F(gft_test, test1) {
     int ret = 0;
     uint64_t asm_base_addr;
     printf("Connecting to ASIC SIM\n");
-    ret = lib_model_connect();
+    ret = pal_init(true);
     ASSERT_NE(ret, -1);
     ret = capri_load_config((char *)"obj/gft/pgm_bin");
     ASSERT_NE(ret, -1);
