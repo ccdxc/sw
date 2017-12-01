@@ -1796,7 +1796,7 @@ def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,        
                                                         mux_inst_allocator, mux_idx_allocator)
     '''
 
-    return ohi_instr_allocated_count 
+    return ohi_instr_allocated_count
 
 
 def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = None):
@@ -1816,7 +1816,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     mux_idx_allocator = [None for _ in sram['mux_idx']]
     mux_inst_allocator = [(None, None, None) for _ in sram['mux_inst']]
-    mux_inst_id_to_mux_index_id_map = {} # mux_instr_id ->  mux_idx map. 
+    mux_inst_id_to_mux_index_id_map = {} # mux_instr_id ->  mux_idx map.
     mux_inst_id_to_capri_expr_map = {}
     mux_inst_id_to_ohi_id_map = {}
 
@@ -1834,6 +1834,17 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     # lkp_val_inst
     for r,lkp_reg in enumerate(nxt_cs.lkp_regs):
+        if add_cs != None and add_cs.lkp_regs[r].store_en:
+            # make sure if register is stored in start state then it is not loaded in nxt_cs
+            if lkp_reg.type != lkp_reg_type.LKP_REG_NONE and \
+                lkp_reg.type != lkp_reg_type.LKP_REG_RETAIN and \
+                lkp_reg.type != lkp_reg_type.LKP_REG_STORED:
+                parser.logger.critical( \
+                        "Cannot store this registers in state %s as it is loaded in next state %s" % \
+                        (add_cs.name, nxt_cs.name))
+                assert 0, pdb.set_trace()
+                assert 0, "Add a dummy start state to avoid this problem"
+
         if lkp_reg.type == lkp_reg_type.LKP_REG_NONE:
             continue
         elif lkp_reg.type == lkp_reg_type.LKP_REG_PKT:
@@ -1915,6 +1926,18 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         else:
             sram['lkp_val_inst'][r]['store_en']['value'] = str(0)
 
+    # special handling for add_cs lkp_regs that need to be stored,
+    # since start_state(indicated by add_cs) is programmed via init_profile registers,
+    # there was no chance to save these registers. This is handled (somewhat) in the above
+    # code, but when register is not used in nxt_cs, it got missed
+    if add_cs != None:
+        for r,lkp_reg in enumerate(add_cs.lkp_regs):
+            if lkp_reg.type == lkp_reg_type.LKP_REG_NONE or not lkp_reg.store_en:
+                continue
+            # may be create an empty start state ???
+            sram['lkp_val_inst'][r]['sel']['value'] = str(2)     # Retain
+            sram['lkp_val_inst'][r]['muxsel']['value'] = str(0)  # NA
+            sram['lkp_val_inst'][r]['store_en']['value'] = str(1)
     #lkp instructions allocated so far
     lkp_instr_inst = r
 
@@ -2523,7 +2546,9 @@ def capri_parser_output_decoders(parser):
 
                 # Allow smaller json definition file and add entries
                 te['entry_idx'] = str(idx)  # debug aid
+                te['_modified'] = True
                 se['entry_idx'] = str(idx)  # debug aid
+                se['_modified'] = True
                 if idx < len(tcam0):
                     tcam0[idx] = te
                     sram0[idx] = se
@@ -2587,12 +2612,15 @@ def capri_parser_output_decoders(parser):
         sram0.append(se)
     te['entry_idx'] = str(idx)  # debug aid
     se['entry_idx'] = str(idx)  # debug aid
+    te['_modified'] = True
+    se['_modified'] = True
     # program catch all entry register
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['pe_enable']['value'] = str(0x3ff)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['parse_loop_cnt']['value'] = str(64)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['num_phv_flit']['value'] = str(6)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']\
         ['state_lkp_catchall_entry']['value'] = str(idx)
+    ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['_modified'] = True
     idx += 1
     parser.logger.info('%s:Tcam states used %d' % (parser.d.name, idx))
     ppa_json['cap_ppa']['memories']['cap_ppa_csr_dhs_bndl0_state_lkp_tcam']['entries'] = tcam0
@@ -2620,6 +2648,7 @@ def capri_parser_output_decoders(parser):
         init_profile = ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_init_profile[%d]'%i]
         init_profile['curr_offset']['value'] = str(0)
         init_profile['state']['value'] = str(parser.start_state.id)
+        init_profile['_modified'] = True
         for r, reg in enumerate(parser.start_state.lkp_regs):
             if reg.pkt_off >= 0:
                 #init_profile['mux_sel%d' % r]['value'] =  str(r)
@@ -2646,6 +2675,7 @@ def _fill_te_tcam_catch_all(tcam_t):
     tcam_t['valid']['value'] = str(1)
     tcam_t['value']['value'] = str(0)
     tcam_t['mask']['value'] = str(0)
+    tcam_t['_modified'] = True
 
 def _phv_bit_flit_le_bit(phv_bit):
     # ncc numbers everthing from left to right, msb->lsb
@@ -2718,12 +2748,14 @@ def capri_te_cfg_output(stage):
                 json_km_profile['byte_sel']['value'] = no_load_byte
             else:
                 json_km_profile['byte_sel']['value'] = str(b)
+            json_km_profile['_modified'] = True
             sel_id += 1
         # load rest of the bytes to not load the km
         for b in range(sel_id, ((hw_id+1) * max_km_wB)):
             if sel_id >= 256: pdb.set_trace()
             json_km_profile = json_regs['cap_te_csr_cfg_km_profile_byte_sel[%d]' % sel_id]
             json_km_profile['byte_sel']['value'] = no_load_byte
+            json_km_profile['_modified'] = True
             sel_id += 1
 
         byte_sel_val = []
@@ -2758,7 +2790,9 @@ def capri_te_cfg_output(stage):
             if prof.bit_loc >= 0:
                 json_km_profile['valid']['value'] = str(1)
                 json_km_profile['bit_loc']['value'] = str(prof.bit_loc)
+                json_km_profile['_modified'] = True
             else:
+                # do we need to set _modified flag here?
                 json_km_profile['valid']['value'] = str(0)
             json_km_profile = json_regs['cap_te_csr_cfg_km_profile_bit_loc[%d]' % (bit_loc_id+1)]
             json_km_profile['valid']['value'] = str(0)
@@ -2767,12 +2801,14 @@ def capri_te_cfg_output(stage):
             if prof.bit_loc >= 0:
                 json_km_profile['valid']['value'] = str(1)
                 json_km_profile['bit_loc']['value'] = str(prof.bit_loc)
+                json_km_profile['_modified'] = True
             else:
                 json_km_profile['valid']['value'] = str(0)
             json_km_profile = json_regs['cap_te_csr_cfg_km_profile_bit_loc[%d]' % (bit_loc_id+1)]
             if prof.bit_loc1 >= 0:
                 json_km_profile['valid']['value'] = str(1)
                 json_km_profile['bit_loc']['value'] = str(prof.bit_loc1)
+                json_km_profile['_modified'] = True
             else:
                 json_km_profile['valid']['value'] = str(0)
 
@@ -2832,9 +2868,11 @@ def capri_te_cfg_output(stage):
         for k in range(len(key_sel_bits)):
             json_tbl_prof_key['sel%d' % k]['value'] = "0x%x" % \
                 int(_phv_bit_flit_le_bit(key_sel_bits[k]))
+            json_tbl_prof_key['_modified'] = True
 
         for k in range(k+1, max_key_sel):
             json_tbl_prof_key['sel%d' % k]['value'] = str(0)
+            #json_tbl_prof_key['_modified'] = True
 
     prof_idx = 0
     # don't sort the prof_vals, already done while creating profiles
@@ -2864,6 +2902,7 @@ def capri_te_cfg_output(stage):
             te['valid']['value'] = str(1)
             te['value']['value'] = "0x%x" % val
             te['mask']['value'] = "0x%x" % mask
+            te['_modified'] = True
 
         te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx] # for printing
         # do use overflow tcam when programming
@@ -2871,6 +2910,7 @@ def capri_te_cfg_output(stage):
 
         json_tbl_prof = json_regs['cap_te_csr_cfg_table_profile[%d]' % prof_idx]
         json_tbl_prof['mpu_results']['value'] = str(len(active_ctg))
+        json_tbl_prof['_modified'] = True
 
         stage.gtm.tm.logger.debug( \
             "%s:Stage %d:Table profile TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
@@ -2986,6 +3026,7 @@ def capri_te_cfg_output(stage):
             json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
             if stage.table_sequencer[prof_val][cyc].adv_flit:
                 json_sram_ext['adv_phv_flit']['value'] = str(1)
+                json_sram_ext['_modified'] = True
                 prev_fid = fid
                 fid += 1
             else:
@@ -3005,6 +3046,7 @@ def capri_te_cfg_output(stage):
             if stage.table_sequencer[prof_val][cyc].is_last:
                 cyc_done = True
 
+            se['_modified'] = True
             sidx += 1
 
         prof_idx += 1
@@ -3026,10 +3068,12 @@ def capri_te_cfg_output(stage):
         json_tbl_prof = json_regs['cap_te_csr_cfg_table_profile[%d]' % prof_idx]
         json_tbl_prof['mpu_results']['value'] = str(0)
         json_tbl_prof['seq_base']['value'] = str(sidx)
+        json_tbl_prof['_modified'] = True
 
         json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
         json_sram_ext['adv_phv_flit']['value'] = str(1)
         json_sram_ext['done']['value'] = str(1)
+        json_sram_ext['_modified'] = True
 
         # setup sram entry to launch no lookup
         se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
@@ -3119,7 +3163,7 @@ def capri_te_cfg_output(stage):
             k -= 1
 
         if ct.is_writeback:
-            if ct.is_raw:
+            if ct.is_raw or ct.is_raw_index:
                 json_tbl_['lock_en_raw']['value'] = str(1)
             else:
                 json_tbl_['lock_en']['value'] = str(1)
@@ -3181,6 +3225,7 @@ def capri_te_cfg_output(stage):
         else:
             json_tbl_['chain_shift']['value'] = str(0)
 
+        json_tbl_['_modified'] = True
         stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:cap_te_csr_cfg_table_property[%d]:\n%s" % \
             (stage.gtm.d.name, stage.id, ct.p4_table.name, ct.tbl_id,
             te_tbl_property_print(json_tbl_)))
