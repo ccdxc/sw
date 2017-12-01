@@ -50,13 +50,11 @@ func (x EndpointVMotionState) String() string {
 func (EndpointVMotionState) EnumDescriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{0} }
 
 type EndpointAttributes struct {
-	InterfaceHandle    uint64                    `protobuf:"fixed64,1,opt,name=interface_handle,json=interfaceHandle,proto3" json:"interface_handle,omitempty"`
+	InterfaceKeyHandle *InterfaceKeyHandle       `protobuf:"bytes,1,opt,name=interface_key_handle,json=interfaceKeyHandle" json:"ref"`
 	UsegVlan           uint32                    `protobuf:"varint,2,opt,name=useg_vlan,json=usegVlan,proto3" json:"useg_vlan,omitempty"`
 	IpAddress          []*IPAddress              `protobuf:"bytes,3,rep,name=ip_address,json=ipAddress" json:"ip_address,omitempty"`
-	SgHandle           []uint64                  `protobuf:"varint,4,rep,packed,name=sg_handle,json=sgHandle" json:"sg_handle,omitempty"`
+	SgKeyHandle        []*SecurityGroupKeyHandle `protobuf:"bytes,4,rep,name=sg_key_handle,json=sgKeyHandle" json:"ref"`
 	VmotionState       EndpointVMotionState      `protobuf:"varint,5,opt,name=vmotion_state,json=vmotionState,proto3,enum=endpoint.EndpointVMotionState" json:"vmotion_state,omitempty"`
-	InterfaceKeyHandle *InterfaceKeyHandle       `protobuf:"bytes,6,opt,name=interface_key_handle,json=interfaceKeyHandle" json:"interface_ref"`
-	SgKeyHandle        []*SecurityGroupKeyHandle `protobuf:"bytes,7,rep,name=sg_key_handle,json=sgKeyHandle" json:"sg_ref"`
 }
 
 func (m *EndpointAttributes) Reset()                    { *m = EndpointAttributes{} }
@@ -64,11 +62,11 @@ func (m *EndpointAttributes) String() string            { return proto.CompactTe
 func (*EndpointAttributes) ProtoMessage()               {}
 func (*EndpointAttributes) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{0} }
 
-func (m *EndpointAttributes) GetInterfaceHandle() uint64 {
+func (m *EndpointAttributes) GetInterfaceKeyHandle() *InterfaceKeyHandle {
 	if m != nil {
-		return m.InterfaceHandle
+		return m.InterfaceKeyHandle
 	}
-	return 0
+	return nil
 }
 
 func (m *EndpointAttributes) GetUsegVlan() uint32 {
@@ -85,9 +83,9 @@ func (m *EndpointAttributes) GetIpAddress() []*IPAddress {
 	return nil
 }
 
-func (m *EndpointAttributes) GetSgHandle() []uint64 {
+func (m *EndpointAttributes) GetSgKeyHandle() []*SecurityGroupKeyHandle {
 	if m != nil {
-		return m.SgHandle
+		return m.SgKeyHandle
 	}
 	return nil
 }
@@ -99,24 +97,10 @@ func (m *EndpointAttributes) GetVmotionState() EndpointVMotionState {
 	return EndpointVMotionState_VMOTION_STATE_NONE
 }
 
-func (m *EndpointAttributes) GetInterfaceKeyHandle() *InterfaceKeyHandle {
-	if m != nil {
-		return m.InterfaceKeyHandle
-	}
-	return nil
-}
-
-func (m *EndpointAttributes) GetSgKeyHandle() []*SecurityGroupKeyHandle {
-	if m != nil {
-		return m.SgKeyHandle
-	}
-	return nil
-}
-
 // EndpointSpec is used to add or update an endpoint
 type EndpointSpec struct {
 	Meta          *ObjectMeta         `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	L2Key         *EndpointL2Key      `protobuf:"bytes,2,opt,name=l2_key,json=l2Key" json:"l2_key,omitempty"`
+	KeyOrHandle   *EndpointKeyHandle  `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key"`
 	VrfKeyHandle  *VrfKeyHandle       `protobuf:"bytes,3,opt,name=vrf_key_handle,json=vrfKeyHandle" json:"ref"`
 	EndpointAttrs *EndpointAttributes `protobuf:"bytes,4,opt,name=endpoint_attrs,json=endpointAttrs" json:"endpoint_attrs,omitempty"`
 }
@@ -133,9 +117,9 @@ func (m *EndpointSpec) GetMeta() *ObjectMeta {
 	return nil
 }
 
-func (m *EndpointSpec) GetL2Key() *EndpointL2Key {
+func (m *EndpointSpec) GetKeyOrHandle() *EndpointKeyHandle {
 	if m != nil {
-		return m.L2Key
+		return m.KeyOrHandle
 	}
 	return nil
 }
@@ -239,7 +223,7 @@ func (m *EndpointStatus) GetIsEndpointLocal() bool {
 
 // EndpointResponse is response to EndpointSpec
 type EndpointResponse struct {
-	ApiStatus      ApiStatus       `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	ApiStatus      ApiStatus       `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
 	EndpointStatus *EndpointStatus `protobuf:"bytes,2,opt,name=endpoint_status,json=endpointStatus" json:"endpoint_status,omitempty"`
 }
 
@@ -362,10 +346,9 @@ func (m *EndpointUpdateResponseMsg) GetResponse() []*EndpointResponse {
 // so that agent and HAL are less chatty when doing bulk deletes (e.g.
 // when a L2 segment is deleted or interfae goes down etc.)
 type EndpointFilter struct {
-	L2SegmentHandle    uint64              `protobuf:"fixed64,1,opt,name=l2_segment_handle,json=l2SegmentHandle,proto3" json:"l2_segment_handle,omitempty"`
-	InterfaceHandle    uint64              `protobuf:"fixed64,2,opt,name=interface_handle,json=interfaceHandle,proto3" json:"interface_handle,omitempty"`
-	VrfKeyHandle       *VrfKeyHandle       `protobuf:"bytes,3,opt,name=vrf_key_handle,json=vrfKeyHandle" json:"vrf_ref"`
-	L2SegmentKeyHandle *L2SegmentKeyHandle `protobuf:"bytes,4,opt,name=l2Segment_key_handle,json=l2SegmentKeyHandle" json:"l2seg_ref"`
+	VrfKeyHandle       *VrfKeyHandle       `protobuf:"bytes,1,opt,name=vrf_key_handle,json=vrfKeyHandle" json:"vrf_ref"`
+	InterfaceKeyHandle *InterfaceKeyHandle `protobuf:"bytes,2,opt,name=interface_key_handle,json=interfaceKeyHandle" json:"ref"`
+	L2SegmentKeyHandle *L2SegmentKeyHandle `protobuf:"bytes,3,opt,name=l2Segment_key_handle,json=l2SegmentKeyHandle" json:"l2seg_ref"`
 }
 
 func (m *EndpointFilter) Reset()                    { *m = EndpointFilter{} }
@@ -373,23 +356,16 @@ func (m *EndpointFilter) String() string            { return proto.CompactTextSt
 func (*EndpointFilter) ProtoMessage()               {}
 func (*EndpointFilter) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{9} }
 
-func (m *EndpointFilter) GetL2SegmentHandle() uint64 {
-	if m != nil {
-		return m.L2SegmentHandle
-	}
-	return 0
-}
-
-func (m *EndpointFilter) GetInterfaceHandle() uint64 {
-	if m != nil {
-		return m.InterfaceHandle
-	}
-	return 0
-}
-
 func (m *EndpointFilter) GetVrfKeyHandle() *VrfKeyHandle {
 	if m != nil {
 		return m.VrfKeyHandle
+	}
+	return nil
+}
+
+func (m *EndpointFilter) GetInterfaceKeyHandle() *InterfaceKeyHandle {
+	if m != nil {
+		return m.InterfaceKeyHandle
 	}
 	return nil
 }
@@ -560,21 +536,37 @@ func (m *EndpointDeleteRequestMsg) GetRequest() []*EndpointDeleteRequest {
 	return nil
 }
 
+type EndpointDeleteResponse struct {
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+}
+
+func (m *EndpointDeleteResponse) Reset()                    { *m = EndpointDeleteResponse{} }
+func (m *EndpointDeleteResponse) String() string            { return proto.CompactTextString(m) }
+func (*EndpointDeleteResponse) ProtoMessage()               {}
+func (*EndpointDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{12} }
+
+func (m *EndpointDeleteResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
 // EndpointDeleteResponseMsg is used to delete a batch of Endpoints
 type EndpointDeleteResponseMsg struct {
-	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
+	Response []*EndpointDeleteResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
 func (m *EndpointDeleteResponseMsg) Reset()         { *m = EndpointDeleteResponseMsg{} }
 func (m *EndpointDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*EndpointDeleteResponseMsg) ProtoMessage()    {}
 func (*EndpointDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorEndpoint, []int{12}
+	return fileDescriptorEndpoint, []int{13}
 }
 
-func (m *EndpointDeleteResponseMsg) GetApiStatus() []ApiStatus {
+func (m *EndpointDeleteResponseMsg) GetResponse() []*EndpointDeleteResponse {
 	if m != nil {
-		return m.ApiStatus
+		return m.Response
 	}
 	return nil
 }
@@ -590,7 +582,7 @@ type EndpointGetRequest struct {
 func (m *EndpointGetRequest) Reset()                    { *m = EndpointGetRequest{} }
 func (m *EndpointGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetRequest) ProtoMessage()               {}
-func (*EndpointGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{13} }
+func (*EndpointGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{14} }
 
 func (m *EndpointGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -621,7 +613,7 @@ type EndpointGetRequestMsg struct {
 func (m *EndpointGetRequestMsg) Reset()                    { *m = EndpointGetRequestMsg{} }
 func (m *EndpointGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetRequestMsg) ProtoMessage()               {}
-func (*EndpointGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{14} }
+func (*EndpointGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{15} }
 
 func (m *EndpointGetRequestMsg) GetRequest() []*EndpointGetRequest {
 	if m != nil {
@@ -642,7 +634,7 @@ func (m *EndpointGetByInterfaceRequestMsg) Reset()         { *m = EndpointGetByI
 func (m *EndpointGetByInterfaceRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*EndpointGetByInterfaceRequestMsg) ProtoMessage()    {}
 func (*EndpointGetByInterfaceRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorEndpoint, []int{15}
+	return fileDescriptorEndpoint, []int{16}
 }
 
 func (m *EndpointGetByInterfaceRequestMsg) GetMeta() *ObjectMeta {
@@ -681,7 +673,7 @@ func (m *EndpointGetAllRequestMsg) Reset()         { *m = EndpointGetAllRequestM
 func (m *EndpointGetAllRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*EndpointGetAllRequestMsg) ProtoMessage()    {}
 func (*EndpointGetAllRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorEndpoint, []int{16}
+	return fileDescriptorEndpoint, []int{17}
 }
 
 // EndpointStats is the statistics object for each Endpoint
@@ -691,11 +683,11 @@ type EndpointStats struct {
 func (m *EndpointStats) Reset()                    { *m = EndpointStats{} }
 func (m *EndpointStats) String() string            { return proto.CompactTextString(m) }
 func (*EndpointStats) ProtoMessage()               {}
-func (*EndpointStats) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{17} }
+func (*EndpointStats) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{18} }
 
 // EndpointGetResponse captures all the information about one Endpoint
 type EndpointGetResponse struct {
-	ApiStatus ApiStatus       `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	ApiStatus ApiStatus       `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
 	Spec      *EndpointSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
 	Status    *EndpointStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
 	Stats     *EndpointStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
@@ -704,7 +696,7 @@ type EndpointGetResponse struct {
 func (m *EndpointGetResponse) Reset()                    { *m = EndpointGetResponse{} }
 func (m *EndpointGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetResponse) ProtoMessage()               {}
-func (*EndpointGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{18} }
+func (*EndpointGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{19} }
 
 func (m *EndpointGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -736,14 +728,14 @@ func (m *EndpointGetResponse) GetStats() *EndpointStats {
 
 // EndpointGetResponseMsg is batched response to EndpointGetRequestMsg
 type EndpointGetResponseMsg struct {
-	ApiStatus ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	ApiStatus ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
 	Response  []*EndpointGetResponse `protobuf:"bytes,2,rep,name=response" json:"response,omitempty"`
 }
 
 func (m *EndpointGetResponseMsg) Reset()                    { *m = EndpointGetResponseMsg{} }
 func (m *EndpointGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetResponseMsg) ProtoMessage()               {}
-func (*EndpointGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{19} }
+func (*EndpointGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{20} }
 
 func (m *EndpointGetResponseMsg) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -772,6 +764,7 @@ func init() {
 	proto.RegisterType((*EndpointFilter)(nil), "endpoint.EndpointFilter")
 	proto.RegisterType((*EndpointDeleteRequest)(nil), "endpoint.EndpointDeleteRequest")
 	proto.RegisterType((*EndpointDeleteRequestMsg)(nil), "endpoint.EndpointDeleteRequestMsg")
+	proto.RegisterType((*EndpointDeleteResponse)(nil), "endpoint.EndpointDeleteResponse")
 	proto.RegisterType((*EndpointDeleteResponseMsg)(nil), "endpoint.EndpointDeleteResponseMsg")
 	proto.RegisterType((*EndpointGetRequest)(nil), "endpoint.EndpointGetRequest")
 	proto.RegisterType((*EndpointGetRequestMsg)(nil), "endpoint.EndpointGetRequestMsg")
@@ -1035,10 +1028,15 @@ func (m *EndpointAttributes) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.InterfaceHandle != 0 {
-		dAtA[i] = 0x9
+	if m.InterfaceKeyHandle != nil {
+		dAtA[i] = 0xa
 		i++
-		i = encodeFixed64Endpoint(dAtA, i, uint64(m.InterfaceHandle))
+		i = encodeVarintEndpoint(dAtA, i, uint64(m.InterfaceKeyHandle.Size()))
+		n1, err := m.InterfaceKeyHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
 	}
 	if m.UsegVlan != 0 {
 		dAtA[i] = 0x10
@@ -1057,41 +1055,9 @@ func (m *EndpointAttributes) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if len(m.SgHandle) > 0 {
-		dAtA2 := make([]byte, len(m.SgHandle)*10)
-		var j1 int
-		for _, num := range m.SgHandle {
-			for num >= 1<<7 {
-				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j1++
-			}
-			dAtA2[j1] = uint8(num)
-			j1++
-		}
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(j1))
-		i += copy(dAtA[i:], dAtA2[:j1])
-	}
-	if m.VmotionState != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(m.VmotionState))
-	}
-	if m.InterfaceKeyHandle != nil {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(m.InterfaceKeyHandle.Size()))
-		n3, err := m.InterfaceKeyHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n3
-	}
 	if len(m.SgKeyHandle) > 0 {
 		for _, msg := range m.SgKeyHandle {
-			dAtA[i] = 0x3a
+			dAtA[i] = 0x22
 			i++
 			i = encodeVarintEndpoint(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -1100,6 +1066,11 @@ func (m *EndpointAttributes) MarshalTo(dAtA []byte) (int, error) {
 			}
 			i += n
 		}
+	}
+	if m.VmotionState != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintEndpoint(dAtA, i, uint64(m.VmotionState))
 	}
 	return i, nil
 }
@@ -1123,41 +1094,41 @@ func (m *EndpointSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Meta.Size()))
-		n4, err := m.Meta.MarshalTo(dAtA[i:])
+		n2, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n2
 	}
-	if m.L2Key != nil {
+	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(m.L2Key.Size()))
-		n5, err := m.L2Key.MarshalTo(dAtA[i:])
+		i = encodeVarintEndpoint(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n3, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n3
 	}
 	if m.VrfKeyHandle != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n6, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n4, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n4
 	}
 	if m.EndpointAttrs != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.EndpointAttrs.Size()))
-		n7, err := m.EndpointAttrs.MarshalTo(dAtA[i:])
+		n5, err := m.EndpointAttrs.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n5
 	}
 	return i, nil
 }
@@ -1301,11 +1272,11 @@ func (m *EndpointResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.EndpointStatus.Size()))
-		n8, err := m.EndpointStatus.MarshalTo(dAtA[i:])
+		n6, err := m.EndpointStatus.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n6
 	}
 	return i, nil
 }
@@ -1359,41 +1330,41 @@ func (m *EndpointUpdateRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Meta.Size()))
-		n9, err := m.Meta.MarshalTo(dAtA[i:])
+		n7, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n7
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n10, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n8, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n8
 	}
 	if m.VrfKeyHandle != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n11, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n9, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n9
 	}
 	if m.EndpointAttrs != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.EndpointAttrs.Size()))
-		n12, err := m.EndpointAttrs.MarshalTo(dAtA[i:])
+		n10, err := m.EndpointAttrs.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n10
 	}
 	return i, nil
 }
@@ -1473,35 +1444,35 @@ func (m *EndpointFilter) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.L2SegmentHandle != 0 {
-		dAtA[i] = 0x9
-		i++
-		i = encodeFixed64Endpoint(dAtA, i, uint64(m.L2SegmentHandle))
-	}
-	if m.InterfaceHandle != 0 {
-		dAtA[i] = 0x11
-		i++
-		i = encodeFixed64Endpoint(dAtA, i, uint64(m.InterfaceHandle))
-	}
 	if m.VrfKeyHandle != nil {
-		dAtA[i] = 0x1a
+		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n13, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n11, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	if m.InterfaceKeyHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintEndpoint(dAtA, i, uint64(m.InterfaceKeyHandle.Size()))
+		n12, err := m.InterfaceKeyHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	if m.L2SegmentKeyHandle != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintEndpoint(dAtA, i, uint64(m.L2SegmentKeyHandle.Size()))
+		n13, err := m.L2SegmentKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n13
-	}
-	if m.L2SegmentKeyHandle != nil {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(m.L2SegmentKeyHandle.Size()))
-		n14, err := m.L2SegmentKeyHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n14
 	}
 	return i, nil
 }
@@ -1525,28 +1496,28 @@ func (m *EndpointDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Meta.Size()))
-		n15, err := m.Meta.MarshalTo(dAtA[i:])
+		n14, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n15
+		i += n14
 	}
 	if m.DeleteBy != nil {
-		nn16, err := m.DeleteBy.MarshalTo(dAtA[i:])
+		nn15, err := m.DeleteBy.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn16
+		i += nn15
 	}
 	if m.VrfKeyHandle != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n17, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n16, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n17
+		i += n16
 	}
 	return i, nil
 }
@@ -1557,11 +1528,11 @@ func (m *EndpointDeleteRequest_KeyOrHandle) MarshalTo(dAtA []byte) (int, error) 
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n18, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n17, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n18
+		i += n17
 	}
 	return i, nil
 }
@@ -1571,11 +1542,11 @@ func (m *EndpointDeleteRequest_Filter) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Filter.Size()))
-		n19, err := m.Filter.MarshalTo(dAtA[i:])
+		n18, err := m.Filter.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n19
+		i += n18
 	}
 	return i, nil
 }
@@ -1609,6 +1580,29 @@ func (m *EndpointDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *EndpointDeleteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EndpointDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintEndpoint(dAtA, i, uint64(m.ApiStatus))
+	}
+	return i, nil
+}
+
 func (m *EndpointDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1624,22 +1618,17 @@ func (m *EndpointDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.ApiStatus) > 0 {
-		dAtA21 := make([]byte, len(m.ApiStatus)*10)
-		var j20 int
-		for _, num := range m.ApiStatus {
-			for num >= 1<<7 {
-				dAtA21[j20] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j20++
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintEndpoint(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
 			}
-			dAtA21[j20] = uint8(num)
-			j20++
+			i += n
 		}
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(j20))
-		i += copy(dAtA[i:], dAtA21[:j20])
 	}
 	return i, nil
 }
@@ -1663,31 +1652,31 @@ func (m *EndpointGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Meta.Size()))
-		n22, err := m.Meta.MarshalTo(dAtA[i:])
+		n19, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n22
+		i += n19
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n23, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n20, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n23
+		i += n20
 	}
 	if m.VrfKeyHandle != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n24, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n21, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n24
+		i += n21
 	}
 	return i, nil
 }
@@ -1741,11 +1730,11 @@ func (m *EndpointGetByInterfaceRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Meta.Size()))
-		n25, err := m.Meta.MarshalTo(dAtA[i:])
+		n22, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n25
+		i += n22
 	}
 	if m.InterfaceHandle != 0 {
 		dAtA[i] = 0x11
@@ -1756,21 +1745,21 @@ func (m *EndpointGetByInterfaceRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n26, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n23, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n26
+		i += n23
 	}
 	if m.InterfaceKeyHandle != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.InterfaceKeyHandle.Size()))
-		n27, err := m.InterfaceKeyHandle.MarshalTo(dAtA[i:])
+		n24, err := m.InterfaceKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n27
+		i += n24
 	}
 	return i, nil
 }
@@ -1835,31 +1824,31 @@ func (m *EndpointGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Spec.Size()))
-		n28, err := m.Spec.MarshalTo(dAtA[i:])
+		n25, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n28
+		i += n25
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Status.Size()))
-		n29, err := m.Status.MarshalTo(dAtA[i:])
+		n26, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n29
+		i += n26
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Stats.Size()))
-		n30, err := m.Stats.MarshalTo(dAtA[i:])
+		n27, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n30
+		i += n27
 	}
 	return i, nil
 }
@@ -1929,8 +1918,9 @@ func encodeVarintEndpoint(dAtA []byte, offset int, v uint64) int {
 func (m *EndpointAttributes) Size() (n int) {
 	var l int
 	_ = l
-	if m.InterfaceHandle != 0 {
-		n += 9
+	if m.InterfaceKeyHandle != nil {
+		l = m.InterfaceKeyHandle.Size()
+		n += 1 + l + sovEndpoint(uint64(l))
 	}
 	if m.UsegVlan != 0 {
 		n += 1 + sovEndpoint(uint64(m.UsegVlan))
@@ -1941,25 +1931,14 @@ func (m *EndpointAttributes) Size() (n int) {
 			n += 1 + l + sovEndpoint(uint64(l))
 		}
 	}
-	if len(m.SgHandle) > 0 {
-		l = 0
-		for _, e := range m.SgHandle {
-			l += sovEndpoint(uint64(e))
-		}
-		n += 1 + sovEndpoint(uint64(l)) + l
-	}
-	if m.VmotionState != 0 {
-		n += 1 + sovEndpoint(uint64(m.VmotionState))
-	}
-	if m.InterfaceKeyHandle != nil {
-		l = m.InterfaceKeyHandle.Size()
-		n += 1 + l + sovEndpoint(uint64(l))
-	}
 	if len(m.SgKeyHandle) > 0 {
 		for _, e := range m.SgKeyHandle {
 			l = e.Size()
 			n += 1 + l + sovEndpoint(uint64(l))
 		}
+	}
+	if m.VmotionState != 0 {
+		n += 1 + sovEndpoint(uint64(m.VmotionState))
 	}
 	return n
 }
@@ -1971,8 +1950,8 @@ func (m *EndpointSpec) Size() (n int) {
 		l = m.Meta.Size()
 		n += 1 + l + sovEndpoint(uint64(l))
 	}
-	if m.L2Key != nil {
-		l = m.L2Key.Size()
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
 		n += 1 + l + sovEndpoint(uint64(l))
 	}
 	if m.VrfKeyHandle != nil {
@@ -2102,14 +2081,12 @@ func (m *EndpointUpdateResponseMsg) Size() (n int) {
 func (m *EndpointFilter) Size() (n int) {
 	var l int
 	_ = l
-	if m.L2SegmentHandle != 0 {
-		n += 9
-	}
-	if m.InterfaceHandle != 0 {
-		n += 9
-	}
 	if m.VrfKeyHandle != nil {
 		l = m.VrfKeyHandle.Size()
+		n += 1 + l + sovEndpoint(uint64(l))
+	}
+	if m.InterfaceKeyHandle != nil {
+		l = m.InterfaceKeyHandle.Size()
 		n += 1 + l + sovEndpoint(uint64(l))
 	}
 	if m.L2SegmentKeyHandle != nil {
@@ -2166,15 +2143,23 @@ func (m *EndpointDeleteRequestMsg) Size() (n int) {
 	return n
 }
 
+func (m *EndpointDeleteResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovEndpoint(uint64(m.ApiStatus))
+	}
+	return n
+}
+
 func (m *EndpointDeleteResponseMsg) Size() (n int) {
 	var l int
 	_ = l
-	if len(m.ApiStatus) > 0 {
-		l = 0
-		for _, e := range m.ApiStatus {
-			l += sovEndpoint(uint64(e))
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovEndpoint(uint64(l))
 		}
-		n += 1 + sovEndpoint(uint64(l)) + l
 	}
 	return n
 }
@@ -2321,22 +2306,38 @@ func (m *EndpointAttributes) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceHandle", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceKeyHandle", wireType)
 			}
-			m.InterfaceHandle = 0
-			if (iNdEx + 8) > l {
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEndpoint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEndpoint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			iNdEx += 8
-			m.InterfaceHandle = uint64(dAtA[iNdEx-8])
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-1]) << 56
+			if m.InterfaceKeyHandle == nil {
+				m.InterfaceKeyHandle = &InterfaceKeyHandle{}
+			}
+			if err := m.InterfaceKeyHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UsegVlan", wireType)
@@ -2388,120 +2389,6 @@ func (m *EndpointAttributes) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 4:
-			if wireType == 0 {
-				var v uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowEndpoint
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.SgHandle = append(m.SgHandle, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowEndpoint
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthEndpoint
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				for iNdEx < postIndex {
-					var v uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowEndpoint
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= (uint64(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.SgHandle = append(m.SgHandle, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field SgHandle", wireType)
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VmotionState", wireType)
-			}
-			m.VmotionState = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.VmotionState |= (EndpointVMotionState(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceKeyHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.InterfaceKeyHandle == nil {
-				m.InterfaceKeyHandle = &InterfaceKeyHandle{}
-			}
-			if err := m.InterfaceKeyHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SgKeyHandle", wireType)
 			}
@@ -2532,6 +2419,25 @@ func (m *EndpointAttributes) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VmotionState", wireType)
+			}
+			m.VmotionState = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEndpoint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VmotionState |= (EndpointVMotionState(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEndpoint(dAtA[iNdEx:])
@@ -2617,7 +2523,7 @@ func (m *EndpointSpec) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field L2Key", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2641,10 +2547,10 @@ func (m *EndpointSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.L2Key == nil {
-				m.L2Key = &EndpointL2Key{}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &EndpointKeyHandle{}
 			}
-			if err := m.L2Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3571,40 +3477,6 @@ func (m *EndpointFilter) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field L2SegmentHandle", wireType)
-			}
-			m.L2SegmentHandle = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += 8
-			m.L2SegmentHandle = uint64(dAtA[iNdEx-8])
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-1]) << 56
-		case 2:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceHandle", wireType)
-			}
-			m.InterfaceHandle = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += 8
-			m.InterfaceHandle = uint64(dAtA[iNdEx-8])
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.InterfaceHandle |= uint64(dAtA[iNdEx-1]) << 56
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VrfKeyHandle", wireType)
 			}
@@ -3637,7 +3509,40 @@ func (m *EndpointFilter) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceKeyHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEndpoint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEndpoint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.InterfaceKeyHandle == nil {
+				m.InterfaceKeyHandle = &InterfaceKeyHandle{}
+			}
+			if err := m.InterfaceKeyHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field L2SegmentKeyHandle", wireType)
 			}
@@ -3952,6 +3857,75 @@ func (m *EndpointDeleteRequestMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *EndpointDeleteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEndpoint
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EndpointDeleteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EndpointDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEndpoint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEndpoint(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEndpoint
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *EndpointDeleteResponseMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3982,67 +3956,36 @@ func (m *EndpointDeleteResponseMsg) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType == 0 {
-				var v ApiStatus
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowEndpoint
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= (ApiStatus(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEndpoint
 				}
-				m.ApiStatus = append(m.ApiStatus, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowEndpoint
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthEndpoint
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex > l {
+				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				for iNdEx < postIndex {
-					var v ApiStatus
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowEndpoint
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= (ApiStatus(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.ApiStatus = append(m.ApiStatus, v)
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
 				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthEndpoint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &EndpointDeleteResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEndpoint(dAtA[iNdEx:])
@@ -4936,84 +4879,82 @@ var (
 func init() { proto.RegisterFile("endpoint.proto", fileDescriptorEndpoint) }
 
 var fileDescriptorEndpoint = []byte{
-	// 1255 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0xcf, 0x6f, 0xe2, 0xc6,
-	0x17, 0xc7, 0x40, 0x08, 0x19, 0xc2, 0x8f, 0xcc, 0x66, 0xb3, 0x7c, 0xf9, 0xee, 0x06, 0xe4, 0xaa,
-	0x2a, 0x8d, 0x54, 0xba, 0xa2, 0x52, 0xa5, 0xed, 0xa5, 0x22, 0x84, 0x4d, 0xd2, 0x84, 0xb0, 0x32,
-	0x24, 0xad, 0xba, 0x07, 0xcb, 0x81, 0x01, 0x5c, 0x1c, 0x70, 0x67, 0x86, 0x48, 0xdc, 0xdb, 0xde,
-	0xaa, 0xaa, 0x97, 0x6a, 0xff, 0x89, 0xfe, 0x1f, 0xdb, 0x5b, 0xa5, 0xde, 0x51, 0x95, 0xaa, 0x97,
-	0x1c, 0xfb, 0x17, 0x54, 0x33, 0x63, 0x7b, 0x0c, 0x98, 0x0d, 0xdb, 0xad, 0xaa, 0xf6, 0x84, 0x3d,
-	0xef, 0xbd, 0x8f, 0xdf, 0x7c, 0xde, 0xe7, 0xcd, 0x9b, 0x04, 0xa4, 0xd0, 0xb0, 0x63, 0x8f, 0xcc,
-	0x21, 0x2d, 0xd9, 0x78, 0x44, 0x47, 0x30, 0xee, 0xbe, 0xe7, 0x12, 0x74, 0x62, 0x23, 0x22, 0x96,
-	0x73, 0xf1, 0x41, 0x5f, 0x3c, 0xa9, 0x2f, 0x22, 0x00, 0xd6, 0x1c, 0x9f, 0x0a, 0xa5, 0xd8, 0xbc,
-	0x1c, 0x53, 0x44, 0xe0, 0xbb, 0x20, 0x63, 0x0e, 0x29, 0xc2, 0x5d, 0xa3, 0x8d, 0xf4, 0xbe, 0x31,
-	0xec, 0x58, 0x28, 0xab, 0x14, 0x94, 0x62, 0x4c, 0x4b, 0x7b, 0xeb, 0x47, 0x7c, 0x19, 0xfe, 0x1f,
-	0x6c, 0x8c, 0x09, 0xea, 0xe9, 0xd7, 0x96, 0x31, 0xcc, 0x86, 0x0b, 0x4a, 0x31, 0xa9, 0xc5, 0xd9,
-	0xc2, 0x85, 0x65, 0x0c, 0xe1, 0xfb, 0x00, 0x98, 0xb6, 0x6e, 0x74, 0x3a, 0x18, 0x11, 0x92, 0x8d,
-	0x14, 0x22, 0xc5, 0x44, 0x39, 0x53, 0x12, 0xa9, 0x1c, 0x3f, 0xab, 0x88, 0x75, 0x6d, 0xc3, 0xb4,
-	0x9d, 0x47, 0x86, 0x46, 0x7a, 0xee, 0x17, 0xa3, 0x85, 0x48, 0x31, 0xaa, 0xc5, 0x49, 0xcf, 0xf9,
-	0x54, 0x15, 0x24, 0xaf, 0xaf, 0x46, 0xd4, 0x1c, 0x0d, 0x75, 0x42, 0x0d, 0x8a, 0xb2, 0x6b, 0x05,
-	0xa5, 0x98, 0x2a, 0xef, 0x96, 0xbc, 0x5d, 0xbb, 0x5b, 0xb9, 0xa8, 0x73, 0xb7, 0x26, 0xf3, 0xd2,
-	0x36, 0x9d, 0x20, 0xfe, 0x06, 0x9f, 0x83, 0x6d, 0xb9, 0xb5, 0x01, 0x9a, 0xb8, 0x1f, 0x8b, 0x15,
-	0x94, 0x62, 0xa2, 0xbc, 0x53, 0x1a, 0xf4, 0x4b, 0xc7, 0xae, 0xfd, 0x04, 0x4d, 0xc4, 0xa7, 0xf7,
-	0xb7, 0x6e, 0xa7, 0xf9, 0xa4, 0x8c, 0xc3, 0xa8, 0xab, 0x41, 0x73, 0xc1, 0x0d, 0x7e, 0x02, 0x92,
-	0xa4, 0xe7, 0x47, 0x5d, 0xe7, 0x5b, 0xce, 0x31, 0xd4, 0x26, 0x6a, 0x8f, 0xb1, 0x49, 0x27, 0x87,
-	0x78, 0x34, 0xb6, 0x25, 0x32, 0xb8, 0x9d, 0xe6, 0x63, 0xa4, 0xc7, 0x21, 0x13, 0xa4, 0xe7, 0x19,
-	0xd4, 0xdf, 0x15, 0xb0, 0xe9, 0xee, 0xa7, 0x69, 0xa3, 0x36, 0x7c, 0x1b, 0x44, 0xaf, 0x10, 0x35,
-	0x78, 0x21, 0x12, 0xe5, 0x2d, 0x87, 0xc6, 0xc6, 0xe5, 0x17, 0xa8, 0x4d, 0xeb, 0x88, 0x1a, 0x1a,
-	0x37, 0xc3, 0x22, 0x88, 0x59, 0x65, 0x96, 0x03, 0xaf, 0x06, 0x73, 0x1c, 0xf4, 0x3d, 0x62, 0x4e,
-	0xcb, 0x27, 0x68, 0xa2, 0xad, 0x59, 0xec, 0x07, 0x7e, 0x0c, 0x52, 0xd7, 0xb8, 0xeb, 0x4f, 0x37,
-	0xc2, 0x23, 0x32, 0x2c, 0xe2, 0x02, 0x77, 0x65, 0x92, 0xeb, 0xb7, 0xd3, 0x7c, 0x84, 0x65, 0xb8,
-	0x79, 0xed, 0x5b, 0x86, 0x55, 0x29, 0x38, 0xdd, 0xa0, 0x14, 0x93, 0x6c, 0x94, 0x03, 0x3c, 0x5c,
-	0xac, 0x88, 0x14, 0x97, 0x96, 0x44, 0xbe, 0x35, 0xa2, 0x3e, 0x95, 0x0a, 0xd4, 0xd0, 0x97, 0x63,
-	0x44, 0x68, 0x9d, 0xf4, 0xe0, 0x63, 0xb0, 0x8e, 0xc5, 0x5b, 0x56, 0xe1, 0x1c, 0xee, 0x2c, 0x62,
-	0x32, 0x56, 0x34, 0xd7, 0x4d, 0x7d, 0x19, 0x06, 0x29, 0xcf, 0x42, 0x0d, 0x3a, 0x26, 0xf0, 0x1d,
-	0x90, 0xf6, 0xf2, 0x9b, 0x51, 0xb1, 0x97, 0xb6, 0xb3, 0x91, 0x59, 0x9d, 0x86, 0xef, 0xd6, 0xe9,
-	0x1e, 0xd8, 0xb2, 0x90, 0x81, 0x87, 0x3a, 0x19, 0x8d, 0x71, 0x1b, 0xe9, 0x9d, 0x7e, 0xdb, 0xe6,
-	0xec, 0xc5, 0xb5, 0x34, 0x37, 0x34, 0xf9, 0xfa, 0x41, 0xbf, 0x6d, 0xc3, 0x22, 0xc8, 0xcc, 0xf8,
-	0x1a, 0xd8, 0xe6, 0x3c, 0xc5, 0xb5, 0x94, 0xcf, 0xb5, 0x82, 0xed, 0x05, 0x54, 0xcc, 0x5c, 0xd7,
-	0x16, 0x50, 0x35, 0x03, 0xdb, 0xb0, 0x04, 0xee, 0xcd, 0xf8, 0xb6, 0x47, 0xc3, 0xae, 0xd9, 0xe3,
-	0x32, 0x8e, 0x6b, 0x5b, 0x3e, 0xef, 0x2a, 0x37, 0x30, 0x6c, 0x93, 0xe8, 0x1e, 0x1d, 0xd6, 0xa8,
-	0x6d, 0x58, 0xd9, 0x75, 0x81, 0x6d, 0x12, 0x4f, 0x1f, 0x6c, 0x59, 0xfd, 0x46, 0x01, 0x19, 0x59,
-	0x13, 0x62, 0x8f, 0x86, 0x84, 0x73, 0x64, 0xd8, 0x26, 0xef, 0xbc, 0x31, 0xe1, 0x3c, 0xa6, 0x3c,
-	0x8e, 0x2a, 0xb6, 0x29, 0x28, 0xd7, 0x36, 0x0c, 0xf7, 0x11, 0x56, 0x7c, 0xec, 0x3b, 0x51, 0x42,
-	0x91, 0xd9, 0x80, 0x52, 0x8a, 0x68, 0xaf, 0x2e, 0xe2, 0x5d, 0xad, 0x83, 0x7b, 0xf3, 0x79, 0x30,
-	0x71, 0x7c, 0x08, 0xe2, 0xd8, 0x79, 0x75, 0xd4, 0x91, 0x5b, 0x84, 0x74, 0x03, 0x34, 0xcf, 0x57,
-	0xfd, 0x3e, 0x0c, 0xee, 0xbb, 0xe6, 0x73, 0xbb, 0xc3, 0x0e, 0x07, 0x21, 0x9e, 0x55, 0x7b, 0xeb,
-	0x04, 0x24, 0x59, 0xb7, 0x8c, 0xb0, 0x2b, 0x27, 0xb1, 0xa1, 0xfb, 0xfe, 0x16, 0x93, 0x5d, 0x93,
-	0xf9, 0x63, 0x9a, 0xdf, 0xbc, 0x46, 0x43, 0xb3, 0x8d, 0x3e, 0x52, 0x07, 0x68, 0xa2, 0x6a, 0x89,
-	0x01, 0x9a, 0x34, 0xb0, 0x23, 0xba, 0x7f, 0x47, 0xfb, 0x9d, 0x83, 0x6c, 0x20, 0x25, 0x8c, 0xe7,
-	0x27, 0xf3, 0x4d, 0x98, 0x5f, 0x44, 0x9e, 0x09, 0x92, 0xdd, 0xd8, 0x04, 0xff, 0x9b, 0xf7, 0x78,
-	0xf3, 0xfa, 0x7d, 0xed, 0x6b, 0xf1, 0xa7, 0xa6, 0x45, 0x11, 0xe6, 0x2d, 0x53, 0xd6, 0x09, 0xea,
-	0x5d, 0xa1, 0xf9, 0x26, 0x4f, 0x5b, 0xe5, 0xa6, 0x58, 0x77, 0xf8, 0x0a, 0x9a, 0x6a, 0xe1, 0xe0,
-	0xa9, 0x56, 0x5d, 0xb9, 0x36, 0x89, 0xdb, 0x69, 0x7e, 0x9d, 0xf9, 0x2e, 0xd6, 0xe7, 0x53, 0xb0,
-	0xed, 0xa5, 0xe0, 0x87, 0x8a, 0xca, 0x51, 0x73, 0xea, 0xda, 0x25, 0x60, 0xf2, 0x76, 0x9a, 0xdf,
-	0xb0, 0xca, 0x6c, 0xa6, 0xf2, 0x31, 0x63, 0x2d, 0xb8, 0xa8, 0xdf, 0xf9, 0x74, 0x7c, 0x80, 0x2c,
-	0xf4, 0xda, 0x3a, 0xae, 0xbf, 0x99, 0x8e, 0x8f, 0x42, 0xb3, 0x4a, 0x2e, 0x83, 0x58, 0x97, 0x97,
-	0xc3, 0x61, 0x29, 0xa0, 0xc1, 0x45, 0xb9, 0x8e, 0x42, 0x9a, 0xe3, 0x19, 0xa0, 0xfe, 0xe8, 0x6b,
-	0xa9, 0x7f, 0x3f, 0x01, 0x36, 0x3a, 0x7c, 0xef, 0xfa, 0xe5, 0xc4, 0xaf, 0xe2, 0x19, 0x42, 0x56,
-	0x55, 0xf1, 0x4c, 0x90, 0x54, 0xf1, 0xa9, 0x54, 0xb1, 0xeb, 0x21, 0x55, 0x3c, 0x7f, 0x20, 0x46,
-	0xee, 0x38, 0x10, 0xd5, 0x9f, 0x14, 0x39, 0xea, 0x0e, 0x11, 0xfd, 0x2f, 0x9f, 0x3d, 0x6a, 0x43,
-	0x2a, 0x50, 0x6e, 0x45, 0xf4, 0xf6, 0x1c, 0xdb, 0x01, 0xa7, 0x91, 0x8c, 0x90, 0x54, 0xff, 0x10,
-	0x06, 0x05, 0x9f, 0x7d, 0x7f, 0xe2, 0xdd, 0xc2, 0x7c, 0xe0, 0x2b, 0x52, 0xf5, 0x4f, 0x37, 0xfa,
-	0xb2, 0x3b, 0x65, 0xf4, 0x6f, 0xb8, 0x53, 0xaa, 0x39, 0x29, 0xed, 0x43, 0x44, 0x2b, 0x96, 0x25,
-	0xf9, 0x50, 0xd3, 0x20, 0xe9, 0x9f, 0xa0, 0x44, 0xfd, 0x45, 0x91, 0x13, 0x93, 0xb3, 0xfc, 0x57,
-	0x87, 0xf7, 0x1e, 0x88, 0x12, 0x1b, 0xb5, 0x1d, 0x91, 0x2d, 0xbb, 0x7c, 0x71, 0x1f, 0xf8, 0x18,
-	0xc4, 0x1c, 0xe0, 0xc8, 0x1d, 0xf3, 0xdd, 0xf1, 0x83, 0xef, 0x81, 0x35, 0xf6, 0xe4, 0x0e, 0xac,
-	0x07, 0xc1, 0x01, 0x44, 0x13, 0x5e, 0xea, 0x57, 0x0a, 0xd8, 0x09, 0xd8, 0x55, 0x50, 0x13, 0xde,
-	0xb9, 0xb1, 0x27, 0xbe, 0xd9, 0x23, 0x2e, 0x7a, 0x8f, 0x96, 0x08, 0x74, 0x7e, 0xfc, 0xec, 0x7d,
-	0xab, 0x80, 0xed, 0xa0, 0xbf, 0x30, 0xe0, 0x0e, 0x80, 0x17, 0xf5, 0x46, 0xeb, 0xb8, 0x71, 0xa6,
-	0x37, 0x5b, 0x95, 0x56, 0x4d, 0x3f, 0x6b, 0x9c, 0xd5, 0x32, 0x21, 0xf8, 0x00, 0xdc, 0x9b, 0x5d,
-	0x6f, 0xb6, 0x2a, 0x5a, 0x2b, 0xa3, 0x04, 0x18, 0x6a, 0xad, 0xf3, 0x67, 0x99, 0x30, 0xcc, 0x81,
-	0x9d, 0x59, 0x43, 0xa5, 0xda, 0x3a, 0xbe, 0xa8, 0xb4, 0x6a, 0x99, 0x08, 0x4c, 0x83, 0x84, 0x6b,
-	0xab, 0x9d, 0x1d, 0x64, 0xa2, 0xe5, 0x1f, 0xa3, 0x20, 0xee, 0xe6, 0x03, 0x1b, 0x72, 0x34, 0x56,
-	0x31, 0x62, 0x59, 0x3d, 0x0c, 0x9a, 0xa9, 0xae, 0x74, 0x72, 0x8f, 0x96, 0x4f, 0x5c, 0xa6, 0xac,
-	0x10, 0x7c, 0x2e, 0x01, 0xc5, 0x04, 0x87, 0xea, 0x1d, 0xd3, 0x9f, 0xc1, 0xbe, 0xb5, 0xdc, 0x67,
-	0x09, 0xb8, 0x38, 0x58, 0x83, 0xc0, 0xe7, 0x4f, 0xf2, 0x20, 0xf0, 0x85, 0x63, 0x59, 0x0d, 0x41,
-	0x0d, 0x24, 0x7c, 0x85, 0x84, 0xf9, 0x57, 0x1d, 0x40, 0x0c, 0xb6, 0xf0, 0x4a, 0x01, 0x08, 0xcc,
-	0xcf, 0x64, 0xc2, 0xa2, 0x0b, 0x83, 0x12, 0x9e, 0xef, 0xcf, 0x95, 0x90, 0xfb, 0x33, 0xda, 0xf6,
-	0x9d, 0x7b, 0x70, 0x2f, 0x30, 0x3a, 0xf0, 0x64, 0x5c, 0xe5, 0x4b, 0xfb, 0xb9, 0x97, 0x37, 0xbb,
-	0xca, 0xcf, 0x37, 0xbb, 0xca, 0xaf, 0x37, 0xbb, 0xca, 0x8b, 0xdf, 0x76, 0x43, 0x9f, 0xc7, 0xfb,
-	0x86, 0xc5, 0xff, 0x11, 0x70, 0x19, 0xe3, 0x3f, 0x1f, 0xfc, 0x19, 0x00, 0x00, 0xff, 0xff, 0x2b,
-	0x13, 0x6e, 0xcd, 0x42, 0x10, 0x00, 0x00,
+	// 1230 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0xd1, 0x6e, 0xe2, 0x46,
+	0x14, 0xc5, 0x40, 0x08, 0x19, 0x02, 0x21, 0x93, 0x6c, 0x96, 0xd2, 0xdd, 0x80, 0x5c, 0x55, 0x4d,
+	0x23, 0x95, 0xae, 0xa8, 0x54, 0x69, 0xab, 0x4a, 0x15, 0x24, 0x6c, 0x12, 0xed, 0x12, 0xb6, 0x86,
+	0xa4, 0xdd, 0xee, 0x83, 0xe5, 0xc0, 0x00, 0x2e, 0x8e, 0x71, 0x67, 0x86, 0x48, 0x3c, 0xf6, 0x03,
+	0xaa, 0xaa, 0x52, 0xb5, 0xea, 0x4f, 0xf4, 0x2b, 0xfa, 0xb2, 0x7d, 0xeb, 0x17, 0xa0, 0x2a, 0xfb,
+	0x96, 0xc7, 0xfe, 0x40, 0xab, 0x19, 0xdb, 0x8c, 0x8d, 0x4d, 0x42, 0x9a, 0x7d, 0x68, 0x9f, 0xd6,
+	0x9e, 0x7b, 0xe6, 0x70, 0xe7, 0xdc, 0x73, 0xef, 0x78, 0x03, 0x32, 0xc8, 0xec, 0x58, 0x43, 0xdd,
+	0xa4, 0x25, 0x0b, 0x0f, 0xe9, 0x10, 0x26, 0xdd, 0xf7, 0x7c, 0x8a, 0x8e, 0x2d, 0x44, 0xec, 0xe5,
+	0x7c, 0x72, 0xd0, 0xb7, 0x9f, 0xe4, 0xdf, 0xa2, 0x00, 0xd6, 0x1c, 0x4c, 0x85, 0x52, 0xac, 0x9f,
+	0x8d, 0x28, 0x22, 0xf0, 0x4b, 0xb0, 0xa9, 0x9b, 0x14, 0xe1, 0xae, 0xd6, 0x46, 0xea, 0x00, 0x8d,
+	0xd5, 0xbe, 0x66, 0x76, 0x0c, 0x94, 0x93, 0x8a, 0xd2, 0x4e, 0xaa, 0xbc, 0x55, 0x1a, 0xf4, 0x4b,
+	0x47, 0x6e, 0xfc, 0x29, 0x1a, 0x1f, 0xf2, 0x68, 0x75, 0xf9, 0x6a, 0x52, 0x88, 0x61, 0xd4, 0x55,
+	0xa0, 0x1e, 0x08, 0xc2, 0x77, 0xc1, 0xca, 0x88, 0xa0, 0x9e, 0x7a, 0x61, 0x68, 0x66, 0x2e, 0x5a,
+	0x94, 0x76, 0xd2, 0x4a, 0x92, 0x2d, 0x9c, 0x1a, 0x9a, 0x09, 0x3f, 0x06, 0x40, 0xb7, 0x54, 0xad,
+	0xd3, 0xc1, 0x88, 0x90, 0x5c, 0xac, 0x18, 0xdb, 0x49, 0x95, 0xb3, 0x25, 0x3b, 0xe5, 0xa3, 0xe7,
+	0x15, 0x7b, 0x5d, 0x59, 0xd1, 0x2d, 0xe7, 0x11, 0x1e, 0x80, 0x34, 0xe9, 0x79, 0x33, 0x8b, 0xf3,
+	0x3d, 0x79, 0x96, 0x59, 0x13, 0xb5, 0x47, 0x58, 0xa7, 0xe3, 0x03, 0x3c, 0x1c, 0x59, 0x21, 0xd9,
+	0xa5, 0x48, 0x4f, 0xa4, 0xb5, 0x07, 0xd2, 0x17, 0xe7, 0x43, 0xaa, 0x0f, 0x4d, 0x95, 0x50, 0x8d,
+	0xa2, 0xdc, 0x52, 0x51, 0xda, 0xc9, 0x94, 0xb7, 0x4b, 0x53, 0x25, 0x5d, 0x79, 0x4e, 0xeb, 0x1c,
+	0xd6, 0x64, 0x28, 0x65, 0xd5, 0xd9, 0xc4, 0xdf, 0xe4, 0xbf, 0x25, 0xb0, 0xea, 0xc2, 0x9a, 0x16,
+	0x6a, 0xc3, 0xf7, 0x41, 0xfc, 0x1c, 0x51, 0xcd, 0xd1, 0x6b, 0xdd, 0x39, 0x49, 0xe3, 0xec, 0x5b,
+	0xd4, 0xa6, 0x75, 0x44, 0x35, 0x85, 0x87, 0x61, 0x15, 0xa4, 0xd9, 0x11, 0x86, 0xd8, 0x3d, 0x45,
+	0x94, 0xe3, 0xef, 0xb1, 0x53, 0xb8, 0x7c, 0x33, 0x07, 0x18, 0xa0, 0xb1, 0x92, 0x1a, 0xa0, 0x71,
+	0x03, 0x3b, 0x07, 0xf8, 0x02, 0x64, 0x2e, 0x70, 0xd7, 0x2b, 0x45, 0x8c, 0x93, 0x64, 0x19, 0xc9,
+	0x29, 0xee, 0x86, 0x08, 0xb0, 0x7a, 0xe1, 0x59, 0x86, 0x7b, 0xc2, 0x35, 0xaa, 0x46, 0x29, 0x26,
+	0xb9, 0x38, 0x27, 0x78, 0x10, 0x94, 0x40, 0x38, 0x44, 0x49, 0x23, 0xcf, 0x1a, 0x91, 0x9f, 0x08,
+	0x1b, 0x29, 0xe8, 0xbb, 0x11, 0x22, 0xb4, 0x4e, 0x7a, 0xf0, 0x11, 0x58, 0xc6, 0xf6, 0x5b, 0x4e,
+	0xe2, 0xf5, 0xd9, 0x0a, 0x72, 0x32, 0xbd, 0x14, 0x17, 0x26, 0xbf, 0x8e, 0x82, 0xcc, 0x34, 0x42,
+	0x35, 0x3a, 0x22, 0xf0, 0x03, 0xb0, 0x36, 0xcd, 0xcf, 0x63, 0xc3, 0x84, 0x32, 0x4d, 0xdb, 0x39,
+	0x88, 0xdf, 0x44, 0xd1, 0x9b, 0x4d, 0xb4, 0x0b, 0xd6, 0x0d, 0xa4, 0x61, 0x53, 0x25, 0xc3, 0x11,
+	0x6e, 0x23, 0xb5, 0xd3, 0x6f, 0x5b, 0x5c, 0xbd, 0xa4, 0xb2, 0xc6, 0x03, 0x4d, 0xbe, 0xbe, 0xdf,
+	0x6f, 0x5b, 0x70, 0x07, 0x64, 0x7d, 0x58, 0x0d, 0x5b, 0x5c, 0xa7, 0xa4, 0x92, 0xf1, 0x40, 0x2b,
+	0xd8, 0x0a, 0xb0, 0x62, 0x06, 0x5d, 0x0a, 0xb0, 0x2a, 0x1a, 0xb6, 0x60, 0x09, 0x6c, 0xf8, 0xb0,
+	0xed, 0xa1, 0xd9, 0xd5, 0x7b, 0xb9, 0x04, 0x47, 0xaf, 0x7b, 0xd0, 0x7b, 0x3c, 0xc0, 0xb8, 0x75,
+	0xa2, 0x4e, 0xe5, 0x30, 0x86, 0x6d, 0xcd, 0xc8, 0x2d, 0xdb, 0xdc, 0x3a, 0x71, 0x85, 0x7b, 0xc6,
+	0x96, 0xe5, 0x57, 0x12, 0xc8, 0x8a, 0x9a, 0x10, 0x6b, 0x68, 0x12, 0xe6, 0x16, 0xa0, 0x59, 0x3a,
+	0xb7, 0xfa, 0x88, 0x70, 0x1d, 0x33, 0x53, 0x8d, 0x2a, 0x96, 0x6e, 0x4b, 0x5e, 0xcd, 0x5c, 0x4d,
+	0x0a, 0x1e, 0x9c, 0xb2, 0xa2, 0xb9, 0x21, 0x58, 0xf1, 0x54, 0xc3, 0x61, 0xb1, 0x4d, 0x9b, 0x0b,
+	0x29, 0xad, 0xbd, 0x7b, 0x5a, 0x27, 0xfb, 0x5d, 0xae, 0x83, 0x8d, 0xd9, 0xbc, 0x98, 0x59, 0x3e,
+	0x05, 0x49, 0xec, 0xbc, 0x3a, 0x6e, 0xc9, 0x07, 0x29, 0xdd, 0x0d, 0xca, 0x14, 0x2b, 0xff, 0x14,
+	0x05, 0xf7, 0xdc, 0xf0, 0x89, 0xd5, 0x61, 0xdd, 0x69, 0x9b, 0x69, 0xd1, 0x2e, 0x7c, 0x7a, 0xab,
+	0x2e, 0xcc, 0xfe, 0x35, 0x29, 0xac, 0x5e, 0x20, 0x53, 0x6f, 0xa3, 0xcf, 0xe4, 0x01, 0x1a, 0xcb,
+	0xff, 0xc5, 0x76, 0x3c, 0x01, 0xb9, 0x50, 0x49, 0x98, 0xce, 0x8f, 0x67, 0x9b, 0xb2, 0x10, 0x64,
+	0xf6, 0x6d, 0x12, 0xdd, 0xd9, 0x04, 0xef, 0xcc, 0x22, 0xee, 0x5e, 0xbf, 0xef, 0x3d, 0x2d, 0xff,
+	0x44, 0x37, 0x28, 0xc2, 0x4c, 0x83, 0x19, 0x11, 0xa5, 0x39, 0x22, 0xa6, 0xae, 0x26, 0x85, 0x65,
+	0x86, 0x0d, 0x0a, 0x39, 0xef, 0x0e, 0x8b, 0xfe, 0xfb, 0x3b, 0xec, 0x2b, 0xb0, 0x69, 0x94, 0x9b,
+	0xa8, 0x77, 0x8e, 0x4c, 0x1a, 0x2c, 0x31, 0xa7, 0x7c, 0xe6, 0xc6, 0x05, 0x65, 0xfa, 0x6a, 0x52,
+	0x58, 0x31, 0xca, 0xec, 0xf2, 0xe3, 0xc4, 0x46, 0x00, 0x22, 0xff, 0xe8, 0xf1, 0xf0, 0x3e, 0x32,
+	0xd0, 0xad, 0x3d, 0x5c, 0xbf, 0x9b, 0x87, 0x0f, 0x23, 0x7e, 0x17, 0x97, 0x41, 0xa2, 0xcb, 0x4b,
+	0xe1, 0x1c, 0x2d, 0xa4, 0xb9, 0xed, 0x52, 0x1d, 0x46, 0x14, 0x07, 0x19, 0xe2, 0xfc, 0xf8, 0xad,
+	0x9c, 0x5f, 0x4d, 0x81, 0x95, 0x0e, 0x3f, 0xbb, 0x7a, 0x36, 0xf6, 0x3a, 0xd8, 0x27, 0xc8, 0xa2,
+	0x0e, 0xf6, 0x6d, 0x12, 0x0e, 0x7e, 0x01, 0xb6, 0x66, 0x11, 0x6f, 0x69, 0x32, 0xca, 0x2f, 0x44,
+	0x73, 0xf8, 0xa9, 0x59, 0xca, 0x9f, 0x07, 0x9a, 0xa3, 0x38, 0x3f, 0xe7, 0x40, 0x8b, 0xfc, 0x2e,
+	0x89, 0xeb, 0xf5, 0x00, 0xd1, 0xff, 0xf3, 0x7c, 0x93, 0x1b, 0xc2, 0xe9, 0xe2, 0x28, 0xf6, 0xfc,
+	0x98, 0xa9, 0x6a, 0xc8, 0xc4, 0x13, 0x3b, 0x44, 0x49, 0x5f, 0x45, 0x41, 0xd1, 0x13, 0xaf, 0x8e,
+	0xa7, 0x5d, 0xed, 0x21, 0x5f, 0x50, 0xaa, 0x0f, 0x41, 0x56, 0xcc, 0x0c, 0x8f, 0x5a, 0x09, 0x65,
+	0x6d, 0xba, 0x2e, 0xe6, 0xf4, 0x82, 0x42, 0x5c, 0x33, 0xa3, 0x5e, 0xce, 0x99, 0x51, 0xf1, 0x6b,
+	0x67, 0xd4, 0xfa, 0xd5, 0xa4, 0x90, 0x16, 0xfb, 0xe6, 0x4c, 0x2b, 0x39, 0x2f, 0x5a, 0xe8, 0x00,
+	0xd1, 0x8a, 0x61, 0x08, 0x3d, 0xe4, 0x35, 0x90, 0xf6, 0xde, 0xd2, 0x44, 0x7e, 0x23, 0x89, 0x5b,
+	0x99, 0xab, 0xfc, 0xb6, 0x3e, 0x18, 0x76, 0x41, 0x9c, 0x58, 0xa8, 0x3d, 0x1d, 0xbb, 0xe1, 0x1f,
+	0x80, 0x1c, 0x03, 0x1f, 0x81, 0x84, 0xf3, 0x43, 0xb1, 0x1b, 0xbe, 0x29, 0x1c, 0x1c, 0xfc, 0x08,
+	0x2c, 0xb1, 0x27, 0xf7, 0x92, 0xbc, 0x1f, 0xbe, 0x81, 0x28, 0x36, 0x4a, 0xfe, 0x59, 0x12, 0xfd,
+	0xef, 0x39, 0x25, 0x73, 0xc8, 0x9d, 0x0f, 0xfa, 0xd8, 0xd3, 0xe2, 0xf6, 0xc7, 0xe7, 0xc3, 0x39,
+	0x06, 0x9e, 0xed, 0xef, 0xdd, 0x1f, 0x24, 0xb0, 0x19, 0xf6, 0xdf, 0x0c, 0xb8, 0x05, 0xe0, 0x69,
+	0xbd, 0xd1, 0x3a, 0x6a, 0x1c, 0xab, 0xcd, 0x56, 0xa5, 0x55, 0x53, 0x8f, 0x1b, 0xc7, 0xb5, 0x6c,
+	0x04, 0xde, 0x07, 0x1b, 0xfe, 0xf5, 0x66, 0xab, 0xa2, 0xb4, 0xb2, 0x52, 0x48, 0xa0, 0xd6, 0x3a,
+	0x79, 0x9e, 0x8d, 0xc2, 0x3c, 0xd8, 0xf2, 0x07, 0x2a, 0x7b, 0xad, 0xa3, 0xd3, 0x4a, 0xab, 0x96,
+	0x8d, 0xc1, 0x35, 0x90, 0x72, 0x63, 0xb5, 0xe3, 0xfd, 0x6c, 0xbc, 0xfc, 0x6b, 0x1c, 0x24, 0xdd,
+	0x7c, 0x60, 0x43, 0x5c, 0xcf, 0x7b, 0x18, 0xb1, 0xac, 0x1e, 0x84, 0xdd, 0xeb, 0xae, 0xb5, 0xf2,
+	0x0f, 0xe7, 0xdf, 0xfa, 0xcc, 0x79, 0x11, 0xf8, 0x52, 0x10, 0xda, 0x5f, 0x11, 0x50, 0xbe, 0xe1,
+	0x0b, 0x84, 0xd1, 0xbe, 0x37, 0x1f, 0x33, 0x87, 0xdc, 0x1e, 0xa7, 0x61, 0xe4, 0xb3, 0x37, 0x4a,
+	0x18, 0x79, 0x60, 0x86, 0xcb, 0x11, 0xa8, 0x80, 0x94, 0xa7, 0x90, 0xb0, 0x70, 0xdd, 0x80, 0x62,
+	0xb4, 0xc5, 0x6b, 0x0d, 0x60, 0x73, 0x7e, 0x2d, 0x12, 0xb6, 0xbb, 0x34, 0x2c, 0xe1, 0xd9, 0xfe,
+	0x5d, 0x88, 0xb9, 0xef, 0xf3, 0xba, 0x67, 0x2e, 0xc2, 0xdd, 0xd0, 0xdd, 0xa1, 0x93, 0x73, 0x91,
+	0x5f, 0xaa, 0xe6, 0x5f, 0x5f, 0x6e, 0x4b, 0x7f, 0x5c, 0x6e, 0x4b, 0x7f, 0x5e, 0x6e, 0x4b, 0xbf,
+	0xbc, 0xd9, 0x8e, 0x7c, 0x93, 0xec, 0x6b, 0x06, 0xff, 0x0b, 0xc3, 0x59, 0x82, 0xff, 0xf3, 0xc9,
+	0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x24, 0x5b, 0x15, 0xdc, 0x9b, 0x10, 0x00, 0x00,
 }

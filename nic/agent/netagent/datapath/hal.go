@@ -241,27 +241,52 @@ func (hd *HalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 	}
 
 	// get sg ids
-	var sgids []uint64
+	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
-		sgids = append(sgids, uint64(sg.Status.SecurityGroupID))
+		sgKey := halproto.SecurityGroupKeyHandle{
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupHandle{
+				SecurityGroupHandle: sg.Status.SecurityGroupID,
+			},
+		}
+		sgHandles = append(sgHandles, &sgKey)
 	}
 
-	l2key := halproto.EndpointL2Key{
-		L2SegmentHandle: nw.Status.NetworkHandle,
-		MacAddress:      macaddr,
+	l2Handle := halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
+			L2SegmentHandle: nw.Status.NetworkHandle,
+		},
+	}
+
+	ifKeyHandle := halproto.InterfaceKeyHandle{
+		KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
+			IfHandle: 0, //FIXME
+		},
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		InterfaceHandle: 0, //FIXME
-		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
-		SgHandle:        sgids,
+		InterfaceKeyHandle: &ifKeyHandle, //FIXME
+		UsegVlan:           ep.Status.UsegVlan,
+		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
+		SgKeyHandle:        sgHandles,
+	}
+
+	epHandle := halproto.EndpointKeyHandle{
+		KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
+			EndpointKey: &halproto.EndpointKey{
+				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
+					L2Key: &halproto.EndpointL2Key{
+						L2SegmentKeyHandle: &l2Handle,
+						MacAddress:         macaddr,
+					},
+				},
+			},
+		},
 	}
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
+		KeyOrHandle:   &epHandle,
 		Meta:          &halproto.ObjectMeta{},
-		L2Key:         &l2key,
 		EndpointAttrs: &epAttrs,
 	}
 	epReq := halproto.EndpointRequestMsg{
@@ -308,27 +333,52 @@ func (hd *HalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.
 	}
 
 	// get sg ids
-	var sgids []uint64
+	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
-		sgids = append(sgids, uint64(sg.Status.SecurityGroupID))
+		sgKey := halproto.SecurityGroupKeyHandle{
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupHandle{
+				SecurityGroupHandle: sg.Status.SecurityGroupID,
+			},
+		}
+		sgHandles = append(sgHandles, &sgKey)
 	}
 
-	l2key := halproto.EndpointL2Key{
-		L2SegmentHandle: nw.Status.NetworkHandle,
-		MacAddress:      macaddr,
+	l2Handle := halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
+			L2SegmentHandle: nw.Status.NetworkHandle,
+		},
+	}
+
+	ifKeyHandle := halproto.InterfaceKeyHandle{
+		KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
+			IfHandle: 0, //FIXME
+		},
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		InterfaceHandle: 0, //FIXME
-		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
-		SgHandle:        sgids,
+		InterfaceKeyHandle: &ifKeyHandle, //FIXME
+		UsegVlan:           ep.Status.UsegVlan,
+		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
+		SgKeyHandle:        sgHandles,
+	}
+
+	epHandle := halproto.EndpointKeyHandle{
+		KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
+			EndpointKey: &halproto.EndpointKey{
+				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
+					L2Key: &halproto.EndpointL2Key{
+						L2SegmentKeyHandle: &l2Handle,
+						MacAddress:         macaddr,
+					},
+				},
+			},
+		},
 	}
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
 		Meta:          &halproto.ObjectMeta{},
-		L2Key:         &l2key,
+		KeyOrHandle:   &epHandle,
 		EndpointAttrs: &epAttrs,
 	}
 	epReq := halproto.EndpointRequestMsg{
@@ -373,21 +423,51 @@ func (hd *HalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 	}
 
 	// get sg ids
-	var sgids []uint64
+	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
-		sgids = append(sgids, uint64(sg.Status.SecurityGroupID))
+		sgKey := halproto.SecurityGroupKeyHandle{
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupHandle{
+				SecurityGroupHandle: sg.Status.SecurityGroupID,
+			},
+		}
+		sgHandles = append(sgHandles, &sgKey)
+	}
+
+	l2Handle := halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
+			L2SegmentHandle: nw.Status.NetworkHandle,
+		},
+	}
+
+	ifKeyHandle := halproto.InterfaceKeyHandle{
+		KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
+			IfHandle: 0, //FIXME
+		},
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		InterfaceHandle: 0, //FIXME
-		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
-		SgHandle:        sgids,
+		InterfaceKeyHandle: &ifKeyHandle, //FIXME
+		UsegVlan:           ep.Status.UsegVlan,
+		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
+		SgKeyHandle:        sgHandles,
+	}
+
+	epHandle := halproto.EndpointKeyHandle{
+		KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
+			EndpointKey: &halproto.EndpointKey{
+				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
+					L2Key: &halproto.EndpointL2Key{
+						L2SegmentKeyHandle: &l2Handle,
+					},
+				},
+			},
+		},
 	}
 
 	// build endpoint message
 	epUpdateReq := halproto.EndpointUpdateRequest{
 		Meta:          &halproto.ObjectMeta{},
+		KeyOrHandle:   &epHandle,
 		EndpointAttrs: &epAttrs,
 	}
 
@@ -433,21 +513,51 @@ func (hd *HalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.
 	}
 
 	// get sg ids
-	var sgids []uint64
+	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
-		sgids = append(sgids, uint64(sg.Status.SecurityGroupID))
+		sgKey := halproto.SecurityGroupKeyHandle{
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupHandle{
+				SecurityGroupHandle: sg.Status.SecurityGroupID,
+			},
+		}
+		sgHandles = append(sgHandles, &sgKey)
+	}
+
+	l2Handle := halproto.L2SegmentKeyHandle{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
+			L2SegmentHandle: nw.Status.NetworkHandle,
+		},
+	}
+
+	ifKeyHandle := halproto.InterfaceKeyHandle{
+		KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
+			IfHandle: 0, //FIXME
+		},
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		InterfaceHandle: 0, //FIXME
-		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
-		SgHandle:        sgids,
+		InterfaceKeyHandle: &ifKeyHandle, //FIXME
+		UsegVlan:           ep.Status.UsegVlan,
+		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
+		SgKeyHandle:        sgHandles,
+	}
+
+	epHandle := halproto.EndpointKeyHandle{
+		KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
+			EndpointKey: &halproto.EndpointKey{
+				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
+					L2Key: &halproto.EndpointL2Key{
+						L2SegmentKeyHandle: &l2Handle,
+					},
+				},
+			},
+		},
 	}
 
 	// build endpoint message
 	epUpdateReq := halproto.EndpointUpdateRequest{
 		Meta:          &halproto.ObjectMeta{},
+		KeyOrHandle:   &epHandle,
 		EndpointAttrs: &epAttrs,
 	}
 

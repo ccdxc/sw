@@ -172,6 +172,7 @@
 		EndpointFilter
 		EndpointDeleteRequest
 		EndpointDeleteRequestMsg
+		EndpointDeleteResponse
 		EndpointDeleteResponseMsg
 		EndpointGetRequest
 		EndpointGetRequestMsg
@@ -204,6 +205,7 @@
 		SetQStateResponseMsg
 		LifDeleteRequest
 		LifDeleteRequestMsg
+		LifDeleteResponse
 		LifDeleteResponseMsg
 		LifTxStats
 		LifRxStats
@@ -229,6 +231,7 @@
 		InterfaceResponseMsg
 		InterfaceDeleteRequest
 		InterfaceDeleteRequestMsg
+		InterfaceDeleteResponse
 		InterfaceDeleteResponseMsg
 		InterfaceStats
 		InterfaceGetRequest
@@ -282,6 +285,7 @@
 		L2SegmentResponseMsg
 		L2SegmentDeleteRequest
 		L2SegmentDeleteRequestMsg
+		L2SegmentDeleteResponse
 		L2SegmentDeleteResponseMsg
 		L2SegmentGetRequest
 		L2SegmentGetRequestMsg
@@ -375,6 +379,7 @@
 		SecurityGroupPolicyResponseMsg
 		SecurityGroupPolicyDeleteRequest
 		SecurityGroupPolicyDeleteRequestMsg
+		SecurityGroupPolicyDeleteResponse
 		SecurityGroupPolicyDeleteResponseMsg
 		SecurityGroupPolicyGetRequest
 		SecurityGroupPolicyGetRequestMsg
@@ -409,6 +414,7 @@
 		DoSPolicyResponseMsg
 		DoSPolicyDeleteRequest
 		DoSPolicyDeleteRequestMsg
+		DoSPolicyDeleteResponse
 		DoSPolicyDeleteResponseMsg
 		DoSPolicyGetRequest
 		DoSPolicyGetRequestMsg
@@ -421,6 +427,7 @@
 		PortResponseMsg
 		PortDeleteRequest
 		PortDeleteRequestMsg
+		PortDeleteResponse
 		PortDeleteResponseMsg
 		PortStats
 		PortGetRequest

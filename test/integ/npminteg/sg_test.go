@@ -151,7 +151,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 		ep, ok := ag.datapath.DB.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
-		c.Assert(len(ep.Request[0].EndpointAttrs.SgHandle), Equals, 1)
+		c.Assert(len(ep.Request[0].EndpointAttrs.SgKeyHandle), Equals, 1)
 		c.Assert(ep.Request[0].EndpointAttrs.UsegVlan, Equals, uint32(2))
 	}
 
@@ -167,7 +167,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 		ep, ok := ag.datapath.DB.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint2")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
-		c.Assert(len(ep.Request[0].EndpointAttrs.SgHandle), Equals, 1)
+		c.Assert(len(ep.Request[0].EndpointAttrs.SgKeyHandle), Equals, 1)
 		c.Assert(ep.Request[0].EndpointAttrs.UsegVlan, Equals, uint32(3))
 	}
 
@@ -188,7 +188,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
 			ep, ok := ag.datapath.DB.EndpointUpdateDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
-			if ok && len(ep.Request) == 1 && len(ep.Request[0].EndpointAttrs.SgHandle) == 0 {
+			if ok && len(ep.Request) == 1 && len(ep.Request[0].EndpointAttrs.SgKeyHandle) == 0 {
 				return true, nil
 			}
 			return false, nil
