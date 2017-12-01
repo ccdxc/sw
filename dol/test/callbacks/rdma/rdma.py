@@ -169,3 +169,11 @@ def GetMrSlab1LkeyForMulticastCopy(tc, buf, args = None):
     tc.info("GetEpSlab0LkeyForMulticastCopy: %s Qid: %s Mr: %s Lkey: %s" % (lif.GID(), qp.GID(), mr.GID(), mr.lkey))
     return mr.lkey
 
+def GetAtomicData(tc, pkt, args = None):
+    srcpkt = tc.packets.Get(args.pktid)
+    rbytes = srcpkt.rawbytes
+    val = 0
+    for b in list(rbytes):
+        val = val << 8
+        val = val | b
+    return val

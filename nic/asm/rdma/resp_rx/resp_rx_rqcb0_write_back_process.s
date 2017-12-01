@@ -63,12 +63,15 @@ incr_c_index_exit:
     // to generate ACK only when needed. Remove ACK_REQ bit check later ?
     bcf         [!c7 & !c1], invoke_wb1
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)    //BD Slot
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+
+    setcf       c1, [c6 | c5 | c4]
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c1)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c1)
 
     // prepare for acknowledgement
     RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(DMA_CMD_BASE, RQCB1_ADDR, TMP)
     // for read/atomic operations, do not ring doorbell
-    bcf         [c6 | c5 | c4], invoke_wb1
+    bcf         [c1], invoke_wb1
     nop         //BD Slot
     RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
                                    k.global.lif,

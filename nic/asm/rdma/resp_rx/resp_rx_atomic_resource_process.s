@@ -91,12 +91,12 @@ loop_exit:
     //calculate the DMA address for this byte
     // base_addr + 63 - (r1 >> 3)
     srl         r1, r1, LOG_BITS_PER_BYTE
+    sub         r1, 63, r1
     // r1 now has the atomic resource number
     addui       r2, r0, hiword(rdma_atomic_resource_addr)
     addi        r2, r2, loword(rdma_atomic_resource_addr)
     // r2 now has atomic resource base_addr
-    add         r2, r2, 63
-    sub         r2, r2, r1
+    add          r2, r2, r1
     // r2 now has DMA address of the byte
     
     addui       r3, r0, hiword(rdma_pcie_atomic_base_addr)
@@ -105,20 +105,24 @@ loop_exit:
     add         r3, r3, r1, 6 
 
     // DMA command to write to acquired atomic resource 
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ATOMIC_RESOURCE_WR)
-    DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, pcie_atomic, pcie_atomic, r3)
+    // NOTE: Below DMA command couldn't be done using mem2mem_phv2mem as it is restricted to only 15 bytes or less,
+    // where as this pcie register is of 64 Bytes which need to be written in a single shot. So phv2mem is the only
+    // choice here. Note that pcie has a reordering logic where even if READ on pcie register is received before
+    // write, it will wait for write to arrive and this ensures ordering.
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ATOMIC_RESOURCE_WR)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, pcie_atomic, pcie_atomic, r3)
     // DMA commands to read from acquired atomic resource and
     // write to rsqwqe_p
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ATOMIC_RESOURCE_RD)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ATOMIC_RESOURCE_RD)
     DMA_HBM_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, 8, r3)
 
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ATOMIC_RESOURCE_TO_RSQWQE)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ATOMIC_RESOURCE_TO_RSQWQE)
     add     r3, k.to_stage.s1.atomic.rsqwqe_ptr, RSQWQE_ORIG_DATA_OFFSET
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, 8, r3)
       
     // DMA for releasing atomic resource
     // atomic_release_byte value is 0 as phv gets initialized to 0.
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE)
     DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, atomic_release_byte, atomic_release_byte, r2)
 
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
@@ -152,10 +156,15 @@ loop_exit:
     phvwr   p.db_data1, DB_DATA.dx
 
     // DMA for RSQ DoorBell
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
-    DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data1, db_data1, DB_ADDR)
+    //TODO: for some reason, rining doorbell using mem2mem_phv2mem is not working.
+    //      check with helen and fix it.
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data1, db_data1, DB_ADDR)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    //DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data1, db_data1, DB_ADDR)
+    //DMA_SET_WR_FENCE(DMA_CMD_MEM2MEM_T, DMA_CMD_BASE)
+    //DMA_SET_END_OF_CMDS(DMA_CMD_MEM2MEM_T, DMA_CMD_BASE)
 
 exit:
     nop.e

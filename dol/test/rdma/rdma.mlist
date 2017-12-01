@@ -806,6 +806,15 @@ modules:
         spec    : resp_write_fml_read_fml.testspec
         ignore  : False
  
+    # RQ Atomic testcases
+#    - module:
+#        name    : RDMA_RX_ATOMIC_FETCHADD
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_atomic_fetchadd
+#        spec    : resp_rx_atomic_fetchadd.testspec
+#        ignore  : False
+
     # RQ Recirc testcases
     - module:
         name    : RDMA_RX_SEND_ONLY_4SGES

@@ -7,6 +7,7 @@
 #define GLOBAL_DATA_WIDTH 128
 #define TO_STAGE_DATA_WIDTH 128
 
+//10B
 struct p4plus_to_p4_header_t {
     p4plus_app_id      : 4;
     pad                : 4;

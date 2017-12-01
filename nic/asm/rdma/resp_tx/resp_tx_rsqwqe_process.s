@@ -10,6 +10,7 @@ struct rsqwqe_d_t d;
 struct resp_tx_rsqwqe_process_k_t k;
 
 #define RKEY_INFO_T struct resp_tx_rsqwqe_to_rkey_info_t
+#define RQCB1_WB_INFO_T struct resp_tx_rqcb1_write_back_info_t
 
 #define CURR_PSN            r1
 #define BYTES_SENT          r2
@@ -24,9 +25,12 @@ struct resp_tx_rsqwqe_process_k_t k;
 #define KEY_ADDR            r2
 
 #define RAW_TABLE_PC        r7
+#define RQCB1_ADDR          r2
+#define DMA_CMD_BASE        r1
 
 %%
     .param      resp_tx_rsqrkey_process
+    .param      resp_tx_rqcb1_write_back_process
 
 resp_tx_rsqwqe_process:
 
@@ -35,7 +39,43 @@ resp_tx_rsqwqe_process:
     seq         c2, k.args.read_rsp_in_progress, 1 //BD Slot
     
 process_atomic:
-        // TODO
+    add         BTH_OPCODE, RDMA_PKT_OPC_ATOMIC_ACK, k.args.serv_type, BTH_OPC_SVC_SHIFT
+    phvwr       p.bth.opcode, BTH_OPCODE
+    phvwr       p.bth.psn, d.psn
+
+    // prepare atomicaeth header
+    phvwr       p.atomicaeth.orig_data, d.{atomic.orig_data}.dx
+
+    // header template
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
+    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, HDR_TEMPLATE_T_SIZE_BYTES, k.args.header_template_addr)
+
+    // bth
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_BTH)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, bth, bth)
+
+    // aeth
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_AETH)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, aeth, aeth)
+
+    // atomicaeth
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_ATOMICAETH)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, atomicaeth, atomicaeth)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+
+    // invoke writeback in table 1
+    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rqcb1_write_back_process)
+    RQCB1_ADDR_GET(RQCB1_ADDR)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
+
+    CAPRI_GET_TABLE_1_ARG(resp_tx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RQCB1_WB_INFO_T, new_rsq_c_index, k.args.new_rsq_c_index)
+
+    nop.e
+    // invalidate table 0
+    CAPRI_SET_TABLE_0_VALID(0)  //Exit slot
 
 
 process_read:

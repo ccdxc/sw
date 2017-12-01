@@ -18,6 +18,11 @@ struct rqcb1_t d;
 
 resp_tx_rqcb1_write_back_process:
 
+    // Pin write_back_process to stage 4
+    mfspr           r1, spr_mpuid
+    seq             c1, r1[6:2], STAGE_4
+    bcf             [!c1], exit
+
 add_headers:
 
     // intrinsic

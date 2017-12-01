@@ -34,6 +34,10 @@
 
 #define RESP_RX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 
+// for read and atomic operations, use flit id 9 as the start flit id
+// of DMA operations
+#define RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID 9
+
 //TODO: put ack_info.aeth, ack_info.psn adjacent to each other in PHV and also
 //      adjacent to each other in rqcb1, in right order. This will eliminate
 //      one DMA instruction
@@ -104,19 +108,20 @@ struct resp_rx_phv_t {
     struct resp_rx_dma_cmds_flit_t flit_11;
 
     /* flit 10 */
-    union {
-        struct resp_rx_dma_cmds_flit_t  flit_10;
-        struct rdma_pcie_atomic_reg_t   pcie_atomic;
-    };
+    
+    struct resp_rx_dma_cmds_flit_t  flit_10;
 
     /* flit 9 */
     struct resp_rx_dma_cmds_flit_t flit_9;
  
     /* flit 8 */
-    struct resp_rx_dma_cmds_flit_t flit_8;
+    union {
+        struct resp_rx_dma_cmds_flit_t  flit_8;
+        struct rdma_pcie_atomic_reg_t   pcie_atomic;
+    };
     
     // scratch (flit 7):
-    // size: 41 =  2 + 2 + 8 + 8 + 2 + 5 + 4 + 1 + 8 + 1
+    // size: 43 =  2 + 2 + 8 + 8 + 2 + 7 + 4 + 1 + 8 + 1
     spec_cindex: 16;
     eq_int_num: 16;
     db_data1: 64;
@@ -127,6 +132,7 @@ struct resp_rx_phv_t {
     my_token_id: 8;
     immdt_as_dbell_data: 64;
     atomic_release_byte: 8;
+    pad: 168;   //21B
 
     // scratch (flit 6)
     // size: 64  = 32 + 32

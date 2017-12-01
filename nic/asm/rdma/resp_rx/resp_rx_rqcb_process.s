@@ -276,6 +276,8 @@ send_in_progress:
 
 /******  Common logic for ONLY packets (send/write) ******/
 process_only_rd_atomic:
+    // for read and atomic, start DMA commands from flit 9 instead of 8
+    RXDMA_DMA_CMD_PTR_SET_C(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, !c1) //BD Slot
     seq         c7, d.disable_speculation, 0
     seq         c1, d.token_id, d.nxt_to_go_token_id
     bcf         [c7], skip_token_id_check
@@ -422,7 +424,7 @@ process_read_atomic:
     mincr       NEW_RSQ_P_INDEX, d.log_rsq_size, 1
    
     // DMA for RSQWQE
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe, rsqwqe, RSQWQE_P)
     
     // in case of quiesce mode, only duplicate reqs would move rsq_p_index in a 
@@ -626,7 +628,9 @@ nak:
     phvwr       p.ack_info.aeth.msn, d.msn
       
     add         RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c2)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c2)
 
     RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB1_ADDR, TMP, \
                                    CAPRI_RXDMA_INTRINSIC_LIF, \

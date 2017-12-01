@@ -354,6 +354,9 @@ class Packet(objects.FrameworkObject):
                 assert(0)
             self.headers.payload.fields.data = list(data)
             self.__fixup_payload(tc)
+        elif isinstance(self.headers.payload.fields.data, str):
+            self.headers.payload.fields.data =\
+                    utils.ParseIntegerList(self.headers.payload.fields.data)
         else:
             self.__fixup_payload(tc)
         tc.info("- Added Payload of Size = %d" % self.payloadsize)

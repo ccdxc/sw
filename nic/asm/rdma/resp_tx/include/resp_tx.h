@@ -16,6 +16,7 @@
 #define RESP_TX_DMA_CMD_BTH             4
 #define RESP_TX_DMA_CMD_AETH            5
 #define RESP_TX_DMA_CMD_CNP_RSVD        5 // CNP packets do not have AETH header. Re-using index.
+#define RESP_TX_DMA_CMD_ATOMICAETH      6 
 #define RESP_TX_DMA_CMD_PYLD_BASE       6
 
 #define RESP_TX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
@@ -25,14 +26,15 @@ struct resp_tx_phv_t {
     // dma commands (flit 8 - 11)
 
     // scratch (flit 6 - 7)
-    db_data1: 64;
-    db_data2: 64;
+    db_data1: 64;       //8B
+    db_data2: 64;       //8B
+    struct rdma_atomicaeth_t atomicaeth; //8B
     union {
-        struct rdma_cnp_rsvd_t cnp_rsvd;
-        struct rdma_aeth_t aeth;
+        struct rdma_cnp_rsvd_t cnp_rsvd;    //16B
+        struct rdma_aeth_t aeth;            //4B
     }; // CNP packets do not have aeth header.
-    struct rdma_bth_t bth;
-    struct p4plus_to_p4_header_t p4plus_to_p4;
+    struct rdma_bth_t bth;  //12B
+    struct p4plus_to_p4_header_t p4plus_to_p4;  //10B
 
     // common tx (flit 0 - 5)
     struct phv_ common;

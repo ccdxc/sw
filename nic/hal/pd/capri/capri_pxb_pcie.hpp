@@ -18,7 +18,7 @@
 #define CAPRI_PCIE_ATOMIC_PAGE_ID 0x3ffUL
 #define CAPRI_PCIE_ATOMIC_REGION_ID 0xfUL
 #define CAPRI_PCIE_ATOMIC_BASE_ADDR_GET(_region_id, _page_id) \
-            ((1UL << 33) | (_region_id << 29) | (_page_id << 12) | 0x000)
+            ((1UL << 35) | (_region_id << 31) | (_page_id << 12) | 0x000)
 #define CAPRI_PCIE_ATOMIC_BASE_ADDR \
             CAPRI_PCIE_ATOMIC_BASE_ADDR_GET(CAPRI_PCIE_ATOMIC_REGION_ID, CAPRI_PCIE_ATOMIC_PAGE_ID)
 
