@@ -853,6 +853,7 @@ class capri_parser:
         self.ohi = None
         self.ohi_used = 0
         self.wr_only_ohi = OrderedDict()    # {wr_only_fld_name : ohi_slot}
+        self.wr_only_hdrs = [] #All headers with parser_write_only directive.
         self.hdr_ext_states = OrderedDict() # {hdr : [ states where it is extracted ] }
         self.meta_ext_states = OrderedDict() # {meta_fld : [ states where it is extracted ] }
         self.hdr_order_groups = []  # header groups specified using header_ordering pragma
@@ -895,6 +896,7 @@ class capri_parser:
         #Collect write_only ohi fields
         for hdr_name, hdr in self.be.h.p4_header_instances.items():
             if 'parser_write_only' in hdr._parsed_pragmas:
+                self.wr_only_hdrs.append(hdr)
                 for field in hdr.fields:
                     self.wr_only_ohi[field.name] = None
 
@@ -1719,10 +1721,26 @@ class capri_parser:
             # reset
             self.wr_only_ohi[k] = None
 
-        ohi_slot = 0
+        groups = 0
+        ohi_groups = {}
+        for wr_only_hdr in self.wr_only_hdrs:
+            if 'parser_share_ohi' in wr_only_hdr._parsed_pragmas:
+                for  shared_ohi_field_group in wr_only_hdr._parsed_pragmas['parser_share_ohi']:
+                    shared_fields = get_pragma_param_list(\
+                    wr_only_hdr._parsed_pragmas['parser_share_ohi'][shared_ohi_field_group])
+                    ohi_groups[groups] = shared_fields
+                    groups += 1
+        ohi_slot = groups
         for k in self.wr_only_ohi.keys():
-            self.wr_only_ohi[k] = ohi_slot
-            ohi_slot += 1
+            shared = False
+            for grp in range(groups):
+                if k in ohi_groups[grp]:
+                    self.wr_only_ohi[k] = grp
+                    shared = True
+                    break
+            if not shared:
+                self.wr_only_ohi[k] = ohi_slot
+                ohi_slot += 1
 
     def get_ohi_hdr_start_off(self, hdr):
         # return ohi slot assigned to capture header start offset (if allocated)

@@ -74,6 +74,8 @@ header_type parser_ohi_t {
 }
 @pragma pa_parser_local
 @pragma parser_write_only
+@pragma parser_share_ohi icrc_l3 ipv4___start_off ipv6___start_off
+@pragma parser_share_ohi icrc_inner_l3 inner_ipv4___start_off inner_ipv6___start_off
 metadata parser_ohi_t ohi;
 
 @pragma pa_parser_local

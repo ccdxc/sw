@@ -2155,7 +2155,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 (set_op.dst))
             continue
         flat_expr_str = set_op.capri_expr.flatten_capri_expr()
-        if flat_expr_str not in expr_shared_ohi_id.keys() or parser.d == xgress.EGRESS:
+        if flat_expr_str not in expr_shared_ohi_id.keys():
             ohi_id = parser.wr_only_ohi[dst_name]
             sram['ohi_inst'][s]['sel']['value'] = str(3)  # len using mux_inst_data
             sram['ohi_inst'][s]['muxsel']['value'] = str(mux_inst_id)

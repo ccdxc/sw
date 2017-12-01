@@ -488,14 +488,12 @@ class IcrcDeParserProfile:
         icrc_profile['len_shift_val'] ['value']=str(self.len_shift_val)
         icrc_profile['start_adj']     ['value']=str(self.start_adj)
 
-        #TODO : Need to wait for HW change and then enable subtract adjust
-
-        #icrc_profile['start_adj_sub'] ['value']=str(self.start_adj_sub)
+        icrc_profile['start_adj_sub'] ['value']=str(self.start_adj_sub)
         icrc_profile['end_adj']       ['value']=str(self.end_adj)
-        #icrc_profile['end_adj_sub']   ['value']=str(self.end_adj_sub)
+        icrc_profile['end_adj_sub']   ['value']=str(self.end_adj_sub)
         icrc_profile['loc_adj']       ['value']=str(self.icrc_loc_adj)
-        #icrc_profile['loc_adj_sub']   ['value']=str(self.icrc_loc_adj_sub)
-        icrc_profile['_modified']               = True
+        icrc_profile['loc_adj_sub']   ['value']=str(self.icrc_loc_adj_sub)
+        icrc_profile['_modified']              = True
 
     def LogGenerate(self):
         log_str = ''
@@ -708,9 +706,6 @@ class IcrcDeParserCalField:
                                                                 IcrcMaskProfileNumGet())
             icrc_hdr_cfg['mask_vld']    ['value']   = str(1)
             icrc_hdr_cfg['mask_unit']   ['value']   = str(0) #Mask unit ????
-            #TODO : Until HW changes are released, disabling icrc computation. 
-            # Remove following line later.
-            icrc_hdr_cfg['crc_vld']     ['value']   = str(0)
         else:
             #Config to add udp.checksum as invariant
             icrc_hdr_cfg['hdr_num']     ['value']   = str(max_hv_bit_idx - self.icrc_l4_hv)
@@ -725,9 +720,6 @@ class IcrcDeParserCalField:
                                                                 IcrcL4MaskProfileNumGet())
             icrc_hdr_cfg['mask_vld']    ['value']   = str(1)
             icrc_hdr_cfg['mask_unit']   ['value']   = str(0) #Mask unit ????
-            #TODO : Until HW changes are released, disabling icrc computation. 
-            # Remove following line later.
-            icrc_hdr_cfg['crc_vld']     ['value']   = str(0)
 
         icrc_hdr_cfg['_modified']               = True
 
