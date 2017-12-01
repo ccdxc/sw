@@ -197,7 +197,7 @@ write_non_first_pkt:
     //IMM_DATA has imm_data
     //format: <lif(11), qtype(3), qid(18)>
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
-    RESP_RX_POST_IMMDT_AS_DOORBELL(DMA_CMD_BASE, \
+    RESP_RX_POST_IMMDT_AS_DOORBELL_INCR_PINDEX(DMA_CMD_BASE, \
                                    IMM_DATA[31:21], \
                                    IMM_DATA[20:18], \
                                    IMM_DATA[17:0], \
@@ -250,7 +250,7 @@ send_check_immdt:
     //format: <lif(11), qtype(3), qid(18)>
     add         IMM_DATA, r0, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
-    RESP_RX_POST_IMMDT_AS_DOORBELL(DMA_CMD_BASE, \
+    RESP_RX_POST_IMMDT_AS_DOORBELL_SET_PINDEX(DMA_CMD_BASE, \
                                    IMM_DATA[31:21], \
                                    IMM_DATA[20:18], \
                                    IMM_DATA[17:0], \
@@ -348,7 +348,7 @@ send_only_check_immdt:
     //format: <lif(11), qtype(3), qid(18)>
     add         IMM_DATA, r0, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
-    RESP_RX_POST_IMMDT_AS_DOORBELL(DMA_CMD_BASE, \
+    RESP_RX_POST_IMMDT_AS_DOORBELL_SET_PINDEX(DMA_CMD_BASE, \
                                    IMM_DATA[31:21], \
                                    IMM_DATA[20:18], \
                                    IMM_DATA[17:0], \
@@ -392,7 +392,7 @@ process_write_only:
     //IMM_DATA has imm_data
     //format: <lif(11), qtype(3), qid(18)>
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
-    RESP_RX_POST_IMMDT_AS_DOORBELL(DMA_CMD_BASE, \
+    RESP_RX_POST_IMMDT_AS_DOORBELL_INCR_PINDEX(DMA_CMD_BASE, \
                                    IMM_DATA[31:21], \
                                    IMM_DATA[20:18], \
                                    IMM_DATA[17:0], \

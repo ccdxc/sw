@@ -75,5 +75,9 @@ resp_rx_cqcb_process:
     seq             c2, d.arm, 1
     tblwr.c2        d.arm, 0
 
+    //for send with imm_as_dbell, set the pindex 
+    //optimizing conditional checks
+    RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(CQ_P_INDEX_HX)
+
     nop.e
     nop

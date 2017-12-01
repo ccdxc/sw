@@ -59,14 +59,26 @@
                                        _db_addr_r, _db_data_r); \
     
 #ring-id assumed as 0
-#define RESP_RX_POST_IMMDT_AS_DOORBELL(_dma_base_r, \
+#define RESP_RX_POST_IMMDT_AS_DOORBELL_INCR_PINDEX(_dma_base_r, \
                                        _lif, _qtype, _qid, \
                                        _db_addr_r, _db_data_r) \
     PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, 0 /*ring-id*/, _db_addr_r, _db_data_r);\
     phvwr       p.immdt_as_dbell_data, _db_data_r.dx; \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, immdt_as_dbell_data, immdt_as_dbell_data, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
+
+#ring-id assumed as 0
+#define RESP_RX_POST_IMMDT_AS_DOORBELL_SET_PINDEX(_dma_base_r, \
+                                       _lif, _qtype, _qid, \
+                                       _db_addr_r, _db_data_r) \
+    PREPARE_DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, 0 /*ring-id*/, 0 /*pindex*/, _db_addr_r, _db_data_r);\
+    phvwr       p.immdt_as_dbell_data, _db_data_r.dx; \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, immdt_as_dbell_data, immdt_as_dbell_data, _db_addr_r); \
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
        
+#define RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(_pindex) \
+    phvwr       p.immdt_as_dbell_data[63:48], _pindex;
+
 #define RESP_RX_RING_ACK_NAK_DB(_dma_base_r,  \
                                 _lif, _qtype, _qid, \
                                 _db_addr_r, _db_data_r) \

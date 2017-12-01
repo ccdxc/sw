@@ -10,9 +10,9 @@ int test_setup();
 
 int check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size);
 
-int form_read_cmd_no_buf(uint8_t *nvme_cmd);
+int form_read_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba);
 
-int form_write_cmd_no_buf(uint8_t *nvme_cmd);
+int form_write_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba);
 
 int test_run_nvme_pvm_admin_cmd();
 
