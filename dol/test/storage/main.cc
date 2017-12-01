@@ -61,6 +61,9 @@ std::vector<tests::TestEntry> test_suite = {
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
   {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
+};
+
+std::vector<tests::TestEntry> rdma_tests = {
   {&tests::test_run_rdma_e2e_write, "E2E write over RDMA", false},
   {&tests::test_run_rdma_e2e_read, "E2E read over RDMA", false},
 };
@@ -97,14 +100,17 @@ int main(int argc, char**argv) {
     return 1;
   }
 
-  size_t base_test_size = test_suite.size();
-
   // Add xts tests
   tests::add_xts_tests(test_suite);
+  printf("Added XTS tests \n");
+
+  // Add rdma tests
+  for (size_t i = 0; i < rdma_tests.size(); i++) {
+    test_suite.push_back(rdma_tests[i]);
+  }
+  printf("Added RDMA tests \n");
 
   for (size_t i = 0; i < test_suite.size(); i++) {
-    // Delay between bases cases and accelerators
-    if (i == base_test_size) sleep(5);
     printf(" Starting test #: %d name: %s \n", (int) i, test_suite[i].test_name.c_str());
     if (test_suite[i].test_fn() < 0)
       test_suite[i].test_succeded = false;
