@@ -168,6 +168,7 @@ class DeParserPhdrProfile:
         phdr_profile['fld_start_2']['value']=str(self.fld2_start)
         phdr_profile['fld_end_2']  ['value']=str(self.fld2_end)
         phdr_profile['add_len']    ['value']=str(self.add_len)
+        phdr_profile['_modified']           = True
 
     def LogGenerate(self):
         log_str = ''
@@ -256,6 +257,7 @@ class DeParserCsumProfile:
         csum_profile['add_len']       ['value']=str(self.add_len)
         #csum_profile['csum_unit_include_bm']['value'] = \
         #                        str(self.csum_unit_include_bm)
+        csum_profile['_modified']           = True
     def LogGenerate(self):
         log_str = ''
         log_str += 'DeParser Csum Profile:\n'
@@ -380,6 +382,7 @@ class DeParserCsumObj:
         csum_hdr_cfg['crc_include_bm']['value']=str(self.crc_include_bm)
         csum_hdr_cfg['csum_unit_include_bm']['value'] = \
                                       str(self.csum_unit_include_bm)
+        csum_hdr_cfg['_modified']            = True
 
     def LogGenerate(self, csum_hdr):
         log_str = ''

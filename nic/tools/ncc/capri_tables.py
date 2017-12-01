@@ -5878,6 +5878,7 @@ class capri_table_manager:
                                                                   capri_get_hbm_start_address_from_layout(table['layout']))
                     else:
                         continue
+                    profile['_modified'] = True
 
         capri_pic_csr_output(self.be, pic)
 

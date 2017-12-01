@@ -191,6 +191,8 @@ class ParserPhdrProfile:
         phdr_profile['fld3_fld_end']['value']   = str(self.fld3_end)
         phdr_profile['fld3_add_len']['value']   = str(self.fld3_add_len)
 
+        phdr_profile['_modified'] = True
+
 
 class ParserCsumProfile:
     '''
@@ -251,6 +253,7 @@ class ParserCsumProfile:
         profile['addsub_csum_loc']['value']= str(self.addsub_csum_loc)
         profile['csum_loc_adj']['value']   = str(self.csum_loc_adj)
         profile['align']['value']          = str(self.align)
+        profile['_modified']               = True
 
         log_str = ''
         log_str += 'Csum Profile\n'
