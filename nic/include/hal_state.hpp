@@ -634,11 +634,22 @@ private:
 
 extern class hal_state    *g_hal_state;
 
-
 static inline bool
 is_forwarding_mode_host_pinned()
 {
     return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED;
+}
+
+static inline bool
+is_forwarding_mode_classic_nic()
+{
+    return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC;
+}
+
+static inline bool
+is_forwarding_mode_smart_nic()
+{
+    return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH;
 }
 
 }    // namespace hal

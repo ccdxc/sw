@@ -308,6 +308,36 @@ end:
     return ret;
 }
 
+hal_ret_t
+enicif_classic_add_to_oif_lists (l2seg_t *l2seg, if_t *hal_if)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    oif_t                       oif = { 0 };
+    lif_t                       *lif = NULL;
+
+    HAL_ASSERT(l2seg && hal_if);
+    lif = find_lif_by_handle(hal_if->lif_handle);
+    HAL_ASSERT(lif != NULL);
+
+    oif.intf = hal_if;
+    oif.l2seg = l2seg;
+
+    if (lif->packet_filters.receive_broadcast) {
+        ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
+        HAL_ASSERT(ret == HAL_RET_OK);
+    }
+    if (lif->packet_filters.receive_all_multicast) {
+        ret = oif_list_add_oif(l2seg->bcast_oif_list + 1, &oif);
+        HAL_ASSERT(ret == HAL_RET_OK);
+    }
+    if (lif->packet_filters.receive_promiscuous) {
+        ret = oif_list_add_oif(l2seg->bcast_oif_list + 2, &oif);
+        HAL_ASSERT(ret == HAL_RET_OK);
+    }
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // 1. Update PI DBs as if_create_add_cb() was a success
 //------------------------------------------------------------------------------
@@ -321,6 +351,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
     if_create_app_ctxt_t        *app_ctxt = NULL; 
     l2seg_t                     *l2seg = NULL, *nat_l2seg = NULL;
+    oif_t                       oif = { 0 };
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-if:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -338,7 +369,6 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("pi-if:{}:if_id:{}:create commit CB",
                     __FUNCTION__, hal_if->if_id);
-
 
     // Add to if id hash table
     ret = if_add_to_db(hal_if, hal_handle);
@@ -363,13 +393,10 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             // Add classic nic/RxQ to bcast list only when RDMA is not enabled for this LIF
             if (l2seg && !app_ctxt->lif->enable_rdma) {
                 // TODO: Clean this as l2seg should not have list of oifs.
-                //       It should be handles.
+                // It should be handles.
                 // Add the new interface to the broadcast list of the associated
                 // l2seg. This applies to enicifs only. Its here because the
                 // multicast oif call requires the pi_if to have been created fully.
-                oif_t  oif;
-                // oif.if_id = hal_if->if_id;
-                // oif.l2_seg_id = app_ctxt->l2seg->seg_id;
                 oif.intf = hal_if;
                 oif.l2seg = l2seg;
                 ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
@@ -406,6 +433,8 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     goto end;
                 }
                 ret = l2seg_add_if(nat_l2seg, hal_if);
+                HAL_ASSERT(ret == HAL_RET_OK);
+                ret = enicif_classic_add_to_oif_lists(nat_l2seg, hal_if);
                 HAL_ASSERT(ret == HAL_RET_OK);
             }
 
@@ -1866,7 +1895,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     }
 
     // Add the uplink to the broadcast list of the l2seg
-    if (is_forwarding_mode_host_pinned() == FALSE) {
+    if (is_forwarding_mode_smart_nic()) {
         oif.intf = hal_if;
         oif.l2seg = l2seg;
         ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
@@ -3157,6 +3186,9 @@ enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, if_t *hal_if, bool ad
         }
         if (add) {
             ret = l2seg_add_if(l2seg, hal_if);
+            if (ret == HAL_RET_OK) {
+                ret = enicif_classic_add_to_oif_lists(l2seg, hal_if);
+            }
         } else {
             ret = l2seg_del_if(l2seg, hal_if);
         }

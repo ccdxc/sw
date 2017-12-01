@@ -61,6 +61,7 @@ public:
     indexer::status alloc(uint32_t *index, bool lowest = TRUE, 
                           uint32_t block_size = 1);
     indexer::status alloc_withid(uint32_t index, uint32_t block_size = 1);
+    indexer::status alloc_block(uint32_t *index, uint32_t block_size);
     indexer::status free(uint32_t index);
     bool is_alloced(uint32_t index);
     uint32_t get_size() { return size_; }

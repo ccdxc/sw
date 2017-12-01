@@ -519,6 +519,12 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->hal_handle = hal_alloc_handle();
     lif->vlan_strip_en = spec.vlan_strip_en();
     lif->pinned_uplink = spec.pinned_uplink_if_handle();
+    lif->packet_filters.receive_broadcast = spec.packet_filter().
+                                            receive_broadcast();
+    lif->packet_filters.receive_promiscuous = spec.packet_filter().
+                                              receive_promiscuous();
+    lif->packet_filters.receive_all_multicast = spec.packet_filter().
+                                                receive_all_multicast();
     //lif->allmulti = spec.allmulti();
     lif->enable_rdma = spec.enable_rdma();
     lif->rdma_max_keys = spec.rdma_max_keys();

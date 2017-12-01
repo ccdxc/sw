@@ -72,6 +72,33 @@ Met::~Met()
 }
 
 // ----------------------------------------------------------------------------
+// Create a Replication List
+// ----------------------------------------------------------------------------
+hal_ret_t
+Met::create_repl_list(uint32_t *repl_list_idx)
+{
+    hal_ret_t   rs = HAL_RET_OK;
+    ReplList    *repl_list = NULL;
+
+    // Allocate an index in repl. table
+    rs = alloc_repl_table_index(repl_list_idx);
+    if (rs != HAL_RET_OK) {
+        goto end;
+    }
+
+    // repl_list = new ReplList(*repl_list_idx, this);
+    repl_list = ReplList::factory(*repl_list_idx, this);
+
+    repl_list_map_[*repl_list_idx] = repl_list;
+
+    // TODO: Only for debugging
+    trace_met();
+end:
+    stats_update(INSERT, rs);
+    return rs;
+}
+
+// ----------------------------------------------------------------------------
 // Create a Replication List with a known ID
 // ----------------------------------------------------------------------------
 hal_ret_t
@@ -100,32 +127,33 @@ Met::create_repl_list_with_id(uint32_t repl_list_idx)
     return rs;
 }
 
-
 // ----------------------------------------------------------------------------
-// Create a Replication List
+// Create a block of Replication Lists with consecutive IDs
 // ----------------------------------------------------------------------------
 hal_ret_t
-Met::create_repl_list(uint32_t *repl_list_idx)
+Met::create_repl_list_block(uint32_t *repl_list_idx, uint32_t size)
 {
     hal_ret_t   rs = HAL_RET_OK;
     ReplList    *repl_list = NULL;
 
-    // Allocate an index in repl. table
-    rs = alloc_repl_table_index(repl_list_idx);
-    if (rs != HAL_RET_OK) {
+    // Allocate the index block in repl. table
+    indexer::status irs = repl_table_indexer_->alloc_block(repl_list_idx, size);
+    if (irs != indexer::SUCCESS) {
+        rs =  HAL_RET_NO_RESOURCE;
         goto end;
     }
 
-    // repl_list = new ReplList(*repl_list_idx, this);
-    repl_list = ReplList::factory(*repl_list_idx, this);
+    HAL_TRACE_DEBUG("Met:{}: Alloc repl table id: {}[+{}]", __FUNCTION__,
+                    *repl_list_idx, size);
 
-
-    repl_list_map_[*repl_list_idx] = repl_list;
+    for (uint32_t i = 0; i < size; i++) {
+        repl_list = ReplList::factory((*repl_list_idx) + i, this);
+        repl_list_map_[(*repl_list_idx) + i] = repl_list;
+    }
 
     // TODO: Only for debugging
     trace_met();
 end:
-    stats_update(INSERT, rs);
     return rs;
 }
 
@@ -375,4 +403,3 @@ Met::trace_met()
 
     return ret;
 }
-

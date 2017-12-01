@@ -164,6 +164,72 @@ end:
 }
 
 // ---------------------------------------------------------------------------
+// alloc_block()
+//  - Finds the first free block of bits.
+//  - Sets the bit and returns SUCCESS.
+//  - @lowest - boolean
+//          TRUE: returns the lowest free index
+//          FALSE: returns the next higher free index. Useful for bottom-up
+//                 allocation of indices
+// ---------------------------------------------------------------------------
+indexer::status
+indexer::alloc_block(uint32_t *index, uint32_t block_size)
+{
+    uint32_t start = 0, offs = 0, word = 0, bit = 0;
+    indexer::status rs = SUCCESS;
+
+    if (thread_safe_) {
+        HAL_ASSERT_RETURN((HAL_SPINLOCK_LOCK(&slock_) == 0), SLOCK_ERR);
+    }
+
+    if (num_words_ == 0 || !bits_) {
+        rs = INVALID_INDEXER;
+        goto end;
+    }
+
+    while (bit < block_size) {
+
+        word = (start + bit) >> WORD_SIZE_SHIFT;
+        while ((word < num_words_) && (bits_[word] == ALL_ONES_64BIT)) {
+            word++; // Skip entire words if nothing is free in them.
+            bit = 0; // But that would reset the search.
+            start = word << WORD_SIZE_SHIFT;
+        }
+
+        if (word >= num_words_) {
+            rs = INDEXER_FULL;
+            goto end;
+        }
+
+        offs = (start + bit) & WORD_SIZE_MASK;
+        if ((bits_[word] & (1ULL << offs)) == 0) {
+            bit++; // This index is free. Continue to the next index.
+            continue;
+        }
+
+        // This index is NOT free. Reset and search from the next index
+        start = start + bit + 1;
+        bit = 0;
+    }
+
+    *index = start;
+
+    for (uint32_t idx = start; idx < (start + block_size); idx ++) {
+        // Set the index as allocated
+        word = idx >> WORD_SIZE_SHIFT;
+        offs = idx  & WORD_SIZE_MASK;
+        bits_[word] |= (1ULL << offs);
+    }
+
+end:
+    if (thread_safe_) {
+        HAL_ASSERT_RETURN((HAL_SPINLOCK_UNLOCK(&slock_) == 0), SLOCK_ERR);
+    }
+
+    return rs;
+}
+
+// ---------------------------------------------------------------------------
 // alloc_withid
 //  - Sets the bit if its not already set.
 //  - If its already set, returns DUPLICATE_ALLOC

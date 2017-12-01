@@ -10,6 +10,8 @@ namespace pd {
 
 // Creates a new oif_list and returns handle
 hal_ret_t oif_list_create(oif_list_id_t *list);
+// Creates a contiguous block of oif_lists and returns handle to the first one
+hal_ret_t oif_list_create_block(oif_list_id_t *list, uint32_t size);
 // Takes an oiflis_handle and deletes it
 hal_ret_t oif_list_delete(oif_list_id_t list);
 // Adds an oif to list

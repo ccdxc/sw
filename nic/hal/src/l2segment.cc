@@ -185,10 +185,19 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-l2seg:{}:create add CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
-
     // create the broadcast/flood list for this l2seg
-    ret = oif_list_create(&l2seg->bcast_oif_list);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    if (is_forwarding_mode_classic_nic()) {
+        ret = oif_list_create_block(&l2seg->bcast_oif_list, 3);
+    } else {
+        ret = oif_list_create(&l2seg->bcast_oif_list);
+    }
+
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-l2seg:{}:failed to create broadcast list, err : {}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
+
     // PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
@@ -266,10 +275,29 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-l2seg:{}:create commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
-
-    if (is_forwarding_mode_host_pinned()) {
+    // create the broadcast/flood list for this l2seg
+    if (is_forwarding_mode_classic_nic()) {
         ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        if (ret != HAL_RET_OK) {
+            oif_list_delete_block(l2seg->bcast_oif_list, 3);
+            goto end;
+        }
+        ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list + 1);
+        if (ret != HAL_RET_OK) {
+            oif_list_delete_block(l2seg->bcast_oif_list, 3);
+            goto end;
+        }
+        ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list + 2);
+        if (ret != HAL_RET_OK) {
+            oif_list_delete_block(l2seg->bcast_oif_list, 3);
+            goto end;
+        }
+    } else if (is_forwarding_mode_host_pinned()) {
+        ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list);
+        if (ret != HAL_RET_OK) {
+            oif_list_delete(l2seg->bcast_oif_list);
+            goto end;
+        }
     }
 
     // 1. a. Add to l2seg id hash table

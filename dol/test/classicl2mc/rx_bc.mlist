@@ -4,8 +4,8 @@ feature:
     sub         : rxbc
     package     : test.classicl2mc
     module      : classic
-    enable      : False
-    ignore      : True
+    enable      : True
+    ignore      : False
     runorder    : 100
 
 modules:
@@ -27,6 +27,7 @@ modules:
 
     - module:
         name    : BCAST_VLAN_STRIP
+        enable  : False
         spec    : rx_bc_vlan_strip.testspec
         iterate :
             - flood     : True

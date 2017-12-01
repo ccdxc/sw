@@ -293,7 +293,35 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_ASSERT(pi_if != NULL && pi_if->if_type == intf::IF_TYPE_ENIC);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
-        oif_list_add_oif(mc_entry->oif_list, &oif);
+        ret = oif_list_add_oif(mc_entry->oif_list, &oif);
+        HAL_ASSERT(ret == HAL_RET_OK);
+    }
+
+    // Check all the other Classic Enics on this l2seg and add
+    // them if they have a packet filter of type all-multicast
+    for (const void *ptr : *l2seg->if_list) {
+        auto p_hdl_id = (hal_handle_t *)ptr;
+        pi_if = find_if_by_handle(*p_hdl_id);
+        if (!pi_if) {
+            HAL_TRACE_ERR("mc_entry_create_add_cb:{}:"
+                          "unable to find if with handle:{}",
+                          __FUNCTION__, entry->handle_id);
+            continue;
+        }
+
+        if (pi_if->if_type == intf::IF_TYPE_ENIC &&
+            pi_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+
+            lif_t *lif = find_lif_by_handle(pi_if->lif_handle);
+            HAL_ASSERT(lif != NULL);
+
+            if (lif->packet_filters.receive_all_multicast) {
+                oif.intf = pi_if;
+                oif.l2seg = l2seg;
+                ret = oif_list_add_oif(mc_entry->oif_list, &oif);
+                HAL_ASSERT(ret == HAL_RET_OK);
+            }
+        }
     }
 
     // PD Call to allocate PD resources and HW programming
@@ -305,7 +333,7 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                       __FUNCTION__, ret);
     }
 
-    end:
+end:
     return ret;
 }
 
@@ -344,7 +372,7 @@ mc_entry_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    end:
+end:
     return ret;
 }
 
@@ -401,7 +429,7 @@ mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Free mc entry
     mc_entry_free(mc_entry);
 
-    end:
+end:
     return ret;
 }
 

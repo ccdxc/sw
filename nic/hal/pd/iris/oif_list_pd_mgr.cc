@@ -21,10 +21,26 @@ hal_ret_t oif_list_create(oif_list_id_t *list)
     return g_hal_state_pd->met_table()->create_repl_list(list);
 }
 
+// Creates a contiguous block of oif_lists and returns handle to the first one
+hal_ret_t oif_list_create_block(oif_list_id_t *list, uint32_t size)
+{
+    return g_hal_state_pd->met_table()->create_repl_list_block(list, size);
+}
+
 // Takes an oiflis_handle and deletes it
 hal_ret_t oif_list_delete(oif_list_id_t list)
 {
     return g_hal_state_pd->met_table()->delete_repl_list(list);
+}
+
+// Takes an oiflis_handle and deletes a block starting from it
+hal_ret_t oif_list_delete_block(oif_list_id_t list, uint32_t size)
+{
+    for (uint32_t i = 0; i < size; i++) {
+        oif_list_delete(list + i);
+    }
+
+    return HAL_RET_OK;
 }
 
 // Adds an oif to list

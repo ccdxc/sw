@@ -11,8 +11,6 @@ struct phv_              p;
 registered_macs:
   bcf         [c1], registered_macs_hit
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  seq         c1, k.control_metadata_uplink, FALSE
-  nop.c1.e
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
   bcf         [c1], registered_macs_all_multicast
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_BROADCAST
@@ -29,11 +27,11 @@ registered_macs_hit:
   phvwr.!c1.e p.control_metadata_dst_lport, d.registered_macs_d.dst_lport
   nop
 
-registered_macs_all_multicast:
+registered_macs_broadcast:
   phvwr.e     p.capri_intrinsic_tm_replicate_en, TRUE
   phvwr       p.capri_intrinsic_tm_replicate_ptr, k.control_metadata_flow_miss_idx
 
-registered_macs_broadcast:
+registered_macs_all_multicast:
   add         r1, k.control_metadata_flow_miss_idx, 1
   phvwr.e     p.capri_intrinsic_tm_replicate_en, TRUE
   phvwr       p.capri_intrinsic_tm_replicate_ptr, r1

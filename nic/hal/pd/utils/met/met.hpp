@@ -106,6 +106,7 @@ public:
     // Methods
     hal_ret_t create_repl_list(uint32_t *repl_list_idx);
     hal_ret_t create_repl_list_with_id(uint32_t repl_list_idx);
+    hal_ret_t create_repl_list_block(uint32_t *repl_list_idx, uint32_t size);
     hal_ret_t add_replication(uint32_t repl_list_idx, void *data);
     hal_ret_t del_replication(uint32_t repl_list_idx, void *data);
     hal_ret_t delete_repl_list(uint32_t repl_list_idx);

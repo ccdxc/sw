@@ -29,6 +29,13 @@ namespace hal {
 typedef uint32_t lif_id_t;
 // typedef struct if_s if_t;
 
+// PKtFilter structure
+typedef struct pkt_filter_s {
+    bool    receive_broadcast;     // Receive Broadcast
+    bool    receive_all_multicast; // Receive all Multicast
+    bool    receive_promiscuous;   // Receive Unknown Unicast, Broadcast, Multicast. Not Known Unicast
+} __PACK__ pkt_filter_t;
+
 // LIF structure
 typedef struct lif_s {
     hal_spinlock_t      slock;                       // lock to protect this structure
@@ -36,13 +43,13 @@ typedef struct lif_s {
     intf::IfStatus      admin_status;                // admin status
     bool                vlan_strip_en;               // vlan strip enable
     hal_handle_t        pinned_uplink;               // uplink this LIF is pinned to
-    //bool                allmulti;                    // All multicast enable
     bool                enable_rdma;                 // enable rdma on this LIF
     uint32_t            rdma_max_keys;
     uint32_t            rdma_max_pt_entries;
     uint8_t             qtypes[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
     uint16_t            cos_bmp;                     // bitmap of COS values supported by this LIF.
-    bool                qstate_init_done;          // qstate map init status.
+    bool                qstate_init_done;            // qstate map init status.
+    pkt_filter_t        packet_filters;              // Packet Filter Modes
 
     // operational state of interface
     hal_handle_t        hal_handle;                  // HAL allocated handle

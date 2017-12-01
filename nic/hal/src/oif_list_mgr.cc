@@ -12,10 +12,22 @@ hal_ret_t oif_list_create(oif_list_id_t *list)
     return pd::oif_list_create(list);
 }
 
+// Creates a contiguous block of oif_lists and returns handle to the first one
+hal_ret_t oif_list_create_block(oif_list_id_t *list, uint32_t size)
+{
+    return pd::oif_list_create_block(list, size);
+}
+
 // Takes an oiflis_handle and deletes it
 hal_ret_t oif_list_delete(oif_list_id_t list)
 {
     return pd::oif_list_delete(list);
+}
+
+// Takes an oiflis_handle and deletes a block starting from it
+hal_ret_t oif_list_delete_block(oif_list_id_t list, uint32_t size)
+{
+    return pd::oif_list_delete_block(list, size);
 }
 
 // Adds an oif to list
