@@ -22,7 +22,7 @@ modules:
         package : test.rdma
         module  : req_tx_send_only_rexmit_timeout
         spec    : req_tx_send_only_rexmit_timeout.testspec
-        ignore  : True
+        ignore  : False
  
     - module:
         name    : RDMA_TX_SEND_ONLY_2SGES

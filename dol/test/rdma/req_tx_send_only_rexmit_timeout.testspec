@@ -15,7 +15,9 @@ selectors:
         lqp         : filter://svc=0
         rqp         : filter://svc=0
 #    maxflows    : 1
-#   maxrdmasessions     : 1
+#  Restrict rdmasessions to 1 for timer expiry tests as expiry event will happen for
+#  all sessions at the same time and cannot be controlled at rdma session level
+    maxrdmasessions     : 1
 
 packets:
     - packet:

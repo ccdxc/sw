@@ -72,7 +72,7 @@ skip_cnp_send:
 
     // if (sqcb1_p->lsn != ((1 << (sqcb1_p->credits >> 1)) + sqcb1_p->msn))
     //     doorbell_incr_pindex(fc_ring_id) 
-    DECODE_NAK_SYNDROME_CREDITS(r2, k.to_stage.syndrome, c1)
+    DECODE_ACK_SYNDROME_CREDITS(r2, k.to_stage.syndrome, c1)
     mincr          r2, 24, k.to_stage.msn
     sne            c1, d.lsn, r2
 

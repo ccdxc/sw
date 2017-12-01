@@ -798,7 +798,7 @@ struct header_template_t {
 #define NAK_SEQ_ERR_SYNDROME   0x60
 #define SYNDROME_CREDITS_MASK 0x1F
 
-#define DECODE_NAK_SYNDROME_CREDITS(_credits_r, _syndrome, _cf)         \
+#define DECODE_ACK_SYNDROME_CREDITS(_credits_r, _syndrome, _cf)         \
     seq            _cf, _syndrome[4:0], r0;                             \
     srl            _credits_r, _syndrome[4:0], 1;                       \
     sllv.!_cf      _credits_r, 1, _credits_r;

@@ -12,6 +12,8 @@ struct sqcb0_t d;
 req_tx_bktrack_write_back_process:
 
      tblwr         d.busy, k.args.busy
+     seq           c1, k.args.release_cb1_busy, 1
+     tblwr         d.cb1_busy, 0
      tblwr         d.num_sges, k.args.num_sges
      tblwr         d.in_progress, k.args.in_progress
      tblwr         d.current_sge_id, k.args.current_sge_id

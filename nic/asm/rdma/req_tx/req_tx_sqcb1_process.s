@@ -23,8 +23,8 @@ req_tx_sqcb1_process:
     //  if (sqcb1_p->credits)
     //      credits = 1 << (sqcb1_p->credits >> 1); 
     //  sqcb1_p->lsn = sqcb1_p->msn + credits
-    DECODE_NAK_SYNDROME_CREDITS(r1, d.credits, c1)
-    add            r1, d.msn, r1
+    DECODE_ACK_SYNDROME_CREDITS(r1, d.credits, c1)
+    mincr          r1, 24, d.msn
     tblwr          d.lsn, r1
     
     // sqcb1_to_credits_info_p->need_credits = TRUE

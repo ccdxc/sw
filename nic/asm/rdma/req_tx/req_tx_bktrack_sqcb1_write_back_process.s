@@ -11,6 +11,14 @@ struct sqcb1_t d;
 req_tx_bktrack_sqcb1_write_back_process:
      tblwr         d.tx_psn, k.args.tx_psn
      tblwr         d.ssn, k.args.ssn
+     tblwr         d.imm_data, k.args.imm_data
+     tblwr         d.inv_key, k.args.inv_key
+
+     // Revert LSN based on last received ACK's MSN and credits
+     DECODE_ACK_SYNDROME_CREDITS(r1, d.credits, c1)
+     mincr         r1, 24, d.msn
+     tblwr         d.lsn, r1
+
      seq           c1, k.args.skip_wqe_start_psn, 1
      tblwr.!c1     d.wqe_start_psn, k.args.wqe_start_psn
     

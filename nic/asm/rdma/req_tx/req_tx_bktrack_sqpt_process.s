@@ -43,7 +43,6 @@ req_tx_bktrack_sqpt_process:
 
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, k.args.tx_psn)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, k.args.ssn)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, rexmit_psn, k.args.rexmit_psn)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, k.args.sq_c_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, in_progress, k.args.in_progress)

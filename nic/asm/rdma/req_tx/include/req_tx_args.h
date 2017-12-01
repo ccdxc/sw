@@ -128,7 +128,9 @@ struct req_tx_sqcb0_to_sqcb1_info_t {
     num_sges                      : 8;
     update_credits                : 1;
     bktrack                       : 1; 
-    pad                           : 76;
+    pt_base_addr                  : 32;
+    op_type                       : 5;
+    pad                           : 39;
 };
 
 
@@ -143,17 +145,27 @@ struct req_tx_sqcb1_to_credits_info_t {
 //
 struct req_tx_sq_bktrack_info_t {
     sq_c_index                    : 16;
-    sq_p_index                    : 16;
     in_progress                   : 1;
 //    bktrack_in_progress           : 1;
     current_sge_offset            : 32;
     current_sge_id                : 8;
     num_sges                      : 8;
-    rexmit_psn                    : 24;
     tx_psn                        : 24;
     ssn                           : 24;
     op_type                       : 5;
-    pad                           : 2;
+    union {
+        struct {
+            sq_p_index            : 16;
+            pad1                  : 26;
+        };
+        struct {
+            union {
+                imm_data          : 32;       
+                inv_key           : 32;
+            };
+            pad2                  : 10;       
+        };
+    };
 };
 
 struct req_tx_bktrack_sqcb1_write_back_info_t {
@@ -162,7 +174,9 @@ struct req_tx_bktrack_sqcb1_write_back_info_t {
     ssn                           : 24;
     skip_wqe_start_psn            : 1;
     tbl_id                        : 3;
-    pad                           : 84;
+    imm_data                      : 32;
+    inv_key                       : 32;
+    pad                           : 20;
 };
 
 struct req_tx_sq_to_stage_t {
@@ -173,12 +187,12 @@ struct req_tx_sq_to_stage_t {
 
 struct req_tx_bktrack_to_stage_t {
     wqe_addr                     : 64;
-    pt_base_addr                 : 32;
     log_pmtu                     : 5;
     log_sq_page_size             : 5;
     log_wqe_size                 : 5;
     log_num_wqes                 : 5;
-    pad                          : 12;
+    rexmit_psn                   : 24;
+    pad                          : 20;
 };
 
 struct req_tx_to_stage_t {
