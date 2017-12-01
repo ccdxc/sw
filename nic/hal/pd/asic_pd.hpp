@@ -47,6 +47,11 @@ hal_ret_t asic_mem_write(uint64_t addr, uint8_t *data,
 hal_ret_t asic_ring_doorbell(uint64_t addr, uint64_t data,
                              bool blocking = true);
 
+//------------------------------------------------------------------------------
+// public API for saving cpu packet.
+//------------------------------------------------------------------------------
+hal_ret_t asic_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
+
 // starting point for asic read-write thread
 void *asic_rw_start(void *ctxt);
 

@@ -58,6 +58,8 @@ cc_library(
         "asic/capri/model/cap_ms/cap_ms_csr.h",
         "asic/capri/model/cap_ms/cap_msr_csr.cc",
         "asic/capri/model/cap_ms/cap_msr_csr.h",
+        "asic/capri/model/cap_ms/cap_msh_csr.cc",
+        "asic/capri/model/cap_ms/cap_msh_csr.h",
         "asic/capri/model/cap_ap/cap_ap_csr.cc",
         "asic/capri/model/cap_ap/cap_ap_csr.h",
         "asic/capri/model/cap_ap/cap_apb_csr.h",

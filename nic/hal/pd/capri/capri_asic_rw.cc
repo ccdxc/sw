@@ -14,7 +14,6 @@
 
 #include "nic/utils/thread/thread.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
 
 namespace hal {
 
@@ -330,6 +329,15 @@ asic_ring_doorbell (uint64_t addr, uint64_t data, bool blocking)
     return rc;
 }
 
+//------------------------------------------------------------------------------
+// public API for saving cpu packet.
+//------------------------------------------------------------------------------
+hal_ret_t
+asic_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len)
+{
+    pal_ret_t prc = pal_step_cpu_pkt(pkt, pkt_len);
+    return IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+}
 
 hal_ret_t
 asic_port_cfg (uint32_t port_num,

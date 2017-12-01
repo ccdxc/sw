@@ -197,6 +197,7 @@ class IcrcParserProfile:
         profile['mask_adj']['value']       = str(self.mask_adj)
         profile['end_eop']['value']        = str(self.end_eop)
         profile['mask_prof_sel']['value']  = str(self.mask_profile)
+        profile['_modified']               = True
 
     def LogGenerate(self):
         log_str = ''
@@ -494,6 +495,7 @@ class IcrcDeParserProfile:
         #icrc_profile['end_adj_sub']   ['value']=str(self.end_adj_sub)
         icrc_profile['loc_adj']       ['value']=str(self.icrc_loc_adj)
         #icrc_profile['loc_adj_sub']   ['value']=str(self.icrc_loc_adj_sub)
+        icrc_profile['_modified']               = True
 
     def LogGenerate(self):
         log_str = ''
@@ -726,6 +728,8 @@ class IcrcDeParserCalField:
             #TODO : Until HW changes are released, disabling icrc computation. 
             # Remove following line later.
             icrc_hdr_cfg['crc_vld']     ['value']   = str(0)
+
+        icrc_hdr_cfg['_modified']               = True
 
     def LogGenerate(self, icrc_hdr):
         max_hv_bit_idx = self.be.hw_model['parser']['max_hv_bits'] - 1

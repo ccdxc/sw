@@ -67,6 +67,7 @@ SOURCES = \
     cap_mx_csr.cc \
     cap_ms_csr.cc \
     cap_msr_csr.cc \
+    cap_msh_csr.cc \
     LogMsg.cc \
     cpu.cc \
     cpu_hal_if.cc \

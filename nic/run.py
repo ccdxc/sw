@@ -8,6 +8,7 @@ import re
 import time
 import signal
 import atexit
+import pdb
 
 from subprocess import Popen, PIPE, call
 
@@ -40,7 +41,7 @@ lock_file = nic_dir + "/.run.pid"
 
 # Environment
 
-os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin:third-party/snort3/export/bin"
+os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
 os.environ["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
 
 # build
@@ -120,7 +121,7 @@ def run_model(args):
 def run_hal(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["HAL_PLUGIN_PATH"] = nic_dir + "/../bazel-bin/nic/hal/plugins/"
-    #os.environ["LD_LIBRARY_PATH"] = "./obj:/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + nic_dir + "/third-party/snort3/export/bin"
     os.environ["SNORT_LUA_PATH"] = nic_dir + "/third-party/snort3/export/lua/"
     os.environ["LUA_PATH"] = nic_dir + "/third-party/snort3/export/lua/?.lua;;"
     os.environ["SNORT_DAQ_PATH"] = nic_dir + "/third-party/snort3/export/daqs/"
@@ -184,6 +185,7 @@ def run_storage_dol(port):
 # Run GFT tests
 def run_gft_test():
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
     os.chdir(nic_dir)
     cmd = ['../bazel-bin/nic/hal/test/gtests/gft_test']
     p = Popen(cmd)

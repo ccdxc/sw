@@ -5,6 +5,10 @@
 #include <vector>
 #include "buf_hdr.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int lib_model_connect();
 int lib_model_conn_close();
 void step_network_pkt(const std::vector<uint8_t> & pkt, uint32_t port);
@@ -23,5 +27,9 @@ int lib_model_mac_msg_send (uint32_t port_num,
                             uint32_t type,
                             uint32_t num_lanes,
                             uint32_t val);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __LIB_MODEL_CLIENT_H__

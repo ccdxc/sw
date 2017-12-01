@@ -1344,6 +1344,7 @@ def capri_deparser_cfg_output(deparser):
         rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx)
         dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-1)
         dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(0)
+        dpp_json['cap_dpp']['registers'][rstr]['_modified'] = True
         dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
         dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
         dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
@@ -1352,9 +1353,11 @@ def capri_deparser_cfg_output(deparser):
         # to subtract it from total len
         dpp_rstr['size_sel']['value'] = str(ohi_sel)
         dpp_rstr['size_val']['value'] = str(payload_offset_len_ohi_id)
+        dpp_rstr['_modified'] = True
         # get pkt_offset from last(sw) ohi slot
         dpr_rstr['source_sel']['value'] = str(ohi_sel)
         dpr_rstr['source_oft']['value'] = str(payload_offset_len_ohi_id)
+        dpr_rstr['_modified'] = True
 
     for name, hdr in deparser.be.h.p4_header_instances.items():
         if hdr.metadata:
@@ -1365,6 +1368,7 @@ def capri_deparser_cfg_output(deparser):
                 rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - 1)
                 dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-2)
                 dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(1)
+                dpp_json['cap_dpp']['registers'][rstr]['_modified'] = True
                 dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
                 dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
                 dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
@@ -1382,6 +1386,8 @@ def capri_deparser_cfg_output(deparser):
                 payload_offset_len_ohi_id = deparser.be.hw_model['parser']['ohi_threshold']
                 dpr_rstr['source_sel']['value'] = str(ohi_sel)
                 dpr_rstr['source_oft']['value'] = str(payload_offset_len_ohi_id)
+                dpr_rstr['_modified'] = True
+                dpp_rstr['_modified'] = True
 
     # Fill in all header fields information.
     for hvb in range(max_hv_bit_idx, -1, -1):
@@ -1452,6 +1458,8 @@ def capri_deparser_cfg_output(deparser):
                     else:
                         dpp_rstr['size_sel']['value'] = str(ohi_sel)
                         dpp_rstr['size_val']['value'] = str(phv_ohi.var_id) if not csum_hvb else str(0)
+                dpr_rstr['_modified'] = True
+                dpp_rstr['_modified'] = True
                 used_hdr_fld_info_slots += 1
 
             #Check if the header has csum hv bits; if so, allocate dummy  end fld slots
@@ -1465,9 +1473,12 @@ def capri_deparser_cfg_output(deparser):
             dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
             dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
             dpp_rstr['size_val']['value'] = str(0)
+            dpr_rstr['_modified'] = True
+            dpp_rstr['_modified'] = True
             used_hdr_fld_info_slots += 1
 
         dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(start_fld)
+        dpp_json['cap_dpp']['registers'][rstr]['_modified'] = True
         if not end_fld_info_adjust:
             dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
                 str(max_hdr_flds - used_hdr_fld_info_slots)
@@ -1504,6 +1515,8 @@ def capri_deparser_cfg_output(deparser):
                 dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
                 dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
                 dpp_rstr['size_val']['value'] = str(0)
+                dpr_rstr['_modified'] = True
+                dpp_rstr['_modified'] = True
                 rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - csum_allocated_hv)
                 dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
                     str(max_hdr_flds - end_fld)
@@ -1790,6 +1803,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     parser.logger.debug("%s:fill_sram_entry for %s + %s" % \
         (parser.d.name, bi.nxt_state, add_cs))
     sram = copy.deepcopy(sram_t)
+    sram['_modified'] = True
 
     # add_cs is valid when this is the first state that h/w enters via cfg registers
     # add extractions, setops, hv bits etc from add_cs to this
@@ -2342,9 +2356,15 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     # fill unused instructions to do NOP - XXX
     # set up the unused meta instr to perform |= 0
     for m in range(mid, max_mid):
-        sram['meta_inst'][mid]['sel']['value'] = meta_ops['nop']
-        sram['meta_inst'][mid]['phv_idx']['value'] = str(0)
-        sram['meta_inst'][mid]['val']['value'] = str(0)
+        sram['meta_inst'][m]['sel']['value'] = meta_ops['nop']
+        sram['meta_inst'][m]['phv_idx']['value'] = str(0)
+        sram['meta_inst'][m]['val']['value'] = str(0)
+    
+
+    for m,used in enumerate(mux_idx_allocator):
+        if used != None:
+            continue
+        sram['mux_idx'][m]['sel']['value'] = str(3) # load offset - Do not access packet
 
     if current_flit != None:
         parser.logger.debug("%s:%s:Flit # %d" % (parser.d.name, nxt_cs.name, current_flit))
@@ -2356,6 +2376,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
 def _fill_parser_sram_catch_all(sram_t):
     sram = copy.deepcopy(sram_t)
+    sram['_modified'] = True
     # mark this as 'end' state
     sram['action']['value'] = str(1)
     sram['nxt_state']['value'] = str(0)
@@ -2373,6 +2394,7 @@ def _fill_parser_sram_catch_all(sram_t):
 def _fill_parser_tcam_catch_all(tcam_t):
     # Catch-all entry
     te = copy.deepcopy(tcam_t)
+    te['_modified'] = True
     te['key']['control']['value'] = str(0)
     te['mask']['control']['value'] = str(0)
     te['key']['state']['value'] = "0"
@@ -2386,6 +2408,7 @@ def _fill_parser_tcam_catch_all(tcam_t):
 def _fill_parser_tcam_entry(tcam_t, parser, cs, bi):
     # tcam entry is created for lookup (current_state_id, lkp_regs => bi.value, bi.mask
     te = copy.deepcopy(tcam_t)
+    te['_modified'] = True
     hw_mask = [0 for i in range(cs.hw_lkp_size)]
     hw_val = [0 for i in range(cs.hw_lkp_size)]
     for i,b in enumerate(bi.mask):
@@ -3243,7 +3266,7 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                 for field, attrib in conf.iteritems():
                     if ((field == 'word_size') or (field == 'inst_name') or
                         (field == 'addr_offset') or (field == 'decoder') or
-                        (field == 'is_array')):
+                        (field == 'is_array') or (field == '_width')):
                         continue
                     lsb  = int(attrib['field_lsb'])
                     msb  = int(attrib['field_msb'])
@@ -3259,14 +3282,9 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                     width = result[1]
         else:
             for field, attrib in conf.iteritems():
-                if ((field == 'word_size') or (field == 'inst_name') or
-                    (field == 'addr_offset') or (field == 'decoder') or
-                    (field == 'is_array')):
+                if not type(attrib) is dict:
                     continue
-                try:
-                    lsb  = int(attrib['field_lsb'])
-                except:
-                    pdb.set_trace()
+                lsb  = int(attrib['field_lsb'])
                 msb  = int(attrib['field_msb'])
                 mask = int(attrib['field_mask'], 16)
                 val  = int(attrib['value'], 0)
@@ -3275,7 +3293,6 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                 else:
                     skip = False
                 width += msb - lsb + 1
-#               data = data | ((val & mask) << lsb)
                 data = data | (val << lsb)
         if skip == True:
             continue
