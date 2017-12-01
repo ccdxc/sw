@@ -217,11 +217,13 @@ message SessionStatus {
   fixed64                session_handle    = 1;    // id of the session (returned by HAL)
   FlowStatus             iflow_status      = 2;    // operational status of iflow
   FlowStatus             rflow_status      = 3;    // operational status of rflow
-  nwsec.ALGName          alg               = 4;    // ALG applied on the session
+  uint32                 app_id            = 4;    // L7 app id
+  uint32                 app_id_state      = 5;    // L7 app id state
+  nwsec.ALGName          alg               = 6;    // ALG applied on the session
   oneof alg_info {
-      TFTPALGInfo        tftp_info          = 5;   
-      RPCALGInfo         rpc_info           = 6;
-      SIPALGInfo         sip_info           = 7;
+      TFTPALGInfo        tftp_info          = 7;   
+      RPCALGInfo         rpc_info           = 8;
+      SIPALGInfo         sip_info           = 9;
   } 
 }
 

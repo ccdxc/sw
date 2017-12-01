@@ -28,8 +28,13 @@ public:
     // Parses the config
     void parse(const std::string& config, const std::string& plugin_path);
 
-    // Loads plugins with auto-load enabled
+    // Loads/exits plugins with auto-load enabled
     void load();
+    void exit();
+
+    // Per-thread initialization and destruction
+    void thread_init(int tid);
+    void thread_exit(int tid);
 
     // delete default copy contructor and assignment operator
     plugin_manager_t(plugin_manager_t const&) = delete;
@@ -67,6 +72,10 @@ private:
     bool load_symbol(void *so, std::string name, void **symbol);
     bool load_symbols(void *so, plugin_t *plugin);
     bool load_plugin(plugin_t *plugin);
+    void exit_plugin(plugin_t *plugin);
+
+    void thread_init_plugin(plugin_t *plugin, int tid);
+    void thread_exit_plugin(plugin_t *plugin, int tid);
 };
 } // namepsace plugins
 
@@ -99,6 +108,24 @@ inline hal_ret_t init_plugins(bool classic_nic) {
     hal::proxy::proxy_plugin_init();
 
     return HAL_RET_OK;
+}
+
+inline void exit_plugins() {
+    plugins::plugin_manager_t &pluginmgr = plugins::plugin_manager_t::get();
+
+    pluginmgr.exit();
+}
+
+inline void thread_init_plugins(int tid) {
+    plugins::plugin_manager_t &pluginmgr = plugins::plugin_manager_t::get();
+
+    pluginmgr.thread_init(tid);
+}
+
+inline void thread_exit_plugins(int tid) {
+    plugins::plugin_manager_t &pluginmgr = plugins::plugin_manager_t::get();
+
+    pluginmgr.thread_exit(tid);
 }
 
 

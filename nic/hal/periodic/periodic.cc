@@ -25,6 +25,7 @@ namespace periodic {
 
 // global timer wheel for periodic thread's use
 hal::utils::twheel *g_twheel;
+static volatile bool g_twheel_is_running = false;
 
 // timer fd information
 struct periodic_info {
@@ -32,6 +33,9 @@ struct periodic_info {
     uint64_t    usecs;
     uint64_t    missed_wakeups;
 } __PACK__;
+
+// thread local variables
+thread_local struct periodic_info t_pinfo;
 
 //------------------------------------------------------------------------------
 // initiaize information about a given timer fd
@@ -96,11 +100,8 @@ timerfd_wait (struct periodic_info *pinfo, uint64_t *missed)
 // periodic thread starting point
 //------------------------------------------------------------------------------
 void *
-periodic_thread_start (void *ctxt)
+periodic_thread_init (void *ctxt)
 {
-    struct periodic_info    pinfo;
-    uint64_t                missed;
-
     HAL_THREAD_INIT(ctxt);
 
     // create a timer wheel
@@ -112,16 +113,28 @@ periodic_thread_start (void *ctxt)
     }
 
     // prepare the timer fd(s)
-    timerfd_init(&pinfo);
-    pinfo.usecs = TWHEEL_DEFAULT_SLICE_DURATION * TIME_USECS_PER_MSEC;
-    if (timerfd_prepare(&pinfo) < 0) {
+    timerfd_init(&t_pinfo);
+    t_pinfo.usecs = TWHEEL_DEFAULT_SLICE_DURATION * TIME_USECS_PER_MSEC;
+    if (timerfd_prepare(&t_pinfo) < 0) {
         HAL_TRACE_ERR("Periodic thread failed to intiialize timer fd");
         return NULL;
     }
 
+    g_twheel_is_running = true;
+    return NULL;
+}
+
+//------------------------------------------------------------------------------
+// periodic thread main loop
+//------------------------------------------------------------------------------
+void *
+periodic_thread_run (void *ctxt)
+{
+    uint64_t                missed;
+
     while (TRUE) {
         // wait for timer to fire
-        if (timerfd_wait(&pinfo, &missed) < 0) {
+        if (timerfd_wait(&t_pinfo, &missed) < 0) {
             HAL_TRACE_ERR("Periodic thread failed to wait on timer");
             break;
         }
@@ -131,9 +144,19 @@ periodic_thread_start (void *ctxt)
             g_twheel->tick(missed * TWHEEL_DEFAULT_SLICE_DURATION);
         }
     }
+    g_twheel_is_running = false;
     HAL_TRACE_ERR("Periodic thread exiting !!!");
 
     return NULL;
+}
+
+//------------------------------------------------------------------------------
+// returns true only if thread timer wheel is running
+//------------------------------------------------------------------------------
+bool
+periodic_thread_is_running (void)
+{
+    return g_twheel_is_running;
 }
 
 //------------------------------------------------------------------------------

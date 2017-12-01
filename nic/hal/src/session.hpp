@@ -83,6 +83,21 @@ DEFINE_ENUM(flow_end_type_t, FLOW_END_TYPES)
 DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
 #undef SESSION_DIRECTIONS
 
+// appID state
+#define APPID_STATE(ENTRY)                                          \
+    ENTRY(APPID_STATE_INIT,        0,  "APPID_STATE_INIT")         \
+    ENTRY(APPID_STATE_NEEDED,      1,  "APPID_STATE_NEEDED")       \
+    ENTRY(APPID_STATE_NOT_NEEDED,  2,  "APPID_STATE_NOT_NEEDED")   \
+    ENTRY(APPID_STATE_IN_PROGRESS, 3,  "APPID_STATE_IN_PROGRESS")  \
+    ENTRY(APPID_STATE_FOUND,       4,  "APPID_STATE_FOUND")        \
+    ENTRY(APPID_STATE_NOT_FOUND,   5,  "APPID_STATE_NOT_FOUND")    \
+    ENTRY(APPID_STATE_ABORT,       6,  "APPID_STATE_ABORT")        \
+
+DEFINE_ENUM(appid_state_t, APPID_STATE)
+#undef APPID_STATE
+
+typedef uint16_t    appid_id_t;
+
 // NAT types
 enum nat_type_t {
     NAT_TYPE_NONE         = 0,

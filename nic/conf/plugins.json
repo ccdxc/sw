@@ -69,7 +69,7 @@
         {
             "name"      : "proxy",
             "provider"  : "pensando.io",
-            "lib"       : "dol/libproxy.so",
+            "lib"       : "proxy/libproxyplugin.so",
             "init_func" : "proxy_plugin_init",
             "exit_func" : "proxy_exit",
             "auto_load" : "true",
@@ -78,11 +78,25 @@
                 "tcp", 
                 "quiesce",
                 "tls", 
-                "ipsec", 
+                "ipsec",
+                "app-p4pt"
+            ]
+        },
+        {
+            "name"      : "app-redir",
+            "provider"  : "pensando.io",
+            "lib"       : "app_redir/libapp_redir.so",
+            "init_func" : "app_redir_init",
+            "exit_func" : "app_redir_exit",
+            "thread_init_func" : "app_redir_thread_init",
+            "thread_exit_func" : "app_redir_thread_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : [
                 "app-redir-miss",
                 "app-redir", 
                 "app-redir-fini", 
-                "app-p4pt"
+                "app-redir-appid"
             ]
         }
     ],
@@ -99,13 +113,14 @@
                 "pensando.io/alg:alg",
                 "pensando.io/proxy:tcp",
                 "pensando.io/proxy:ipsec",
-                "pensando.io/proxy:app-redir-miss",
+                "pensando.io/app-redir:app-redir-miss",
+                "pensando.io/app-redir:app-redir-appid",
                 "pensando.io/network:stage-marker",
                 "pensando.io/lb:lb",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
-                "pensando.io/proxy:app-redir-fini",
+                "pensando.io/app-redir:app-redir-fini",
                 "pensando.io/proxy:app-p4pt"
             ],
             "inbound_features": [
@@ -115,14 +130,15 @@
                 "pensando.io/lb:lb",
                 "pensando.io/proxy:tcp",
                 "pensando.io/proxy:ipsec",
-                "pensando.io/proxy:app-redir-miss",
+                "pensando.io/app-redir:app-redir-miss",
+                "pensando.io/app-redir:app-redir-appid",
                 "pensando.io/network:stage-marker",
                 "pensando.io/firewall:firewall",
                 "pensando.io/alg:alg",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
-                "pensando.io/proxy:app-redir-fini",
+                "pensando.io/app-redir:app-redir-fini",
                 "pensando.io/proxy:app-p4pt"
            ]
         },
@@ -137,8 +153,9 @@
             "name": "app-redir",
             "selector": { "lif": "SERVICE_LIF_APP_REDIR"},
             "outbound_features": [
-                "pensando.io/proxy:app-redir",
-                "pensando.io/proxy:app-redir-fini"
+                "pensando.io/app-redir:app-redir",
+                "pensando.io/app-redir:app-redir-appid",
+                "pensando.io/app-redir:app-redir-fini"
             ]
         },
         {

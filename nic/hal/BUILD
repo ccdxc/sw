@@ -14,6 +14,7 @@ cc_binary(
         "-lz",
         "-lprotobuf",
         "-rdynamic",
+        "-lsnort",
     ],
     deps = [
         ":hal_src",
@@ -31,6 +32,7 @@ cc_binary(
         "//nic:halproto",
         "//nic:grpc",
         "//nic/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
+        "//nic:snort3",  # TODO(move to app_redir plugin)
 
         # PD
         "//nic/hal/pd/common:pdcommon",
@@ -83,6 +85,7 @@ cc_library(
         "//nic/hal/plugins:plugins_includes",
         "//nic/hal/plugins/network:network_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
+        "//nic/hal/plugins/app_redir:app_redir_includes",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/utils/thread:thread",
         "//nic/utils/print:print",

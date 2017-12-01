@@ -1,1 +1,1 @@
-../hal/plugins/proxy/app_redir_headers.hpp
+../hal/plugins/app_redir/app_redir_headers.hpp

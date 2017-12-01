@@ -1,6 +1,7 @@
 LIBDIRS = \
 	network \
 	proxy \
+	app_redir \
 	$(NULL)
 
 PGMDIRS = $(NULL)

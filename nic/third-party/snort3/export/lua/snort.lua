@@ -40,6 +40,14 @@ if ( not conf_dir ) then
     conf_dir = '.'
 end
 
+-- this depends on SNORT_DAQ_PATH
+-- where to find other daq files
+daq_dir = os.getenv('SNORT_DAQ_PATH')
+
+if ( not daq_dir ) then
+    daq_dir = '/snort3/daqs/.libs'
+end
+
 ---------------------------------------------------------------------------
 -- 2. configure defaults
 ---------------------------------------------------------------------------
@@ -59,7 +67,7 @@ daq =
 {
     module_dirs =
     {
-        '/snort3/daqs/.libs'
+        daq_dir
     },
     module = 'fte',
 }
