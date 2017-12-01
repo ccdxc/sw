@@ -35,6 +35,8 @@ tls_enc_rx_bsq_enc_process:
 table_read_desc:	
 	add		r3, r0, d.qhead
     /* FIXME: Adjust qhead and possibly qtail in the CB */
+    tblwr   d.qhead, 0  // FIXME
+    tblwr   d.qtail, 0  // FIXME
     phvwr   p.to_s3_idesc, r3
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_enc_read_desc_process, r3, TABLE_SIZE_512_BITS)
 

@@ -306,7 +306,7 @@
 // Tx encodings
 #define TCP_TX_DDOL_DONT_SEND_ACK       0x1
 #define TCP_TX_DDOL_DONT_TX             0x2
-#define TCP_TX_DDOL_FREE_RNMDR          0x4
+#define TCP_TX_DDOL_BYPASS_BARCO        0x4
 #define TCP_TX_DDOL_DONT_START_RETX_TIMER 0x8
 
 #endif /* #ifndef CONSTANTS_H */

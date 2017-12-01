@@ -213,6 +213,14 @@ table_read_RTT:
      * c6 = OOO in Rx queue, do not allocate buffers
      */
     bcf             [c6], tcp_rx_end
+
+    /*
+     * For pure ack not going to cpu, don't allocate buffers
+     * TODO : check for FIN/RST as well
+     */
+    seq             c5, k.s1_s2s_payload_len, r0
+    seq             c4, k.common_phv_syn, 1
+    bcf             [c5 & !c4], tcp_rx_end
 table_read_RNMDR_ALLOC_IDX:
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
                         RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)

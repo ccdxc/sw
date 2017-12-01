@@ -48,6 +48,7 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-retx.s \
     $(SRC_DIR)/tcp-cc-and-fra.s \
     $(SRC_DIR)/tcp-xmit.s \
+    $(SRC_DIR)/tcp-tx-read-gc-nmdr-idx.s \
     $(SRC_DIR)/tcp-cc-bic.s \
     $(SRC_DIR)/tcp-tso.s \
     $(SRC_DIR)/tcp-tx-stats.s

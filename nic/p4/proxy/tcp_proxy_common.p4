@@ -177,7 +177,7 @@ quick_acks_decr
     modify_field(retx_d.retx_xmit_cursor, retx_xmit_cursor); \
     modify_field(retx_d.retx_next_desc, retx_next_desc); \
     modify_field(retx_d.retx_head_offset, retx_head_offset); \
-    modify_field(retx_d.retx_head_len, retx_head_len);
+    modify_field(retx_d.retx_head_len, retx_head_len); \
 
 #define GENERATE_CC_AND_FRA_SHARED_D \
     modify_field(cc_and_fra_d.prr_out, prr_out); \

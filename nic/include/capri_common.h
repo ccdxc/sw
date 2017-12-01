@@ -60,6 +60,7 @@
 
 // Semaphores (not PI/CI pairs)
 // Define 32 bit (4 byte) semaphores here
+#define CAPRI_SEM_TCP_NMDR_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 0)
 
 //#define CAPRI_RNMDR_RING_SIZE               16384
 //#define CAPRI_RNMDR_RING_SHIFT              14
@@ -176,6 +177,14 @@
                             (CAPRI_SEM_TNMPR_SMALL_FREE_ADDR + CAPRI_SEM_INF_OFFSET)
 
 /*
+ * 32 bit semaphores
+ */
+#define CAPRI_SEM_TCP_NMDR_GC_IDX_RAW_ADDR \
+                            (CAPRI_SEM_TCP_NMDR_IDX_ADDR + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_TCP_NMDR_GC_IDX_INC_ADDR \
+                            (CAPRI_SEM_TCP_NMDR_IDX_ADDR + CAPRI_SEM_INC_OFFSET)
+
+/*
  * Garbage collector queueu and ring defines
  */
 #define CAPRI_RNMDR_GC_RING_SIZE                1024
@@ -187,6 +196,7 @@
 
 #define CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE     256
 #define CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT    8
+#define CAPRI_HBM_GC_PER_PRODUCER_RING_MASK     255
 
 #define CAPRI_RNMDR_GC_TCP_RING_PRODUCER        0
 #define CAPRI_RNMDR_GC_TLS_RING_PRODUCER        1

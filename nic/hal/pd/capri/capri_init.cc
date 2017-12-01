@@ -456,7 +456,7 @@ capri_p4p_asm_init()
     symbols[39].params[1].name = P4_FLOW_ATOMIC_STATS_BASE;
     symbols[39].params[1].val = get_start_offset(JP4_ATOMIC_STATS);
 
-    symbols[40].name = "tcp-retx.bin";
+    symbols[40].name = "tcp-tx-read-gc-nmdr-idx.bin";
     symbols[40].num_params = 2;
     symbols[40].params[0].name = RNMDR_GC_TABLE_BASE;
     symbols[40].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC);
@@ -493,7 +493,6 @@ capri_p4p_asm_init()
     symbols[45].num_params = 1;
     symbols[45].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
     symbols[45].params[0].val = 50000; 
-
 
     // TODO: This is a placeholder. Replace this with appropriate value based on 
     // clock frequency.

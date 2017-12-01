@@ -34,6 +34,7 @@ tcp_cc_and_fra_process_start:
     nop
 
 tcp_cong_control:
+    CAPRI_CLEAR_TABLE_VALID(0)
     /*
      * Check if we are in congestion window reduction state
      */
