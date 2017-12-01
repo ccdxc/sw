@@ -130,7 +130,6 @@ void dhcp_topo_setup()
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -140,7 +139,6 @@ void dhcp_topo_setup()
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(2);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -752,4 +750,3 @@ TEST_F(dhcp_fsm_test, dhcp_basic_bound_timeout) {
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ASSERT_TRUE(!ip_in_ep(&ip, ep, NULL));
 }
-

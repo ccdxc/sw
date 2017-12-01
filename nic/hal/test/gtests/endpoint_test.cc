@@ -144,7 +144,6 @@ TEST_F(endpoint_test, test1)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -154,7 +153,6 @@ TEST_F(endpoint_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(2);
     up_spec.mutable_if_uplink_info()->set_port_num(2);

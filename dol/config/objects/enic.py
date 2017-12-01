@@ -155,7 +155,6 @@ class EnicObject(base.ConfigObjectBase):
         return self.type == ENIC_TYPE_CLASSIC
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.vrf_key_handle.vrf_id = self.tenant.id
         req_spec.type           = haldefs.interface.IF_TYPE_ENIC
         req_spec.admin_status   = haldefs.interface.IF_STATUS_UP
         req_spec.key_or_handle.interface_id = self.id

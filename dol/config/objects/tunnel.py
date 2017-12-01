@@ -101,10 +101,10 @@ class TunnelObject(base.ConfigObjectBase):
         return self.encap_type == 'GRE'
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.vrf_key_handle.vrf_id = self.tenant.id
         req_spec.key_or_handle.interface_id = self.id
         req_spec.type = self.type
         req_spec.admin_status = self.status
+        req_spec.if_tunnel_info.vrf_key_handle.vrf_id = self.tenant.id
         if self.encap_type == "VXLAN":
             req_spec.if_tunnel_info.encap_type = haldefs.interface.IF_TUNNEL_ENCAP_TYPE_VXLAN
             # Local TEP

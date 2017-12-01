@@ -146,8 +146,6 @@ static hal_ret_t
 validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
     intf::IfType    if_type;
-    vrf_id_t     tid;
-    vrf_t        *vrf = NULL;
     hal_ret_t       ret = HAL_RET_OK;
 
     // key-handle field must be set
@@ -177,16 +175,6 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     }
 
     if (if_type == intf::IF_TYPE_ENIC) {
-        // fetch the vrf information
-        tid = spec.vrf_key_handle().vrf_id();
-        vrf = vrf_lookup_by_id(tid);
-        if (vrf == NULL) {
-            HAL_TRACE_ERR("pi-enicif:{}: invalid tenanit id. tenid:{}, err:{} ",
-                          __FUNCTION__, tid, HAL_RET_INVALID_ARG);
-            rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
-            return HAL_RET_INVALID_ARG;
-        }
-
         // make sure ENIC info is provided
         if (!spec.has_if_enic_info()) {
             HAL_TRACE_ERR("pi-enicif:{}: no enic info. err:{} ",
@@ -1613,7 +1601,6 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     spec->mutable_key_or_handle()->set_interface_id(hal_if->if_id);
     spec->set_type(hal_if->if_type);
     spec->set_admin_status(hal_if->if_admin_status);
-    spec->mutable_vrf_key_handle()->set_vrf_id(hal_if->tid);
     spec->mutable_tx_qos_actions()->mutable_queue_key_or_handle()->
         mutable_queue_handle()->set_handle(hal_if->tx_qos_actions.queue_handle);
     spec->mutable_tx_qos_actions()->mutable_policer_key_or_handle()->
@@ -2137,6 +2124,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
     hal_ret_t           ret = HAL_RET_OK;
     l2seg_t             *l2seg;
     lif_t               *lif;
+    vrf_t               *vrf = NULL;
     L2SegmentKeyHandle  l2seg_clsc_key_handle;
 
     HAL_TRACE_DEBUG("pi-enicif:{}:enicif create for id {} type:{}",
@@ -2154,7 +2142,6 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
 
     auto if_enic_info = spec.if_enic_info();
     hal_if->enic_type = if_enic_info.enic_type();
-    hal_if->tid = spec.vrf_key_handle().vrf_id();
     hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_handle();
     lif = find_lif_by_handle(hal_if->lif_handle);
 
@@ -2171,6 +2158,18 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
         }
 
         hal_if->l2seg_handle = l2seg->hal_handle;
+
+        // Fetch the vrf information from l2seg
+        vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+        if(vrf == NULL ) {
+            HAL_TRACE_ERR("pi-enicif:{}:failed to find vrf using handle:{}",
+                           __FUNCTION__,
+                           l2seg->hal_handle);
+            ret = HAL_RET_VRF_NOT_FOUND;
+            goto end;
+        }
+
+        hal_if->tid = vrf->vrf_id;
         MAC_UINT64_TO_ADDR(hal_if->mac_addr,
                 if_enic_info.mutable_enic_info()->mac_address());
         hal_if->encap_vlan = if_enic_info.mutable_enic_info()->encap_vlan_id();
@@ -2359,8 +2358,8 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     HAL_TRACE_DEBUG("pi-tunnelif:{}:tunnelif create for id {}", __FUNCTION__, 
                     spec.key_or_handle().interface_id());
-    hal_if->tid = spec.vrf_key_handle().vrf_id();
     auto if_tunnel_info = spec.if_tunnel_info();
+    hal_if->tid = if_tunnel_info.vrf_key_handle().vrf_id();
     hal_if->encap_type = if_tunnel_info.encap_type();
     /* Both source addr and dest addr have to v4 or v6 */
     if ((if_tunnel_info.vxlan_info().local_tep().v4_addr() &&

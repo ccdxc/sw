@@ -131,7 +131,6 @@ TEST_F(enicif_test, test1)
 
     pre = hal_test_utils_collect_slab_stats();
     // Create enicif
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec.mutable_key_or_handle()->set_interface_id(1);
@@ -288,7 +287,6 @@ TEST_F(enicif_test, test2)
     // pre = hal_test_utils_collect_slab_stats();
 
     // Create enicif with wrong enic info
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
@@ -301,7 +299,6 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create classic enic
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
@@ -318,7 +315,6 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Update classic enic - Change uplink
-    enicif_spec1.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
@@ -449,7 +445,6 @@ TEST_F(enicif_test, test3)
     // pre = hal_test_utils_collect_slab_stats();
 
     // Create enicif with wrong enic info
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(31);
     enicif_spec.mutable_key_or_handle()->set_interface_id(31);

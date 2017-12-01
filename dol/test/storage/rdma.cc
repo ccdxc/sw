@@ -172,7 +172,6 @@ int CreateEnicif(uint32_t ten_id, uint32_t lif_id, uint32_t if_id,
   intf::InterfaceResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_vrf_key_handle()->set_vrf_id(ten_id);
   req->set_type(intf::IF_TYPE_ENIC);
   req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
   req->mutable_key_or_handle()->set_interface_id(if_id);

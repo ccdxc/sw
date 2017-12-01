@@ -245,6 +245,9 @@ if_enicif_get_pi_nwsec(if_t *pi_if)
 
     // Check if if is enicif
     if (pi_if->if_type == intf::IF_TYPE_ENIC) {
+        if (pi_if->tid == 0) {
+            return NULL;
+        }
         pi_vrf = vrf_lookup_by_id(pi_if->tid);
         HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
         pi_nwsec =

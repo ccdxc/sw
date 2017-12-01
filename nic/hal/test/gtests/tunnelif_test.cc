@@ -112,7 +112,6 @@ TEST_F(tunnelif_test, test1)
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -149,9 +148,9 @@ TEST_F(tunnelif_test, test1)
 
     
     // tunnel create
-    tnnl_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     tnnl_spec.mutable_key_or_handle()->set_interface_id(2);
     tnnl_spec.set_type(intf::IF_TYPE_TUNNEL);
+    tnnl_spec.mutable_if_tunnel_info()->mutable_vrf_key_handle()->set_vrf_id(1);
     tnnl_spec.mutable_if_tunnel_info()->set_encap_type(intf::IF_TUNNEL_ENCAP_TYPE_VXLAN);
     tnnl_spec.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_local_tep()->set_ip_af(types::IP_AF_INET);
     tnnl_spec.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_local_tep()->set_v4_addr(0x0a000000);
@@ -164,9 +163,9 @@ TEST_F(tunnelif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // tunnel create
-    tnnl_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
     tnnl_spec1.mutable_key_or_handle()->set_interface_id(12);
     tnnl_spec1.set_type(intf::IF_TYPE_TUNNEL);
+    tnnl_spec1.mutable_if_tunnel_info()->mutable_vrf_key_handle()->set_vrf_id(1);
     tnnl_spec1.mutable_if_tunnel_info()->set_encap_type(intf::IF_TUNNEL_ENCAP_TYPE_VXLAN);
     tnnl_spec1.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_local_tep()->set_ip_af(types::IP_AF_INET);
     tnnl_spec1.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_local_tep()->set_v4_addr(0x0a000000);

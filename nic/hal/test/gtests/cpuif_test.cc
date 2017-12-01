@@ -122,7 +122,6 @@ TEST_F(cpuif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create cpuif
-    cpuif_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     cpuif_spec.set_type(intf::IF_TYPE_CPU);
     cpuif_spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     cpuif_spec.mutable_key_or_handle()->set_interface_id(1);

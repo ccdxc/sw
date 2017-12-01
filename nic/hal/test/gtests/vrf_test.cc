@@ -198,7 +198,6 @@ TEST_F(vrf_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
@@ -422,7 +421,6 @@ TEST_F(vrf_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(41);
     enicif_spec.mutable_key_or_handle()->set_interface_id(41);
@@ -535,7 +533,6 @@ TEST_F(vrf_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(51);
     enicif_spec.mutable_key_or_handle()->set_interface_id(51);
@@ -752,7 +749,6 @@ TEST_F(vrf_test, test8)
     }
 
     // Create enicif
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(81);
 
@@ -904,7 +900,6 @@ TEST_F(vrf_test, test9)
     }
 
     // Create enicif
-    enicif_spec.mutable_vrf_key_handle()->set_vrf_id(9);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(91);
     enicif_spec.mutable_key_or_handle()->set_interface_id(921);
