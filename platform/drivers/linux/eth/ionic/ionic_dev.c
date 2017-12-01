@@ -589,13 +589,13 @@ bool ionic_q_has_space(struct queue *q, unsigned int want)
 void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index)
 {
-	struct desc_info *desc_info = q->tail;
+	struct desc_info *desc_info;
 
-	while (desc_info->index != stop_index) {
+	do {
+		desc_info = q->tail;
 		if (desc_info->cb)
 			desc_info->cb(q, desc_info, cq_info,
 				      desc_info->cb_arg);
 		q->tail = q->tail->next;
-		desc_info = q->tail;
-	};
+	} while (desc_info->index != stop_index);
 }
