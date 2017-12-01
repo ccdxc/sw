@@ -3,6 +3,7 @@
 #include "nic/include/twheel.hpp"
 
 #include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
+#include "nic/hal/plugins/eplearn/arp/ndp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/arp_trans.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
@@ -38,13 +39,14 @@ extern twheel *g_twheel;
 }  // namespace hal
 
 vrf_t *dummy_ten;
-#define MAX_ENDPOINTS 4
+#define MAX_ENDPOINTS 8
 hal_handle_t ep_handles[MAX_ENDPOINTS];
 string mac_addr_base = "12345";
 #define GET_MAC_ADDR(_ep) ((unsigned char*)((mac_addr_base + std::to_string(_ep)).c_str()))
 
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
-        fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
+        hal::ep_t *dep, fte::cpu_rxhdr_t *cpu_rxhdr,
+        uint8_t *pkt, size_t pkt_len,
         fte::flow_t iflow[], fte::flow_t rflow[]);
 
 void arp_topo_setup()
@@ -204,8 +206,14 @@ EthernetII *get_default_arp_packet(ARP::Flags type,
     HWAddress<6> hw_address(sender_hw_addr);
     arp->sender_hw_addr(hw_address);
 
-    HWAddress<6> hw_address_1(target_hw_addr);
-    arp->target_hw_addr(hw_address_1);
+    if (type == ARPOP_REVREQUEST) {
+        HWAddress<6> hw_address_1(sender_hw_addr);
+        arp->target_hw_addr(hw_address_1);
+    } else {
+        HWAddress<6> hw_address_2(target_hw_addr);
+        arp->target_hw_addr(hw_address_2);
+    }
+
 
     arp->sender_ip_addr(sender_ip_address);
     arp->target_ip_addr(target_ip_addr);
@@ -213,22 +221,193 @@ EthernetII *get_default_arp_packet(ARP::Flags type,
     return eth;
 }
 
+EthernetII *get_default_neighbor_disc_packet(ICMPv6::Types type,
+                                   const char *sender_ip_address,
+                                   unsigned char *sender_hw_addr,
+                                   const char *target_ip_addr,
+                                   unsigned char *target_hw_addr) {
+    EthernetII *eth = new EthernetII();
+    IPv6 *ipv6 = new IPv6();
+    ICMPv6 *neigh_disc = new ICMPv6();
+    ICMPv6::option option;
+
+    eth->src_addr(sender_hw_addr);
+    eth->dst_addr(sender_hw_addr);
+    eth->inner_pdu(ipv6);
+    ipv6->inner_pdu(neigh_disc);
+
+    ipv6->src_addr(IPv6Address(sender_ip_address));
+
+    // Retrieve a pointer to the stored TCP PDU
+    neigh_disc = ipv6->find_pdu<ICMPv6>();
+
+    neigh_disc->type(type);
+
+    if (type == ICMPv6::NEIGHBOUR_SOLICIT) {
+        neigh_disc->target_addr(IPv6Address(target_ip_addr));
+        HWAddress<6> hw_address(sender_hw_addr);
+        neigh_disc->source_link_layer_addr(hw_address);
+    } else if (type == ICMPv6::NEIGHBOUR_ADVERT) {
+        neigh_disc->target_addr(IPv6Address(sender_ip_address));
+        HWAddress<6> hw_address(sender_hw_addr);
+        neigh_disc->target_link_layer_addr(hw_address);
+        ipv6->dst_addr(IPv6Address(target_ip_addr));
+    }
+
+    ipv6->src_addr(IPv6Address(sender_ip_address));
+
+    return eth;
+}
+
 hal_ret_t arp_packet_send(hal_handle_t ep_handle,
                      ARP::Flags type, const char *sender_ip_address,
                      unsigned char *sender_hw_addr, const char *target_ip_addr,
-                     unsigned char *target_hw_addr = NULL) {
+                     unsigned char *target_hw_addr = NULL,
+                     hal_handle_t dst_ep_handle = 0) {
     EthernetII *eth =
         get_default_arp_packet(type, sender_ip_address, sender_hw_addr,
                                target_ip_addr, target_hw_addr);
 
     std::vector<uint8_t> buffer = eth->serialize();
     fte::ctx_t ctx;
+    ep_t *dst_ep = nullptr;
+
     ep_t *dummy_ep = find_ep_by_handle(ep_handle);
-    fte::cpu_rxhdr_t cpu_hdr;
-    cpu_hdr.flags = 0;
+    if (dst_ep_handle) {
+        dst_ep = find_ep_by_handle(dst_ep_handle);
+    }
+    fte::cpu_rxhdr_t cpu_rxhdr;
+    cpu_rxhdr.flags = 0;
     fte_ctx_init(ctx, dummy_ten,
-            dummy_ep, &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL);
+            dummy_ep, dst_ep, &cpu_rxhdr, &buffer[0], buffer.size(), NULL, NULL);
     return arp_process_packet(ctx);
+}
+
+hal_ret_t arp_ipv6_packet_send(hal_handle_t ep_handle,
+                    ICMPv6::Types type, const char *sender_ip_address,
+                     unsigned char *sender_hw_addr, const char *target_ip_addr,
+                     unsigned char *target_hw_addr = NULL,
+                     hal_handle_t dst_ep_handle = 0) {
+    EthernetII *eth = get_default_neighbor_disc_packet(type,
+                               sender_ip_address, sender_hw_addr,
+                               target_ip_addr, target_hw_addr);
+
+    std::vector<uint8_t> buffer = eth->serialize();
+    fte::ctx_t ctx;
+    ep_t *dst_ep = nullptr;
+
+    ep_t *dummy_ep = find_ep_by_handle(ep_handle);
+    if (dst_ep_handle) {
+        dst_ep = find_ep_by_handle(dst_ep_handle);
+    }
+    fte::cpu_rxhdr_t cpu_rxhdr;
+    cpu_rxhdr.l4_offset = L2_ETH_HDR_LEN + sizeof(ipv6_header_t);
+    cpu_rxhdr.l3_offset = L2_ETH_HDR_LEN;
+    cpu_rxhdr.flags = 0;
+    fte_ctx_init(ctx, dummy_ten,
+            dummy_ep, dst_ep, &cpu_rxhdr, &buffer[0], buffer.size(), NULL, NULL);
+    return neighbor_disc_process_packet(ctx);
+}
+
+TEST_F(arp_fsm_test, arp_ipv6_request_response) {
+    arp_ipv6_packet_send(ep_handles[4], ICMPv6::Types::NEIGHBOUR_SOLICIT,
+                    "fe80::c001:2ff:fe40:0",
+                    GET_MAC_ADDR(4), "fe80::c002:3ff:fee4:0");
+    arp_trans_key_t key;
+    ep_t *dummy_ep = find_ep_by_handle(ep_handles[4]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(4), dummy_ep, ARP_TRANS_IPV6,
+                                    &key);
+    arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+
+    ip_addr_t ip = {0};
+    ip.af = IP_AF_IPV6;
+    inet_pton(AF_INET6, "fe80::c001:2ff:fe40:0", &(ip.addr.v6_addr));
+    ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
+
+    arp_ipv6_packet_send(ep_handles[5], ICMPv6::Types::NEIGHBOUR_ADVERT,
+                    "fe80::c002:3ff:fee4:0",
+                    GET_MAC_ADDR(5), "fe80::c001:2ff:fe40:0");
+
+    dummy_ep = find_ep_by_handle(ep_handles[5]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(5),
+            dummy_ep, ARP_TRANS_IPV6, &key);
+    entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+    ip.af = IP_AF_IPV6;
+    inet_pton(AF_INET6, "fe80::c002:3ff:fee4:0", &(ip.addr.v6_addr));
+    ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
+
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 2);
+    //ASSERT_EQ(arp_trans_t::ep_l3_entry_ht()->num_entries(), 2);
+}
+
+TEST_F(arp_fsm_test, arp6_spoofing) {
+
+    arp_ipv6_packet_send(ep_handles[6], ICMPv6::Types::NEIGHBOUR_SOLICIT,
+                    "fe80::c001:2ff:fe40:0",
+                    GET_MAC_ADDR(4), "fe80::c002:3ff:fee4:0");
+    ep_t *dummy_ep = find_ep_by_handle(ep_handles[6]);
+    ip_addr_t ip = {0};
+    ip.af = IP_AF_IPV6;
+    inet_pton(AF_INET6, "fe80::c001:2ff:fe40:0", &(ip.addr.v6_addr));
+    ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 2);
+    ASSERT_EQ(g_hal_state->ep_l3_entry_ht()->num_entries(), 2);
+}
+
+TEST_F(arp_fsm_test, arp_request_response_same_ep_with_already_ndp) {
+    arp_packet_send(ep_handles[4], ARP::Flags::REQUEST, "1.1.1.1",
+                    GET_MAC_ADDR(4), "1.1.1.2");
+    arp_trans_key_t key;
+    ep_t *dummy_ep = find_ep_by_handle(ep_handles[4]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(4), dummy_ep,
+            ARP_TRANS_IPV4, &key);
+    arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+
+    ip_addr_t ip = {0};
+    inet_pton(AF_INET, "1.1.1.1", &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
+    inet_pton(AF_INET, "1.1.1.2", &(ip.addr.v4_addr));
+    ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
+    arp_packet_send(ep_handles[5], ARP::Flags::REPLY, "1.1.1.2",
+                    GET_MAC_ADDR(5), "1.1.1.1", GET_MAC_ADDR(4));
+    dummy_ep = find_ep_by_handle(ep_handles[5]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(5), dummy_ep,
+            ARP_TRANS_IPV4, &key);
+    entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+    inet_pton(AF_INET, "1.1.1.2", &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(5), dummy_ep, ARP_TRANS_IPV4,
+            &key);
+    entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 4);
+    //ASSERT_EQ(arp_trans_t::ep_l3_entry_ht()->num_entries(), 2);
+}
+
+TEST_F(arp_fsm_test, arp6_entry_timeout) {
+    arp_trans_key_t key;
+    ep_t *dummy_ep = find_ep_by_handle(ep_handles[5]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(5), dummy_ep, ARP_TRANS_IPV6, &key);
+    arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+
+    auto timeout = entry->get_current_state_timeout();
+    hal::periodic::g_twheel->tick(timeout + 100);
+    sleep(3);
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(g_hal_state->ep_l3_entry_ht()->num_entries(), 0);
 }
 
 TEST_F(arp_fsm_test, arp_request_response) {
@@ -236,7 +415,7 @@ TEST_F(arp_fsm_test, arp_request_response) {
                     GET_MAC_ADDR(0), "1.1.1.2");
     arp_trans_key_t key;
     ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, ARP_TRANS_IPV4, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -250,14 +429,15 @@ TEST_F(arp_fsm_test, arp_request_response) {
     arp_packet_send(ep_handles[1], ARP::Flags::REPLY, "1.1.1.2",
                     GET_MAC_ADDR(1), "1.1.1.1", GET_MAC_ADDR(0));
     dummy_ep = find_ep_by_handle(ep_handles[1]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep, ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     inet_pton(AF_INET, "1.1.1.2", &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
 
@@ -272,7 +452,8 @@ TEST_F(arp_fsm_test, arp_request_response_repeat) {
                     GET_MAC_ADDR(0), "1.1.1.2");
     arp_trans_key_t key;
     ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -287,7 +468,8 @@ TEST_F(arp_fsm_test, arp_request_response_repeat) {
     arp_packet_send(ep_handles[1], ARP::Flags::REPLY, "1.1.1.2",
                     GET_MAC_ADDR(1), "1.1.1.1", GET_MAC_ADDR(0));
     dummy_ep = find_ep_by_handle(ep_handles[1]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -295,7 +477,8 @@ TEST_F(arp_fsm_test, arp_request_response_repeat) {
     inet_pton(AF_INET, "1.1.1.2", &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
 
@@ -324,7 +507,8 @@ TEST_F(arp_fsm_test, arp_entry_timeout) {
                     GET_MAC_ADDR(0), "1.1.1.2");
     arp_trans_key_t key;
     ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -348,7 +532,8 @@ TEST_F(arp_fsm_test, arp_request_response_again) {
                     GET_MAC_ADDR(0), "1.1.1.2");
     arp_trans_key_t key;
     ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -362,14 +547,16 @@ TEST_F(arp_fsm_test, arp_request_response_again) {
     arp_packet_send(ep_handles[1], ARP::Flags::REPLY, "1.1.1.2",
                     GET_MAC_ADDR(1), "1.1.1.1", GET_MAC_ADDR(0));
     dummy_ep = find_ep_by_handle(ep_handles[1]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     inet_pton(AF_INET, "1.1.1.2", &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
 
@@ -386,17 +573,20 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ep) {
                     GET_MAC_ADDR(0), "1.1.1.2");
     arp_trans_key_t key;
     ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     arp_packet_send(ep_handles[1], ARP::Flags::REPLY, "1.1.1.2",
                     GET_MAC_ADDR(1), "1.1.1.1", GET_MAC_ADDR(0));
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
 
@@ -407,7 +597,8 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ep) {
     arp_packet_send(ep_handles[2],
                     ARP::Flags::REQUEST, "1.1.1.1",
                     GET_MAC_ADDR(2), "1.1.1.2");
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(2), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(2), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -415,7 +606,8 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ep) {
 
     arp_packet_send(ep_handles[3], ARP::Flags::REPLY, "1.1.1.2",
                     GET_MAC_ADDR(3), "1.1.1.1", GET_MAC_ADDR(2));
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(3), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(3), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -437,17 +629,20 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ip_same_ep) {
                     GET_MAC_ADDR(0), "1.1.1.2");
     arp_trans_key_t key;
     ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
     arp_packet_send(ep_handles[1], ARP::Flags::REPLY, "1.1.1.2",
                     GET_MAC_ADDR(1), "1.1.1.1", GET_MAC_ADDR(0));
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
 
@@ -458,7 +653,8 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ip_same_ep) {
     arp_packet_send(ep_handles[0],
                     ARP::Flags::REQUEST, "1.1.1.3",
                     GET_MAC_ADDR(0), "1.1.1.4");
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -466,7 +662,8 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ip_same_ep) {
 
     arp_packet_send(ep_handles[1], ARP::Flags::REPLY, "1.1.1.4",
                     GET_MAC_ADDR(1), "1.1.1.3", GET_MAC_ADDR(0));
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -493,7 +690,8 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ip_same_ep) {
     arp_packet_send(ep_handles[0],
                     ARP::Flags::REQUEST, "1.1.1.1",
                     GET_MAC_ADDR(0), "1.1.1.2");
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -501,7 +699,8 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ip_same_ep) {
 
     arp_packet_send(ep_handles[1], ARP::Flags::REPLY, "1.1.1.2",
                     GET_MAC_ADDR(1), "1.1.1.1", GET_MAC_ADDR(0));
-    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep, &key);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(1), dummy_ep,
+            ARP_TRANS_IPV4, &key);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
@@ -523,4 +722,49 @@ TEST_F(arp_fsm_test, arp_request_response_replace_with_different_ip_same_ep) {
     inet_pton(AF_INET, "1.1.1.4", &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
+}
+
+TEST_F(arp_fsm_test, rarp_request_response) {
+    arp_packet_send(ep_handles[2], (ARP::Flags)3, "2.2.2.2",
+                    GET_MAC_ADDR(2), "2.2.2.1");
+    arp_trans_key_t key;
+    ep_t *dummy_ep = find_ep_by_handle(ep_handles[2]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(2), dummy_ep,
+            ARP_TRANS_IPV4, &key);
+    arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+
+    ip_addr_t ip = {0};
+    inet_pton(AF_INET, "2.2.2.2", &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 3);
+
+    arp_packet_send(ep_handles[3], (ARP::Flags)4, "2.2.2.1",
+                    GET_MAC_ADDR(3), "2.2.2.2", GET_MAC_ADDR(2),
+                    ep_handles[2]);
+    dummy_ep = find_ep_by_handle(ep_handles[2]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(2), dummy_ep,
+            ARP_TRANS_IPV4, &key);
+    entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+    inet_pton(AF_INET, "2.2.2.2", &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
+
+    /* Make sure RARP server entry is also added */
+    dummy_ep = find_ep_by_handle(ep_handles[3]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(3), dummy_ep,
+            ARP_TRANS_IPV4, &key);
+    entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+    inet_pton(AF_INET, "2.2.2.1", &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, dummy_ep, NULL));
+
+    ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 4);
+    ASSERT_EQ(g_hal_state->ep_l3_entry_ht()->num_entries(), 4);
 }

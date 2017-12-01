@@ -31,29 +31,39 @@ namespace network {
 enum arp_fsm_state_t {
     ARP_INIT,
     ARP_BOUND,
+    RARP_INIT,
     ARP_DONE,
 };
 
 enum arp_fsm_event_t {
     ARP_ADD,
+    RARP_REQ,
+    RARP_REPLY,
     ARP_REMOVE,
     ARP_ERROR,
     ARP_DUPLICATE,
     ARP_TIMEOUT,
 };
 
+enum arp_trans_type_t {
+    ARP_TRANS_IPV4,
+    ARP_TRANS_IPV6
+};
+
 class arp_trans_t;
 
 // ARP transaction key
 typedef struct arp_trans_key_s {
-    vrf_id_t    vrf_id;    //tenant id
-    l2seg_id_t  l2_segid;  // L2 segment id
-    mac_addr_t  mac_addr;  // MAC address of the endpoint
+    vrf_id_t         vrf_id;    //tenant id
+    l2seg_id_t       l2_segid;  // L2 segment id
+    mac_addr_t       mac_addr;  // MAC address of the endpoint
+    arp_trans_type_t type;      // IPv4 or IPv6 trans type
+
 } __PACK__ arp_trans_key_t;
 
 struct arp_event_data_t {
     const fte::ctx_t  *fte_ctx;
-    uint8_t           *protocol_address;
+    ip_addr_t         *ip_addr;
 };
 
 class arp_trans_t : public trans_t {
@@ -64,7 +74,7 @@ public:
 private:
     arp_trans_key_t trans_key_;
     uint8_t hw_addr_[ETHER_ADDR_LEN]; /* hardware address */
-    uint8_t protocol_addr_[4];        /* protocol address */
+    ip_addr_t ip_addr_;
 
     ht_ctxt_t ht_ctxt_;           // id based hash table ctxt
     ht_ctxt_t ip_entry_ht_ctxt_;  // IP based hash table ctxt
@@ -85,6 +95,8 @@ private:
             this->sm_def = sm_def;
         }
         bool process_arp_request(fsm_state_ctx ctx, fsm_event_data data);
+        bool process_rarp_request(fsm_state_ctx ctx, fsm_event_data data);
+        bool process_rarp_reply(fsm_state_ctx ctx, fsm_event_data data);
         bool process_arp_renewal_request(fsm_state_ctx ctx, fsm_event_data data);
         void bound_entry_func(fsm_state_ctx ctx);
 
@@ -135,10 +147,10 @@ private:
 
    public:
     arp_trans_key_t *trans_key_ptr() { return &trans_key_; }
-    void set_up_ip_entry_key(uint8_t *protocol_address);
-    bool protocol_address_match(uint8_t *protocol_address);
+    void set_up_ip_entry_key(const ip_addr_t *ip_addr);
+    bool protocol_address_match(const ip_addr_t *ip_addr);
     static void init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
-                                   arp_trans_key_t *trans_key);
+                                   arp_trans_type_t type, arp_trans_key_t *trans_key);
 
 
     static inline arp_trans_t *find_arptrans_by_id(arp_trans_key_t id) {
@@ -152,7 +164,8 @@ private:
 
     void *operator new(size_t size);
     void operator delete(void *p);
-    explicit arp_trans_t(uint8_t *hw_address, fte::ctx_t &ctx);
+    explicit arp_trans_t(const uint8_t *hw_address, arp_trans_type_t type,
+            fte::ctx_t &ctx);
     arp_fsm_state_t get_state();
     void reset();
     virtual ~arp_trans_t();

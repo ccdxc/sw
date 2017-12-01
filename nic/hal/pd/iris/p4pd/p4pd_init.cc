@@ -520,7 +520,8 @@ p4pd_nacl_smart_nic_mode_init (void)
 }
 
 static hal_ret_t
-p4pd_nacl_arp_init (void)
+p4pd_nacl_dport_match_tp_cpu_init (uint8_t lkp_type,
+        uint16_t dport_match)
 {
     hal_ret_t               ret = HAL_RET_OK;
     acl_tcam                *acl_tbl = NULL;
@@ -529,9 +530,6 @@ p4pd_nacl_arp_init (void)
     nacl_actiondata         data;
     priority_t              priority;
     acl_tcam_entry_handle_t handle;
-
-    uint16_t ether_type = ETHERTYPE_ARP;
-    uint16_t ether_type_mask = 0xffff;
 
     acl_tbl = g_hal_state_pd->acl_table();
     HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
@@ -545,7 +543,7 @@ p4pd_nacl_arp_init (void)
 
     key.control_metadata_from_cpu = 0;
     mask.control_metadata_from_cpu_mask = 1;
-    key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
+    key.flow_lkp_metadata_lkp_type = lkp_type;
     mask.flow_lkp_metadata_lkp_type_mask =
             ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
 
@@ -554,8 +552,8 @@ p4pd_nacl_arp_init (void)
 
     key.control_metadata_flow_miss_ingress = 1;
     mask.control_metadata_flow_miss_ingress_mask = 1;
-    key.flow_lkp_metadata_lkp_dport = ether_type;
-    mask.flow_lkp_metadata_lkp_dport_mask = ether_type_mask;
+    key.flow_lkp_metadata_lkp_dport = dport_match;
+    mask.flow_lkp_metadata_lkp_dport_mask = 0xffff;
 
     data.nacl_action_u.nacl_nacl_permit.dst_lport = CPU_LPORT;
     data.nacl_action_u.nacl_nacl_permit.dst_lport_en = 1;
@@ -582,6 +580,31 @@ p4pd_nacl_arp_init (void)
                   "priority : {}, handle : {}, ret: {}", priority, handle, ret);
 
     return HAL_RET_OK;
+}
+
+
+static hal_ret_t
+p4pd_nacl_arp_init (void)
+{
+    hal_ret_t ret;
+
+    ret = p4pd_nacl_dport_match_tp_cpu_init(FLOW_KEY_LOOKUP_TYPE_MAC,
+            ETHERTYPE_ARP);
+    if (ret != HAL_RET_OK) {
+        goto out;
+    }
+    ret = p4pd_nacl_dport_match_tp_cpu_init(FLOW_KEY_LOOKUP_TYPE_IPV6,
+            ICMP_NEIGHBOR_SOLICITATION << 8 | 0);
+    if (ret != HAL_RET_OK) {
+        goto out;
+    }
+    ret = p4pd_nacl_dport_match_tp_cpu_init(FLOW_KEY_LOOKUP_TYPE_IPV6,
+            ICMP_NEIGHBOR_ADVERTISEMENT <<8 | 0);
+    if (ret != HAL_RET_OK) {
+        goto out;
+    }
+out:
+    return ret;
 }
 
 static hal_ret_t

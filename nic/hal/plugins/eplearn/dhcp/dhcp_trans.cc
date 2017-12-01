@@ -128,8 +128,10 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_inform(fsm_state_ctx ctx,
     dhcp_ctx *dhcp_ctx = &dhcp_trans->ctx_;
     struct option_data option_data;
     ep_t *ep_entry = fte_ctx->sep();
-    uint32_t ip_addr = ntohl(raw->yiaddr.s_addr);
+    ip_addr_t ip_addr = {0};
     hal_ret_t ret;
+
+    ip_addr.addr.v4_addr = ntohl(raw->yiaddr.s_addr);
 
     ret = dhcp_lookup_option(decoded_packet,
                              DHO_DHCP_SERVER_IDENTIFIER, &option_data);
@@ -155,9 +157,9 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_inform(fsm_state_ctx ctx,
                                                 &dhcp_trans->ht_ctxt_);
     }
 
-    init_ip_entry_key((uint8_t *)(&ip_addr),
-                       dhcp_trans->trans_key_ptr()->vrf_id,
-                       dhcp_trans->ip_entry_key_ptr());
+    init_ip_entry_key(&ip_addr,
+                      dhcp_trans->trans_key_ptr()->vrf_id,
+                      dhcp_trans->ip_entry_key_ptr());
 
     ret = endpoint_update_ip_add(ep_entry,
             &dhcp_trans->ip_entry_key_ptr()->ip_addr,
@@ -241,9 +243,11 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
     dhcp_ctx *dhcp_ctx = &dhcp_trans->ctx_;
     struct option_data option_data;
     hal_ret_t ret;
-    uint32_t ip_addr = ntohl(raw->yiaddr.s_addr);
+    ip_addr_t ip_addr = {0};
 
-    HAL_TRACE_INFO("Received IP {:#x}, {}", ip_addr, ipv4addr2str(ip_addr));
+    ip_addr.addr.v4_addr = ntohl(raw->yiaddr.s_addr);
+
+    HAL_TRACE_INFO("Received IP {:#x}, {}", ip_addr, ipaddr2str(&ip_addr));
     ep_t *ep_entry = fte_ctx->sep();
     if (ep_entry == nullptr) {
         HAL_TRACE_ERR("DHCP Server Endpoint entry not found.");
@@ -285,9 +289,9 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
     memcpy(&(dhcp_ctx->lease_time_), option_data.data,
            sizeof(dhcp_ctx->lease_time_));
 
-    init_ip_entry_key((uint8_t *)(&ip_addr),
-                       dhcp_trans->trans_key_ptr()->vrf_id,
-                       dhcp_trans->ip_entry_key_ptr());
+    init_ip_entry_key((&ip_addr),
+                      dhcp_trans->trans_key_ptr()->vrf_id,
+                      dhcp_trans->ip_entry_key_ptr());
 
     ret = endpoint_update_ip_add(ep_entry,
             &dhcp_trans->ip_entry_key_ptr()->ip_addr,

@@ -48,9 +48,9 @@ string mac_addr_base = "12345";
 
 hal_handle_t *dhcp_server_ep = &ep_handles[MAX_ENDPOINTS - 1];
 
-
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
-        fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
+        hal::ep_t *dep, fte::cpu_rxhdr_t *cpu_rxhdr,
+        uint8_t *pkt, size_t pkt_len,
         fte::flow_t iflow[], fte::flow_t rflow[]);
 
 
@@ -250,7 +250,7 @@ void dhcp_packet_send(hal_handle_t ep_handle,
     fte::cpu_rxhdr_t cpu_hdr;
     cpu_hdr.flags = 0;
     fte_ctx_init(ctx, dummy_ten,
-            dummy_ep, &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL);
+            dummy_ep, NULL, &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL);
     hal_ret_t ret = dhcp_process_packet(ctx);
     ASSERT_EQ(ret, HAL_RET_OK);
 }
@@ -339,8 +339,9 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
     ASSERT_EQ(memcmp(&ctx->rebinding_time_, &lease_time[0],
                      sizeof(ctx->rebinding_time_)),
               0);
-    uint32_t ip_new_addr = ntohl(yiaddr.s_addr);
-    dhcp_trans_t::init_ip_entry_key((uint8_t *)(&(ip_new_addr)),
+    ip_addr_t ip_new_addr = {0};
+    ip_new_addr.addr.v4_addr = ntohl(yiaddr.s_addr);
+    dhcp_trans_t::init_ip_entry_key(&(ip_new_addr),
                                     dummy_ten->vrf_id, &ip_key);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_ip_entry_ht()->lookup(&ip_key));
@@ -612,7 +613,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
 
     inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
-    dhcp_trans_t::init_ip_entry_key((uint8_t *)(&(ip.addr)),
+    dhcp_trans_t::init_ip_entry_key(&(ip),
                                     dummy_ten->vrf_id, &ip_key);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_ip_entry_ht()->lookup(&ip_key));
@@ -621,7 +622,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
 
     inet_pton(AF_INET, renew_ip_address, &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
-    dhcp_trans_t::init_ip_entry_key((uint8_t *)(&(ip.addr)),
+    dhcp_trans_t::init_ip_entry_key(&ip,
                                     dummy_ten->vrf_id, &ip_key);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_ip_entry_ht()->lookup(&ip_key));

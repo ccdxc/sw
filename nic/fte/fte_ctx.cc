@@ -130,6 +130,7 @@ hal_ret_t
 ctx_t::lookup_flow_objs()
 {
     vrf_id_t tid;
+    ether_header_t *ethhdr;
 
     if (key_.flow_type == hal::FLOW_TYPE_L2) {
         hal::l2seg_t *l2seg = hal::find_l2seg_by_id(key_.l2seg_id);
@@ -165,13 +166,18 @@ ctx_t::lookup_flow_objs()
         if (!cpu_rxhdr_) {
             return HAL_RET_EP_NOT_FOUND;            
         }
-
         // lookup l2seg from cpuheader lkp_vrf
         sl2seg_ =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
         HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
-
         //sif_ = hal::find_if_by_hwid(cpu_rxhdr_->src_lif);
         //HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
+
+        // Try to find sep by looking at L2.
+         ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
+         sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
+         if (sep_) {
+             HAL_TRACE_INFO("fte: src ep found by L2 lookup, key={}", key_);
+         }
     }
 
     if (dep_) {

@@ -11,6 +11,20 @@ feature:
 
 modules:
     - module:
+        name    : NDP_LOCAL_SOLICIT
+        spec    : ndp_learn_local.testspec
+        iterate :
+              - type     : NDP_SOLICIT
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=False
+    - module:
+        name    : NDP_REMOTE_SOLICIT
+        spec    : ndp_learn_remote.testspec
+        iterate :
+              - type     : NDP_SOLICIT
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=True
+    - module:
         name    : ARP_REMOTE_REQ
         spec    : arp_learn_remote.testspec
         iterate :

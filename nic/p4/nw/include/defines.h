@@ -304,6 +304,8 @@
 /*****************************************************************************/
 /* ICMP related                                                              */
 /*****************************************************************************/
+#define ICMP_NEIGHBOR_SOLICITATION     135
+#define ICMP_NEIGHBOR_ADVERTISEMENT    136
 #define ICMP_ECHO_REQ_TYPE_CODE        0x0800
 #define ICMP_ECHO_REPLY_TYPE_CODE      0x0000
 

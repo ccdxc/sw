@@ -53,6 +53,7 @@ ht *arp_trans_t::arplearn_ip_entry_ht_ =
 #define INIT_TIMEOUT       120 * TIME_MSECS_PER_SEC
 // This is default, entry func can override this.
 #define BOUND_TIMEOUT      2000  * TIME_MSECS_PER_MIN
+#define RARP_ENTRY_TIMEOUT 1  * TIME_MSECS_PER_MIN
 
 // clang-format off
 void arp_trans_t::arp_fsm_t::_init_state_machine() {
@@ -61,8 +62,14 @@ void arp_trans_t::arp_fsm_t::_init_state_machine() {
     FSM_SM_BEGIN((sm_def))
         FSM_STATE_BEGIN(ARP_INIT, INIT_TIMEOUT, NULL, NULL)
             FSM_TRANSITION(ARP_ADD, SM_FUNC(process_arp_request), ARP_BOUND)
+            FSM_TRANSITION(RARP_REQ, SM_FUNC(process_rarp_request), RARP_INIT)
             FSM_TRANSITION(ARP_ERROR, NULL, ARP_DONE)
             FSM_TRANSITION(ARP_DUPLICATE, NULL, ARP_DONE)
+        FSM_STATE_END
+        FSM_STATE_BEGIN(RARP_INIT, RARP_ENTRY_TIMEOUT, NULL, NULL)
+            FSM_TRANSITION(RARP_REPLY, SM_FUNC(process_rarp_reply),
+                           ARP_BOUND)
+            FSM_TRANSITION(ARP_TIMEOUT, NULL, ARP_DONE)
         FSM_STATE_END
         FSM_STATE_BEGIN(ARP_BOUND, BOUND_TIMEOUT, NULL, NULL)
             FSM_TRANSITION(ARP_ADD, SM_FUNC(process_arp_renewal_request),
@@ -81,8 +88,7 @@ ep_t* arp_trans_t::get_ep_entry() {
     ep_l3_key_t l3_key = {0};
 
     l3_key.vrf_id = this->trans_key_ptr()->vrf_id;
-    memcpy(&l3_key.ip_addr.addr.v4_addr, this->protocol_addr_,
-           sizeof(ipv4_addr_t));
+    memcpy(&l3_key.ip_addr, &this->ip_addr_, sizeof(ip_addr_t));
 
     /* Find the EP entry for this IP address */
     other_ep_entry = find_ep_by_l3_key(&l3_key);
@@ -95,8 +101,7 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
     arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
     const fte::ctx_t *fte_ctx = data->fte_ctx;
-    uint8_t *protocol_address = data->protocol_address;
-    uint32_t ip_addr;
+    const ip_addr_t *ip_addr = data->ip_addr;
     hal_ret_t ret;
     ep_t *ep_entry = fte_ctx->sep();
 
@@ -106,12 +111,9 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
         return false;
     }
 
-    memcpy(&ip_addr, protocol_address, sizeof(uint32_t));
-    ip_addr = ntohl(ip_addr);
 
     /* Setup IP entry key for new transaction first */
-    trans->set_up_ip_entry_key((uint8_t*)&ip_addr);
-
+    trans->set_up_ip_entry_key(ip_addr);
 
     arp_trans_t *other_trans = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_ip_entry_ht()->lookup(
@@ -138,18 +140,14 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
     return true;
 }
 
-bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
+bool arp_trans_t::arp_fsm_t::process_rarp_reply(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data) {
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
     arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
     const fte::ctx_t *fte_ctx = data->fte_ctx;
-    uint8_t *protocol_address = data->protocol_address;
-    ep_t *ep_entry = fte_ctx->sep();
-    uint32_t ip_addr;
-
-
-    memcpy(&ip_addr, protocol_address, sizeof(uint32_t));
-    ip_addr = ntohl(ip_addr);
+    const ip_addr_t *ip_addr = data->ip_addr;
+    hal_ret_t ret;
+    ep_t *ep_entry = fte_ctx->dep();
 
     if (ep_entry == nullptr) {
         HAL_TRACE_ERR("Endpoint entry not found.");
@@ -157,7 +155,67 @@ bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
         return false;
     }
 
-    if (trans->protocol_address_match((uint8_t *)&ip_addr)) {
+    /* Setup IP entry key for new transaction first */
+    trans->set_up_ip_entry_key(ip_addr);
+
+    arp_trans_t *other_trans = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_ip_entry_ht()->lookup(
+                (trans->ip_entry_key_ptr())));
+
+    if (other_trans != NULL) {
+        arp_trans_t::process_transaction(other_trans, ARP_REMOVE, NULL);
+    }
+
+    ret = endpoint_update_ip_add(ep_entry,
+            &trans->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
+
+    if (ret != HAL_RET_OK) {
+       HAL_TRACE_ERR("pi-ep:{}:IP add update failed", __FUNCTION__);
+       trans->sm_->throw_event(ARP_ERROR, NULL);
+       /* We should probably drop this packet as this ARP request may not be valid one */
+       return false;
+    }
+
+    arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
+    arp_trans_t::arplearn_ip_entry_ht()->insert((void *)trans,
+                                                &trans->ip_entry_ht_ctxt_);
+
+    return true;
+}
+
+bool arp_trans_t::arp_fsm_t::process_rarp_request(fsm_state_ctx ctx,
+                                               fsm_event_data fsm_data) {
+    arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
+    arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
+    const fte::ctx_t *fte_ctx = data->fte_ctx;
+    ep_t *ep_entry = fte_ctx->sep();
+
+    if (ep_entry == nullptr) {
+        HAL_TRACE_ERR("Endpoint entry not found.");
+        trans->sm_->throw_event(ARP_ERROR, NULL);
+        return false;
+    }
+
+    arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
+
+    return true;
+}
+
+bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
+                                               fsm_event_data fsm_data) {
+    arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
+    arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
+    const fte::ctx_t *fte_ctx = data->fte_ctx;
+    const ip_addr_t *ip_addr = data->ip_addr;
+    ep_t *ep_entry = fte_ctx->sep();
+
+    if (ep_entry == nullptr) {
+        HAL_TRACE_ERR("Endpoint entry not found.");
+        trans->sm_->throw_event(ARP_ERROR, NULL);
+        return false;
+    }
+
+    if (trans->protocol_address_match(ip_addr)) {
         /* Just a renewal, nothing to do, timeout will be updated. */
         return true;
     }
@@ -168,16 +226,14 @@ bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
 }
 
 
-void arp_trans_t::set_up_ip_entry_key(uint8_t *protocol_address) {
-    memcpy(this->protocol_addr_, protocol_address,
-           sizeof(uint32_t));
-    init_ip_entry_key(protocol_address, this->trans_key_ptr()->vrf_id,
+void arp_trans_t::set_up_ip_entry_key(const ip_addr_t *ip_addr) {
+    memcpy(&this->ip_addr_, ip_addr, sizeof(ip_addr_t));
+    init_ip_entry_key(ip_addr, this->trans_key_ptr()->vrf_id,
             this->ip_entry_key_ptr());
 }
 
-bool arp_trans_t::protocol_address_match(uint8_t *protocol_address) {
-    return (!memcmp(this->protocol_addr_, protocol_address,
-           sizeof(this->protocol_addr_)));
+bool arp_trans_t::protocol_address_match(const ip_addr_t *ip_addr) {
+    return (!memcmp(&this->ip_addr_, ip_addr, sizeof(ip_addr_t)));
 }
 
 void *arp_trans_t::operator new(size_t size) {
@@ -190,9 +246,10 @@ void arp_trans_t::operator delete(void *p) {
     arp_trans_free(trans);
 }
 
-arp_trans_t::arp_trans_t(uint8_t *hw_address, fte::ctx_t &ctx) {
+arp_trans_t::arp_trans_t(const uint8_t *hw_address,
+        arp_trans_type_t type, fte::ctx_t &ctx) {
     memcpy(this->hw_addr_, hw_address, sizeof(this->hw_addr_));
-    init_arp_trans_key(hw_address, ctx.sep(), &this->trans_key_);
+    init_arp_trans_key(hw_address, ctx.sep(), type, &this->trans_key_);
     this->sm_ = new fsm_state_machine_t(get_sm_def_func, ARP_INIT, ARP_DONE,
                                         ARP_TIMEOUT, (fsm_state_ctx)this,
                                         get_timer_func);
@@ -234,7 +291,7 @@ void arp_trans_t::reset() {
 }
 
 void arp_trans_t::init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
-                                     arp_trans_key_t *trans_key) {
+                                     arp_trans_type_t type, arp_trans_key_t *trans_key) {
     for (uint32_t i = 0; i < ETHER_ADDR_LEN; ++i) {
         trans_key->mac_addr[i] = (uint8_t)hw_addr[i];
     }
@@ -244,6 +301,7 @@ void arp_trans_t::init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
         HAL_ABORT(0);
     }
     trans_key->vrf_id = vrf->vrf_id;
+    trans_key->type = type;
 }
 
 arp_fsm_state_t arp_trans_t::get_state() {

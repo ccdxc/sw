@@ -111,12 +111,10 @@ public:
 
     trans_ip_entry_key_t *ip_entry_key_ptr() { return &ip_entry_key_; }
 
-    static void init_ip_entry_key(const uint8_t *protocol_address,
-                                      vrf_id_t vrf_id,
-                                      trans_ip_entry_key_t *ip_entry_key) {
+    static void init_ip_entry_key(const ip_addr_t *ip_addr, vrf_id_t vrf_id,
+                                  trans_ip_entry_key_t *ip_entry_key) {
         *ip_entry_key = {0};
-        memcpy(&ip_entry_key->ip_addr.addr.v4_addr, protocol_address,
-               sizeof(ip_entry_key->ip_addr.addr.v4_addr));
+        memcpy(&ip_entry_key->ip_addr, ip_addr, sizeof(ip_addr_t));
         ip_entry_key->vrf_id = vrf_id;
     }
 

@@ -1,0 +1,9 @@
+meta:
+    id      : ICMPv6NDOptSrcLLAddr
+    scapy   : ICMPv6NDOptSrcLLAddr
+    size    : 16
+
+fields:
+    type    : 1
+    len     : 1
+    lladdr  : None

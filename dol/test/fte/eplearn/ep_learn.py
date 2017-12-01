@@ -28,11 +28,24 @@ def TestCaseStepSetup(tc, step):
 def TestCaseStepTrigger(tc, step):
     return modcbs.TestCaseStepTrigger(tc, step)
 
+def IsIpv4(testcase):
+    return "ARP" in  testcase.module.iterator.Get().type
+
+def IsIpv6(testcase):
+    return "NDP" in  testcase.module.iterator.Get().type
+
 def TestCaseStepVerify(tc, step):
     ipaddrs = tc.config.root.ipaddrs
+    ipv6addrs = tc.config.root.ipv6addrs
     tc.config.root.Get()
-    assert (tc.config.root.ipaddrs[0].get() == ipaddrs[0].get())
+    if IsIpv4(tc):
+        assert (tc.config.root.ipaddrs[0].get() == ipaddrs[0].get())
+    elif IsIpv6(tc):
+        assert (tc.config.root.ipv6addrs[0].get() == ipv6addrs[0].get())
+    else:
+        assert(0)
     tc.config.root.ipaddrs = ipaddrs
+    tc.config.root.ipv6addrs = ipv6addrs
     return True
 
 def TestCaseStepTeardown(tc, step):

@@ -21,7 +21,7 @@ security_profile: None
 fte:
     ep_learn:
         ipv4: True
-        ipv6: False
+        ipv6: True
 
 sessions:
     unidest:

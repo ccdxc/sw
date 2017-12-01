@@ -1,0 +1,45 @@
+# Test Spec
+selectors:
+    root            : ref://store/templates/id=ENDPOINT
+    endpoint        : filter://remote=True
+    tenant          : filter://overlay=VLAN,type=TENANT
+    segment         : filter://any
+    #maxsessions    : 2
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV6_ICMPV6_ND_NS
+        headers     :
+            eth:
+                src     : ref://testcase/config/root/macaddr
+                dst     : callback://eplearn/ndp/GetNdpDestMAC
+            ipv6:
+                src     : callback://eplearn/ndp/GetNdpSourceIP
+                dst     : callback://eplearn/ndp/GetNdpDestIP
+            icmpv6:
+                tgt     : callback://eplearn/ndp/GetNdpDestIP
+            icmpv6_opt_srclladdr:
+                lladdr  : ref://testcase/config/root/macaddr
+
+    - packet:
+        id          : PKT1 # Base  Packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://eplearn/arp/GetPacketEncaps
+        headers     :
+            qtag:
+                vlan: ref://testcase/config/root/segment/vlan_id
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/root/intf/ports
+
+expect:
+    delay   : callback://eplearn/arp/GetExpectDelay
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 128

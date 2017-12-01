@@ -1,0 +1,14 @@
+meta:
+    id      : ICMPv6ND_NS
+    scapy   : ICMPv6ND_NS
+    size    : 16
+
+fields:
+    type    : 135
+    code    : 0
+    cksum   : None
+    R       : 0
+    S       : 0
+    res     : 0
+    tgt     : None
+
