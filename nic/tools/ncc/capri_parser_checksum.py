@@ -507,7 +507,6 @@ class ParserCalField:
     def _build_ohi_instr(sram, ohi_instr_inst, select, mux_instr_sel,\
                          index, ohi_slot_num):
 
-        return "Not done"
         try:
             sram['ohi_inst'][ohi_instr_inst]['sel']['value']        = str(select)
             sram['ohi_inst'][ohi_instr_inst]['muxsel']['value']     = str(mux_instr_sel)

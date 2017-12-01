@@ -879,6 +879,8 @@ class capri_parser:
                 range(self.be.hw_model['parser']['ohi_threshold']\
                 + self.be.hw_model['parser']['max_csum_engines'] * 2, \
                 self.be.hw_model['parser']['num_ohi'])]
+        self.free_ohi_slots = [True for i in \
+                range(self.be.hw_model['parser']['ohi_threshold'])]
 
     def get_header_size(self, hdr):
         # return fixed len or P4field/expression that represents len
@@ -1596,7 +1598,7 @@ class capri_parser:
         # keep doing it until all headers are done
         paths = sorted(self.paths, key=lambda p: len(p), reverse=True)
 
-        max_ohi = self.be.hw_model['parser']['num_ohi']
+        max_ohi = self.be.hw_model['parser']['ohi_threshold']
         max_ohi_used = 0
         max_ohi_path = None
 
@@ -1635,7 +1637,7 @@ class capri_parser:
                 if fixed_ohi_id == -1:
                     # check if this is globally allocated
                     wr_only_ohi_name = hdr.name + '___start_off'
-                    if wr_only_ohi_name in self.wr_only_ohi:
+                    if self.ohi[hdr][0].start == 0 and wr_only_ohi_name in self.wr_only_ohi:
                         ohid = self.wr_only_ohi[wr_only_ohi_name]
                         assert ohid != None, pdb.set_trace()
                         self.logger.debug("%s:%s use global ohi slot %d" % \
@@ -1691,12 +1693,20 @@ class capri_parser:
                 pdb.set_trace()
                 break
 
+        max_ohi = self.be.hw_model['parser']['ohi_threshold']
+        for i in range(max_ohi):
+            self.free_ohi_slots[i] = free_slots[i]
 
         self.logger.info("%s:Max ohi used %d" % (self.d.name, max_ohi_used))
         self.logger.debug("Max ohi path %s" % max_ohi_path)
         self.logger.debug("%s: OHI allocation %s" % (self.d.name, self.ohi))
         self.ohi_used = max_ohi_used
         return (max_ohi_used, max_ohi_path)
+
+    def get_ohi_slot(self):
+        ohi_id = self.free_ohi_slots.index(True)
+        self.free_ohi_slots[ohi_id] = False
+        return ohi_id
 
     def assign_wr_only_ohi_slots(self):
         # since wr_only variable will not appear in the path-headers, there is a small
@@ -1718,7 +1728,12 @@ class capri_parser:
         # return ohi slot assigned to capture header start offset (if allocated)
         ohi_name = hdr.name + '___start_off'
         if hdr in self.ohi:
-            return self.ohi[hdr][0].id
+            if self.ohi[hdr][0].start == 0:
+                return self.ohi[hdr][0].id
+            elif ohi_name in self.wr_only_ohi:
+                return self.wr_only_ohi[ohi_name]
+            else:
+                return None
         elif ohi_name in self.wr_only_ohi:
             return self.wr_only_ohi[ohi_name]
         else:

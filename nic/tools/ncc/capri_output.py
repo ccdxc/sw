@@ -2021,6 +2021,8 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     #pdb.set_trace()
     # ohi_inst
 
+    expr_shared_ohi_id = {}
+
     hw_max_ohi_per_state = len(sram['ohi_inst'])
     s = 0
     headers = []
@@ -2070,11 +2072,15 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 assert len(parser.ohi[hdr]) > 1, pdb.set_trace() # ERROR
             else:
                 # slot[0] : pkt offset
+                if hdr_off != 0:
+                    ohi_id = parser.get_ohi_slot()
+                    ohi.id = ohi_id
                 sram['ohi_inst'][s]['sel']['value'] = str(1)    # provide pkt_offset
                 sram['ohi_inst'][s]['muxsel']['value'] = str(0) # NA
                 sram['ohi_inst'][s]['idx_val']['value'] = str(hdr_off + ohi.start)
                 sram['ohi_inst'][s]['slot_num']['value'] = str(ohi.id)
-                ohi_inst_allocator[s] = (hdr.name + '___start_off', ohi.id)
+                if (ohi.start + hdr_off) == 0:
+                    ohi_inst_allocator[s] = (hdr.name + '___start_off', ohi.id)
                 s += 1
 
             if not isinstance(ohi.length, int):
@@ -2113,6 +2119,8 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 ohi_inst_allocator[s] = (hdr.name + '___hdr_len', ohi.var_id)
                 parser.logger.debug('OHI instruction[%d]: ohi_slot %d off %d, len %s' % \
                     (s, ohi.var_id, ohi.start + hdr_off, ohi.length))
+                flat_expr_str = ohi.length.flatten_capri_expr()
+                expr_shared_ohi_id[flat_expr_str] = (s, ohi, hdr, mux_inst_id)
                 s += 1
             else:
                 # for fixed size ohi, deparser is programmed with fixed length
@@ -2146,15 +2154,26 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             parser.logger.debug("OHI (wr-only) %s is not programmed here - TBD csum changes" % \
                 (set_op.dst))
             continue
-        ohi_id = parser.wr_only_ohi[dst_name]
-        sram['ohi_inst'][s]['sel']['value'] = str(3)  # len using mux_inst_data
-        sram['ohi_inst'][s]['muxsel']['value'] = str(mux_inst_id)
-        sram['ohi_inst'][s]['idx_val']['value'] = str(0) # NA
-        sram['ohi_inst'][s]['slot_num']['value'] = str(ohi_id)
-        mux_inst_id_to_ohi_id_map[mux_inst_id] = ohi_id
-        parser.logger.debug('OHI (wr-only) instruction[%d]: ohi_slot %d, %s=%s' %
-                            (s, ohi_id, dst_name, set_op))
-        s += 1
+        flat_expr_str = set_op.capri_expr.flatten_capri_expr()
+        if flat_expr_str not in expr_shared_ohi_id.keys() or parser.d == xgress.EGRESS:
+            ohi_id = parser.wr_only_ohi[dst_name]
+            sram['ohi_inst'][s]['sel']['value'] = str(3)  # len using mux_inst_data
+            sram['ohi_inst'][s]['muxsel']['value'] = str(mux_inst_id)
+            sram['ohi_inst'][s]['idx_val']['value'] = str(0) # NA
+            sram['ohi_inst'][s]['slot_num']['value'] = str(ohi_id)
+            mux_inst_id_to_ohi_id_map[mux_inst_id] = ohi_id
+            parser.logger.debug('OHI (wr-only) instruction[%d]: ohi_slot %d, %s=%s' %
+                                (s, ohi_id, dst_name, set_op))
+            s += 1
+        else:
+            #Ohi instruction for no-reg set-ops is already computed and loaded in ohi.
+            #Inorder to share ohi_instruction, ohiID allocated for <hdr-name>___hdr_len
+            #will be modified to match ohiID used for capri_expr that computed header len.
+            _inst, _ohi_updated, _hdr, _mux_inst_id = expr_shared_ohi_id[flat_expr_str]
+            sram['ohi_inst'][_inst]['slot_num']['value'] = str(parser.wr_only_ohi[dst_name])
+            _ohi_updated.var_id = parser.wr_only_ohi[dst_name]
+            mux_inst_id_to_ohi_id_map[_mux_inst_id] = parser.wr_only_ohi[dst_name]
+            ohi_inst_allocator[_inst] = (_hdr.name + '___hdr_len', _ohi_updated.var_id)
 
     # Build offset instruction at the end so that if possible
     # mux instructions can be re-used by adjusting constant values
@@ -2502,13 +2521,13 @@ def capri_parser_output_decoders(parser):
     sram_t, sram_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
                             'cap_ppa_csr_dhs_bndl0_state_lkp_sram_entry[0]')
     csum_t, csum_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_cfg_csum_profile[0]')
+                            'cap_ppa_csr_cfg_csum_profile[1]')
     csum_phdr_t, phdr_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_cfg_csum_phdr_profile[0]')
+                            'cap_ppa_csr_cfg_csum_phdr_profile[1]')
     icrc_t, icrc_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_cfg_crc_profile[0]')
+                            'cap_ppa_csr_cfg_crc_profile[1]')
     icrc_mask_t, icrc_mask_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_cfg_crc_mask_profile[0]')
+                            'cap_ppa_csr_cfg_crc_mask_profile[1]')
     tcam0 = []
     sram0 = []
 
@@ -2573,10 +2592,14 @@ def capri_parser_output_decoders(parser):
                                                          [bi.nxt_state], bi.nxt_state,\
                                                          csum_phdr_t)
                 if csum_prof != None:
+                    #For handling wide register store word_size  *  profile#
+                    csum_prof['word_size'] = str(int(csum_t['word_size'], 16) * cprof_inst)
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
                             = csum_prof
                 if csum_phdr_prof != None:
+                    #For handling wide register store word_size  *  profile#
+                    csum_phdr_prof['word_size'] = str(int(csum_phdr_t['word_size'], 16) * phdr_inst)
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
                                                           = csum_phdr_prof
@@ -2588,6 +2611,8 @@ def capri_parser_output_decoders(parser):
                                                           [bi.nxt_state], bi.nxt_state,\
                                                           icrc_t)
                 if icrc_prof != None:
+                    #For handling wide register store word_size  *  profile#
+                    icrc_prof['word_size'] = str(int(icrc_t['word_size'], 16) * prof_inst)
                     ppa_json['cap_ppa']['registers']\
                       ['cap_ppa_csr_cfg_crc_profile[%d]' % prof_inst] = icrc_prof
 
@@ -2597,6 +2622,8 @@ def capri_parser_output_decoders(parser):
                                                           [bi.nxt_state], bi.nxt_state,\
                                                           icrc_mask_t)
                 if icrc_mask_prof != None:
+                    #For handling wide register store word_size  *  profile#
+                    icrc_mask_prof['word_size'] = str(int(icrc_mask_t['word_size'], 16) * prof_inst)
                     ppa_json['cap_ppa']['registers']\
                       ['cap_ppa_csr_cfg_crc_mask_profile[%d]' % prof_inst] = icrc_mask_prof
 

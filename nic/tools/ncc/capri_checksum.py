@@ -771,8 +771,9 @@ class Checksum:
         select          = 1 # Load current offset + index
         na              = 0 # NA
         index           = 0
-        ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, na,\
+        log_str = ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, na,\
                               index, parse_state.phdr_offset_ohi_id)
+        self.csum_verify_logger.debug("%s" % (log_str))
         ohi_instr_inst += 1
         return ohi_instr_inst
 
@@ -948,7 +949,8 @@ class Checksum:
 
         ohi_id = parser.get_ohi_hdr_start_off(self.be.h.p4_header_instances[\
                                               calfldobj.CalculatedFieldHdrGet()])
-        if ohi_id == None:
+        if ohi_id != None:
+            assert hdr_ohi_id == ohi_id, pdb.set_trace()
             assert ohi_instr_inst < len(sram['ohi_inst']), pdb.set_trace()
             # Ohi Instr to capture HdrStart Offset
             select          = 1 # Load current offset + index
@@ -957,8 +959,6 @@ class Checksum:
             log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, \
                                                        na, index, hdr_ohi_id)
             ohi_instr_inst += 1
-        else:
-            assert hdr_ohi_id == ohi_id, pdb.set_trace()
 
         if not calfldobj.payload_checksum:
             # When no payload, assume its always ipv4 hdr checksum. Its not
