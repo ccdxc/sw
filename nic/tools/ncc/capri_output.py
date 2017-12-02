@@ -2612,12 +2612,18 @@ def capri_parser_output_decoders(parser):
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
                             = csum_prof
+                    ppa_json['cap_ppa']['registers']\
+                        ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]['_modified']\
+                            = True 
                 if csum_phdr_prof != None:
                     #For handling wide register store word_size  *  profile#
                     csum_phdr_prof['word_size'] = str(int(csum_phdr_t['word_size'], 16) * phdr_inst)
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
                                                           = csum_phdr_prof
+                    ppa_json['cap_ppa']['registers']\
+                        ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]['_modified']\
+                            = True 
 
                 #Generate icrc related profile config for parser block
                 icrc_prof, prof_inst = parser.be.icrc.\
@@ -2630,6 +2636,8 @@ def capri_parser_output_decoders(parser):
                     icrc_prof['word_size'] = str(int(icrc_t['word_size'], 16) * prof_inst)
                     ppa_json['cap_ppa']['registers']\
                       ['cap_ppa_csr_cfg_crc_profile[%d]' % prof_inst] = icrc_prof
+                    ppa_json['cap_ppa']['registers']\
+                      ['cap_ppa_csr_cfg_crc_profile[%d]' % prof_inst]['_modified'] = True
 
                 icrc_mask_prof, prof_inst = parser.be.icrc.\
                                 ParserIcrcMaskProfileGenerate(parser, \
@@ -2641,6 +2649,8 @@ def capri_parser_output_decoders(parser):
                     icrc_mask_prof['word_size'] = str(int(icrc_mask_t['word_size'], 16) * prof_inst)
                     ppa_json['cap_ppa']['registers']\
                       ['cap_ppa_csr_cfg_crc_mask_profile[%d]' % prof_inst] = icrc_mask_prof
+                    ppa_json['cap_ppa']['registers']\
+                      ['cap_ppa_csr_cfg_crc_mask_profile[%d]' % prof_inst]['_modified'] = True
 
 
     # XXX add a catch-all end state
