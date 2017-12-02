@@ -38,10 +38,13 @@ def _parser_tcam_print(te):
     return pstr
 
 def _parser_sram_print(parser, se):
-    pstr = ''
+    pstr = '\n'
     pstr += 'action = %s, ' % se['action']['value']
     pstr += 'nxt_state = %s, ' % se['nxt_state']['value']
-    pstr += 'offset_inst: sel %s, mux_sel %s, val %s ' % \
+    pstr += 'offset_jump_chk_en = %s, ' % se['offset_jump_chk_en']['value']
+    if se['pkt_size_chk_en']['value'] == '1':
+        pstr += 'pkt_size_chk = %s, ' % se['pkt_size']['value']
+    pstr += '\noffset_inst: sel %s, mux_sel %s, val %s ' % \
         (se['offset_inst']['sel']['value'], se['offset_inst']['muxsel']['value'],
          se['offset_inst']['val']['value'])
     pstr += '\n'
@@ -2193,6 +2196,17 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             offset_inst['sel']['value'] = str(0)
             offset_inst['muxsel']['value'] = str(0)
             offset_inst['val']['value'] = str(nxt_cs.extract_len + add_off)
+            if (nxt_cs.extract_len + add_off) != 0 or not nxt_cs.is_end:
+                # enable jump check if moving the offset
+                # or any time are going to non-end-state
+                sram['offset_jump_chk_en']['value'] = str(1)
+
+            if (nxt_cs.extract_len + add_off) != 0:
+                sram['pkt_size_chk_en']['value'] = str(1)
+                if (nxt_cs.extract_len + add_off) == 64:
+                    sram['pkt_size']['value'] = str(0)
+                else:
+                    sram['pkt_size']['value'] = str(nxt_cs.extract_len + add_off)
         else:
             #assert isinstance(nxt_cs.extract_len, capri_parser_expr)
             expr_const = nxt_cs.extract_len.const
@@ -2225,6 +2239,8 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             offset_inst['muxsel']['value'] = str(mux_inst_id)
             # add_off is not added into expr, instead it is added by h/w using 'value'
             offset_inst['val']['value'] = str(add_off + adjusted_const)
+            # enable jump check since we are moving the offset
+            sram['offset_jump_chk_en']['value'] = str(1)
 
             if adjusted_const:
                 #Reset constant value back to original so that when processing
@@ -2232,9 +2248,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 #expression is used.
                 nxt_cs.extract_len.const = expr_const
 
-    # offset junp check is always eanbled, hw does not check this on the last state that is marked
-    # as 'stop'
-    sram['offset_jump_chk_en']['value'] = str(1)
 
     #Generate Checksum related Configuration in parser.
     s = _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs, parser,\

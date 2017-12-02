@@ -46,7 +46,10 @@ from the P4 program.
     pre-extraction logic
     Other approach considered as 'post-extract' performs header extraction of 
     headers in a state-A on every branch leaving that state. This approach is 
-    not used since it requires more TCAM/SRAM entries
+    not used since it requires more TCAM/SRAM entries. Also when a variable len
+    header is extracted, next lkp values must be loaded using current_offset +
+    var_len_expression. This is not possible in the Capri hardware. Capri h/w
+    does not provide a way to load from packet[current_ofset + var_len_expr]
 
 * Parser-Local fields:
 

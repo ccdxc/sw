@@ -243,8 +243,8 @@ class capri_parser_set_op:
                     # byte alignment check for cf
                     # fields loaded in reg are expected to be right justified in the register
                     # mask is computed by output genertion code
-                    src_soff = cf.p4_fld.offset % 8
-                    src_eoff = (src_soff + cf.width) % 16
+                    src_boff = cf.p4_fld.offset % 8
+                    src_eoff = (src_boff + cf.width) % 16
                     if src_eoff:
                         self.capri_expr = capri_parser_expr(cstate.parser, None)
                         self.capri_expr.op1 = '>>'
@@ -2063,21 +2063,38 @@ class capri_parser:
         # do data flow ananlysis per path and create in(down) and out(up) variables for each state
         # do not share in, out objects between states (multiple down stream states can clobber each
         # others data
-        # ALGO: Register allocation is done by doing liveness calcualtion and creating
+        # ALGO: Register allocation is done by doing liveness calculation and creating
         # up(out)/down(in) variables for each state. Since a given parse state can be on multiple
-        # paths, collect the proallocated register information while performing the liveness
+        # paths, collect the preallocated register information while performing the liveness
         # analysis on each path.
         # Perform register allocation on each path top->bottom, allocate register for any
         # un-allocated variables
         # This code does not create RIG (register interference graph).. need to see if that is
         # a better way to handle this.
         cs_lfs = OrderedDict() # {cs: {in_lfs, out_lfs]}
+        n_states = len([s for s in self.states if s.name != '__END__' and not s.deparse_only \
+            and not s.is_virtual])
+        cs_covered = 0
         for path in path_states:
+            # once all state are covered.. we can stop the loop, # of paths is of the order of
+            # 250k for iris.p4 program
+            if cs_covered == n_states:
+                #pdb.set_trace()
+                break;
             out_lfs = OrderedDict() # {lf: reg}
+            # check if all states on this path are already covered
+            path_cs_covered = 0
+            for cs in path:
+                if cs in cs_lfs or cs.deparse_only:
+                    path_cs_covered += 1
+            if path_cs_covered == len(path):
+                continue
             for cs in reversed(path):
                 # if cs.name == 'parse_trailer': pdb.set_trace()
                 if cs not in cs_lfs:
                     cs_lfs[cs] = [OrderedDict(), OrderedDict()]
+                    if not cs.deparse_only:
+                        cs_covered += 1
 
                 in_lfs = cs_lfs[cs][0]
                 # previous (downstream out_lf is now in_lf) copy it
@@ -2172,6 +2189,8 @@ class capri_parser:
 
                 upstream_lfs = OrderedDict()
                 upstream_lfs = copy.copy(downstream_lfs)
+
+        #pdb.set_trace()
         for cs in self.states:
             if cs not in cs_lfs:
                 continue

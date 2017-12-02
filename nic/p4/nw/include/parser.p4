@@ -977,6 +977,7 @@ parser parse_tcp {
     set_metadata(parser_csum.l4_len, parser_metadata.l4_trailer + 0);
     return select(parser_metadata.parse_tcp_counter) {
         0 : ingress;
+        0x80 mask 0x80: parse_tcp_option_error;
         default : parse_tcp_options_blob;
     }
 }
@@ -993,28 +994,40 @@ parser parse_tcp_option_one_sack {
     extract(tcp_option_one_sack);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 10);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_option_two_sack {
     extract(tcp_option_two_sack);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 18);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_option_three_sack {
     extract(tcp_option_three_sack);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 26);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_option_four_sack {
     extract(tcp_option_four_sack);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 34);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_option_sack {
@@ -1031,14 +1044,20 @@ parser parse_tcp_option_EOL {
     extract(tcp_option_eol);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 1);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_option_NOP {
     extract(tcp_option_nop);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 1);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 @pragma deparse_only
@@ -1051,35 +1070,50 @@ parser parse_tcp_option_mss {
     extract(tcp_option_mss);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 4);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_option_ws {
     extract(tcp_option_ws);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 3);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_option_sack_perm {
     extract(tcp_option_sack_perm);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 2);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_timestamp {
     extract(tcp_option_timestamp);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - 10);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 parser parse_tcp_unknown_option {
     extract(tcp_option_unknown);
     set_metadata(parser_metadata.parse_tcp_counter,
                  parser_metadata.parse_tcp_counter - tcp_option_unknown.optLength);
-    return parse_tcp_options;
+    return select(parser_metadata.parse_tcp_counter) {
+        0x00 : ingress;
+        default : parse_tcp_options;
+    }
 }
 
 @pragma dont_capture_payload_offset 
