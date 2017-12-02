@@ -11,4 +11,4 @@ export LUA_PATH="$NIC_DIR/third-party/snort3/export/lua/?.lua;;"
 export SNORT_DAQ_PATH=$NIC_DIR/third-party/snort3/export/daqs/
 export SNORT_LD_PATH=$NIC_DIR/third-party/snort3/export/bin/libsnort.so
 
-LD_PRELOAD=$SNORT_LD_PATH CAPRI_MOCK_MODE=1 $NIC_DIR/../bazel-bin/nic/hal/hal -c hal.json 2>&1 | tee $NIC_DIR/hal.log
+CAPRI_MOCK_MODE=1 $NIC_DIR/../bazel-bin/nic/hal/hal -c hal.json 2>&1 | tee $NIC_DIR/hal.log

@@ -38,7 +38,14 @@ hal_ret_t scanner_init(int thread_num) {
     if (thread_num == hal::HAL_THREAD_ID_CFG) {
         // TODO: any non-thread init can go here
     } else if (thread_num == hal::HAL_THREAD_ID_PERIODIC) {
-        if (init_main_thread(PEN_SNORT_THREAD_COUNT, PEN_SNORT_CFG_PATH) != 0) {
+        std::string lua_path(std::getenv("SNORT_LUA_PATH"));
+        if (lua_path.length() == 0) {
+            HAL_TRACE_DEBUG("missing environment variable SNORT_LUA_PATH");
+            goto error;
+        }
+        lua_path += "snort.lua";
+
+        if (init_main_thread(PEN_SNORT_THREAD_COUNT, lua_path.c_str()) != 0) {
             goto error;
         }
         if (hal::periodic::periodic_thread_is_running()) {

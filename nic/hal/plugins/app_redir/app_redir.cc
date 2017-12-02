@@ -361,7 +361,7 @@ app_redir_test_flow_criteria_check(fte::ctx_t& ctx)
                     (flow_key.dport == APP_REDIR_MYSQL_PORT)) {
 
                     redir_ctx.set_redir_policy_applic(true);
-                    ctx.set_appid_state(APPID_STATE_NEEDED);
+                    ctx.set_appid_state(APPID_STATE_NOT_NEEDED); // TODO
                     return true;
                 }
             }
@@ -528,7 +528,6 @@ app_redir_policy_applic_set(fte::ctx_t& ctx)
     hal_ret_t               ret = HAL_RET_OK;
 
     redir_ctx.set_redir_policy_applic(true);
-    ctx.set_appid_state(APPID_STATE_NEEDED);
 
     /*
      * Update flow to redirect to us.
