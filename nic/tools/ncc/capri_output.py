@@ -1337,6 +1337,7 @@ def capri_deparser_cfg_output(deparser):
         payload_offset_ohi_bit = 1<<payload_offset_len_ohi_id
         dpp_json['cap_dpp']['registers']['cap_dpp_csr_cfg_ohi_payload']\
             ['ohi_slot_payload_ptr_bm']['value'] = str('0x%x' % payload_offset_ohi_bit)
+        dpp_json['cap_dpp']['registers']['cap_dpp_csr_cfg_ohi_payload']['_modified'] = True
 
         # Because header bit 127 is used for payload, use hdrfld_info slot 255 (last slot)
         # for specifying packet payload ohi information. OHI slot contains payload offset,
@@ -1520,6 +1521,7 @@ def capri_deparser_cfg_output(deparser):
                 rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - csum_allocated_hv)
                 dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
                     str(max_hdr_flds - end_fld)
+                dpp_json['cap_dpp']['registers'][rstr]['_modified'] = True
                 used_hdr_fld_info_slots += 1 #Dummy slot after actual hdr slot
                 csum_hv_fld_slots[csum_allocated_hv] = \
                     (start_fld, end_fld - 1, h.name)
@@ -2801,12 +2803,14 @@ def capri_te_cfg_output(stage):
                 json_km_profile['bit_sel']['value'] = no_load_bit
             else:
                 json_km_profile['bit_sel']['value'] = "0x%x" % int(_phv_bit_flit_le_bit(b))
+            json_km_profile['_modified'] = True
             bit_sel_id -= 1
             bits_left -= 1
 
         for b in range(bits_left):
             json_km_profile = json_regs['cap_te_csr_cfg_km_profile_bit_sel[%d]' % bit_sel_id]
             json_km_profile['bit_sel']['value'] = no_load_bit
+            json_km_profile['_modified'] = True
             bit_sel_id -= 1
 
         # bit_loc1 is bit0-7, bit_loc0 is bit8-15
@@ -3053,7 +3057,6 @@ def capri_te_cfg_output(stage):
             json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
             if stage.table_sequencer[prof_val][cyc].adv_flit:
                 json_sram_ext['adv_phv_flit']['value'] = str(1)
-                json_sram_ext['_modified'] = True
                 prev_fid = fid
                 fid += 1
             else:
@@ -3073,6 +3076,7 @@ def capri_te_cfg_output(stage):
             if stage.table_sequencer[prof_val][cyc].is_last:
                 cyc_done = True
 
+            json_sram_ext['_modified'] = True
             se['_modified'] = True
             sidx += 1
 
@@ -3306,14 +3310,13 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
     base_addr += addr_map_size * cap_inst
 
     for name, conf in regs.iteritems():
-        if 'addr_offset' not in conf.keys(): pdb.set_trace()
         addr_offset = int(conf['addr_offset'], 16) + base_addr
         word_size = int(conf['word_size'], 16)
         is_array = int(conf['is_array'])
         if is_array == 1:
             addr_offset += word_size * 4
         data = 0
-        width = 0
+        width = int(conf['_width'], 0)
         skip = True
 
         if 'decoder' in conf:
@@ -3334,16 +3337,6 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                     _decode_mem(mems[decoder]['entries'][int(idx)], result)
                     data = result[0]
 
-                # find the correct width of the entry
-                for field, attrib in conf.iteritems():
-                    if ((field == 'word_size') or (field == 'inst_name') or
-                        (field == 'addr_offset') or (field == 'decoder') or
-                        (field == 'is_array') or (field == '_width')):
-                        continue
-                    lsb  = int(attrib['field_lsb'])
-                    msb  = int(attrib['field_msb'])
-                    width += msb - lsb + 1
-
             elif m.group(0) in regs:
                 if decoder not in regs[m.group(0)]:
                     continue
@@ -3351,8 +3344,10 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                     result = [data, 0]
                     _decode_reg(regs[m.group(0)][decoder]['entries'], result)
                     data = result[0]
-                    width = result[1]
         else:
+            if '_modified' not in conf.keys():
+                # skip the register if its contents are not modified
+                continue
             for field, attrib in conf.iteritems():
                 if not type(attrib) is dict:
                     continue
@@ -3364,13 +3359,10 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                     val = 0
                 else:
                     skip = False
-                width += msb - lsb + 1
                 data = data | (val << lsb)
         if skip == True:
             continue
 
-        if (is_array == 0) and (width/8 < (word_size * 4)):
-            width = word_size * 32
         while width > 0:
 #            print '0x%08x 0x%08x %s' % \
 #                (addr_offset, data & 0xFFFFFFFF, name)
