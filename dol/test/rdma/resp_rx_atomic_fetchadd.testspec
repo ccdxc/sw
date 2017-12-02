@@ -27,6 +27,14 @@ packets:
                 data    : 01 02 03 04 05 06 07 08
 
    - packet:
+        id          : ORIG_DATA_LITTLE # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : 08 07 06 05 04 03 02 01
+
+   - packet:
         id          : ADD_DATA # Base packet
         payloadsize : 8
         template    : ref://factory/packets/id=PAYLOAD
@@ -41,6 +49,14 @@ packets:
         headers     :
             payload:
                 data    : 02 04 04 06 06 08 08 09
+
+   - packet:
+        id          : FINAL_DATA_LITTLE # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : 09 08 08 06 06 04 04 02
 
    - packet:
         id          : IN_PKT    # Input packet 
@@ -123,8 +139,8 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=ORIG_DATA/size
-                 data    : ref://testcase/packets/id=ORIG_DATA/rawbytes
+               - size    : ref://testcase/packets/id=ORIG_DATA_LITTLE/size
+                 data    : ref://testcase/packets/id=ORIG_DATA_LITTLE/rawbytes
 
     - buffer:
         id      : XFER_BUF
@@ -132,7 +148,7 @@ buffers:
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
-           size    : ref://testcase/packets/id=ORIG_DATA/size
+           size    : ref://testcase/packets/id=ORIG_DATA_LITTLE/size
 
     - buffer:
         id      : EXP_BUF
@@ -141,8 +157,8 @@ buffers:
            slab    : None
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=FINAL_DATA/size
-                 data    : ref://testcase/packets/id=FINAL_DATA/rawbytes
+               - size    : ref://testcase/packets/id=FINAL_DATA_LITTLE/size
+                 data    : ref://testcase/packets/id=FINAL_DATA_LITTLE/rawbytes
 
 
 descriptors:
