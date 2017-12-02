@@ -6,15 +6,18 @@
 #include "INGRESS_p.h"
 #include "common_phv.h"
 
-#define REQ_TX_DMA_CMD_PHV_INTRINSIC 0
-#define REQ_TX_DMA_CMD_HEADER_TEMPLATE 1
-#define REQ_TX_DMA_CMD_RDMA_HEADERS 2
-#define REQ_TX_DMA_CMD_RRQWQE 3
-#define REQ_TX_DMA_CMD_RRQ_PINDEX 4
-#define REQ_TX_DMA_CMD_PYLD_BASE 3
-#define REQ_TX_DMA_CMD_PYLD_BASE_END 14
-#define REQ_TX_DMA_CMD_RDMA_FEEDBACK 15
-#define REQ_TX_DMA_CMD_START_FLIT_ID 8
+#define REQ_TX_DMA_CMD_PHV_INTRINSIC 2
+#define REQ_TX_DMA_CMD_HEADER_TEMPLATE 3
+#define REQ_TX_DMA_CMD_RDMA_HEADERS 4
+#define REQ_TX_DMA_CMD_RRQWQE 5
+#define REQ_TX_DMA_CMD_RRQ_PINDEX 6
+#define REQ_TX_DMA_CMD_PYLD_BASE 5
+#define REQ_TX_DMA_CMD_PYLD_BASE_END 16
+#define REQ_TX_DMA_CMD_RDMA_FEEDBACK 17
+#define REQ_TX_DMA_CMD_RDMA_ICRC_PAD 18
+#define REQ_TX_DMA_CMD_RDMA_UDP_OPTS 19
+#define REQ_TX_DMA_CMD_START_FLIT_ID 7
+#define REQ_TX_DMA_CMD_START_FLIT_CMD_ID 2
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
 
 #define BTH_DST_QP              p.bth.dst_qp
@@ -55,58 +58,60 @@
 // phv 
 struct req_tx_phv_t {
     // dma commands
-
     /* flit 11 */
+    dma_cmd16 : 128;
+    dma_cmd17 : 128;
+    dma_cmd18 : 128;
+    dma_cmd19 : 128;
+
+
+    /* flit 10 */
     dma_cmd12 : 128;
     dma_cmd13 : 128;
     dma_cmd14 : 128;
     dma_cmd15 : 128;
 
-    /* flit 10 */
+    /* flit 9 */
     dma_cmd8 : 128;
     dma_cmd9 : 128;
     dma_cmd10 : 128;
     dma_cmd11 : 128;
 
-    /* flit 9 */
+    /* flit 8 */
     dma_cmd4 : 128;
     dma_cmd5 : 128;
     dma_cmd6 : 128;
     dma_cmd7 : 128;
  
-    /* flit 8 */
-    dma_cmd0 : 128;
-    dma_cmd1 : 128;
+    /* flit 7 */
+    union {
+        struct rrqwqe_t rrqwqe;    // dma_cmd0
+        inline_data: 256;          // dma_cmd1
+    };
     dma_cmd2 : 128;
     dma_cmd3 : 128;
 
-    /* flit 7 */
-    rsvd_flit_7 : 120;
-    rrq_p_index: 16;
-    union {
-        struct rrqwqe_t rrqwqe;
-        inline_data: 256;
-    };
-    struct p4plus_to_p4_header_t p4plus_to_p4;
-    rsvd       : 6;
-    in_progress: 1;
-    rrq_empty: 1;
-
     /* flit 6 */
-    struct rdma_ieth_t ieth;
-    union {
-        struct rdma_atomiceth_t atomiceth;
-        struct rdma_feedback_t rdma_feedback;
-    };
-    struct rdma_immeth_t immeth;
+    rsvd: 64;                                       //  8B  free
+    rrq_p_index: 16;                                //  2B
+    struct p4plus_to_p4_header_t p4plus_to_p4;      // 10B
+    struct rdma_immeth_t immeth;                    //  4B
 
-    union {
-        struct rdma_reth_t reth;
-        struct rdma_deth_t deth;    
-        struct rdma_cnp_rsvd_t cnp_rsvd;
+    union {                                         // 28B
+        struct rdma_reth_t reth;                        // 16B
+        struct {                                        // 19B
+            struct rdma_deth_t deth;                           //  8B
+            struct rdma_feedback_t rdma_feedback;              // 11B
+        };
+        struct rdma_cnp_rsvd_t cnp_rsvd;                // 16B
+        struct rdma_ieth_t ieth;                        //  4B
+        struct rdma_atomiceth_t atomiceth;              // 28B
     };
 
-    struct rdma_bth_t bth;  // should be from a byte boundary
+    struct rdma_bth_t bth;                          // 12B
+    // should be from a byte boundary
+
+    /* flit 0-5 */
 
     // Packet PHV has its own phv_intrinsic space. In order to generate
     // additional RDMA feedback PHV, phv_intrinsic has to be composed. 

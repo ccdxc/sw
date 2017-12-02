@@ -616,8 +616,8 @@ struct capri_dma_cmd_mem2mem_t {
 #define RXDMA_DMA_CMD_PTR_SET(_flit_id) \
     RXDMA_DMA_CMD_PTR_SET_C(_flit_id, c0); \
 
-#define TXDMA_DMA_CMD_PTR_SET(_flit_id) \
-    phvwr       p.common.p4_txdma_intr_dma_cmd_ptr, (_flit_id * NUM_DMA_CMDS_PER_FLIT)
+#define TXDMA_DMA_CMD_PTR_SET(_flit_id, _index) \
+    phvwr       p.common.p4_txdma_intr_dma_cmd_ptr, (_flit_id * NUM_DMA_CMDS_PER_FLIT + _index)
 
 #define DMA_CMD_I_BASE_GET(_base_r, _tmp_r, _flit_id, _index) \
     srl         _base_r, _index, LOG_NUM_DMA_CMDS_PER_FLIT; \

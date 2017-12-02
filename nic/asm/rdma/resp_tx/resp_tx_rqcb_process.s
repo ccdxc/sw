@@ -100,8 +100,8 @@ rq:
     nop
 
 check_rsq:
-    // set DMA cmd ptr
-    TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID)
+    // set DMA cmd ptr   (dma cmd idx with in flit is zero)
+    TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID, 0)
 
     seq         c1, RSQ_C_INDEX, RSQ_P_INDEX
     bcf         [c1], check_ack_nak

@@ -48,7 +48,7 @@ req_tx_sqcb_process:
     CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags, REQ_TX_FLAG_UD_SERVICE, c1)
 
     //set dma_cmd_ptr in phv
-    TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID) // Branch Delay Slot
+    TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_START_FLIT_CMD_ID) // Branch Delay Slot
 
     seq            c1, r7[MAX_SQ_HOST_RINGS-1:1], r0
     bcf            [c1], process_sq
