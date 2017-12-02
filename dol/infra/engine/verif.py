@@ -152,6 +152,7 @@ class VerifEngineObject:
         return adescr
 
     def __verify_descriptors(self, step, tc):
+        final_status = defs.status.SUCCESS
         for dsp in step.expect.descriptors:
             edescr = dsp.descriptor.object
             adescr = self.__consume_descriptor(edescr,
@@ -159,8 +160,8 @@ class VerifEngineObject:
                                                tc)
             status = self.__verify_one_descriptor(edescr, adescr, tc)
             if status == defs.status.ERROR:
-                return status
-        return defs.status.SUCCESS
+                final_status = status
+        return final_status
 
     def __verify_configs(self, step, tc):
         for config in step.expect.configs:

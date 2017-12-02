@@ -10,6 +10,7 @@ import config.hal.defs          as haldefs
 from config.store               import Store
 from infra.common.logging       import cfglogger
 
+MAX_ENICS_PER_GROUP = 2
 class MulticastGroupObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -93,11 +94,15 @@ class MulticastGroupObject(base.ConfigObjectBase):
         for int in self.oifs.GetAllInList():
             if int == oif:
                 return
-        self.oifs.Add(oif)
         if remote:
             self.uplink_list.append(oif)
+            self.oifs.Add(oif)
         else:
+            if len(self.enic_list) >= MAX_ENICS_PER_GROUP:
+                cfglogger.info("Reached MAX_ENICS_PER_GROUP. Not adding OIF:%s" % (oif.GID()))
+                return
             self.enic_list.append(oif)
+            self.oifs.Add(oif)
         return
 
     def PrepareHALRequestSpec(self, req_spec):

@@ -6,7 +6,7 @@ feature:
     module      : classic
     enable      : True
     ignore      : False
-    runorder    : 100
+    runorder    : 20
 
 modules:
     - module:

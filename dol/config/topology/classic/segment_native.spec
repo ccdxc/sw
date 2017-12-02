@@ -11,5 +11,5 @@ l4lb        : False
 groups      : ref://store/specs/id=MULTICAST_GROUPS_CLASSIC
 endpoints   :
     enics   : False
-    classic : 2
+    classic : 4
     remote  : 1
