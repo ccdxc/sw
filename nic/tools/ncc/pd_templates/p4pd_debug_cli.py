@@ -13,8 +13,9 @@ import    debug_pb2_grpc
 
 grpc_server = 'localhost:50054'
 
+import json
 import glob
-from iris import *
+from   iris import *
 import ${pddict['cli-name']}
 //::    tabledict = {}
 //::    tableid = 1
@@ -901,3 +902,11 @@ def populate_table(ctx):
 //::    #endfor
         # endfor table
 
+def table_dump():
+    with open("../p4pd/capri_p4_table_map.json") as data_file:
+        data = json.load(data_file)
+        print("=================================================================================")
+        print( "{:<30} {:<6} {:<10} {:<10} {:<5} {:<10} {:<7}".format("Table","TblId", "Type", "In/Egress", "Stage", "StageTblID", "Size"))
+        print("=================================================================================")
+        for table in data['tables']:
+            print( "{:<30} {:<6} {:<10} {:<10} {:<5} {:<10} {:<7}".format(str(table['name']), table_name_to_id_dict[table['name']], str(table['match_type']), str(table['direction']),  table['stage'], table['stage_table_id'], table['num_entries']))

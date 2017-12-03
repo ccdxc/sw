@@ -58,6 +58,22 @@ p4pd_table_types_enum = [
 def dbg_cli():
     pass
 
+
+@dbg_cli.group()
+@click.pass_context
+def show(ctx):
+    pass
+
+@show.group()
+@click.pass_context
+def system(ctx):
+    pass
+
+@system.command()
+@click.pass_context
+def p4table(ctx):
+    backend.table_dump()
+
 @dbg_cli.group()
 @click.pass_context
 def debug(ctx):
