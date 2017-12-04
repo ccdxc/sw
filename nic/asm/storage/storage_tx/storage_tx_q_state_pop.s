@@ -40,7 +40,7 @@ storage_tx_q_state_pop_start:
    phvwr	p.storage_kivec1_src_lif, STAGE0_KIVEC_LIF
    phvwr	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
    phvwr	p.storage_kivec1_src_qid, STAGE0_KIVEC_QID
-   phvwr	p.storage_kivec1_ssd_ci_addr, d.ssd_ci_addr
+   phvwr	p.storage_kivec1_device_addr, d.ssd_ci_addr
    phvwr	p.storage_kivec2_ssd_q_num, d.ssd_q_num
    phvwr	p.storage_kivec2_ssd_q_size, d.ssd_q_size
    // TODO: derive is_q0 from QID

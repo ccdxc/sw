@@ -545,12 +545,13 @@ header_type storage_kivec0_t {
 // kivec1: header union with global
 header_type storage_kivec1_t {
   fields {
-    src_lif	: 11;	// Source LIF number
-    src_qtype	: 3;	// Source LIF type (within the LIF)
-    src_qid	: 24;	// Source queue number (within the LIF)
-    src_qaddr	: 34;	// Source queue state address
+    src_lif		: 11;	// Source LIF number
+    src_qtype		: 3;	// Source LIF type (within the LIF)
+    src_qid		: 24;	// Source queue number (within the LIF)
+    src_qaddr		: 34;	// Source queue state address
     xts_desc_size	: 16;	// Barco XTS descriptor size
-    ssd_ci_addr	: 34;	// Address of the consumer index in the SSD qstate
+    device_addr		: 34;	// Address of the consumer index in the SSD qstate (OR)
+				// Barco XTS ring address
     roce_cq_new_cmd	: 1;	// If ROCE CQ entry is a new commmand
   }
 }
@@ -619,7 +620,7 @@ header_type storage_kivec6_t {
   modify_field(scratch.src_qid, kivec.src_qid);				\
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
   modify_field(scratch.xts_desc_size, kivec.xts_desc_size);		\
-  modify_field(scratch.ssd_ci_addr, kivec.ssd_ci_addr);			\
+  modify_field(scratch.device_addr, kivec.device_addr);			\
 
 #define STORAGE_KIVEC2_USE(scratch, kivec)				\
   modify_field(scratch.ssd_q_num, kivec.ssd_q_num);			\

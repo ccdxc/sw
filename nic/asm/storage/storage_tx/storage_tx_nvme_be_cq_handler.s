@@ -35,7 +35,7 @@ storage_tx_nvme_be_cq_handler_start:
 
    // Setup the DMA command to push the sq_head to the c_ndx of the SSD
    DMA_PHV2MEM_SETUP(ssd_ci_c_ndx, ssd_ci_c_ndx, 
-                     STORAGE_KIVEC1_SSD_CI_ADDR, dma_p2m_2)
+                     STORAGE_KIVEC1_DEVICE_ADDR, dma_p2m_2)
 
    // Obtain the saved command index from the command id in the status
    // and save it in the PHV. Store the result in GPR r6 to pass as input

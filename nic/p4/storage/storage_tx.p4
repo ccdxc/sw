@@ -335,7 +335,7 @@ action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     modify_field(storage_kivec0.dst_qid, dst_qid);
     modify_field(storage_kivec0.dst_qaddr, dst_qaddr);
     modify_field(storage_kivec0.ssd_bm_addr, ssd_bm_addr);
-    modify_field(storage_kivec1.ssd_ci_addr, ssd_ci_addr);
+    modify_field(storage_kivec1.device_addr, ssd_ci_addr);
 
     // In ASM, derive these from the K+I for stage 0
     modify_field(storage_kivec1.src_qaddr, 0);
@@ -1299,7 +1299,7 @@ action nvme_be_cq_handler(cspec, rsvd, sq_head, sq_id, cid, phase, status) {
 
   // Setup the DMA command to push the sq_head to the c_ndx of the SSD
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_2, 
-                           storage_kivec1.ssd_ci_addr,
+                           storage_kivec1.device_addr,
                            PHV_FIELD_OFFSET(ssd_ci.c_ndx),
                            PHV_FIELD_OFFSET(ssd_ci.c_ndx),
                            0, 0, 0, 0)
@@ -1687,7 +1687,7 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_pndx_size,
   // Update the K+I vector with the barco descriptor size to be used 
   // when calculating the offset for the push operation 
   modify_field(storage_kivec1.xts_desc_size, seq_barco_entry.xts_desc_size);
-  modify_field(storage_kivec1.ssd_ci_addr, seq_barco_entry.xts_ring_addr);
+  modify_field(storage_kivec1.device_addr, seq_barco_entry.xts_ring_addr);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -1740,7 +1740,7 @@ action seq_barco_ring_push(p_ndx) {
   // NOTE: This API in P4 land will not work, but in ASM we can selectively
   // overwrite the fields
   DMA_COMMAND_PHV2MEM_FILL(dma_m2m_2, 
-                           storage_kivec1.ssd_ci_addr +
+                           storage_kivec1.device_addr +
                            (barco_xts_ring_scratch.p_ndx * 
                             storage_kivec1.xts_desc_size),
                            0, 0,
