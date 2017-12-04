@@ -8,6 +8,7 @@
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/tls/tls_api.hpp"
+#include "nic/hal/src/proxyrcb.hpp"
 
 extern "C" {
 #include "nic/third-party/lkl/export/include/lkl.h"
@@ -527,8 +528,9 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
                                      uint32_t iqid, uint32_t rqid, 
 				     uint16_t src_lif, uint16_t hw_vlan_id)
 {
-    lklshim_flow_t     *flow;
-    lklshim_flow_key_t flow_key;
+    lklshim_flow_t      *flow;
+    lklshim_flow_key_t  flow_key;
+    types::AppRedirType l7_proxy_type;
 
 
     ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
@@ -553,14 +555,17 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     flow->rqid = rqid;
     lklshim_flow_by_qid[rqid] = flow;
     flow->src_lif = src_lif;
-    proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true, hw_vlan_id);
-    proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false, hw_vlan_id);
+    l7_proxy_type = find_proxyrcb_by_id(PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, flow->iqid)) || 
+                    find_proxyrcb_by_id(PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, flow->rqid)) ?
+                    types::APP_REDIR_TYPE_REDIRECT : types::APP_REDIR_TYPE_NONE;
+    proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true, hw_vlan_id, l7_proxy_type);
+    proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false, hw_vlan_id, l7_proxy_type);
     // create tlscb
-    hal::tls::tls_api_init_flow(flow->iqid, false);
-    hal::tls::tls_api_init_flow(flow->rqid, true);
+    hal::tls::tls_api_init_flow(flow->iqid, false, l7_proxy_type);
+    hal::tls::tls_api_init_flow(flow->rqid, true, l7_proxy_type);
 
     if (dir == hal::FLOW_DIR_FROM_ENIC) {
-        hal::tls::tls_api_init_flow(flow->iqid, flow->rqid);
+        hal::tls::tls_api_init_flow(flow->iqid, flow->rqid, l7_proxy_type);
         flow->hostns.skbuff = pkt_skb;
         flow->netns.skbuff = NULL;
         flow->hostns.state = FLOW_STATE_SYN_RCVD;
@@ -582,7 +587,7 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
         lklshim_create_listen_sockets(dir, flow);
         lklshim_trigger_flow_connection(flow, dir);
     } else {
-        hal::tls::tls_api_init_flow(flow->rqid, flow->iqid);
+        hal::tls::tls_api_init_flow(flow->rqid, flow->iqid, l7_proxy_type);
         flow->netns.skbuff = pkt_skb;
         flow->hostns.skbuff = NULL;
         flow->netns.state = FLOW_STATE_SYN_RCVD;

@@ -34,6 +34,7 @@ proxyc_s0_tx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
+    phvwr       p.to_s1_my_txq_ring, r7[0:0]
     
     /*
      * qid is our flow ID context
@@ -69,8 +70,8 @@ proxyc_s0_tx_start:
      * double check for queue not empty in case we somehow got erroneously scheduled.
      */
     add         r_ci, r0, d.{ci_0}.hx
-    mincr       r_ci, d.my_txq_ring_size_shift, r0
     add         r_pi, r0, d.{pi_0}.hx
+    mincr       r_ci, d.my_txq_ring_size_shift, r0
     mincr       r_pi, d.my_txq_ring_size_shift, r0
     beq         r_ci, r_pi, _my_txq_ring_empty
     phvwr       p.to_s1_my_txq_ci_curr, r_ci    // delay slot

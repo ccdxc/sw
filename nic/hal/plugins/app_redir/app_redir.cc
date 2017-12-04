@@ -2,11 +2,27 @@
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "app_redir_plugin.hpp"
+#include "app_redir.hpp"
 #include "app_redir_headers.hpp"
 #include "app_redir_cb_ops.hpp"
 
 namespace hal {
 namespace app_redir {
+
+/*
+ * TODO: determine whether the operational flow key should
+ * be pre or post rewrite.
+ */
+#define APP_REDIR_OPER_FLOW_KEY_PRE_REWRITE     1
+
+
+const flow_key_t&
+app_redir_oper_flow_key_get(fte::ctx_t& ctx)
+{
+    return APP_REDIR_OPER_FLOW_KEY_PRE_REWRITE ? ctx.key() :
+                                                 ctx.get_key(ctx.role());
+}
+
 
 /*
  * Evaluate and set the reverse role
@@ -82,8 +98,8 @@ app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
     hal_ret_t               ret = HAL_RET_OK;
 
     if (ctx.pkt()) {
-        app_redir_rawccb_init(&rawccb);
-        app_redir_rawrcb_init(&rawrcb);
+        app_redir_rawccb_init(redir_ctx.chain_flow_id(), rawccb);
+        app_redir_rawrcb_init(redir_ctx.chain_flow_id(), rawrcb);
 
         /*
          * For rawrcb, we need to set up chain_rxq_base and its related attributes.
@@ -93,11 +109,58 @@ app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
          * would need to be specified here.
          *
          * For rawccb, PD will supply the correct defaults when my_txq_base is
-         * left as zero.
+         * left at zero.
          */
-        ret = app_redir_rawccb_create(redir_ctx.chain_flow_id(), &rawccb);
+        ret = app_redir_rawccb_create(rawccb);
         if (ret == HAL_RET_OK) {
-            ret = app_redir_rawrcb_create(redir_ctx.chain_flow_id(), &rawrcb);
+            ret = app_redir_rawrcb_create(rawrcb);
+        }
+    }
+
+    return app_redir_feature_status_set(ctx, ret);
+}
+
+
+/*
+ * Establish service chaining by creating control blocks (cb) for
+ * P4+ TCP/TLS proxy redirect programs.
+ */
+/*static*/ hal_ret_t
+app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
+{
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    proxyrcb_t              proxyrcb;
+    proxyccb_t              proxyccb;
+    const flow_key_t&       flow_key = app_redir_oper_flow_key_get(ctx);
+    hal_ret_t               ret = HAL_RET_OK;
+
+    if (ctx.pkt()) {
+        app_redir_proxyccb_init(app_redir_proxyc_oper_cb_id_eval(flow_key,
+                                          redir_ctx.chain_flow_id()), proxyccb);
+        app_redir_proxyrcb_init(app_redir_proxyr_oper_cb_id_eval(flow_key,
+                                          redir_ctx.chain_flow_id()), proxyrcb);
+
+        /*
+         * For proxyrcb, we need to set up chain_rxq_base and its related
+         * attributes. However, when chain_rxq_base is set to zero, PD will
+         * automatically supply the correct ARQ defaults for chain_rxq_base.
+         * When multi cores are supported, only the chain_rxq_ring_index_select
+         * would need to be specified here.
+         *
+         * For proxyccb, PD will supply the correct defaults when my_txq_base
+         * is left at zero, but for chain_txq info, appropriate value will be
+         * constructed by app_redir_proxyccb_chain_txq_build().
+         */
+        ret = app_redir_proxyccb_chain_txq_build(flow_key, proxyccb);
+        if (ret == HAL_RET_OK) {
+            ret = app_redir_proxyrcb_flow_key_build(flow_key, proxyrcb);
+        }
+
+        if (ret == HAL_RET_OK) {
+            ret = app_redir_proxyccb_create(proxyccb);
+        }
+        if (ret == HAL_RET_OK) {
+            ret = app_redir_proxyrcb_create(proxyrcb);
         }
     }
 
@@ -115,6 +178,7 @@ app_redir_pkt_tx_enqueue(fte::ctx_t& ctx)
     uint8_t                         *pkt;
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     size_t                          pkt_len;
+    uint32_t                        flow_id = redir_ctx.chain_flow_id();
     hal::pd::cpu_to_p4plus_header_t cpu_header;
     hal::pd::p4plus_to_p4_header_t  p4_header;
     hal_ret_t                       ret;
@@ -144,21 +208,30 @@ app_redir_pkt_tx_enqueue(fte::ctx_t& ctx)
         pkt_len -= redir_ctx.hdr_len_total();
     }
 
-    HAL_TRACE_DEBUG("{} pkt_len {} src_lif {}", __FUNCTION__,
-                    pkt_len, cpu_header.src_lif);
+    /*
+     * For proxy flow, evaluate the correct CB for chaining to
+     * either TCP or TLS.
+     */
+    if (redir_ctx.chain_wring_type() == types::WRING_TYPE_APP_REDIR_PROXYC) {
+        flow_id = app_redir_proxyc_oper_cb_id_eval(ctx.key(), flow_id);
+    }
+
+    HAL_TRACE_DEBUG("{} flow_id {} pkt_len {} src_lif {}", __FUNCTION__,
+                    flow_id, pkt_len, cpu_header.src_lif);
     ret = hal::pd::cpupkt_register_tx_queue(redir_ctx.arm_ctx(),
                                             redir_ctx.chain_wring_type(),
-                                            redir_ctx.chain_flow_id());
+                                            flow_id);
     if (ret == HAL_RET_OK) {
         ret = ctx.queue_txpkt(pkt, pkt_len, &cpu_header, &p4_header,
                               SERVICE_LIF_APP_REDIR, redir_ctx.chain_qtype(),
-                              redir_ctx.chain_flow_id(), redir_ctx.chain_ring(),
+                              flow_id, redir_ctx.chain_ring(),
                               redir_ctx.chain_wring_type());
     }
 
     redir_ctx.set_chain_pkt_enqueued(true);
     return app_redir_feature_status_set(ctx, ret);
 }
+
 
 /*
  * Insert app redirect headers for a packet resulting in flow miss
@@ -175,28 +248,65 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
 
     redir_miss_hdr.app.h_proto = htons(PEN_APP_REDIR_ETHERTYPE);
     cpu_rxhdr = ctx.cpu_rxhdr();
+    redir_miss_hdr.ver.format = format;
     switch (format) {
 
     case PEN_RAW_REDIR_V1_FORMAT:
-        redir_miss_hdr.ver.format = format;
+    {
         hdr_len = PEN_APP_REDIR_VERSION_HEADER_SIZE +
                   PEN_RAW_REDIR_HEADER_V1_SIZE;
         redir_miss_hdr.ver.hdr_len = htons(hdr_len);
-        redir_miss_hdr.raw.vrf = cpu_rxhdr->lkp_vrf;
+        redir_miss_hdr.raw.vrf = htons(cpu_rxhdr->lkp_vrf);
         redir_miss_hdr.raw.flags = htons(PEN_APP_REDIR_L3_CSUM_CHECKED |
                                          PEN_APP_REDIR_L4_CSUM_CHECKED);
-        redir_miss_hdr.raw.flow_id = redir_ctx.chain_flow_id();
+        redir_miss_hdr.raw.flow_id = htonl(redir_ctx.chain_flow_id());
         redir_ctx.set_redir_miss_pkt_p(ctx.pkt());
-        redir_miss_hdr.raw.redir_miss_pkt_p =(uint64_t)ctx.pkt();
+        redir_miss_hdr.raw.redir_miss_pkt_p = (uint64_t)ctx.pkt();
 
         HAL_TRACE_DEBUG("{} hdr_len {} format {}", __FUNCTION__,
                         hdr_len + PEN_APP_REDIR_HEADER_SIZE, format);
         break;
+    }
 
     case PEN_PROXY_REDIR_V1_FORMAT:
-        HAL_TRACE_ERR("{} proxy hdr insertion coming soon", __FUNCTION__);
-        ret = HAL_RET_ERR;
+    {
+        const flow_key_t&   flow_key = app_redir_oper_flow_key_get(ctx);
+
+        hdr_len = PEN_APP_REDIR_VERSION_HEADER_SIZE +
+                  PEN_PROXY_REDIR_HEADER_V1_SIZE;
+        redir_miss_hdr.ver.hdr_len = htons(hdr_len);
+        redir_miss_hdr.proxy.vrf = htons(cpu_rxhdr->lkp_vrf);
+        redir_miss_hdr.proxy.flags = htons(PEN_APP_REDIR_L3_CSUM_CHECKED |
+                                           PEN_APP_REDIR_L4_CSUM_CHECKED);
+        redir_miss_hdr.proxy.flow_id = htonl(redir_ctx.chain_flow_id());
+        assert(cpu_rxhdr->payload_offset > 0);
+        redir_ctx.set_redir_miss_pkt_p(ctx.pkt());
+        redir_miss_hdr.proxy.redir_miss_pkt_p = (uint64_t)ctx.pkt() +
+                                                cpu_rxhdr->payload_offset;
+        redir_miss_hdr.proxy.tcp_flags = cpu_rxhdr->tcp_flags;
+
+        /*
+         * Extract flow key
+         */
+        redir_miss_hdr.proxy.ip_proto = IPPROTO_TCP;
+        redir_miss_hdr.proxy.sport = htons(flow_key.sport);
+        redir_miss_hdr.proxy.dport = htons(flow_key.dport);
+        if (flow_key.flow_type == hal::FLOW_TYPE_V4) {
+            redir_miss_hdr.proxy.af = AF_INET;
+            redir_miss_hdr.proxy.ip_sa[0] = htonl(flow_key.sip.v4_addr);
+            redir_miss_hdr.proxy.ip_da[0] = htonl(flow_key.dip.v4_addr);
+        } else {
+            redir_miss_hdr.proxy.af = AF_INET6;
+            memcpy(&redir_miss_hdr.proxy.ip_sa[0], &flow_key.sip.v6_addr,
+                   sizeof(redir_miss_hdr.proxy.ip_sa));
+            memcpy(&redir_miss_hdr.proxy.ip_da[0], &flow_key.dip.v6_addr,
+                   sizeof(redir_miss_hdr.proxy.ip_da));
+        }
+
+        HAL_TRACE_DEBUG("{} hdr_len {} format {}", __FUNCTION__,
+                        hdr_len + PEN_APP_REDIR_HEADER_SIZE, format);
         break;
+    }
 
     default:
         HAL_TRACE_ERR("{} unknown format {}", __FUNCTION__, format);
@@ -288,6 +398,13 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
             goto done;
         }
 
+        /* 
+         * From network, packet will go to TCP, TLS (for decryption)
+         * app redir, then chain to TCP
+         * 
+         * From host, packets will go to TCP, app redir, then chain to
+         * TLS (for encryption)
+         */
         redir_ctx.set_chain_qtype(APP_REDIR_PROXYC_QTYPE);
         redir_ctx.set_chain_wring_type(types::WRING_TYPE_APP_REDIR_PROXYC);
         break;
@@ -306,6 +423,48 @@ done:
     app_redir_feature_status_set(ctx, ret);
     return ret;
 }
+
+
+/*
+ * Return pointer to current packet, taking into account of inserted
+ * app redirect headers in the flow miss case.
+ */
+uint8_t *
+app_redir_pkt(fte::ctx_t& ctx)
+{
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+
+    return redir_ctx.redir_miss_pkt_p() ?
+           (uint8_t *)&redir_ctx.redir_miss_hdr() : ctx.pkt();
+}
+
+
+/*
+ * Return length of current packet, taking into account of inserted
+ * app redirect headers in the flow miss case.
+ */
+size_t
+app_redir_pkt_len(fte::ctx_t& ctx)
+{
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    const fte::cpu_rxhdr_t  *cpu_rxhdr;
+    size_t                  pkt_len;
+
+    pkt_len = ctx.pkt_len();
+    if (redir_ctx.redir_miss_pkt_p()) {
+        if (redir_ctx.tcp_tls_proxy_flow()) {
+            cpu_rxhdr = ctx.cpu_rxhdr();
+            assert((cpu_rxhdr->payload_offset > 0) &&
+                   ((int)pkt_len >= cpu_rxhdr->payload_offset));
+            pkt_len -= cpu_rxhdr->payload_offset;
+        }
+
+        pkt_len += redir_ctx.hdr_len_total();
+    }
+
+    return pkt_len;
+}
+
 
 /*
  * Forward redirected packet to application or simply loop it back (DOL case).
@@ -335,14 +494,15 @@ app_redir_pkt_process(fte::ctx_t& ctx)
 
 
 /*
- * Criteria check for appid DOL testing
+ * Temporary: criteria check flow_key against a given port.
  */
 static bool
-app_redir_test_flow_criteria_check(fte::ctx_t& ctx)
+app_redir_test_flow_dol_port_check(fte::ctx_t& ctx,
+                                   uint16_t dol_port)
 {
 #if 1
     fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
-    flow_key_t              flow_key = ctx.key();
+    const flow_key_t&       flow_key = ctx.key();
 
     if (ctx.pkt()) {
         switch (flow_key.flow_type) {
@@ -351,14 +511,8 @@ app_redir_test_flow_criteria_check(fte::ctx_t& ctx)
         case hal::FLOW_TYPE_V6:
 
             if (flow_key.proto == IPPROTO_TCP) {
-
-#define APP_REDIR_KISMET_PORT       2501
-#define APP_REDIR_MYSQL_PORT        3306
-
-                if ((flow_key.sport == APP_REDIR_KISMET_PORT)   ||
-                    (flow_key.dport == APP_REDIR_KISMET_PORT)   ||
-                    (flow_key.sport == APP_REDIR_MYSQL_PORT)    ||
-                    (flow_key.dport == APP_REDIR_MYSQL_PORT)) {
+                if ((flow_key.sport == dol_port)   ||
+                    (flow_key.dport == dol_port)) {
 
                     redir_ctx.set_redir_policy_applic(true);
                     ctx.set_appid_state(APPID_STATE_NEEDED);
@@ -378,50 +532,85 @@ app_redir_test_flow_criteria_check(fte::ctx_t& ctx)
 
 
 /*
+ * Temporary: criteria check for appid DOL testing,
+ */
+static bool
+app_redir_test_flow_criteria_check(fte::ctx_t& ctx)
+{
+
+#define APP_REDIR_KISMET_PORT       2501
+#define APP_REDIR_MYSQL_PORT        3306
+
+    return app_redir_test_flow_dol_port_check(ctx, APP_REDIR_KISMET_PORT) ||
+           app_redir_test_flow_dol_port_check(ctx, APP_REDIR_MYSQL_PORT);
+}
+           
+
+/*
+ * Temporary: criteria check for appid DOL testing with
+ * TCP/TLS proxy.
+ */
+static bool
+app_redir_test_tcp_tls_flow_criteria_check(fte::ctx_t& ctx)
+{
+
+#define APP_REDIR_DOL_TCP_TLS_PORT  23766
+
+    return app_redir_test_flow_dol_port_check(ctx, APP_REDIR_DOL_TCP_TLS_PORT);
+}
+
+
+/*
+ * Return proxy info for the current flow.
+ */
+static proxy_flow_info_t *
+app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
+                               flow_key_t& flow_key,
+                               bool include_tcp_tls_flows)
+{
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    proxy_flow_info_t       *pfi;
+
+    pfi = redir_ctx.proxy_flow_info() ?
+          redir_ctx.proxy_flow_info() :
+          proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
+
+    if (!pfi && include_tcp_tls_flows) {
+
+        /*
+         * See if flow was configured as TCP/TLS proxy flow
+         */
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, &flow_key);
+        if (pfi) {
+            redir_ctx.set_tcp_tls_proxy_flow(true);
+        }
+    }
+
+    return pfi;
+}
+
+
+/*
  * Return proxy info for the current flow if, by configuration or by certain
  * test criteria, the flow is subject to app redirect. 
  */
 static proxy_flow_info_t *
 app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
-                              flow_key_t& flow_key)
+                              flow_key_t& flow_key,
+                              bool include_tcp_tls_flows)
 {
     fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
-    proxy_flow_info_t       *pfi = NULL;
-    proxy_flow_info_t       *rpfi = NULL;
-    flow_key_t              rev_flow_key;
+    proxy_flow_info_t       *pfi;
     hal_ret_t               ret = HAL_RET_OK;
 
-    /*
-     * The flow might already have been created by the test infra,
-     * in which case, return it.
-     */
-    pfi = redir_ctx.proxy_flow_info() ?
-          redir_ctx.proxy_flow_info() :
-          proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
+    pfi = app_redir_proxy_flow_info_find(ctx, flow_key, include_tcp_tls_flows);
     if (!pfi) {
 
         /*
-         * Create flow only for flow hit case
+         * Create flow only for flow miss case
          */
         if (!ctx.pkt() || !ctx.flow_miss() || !redir_ctx.redir_policy_applic()) {
             goto done;
-        }
-
-        if (ctx.existing_session()) {
-
-            /*
-             * Ignore direction. Always set it to 0 for flow_info lookup.
-             */
-            rev_flow_key = ctx.get_key(redir_ctx.chain_rev_role());
-            rev_flow_key.dir = 0;
-            rpfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &rev_flow_key);
-            if (!rpfi) {
-                HAL_TRACE_DEBUG("app_redir existing_session for rev_role {} "
-                                "not found", redir_ctx.chain_rev_role());
-
-                ret = HAL_RET_FLOW_NOT_FOUND;
-                goto done;
-            }
         }
 
         /*
@@ -435,10 +624,10 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
 
         pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
         assert(pfi);
-        if (rpfi) {
-            pfi->qid1 = rpfi->qid1;
-            pfi->qid2 = rpfi->qid2;
-        }
+    }
+
+    if (pfi) {
+        redir_ctx.set_proxy_flow_info(pfi);
     }
 
 done:
@@ -457,22 +646,27 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
 {
     fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
     fte::flow_update_t      flowupd = {type: fte::FLOWUPD_FWDING_INFO};
+    hal_ret_t               ret = HAL_RET_OK;
 
+    /*
+     * Update fwding info if applicable
+     */
     assert(pfi);
-    HAL_TRACE_DEBUG("app_redir flow forwarding role: {} qid1: {} qid2: {}",
-                    ctx.role(), pfi->qid1, pfi->qid2);
-    HAL_TRACE_DEBUG("app_redir updating lport = {} for sport = {} dport = {}",
-                    pfi->proxy->meta->lif_info[0].lport_id,
-                    flow_key.sport, flow_key.dport);
-
-    // update fwding info
-    flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
-    flowupd.fwding.qid_en = true;
-    flowupd.fwding.qtype = APP_REDIR_RAWR_QTYPE;
     flowupd.fwding.qid = ctx.role() ==  hal::FLOW_ROLE_INITIATOR ?
                          pfi->qid1 : pfi->qid2;
     redir_ctx.set_chain_flow_id(flowupd.fwding.qid);
-    return app_redir_feature_status_set(ctx, ctx.update_flow(flowupd));
+    if (!redir_ctx.tcp_tls_proxy_flow()) {
+        flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
+        flowupd.fwding.qid_en = true;
+        flowupd.fwding.qtype = APP_REDIR_RAWR_QTYPE;
+
+        HAL_TRACE_DEBUG("app_redir flow forwarding role: {} qid1: {} qid2: {}",
+                        ctx.role(), pfi->qid1, pfi->qid2);
+        HAL_TRACE_DEBUG("app_redir updating lport = {} for sport = {} dport = {}",
+                        flowupd.fwding.lport, flow_key.sport, flow_key.dport);
+        ret = ctx.update_flow(flowupd);
+    }
+    return app_redir_feature_status_set(ctx, ret);
 }
 
 
@@ -480,9 +674,9 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
  * Wrapper for app_redir_proxy_flow_info_get() and app_redir_flow_fwding_update().
  */
 static hal_ret_t
-app_redir_proxy_flow_info_update(fte::ctx_t& ctx)
+app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
+                                 bool include_tcp_tls_flows)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
     flow_key_t              flow_key;
     proxy_flow_info_t       *pfi;
     hal_ret_t               ret = HAL_RET_OK;
@@ -492,9 +686,8 @@ app_redir_proxy_flow_info_update(fte::ctx_t& ctx)
      */
     flow_key = ctx.key();
     flow_key.dir = 0;
-    pfi = app_redir_proxy_flow_info_get(ctx, flow_key);
+    pfi = app_redir_proxy_flow_info_get(ctx, flow_key, include_tcp_tls_flows);
     if (pfi) {
-        redir_ctx.set_proxy_flow_info(pfi);
         ret = app_redir_flow_fwding_update(ctx, pfi, flow_key);
     }
 
@@ -535,13 +728,16 @@ app_redir_policy_applic_set(fte::ctx_t& ctx)
      */
     if (ctx.pkt() && ctx.flow_miss()) {
 
-        app_redir_proxy_flow_info_update(ctx);
+        app_redir_proxy_flow_info_update(ctx, true);
         if (!redir_ctx.redir_miss_pkt_p()) {
 
             /*
              * Insert app redirect header for the flow miss case
              */
-            ret = app_redir_miss_hdr_insert(ctx, PEN_RAW_REDIR_V1_FORMAT);
+            ret = app_redir_miss_hdr_insert(ctx, 
+                                     redir_ctx.tcp_tls_proxy_flow() ?
+                                     PEN_PROXY_REDIR_V1_FORMAT          :
+                                     PEN_RAW_REDIR_V1_FORMAT);
             if (ret == HAL_RET_OK) {
                 ret = app_redir_pkt_process(ctx);
             }
@@ -558,16 +754,15 @@ app_redir_policy_applic_set(fte::ctx_t& ctx)
 fte::pipeline_action_t
 app_redir_miss_exec(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    bool    include_tcp_tls_flows;
 
     /*
      * Evaluate initial flow ID
      */
     app_redir_rev_role_set(ctx);
     if (ctx.pkt()) {
-        redir_ctx.set_chain_flow_id(ctx.cpu_rxhdr()->qid);
         if (app_redir_test_flow_criteria_check(ctx)) {
-            app_redir_proxy_flow_info_update(ctx);
+            app_redir_proxy_flow_info_update(ctx, true);
         }
 
     } else {
@@ -576,7 +771,8 @@ app_redir_miss_exec(fte::ctx_t& ctx)
          * Handle proxy flow update for DOL testing purposes, i.e.,
          * when infra creates these flows before any packets are sent.
          */
-        app_redir_proxy_flow_info_update(ctx);
+        include_tcp_tls_flows = app_redir_test_tcp_tls_flow_criteria_check(ctx);
+        app_redir_proxy_flow_info_update(ctx, include_tcp_tls_flows);
     }
 
     return app_redir_pipeline_action(ctx);
@@ -628,7 +824,9 @@ app_redir_exec_fini(fte::ctx_t& ctx)
                  * getting programmed first.
                  */
                 if ((ret == HAL_RET_OK) && ctx.pkt()) {
-                    ret = app_redir_rawrcb_rawccb_create(ctx);
+                    ret = redir_ctx.tcp_tls_proxy_flow() ?
+                          app_redir_proxyrcb_proxyccb_create(ctx) :
+                          app_redir_rawrcb_rawccb_create(ctx);
                 }
             }
         }

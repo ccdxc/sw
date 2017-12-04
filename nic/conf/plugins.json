@@ -121,6 +121,7 @@
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
                 "pensando.io/app-redir:app-redir-fini",
+                "pensando.io/proxy:tcp-trigger-flow",
                 "pensando.io/proxy:app-p4pt"
             ],
             "inbound_features": [
@@ -139,6 +140,7 @@
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
                 "pensando.io/app-redir:app-redir-fini",
+                "pensando.io/proxy:tcp-trigger-flow",
                 "pensando.io/proxy:app-p4pt"
            ]
         },

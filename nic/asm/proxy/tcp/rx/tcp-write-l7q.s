@@ -9,6 +9,7 @@
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "../../../app-redir-p4+/common/include/app_redir_shared.h"
 
 struct phv_ p;
 struct s5_t2_tcp_rx_k k;
@@ -70,14 +71,26 @@ tcp_l7q_produce:
     nop
 ring_doorbell:
 
+#if PROXYR_TCP_PROXY_DIR
+    add         r5, k.common_phv_fid, PROXYR_OPER_CB_OFFSET(PROXYR_TCP_PROXY_DIR)
     CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd9_dma_cmd, 
                                  LIF_APP_REDIR,
+                                 APP_REDIR_PROXYR_QTYPE,
+                                 r5,
                                  0,
+                                 d.{l7q_pidx}.hx, 
+                                 db_data_pid, 
+                                 db_data_index)
+#else
+    CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd9_dma_cmd, 
+                                 LIF_APP_REDIR,
+                                 APP_REDIR_PROXYR_QTYPE,
                                  k.common_phv_fid,
                                  0,
                                  d.{l7q_pidx}.hx, 
                                  db_data_pid, 
                                  db_data_index)
+#endif                                 
     tbladd      d.{l7q_pidx}.hx, 1
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd9_dma_cmd)
     addi        r7, r0, 1

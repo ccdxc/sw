@@ -38,7 +38,7 @@ proxyc_s1_my_txq_entry_consume:
                              to_s1_my_txq_lif_sbit8_ebit10},
                           k.to_s1_my_txq_qtype,
                           k.to_s1_my_txq_qid,
-                          PROXYC_MY_TXQ_RING_DEFAULT,
+                          k.to_s1_my_txq_ring,
                           r_ci,
                           r_db_addr_scratch,
                           r_db_data_scratch)

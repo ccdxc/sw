@@ -67,12 +67,6 @@ typedef struct pen_raw_redir_header_v1_s {
 typedef struct pen_proxy_redir_header_v1_s {
     uint32_t            flow_id;
     uint16_t            flags;
-
-    /*
-     * The following static flow key fields (from vrf to ip_proto)
-     * must be sized and ordered exactly as defined in the structure
-     * proxyrcb_flow_key_t in p4/app-redir-p4+/proxyr_txdma.p4
-     */
     uint16_t            vrf;
     uint32_t            ip_sa[4];
     uint32_t            ip_da[4];
@@ -80,9 +74,9 @@ typedef struct pen_proxy_redir_header_v1_s {
     uint16_t            dport;
     uint8_t             af;
     uint8_t             ip_proto;
-
     uint8_t             tcp_flags;
-    uint8_t             end_pad;
+    uint8_t             pad;
+    uint64_t            redir_miss_pkt_p;
 } __attribute__ ((__packed__)) pen_proxy_redir_header_v1_t;
 
 #define PEN_PROXY_REDIR_HEADER_V1_SIZE  sizeof(pen_proxy_redir_header_v1_t)

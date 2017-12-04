@@ -16,6 +16,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif_manager.hpp"
 #include "nic/include/tcp_common.h"
+#include "nic/include/app_redir_shared.h"
 
 namespace hal {
 namespace pd {
@@ -247,7 +248,7 @@ p4pd_add_or_del_tcpcb_write_l7q_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         // Get L7Q address
         wring_hw_id_t  q_base;
         ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYR,
-                                     tcpcb_pd->tcpcb->cb_id,
+                                     PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, tcpcb_pd->tcpcb->cb_id),
                                      &q_base);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to receive l7q base for tcp cb: {}",

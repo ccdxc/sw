@@ -70,6 +70,29 @@ p4pd_get_proxyc_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+p4pd_proxyc_wring_eval(uint32_t qid,
+                       types::WRingType wring_type,
+                       wring_hw_id_t& wring_base,
+                       uint8_t& ring_size_shift,
+                       uint8_t& entry_size_shift)
+{
+    pd_wring_meta_t     *pd_wring_meta;
+    hal_ret_t           ret;
+
+    pd_wring_meta = wring_pd_get_meta(wring_type);
+    ret = wring_pd_get_base_addr(wring_type, qid, &wring_base);
+    if (!pd_wring_meta) {
+        ret = HAL_RET_WRING_NOT_FOUND;
+    }
+    if (ret == HAL_RET_OK) {
+        ring_size_shift  = log2(pd_wring_meta->num_slots);
+        entry_size_shift = log2(pd_wring_meta->slot_size_in_bytes);
+    }
+
+    return ret;
+}
+
 static hal_ret_t 
 p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
                                        bool del,
@@ -77,53 +100,82 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
 {
     proxyc_tx_start_d   data = {0};
     uint8_t             *data_p = (uint8_t *)&data;
-    proxyccb_t          *proxyccb;
-    pd_wring_meta_t     *pd_wring_meta;
+    proxyccb_t          *proxyccb = proxyccb_pd->proxyccb;
     hal_ret_t           ret = HAL_RET_OK;
     uint64_t            pc_offset = 0;
-    wring_hw_id_t       my_txq_base;
+    wring_hw_id_t       txq_base;
     uint32_t            data_len = sizeof(data);
     proxyccb_hw_addr_t  hw_addr = proxyccb_pd->hw_addr;
+    uint16_t            lif;
+    uint8_t             ring_size_shift;
+    uint8_t             entry_size_shift;
 
     proxyccb = proxyccb_pd->proxyccb;
-    if (proxyccb->my_txq_base) {
-        data.u.start_d.my_txq_base = proxyccb->my_txq_base;
-        data.u.start_d.my_txq_ring_size_shift = proxyccb->my_txq_ring_size_shift;
-        data.u.start_d.my_txq_entry_size_shift = proxyccb->my_txq_entry_size_shift;
-    } else {
+    data.u.start_d.my_txq_base = proxyccb->my_txq_base;
+    data.u.start_d.my_txq_ring_size_shift = proxyccb->my_txq_ring_size_shift;
+    data.u.start_d.my_txq_entry_size_shift = proxyccb->my_txq_entry_size_shift;
+
+    if (!proxyccb->my_txq_base) {
 
         /*
          * Provide reasonable defaults for above
          */
-        pd_wring_meta = wring_pd_get_meta(types::WRING_TYPE_APP_REDIR_PROXYC);
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYC,
-                                     proxyccb->cb_id, &my_txq_base);
-        if((ret == HAL_RET_OK) && pd_wring_meta) {
-            HAL_TRACE_DEBUG("PROXYCCB {} my_txq_base: {:#x}",
-                            proxyccb->cb_id, my_txq_base);
-            data.u.start_d.my_txq_base = my_txq_base;
-            data.u.start_d.my_txq_ring_size_shift =
-                           log2(pd_wring_meta->num_slots);
-            data.u.start_d.my_txq_entry_size_shift =
-                           log2(pd_wring_meta->slot_size_in_bytes);
-            HAL_TRACE_DEBUG("PROXYCCB my_txq_ring_size_shift: {} "
-                            "my_txq_entry_size_shift: {}",
-                            data.u.start_d.my_txq_ring_size_shift,
-                            data.u.start_d.my_txq_entry_size_shift);
-        } else {
-            HAL_TRACE_ERR("Failed to receive WRING_TYPE_APP_REDIR_PROXYC");
-            ret = HAL_RET_WRING_NOT_FOUND;
+        ret = p4pd_proxyc_wring_eval(proxyccb->cb_id, types::WRING_TYPE_APP_REDIR_PROXYC,
+                                     txq_base, ring_size_shift, entry_size_shift);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{} wring info not found for WRING_TYPE_APP_REDIR_PROXYC",
+                          __FUNCTION__);
+            goto done;
         }
+
+        data.u.start_d.my_txq_base = txq_base;
+        data.u.start_d.my_txq_ring_size_shift  = ring_size_shift;
+        data.u.start_d.my_txq_entry_size_shift = entry_size_shift;
+
+        HAL_TRACE_DEBUG("PROXYCCB {} my_txq_base: {:#x}",
+                        proxyccb->cb_id, data.u.start_d.my_txq_base);
+        HAL_TRACE_DEBUG("PROXYCCB my_txq_ring_size_shift: {} "
+                        "my_txq_entry_size_shift: {}",
+                        data.u.start_d.my_txq_ring_size_shift,
+                        data.u.start_d.my_txq_entry_size_shift);
     }
 
+    /*
+     * Build out chain_txq info based on LIF provided in proxyccb->chain_txq_lif
+     */
     data.u.start_d.chain_txq_base = proxyccb->chain_txq_base;
     data.u.start_d.chain_txq_ring_indices_addr = proxyccb->chain_txq_ring_indices_addr;
-    data.u.start_d.chain_txq_ring_size_shift = proxyccb->chain_txq_ring_size_shift;
-    data.u.start_d.chain_txq_entry_size_shift = proxyccb->chain_txq_entry_size_shift;
     data.u.start_d.chain_txq_lif = proxyccb->chain_txq_lif;
     data.u.start_d.chain_txq_qtype = proxyccb->chain_txq_qtype;
     data.u.start_d.chain_txq_qid = proxyccb->chain_txq_qid;
     data.u.start_d.chain_txq_ring = proxyccb->chain_txq_ring;
+
+    if (!proxyccb->chain_txq_base) {
+        lif = ntohs(proxyccb->chain_txq_lif);
+        assert((lif == SERVICE_LIF_TCP_PROXY) || (lif == SERVICE_LIF_TLS_PROXY));
+        ret = p4pd_proxyc_wring_eval(proxyccb->cb_id,
+                                     lif == SERVICE_LIF_TCP_PROXY ?
+                                     types::WRING_TYPE_SESQ : types::WRING_TYPE_SERQ,
+                                     txq_base, ring_size_shift, entry_size_shift);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{} wring info not found for lif {}", __FUNCTION__,
+                          proxyccb->chain_txq_lif);
+            goto done;
+        }
+
+        data.u.start_d.chain_txq_base = txq_base;
+        data.u.start_d.chain_txq_ring_indices_addr = 
+             g_lif_manager->GetLIFQStateAddr(lif, 0, proxyccb->cb_id & PROXYCCB_NUM_ENTRIES_MASK) +
+             (CAPRI_QSTATE_HEADER_COMMON_SIZE + 
+              (proxyccb->chain_txq_ring * CAPRI_QSTATE_HEADER_RING_SINGLE_SIZE));
+        data.u.start_d.chain_txq_ring_size_shift  = ring_size_shift;
+        data.u.start_d.chain_txq_entry_size_shift = entry_size_shift;
+        HAL_TRACE_DEBUG("{} chain_txq_base: {:#x} ring_size_shift {} "
+                        "entry_size_shift {}", __FUNCTION__,
+                        txq_base, data.u.start_d.chain_txq_ring_size_shift,
+                        data.u.start_d.chain_txq_entry_size_shift);
+    }
+
     data.u.start_d.proxyccb_flags = proxyccb->proxyccb_flags;
 
     /*
@@ -133,6 +185,7 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
         if(p4pd_get_proxyc_tx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to get pc address");
             ret = HAL_RET_HW_FAIL;
+            goto done;
         }
         pc_offset = (pc_offset >> 6);
         HAL_TRACE_DEBUG("PROXYCCB programming action-id: {:#x}", pc_offset);
@@ -160,6 +213,8 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for PROXYCCB");
         ret = HAL_RET_HW_FAIL;
     }
+
+done:
     return ret;
 }
 

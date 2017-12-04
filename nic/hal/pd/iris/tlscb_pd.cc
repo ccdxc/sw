@@ -11,6 +11,7 @@
 #include "nic/hal/src/lif_manager.hpp"
 #include "nic/gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
+#include "nic/include/app_redir_shared.h"
 
 namespace hal {
 namespace pd {
@@ -285,7 +286,7 @@ p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool de
         // Get L7Q address
         wring_hw_id_t  q_base;
         ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYR,
-                                     tlscb_pd->tlscb->cb_id,
+                                     PROXYR_OPER_CB_ID(PROXYR_TLS_PROXY_DIR, tlscb_pd->tlscb->cb_id),
                                      &q_base);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to receive l7q base for tls cb: {}",
