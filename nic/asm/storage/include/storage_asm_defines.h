@@ -22,7 +22,7 @@
 #define STORAGE_KIVEC0_DST_QID		\
 	k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR	\
-	k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit2_ebit33}
+	k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit26_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST	\
 	k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0		\
@@ -49,9 +49,9 @@
 #define STORAGE_KIVEC1_SRC_QID		\
 	k.{storage_kivec1_src_qid_sbit0_ebit1...storage_kivec1_src_qid_sbit18_ebit23}
 #define STORAGE_KIVEC1_SRC_QADDR	\
-	k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit2_ebit33}
+	k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit26_ebit33}
 #define STORAGE_KIVEC1_XTS_DESC_SIZE	\
-	k.storage_kivec1_xts_desc_size
+	k.{storage_kivec1_xts_desc_size_sbit0_ebit7...storage_kivec1_xts_desc_size_sbit8_ebit15}
 #define STORAGE_KIVEC1_SSD_CI_ADDR	\
 	k.{storage_kivec1_ssd_ci_addr_sbit0_ebit31...storage_kivec1_ssd_ci_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD	\
