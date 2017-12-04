@@ -53,7 +53,7 @@
 #define STORAGE_KIVEC1_XTS_DESC_SIZE	\
 	k.{storage_kivec1_xts_desc_size_sbit0_ebit7...storage_kivec1_xts_desc_size_sbit8_ebit15}
 #define STORAGE_KIVEC1_SSD_CI_ADDR	\
-	k.{storage_kivec1_ssd_ci_addr_sbit0_ebit31...storage_kivec1_ssd_ci_addr_sbit32_ebit33}
+	k.{storage_kivec1_ssd_ci_addr_sbit0_ebit7...storage_kivec1_ssd_ci_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD	\
 	k.storage_kivec1_roce_cq_new_cmd
 

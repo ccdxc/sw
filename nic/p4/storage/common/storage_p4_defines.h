@@ -585,6 +585,8 @@ header_type storage_kivec5_t {
   fields {
     status_addr		: 64;	// Address where compression status will be placed
     status_len		: 16;	// Length of the compression status
+    status_dma_en	:  8;	// 1 => DMA status, 0 => don't DMA status
+    status_err		:  3;	// Error status (0: success: >0: failure)
   }
 }
 
@@ -635,6 +637,7 @@ header_type storage_kivec6_t {
 #define STORAGE_KIVEC5_USE(scratch, kivec)				\
   modify_field(scratch.status_addr, kivec.status_addr);			\
   modify_field(scratch.status_len, kivec.status_len);			\
+  modify_field(scratch.status_dma_en, kivec.status_dma_en);		\
 
 #define STORAGE_KIVEC6_USE(scratch, kivec)				\
   modify_field(scratch.intr_addr, kivec.intr_addr);			\
@@ -907,7 +910,7 @@ header_type storage_pad0_t {
 }
 header_type storage_pad1_t {
   fields {
-    pad		: 32;
+    pad		: 168;
   }
 }
 
@@ -979,6 +982,7 @@ header_type seq_comp_desc_t {
     intr_addr		: 64;	// Address where interrupt needs to be written
     intr_data		: 64;	// Data that needs to be written for interrupt
     status_len		: 16;	// Length of the compression status
+    status_dma_en	:  8;	// 1 => DMA status, 0 => don't DMA status
   }
 }
 
@@ -990,12 +994,10 @@ header_type seq_comp_sgl_t {
     addr1		: 64;	// SGL data buffer 1 address
     addr2		: 64;	// SGL data buffer 2 address
     addr3		: 64;	// SGL data buffer 3 address
-    addr4		: 64;	// SGL data buffer 4 address
     len0		: 16;	// SGL data buffer 0 length
     len1		: 16;	// SGL data buffer 1 length
     len2		: 16;	// SGL data buffer 2 length
     len3		: 16;	// SGL data buffer 3 length
-    len4		: 16;	// SGL data buffer 4 length
   }
 }
 

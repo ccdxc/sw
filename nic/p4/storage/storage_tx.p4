@@ -80,10 +80,21 @@ metadata storage_kivec3_t storage_kivec3;
 @pragma pa_header_union ingress to_stage_3
 metadata storage_kivec6_t storage_kivec6;
 
+// Push/Pop doorbells
 @pragma dont_trim
-metadata storage_pad0_t storage_pad0;
+metadata storage_doorbell_data_t qpush_doorbell_data;
+@pragma dont_trim
+metadata storage_doorbell_data_t qpop_doorbell_data;
+@pragma dont_trim
+metadata storage_doorbell_data_t seq_doorbell_data;
 
-// Keep the WQEs/commands that occupy full flit first) 
+// Push/interrupt data across PCI bus
+@pragma dont_trim
+metadata storage_pci_data_t pci_push_data;
+@pragma dont_trim
+metadata storage_pci_data_t pci_intr_data;
+
+// Keep the WQEs/commands that occupy full flit aligned at flit boundaries
 
 // NVME command (occupies full flit)
 @pragma dont_trim
@@ -110,20 +121,6 @@ metadata nvme_sta_t nvme_sta;
 // SSD's consumer index
 @pragma dont_trim
 metadata ssd_ci_t ssd_ci;
-
-// Push/Pop doorbells
-@pragma dont_trim
-metadata storage_doorbell_data_t qpush_doorbell_data;
-@pragma dont_trim
-metadata storage_doorbell_data_t qpop_doorbell_data;
-@pragma dont_trim
-metadata storage_doorbell_data_t seq_doorbell_data;
-
-// Push/interrupt data across PCI bus
-@pragma dont_trim
-metadata storage_pci_data_t pci_push_data;
-@pragma dont_trim
-metadata storage_pci_data_t pci_intr_data;
 
 @pragma dont_trim
 metadata barco_xts_ring_t xts_doorbell_data;
@@ -198,6 +195,12 @@ metadata dma_cmd_phv2mem_t dma_p2m_10;
 @pragma dont_trim
 @pragma pa_header_union ingress dma_p2m_10
 metadata dma_cmd_mem2mem_t dma_m2m_10;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_p2m_11;
+@pragma dont_trim
+@pragma pa_header_union ingress dma_p2m_11
+metadata dma_cmd_mem2mem_t dma_m2m_11;
 
 /*****************************************************************************
  * Storage Tx PHV layout END 
@@ -2002,7 +2005,7 @@ action pvm_roce_sq_wqe_process(wrid, op_type, complete_notify, fence,
 
 @pragma little_endian status_addr data_addr sgl_addr intr_addr intr_data status_len
 action seq_comp_desc_handler(status_addr, data_addr, sgl_addr, intr_addr, 
-                              intr_data, status_len) {
+                              intr_data, status_len, status_dma_en) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
@@ -2015,12 +2018,14 @@ action seq_comp_desc_handler(status_addr, data_addr, sgl_addr, intr_addr,
   modify_field(seq_comp_desc_scratch.intr_addr, intr_addr);
   modify_field(seq_comp_desc_scratch.intr_data, intr_data);
   modify_field(seq_comp_desc_scratch.status_len, status_len);
+  modify_field(seq_comp_desc_scratch.status_dma_en, status_dma_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec4.sgl_addr, seq_comp_desc_scratch.sgl_addr);
   modify_field(storage_kivec4.data_addr, seq_comp_desc_scratch.data_addr);
   modify_field(storage_kivec5.status_addr, seq_comp_desc_scratch.status_addr);
   modify_field(storage_kivec5.status_len, seq_comp_desc_scratch.status_len);
+  modify_field(storage_kivec5.status_dma_en, seq_comp_desc_scratch.status_dma_en);
   modify_field(storage_kivec6.intr_addr, seq_comp_desc_scratch.intr_addr);
   modify_field(storage_kivec6.intr_data, seq_comp_desc_scratch.intr_data);
 
@@ -2036,6 +2041,17 @@ action seq_comp_desc_handler(status_addr, data_addr, sgl_addr, intr_addr,
                         seq_comp_status_handler_start)
 }
 
+/*****************************************************************************
+ *  seq_comp_status_handler: Handle the completion status and check for errors
+Handle the compression descriptor entry in the 
+ *                          sequencer. This involves:
+ *                          1. processing status to see if operation succeeded
+ *                          2. breaking up the compressed data into the 
+ *                             destination SGL provided in the descriptor
+ *                          In this stage, load the status entry for next stage
+ *                          and save the other fields into I vector.
+ *****************************************************************************/
+
 @pragma little_endian data_len rsvd3
 action seq_comp_status_handler(rsvd2, err, rsvd1, data_len, rsvd3) {
 
@@ -2050,24 +2066,21 @@ action seq_comp_status_handler(rsvd2, err, rsvd1, data_len, rsvd3) {
   modify_field(seq_comp_status_scratch.data_len, data_len);
   modify_field(seq_comp_status_scratch.rsvd3, rsvd3);
 
-  // Store the data length in the K+I vector for later use
+  // Store the data length and error status in the K+I vector for later use
   modify_field(storage_kivec4.data_len, seq_comp_status_scratch.data_len);
+  modify_field(storage_kivec5.status_err, seq_comp_status_scratch.err);
 
-  // DMA the data only if compression was successful
-  if (seq_comp_status_scratch.err == 0) {
-    // Load the address where compression destination SGL is stored for 
-    // processing in the next stage
-    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
-                          storage_kivec4.sgl_addr,
-                          STORAGE_DEFAULT_TBL_LOAD_SIZE, 
-                          seq_comp_sgl_handler_start)
-  }
-  // else exit the pipeline ?? what about errors to host ??
+  // Load the address where compression destination SGL is stored for 
+  // processing in the next stage
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
+                        storage_kivec4.sgl_addr,
+                        STORAGE_DEFAULT_TBL_LOAD_SIZE, 
+                        seq_comp_sgl_handler_start)
 }
 
-@pragma little_endian status_addr addr0 addr1 addr2 addr3 addr4 len0 len1 len2 len3 len4
-action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3, addr4, 
-                            len0, len1, len2, len3, len4) {
+@pragma little_endian status_addr addr0 addr1 addr2 addr3 len0 len1 len2 len3 
+action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3, 
+                            len0, len1, len2, len3) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
@@ -2080,29 +2093,34 @@ action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3, addr4,
   modify_field(seq_comp_sgl_scratch.addr1, addr1);
   modify_field(seq_comp_sgl_scratch.addr2, addr2);
   modify_field(seq_comp_sgl_scratch.addr3, addr3);
-  modify_field(seq_comp_sgl_scratch.addr4, addr4);
   modify_field(seq_comp_sgl_scratch.len0, len0);
   modify_field(seq_comp_sgl_scratch.len1, len1);
   modify_field(seq_comp_sgl_scratch.len2, len2);
   modify_field(seq_comp_sgl_scratch.len3, len3);
-  modify_field(seq_comp_sgl_scratch.len4, len4);
 
-  // DMA of interrupt - TODO: move the DMA command when we add more SGLs
+  // DMA of interrupt - this should be the last to fence with other DMAs
   modify_field(doorbell_addr.addr, storage_kivec6.intr_addr);
   modify_field(seq_doorbell_data.data, storage_kivec6.intr_data);
-  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_9, 
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
                            0,
                            PHV_FIELD_OFFSET(seq_doorbell_data.data),
                            PHV_FIELD_OFFSET(seq_doorbell_data.data),
                            0, 0, 0, 0)
 
 
-  // DMA of status
-  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, 
-                           storage_kivec5.status_addr, 0,
-                           seq_comp_sgl_scratch.status_addr, 0,
-                           storage_kivec5.status_len,
-                           0, 0, 0)
+  // DMA of status (only if enabled)
+  if (storage_kivec5.status_dma_en != 0) {
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, 
+                             storage_kivec5.status_addr, 0,
+                             seq_comp_sgl_scratch.status_addr, 0,
+                             storage_kivec5.status_len,
+                             0, 0, 0)
+  }
+
+  // DMA the data only if compression was successful
+  if (seq_comp_status_scratch.err != 0) {
+    exit();
+  }
 
   // DMA to SGL 0
   if (storage_kivec4.data_len <= seq_comp_sgl_scratch.len0) {
@@ -2158,8 +2176,23 @@ action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3, addr4,
                  (storage_kivec4.data_len - seq_comp_sgl_scratch.len2));
   }
 
-  // TODO: Add SGL 3/4 when we create more space in PHV
-  // TODO: move the DMA command for interrupt when we add more SGLs
+  // DMA to SGL 3
+  if (storage_kivec4.data_len <= seq_comp_sgl_scratch.len3) {
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_9, dma_m2m_10, 
+                             storage_kivec4.data_addr, 0,
+                             seq_comp_sgl_scratch.addr3, 0,
+                             storage_kivec4.data_len,
+                             0, 0, 0)
+    exit();
+  } else {
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_9, dma_m2m_10, 
+                             storage_kivec4.data_addr, 0,
+                             seq_comp_sgl_scratch.addr3, 0,
+                             seq_comp_sgl_scratch.len3,
+                             0, 0, 0)
+    modify_field(storage_kivec4.data_len, 
+                 (storage_kivec4.data_len - seq_comp_sgl_scratch.len3));
+  }
 
   // Exit the pipeline here
 }
