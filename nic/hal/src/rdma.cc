@@ -1029,6 +1029,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.log_num_wqes = log2(num_cq_wqes);
     cqcb.cq_num = spec.cq_num();
     cqcb.eq_id = spec.eq_id();
+    cqcb.color = 0;
     cqcb.arm = 0;   // Dont arm by default, only Arm it for tests which post/validate EQ
 
     // write to hardware

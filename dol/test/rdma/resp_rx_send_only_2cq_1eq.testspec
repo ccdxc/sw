@@ -237,7 +237,7 @@ descriptors:
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetCQExpColor
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             smac: callback://rdma/rdma/GetZeroMAC
             
     - descriptor:
@@ -273,7 +273,7 @@ descriptors:
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetCQExpColor
+            color  : callback://rdma/rdma/GetCQExpColor/entries=2
             smac: callback://rdma/rdma/GetZeroMAC
             
     - descriptor:

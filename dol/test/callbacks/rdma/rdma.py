@@ -31,7 +31,25 @@ def GetVAfromSLAB (tc, pkt, args):
     return (tc.config.rdmasession.lqp.pd.ep.slabs.Get(args.slab_id).address + args.offset)
 
 def GetCQExpColor (tc, desc, args = None):
-    if tc.pvtdata.rq_cq_pre_qstate.p_index0 == 0:
+    if args is None:
+        entries = 1
+    else:
+        entries = args.entries
+
+    pre_val = tc.pvtdata.rq_cq_pre_qstate.p_index0 
+    log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_pre_qstate, 'log_num_wqes')
+    mask = (2 ** log_num_cq_wqes) - 1
+
+    if pre_val is 0:
+        color_change = True
+    elif ((pre_val + entries) & mask) is 0:
+        color_change = False
+    elif pre_val > ((pre_val + entries) & mask):
+        color_change = True
+    else:
+        color_change = False
+       
+    if color_change:
        return (not tc.pvtdata.rq_cq_pre_qstate.color)
     else:
        return (tc.pvtdata.rq_cq_pre_qstate.color)
@@ -43,7 +61,25 @@ def GetEQExpColor (tc, desc, args = None):
        return (tc.pvtdata.eq_pre_qstate.color)
 
 def GetReqRxCQExpColor (tc, desc, args = None):
-    if tc.pvtdata.sq_cq_pre_qstate.p_index0 == 0:
+    if args is None:
+        entries = 1
+    else:
+        entries = args.entries
+
+    pre_val = tc.pvtdata.sq_cq_pre_qstate.p_index0 
+    log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_pre_qstate, 'log_num_wqes')
+    mask = (2 ** log_num_cq_wqes) - 1
+
+    if pre_val is 0:
+        color_change = True
+    elif ((pre_val + entries) & mask) is 0:
+        color_change = False
+    elif pre_val > ((pre_val + entries) & mask):
+        color_change = True
+    else:
+        color_change = False
+       
+    if color_change:
        return (not tc.pvtdata.sq_cq_pre_qstate.color)
     else:
        return (tc.pvtdata.sq_cq_pre_qstate.color)
