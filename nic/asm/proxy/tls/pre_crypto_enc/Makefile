@@ -41,7 +41,8 @@ SRC_FILES := \
     $(SRC_DIR)/tls-enc-serq.s \
     $(SRC_DIR)/tls-enc-pre-crypto-stats.s \
     $(SRC_DIR)/tls-enc-read-pkt-descr.s \
-    $(SRC_DIR)/tls-enc-queue-brq-mpp.s
+    $(SRC_DIR)/tls-enc-queue-brq-mpp.s \
+    $(SRC_DIR)/tls-enc-read-random-iv.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

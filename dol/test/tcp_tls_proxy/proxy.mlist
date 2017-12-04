@@ -233,6 +233,34 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : PKT_TO_BSQ_AES256_GCM_ENCRYPT_USE_RANDOM_IV
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_encrypt
+        spec    : one_pkt.testspec
+        args    :
+            cipher_suite: GCM
+            maxflows: 1
+            same_flow : 1
+            key_size : 32
+            use_random_iv : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_BSQ_AES256_CCM_ENCRYPT_USE_RANDOM_IV
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_encrypt
+        spec    : one_pkt.testspec
+        args    :
+            cipher_suite: CCM
+            maxflows: 1
+            same_flow : 1
+            key_size : 32
+            use_random_iv : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : PKT_TO_BSQ_AES256_CCM_ENCRYPT
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt

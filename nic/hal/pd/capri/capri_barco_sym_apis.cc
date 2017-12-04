@@ -6,6 +6,7 @@
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 
 namespace hal {
 namespace pd {
@@ -324,8 +325,6 @@ cleanup:
     return generate ? ret : (status == 0 ? (hal_ret_t )0 : (hal_ret_t)-1);
 }
 
-#if 1
-
 hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type, bool encrypt,
 						       uint8_t *key, int key_len,
 						       uint8_t *header, int header_len,
@@ -550,7 +549,6 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
      * If it is a "Decrypt" operation, we want to write the input auth-tag at the
      * auth-tag-addr for barco to read.
      */
-#if 1
     if (!encrypt) {
         if (capri_hbm_write_mem(auth_tag_mem_addr, (uint8_t*)auth_tag,
 				auth_tag_len)) {
@@ -573,7 +571,6 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 	    goto cleanup;
 	}
     }
-#endif
 
     /* Setup Symmetric Request Descriptor */
     memset(&sym_req_descr, 0, sizeof(sym_req_descr));
@@ -780,7 +777,201 @@ cleanup:
 
     return encrypt ? ret : (status == 0 ? (hal_ret_t )0 : (hal_ret_t)-1);
 }
+
+#define DRBG_SET(X) \
+    cap_hens_csr_t& csr_he_ns = CAP_BLK_REG_MODEL_ACCESS(cap_hens_csr_t, chip_id, 0); \
+    csr_he_ns.dhs_crypto_ctl.md_drbg_##X.fld(value); \
+    if (refresh) { \
+        csr_he_ns.dhs_crypto_ctl.md_drbg_##X.set_access_no_zero_time(true); \
+        csr_he_ns.dhs_crypto_ctl.md_drbg_##X.write(); \
+        csr_he_ns.dhs_crypto_ctl.md_drbg_##X.set_access_no_zero_time(false); }
+
+#define DRBG_GET(X) \
+    cap_hens_csr_t& csr_he_ns = CAP_BLK_REG_MODEL_ACCESS(cap_hens_csr_t, chip_id, 0); \
+    if (refresh) { \
+        csr_he_ns.dhs_crypto_ctl.md_drbg_##X.set_access_no_zero_time(true); \
+        csr_he_ns.dhs_crypto_ctl.md_drbg_##X.read(); \
+        csr_he_ns.dhs_crypto_ctl.md_drbg_##X.set_access_no_zero_time(false); } \
+    return csr_he_ns.dhs_crypto_ctl.md_drbg_##X.fld().convert_to<int>();
+
+static inline
+void cap_drbg_set_ctl_isr(int chip_id, int value, bool refresh)
+{
+    DRBG_SET(isr);
+}
+
+static inline
+void cap_drbg_set_ctl_msk(int chip_id, int value, bool refresh)
+{
+    DRBG_SET(msk);
+}
+
+static inline
+void cap_drbg_set_ctl_icr(int chip_id, int value, bool refresh)
+{
+    DRBG_SET(icr);
+}
+
+static inline
+void cap_drbg_set_ctl_ver(int chip_id, int value, bool refresh)
+{
+    DRBG_SET(ver);
+}
+
+static inline
+void cap_drbg_set_ctl_gct(int chip_id, int value, bool refresh)
+{
+    DRBG_SET(gct);
+}
+
+static inline
+void cap_drbg_set_ctl_gs(int chip_id, int value, bool refresh)
+{
+    DRBG_SET(gs);
+}
+
+static inline
+void cap_drbg_set_ctl_rng(int chip_id, int value, bool refresh)
+{
+    DRBG_SET(rng);
+}
+
+static inline
+void cap_drbg_set_ctl_drnge(int chip_id, int value, bool refresh)
+{
+    DRBG_SET(drnge);
+}
+
+static inline
+int cap_drbg_get_ctl_isr(int chip_id, bool refresh)
+{
+    DRBG_GET(isr);
+}
+
+static inline
+int cap_drbg_get_ctl_msk(int chip_id, bool refresh)
+{
+    DRBG_GET(msk);
+}
+
+static inline
+int cap_drbg_get_ctl_icr(int chip_id, bool refresh)
+{
+    DRBG_GET(icr);
+}
+
+static inline
+int cap_drbg_get_ctl_ver(int chip_id, bool refresh)
+{
+    DRBG_GET(ver);
+}
+
+static inline
+int cap_drbg_get_ctl_gct(int chip_id, bool refresh)
+{
+    DRBG_GET(gct);
+}
+
+static inline
+int cap_drbg_get_ctl_gs(int chip_id,  bool refresh)
+{
+    DRBG_GET(gs);
+}
+
+static inline
+int cap_drbg_get_ctl_rng(int chip_id, bool refresh)
+{
+    DRBG_GET(rng);
+}
+
+static inline
+int cap_drbg_get_ctl_drnge(int chip_id, bool refresh)
+{
+    DRBG_GET(drnge);
+}
+
+#define DRBG_WRITE(X) \
+    cap_hens_csr_t& csr_he_ns = CAP_BLK_REG_MODEL_ACCESS(cap_hens_csr_t, chip_id, 0); \
+    for (int i = 0; i < (len + 3) / 4; i++) { \
+        unsigned int t = 0; \
+        for (int j = 0; j < 4 && i * 4 + j < len; j++) { \
+            t |= (((unsigned int)value[i*4+j]) << ((3-j)*8)); \
+        } \
+        csr_he_ns.dhs_crypto_ctl.md_drbg_cryptoram_##X[i].fld(t); \
+        if (refresh) { \
+            csr_he_ns.dhs_crypto_ctl.md_drbg_cryptoram_##X[i].set_access_no_zero_time(true); \
+            csr_he_ns.dhs_crypto_ctl.md_drbg_cryptoram_##X[i].write(); \
+            csr_he_ns.dhs_crypto_ctl.md_drbg_cryptoram_##X[i].set_access_no_zero_time(false); } \
+    }
+
+#define DRBG_READ(X) \
+    cap_hens_csr_t& csr_he_ns = CAP_BLK_REG_MODEL_ACCESS(cap_hens_csr_t, chip_id, 0); \
+    for (int i = 0; i < (len + 3) / 4; i++) { \
+        unsigned int t = 0; \
+        if (refresh) { \
+            csr_he_ns.dhs_crypto_ctl.md_drbg_cryptoram_##X[i].set_access_no_zero_time(true); \
+            csr_he_ns.dhs_crypto_ctl.md_drbg_cryptoram_##X[i].read(); \
+            csr_he_ns.dhs_crypto_ctl.md_drbg_cryptoram_##X[i].set_access_no_zero_time(false); } \
+        t = csr_he_ns.dhs_crypto_ctl.md_drbg_cryptoram_##X[i].fld().convert_to<unsigned int>(); \
+        for (int j = 0; j < 4 && i * 4 + j < len; j++) { \
+            value[i*4+j] = (unsigned char)(t >> ((3 - j) * 8)); \
+        } \
+    }
+
+static inline void cap_drbg_write_ram_rand_num0(int chip_id, const unsigned char* value, int len, bool refresh)
+{
+    DRBG_WRITE(random_num0)
+}
+
+static inline void cap_drbg_write_ram_rand_num1(int chip_id, const unsigned char* value, int len, bool refresh)
+{
+    DRBG_WRITE(random_num1)
+}
+
+static inline void cap_drbg_read_ram_rand_num0(int chip_id, unsigned char* value, int len, bool refresh)
+{
+    DRBG_READ(random_num0)
+}
+
+static inline void cap_drbg_read_ram_rand_num1(int chip_id, unsigned char* value, int len, bool refresh)
+{
+    DRBG_READ(random_num1)
+}
+
+void
+capri_barco_init_drbg (void)
+{
+#if 0
+
+    /*
+     * Testing only.
+     */
+    unsigned char num0[512];
+    unsigned char num1[512];
+
+    memset(num0, 0, 512);
+    memset(num1, 0, 512);
+    cap_drbg_read_ram_rand_num0(0, num0, 512, true);
+    cap_drbg_read_ram_rand_num1(0, num1, 512, true);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 0:", (char *)num0, 512);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 1:", (char *)num1, 512);
+
+    cap_drbg_set_ctl_rng(0, 0x80000000, true);
+    cap_drbg_read_ram_rand_num0(0, num0, 512, true);
+    cap_drbg_read_ram_rand_num1(0, num1, 512, true);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 0:", (char *)num0, 512);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 1:", (char *)num1, 512);
 #endif
+
+    /*
+     * Generate the random numbers once from ARM cpu, for the first use by the
+     * data-path. Data-path program will generate for subsequent uses.
+     * (Eventually with a timer-based DRBG producer ring infra in data-path, we'll
+     * not need this).
+     */
+    cap_drbg_set_ctl_rng(0, 0xC0000000, true);
+
+}
 
 }    // namespace pd
 }    // namespace hal

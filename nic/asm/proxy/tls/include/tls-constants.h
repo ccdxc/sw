@@ -366,15 +366,16 @@
 #define BARCO_SYM_STATUS_SUCCESS 0
 
 /* debug dol encoding to affect the runtime TLS processing */
-#define TLS_DDOL_BYPASS_BARCO           1    /* Enqueue the request to BRQ, but bypass updating the PI of barco and 
+#define TLS_DDOL_BYPASS_BARCO           0x1    /* Enqueue the request to BRQ, but bypass updating the PI of barco and 
                                               * ring BSQ doorbell 
                                               */
-#define TLS_DDOL_SESQ_STOP              2    /* Enqueue the request to SESQ, but donot ring the doorbell to TCP */
+#define TLS_DDOL_SESQ_STOP              0x2    /* Enqueue the request to SESQ, but donot ring the doorbell to TCP */
 
-#define TLS_DDOL_BYPASS_PROXY           4    /* Don't queue to other flow , keep in same flow */
-#define TLS_DDOL_LEAVE_IN_ARQ           8    /* Don't queue to ARQ (arm) */
+#define TLS_DDOL_BYPASS_PROXY           0x4    /* Don't queue to other flow , keep in same flow */
+#define TLS_DDOL_LEAVE_IN_ARQ           0x8    /* Don't queue to ARQ (arm) */
 /* MAKE SURE that this is in sync with the define in hal/plugin/proxy/proxy_tls.cc*/
-#define TLS_DDOL_ARM_LOOP_CTRL_PKTS     16   /* Loopback control packets in ARM */
+#define TLS_DDOL_ARM_LOOP_CTRL_PKTS     0x10   /* Loopback control packets in ARM */
+#define TLS_DDOL_EXPLICIT_IV_USE_RANDOM 0x20   /* Use DRBG random value for explicit IV */   
 /* HACK used until the issue with payload generation is fixed in DoL framework */
 #define TLS_DDOL_FAKE_HANDSHAKE_MSG     0x80
 

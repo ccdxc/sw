@@ -56,6 +56,11 @@ def TestCaseSetup(tc):
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
     tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
                             tcp_tls_proxy.tls_debug_dol_sesq_stop
+
+    #If 'use_random_iv' is set, set the corresponding debug-dol flag to indicate
+    #datapath to pick a random value from DRBG as IV.
+    if hasattr(tc.module.args, 'use_random_iv') and tc.module.args.use_random_iv == 1:
+        tlscb.debug_dol |= tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random
     tlscb.other_fid = 0xffff
 
     if tc.module.args.key_size == 16:
@@ -121,12 +126,19 @@ def TestCaseVerify(tc):
         return False
 
     # 1. Verify threading
-    if (tlscb_cur.pre_debug_stage0_7_thread != 0x117711):
-        print("pre crypto pipeline threading was not ok")
+
+    # When using random value for IV, there will be an additional DRBG table read program launched
+    if ((tlscb.debug_dol & tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random) == tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random):
+        pre_debug_stage0_7_thread = 0x137711
+    else:
+        pre_debug_stage0_7_thread = 0x117711
+
+    if (tlscb_cur.pre_debug_stage0_7_thread != pre_debug_stage0_7_thread):
+        print("pre crypto pipeline threading was not ok 0x%x" % tlscb_cur.pre_debug_stage0_7_thread)
         return False
 
     if (tlscb_cur.post_debug_stage0_7_thread != 0x11111):
-        print("post crypto pipeline threading was not ok")
+        print("post crypto pipeline threading was not ok 0x%x" % tlscb_cur.pre_debug_stage0_7_thread)
         return False
 
 
@@ -217,13 +229,15 @@ def TestCaseVerify(tc):
         
     # 12. Verify Explicit IV
     tls_explicit_iv = tlscb.explicit_iv
-    if brq_cur.ring_entries[brq_cur.pi-1].explicit_iv != tls_explicit_iv:
-        print("Explicit IV Check Failed: Got 0x%x, Expected: 0x%x" %
-                                (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
-        return False
-    else:
-        print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
-                                (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
+
+    # When using random value for IV from DRBG, the IV field from tlscb will not match, as expected.
+    if ((tlscb.debug_dol & tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random) != tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random):
+        if brq_cur.ring_entries[brq_cur.pi-1].explicit_iv != tls_explicit_iv:
+            print("Explicit IV Check Failed: Got 0x%x, Expected: 0x%x" %
+                  (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
+            return False
+    print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
+          (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
 
     # 13. Verify header size, this is the AAD size and is 13 bytes 
     if brq_cur.ring_entries[brq_cur.pi-1].header_size != 0xd:

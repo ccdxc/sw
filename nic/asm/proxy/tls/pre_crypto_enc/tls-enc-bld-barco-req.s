@@ -45,17 +45,22 @@ table_read_QUEUE_BRQ:
     phvwr       p.crypto_iv_salt, d.u.tls_bld_brq4_d.salt
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.salt)
 
-    phvwr       p.crypto_iv_explicit_iv, d.u.tls_bld_brq4_d.explicit_iv
+    /*
+     * When set to use random IV from barco DRBG, the explicit-IV field in the request will be
+     * set by another program which reads the random number memory, so we dont set it here.
+     */
+    smeqb       c1, k.to_s4_debug_dol, TLS_DDOL_EXPLICIT_IV_USE_RANDOM, TLS_DDOL_EXPLICIT_IV_USE_RANDOM
+    phvwr.!c1   p.crypto_iv_explicit_iv, d.u.tls_bld_brq4_d.explicit_iv
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.explicit_iv)
 
     /* Setup AAD */
     /* AAD length already setup in Stage 2, Table 3 */
-    phvwr       p.s2_s5_t0_phv_aad_seq_num, d.u.tls_bld_brq4_d.explicit_iv
+    phvwr.!c1   p.s2_s5_t0_phv_aad_seq_num, d.u.tls_bld_brq4_d.explicit_iv
     phvwri      p.s2_s5_t0_phv_aad_type, NTLS_RECORD_DATA
     phvwri      p.s2_s5_t0_phv_aad_version_major, NTLS_TLS_1_2_MAJOR
     phvwri      p.s2_s5_t0_phv_aad_version_minor, NTLS_TLS_1_2_MINOR
 
-    tbladd      d.u.tls_bld_brq4_d.explicit_iv, 1
+    tbladd.!c1  d.u.tls_bld_brq4_d.explicit_iv, 1
 
     phvwr       p.barco_desc_command, d.u.tls_bld_brq4_d.barco_command
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)

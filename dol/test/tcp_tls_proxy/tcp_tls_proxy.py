@@ -7,11 +7,12 @@ import types_pb2                as types_pb2
 import infra.common.defs as defs
 
 # Need to match defines in tls-constants.h
-tls_debug_dol_bypass_barco = 1
+tls_debug_dol_bypass_barco = 0x1
 tls_debug_dol_sesq_stop = 0x2
 tls_debug_dol_bypass_proxy = 0x4
 tls_debug_dol_leave_in_arq = 0x8
 tls_debug_dol_arm_loop_ctlr_pkts = 0x10
+tls_debug_dol_explicit_iv_use_random = 0x20
 
 #  HACK: used until the issue with payload generation is fixed in DoL framework
 tls_debug_dol_fake_handshake_msg = 0x80

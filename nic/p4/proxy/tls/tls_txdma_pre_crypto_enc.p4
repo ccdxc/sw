@@ -16,6 +16,7 @@
 #define tx_table_s3_t2_action       tpage_alloc
 
 #define tx_table_s4_t0_action       tls_bld_brq4
+#define tx_table_s4_t1_action       tls_read_random_iv
 
 #define tx_table_s5_t0_action       tls_queue_brq5
 
@@ -148,13 +149,15 @@ header_type to_stage_3_phv_t {
         tnmdr_pi                        : 16;
         tnmpr_pi                        : 16;
         serq_ci                         : 16;
+        debug_dol                       : 8;
     }
 }
 
 header_type to_stage_4_phv_t {
     fields {
-        idesc                           : ADDRESS_WIDTH;
-        odesc                           : ADDRESS_WIDTH;
+        idesc                           : HBM_ADDRESS_WIDTH;
+        odesc                           : HBM_ADDRESS_WIDTH;
+        debug_dol                       : 8;
     }
 }
 
@@ -404,6 +407,7 @@ action tdesc_alloc(desc, pad) {
     // k + i for stage 3 table 1
 
     // from to_stage 3
+    modify_field(to_s3_scratch.debug_dol, to_s3.debug_dol);
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -448,20 +452,32 @@ action tls_stage3(TLSCB_1_PARAMS) {
     GENERATE_TLSCB_1_D
 }
 
-/* Stage 4 action */
+/* Stage 4 table 0 action */
 action tls_bld_brq4(TLSCB_0_PARAMS_NON_STG0) {
 
     GENERATE_GLOBAL_K
 
-    /* To Stage 4 fields */
+    /* To Stage 4 table 0 fields */
     modify_field(to_s4_scratch.idesc, to_s4.idesc);
     modify_field(to_s4_scratch.odesc, to_s4.odesc);
+    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
 
 
     /* D vector */
     GENERATE_TLSCB_0_D_NON_STG0
 }
 
+/* Stage 4 table 1 action */
+action tls_read_random_iv(TLSCB_0_PARAMS_NON_STG0) {
+
+    GENERATE_GLOBAL_K
+
+    /* To Stage 4 table 1 fields */
+    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
+
+    /* D vector */
+    GENERATE_TLSCB_0_D_NON_STG0
+}
 
 /* Stage 5 table 0 action */
 action tls_queue_brq5(BARCO_CHANNEL_PARAMS) {

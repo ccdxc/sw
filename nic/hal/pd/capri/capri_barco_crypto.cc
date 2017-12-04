@@ -7,6 +7,7 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 
 namespace hal {
 
@@ -34,8 +35,6 @@ std::string barco_hex_dump(const uint8_t *buf, size_t sz)
 
     return result.str();
 }
-
-
 
 hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
         uint64_t key_desc_array_base, uint32_t key_desc_array_size)
@@ -125,6 +124,11 @@ hal_ret_t capri_barco_crypto_init(void)
     hal_ret_t capri_barco_sym_hash_run_tests(void);
     ret = capri_barco_sym_hash_run_tests();
 #endif
+
+    /*
+     * Initialize the barco DRBG random number generator.
+     */
+    capri_barco_init_drbg();
 
     return ret;
 }
