@@ -8,55 +8,307 @@ feature:
 
 modules:
     - module:
-        name    : TELEMETRY_L2
-        spec    : l2_notruncate.testspec
-        iterate:
-            - SPAN_LOCAL_INGRESS_UPLINK
-            - SPAN_LOCAL_INGRESS_PC
-            - SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
-            - SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
-            - RSPAN_LOCAL_INGRESS_UPLINK
-            - RSPAN_LOCAL_INGRESS_PC
-            - ERSPAN_LOCAL_INGRESS_UPLINK
-            - ERSPAN_LOCAL_INGRESS_PC
-            - RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
-            - RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
-            - ERSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
-            - ERSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
-            - SPAN_RSPAN_ERSPAN_LOCAL_INGRESS_UPLINK
-            - SPAN_RSPAN_ERSPAN_LOCAL_INGRESS_PC
-            - RSPAN_SPAN_ERSPAN_LOCAL_INGRESS_PC
-            - SPAN_LOCAL_EGRESS_UPLINK
-            - SPAN_LOCAL_EGRESS_PC
-            - SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK
-            - SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC
-            - RSPAN_LOCAL_EGRESS_UPLINK
-            - RSPAN_LOCAL_EGRESS_PC
-            - RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK
-            - RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC
-            - ERSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK
-            - ERSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC
-            - SPAN_RSPAN_ERSPAN_LOCAL_EGRESS_UPLINK
-            - SPAN_RSPAN_ERSPAN_LOCAL_EGRESS_PC
-            - RSPAN_SPAN_LOCAL_EGRESS_PC
-            - RSPAN_SPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC
-            - SPAN_RSPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC
-
-    - module:
-        name    : TELEMETRY_L3
-        spec    : l3_notruncate.testspec
-        iterate:
-            - L3_SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
-            - L3_SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
-            - L3_RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
-            - L3_RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
-            - L3_ERSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
-            - L3_ERSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
-            - L3_SPAN_RSPAN_ERSPAN_LOCAL_INGRESS_UPLINK
-            - L3_SPAN_RSPAN_ERSPAN_LOCAL_INGRESS_PC
-
-    - module:
         name    : TELEMETRY_EXPORT
         module  : ipfix
         spec    : ipfix.testspec
         ignore  : False
+
+    # Passed
+    - module:
+        name    : TELEMETRY_R2R_L2_VLAN
+        spec    : l2_r2r_vlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+
+    - module:
+        name    : TELEMETRY_R2R_L2_VXLAN
+        spec    : l2_r2r_vxlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_R2R_L2_NATIVE
+        spec    : l2_r2r_native.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_R2R_L3_VLAN
+        spec    : l3_r2r_vlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_R2R_L3_VXLAN
+        spec    : l3_r2r_vxlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+
+    - module:
+        name    : TELEMETRY_L2R_L2_VLAN
+        spec    : l2_l2r_vlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_L2R_L2_NATIVE
+        spec    : l2_l2r_native.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_L2R_L2_VXLAN
+        spec    : l2_l2r_vxlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_L2R_L3_VLAN
+        spec    : l3_l2r_vlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_L2R_L3_NATIVE
+        spec    : l3_l2r_native.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_L2R_L3_VXLAN
+        spec    : l3_l2r_vxlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+
+
+    - module:
+        name    : TELEMETRY_R2L_L2_VXLAN
+        spec    : l2_r2l_vxlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_R2L_L3_VLAN
+        spec    : l3_r2l_vlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_R2L_L3_VXLAN
+        spec    : l3_r2l_vxlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+    - module:
+        name    : TELEMETRY_R2L_L2_VLAN
+        spec    : l2_r2l_vlan.testspec
+        iterate:
+            - SPAN_UPLINK_PC_ING_EG
+            - RSPAN_UPLINK_PC_ING_EG
+            - ERSPAN_UPLINK_PC_ING_EG
+            - XSPAN_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+            #- SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+            #
+#    - module:
+#        name    : TELEMETRY_L2L_L2_VLAN
+#        spec    : l2_l2l_vlan.testspec
+#        iterate:
+#            - SPAN_UPLINK_PC_ING_EG
+#            - RSPAN_UPLINK_PC_ING_EG
+#            - ERSPAN_UPLINK_PC_ING_EG
+#            - XSPAN_UPLINK_PC_ING_EG
+#            - XSPAN2_UPLINK_PC_ING_EG
+#            - XSPAN2_UPLINK_PC_ING_EG_SNAP32
+#            - XSPAN2_UPLINK_PC_ING_EG_SNAP64
+#            - XSPAN2_UPLINK_PC_ING_EG_SNAP1000
+#            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+#            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+#            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+#            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+
+
+#    - module:
+#        name    : TELEMETRY_LOCAL_SPAN
+#        spec    : local_span.testspec
+#        iterate:
+#            - SPAN_LOCAL_INGRESS_LOCAL_EP
+
+#    - module:
+#        name    : TELEMETRY_LOCAL_ERSPAN
+#        spec    : local_erspan.testspec
+#        iterate:
+#            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP
+#            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP32
+#            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP64
+#            - SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP_SNAP1000
+#
+#    - module:
+#        name    : TELEMETRY_TEST
+#        spec    : l2_r2l_vlan.testspec
+#        iterate:
+#            - SPAN_LOCAL_EGRESS_UPLINK
+

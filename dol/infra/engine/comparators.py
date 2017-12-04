@@ -255,39 +255,75 @@ class PacketComparator:
         self.pid    = 0
         self.expkts = {}
         self.rxpkts = {}
+        self.dpm    = {} # Degree x Pair Matrix
         self.pairs  = {}
         self.match  = True
         self.lg     = lg
         return
 
-    def __get_best_rpkt(self, epkt):
-        bdeg = 0
-        brpkt = None
-        for rpktid,rpkt in self.rxpkts.items():
-            deg = epkt.GetMatchDegree(rpkt)
-            if deg == 0: continue
-            if deg > bdeg:
-                bdeg = deg
-                brpkt = rpkt
-        return brpkt
+    def __add_pair_to_dpm(self, deg, epid, rpid):
+        if deg == 0:
+            return
+        if deg not in self.dpm:
+            self.dpm[deg] = []
+        self.lg.debug("Adding DPM entry Deg:%d Epid:%s Rpid:%s" %\
+                      (deg, epid, rpid))
+        self.dpm[deg].append((epid, rpid))
+        return
 
-    def __add_pair(self, e, r):
+    def __build_dpm(self):
+        for epktid,epkt in self.expkts.items():
+            self.lg.debug("Searching for BestPkt for Expkt:%s" % epktid)
+            for rpktid,rpkt in self.rxpkts.items():
+                deg = epkt.GetMatchDegree(rpkt)
+                self.__add_pair_to_dpm(deg, epktid, rpktid)
+        return
+
+    def __add_pair(self, epkt, rpkt):
         self.pid += 1
-        self.lg.verbose("Adding pair id = %s" % self.pid)
-        pair = CrPacketPair(e, r, self.pid, self.lg)
+        self.lg.debug("- Adding new pair id = %s" % self.pid)
+        pair = CrPacketPair(epkt, rpkt, self.pid, self.lg)
         self.pairs[self.pid] = pair
         return
 
-    def __build_pairs(self):
-        for epktid,epkt in self.expkts.items():
-            rpkt = self.__get_best_rpkt(epkt)
-            self.__add_pair(epkt, rpkt)
-            if rpkt is not None:
-                del self.rxpkts[rpkt.pktid]
+    def __add_dpm_pair(self, epid, rpid):
+        epkt = None
+        rpkt = None
+        if epid in self.expkts:
+            epkt = self.expkts[epid]
+        else:
+            # Expkt is already added by a pair with better degree.
+            self.lg.debug("- Epid:%s used already..skipping." % epid)
+            return
 
-        # Check if any other packets are left in rcvs
-        for rpktid,rpkt in self.rxpkts.items():
+        if rpid in self.rxpkts:
+            rpkt = self.rxpkts[rpid]
+        else:
+            self.lg.debug("- Rpid:%s used already..skipping." % rpid)
+            return
+            
+        del self.expkts[epid]
+        del self.rxpkts[rpid]
+        
+        self.__add_pair(epkt, rpkt)
+        return
+
+    def __build_pairs(self):
+        for deg in sorted(self.dpm.keys(), reverse=True):
+            pairs = self.dpm[deg]
+            for p in pairs:
+                self.lg.debug("Processing pair: Deg:%d Epid:%s Rpid:%s" %\
+                              (deg, p[0], p[1]))
+                self.__add_dpm_pair(p[0], p[1])
+
+        # Add all missing packets.
+        for epid,epkt in self.expkts.items():
+            self.__add_pair(epkt, None)
+
+        # Add all excess packets.
+        for rpid,rpkt in self.rxpkts.items():
             self.__add_pair(None, rpkt)
+            
         return
 
     def GetExPacketCount(self):
@@ -316,6 +352,7 @@ class PacketComparator:
         return
 
     def Compare(self):
+        self.__build_dpm()
         self.__build_pairs()
         for pid,pair in self.pairs.items():
             if pair.Match() == False:

@@ -107,6 +107,11 @@ header cap_phv_intr_p4_t     capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t  capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t  capri_txdma_intrinsic;
 
+// dummy headers that are extracted and thrown away (rxdma span copies)
+header cap_phv_intr_rxdma_t              e2e_capri_rxdma_intrinsic;
+header p4_to_p4plus_classic_nic_header_t e2e_p4_to_p4plus_classic_nic;
+header p4_to_p4plus_ip_addr_t            e2e_p4_to_p4plus_classic_nic_ip;
+
 @pragma pa_header_union egress p4_to_p4plus_roce_eth
 header ethernet_t ethernet;
 header recirc_header_t recirc_header;
@@ -294,6 +299,24 @@ parser parse_ingress_to_egress {
 
 @pragma xgress egress
 parser parse_egress_to_egress {
+    extract(capri_p4_intrinsic);
+    return select(capri_intrinsic.tm_oport) {
+        TM_PORT_DMA : parse_egress_to_egress_rxdma;
+        default : parse_egress_to_egress_common;
+    }
+}
+
+@pragma xgress egress
+@pragma no_extract
+parser parse_egress_to_egress_rxdma {
+    extract(e2e_capri_rxdma_intrinsic);
+    extract(e2e_p4_to_p4plus_classic_nic);
+    extract(e2e_p4_to_p4plus_classic_nic_ip);
+    return parse_egress_to_egress_common;
+}
+
+@pragma xgress egress
+parser parse_egress_to_egress_common {
     return select(capri_intrinsic.tm_instance_type) {
         TM_INSTANCE_TYPE_SPAN : parse_span_copy;
         TM_INSTANCE_TYPE_SPAN_AND_DROP : parse_span_copy;

@@ -59,8 +59,15 @@ StdoutLoggerSink = LoggerSink(stdout = True)
 sys.stdout = StdoutLoggerSink
 sys.stderr = StdoutLoggerSink
 
+start_level = levels.INFO
+if GlobalOptions.debug:
+    start_level = levels.DEBUG
+
+if GlobalOptions.verbose:
+    start_level = levels.VERBOSE
+
 class Logger:
-    def __init__(self, stdout=True, level=levels.DEBUG, name=None, logfile=None):
+    def __init__(self, stdout=True, level=start_level, name=None, logfile=None):
         self.sinks          = []
         self.indent_enable  = False
         self.level          = level
@@ -144,13 +151,6 @@ class Logger:
     def ShowScapyObject(self, scapyobj):
         scapyobj.show2(indent = 0,
                         label_lvl = self.GetLogPrefix())
-
-start_level = levels.INFO
-if GlobalOptions.debug:
-    start_level = levels.DEBUG
-
-if GlobalOptions.verbose:
-    start_level = levels.VERBOSE
 
 logger      = Logger(level = start_level, name = "Default")
 ylogger     = Logger(level = start_level, name = " YAML ")

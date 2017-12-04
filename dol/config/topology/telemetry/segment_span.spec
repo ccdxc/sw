@@ -1,8 +1,9 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_TELEMETRY
+    id: SEGMENT_SPAN_TELEMETRY
 
-type        : tenant
+type        : span
+fabencap    : vlan
 native      : False
 broadcast   : flood
 multicast   : drop
@@ -11,4 +12,4 @@ endpoints   :
     useg    : 0
     pvlan   : 4
     direct  : 0
-    remote  : 4 # Remote TEPs
+    remote  : 3 # 1 for Local 1 for ERSPAN and 1 for RSPAN_VXLAN

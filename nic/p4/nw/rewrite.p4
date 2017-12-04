@@ -133,6 +133,7 @@ action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index) {
 }
 
 action drop_mirror() {
+    modify_field(control_metadata.dst_lport, 0);
     modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(capri_intrinsic.drop, TRUE);
 }

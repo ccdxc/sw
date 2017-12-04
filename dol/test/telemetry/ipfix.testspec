@@ -472,14 +472,15 @@ packets:
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth     :
-                src             : 00:cc:00:00:00:02
-                dst             : 00:ee:ff:00:00:02
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac
             qtag    :
-                vlan            : 2
+                prio            : callback://networking/packets/GetExpectedPacketCos
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan
             ipv4    :
-                src             : 64.0.0.4
-                dst             : 64.0.0.1
-                id              : 0
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp
+                id  : 0
             udp     :
                 sport           : 32007
                 dport           : 4739
@@ -509,14 +510,15 @@ packets:
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth     :
-                src             : 00:cc:00:00:00:02
-                dst             : 00:ee:ff:00:00:02
+                src             : callback://telemetry/callbacks/GetCollectorSrcMac
+                dst             : callback://telemetry/callbacks/GetCollectorDstMac
             qtag    :
+                #prio            : callback://networking/packets/GetExpectedPacketCos
                 prio            : 0
-                vlan            : 1
+                vlan            : 2
             ipv4    :
-                src             : 64.0.0.4
-                dst             : 64.0.0.1
+                src             : callback://telemetry/callbacks/GetCollectorSrcIp
+                dst             : callback://telemetry/callbacks/GetCollectorDstIp
                 id              : 0
                 tos             : 0
             udp     :

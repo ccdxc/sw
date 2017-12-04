@@ -482,6 +482,7 @@ class ERSPAN(Packet):
     ]
 
 bind_layers(GRE, ERSPAN, proto=0x22eb)
+bind_layers(ERSPAN, Ether, ver=2)
 
 class _IpfixIpv4Fields(Packet):
     name = "IpfixIpv4Fields"

@@ -1,14 +1,15 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_TELEMETRY
+    id: SEGMENT_VXLAN_TELEMETRY
 
 type        : tenant
+fabencap    : vxlan
 native      : False
-broadcast   : flood
+broadcast   : drop
 multicast   : drop
 l4lb        : False
 endpoints   :
     useg    : 0
-    pvlan   : 4
+    pvlan   : 2
     direct  : 0
     remote  : 4 # Remote TEPs

@@ -33,7 +33,7 @@ entries:
                 tcp_mss         : const/1460
 
     - entry:
-        label: span
+        label: span1
         tracking: False
         timestamp: False
         responder: 

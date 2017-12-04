@@ -216,14 +216,21 @@ class TenantObject(base.ConfigObjectBase):
         if self.IsIPV4EpLearnEnabled() or self.IsIPV6EpLearnEnabled():
             return
         reps = self.GetRemoteEps()
+        leps = self.GetLocalEps()
         id = 0
+        lid = 0
         for entry in self.spec.tunnels:
             spec = entry.spec.Get(Store)
+            isLocal = entry.local
             if id >= len(reps):
                 return
             eps = []
-            eps.append(reps[id])
-            id = id + 1
+            if isLocal is True:
+                eps.append(leps[lid])
+                lid = lid + 1
+            else:
+                eps.append(reps[id])
+                id = id + 1
             self.obj_helper_tunnel.Generate(self, spec, eps)
         self.obj_helper_tunnel.AddToStore()
 

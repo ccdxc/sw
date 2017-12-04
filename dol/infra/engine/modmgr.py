@@ -261,8 +261,7 @@ class Module(objects.FrameworkObject):
 
         self.infra_data = infra_data
         prefix = "%s/%s" % (self.feature, self.name)
-        self.logger = logging.Logger(level=logging.levels.INFO, stdout=True,
-                                     name=prefix)
+        self.logger = logging.Logger(stdout=True, name=prefix)
         self.infra_data.Logger = self.logger
         self.__load()
         self.__init_tracker()

@@ -1,14 +1,15 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_TELEMETRY
+    id: SEGMENT_INFRA_TELEMETRY
 
-type        : tenant
+type        : infra
 native      : False
-broadcast   : flood
+fabencap    : vlan
+broadcast   : drop
 multicast   : drop
 l4lb        : False
 endpoints   :
     useg    : 0
-    pvlan   : 4
+    pvlan   : 0
     direct  : 0
     remote  : 4 # Remote TEPs

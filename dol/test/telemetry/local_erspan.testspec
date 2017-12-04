@@ -1,0 +1,461 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://fwtype=L2,label=SPAN
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : BASE     # BASE Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        encaps      : None
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : RAW_PKT1
+        payloadsize : 1500
+        template    : ref://factory/packets/id=RAW
+        headers     :
+            payload :
+            data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : PKT1     # Input packet 1
+        clone       : ref://testcase/packets/id=BASE
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+
+
+    - packet:
+        id          : SPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=PKT1
+        headers     :
+            ipv4:
+
+    - packet:
+        id          : EG_SPAN_PKT1
+        clone       : ref://testcase/packets/id=PKT1
+        headers     :
+            ipv4:
+
+    - packet:
+        id          : RSPAN_PKT1 
+        clone       : ref://testcase/packets/id=BASE
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QINQ
+        headers     :
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetRspanVlan 
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+
+    - packet:
+        id          : EG_RSPAN_PKT1
+        clone       : ref://testcase/packets/id=RSPAN_PKT1
+
+    - packet:
+        id          : ERSPAN_PKT1
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            erspaneth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=1,dir=ingress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=1,dir=ingress
+            erspanqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=1,dir=ingress
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=1,dir=ingress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=ingress
+            erspangre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+    - packet:
+        id          : ERSPAN_PKT2
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            erspaneth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=2,dir=ingress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=2,dir=ingress
+            erspanqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=2,dir=ingress
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=2,dir=ingress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=ingress
+            erspangre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+    - packet:
+        id          : ERSPAN_PKT3
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            erspaneth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=3,dir=ingress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=3,dir=ingress
+            erspanqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=3,dir=ingress
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=3,dir=ingress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=ingress
+            erspangre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+    - packet:
+        id          : EG_ERSPAN_PKT1
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            erspaneth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=1,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=1,dir=egress
+            erspanqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=1,dir=egress
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=1,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=egress
+            erspangre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+    - packet:
+        id          : EG_ERSPAN_PKT2
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            erspaneth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=2,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=2,dir=egress
+            erspanqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=2,dir=egress
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=2,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=egress
+            erspangre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+    - packet:
+        id          : EG_ERSPAN_PKT3
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            erspaneth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=3,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=3,dir=egress
+            erspanqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=3,dir=egress
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=3,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=egress
+            erspangre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+    - packet:
+        id          : TRUNCATE_PKT1
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=1
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT1,sessionid=1
+
+    - packet:
+        id          : TRUNCATE_PKT2
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=2
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT2,sessionid=2
+
+    - packet:
+        id          : TRUNCATE_PKT3
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=3
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT3,sessionid=3
+
+
+    - packet:
+        id          : TRUNCATE_PKT4
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=4
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT4,sessionid=4
+
+    - packet:
+        id          : TRUNCATE_PKT5
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=5
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT5,sessionid=5
+
+    - packet:
+        id          : TRUNCATE_PKT6
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=6
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT6,sessionid=6
+
+buffers:
+    - buffer:
+        id      : SBUF1  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+    - buffer:
+        id      : SBUF2  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+    - buffer:
+        id      : SBUF3  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+    - buffer:
+        id      : SBUF4  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : EXP_BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : callback://telemetry/callbacks/GetExpectBufSize/sessionid=1
+            data  : callback://telemetry/callbacks/GetExpectBufData/sessionid=1
+
+    - buffer:
+        id      : EXP_BUF2
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : callback://telemetry/callbacks/GetExpectBufSize/sessionid=2
+            data  : callback://telemetry/callbacks/GetExpectBufData/sessionid=2
+
+    - buffer:
+        id      : EXP_BUF3
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : callback://telemetry/callbacks/GetExpectBufSize/sessionid=3
+            data  : callback://telemetry/callbacks/GetExpectBufData/sessionid=3
+
+    - buffer:
+        id      : EXP_BUF4
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : callback://telemetry/callbacks/GetExpectBufSize/sessionid=4
+            data  : callback://telemetry/callbacks/GetExpectBufData/sessionid=4
+
+descriptors:
+    - descriptor:
+        id      : SDESC1 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=SBUF1
+            addr  : ref://testcase/buffers/id=SBUF1/addr
+            len   : ref://testcase/buffers/id=SBUF1/size
+    - descriptor:
+        id      : SDESC2 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=SBUF2
+            addr  : ref://testcase/buffers/id=SBUF2/addr
+            len   : ref://testcase/buffers/id=SBUF2/size
+    - descriptor:
+        id      : SDESC3 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=SBUF3
+            addr  : ref://testcase/buffers/id=SBUF3/addr
+            len   : ref://testcase/buffers/id=SBUF3/size
+    - descriptor:
+        id      : SDESC4 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=SBUF4
+            addr  : ref://testcase/buffers/id=SBUF4/addr
+            len   : ref://testcase/buffers/id=SBUF4/size
+
+    - descriptor:
+        id      : EXP_DESC1
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXP_BUF1
+            bytes_written : ref://testcase/buffers/id=EXP_BUF1/size
+
+    - descriptor:
+        id      : EXP_DESC2
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXP_BUF2
+            bytes_written : ref://testcase/buffers/id=EXP_BUF2/size
+
+    - descriptor:
+        id      : EXP_DESC3
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXP_BUF3
+            bytes_written : ref://testcase/buffers/id=EXP_BUF3/size
+
+    - descriptor:
+        id      : EXP_DESC4
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXP_BUF4
+            bytes_written : ref://testcase/buffers/id=EXP_BUF4/size
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=SDESC1
+            ring    : callback://telemetry/callbacks/GetTriggerRing/sessionid=1
+        - descriptor:
+            object  : ref://testcase/descriptors/id=SDESC2
+            ring    : callback://telemetry/callbacks/GetTriggerRing/sessionid=2
+        - descriptor:
+            object  : ref://testcase/descriptors/id=SDESC3
+            ring    : callback://telemetry/callbacks/GetTriggerRing/sessionid=3
+        - descriptor:
+            object  : ref://testcase/descriptors/id=SDESC4
+            ring    : callback://telemetry/callbacks/GetTriggerRing/sessionid=4
+
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : callback://telemetry/callbacks/GetExpectRing/sessionid=1
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC2
+            ring    : callback://telemetry/callbacks/GetExpectRing/sessionid=2
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC3
+            ring    : callback://telemetry/callbacks/GetExpectRing/sessionid=3
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC4
+            ring    : callback://telemetry/callbacks/GetExpectRing/sessionid=4
+
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=1
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=1
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=2
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=2
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=3
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=3
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=4
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=4
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=5
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=5
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=6
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=6

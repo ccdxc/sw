@@ -34,7 +34,16 @@ class TunnelObject(base.ConfigObjectBase):
         else:
             leps = self.tenant.GetLocalEps()
             self.ltep = leps[0].ipaddrs[0]
-        self.ports      = self.remote_ep.GetInterface().ports
+
+        if remote_ep.IsRemote():
+            self.local_dest = False
+        else:
+            self.local_dest = True
+        if 'ports' not in self.remote_ep.GetInterface().__dict__:
+            self.ports = []
+            self.ports.append(self.remote_ep.GetInterface())
+        else:
+            self.ports      = self.remote_ep.GetInterface().ports
         self.vlan_id    = self.remote_ep.segment.vlan_id
         self.macaddr    = self.remote_ep.segment.macaddr
         self.rmacaddr   = self.remote_ep.macaddr
@@ -74,6 +83,7 @@ class TunnelObject(base.ConfigObjectBase):
         if 'local_tep' in self.tenant.__dict__:
             cfglogger.info("- LocalTep    = %s" % self.ltep.get())
         cfglogger.info("- RemoteTep   = %s" % self.rtep.get())
+        cfglogger.info("- Local Dest  = ", self.local_dest)
         cfglogger.info("- Interface   = %s" % self.remote_ep.GetInterface().GID())
         cfglogger.info("- Ports       =", self.ports)
         cfglogger.info("- txqos: Cos:%s/Dscp:%s" %\

@@ -46,6 +46,7 @@ erspan_mirror:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 drop_mirror:
+  phvwr       p.control_metadata_dst_lport, 0
   phvwr.e     p.capri_intrinsic_drop, TRUE
   phvwr       p.capri_intrinsic_tm_span_session, 0
 

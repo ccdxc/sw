@@ -25,7 +25,7 @@ modules:
         iterate:
             - id        : ACL_DROPMASK_ACTION_MIRROR
               flow      : filter://type=IPV4
-              mirror    : SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC
+              mirror    : SPAN_LOCAL_INGRESS_UPLINK
             - id        : ACL_DROPMASK_ACTION_MIRROR
               flow      : filter://type=IPV6
               mirror    : SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK

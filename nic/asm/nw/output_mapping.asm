@@ -20,8 +20,7 @@ set_tm_oport:
 
   // mod instruction stalls; instructions below execute till r7 is ready
   seq         c1, d.u.set_tm_oport_d.egress_mirror_en, TRUE
-  //seq.c1      c1, k.control_metadata_span_copy, FALSE
-  seq.c1      c1, k.control_metadata_cpu_copy, FALSE
+  seq.c1      c1, k.control_metadata_span_copy, FALSE 
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
   phvwrpair   p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif, \
                 p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue[4:0]

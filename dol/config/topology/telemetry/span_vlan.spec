@@ -1,12 +1,12 @@
 # Configuration Template.
 meta:
-    id: TENANT_SPAN_VLAN
+    id: TELEMETRY_SPAN_VLAN
 
 type    : span
 overlay : vlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_SPAN
+    - spec  : ref://store/specs/id=SEGMENT_SPAN_TELEMETRY
       count : 1
 
 tunnels:
@@ -32,4 +32,4 @@ span_sessions:
 
 sessions: None
 
-lif: ref://store/specs/id=LIF_ETH_RDMA
+lif: ref://store/specs/id=LIF_ETH

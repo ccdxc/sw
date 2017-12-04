@@ -4,25 +4,25 @@ meta:
 
 headers:
     - header:
-        id      : outereth
+        id      : erspaneth
         template: ref://store/headers/id=ETHERNET
         fields:
             type: ethertype/0x8100
 
     - header:
-        id      : outerqtag
+        id      : erspanqtag
         template: ref://store/headers/id=QTAG
         fields:
             type: ethertype/0x800
 
     - header:
-        id      : outeripv4
+        id      : erspanipv4
         template: ref://store/headers/id=IPV4
         fields:
             proto: ipproto/47
 
     - header:
-        id      : outergre
+        id      : erspangre
         template: ref://store/headers/id=GRE
         fields:
             proto: const/0x22eb

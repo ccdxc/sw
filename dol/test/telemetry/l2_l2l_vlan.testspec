@@ -1,0 +1,424 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=False
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=False
+        interface   : filter://any
+    flow        : filter://fwtype=L2,label=SPAN
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : BASE     # BASE Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        encaps      : None
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                #code    : ref://testcase/config/flow/icmpcode
+                #type    : ref://testcase/config/flow/icmptype
+                #id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : RAW_PKT1
+        payloadsize : 1500
+        template    : ref://factory/packets/id=RAW
+        headers     :
+            payload :
+            data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : PKT1     # Input packet 1
+        clone       : ref://testcase/packets/id=BASE
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/encap_vlan_id
+
+    - packet:
+        id          : EXP_PKT # Base packet
+        clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            qtag:
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: ref://testcase/config/flow/txqos/cos
+            ipv4:
+                tos : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                tc  : ref://testcase/config/flow/txqos/dscp
+            tcp:
+                flags: ack
+
+    - packet:
+        id          : SPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=PKT1
+        headers     :
+            ipv4:
+
+    - packet:
+        id          : EG_SPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=PKT1
+        headers     :
+            qtag:
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: callback://networking/packets/GetExpectedPacketCos
+            ipv4:
+
+    - packet:
+        id          : RSPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=BASE
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QINQ
+        headers     :
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetRspanVlan 
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+
+    - packet:
+        id          : EG_RSPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=BASE
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QINQ
+        headers     :
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetRspanVlan 
+            qtag:
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: callback://networking/packets/GetExpectedPacketCos
+
+
+    - packet:
+        id          : ERSPAN_PKT1
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            outereth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=1,dir=ingress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=1,dir=ingress
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=1,dir=ingress
+            outeripv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=1,dir=ingress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=ingress
+            outergre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+    - packet:
+        id          : ERSPAN_PKT2
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            outereth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=2,dir=ingress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=2,dir=ingress
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=2,dir=ingress
+            outeripv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=2,dir=ingress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=ingress
+            outergre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+    - packet:
+        id          : ERSPAN_PKT3
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            outereth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=3,dir=ingress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=3,dir=ingress
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=3,dir=ingress
+            outeripv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=3,dir=ingress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=ingress
+            outergre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
+
+    - packet:
+        id          : EG_ERSPAN_PKT1
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            outereth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=1,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=1,dir=egress
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=1,dir=egress
+            outeripv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=1,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=egress
+            outergre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+            qtag:
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: callback://networking/packets/GetExpectedPacketCos
+
+    - packet:
+        id          : EG_ERSPAN_PKT2
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            outereth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=2,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=2,dir=egress
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=2,dir=egress
+            outeripv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=2,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=egress
+            outergre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+            qtag:
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: callback://networking/packets/GetExpectedPacketCos
+
+    - packet:
+        id          : EG_ERSPAN_PKT3
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            outereth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=3,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=3,dir=egress
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=3,dir=egress
+            outeripv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=3,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=egress
+            outergre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+            qtag:
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: callback://networking/packets/GetExpectedPacketCos
+
+
+    - packet:
+        id          : TRUNCATE_PKT1
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=1
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT1,sessionid=1
+
+    - packet:
+        id          : TRUNCATE_PKT2
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=2
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT2,sessionid=2
+
+    - packet:
+        id          : TRUNCATE_PKT3
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=3
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT3,sessionid=3
+
+
+    - packet:
+        id          : TRUNCATE_PKT4
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=4
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT4,sessionid=4
+
+    - packet:
+        id          : TRUNCATE_PKT5
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=5
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT5,sessionid=5
+
+    - packet:
+        id          : TRUNCATE_PKT6
+        payloadsize : callback://telemetry/callbacks/GetTruncatePktSize/sessionid=6
+        template    : ref://testcase/packets/id=RAW
+        headers     :
+            payload :
+                data: callback://telemetry/callbacks/GetTruncatePacketPayload/pktid=TRUNCATE_PKT6,sessionid=6
+
+buffers:
+    - buffer:
+        id      : RXBUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : TXBUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=PKT1/size
+            data  : ref://testcase/packets/id=PKT1/rawbytes
+
+    - buffer:
+        id      : EXBUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=EXP_PKT/size
+            data  : ref://testcase/packets/id=EXP_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : RXDESC
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=RXBUF
+            addr  : ref://testcase/buffers/id=RXBUF/addr
+            len   : ref://testcase/buffers/id=RXBUF/size
+
+    - descriptor:
+        id      : TXDESC
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=TXBUF
+            addr  : ref://testcase/buffers/id=TXBUF/addr
+            len   : ref://testcase/buffers/id=TXBUF/size
+
+    - descriptor:
+        id      : EX_TXDESC
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            err_code : 0x0
+
+    - descriptor:
+        id      : EX_RXDESC
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXBUF
+            bytes_written : ref://testcase/buffers/id=EXBUF/size
+
+
+trigger:
+
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=TXDESC
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RXDESC
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+
+    doorbell:
+        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EX_TXDESC
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EX_RXDESC
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+
+    packets:
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
+            port    : 128
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=1
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=1
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=2
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=2
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=3
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=3
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=4
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=4
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=5
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=5
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=6
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=6
