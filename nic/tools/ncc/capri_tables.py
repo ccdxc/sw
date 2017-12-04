@@ -268,6 +268,7 @@ class capri_table:
         self.is_wide_key = False
         self.is_policer = False
         self.policer_colors = 0 # 2-color/3-color
+        self.is_rate_limit_en = False
         # flit numbers from which key(K+I) is built, Lookup can be
         # launched from the last flit when all the info is avaialble
         self.flits_used = []     # flits that provide K and I values
@@ -4750,6 +4751,10 @@ class capri_gress_tm:
                             ctable.policer_colors = 2
                         ctable.is_policer = True
 
+                    # Check if rate limit is enabled for this table.
+                    if t._parsed_pragmas and 'enable_rate_limit' in t._parsed_pragmas:
+                        ctable.is_rate_limit_en = True
+
                     is_ternary = False
                     for f, mtype, mask, in t.match_fields:
                         if mtype != p4.p4_match_type.P4_MATCH_EXACT and \
@@ -5861,6 +5866,11 @@ class capri_table_manager:
                             profile['axishift']['value'] = "0x%x" % ((ctable.start_key_off - wordmultiple_dsize) >> 4)
                         else:
                             profile['axishift']['value'] = "0x%x" % (0)
+
+                        if ctable.is_rate_limit_en:
+                            profile['rlimit_en']['value'] = "0x%x" % (1)
+                            profile['opcode']['value'] = "0x%x" % (capri_model['match_action']
+                                                                   ['te_consts']['pic_tbl_opcode_saturate_neg'])
                     elif mem_type == 'tcam':
                         cap_name = 'cap_pict'
                         num_bkts = 0 if table['depth'] == 0 else (capri_get_depth_from_layout(layout) / table['depth'])
@@ -5878,6 +5888,7 @@ class capri_table_manager:
                                                                   capri_get_hbm_start_address_from_layout(table['layout']))
                     else:
                         continue
+
                     profile['_modified'] = True
 
         capri_pic_csr_output(self.be, pic)

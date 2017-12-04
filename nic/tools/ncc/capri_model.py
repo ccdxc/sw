@@ -45,6 +45,11 @@ capri_model = {
             'rsvd'              : '7', 
             # hash_type
             'num_hash_types'    : 4,    # 0-3 CRC hash, 4= toeplitz hash
+            #Pic Table Opcodes
+            'pic_tbl_opcode_saturate_none'  : 0,
+            'pic_tbl_opcode_saturate_minmax': 1,
+            'pic_tbl_opcode_saturate_oprd3' : 2,
+            'pic_tbl_opcode_saturate_neg'   : 3,
         }
     },
     'parser': {
