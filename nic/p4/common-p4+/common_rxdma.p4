@@ -13,6 +13,9 @@ metadata cap_phv_intr_rxdma_t p4_rxdma_intr;
 @pragma dont_trim
 metadata p4_2_p4plus_app_header_t app_header;
 
+@pragma dont_trim
+metadata p4_2_p4plus_ext_app_header_t ext_app_header;
+
 // to_stage PHV
 @pragma dont_trim
 metadata p4plus_common_to_stage_t to_stage_0;
@@ -102,6 +105,10 @@ metadata rdma_scratch_metadata_t scratch_rdma;
 @pragma dont_trim
 @pragma scratch_metadata
 metadata p4_2_p4plus_app_header_t scratch_app;
+
+@pragma dont_trim
+@pragma scratch_metadata
+metadata p4_2_p4plus_ext_app_header_t scratch_ext_app;
 
 @pragma scratch_metadata
 metadata p4plus_common_raw_table_engine_phv_t te0_scratch;
@@ -1004,6 +1011,8 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
 
         if (((1 << p4_rxdma_intr.qtype) & rdma_en_qtype_mask)  != 0) {
 
+            modify_field(scratch_ext_app.app_data3, ext_app_header.app_data3);
+
             modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
             modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
             modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
@@ -1025,6 +1034,10 @@ table rx_stage0_load_rdma_params {
     }
     actions {
         rx_stage0_load_rdma_params;
+        rx_stage0_load_rdma_params_dummy1;
+        rx_stage0_load_rdma_params_dummy2;
+        rx_stage0_load_rdma_params_dummy3;
+        rx_stage0_load_rdma_params_dummy4;
     }
     size : LIF_TABLE_SIZE;
 }

@@ -171,6 +171,9 @@ exit:
 
     add         r7, r0, k.global.flags
 
+    ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_UD|RESP_RX_FLAG_IMMDT)
+    phvwr.c2    p.cqwqe.smac[31:0], k.{to_stage.s2.ext_hdr.ext_hdr_data[95:64]}
+
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
     seq         c3, k.args.recirc_path, 1
     bcf         [!c2 | c3], non_first_or_recirc_pkt

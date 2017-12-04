@@ -64,11 +64,6 @@ resp_rx_rqcb_process:
     // get a tokenid for the fresh packet
     phvwr   p.common.rdma_recirc_token_id, d.token_id
 
-    // for now copy to both stage_2 and stage_3 to_stage info
-    // as write is using stage_2 for write_back and send is using stage_3.
-    // TODO: fix it
-    CAPRI_GET_STAGE_2_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
     CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
 
@@ -490,14 +485,18 @@ process_atomic:
 
 process_fna:
     //c5:fna
-    phvwr           p.pcie_atomic.compare_data_or_add_data, CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA.dx
+    CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA(r5)
+    phvwr           p.pcie_atomic.compare_data_or_add_data, r5.dx
     phvwr.e         p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_FNA
     phvwr           p.pcie_atomic.tlp_len, PCIE_TLP_LEN_FNA //Exit slot
 
 process_cswap:
     //c6:cswap
-    phvwr           p.pcie_atomic.compare_data_or_add_data, CAPRI_RXDMA_BTH_ATOMICETH_CMP_DATA.dx
-    phvwr           p.pcie_atomic.swap_data, CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA.dx
+    
+    //CAPRI_RXDMA_BTH_ATOMICETH_CMP_DATA1(r5)
+    //phvwr           p.pcie_atomic.compare_data_or_add_data, r5.wx
+    CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA(r5)
+    phvwr           p.pcie_atomic.swap_data, r5.dx
     phvwr.e         p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_CSWAP
     phvwr           p.pcie_atomic.tlp_len, PCIE_TLP_LEN_CSWAP   //Exit Slot
 
@@ -667,10 +666,11 @@ process_ud:
     // populate completion entry
     phvwr       p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID
     phvwr       p.cqwqe.op_type, OP_TYPE_SEND_RCVD
-    CAPRI_RXDMA_DETH_SRC_QP(r4)
-    phvwr       p.cqwqe.src_qp, r4
+    phvwr       p.cqwqe.src_qp, CAPRI_RXDMA_DETH_SRC_QP
     phvwr       p.cqwqe.ipv4, 1
-    cmov        r1, c6, CAPRI_RXDMA_DETH_IMMETH_SMAC, CAPRI_RXDMA_DETH_SMAC
+    CAPRI_RXDMA_DETH_SMAC(r5)
+    CAPRI_RXDMA_DETH_IMMETH_SMAC1(r1)
+    cmov        r1, c6, r1, r5
     phvwr       p.cqwqe.smac, r1
     phvwr.c6    p.cqwqe.imm_data_vld, 1
     phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_DETH_IMMETH_DATA

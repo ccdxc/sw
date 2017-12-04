@@ -124,7 +124,7 @@ struct req_tx_phv_t {
             struct phv_intr_p4_t p4_intr;
             struct phv_intr_rxdma_t p4_intr_rxdma;
             struct p4_to_p4plus_roce_header_t p4_to_p4plus;
-            pad5: 208;
+            pad5: 96;
             pad4: 512;
             pad3: 512;
             pad2: 512;

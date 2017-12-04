@@ -24,6 +24,11 @@
 #define common_p4plus_stage0_app_header_table_action_dummy16 rdma_stage0_recirc_action
 #define common_p4plus_stage0_app_header_table_action_dummy17 rdma_stage0_ud_feedback_action
 
+#define rx_stage0_load_rdma_params_dummy1 rdma_stage0_ext_bth_atomiceth_action
+#define rx_stage0_load_rdma_params_dummy2 rdma_stage0_ext_bth_xrceth_atomiceth_action
+#define rx_stage0_load_rdma_params_dummy3 rdma_stage0_ext_bth_xrceth_reth_immeth_action 
+#define rx_stage0_load_rdma_params_dummy4 rdma_stage0_ext_bth_deth_immeth_action
+
 #include "../common-p4+/common_rxdma.p4"
 
 #include "./rdma_rxdma_headers.p4"
@@ -65,6 +70,12 @@ metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth;
 metadata rdma_ud_feedback_header_t rdma_ud_feedback;
 
 
+@pragma pa_header_union ingress ext_app_header rdma_bth_atomiceth_ext rdma_bth_xrceth_atomiceth_ext rdma_bth_xrceth_reth_immeth_ext rdma_bth_deth_immeth_ext
+
+metadata p4_to_p4plus_roce_bth_atomiceth_ext_header_t rdma_bth_atomiceth_ext;
+metadata p4_to_p4plus_roce_bth_xrceth_atomiceth_ext_header_t rdma_bth_xrceth_atomiceth_ext;
+metadata p4_to_p4plus_roce_bth_xrceth_reth_immeth_ext_header_t rdma_bth_xrceth_reth_immeth_ext;
+metadata p4_to_p4plus_roce_bth_deth_immeth_ext_header_t rdma_bth_deth_immeth_ext;
 
 @pragma scratch_metadata
 metadata roce_recirc_header_t rdma_recirc_scr;
@@ -104,6 +115,16 @@ metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth_scr;
 metadata rdma_ud_feedback_header_t rdma_ud_feedback_scr;
 
 
+//Extended headers
+@pragma scratch_metadata
+metadata p4_to_p4plus_roce_bth_atomiceth_ext_header_t rdma_bth_atomiceth_ext_scr;
+@pragma scratch_metadata
+metadata p4_to_p4plus_roce_bth_xrceth_atomiceth_ext_header_t rdma_bth_xrceth_atomiceth_ext_scr;
+@pragma scratch_metadata
+metadata p4_to_p4plus_roce_bth_xrceth_reth_immeth_ext_header_t rdma_bth_xrceth_reth_immeth_ext_scr;
+@pragma scratch_metadata
+metadata p4_to_p4plus_roce_bth_deth_immeth_ext_header_t rdma_bth_deth_immeth_ext_scr;
+
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
  *
@@ -125,7 +146,8 @@ action rdma_stage0_recirc_action () {
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
 
     // from app header
-    modify_field(rdma_recirc_scr.app_data0, rdma_recirc.app_data0);
+    modify_field(rdma_recirc_scr.app_data0_1, rdma_recirc.app_data0_1);
+    modify_field(rdma_recirc_scr.app_data0_2, rdma_recirc.app_data0_2);
     modify_field(rdma_recirc_scr.app_data1, rdma_recirc.app_data1);
     modify_field(rdma_recirc_scr.app_data2, rdma_recirc.app_data2);
 
@@ -158,6 +180,9 @@ action rdma_stage0_bth_action () {
     modify_field(rdma_bth_scr.raw_flags, rdma_bth.raw_flags);
     modify_field(rdma_bth_scr.ecn, rdma_bth.ecn);
     modify_field(rdma_bth_scr.payload_len, rdma_bth.payload_len);
+    modify_field(rdma_bth_scr.roce_opt_timestamp, rdma_bth.roce_opt_timestamp);
+    modify_field(rdma_bth_scr.roce_opt_new, rdma_bth.roce_opt_new);
+    modify_field(rdma_bth_scr.roce_int_recirc_hdr, rdma_bth.roce_int_recirc_hdr);
 
     // bth params
     modify_field(rdma_bth_scr.bth_opcode, rdma_bth.bth_opcode);
@@ -220,7 +245,8 @@ action rdma_stage0_bth_reth_action () {
     modify_field(rdma_bth_reth_scr.bth_header_bits, rdma_bth_reth.bth_header_bits);
 
     // reth params
-    modify_field(rdma_bth_reth_scr.reth_va, rdma_bth_reth.reth_va);
+    modify_field(rdma_bth_reth_scr.reth_va_1, rdma_bth_reth.reth_va_1);
+    modify_field(rdma_bth_reth_scr.reth_va_2, rdma_bth_reth.reth_va_2);
     modify_field(rdma_bth_reth_scr.reth_r_key, rdma_bth_reth.reth_r_key);
     modify_field(rdma_bth_reth_scr.reth_dma_len1, rdma_bth_reth.reth_dma_len1);
     modify_field(rdma_bth_reth_scr.reth_dma_len2, rdma_bth_reth.reth_dma_len2);
@@ -326,11 +352,22 @@ action rdma_stage0_bth_atomiceth_action () {
     modify_field(rdma_bth_atomiceth_scr.bth_header_bits, rdma_bth_atomiceth.bth_header_bits);
 
     // atomiceth params
-    modify_field(rdma_bth_atomiceth_scr.atomiceth_va, rdma_bth_atomiceth.atomiceth_va);
+    modify_field(rdma_bth_atomiceth_scr.atomiceth_va_1, rdma_bth_atomiceth.atomiceth_va_1);
+    modify_field(rdma_bth_atomiceth_scr.atomiceth_va_2, rdma_bth_atomiceth.atomiceth_va_2);
     modify_field(rdma_bth_atomiceth_scr.atomiceth_r_key, rdma_bth_atomiceth.atomiceth_r_key);
     modify_field(rdma_bth_atomiceth_scr.atomiceth_swap_or_add_data, rdma_bth_atomiceth.atomiceth_swap_or_add_data);
-    modify_field(rdma_bth_atomiceth_scr.atomiceth_cmp_data, rdma_bth_atomiceth.atomiceth_cmp_data);
+    //modify_field(rdma_bth_atomiceth_scr.atomiceth_cmp_data, rdma_bth_atomiceth.atomiceth_cmp_data);
 }
+
+/*
+ * Stage 0 rdma_params table ext bth atomiceth action
+ */
+action rdma_stage0_ext_bth_atomiceth_action () {
+    // k + i for stage 0
+
+    modify_field(rdma_bth_atomiceth_ext_scr.atomiceth_cmp_data, rdma_bth_atomiceth_ext.atomiceth_cmp_data);
+}
+
 
 /*
  * Stage 0 table 0 bth ieth action
@@ -404,12 +441,24 @@ action rdma_stage0_bth_deth_immeth_action () {
     modify_field(rdma_bth_deth_immeth_scr.bth_header_bits, rdma_bth_deth_immeth.bth_header_bits);
 
     // deth bits
-    modify_field(rdma_bth_deth_immeth_scr.deth_header_bits, rdma_bth_deth_immeth.deth_header_bits);
+    modify_field(rdma_bth_deth_immeth_scr.deth_header_bits_1, rdma_bth_deth_immeth.deth_header_bits_1);
+    modify_field(rdma_bth_deth_immeth_scr.deth_header_bits_2, rdma_bth_deth_immeth.deth_header_bits_2);
 
     // deth_immeth params
     modify_field(rdma_bth_deth_immeth_scr.immeth_data, rdma_bth_deth_immeth.immeth_data);
-    modify_field(rdma_bth_deth_immeth_scr.smac, rdma_bth_deth_immeth.smac);
+    modify_field(rdma_bth_deth_immeth_scr.smac_1, rdma_bth_deth_immeth.smac_1);
+    //modify_field(rdma_bth_deth_immeth_scr.smac_2, rdma_bth_deth_immeth.smac_2);
 }
+
+/*
+ * Stage 0 table 0 bth deth immeth action
+ */
+action rdma_stage0_ext_bth_deth_immeth_action () {
+    // k + i for stage 0
+
+    modify_field(rdma_bth_deth_immeth_ext_scr.smac_2, rdma_bth_deth_immeth_ext.smac_2);
+}
+
 
 
 /*
@@ -519,9 +568,19 @@ action rdma_stage0_bth_xrceth_reth_immeth_action () {
     modify_field(rdma_bth_xrceth_reth_immeth_scr.reth_header_bits, rdma_bth_xrceth_reth_immeth.reth_header_bits);
 
     // reth_immeth params
-    modify_field(rdma_bth_xrceth_reth_immeth_scr.immeth_data, rdma_bth_xrceth_reth_immeth.immeth_data);
+    //modify_field(rdma_bth_xrceth_reth_immeth_scr.immeth_data, rdma_bth_xrceth_reth_immeth.immeth_data);
 }
 
+
+/*
+ * Stage 0 table 0 ext bth reth immeth action
+ */
+action rdma_stage0_ext_bth_xrceth_reth_immeth_action () {
+    // k + i for stage 0
+
+    // reth_immeth params
+    modify_field(rdma_bth_xrceth_reth_immeth_ext_scr.immeth_data, rdma_bth_xrceth_reth_immeth_ext.immeth_data);
+}
 
 /*
  * Stage 0 table 0 bth atomiceth action
@@ -548,8 +607,19 @@ action rdma_stage0_bth_xrceth_atomiceth_action () {
     // atomiceth params
     modify_field(rdma_bth_xrceth_atomiceth_scr.atomiceth_va, rdma_bth_xrceth_atomiceth.atomiceth_va);
     modify_field(rdma_bth_xrceth_atomiceth_scr.atomiceth_r_key, rdma_bth_xrceth_atomiceth.atomiceth_r_key);
-    modify_field(rdma_bth_xrceth_atomiceth_scr.atomiceth_swap_or_add_data, rdma_bth_xrceth_atomiceth.atomiceth_swap_or_add_data);
-    modify_field(rdma_bth_xrceth_atomiceth_scr.atomiceth_cmp_data, rdma_bth_xrceth_atomiceth.atomiceth_cmp_data);
+    modify_field(rdma_bth_xrceth_atomiceth_scr.atomiceth_swap_or_add_data_1, rdma_bth_xrceth_atomiceth.atomiceth_swap_or_add_data_1);
+    //modify_field(rdma_bth_xrceth_atomiceth_scr.atomiceth_swap_or_add_data_2, rdma_bth_xrceth_atomiceth.atomiceth_swap_or_add_data_2);
+    //modify_field(rdma_bth_xrceth_atomiceth_scr.atomiceth_cmp_data, rdma_bth_xrceth_atomiceth.atomiceth_cmp_data);
+}
+
+/*
+ * Stage 0 rdma_params table ext bth atomiceth action
+ */
+action rdma_stage0_ext_bth_xrceth_atomiceth_action () {
+    // k + i for stage 0
+
+    modify_field(rdma_bth_xrceth_atomiceth_ext_scr.atomiceth_swap_or_add_data_2, rdma_bth_xrceth_atomiceth_ext.atomiceth_swap_or_add_data_2);
+    modify_field(rdma_bth_xrceth_atomiceth_ext_scr.atomiceth_cmp_data, rdma_bth_xrceth_atomiceth_ext.atomiceth_cmp_data);
 }
 
 /*

@@ -153,7 +153,8 @@ process_feedback:
 
 ud_feedback:
     phvwr          p.cqwqe.op_type, k.rdma_ud_feedback_optype // Branch Delay Slot
-    phvwr          p.cqwqe.id.wrid, k.{rdma_ud_feedback_wrid_sbit0_ebit7...rdma_ud_feedback_wrid_sbit56_ebit63}
+    RDMA_UD_FEEDBACK_WRID(r7)
+    phvwr          p.cqwqe.id.wrid, r7
     phvwr          p.cqwqe.status, k.rdma_ud_feedback_status
 
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)

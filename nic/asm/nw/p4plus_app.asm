@@ -221,7 +221,8 @@ f_p4plus_cpu_pkt:
   phvwr       p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
                   k.control_metadata_lkp_flags_egress
   sub         r1, r0, 1
-  phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_payload_offset}, r1
+  phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_l3_offset}, r1
+  phvwr       p.{p4_to_p4plus_cpu_pkt_l4_offset...p4_to_p4plus_cpu_pkt_payload_offset}, r1
   // r1 : offset
   // r2 : flags
   add         r1, r0, r6

@@ -40,7 +40,7 @@ resp_rx_stats_process:
     tblmincri.c2     d.num_atomic_cswap_msgs, MASK_16, 1
     tblmincri.c1     d.num_read_req_msgs, MASK_16, 1
 
-    bcf              [c6 | c4 | c3 | c2 | c1], done
+    bcf              [c4 | c3 | c2 | c1], done
 
     ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND) //BDF
     tblmincri.c6     d.num_send_msgs_imm_data, MASK_16, 1

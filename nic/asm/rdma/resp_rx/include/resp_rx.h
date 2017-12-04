@@ -188,6 +188,15 @@ struct resp_rx_to_stage_atomic_info_t {
     pad: 64; 
 };
 
+//Right now, worst case RDMA headers are overflowing by 64bits at maximum
+//from stage0 app_data table to rdma_params_table.
+//That data is passed blindly by rdma_params_table in stage0 to stage2 of
+//regular program
+struct resp_rx_to_stage_ext_hdr_info_t {
+    ext_hdr_data: 96;
+    pad: 32;
+};
+
 struct resp_rx_s0_info_t {
     union {
         struct resp_rx_to_stage_backtrack_info_t backtrack;
@@ -205,7 +214,7 @@ struct resp_rx_s1_info_t {
 struct resp_rx_s2_info_t {
     union {
         struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_wb0_info_t wb0;
+        struct resp_rx_to_stage_ext_hdr_info_t ext_hdr;
     };
 };
 

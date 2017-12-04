@@ -19,18 +19,18 @@
 #define CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT k.p4_intr_recirc_count
 
 #define CAPRI_RXDMA_RETH_VA(_r) \
-    add _r, k.{rdma_bth_reth_reth_va_sbit56_ebit63}, k.{rdma_bth_reth_reth_va_sbit0_ebit7...rdma_bth_reth_reth_va_sbit40_ebit55}, 8
+    add _r, k.{rdma_bth_reth_reth_va_2_sbit0_ebit7...rdma_bth_reth_reth_va_2_sbit8_ebit31}, k.{rdma_bth_reth_reth_va_1_sbit0_ebit7...rdma_bth_reth_reth_va_1_sbit8_ebit31}, 32
 
-#define CAPRI_RXDMA_BTH_ATOMICETH_CMP_DATA k.{rdma_bth_atomiceth_atomiceth_cmp_data_sbit0_ebit23...rdma_bth_atomiceth_atomiceth_cmp_data_sbit32_ebit63}
-#define CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA k.{rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit0_ebit15...rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit48_ebit63}
 
-//#define CAPRI_RXDMA_RETH_DMA_LEN k.rdma_bth_reth_reth_dma_len
+#define CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA(_r) \
+    add _r, k.{rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit56_ebit63}, k.{rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit0_ebit15...rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit48_ebit55}, 8
+
 #define CAPRI_RXDMA_RETH_DMA_LEN k.{rdma_bth_reth_reth_dma_len1...rdma_bth_reth_reth_dma_len2}
-#define CAPRI_RXDMA_RETH_R_KEY k.rdma_bth_reth_reth_r_key
+#define CAPRI_RXDMA_RETH_R_KEY k.{rdma_bth_reth_reth_r_key_sbit0_ebit23...rdma_bth_reth_reth_r_key_sbit24_ebit31}
 
 #define CAPRI_RXDMA_BTH_IMMETH_IMMDATA  k.{rdma_bth_immeth_immeth_data_sbit0_ebit7...rdma_bth_immeth_immeth_data_sbit8_ebit31}
 #define CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(_r, _c_flag) \
-    add._c_flag _r,  k.{rdma_bth_reth_immeth_immeth_data_sbit16_ebit31}, k.{rdma_bth_reth_immeth_immeth_data_sbit0_ebit15}, 16
+    add._c_flag _r,  k.{rdma_bth_reth_immeth_immeth_data_sbit24_ebit31}, k.{rdma_bth_reth_immeth_immeth_data_sbit0_ebit15...rdma_bth_reth_immeth_immeth_data_sbit16_ebit23}, 8
 
 #define CAPRI_RXDMA_BTH_IETH_R_KEY k.{rdma_bth_ieth_ieth_r_key_sbit0_ebit7...rdma_bth_ieth_ieth_r_key_sbit8_ebit31}
 
@@ -62,11 +62,15 @@
 
 //DETH header fields
 #define CAPRI_RXDMA_DETH_Q_KEY                k.{rdma_bth_deth_deth_q_key_sbit0_ebit7...rdma_bth_deth_deth_q_key_sbit8_ebit31}
-#define CAPRI_RXDMA_DETH_SRC_QP(_r) \
-    add _r, k.{rdma_bth_deth_deth_src_qp_sbit16_ebit23}, k.rdma_bth_deth_deth_src_qp_sbit0_ebit15, 16
-#define CAPRI_RXDMA_DETH_IMMETH_DATA          k.rdma_bth_deth_immeth_immeth_data
-#define CAPRI_RXDMA_DETH_SMAC                 k.{rdma_bth_deth_smac_sbit0_ebit15...rdma_bth_deth_smac_sbit32_ebit47}
-#define CAPRI_RXDMA_DETH_IMMETH_SMAC          k.{rdma_bth_deth_immeth_smac_sbit0_ebit15...rdma_bth_deth_immeth_smac_sbit40_ebit47}
+#define CAPRI_RXDMA_DETH_SRC_QP               k.rdma_bth_deth_deth_src_qp
+#define CAPRI_RXDMA_DETH_IMMETH_DATA          k.{rdma_bth_deth_immeth_immeth_data_sbit0_ebit23...rdma_bth_deth_immeth_immeth_data_sbit24_ebit31}
+#define CAPRI_RXDMA_DETH_SMAC(_r) \
+   add _r, k.{rdma_bth_deth_smac_sbit40_ebit47}, k.{rdma_bth_deth_smac_sbit0_ebit15...rdma_bth_deth_smac_sbit32_ebit39}, 8
+#define CAPRI_RXDMA_DETH_IMMETH_SMAC1(_r) \
+   add _r, k.{rdma_bth_deth_immeth_smac_1_sbit8_ebit15}, k.{rdma_bth_deth_immeth_smac_1_sbit0_ebit7}, 8
+
+#define RDMA_UD_FEEDBACK_WRID(_r) \
+    add _r, k.{rdma_ud_feedback_wrid_sbit32_ebit55...rdma_ud_feedback_wrid_sbit56_ebit63}, k.{rdma_ud_feedback_wrid_sbit0_ebit7...rdma_ud_feedback_wrid_sbit24_ebit31}, 32 
 
 #define CAPRI_RAW_TABLE_PC_SHIFT 6
 

@@ -126,9 +126,12 @@ invoke_pt:
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
 
 skip_pt:
+    add         GLOBAL_FLAGS, r0, k.global.flags // BD Slot
+    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_ATOMIC_CSWAP)
+    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_stage.s2.ext_hdr.ext_hdr_data[95:32]}.wx
+
     seq         c3, k.args.dma_cmdeop, 1
     bcf         [!c3], check_write_back
-    add         GLOBAL_FLAGS, r0, k.global.flags // BD Slot
 
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_RING_DBELL)
 
