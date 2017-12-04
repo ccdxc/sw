@@ -9,6 +9,7 @@ package server
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -83,6 +84,7 @@ func (ts *TestSuite) setup(t *testing.T, fake bool) {
 		}
 		ts.testStore = m
 	} else {
+		os.Chdir("/tmp")
 		ts.cluster = integration.NewClusterV3(t)
 		sURL := ts.cluster.ClientURL()
 		store.Init(sURL, kvs.KVStoreTypeEtcd)

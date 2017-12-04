@@ -1,20 +1,25 @@
 {
   "builders": [{
     "type": "qemu",
-    "iso_url": "{{user `mirror`}}/releases/24/Server/x86_64/iso/Fedora-Server-netinst-x86_64-24-1.2.iso",
+    "iso_url": "{{user `mirror`}}/17.04/ubuntu-17.04-server-amd64.iso",
     "iso_checksum": "{{user `iso_checksum`}}",
     "iso_checksum_type": "{{user `iso_checksum_type`}}",
-    "output_directory": "output-fedora-24-x86_64-{{build_type}}",
-    "vm_name": "packer-fedora-24-x86_64",
+    "output_directory": "output-ubuntu-17.04-amd64-{{build_type}}",
+    "vm_name": "packer-ubuntu-17.04-amd64",
     "disk_size": "{{user `disk_size`}}",
     "headless": "{{user `headless`}}",
     "http_directory": "http",
     "boot_wait": "5s",
     "boot_command": [
-      "<tab> ",
-      "inst.ks=http://{{.HTTPIP}}:{{.HTTPPort}}/fedora-24/anaconda-ks.cfg ",
-      "biosdevname=0 ",
+      "<esc><wait>",
+      "<esc><wait>",
+      "<enter><wait>",
+      "/install/vmlinuz ",
+      "initrd=/install/initrd.gz ",
       "net.ifnames=0 ",
+      "auto-install/enable=true ",
+      "debconf/priority=critical ",
+      "preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/ubuntu-17.04/preseed.cfg ",
       "<enter>"
     ],
     "ssh_timeout": "{{user `ssh_timeout`}}",
@@ -27,21 +32,26 @@
     ]
   }, {
     "type": "virtualbox-iso",
-    "guest_os_type": "Fedora_64",
-    "iso_url": "{{user `mirror`}}/releases/24/Server/x86_64/iso/Fedora-Server-netinst-x86_64-24-1.2.iso",
+    "guest_os_type": "Ubuntu_64",
+    "iso_url": "{{user `mirror`}}/17.04/ubuntu-17.04-server-amd64.iso",
     "iso_checksum": "{{user `iso_checksum`}}",
     "iso_checksum_type": "{{user `iso_checksum_type`}}",
-    "output_directory": "output-fedora-24-x86_64-{{build_type}}",
-    "vm_name": "packer-fedora-24-x86_64",
+    "output_directory": "output-ubuntu-17.04-amd64-{{build_type}}",
+    "vm_name": "packer-ubuntu-17.04-amd64",
     "disk_size": "{{user `disk_size`}}",
     "headless": "{{user `headless`}}",
     "http_directory": "http",
     "boot_wait": "5s",
     "boot_command": [
-      "<tab> ",
-      "inst.ks=http://{{.HTTPIP}}:{{.HTTPPort}}/fedora-24/anaconda-ks.cfg ",
-      "biosdevname=0 ",
+      "<esc><wait>",
+      "<esc><wait>",
+      "<enter><wait>",
+      "/install/vmlinuz ",
+      "initrd=/install/initrd.gz ",
       "net.ifnames=0 ",
+      "auto-install/enable=true ",
+      "debconf/priority=critical ",
+      "preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/ubuntu-17.04/preseed.cfg ",
       "<enter>"
     ],
     "ssh_timeout": "{{user `ssh_timeout`}}",
@@ -54,21 +64,26 @@
     ]
   }, {
     "type": "vmware-iso",
-    "guest_os_type": "fedora-64",
-    "iso_url": "{{user `mirror`}}/releases/24/Server/x86_64/iso/Fedora-Server-netinst-x86_64-24-1.2.iso",
+    "guest_os_type": "ubuntu-64",
+    "iso_url": "{{user `mirror`}}/17.04/ubuntu-17.04-server-amd64.iso",
     "iso_checksum": "{{user `iso_checksum`}}",
     "iso_checksum_type": "{{user `iso_checksum_type`}}",
-    "output_directory": "output-fedora-24-x86_64-{{build_type}}",
-    "vm_name": "packer-fedora-24-x86_64",
+    "output_directory": "output-ubuntu-17.04-amd64-{{build_type}}",
+    "vm_name": "packer-ubuntu-17.04-amd64",
     "disk_size": "{{user `disk_size`}}",
     "headless": "{{user `headless`}}",
     "http_directory": "http",
     "boot_wait": "5s",
     "boot_command": [
-      "<tab> ",
-      "inst.ks=http://{{.HTTPIP}}:{{.HTTPPort}}/fedora-24/anaconda-ks.cfg ",
-      "biosdevname=0 ",
+      "<esc><wait>",
+      "<esc><wait>",
+      "<enter><wait>",
+      "/install/vmlinuz ",
+      "initrd=/install/initrd.gz ",
       "net.ifnames=0 ",
+      "auto-install/enable=true ",
+      "debconf/priority=critical ",
+      "preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/ubuntu-17.04/preseed.cfg ",
       "<enter>"
     ],
     "ssh_timeout": "{{user `ssh_timeout`}}",
@@ -83,28 +98,29 @@
   "provisioners": [{
     "type": "shell",
     "scripts": [
-      "scripts/fedora/virtualbox.sh",
-      "scripts/fedora/vmware.sh",
+      "scripts/ubuntu/apt.sh",
+      "scripts/ubuntu/virtualbox.sh",
+      "scripts/ubuntu/vmware.sh",
       "scripts/common/vagrant.sh",
       "scripts/common/sshd.sh",
-      "scripts/fedora/cleanup.sh",
+      "scripts/ubuntu/cleanup.sh",
       "scripts/common/minimize.sh"
     ]
   }],
   "post-processors": [{
     "type": "vagrant",
     "compression_level": "{{user `compression_level`}}",
-    "output": "fedora-24-x86_64-{{.Provider}}.box"
+    "output": "ubuntu-17.04-amd64-{{.Provider}}.box"
   }],
   "variables": {
     "compression_level": "6",
     "cpus": "1",
     "disk_size": "40000",
     "headless": "false",
-    "iso_checksum": "071c30520775b3e93bb4c34edab4eab3badc26fbb8473ad3a9458614ba85a4e5",
+    "iso_checksum": "ca5d9a8438e2434b9a3ac2be67b5c5fa2c1f8e3e40b954519462935195464034",
     "iso_checksum_type": "sha256",
     "memory": "512",
-    "mirror": "http://download.fedoraproject.org/pub/fedora/linux",
+    "mirror": "http://releases.ubuntu.com",
     "ssh_timeout": "60m"
   }
 }

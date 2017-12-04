@@ -1,6 +1,7 @@
 package services
 
 import (
+	"os"
 	"testing"
 
 	"fmt"
@@ -14,6 +15,7 @@ import (
 )
 
 func setupTestCluster(t *testing.T) (*integration.ClusterV3, kvstore.Interface) {
+	os.Chdir("/tmp")
 	cluster := integration.NewClusterV3(t)
 	s := runtime.NewScheme()
 	store, err := store.New(store.Config{

@@ -5,10 +5,17 @@ require 'fileutils'
 dir = File.dirname(File.expand_path(__FILE__))
 load "#{dir}/tools/vagrant-files/Vagrantfile.include"
 
+vbox_version=`vboxmanage --version`
+vb = vbox_version.split('.').map{|s|s.to_i}
+vb_min = [5,1,30]
+if ((vb <=> vb_min) < 0)
+	abort('virtualbox needs to be at least of version 5.1.30 for this box')
+end
+
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "vramakrishnan/centos73"
-  config.vm.box_version = "0.5"
+  config.vm.box = "nasuku/centos74"
+  config.vm.box_version = "0.6"
   config.ssh.insert_key = false
   config.vm.provision :shell, inline: 'ulimit -n 4096'
 

@@ -329,6 +329,9 @@ func Setup(m *testing.M) {
 
 	// Init etcd cluster
 	var t testing.T
+
+	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
+	os.Chdir("/tmp")
 	cluster := integration.NewClusterV3(&t)
 
 	// Disable open trace

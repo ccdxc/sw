@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"os"
 	"strconv"
 	"testing"
 
@@ -26,6 +27,7 @@ func clusterCleanup(t *testing.T, cluster kvstore.TestCluster) {
 }
 
 func storeSetup(t *testing.T, cluster kvstore.TestCluster) (kvstore.Interface, error) {
+	os.Chdir("/tmp")
 	c, ok := cluster.(*integration.ClusterV3)
 	if !ok {
 		t.Fatalf("invalid cluster")
