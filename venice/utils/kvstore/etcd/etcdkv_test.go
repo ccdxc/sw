@@ -13,6 +13,7 @@ import (
 )
 
 func clusterSetup(t *testing.T) kvstore.TestCluster {
+	os.Chdir("/tmp")
 	cluster := integration.NewClusterV3(t)
 	return cluster
 }
@@ -27,7 +28,6 @@ func clusterCleanup(t *testing.T, cluster kvstore.TestCluster) {
 }
 
 func storeSetup(t *testing.T, cluster kvstore.TestCluster) (kvstore.Interface, error) {
-	os.Chdir("/tmp")
 	c, ok := cluster.(*integration.ClusterV3)
 	if !ok {
 		t.Fatalf("invalid cluster")
