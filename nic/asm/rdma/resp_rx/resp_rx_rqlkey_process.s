@@ -128,7 +128,7 @@ invoke_pt:
 skip_pt:
     add         GLOBAL_FLAGS, r0, k.global.flags // BD Slot
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_ATOMIC_CSWAP)
-    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_stage.s2.ext_hdr.ext_hdr_data[95:32]}.wx
+    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_stage.s2.ext_hdr.ext_hdr_data[63:0]}.dx
 
     seq         c3, k.args.dma_cmdeop, 1
     bcf         [!c3], check_write_back

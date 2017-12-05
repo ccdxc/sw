@@ -911,18 +911,6 @@ struct rdma_atomic_resource_t {
 #define PCIE_TLP_LEN_FNA    2   //2 double words = 8B
 #define PCIE_TLP_LEN_CSWAP  4   //4 double words = 16B
 
-struct rdma_pcie_atomic_reg_old_t {
-    rsvd3: 156;
-    tlp_len: 4;
-    rsvd2: 27;
-    atomic_type: 5;
-    rsvd1: 12;
-    host_addr: 52;
-    rsvd_operand_data: 128;
-    swap_data: 64;
-    compare_data_or_add_data: 64;
-};
-
 struct rdma_pcie_atomic_reg_t {
     compare_data_or_add_data: 64;
     swap_data: 64;
