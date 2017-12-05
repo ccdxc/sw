@@ -16,6 +16,7 @@ run "yum install -y epel-release"
 PIP2_PACKAGES = %w[
   ply==3.9
   cmd2
+  bitstring
 ]
 
 PIP3_PACKAGES = %w[
@@ -28,6 +29,7 @@ PIP3_PACKAGES = %w[
   grpcio
   zmq
   cmd2
+  bitstring
 ]
 
 PACKAGES = %w[
@@ -237,6 +239,8 @@ run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is
 run "echo /usr/local/lib >>/etc/ld.so.conf"
 run "ldconfig -v"
 
-if getenv("RELEASE") != ""
-  flatten
+after do
+  if getenv("RELEASE") != ""
+    flatten
+  end
 end

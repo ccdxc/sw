@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.3"
+from "registry.test.pensando.io:5000/pensando/nic:1.5"
 
 env GOPATH: "/usr"
 
