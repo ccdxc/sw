@@ -3180,10 +3180,10 @@ class capri_key_maker:
                 else:
                     self.combined_profile._update_bit_loc_key_off()
             else:
-                k_bytes = set(self.combined_profile.k_byte_sel)
-
-                if len(k_bytes):
-                    bit_loc = len(k_bytes)
+                # Bit loc is last k_byte in combine_profile.byte_sel
+                if len(self.combined_profile.k_byte_sel):
+                    last_k_byte = self.combined_profile.k_byte_sel[-1]
+                    bit_loc = self.combined_profile.byte_sel.index(last_k_byte) + 1
                     num_bytes = (len(self.combined_profile.bit_sel)+7) / 8
                     for i in range(num_bytes):
                         self.combined_profile.byte_sel.insert(bit_loc+i, -1)
@@ -3558,7 +3558,7 @@ class capri_stage:
                 pass
         return True
 
-    def _share_key_maker(self, fid, ct, new_km):
+    def _share_key_maker(self, fid, ct, new_km, km_used):
         # XXX - TBD
         # 1. Tables with the same key
         # 2. Index tables that can fit into same key-makers
@@ -3609,7 +3609,14 @@ class capri_stage:
                 if km_hw_id == -1:
                     # km is not allocated yet, it will get shared when its turn comes
                     continue
-
+                km_id_used = False
+                for _kmused in km_used:
+                    # or km is used by the same table's another key_maker
+                    if _kmused == km_hw_id:
+                        km_id_used = True
+                        break
+                if km_id_used:
+                    continue
                 u_byte_sel = set(km_profile.byte_sel) | ct_byte_sel
                 # remove the bytes reserved for bit_sel
                 u_byte_sel = u_byte_sel - set([-1])
@@ -3675,15 +3682,13 @@ class capri_stage:
                 continue
 
             if kt.is_hash_table():
-                assert ct.is_tcam_table(), pdb.set_trace()
-                if not self._can_share_hash_tcam_km(km_found, new_km):
+                if ct.is_tcam_table() and not self._can_share_hash_tcam_km(km_found, new_km):
                     self.gtm.tm.logger.debug("Cannot merge %s into %s" % \
                         (ct.p4_table.name, kt.p4_table.name))
                     continue
 
             if ct.is_hash_table():
-                assert kt.is_tcam_table(), pdb.set_trace()
-                if not self._can_share_hash_tcam_km(new_km, km_found):
+                if kt.is_tcam_table() and not self._can_share_hash_tcam_km(new_km, km_found):
                     self.gtm.tm.logger.debug("Cannot merge %s into %s" % \
                         (kt.p4_table.name, ct.p4_table.name))
                     continue
@@ -3779,12 +3784,52 @@ class capri_stage:
             for _km in self.km_allocator[fid]:
                 if _km == None:
                     break
-
                 if _km.shared_km:
                     km = _km.shared_km
                 else:
                     km = _km
 
+                # km may be shared *after* is is allocated
+                if km.hw_id in km_used:
+                    # used by other key-maker of the same table
+                    continue
+                '''
+                # check for sharable key-makers before reusing mutually-exclusive table's km
+                if set(km.ctables) <= p_excl_tbls[ct]:
+                    new_km.hw_id = km.hw_id
+                    km.ctables.append(ct)
+                    # allocate km in all flits used
+                    for f in new_km.flits_used:
+                        self.km_allocator[f][new_km.hw_id] = km
+                        self.gtm.tm.logger.debug("%s:[flit %d] reuse key_maker[%d] %d : %s" % \
+                            (ct.p4_table.name, f, c_km.km_id, km.hw_id, km.ctables))
+                    km_allocated += 1
+                    total_km_allocated += 1
+                    km_used[c_km.km_id] = new_km.hw_id
+                    break
+                '''
+            if km_allocated != 0:
+                continue
+            # check other criteria for sharing km between tables
+            if need_sharing and self._share_key_maker(fid, ct, new_km, km_used):
+                for f in new_km.flits_used:
+                    self.km_allocator[f][new_km.shared_km.hw_id] = new_km.shared_km
+                    self.gtm.tm.logger.debug(\
+                        "%s:%d:%s:[flit %d] Assign key_maker[%d] %d (shared)" % \
+                        (self.gtm.d.name, self.id, ct.p4_table.name, f, c_km.km_id,
+                        new_km.shared_km.hw_id))
+                total_km_allocated += 1
+                km_used[c_km.km_id] = new_km.shared_km.hw_id
+                continue
+
+            # check kms of mutually exclusive tables
+            for _km in self.km_allocator[fid]:
+                if _km == None:
+                    continue
+                if _km.shared_km:
+                    km = _km.shared_km
+                else:
+                    km = _km
                 # km may be shared *after* is is allocated
                 if km.hw_id in km_used:
                     # used by other key-maker of the same table
@@ -3802,17 +3847,6 @@ class capri_stage:
                     km_used[c_km.km_id] = new_km.hw_id
                     break
             if km_allocated != 0:
-                continue
-            # check other criteria for sharing km between tables
-            if need_sharing and self._share_key_maker(fid, ct, new_km):
-                for f in new_km.flits_used:
-                    self.km_allocator[f][new_km.shared_km.hw_id] = new_km.shared_km
-                    self.gtm.tm.logger.debug(\
-                        "%s:%d:%s:[flit %d] Assign key_maker[%d] %d (shared)" % \
-                        (self.gtm.d.name, self.id, ct.p4_table.name, f, c_km.km_id,
-                        new_km.shared_km.hw_id))
-                total_km_allocated += 1
-                km_used[c_km.km_id] = new_km.shared_km.hw_id
                 continue
 
             # allocate new key maker
@@ -3941,36 +3975,12 @@ class capri_stage:
         new_per_flit_kms = [[] for _ in range(num_flits)]
         max_km = self.gtm.tm.be.hw_model['match_action']['num_key_makers']
 
-        km_violation_fid = OrderedDict()
-
-        fid_excl_tables = OrderedDict()
-        for fid, ctg in enumerate(per_flit_tables):
-            fid_excl_tables[fid] = []
-            for et in p_excl_tbls.keys():
-                if et in ctg:
-                    for et2 in p_excl_tbls[et]:
-                        if et2 in ctg:
-                            if et not in fid_excl_tables[fid]:
-                                fid_excl_tables[fid].append(et)
-                            if et2 not in fid_excl_tables[fid]:
-                                fid_excl_tables[fid].append(et2)
-
 
         for fid, ctg in enumerate(per_flit_tables):
             self.gtm.tm.logger.debug("Stg %d:Per Flit Tables[%d] = %s" % (self.id, fid, ctg))
 
-        for fid, ctg in enumerate(per_flit_tables):
-            num_km = sum(ct.num_km for ct in ctg if ct not in fid_excl_tables[fid])
-            if len(fid_excl_tables[fid]):
-                num_km += max([ct.num_km  for ct in fid_excl_tables[fid]])
-            if num_km > max_km:
-                self.gtm.tm.logger.warning( \
-                    "%s:Resource Pressure:Stg %d flit %d KeyMakers %d" % \
-                    (self.gtm.d.name, self.id, fid, num_km))
-                km_violation_fid[fid] = num_km
 
-
-        # allocate hw_keymakers to each key maker based on flit usage
+        # allocate hw_keymaker to each key maker based on flit usage
         # When a lookup is launched in flit x then hardware km can be used for another
         # table in flit x+1
         self.gtm.tm.logger.debug("%s:start km allocation for all tables - %s" %\
@@ -3986,7 +3996,9 @@ class capri_stage:
                     # don't share key-makers of the wide-key tables (includes toeplitz)
                     need_sharing = False
                 else:
-                    need_sharing = True if fid in km_violation_fid else False
+                    #need_sharing = True if fid in km_violation_fid else False
+                    # XXX need better way to create per flit mutually exclusive tabels
+                    need_sharing = True
 
                 if not self._allocate_km(fid, ct, p_excl_tbls, need_sharing):
                     self.gtm.tm.logger.critical( \
