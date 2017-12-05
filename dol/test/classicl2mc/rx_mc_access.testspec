@@ -63,6 +63,12 @@ packets:
         encaps      : None
         headers     :
 
+    - packet:
+        id          : EXP_PKT_COPY2_ALLMC     # Expected packet on Enics
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : None
+        headers     :
+
 
 buffers:
     - buffer:
@@ -75,6 +81,14 @@ buffers:
 
     - buffer:
         id      : RX_BUF_COPY1  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : RX_BUF_COPY2_ALLMC  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
@@ -97,6 +111,13 @@ buffers:
             size  : callback://classic/callbacks/GetExpectedBufferSizeForMulticastCopy/id=EXP_PKT_COPY1
             data  : callback://classic/callbacks/GetExpectedBufferDataForMulticastCopy/id=EXP_PKT_COPY1
 
+    - buffer:
+        id      : EXP_BUF_COPY2_ALLMC  # Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : callback://classic/callbacks/GetExpectedBufferSizeForMulticastCopy/id=EXP_PKT_COPY2_ALLMC
+            data  : callback://classic/callbacks/GetExpectedBufferDataForMulticastCopy/id=EXP_PKT_COPY2_ALLMC
 
 descriptors:
     - descriptor:
@@ -116,6 +137,14 @@ descriptors:
             len   : ref://testcase/buffers/id=RX_BUF_COPY1/size
 
     - descriptor:
+        id      : RX_DESC_COPY2_ALLMC
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=RX_BUF_COPY2_ALLMC
+            addr  : ref://testcase/buffers/id=RX_BUF_COPY2_ALLMC/addr
+            len   : ref://testcase/buffers/id=RX_BUF_COPY2_ALLMC/size
+
+    - descriptor:
         id      : EXP_DESC_COPY0 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
@@ -129,6 +158,12 @@ descriptors:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY1
             bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY1/size
 
+    - descriptor:
+        id      : EXP_DESC_COPY2_ALLMC # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXP_BUF_COPY2_ALLMC
+            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY2_ALLMC/size
 
 trigger:
     descriptors:
@@ -139,6 +174,10 @@ trigger:
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_COPY1
             ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=1
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RX_DESC_COPY2_ALLMC
+            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=2
 
     packets:
         - packet:
@@ -152,7 +191,12 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_COPY0
             ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=0
+
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_COPY1
             ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=1
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC_COPY2_ALLMC
+            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=2
 

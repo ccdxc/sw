@@ -118,6 +118,10 @@ class EnicObject(base.ConfigObjectBase):
         summary += '/%s' % self.type
         summary += '/EncVlan:%s' % self.encap_vlan_id
         summary += '/%s' % self.lif.GID()
+        if self.IsAllMulticast():
+            summary += '/AllMC'
+        if self.IsPromiscous():
+            summary += '/Prom'
         return summary
 
     def __init_qos(self):
@@ -153,6 +157,12 @@ class EnicObject(base.ConfigObjectBase):
 
     def IsClassic(self):
         return self.type == ENIC_TYPE_CLASSIC
+
+    def IsPromiscous(self):
+        return self.lif.IsPromiscous()
+
+    def IsAllMulticast(self):
+        return self.lif.IsAllMulticast()
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.type           = haldefs.interface.IF_TYPE_ENIC

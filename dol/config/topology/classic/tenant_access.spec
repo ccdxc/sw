@@ -6,7 +6,9 @@ type    : tenant
 overlay : vlan
 
 enics:
-    classic : 2
+    classic     : 4
+    promiscuous : 1
+    allmulti    : 1
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_CLASSIC_DEFAULT

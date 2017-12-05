@@ -37,6 +37,8 @@ class LifObject(base.ConfigObjectBase):
         self.status     = haldefs.interface.IF_STATUS_UP
         self.hw_lif_id = -1
         self.qstate_base = {}
+        self.promiscous = False
+        self.allmulticast = False
 
         self.c_lib_name = getattr(spec, 'c_lib', None)
         if self.c_lib_name:
@@ -162,6 +164,8 @@ class LifObject(base.ConfigObjectBase):
         req_spec.vlan_strip_en = self.vlan_strip_en
         if GlobalOptions.classic:
             req_spec.packet_filter.receive_broadcast = True
+            req_spec.packet_filter.receive_promiscuous = self.promiscous
+            req_spec.packet_filter.receive_all_multicast = self.allmulticast
         for queue_type in self.queue_types.GetAll():
             qstate_map_spec = req_spec.lif_qstate_map.add()
             queue_type.PrepareHALRequestSpec(qstate_map_spec)
@@ -230,19 +234,45 @@ class LifObject(base.ConfigObjectBase):
         halapi.ConfigureLifs([self], update=True)
         self.ConfigureQueueTypes()
 
+    def SetPromiscous(self):
+        cfglogger.info("Setting PROMISCOUS mode for LIF:%s" % self.GID())
+        self.promiscous = True
+        return
+    def IsPromiscous(self):
+        return self.promiscous
+
+    def SetAllMulticast(self):
+        cfglogger.info("Setting ALL MULTICAST mode for LIF:%s" % self.GID())
+        self.allmulticast = True
+        return
+    def IsAllMulticast(self):
+        return self.allmulticast
 
 class LifObjectHelper:
     def __init__(self):
         self.lifs = []
+        self.plifs = []
+        self.mlifs = []
         self.aidx = 0
 
-    def Generate(self, tenant, spec, namespace):
+    def Generate(self, tenant, spec, namespace, n_prom, n_allmc):
         count = namespace.GetCount()
         cfglogger.info("Creating %d Lifs. for Tenant:%s" %\
                        (count, tenant.GID()))
         for l in range(count):
             lif = LifObject(tenant, spec, namespace)
             self.lifs.append(lif)
+
+        if n_prom != 0:
+            self.plifs = self.lifs[-n_prom:]
+            for l in self.plifs:
+                l.SetPromiscous()
+
+        if n_allmc != 0:
+            self.mlifs = self.lifs[-n_allmc:]
+            for l in self.mlifs:
+                l.SetAllMulticast()
+        return
 
     def Configure(self):
         cfglogger.info("Configuring %d LIFs." % len(self.lifs)) 

@@ -67,6 +67,10 @@ class MulticastGroupObject(base.ConfigObjectBase):
         cfglogger.info("- OIFs  :")
         for intf in self.oifs.GetAllInList():
             cfglogger.info("  - Oif: %s" % (intf.Summary()))
+        cfglogger.info("- ENICs  :")
+        for intf in self.enic_list:
+            cfglogger.info("  - Oif: %s" % (intf.Summary()))
+
         return
 
     def Summary(self):
@@ -97,12 +101,18 @@ class MulticastGroupObject(base.ConfigObjectBase):
         if remote:
             self.uplink_list.append(oif)
             self.oifs.Add(oif)
-        else:
-            if len(self.enic_list) >= MAX_ENICS_PER_GROUP:
-                cfglogger.info("Reached MAX_ENICS_PER_GROUP. Not adding OIF:%s" % (oif.GID()))
-                return
+            return
+        
+        if oif.IsAllMulticast():
+            cfglogger.info("Adding ALL MULTICAST oif:%s to enic list only." % oif.GID())
             self.enic_list.append(oif)
-            self.oifs.Add(oif)
+            return
+
+        if len(self.enic_list) >= MAX_ENICS_PER_GROUP:
+            cfglogger.info("Reached MAX_ENICS_PER_GROUP. Not adding OIF:%s" % (oif.GID()))
+            return
+        self.enic_list.append(oif)
+        self.oifs.Add(oif)
         return
 
     def PrepareHALRequestSpec(self, req_spec):

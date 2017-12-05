@@ -196,8 +196,15 @@ class TenantObject(base.ConfigObjectBase):
         return
 
     def __create_lifs(self):
+        enic_spec = getattr(self.spec, 'enics', None)
+        n_prom = 0
+        n_allmc = 0
+        if enic_spec:
+            n_prom = getattr(enic_spec, 'promiscous', 0)
+            n_allmc = getattr(enic_spec, 'allmulti', 0)
         self.spec.lif = self.spec.lif.Get(Store)
-        self.obj_helper_lif.Generate(self, self.spec.lif, self.lifns)
+        self.obj_helper_lif.Generate(self, self.spec.lif,
+                                     self.lifns, n_prom, n_allmc)
         self.obj_helper_lif.Configure()
         return
 
