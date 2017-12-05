@@ -83,7 +83,7 @@ class FeatureObjectHelper(parser.ParserBase):
     def __is_subfeature_match(self, feature):
         if GlobalOptions.subfeature is None:
             return True
-        return GlobalOptions.subfeature == feature.sub
+        return feature.sub in GlobalOptions.subfeature
 
     def __is_enabled(self, feature):
         if self.__is_subfeature_match(feature) is False:
@@ -107,6 +107,8 @@ class FeatureObjectHelper(parser.ParserBase):
 def Init():
     if GlobalOptions.feature is not None:
         GlobalOptions.feature = GlobalOptions.feature.split(',')
+    if GlobalOptions.subfeature is not None:
+        GlobalOptions.subfeature = GlobalOptions.subfeature.split(',')
     FtlHelper = FeatureObjectHelper()
     FtlHelper.Parse()
     return
