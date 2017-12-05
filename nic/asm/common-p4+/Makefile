@@ -20,6 +20,7 @@ SRC_FILES := \
     $(SRC_DIR)/rxdma_stage0.s \
     $(SRC_DIR)/txdma_stage0.s \
     $(SRC_DIR)/tx_stage0_lif_params_table.s \
+	$(SRC_DIR)/tx_table_s7_t4_lif_rate_limiter_table.s \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

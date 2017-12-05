@@ -31,6 +31,7 @@
 #define P4PLUS_APPTYPE_P4PT         10
 
 #define LIF_TABLE_SIZE 2048
+#define EGRESS_RATE_LIMITER_TABLE_SIZE 2048
 
 #define DMA_CMD_TYPE_MEM2PKT     1
 #define DMA_CMD_TYPE_PHV2PKT     2
@@ -604,5 +605,21 @@ header_type p4_to_p4plus_cpu_pkt_3_t {
         tcp_options         : 8;
         tcp_mss             : 16;
         tcp_ws              : 8;
+    }
+}
+
+
+header_type policer_scratch_metadata_t {
+    fields {
+        policer_valid       : 1;                                             
+        policer_pkt_rate    : 1;
+        policer_rlimit_en   : 1;
+        policer_rlimit_prof : 2;
+        policer_color_aware : 1;
+        policer_rsvd        : 1;
+        policer_axi_wr_pend : 1;
+        policer_burst       : 40;
+        policer_rate        : 40;
+        policer_tbkt        : 40;
     }
 }
