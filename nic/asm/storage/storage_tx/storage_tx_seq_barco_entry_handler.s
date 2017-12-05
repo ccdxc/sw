@@ -24,7 +24,7 @@ storage_tx_seq_barco_entry_handler_start:
    // Update the K+I vector with the barco descriptor size to be used
    // when calculating the offset for the push operation
    phvwr	p.storage_kivec1_xts_desc_size, d.xts_desc_size
-   phvwr	p.storage_kivec1_ssd_ci_addr, d.xts_ring_addr
+   phvwr	p.storage_kivec1_device_addr, d.xts_ring_addr
   
    // Save the descriptor size in bytes in r7
    addi     r7, r0, 1

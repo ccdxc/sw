@@ -831,6 +831,7 @@ table tx_table_s3_t0 {
         tx_table_s3_t0_action2;
         tx_table_s3_t0_action3;
         tx_table_s3_t0_action4;
+        tx_table_s3_t0_action5;
     }
 }
 
@@ -888,6 +889,7 @@ table tx_table_s2_t0 {
         tx_table_s2_t0_action7;
         tx_table_s2_t0_action8;
         tx_table_s2_t0_action9;
+        tx_table_s2_t0_action10;
     }
 }
 
@@ -947,6 +949,7 @@ table tx_table_s1_t0 {
         tx_table_s1_t0_action7;
         tx_table_s1_t0_action8;
         tx_table_s1_t0_action9;
+        tx_table_s1_t0_action10;
     }
 }
 

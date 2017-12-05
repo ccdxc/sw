@@ -22,7 +22,7 @@
 #define STORAGE_KIVEC0_DST_QID		\
 	k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
 #define STORAGE_KIVEC0_DST_QADDR	\
-	k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit2_ebit33}
+	k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit26_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST	\
 	k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0		\
@@ -49,11 +49,11 @@
 #define STORAGE_KIVEC1_SRC_QID		\
 	k.{storage_kivec1_src_qid_sbit0_ebit1...storage_kivec1_src_qid_sbit18_ebit23}
 #define STORAGE_KIVEC1_SRC_QADDR	\
-	k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit2_ebit33}
+	k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit26_ebit33}
 #define STORAGE_KIVEC1_XTS_DESC_SIZE	\
-	k.storage_kivec1_xts_desc_size
-#define STORAGE_KIVEC1_SSD_CI_ADDR	\
-	k.{storage_kivec1_ssd_ci_addr_sbit0_ebit31...storage_kivec1_ssd_ci_addr_sbit32_ebit33}
+	k.{storage_kivec1_xts_desc_size_sbit0_ebit7...storage_kivec1_xts_desc_size_sbit8_ebit15}
+#define STORAGE_KIVEC1_DEVICE_ADDR	\
+	k.{storage_kivec1_device_addr_sbit0_ebit7...storage_kivec1_device_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD	\
 	k.storage_kivec1_roce_cq_new_cmd
 
@@ -64,6 +64,29 @@
 
 #define STORAGE_KIVEC3_ROCE_MSN		\
 	k.storage_kivec3_roce_msn
+
+#define STORAGE_KIVEC4_W_NDX		\
+	k.storage_kivec4_w_ndx
+#define STORAGE_KIVEC4_SGL_ADDR		\
+	k.{storage_kivec4_sgl_addr_sbit0_ebit7...storage_kivec4_sgl_addr_sbit40_ebit63}
+#define STORAGE_KIVEC4_DATA_ADDR	\
+	k.{storage_kivec4_data_addr_sbit0_ebit7...storage_kivec4_data_addr_sbit56_ebit63}
+#define STORAGE_KIVEC4_DATA_LEN		\
+	k.{storage_kivec4_data_len_sbit0_ebit7...storage_kivec4_data_len_sbit8_ebit15}
+
+#define STORAGE_KIVEC5_STATUS_ADDR	\
+	k.{storage_kivec5_status_addr_sbit0_ebit7...storage_kivec5_status_addr_sbit40_ebit63}
+#define STORAGE_KIVEC5_STATUS_LEN	\
+	k.{storage_kivec5_status_len_sbit0_ebit7...storage_kivec5_status_len_sbit8_ebit15}
+#define STORAGE_KIVEC5_STATUS_DMA_EN	\
+	k.storage_kivec5_status_dma_en
+#define STORAGE_KIVEC5_STATUS_ERR	\
+	k.storage_kivec5_status_err
+
+#define STORAGE_KIVEC6_INTR_ADDR	\
+	k.{storage_kivec6_intr_addr_sbit0_ebit31...storage_kivec6_intr_addr_sbit32_ebit63}
+#define STORAGE_KIVEC6_INTR_DATA	\
+	k.storage_kivec6_intr_data
 
 #define STAGE0_KIVEC_LIF		\
 	k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
@@ -348,6 +371,17 @@
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
+
+// Raise an interrupt using the address and data stored in the K+I vector
+#define SEQ_COMP_SET_INTR(_dma_cmd_ptr)					\
+   add		r1, r0, STORAGE_KIVEC6_INTR_DATA;			\
+   phvwr	p.seq_doorbell_data_data, r1.dx;			\
+   add		r7, r0, STORAGE_KIVEC6_INTR_ADDR;			\
+   DMA_PHV2MEM_SETUP(seq_doorbell_data_data, seq_doorbell_data_data,	\
+                     r7, _dma_cmd_ptr)					\
+   DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
+
+
 // Raise an interrupt by using the address and data specified in the
 // d-vector
 #define PCI_QUEUE_PUSH_INTR_UPDATE(_dma_cmd_ptr)			\
@@ -539,4 +573,35 @@
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4, r5, r0, r0, dma_m2m_1)	\
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_2)	\
    
+// Setup the compression data buffer DMA based on flat source buffer 
+// and destination SGL (processing one SGL entry in this macro).
+// Notes: These GPRs are used for input/output to/from this macro
+//  1. r6 stores the running count of data remaining to be xfered
+//  2. r7 stores the offeset of the source data buffer from where
+//     the current xfer is to be done.
+// Steps:
+//  1. Adjust data len (0 => 64L xfer) and store it in r4
+//  2. Setup the DMA size based on the min size in r4 vs r6. 
+//  3. Source of the DMA is stored in r7.
+//  4. Destination of the DMA is based on the address in SGL.
+//  5. Update data remaining (r6) and address offset (r7) 
+//  6. If data xfer is complete, jump to the branch instruction
+//  7. Use a branch delay slot of nop to avoid spurious updates after 
+//     this macro is invoked 
+#define COMP_SGL_DMA(_dma_cmd_ptr_src, _dma_cmd_ptr_dst, _addr, _len,	\
+                     _branch_instr)					\
+   add		r4, r0, _len;						\
+   seq		c1, _len, 0;						\
+   addi.c1	r4, r0, 65536;						\
+   sle		c2, r4, r6;						\
+   add.c2	r4, r0, r6;						\
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r7, r4, 0, 0, 		\
+                     _dma_cmd_ptr_src)					\
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, _addr, r4, 0, 0,		\
+                     _dma_cmd_ptr_dst)					\
+   add		r7, r7, r4;						\
+   sub		r6, r6, r4;						\
+   bcf		![c2], _branch_instr;					\
+   nop;									\
+
 #endif     // STORAGE_ASM_DEFINES_H

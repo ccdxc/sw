@@ -71,6 +71,8 @@
 #define roce_rq_push_start		0x8000F000
 #define pvm_roce_sq_cb_push_start	0x80010000
 #define seq_pvm_roce_sq_cb_push_start	0x80020000
+#define seq_comp_status_handler_start	0x80030000
+#define seq_comp_sgl_handler_start	0x80040000
 
 // Generic Queue State. Total size can be 64 bytes at most.
 header_type q_state_t {
@@ -543,12 +545,13 @@ header_type storage_kivec0_t {
 // kivec1: header union with global
 header_type storage_kivec1_t {
   fields {
-    src_lif	: 11;	// Source LIF number
-    src_qtype	: 3;	// Source LIF type (within the LIF)
-    src_qid	: 24;	// Source queue number (within the LIF)
-    src_qaddr	: 34;	// Source queue state address
+    src_lif		: 11;	// Source LIF number
+    src_qtype		: 3;	// Source LIF type (within the LIF)
+    src_qid		: 24;	// Source queue number (within the LIF)
+    src_qaddr		: 34;	// Source queue state address
     xts_desc_size	: 16;	// Barco XTS descriptor size
-    ssd_ci_addr	: 34;	// Address of the consumer index in the SSD qstate
+    device_addr		: 34;	// Address of the consumer index in the SSD qstate (OR)
+				// Barco XTS ring address
     roce_cq_new_cmd	: 1;	// If ROCE CQ entry is a new commmand
   }
 }
@@ -567,6 +570,35 @@ header_type storage_kivec3_t {
     roce_msn	: 32;	// ROCE message sequence number 
   }
 }
+
+// kivec4: header union with stage_2_stage for table 0
+header_type storage_kivec4_t {
+  fields {
+    w_ndx		: 16;	// Working consumer index
+    sgl_addr		: 64;	// Address where destination SGL will be placed for PDMA
+    data_addr		: 64;	// Address where compression data will be placed
+    data_len		: 16;	// Output bits
+  }
+}
+
+// kivec5: header union with global
+header_type storage_kivec5_t {
+  fields {
+    status_addr		: 64;	// Address where compression status will be placed
+    status_len		: 16;	// Length of the compression status
+    status_dma_en	:  8;	// 1 => DMA status, 0 => don't DMA status
+    status_err		:  3;	// Error status (0: success: >0: failure)
+  }
+}
+
+// kivec6: header union with to_stage_3
+header_type storage_kivec6_t {
+  fields {
+    intr_addr		: 64;	// Address where interrupt needs to be written
+    intr_data		: 64;	// Data that needs to be written for interrupt
+  }
+}
+
 #define STORAGE_KIVEC0_USE(scratch, kivec)				\
   modify_field(scratch.w_ndx, kivec.w_ndx);				\
   modify_field(scratch.dst_lif, kivec.dst_lif);				\
@@ -588,7 +620,7 @@ header_type storage_kivec3_t {
   modify_field(scratch.src_qid, kivec.src_qid);				\
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
   modify_field(scratch.xts_desc_size, kivec.xts_desc_size);		\
-  modify_field(scratch.ssd_ci_addr, kivec.ssd_ci_addr);			\
+  modify_field(scratch.device_addr, kivec.device_addr);			\
 
 #define STORAGE_KIVEC2_USE(scratch, kivec)				\
   modify_field(scratch.ssd_q_num, kivec.ssd_q_num);			\
@@ -596,6 +628,23 @@ header_type storage_kivec3_t {
 
 #define STORAGE_KIVEC3_USE(scratch, kivec)				\
   modify_field(scratch.roce_msn, kivec.roce_msn);			\
+
+#define STORAGE_KIVEC4_USE(scratch, kivec)				\
+  modify_field(scratch.w_ndx, kivec.w_ndx);				\
+  modify_field(scratch.sgl_addr, kivec.sgl_addr);			\
+  modify_field(scratch.data_addr, kivec.data_addr);			\
+  modify_field(scratch.data_len, kivec.data_len);			\
+
+#define STORAGE_KIVEC5_USE(scratch, kivec)				\
+  modify_field(scratch.status_addr, kivec.status_addr);			\
+  modify_field(scratch.status_len, kivec.status_len);			\
+  modify_field(scratch.status_dma_en, kivec.status_dma_en);		\
+  modify_field(scratch.status_err, kivec.status_err);			\
+
+#define STORAGE_KIVEC6_USE(scratch, kivec)				\
+  modify_field(scratch.intr_addr, kivec.intr_addr);			\
+  modify_field(scratch.intr_data, kivec.intr_data);			\
+
 
 // PRP size calculation
 #define PRP_SIZE(p)				(PRP_SIZE_SUB - (p & PRP_SIZE_MASK))
@@ -863,7 +912,7 @@ header_type storage_pad0_t {
 }
 header_type storage_pad1_t {
   fields {
-    pad		: 32;
+    pad		: 168;
   }
 }
 
@@ -926,8 +975,46 @@ header_type seq_barco_entry_t {
   }
 }
 
+// Sequencer metadata compression entry
+header_type seq_comp_desc_t {
+  fields {
+    status_addr		: 64;	// Address where compression status will be placed
+    data_addr		: 64;	// Address where compression data will be placed
+    sgl_addr		: 64;	// Address where destination SGL will be placed for PDMA
+    intr_addr		: 64;	// Address where interrupt needs to be written
+    intr_data		: 64;	// Data that needs to be written for interrupt
+    status_len		: 16;	// Length of the compression status
+    status_dma_en	:  8;	// 1 => DMA status, 0 => don't DMA status
+  }
+}
 
-  // Carry forward NVME command information to be sent to PVM in the PHV 
+// Compression destination SGL metadata
+header_type seq_comp_sgl_t {
+  fields {
+    status_addr		: 64;	// Status destination address
+    addr0		: 64;	// SGL data buffer 0 address
+    addr1		: 64;	// SGL data buffer 1 address
+    addr2		: 64;	// SGL data buffer 2 address
+    addr3		: 64;	// SGL data buffer 3 address
+    len0		: 16;	// SGL data buffer 0 length
+    len1		: 16;	// SGL data buffer 1 length
+    len2		: 16;	// SGL data buffer 2 length
+    len3		: 16;	// SGL data buffer 3 length
+  }
+}
+
+// Compression status metadata
+header_type seq_comp_status_t {
+  fields {
+    rsvd2		: 1;	// Reserved
+    err			: 3;	// Error status (0: success: >0: failure)
+    rsvd1		: 12;	// Reserved
+    data_len		: 16;	// Output bits
+    rsvd3		: 32;	// Reserved
+  }
+}
+
+// Copy macros
 #define NVME_CMD_COPY(cmd)			\
   modify_field(cmd.opc, opc);			\
   modify_field(cmd.fuse, fuse);			\
