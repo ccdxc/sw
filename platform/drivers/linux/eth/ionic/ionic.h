@@ -47,7 +47,8 @@ struct ionic {
 
 struct tx_stats {
 	u64 dma_map_err;
-	u64 post;
+	u64 pkts;
+	u64 bytes;
 	u64 clean;
 	u64 drop;
 	u64 linearize;
