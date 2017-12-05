@@ -48,6 +48,10 @@ def GetCpuPacketbyRflow(testcase, args = None):
 
     return None
 
+def GetSIP(testcase, args = None):
+    sip = testcase.tracker.config.flow.sip
+    return (int(sip.value))
+
 def __get_expected_packet(testcase, args, config=None):
     root = getattr(testcase.config, 'flow', None)
     if root is None:

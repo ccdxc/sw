@@ -1,0 +1,9 @@
+meta:
+    id      : MSRPC_BIND_RSLT
+    scapy   : MSRPC_BIND_RSLT
+    size    : 0
+
+fields:
+    result      : const/0
+    response    : const/0
+    xfer_syntax : None

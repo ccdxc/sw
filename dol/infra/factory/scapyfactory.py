@@ -332,7 +332,6 @@ class ScapyPacketObject:
         builder = IcrcHeaderBuilder(packet)
         hdr.fields.icrc = builder.GetIcrc()
         
-        #pdb.set_trace()
         self.__add_header(hdr)
         return
         
@@ -495,4 +494,53 @@ def Parse(rawpkt):
     obj.Build(scapypacket = spkt)
     return obj
 
+#class ScapyHeaderBuilder_MSRPC_SYNTAX(ScapyHeaderBuilder_BASE):
+#    def build(self, hdr):
+#        hdr.fields.if_uuid = penscapy.UUID(hdr.fields.if_uuid)
+#        return super().build(hdr)
+#MSRPC_SYNTAX_builder = ScapyHeaderBuilder_MSRPC_SYNTAX()
 
+#class ScapyHeaderBuilder_MSRPC_CTXT_ELEM(ScapyHeaderBuilder_BASE):
+#    def build(self, hdr):
+#        records = []
+#        for r in hdr.fields.xfer_syntax:
+#            records.append(penscapy.MSRPC_SYNTAX(r.record))
+#        hdr.fields.xfer_syntax = records
+#        return super().build(hdr)
+#MSRPC_CTXT_ELEM_builder = ScapyHeaderBuilder_MSRPC_CTXT_ELEM()
+
+class ScapyHeaderBuilder_MSRPC_EPM_TWR(ScapyHeaderBuilder_BASE):
+    def build(self, hdr):
+        records = []
+        for r in hdr.fields.floors:
+            records.append(penscapy.MSRPC_EPM_FLOOR(r.record))
+        hdr.fields.floors = records
+        return super().build(hdr)
+MSRPC_EPM_TWR_builder = ScapyHeaderBuilder_MSRPC_EPM_TWR()
+
+class ScapyHeaderBuilder_MSRPC_EPM_RSP(ScapyHeaderBuilder_BASE):
+    def build(self, hdr):
+        records = []
+        for r in hdr.fields.msrpc_twr:
+            records.append(penscapy.MSRPC_EPM_TWR(r.record))
+        hdr.fields.msrpc_twr = records
+        return super().build(hdr)
+MSRPC_EPM_RSP_builder = ScapyHeaderBuilder_MSRPC_EPM_RSP()
+
+#class ScapyHeaderBuilder_MSRPC_BIND_REQ(ScapyHeaderBuilder_BASE):
+#    def build(self, hdr):
+#        records = []
+#        for r in hdr.fields.p_cont_elm:
+#            records.append(penscapy.MSRPC_CTXT_ELEM(r.record))
+#        hdr.fields.p_cont_elm = records
+#        return super().build(hdr)
+#MSRPC_BIND_REQ_builder = ScapyHeaderBuilder_MSRPC_BIND_REQ()
+
+#class ScapyHeaderBuilder_MSRPC_BIND_RSP(ScapyHeaderBuilder_BASE):
+#    def build(self, hdr):
+#        records = []
+#        for r in hdr.fields.rslts:
+#            records.append(penscapy.MSRPC_BIND_RSLT(r.record))
+#        hdr.fields.rslts = records
+#        return super().build(hdr)
+#MSRPC_BIND_RSP_builder = ScapyHeaderBuilder_MSRPC_BIND_RSP()

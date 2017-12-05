@@ -1,0 +1,8 @@
+meta:
+    id: MSRPC_BIND_RSLT
+
+headers:
+    - header:
+        id      : base
+        template: ref://store/headers/id=MSRPC_BIND_RSLT
+        fields:

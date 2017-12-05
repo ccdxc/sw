@@ -1,0 +1,13 @@
+meta:
+    id      : MSRPC_EPM_RSP
+    scapy   : MSRPC_EPM_RSP
+    size    : 0
+
+fields:
+    handle      : const/0
+    num_twr     : const/0
+    max_cnt     : const/0
+    offset      : const/0
+    actual_cnt  : const/0
+    msrpc_twr   : None
+    return_code : const/0 

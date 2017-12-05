@@ -149,16 +149,34 @@ steps:
                 valfollows: 1
 
     - step:
-        id          : IFLOW_DUMP_DATA
-        base        : ref://trackerstore/steps/id=IFLOW_BASE
-        fields      :
-            dport   : 32776 
-
-    - step:
         id          : IFLOW_GETPORT_DATA
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
             dport   : 54891
+
+    - step:
+        id          : IFLOW_SRPC_DATA_SYN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            sport   : 32001
+            dport   : 32776
+
+    - step:
+        id          : RFLOW_SRPC_DATA_SYN_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            sport   : 32776
+            dport   : 32001
+
+    - step:
+        id          : IFLOW_SRPC_DATA_ACK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : ack
+            sport   : 32001
+            dport   : 32776 
 
     - step:
         id          : IFLOW_MSRPC_DG_LE
@@ -172,30 +190,6 @@ steps:
                flags1   : 2
                serial_lo: 1
                drep     : 0x100000 
-               object:
-                   time_lo     : 00000000
-                   time_mid    : 0000
-                   time_hi_vers: 0000
-                   clock_seq_hi: 00
-                   clock_seq_lo: 00
-                   node_hi     : 000000
-                   node_lo     : 000000
-               if_id: 
-                   time_lo     : 0x0883afe1
-                   time_mid    : 0x1f5d
-                   time_hi_vers: 0xc911
-                   clock_seq_hi: 0xa4
-                   clock_seq_lo: 0x08
-                   node_hi     : 0x002b14
-                   node_lo     : 0xa0fa03
-               act_id:
-                   time_lo     : 00000000
-                   time_mid    : 0000
-                   time_hi_vers: 0000
-                   clock_seq_hi: 00
-                   clock_seq_lo: 00
-                   node_hi     : 000000
-                   node_lo     : 000100
                seqnum   : 1
                opnum    : 0
                fragnum  : 0
@@ -212,30 +206,6 @@ steps:
                flags1   : 2
                serial_lo: 1
                drep     : 0x100000
-               object:
-                   time_lo     : 00000000
-                   time_mid    : 0000
-                   time_hi_vers: 0000
-                   clock_seq_hi: 00
-                   clock_seq_lo: 00
-                   node_hi     : 000000
-                   node_lo     : 000000
-               if_id:
-                   time_lo     : 0x0883afe1
-                   time_mid    : 0x1f5d
-                   time_hi_vers: 0xc911
-                   clock_seq_hi: 0xa4
-                   clock_seq_lo: 0x08
-                   node_hi     : 0x002b14
-                   node_lo     : 0xa0fa03
-               act_id:
-                   time_lo     : 00000000
-                   time_mid    : 0000
-                   time_hi_vers: 0000
-                   clock_seq_hi: 00
-                   clock_seq_lo: 00
-                   node_hi     : 000000
-                   node_lo     : 000100
                seqnum   : 1
                opnum    : 0
                fragnum  : 0
@@ -252,30 +222,6 @@ steps:
                flags1   : 2
                serial_lo: 1
                drep     : 0x100000
-               object:
-                   time_lo     : 00000000
-                   time_mid    : 0000
-                   time_hi_vers: 0000
-                   clock_seq_hi: 00
-                   clock_seq_lo: 00
-                   node_hi     : 000000
-                   node_lo     : 000000
-               if_id:
-                   time_lo     : 0x0883afe1
-                   time_mid    : 0x1f5d
-                   time_hi_vers: 0xc911
-                   clock_seq_hi: 0xa4
-                   clock_seq_lo: 0x08
-                   node_hi     : 0x002b14
-                   node_lo     : 0xa0fa03
-               act_id:
-                   time_lo     : 00000000
-                   time_mid    : 0000
-                   time_hi_vers: 0000
-                   clock_seq_hi: 00
-                   clock_seq_lo: 00
-                   node_hi     : 000000
-                   node_lo     : 000100
                seqnum   : 2
                opnum    : 0
                fragnum  : 0
@@ -292,30 +238,110 @@ steps:
                flags1   : 2
                serial_lo: 1
                drep     : 0x100000
-               object:
-                   time_lo     : 00000000
-                   time_mid    : 0000
-                   time_hi_vers: 0000
-                   clock_seq_hi: 00
-                   clock_seq_lo: 00
-                   node_hi     : 000000
-                   node_lo     : 000000
-               if_id:
-                   time_lo     : 0x0883afe1
-                   time_mid    : 0x1f5d
-                   time_hi_vers: 0xc911
-                   clock_seq_hi: 0xa4
-                   clock_seq_lo: 0x08
-                   node_hi     : 0x002b14
-                   node_lo     : 0xa0fa03
-               act_id:
-                   time_lo     : 00000000
-                   time_mid    : 0000
-                   time_hi_vers: 0000
-                   clock_seq_hi: 00
-                   clock_seq_lo: 00
-                   node_hi     : 000000
-                   node_lo     : 000100
                seqnum   : 2
                opnum    : 0
                fragnum  : 0
+
+    - step:
+        id          : IFLOW_MSRPC_SYN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            sport   : 65528
+            dport   : 135
+
+    - step:
+        id          : RFLOW_MSRPC_SYN_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            sport   : 135
+            dport   : 65528
+
+    - step:
+        id          : IFLOW_MSRPC_ACK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : ack
+            sport   : 65528
+            dport   : 135
+ 
+    - step:
+        id          : IFLOW_MSRPC_BIND
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            sport   : 65528
+            dport   : 135
+            l7:
+               rpc_vers : 5
+               ptype    : 'BIND_REQ'
+               flags1   : 0x3
+               drep     : 0x10000000
+               call_id  : 0x1000000
+
+    - step:
+        id          : RFLOW_MSRPC_BIND_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            sport   : 135
+            dport   : 65528
+            l7:
+               rpc_vers : 5
+               ptype    : 'BIND_ACK'
+               flags1   : 0x3
+               drep     : 0x10000000
+               call_id  : 0x1000000
+
+    - step:
+        id          : IFLOW_MSRPC_EPM_REQ
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            sport   : 65528
+            dport   : 135
+            l7:
+               rpc_vers : 5
+               ptype    : 'PDU_REQ'
+               flags1   : 0x3
+               ctxt_id  : 0x0000 
+               drep     : 0x10000000
+               call_id  : 0x2000000
+
+    - step:
+        id          : RFLOW_MSRPC_EPM_RSP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            dport   : 65528
+            sport   : 135
+            l7:
+               rpc_vers : 5
+               ptype    : 'PDU_RSP'
+               flags1   : 0x3
+               ctxt_id  : 0x0000 
+               drep     : 0x10000000
+               call_id  : 0x2000000
+               refer_id : 0x3000000
+
+    - step:
+        id          : IFLOW_MSRPC_DATA_SYN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            dport   : 49154
+
+    - step:
+        id          : RFLOW_MSRPC_DATA_SYN_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            sport   : 49154
+
+    - step:
+        id          : IFLOW_MSRPC_DATA_ACK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            dport   : 49154

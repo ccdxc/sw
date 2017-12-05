@@ -1,0 +1,40 @@
+meta:
+    id: ETH_IPV4_TCP_MSRPC_EPM_RSP
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x800
+
+    - header:
+        id      : ipv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/6
+
+    - header:
+        id      : tcp
+        template: ref://store/headers/id=TCP
+        fields:
+
+    - header:
+        id      : msrpc
+        template: ref://store/headers/id=MSRPC
+        fields:
+
+    - header:
+        id      : msrpc_cn_hdr
+        template: ref://store/headers/id=MSRPC_CN_HDR
+        fields:
+
+    - header:
+        id      : msrpc_rsp_hdr
+        template: ref://store/headers/id=MSRPC_RSP_HDR
+        fields:
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:

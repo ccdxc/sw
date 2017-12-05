@@ -1,0 +1,15 @@
+meta:
+    id      : MSRPC_BIND_RSP
+    scapy   : MSRPC_BIND_RSP
+    size    : 0
+
+fields:
+    max_xmit_frag  : const/0
+    max_recv_frag  : const/0
+    assoc_grp_id   : const/0
+    sec_addr_len   : const/0
+    sec_addr       : None
+    num_rslt       : const/0
+    rsvd           : const/0
+    rsvd2          : const/0
+    rslts          : None

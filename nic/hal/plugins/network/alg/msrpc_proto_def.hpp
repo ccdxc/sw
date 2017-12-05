@@ -17,6 +17,7 @@
 #define EPM_PROTO_DG   0x0a
 #define EPM_PROTO_TCP_PORT 0x07
 #define EPM_PROTO_UDP_PORT 0x08
+#define EPM_PROTO_HOST_ADDR 0x09
 #define MAX_FLOORS     5
 #define MAX_CONTEXT    256 
 #define WORD_BYTES     4
@@ -141,14 +142,14 @@ typedef struct msrpc_rsp_hdr_s {
 } msrpc_rsp_hdr_t;
 
 typedef struct msrpc_epm_flr_s {
-    uint16_t   lhs_length;
-    uint8_t    protocol;
-    uuid_t     uuid;
-    uint16_t   version;
-    uint16_t   rhs_length;
-    uint16_t   minor_vers;
-    uint16_t   port;
-    uint32_t   ip;
+    uint16_t     lhs_length;
+    uint8_t      protocol;
+    uuid_t       uuid;
+    uint16_t     version;
+    uint16_t     rhs_length;
+    uint16_t     minor_vers;
+    uint16_t     port;
+    ipvx_addr_t  ip;
 } msrpc_epm_flr_t;
 
 typedef struct msrcp_twr_p_s {

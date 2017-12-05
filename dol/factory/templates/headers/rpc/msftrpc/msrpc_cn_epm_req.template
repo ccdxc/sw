@@ -1,0 +1,11 @@
+meta:
+    id      : MSRPC_EPM_REQ
+    scapy   : MSRPC_EPM_REQ
+    size    : 0
+
+fields:
+    refer_id  : const/0
+    uuid      : None
+    msrpc_twr : None
+    handle    : const/0
+    max_twr   : const/0

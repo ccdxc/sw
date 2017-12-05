@@ -102,7 +102,8 @@ namespace hal {
 namespace net {
 
 void
-insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map)
+insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map, 
+                 fte::alg_proto_state_t proto_state)
 {
     fte::alg_entry_t *entry = NULL;
 
@@ -115,20 +116,19 @@ insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map)
 
     memset(&entry->entry.key, 0, sizeof(hal::flow_key_t));
     entry->entry.key.vrf_id = ctx.key().vrf_id;
-    entry->entry.key.dip = ctx.key().sip;
+    entry->entry.key.dip = map->ip;
     entry->entry.key.dport = map->dport;
     entry->entry.key.proto = (types::IPProtocol)map->prot;
     entry->entry.key.flow_type = (map->addr_family == fte::ALG_ADDRESS_FAMILY_IPV6)?FLOW_TYPE_V6:FLOW_TYPE_V4;
-    entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_DATA;
+    entry->alg_proto_state = proto_state;
     entry->skip_firewall = TRUE;
 
     // Save the program number and SUN/MS RPC control dport (could be user specified)
     // We would replace this with the incoming one for Firewall lookup.
-    entry->rpcinfo.rpc_map.num_map = 1;
-    entry->rpcinfo.rpc_map.maps[entry->rpcinfo.rpc_map.num_map-1].prog_num = map->prog_num;
-    memcpy(&entry->rpcinfo.rpc_map.maps[entry->rpcinfo.rpc_map.num_map-1].uuid, &map->uuid, sizeof(map->uuid));
-    entry->rpcinfo.rpc_map.maps[entry->rpcinfo.rpc_map.num_map-1].vers = map->vers;
-    entry->rpcinfo.rpc_map.maps[entry->rpcinfo.rpc_map.num_map-1].dport = ctx.key().dport;
+    entry->rpcinfo.rpc_map.prog_num = map->prog_num;
+    memcpy(&entry->rpcinfo.rpc_map.uuid, &map->uuid, sizeof(map->uuid));
+    entry->rpcinfo.rpc_map.vers = map->vers;
+    entry->rpcinfo.rpc_map.dport = ctx.key().dport;
 
     // Need to add the entry with a timer
     // Todo(Pavithra) add timer to every ALG entry

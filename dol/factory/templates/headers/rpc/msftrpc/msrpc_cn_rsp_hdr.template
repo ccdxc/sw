@@ -1,0 +1,11 @@
+meta:
+    id      : MSRPC_RSP_HDR
+    scapy   : MSRPC_RSP_HDR
+    size    : 0
+
+fields:
+    alloc_hint  : const/0
+    ctxt_id     : const/0
+    cancel_cnt  : const/0
+    rsvd        : const/0
+    epm_data    : None

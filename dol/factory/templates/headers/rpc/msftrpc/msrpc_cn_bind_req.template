@@ -1,0 +1,13 @@
+meta:
+    id      : MSRPC_BIND_REQ
+    scapy   : MSRPC_BIND_REQ
+    size    : 0
+
+fields:
+    max_xmit_frag  : const/0
+    max_recv_frag  : const/0
+    assoc_grp_id   : const/0
+    num_ctxt_elem  : const/0
+    rsvd           : const/0
+    rsvd2          : const/0
+    p_cont_elm     : None

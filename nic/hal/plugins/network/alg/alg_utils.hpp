@@ -9,16 +9,17 @@ namespace fte {
     ENTRY(ALG_PROTO_STATE_TFTP_WRQ,       2,  "ALG_PROTO_STATE_TFTP_WRQ")  \
     ENTRY(ALG_PROTO_STATE_FTP,            3,  "ALG_PROTO_STATE_FTP")       \
     ENTRY(ALG_PROTO_STATE_DNS,            4,  "ALG_PROTO_STATE_DNS")       \
-    ENTRY(ALG_PROTO_STATE_RPC_INIT,       5,  "ALG_PROTO_STATE_RPC_INIT")  \
+    ENTRY(ALG_PROTO_STATE_SUNRPC_INIT,    5,  "ALG_PROTO_STATE_SURPRPC_INIT")  \
     ENTRY(ALG_PROTO_STATE_RPC_GETPORT,    6,  "ALG_PROTO_STATE_RPC_GETPORT") \
     ENTRY(ALG_PROTO_STATE_RPC_CALLIT,     7,  "ALG_PROTO_STATE_RPC_CALLIT") \
     ENTRY(ALG_PROTO_STATE_RPC_DUMP,       8,  "ALG_PROTO_STATE_RPC_DUMP") \
-    ENTRY(ALG_PROTO_STATE_RPC_DATA,       9,  "ALG_PROTO_STATE_RPC_DATA") \
-    ENTRY(ALG_PROTO_STATE_MSRPC_BIND,     10, "ALG_PROTO_STATE_MSRPC_BIND") \
-    ENTRY(ALG_PROTO_STATE_MSRPC_BOUND,    11, "ALG_PROTO_STATE_MSRPC_BOUND") \
-    ENTRY(ALG_PROTO_STATE_MSRPC_EPM,      12, "ALG_PROTO_STATE_MSRPC_EPM") \
-    ENTRY(ALG_PROTO_STATE_MSRPC_FRAG_REQ, 13, "ALG_PROTO_STATE_MSRPC_FRAG_REQ") \
-
+    ENTRY(ALG_PROTO_STATE_SUNRPC_DATA,    9,  "ALG_PROTO_STATE_SUNRPC_DATA") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_INIT,     10, "ALG_PROTO_STATE_MSRPC_INIT") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_BIND,     11, "ALG_PROTO_STATE_MSRPC_BIND") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_BOUND,    12, "ALG_PROTO_STATE_MSRPC_BOUND") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_EPM,      13, "ALG_PROTO_STATE_MSRPC_EPM") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_FRAG_REQ, 14, "ALG_PROTO_STATE_MSRPC_FRAG_REQ") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_DATA,     15, "ALG_PROTO_STATE_MSRPC_DATA") \
 
 DEFINE_ENUM(alg_proto_state_t, ALG_PROTO_STATE)
 #undef ALG_PROTO_STATE
@@ -35,6 +36,7 @@ DEFINE_ENUM(alg_addr_family_t, ALG_ADDRESS_FAMILY)
 
 typedef struct map {
     alg_addr_family_t    addr_family;
+    ipvx_addr_t          ip;
     uint32_t             prot;
     uint32_t             dport;
     uint32_t             vers;
@@ -53,16 +55,11 @@ typedef struct map {
     } __PACK__;
 } RPCMap;
 
-typedef struct maplist {
-    uint32_t  num_map;
-    RPCMap    maps[MAX_RPC];
-} RPCMaplist;
-
 typedef struct rpcinfo {
     uint8_t     rpc_frag_cont;
     uint8_t     msrpc_ctxt_id;
     uint8_t     rpcvers;
-    RPCMaplist  rpc_map;
+    RPCMap      rpc_map;
 } RPCInfo;
 
 // Todo (Pavithra) -- make it thread safe class
@@ -167,7 +164,7 @@ __pack_uint16(const uint8_t *buf, uint8_t *idx, uint8_t format=0)
 }
 
 
-void insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map);
+void insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map, fte::alg_proto_state_t proto_state);
 void cleanup_alg_entry(fte::ctx_t& ctx, hal::flow_key_t key);
 
 }

@@ -1,0 +1,11 @@
+meta:
+    id      : MSRPC_CTXT_ELEM
+    scapy   : MSRPC_CTXT_ELEM
+    size    : 0
+
+fields:
+    ctxt_id          : const/0
+    num_xfer_syn     : const/0
+    rsvd             : const/0
+    abs_syntax       : None
+    xfer_syntax      : None

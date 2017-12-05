@@ -14,6 +14,11 @@ modules:
         tracker  : True
         args     : 
             connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV4,proto=UDP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
         iterate  :
             # MSRPC DG UNFRAGMENTED
             - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_DG_LE
@@ -27,3 +32,37 @@ modules:
             - step        : ref://trackerstore/steps/id=RFLOW_MSRPC_DG_DATA
               pkttemplate : ETH_IPV4_UDP_MSRPC_DG
               fte_done    : True
+
+    - module:
+        name     : MSRPC_CN_UNFRAGMENTED
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV4,proto=TCP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+        iterate  :
+            - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_MSRPC_SYN_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_BIND
+              pkttemplate : ETH_IPV4_TCP_MSRPC_BIND_REQ
+            - step        : ref://trackerstore/steps/id=RFLOW_MSRPC_BIND_ACK
+              pkttemplate : ETH_IPV4_TCP_MSRPC_BIND_RSP
+            - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_EPM_REQ
+              pkttemplate : ETH_IPV4_TCP_MSRPC_EPM_REQ
+            - step        : ref://trackerstore/steps/id=RFLOW_MSRPC_EPM_RSP
+              pkttemplate : ETH_IPV4_TCP_MSRPC_EPM_RSP
+            - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_DATA_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_MSRPC_DATA_SYN_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_MSRPC_DATA_ACK
+              pkttemplate : ETH_IPV4_TCP

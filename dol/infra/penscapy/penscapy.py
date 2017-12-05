@@ -626,11 +626,137 @@ class UUID(Packet):
         BitField("node_lo", 0, 24),
     ]
 
+    def extract_padding(self, p):
+        return "", p
+
+class MSRPC_SYNTAX(Packet):
+    name = "MSRPC_SYNTAX"
+    fields_desc = [
+        PacketField("if_uuid", '', UUID),
+        BitField("if_vers", 0, 32),
+    ]
+ 
+    def extract_padding(self, p):
+        return "", p
+
+class MSRPC_EPM_FLOOR(Packet):
+    name = "MSRPC_EPM_FLOOR"
+    fields_desc = [
+        BitField("lhs_len",  0,  16),
+        BitField("proto",    0,   8),
+        ConditionalField(PacketField("uuid", '', UUID), lambda pkt:pkt.proto==13),
+        ConditionalField(BitField("vers", 0,  16), lambda pkt:pkt.proto==13),
+        BitField("rhs_len",  0,  16),
+        ConditionalField(BitField("vers_minor", 0,  16), lambda pkt:pkt.proto==13),
+        ConditionalField(BitField("port", 0,  16), lambda pkt:pkt.proto==7),
+        ConditionalField(BitField("ip", 0, 32), lambda pkt:pkt.proto==9),
+    ]
+
+class MSRPC_EPM_TWR(Packet):
+    name = "MSRPC_EPM_TWR"
+    fields_desc = [
+        BitField("refer_id",    0,  32),
+        BitField("length1",     0,  32),
+        BitField("length2",     0,  32),
+        BitField("num_floors",  0,  16),
+        PacketListField("floors", [], MSRPC_EPM_FLOOR),
+    ]
+
+class MSRPC_EPM_REQ(Packet):
+    name = "MSRPC_EPM_REQ"
+    fields_desc = [
+        BitField("refer_id",   0,  32),
+        PacketField("uuid",  '', UUID),
+        PacketField("msrpc_twr", '', MSRPC_EPM_TWR),
+        BitField("handle",  0, 160),
+        BitField("max_twr", 0,  32),
+    ]
+
+class MSRPC_EPM_RSP(Packet):
+    name = "MSRPC_EPM_RSP"
+    fields_desc = [
+        BitField("handle", 0, 160),
+        BitField("num_twr", 0,  32),
+        BitField("max_cnt", 0,  32),
+        BitField("offset",  0,  32),
+        BitField("actual_cnt",  0,  32),
+        PacketListField("msrpc_twr", '', MSRPC_EPM_TWR),
+        BitField("return_code",  0,  32),
+    ]
+
+class MSRPC_CTXT_ELEM(Packet):
+    name = "MSRPC_CTXT_ELEM"
+    fields_desc = [
+        BitField("ctxt_id",  0,  16),
+        BitField("num_xfer_syn",  0, 8),
+        BitField("rsvd",   0,   8),
+        PacketField("abs_syntax", '', MSRPC_SYNTAX),
+        PacketField("xfer_syntax", '', MSRPC_SYNTAX),
+    ]
+
+    def extract_padding(self, p):
+        return "", p    
+
+class MSRPC_BIND_RSLT(Packet):
+    name = "MSRPC_BIND_RSLT"
+    fields_desc = [
+        ShortEnumField("result",  0, {0:"ACCEPT", 1:"USER_REJECT", 2:"PROVIDER_REJECT"}),
+        ShortEnumField("reason",  0, {0:"REASON_NONE", 2:"ABS_SYN_UNSUPPORTED",
+                                      3:"XFER_SYN_UNSUPPORTED", 4:"LOCAL_LIMIT_EXCEEDED"}),
+        PacketField("xfer_syntax", '', MSRPC_SYNTAX),
+    ]
+
+class MSRPC_BIND_RSP(Packet):
+    name = "MSRPC_BIND_RSP"
+    fields_desc = [
+        BitField("max_xmit_frag",  0,   16),
+        BitField("max_recv_frag",  0,   16),
+        BitField("assoc_grp_id",   0,   32),
+        BitField("sec_addr_len", 0, 16),
+        BitField("sec_addr", 0, 32),
+        BitField("num_rslt",   0,  8),
+        BitField("rsvd",   0,  8),
+        BitField("rsvd2",  0,  8),
+        PacketField("rslts", '', MSRPC_BIND_RSLT),
+    ]
+
+class MSRPC_BIND_REQ(Packet):
+    name = "MSRPC_BIND_REQ"
+    fields_desc = [
+        BitField("max_xmit_frag",  0,  16),
+        BitField("max_recv_frag",  0,  16),
+        BitField("assoc_grp_id",   0,  32),
+        BitField("num_ctxt_elem",  0,  8),
+        BitField("rsvd",           0,  8),
+        BitField("rsvd2",          0,  16),
+        PacketField("p_cont_elm",  '', MSRPC_CTXT_ELEM),
+    ]
+
+class MSRPC_REQ_HDR(Packet):
+    name = "MSRPC_REQ_HDR"
+    fields_desc = [
+        BitField("alloc_hint",  0,   32),
+        BitField("ctxt_id",     0,   16),
+        BitField("opnum",       0,   16),
+        PacketField("epm_data", '',  MSRPC_EPM_REQ),
+    ]
+
+class MSRPC_RSP_HDR(Packet):
+    name = "MSRPC_RSP_HDR"
+    fields_desc = [
+        BitField("alloc_hint",  0,  32),
+        BitField("ctxt_id",     0,  16),
+        BitField("cancel_cnt",  0,  8),
+        BitField("rsvd",        0,  8),
+        PacketField("epm_data", '', MSRPC_EPM_RSP),
+    ]
+
 class MSRPC_CN_HDR(Packet):
     name = "MSRPC_CN_HDR"
     fields_desc = [
         BitField("rpc_vers_minor",  0,  8),
-        BitField("ptype",           0,  8),
+        ByteEnumField("ptype",  0,  {0:"PDU_REQ", 2:"PDU_RSP", 11:"BIND_REQ", 12:"BIND_ACK", 
+                                     13:"BIND_NACK", 14:"ALTER_CTXT_REQ", 15:"ALTER_CTXT_RSP"}),
         BitField("pfc_flags",       0,  8),
         BitField("drep",            0,  32),
         BitField("frag_lgth",       0,  16),
@@ -675,3 +801,9 @@ bind_layers(TCP, MSRPC, dport=65528)
 bind_layers(TCP, MSRPC, dport=65527)
 bind_layers(MSRPC, MSRPC_CN_HDR, rpc_vers=5)
 bind_layers(MSRPC, MSRPC_DG_HDR, rpc_vers=4)
+bind_layers(MSRPC_CN_HDR, MSRPC_BIND_REQ, ptype=11)
+bind_layers(MSRPC_CN_HDR, MSRPC_REQ_HDR, ptype=0)
+bind_layers(MSRPC_CN_HDR, MSRPC_RSP_HDR, ptype=2)
+bind_layers(MSRPC_CN_HDR, MSRPC_BIND_RSP, ptype=12)
+bind_layers(MSRPC_CN_HDR, MSRPC_BIND_REQ, ptype=14)
+bind_layers(MSRPC_CN_HDR, MSRPC_BIND_RSP, ptype=15)

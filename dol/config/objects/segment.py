@@ -192,7 +192,6 @@ class SegmentObject(base.ConfigObjectBase):
             return False
 
         if set(self.nw_hal_handles) != set(other.nw_hal_handles):
-            pdb.set_trace()
             lgh.error("Network handles don't match Expected : %s, actual : %s"
                       %(set(self.nw_hal_handles), set(other.nw_hal_handles)))
             return False

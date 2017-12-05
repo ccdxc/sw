@@ -1,0 +1,11 @@
+meta:
+    id      : MSRPC_EPM_TWR
+    scapy   : MSRPC_EPM_TWR
+    size    : 0
+
+fields:
+    refer_id       : const/0
+    length1        : const/0
+    length2        : const/0
+    num_floors     : const/0
+    floors         : None

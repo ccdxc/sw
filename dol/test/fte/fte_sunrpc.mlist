@@ -53,6 +53,10 @@ modules:
               pkttemplate : ETH_IPV4_TCP_SUNRPC_CALL_4_DUMP
             - step        : ref://trackerstore/steps/id=IFLOW_VERS4_PMAP_STAT
               pkttemplate : ETH_IPV4_TCP_SUNRPC_REPLY_4_DUMP
-            - step        : ref://trackerstore/steps/id=IFLOW_DUMP_DATA
+            - step        : ref://trackerstore/steps/id=IFLOW_SRPC_DATA_SYN
               cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_SRPC_DATA_SYN_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_SRPC_DATA_ACK
               pkttemplate : ETH_IPV4_TCP

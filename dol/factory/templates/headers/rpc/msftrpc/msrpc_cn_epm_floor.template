@@ -1,0 +1,9 @@
+meta:
+    id      : MSRPC_EPM_FLOOR
+    scapy   : MSRPC_EPM_FLOOR
+    size    : 0
+
+fields:
+    lhs_len  : const/0
+    proto    : const/0
+    rhs_len  : const/0

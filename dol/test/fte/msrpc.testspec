@@ -23,39 +23,206 @@ packets:
         template    : ref://factory/packets/id=UUID
         headers     :
             base:
-                time_lo     : ref://testcase/tracker/step/fields/l7/object/time_lo
-                time_mid    : ref://testcase/tracker/step/fields/l7/object/time_mid
-                time_hi_vers: ref://testcase/tracker/step/fields/l7/object/time_hi_vers
-                clock_seq_hi: ref://testcase/tracker/step/fields/l7/object/clock_seq_hi
-                clock_seq_lo: ref://testcase/tracker/step/fields/l7/object/clock_seq_lo
-                node_hi     : ref://testcase/tracker/step/fields/l7/object/node_hi
-                node_lo     : ref://testcase/tracker/step/fields/l7/object/node_lo
+                time_lo     : 00000000
+                time_mid    : 0000
+                time_hi_vers: 0000
+                clock_seq_hi: 00
+                clock_seq_lo: 00
+                node_hi     : 000000
+                node_lo     : 000000
 
     - packet:
         id          : IFIDUUID
         template    : ref://factory/packets/id=UUID
         headers     :
             base:
-                time_lo     : ref://testcase/tracker/step/fields/l7/if_id/time_lo
-                time_mid    : ref://testcase/tracker/step/fields/l7/if_id/time_mid
-                time_hi_vers: ref://testcase/tracker/step/fields/l7/if_id/time_hi_vers
-                clock_seq_hi: ref://testcase/tracker/step/fields/l7/if_id/clock_seq_hi
-                clock_seq_lo: ref://testcase/tracker/step/fields/l7/if_id/clock_seq_lo
-                node_hi     : ref://testcase/tracker/step/fields/l7/if_id/node_hi
-                node_lo     : ref://testcase/tracker/step/fields/l7/if_id/node_lo
+                time_lo     : 0x0883afe1
+                time_mid    : 0x1f5d
+                time_hi_vers: 0xc911
+                clock_seq_hi: 0x91
+                clock_seq_lo: 0xa4
+                node_hi     : 0x08002b
+                node_lo     : 0x14a0fa
 
     - packet:
         id          : ACTUUID
         template    : ref://factory/packets/id=UUID
         headers     :
             base:
-                time_lo     : ref://testcase/tracker/step/fields/l7/act_id/time_lo
-                time_mid    : ref://testcase/tracker/step/fields/l7/act_id/time_mid
-                time_hi_vers: ref://testcase/tracker/step/fields/l7/act_id/time_hi_vers
-                clock_seq_hi: ref://testcase/tracker/step/fields/l7/act_id/clock_seq_hi
-                clock_seq_lo: ref://testcase/tracker/step/fields/l7/act_id/clock_seq_lo
-                node_hi     : ref://testcase/tracker/step/fields/l7/act_id/node_hi
-                node_lo     : ref://testcase/tracker/step/fields/l7/act_id/node_lo
+                time_lo     : 00000000
+                time_mid    : 0000
+                time_hi_vers: 0000
+                clock_seq_hi: 00
+                clock_seq_lo: 00
+                node_hi     : 000000
+                node_lo     : 000000
+
+    - packet:
+        id          : ABS_SYN
+        template    : ref://factory/packets/id=MSRPC_SYNTAX
+        headers     : 
+            base: 
+                if_uuid: ref://testcase/packets/id=IFIDUUID/rawbytes
+                if_vers: 03000000
+
+    - packet:
+        id          : XFER_SYN
+        template    : ref://factory/packets/id=MSRPC_SYNTAX
+        headers     :
+            base:
+                if_uuid: ref://testcase/packets/id=ACTUUID/rawbytes
+                if_vers: 02000000
+
+    - packet:
+        id          : BIND_CTXT
+        template    : ref://factory/packets/id=MSRPC_CTXT_ELEM
+        headers     :
+            base:
+                num_xfer_syn: 1 
+                abs_syntax  : ref://testcase/packets/id=ABS_SYN/rawbytes
+                xfer_syntax : ref://testcase/packets/id=XFER_SYN/rawbytes 
+
+    - packet:
+        id          : BIND_RSLT
+        template    : ref://factory/packets/id=MSRPC_BIND_RSLT
+        headers     :
+            base:
+                result  : 0 
+                response: 0 
+                xfer_syntax: ref://testcase/packets/id=XFER_SYN/rawbytes
+
+    - packet:
+        id          : SAMRUUID
+        template    : ref://factory/packets/id=UUID
+        headers     :
+            base:
+                time_lo     : 0x78573412
+                time_mid    : 0x3412
+                time_hi_vers: 0xcdab
+                clock_seq_hi: 0xef
+                clock_seq_lo: 0x00
+                node_hi     : 0x012345
+                node_lo     : 0x6789ac
+
+    - packet: 
+        id          : EPMREQFLOORUUID
+        template    : ref://factory/packets/id=MSRPC_EPM_FLOOR
+        headers     :
+            base    :
+                lhs_len: 0x1300
+                proto  : 13
+                uuid   : ref://testcase/packets/id=SAMRUUID/rawbytes
+                version: 0x1000
+                rhs_len: 0x0200
+
+    - packet:
+        id          : EPMREQFLOORDREP
+        template    : ref://factory/packets/id=MSRPC_EPM_FLOOR
+        headers     :
+            base    :
+                lhs_len: 0x1300
+                proto  : 13
+                uuid   : ref://testcase/packets/id=OBJUUID/rawbytes
+                version: 0x2000
+                rhs_len: 0x0200
+
+    - packet:
+        id          : EPMREQFLOORPROTO
+        template    : ref://factory/packets/id=MSRPC_EPM_FLOOR
+        headers     :
+            base    :
+                lhs_len: 0x1300
+                proto  : 11
+                rhs_len: 0x0200
+
+    - packet:
+        id          : EPMREQFLOORDPORT
+        template    : ref://factory/packets/id=MSRPC_EPM_FLOOR
+        headers     :
+            base    :
+                lhs_len: 0x0100
+                proto  : 7
+                rhs_len: 0x200
+                port   : 0
+
+    - packet:
+        id          : EPMREQFLOORIPADDR
+        template    : ref://factory/packets/id=MSRPC_EPM_FLOOR
+        headers     :
+            base    :
+                lhs_len: 0x0100
+                proto  : 9
+                rhs_len: 0x400
+ 
+    - packet:
+        id          : EPMRSPFLOORDPORT
+        template    : ref://factory/packets/id=MSRPC_EPM_FLOOR
+        headers     :
+            base    :
+                lhs_len: 0x0100
+                proto  : 7
+                rhs_len: 0x200
+                port   : 0xc002
+
+    - packet:
+        id          : EPMRSPFLOORDIPADDR
+        template    : ref://factory/packets/id=MSRPC_EPM_FLOOR
+        headers     :
+            base    :
+                lhs_len: 0x0100
+                proto  : 9
+                rhs_len: 0x400
+                ip     : callback://alg/callbacks/GetSIP
+
+    - packet: 
+        id          : EPMREQTWR
+        template    : ref://factory/packets/id=MSRPC_EPM_TWR
+        headers     :
+            base    :
+                refer_id   : 0x2000000
+                num_floors : 0x0500
+                floors     : 
+                    - record: ref://testcase/packets/id=EPMREQFLOORUUID/rawbytes
+                    - record: ref://testcase/packets/id=EPMREQFLOORDREP/rawbytes
+                    - record: ref://testcase/packets/id=EPMREQFLOORPROTO/rawbytes
+                    - record: ref://testcase/packets/id=EPMREQFLOORDPORT/rawbytes
+                    - record: ref://testcase/packets/id=EPMREQFLOORIPADDR/rawbytes
+
+    - packet:
+        id          : EPMRSPTWR
+        template    : ref://factory/packets/id=MSRPC_EPM_TWR
+        headers     :
+            base    :
+                refer_id   : 0x3000000
+                num_floors : 0x0500 
+                floors     : 
+                    - record: ref://testcase/packets/id=EPMREQFLOORUUID/rawbytes
+                    - record: ref://testcase/packets/id=EPMREQFLOORDREP/rawbytes
+                    - record: ref://testcase/packets/id=EPMREQFLOORPROTO/rawbytes
+                    - record: ref://testcase/packets/id=EPMRSPFLOORDPORT/rawbytes
+                    - record: ref://testcase/packets/id=EPMRSPFLOORDIPADDR/rawbytes
+
+    - packet:
+        id          : EPM_REQ
+        template    : ref://factory/packets/id=MSRPC_EPM_REQ
+        headers     :
+            base    : 
+                refer_id : 0x01000000 
+                uuid     : ref://testcase/packets/id=OBJUUID/rawbytes
+                msrpc_twr: ref://testcase/packets/id=EPMREQTWR/rawbytes
+                max_twr  : 0x01000000
+
+    - packet:
+        id          : EPM_RSP
+        template    : ref://factory/packets/id=MSRPC_EPM_RSP
+        headers     :
+            base    :
+                num_twr     : 1
+                max_cnt     : 1
+                actual_cnt  : 1
+                msrpc_twr   : 
+                    - record: ref://testcase/packets/id=EPMRSPTWR/rawbytes
+                return_code : 1
 
     - packet:
         id          : PKT  # IFlow Base Packet
@@ -104,7 +271,30 @@ packets:
                 fragnum     : ref://testcase/tracker/step/fields/l7/fragnum
                 auth_proto  : 0
                 serial_lo   : ref://testcase/tracker/step/fields/l7/serial_lo 
-
+            msrpc_cn_hdr: 
+                rpc_vers_minor: 0
+                ptype         : ref://testcase/tracker/step/fields/l7/ptype
+                pfc_flags     : ref://testcase/tracker/step/fields/l7/flags1
+                drep          : ref://testcase/tracker/step/fields/l7/drep
+                frag_lgth     : 0
+                auth_lgth     : 0
+                call_id       : ref://testcase/tracker/step/fields/l7/call_id
+            msrpc_bind_req: 
+                num_ctxt_elem : 1
+                p_cont_elm    : ref://testcase/packets/id=BIND_CTXT/rawbytes
+            msrpc_bind_rsp: 
+                sec_addr_len  : 0x0400
+                sec_addr      : 0x31333500
+                num_rslt      : 1
+                rslts         : ref://testcase/packets/id=BIND_RSLT/rawbytes
+            msrpc_req_hdr: 
+                ctxt_id       : ref://testcase/tracker/step/fields/l7/ctxt_id
+                opnum         : 0x0300
+                epm_data      : ref://testcase/packets/id=EPM_REQ/rawbytes
+            msrpc_rsp_hdr:  
+                ctxt_id       : ref://testcase/tracker/step/fields/l7/ctxt_id
+                epm_data      : ref://testcase/packets/id=EPM_RSP/rawbytes
+                
 trigger:
     packets:
         - packet:
