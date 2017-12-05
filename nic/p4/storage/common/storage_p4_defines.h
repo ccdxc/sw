@@ -639,6 +639,7 @@ header_type storage_kivec6_t {
   modify_field(scratch.status_addr, kivec.status_addr);			\
   modify_field(scratch.status_len, kivec.status_len);			\
   modify_field(scratch.status_dma_en, kivec.status_dma_en);		\
+  modify_field(scratch.status_err, kivec.status_err);			\
 
 #define STORAGE_KIVEC6_USE(scratch, kivec)				\
   modify_field(scratch.intr_addr, kivec.intr_addr);			\

@@ -1995,12 +1995,12 @@ action pvm_roce_sq_wqe_process(wrid, op_type, complete_notify, fence,
 
 /*****************************************************************************
  *  seq_comp_desc_handler: Handle the compression descriptor entry in the 
- *                          sequencer. This involves:
+ *                         sequencer. This involves:
  *                          1. processing status to see if operation succeeded
  *                          2. breaking up the compressed data into the 
  *                             destination SGL provided in the descriptor
- *                          In this stage, load the status entry for next stage
- *                          and save the other fields into I vector.
+ *                         In this stage, load the status entry for next stage
+ *                         and save the other fields into I vector.
  *****************************************************************************/
 
 @pragma little_endian status_addr data_addr sgl_addr intr_addr intr_data status_len
@@ -2042,14 +2042,8 @@ action seq_comp_desc_handler(status_addr, data_addr, sgl_addr, intr_addr,
 }
 
 /*****************************************************************************
- *  seq_comp_status_handler: Handle the completion status and check for errors
-Handle the compression descriptor entry in the 
- *                          sequencer. This involves:
- *                          1. processing status to see if operation succeeded
- *                          2. breaking up the compressed data into the 
- *                             destination SGL provided in the descriptor
- *                          In this stage, load the status entry for next stage
- *                          and save the other fields into I vector.
+ *  seq_comp_status_handler: Store the compression status in K+I vector. Load
+ *                           SGL address for next stage to do the PDMA.
  *****************************************************************************/
 
 @pragma little_endian data_len rsvd3
@@ -2077,6 +2071,11 @@ action seq_comp_status_handler(rsvd2, err, rsvd1, data_len, rsvd3) {
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, 
                         seq_comp_sgl_handler_start)
 }
+
+/*****************************************************************************
+ *  seq_comp_sgl_handler: Parse the destination SGL and DMA the status, 
+ *                        data (if status was success) and set the interrupt.
+ *****************************************************************************/
 
 @pragma little_endian status_addr addr0 addr1 addr2 addr3 len0 len1 len2 len3 
 action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3, 
