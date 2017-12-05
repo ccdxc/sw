@@ -15,16 +15,31 @@ service Cluster {
 	rpc Disjoin (ClusterDisjoinReq)  returns (ClusterDisjoinResp) {};
 }
 
+// A Venice cluster runs a service to issue X509 certificates to controllers and agents for mTLS.
+// A node that joins the cluster bootstraps its CA with a signing key shared with other nodes.
+// The signing key is transported in wrapped form from the node that initiates cluster formation
+// to the node that is asked to join using the Elliptic Curve Diffie-Hellman (ECDH) protocol.
+//
+// This is the sequence of steps performed by initiation and joining node to transport the CA signing key:
+// 1. Initiator generates EC key pair (Public1, Private1) and sends Public1 to joining node
+// 2. Joining node generates an EC key pair (Public2, Private2) and sends Public2 to initiator node
+// 3. Initiator node computes an AES key as AESKey = Private1 + Public2
+// 4. Joining node computes the same AES key as AESKey = Private2 + Public1
+// 5. Initiator node sends the signing key to joining node encrypted with AESKey
+// 6. Joining node decrypts the signing key using AESKey and bootstraps the CA.
+
 // Cluster PreJoin request
 message ClusterPreJoinReq {
 	string name = 1;
 	string uuid = 2;
 	string virtual_ip = 3;
+	bytes transportKey = 4; // Initiator public key (step 1 in CA key transport sequence)
 }
 
 // Cluster PreJoin response
 message ClusterPreJoinResp {
 	string sw_version = 1;
+	bytes transportKey = 2; // Joining node public key (step 2 in CA key transport sequence)
 }
 
 // Quorum member
@@ -41,6 +56,18 @@ message QuorumConfig {
 	repeated QuorumMember quorum_members = 2;
 }
 
+// Certificate
+message Certificate {
+	bytes certificate = 1;
+}
+
+// CA Bundle
+message CertMgrBundle {
+	bytes wrappedCaKey = 1;
+	repeated Certificate caTrustChain = 2;
+	repeated Certificate trustRoots = 3;
+}
+
 // Cluster Join request
 message ClusterJoinReq {
 	string name = 1;
@@ -50,6 +77,7 @@ message ClusterJoinReq {
 	QuorumConfig quorum_config = 5;
 	repeated string NTPServers = 6;
 	string node_id = 7;
+	CertMgrBundle certMgrBundle = 8; // Bundle containing the CA signing key and related certificates (step 5)
 }
 
 // Cluster Join response

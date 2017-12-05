@@ -25,7 +25,7 @@ func TestCKMBasedProviderInit(t *testing.T) {
 	// NEGATIVE TEST-CASES
 
 	// create a real KeyMgr
-	be, err := keymgr.NewDefaultBackend()
+	be, err := keymgr.NewDefaultBackend("rpckit_ckm_test")
 	AssertOk(t, err, "Error instantiating KeyMgr backend")
 	defer be.Close()
 	km, err := keymgr.NewKeyMgr(be)
@@ -59,7 +59,7 @@ func TestCKMBasedProviderRPC(t *testing.T) {
 	AssertOk(t, err, "Error creating CKM controller at localhost:0")
 
 	// create KeyMgr
-	be, err := keymgr.NewDefaultBackend()
+	be, err := keymgr.NewDefaultBackend("rpckit_ckm_test")
 	AssertOk(t, err, "Error instantiating KeyMgr backend")
 	defer be.Close()
 	km, err := keymgr.NewKeyMgr(be)
@@ -139,7 +139,7 @@ func TestRPCBalancing(t *testing.T) {
 	b := balancer.New(r)
 
 	// create KeyMgr
-	be, err := keymgr.NewDefaultBackend()
+	be, err := keymgr.NewDefaultBackend("rpckit_ckm_test")
 	AssertOk(t, err, "Error instantiating KeyMgr backend")
 	defer be.Close()
 	km, err := keymgr.NewKeyMgr(be)

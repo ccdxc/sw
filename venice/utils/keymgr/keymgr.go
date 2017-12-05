@@ -211,7 +211,7 @@ func (km *KeyMgr) DeriveKey(derivedKeyID string, derivedKeyType KeyType, baseKey
 	}
 	// Right now only ECDH (Elliptic Curve Diffie-Hellman) derivation of AES keys
 	// is supported for all backends, so we can do all checks here
-	peerKeyType := getPublicKeyType(peerPublicKey)
+	peerKeyType := GetPublicKeyType(peerPublicKey)
 	if !isECDSAKey(peerKeyType) {
 		return nil, fmt.Errorf("Unsupported peer key type: %v", peerKeyType)
 	}
@@ -266,6 +266,16 @@ func (km *KeyMgr) UnwrapKeyPair(targetKeyPairID string, wrappedKey []byte, publi
 	}
 	km.objects[targetKeyPairID] = kp
 	return kp, nil
+}
+
+// Close releases the resources used by this backend
+func (km *KeyMgr) Close() error {
+	km.Lock()
+	defer km.Unlock()
+	err := km.be.Close()
+	km.be = nil
+	km.objects = nil
+	return err
 }
 
 // NewKeyMgr returns a new instance of KeyMgr using the supplied backend

@@ -96,7 +96,7 @@ func NewKeyPairObject(id string, signer crypto.Signer) *KeyPair {
 			id:      id,
 			objType: ObjectTypeKeyPair,
 		},
-		KeyType: getPublicKeyType(signer.Public()),
+		KeyType: GetPublicKeyType(signer.Public()),
 		Signer:  signer,
 	}
 }
@@ -181,6 +181,8 @@ type Backend interface {
 	// DeriveKey derives a symmetric key using Diffie-Hellman key agreement.
 	// Backend is expected to follow ANSI X9.63 for the derivation with NULL KDF
 	// See http://www.secg.org/sec1-v2.pdf Sec. 3.3.1 and 6.1
+	// TODO: The shared secret should be hashed to remove any weak bits, but current
+	//       SoftHSM does not support any key derivation function (PKCS#11 supports SHA1)
 	DeriveKey(derivedKeyID string, derivedKeyType KeyType, baseKeyPairID string, peerPublicKey crypto.PublicKey) (*SymmetricKey, error)
 
 	// WrapKeyPair encrypts a KeyPair with an existing symmetric wrapping key.

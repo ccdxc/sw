@@ -22,13 +22,15 @@ import (
 
 func TestCertificatesRPC(t *testing.T) {
 	// Instantiate Key Manager and Certificate Manager
-	be, err := keymgr.NewDefaultBackend()
+	be, err := keymgr.NewDefaultBackend("rpctest")
 	AssertOk(t, err, "Error instantiating KeyMgr default backend")
 	defer be.Close()
 	km, err := keymgr.NewKeyMgr(be)
 	AssertOk(t, err, "Error instantiating KeyMgr")
 	cm, err := certmgr.NewCertificateMgr(km)
-	AssertOk(t, err, "Error instantiating certificates manager")
+	AssertOk(t, err, "Error instantiating certificate manager")
+	err = cm.StartCa(true)
+	AssertOk(t, err, "Error starting certificate manager CA")
 
 	serverName := "ckm"
 
@@ -52,7 +54,7 @@ func TestCertificatesRPC(t *testing.T) {
 	trustRoots := x509.NewCertPool()
 
 	for i, r := range rootsResp.GetTrustRoots() {
-		trustRoots.AddCert(&cmTrustRoots[i])
+		trustRoots.AddCert(cmTrustRoots[i])
 		if !reflect.DeepEqual(r.GetCertificate(), cmTrustRoots[i].Raw) {
 			t.Fatalf("TrustRoots() RPC response does not match CM trust roots.\nHave: %+v\nWant:%+v", r.GetCertificate(), cmTrustRoots[i].Raw)
 		}

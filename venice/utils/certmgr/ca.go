@@ -5,6 +5,7 @@ package certmgr
 import (
 	"crypto"
 	"crypto/x509"
+	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -60,7 +61,7 @@ func (l *CertificateAuthority) getValidTrustChains(cert *x509.Certificate, inter
 }
 
 // initializes a certificate services instance
-func (l *CertificateAuthority) init() error {
+func (l *CertificateAuthority) init(bootstrap bool) error {
 	// Try to read an existing private key from keymgr.
 	// If an object with ID caKeyID does not exist, caKey will be nil, but no error is returned
 	caKey, err := l.keyMgr.GetObject(caKeyID, keymgr.ObjectTypeKeyPair)
@@ -70,7 +71,7 @@ func (l *CertificateAuthority) init() error {
 
 	// If we fail to read an existing private key, we bootstrap the CA with
 	// a generated private key and a self-signed certificate
-	if caKey == nil {
+	if caKey == nil && bootstrap {
 		caKey, err = l.keyMgr.CreateKeyPair(caKeyID, caKeyType)
 		if err != nil {
 			return errors.Wrap(err, "Error generating signing key")
@@ -83,9 +84,16 @@ func (l *CertificateAuthority) init() error {
 		if err != nil {
 			return errors.Wrap(err, "Error storing self-signed certificate")
 		}
+		err = l.keyMgr.StoreObject(keymgr.NewCertificateBundleObject(trustRootsBundleName, []*x509.Certificate{selfSignedCert}))
+		if err != nil {
+			return errors.Wrap(err, "Error creating trust roots bundle")
+		}
 	}
-	l.caKey = caKey
-
+	if caKey != nil {
+		l.caKey = caKey
+	} else {
+		return fmt.Errorf("CA signing key not found")
+	}
 	// read CA certificate
 	caCert, err := l.keyMgr.GetObject(caCertificateID, keymgr.ObjectTypeCertificate)
 	if err != nil {
@@ -120,12 +128,6 @@ func (l *CertificateAuthority) init() error {
 	}
 	log.Infof("Loaded %v trust roots", len(l.trustRoots))
 
-	// if our cert is self-signed, add ourselves to trustRoots
-	if certs.IsSelfSigned(l.caCertificate) {
-		l.trustRoots = append(l.trustRoots, l.caCertificate)
-		log.Infof("Added self-signed certificate to trusted roots")
-	}
-
 	// form and validate the CA trust chain
 	tcs, err := l.getValidTrustChains(l.caCertificate, intermediates)
 	if err != nil || len(tcs) < 1 {
@@ -151,10 +153,10 @@ func (l *CertificateAuthority) Sign(csr *x509.CertificateRequest) (*x509.Certifi
 // TrustRoots returns the trust roots that should be trusted by all members of the cluster.
 // These include the root of the CA trust chain + other roots that should be
 // trusted by cluster members, if any
-func (l *CertificateAuthority) TrustRoots() []x509.Certificate {
-	result := make([]x509.Certificate, 0)
+func (l *CertificateAuthority) TrustRoots() []*x509.Certificate {
+	result := make([]*x509.Certificate, 0)
 	for _, r := range l.trustRoots {
-		result = append(result, *r)
+		result = append(result, r)
 	}
 	return result
 }
@@ -164,10 +166,10 @@ func (l *CertificateAuthority) TrustRoots() []x509.Certificate {
 // trust root and is typically self-signed. In between are the certificates of
 // intermediate CAs, if any. If the CA uses a self-signed certificate, the trust chain
 // consists of that certificate only.
-func (l *CertificateAuthority) TrustChain() []x509.Certificate {
-	result := make([]x509.Certificate, 0)
+func (l *CertificateAuthority) TrustChain() []*x509.Certificate {
+	result := make([]*x509.Certificate, 0)
 	for _, c := range l.trustChain {
-		result = append(result, *c)
+		result = append(result, c)
 	}
 	return result
 }
@@ -185,7 +187,9 @@ func (l *CertificateAuthority) IsReady() bool {
 }
 
 // NewCertificateAuthority provides a new instance of Certificate Services
-func NewCertificateAuthority(km *keymgr.KeyMgr) (*CertificateAuthority, error) {
+// If no existing keys are found and bootstrap is true, the CA is bootstrapped with a
+// generated private key and a self-signed certificate, otherwise an error is returned
+func NewCertificateAuthority(km *keymgr.KeyMgr, bootstrap bool) (*CertificateAuthority, error) {
 	if km == nil {
 		return nil, errors.New("KeyMgr instance is required")
 	}
@@ -195,7 +199,7 @@ func NewCertificateAuthority(km *keymgr.KeyMgr) (*CertificateAuthority, error) {
 		ready:  false,
 	}
 
-	err := ca.init()
+	err := ca.init(bootstrap)
 	if err != nil || !ca.ready {
 		return nil, errors.Wrap(err, "CA failed to start")
 	}

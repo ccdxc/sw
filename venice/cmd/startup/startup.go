@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
+	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/quorum"
@@ -232,11 +233,29 @@ func StartNodeServices(nodeID, VirtualIP string) {
 
 // OnStart restore state and start services as applicable
 func OnStart() {
+	// CertMgr runs both on quorum and controller nodes
+	// It needs to be instantiated before cluster is formed, but it will be
+	// ready to issue certificates only after the cluster is formed
+	if env.CertMgr == nil {
+		cm, err := certmgr.NewDefaultCertificateMgr()
+		if err != nil {
+			log.Errorf("Failed to instantiate certificate manager, error: %v", err)
+			return
+		}
+		env.CertMgr = cm
+	}
+
 	var cluster *utils.Cluster
 	var err error
 	if cluster, err = utils.GetCluster(); err != nil || cluster == nil {
 		log.Debugf("OnStart cluster:%v err:%v possibly not part of cluster yet", cluster, err)
 		return
+	}
+
+	// if we are already part of a cluster we can start the CA
+	err = env.CertMgr.StartCa(false)
+	if err != nil {
+		log.Errorf("Node is part of cluster %+v but CA failed to start with err: %v", cluster, err)
 	}
 
 	if cluster.QuorumNodes == nil {

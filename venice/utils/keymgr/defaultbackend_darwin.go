@@ -12,9 +12,9 @@ import (
 
 // NewDefaultBackend returns an instance of the default backend
 // It allows switching from one backend to the other without making clients of KeyMgr aware of the change
-func NewDefaultBackend() (Backend, error) {
+func NewDefaultBackend(ID string) (Backend, error) {
 	// GoCrypto is only available choice on Mac
-	workDir, err := ioutil.TempDir("", "gocryptobe-")
+	workDir, err := ioutil.TempDir("", "gocryptobe-"+ID+"-")
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error creating workdir for GoCrypto backend")
 	}

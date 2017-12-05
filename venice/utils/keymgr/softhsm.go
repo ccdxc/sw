@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/miekg/pkcs11"
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/venice/utils/log"
@@ -85,4 +86,12 @@ func DestroySoftHSMSandbox() error {
 		return errors.Wrapf(err, "Error setting environment variable %s", configEnvVarName)
 	}
 	return os.Unsetenv(configEnvVarName)
+}
+
+// HasMultiTokenSupport tells whether the PKCS#11 backend supports multiple tokens
+// SoftHSM versions before 2.2.0 do not automatically make extra uninitialized tokens
+// available when a token is initialized. See https://github.com/opendnssec/SoftHSMv2/pull/198
+func HasMultiTokenSupport(hsmInfo pkcs11.Info) bool {
+	return (hsmInfo.ManufacturerID != "SoftHSM") ||
+		(hsmInfo.LibraryVersion.Major >= 2 && hsmInfo.LibraryVersion.Minor >= 2)
 }

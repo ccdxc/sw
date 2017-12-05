@@ -73,6 +73,9 @@ end
           v.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
           v.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
           v.customize ['modifyvm', :id, '--paravirtprovider', "kvm"]
+
+          # Configure Virtualbox to resync VM time if it drifts more than 1s from the host time
+          v.customize ["guestproperty", "set", :id, "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold", 1000]
       end
 
         if ENV['SCALE_SETUP']

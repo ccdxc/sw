@@ -1,6 +1,9 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 package server
 
 import (
+	"crypto"
 	"fmt"
 	"net"
 	"os"
@@ -11,9 +14,11 @@ import (
 
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
+	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -34,6 +39,7 @@ const (
 
 // clusterRPCHandler handles all cluster gRPC calls.
 type clusterRPCHandler struct {
+	peerTransportKey crypto.PublicKey
 }
 
 // PreJoin handles the prejoin request for joining a cluster. Will fail if
@@ -44,7 +50,33 @@ func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *grpc.ClusterPreJoi
 	} else if cluster != nil {
 		return nil, fmt.Errorf("Already part of cluster +%v", cluster)
 	}
-	return &grpc.ClusterPreJoinResp{SwVersion: version.Version}, nil
+	var transportKeyBytes []byte
+	if req.TransportKey != nil {
+		if env.CertMgr == nil {
+			cm, err := certmgr.NewDefaultCertificateMgr()
+			if err != nil {
+				return nil, fmt.Errorf("Failed to instantiate certificate manager, error: %v", err)
+			}
+			env.CertMgr = cm
+		}
+		// PreJoin messages go out to all quorum nodes during cluster formation, including the sender.
+		// If CertMgr is already bootstrapped, it means that we are the sender and we don't need to do anything
+		if !env.CertMgr.IsReady() {
+			transportKey, err := env.CertMgr.GetKeyAgreementKey("self")
+			if err != nil {
+				return nil, fmt.Errorf("Error generating key-agreement-key")
+			}
+			if c.peerTransportKey != nil {
+				log.Warnf("Overriding peerTransportKey from previous unfinished exchange")
+			}
+			c.peerTransportKey = env.CertMgr.UnmarshalKeyAgreementKey(req.TransportKey)
+			transportKeyBytes = env.CertMgr.MarshalKeyAgreementKey(transportKey)
+		}
+	}
+	return &grpc.ClusterPreJoinResp{
+		SwVersion:    version.Version,
+		TransportKey: transportKeyBytes,
+	}, nil
 }
 
 // Join handles the join request for a cluster. If part of quorum, it will
@@ -68,6 +100,18 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	// Record cluster membership on local FS.
 	if err := utils.SaveCluster(&cl); err != nil {
 		return nil, err
+	}
+
+	if req.CertMgrBundle != nil && !env.CertMgr.IsReady() {
+		defer func() { c.peerTransportKey = nil }()
+		err := certificates.UnpackCertMgrBundle(env.CertMgr, req.CertMgrBundle, c.peerTransportKey)
+		if err != nil {
+			return nil, fmt.Errorf("Error unpacking CertMgr bundle: %v", err)
+		}
+		err = env.CertMgr.StartCa(false)
+		if err != nil || !env.CertMgr.IsReady() {
+			return nil, fmt.Errorf("Error starting CertMgr: %v", err)
+		}
 	}
 
 	// Check if quorum node.
@@ -189,6 +233,14 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 
 func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoinReq) (*grpc.ClusterDisjoinResp, error) {
 	var err error
+	// Stop CertificatesMgr and cleanup CA keys
+	if env.CertMgr != nil {
+		err = env.CertMgr.Close()
+		if err != nil {
+			env.Logger.Errorf("Error %v while stopping CertificatesMgr", err)
+		}
+		env.CertMgr = nil
+	}
 	if env.SystemdService != nil {
 		err = env.SystemdService.StopUnit("pen-kubelet.service")
 		if err != nil {

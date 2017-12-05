@@ -17,7 +17,7 @@ func TestKeyMgrInit(t *testing.T) {
 
 // Test the checks performed on API parameters
 func TestParameterValidation(t *testing.T) {
-	be, err := NewDefaultBackend()
+	be, err := NewDefaultBackend("keymgr")
 	AssertOk(t, err, "Error instantiating default backend")
 	defer be.Close()
 	keyMgr, err := NewKeyMgr(be)

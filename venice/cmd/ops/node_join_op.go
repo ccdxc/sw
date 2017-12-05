@@ -13,6 +13,17 @@ import (
 	"github.com/pensando/sw/venice/utils/errors"
 )
 
+func hasRole(nodeSpec *cmd.NodeSpec, role cmd.NodeSpec_NodeRole) bool {
+	if nodeSpec != nil && nodeSpec.Roles != nil {
+		for _, r := range nodeSpec.Roles {
+			if role.String() == r {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // NodeJoinOp contains state for node addition
 type NodeJoinOp struct {
 	cluster *cmd.Cluster
@@ -50,14 +61,32 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 		// Node is already part of cluster
 		return o.node, nil
 	}
-	// Send prejoin request to all nodes.
-	preJoinReq := &grpc.ClusterPreJoinReq{
-		Name:      o.cluster.Name,
-		Uuid:      o.cluster.UUID,
-		VirtualIp: o.cluster.Spec.VirtualIP,
+
+	// Transport key is an asymmetric key that allows multiple CMD instances to securely agree on a
+	// symmetric key that can be used to transport secrets across CMD instances.
+	var transportKeyBytes []byte
+	if hasRole(&o.node.Spec, cmd.NodeSpec_QUORUM) || hasRole(&o.node.Spec, cmd.NodeSpec_CONTROLLER) {
+		if !env.CertMgr.IsReady() {
+			return nil, errors.NewInternalError(fmt.Errorf("CertMgr not ready"))
+		}
+		transportKey, err := env.CertMgr.GetKeyAgreementKey(o.node.Name)
+		defer env.CertMgr.DestroyKeyAgreementKey(o.node.Name)
+		if err != nil {
+			return nil, errors.NewInternalError(fmt.Errorf("Error getting key-agreement-key: %v", err))
+		}
+		transportKeyBytes = env.CertMgr.MarshalKeyAgreementKey(transportKey)
 	}
 
-	err := sendPreJoins(nil, preJoinReq, []string{o.node.Name})
+	// Send prejoin request to the new node.
+	preJoinReq := &grpc.ClusterPreJoinReq{
+		Name:         o.cluster.Name,
+		Uuid:         o.cluster.UUID,
+		VirtualIp:    o.cluster.Spec.VirtualIP,
+		TransportKey: transportKeyBytes,
+	}
+
+	nodeTransportKeys := make(map[string][]byte)
+	err := sendPreJoins(nil, preJoinReq, []string{o.node.Name}, nodeTransportKeys)
 	if err != nil {
 		return nil, errors.NewBadRequest(err.Error())
 	}
@@ -71,7 +100,7 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 		NodeId:     o.node.Name,
 	}
 
-	err = sendJoins(nil, joinReq, []string{o.node.Name})
+	err = sendJoins(nil, joinReq, []string{o.node.Name}, nodeTransportKeys)
 	if err != nil {
 		return nil, errors.NewInternalError(err)
 	}

@@ -25,7 +25,7 @@ type CKMctrler struct {
 // NewCKMctrler returns a controller instance
 func NewCKMctrler(serverURL, keyStoreDir string) (*CKMctrler, error) {
 	// create key manager instance
-	be, err := keymgr.NewDefaultBackend()
+	be, err := keymgr.NewDefaultBackend("ckm")
 	defer func() {
 		if err != nil {
 			be.Close()
@@ -43,6 +43,10 @@ func NewCKMctrler(serverURL, keyStoreDir string) (*CKMctrler, error) {
 	cm, err := certmgr.NewCertificateMgr(keymgr)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error instantiating certificate manager")
+	}
+	err = cm.StartCa(true)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error starting certificate manager CA")
 	}
 
 	// create RPC server

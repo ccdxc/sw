@@ -12,6 +12,8 @@
 		ClusterPreJoinResp
 		QuorumMember
 		QuorumConfig
+		Certificate
+		CertMgrBundle
 		ClusterJoinReq
 		ClusterJoinResp
 		ClusterDisjoinReq
@@ -32,10 +34,8 @@ import _ "github.com/gogo/protobuf/gogoproto"
 import cmd "github.com/pensando/sw/api/generated/cmd"
 import api "github.com/pensando/sw/api"
 
-import (
-	context "golang.org/x/net/context"
-	grpc1 "google.golang.org/grpc"
-)
+import context "golang.org/x/net/context"
+import grpc1 "google.golang.org/grpc"
 
 import io "io"
 
@@ -52,9 +52,10 @@ const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 // Cluster PreJoin request
 type ClusterPreJoinReq struct {
-	Name      string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Uuid      string `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
-	VirtualIp string `protobuf:"bytes,3,opt,name=virtual_ip,json=virtualIp,proto3" json:"virtual_ip,omitempty"`
+	Name         string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Uuid         string `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	VirtualIp    string `protobuf:"bytes,3,opt,name=virtual_ip,json=virtualIp,proto3" json:"virtual_ip,omitempty"`
+	TransportKey []byte `protobuf:"bytes,4,opt,name=transportKey,proto3" json:"transportKey,omitempty"`
 }
 
 func (m *ClusterPreJoinReq) Reset()                    { *m = ClusterPreJoinReq{} }
@@ -83,9 +84,17 @@ func (m *ClusterPreJoinReq) GetVirtualIp() string {
 	return ""
 }
 
+func (m *ClusterPreJoinReq) GetTransportKey() []byte {
+	if m != nil {
+		return m.TransportKey
+	}
+	return nil
+}
+
 // Cluster PreJoin response
 type ClusterPreJoinResp struct {
-	SwVersion string `protobuf:"bytes,1,opt,name=sw_version,json=swVersion,proto3" json:"sw_version,omitempty"`
+	SwVersion    string `protobuf:"bytes,1,opt,name=sw_version,json=swVersion,proto3" json:"sw_version,omitempty"`
+	TransportKey []byte `protobuf:"bytes,2,opt,name=transportKey,proto3" json:"transportKey,omitempty"`
 }
 
 func (m *ClusterPreJoinResp) Reset()                    { *m = ClusterPreJoinResp{} }
@@ -98,6 +107,13 @@ func (m *ClusterPreJoinResp) GetSwVersion() string {
 		return m.SwVersion
 	}
 	return ""
+}
+
+func (m *ClusterPreJoinResp) GetTransportKey() []byte {
+	if m != nil {
+		return m.TransportKey
+	}
+	return nil
 }
 
 // Quorum member
@@ -166,21 +182,72 @@ func (m *QuorumConfig) GetQuorumMembers() []*QuorumMember {
 	return nil
 }
 
+// Certificate
+type Certificate struct {
+	Certificate []byte `protobuf:"bytes,1,opt,name=certificate,proto3" json:"certificate,omitempty"`
+}
+
+func (m *Certificate) Reset()                    { *m = Certificate{} }
+func (m *Certificate) String() string            { return proto.CompactTextString(m) }
+func (*Certificate) ProtoMessage()               {}
+func (*Certificate) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{4} }
+
+func (m *Certificate) GetCertificate() []byte {
+	if m != nil {
+		return m.Certificate
+	}
+	return nil
+}
+
+// CA Bundle
+type CertMgrBundle struct {
+	WrappedCaKey []byte         `protobuf:"bytes,1,opt,name=wrappedCaKey,proto3" json:"wrappedCaKey,omitempty"`
+	CaTrustChain []*Certificate `protobuf:"bytes,2,rep,name=caTrustChain" json:"caTrustChain,omitempty"`
+	TrustRoots   []*Certificate `protobuf:"bytes,3,rep,name=trustRoots" json:"trustRoots,omitempty"`
+}
+
+func (m *CertMgrBundle) Reset()                    { *m = CertMgrBundle{} }
+func (m *CertMgrBundle) String() string            { return proto.CompactTextString(m) }
+func (*CertMgrBundle) ProtoMessage()               {}
+func (*CertMgrBundle) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{5} }
+
+func (m *CertMgrBundle) GetWrappedCaKey() []byte {
+	if m != nil {
+		return m.WrappedCaKey
+	}
+	return nil
+}
+
+func (m *CertMgrBundle) GetCaTrustChain() []*Certificate {
+	if m != nil {
+		return m.CaTrustChain
+	}
+	return nil
+}
+
+func (m *CertMgrBundle) GetTrustRoots() []*Certificate {
+	if m != nil {
+		return m.TrustRoots
+	}
+	return nil
+}
+
 // Cluster Join request
 type ClusterJoinReq struct {
-	Name         string        `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Uuid         string        `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
-	VirtualIp    string        `protobuf:"bytes,3,opt,name=virtual_ip,json=virtualIp,proto3" json:"virtual_ip,omitempty"`
-	QuorumNodes  []string      `protobuf:"bytes,4,rep,name=quorum_nodes,json=quorumNodes" json:"quorum_nodes,omitempty"`
-	QuorumConfig *QuorumConfig `protobuf:"bytes,5,opt,name=quorum_config,json=quorumConfig" json:"quorum_config,omitempty"`
-	NTPServers   []string      `protobuf:"bytes,6,rep,name=NTPServers" json:"NTPServers,omitempty"`
-	NodeId       string        `protobuf:"bytes,7,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	Name          string         `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Uuid          string         `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	VirtualIp     string         `protobuf:"bytes,3,opt,name=virtual_ip,json=virtualIp,proto3" json:"virtual_ip,omitempty"`
+	QuorumNodes   []string       `protobuf:"bytes,4,rep,name=quorum_nodes,json=quorumNodes" json:"quorum_nodes,omitempty"`
+	QuorumConfig  *QuorumConfig  `protobuf:"bytes,5,opt,name=quorum_config,json=quorumConfig" json:"quorum_config,omitempty"`
+	NTPServers    []string       `protobuf:"bytes,6,rep,name=NTPServers" json:"NTPServers,omitempty"`
+	NodeId        string         `protobuf:"bytes,7,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	CertMgrBundle *CertMgrBundle `protobuf:"bytes,8,opt,name=certMgrBundle" json:"certMgrBundle,omitempty"`
 }
 
 func (m *ClusterJoinReq) Reset()                    { *m = ClusterJoinReq{} }
 func (m *ClusterJoinReq) String() string            { return proto.CompactTextString(m) }
 func (*ClusterJoinReq) ProtoMessage()               {}
-func (*ClusterJoinReq) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{4} }
+func (*ClusterJoinReq) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{6} }
 
 func (m *ClusterJoinReq) GetName() string {
 	if m != nil {
@@ -231,6 +298,13 @@ func (m *ClusterJoinReq) GetNodeId() string {
 	return ""
 }
 
+func (m *ClusterJoinReq) GetCertMgrBundle() *CertMgrBundle {
+	if m != nil {
+		return m.CertMgrBundle
+	}
+	return nil
+}
+
 // Cluster Join response
 type ClusterJoinResp struct {
 }
@@ -238,7 +312,7 @@ type ClusterJoinResp struct {
 func (m *ClusterJoinResp) Reset()                    { *m = ClusterJoinResp{} }
 func (m *ClusterJoinResp) String() string            { return proto.CompactTextString(m) }
 func (*ClusterJoinResp) ProtoMessage()               {}
-func (*ClusterJoinResp) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{5} }
+func (*ClusterJoinResp) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{7} }
 
 // Cluster Disjoin request
 type ClusterDisjoinReq struct {
@@ -247,7 +321,7 @@ type ClusterDisjoinReq struct {
 func (m *ClusterDisjoinReq) Reset()                    { *m = ClusterDisjoinReq{} }
 func (m *ClusterDisjoinReq) String() string            { return proto.CompactTextString(m) }
 func (*ClusterDisjoinReq) ProtoMessage()               {}
-func (*ClusterDisjoinReq) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{6} }
+func (*ClusterDisjoinReq) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{8} }
 
 // Cluster Disjoin response
 type ClusterDisjoinResp struct {
@@ -256,7 +330,7 @@ type ClusterDisjoinResp struct {
 func (m *ClusterDisjoinResp) Reset()                    { *m = ClusterDisjoinResp{} }
 func (m *ClusterDisjoinResp) String() string            { return proto.CompactTextString(m) }
 func (*ClusterDisjoinResp) ProtoMessage()               {}
-func (*ClusterDisjoinResp) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{7} }
+func (*ClusterDisjoinResp) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{9} }
 
 // Register NIC request
 type RegisterNICRequest struct {
@@ -269,7 +343,7 @@ type RegisterNICRequest struct {
 func (m *RegisterNICRequest) Reset()                    { *m = RegisterNICRequest{} }
 func (m *RegisterNICRequest) String() string            { return proto.CompactTextString(m) }
 func (*RegisterNICRequest) ProtoMessage()               {}
-func (*RegisterNICRequest) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{8} }
+func (*RegisterNICRequest) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{10} }
 
 func (m *RegisterNICRequest) GetNic() cmd.SmartNIC {
 	if m != nil {
@@ -297,7 +371,7 @@ type RegisterNICResponse struct {
 func (m *RegisterNICResponse) Reset()                    { *m = RegisterNICResponse{} }
 func (m *RegisterNICResponse) String() string            { return proto.CompactTextString(m) }
 func (*RegisterNICResponse) ProtoMessage()               {}
-func (*RegisterNICResponse) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{9} }
+func (*RegisterNICResponse) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{11} }
 
 func (m *RegisterNICResponse) GetPhase() string {
 	if m != nil {
@@ -322,7 +396,7 @@ type UpdateNICRequest struct {
 func (m *UpdateNICRequest) Reset()                    { *m = UpdateNICRequest{} }
 func (m *UpdateNICRequest) String() string            { return proto.CompactTextString(m) }
 func (*UpdateNICRequest) ProtoMessage()               {}
-func (*UpdateNICRequest) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{10} }
+func (*UpdateNICRequest) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{12} }
 
 func (m *UpdateNICRequest) GetNic() cmd.SmartNIC {
 	if m != nil {
@@ -340,7 +414,7 @@ type UpdateNICResponse struct {
 func (m *UpdateNICResponse) Reset()                    { *m = UpdateNICResponse{} }
 func (m *UpdateNICResponse) String() string            { return proto.CompactTextString(m) }
 func (*UpdateNICResponse) ProtoMessage()               {}
-func (*UpdateNICResponse) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{11} }
+func (*UpdateNICResponse) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{13} }
 
 func (m *UpdateNICResponse) GetNic() *cmd.SmartNIC {
 	if m != nil {
@@ -358,7 +432,7 @@ type SmartNICEvent struct {
 func (m *SmartNICEvent) Reset()                    { *m = SmartNICEvent{} }
 func (m *SmartNICEvent) String() string            { return proto.CompactTextString(m) }
 func (*SmartNICEvent) ProtoMessage()               {}
-func (*SmartNICEvent) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{12} }
+func (*SmartNICEvent) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{14} }
 
 func (m *SmartNICEvent) GetEventType() api.EventType {
 	if m != nil {
@@ -379,6 +453,8 @@ func init() {
 	proto.RegisterType((*ClusterPreJoinResp)(nil), "grpc.ClusterPreJoinResp")
 	proto.RegisterType((*QuorumMember)(nil), "grpc.QuorumMember")
 	proto.RegisterType((*QuorumConfig)(nil), "grpc.QuorumConfig")
+	proto.RegisterType((*Certificate)(nil), "grpc.Certificate")
+	proto.RegisterType((*CertMgrBundle)(nil), "grpc.CertMgrBundle")
 	proto.RegisterType((*ClusterJoinReq)(nil), "grpc.ClusterJoinReq")
 	proto.RegisterType((*ClusterJoinResp)(nil), "grpc.ClusterJoinResp")
 	proto.RegisterType((*ClusterDisjoinReq)(nil), "grpc.ClusterDisjoinReq")
@@ -731,6 +807,12 @@ func (m *ClusterPreJoinReq) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintCluster(dAtA, i, uint64(len(m.VirtualIp)))
 		i += copy(dAtA[i:], m.VirtualIp)
 	}
+	if len(m.TransportKey) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCluster(dAtA, i, uint64(len(m.TransportKey)))
+		i += copy(dAtA[i:], m.TransportKey)
+	}
 	return i, nil
 }
 
@@ -754,6 +836,12 @@ func (m *ClusterPreJoinResp) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintCluster(dAtA, i, uint64(len(m.SwVersion)))
 		i += copy(dAtA[i:], m.SwVersion)
+	}
+	if len(m.TransportKey) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCluster(dAtA, i, uint64(len(m.TransportKey)))
+		i += copy(dAtA[i:], m.TransportKey)
 	}
 	return i, nil
 }
@@ -853,6 +941,78 @@ func (m *QuorumConfig) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *Certificate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Certificate) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Certificate) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCluster(dAtA, i, uint64(len(m.Certificate)))
+		i += copy(dAtA[i:], m.Certificate)
+	}
+	return i, nil
+}
+
+func (m *CertMgrBundle) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CertMgrBundle) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.WrappedCaKey) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCluster(dAtA, i, uint64(len(m.WrappedCaKey)))
+		i += copy(dAtA[i:], m.WrappedCaKey)
+	}
+	if len(m.CaTrustChain) > 0 {
+		for _, msg := range m.CaTrustChain {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.TrustRoots) > 0 {
+		for _, msg := range m.TrustRoots {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func (m *ClusterJoinReq) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -932,6 +1092,16 @@ func (m *ClusterJoinReq) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintCluster(dAtA, i, uint64(len(m.NodeId)))
 		i += copy(dAtA[i:], m.NodeId)
 	}
+	if m.CertMgrBundle != nil {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintCluster(dAtA, i, uint64(m.CertMgrBundle.Size()))
+		n2, err := m.CertMgrBundle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
 	return i, nil
 }
 
@@ -1007,11 +1177,11 @@ func (m *RegisterNICRequest) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintCluster(dAtA, i, uint64(m.Nic.Size()))
-	n2, err := m.Nic.MarshalTo(dAtA[i:])
+	n3, err := m.Nic.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n2
+	i += n3
 	if len(m.Cert) > 0 {
 		dAtA[i] = 0x12
 		i++
@@ -1069,11 +1239,11 @@ func (m *UpdateNICRequest) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintCluster(dAtA, i, uint64(m.Nic.Size()))
-	n3, err := m.Nic.MarshalTo(dAtA[i:])
+	n4, err := m.Nic.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n3
+	i += n4
 	return i, nil
 }
 
@@ -1096,11 +1266,11 @@ func (m *UpdateNICResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintCluster(dAtA, i, uint64(m.Nic.Size()))
-		n4, err := m.Nic.MarshalTo(dAtA[i:])
+		n5, err := m.Nic.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n5
 	}
 	return i, nil
 }
@@ -1128,11 +1298,11 @@ func (m *SmartNICEvent) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintCluster(dAtA, i, uint64(m.Nic.Size()))
-	n5, err := m.Nic.MarshalTo(dAtA[i:])
+	n6, err := m.Nic.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n5
+	i += n6
 	return i, nil
 }
 
@@ -1160,6 +1330,10 @@ func (m *ClusterPreJoinReq) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCluster(uint64(l))
 	}
+	l = len(m.TransportKey)
+	if l > 0 {
+		n += 1 + l + sovCluster(uint64(l))
+	}
 	return n
 }
 
@@ -1167,6 +1341,10 @@ func (m *ClusterPreJoinResp) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.SwVersion)
+	if l > 0 {
+		n += 1 + l + sovCluster(uint64(l))
+	}
+	l = len(m.TransportKey)
 	if l > 0 {
 		n += 1 + l + sovCluster(uint64(l))
 	}
@@ -1214,6 +1392,38 @@ func (m *QuorumConfig) Size() (n int) {
 	return n
 }
 
+func (m *Certificate) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Certificate)
+	if l > 0 {
+		n += 1 + l + sovCluster(uint64(l))
+	}
+	return n
+}
+
+func (m *CertMgrBundle) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.WrappedCaKey)
+	if l > 0 {
+		n += 1 + l + sovCluster(uint64(l))
+	}
+	if len(m.CaTrustChain) > 0 {
+		for _, e := range m.CaTrustChain {
+			l = e.Size()
+			n += 1 + l + sovCluster(uint64(l))
+		}
+	}
+	if len(m.TrustRoots) > 0 {
+		for _, e := range m.TrustRoots {
+			l = e.Size()
+			n += 1 + l + sovCluster(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *ClusterJoinReq) Size() (n int) {
 	var l int
 	_ = l
@@ -1247,6 +1457,10 @@ func (m *ClusterJoinReq) Size() (n int) {
 	}
 	l = len(m.NodeId)
 	if l > 0 {
+		n += 1 + l + sovCluster(uint64(l))
+	}
+	if m.CertMgrBundle != nil {
+		l = m.CertMgrBundle.Size()
 		n += 1 + l + sovCluster(uint64(l))
 	}
 	return n
@@ -1454,6 +1668,37 @@ func (m *ClusterPreJoinReq) Unmarshal(dAtA []byte) error {
 			}
 			m.VirtualIp = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TransportKey", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCluster
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TransportKey = append(m.TransportKey[:0], dAtA[iNdEx:postIndex]...)
+			if m.TransportKey == nil {
+				m.TransportKey = []byte{}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCluster(dAtA[iNdEx:])
@@ -1532,6 +1777,37 @@ func (m *ClusterPreJoinResp) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.SwVersion = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TransportKey", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCluster
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TransportKey = append(m.TransportKey[:0], dAtA[iNdEx:postIndex]...)
+			if m.TransportKey == nil {
+				m.TransportKey = []byte{}
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1820,6 +2096,230 @@ func (m *QuorumConfig) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *Certificate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Certificate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Certificate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Certificate", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCluster
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Certificate = append(m.Certificate[:0], dAtA[iNdEx:postIndex]...)
+			if m.Certificate == nil {
+				m.Certificate = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CertMgrBundle) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CertMgrBundle: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CertMgrBundle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WrappedCaKey", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCluster
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.WrappedCaKey = append(m.WrappedCaKey[:0], dAtA[iNdEx:postIndex]...)
+			if m.WrappedCaKey == nil {
+				m.WrappedCaKey = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CaTrustChain", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CaTrustChain = append(m.CaTrustChain, &Certificate{})
+			if err := m.CaTrustChain[len(m.CaTrustChain)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustRoots", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TrustRoots = append(m.TrustRoots, &Certificate{})
+			if err := m.TrustRoots[len(m.TrustRoots)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *ClusterJoinReq) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2055,6 +2555,39 @@ func (m *ClusterJoinReq) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.NodeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CertMgrBundle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.CertMgrBundle == nil {
+				m.CertMgrBundle = &CertMgrBundle{}
+			}
+			if err := m.CertMgrBundle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2816,56 +3349,64 @@ var (
 func init() { proto.RegisterFile("cluster.proto", fileDescriptorCluster) }
 
 var fileDescriptorCluster = []byte{
-	// 806 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0x41, 0x6f, 0x1b, 0x45,
-	0x14, 0xf6, 0xda, 0x6e, 0xdc, 0x7d, 0x8e, 0x9d, 0x64, 0x9c, 0x92, 0xc5, 0x80, 0x1d, 0x56, 0x02,
-	0x05, 0x51, 0x6c, 0xe4, 0xaa, 0x20, 0x2e, 0x3d, 0xd8, 0xed, 0xc1, 0x45, 0x35, 0x61, 0xdb, 0x82,
-	0xe0, 0x62, 0xad, 0x77, 0xa7, 0x9b, 0xa9, 0xbc, 0x33, 0x93, 0x99, 0xd9, 0x44, 0xfd, 0x13, 0x9c,
-	0xf9, 0x39, 0xdc, 0xc8, 0x91, 0x5f, 0x60, 0xa1, 0x70, 0xb3, 0xf8, 0x11, 0x68, 0x67, 0xc6, 0xce,
-	0xc6, 0x09, 0x20, 0x44, 0x6f, 0x3b, 0xdf, 0xfb, 0xde, 0x7b, 0xdf, 0x7b, 0xef, 0x93, 0x0d, 0x8d,
-	0x68, 0x9e, 0x49, 0x85, 0x45, 0x8f, 0x0b, 0xa6, 0x18, 0xaa, 0x26, 0x82, 0x47, 0xed, 0xf7, 0x13,
-	0xc6, 0x92, 0x39, 0xee, 0x87, 0x9c, 0xf4, 0x43, 0x4a, 0x99, 0x0a, 0x15, 0x61, 0x54, 0x1a, 0x4e,
-	0xfb, 0xb3, 0x84, 0xa8, 0x93, 0x6c, 0xd6, 0x8b, 0x58, 0xda, 0x4f, 0x58, 0xc2, 0xfa, 0x1a, 0x9e,
-	0x65, 0xaf, 0xf4, 0x4b, 0x3f, 0xf4, 0x97, 0xa5, 0x7f, 0x5a, 0xa0, 0x73, 0x4c, 0x65, 0x48, 0x63,
-	0xd6, 0x97, 0xe7, 0xba, 0xb8, 0x66, 0xc8, 0x7e, 0x94, 0xc6, 0x96, 0xfc, 0xd1, 0x3f, 0x90, 0x53,
-	0xac, 0x42, 0x43, 0xf3, 0x7f, 0x84, 0xbd, 0x91, 0xd1, 0x7d, 0x2c, 0xf0, 0x53, 0x46, 0x68, 0x80,
-	0x4f, 0x11, 0x82, 0x2a, 0x0d, 0x53, 0xec, 0x39, 0x87, 0xce, 0x91, 0x1b, 0xe8, 0xef, 0x1c, 0xcb,
-	0x32, 0x12, 0x7b, 0x65, 0x83, 0xe5, 0xdf, 0xe8, 0x03, 0x80, 0x33, 0x22, 0x54, 0x16, 0xce, 0xa7,
-	0x84, 0x7b, 0x15, 0x1d, 0x71, 0x2d, 0x32, 0xe6, 0xfe, 0x03, 0x40, 0x9b, 0xb5, 0x25, 0xcf, 0x93,
-	0xe4, 0xf9, 0xf4, 0x0c, 0x0b, 0x49, 0x18, 0xb5, 0x2d, 0x5c, 0x79, 0xfe, 0x9d, 0x01, 0x7c, 0x0e,
-	0xdb, 0xdf, 0x66, 0x4c, 0x64, 0xe9, 0x33, 0x9c, 0xce, 0xb0, 0x40, 0x4d, 0x28, 0x93, 0x58, 0xd3,
-	0xaa, 0x41, 0x99, 0xc4, 0x6b, 0x6d, 0xe5, 0x82, 0xb6, 0xf7, 0xc0, 0xe5, 0x18, 0x8b, 0x69, 0x26,
-	0xe6, 0xd2, 0xab, 0x1c, 0x56, 0x8e, 0xdc, 0xe0, 0x6e, 0x0e, 0xbc, 0x14, 0x73, 0x89, 0xba, 0x50,
-	0x8f, 0xe6, 0x04, 0x53, 0x65, 0xc2, 0x55, 0x1d, 0x06, 0x03, 0xe5, 0x04, 0xff, 0x87, 0x55, 0xc7,
-	0x11, 0xa3, 0xaf, 0x48, 0x52, 0xe8, 0xe8, 0xea, 0x8e, 0x5f, 0x41, 0xf3, 0x54, 0xc7, 0xa7, 0xa9,
-	0x96, 0x24, 0xbd, 0xf2, 0x61, 0xe5, 0xa8, 0x3e, 0x40, 0xbd, 0xfc, 0xc4, 0xbd, 0xa2, 0xda, 0xa0,
-	0x71, 0x5a, 0x78, 0x49, 0xff, 0x4f, 0x07, 0x9a, 0x76, 0x05, 0x6f, 0x77, 0xb7, 0xe8, 0x43, 0xd8,
-	0xb6, 0xa2, 0x28, 0x8b, 0xf1, 0x6a, 0xac, 0xba, 0xc1, 0x26, 0x39, 0x84, 0xbe, 0x04, 0xab, 0x66,
-	0x1a, 0xe9, 0xc1, 0xbc, 0x3b, 0x87, 0xce, 0xa6, 0x6c, 0x33, 0x72, 0x60, 0x6b, 0xd9, 0x05, 0x74,
-	0x00, 0x26, 0x2f, 0x8e, 0x9f, 0x63, 0x91, 0x1f, 0xc9, 0xdb, 0x32, 0x0b, 0xbb, 0x42, 0xd0, 0x01,
-	0xd4, 0xf2, 0xa6, 0x53, 0x12, 0x7b, 0x35, 0xad, 0x6b, 0x2b, 0x7f, 0x8e, 0x63, 0x7f, 0x0f, 0x76,
-	0xae, 0x4d, 0x2b, 0xb9, 0xdf, 0x5a, 0xfb, 0xeb, 0x31, 0x91, 0xaf, 0xcd, 0x0e, 0xfc, 0xfd, 0xb5,
-	0x31, 0xd6, 0xa0, 0xe4, 0xbe, 0x02, 0x14, 0xe0, 0x84, 0xe4, 0xf0, 0x64, 0x3c, 0x0a, 0xf0, 0x69,
-	0x86, 0xa5, 0x42, 0x5f, 0x40, 0x65, 0x42, 0x22, 0xbd, 0xae, 0xfa, 0xa0, 0xd1, 0xcb, 0x0d, 0xfe,
-	0x3c, 0x0d, 0x85, 0x9a, 0x8c, 0x47, 0xc3, 0x7b, 0x17, 0x8b, 0x6e, 0x69, 0xb9, 0xe8, 0x36, 0x28,
-	0x89, 0xee, 0xb3, 0x94, 0x28, 0x9c, 0x72, 0xf5, 0x26, 0xc8, 0x13, 0xd0, 0xc7, 0x50, 0x1d, 0x61,
-	0xa1, 0xf4, 0x4e, 0xb7, 0x87, 0x68, 0xb9, 0xe8, 0x36, 0x23, 0x2c, 0x54, 0x81, 0xa6, 0xe3, 0x3e,
-	0x85, 0xd6, 0xb5, 0xae, 0x92, 0x33, 0x2a, 0x31, 0xfa, 0x04, 0xee, 0x1c, 0x9f, 0x84, 0xd2, 0xde,
-	0x69, 0xd8, 0x5a, 0x2e, 0xba, 0x3b, 0x3c, 0x07, 0x0a, 0x05, 0x0c, 0x03, 0xdd, 0x87, 0xad, 0x00,
-	0x87, 0x92, 0x51, 0x73, 0xbf, 0xe1, 0xfe, 0x72, 0xd1, 0xdd, 0x15, 0x1a, 0x29, 0x90, 0x2d, 0xc7,
-	0x7f, 0x0a, 0xbb, 0x2f, 0x79, 0x1c, 0x2a, 0xfc, 0xff, 0x67, 0xf4, 0xbf, 0x86, 0xbd, 0x42, 0x2d,
-	0xab, 0xfc, 0xdf, 0x8a, 0x39, 0x7f, 0x53, 0xec, 0x27, 0x07, 0x1a, 0x2b, 0xe2, 0x93, 0x33, 0x4c,
-	0x15, 0x7a, 0x02, 0xae, 0xfe, 0x78, 0xf1, 0x86, 0x9b, 0x3d, 0x34, 0x07, 0xcd, 0x5e, 0xc8, 0x49,
-	0x6f, 0x8d, 0x0e, 0x0f, 0x96, 0x8b, 0x6e, 0x0b, 0xaf, 0x9e, 0x85, 0x92, 0x57, 0x99, 0x2b, 0x41,
-	0xe5, 0xff, 0x38, 0xdd, 0xe0, 0x17, 0x07, 0x6a, 0xd6, 0x26, 0xe8, 0x11, 0xd4, 0xec, 0x6f, 0x08,
-	0x3a, 0x30, 0xfe, 0xbd, 0xf1, 0xab, 0xd5, 0xf6, 0x6e, 0x0f, 0x48, 0xee, 0x97, 0xd0, 0x43, 0xa8,
-	0xea, 0xe4, 0xfd, 0x6b, 0x9c, 0x55, 0xe6, 0xbd, 0x5b, 0x50, 0x9d, 0xf6, 0x08, 0x6a, 0xd6, 0xa1,
-	0x1b, 0x6d, 0xaf, 0xcc, 0xbc, 0xd1, 0xb6, 0x68, 0xe8, 0xd2, 0xe0, 0x57, 0x07, 0xee, 0xae, 0x66,
-	0x45, 0x8f, 0xa1, 0x5e, 0x70, 0x1a, 0xb2, 0x79, 0x37, 0x2d, 0xdf, 0x7e, 0xf7, 0x96, 0x88, 0x39,
-	0xae, 0x96, 0xe4, 0xae, 0x6f, 0x8e, 0xde, 0x31, 0xcc, 0x4d, 0x43, 0xb5, 0x0f, 0x6e, 0xe0, 0xeb,
-	0xfc, 0x87, 0xe0, 0x7e, 0x1f, 0xaa, 0xe8, 0x64, 0x32, 0x1e, 0x49, 0xb4, 0xa3, 0xcf, 0xf9, 0xcd,
-	0xec, 0x35, 0x8e, 0xd4, 0x33, 0xac, 0xc2, 0x76, 0xcb, 0x24, 0x5e, 0xf3, 0x81, 0x5f, 0xfa, 0xdc,
-	0x19, 0xee, 0x5e, 0x5c, 0x76, 0x9c, 0xdf, 0x2e, 0x3b, 0xce, 0xef, 0x97, 0x1d, 0xe7, 0xe7, 0x3f,
-	0x3a, 0xa5, 0xd9, 0x96, 0xfe, 0x03, 0x79, 0xf0, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0x67, 0xa0,
-	0x29, 0x07, 0xf8, 0x06, 0x00, 0x00,
+	// 931 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0x4f, 0x6f, 0x23, 0x35,
+	0x14, 0xef, 0xa4, 0xd9, 0xb6, 0x79, 0xf9, 0xd3, 0xd6, 0xed, 0xd2, 0x21, 0x40, 0x12, 0x46, 0x02,
+	0x15, 0xb1, 0x24, 0x10, 0x54, 0x10, 0x97, 0x3d, 0x24, 0xbb, 0x87, 0xec, 0xaa, 0xa1, 0xcc, 0x76,
+	0x59, 0x71, 0x8a, 0x9c, 0x19, 0x37, 0xf5, 0x2a, 0x33, 0x76, 0x6d, 0x4f, 0xab, 0x5e, 0xf8, 0x08,
+	0x9c, 0xb9, 0x70, 0xe6, 0x6b, 0x70, 0x63, 0x8f, 0x7c, 0x82, 0x08, 0x95, 0x5b, 0x3e, 0x05, 0xb2,
+	0x3d, 0x49, 0x26, 0x69, 0x00, 0x21, 0xb8, 0xf9, 0xfd, 0xde, 0xef, 0xfd, 0xf1, 0x7b, 0x3f, 0xcf,
+	0x40, 0x39, 0x18, 0x27, 0x52, 0x11, 0xd1, 0xe4, 0x82, 0x29, 0x86, 0xf2, 0x23, 0xc1, 0x83, 0xea,
+	0xbb, 0x23, 0xc6, 0x46, 0x63, 0xd2, 0xc2, 0x9c, 0xb6, 0x70, 0x1c, 0x33, 0x85, 0x15, 0x65, 0xb1,
+	0xb4, 0x9c, 0xea, 0x27, 0x23, 0xaa, 0x2e, 0x93, 0x61, 0x33, 0x60, 0x51, 0x6b, 0xc4, 0x46, 0xac,
+	0x65, 0xe0, 0x61, 0x72, 0x61, 0x2c, 0x63, 0x98, 0x53, 0x4a, 0xff, 0x38, 0x43, 0xe7, 0x24, 0x96,
+	0x38, 0x0e, 0x59, 0x4b, 0xde, 0x98, 0xe4, 0x86, 0x21, 0x5b, 0x41, 0x14, 0xa6, 0xe4, 0x0f, 0xfe,
+	0x86, 0x1c, 0x11, 0x85, 0x2d, 0xcd, 0xfb, 0x1e, 0xf6, 0xbb, 0xb6, 0xef, 0x33, 0x41, 0x9e, 0x31,
+	0x1a, 0xfb, 0xe4, 0x0a, 0x21, 0xc8, 0xc7, 0x38, 0x22, 0xae, 0xd3, 0x70, 0x8e, 0x0b, 0xbe, 0x39,
+	0x6b, 0x2c, 0x49, 0x68, 0xe8, 0xe6, 0x2c, 0xa6, 0xcf, 0xe8, 0x3d, 0x80, 0x6b, 0x2a, 0x54, 0x82,
+	0xc7, 0x03, 0xca, 0xdd, 0x4d, 0xe3, 0x29, 0xa4, 0x48, 0x8f, 0x23, 0x0f, 0x4a, 0x4a, 0xe0, 0x58,
+	0x72, 0x26, 0xd4, 0x73, 0x72, 0xeb, 0xe6, 0x1b, 0xce, 0x71, 0xc9, 0x5f, 0xc2, 0xbc, 0x57, 0x80,
+	0x56, 0xeb, 0x4b, 0xae, 0x13, 0xcb, 0x9b, 0xc1, 0x35, 0x11, 0x92, 0xb2, 0x38, 0x6d, 0xa3, 0x20,
+	0x6f, 0xbe, 0xb5, 0xc0, 0xbd, 0xc4, 0xb9, 0x35, 0x89, 0x39, 0x94, 0xbe, 0x49, 0x98, 0x48, 0xa2,
+	0x53, 0x12, 0x0d, 0x89, 0x40, 0x15, 0xc8, 0xd1, 0xd0, 0xa4, 0xca, 0xfb, 0x39, 0x1a, 0xce, 0xef,
+	0x98, 0xcb, 0xdc, 0xf1, 0x1d, 0x28, 0x70, 0x42, 0xc4, 0x20, 0x11, 0x63, 0xe9, 0x6e, 0x36, 0x36,
+	0x8f, 0x0b, 0xfe, 0x8e, 0x06, 0x5e, 0x8a, 0xb1, 0x44, 0x75, 0x28, 0x06, 0x63, 0x4a, 0x62, 0x65,
+	0xdd, 0x79, 0xe3, 0x06, 0x0b, 0x69, 0x82, 0xf7, 0xdd, 0xac, 0x62, 0x97, 0xc5, 0x17, 0x74, 0x94,
+	0xa9, 0x58, 0x30, 0x15, 0xbf, 0x82, 0xca, 0x95, 0xf1, 0x0f, 0x22, 0xd3, 0x92, 0x74, 0x73, 0x8d,
+	0xcd, 0xe3, 0x62, 0x1b, 0x35, 0xb5, 0x54, 0x9a, 0xd9, 0x6e, 0xfd, 0xf2, 0x55, 0xc6, 0x92, 0x5e,
+	0x0b, 0x8a, 0x5d, 0x22, 0x14, 0xbd, 0xa0, 0x01, 0x56, 0x04, 0x35, 0xa0, 0x18, 0x2c, 0x4c, 0x53,
+	0xa2, 0xe4, 0x67, 0x21, 0xef, 0x27, 0x07, 0xca, 0x3a, 0xe2, 0x74, 0x24, 0x3a, 0x49, 0x1c, 0x8e,
+	0x89, 0x9e, 0xd9, 0x8d, 0xc0, 0x9c, 0x93, 0xb0, 0x8b, 0xf5, 0xcc, 0x6c, 0xd0, 0x12, 0x86, 0x4e,
+	0xa0, 0x14, 0xe0, 0x73, 0x91, 0x48, 0xd5, 0xbd, 0xc4, 0x34, 0x4e, 0xfb, 0xdb, 0xb7, 0xfd, 0x65,
+	0x1a, 0xf0, 0x97, 0x68, 0xe8, 0x33, 0x00, 0xa5, 0x2d, 0x9f, 0x31, 0x65, 0xe7, 0xb6, 0x36, 0x28,
+	0x43, 0xf2, 0x7e, 0xce, 0x41, 0x25, 0xdd, 0xfb, 0xff, 0x2c, 0xba, 0xf7, 0xa1, 0x94, 0x4e, 0x39,
+	0x66, 0x21, 0x99, 0xed, 0xa9, 0x68, 0xb1, 0xbe, 0x86, 0xd0, 0x97, 0x90, 0x8e, 0x77, 0x10, 0x98,
+	0x4d, 0xb9, 0x0f, 0x1a, 0xce, 0xea, 0x1e, 0xec, 0x0e, 0xfd, 0x34, 0x57, 0xba, 0xd1, 0x1a, 0x40,
+	0xff, 0xfc, 0xec, 0x05, 0x11, 0x5a, 0x99, 0xee, 0x96, 0x55, 0xc0, 0x02, 0x41, 0x47, 0xb0, 0xad,
+	0x8b, 0x0e, 0x68, 0xe8, 0x6e, 0x9b, 0xbe, 0xb6, 0xb4, 0xd9, 0xd3, 0xab, 0x2f, 0x07, 0xd9, 0x6d,
+	0xb8, 0x3b, 0xa6, 0xe2, 0xc1, 0x62, 0x48, 0x73, 0x97, 0xbf, 0xcc, 0xf4, 0xf6, 0x61, 0x77, 0x69,
+	0x50, 0x92, 0x7b, 0x07, 0xf3, 0x37, 0xfb, 0x84, 0xca, 0xd7, 0x76, 0x7c, 0xde, 0xe1, 0xfc, 0x21,
+	0xcd, 0x41, 0xc9, 0x3d, 0x05, 0xc8, 0x27, 0x23, 0xaa, 0xe1, 0x7e, 0xaf, 0xeb, 0x93, 0xab, 0x84,
+	0x48, 0x85, 0xbe, 0x80, 0xcd, 0x3e, 0x0d, 0xcc, 0xa4, 0x8b, 0xed, 0x72, 0x53, 0x7f, 0x34, 0x5e,
+	0x44, 0x58, 0xa8, 0x7e, 0xaf, 0xdb, 0x79, 0xf8, 0x66, 0x52, 0xdf, 0x98, 0x4e, 0xea, 0xe5, 0x98,
+	0x06, 0x8f, 0x58, 0x44, 0x15, 0x89, 0xb8, 0xba, 0xf5, 0x75, 0x00, 0xfa, 0x10, 0xf2, 0xba, 0x57,
+	0xfb, 0xde, 0x3a, 0x68, 0x3a, 0xa9, 0x57, 0x74, 0xb3, 0x19, 0x9a, 0xf1, 0x7b, 0x31, 0x1c, 0x2c,
+	0x55, 0x95, 0x9c, 0xc5, 0x92, 0xa0, 0x8f, 0xe0, 0xc1, 0xd9, 0x25, 0x96, 0xe9, 0x8a, 0x3b, 0x07,
+	0xd3, 0x49, 0x7d, 0x97, 0x6b, 0x20, 0x93, 0xc0, 0x32, 0xd0, 0x23, 0xd8, 0xf2, 0x09, 0x96, 0x2c,
+	0xb6, 0xab, 0xef, 0x1c, 0x4e, 0x27, 0xf5, 0x3d, 0x61, 0x90, 0x0c, 0x39, 0xe5, 0x78, 0xcf, 0x60,
+	0xef, 0x25, 0x0f, 0xb1, 0x22, 0xff, 0xfd, 0x8e, 0xde, 0x73, 0xd8, 0xcf, 0xe4, 0x4a, 0x3b, 0xff,
+	0xa7, 0x64, 0xce, 0x5f, 0x24, 0xfb, 0xc1, 0x81, 0xf2, 0x8c, 0xf8, 0xf4, 0x9a, 0xc4, 0x0a, 0x3d,
+	0x85, 0x82, 0x39, 0x9c, 0xdf, 0x72, 0x3b, 0x87, 0x4a, 0xbb, 0xd2, 0xc4, 0x9c, 0x36, 0xe7, 0x68,
+	0xe7, 0x68, 0x3a, 0xa9, 0x1f, 0x90, 0x99, 0x99, 0x49, 0xb9, 0x88, 0x9c, 0x35, 0x94, 0xfb, 0x97,
+	0xb7, 0x6b, 0xff, 0xe2, 0xc0, 0x76, 0x2a, 0x13, 0xf4, 0x18, 0xb6, 0xd3, 0x6f, 0x2e, 0x3a, 0x4a,
+	0x85, 0xb8, 0xfa, 0x27, 0xa8, 0xba, 0xeb, 0x1d, 0x92, 0x7b, 0x1b, 0xe8, 0x04, 0xf2, 0x26, 0xf8,
+	0x70, 0x89, 0x33, 0x8b, 0x7c, 0xb8, 0x06, 0x35, 0x61, 0x8f, 0x61, 0x3b, 0x55, 0xe8, 0x4a, 0xd9,
+	0x85, 0x98, 0x57, 0xca, 0x66, 0x05, 0xbd, 0xd1, 0xfe, 0xd5, 0x81, 0x9d, 0xd9, 0x5d, 0xd1, 0x13,
+	0x28, 0x66, 0x94, 0x86, 0xd2, 0xb8, 0xfb, 0x92, 0xaf, 0xbe, 0xbd, 0xc6, 0x63, 0x97, 0x6b, 0x5a,
+	0x2a, 0xcc, 0x77, 0x8e, 0xde, 0xb2, 0xcc, 0x55, 0x41, 0x55, 0x8f, 0xee, 0xe1, 0xf3, 0xf8, 0x13,
+	0x28, 0xbc, 0xc2, 0x2a, 0xb8, 0xec, 0xf7, 0xba, 0x12, 0xed, 0x9a, 0x75, 0x7e, 0x3d, 0x7c, 0x4d,
+	0x02, 0x75, 0x4a, 0x14, 0xae, 0xa6, 0xaf, 0x7c, 0x49, 0x07, 0xde, 0xc6, 0xa7, 0x4e, 0x67, 0xef,
+	0xcd, 0x5d, 0xcd, 0xf9, 0xed, 0xae, 0xe6, 0xfc, 0x7e, 0x57, 0x73, 0x7e, 0xfc, 0xa3, 0xb6, 0x31,
+	0xdc, 0x32, 0x3f, 0xe5, 0xcf, 0xff, 0x0c, 0x00, 0x00, 0xff, 0xff, 0x83, 0x04, 0x67, 0xd6, 0x4c,
+	0x08, 0x00, 0x00,
 }

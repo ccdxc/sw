@@ -83,6 +83,7 @@ type Pkcs11Backend struct {
 	tokenLabel    string
 	pin           string
 	ctx           *ctx
+	slot          uint
 	sessionHandle pkcs11.SessionHandle
 }
 
@@ -167,6 +168,7 @@ func (be *Pkcs11Backend) initialize() error {
 		if err != nil {
 			return errors.Wrapf(err, "Error initializing token, slotID: %v, label: %v", availableToken, be.tokenLabel)
 		}
+		be.slot = slot
 		return be.startSession(slot)
 	}
 	return fmt.Errorf("Error starting session. Could not find a slot with label %v or an uninitialized one", be.tokenLabel)
@@ -428,20 +430,15 @@ func (be *Pkcs11Backend) readEcdsaPublicKey(handle pkcs11.ObjectHandle) (*ecdsa.
 		}
 	}
 	curve := namedCurveFromOID(curveOID)
-	x, y := elliptic.Unmarshal(curve, point.Bytes)
-	if x == nil || y == nil {
-		return nil, fmt.Errorf("error parsing public session attributes")
-	}
-	publicKey := &ecdsa.PublicKey{
-		Curve: curve,
-		X:     x,
-		Y:     y,
+	publicKey := UnmarshalEcdsaPublicKey(ecdsaCurveToKeyType[curve], point.Bytes)
+	if publicKey == nil {
+		return nil, fmt.Errorf("Error unmarshaling point coordinates")
 	}
 	return publicKey, nil
 }
 
 func (be *Pkcs11Backend) storePublicKey(ID string, key crypto.PublicKey) (pkcs11.ObjectHandle, error) {
-	keyType := getPublicKeyType(key)
+	keyType := GetPublicKeyType(key)
 	switch {
 	case isRSAKey(keyType):
 		return be.storeRsaPublicKey(ID, key.(*rsa.PublicKey))
@@ -801,7 +798,7 @@ func (be *Pkcs11Backend) DeriveKey(derivedKeyID string, derivedKeyType KeyType, 
 		return nil, fmt.Errorf("Key pair does not exist, ID: %v", baseKeyPairID)
 	}
 	baseKeyPair := baseKeySigner.(*pkcs11Signer)
-	baseKeyType := getPublicKeyType(baseKeyPair.publicKey)
+	baseKeyType := GetPublicKeyType(baseKeyPair.publicKey)
 	if !isECDSAKey(baseKeyType) {
 		return nil, fmt.Errorf("Unsupported base key type: %v", baseKeyType)
 	}
@@ -862,7 +859,7 @@ func (be *Pkcs11Backend) UnwrapKeyPair(targetKeyID string, wrappedKey []byte, pu
 	// form template for unwrapped private key
 	keyTemplate := []*pkcs11.Attribute{
 		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PRIVATE_KEY),
-		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, getKeyTypeAttributeValue(getPublicKeyType(publicKey))),
+		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, getKeyTypeAttributeValue(GetPublicKeyType(publicKey))),
 		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true), // persistent
 		pkcs11.NewAttribute(pkcs11.CKA_SIGN, true),
 		pkcs11.NewAttribute(pkcs11.CKA_LABEL, targetKeyID),
@@ -888,10 +885,15 @@ func (be *Pkcs11Backend) GetInfo() (pkcs11.Info, error) {
 	return be.ctx.GetInfo()
 }
 
-// Close terminates the session and performs a logout
+// Close terminates the session and re-initialize the token
+// Re-initializing the token wipes out all the objects
 func (be *Pkcs11Backend) Close() error {
-	// we do not logout because logout is a global operation that affects all sessions
-	return be.ctx.CloseSession(be.sessionHandle)
+	be.ctx.CloseSession(be.sessionHandle)
+	err := be.initializeToken(be.slot)
+	if err != nil {
+		return errors.Wrapf(err, "Error closing PKCS#11 backend: %+v", be)
+	}
+	return nil
 }
 
 // NewPkcs11Backend creates a new instance of the backend.

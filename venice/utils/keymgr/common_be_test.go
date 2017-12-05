@@ -392,6 +392,7 @@ func testECDHKeyTransport(t *testing.T, be1, be2 Backend) {
 func testAll(t *testing.T, backends []Backend) {
 	// Tests for individual backends
 	for _, be := range backends {
+		t.Logf("Running tests for backend type: %T", be)
 		testObjectStore(t, be)
 		testKeyOps(t, be)
 		testKeyImport(t, be)

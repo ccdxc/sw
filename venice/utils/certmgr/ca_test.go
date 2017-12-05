@@ -25,7 +25,7 @@ const (
 
 // create KeyMgr instance with default backend
 func createDefaultKeyMgr(t *testing.T) (*keymgr.KeyMgr, keymgr.Backend) {
-	be, err := keymgr.NewDefaultBackend()
+	be, err := keymgr.NewDefaultBackend("certmgr")
 	AssertOk(t, err, "Error instantiating KeyMgr backend")
 	km, err := keymgr.NewKeyMgr(be)
 	if err != nil {
@@ -39,7 +39,7 @@ func TestCaInit(t *testing.T) {
 	// NEGATIVE TEST-CASES
 
 	// nil KeyMgr
-	_, err := NewCertificateAuthority(nil)
+	_, err := NewCertificateAuthority(nil, true)
 	Assert(t, err != nil, "NewCertificateAuthority succeeded nil KeyMgr")
 }
 
@@ -81,7 +81,7 @@ func TestSelfSignedFlow(t *testing.T) {
 	defer be.Close()
 
 	// test the bootstrap case where we start with no keys and certs
-	ca, err := NewCertificateAuthority(km)
+	ca, err := NewCertificateAuthority(km, true)
 	AssertOk(t, err, "Error instantiating new CA")
 	defer cleanupCAKeys(t, km)
 	Assert(t, ca.IsReady(), "Certificates service failed to start")
@@ -103,15 +103,15 @@ func TestSelfSignedFlow(t *testing.T) {
 
 	// check that the self-signed certificate is the only trust root
 	Assert(t, len(ca.TrustRoots()) == 1, "Found unexpected number of trust roots, want: 1, have: %d", len(ca.TrustRoots()))
-	Assert(t, caCertificate.Equal(&ca.TrustRoots()[0]), "CA certificate not found in trusted roots")
+	Assert(t, caCertificate.Equal(ca.TrustRoots()[0]), "CA certificate not found in trusted roots")
 
 	// check that the ca trust chain contains only the self-signed cert
-	Assert(t, caCertificate.Equal(&ca.TrustChain()[0]), "CA certificate not found in CA trust chain")
+	Assert(t, caCertificate.Equal(ca.TrustChain()[0]), "CA certificate not found in CA trust chain")
 	Assert(t, len(ca.TrustChain()) == 1, "Found unexpected certificate in trust chain")
 
 	// Now instantiate a new CA with the same KeyManager
 	// It should read the exact same keys and certificates
-	ca2, err := NewCertificateAuthority(km)
+	ca2, err := NewCertificateAuthority(km, false)
 	AssertOk(t, err, "Error instantiating new CA")
 
 	if !reflect.DeepEqual(ca, ca2) {
@@ -129,7 +129,7 @@ func TestExternalCAFlow(t *testing.T) {
 	caKeyPair, caCertificate, trustRoots := preloadCAKeys(t, km)
 
 	// Instantiate CA
-	ca, err := NewCertificateAuthority(km)
+	ca, err := NewCertificateAuthority(km, false)
 	AssertOk(t, err, "Error instantiating certificate authority")
 	Assert(t, ca.IsReady(), "Certificate authority not ready")
 	defer cleanupCAKeys(t, km)
@@ -158,7 +158,7 @@ func TestCertificateVerification(t *testing.T) {
 	// Pre-load keys and certificates in key manager from files
 	_, _, _ = preloadCAKeys(t, km)
 
-	ca, err := NewCertificateAuthority(km)
+	ca, err := NewCertificateAuthority(km, false)
 	AssertOk(t, err, "Error instantiating certificate authority")
 	Assert(t, ca.IsReady(), "Certificate authority not ready")
 	defer cleanupCAKeys(t, km)
@@ -183,7 +183,7 @@ func TestCertificatesApi(t *testing.T) {
 	defer be.Close()
 
 	// Instantiate a new CA with self-signed certificate
-	ca, err := NewCertificateAuthority(km)
+	ca, err := NewCertificateAuthority(km, true)
 	AssertOk(t, err, "Error instantiating certificate authority")
 	Assert(t, ca.IsReady(), "CA not ready")
 	defer cleanupCAKeys(t, km)

@@ -8,7 +8,9 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
@@ -88,6 +90,13 @@ func sendClusterGRPCs(cFn clusterClientFn, msgType string, nodes []string, req i
 			newReq := req
 			if mFn != nil {
 				newReq = mFn(host, req)
+				if newReq == nil {
+					respCh <- response{
+						host: host,
+						err:  nil,
+					}
+					return
+				}
 			}
 
 			// timeouts are handled by gRPC and result in an error.
@@ -135,7 +144,8 @@ func sendClusterGRPCs(cFn clusterClientFn, msgType string, nodes []string, req i
 }
 
 // sendPreJoins sends prejoin gRPC message to provided nodes.
-func sendPreJoins(cFn clusterClientFn, req *grpc.ClusterPreJoinReq, nodes []string) error {
+// Collect the node transport keys from the responses
+func sendPreJoins(cFn clusterClientFn, req *grpc.ClusterPreJoinReq, nodes []string, transportKeys map[string][]byte) error {
 	ppFn := func(host string, obj interface{}) error {
 		resp, ok := obj.(*grpc.ClusterPreJoinResp)
 		if !ok {
@@ -144,6 +154,7 @@ func sendPreJoins(cFn clusterClientFn, req *grpc.ClusterPreJoinReq, nodes []stri
 		if resp.SwVersion != version.Version {
 			return fmt.Errorf("Version mismatch: expected %v, got %v", version.Version, resp.SwVersion)
 		}
+		transportKeys[host] = resp.GetTransportKey()
 		return nil
 	}
 
@@ -165,7 +176,7 @@ func sendPreJoins(cFn clusterClientFn, req *grpc.ClusterPreJoinReq, nodes []stri
 }
 
 // sendJoins sends join gRPC message to provided nodes.
-func sendJoins(cFn clusterClientFn, req *grpc.ClusterJoinReq, nodes []string) error {
+func sendJoins(cFn clusterClientFn, req *grpc.ClusterJoinReq, nodes []string, transportKeys map[string][]byte) error {
 	mFn := func(host string, req interface{}) interface{} {
 		origReq := req.(*grpc.ClusterJoinReq)
 		newReq := *origReq
@@ -181,6 +192,20 @@ func sendJoins(cFn clusterClientFn, req *grpc.ClusterJoinReq, nodes []string) er
 		newReq.NodeId = host
 		if !found {
 			newReq.QuorumConfig = nil
+		}
+		if transportKeys[host] != nil {
+			var destination string
+			if len(nodes) > 1 {
+				destination = "QuorumNodes"
+			} else {
+				destination = host
+			}
+			cmb, err := certificates.MakeCertMgrBundle(env.CertMgr, destination, transportKeys[host])
+			if err != nil {
+				log.Errorf("Error making CertMgr bundle, host name: %v, err: %v", host, err)
+				return nil
+			}
+			newReq.CertMgrBundle = cmb
 		}
 		return &newReq
 	}

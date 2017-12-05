@@ -83,6 +83,7 @@ func isRSAKey(kt KeyType) bool {
 	return kt >= RSA1024 && kt <= RSA4096
 }
 
+// ecdsaKeyTypeToCurve is a map from a KeyMgr ECDSA key type to the corresponding Go elliptic Curve struct
 var ecdsaKeyTypeToCurve = map[KeyType]elliptic.Curve{
 	ECDSA224: elliptic.P224(),
 	ECDSA256: elliptic.P256(),
@@ -90,6 +91,7 @@ var ecdsaKeyTypeToCurve = map[KeyType]elliptic.Curve{
 	ECDSA521: elliptic.P521(),
 }
 
+// ecdsaCurveToKeyType is a map from a Go elliptic Curve struct to the corresponding KeyMgr ECDSA key type
 var ecdsaCurveToKeyType = map[elliptic.Curve]KeyType{
 	elliptic.P224(): ECDSA224,
 	elliptic.P256(): ECDSA256,
@@ -152,8 +154,8 @@ func rawToSignerSignature(rawSignature []byte, signer crypto.Signer) ([]byte, er
 	}
 }
 
-// return KeyMgr's KeyType from a crypto.PublicKey
-func getPublicKeyType(key crypto.PublicKey) KeyType {
+// GetPublicKeyType return KeyMgr's KeyType from a crypto.PublicKey
+func GetPublicKeyType(key crypto.PublicKey) KeyType {
 	switch keyType := key.(type) {
 	case *rsa.PublicKey:
 		return rsaBitSizeToKeyType[key.(*rsa.PublicKey).N.BitLen()]
@@ -237,4 +239,29 @@ func Pkcs8MarshalPrivateKey(privateKey crypto.PrivateKey) ([]byte, error) {
 		return nil, fmt.Errorf("Unknown key type %T", keyType)
 	}
 	return asn1.Marshal(keyInfo)
+}
+
+// MarshalEcdsaPublicKey unmarshals an ECDSA public key to the coresponding Go crypto struct
+func MarshalEcdsaPublicKey(key *ecdsa.PublicKey) []byte {
+	if key == nil {
+		return nil
+	}
+	return elliptic.Marshal(key.Curve, key.X, key.Y)
+}
+
+// UnmarshalEcdsaPublicKey unmarshals an ECDSA public key to the coresponding Go crypto struct
+func UnmarshalEcdsaPublicKey(keyType KeyType, bytes []byte) *ecdsa.PublicKey {
+	if bytes == nil {
+		return nil
+	}
+	curve := ecdsaKeyTypeToCurve[keyType]
+	x, y := elliptic.Unmarshal(curve, bytes)
+	if x == nil || y == nil {
+		return nil
+	}
+	return &ecdsa.PublicKey{
+		Curve: curve,
+		X:     x,
+		Y:     y,
+	}
 }
