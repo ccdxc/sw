@@ -49,6 +49,7 @@ using intf::GetQStateRequestMsg;
 using intf::GetQStateResponseMsg;
 using intf::SetQStateRequestMsg;
 using intf::SetQStateResponseMsg;
+using intf::IfType;
 
 namespace hal {
 

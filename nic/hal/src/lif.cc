@@ -20,8 +20,8 @@ namespace hal {
 void *
 lif_id_get_key_func (void *entry)
 {
-    hal_handle_id_ht_entry_t    *ht_entry;
-    lif_t                       *lif = NULL;
+    hal_handle_id_ht_entry_t *ht_entry = NULL;
+    lif_t                    *lif      = NULL;
 
     HAL_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
@@ -54,8 +54,8 @@ lif_id_compare_key_func (void *key1, void *key2)
 static inline hal_ret_t
 lif_add_to_db (lif_t *lif, hal_handle_t handle)
 {
-    hal_ret_t                   ret;
-    hal_handle_id_ht_entry_t    *entry;
+    hal_ret_t                ret;
+    hal_handle_id_ht_entry_t *entry = NULL;
 
     HAL_TRACE_DEBUG("pi-lif:{}:adding to lif id hash table", 
                     __FUNCTION__);
@@ -89,7 +89,7 @@ lif_add_to_db (lif_t *lif, hal_handle_t handle)
 static inline hal_ret_t
 lif_del_from_db (lif_t *lif)
 {
-    hal_handle_id_ht_entry_t    *entry;
+    hal_handle_id_ht_entry_t *entry;
 
     HAL_TRACE_DEBUG("pi-lif:{}:removing from lif id hash table", __FUNCTION__);
     // remove from hash table
@@ -108,8 +108,8 @@ lif_del_from_db (lif_t *lif)
 hal_ret_t
 lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
 {
-    LIFQStateParams    qs_params = { 0 };
-    int32_t            ec = 0;
+    LIFQStateParams qs_params = { 0 };
+    int32_t         ec        = 0;
 
     for (int i = 0; i < spec.lif_qstate_map_size(); i++) {
         const auto &ent = spec.lif_qstate_map(i);
@@ -128,10 +128,10 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
             return HAL_RET_INVALID_ARG;
         }
 
-        qs_params.type[ent.type_num()].size = ent.size();
+        qs_params.type[ent.type_num()].size    = ent.size();
         qs_params.type[ent.type_num()].entries = ent.entries();
-        qs_params.type[ent.type_num()].cosA = ent.cos_a().cos();
-        qs_params.type[ent.type_num()].cosB = ent.cos_b().cos();
+        qs_params.type[ent.type_num()].cosA    = ent.cos_a().cos();
+        qs_params.type[ent.type_num()].cosB    = ent.cos_b().cos();
 
         if (ent.purpose() > intf::LifQPurpose_MAX) {
             HAL_TRACE_ERR("Invalid entry in LifSpec : purpose={}", ent.purpose());
@@ -197,8 +197,8 @@ static hal_ret_t
 lif_fwd_create (LifSpec& spec, LifResponse *rsp, lif_t *lif, 
                 lif_hal_info_t *lif_hal_info)
 {
-    hal_ret_t            ret = HAL_RET_OK;
-    pd::pd_lif_args_t    pd_lif_args;
+    hal_ret_t         ret          = HAL_RET_OK;
+    pd::pd_lif_args_t pd_lif_args;
 
     HAL_TRACE_DEBUG("pi-lif:{}: P4 Processing for lif id {}", __FUNCTION__, 
                     spec.key_or_handle().lif_id());
@@ -225,7 +225,7 @@ end:
 hal_ret_t
 validate_lif_create(LifSpec& spec, LifResponse *rsp)
 {
-    hal_ret_t       ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
 
     // make sure key-handle field is set
     if (!spec.has_key_or_handle()) {
@@ -265,16 +265,16 @@ end:
 hal_ret_t
 lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    LifSpec                     *spec = NULL;
-    LifResponse                 *rsp = NULL;
-    lif_t                       *lif = NULL;
-    lif_hal_info_t              *lif_hal_info, lif_info;
-    lif_create_app_ctxt_t       *app_ctxt = NULL; 
-    uint32_t                    hw_lif_id = 0;
-    std::unique_ptr<uint8_t[]>  buf;
+    hal_ret_t                  ret            = HAL_RET_OK;
+    dllist_ctxt_t              *lnode         = NULL;
+    dhl_entry_t                *dhl_entry     = NULL;
+    LifSpec                    *spec          = NULL;
+    LifResponse                *rsp           = NULL;
+    lif_t                      *lif           = NULL;
+    lif_hal_info_t             *lif_hal_info, lif_info;
+    lif_create_app_ctxt_t      *app_ctxt      = NULL;
+    uint32_t                   hw_lif_id      = 0;
+    std::unique_ptr<uint8_t[]> buf;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif:{}: invalid cfg_ctxt", __FUNCTION__);
@@ -282,14 +282,14 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (lif_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt  = (lif_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    lif = (lif_t *)dhl_entry->obj;
+    lif          = (lif_t *)dhl_entry->obj;
     lif_hal_info = app_ctxt->lif_info;
-    spec = app_ctxt->spec;
-    rsp = app_ctxt->rsp;
+    spec         = app_ctxt->spec;
+    rsp          = app_ctxt->rsp;
 
     HAL_TRACE_DEBUG("pi-lif:{}:create add CB {}",
                     __FUNCTION__, lif->lif_id);
@@ -361,11 +361,11 @@ end:
 hal_ret_t
 lif_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    lif_t                       *lif = NULL;
-    hal_handle_t                hal_handle = 0;
+    hal_ret_t     ret        = HAL_RET_OK;
+    dllist_ctxt_t *lnode     = NULL;
+    dhl_entry_t   *dhl_entry = NULL;
+    lif_t         *lif       = NULL;
+    hal_handle_t  hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -374,10 +374,10 @@ lif_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // assumption is there is only one element in the list
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    lif = (lif_t *)dhl_entry->obj;
+    lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("pi-lif:{}:create commit CB {}",
@@ -409,12 +409,12 @@ end:
 hal_ret_t
 lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_lif_args_t        pd_lif_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    lif_t                    *lif = NULL;
-    hal_handle_t                hal_handle = 0;
+    hal_ret_t         ret         = HAL_RET_OK;
+    pd::pd_lif_args_t pd_lif_args = { 0 };
+    dllist_ctxt_t     *lnode      = NULL;
+    dhl_entry_t       *dhl_entry  = NULL;
+    lif_t             *lif        = NULL;
+    hal_handle_t      hal_handle  = 0;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -422,10 +422,10 @@ lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    lif = (lif_t *)dhl_entry->obj;
+    lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("pi-lif:{}:create abort CB {}",
@@ -457,7 +457,7 @@ end:
 hal_ret_t
 lif_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
 
     return ret;
 }
@@ -483,14 +483,14 @@ lif_prepare_rsp (LifResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
 hal_ret_t
 lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    lif_t                       *lif = NULL;
-    uint32_t                    hw_lif_id = 0;
-    std::unique_ptr<uint8_t[]>  buf;
-    hal_handle_t                hal_handle = HAL_HANDLE_INVALID;
-    lif_create_app_ctxt_t       app_ctxt = { 0 };
-    dhl_entry_t                 dhl_entry = { 0 };
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
+    hal_ret_t                  ret        = HAL_RET_OK;
+    lif_t                      *lif       = NULL;
+    uint32_t                   hw_lif_id  = 0;
+    std::unique_ptr<uint8_t[]> buf;
+    hal_handle_t               hal_handle = HAL_HANDLE_INVALID;
+    lif_create_app_ctxt_t      app_ctxt   = { 0 };
+    dhl_entry_t                dhl_entry  = { 0 };
+    cfg_op_ctxt_t              cfg_ctxt   = { 0 };
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("pi-lif:{}:lif create for id {}", __FUNCTION__, 
@@ -514,20 +514,21 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     }
 
     // consume the config
-    lif->lif_id = spec.key_or_handle().lif_id();
-    lif->admin_status = spec.admin_status();
-    lif->hal_handle = hal_alloc_handle();
-    lif->vlan_strip_en = spec.vlan_strip_en();
-    lif->pinned_uplink = spec.pinned_uplink_if_handle();
+    lif->lif_id              = spec.key_or_handle().lif_id();
+    lif->admin_status        = spec.admin_status();
+    lif->hal_handle          = hal_alloc_handle();
+    lif->vlan_strip_en       = spec.vlan_strip_en();
+    lif->vlan_insert_en      = spec.vlan_insert_en();
+    lif->pinned_uplink       = spec.pinned_uplink_if_handle();
     lif->packet_filters.receive_broadcast = spec.packet_filter().
                                             receive_broadcast();
     lif->packet_filters.receive_promiscuous = spec.packet_filter().
                                               receive_promiscuous();
     lif->packet_filters.receive_all_multicast = spec.packet_filter().
                                                 receive_all_multicast();
-    //lif->allmulti = spec.allmulti();
-    lif->enable_rdma = spec.enable_rdma();
-    lif->rdma_max_keys = spec.rdma_max_keys();
+    //lif->allmulti          = spec.allmulti();
+    lif->enable_rdma         = spec.enable_rdma();
+    lif->rdma_max_keys       = spec.rdma_max_keys();
     lif->rdma_max_pt_entries = spec.rdma_max_pt_entries();
 
     // allocate hal handle id
@@ -542,10 +543,10 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     // form ctxt and call infra add
     app_ctxt.lif_info = lif_hal_info;
-    app_ctxt.spec = &spec;
-    app_ctxt.rsp = rsp;
-    dhl_entry.handle = hal_handle;
-    dhl_entry.obj = lif;
+    app_ctxt.spec     = &spec;
+    app_ctxt.rsp      = rsp;
+    dhl_entry.handle  = hal_handle;
+    dhl_entry.obj     = lif;
     cfg_ctxt.app_ctxt = &app_ctxt;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
@@ -583,6 +584,9 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->mutable_rdma_data()->set_kt_base_addr(rdma_lif_kt_base_addr(hw_lif_id));
     }
 
+    HAL_TRACE_DEBUG("Lif Created:");
+    HAL_TRACE_DEBUG("------------");
+    lif_print(lif);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
@@ -593,7 +597,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 hal_ret_t
 validate_lif_update (LifSpec& spec, LifResponse *rsp)
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
@@ -612,13 +616,13 @@ validate_lif_update (LifSpec& spec, LifResponse *rsp)
 hal_ret_t
 lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_lif_upd_args_t       args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    lif_t                       *lif = NULL;
-    lif_update_app_ctxt_t       *app_ctxt = NULL;
-    uint32_t                    hw_lif_id;
+    hal_ret_t             ret        = HAL_RET_OK;
+    pd::pd_lif_upd_args_t args       = { 0 };
+    dllist_ctxt_t         *lnode     = NULL;
+    dhl_entry_t           *dhl_entry = NULL;
+    lif_t                 *lif       = NULL;
+    lif_update_app_ctxt_t *app_ctxt  = NULL;
+    uint32_t              hw_lif_id;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -626,9 +630,9 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt  = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     lif = (lif_t *)dhl_entry->obj;
 
@@ -637,11 +641,11 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_lif_upd_args_init(&args);
-    args.lif = lif;
+    args.lif                   = lif;
     args.vlan_strip_en_changed = app_ctxt->vlan_strip_en_changed;
-    args.vlan_strip_en = app_ctxt->vlan_strip_en;
-    args.qstate_map_init_set = app_ctxt->qstate_map_init_set;
-    hw_lif_id = pd::pd_get_hw_lif_id(lif);
+    args.vlan_strip_en         = app_ctxt->vlan_strip_en;
+    args.qstate_map_init_set   = app_ctxt->qstate_map_init_set;
+    hw_lif_id                  = pd::pd_get_hw_lif_id(lif);
 
     if (app_ctxt->qstate_map_init_set) {
         // init queue state map
@@ -699,12 +703,12 @@ lif_make_clone (lif_t *lif, lif_t **lif_clone)
 hal_ret_t
 lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_lif_args_t           pd_lif_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    lif_t                       *lif = NULL, *lif_clone = NULL;
-    lif_update_app_ctxt_t    *app_ctxt = NULL;
+    hal_ret_t             ret         = HAL_RET_OK;
+    pd::pd_lif_args_t     pd_lif_args = { 0 };
+    dllist_ctxt_t         *lnode      = NULL;
+    dhl_entry_t           *dhl_entry  = NULL;
+    lif_t                 *lif        = NULL, *lif_clone = NULL;
+    lif_update_app_ctxt_t *app_ctxt   = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -712,11 +716,11 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt  = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    lif = (lif_t *)dhl_entry->obj;
+    lif       = (lif_t *)dhl_entry->obj;
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("pi-lif:{}:update commit CB {}",
@@ -756,12 +760,12 @@ end:
 hal_ret_t
 lif_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_lif_args_t           pd_lif_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    lif_t                       *lif = NULL;
-    // lif_update_app_ctxt_t    *app_ctxt = NULL;
+    hal_ret_t                ret         = HAL_RET_OK;
+    pd::pd_lif_args_t        pd_lif_args = { 0 };
+    dllist_ctxt_t            *lnode      = NULL;
+    dhl_entry_t              *dhl_entry  = NULL;
+    lif_t                    *lif        = NULL;
+    // lif_update_app_ctxt_t *app_ctxt   = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -769,8 +773,8 @@ lif_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    lnode       = cfg_ctxt->dhl.next;
+    dhl_entry   = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     // app_ctxt = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     lif = (lif_t *)dhl_entry->cloned_obj;
@@ -806,7 +810,7 @@ lif_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 lif_t *
 lif_lookup_key_or_handle (const LifKeyHandle& kh)
 {
-    lif_t     *lif = NULL;
+    lif_t *lif = NULL;
 
     if (kh.key_or_handle_case() == LifKeyHandle::kLifId) {
         lif = find_lif_by_id(kh.lif_id());
@@ -823,8 +827,8 @@ lif_lookup_key_or_handle (const LifKeyHandle& kh)
 static inline hal_ret_t
 lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    LifSpec             *spec = app_ctxt->spec;
+    hal_ret_t ret   = HAL_RET_OK;
+    LifSpec   *spec = app_ctxt->spec;
 
     // Handle vlan_strip_en change
     if (lif->vlan_strip_en != spec->vlan_strip_en()) {
@@ -856,13 +860,13 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 hal_ret_t
 lif_update (LifSpec& spec, LifResponse *rsp)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    lif_t                       *lif = NULL;
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
-    dhl_entry_t                 dhl_entry = { 0 };
-    const LifKeyHandle          &kh = spec.key_or_handle();
-    lif_update_app_ctxt_t       app_ctxt = { 0 };
-    hal_handle_t                hal_handle = 0;
+    hal_ret_t             ret          = HAL_RET_OK;
+    lif_t                 *lif         = NULL;
+    cfg_op_ctxt_t         cfg_ctxt     = { 0 };
+    dhl_entry_t           dhl_entry    = { 0 };
+    const                 LifKeyHandle &kh = spec .key_or_handle ();
+    lif_update_app_ctxt_t app_ctxt     = { 0 };
+    hal_handle_t          hal_handle   = 0;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
 
@@ -888,7 +892,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
 
     // Check for any change, if there is none goto end.
     app_ctxt.spec = &spec;
-    app_ctxt.rsp = rsp;
+    app_ctxt.rsp  = rsp;
     ret = lif_handle_update(&app_ctxt, lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:lif check update failed, ret : {}", 
@@ -904,8 +908,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     lif_make_clone(lif, (lif_t **)&dhl_entry.cloned_obj);
 
     // form ctxt and call infra update object
-    dhl_entry.handle = lif->hal_handle;
-    dhl_entry.obj = lif;
+    dhl_entry.handle  = lif->hal_handle;
+    dhl_entry.obj     = lif;
     cfg_ctxt.app_ctxt = &app_ctxt;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
@@ -928,7 +932,7 @@ end:
 hal_ret_t
 validate_lif_delete_req (LifDeleteRequest& req, LifDeleteResponse *rsp)
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
@@ -945,7 +949,7 @@ validate_lif_delete_req (LifDeleteRequest& req, LifDeleteResponse *rsp)
 hal_ret_t
 validate_lif_delete (lif_t *lif)
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
 
     // check for no presence of back references
     if (dllist_count(&lif->if_list_head)) {
@@ -963,11 +967,11 @@ validate_lif_delete (lif_t *lif)
 hal_ret_t
 lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_lif_args_t           pd_lif_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    lif_t                       *lif = NULL;
+    hal_ret_t         ret         = HAL_RET_OK;
+    pd::pd_lif_args_t pd_lif_args = { 0 };
+    dllist_ctxt_t     *lnode      = NULL;
+    dhl_entry_t       *dhl_entry  = NULL;
+    lif_t             *lif        = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -979,7 +983,7 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     //       If its non zero, fail the delete.
     //       - Enic's referring to this lif
 
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     lif = (lif_t *)dhl_entry->obj;
@@ -1012,11 +1016,11 @@ end:
 hal_ret_t
 lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    lif_t                       *lif = NULL;
-    hal_handle_t                hal_handle = 0;
+    hal_ret_t     ret        = HAL_RET_OK;
+    dllist_ctxt_t *lnode     = NULL;
+    dhl_entry_t   *dhl_entry = NULL;
+    lif_t         *lif       = NULL;
+    hal_handle_t  hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -1024,10 +1028,10 @@ lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    lnode      = cfg_ctxt->dhl.next;
+    dhl_entry  = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    lif = (lif_t *)dhl_entry->obj;
+    lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("pi-lif:{}:delete commit CB {}",
@@ -1077,11 +1081,11 @@ lif_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 hal_ret_t
 lif_delete (LifDeleteRequest& req, LifDeleteResponse *rsp)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    lif_t                       *lif = NULL;
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
-    dhl_entry_t                 dhl_entry = { 0 };
-    const LifKeyHandle          &kh = req.key_or_handle();
+    hal_ret_t     ret          = HAL_RET_OK;
+    lif_t         *lif         = NULL;
+    cfg_op_ctxt_t cfg_ctxt     = { 0 };
+    dhl_entry_t   dhl_entry    = { 0 };
+    const         LifKeyHandle &kh = req .key_or_handle ();
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
 
@@ -1113,8 +1117,8 @@ lif_delete (LifDeleteRequest& req, LifDeleteResponse *rsp)
     }
 
     // form ctxt and call infra add
-    dhl_entry.handle = lif->hal_handle;
-    dhl_entry.obj = lif;
+    dhl_entry.handle  = lif->hal_handle;
+    dhl_entry.obj     = lif;
     cfg_ctxt.app_ctxt = NULL;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
@@ -1192,8 +1196,8 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
 hal_ret_t lif_get(LifGetRequest& req,
                   LifGetResponse *rsp)
 {
-    lif_t            *lif;
-    LifSpec          *spec;
+    lif_t   *lif;
+    LifSpec *spec;
 
     if (!req.has_key_or_handle()) {
         rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
@@ -1224,8 +1228,8 @@ hal_ret_t lif_get(LifGetRequest& req,
 hal_ret_t
 lif_add_if (lif_t *lif, if_t *hal_if)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    hal_handle_id_list_entry_t  *entry = NULL;
+    hal_ret_t                  ret    = HAL_RET_OK;
+    hal_handle_id_list_entry_t *entry = NULL;
 
     if (lif == NULL || hal_if == NULL) {
         ret = HAL_RET_INVALID_ARG;
@@ -1260,9 +1264,9 @@ end:
 hal_ret_t
 lif_del_if (lif_t *lif, if_t *hal_if)
 {
-    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    dllist_ctxt_t               *curr = NULL, *next = NULL;
+    hal_ret_t                  ret    = HAL_RET_IF_NOT_FOUND;
+    hal_handle_id_list_entry_t *entry = NULL;
+    dllist_ctxt_t              *curr  = NULL, *next = NULL;
 
 
     lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
@@ -1290,11 +1294,11 @@ lif_del_if (lif_t *lif, if_t *hal_if)
 hal_ret_t
 lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    if_t                        *hal_if = NULL;
-    pd::pd_if_lif_upd_args_t    args = { 0 };
+    hal_ret_t                  ret     = HAL_RET_OK;
+    dllist_ctxt_t              *lnode  = NULL;
+    hal_handle_id_list_entry_t *entry  = NULL;
+    if_t                       *hal_if = NULL;
+    pd::pd_if_lif_upd_args_t   args    = { 0 };
 
     if (lif == NULL) {
         return ret;
@@ -1325,12 +1329,15 @@ lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// Prints Enicifs mapped to the lif
+//-----------------------------------------------------------------------------
 void
 lif_print_ifs(lif_t *lif)
 {
-    dllist_ctxt_t               *lnode = NULL;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    if_t                        *hal_if = NULL;
+    dllist_ctxt_t              *lnode  = NULL;
+    hal_handle_id_list_entry_t *entry  = NULL;
+    if_t                       *hal_if = NULL;
 
     dllist_for_each(lnode, &(lif->if_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
@@ -1338,6 +1345,39 @@ lif_print_ifs(lif_t *lif)
         HAL_TRACE_DEBUG("pi-lif:{}: if: {}", 
                 __FUNCTION__, hal_if->if_id);
     }
+}
+
+//-----------------------------------------------------------------------------
+// Print PI lif
+//-----------------------------------------------------------------------------
+void
+lif_print(lif_t *lif)
+{
+    fmt::MemoryWriter          buf;
+    dllist_ctxt_t              *lnode  = NULL;
+    hal_handle_id_list_entry_t *entry  = NULL;
+    if_t                       *hal_if = NULL;
+
+    if (!lif) {
+        return;
+    }
+
+    buf.write("lif id:{}, vlan_strip_en:{}, vlan_insert_en:{}, "
+              "pinned_uplink:{}, enable_rdma:{}, hal_handle:{}, num_enics:{} ",
+              lif->lif_id, lif->vlan_strip_en, lif->vlan_insert_en,
+              lif->pinned_uplink, lif->enable_rdma, lif->hal_handle,
+              dllist_count(&(lif->if_list_head)));
+
+    if (dllist_count(&(lif->if_list_head))) {
+        buf.write("Enics\n");
+        buf.write("-----\n");
+        dllist_for_each(lnode, &(lif->if_list_head)) {
+            entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+            hal_if = find_if_by_handle(entry->handle_id);
+            buf.write("if_id: {}, ", hal_if->if_id);
+        }
+    }
+    HAL_TRACE_DEBUG(buf.c_str());
 }
 
 }    // namespace hal

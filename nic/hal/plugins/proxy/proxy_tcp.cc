@@ -408,11 +408,11 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
         uint16_t shw_vlan_id, dhw_vlan_id;
 
 
-        if (hal::pd::pd_l2seg_get_fromcpu_id(ctx.sl2seg(), &shw_vlan_id)) {
+        if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.sl2seg(), &shw_vlan_id) == HAL_RET_OK) {
           HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
         }
 
-        if (hal::pd::pd_l2seg_get_fromcpu_id(ctx.dl2seg(), &dhw_vlan_id)) {
+        if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.dl2seg(), &dhw_vlan_id) == HAL_RET_OK) {
           HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", dhw_vlan_id);
         }
 

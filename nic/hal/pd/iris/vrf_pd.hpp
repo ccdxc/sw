@@ -26,8 +26,13 @@ struct pd_vrf_s {
     // operational state of vrf pd
     uint32_t           gipo_imn_idx[3];      // Input mapping native table idx
     uint32_t           gipo_imt_idx[3];      // Input mapping tunneled table idx
-    vrf_hw_id_t     ten_hw_id;            // hw id for this VRF
+    vrf_hw_id_t        ten_hw_id;            // hw id for this VRF
+    uint32_t           vrf_lookup_id;        // Used by IPSec for flow lookup
+    uint32_t           vrf_fromcpu_vlan_id;  // From CPU vlan id
     indexer            *l2seg_hw_id_idxr_;   // indexer for l2segs in this ten
+
+    // Entry used by traffic From CPU traffic
+    uint32_t            inp_prop_tbl_cpu_idx;
 } __PACK__;
 
 // allocate a vrf pd instance
@@ -110,6 +115,14 @@ hal_ret_t vrf_pd_alloc_l2seg_hw_id(pd_vrf_t *vrf_pd,
                                       uint32_t *l2seg_hw_id);
 hal_ret_t vrf_pd_free_l2seg_hw_id(pd_vrf_t *vrf_pd, 
                                      uint32_t l2seg_hw_id);
+hal_ret_t vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_program_hw (pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_deprogram_hw (pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd);
+
+hal_ret_t vrf_pd_alloc_cpuid(pd_vrf_t *pd_vrf);
+hal_ret_t vrf_pd_dealloc_cpuid(pd_vrf_t *vrf_pd);
 
 }   // namespace pd
 }   // namespace hal

@@ -181,7 +181,7 @@ pd_collector_create(collector_config_t *cfg)
     _export_destinations[cfg->exporter_id] = d;
     d->init(cfg->exporter_id);
 
-    if (!pd_l2seg_get_fromcpu_id(cfg->l2seg, &cfg->vlan)) {
+    if (pd_l2seg_get_fromcpu_vlanid(cfg->l2seg, &cfg->vlan) != HAL_RET_OK) {
         HAL_TRACE_DEBUG("PD-Collector:{}: Could not retrieve CPU VLAN", __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }

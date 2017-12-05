@@ -868,12 +868,12 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                     pd_if_lif_upd_args_t *lif_upd,
                                     table_oper_t oper)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    uint8_t                     tm_oport = 0;
-    uint8_t                     p4plus_app_id = 0;
+    hal_ret_t                   ret                 = HAL_RET_OK;
+    uint8_t                     tm_oport            = 0;
+    uint8_t                     p4plus_app_id       = 0;
     output_mapping_actiondata   data;
-    DirectMap                   *dm_omap = NULL;
-    pd_lif_t                    *pd_lif = NULL;
+    DirectMap                   *dm_omap            = NULL;
+    pd_lif_t                    *pd_lif             = NULL;
     uint32_t                    access_vlan_classic = 0;
 
     memset(&data, 0, sizeof(data));

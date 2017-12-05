@@ -15,13 +15,14 @@ using hal::pd::pd_if_args_t;
 
 namespace hal {
 
-// static hal_ret_t uplinkpc_add_l2segment (if_t *uppc, l2seg_t *seg);
-
+//------------------------------------------------------------------------------
+// Get key function for if id hash table
+//------------------------------------------------------------------------------
 void *
 if_id_get_key_func (void *entry)
 {
-    hal_handle_id_ht_entry_t    *ht_entry;
-    if_t                        *hal_if = NULL;
+    hal_handle_id_ht_entry_t *ht_entry = NULL;
+    if_t                     *hal_if   = NULL;
 
     HAL_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
@@ -33,12 +34,18 @@ if_id_get_key_func (void *entry)
     return (void *)&(hal_if->if_id);
 }
 
+//------------------------------------------------------------------------------
+// Compute hash function for if id hash table
+//------------------------------------------------------------------------------
 uint32_t
 if_id_compute_hash_func (void *key, uint32_t ht_size)
 {
     return utils::hash_algo::fnv_hash(key, sizeof(if_id_t)) % ht_size;
 }
 
+//------------------------------------------------------------------------------
+// Compare key function for if id hash table
+//------------------------------------------------------------------------------
 bool
 if_id_compare_key_func (void *key1, void *key2)
 {
@@ -49,34 +56,18 @@ if_id_compare_key_func (void *key1, void *key2)
     return false;
 }
 
-#if 0
-//------------------------------------------------------------------------------
-// insert this interface in all meta data structures
-//------------------------------------------------------------------------------
-static inline hal_ret_t
-add_if_to_db (if_t *hal_if)
-{
-    g_hal_state->if_id_ht()->insert(hal_if, &hal_if->ht_ctxt);
-    g_hal_state->if_hwid_ht()->insert(hal_if, &hal_if->hw_ht_ctxt);
-    g_hal_state->if_hal_handle_ht()->insert(hal_if,
-                                            &hal_if->hal_handle_ht_ctxt);
-    return HAL_RET_OK;
-}
-#endif
-
 //------------------------------------------------------------------------------
 // insert a if to HAL config db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 if_add_to_db (if_t *hal_if, hal_handle_t handle)
 {
-    hal_ret_t                   ret;
-    hal_handle_id_ht_entry_t    *entry;
-    // if_t                        *if_temp = NULL;
+    hal_ret_t                ret;
+    hal_handle_id_ht_entry_t *entry;
 
     HAL_TRACE_DEBUG("pi-hal_if:{}:adding to hal_if id hash table", 
                     __FUNCTION__);
-    // allocate an entry to establish mapping from if id to its handle
+    // allocate hash table entry
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
         hal_handle_id_ht_entry_slab()->alloc();
@@ -84,7 +75,7 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from vrf id to its handle
+    // add if_id -> handle
     entry->handle_id = handle;
     ret = g_hal_state->if_id_ht()->insert_with_key(&hal_if->if_id,
                                                    entry, &entry->ht_ctxt);
@@ -93,9 +84,6 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
                       "err : {}", __FUNCTION__, ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
-
-    // TODO: Check if this is the right place
-    hal_if->hal_handle = handle;
 
     return ret;
 }
@@ -106,7 +94,7 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
 static inline hal_ret_t
 if_del_from_db (if_t *hal_if)
 {
-    hal_handle_id_ht_entry_t    *entry;
+    hal_handle_id_ht_entry_t *entry;
 
     HAL_TRACE_DEBUG("pi-if:{}:removing from if id hash table", __FUNCTION__);
     // remove from hash table
@@ -138,15 +126,14 @@ if_lookup_key_or_handle (const kh::InterfaceKeyHandle& key_handle)
 
 }
 
-
 //------------------------------------------------------------------------------
 // validate an incoming interface create request
 //------------------------------------------------------------------------------
 static hal_ret_t
 validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
-    intf::IfType    if_type;
-    hal_ret_t       ret = HAL_RET_OK;
+    intf::IfType if_type;
+    hal_ret_t ret = HAL_RET_OK;
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
@@ -218,7 +205,6 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                 goto end;
             }
         }
-
     } else if (if_type == intf::IF_TYPE_UPLINK) {
         // uplink specific validation
         if (!spec.has_if_uplink_info()) {

@@ -11,5 +11,5 @@
 -I ../utils
 -I ../hal/pd/common
 -I ../include
--I .
+-I ../..
 -std=c++11

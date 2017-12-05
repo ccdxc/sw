@@ -887,7 +887,8 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         if (key_.dir == FLOW_DIR_FROM_UPLINK) {
      	    HAL_TRACE_DEBUG("fte: setting defaults for uplink -> host direction");
             pkt_info->cpu_header.src_lif = hal::SERVICE_LIF_CPU;
-            if (hal::pd::pd_l2seg_get_fromcpu_id(sl2seg_, &pkt_info->cpu_header.hw_vlan_id)) {
+            if (hal::pd::pd_l2seg_get_fromcpu_vlanid(sl2seg_, 
+                                                     &pkt_info->cpu_header.hw_vlan_id) == HAL_RET_OK) {
                 pkt_info->cpu_header.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
             }
         }

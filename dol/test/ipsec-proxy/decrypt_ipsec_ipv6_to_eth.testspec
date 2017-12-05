@@ -21,29 +21,25 @@ selectors:
 packets:
     - packet:
         id          : PKT1
-        template    : callback://networking/packets/GetPacketTemplateByFlow
+        template    : ref://factory/packets/id=ETH_IPV6_TCP
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
+                src     : callback://ipsec/ipsec/GetSMac
+                dst     : callback://ipsec/ipsec/GetDMac
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : 5
                 prio    : 0
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 hlim    : 64
             tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                sport   : 44445
+                dport   : 44444
             payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data
     - packet:
         id          : PKT2
         template    : ref://factory/packets/id=ETH_IPV6_ESP
@@ -71,27 +67,26 @@ packets:
                 data    : ref://factory/payloads/id=ESP_V6_TCP_PAYLOAD/data 
     - packet:
         id          : PKT3
-        template    : ref://factory/packets/id=ETH_IPV6_ESP
-        payloadsize : ref://factory/payloads/id=ESP_V6_TCP_PAYLOAD/size
-        encaps      : None
+        id          : PKT3
+        template    : ref://factory/packets/id=ETH_IPV6_TCP
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
-                src     : callback://ipsec/ipsec/GetSMac 
-                dst     : callback://ipsec/ipsec/GetDMac 
+                src     : callback://ipsec/ipsec/GetSMac
+                dst     : callback://ipsec/ipsec/GetDMac
+            qtag:
+                vlan    : 4
+                prio    : 0
             ipv6:
-                src     : callback://ipsec/ipsec/GetDIp6
-                dst     : callback://ipsec/ipsec/GetSIp6
-                hlim    : 255
-                plen    : 160
-                tc      : 0
-                fl      : 0
-                nh      : 50
-            esp:
-                spi     : callback://ipsec/ipsec/GetSpi
-                iv      : callback://ipsec/ipsec/GetIv
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : 44445
+                dport   : 44444
             payload:
-                data    : ref://factory/payloads/id=ESP_V6_TCP_PAYLOAD/data 
-
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data
 trigger:
     packets:
         - packet:
@@ -99,4 +94,11 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-
+    delay : 2
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT3
+            port    : 2
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 128

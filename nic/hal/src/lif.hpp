@@ -38,24 +38,25 @@ typedef struct pkt_filter_s {
 
 // LIF structure
 typedef struct lif_s {
-    hal_spinlock_t      slock;                       // lock to protect this structure
-    lif_id_t            lif_id;                      // lif id assigned
-    intf::IfStatus      admin_status;                // admin status
-    bool                vlan_strip_en;               // vlan strip enable
-    hal_handle_t        pinned_uplink;               // uplink this LIF is pinned to
-    bool                enable_rdma;                 // enable rdma on this LIF
+    hal_spinlock_t      slock;           // lock to protect this structure
+    lif_id_t            lif_id;          // lif id assigned
+    intf::IfStatus      admin_status;    // admin status
+    bool                vlan_strip_en;   // vlan strip enable
+    bool                vlan_insert_en;  // if en, ingress vlan is in p4plus_to_p4 dr
+    hal_handle_t        pinned_uplink;   // uplink this LIF is pinned to
+    bool                enable_rdma;     // enable rdma on this LIF
     uint32_t            rdma_max_keys;
     uint32_t            rdma_max_pt_entries;
     uint8_t             qtypes[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
-    uint16_t            cos_bmp;                     // bitmap of COS values supported by this LIF.
-    bool                qstate_init_done;            // qstate map init status.
-    pkt_filter_t        packet_filters;              // Packet Filter Modes
+    uint16_t            cos_bmp;         // bitmap of COS values supported by this LIF.
+    bool                qstate_init_done;// qstate map init status.
+    pkt_filter_t        packet_filters;  // Packet Filter Modes
 
     // operational state of interface
-    hal_handle_t        hal_handle;                  // HAL allocated handle
+    hal_handle_t        hal_handle;      // HAL allocated handle
 
     // back references to enic ifs
-    dllist_ctxt_t       if_list_head;                // interfaces (enics) behind this lif
+    dllist_ctxt_t       if_list_head;    // interfaces (enics) behind this lif
 
     void                *pd_lif;
 } __PACK__ lif_t;
@@ -73,13 +74,13 @@ typedef struct lif_create_app_ctxt_s {
 } __PACK__ lif_create_app_ctxt_t;
 
 typedef struct lif_update_app_ctxt_s {
-    LifSpec             *spec;
-    LifResponse         *rsp;
-    bool                vlan_strip_en;
-    bool                qstate_map_init_set;
-    uint64_t            vlan_strip_en_changed:1;
-    uint64_t            pinned_uplink_changed:1;
-    hal_handle_t        new_pinned_uplink;
+    LifSpec      *spec;
+    LifResponse  *rsp;
+    bool         vlan_strip_en;
+    bool         qstate_map_init_set;
+    uint64_t     vlan_strip_en_changed:1;
+    uint64_t     pinned_uplink_changed:1;
+    hal_handle_t new_pinned_uplink;
 } __PACK__ lif_update_app_ctxt_t;
 
 #define HAL_MAX_LIFS                                 1024
@@ -190,6 +191,8 @@ extern uint32_t lif_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool lif_id_compare_key_func(void *key1, void *key2);
 hal_ret_t lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en);
 void lif_print_ifs(lif_t *lif);
+void lif_print(lif_t *lif);
+
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);

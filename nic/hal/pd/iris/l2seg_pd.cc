@@ -457,7 +457,8 @@ l2seg_pd_alloc_hwid(pd_l2seg_t *pd_l2seg)
     if (ret != HAL_RET_OK) {
         goto end;
     }
-    pd_l2seg->l2seg_ten_hw_id = ten_pd->ten_hw_id << 12 | pd_l2seg->l2seg_hw_id; 
+    pd_l2seg->l2seg_ten_hw_id = ten_pd->ten_hw_id << HAL_PD_VRF_SHIFT | 
+                                pd_l2seg->l2seg_hw_id; 
     HAL_TRACE_DEBUG("pd-l2seg:{}:l2seg_hwid: {},ten_hwid: {}, "
             "l2seg_ten_hw_id: {} ", 
             __FUNCTION__, pd_l2seg->l2seg_hw_id, ten_pd->ten_hw_id, 
@@ -636,18 +637,22 @@ pd_l2seg_get_ten_hwid(l2seg_t *l2seg)
 // Returns the internal vlan of l2seg (used for input_properites lookup of
 // reinjected packets) returns false if vlan is not valid
 //-----------------------------------------------------------------------------
-bool
-pd_l2seg_get_fromcpu_id(l2seg_t *l2seg, uint16_t *vid)
+hal_ret_t
+pd_l2seg_get_fromcpu_vlanid(l2seg_t *l2seg, uint16_t *vid)
 {
+    hal_ret_t   ret = HAL_RET_OK;
 
     if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
-        return false;
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
 
     if (vid) {
         *vid = ((pd_l2seg_t *)l2seg->pd)->l2seg_fromcpu_id;
     }
-    return true;
+
+end:
+    return ret;
 }
 
 // ----------------------------------------------------------------------------

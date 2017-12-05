@@ -2,11 +2,13 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/src/proxy.hpp"
 #include "if_pd_utils.hpp"
 
 namespace hal {
 namespace pd {
 
+#define inp_prop data.input_properties_action_u.input_properties_input_properties
 //-----------------------------------------------------------------------------
 // PD vrf Create
 //-----------------------------------------------------------------------------
@@ -32,6 +34,18 @@ pd_vrf_create (pd_vrf_args_t *args)
 
     // allocate resources
     ret = vrf_pd_alloc_res(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf:{}:failed to allocated resources", 
+                      __FUNCTION__);
+        goto end;
+    }
+
+    // Program HW
+    ret = vrf_pd_program_hw(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf:{}:failed to program hw", __FUNCTION__);
+        goto end;
+    }
 
 end:
     if (ret != HAL_RET_OK) {
@@ -67,6 +81,13 @@ pd_vrf_delete (pd_vrf_args_t *args)
                     __FUNCTION__, args->vrf->vrf_id);
     vrf_pd = (pd_vrf_t *)args->vrf->pd;
 
+    // deprogram HW
+    ret = vrf_pd_deprogram_hw(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf:{}:unable to deprogram hw", __FUNCTION__);
+    }
+
+    // dealloc resources and free
     ret = vrf_pd_cleanup(vrf_pd);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-vrf:{}:failed pd vrf delete",
@@ -75,6 +96,110 @@ pd_vrf_delete (pd_vrf_args_t *args)
 
     return ret;
 }
+
+// ----------------------------------------------------------------------------
+// DeProgram HW
+// ----------------------------------------------------------------------------
+hal_ret_t
+vrf_pd_deprogram_hw (pd_vrf_t *vrf_pd)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+
+    // Program Input properties Table
+    ret = vrf_pd_depgm_inp_prop_tbl(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf:{}:unable to deprogram hw", __FUNCTION__);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// DeProgram input propterties table for cpu tx traffic
+// ----------------------------------------------------------------------------
+hal_ret_t
+vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    Hash                        *inp_prop_tbl = NULL;
+
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    
+    ret = inp_prop_tbl->remove(vrf_pd->inp_prop_tbl_cpu_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf::{}:unable to deprogram from cpu entry "
+                "input properties for seg_id:{}",
+                __FUNCTION__, ((vrf_t*)(vrf_pd->vrf))->vrf_id);
+    } else {
+        HAL_TRACE_DEBUG("pd-vrf::{}:deprogrammed from_cpu_entry "
+                "input properties for seg_id:{}",
+                __FUNCTION__, ((vrf_t*)(vrf_pd->vrf))->vrf_id);
+    }
+
+    return ret;
+}
+
+
+// ----------------------------------------------------------------------------
+// Program HW
+// ----------------------------------------------------------------------------
+hal_ret_t
+vrf_pd_program_hw (pd_vrf_t *vrf_pd)
+{
+    hal_ret_t            ret;
+
+    // Program Input properties Table
+    ret = vrf_pd_pgm_inp_prop_tbl(vrf_pd);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Program input propterties table for cpu tx traffic
+// ----------------------------------------------------------------------------
+hal_ret_t
+vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
+{
+    hal_ret_t                   ret           = HAL_RET_OK;
+    Hash                        *inp_prop_tbl = NULL;
+    input_properties_swkey_t    key           = { 0 };
+    input_properties_actiondata data          = { 0 };
+
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    key.capri_intrinsic_lif = SERVICE_LIF_CPU;
+    key.vlan_tag_valid      = 1;
+    key.vlan_tag_vid        = vrf_pd->vrf_fromcpu_vlan_id;
+    inp_prop.dir            = FLOW_DIR_FROM_UPLINK;
+
+    inp_prop.vrf              = vrf_pd->vrf_lookup_id;
+    inp_prop.l4_profile_idx   = 0;
+    inp_prop.ipsg_enable      = 0;
+    inp_prop.src_lport        = 0;
+    inp_prop.flow_miss_action = 0;
+    inp_prop.flow_miss_idx    = 0;
+    inp_prop.allow_flood      = 0;
+
+    // Insert
+    ret = inp_prop_tbl->insert(&key, &data, &vrf_pd->inp_prop_tbl_cpu_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf::{}: Unable to program from cpu entry "
+                      "input properties for vrf_id:{}",
+                      __FUNCTION__, ((vrf_t*)(vrf_pd->vrf))->vrf_id);
+        goto end;
+    } else {
+        HAL_TRACE_DEBUG("pd-vrf::{}: Programmed from_cpu_entry "
+                        "input properties for vrf_id:{}",
+                        __FUNCTION__, ((vrf_t*)(vrf_pd->vrf))->vrf_id);
+    }
+
+end:
+    return ret;
+}
+
 
 hal_ret_t
 pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
@@ -293,11 +418,19 @@ vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pd-vrf:{}:allocated ten_hw_id: {}", 
-                    __FUNCTION__, vrf_pd->ten_hw_id);
+    vrf_pd->vrf_lookup_id = vrf_pd->ten_hw_id << HAL_PD_VRF_SHIFT;
+
+    HAL_TRACE_DEBUG("pd-vrf:{}:allocated vrf_hw_id:{}, vrf_lookup_id:{}", 
+                    __FUNCTION__, vrf_pd->ten_hw_id, vrf_pd->vrf_lookup_id);
 
     if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
         ret = pd_vrf_program_gipo_termination_prefix(vrf_pd);
+    }
+
+    ret = vrf_pd_alloc_cpuid(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf:{}:failed to alloc cpuid", __FUNCTION__);
+        goto end;
     }
 
 end:
@@ -328,6 +461,64 @@ vrf_pd_dealloc_res(pd_vrf_t *vrf_pd)
 
     if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
         ret = pd_vrf_deprogram_gipo_termination_prefix(vrf_pd);
+    }
+
+    ret = vrf_pd_dealloc_cpuid(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf:{}:failed to dealloc cpuid", __FUNCTION__);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Allocating cpuid used as vlan id for traffic coming from cpu
+//-----------------------------------------------------------------------------
+hal_ret_t
+vrf_pd_alloc_cpuid(pd_vrf_t *pd_vrf)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    indexer::status      rs = indexer::SUCCESS;
+
+    // Allocate from cpu id
+    rs = g_hal_state_pd->l2seg_cpu_idxr()->
+        alloc((uint32_t *)&pd_vrf->vrf_fromcpu_vlan_id);
+    if (rs != indexer::SUCCESS) {
+        pd_vrf->vrf_fromcpu_vlan_id = INVALID_INDEXER_INDEX;
+        return HAL_RET_NO_RESOURCE;
+    }
+    HAL_TRACE_DEBUG("pd-vrf:{}: vrf_id:{} allocated from_cpu_vlan_id: {}", 
+                    __FUNCTION__, 
+                    ((vrf_t*)(pd_vrf->vrf))->vrf_id,
+                    pd_vrf->vrf_fromcpu_vlan_id);
+
+    return ret;
+}
+
+
+//-----------------------------------------------------------------------------
+// De-Allocate cpuid
+//-----------------------------------------------------------------------------
+hal_ret_t
+vrf_pd_dealloc_cpuid(pd_vrf_t *vrf_pd)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    indexer::status     rs;
+
+    if (vrf_pd->vrf_fromcpu_vlan_id != INVALID_INDEXER_INDEX) {
+        rs = g_hal_state_pd->l2seg_cpu_idxr()->free(vrf_pd->
+                                                    vrf_fromcpu_vlan_id);
+        if (rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("pd-vrf:{}:failed to free cpuid err: {}", 
+                          __FUNCTION__, vrf_pd->vrf_fromcpu_vlan_id);
+            ret = HAL_RET_INVALID_OP;
+            goto end;
+        }
+
+        HAL_TRACE_DEBUG("pd-vrf:{}:freed from_cpu_vlan_id: {}", 
+                        __FUNCTION__, vrf_pd->vrf_fromcpu_vlan_id);
     }
 
 end:
@@ -506,6 +697,34 @@ pd_vrf_mem_free(pd_vrf_args_t *args)
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// Returns the vlan id for packets from CPU 
+// Note: Currently being used only for IPSec packets.
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_vrf_get_fromcpu_vlanid(vrf_t *vrf, uint16_t *vid)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    if (vrf == NULL || vid == NULL) {
+        HAL_TRACE_ERR("{}:invalid args", __FUNCTION__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    *vid = ((pd_vrf_t *)vrf->pd)->vrf_fromcpu_vlan_id;
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Returns the vrf lookupid of the vrf (used as lkp_vrf in flow key)
+//-----------------------------------------------------------------------------
+uint32_t
+pd_vrf_get_lookup_id(vrf_t *vrf)
+{
+    return ((pd_vrf_t *)vrf->pd)->vrf_lookup_id;
+}
 
 
 }    // namespace pd

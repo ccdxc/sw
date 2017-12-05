@@ -515,7 +515,7 @@ packets:
             qtag    :
                 #prio            : callback://networking/packets/GetExpectedPacketCos
                 prio            : 0
-                vlan            : 2
+                vlan            : 6
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp

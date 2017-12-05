@@ -135,11 +135,12 @@ message LifSpec {
   IfStatus                   admin_status            = 4;    // admin status of the interface
   repeated LifQStateMapEntry lif_qstate_map          = 5;    // LIF -> Qstate map.
   bool                       vlan_strip_en           = 6;    // LIF vlan strip enable
-  bool                       enable_rdma             = 7;    // RDMA: enable RDMA on LIF
-  PktFilter                  packet_filter           = 8;    // Packet filters
-  uint32                     rdma_max_keys           = 9;    // RDMA: max key entries
-  uint32                     rdma_max_pt_entries     = 10;    // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate              = 11;   // Initialize Qstate
+  bool                       vlan_insert_en          = 7;    // Ingress vlan tag in p4plus_to_p4 hdr
+  bool                       enable_rdma             = 8;    // RDMA: enable RDMA on LIF
+  PktFilter                  packet_filter           = 9;    // Packet filters
+  uint32                     rdma_max_keys           = 10;   // RDMA: max key entries
+  uint32                     rdma_max_pt_entries     = 11;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate              = 12;   // Initialize Qstate
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

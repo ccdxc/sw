@@ -443,7 +443,9 @@ hal_ret_t pd_l2seg_mem_free(pd_l2seg_args_t *l2seg);
 hal_ret_t pd_l2seg_make_clone(l2seg_t *l2seg, l2seg_t *clone);
 l2seg_t *find_l2seg_by_hwid (l2seg_hw_id_t hwid);
 l2seg_hw_id_t pd_l2seg_get_ten_hwid(l2seg_t *l2seg);
-bool pd_l2seg_get_fromcpu_id(l2seg_t *l2seg, uint16_t *vid);
+uint32_t pd_vrf_get_lookup_id(vrf_t *vrf);
+hal_ret_t pd_l2seg_get_fromcpu_vlanid(l2seg_t *l2seg, uint16_t *vid);
+hal_ret_t pd_vrf_get_fromcpu_vlanid(vrf_t *vrf, uint16_t *vid);
 
 hal_ret_t pd_nwsec_profile_create(pd_nwsec_profile_args_t *nwsec_profile);
 hal_ret_t pd_nwsec_profile_update(pd_nwsec_profile_args_t *nwsec_profile);
