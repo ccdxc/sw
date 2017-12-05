@@ -193,29 +193,14 @@ def main():
     capri_be.pa.create_flits()
 
     for d in xgress:
-        if d == xgress.INGRESS:
-            capri_be.checksum.ProcessVerificationCalFldList(\
-                                                capri_be.parsers[d])
-            capri_be.icrc.ProcessIcrcVerificationCalFldList(\
-                                                capri_be.parsers[d])
-        if d == xgress.EGRESS:
-            capri_be.checksum.ProcessUpdateCalFldList(\
-                                            capri_be.deparsers[d])
-            capri_be.icrc.ProcessIcrcUpdateCalFldList(\
-                                                capri_be.parsers[d])
+        capri_be.checksum.ProcessAllCsumObjects(d) #Regular csum, gso
+        capri_be.icrc.ProcessIcrcObjects(d)
         capri_be.parsers[d].assign_hv_bits()
+        capri_be.parsers[d].assign_rw_phv_hv_bits()
         capri_be.parsers[d].program_capri_states()
         capri_be.deparsers[d].build_field_dictionary()
-        if d == xgress.INGRESS:
-            capri_be.checksum.AllocateParserCsumResources(\
-                                                capri_be.parsers[d])
-            capri_be.icrc.AllocateParserIcrcResources(\
-                                                capri_be.parsers[d])
-        if d == xgress.EGRESS:
-            capri_be.checksum.AllocateDeParserCsumResources(\
-                                                capri_be.parsers[d])
-            capri_be.icrc.AllocateDeParserIcrcResources(\
-                                                capri_be.parsers[d])
+        capri_be.checksum.AllocateAllCsumResources(d)
+        capri_be.icrc.AllocateIcrcObjects(d)
     capri_be.tables.update_table_config()
     capri_be.tables.create_key_makers()
     capri_be.tables.program_tables()

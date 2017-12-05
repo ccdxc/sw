@@ -11,7 +11,8 @@ capri_model = {
         'max_hw_flits' : 12,    # max allowed value for num_flits
         'flit_size' : 512, # max_size/num_flits
         'containers': {8: 640}, # {size:num} all 8 bit containers
-        'wide_key_start_flit' : 2
+        'wide_key_start_flit' : 2,
+        'gso_csum_phv_start' : 512 #Has to first 16b in a phv slot. 
     },
     'match_action': {
         'num_stages' : 6,
@@ -68,6 +69,12 @@ capri_model = {
                                     # capasm does not allow it
         'max_hv_bits' : 128,
         'hv_location' : 384,        # [511:384]
+        'hv_start_offset' : 4,      #First four hdr valid bits can be used for special
+                                    #purpose to rewrite phv in deparser. Use case is GSO
+        'rw_phv_hv_start_offset' : 0, #First four hdr valid bits can be used for special
+                                      #purpose to rewrite phv in deparser. Use case is GSO
+        'max_rw_phv_hv_bits' : 4,     #First four hdr valid bits can be used for special
+                                      #purpose to rewrite phv in deparser. Use case is GSO
         'phv_pkt_len_location' : 384,
         'phv_pkt_trunc_location' : 385,
         'hv_pkt_len_location' : 127,
@@ -87,7 +94,7 @@ capri_model = {
                 'set_val' : '5'
             },
         },
-        'max_csum_engines' : 4
+        'max_csum_engines' : 5
     },
     'deparser': {
         'max_hdr_flds' : 256,
@@ -96,8 +103,12 @@ capri_model = {
         'dpa_src_phv' : 1,
         'dpa_src_ohi' : 2,
         'dpa_src_pkt' : 3,
-        'len_phv_start' : 512,
-        'max_csum_engines' : 4,
-        'dpa_start_hvb_in_phv' : 511
+        'len_phv_start' : 512,  #Has to be first bit in 2 PHV slot (Deparser use_phv
+                                #is from this bit onwards
+        'max_csum_engines' : 5,
+        'dpa_start_hvb_in_phv' : 511,
+        'hdrfld_info_start' : 4 #First four hdr fld can be used for special
+                                #purpose to rewrite phv in deparser. Use case
+                                #is GSO csum
     },
 }

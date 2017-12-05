@@ -34,6 +34,15 @@ header_type capri_deparser_len_t {
     }
 }
 
+header_type capri_gso_csum_phv_loc_t {
+    fields {
+        // For packet in TxDir (to uplink), this field
+        // captures checksum value computed from gso_offset
+        // to EOP.
+        gso_checksum    : 16;
+    }
+}
+
 header_type l3_metadata_t {
     fields {
         ip_option_seen           : 1;
@@ -265,6 +274,11 @@ header_type scratch_metadata_t {
 @pragma deparser_variable_length_header
 @pragma dont_trim
 metadata capri_deparser_len_t capri_deparser_len;
+#ifdef GSO_CSUM
+@pragma gso_csum_header
+@pragma dont_trim
+metadata capri_gso_csum_phv_loc_t   capri_gso_csum;
+#endif
 metadata l3_metadata_t l3_metadata;
 metadata control_metadata_t control_metadata;
 metadata entry_inactive_t entry_inactive;

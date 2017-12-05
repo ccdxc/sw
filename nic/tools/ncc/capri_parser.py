@@ -466,6 +466,7 @@ class capri_parse_state:
         self.icrc_verify_cal_field_objs = [] #In roce_hdr state
                                            #at most 2 calfldobjs
                                            #can be present
+        self.gso_csum_calfldobj = None
 
 
     def active_reg_find(self, lf):
@@ -528,6 +529,12 @@ class capri_parse_state:
             return True
         else:
             return False
+
+    def generic_checksum_start(self):
+        if self.p4_state and 'generic_checksum_start' in self.p4_state._parsed_pragmas:
+            return self.p4_state._parsed_pragmas['generic_checksum_start'].keys()[0]
+        else:
+            return None
 
     def __repr__(self):
         return self.name
@@ -1907,6 +1914,12 @@ class capri_parser:
 
         # fill it backwards as needed by deparser
         hv_bit = hv_location + max_hv_bits - 1
+        hv_start_offset = self.be.hw_model['parser']['hv_start_offset']
+
+        #Don't use leading HV bits which are meant to be used for PHV rewrite purposes
+        #in deparser.
+        hv_bit -= hv_start_offset
+
         hv_headers = copy.copy(self.headers)
         if self.d == xgress.INGRESS and self.be.pa.gress_pa[xgress.INGRESS].i2e_hdr:
             # ingress deparser needs to insert i2e header as expected by egress parser
@@ -1922,7 +1935,7 @@ class capri_parser:
                 hvidx = -1
             hv_headers.insert(hvidx+1, self.be.pa.gress_pa[xgress.INGRESS].i2e_hdr)
 
-        hidx = 0
+        hidx = hv_start_offset
         for _hidx in range(len(hv_headers)):
             h = hv_headers[_hidx]
 
@@ -2003,6 +2016,32 @@ class capri_parser:
             self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
             _hvb = max_hv_bits - 1 - self.be.hw_model['parser']['hv_pkt_len_location']
             self.hv_bit_header[_hvb] = None
+
+    def assign_rw_phv_hv_bits(self):
+        hv_location = self.be.hw_model['parser']['hv_location']
+        max_hv_bits = self.be.hw_model['parser']['max_hv_bits']
+        hv_bit = hv_location + max_hv_bits - 1
+        hv_start_offset = self.be.hw_model['parser']['rw_phv_hv_start_offset']
+        max_rw_phv_hv_bits = self.be.hw_model['parser']['max_rw_phv_hv_bits']
+        hv_bit -= hv_start_offset
+        hidx = hv_start_offset
+
+        #Assign special HV bits (Headers used to rewrite PHV before 
+        #deparser constructs packet. Case: GSO)
+        for name, hdr in self.be.h.p4_header_instances.items():
+            if hdr.metadata:
+                if 'gso_csum_header' in hdr._parsed_pragmas and self.d == xgress.INGRESS:
+                    hf_name = hdr.name + '.gso'
+                    cf = self.be.pa.get_field(hf_name, self.d)
+                    assert cf and cf.is_hv, pdb.set_trace()
+                    assert hidx < max_rw_phv_hv_bits, pdb.set_trace()
+                    # point to copy of hv_bits in flit0
+                    cf.phv_bit = hv_bit
+                    self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
+                    self.hdr_hv_bit[hdr] = hv_bit
+                    self.hv_bit_header[max_hv_bits - hidx - 1] = None
+                    hv_bit -= 1
+                    hidx  += 1
 
     def assign_state_ids(self):
         # for now just assign sequential ids

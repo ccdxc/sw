@@ -857,6 +857,18 @@ class Icrc:
                                                      self.be, \
                                                      field_dst, ops[1]))
 
+    def ProcessIcrcObjects(self, d):
+        if d == xgress.INGRESS:
+            self.ProcessIcrcVerificationCalFldList(self.be.parsers[d])
+        if d == xgress.EGRESS:
+            self.ProcessIcrcUpdateCalFldList(self.be.parsers[d])
+
+    def AllocateIcrcObjects(self, d):
+        if d == xgress.INGRESS:
+            self.AllocateParserIcrcResources(self.be.parsers[d])
+        if d == xgress.EGRESS:
+            self.AllocateDeParserIcrcResources(self.be.parsers[d])
+
     def IsHdrRoceV2(self, hdr_name):
         return True if self.roce_hdr == hdr_name else False
 
@@ -1353,8 +1365,8 @@ class Icrc:
     def DeParserIcrcPayLoadLenSlotGet(self, calfldobj, eg_parser):
         assert calfldobj.icrc_update_len_field != '', pdb.set_trace()
         cf_icrc_update_len = self.be.pa.get_field(calfldobj.icrc_update_len_field, eg_parser.d)
-        pl_slot = (cf_icrc_update_len.phv_bit - 
-                   self.be.hw_model['deparser']['len_phv_start']) / 16
+        dpr_variable_len_phv_start = self.be.hw_model['deparser']['len_phv_start']
+        pl_slot = (cf_icrc_update_len.phv_bit - dpr_variable_len_phv_start) / 16
 
         return pl_slot
 

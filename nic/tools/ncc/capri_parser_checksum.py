@@ -212,6 +212,9 @@ class ParserCsumProfile:
         self.addsub_csum_loc    = 0
         self.csum_loc_adj       = 0
         self.align              = 0
+        self.csum_8b            = 0
+        self.phv_csum_flit_num  = 0
+        self.end_eop            = 0
 
     def CsumProfileUnitNumGet(self):
         return self.csum_profile
@@ -239,6 +242,12 @@ class ParserCsumProfile:
         self.addsub_csum_loc = addsub_csum_loc
         self.csum_loc_adj = csum_loc_adj
 
+    def CsumProfileCsumPhvFlitSet(self, phv_csum_flit_num):
+        self.phv_csum_flit_num  = phv_csum_flit_num
+        self.end_eop            = 1
+
+    def CsumProfileCsumPhvFlitGet(self):
+        return self.phv_csum_flit_num
 
     def ConfigGenerate(self, profile):
         profile['len_mask']['value']       = str(self.len_mask)
@@ -253,6 +262,8 @@ class ParserCsumProfile:
         profile['addsub_csum_loc']['value']= str(self.addsub_csum_loc)
         profile['csum_loc_adj']['value']   = str(self.csum_loc_adj)
         profile['align']['value']          = str(self.align)
+        profile['phv_csum_flit_num']['value']   = str(self.phv_csum_flit_num)
+        profile['end_eop']['value']             = str(self.end_eop)
         profile['_modified']               = True
 
         log_str = ''
@@ -270,6 +281,8 @@ class ParserCsumProfile:
         log_str += '        addsub_csum_loc = %d\n' % (self.addsub_csum_loc)
         log_str += '        csum_loc_adj    = %d\n' % (self.csum_loc_adj)
         log_str += '        align           = %d\n' % (self.align)
+        log_str += '        phv_flit_num    = %d\n' % (self.phv_csum_flit_num)
+        log_str += '        end_eop         = %d\n' % (self.end_eop)
         log_str += '\n'
 
         return log_str
@@ -690,4 +703,136 @@ class ParserCalField:
         log_str += '\n'
 
         return log_str
+
+
+#           GSO Checksum Details
+#           --------------------
+#
+#   Host to Device communication for GSO
+#   -----------------------------------
+#       - Host delivers packet to Capri where in checksum is computed partially
+#         (ex: only psuedo hdr fields used to compute checksum but none of the
+#          payload bytes are yet added to final checksum)
+#       - Host indicates Capri Pipeline to foldin partially computed csum and
+#         compute final checksum including packet data from gso_start  to EOP
+#       - Host via interal headers (p4plus_to_p4) provides following
+#            - gso_start [ Offset in packet from where all the packet bytes
+#                          should be added to csum computation till EOP ]
+#            - gso_offset [Byte Offset inside packet starting from gso_start
+#                          where checksum result should be stored ]
+#            - gso_valid [ When set indicates to device pipeline that GSO
+#                          checksum need to be computed ]
+#
+#   P4 Representation for GSO
+#   -------------------------
+#       - P4 calculated construct will be used to express GSO.
+#       - CalFld Input field list provides gso_start and payload keyword
+#       - Algorithm should provide 'gso'
+
+class ParserGsoCalField:
+    '''
+        Implements GSO checksum
+    '''
+    def __init__(self, capri_be, dstField, UpdateFunc):
+        self.be                         = capri_be
+        self.logstr_tbl                 = []
+        self.dstField                   = dstField
+        self.parser_csum_obj            = None # GSO Csum unit obj which will
+                                               # verify cal fld
+        self.parser_csum_profile_obj    = None # GSO Csum profile obj that
+                                               # csum unit will use
+        self.gso_parse_states           = None # Reference to List of Parser
+                                               # states gso_header is extracted
+
+        self.P4FieldListCalculation       = self.be.h.\
+                                            p4_field_list_calculations\
+                                            [UpdateFunc]
+        #P4 code should have atleast one input field list.
+        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        self.gso_start_field = self.P4FieldListCalculation.input[0].fields[0].name
+
+        #Check last input field and last field within the last input field
+        #to determine 'payload' keyword is part of field list.
+        self.payload_checksum           = True\
+                                             if isinstance(\
+                                                  self.P4FieldListCalculation.\
+                                                  input[-1].fields[-1],\
+                                                  p4.p4_header_keywords)\
+                                             else\
+                                          False
+
+        if self.payload_checksum and 'checksum' in \
+            self.P4FieldListCalculation._parsed_pragmas.keys():
+            if 'update_len' in \
+                self.P4FieldListCalculation._parsed_pragmas['checksum']:
+                self.gso_csum_result_fld_name  = self.P4FieldListCalculation._parsed_pragmas\
+                                                 ['checksum']['update_len'].keys()[0]
+        else:
+            assert(0), pdb.set_trace()
+
+        assert(self.P4FieldListCalculation != None)
+        assert(self.P4FieldListCalculation.algorithm == 'gso')
+        assert(self.P4FieldListCalculation.output_width == 16)
+        assert(self.payload_checksum)
+
+    def CalculatedFieldHdrGet(self):
+        hdrinst = self.dstField.split(".")[0]
+        return hdrinst
+
+    def ParserCsumObjSet(self, ParserCsumObj):
+        self.parser_csum_obj = ParserCsumObj
+
+    def ParserCsumObjGet(self):
+        return self.parser_csum_obj
+
+    def ParserCsumProfileSet(self, ParserProfileObj):
+        self.parser_csum_profile_obj = ParserProfileObj
+
+    def ParserCsumProfileGet(self):
+        return self.parser_csum_profile_obj
+
+    def GsoCsumObjLogStrTableGet(self):
+        return self.logstr_tbl
+
+    def GsoCsumObjAddLog(self, logstr):
+        self.logstr_tbl.append(logstr)
+
+
+    @staticmethod
+    def _build_csum_instr(sram, calfldobj, csum_instr, enable, csum_unit,\
+                          csum_profile, start_ohi_id):
+        sram['csum_inst'][csum_instr]['en']['value']        = str(enable)
+        sram['csum_inst'][csum_instr]['unit_sel']['value']  = str(csum_unit)
+        sram['csum_inst'][csum_instr]['prof_sel']['value']  = str(csum_profile)
+        sram['csum_inst'][csum_instr]['ohi_start_sel']['value'] = str(start_ohi_id)
+        phdr_en = 0 #No phdr in case of GSO
+        sram['csum_inst'][csum_instr]['phdr_en']['value'] = str(phdr_en)
+        sram['csum_inst'][csum_instr]['dis_zero']['value'] = str(0)
+
+        log_str = ''
+        log_str += 'Csum Instruction\n'
+        log_str += '    Instruction#  %d \n'         % (csum_instr)
+        log_str += '        enable          = %d \n' % (enable)
+        log_str += '        unit_sel        = %d \n' % (csum_unit)
+        log_str += '        prof_sel        = %d \n' % (csum_profile)
+        log_str += '        ohiID_start_sel = %d \n' % (start_ohi_id)
+        log_str += '        phdr_en         = %d \n' % (phdr_en)
+        log_str += '\n'
+
+        return log_str
+
+
+    def GsoCsumProfileBuild(self, parse_state, csum_profile_obj):
+        shift_left  = 0
+        shift_val   = 0
+        addsub_start= 0
+        start_adj   = 0
+        addsub_phdr = 0
+        phdr_adj    = 0
+        addsub_end  = 0
+        end_adj     = 0
+        csum_profile_obj.CsumProfileShiftLeftSet(shift_left, shift_val)
+        csum_profile_obj.CsumProfileStartAdjSet(addsub_start, start_adj)
+        csum_profile_obj.CsumProfileEndAdjSet(addsub_end, end_adj)
+        csum_profile_obj.CsumProfilePhdrSet(addsub_phdr, phdr_adj)
 

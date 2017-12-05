@@ -408,6 +408,7 @@ class DeParserCsumObj:
 # Representation for P4 Calulated Field.
 class DeParserCalField:
     '''
+        Implements header and payload checksums (Ipv4, tcp,udp, inner_udp, inner_v4)
     '''
     def __init__(self, capri_be, dstField, VerifyOrUpdateFunc):
         self.be                    = capri_be
@@ -537,4 +538,113 @@ class DeParserCalField:
                                 self.phdr_csum_hdr_obj.hdrfld_end,
                                 self.phdr_csum_hdr_obj.csum_unit_include_bm)
         return pstr
+
+class DeParserGsoCalField:
+    '''
+        Implements GSO csum that includes into final checksum result any partially
+        computed checksum result by host/kernel.
+    '''
+    def __init__(self, capri_be, dstField, UpdateFunc):
+        self.be                    = capri_be
+        self.logstr_tbl            = []
+        self.dstField              = dstField
+        self.hdr_valid             = -1
+        self.hdrfld_slot           = -1
+        self.csum_field_name       = '' # p4 Csum field name.
+        self.csum_field_ohi_slot   = -1 # Csum field location inside packet.
+        self.gso_csum_result_fld_name = '' # Csum result variable name located in PHV
+        self.gso_csum_result_phv   = -1 # phv_bit# of parser computed csum result
+        self.field_size            = 2  # two bytes to replace (csum width)
+        self.P4FieldListCalculation= self.be.h.\
+                                              p4_field_list_calculations\
+                                                 [UpdateFunc]
+        #P4 code should have atleast one input field list.
+        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        #Check last input field and last field within the last input field
+        #to determine 'payload' keyword is part of field list.
+        self.payload_checksum      = True\
+                                       if isinstance(\
+                                           self.P4FieldListCalculation.\
+                                           input[-1].fields[-1],\
+                                           p4.p4_header_keywords)\
+                                       else\
+                                           False
+        if self.payload_checksum and 'checksum' in \
+            self.P4FieldListCalculation._parsed_pragmas.keys():
+            if 'update_len' in \
+                self.P4FieldListCalculation._parsed_pragmas['checksum']:
+                self.gso_csum_result_fld_name  = self.P4FieldListCalculation._parsed_pragmas\
+                                                 ['checksum']['update_len'].keys()[0]
+        else:
+            assert(0), pdb.set_trace()
+
+        #Check all headers and header with pragma 'gso_checksum_offset' will indicate
+        #p4 field name that specifies csum field location inside packet.
+
+        for hdr_name, hdr in self.be.h.p4_header_instances.items():
+            if 'gso_checksum_offset' in hdr._parsed_pragmas:
+                self.csum_field_name = hdr._parsed_pragmas['gso_checksum_offset'].keys()[0]
+                break
+
+        assert(self.P4FieldListCalculation != None)
+        assert(self.P4FieldListCalculation.algorithm == 'gso')
+        assert(self.P4FieldListCalculation.output_width == 16)
+        assert(self.csum_field_name != '')
+        assert(self.payload_checksum)
+
+
+    def GsoCalculatedFieldHdrGet(self):
+        hdrinst = self.dstField.split(".")[0]
+        return hdrinst
+
+    def DeParserGsoCsumObjLogStrTableGet(self):
+        return self.logstr_tbl
+
+    def DeParserGsoCsumHdrFldSlotSet(self, hdrfld_slot):
+        self.hdrfld_slot = hdrfld_slot
+
+    def DeParserGsoCsumHdrFldSlotGet(self):
+        return self.hdrfld_slot
+
+    def DeParserGsoCsumHdrValidSet(self, hv):
+        self.hdr_valid = hv
+
+    def DeParserGsoCsumHdrValidGet(self):
+        return self.hdr_valid
+
+    def DeParserGsoCsumObjAddLog(self, logstr):
+        self.logstr_tbl.append(logstr)
+
+
+    def GsoCfgLogGenerate(self):
+        log_str = ''
+        log_str += 'DeParser Gso Csum Config: Hdr %s\n' % self.dstField
+        log_str += '_____________________________________\n\n'
+        log_str += '    HvBit %d\n' % self.hdr_valid
+        log_str += '    HdrFld %d\n' % self.hdrfld_slot
+        log_str += '    Gso Offset ( %s ) Loaded into Ohi %d\n' % \
+                        (self.csum_field_name, self.csum_field_ohi_slot)
+        log_str += '    Gso Csum result ( %s ) captured @ phv %d\n' % \
+                        (self.gso_csum_result_fld_name, self.gso_csum_result_phv)
+        return log_str
+
+    def GsoConfigGenerate(self, dpp_json, dpr_json):
+        self.DeParserGsoCsumObjAddLog(self.GsoCfgLogGenerate())
+        dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (self.hdrfld_slot)
+        dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (self.hdrfld_slot)
+        dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
+        dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+        dpp_rstr['size_sel']['value'] = str(self.be.hw_model['deparser']['dpa_src_ohi'])
+        dpp_rstr['size_val']['value'] = str(self.csum_field_ohi_slot)
+        dpr_rstr['source_sel']['value'] = str(self.be.hw_model['deparser']['dpa_src_ohi'])
+        dpr_rstr['source_oft']['value'] = str(self.csum_field_ohi_slot)
+        dpp_rstr['_modified'] = True
+        dpr_rstr['_modified'] = True
+        dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_ingress_rw_phv_info[%d]' % (self.hdr_valid)
+        dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+        dpr_rstr['enable']['value'] = str(1)
+        dpr_rstr['start_loc']['value'] = str(self.gso_csum_result_phv)
+        dpr_rstr['fld_size']['value'] = str(self.field_size)
+        dpp_rstr['_modified'] = True
+        dpr_rstr['_modified'] = True
 

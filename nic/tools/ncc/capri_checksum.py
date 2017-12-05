@@ -73,8 +73,8 @@ class ParserCsumEngine:
         self.max_csum_units         = self.be.hw_model['parser']['max_csum_engines']
         self.max_cprofiles          = 8
         self.max_phdr_profiles      = 8
-        self.allocated_csum_units   = [False, False, False, False]
-        self.allocated_csum_is_l3   = [False, False, False, False]
+        self.allocated_csum_units   = [False, False, False, False, False]
+        self.allocated_csum_is_l3   = [False, False, False, False, False]
         self.allocated_cprofile     = 0
         self.allocated_phdr_profile = 0
         self.csum_units             = {} # k = checksumfield, v = csum-unit#
@@ -92,6 +92,9 @@ class ParserCsumEngine:
 
     def AllocateCsumUnit(self, csumField, is_l3=False):
         if csumField in self.csum_units.keys():
+            if self.allocated_csum_units[self.csum_units[csumField]] == False:
+                self.allocated_csum_units[self.csum_units[csumField]] = True
+                self.csum_units_in_use += 1
             return self.csum_units[csumField]
         assert(self.csum_units_in_use < self.max_csum_units), pdb.set_trace()
         if not is_l3:
@@ -129,6 +132,15 @@ class ParserCsumEngine:
                 self.csum_units_in_use += 1
         self.allocated_csum_units[csumUnit] = True
 
+    def CsumUnitAllocationFinalize(self):
+        self.csum_units_in_use = 0
+        for i in range(self.max_csum_units):
+            self.allocated_csum_units[i] = False
+        for csumField, csum_unit in self.csum_units.items():
+            if self.allocated_csum_units[csum_unit] == False:
+                self.allocated_csum_units[csum_unit] = True
+                self.csum_units_in_use += 1
+
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
             return self.csum_profile[csumField]
@@ -157,8 +169,8 @@ class DeParserCsumEngine:
         self.max_csum_units         = self.be.hw_model['deparser']['max_csum_engines']
         self.max_cprofiles          = 8
         self.max_phdr_profiles      = 8
-        self.allocated_csum_units   = [False, False, False, False]
-        self.allocated_csum_is_l3   = [False, False, False, False]
+        self.allocated_csum_units   = [False, False, False, False, False]
+        self.allocated_csum_is_l3   = [False, False, False, False, False]
         self.allocated_cprofile     = 0
         self.allocated_phdr_profile = 0
         self.csum_units             = {} # k = checksumfield, v = csum-unit#
@@ -174,6 +186,9 @@ class DeParserCsumEngine:
 
     def AllocateCsumUnit(self, csumField, is_l3=False):
         if csumField in self.csum_units.keys():
+            if self.allocated_csum_units[self.csum_units[csumField]] == False:
+                self.allocated_csum_units[self.csum_units[csumField]] = True
+                self.csum_units_in_use += 1
             return self.csum_units[csumField]
         assert(self.csum_units_in_use < self.max_csum_units), pdb.set_trace()
         if not is_l3:
@@ -240,11 +255,14 @@ class Checksum:
         self.verify_cal_fieldlist   = [] #List of CalField Objects
         self.update_cal_fieldlist   = [] #List of CalField Objects
         self.IngParserCsumEngineObj = ParserCsumEngine(xgress.INGRESS, capri_be)
+        self.IngDeParserCsumEngineObj = DeParserCsumEngine(xgress.INGRESS, capri_be)
         self.EgDeParserCsumEngineObj = DeParserCsumEngine(xgress.EGRESS, capri_be)
         self.dpr_phdr_csum_obj      = {} #List of phdr objects k = hdr-name, v = obj
         self.dpr_hw_csum_obj        = [] #Sorted list of (csum_obj, is_phdr, calfldobj)
                                          #sorted based on fldstart value.
-
+        self.gso_cal_fieldlist_compute      = []
+        self.gso_cal_fieldlist_update       = []
+        self.l2_csum_cal_fieldlist_update   = []
 
     def initialize(self):
         '''
@@ -254,17 +272,48 @@ class Checksum:
         for cal_fld in self.be.h.calculated_fields:
             field_dst, fld_ops, _, _  = cal_fld
             for ops in fld_ops:
-                if self.be.h.p4_field_list_calculations[ops[1]].algorithm != 'csum16':
-                    #calcualted field objects are not csum constructs.
-                    continue
-                if ops[0] == 'verify':
-                    self.verify_cal_fieldlist.append(ParserCalField(\
-                                                     self.be, \
-                                                     field_dst, ops[1]))
+                if self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'csum16':
+                    if ops[0] == 'verify':
+                        self.verify_cal_fieldlist.append(ParserCalField(\
+                                                         self.be, \
+                                                         field_dst, ops[1]))
+                    else:
+                        self.update_cal_fieldlist.append(DeParserCalField(\
+                                                         self.be, \
+                                                         field_dst, ops[1]))
+                elif self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'gso':
+                    if ops[0] == 'update':
+                        #Since GSO csum is computed in parser
+                        #create parser csum obj for csum update
+                        self.gso_cal_fieldlist_compute.append(ParserGsoCalField(\
+                                                              self.be, \
+                                                              field_dst, ops[1]))
+                        self.gso_cal_fieldlist_update.append(DeParserGsoCalField(\
+                                                            self.be, \
+                                                            field_dst, ops[1]))
+                elif self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'l2_complete_csum':
+                    if ops[0] == 'update':
+                        self.l2_csum_cal_fieldlist_update.append(DeParserCalField(\
+                                                                 self.be, \
+                                                                 field_dst, ops[1]))
                 else:
-                    self.update_cal_fieldlist.append(DeParserCalField(\
-                                                     self.be, \
-                                                     field_dst, ops[1]))
+                    #calculated field objects are not csum constructs.
+                    continue
+
+    def ProcessAllCsumObjects(self, d):
+        if d == xgress.INGRESS:
+            self.ProcessVerificationCalFldList(self.be.parsers[d])
+            self.ProcessGsoCsumComputeObj()
+        if d == xgress.EGRESS:
+            self.ProcessUpdateCalFldList()
+
+    def AllocateAllCsumResources(self, d):
+        if d == xgress.INGRESS:
+            self.AllocateParserCsumResources(self.be.parsers[d])
+            self.AllocateParserGsoCsumResources(self.be.parsers[d])
+            self.AllocateDeParserGsoCsumResources(self.be.parsers[d])
+        if d == xgress.EGRESS:
+            self.AllocateDeParserCsumResources(self.be.parsers[d])
 
     def ProcessCalFields(self, field_list_calculation, csum_hfield):
         '''
@@ -402,6 +451,7 @@ class Checksum:
         for calfldobj in self.verify_cal_fieldlist:
             if calfldobj.ParserCsumObjGet() == None:
                 assert(0), pdb.set_trace()
+
 
     def InsertCsumObjReferenceInParseState(self, parser):
         '''
@@ -715,6 +765,8 @@ class Checksum:
                     break
         #Assert if all calfld objects are allocated resources
         assert(len(csum_objects) == 0), pdb.set_trace()
+
+        self.IngParserCsumEngineObj.CsumUnitAllocationFinalize()
 
         #In parse states where csum related hdrs are extracted,
         #insert reference to calculated fld objects so that
@@ -1231,6 +1283,105 @@ class Checksum:
         csum_str += "\n"
         hfile.close()
 
+    # -- Methods to compute checksum in parser : GSO csum --
+
+    def ProcessGsoCsumComputeObj(self):
+        '''
+        This function will process GSO csum objs
+        '''
+        for calfldobj in self.gso_cal_fieldlist_compute:
+            calfldhdr = calfldobj.CalculatedFieldHdrGet()
+            if calfldobj.ParserCsumObjGet() == None:
+                calfldobj.ParserCsumObjSet(ParserCsumObj())
+                calfldobj.ParserCsumProfileSet(ParserCsumProfile())
+
+    def InsertGsoCsumObjReferenceInParseState(self, parser):
+        '''
+            All parse states, that are annotated with pargma
+            'generic_checksum_start', insert GSO CsumObj reference.
+        '''
+        for parse_state in parser.states:
+            if parse_state.generic_checksum_start() != None:
+                gso_csum_hfname = parse_state.generic_checksum_start()
+                for calfldobj in self.gso_cal_fieldlist_compute:
+                    if calfldobj.dstField == gso_csum_hfname:
+                        parse_state.gso_csum_calfldobj = calfldobj
+                        break
+
+    def AllocateParserGsoCsumResources(self, parser):
+        self.InsertGsoCsumObjReferenceInParseState(parser)
+        for calfldobj in self.gso_cal_fieldlist_compute:
+            #Allocate csum unit
+            #Get ohi_start id and save it in
+            csum_obj = calfldobj.ParserCsumObjGet()
+            csum_profile_obj = calfldobj.ParserCsumProfileGet()
+            csum_obj.CsumUnitNumSet(self.IngParserCsumEngineObj.AllocateCsumUnit(calfldobj.dstField))
+            csum_profile_obj.CsumProfileUnitNumSet(self.\
+               IngParserCsumEngineObj.AllocateCsumProfile(calfldobj.dstField))
+            csum_obj.CsumOhiStartSelSet(parser.\
+                    get_ohi_slot_wr_only_field_name(calfldobj.gso_start_field))
+            cf = self.be.pa.get_field(calfldobj.gso_csum_result_fld_name, parser.d)
+            assert cf != None, pdb.set_trace()
+            csum_profile_obj.CsumProfileCsumPhvFlitSet(cf.phv_bit / self.be.hw_model['phv']['flit_size'])
+
+    def GsoCsumParserConfigGenerate(self, parser, parse_states_in_path,\
+                                    parse_state, sram):
+        '''
+         The parse state where GSO csum branching happens.
+        '''
+        from_parse_state = parse_states_in_path[-2]
+        headers_in_parse_path = []
+        for _parse_state in parse_states_in_path:
+            headers_in_parse_path += _parse_state.headers
+
+        log_str = ''
+        log_str += 'Gso CsumConfig: %s --> %s\n' \
+                    % (from_parse_state.name, parse_state.name)
+        log_str += '_____________________________________\n\n'
+
+        calfldobj = parse_state.gso_csum_calfldobj
+        if calfldobj == None:
+            assert(0), pdb.set_trace()
+        gso_start_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiStartSelGet()
+        assert gso_start_ohi_id != -1, pdb.set_trace()
+        csum_obj = calfldobj.ParserCsumObjGet()
+        csum_profile_obj = calfldobj.ParserCsumProfileGet()
+        calfldobj.GsoCsumProfileBuild(parse_state, csum_profile_obj)
+
+        #Program Csum unit
+        csum_instr = 0
+        csum_unit = csum_obj.CsumUnitNumGet()
+        csum_profile = csum_profile_obj.CsumProfileUnitNumGet()
+        start_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiStartSelGet()
+        log_str += ParserGsoCalField._build_csum_instr(sram, calfldobj, csum_instr,
+                                                       1, csum_unit,csum_profile,\
+                                                       start_ohi_id)
+        csum_instr += 1
+        calfldobj.GsoCsumObjAddLog(log_str)
+        assert(csum_instr < len(sram['csum_inst'])), pdb.set_trace()
+
+    def GsoCsumParserProfileGenerate(self, parser, parse_states_in_path,\
+                                     parse_state, csum_t):
+        profile = None
+        profile_obj = None
+        p = -1
+        phdr_in_path = False
+        if not parse_state.gso_csum_calfldobj:
+            return profile, p
+        calfldobj = parse_state.gso_csum_calfldobj
+        profile_obj = calfldobj.ParserCsumProfileGet()
+        if profile_obj != None:
+            profile = copy.deepcopy(csum_t)
+            p = profile_obj.csum_profile
+            if p == -1:
+                assert(0), pdb.set_trace()
+            log_str = profile_obj.ConfigGenerate(profile)
+            calfldobj.GsoCsumObjAddLog(log_str)
+            #Only one calFld processed in any parse state
+            return profile, p
+        else:
+            assert(0), pdb.set_trace()
+        return profile, p
 
     # -- Methods to process update calculated field list to compute checksum --
 
@@ -1268,6 +1419,13 @@ class Checksum:
                 return True
         return False
 
+    def IsHdrInGsoCsumCompute(self, hdrname):
+        for calfldobj in self.gso_cal_fieldlist_update:
+            if calfldobj.payload_checksum and \
+               calfldobj.GsoCalculatedFieldHdrGet() == hdrname:
+                return True
+        return False
+
     def DeParserPayLoadLenSlotGet(self, calfldobj, eg_parser):
         assert calfldobj.l4_update_len_field != '', pdb.set_trace()
         cf_l4_update_len = self.be.pa.get_field(calfldobj.l4_update_len_field, eg_parser.d)
@@ -1295,7 +1453,7 @@ class Checksum:
                                            ' payload csum result of %s' % \
                                            (_csum_hdr, csum_hdr))
 
-    def ProcessUpdateCalFldList(self, egress_parser):
+    def ProcessUpdateCalFldList(self):
         '''
          Process all update calculated fields
          and creates checksum objects
@@ -1327,6 +1485,7 @@ class Checksum:
             if csum_phdr != '' and csum_phdr not in csum_phdrs:
                 csum_phdrs.add(csum_phdr)
                 self.DeParserPhdrCsumObjSet(csum_phdr, DeParserCsumObj(), -1, '')
+
 
     def AllocateDeParserCsumResources(self, eg_parser):
         '''
@@ -1645,6 +1804,30 @@ class Checksum:
         #Json is dumped in the caller to cfg-file.
 
 
+    def AllocateDeParserGsoCsumResources(self, ig_parser):
+        #Doesn't need csum unit.
+        #Need to use one of first 4 HV bit
+        #Need to use one of first 4 HdrFld Info slots
+        hv_location = self.be.hw_model['parser']['hv_location']
+        max_hv_bits = self.be.hw_model['parser']['max_hv_bits']
+        for calfldobj in self.gso_cal_fieldlist_update:
+            calfldhdr = calfldobj.GsoCalculatedFieldHdrGet()
+            hf_name = calfldhdr + '.gso'
+            cf = self.be.pa.get_field(hf_name, ig_parser.d)
+            assert cf and cf.is_hv, pdb.set_trace()
+            calfldobj.hdr_valid = (hv_location + max_hv_bits - 1) - cf.phv_bit
+            calfldobj.hdrfld_slot = calfldobj.hdr_valid
+            cf = self.be.pa.get_field(calfldobj.gso_csum_result_fld_name, ig_parser.d)
+            assert cf != None, pdb.set_trace()
+            calfldobj.gso_csum_result_phv = cf.phv_bit
+            calfldobj.csum_field_ohi_slot = \
+                ig_parser.get_ohi_slot_wr_only_field_name(calfldobj.csum_field_name)
+            assert (calfldobj.csum_field_ohi_slot != None), pdb.set_trace()
+
+    def GsoCsumDeParserConfigGenerate(self, deparser, dpp_json, dpr_json):
+        for calfldobj in self.gso_cal_fieldlist_update:
+            calfldobj.GsoConfigGenerate(dpp_json, dpr_json)
+
     def CsumLogicalOutputCreate(self):
         '''
             Generates csum.out file containing configuration pushed to HW.
@@ -1663,6 +1846,11 @@ class Checksum:
         for calfldobj in self.verify_cal_fieldlist:
             for log_str in calfldobj.ParserCsumObjLogStrTableGet():
                 ofile.write(log_str)
+
+        for calfldobj in self.gso_cal_fieldlist_compute:
+            for log_str in calfldobj.GsoCsumObjLogStrTableGet():
+                ofile.write(log_str)
+
         ofile.write("Checksum Compute Config in Egress Deparser\n")
         ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
         for calfldobj in self.update_cal_fieldlist:
@@ -1698,6 +1886,9 @@ class Checksum:
             ofile.write(_calfldobj.DeparserCsumConfigMatrixRowLog(is_phdr))
         ofile.write("\n\n")
 
+        for calfldobj in self.gso_cal_fieldlist_update:
+            for log_str in calfldobj.DeParserGsoCsumObjLogStrTableGet():
+                ofile.write(log_str)
 
         ofile.close()
 

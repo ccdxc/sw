@@ -1321,7 +1321,7 @@ def capri_deparser_cfg_output(deparser):
     deparser.logger.info('%s:DeParser Dpp & Dpr Block Output Generation:' \
                          % deparser.d.name)
 
-    used_hdr_fld_info_slots = 0
+    used_hdr_fld_info_slots = deparser.be.hw_model['deparser']['hdrfld_info_start']
     max_hdr_flds = deparser.be.hw_model['deparser']['max_hdr_flds']
     phv_sel = deparser.be.hw_model['deparser']['dpa_src_phv']
     ohi_sel = deparser.be.hw_model['deparser']['dpa_src_ohi']
@@ -1381,10 +1381,10 @@ def capri_deparser_cfg_output(deparser):
                 hf_name = hdr.name + '.trunc_pkt_len'
                 cf = deparser.be.pa.get_field(hf_name, deparser.d)
                 assert cf, pdb.set_trace()
-                assert cf.phv_bit >= deparser.be.hw_model['deparser']['len_phv_start'] and \
-                       (cf.phv_bit < (deparser.be.hw_model['deparser']['len_phv_start'] + \
-                                      deparser.be.hw_model['phv']['flit_size']))
-                dpr_slot = cf.phv_bit - deparser.be.hw_model['deparser']['len_phv_start']
+                len_phv_start = deparser.be.hw_model['deparser']['len_phv_start']
+                assert cf.phv_bit >= len_phv_start and \
+                       (cf.phv_bit < (len_phv_start + deparser.be.hw_model['phv']['flit_size']))
+                dpr_slot = cf.phv_bit - len_phv_start
                 dpr_slot = dpr_slot / 16
                 dpp_rstr['size_val']['value'] = str(dpr_slot)
                 payload_offset_len_ohi_id = deparser.be.hw_model['parser']['ohi_threshold']
@@ -1529,6 +1529,10 @@ def capri_deparser_cfg_output(deparser):
                 csum_hv_fld_slots[csum_allocated_hv] = \
                     (start_fld, end_fld - 1, h.name)
 
+    if deparser.d == xgress.INGRESS:
+        deparser.be.checksum.GsoCsumDeParserConfigGenerate(deparser, \
+                                                           dpp_json, \
+                                                           dpr_json)
     if deparser.d == xgress.EGRESS:
         deparser.be.checksum.CsumDeParserConfigGenerate(deparser, \
                                             csum_hv_fld_slots, dpp_json)
@@ -1801,7 +1805,11 @@ def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,        
                                                         mux_inst_allocator, mux_idx_allocator)
     '''
 
-    return ohi_instr_allocated_count
+    #Gso Csum Config
+    if nxt_cs.gso_csum_calfldobj:
+        parser.be.checksum.GsoCsumParserConfigGenerate(parser, \
+                                               parse_states_in_path, nxt_cs, sram)
+    return ohi_instr_allocated_count 
 
 
 def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = None):
@@ -2624,6 +2632,17 @@ def capri_parser_output_decoders(parser):
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]['_modified']\
                             = True 
+
+                #Generate Gso csum related profile config for parser block
+                csum_prof, cprof_inst = parser.be.checksum.\
+                                GsoCsumParserProfileGenerate(parser, \
+                                                          parse_states_in_path+\
+                                                          [bi.nxt_state], bi.nxt_state,\
+                                                          csum_t)
+                if csum_prof != None:
+                    ppa_json['cap_ppa']['registers']\
+                        ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
+                            = csum_prof
 
                 #Generate icrc related profile config for parser block
                 icrc_prof, prof_inst = parser.be.icrc.\

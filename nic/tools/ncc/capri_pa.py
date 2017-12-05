@@ -665,7 +665,7 @@ class capri_gress_pa:
         self.capri_intr_hdr = None
         self.capri_p4_intr_hdr = None
         self.capri_deparser_len_hdr = None
-
+        self.capri_gso_csum_hdr = None
 
     def initialize(self):
         hw_model = self.pa.be.hw_model
@@ -1244,6 +1244,15 @@ class capri_gress_pa:
             cf = self.fields[hfname]
         cf.is_hv = True
 
+    def allocate_gso_csum_hv_field(self, hdr_name):
+        hfname = hdr_name + '.gso'
+        if hfname not in self.fields:
+            cf = capri_field(None, self.d, 1, hfname)
+            self.fields[hfname] = cf
+        else:
+            cf = self.fields[hfname]
+        cf.is_hv = True
+
     def header_has_ohi(self, hdr):
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
@@ -1332,6 +1341,7 @@ class capri_gress_pa:
         assert(0) # field not found??
         return 0
 
+    '''
     def _create_flit_hv_flds(self, flit, name, num_bits):
         for i in range(num_bits):
             hv_field = capri_field(None, self.d, 1, '%s_%d' % (name, i))
@@ -1396,6 +1406,7 @@ class capri_gress_pa:
             dummy_pf.is_hv_pad = True
             flit.add_cfield(dummy_pf)
             self._create_flit_hv_flds(flit, 'flit_%d_hv' % (flit.id), max_hv_bits)
+    '''
 
     def add_cfield(self, cf, f_id):
         for i in range(0, f_id):
@@ -1404,6 +1415,7 @@ class capri_gress_pa:
                 return True
         return self.flits[f_id].add_cfield(cf)
 
+    '''
     def _create_flits(self, add_hv=False):
         # XXX To be removed.. old phv allocation scheme
         cfid = 0
@@ -1446,6 +1458,7 @@ class capri_gress_pa:
             self.field_order += flit.field_order
             self.logger.debug("Flit %d: %s" % (flit.id, flit.field_order))
             flit.flit_reset()
+    '''
 
     def hdr_get_byte_aligned_fld_chunks(self, hdr):
         # return {cf : num_contiguous_phv_bytes}, do not break flds
@@ -1635,6 +1648,14 @@ class capri_gress_pa:
                                              dpa_variable_len_phv_start_bit, 0, 0, 1, False)
             assert phv_bit == dpa_variable_len_phv_start_bit, pdb.set_trace()
             self.assign_phv_to_hdr_flds(flit, self.capri_deparser_len_hdr, phv_bit)
+        if self.capri_gso_csum_hdr:
+            # GSO Final Csum computed value (using partially computed csum) captured in this header.
+            # capri_parser expects this 16b csum to be first 16b in any 512b PHV flit.
+            gso_phv_start_bit = self.pa.be.hw_model['phv']['gso_csum_phv_start']
+            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_gso_csum_hdr) * 8),\
+                                             gso_phv_start_bit, 0, 0, 1, False)
+            assert phv_bit == gso_phv_start_bit, pdb.set_trace()
+            self.assign_phv_to_hdr_flds(flit, self.capri_gso_csum_hdr, phv_bit)
 
         # add cfields used for predication
         pred_cfs = {}
@@ -2497,6 +2518,7 @@ class capri_pa:
         self.hdr_unions = OrderedDict() # {hdr: (direction, [hdrs_in_union], destination)}
         self.gress_pa = [capri_gress_pa(self, d) for d in xgress]
         self.dprsr_len_hdr = None
+        self.gso_csum_hdr = None
 
     def initialize(self):
         for gress_pa in self.gress_pa:
@@ -2527,14 +2549,23 @@ class capri_pa:
                                 #can be triggered.
                                 self.allocate_icrc_hv_field(name, d)
 
-            #capture metadata hdr inst that is used to store variable pkt len
-            #and truncation length. Fields of this header have to be allocated in
-            #first PHV flit.
             if hdr.metadata:
+                #capture metadata hdr inst that is used to store variable pkt len
+                #and truncation length. Fields of this header have to be allocated
+                #in first PHV flit.
                 if 'deparser_variable_length_header' in hdr._parsed_pragmas:
                     self.dprsr_len_hdr = hdr
                     for d in xgress:
                         cf = self.allocate_hv_truncate_field(hdr.name, d)
+
+                #For GSO checksum, allocate HV to enable/disable GSO
+                #csum result into packet.
+                if 'gso_csum_header' in hdr._parsed_pragmas:
+                    self.gso_csum_hdr = hdr
+                    for d in xgress:
+                        if d == xgress.INGRESS:
+                            if self.be.checksum.IsHdrInGsoCsumCompute(name):
+                                self.allocate_gso_csum_hv_field(name, d)
 
         #Allocate field for payload len.
         for d in xgress:
@@ -2597,6 +2628,21 @@ class capri_pa:
             self.gress_pa[xgress.INGRESS].capri_deparser_len_hdr = self.dprsr_len_hdr
             self.gress_pa[xgress.EGRESS].capri_deparser_len_hdr = self.dprsr_len_hdr
 
+        if self.gso_csum_hdr != None:
+            for p4f in self.gso_csum_hdr.fields:
+                cf = self.get_field(get_hfname(p4f), xgress.INGRESS)
+                if not cf:
+                    cf = self.allocate_field(p4f, xgress.INGRESS)
+                cf.is_ohi = False
+                cf.is_intrinsic = False
+                ecf = self.get_field(get_hfname(p4f), xgress.EGRESS)
+                if not ecf:
+                    ecf = self.allocate_field(p4f, xgress.EGRESS)
+                ecf.is_ohi = False
+                ecf.is_intrinsic = False
+            self.gress_pa[xgress.INGRESS].capri_gso_csum_hdr = self.gso_csum_hdr
+            self.gress_pa[xgress.EGRESS].capri_gso_csum_hdr = self.gso_csum_hdr
+
         # Add all the p4 fields to respective phv allocators based on direction
         egress_i2e_fields = []
         for f in self.be.h.p4_fields.values():
@@ -2614,6 +2660,8 @@ class capri_pa:
                     _ = self.gress_pa[xgress.EGRESS].allocate_field(f)
                     continue
             if self.dprsr_len_hdr and f.instance.name == self.dprsr_len_hdr.name:
+                continue
+            if self.gso_csum_hdr and f.instance.name == self.gso_csum_hdr.name:
                 continue
             if f.instance.name == 'capri_p4_intrinsic':
                 continue
@@ -2852,6 +2900,9 @@ class capri_pa:
 
     def allocate_icrc_hv_field(self, hdr_name, d):
         return self.gress_pa[d].allocate_icrc_hv_field(hdr_name)
+
+    def allocate_gso_csum_hv_field(self, hdr_name, d):
+        return self.gress_pa[d].allocate_gso_csum_hv_field(hdr_name)
 
     def create_flits(self):
         # create flits from the field_order and assign phv bits

@@ -47,6 +47,8 @@ header_type parser_csum_t {
         inner_ipv4___hdr_len               : 16;
         l4_len                             : 16;
         inner_l4_len                       : 16;
+        gso_start                          : 16;
+        gso_offset                         : 16;
     }
 }
 
@@ -73,6 +75,8 @@ header_type parser_ohi_t {
         inner_ipv4___hdr_len        : 16;
         l4_len                      : 16;
         inner_l4_len                : 16;
+        gso_start                   : 16;
+        gso_offset                  : 16;
     }
 }
 @pragma pa_parser_local
@@ -106,9 +110,10 @@ metadata parser_csum_t parser_csum;
         default: ingress
 
 header cap_phv_intr_global_t capri_intrinsic;
-header cap_phv_intr_p4_t     capri_p4_intrinsic;
-header cap_phv_intr_rxdma_t  capri_rxdma_intrinsic;
-header cap_phv_intr_txdma_t  capri_txdma_intrinsic;
+header cap_phv_intr_p4_t    capri_p4_intrinsic;
+header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
+header cap_phv_intr_txdma_t capri_txdma_intrinsic;
+
 
 // dummy headers that are extracted and thrown away (rxdma span copies)
 header cap_phv_intr_rxdma_t              e2e_capri_rxdma_intrinsic;
@@ -268,6 +273,9 @@ header p4_to_p4plus_cpu_pkt_t p4_to_p4plus_cpu_pkt;
 header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 
 header p4_to_p4plus_p4pt_header_t p4_to_p4plus_p4pt;
+
+@pragma gso_checksum_offset gso_offset  // Specifies which field in the p4plus_to_p4
+                                        // captures gso_offset.
 header p4plus_to_p4_header_t p4plus_to_p4;
 
 parser start {
@@ -345,6 +353,7 @@ parser parse_i2e_metadata {
     }
 }
 
+
 @pragma xgress egress
 @pragma allow_set_meta control_metadata.span_copy
 parser parse_span_copy {
@@ -395,6 +404,20 @@ parser parse_vm_bounce {
 parser parse_txdma {
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
+#ifdef GSO_CSUM
+    set_metadata(parser_csum.gso_start, p4plus_to_p4.gso_start + 0);
+    set_metadata(parser_csum.gso_offset, p4plus_to_p4.gso_offset + 0);
+    return select(p4plus_to_p4.gso_valid) {
+        0x1:        parse_gso;
+        default:    parse_ethernet;
+    }
+#else
+    return parse_ethernet;
+#endif
+}
+
+@pragma generic_checksum_start capri_gso_csum.gso_checksum
+parser parse_gso {
     return parse_ethernet;
 }
 
@@ -1618,6 +1641,28 @@ calculated_field inner_udp.checksum {
     update inner_ipv4_udp_checksum if (valid(inner_ipv4));
     update inner_ipv6_udp_checksum if (valid(inner_ipv6));
 }
+
+#ifdef GSO_CSUM
+
+field_list gso_checksum_list {
+    p4plus_to_p4.gso_start; // Gso start should be first field in the input list.
+                            // 'gso_start' should also be included in write only ohi list.
+    payload;
+}
+
+@pragma checksum update_len capri_gso_csum.gso_checksum
+field_list_calculation gso_checksum {
+    input {
+        gso_checksum_list;
+    }
+    algorithm : gso; //For GSO checksum, provide algorithm as gso
+    output_width : 16;
+}
+calculated_field capri_gso_csum.gso_checksum {
+    update gso_checksum;
+}
+
+#endif
 
 parser parse_inner_udp {
     extract(inner_udp);
