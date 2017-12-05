@@ -1953,6 +1953,18 @@ class capri_parser:
                     hv_bit -= 1
                     hidx += 1
                 self.csum_hdr_hv_bit[h] = csum_hv_bit_and_hf
+                #Allocate HV bit for ICRC along with l3 header
+                if self.d == xgress.EGRESS and self.be.icrc.IsHdrInIcrcCompute(h.name):
+                    icrc_hv_bit_and_hf = []
+                    hf_name = h.name + '.icrc'
+                    icrc_cf = self.be.pa.get_field(hf_name, self.d)
+                    icrc_cf.phv_bit = hv_bit
+                    self.be.pa.replace_hv_field(hv_bit, icrc_cf, self.d)
+                    icrc_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
+                    self.hv_bit_header[max_hv_bits - hidx - 1] = h
+                    hv_bit -= 1
+                    hidx += 1
+                    self.icrc_hdr_hv_bit[h] = icrc_hv_bit_and_hf
 
             #Allocate HV for header.valid
             hf_name = h.name + '.valid'
@@ -1966,20 +1978,6 @@ class capri_parser:
             hv_bit -= 1
             hidx += 1
 
-        #Allocate HV bits for ICRC after allocating all other HV bits
-        for _hidx in range(len(hv_headers)):
-            h = hv_headers[_hidx]
-            if self.d == xgress.EGRESS and self.be.icrc.IsHdrInIcrcCompute(h.name):
-                icrc_hv_bit_and_hf = []
-                hf_name = h.name + '.icrc'
-                icrc_cf = self.be.pa.get_field(hf_name, self.d)
-                icrc_cf.phv_bit = hv_bit
-                self.be.pa.replace_hv_field(hv_bit, icrc_cf, self.d)
-                icrc_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
-                self.hv_bit_header[max_hv_bits - hidx - 1] = h
-                hv_bit -= 1
-                hidx += 1
-                self.icrc_hdr_hv_bit[h] = icrc_hv_bit_and_hf
 
         #Assign special HV bits (Headers not seen by Parser)
         for name, hdr in self.be.h.p4_header_instances.items():

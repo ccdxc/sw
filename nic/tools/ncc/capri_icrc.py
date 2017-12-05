@@ -680,7 +680,7 @@ class IcrcDeParserCalField:
 
     def HdrFldStartEndSet(self, hdrfld_start, hdrfld_end):
         self.hdrfld_start   = hdrfld_start
-        self.hdrfld_end     = hdrfld_end
+        self.hdrfld_end     = 0 #Since CRC calculated is using PHV LEN
 
     def HdrFldStartGet(self):
         return self.hdrfld_start
@@ -1376,7 +1376,7 @@ class Icrc:
         #64 1bits are added to icrc computation.
         prof_obj.IcrcProfileStartAdjSet(8, 1)
         prof_obj.IcrcProfileShiftLeftSet(0, 0)
-        prof_obj.IcrcProfileEndAdjSet(0, 0)
+        prof_obj.IcrcProfileEndAdjSet(4, 1)
         prof_obj.IcrcProfileLocAdjSet(4, 1)
 
         #Build mask profile for invariant fields.
