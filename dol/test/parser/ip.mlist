@@ -52,3 +52,24 @@ modules:
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : LAST_FRAGMENT
+
+    - module:
+        name    : VXLAN_IPV4_FIRST_FRAGMENT
+        spec    : ip_vxlan_drop.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : FIRST_FRAGMENT
+
+    - module:
+        name    : VXLAN_IPV4_MIDDLE_FRAGMENT
+        spec    : ip_vxlan_drop.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : MIDDLE_FRAGMENT
+
+    - module:
+        name    : VXLAN_IPV4_LAST_FRAGMENT
+        spec    : ip_vxlan_drop.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : LAST_FRAGMENT

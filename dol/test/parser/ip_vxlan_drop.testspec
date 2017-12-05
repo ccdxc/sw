@@ -36,13 +36,6 @@ packets:
                 dst     : ref://testcase/config/flow/dip
                 hlim    : 64
                 extns   : callback://parser/callbacks/GetIpv6ExtHeaders
-            udp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                chksum  : callback://parser/callbacks/GetUdpChecksum
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -103,12 +96,3 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-    delay   : callback://networking/packets/GetExpectDelay
-    packets:
-        - packet:
-            object  : callback://networking/packets/GetL2UcExpectedPacket
-            port    : ref://testcase/config/dst/endpoint/intf/ports
-
-        - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=IN_PKT
-            port    : 128

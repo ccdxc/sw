@@ -74,6 +74,7 @@ class ParserCsumEngine:
         self.max_cprofiles          = 8
         self.max_phdr_profiles      = 8
         self.allocated_csum_units   = [False, False, False, False]
+        self.allocated_csum_is_l3   = [False, False, False, False]
         self.allocated_cprofile     = 0
         self.allocated_phdr_profile = 0
         self.csum_units             = {} # k = checksumfield, v = csum-unit#
@@ -87,26 +88,46 @@ class ParserCsumEngine:
         self.csum_units_in_use   = 0
         for i in range(self.max_csum_units):
             self.allocated_csum_units[i] = False
+            #self.allocated_csum_is_l3[i] = False
 
-    def AllocateCsumUnit(self, csumField):
+    def AllocateCsumUnit(self, csumField, is_l3=False):
         if csumField in self.csum_units.keys():
             return self.csum_units[csumField]
         assert(self.csum_units_in_use < self.max_csum_units), pdb.set_trace()
-        self.csum_units[csumField] = self.allocated_csum_units.index(False)
-        self.allocated_csum_units[self.csum_units[csumField]] = True
-        self.csum_units_in_use += 1
+        if not is_l3:
+            self.csum_units[csumField] = self.allocated_csum_units.index(False)
+            self.allocated_csum_units[self.csum_units[csumField]] = True
+            self.csum_units_in_use += 1
+        else:
+            for i, used in enumerate(self.allocated_csum_units):
+                if used == False and not self.allocated_csum_is_l3[i]:
+                    self.csum_units[csumField] = i
+                    self.allocated_csum_units[self.csum_units[csumField]] = True
+                    self.csum_units_in_use += 1
+                    break
+            if i >= len(self.allocated_csum_units):
+                assert(0), pdb.set_trace()
+        self.allocated_csum_is_l3[self.csum_units[csumField]] = is_l3
         return (self.csum_units[csumField])
 
     def DeAllocateCsumUnit(self, csumField):
         if csumField in self.csum_units.keys():
             self.allocated_csum_units[self.csum_units[csumField]] = False
+            self.allocated_csum_is_l3[self.csum_units[csumField]] = False
             self.csum_units_in_use -= 1
             del self.csum_units[csumField]
 
-    def AlreadyAllocatedCsumUnitSet(self, csumField, csumUnit):
+    def AlreadyAllocatedCsumUnitSet(self, csumField, csumUnit, is_l3):
         assert csumUnit != -1, pdb.set_trace()
+        if not is_l3:
+            if self.allocated_csum_units[csumUnit] == False:
+                self.csum_units_in_use += 1
+        else:
+            self.allocated_csum_is_l3[csumUnit] = is_l3
+            if self.allocated_csum_units[csumUnit] == False and \
+            self.allocated_csum_is_l3[csumUnit] == True:
+                self.csum_units_in_use += 1
         self.allocated_csum_units[csumUnit] = True
-        self.csum_units_in_use += 1
 
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
@@ -137,6 +158,7 @@ class DeParserCsumEngine:
         self.max_cprofiles          = 8
         self.max_phdr_profiles      = 8
         self.allocated_csum_units   = [False, False, False, False]
+        self.allocated_csum_is_l3   = [False, False, False, False]
         self.allocated_cprofile     = 0
         self.allocated_phdr_profile = 0
         self.csum_units             = {} # k = checksumfield, v = csum-unit#
@@ -148,26 +170,46 @@ class DeParserCsumEngine:
         self.csum_units_in_use   = 0
         for i in range(self.max_csum_units):
             self.allocated_csum_units[i] = False
+            #self.allocated_csum_is_l3[i] = False
 
-    def AllocateCsumUnit(self, csumField):
+    def AllocateCsumUnit(self, csumField, is_l3=False):
         if csumField in self.csum_units.keys():
             return self.csum_units[csumField]
         assert(self.csum_units_in_use < self.max_csum_units), pdb.set_trace()
-        self.csum_units[csumField] = self.allocated_csum_units.index(False)
-        self.allocated_csum_units[self.csum_units[csumField]] = True
-        self.csum_units_in_use += 1
+        if not is_l3:
+            self.csum_units[csumField] = self.allocated_csum_units.index(False)
+            self.allocated_csum_units[self.csum_units[csumField]] = True
+            self.csum_units_in_use += 1
+        else:
+            for i, used in enumerate(self.allocated_csum_units):
+                if used == False and not self.allocated_csum_is_l3[i]:
+                    self.csum_units[csumField] = i
+                    self.allocated_csum_units[self.csum_units[csumField]] = True
+                    self.csum_units_in_use += 1
+                    break
+            if i >= len(self.allocated_csum_units):
+                pdb.set_trace()
+        self.allocated_csum_is_l3[self.csum_units[csumField]] = is_l3
         return (self.csum_units[csumField])
 
     def DeAllocateCsumUnit(self, csumField):
         if csumField in self.csum_units.keys():
             self.allocated_csum_units[self.csum_units[csumField]] = False
+            self.allocated_csum_is_l3[self.csum_units[csumField]] = False
             self.csum_units_in_use -= 1
             del self.csum_units[csumField]
 
-    def AlreadyAllocatedCsumUnitSet(self, csumField, csumUnit):
+    def AlreadyAllocatedCsumUnitSet(self, csumField, csumUnit, is_l3):
         assert csumUnit != -1, pdb.set_trace()
+        if not is_l3:
+            if self.allocated_csum_units[csumUnit] == False:
+                self.csum_units_in_use += 1
+        else:
+            self.allocated_csum_is_l3[csumUnit] = is_l3
+            if self.allocated_csum_units[csumUnit] == False and \
+            self.allocated_csum_is_l3[csumUnit] == True:
+                self.csum_units_in_use += 1
         self.allocated_csum_units[csumUnit] = True
-        self.csum_units_in_use += 1
 
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
@@ -524,7 +566,7 @@ class Checksum:
                             #Provide same csum unit.
                             self.IngParserCsumEngineObj.AlreadyAllocatedCsumUnitSet(\
                                     calfldobj.CalculatedFieldHdrGet(),\
-                                    calfldobj.ParserCsumObjGet().CsumUnitNumGet())
+                                    calfldobj.ParserCsumObjGet().CsumUnitNumGet(), calfldobj.payload_checksum)
 
 
                 for hdr in parse_path:
@@ -545,7 +587,7 @@ class Checksum:
                         calfldhdr = calfldobj.CalculatedFieldHdrGet()
                         calfldobj.ParserCsumObjGet().CsumUnitNumSet(\
                             self.IngParserCsumEngineObj.
-                                            AllocateCsumUnit(calfldhdr))
+                                            AllocateCsumUnit(calfldhdr, True))
                         calfldobj.ParserCsumProfileGet().CsumProfileUnitNumSet(\
                             self.IngParserCsumEngineObj.\
                                             AllocateCsumProfile(calfldhdr))
@@ -1342,7 +1384,7 @@ class Checksum:
                             #Provide same csum unit.
                             self.EgDeParserCsumEngineObj.AlreadyAllocatedCsumUnitSet(\
                                     calfldobj.CalculatedFieldHdrGet(),\
-                                    calfldobj.DeParserCsumObjGet().CsumUnitNumGet())
+                                    calfldobj.DeParserCsumObjGet().CsumUnitNumGet(), calfldobj.payload_checksum)
 
                 current_phdr_obj = None
                 payload_csum_obj_list = [] #used to include inner payload csum
@@ -1370,7 +1412,7 @@ class Checksum:
                         _csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[hdr][0][0])
                         calfldhdr = calfldobj.CalculatedFieldHdrGet()
                         _csum_obj.CsumUnitNumSet(self.EgDeParserCsumEngineObj.\
-                                                 AllocateCsumUnit(calfldhdr))
+                                                 AllocateCsumUnit(calfldhdr, True))
                         _csum_obj.PhdrValidSet(0)
                         csum_profile = self.EgDeParserCsumEngineObj.\
                                                  AllocateCsumProfile(calfldhdr)

@@ -21,11 +21,13 @@ header_type parser_metadata_t {
         parse_inner_ipv4_counter        : 8;
         parse_tcp_counter               : 8;
         ipv6_nextHdr                    : 8;
+        inner_ipv6_nextHdr              : 8;
         l4_trailer                      : 16;
         l4_len                          : 16;
         //Parser local field to specify destination field 
         //to store icrc value. No PHV allocated.
         ipv6_options_len                : 16;
+        inner_ipv6_options_len          : 16;
         icrc                            : 32; 
     }
 }
@@ -58,6 +60,7 @@ header_type parser_ohi_t {
     // start/len information to write-only variables
     fields {
         ipv6_options_blob___hdr_len : 16;
+        inner_ipv6_options_blob___hdr_len : 16;
         ipv4___start_off            : 16;
         ipv6___start_off            : 16;
         inner_ipv4___start_off      : 16;
@@ -1496,6 +1499,7 @@ parser parse_inner_ipv4_options_blob {
 }
 
 parser parse_inner_ipv4 {
+    set_metadata(parser_metadata.l4_trailer, current(16,16) - (current(4,4) << 2));
     return select(current(0,8)) {
         0x45    : parse_base_inner_ipv4;
         0x44    : ingress;
@@ -1639,6 +1643,66 @@ parser parse_dummy {
     }
 }
 
+@pragma hdr_len parser_metadata.inner_ipv6_options_len
+header ipv6_options_blob_t inner_ipv6_options_blob;
+
+@pragma dont_advance_packet
+parser parse_inner_ipv6_option_blob {
+    // inner_ipv6_option_blob header uses inner_ipv6_option_len as variable header len
+    // setup the inner_ipv6_option_len = 0 and keep updating the len as options are
+    // parsed.
+    // Note1: that options are parsed using 'no_extract' state i.e. they are not
+    // individually extracted to phv/ohi (but hv bits will be set)
+    // Note2: inner_ipv6_options_len value used to setup ohi slot is previous value (before init)
+    set_metadata(parser_metadata.inner_ipv6_options_len, 0);
+    extract(inner_ipv6_options_blob);
+    return parse_inner_ipv6_extn_hdrs;
+}
+
+parser parse_inner_ipv6_ulp {
+    // update the header len of the inner_ipv6_options_blob header
+    // must use expression to update ohi variable.
+    set_metadata(ohi.inner_ipv6_options_blob___hdr_len, parser_metadata.inner_ipv6_options_len+0);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - parser_metadata.inner_ipv6_options_len);
+    set_metadata(l3_metadata.inner_ipv6_ulp, parser_metadata.inner_ipv6_nextHdr);
+    return select(parser_metadata.inner_ipv6_nextHdr) {
+        IP_PROTO_ICMPV6 : parse_icmpv6;
+        IP_PROTO_TCP : parse_tcp;
+        IP_PROTO_UDP : parse_inner_udp;
+        default: ingress;
+    }
+}
+
+header ipv6_extn_generic_t inner_v6_generic;
+// use no_extract pragma to simply move the packet offset forward w/o extraction
+// similar to advance() feature in P4-16
+@pragma no_extract
+parser parse_inner_v6_generic_ext_hdr {
+    extract(inner_v6_generic);
+    set_metadata(parser_metadata.inner_ipv6_nextHdr, latest.nextHdr);
+    set_metadata(parser_metadata.inner_ipv6_options_len, \
+            parser_metadata.inner_ipv6_options_len + (inner_v6_generic.len << 3) + 8);
+    return parse_inner_ipv6_extn_hdrs;
+}
+
+
+@pragma header_ordering inner_v6_generic
+parser parse_inner_ipv6_extn_hdrs {
+    set_metadata(l3_metadata.inner_ip_option_seen, 1);
+    // To store back into OHI payloadLen - Sum of option hdr len,
+    // use set_metadata with zero len
+    // set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer + 0);
+    return select(parser_metadata.inner_ipv6_nextHdr) {
+        0x0:  parse_inner_v6_generic_ext_hdr; // hop-by-hop Hdr
+        0x2b: parse_inner_v6_generic_ext_hdr; // Routing Hdr
+        // Note2: ipv6_options_len value used to setup ohi slot is previous value (before init)
+        0x2c: parse_inner_v6_generic_ext_hdr; // Fragment Hdr
+        0x3c: parse_inner_v6_generic_ext_hdr; // Dest_option Hdr
+        0x87: parse_inner_v6_generic_ext_hdr; // Mobility Hdr
+        default: parse_inner_ipv6_ulp;
+    }
+}
+
 /* This state extracts 72 bytes (40 bytes of header + 32 bytes to lkp)
  * Capri-Parser only allows for max of 64 bytes per state. Capri-ncc will
  * check this and internally split this state. Until then this code is
@@ -1646,13 +1710,21 @@ parser parse_dummy {
  */
 parser parse_inner_ipv6 {
     extract(inner_ipv6);
+    set_metadata(parser_metadata.inner_ipv6_nextHdr, latest.nextHdr);
     set_metadata(flow_lkp_metadata.lkp_src, latest.srcAddr);
     set_metadata(flow_lkp_metadata.lkp_dst, latest.dstAddr);
     set_metadata(parser_csum.inner_l4_len, inner_ipv6.payloadLen+0);
-    return select(latest.nextHdr) {
+    set_metadata(l3_metadata.inner_ipv6_ulp, latest.nextHdr);
+    set_metadata(parser_metadata.l4_trailer, inner_ipv6.payloadLen);
+    return select(parser_metadata.inner_ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_inner_udp;
+        0x0:  parse_inner_ipv6_option_blob;   // Hop by Hop Hdr
+        0x2b: parse_inner_ipv6_option_blob;   // Routing Hdro
+        0x2c: parse_inner_ipv6_option_blob;   // Fragment Hdr
+        0x3c: parse_inner_ipv6_option_blob;   // dest_option
+        0x87: parse_inner_ipv6_option_blob;   // Mobility Hdr
         default: ingress;
     }
 }

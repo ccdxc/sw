@@ -2073,6 +2073,7 @@ class capri_parser:
         n_states = len([s for s in self.states if s.name != '__END__' and not s.deparse_only \
             and not s.is_virtual])
         cs_covered = 0
+        self.logger.debug("%s:Start local variable allocation" % (self.d.name))
         for path in path_states:
             # once all state are covered.. we can stop the loop, # of paths is of the order of
             # 250k for iris.p4 program
@@ -2129,8 +2130,11 @@ class capri_parser:
                         out_lfs[lf] = in_lfs[lf]
 
             if len(out_lfs):
-                # unassigned/un-written lfs.. remove them
-                #pdb.set_trace()
+                # unassigned/un-initialized lfs.. remove them
+                for lf in out_lfs.keys():
+                    self.logger.critical("%s:Un-initialized variable %s on path %s" % \
+                        (self.d.name, lf.hfname, path))
+                    assert 0, pdb.set_trace()
                 pass
 
             # allocate reg ids for new lfs

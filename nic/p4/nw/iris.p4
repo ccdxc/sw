@@ -41,6 +41,7 @@ header_type l3_metadata_t {
         ip_frag                  : 1;
         inner_ip_frag            : 1;
         ipv6_ulp                 : 8;
+        inner_ipv6_ulp           : 8;
     }
 }
 
