@@ -139,12 +139,42 @@ action validate_tunneled_packet() {
     }
 }
 
+action check_parser_errors() {
+    if (capri_p4_intrinsic.parser_err == TRUE) {
+        if (control_metadata.uplink == TRUE) {
+            if (capri_p4_intrinsic.crc_err != 0) {
+                modify_field(control_metadata.drop_reason,
+                             (1 << DROP_PARSER_ICRC_ERR),
+                             (1 << DROP_PARSER_ICRC_ERR));
+                drop_packet();
+            }
+            if (capri_p4_intrinsic.len_err != 0) {
+                modify_field(control_metadata.drop_reason,
+                             (1 << DROP_PARSER_LEN_ERR),
+                             (1 << DROP_PARSER_LEN_ERR));
+                drop_packet();
+            }
+        } else {
+            if ((capri_p4_intrinsic.len_err != 0) and
+                ((p4plus_to_p4.flags &
+                  (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN|
+                   P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN)) != 0)) {
+                modify_field(control_metadata.drop_reason,
+                             (1 << DROP_PARSER_LEN_ERR),
+                             (1 << DROP_PARSER_LEN_ERR));
+                drop_packet();
+            }
+        }
+    }
+}
+
 action validate_packet() {
     if (tunnel_metadata.tunnel_terminate == TRUE) {
         validate_tunneled_packet();
     } else {
         validate_native_packet();
     }
+    check_parser_errors();
 }
 
 @pragma stage 3

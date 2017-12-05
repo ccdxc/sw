@@ -417,8 +417,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     mask.l3_metadata_ip_option_seen_mask = 0;
     key.l3_metadata_ip_frag = 0;
     mask.l3_metadata_ip_frag_mask = 0;
-    key.control_metadata_drop_reason = 0;
-    mask.control_metadata_drop_reason_mask = 0;
+    memset(key.control_metadata_drop_reason, 0,
+           sizeof(key.control_metadata_drop_reason));
+    memset(mask.control_metadata_drop_reason_mask, 0,
+           sizeof(mask.control_metadata_drop_reason_mask));
     key.flow_lkp_metadata_lkp_dir = 0;
     mask.flow_lkp_metadata_lkp_dir_mask = 0;
 
@@ -436,8 +438,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     mask.l3_metadata_ip_option_seen_mask = ms->int_mask.ip_options;
     key.l3_metadata_ip_frag = ms->int_key.ip_frag;
     mask.l3_metadata_ip_frag_mask = ms->int_mask.ip_frag;
-    key.control_metadata_drop_reason = ms->int_key.drop_reason;
-    mask.control_metadata_drop_reason_mask = ms->int_mask.drop_reason;
+    memcpy(key.control_metadata_drop_reason, &(ms->int_key.drop_reason),
+           sizeof(key.control_metadata_drop_reason));
+    memcpy(mask.control_metadata_drop_reason_mask, &(ms->int_mask.drop_reason),
+           sizeof(mask.control_metadata_drop_reason_mask));
     key.flow_lkp_metadata_lkp_dir = ms->int_key.direction;
     mask.flow_lkp_metadata_lkp_dir_mask = ms->int_mask.direction;
 #endif

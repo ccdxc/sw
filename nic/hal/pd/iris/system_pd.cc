@@ -91,80 +91,85 @@ end:
 }
 
 hal_ret_t
-pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask, 
+pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
         drop_stats_actiondata *data, DropStatsEntry *stats_entry,
         uint64_t hbm_counter)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    uint64_t drop_reason, drop_reason_mask;
 
-    key->control_metadata_drop_reason &= 
-        key_mask->control_metadata_drop_reason_mask;
+    memcpy(&drop_reason, key->control_metadata_drop_reason,
+           sizeof(key->control_metadata_drop_reason));
+    memcpy(&drop_reason_mask, key_mask->control_metadata_drop_reason_mask,
+           sizeof(key_mask->control_metadata_drop_reason_mask));
+    drop_reason &= drop_reason_mask;
+    memcpy(key->control_metadata_drop_reason, &drop_reason,
+           sizeof(key->control_metadata_drop_reason));
 
     stats_entry->set_drop_input_mapping(
-            key->control_metadata_drop_reason & DROP_INPUT_MAPPING);
+        drop_reason & DROP_INPUT_MAPPING);
     stats_entry->set_drop_input_mapping_dejavu(
-            key->control_metadata_drop_reason & DROP_INPUT_MAPPING_DEJAVU);
+        drop_reason & DROP_INPUT_MAPPING_DEJAVU);
     stats_entry->set_drop_flow_hit(
-            key->control_metadata_drop_reason & DROP_FLOW_HIT);
+        drop_reason & DROP_FLOW_HIT);
     stats_entry->set_drop_flow_miss(
-            key->control_metadata_drop_reason & DROP_FLOW_MISS);
+        drop_reason & DROP_FLOW_MISS);
     stats_entry->set_drop_ipsg(
-            key->control_metadata_drop_reason & DROP_IPSG);
+        drop_reason & DROP_IPSG);
     stats_entry->set_drop_ingress_policer(
-            key->control_metadata_drop_reason & DROP_INGRESS_POLICER);
+        drop_reason & DROP_INGRESS_POLICER);
     stats_entry->set_drop_egress_policer(
-            key->control_metadata_drop_reason & DROP_EGRESS_POLICER);
+        drop_reason & DROP_EGRESS_POLICER);
     stats_entry->set_drop_nacl(
-            key->control_metadata_drop_reason & DROP_NACL);
+        drop_reason & DROP_NACL);
     stats_entry->set_drop_malformed_pkt(
-            key->control_metadata_drop_reason & DROP_MALFORMED_PKT);
+        drop_reason & DROP_MALFORMED_PKT);
     stats_entry->set_drop_ping_of_death(
-            key->control_metadata_drop_reason & DROP_PING_OF_DEATH);
+        drop_reason & DROP_PING_OF_DEATH);
     stats_entry->set_drop_fragment_too_small(
-            key->control_metadata_drop_reason & DROP_FRAGMENT_TOO_SMALL);
+        drop_reason & DROP_FRAGMENT_TOO_SMALL);
     stats_entry->set_drop_ip_normalization(
-            key->control_metadata_drop_reason & DROP_IP_NORMALIZATION);
+        drop_reason & DROP_IP_NORMALIZATION);
     stats_entry->set_drop_tcp_normalization(
-            key->control_metadata_drop_reason & DROP_TCP_NORMALIZATION);
+        drop_reason & DROP_TCP_NORMALIZATION);
     stats_entry->set_drop_tcp_non_syn_first_pkt(
-            key->control_metadata_drop_reason & DROP_TCP_NON_SYN_FIRST_PKT);
+        drop_reason & DROP_TCP_NON_SYN_FIRST_PKT);
     stats_entry->set_drop_icmp_normalization(
-            key->control_metadata_drop_reason & DROP_ICMP_NORMALIZATION);
+        drop_reason & DROP_ICMP_NORMALIZATION);
     stats_entry->set_drop_icmp_src_quench_msg(
-            key->control_metadata_drop_reason & DROP_ICMP_SRC_QUENCH_MSG);
+        drop_reason & DROP_ICMP_SRC_QUENCH_MSG);
     stats_entry->set_drop_icmp_redirect_msg(
-            key->control_metadata_drop_reason & DROP_ICMP_REDIRECT_MSG);
+        drop_reason & DROP_ICMP_REDIRECT_MSG);
     stats_entry->set_drop_icmp_info_req_msg(
-            key->control_metadata_drop_reason & DROP_ICMP_INFO_REQ_MSG);
+        drop_reason & DROP_ICMP_INFO_REQ_MSG);
     stats_entry->set_drop_icmp_addr_req_msg(
-            key->control_metadata_drop_reason & DROP_ICMP_ADDR_REQ_MSG);
+        drop_reason & DROP_ICMP_ADDR_REQ_MSG);
     stats_entry->set_drop_icmp_traceroute_msg(
-            key->control_metadata_drop_reason & DROP_ICMP_TRACEROUTE_MSG);
+        drop_reason & DROP_ICMP_TRACEROUTE_MSG);
     stats_entry->set_drop_icmp_rsvd_type_msg(
-            key->control_metadata_drop_reason & DROP_ICMP_RSVD_TYPE_MSG);
+        drop_reason & DROP_ICMP_RSVD_TYPE_MSG);
     stats_entry->set_drop_input_properties_miss(
-            key->control_metadata_drop_reason & DROP_INPUT_PROPERTIES_MISS);
+        drop_reason & DROP_INPUT_PROPERTIES_MISS);
     stats_entry->set_drop_tcp_out_of_window(
-            key->control_metadata_drop_reason & DROP_TCP_OUT_OF_WINDOW);
+        drop_reason & DROP_TCP_OUT_OF_WINDOW);
     stats_entry->set_drop_tcp_split_handshake(
-            key->control_metadata_drop_reason & DROP_TCP_SPLIT_HANDSHAKE);
+        drop_reason & DROP_TCP_SPLIT_HANDSHAKE);
     stats_entry->set_drop_tcp_win_zero_drop(
-            key->control_metadata_drop_reason & DROP_TCP_WIN_ZERO_DROP);
+        drop_reason & DROP_TCP_WIN_ZERO_DROP);
     stats_entry->set_drop_tcp_ack_err(
-            key->control_metadata_drop_reason & DROP_TCP_ACK_ERR);
+        drop_reason & DROP_TCP_ACK_ERR);
     stats_entry->set_drop_tcp_data_after_fin(
-            key->control_metadata_drop_reason & DROP_TCP_DATA_AFTER_FIN);
+        drop_reason & DROP_TCP_DATA_AFTER_FIN);
     stats_entry->set_drop_tcp_non_rst_pkt_after_rst(
-            key->control_metadata_drop_reason & DROP_TCP_NON_RST_PKT_AFTER_RST);
+        drop_reason & DROP_TCP_NON_RST_PKT_AFTER_RST);
     stats_entry->set_drop_tcp_invalid_responder_first_pkt(
-            key->control_metadata_drop_reason & DROP_TCP_INVALID_RESPONDER_FIRST_PKT);
+        drop_reason & DROP_TCP_INVALID_RESPONDER_FIRST_PKT);
     stats_entry->set_drop_tcp_unexpected_syn(
-            key->control_metadata_drop_reason & DROP_TCP_UNEXPECTED_PKT);
+        drop_reason & DROP_TCP_UNEXPECTED_PKT);
 
     stats_entry->set_drop_count(
-            hbm_counter + 
+            hbm_counter +
             data->drop_stats_action_u.drop_stats_drop_stats.drop_pkts);
-
 
     return ret;
 }

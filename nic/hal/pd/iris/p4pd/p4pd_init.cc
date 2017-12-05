@@ -441,10 +441,10 @@ p4pd_drop_stats_init (void)
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
 
-    /* 
+    /*
      * Drop stats entry points to an atomic region. When the drop_stats entry
-     * overflows the atomic region entry will be incremented by the max of 
-     * drop_stats entry. 
+     * overflows the atomic region entry will be incremented by the max of
+     * drop_stats entry.
      * To get the drop stats:
      *  - (1)Read atomic region.
      *  - (2)Read drop_stats entry.
@@ -456,10 +456,13 @@ p4pd_drop_stats_init (void)
      */
     for (int i = DROP_MIN; i <= DROP_MAX; i++) {
 
-        key.entry_inactive_drop_stats              = 0;
-        key.control_metadata_drop_reason           = 1 << i;
-        key_mask.entry_inactive_drop_stats_mask    = 0xFF;
-        key_mask.control_metadata_drop_reason_mask = 1 << i;
+        uint64_t drop_reason = ((uint64_t)1 << i);
+        key.entry_inactive_drop_stats = 0;
+        memcpy(key.control_metadata_drop_reason, &drop_reason,
+               sizeof(key.control_metadata_drop_reason));
+        key_mask.entry_inactive_drop_stats_mask = 0xFF;
+        memcpy(key_mask.control_metadata_drop_reason_mask, &drop_reason,
+               sizeof(key_mask.control_metadata_drop_reason_mask));
 
         data.actionid = DROP_STATS_DROP_STATS_ID;
         data.drop_stats_action_u.drop_stats_drop_stats.stats_idx = i;

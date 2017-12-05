@@ -47,7 +47,7 @@ header_type l3_metadata_t {
 
 header_type control_metadata_t {
     fields {
-        drop_reason                    : 32;
+        drop_reason                    : 40;
         qid                            : 24;
         qtype                          : 8;
         tm_iport                       : 4;

@@ -231,8 +231,11 @@
 #define DROP_TCP_INVALID_RESPONDER_FIRST_PKT 29
 #define DROP_TCP_UNEXPECTED_PKT        30
 #define DROP_SRC_LIF_MISMATCH          31
+#define DROP_PARSER_ICRC_ERR           32
+#define DROP_PARSER_LEN_ERR            33
+#define DROP_PARSER_CSUM_ERR           34
 #define DROP_MIN                       DROP_INPUT_MAPPING
-#define DROP_MAX                       DROP_SRC_LIF_MISMATCH
+#define DROP_MAX                       DROP_PARSER_CSUM_ERR
 
 /*****************************************************************************/
 /* Rewrite flags                                                             */

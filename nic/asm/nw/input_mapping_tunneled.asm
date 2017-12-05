@@ -75,8 +75,8 @@ tunneled_non_ip_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_MAC
   phvwrpair     p.flow_lkp_metadata_lkp_src[47:0], k.inner_ethernet_srcAddr, \
                     p.flow_lkp_metadata_lkp_dst[47:0], k.inner_ethernet_dstAddr
-  phvwrpair.e   p.flow_lkp_metadata_lkp_dport, k.inner_ethernet_etherType, \
-                    p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
+  phvwr         p.flow_lkp_metadata_lkp_dport, k.inner_ethernet_etherType
+  phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
 
 .align

@@ -74,7 +74,7 @@ typedef struct acl_internal_match_spec_s {
     bool       ip_options;
     bool       ip_frag;
     bool       tunnel_terminate;
-    uint32_t   drop_reason;
+    uint64_t   drop_reason;
     mac_addr_t outer_mac_da;
 } __PACK__ acl_internal_match_spec_t;
 #endif

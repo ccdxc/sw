@@ -1398,10 +1398,11 @@ int capri_tcam_table_hw_entry_read(uint32_t tableid,
         } else {
             to_copy = (copy_bits > 128) ? 128: copy_bits;
         }
-        memcpy(_trit_x, temp_x + (entry_start_word << 1), (to_copy + 7) / 8);
-        memcpy(_trit_y, temp_y + (entry_start_word << 1), (to_copy + 7) / 8);
-        _trit_x += (to_copy + 7)/8;
-        _trit_y += (to_copy + 7)/8;
+        uint8_t to_copy_bytes = ((((to_copy - 1) >> 4) + 1) << 4) / 8;
+        memcpy(_trit_x, temp_x + (entry_start_word << 1), to_copy_bytes);
+        memcpy(_trit_y, temp_y + (entry_start_word << 1), to_copy_bytes);
+        _trit_x += to_copy_bytes;
+        _trit_y += to_copy_bytes;
         entry_start_word = 0;
         copy_bits -= to_copy;
     }
