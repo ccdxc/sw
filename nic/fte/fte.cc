@@ -18,15 +18,17 @@ namespace fte {
 // FTE features
 typedef struct feature_s feature_t;
 struct feature_s {
-    std::string            name;
-    bool                   registered;
-    feature_state_init_t   state_init_fn;  // handler to init feature specific state
+    std::string            name;           // feature name
+    uint16_t               id;             // feature id (generated)
+    bool                   registered;     // feature is registered (plugin loaded)
+    feature_state_init_t   state_init_fn;  // handler to init feature specific ctx state
     size_t                 state_size;     // Size of the feature state
     uint32_t               state_offset;   // Offset of the feature state in fte::ctx_t
     exec_handler_t         exec_handler;   // Feature exec handler
 };
 
-static std::map<std::string, feature_t*> g_feature_list_;
+static std::map<std::string, feature_t*> g_feature_map_;
+static std::vector<feature_t*> g_feature_list_;
 static size_t g_feature_state_size_; // Total size of all feature specific states
 
 static inline feature_t *feature_alloc_()
@@ -36,8 +38,8 @@ static inline feature_t *feature_alloc_()
 
 static inline feature_t *feature_lookup_(const std::string &name)
 {
-    auto entry = g_feature_list_.find(name);
-    if (entry == g_feature_list_.end()) {
+    auto entry = g_feature_map_.find(name);
+    if (entry == g_feature_map_.end()) {
         return nullptr;
     }
 
@@ -45,51 +47,55 @@ static inline feature_t *feature_lookup_(const std::string &name)
 }
 
 //------------------------------------------------------------------------------
-// Returns total size of all feature specific states together
+// Returns feature id (0xFFFF is invalid)
 //------------------------------------------------------------------------------
-size_t feature_state_size()
+uint16_t feature_id(const std::string &name)
 {
-    return g_feature_state_size_;
+    feature_t *feature = feature_lookup_(name);
+    if (feature && feature->registered) {
+        return feature->id;
+    }
+
+    return 0xFFFF;
 }
 
 //------------------------------------------------------------------------------
-// Returns pointer to feature specific state
+// Returns size of memory to store the feature ctx state and pointer to session
+// state of all the registered features
 //------------------------------------------------------------------------------
-void *feature_state_pointer(const std::string &name, uint8_t *state, size_t sz)
+size_t feature_state_size(uint16_t *num_features)
 {
-    feature_t *feature = feature_lookup_(name);
+    *num_features = g_feature_list_.size();
 
-    if (!feature || !feature->registered || feature->state_size == 0) {
-        return NULL;
-    }
-
-    if ((feature->state_offset +  feature->state_size) <= sz) {
-        return (void *)(state + feature->state_offset);
-    }
-
-    return NULL;
+    return (*num_features) * sizeof(feature_state_t) + g_feature_state_size_;
 }
 
 //------------------------------------------------------------------------------
 // Init feature state
 //------------------------------------------------------------------------------
-void feature_state_init(uint8_t *state, size_t sz)
+void feature_state_init(feature_state_t *feature_state, uint16_t num_features)
 {
-    void *feature_state;
+    feature_t *feature;
+    uint8_t *ctx_state_start = (uint8_t *)(feature_state + num_features);
 
-    for (auto node : g_feature_list_) {
-        feature_t *feature = node.second;
+    HAL_ASSERT(num_features <= g_feature_list_.size());
 
-        if ((feature->state_size == 0) ||
-            (feature->state_offset +  feature->state_size) > sz) {
-            continue;
-        }
+    for (uint16_t id = 0; id < num_features; id++) {
+        feature_state[id].session_state = NULL;
+        feature_state[id].ctx_state = NULL;
 
-        feature_state = (void*)(state + feature->state_offset);
-        if (feature->state_init_fn) {
-            feature->state_init_fn(feature_state);
-        } else {
-            std::memset(feature_state, 0, feature->state_size);
+        feature = g_feature_list_[id];
+        if (feature && feature->registered && feature->state_size > 0) {
+            feature_state[id].ctx_state = (void *)(ctx_state_start + feature->state_offset);
+            if (feature->state_init_fn) {
+                feature->state_init_fn(feature_state[id].ctx_state);
+            } else {
+                std::memset(feature_state[id].ctx_state, 0, feature->state_size);
+            }
+            HAL_TRACE_DEBUG("fte::feature_state_init name={} id={}, size={}, offset={} ctx={:p}",
+                            feature->name, feature->id,
+                            feature->state_size, feature->state_offset,
+                            feature_state[id].ctx_state);
         }
     }
 }
@@ -110,8 +116,6 @@ hal_ret_t add_feature(const std::string& name)
 {
     feature_t *feature;
 
-    HAL_TRACE_DEBUG("fte::{}: name={}", __FUNCTION__, name);
-
     if (feature_lookup_(name) != nullptr) {
         HAL_TRACE_ERR("fte::{}: name={} - duplicate feature", __FUNCTION__, name);
         return HAL_RET_INVALID_ARG;
@@ -119,8 +123,12 @@ hal_ret_t add_feature(const std::string& name)
 
     feature = feature_alloc_();
     feature->name = name;
+    feature->id =  g_feature_list_.size();
     feature->exec_handler = dummy_handler;
-    g_feature_list_[name] = feature;
+    g_feature_map_[name] = feature;
+    g_feature_list_.push_back(feature);
+
+    HAL_TRACE_DEBUG("fte::{}: name={} id={}", __FUNCTION__, name, feature->id);
 
     return HAL_RET_OK;
 }
@@ -379,9 +387,10 @@ void unregister_features_and_pipelines() {
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, pipeline);
     }
 
-    for (auto it = g_feature_list_.begin(); it != g_feature_list_.end(); ) {
+    g_feature_list_ = {};
+    for (auto it = g_feature_map_.begin(); it != g_feature_map_.end(); ) {
         feature_t *feature = it->second;
-        it = g_feature_list_.erase(it);
+        it = g_feature_map_.erase(it);
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature);
     }
 }

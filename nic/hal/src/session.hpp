@@ -323,7 +323,8 @@ struct session_s {
     dllist_ctxt_t       dif_session_lentry;       // destination interface's session list context
     dllist_ctxt_t       sl2seg_session_lentry;    // source L2 segment's session list context
     dllist_ctxt_t       dl2seg_session_lentry;    // destination L2 segment's session list context
-    dllist_ctxt_t       vrf_session_lentry;    // vrf's session list context
+    dllist_ctxt_t       vrf_session_lentry;       // vrf's session list context
+    dllist_ctxt_t       feature_list_head;        // List of feature specific states
 } __PACK__;
 
 //---------------------------------------------------------------------------------

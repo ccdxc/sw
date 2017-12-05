@@ -3,6 +3,7 @@
 #include "fte_flow.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/vrf.hpp"
+#include "nic/include/list.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
@@ -227,25 +228,35 @@ ctx_t::lookup_session()
     }
 
     // Check wild card entry table
-    expected_flow_t *entry = lookup_expected_flow(key_);
-    if (entry) {
-        ret = entry->handler(*this, entry);
+    expected_flow_t *expected_flow = lookup_expected_flow(key_);
+    if (expected_flow) {
+        ret = expected_flow->handler(*this, expected_flow);
         if (ret != HAL_RET_OK) {
             return ret;
         }
     }
 
+    session_ = hal::session_lookup(key_, std::addressof(role_));
     if (!session_) {
-        session_ = hal::session_lookup(key_, std::addressof(role_));
-        if (!session_) {
-            return HAL_RET_SESSION_NOT_FOUND;
-        }
-
-        existing_session_ = true;
-        HAL_TRACE_DEBUG("fte: found existing session");
+        return HAL_RET_SESSION_NOT_FOUND;
     }
 
+    HAL_TRACE_DEBUG("fte: found existing session");
+
     hflow = session_->iflow;
+
+    // Init feature sepcific session state
+    hal::utils::dllist_ctxt_t   *entry;
+    dllist_for_each(entry, &session_->feature_list_head) {
+        feature_session_state_t *state =
+            dllist_entry(entry, feature_session_state_t, session_feature_lentry);
+        uint16_t id = feature_id(state->feature_name);
+        if (id <= num_features_) {
+            feature_state_[id].session_state = state;
+            HAL_TRACE_DEBUG("fte: feature={} restored session state {:p}",
+                            state->feature_name, (void*)state);
+        }
+    }
 
     // TODO(goli) handle post svc flows
     if (hflow->config.role == hal::FLOW_ROLE_INITIATOR) {
@@ -504,7 +515,17 @@ ctx_t::update_flow_table()
     } else {
         // Create a new HAL session
         ret = hal::session_create(&session_args, &session_handle, &session);
-        session_ = session;
+        if (ret == HAL_RET_OK) {
+            session_ = session;
+            // Insert session sepcific feature state
+            for (uint16_t id = 0; id < num_features_; id++) {
+                feature_session_state_t *state = feature_state_[id].session_state;
+                if (state) {
+                    hal::utils::dllist_add(&session_->feature_list_head,
+                                           &state->session_feature_lentry);
+                }
+            }
+        }
     }
 
     if (ret != HAL_RET_OK) {
@@ -625,26 +646,50 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 }
 
 //------------------------------------------------------------------------------
+// Initialize the context 
+//------------------------------------------------------------------------------
+hal_ret_t
+ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_features)
+{
+    *this = {};
+
+    // TODO(goli)move this to plugin
+    app_redir().init();
+
+    arm_lifq_ = lifq;
+
+    num_features_ = num_features;
+    feature_state_ = feature_state;
+    if (num_features) {
+        feature_state_init(feature_state_, num_features_);
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // Initialize the context from incoming pkt
 //------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
             flow_t iflow[], flow_t rflow[],
-            uint8_t *feature_state, size_t feature_state_size)
+            feature_state_t feature_state[], uint16_t num_features)
 {
     hal_ret_t ret;
 
-    *this = {};
-    app_redir().init();
+    lifqid_t lifq =  {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
-    feature_state_ = feature_state;
-    feature_state_size_ = feature_state_size;
-    feature_state_init(feature_state_, feature_state_size_);
+    ret = init(lifq, feature_state, num_features);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failed to init ctx, err={}", ret);
+        return ret;
+    }
 
     cpu_rxhdr_ = cpu_rxhdr;
     pkt_ = pkt;
     pkt_len_ = pkt_len;
-    arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
+
+    // TODO(goli) move it to plugin
     app_redir().set_redir_policy_applic(cpu_rxhdr->lif==hal::SERVICE_LIF_APP_REDIR);
 
     if ((cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) ||
@@ -659,25 +704,24 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     return HAL_RET_OK;
 }
 
+
 //------------------------------------------------------------------------------
 // Initialize the context from GRPC protobuf
 //------------------------------------------------------------------------------
 hal_ret_t
 ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
-            uint8_t *feature_state, size_t feature_state_size)
+            feature_state_t feature_state[], uint16_t num_features)
 {
     hal_ret_t ret;
 
-    *this = {};
-    app_redir().init();
-
-    feature_state_ = feature_state;
-    feature_state_size_ = feature_state_size;
-    feature_state_init(feature_state_, feature_state_size_);
+    ret = init(FLOW_MISS_LIFQ, feature_state, num_features);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failed to init ctx, err={}", ret);
+        return ret;
+    }
 
     sess_spec_ = spec;
     sess_resp_ = rsp;
-    arm_lifq_ = FLOW_MISS_LIFQ;
 
     ret = init_flows(iflow, rflow);
     if (ret != HAL_RET_OK) {

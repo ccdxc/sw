@@ -32,8 +32,9 @@ private:
     mpscq_t                *softq_;
 
     ctx_t                  *ctx_;
-    uint8_t                *feature_state_;
+    feature_state_t        *feature_state_;
     size_t                  feature_state_size_;
+    uint16_t                num_features_;
     flow_t                 *iflow_;
     flow_t                 *rflow_;
 
@@ -148,13 +149,14 @@ inst_t::inst_t(uint8_t fte_id) :
 //------------------------------------------------------------------------------
 void inst_t::ctx_mem_init()
 {
-    size_t fstate_size = feature_state_size();
+    uint16_t num_features;
+    size_t fstate_size = feature_state_size(&num_features);
 
     // Check if we need to realloc due to new feature registration
-    if (ctx_ && fstate_size != feature_state_size_) {
+    if (ctx_ && (fstate_size != feature_state_size_ ||
+                 num_features != num_features_)) {
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, ctx_);
         ctx_ = NULL;
-
     }
 
     if (!ctx_) {
@@ -172,9 +174,10 @@ void inst_t::ctx_mem_init()
         rflow_ = (flow_t *)buff;
         buff += ctx_t::MAX_STAGES*sizeof(flow_t);
 
-        feature_state_ = buff;
+        feature_state_ = (feature_state_t*)buff;
         buff += fstate_size;
         feature_state_size_ = fstate_size;
+        num_features_ = num_features;
     }
 }
 
@@ -279,7 +282,7 @@ void inst_t::process_arq()
 
     do {
         // Init ctx_t
-        ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, iflow_, rflow_, feature_state_, feature_state_size_);
+        ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, iflow_, rflow_, feature_state_, num_features_);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
             break;

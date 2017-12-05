@@ -347,10 +347,31 @@ inline bool operator==(const lifqid_t& lifq1, const lifqid_t& lifq2)
             (lifq1.qid == lifq2.qid)));
 }
 
+#define MAX_FEATURE_NAME 64
+typedef char feature_name_t[MAX_FEATURE_NAME];
+
+//------------------------------------------------------------------------------
+// Feature sepcific session state
+// Used for storing as dllist in the hal::session_t
+// (this is embedded inside feature state slab)
+//------------------------------------------------------------------------------
+typedef struct feature_session_state_s {
+    fte::feature_name_t feature_name;                    // Name of the feature
+    dllist_ctxt_t       session_feature_lentry;  // session's feature list context
+} __PACK__ feature_session_state_t;
+
+//------------------------------------------------------------------------------
 // Feature specific state
-size_t feature_state_size();
-void *feature_state_pointer(const std::string &name, uint8_t *state, size_t sz);
-void feature_state_init(uint8_t *state, size_t sz);
+// Used for storing as an array inside fte::ctx_t for faster lookups using featutre id
+//------------------------------------------------------------------------------
+struct feature_state_t {
+    void                         *ctx_state;
+    feature_session_state_t      *session_state;
+};
+uint16_t feature_id(const std::string &name);
+size_t feature_state_size(uint16_t *num_features);
+void feature_state_init(feature_state_t *feature_state, uint16_t num_features);
+
 
 // Application redirect context
 typedef enum {
@@ -480,10 +501,10 @@ public:
 
     hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
                    flow_t iflow[], flow_t rflow[],
-                   uint8_t *feature_state, size_t feature_state_size);
+                   feature_state_t feature_state[], uint16_t num_features);
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
                    flow_t iflow[], flow_t rflow[],
-                   uint8_t *feature_state, size_t feature_state_size);
+                   feature_state_t feature_state[], uint16_t num_features);
     hal_ret_t process();
 
     hal_ret_t update_flow(const flow_update_t& flowupd, const hal::flow_role_t role);
@@ -536,7 +557,7 @@ public:
     session::SessionSpec* sess_spec() {return sess_spec_; }
     session::SessionResponse* sess_resp() {return sess_resp_; }
     hal::session_t* session() { return session_; }
-    bool existing_session() const { return existing_session_; }
+    bool existing_session() const { return session_ != NULL; }
 
     const lifqid_t& arm_lifq() const { return arm_lifq_; }
     void set_arm_lifq(const lifqid_t& arm_lifq) {arm_lifq_= arm_lifq;}
@@ -546,7 +567,10 @@ public:
 
     // name of the feature being executed
     const char* feature_name() const { return feature_name_; } 
-    void set_feature_name(const char *name) { feature_name_ = name; }
+    void set_feature_name(const char *name) {
+        feature_name_ = name;
+        feature_id_ = feature_id(name);
+    }
 
     // return staus of the feature handler
     hal_ret_t feature_status() const { return feature_status_; } 
@@ -601,17 +625,37 @@ public:
     void set_appid_state(hal::appid_state_t state) {appid_info_.state_ = state; }
 
 
-    void *feature_state(const std::string &name) {
-        return feature_state_pointer(name, feature_state_, feature_state_size_);
+    void *feature_state(const std::string &name = "") {
+        uint16_t id = name.length() ? feature_id(name) : feature_id_;
+        return (id < num_features_) ? feature_state_[id].ctx_state : nullptr;
     }
 
-    void *feature_state() {
-        if (!feature_name_) {
-            return nullptr;
+    feature_session_state_t *
+    feature_session_state(const std::string &name = "") {
+        uint16_t id = name.length() ? feature_id(name) : feature_id_;
+        return (id < num_features_) ? feature_state_[id].session_state : nullptr;
+    }
+
+    hal_ret_t register_feature_session_state(feature_session_state_t *state) {
+        if (session_) {
+            HAL_TRACE_ERR("fte: feature={} inserting session state for an exisiting session", 
+                          feature_name_);
+            return HAL_RET_INVALID_OP;
         }
 
-        return feature_state_pointer(feature_name_, feature_state_, feature_state_size_);
+        strncpy(state->feature_name, feature_name_, sizeof(state->feature_name));
+        dllist_reset(&state->session_feature_lentry);
+
+        HAL_TRACE_DEBUG("fte: feature={} register session state {:p}",
+                        feature_name_, (void*)state);
+        feature_state_[feature_id_].session_state = state;
+        return HAL_RET_OK;
     }
+
+    // protected methods accessed by gtest
+protected:
+    hal_ret_t init(const lifqid_t &lifq, feature_state_t feature_state[],
+                   uint16_t num_features);
 
 private:
     lifqid_t              arm_lifq_;
@@ -630,9 +674,10 @@ private:
     session::SessionResponse       *sess_resp_;
 
     const char*           feature_name_;   // Name of the feature being executed (for logging)
+    uint16_t              feature_id_;     // ID of the feature being executed
     hal_ret_t             feature_status_; // feature exit status (set by features to pass the error status)
-    uint8_t*              feature_state_;  // Buffer of feature specific states
-    size_t                feature_state_size_; // Total size of all feature specific states
+    feature_state_t*      feature_state_;  // feature specific states
+    uint16_t              num_features_;   // num of features
 
     //completion handlers
     uint8_t               num_handlers_;
@@ -640,7 +685,6 @@ private:
 
     bool                  drop_;           // Drop the packet
     bool                  drop_flow_;   // fw action is drop, installs drop flow
-    bool                  existing_session_;// Existing or new session ?
     hal::session_t        *session_;
     bool                  cleanup_hal_;    // Cleanup hal session
 

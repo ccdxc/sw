@@ -645,6 +645,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
         goto end;
     }
     *session = {};
+    dllist_reset(&session->feature_list_head);
     session->config = *args->session;
     session->vrf = args->vrf;
 

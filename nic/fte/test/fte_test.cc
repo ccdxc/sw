@@ -2,11 +2,18 @@
 #include <vector>
 
 #include "nic/fte/fte.hpp"
-
+#include "nic/fte/fte_flow.hpp"
 using namespace fte;
 using namespace std;
 
-class fte_test : public ::testing::Test {
+// test ctx with access to protected members
+class test_ctx_t :  public ctx_t {
+public:
+    using ctx_t::init;
+
+};
+
+class fte_test : public ctx_t,  public ::testing::Test {
 protected:
     fte_test() {
     }
@@ -232,6 +239,57 @@ TEST_F(fte_test, execute_pipeline_wildcard) {
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f4"}));
     results.clear();
+}
+
+//test feature state
+TEST_F(fte_test, ctx_state) {
+    auto fn1 = [](ctx_t& ctx) {
+        uint32_t *st1 = (uint32_t *)ctx.feature_state();
+        EXPECT_NE(st1, nullptr);
+
+        *st1 = 0x12345678;
+
+        uint16_t *st2 = (uint16_t *)ctx.feature_state("f2");
+        EXPECT_NE(st2, nullptr);
+
+        for (int i = 0; i < 1024; i++) {
+            st2[i] = i;
+        }
+        return PIPELINE_CONTINUE;
+    };
+
+    auto fn2 = [](ctx_t& ctx) {
+        uint32_t *st1 =  (uint32_t *)ctx.feature_state("f1");
+        EXPECT_EQ(*st1, 0x12345678);
+
+        uint16_t *st2 =  (uint16_t *)ctx.feature_state();
+        for (int i = 0; i < 1024; i++) {
+            EXPECT_EQ(st2[i], i);
+        }
+        return PIPELINE_CONTINUE;
+    };
+
+    feature_info_t info = {};
+
+    info.state_size = sizeof(uint32_t);
+    add_feature("f1");
+    register_feature("f1", fn1, info);
+
+    info.state_size = 1024*sizeof(uint16_t);
+    add_feature("f2");
+    register_feature("f2", fn2, info);
+
+    vector<string> features{"f1", "f2"};
+    register_pipeline("p1", {2,1,1}, features);
+
+
+    uint16_t num_features;
+    size_t sz = feature_state_size(&num_features);
+    feature_state_t *st = (feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
+
+    test_ctx_t ctx = {};
+    ctx.init({2,1,1}, st, num_features);
+    execute_pipeline(ctx);
 }
 
 int main(int argc, char **argv) {
