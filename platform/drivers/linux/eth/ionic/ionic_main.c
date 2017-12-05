@@ -970,7 +970,9 @@ static netdev_tx_t ionic_start_xmit(struct sk_buff *skb,
 	skb_tx_timestamp(skb);
 	// TODO do we honor skb->xmit_more to not ring doorbell?
 	ionic_q_post(q, true, ionic_tx_clean, skb);
-	stats->post++;
+
+	stats->pkts++;
+	stats->bytes += skb->len;
 
 	if (!ionic_q_has_space(q, 1)) {
 		netif_stop_subqueue(netdev, queue_index);
@@ -985,6 +987,26 @@ err_out_drop:
 	return NETDEV_TX_OK;
 }
 
+static void ionic_get_stats64(struct net_device *netdev,
+			      struct rtnl_link_stats64 *net_stats)
+{
+	struct lif *lif = netdev_priv(netdev);
+	struct rx_stats *rx_stats;
+	struct tx_stats *tx_stats;
+	unsigned int i;
+
+	for (i = 0; i < lif->ntxqcqs; i++) {
+		tx_stats = &lif->txqcqs[i]->stats.tx;
+		net_stats->tx_packets += tx_stats->pkts;
+		net_stats->tx_bytes += tx_stats->bytes;
+	}
+
+	for (i = 0; i < lif->nrxqcqs; i++) {
+		rx_stats = &lif->rxqcqs[i]->stats.rx;
+		net_stats->rx_packets += rx_stats->pkts;
+		net_stats->rx_bytes += rx_stats->bytes;
+	}
+}
 
 static void ionic_rx_filter_cb(struct queue *q, struct desc_info *desc_info,
 			       struct cq_info *cq_info, void *cb_arg)
@@ -1151,6 +1173,7 @@ static const struct net_device_ops ionic_netdev_ops = {
 	.ndo_open               = ionic_open,
 	.ndo_stop               = ionic_stop,
 	.ndo_start_xmit		= ionic_start_xmit,
+	.ndo_get_stats64	= ionic_get_stats64,
 	.ndo_set_rx_mode	= ionic_set_rx_mode,
 	.ndo_set_mac_address	= ionic_set_mac_address,
 	.ndo_validate_addr	= eth_validate_addr,
@@ -2001,8 +2024,28 @@ static void ionic_remove(struct pci_dev *pdev)
 		ionic_forget_identity(ionic);
 		ionic_unmap_bars(ionic);
 		pci_release_regions(pdev);
+		pci_disable_sriov(pdev);
 		pci_disable_device(pdev);
 	}
+}
+
+static int ionic_sriov_configure(struct pci_dev *pdev, int numvfs)
+{
+	int err;
+
+	if (numvfs > 0) {
+		err = pci_enable_sriov(pdev, numvfs);
+		if (err) {
+			dev_err(&pdev->dev, "Cannot enable SRIOV, err=%d\n",
+				err);
+			return err;
+		}
+	}
+
+	if (numvfs == 0)
+		pci_disable_sriov(pdev);
+
+	return numvfs;
 }
 
 static struct pci_driver ionic_driver = {
@@ -2010,6 +2053,7 @@ static struct pci_driver ionic_driver = {
 	.id_table = ionic_id_table,
 	.probe = ionic_probe,
 	.remove = ionic_remove,
+	.sriov_configure = ionic_sriov_configure,
 };
 
 static int __init ionic_init_module(void)

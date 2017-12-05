@@ -425,8 +425,10 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 
 		debugfs_create_u64("dma_map_err", S_IRUSR, stats_dentry,
 				   &qcq->stats.tx.dma_map_err);
-		debugfs_create_u64("post", S_IRUSR, stats_dentry,
-				   &qcq->stats.tx.post);
+		debugfs_create_u64("pkts", S_IRUSR, stats_dentry,
+				   &qcq->stats.tx.pkts);
+		debugfs_create_u64("bytes", S_IRUSR, stats_dentry,
+				   &qcq->stats.tx.bytes);
 		debugfs_create_u64("clean", S_IRUSR, stats_dentry,
 				   &qcq->stats.tx.clean);
 		debugfs_create_u64("drop", S_IRUSR, stats_dentry,
