@@ -13,11 +13,12 @@
 namespace pt = boost::property_tree;
 
 static capri_hbm_region_t *hbm_regions_;
+static int num_hbm_regions_;
 
 #define HBM_OFFSET(x)       (0x80000000 + (x))
 
 hal_ret_t
-capri_hbm_parse() 
+capri_hbm_parse()
 {
     char             		*cfg_path;
 #ifndef GFT
@@ -56,8 +57,9 @@ capri_hbm_parse()
         return HAL_RET_ERR;
     }
 
-    int num_regs = CARPI_HBM_MEM_NUM_MEM_REGS;
-    hbm_regions_ = (capri_hbm_region_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_PD, num_regs * sizeof(capri_hbm_region_t));
+    num_hbm_regions_ = json_pt.get_child(JKEY_REGIONS).size();
+    hbm_regions_ = (capri_hbm_region_t *)
+        HAL_CALLOC(hal::HAL_MEM_ALLOC_PD, num_hbm_regions_ * sizeof(capri_hbm_region_t));
     if (!hbm_regions_) {
         return HAL_RET_OOM;
     }
@@ -91,7 +93,7 @@ get_start_offset(const char *reg_name)
 {
     capri_hbm_region_t      *reg;
 
-    for (int i = 0; i < CARPI_HBM_MEM_NUM_MEM_REGS; i++) {
+    for (int i = 0; i < num_hbm_regions_; i++) {
         reg = &hbm_regions_[i];
         if (!strcmp(reg->mem_reg_name, reg_name)) {
             return (HBM_OFFSET(reg->start_offset));
@@ -106,7 +108,7 @@ get_size_kb(const char *reg_name)
 {
     capri_hbm_region_t      *reg;
 
-    for (int i = 0; i < CARPI_HBM_MEM_NUM_MEM_REGS; i++) {
+    for (int i = 0; i < num_hbm_regions_; i++) {
         reg = &hbm_regions_[i];
         if (!strcmp(reg->mem_reg_name, reg_name)) {
             return reg->size_kb;
@@ -121,7 +123,7 @@ get_hbm_region(char *reg_name)
 {
     capri_hbm_region_t      *reg;
 
-    for (int i = 0; i < CARPI_HBM_MEM_NUM_MEM_REGS; i++) {
+    for (int i = 0; i < num_hbm_regions_; i++) {
         reg = &hbm_regions_[i];
         if (!strcmp(reg->mem_reg_name, reg_name)) {
             return reg;
