@@ -3,18 +3,19 @@
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/src/nwsec_group.hpp"
 #include "nic/hal/src/nwsec.hpp"
-#include "firewall.hpp"
+#include "core.hpp"
 
 namespace hal {
-namespace firewall {
+namespace plugins {
+namespace sfw {
 
 #define DEFAULT_MSS 536 // RFC6691
 #define DEFAULT_WINDOW_SIZE 512
 
 hal_ret_t
-net_dfw_match_rules(fte::ctx_t                  &ctx,
+net_sfw_match_rules(fte::ctx_t                  &ctx,
                     nwsec_policy_rules_t        *nwsec_plcy_rules,
-                    net_dfw_match_result_t *match_rslt)
+                    net_sfw_match_result_t *match_rslt)
 {
     flow_key_t          flow_key;
     nwsec_policy_svc_t  *nwsec_plcy_svc = NULL;
@@ -68,10 +69,10 @@ net_dfw_match_rules(fte::ctx_t                  &ctx,
 }
 
 hal_ret_t
-net_dfw_check_policy_pair(fte::ctx_t                    &ctx,
+net_sfw_check_policy_pair(fte::ctx_t                    &ctx,
                           uint32_t                      src_sg,
                           uint32_t                      dst_sg,
-                          net_dfw_match_result_t   *match_rslt)
+                          net_sfw_match_result_t   *match_rslt)
 {
     nwsec_policy_cfg_t    *nwsec_plcy_cfg = NULL;
     dllist_ctxt_t         *lnode = NULL;
@@ -93,7 +94,7 @@ net_dfw_check_policy_pair(fte::ctx_t                    &ctx,
 
     dllist_for_each(lnode, &nwsec_plcy_cfg->rules_head) {
         nwsec_plcy_rules = dllist_entry(lnode, nwsec_policy_rules_t, lentry);
-        ret = net_dfw_match_rules(ctx, nwsec_plcy_rules, match_rslt);
+        ret = net_sfw_match_rules(ctx, nwsec_plcy_rules, match_rslt);
         if (ret == HAL_RET_OK && match_rslt->valid) {
             return ret;
         }
@@ -102,8 +103,8 @@ net_dfw_check_policy_pair(fte::ctx_t                    &ctx,
 }
 
 hal_ret_t
-net_dfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
-                            net_dfw_match_result_t *match_rslt)
+net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
+                            net_sfw_match_result_t *match_rslt)
 {
     ep_t        *sep = NULL;
     ep_t        *dep = NULL;
@@ -134,7 +135,7 @@ net_dfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
     dep  = ctx.dep();
     for (int i = 0; i < sep->sgs.sg_id_cnt; i++) {
         for (int j = 0; j < dep->sgs.sg_id_cnt; j++) {
-            ret = net_dfw_check_policy_pair(ctx,
+            ret = net_sfw_check_policy_pair(ctx,
                                             sep->sgs.arr_sg_id[i],
                                             dep->sgs.arr_sg_id[j],
                                             match_rslt);            if (ret == HAL_RET_OK) {
@@ -160,7 +161,7 @@ net_dfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
 // extract all the TCP related state from session spec
 //------------------------------------------------------------------------------
 static hal_ret_t
-net_dfw_extract_session_state_from_spec (fte::flow_state_t *flow_state,
+net_sfw_extract_session_state_from_spec (fte::flow_state_t *flow_state,
                                  const session::FlowData& flow_data)
 {
     auto conn_track_info = flow_data.conn_track_info();
@@ -181,7 +182,7 @@ net_dfw_extract_session_state_from_spec (fte::flow_state_t *flow_state,
 
 
 static inline bool
-net_dfw_conn_tracking_configured(fte::ctx_t &ctx)
+net_sfw_conn_tracking_configured(fte::ctx_t &ctx)
 {
 
     if (ctx.protobuf_request()) {
@@ -204,24 +205,24 @@ net_dfw_conn_tracking_configured(fte::ctx_t &ctx)
 }
 
 fte::pipeline_action_t
-dfw_exec(fte::ctx_t& ctx)
+sfw_exec(fte::ctx_t& ctx)
 {
-    hal_ret_t                      ret;
-    net_dfw_match_result_t    match_rslt;
-    firewall_info_t           *firewall_info = (firewall_info_t*)ctx.feature_state();
+    hal_ret_t               ret;
+    net_sfw_match_result_t  match_rslt;
+    sfw_info_t              *sfw_info = (sfw_info_t*)ctx.feature_state();
 
     // security policy action
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
 
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction
-    HAL_TRACE_DEBUG("Firewall lookup {}", (firewall_info->skip_firewall)?"skipped":"begin");
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !firewall_info->skip_firewall) {
-        ret = net_dfw_pol_check_sg_policy(ctx, &match_rslt);
+    HAL_TRACE_DEBUG("Firewall lookup {}", (sfw_info->skip_sfw)?"skipped":"begin");
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !sfw_info->skip_sfw) {
+        ret = net_sfw_pol_check_sg_policy(ctx, &match_rslt);
         if (ret == HAL_RET_OK) {
             if (match_rslt.valid) {
                 flowupd.action  = match_rslt.action;
-                firewall_info->alg_proto = match_rslt.alg;
+                sfw_info->alg_proto = match_rslt.alg;
                 //ctx.log         = match_rslt.log;
             } else {
                 // ToDo ret value was ok but match_rslt.valid is 0
@@ -245,7 +246,7 @@ dfw_exec(fte::ctx_t& ctx)
 
     //Todo(lseshan) Move connection tracking to different function
     // connection tracking
-    if (!net_dfw_conn_tracking_configured(ctx)) {
+    if (!net_sfw_conn_tracking_configured(ctx)) {
         return fte::PIPELINE_CONTINUE;
     }
 
@@ -254,7 +255,7 @@ dfw_exec(fte::ctx_t& ctx)
 
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
         if (ctx.protobuf_request()) {
-            net_dfw_extract_session_state_from_spec(&flowupd.flow_state,
+            net_sfw_extract_session_state_from_spec(&flowupd.flow_state,
                                             ctx.sess_spec()->initiator_flow().flow_data());
             flowupd.flow_state.syn_ack_delta = ctx.sess_spec()->iflow_syn_ack_delta();
         } else {
@@ -295,7 +296,7 @@ dfw_exec(fte::ctx_t& ctx)
         }
     } else { /* rflow */
         if (ctx.protobuf_request()) {
-            net_dfw_extract_session_state_from_spec(&flowupd.flow_state,
+            net_sfw_extract_session_state_from_spec(&flowupd.flow_state,
                                             ctx.sess_spec()->responder_flow().flow_data());
         } else {
             flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
@@ -313,5 +314,6 @@ dfw_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-} // namespace firewall
-} // namespace hal
+}  // namespace sfw
+}  // namespace plugins
+}  // namespace hal

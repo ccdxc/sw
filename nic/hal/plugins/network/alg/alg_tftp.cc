@@ -60,7 +60,7 @@ process_tftp_first_packet(fte::ctx_t& ctx)
         // Set Rflow to be invalid and ALG proto state
         // We want the flow miss to happen on Rflow
         ctx.set_valid_rflow(false);
-        alg_entry->skip_firewall = TRUE;
+        alg_entry->skip_sfw = TRUE;
         alg_entry->entry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
         alg_entry->entry.key.sport = 0;
         alg_entry->alg_proto_state = state;

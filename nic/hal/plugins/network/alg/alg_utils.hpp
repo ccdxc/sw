@@ -67,7 +67,7 @@ typedef struct alg_entry_s {
     expected_flow_t         entry;           /* Flow key and handler */
     hal::session_t         *session;         /* Back pointer to control session */
     alg_proto_state_t       alg_proto_state;
-    bool                    skip_firewall;
+    bool                    skip_sfw;
     union {   
         // ALG Protocol specific Information
         RPCInfo                 rpcinfo;

@@ -2,7 +2,7 @@
 #include "nic/hal/plugins/network/alg/alg_utils.hpp"
 #include "nic/hal/plugins/network/alg/msrpc_proto_def.hpp"
 #include "nic/p4/nw/include/defines.h"
-#include "nic/hal/plugins/firewall/firewall.hpp"
+#include "nic/hal/plugins/sfw/core.hpp"
 
 #define UUID_BYTES (sizeof(uuid_t))
 #define DREP_LENDIAN 0x10
@@ -571,7 +571,7 @@ parse_msrpc_dg_control_flow(fte::ctx_t& ctx)
                         alg_entry->entry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
                         alg_entry->entry.key.sport = 0;
                         alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
-                        alg_entry->skip_firewall = TRUE;
+                        alg_entry->skip_sfw = TRUE;
 
                         // Insert an entry for Iflow when the first fragment is seen in case 
                         // of fragmented packet. Insert an entry for Rflow in case of Last 
@@ -626,8 +626,8 @@ process_msrpc_control_flow(fte::ctx_t& ctx)
     hal_ret_t             ret = HAL_RET_OK;
     fte::alg_entry_t     *alg_entry = NULL;
     fte::flow_update_t    flowupd;
-    hal::firewall::firewall_info_t *firewall_info =
-        (hal::firewall::firewall_info_t*)ctx.feature_state(hal::firewall::FTE_FEATURE_FIREWALL);
+    hal::plugins::sfw::sfw_info_t *sfw_info =
+        (hal::plugins::sfw::sfw_info_t*)ctx.feature_state(hal::plugins::sfw::FTE_FEATURE_SFW);
 
     alg_entry = (fte::alg_entry_t *)ctx.alg_entry();
     if (alg_entry == NULL) {
@@ -635,7 +635,7 @@ process_msrpc_control_flow(fte::ctx_t& ctx)
         return HAL_RET_ERR;
     }
 
-    if (firewall_info->alg_proto == nwsec::APP_SVC_MSFT_RPC) {
+    if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
 
             alg_entry->alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_INIT;
