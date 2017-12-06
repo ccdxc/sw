@@ -10,6 +10,7 @@
 #include "nic/include/fte_db.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/include/app_redir_headers.hpp"
+#include "nic/include/app_redir_shared.h"
 
 namespace fte {
 
@@ -388,12 +389,13 @@ public:
         chain_flow_id_          = 0;
         chain_rev_role_         = hal::FLOW_ROLE_NONE;
         chain_ring_             = 0;
-        chain_qtype_            = hal::APP_REDIR_RAWC_QTYPE;
+        chain_qtype_            = APP_REDIR_RAWC_QTYPE;
         chain_wring_type_       = types::WRING_TYPE_APP_REDIR_RAWC;
         chain_pkt_verdict_      = APP_REDIR_VERDICT_PASS;
         pipeline_end_           = false;
         chain_pkt_enqueued_     = false;
         redir_policy_applic_    = false;
+        tcp_tls_proxy_flow_     = false;
         redir_miss_pkt_p_       = nullptr;
         proxy_flow_info_        = nullptr;
         arm_ctx_                = nullptr;
@@ -426,6 +428,9 @@ public:
 
     bool redir_policy_applic() const { return redir_policy_applic_; }
     void set_redir_policy_applic(bool yesno) { redir_policy_applic_ = yesno; }
+
+    bool tcp_tls_proxy_flow() const { return tcp_tls_proxy_flow_; }
+    void set_tcp_tls_proxy_flow(bool yesno) { tcp_tls_proxy_flow_ = yesno; }
 
     uint8_t chain_qtype() const { return chain_qtype_; }
     void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
@@ -460,7 +465,8 @@ private:
     types::WRingType                chain_wring_type_;
     bool                            chain_pkt_enqueued_ : 1,
                                     pipeline_end_       : 1,
-                                    redir_policy_applic_: 1;
+                                    redir_policy_applic_: 1,
+                                    tcp_tls_proxy_flow_ : 1;
     app_redir_verdict_t             chain_pkt_verdict_;
     pen_app_redir_header_v1_full_t  redir_miss_hdr_;
     uint8_t                         *redir_miss_pkt_p_;

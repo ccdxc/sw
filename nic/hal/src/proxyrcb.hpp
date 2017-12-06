@@ -43,10 +43,10 @@ typedef struct proxyrcb_s {
     uint16_t              pi;                       // if more PI/CI's are added, 
     uint16_t              ci;                       // be sure to adjust HAL_PROXYRCB_NUM_RINGS_MAX below
     uint16_t              proxyrcb_flags;
-
     uint8_t               my_txq_ring_size_shift;
     uint8_t               my_txq_entry_size_shift;
     uint32_t              my_txq_base;
+
     uint32_t              chain_rxq_base;           // next service chain RxQ base
     uint32_t              chain_rxq_ring_indices_addr;
     uint8_t               chain_rxq_ring_size_shift;

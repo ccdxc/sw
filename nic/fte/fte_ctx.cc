@@ -693,7 +693,8 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     app_redir().set_redir_policy_applic(cpu_rxhdr->lif==hal::SERVICE_LIF_APP_REDIR);
 
     if ((cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) ||
-        (cpu_rxhdr->lif == hal::SERVICE_LIF_APP_REDIR)) {
+        ((cpu_rxhdr->lif == hal::SERVICE_LIF_APP_REDIR) &&
+         (cpu_rxhdr->qtype != APP_REDIR_PROXYR_QTYPE))) {
         ret = init_flows(iflow, rflow);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);

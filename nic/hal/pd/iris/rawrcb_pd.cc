@@ -71,6 +71,29 @@ p4pd_get_rawr_rx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+p4pd_rawr_wring_eval(uint32_t qid,
+                     types::WRingType wring_type,
+                     wring_hw_id_t& wring_base,
+                     uint8_t& ring_size_shift,
+                     uint8_t& entry_size_shift)
+{
+    pd_wring_meta_t     *pd_wring_meta;
+    hal_ret_t           ret;
+
+    pd_wring_meta = wring_pd_get_meta(wring_type);
+    ret = wring_pd_get_base_addr(wring_type, qid, &wring_base);
+    if (!pd_wring_meta) {
+        ret = HAL_RET_WRING_NOT_FOUND;
+    }
+    if (ret == HAL_RET_OK) {
+        ring_size_shift  = log2(pd_wring_meta->num_slots);
+        entry_size_shift = log2(pd_wring_meta->slot_size_in_bytes);
+    }
+
+    return ret;
+}
+
 static hal_ret_t 
 p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
                                      bool del,
@@ -79,12 +102,13 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
     common_p4plus_stage0_app_header_table_d     data = {0};
     uint8_t                                     *data_p = (uint8_t *)&data;
     rawrcb_t                                    *rawrcb;
-    pd_wring_meta_t                             *pd_wring_meta;
     hal_ret_t                                   ret = HAL_RET_OK;
     uint64_t                                    pc_offset = 0;
     wring_hw_id_t                               arq_base;
     uint32_t                                    data_len = sizeof(data);
     rawrcb_hw_addr_t                            hw_addr = rawrcb_pd->hw_addr;
+    uint8_t                                     ring_size_shift;
+    uint8_t                                     entry_size_shift;
 
     /*
      * For a given flow, one of 2 types of redirection applies:
@@ -104,45 +128,41 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
         data.u.rawr_rx_start_d.chain_txq_qid = rawrcb->chain_txq_qid;
 
     } else {
-        if (rawrcb->chain_rxq_base) {
-            data.u.rawr_rx_start_d.chain_rxq_base = rawrcb->chain_rxq_base;
-            data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr = rawrcb->chain_rxq_ring_indices_addr;
-            data.u.rawr_rx_start_d.chain_rxq_ring_size_shift = rawrcb->chain_rxq_ring_size_shift;
-            data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = rawrcb->chain_rxq_entry_size_shift;
-            data.u.rawr_rx_start_d.chain_rxq_ring_index_select = rawrcb->chain_rxq_ring_index_select;
-        } else {
+        data.u.rawr_rx_start_d.chain_rxq_base = rawrcb->chain_rxq_base;
+        data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr = rawrcb->chain_rxq_ring_indices_addr;
+        data.u.rawr_rx_start_d.chain_rxq_ring_size_shift = rawrcb->chain_rxq_ring_size_shift;
+        data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = rawrcb->chain_rxq_entry_size_shift;
+        data.u.rawr_rx_start_d.chain_rxq_ring_index_select = rawrcb->chain_rxq_ring_index_select;
+        if (!rawrcb->chain_rxq_base) {
 
             /*
              * Provide reasonable defaults for above
              */
-            pd_wring_meta = wring_pd_get_meta(types::WRING_TYPE_ARQRX);
-            ret = wring_pd_get_base_addr(types::WRING_TYPE_ARQRX,
-                                         rawrcb->chain_rxq_ring_index_select,
-                                         &arq_base);
-            if((ret == HAL_RET_OK) && pd_wring_meta) {
-                HAL_TRACE_DEBUG("RAWRCB {} ring: {} arq_base: {:#x}", rawrcb->cb_id,
-                                rawrcb->chain_rxq_ring_index_select, arq_base);
-                data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
-                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr =
-                                       get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
-                data.u.rawr_rx_start_d.chain_rxq_ring_size_shift =
-                                       log2(pd_wring_meta->num_slots);
-                data.u.rawr_rx_start_d.chain_rxq_entry_size_shift =
-                                       log2(pd_wring_meta->slot_size_in_bytes);
-                data.u.rawr_rx_start_d.chain_rxq_ring_index_select = 0;
-                HAL_TRACE_DEBUG("RAWRCB chain_rxq_ring_indices_addr: {:#x} "
-                                "chain_rxq_ring_size_shift: {} "
-                                "chain_rxq_entry_size_shift: {} "
-                                "chain_rxq_ring_index_select: {}",
-                                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr,
-                                data.u.rawr_rx_start_d.chain_rxq_ring_size_shift,
-                                data.u.rawr_rx_start_d.chain_rxq_entry_size_shift,
-                                data.u.rawr_rx_start_d.chain_rxq_ring_index_select);
-            } else {
-                HAL_TRACE_ERR("Failed to receive ARQRX ring {} info for RAWRCB",
-                              rawrcb->chain_rxq_ring_index_select);
-                ret = HAL_RET_WRING_NOT_FOUND;
+            ret = p4pd_rawr_wring_eval(rawrcb->chain_rxq_ring_index_select,
+                                       types::WRING_TYPE_ARQRX,
+                                       arq_base, ring_size_shift, entry_size_shift);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("{} wring info not found for WRING_TYPE_ARQRX",
+                              __FUNCTION__);
+                goto done;
             }
+
+            data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
+            data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr =
+                                   get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
+            data.u.rawr_rx_start_d.chain_rxq_ring_size_shift  = ring_size_shift;
+            data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = entry_size_shift;
+
+            HAL_TRACE_DEBUG("RAWRCB {} ring: {} arq_base: {:#x}", rawrcb->cb_id,
+                            rawrcb->chain_rxq_ring_index_select, arq_base);
+            HAL_TRACE_DEBUG("RAWRCB chain_rxq_ring_indices_addr: {:#x} "
+                            "chain_rxq_ring_size_shift: {} "
+                            "chain_rxq_entry_size_shift: {} "
+                            "chain_rxq_ring_index_select: {}",
+                            data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr,
+                            data.u.rawr_rx_start_d.chain_rxq_ring_size_shift,
+                            data.u.rawr_rx_start_d.chain_rxq_entry_size_shift,
+                            data.u.rawr_rx_start_d.chain_rxq_ring_index_select);
         }
     }
 
@@ -163,6 +183,7 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
         if(p4pd_get_rawr_rx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to get pc address");
             ret = HAL_RET_HW_FAIL;
+            goto done;
         }
         pc_offset = (pc_offset >> 6);
         HAL_TRACE_DEBUG("RAWRCB programming action-id: {:#x}", pc_offset);
@@ -190,6 +211,8 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for RAWRCB");
         ret = HAL_RET_HW_FAIL;
     }
+
+done:
     return ret;
 }
 

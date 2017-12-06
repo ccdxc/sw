@@ -19,6 +19,17 @@
 #endif
 
 /*
+ * App redirect queue types
+ */
+#define APP_REDIR_RAWR_QTYPE                0   /* raw redirect */
+#define APP_REDIR_RAWC_QTYPE                1   /* raw chain */
+#define APP_REDIR_PROXYR_QTYPE              2   /* TCP/TLS proxy redirect */
+#define APP_REDIR_PROXYC_QTYPE              3   /* TCP/TLS proxy chain */
+#define APP_REDIR_NUM_QTYPES_MAX            4
+
+
+/*
+>>>>>>> origin/proxy_redir_integ
  * Control Block sizes
  */
 #define RAWRCB_TABLE_ENTRY_SIZE             64
@@ -50,9 +61,50 @@
  */
 #define RAWRCB_NUM_ENTRIES_MAX              1024
 #define RAWCCB_NUM_ENTRIES_MAX              1024
+#define RAWRCB_NUM_ENTRIES_MASK             (RAWRCB_NUM_ENTRIES_MAX - 1)
+#define RAWCCB_NUM_ENTRIES_MASK             (RAWCCB_NUM_ENTRIES_MAX - 1)
+
+/*
+ * Number of proxy CBs must be >= number of supported TCP/TLS proxy control blocks
+ */
 #define PROXYRCB_NUM_ENTRIES_MAX            1024
 #define PROXYCCB_NUM_ENTRIES_MAX            1024
+#define PROXYRCB_NUM_ENTRIES_MASK           (PROXYRCB_NUM_ENTRIES_MAX - 1)
+#define PROXYCCB_NUM_ENTRIES_MASK           (PROXYCCB_NUM_ENTRIES_MAX - 1)
  
+/*
+ * A proxy CB ID is always an hflow TCP connection ID and is the same
+ * for both initiator and responder directions. Each direction requires
+ * a separate CB which is programmed with its own state info. Hence, the
+ * number of CBs needed is effectively doubled for proxy flows.
+ */
+#define PROXYRCB_NUM_ENTRIES_MAX_MULT       2
+#define PROXYCCB_NUM_ENTRIES_MAX_MULT       2
+
+#define PROXYR_OPER_CB_OFFSET(dir)          \
+    (((dir) & 1) * PROXYRCB_NUM_ENTRIES_MAX)
+
+#define PROXYR_OPER_CB_ID(dir, cb_id)       \
+    (PROXYR_OPER_CB_OFFSET(dir) + (cb_id))
+ 
+#define PROXYC_OPER_CB_OFFSET(dir)          \
+    (((dir) & 1) * PROXYCCB_NUM_ENTRIES_MAX)
+
+#define PROXYC_OPER_CB_ID(dir, cb_id)       \
+    (PROXYC_OPER_CB_OFFSET(dir) + (cb_id))
+
+/*
+ * Proxy direction should be runtime evaluated but for simplification,
+ * TCP and TLS are assigned the below values. These work as long as
+ * TCP/TLS proxy flows are network-to-host or host-to-network
+ * (i.e., not host-to-host or network-to-network).
+ */
+#define PROXYR_TCP_PROXY_DIR                0
+#define PROXYR_TLS_PROXY_DIR                1
+#define PROXYC_TCP_PROXY_DIR                PROXYR_TCP_PROXY_DIR
+#define PROXYC_TLS_PROXY_DIR                PROXYR_TLS_PROXY_DIR
+
+
 /*
  * Control Block activate/deactivate 8-bit indicators
  */

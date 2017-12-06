@@ -151,11 +151,6 @@ header_type proxyrcb_flow_key_t {
         /*
          * NOTE: cb is programmed by HAL and would work best when
          * fields are aligned on whole byte boundary.
-         *
-         * The following static flow key fields (from vrf to ip_proto)
-         * must be sized and ordered exactly as defined in the structure
-         * pen_proxy_redir_header_v1_t in 
-         * asm/app-redir-p4+/common/include/app_redir_headers.h
          */
         vrf                             : 16;
         ip_sa                           : 128;
@@ -269,6 +264,7 @@ header_type to_stage_1_phv_t {
         my_txq_qid                      : 24;
         my_txq_lif                      : 11;
         my_txq_qtype                    : 3;
+        my_txq_ring                     : 1;
     }
 }
 
@@ -485,6 +481,7 @@ action consume(desc) {
     modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
     modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
     modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
+    modify_field(to_s1_scratch.my_txq_ring, to_s1.my_txq_ring);
     
     // from ki global
     GENERATE_GLOBAL_K
@@ -510,6 +507,7 @@ action flow_key_post_read(ip_sa, ip_da, sport, dport,
     modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
     modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
     modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
+    modify_field(to_s1_scratch.my_txq_ring, to_s1.my_txq_ring);
 
     // from ki global
     GENERATE_GLOBAL_K

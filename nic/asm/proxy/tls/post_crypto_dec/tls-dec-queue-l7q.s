@@ -6,6 +6,7 @@
 #include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "../../../app-redir-p4+/common/include/app_redir_shared.h"
         
 struct tx_table_s5_t1_k     k;
 struct phv_                 p;
@@ -58,10 +59,10 @@ dma_cmd_l7q_slot:
     nop
 
 tls_l7q_produce:
-    add         r7, k.to_s5_other_fid, r0
+    add         r7, k.to_s5_other_fid, PROXYR_OPER_CB_OFFSET(PROXYR_TLS_PROXY_DIR)
     CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd5_dma_cmd,
                                 LIF_APP_REDIR, 
-                                0, 
+                                APP_REDIR_PROXYR_QTYPE, 
                                 r7, 
                                 0,
                                 d.{u.tls_queue_l7q_d.sw_l7q_pi}.hx,

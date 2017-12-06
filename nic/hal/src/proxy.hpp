@@ -61,14 +61,6 @@ inline uint16_t parse_service_lif(const char *s)
     return _map[s];
 }
 
-enum {
-    APP_REDIR_RAWR_QTYPE = 0,       // raw redirect
-    APP_REDIR_RAWC_QTYPE,           // raw chain
-    APP_REDIR_PROXYR_QTYPE,         // TCP/TLS proxy redirect
-    APP_REDIR_PROXYC_QTYPE,         // TCP/TLS proxy chain
-    APP_REDIR_NUM_QTYPES_MAX
-};
-
 typedef uint32_t lif_id_t;
 typedef uint8_t  qtype_t;
 typedef uint32_t  qid_t;
