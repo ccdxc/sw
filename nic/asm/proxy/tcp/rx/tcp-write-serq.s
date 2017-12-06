@@ -91,7 +91,8 @@ dma_cmd_serq_slot:
     // increment serq pi as a part of ringing dorrbell
 
     phvwr       p.ring_entry_descr_addr, k.to_s5_descr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1, ring_entry_descr_addr, ring_entry_descr_addr)
+    /* The new SERQ defintion includes the descriptor pointer followed by the first AOL */
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1, ring_entry_descr_addr, aol_L0)
     addi        r7, r7, 1
 dma_cmd_write_rx2tx_shared:
     /* Set the DMA_WRITE CMD for copying rx2tx shared data from phv to mem */

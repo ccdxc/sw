@@ -614,13 +614,14 @@ header_type rx2tx_extra_pad_t {
 @pragma dont_trim
 metadata rx2tx_extra_pad_t rx2tx_extra_pad;
 @pragma dont_trim
-metadata ring_entry_t ring_entry; 
-@pragma dont_trim
 metadata ring_entry_t l7_ring_entry; 
 @pragma dont_trim
 metadata doorbell_data_t db_data;
 @pragma dont_trim
 metadata doorbell_data_t db_data2;
+/* ring_entry and aol needs to be contiguous in PHV */
+@pragma dont_trim
+metadata ring_entry_t ring_entry; 
 @pragma dont_trim
 metadata pkt_descr_aol_t aol;
 

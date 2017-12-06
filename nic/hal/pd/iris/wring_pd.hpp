@@ -16,6 +16,8 @@ namespace pd {
 #define HAL_MAX_HW_WRING                        2048
 #define DEFAULT_WRING_SLOT_SIZE                 8 
 
+#define SERQ_WRING_SLOT_SIZE                    (32)
+
 typedef uint32_t    wring_hw_id_t;
 
 // wring pd state

@@ -78,7 +78,7 @@
         },
         {
             "name": "serq",
-            "size_kb": 16384
+            "size_kb": 65536
         },
         {
             "name": "bsq",
