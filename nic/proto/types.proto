@@ -109,6 +109,10 @@ enum ApiStatus {
   API_STATUS_PORT_NOT_FOUND               = 73;    // port not found
   API_STATUS_MC_ENTRY_ID_INVALID          = 74;    // invalid mc_entry id
   API_STATUS_MC_ENTRY_NOT_FOUND           = 75;    // mc_entry not found
+  API_STATUS_PROXYR_CB_ID_INVALID         = 76;    // invalid Proxy Redirect CB id
+  API_STATUS_PROXYR_CB_NOT_FOUND          = 77;    // invalid Proxy Redirect CB
+  API_STATUS_PROXYC_CB_ID_INVALID         = 78;    // invalid Proxy Chain CB id
+  API_STATUS_PROXYC_CB_NOT_FOUND          = 79;    // invalid Proxy Chain CB
 }
 
 // common meta object that is part of all other top level objects

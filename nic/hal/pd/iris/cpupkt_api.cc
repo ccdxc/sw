@@ -105,23 +105,36 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
                      descr.a1, descr.o1, descr.l1);
     HAL_TRACE_DEBUG("Descriptor2: a: {:#x}, o: {}, l: {}", 
                      descr.a2, descr.o2, descr.l2);
-    
-    if(descr.l0 > 9216) {
+
+    /*
+     * App redirect proxied packets (from TCP/TLS) may use more than one
+     * page (currently up to 2) to hold meta headers and payload.
+     */
+    if((descr.l0 > JUMBO_FRAME_SIZE) || (descr.l1 > JUMBO_FRAME_SIZE)) {
         HAL_TRACE_DEBUG("corrupted packet");
         return HAL_RET_HW_FAIL;
     }
-    uint8_t* buffer = (uint8_t* ) malloc(descr.l0);
+    uint8_t* buffer = (uint8_t* ) malloc(descr.l0 + descr.l1);
 
     uint64_t pktaddr = descr.a0 + descr.o0;
 
     if(!p4plus_hbm_read(pktaddr, buffer, descr.l0)) {
         HAL_TRACE_ERR("Failed to read hbm page");
+        free(buffer);
         return HAL_RET_HW_FAIL;
+    }
+    if(descr.l1) {
+        uint64_t pktaddr = descr.a1 + descr.o1;
+        if (!p4plus_hbm_read(pktaddr, buffer + descr.l0, descr.l1)) {
+            HAL_TRACE_ERR("Failed to read hbm page 1");
+            free(buffer);
+            return HAL_RET_HW_FAIL;
+        }
     }
 
     *flow_miss_hdr = (p4_to_p4plus_cpu_pkt_t*)buffer;
     *data = buffer + sizeof(p4_to_p4plus_cpu_pkt_t);
-    *data_len = descr.l0 - sizeof(p4_to_p4plus_cpu_pkt_t);
+    *data_len = (descr.l0 + descr.l1) - sizeof(p4_to_p4plus_cpu_pkt_t);
     return HAL_RET_OK;
 }
 

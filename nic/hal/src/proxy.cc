@@ -7,10 +7,14 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/app_redir_shared.h"
 #include "nic/hal/src/lif_manager.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/cpucb.hpp"
 #include "nic/hal/src/rawrcb.hpp"
+#include "nic/hal/src/rawccb.hpp"
+#include "nic/hal/src/proxyrcb.hpp"
+#include "nic/hal/src/proxyccb.hpp"
 #include "nic/hal/src/p4pt.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
@@ -52,8 +56,10 @@ proxy_meta_init() {
 
     g_meta[types::PROXY_TYPE_APP_REDIR] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX,
-            {{APP_REDIR_RAWR_QTYPE, 2, 10}, {APP_REDIR_RAWC_QTYPE, 2, 10},
-             {APP_REDIR_PROXYR_QTYPE, 2, 10}, {APP_REDIR_PROXYC_QTYPE, 2, 10}}}};
+            {{APP_REDIR_RAWR_QTYPE, RAWRCB_TABLE_ENTRY_MULTIPLE, (uint8_t)log2(RAWRCB_NUM_ENTRIES_MAX)},
+             {APP_REDIR_RAWC_QTYPE, RAWCCB_TABLE_ENTRY_MULTIPLE, (uint8_t)log2(RAWCCB_NUM_ENTRIES_MAX)},
+             {APP_REDIR_PROXYR_QTYPE, PROXYRCB_TABLE_ENTRY_MULTIPLE, (uint8_t)log2(PROXYRCB_NUM_ENTRIES_MAX)},
+             {APP_REDIR_PROXYC_QTYPE, PROXYCCB_TABLE_ENTRY_MULTIPLE, (uint8_t)log2(PROXYCCB_NUM_ENTRIES_MAX)}}}};
 
     // 128 bytes of P4PT state per connection (e.g. dir) and a total of 2^12 connections
     g_meta[types::PROXY_TYPE_P4PT] =

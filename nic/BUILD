@@ -251,6 +251,8 @@ cc_library(
             "gen/gc_txdma/include/gc_txdma_p4plus_ingress.h",
             "gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h",
             "gen/rawc_txdma/include/rawc_txdma_p4plus_ingress.h",
+            "gen/proxyr_txdma/include/proxyr_txdma_p4plus_ingress.h",
+            "gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h",
             "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",
             "gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h",
             ],

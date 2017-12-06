@@ -34,6 +34,8 @@ typedef struct pd_l4lb_s pd_l4lb_t;
 typedef struct pd_cpucb_s pd_cpucb_t;
 typedef struct pd_rawrcb_s pd_rawrcb_t;
 typedef struct pd_rawccb_s pd_rawccb_t;
+typedef struct pd_proxyrcb_s pd_proxyrcb_t;
+typedef struct pd_proxyccb_s pd_proxyccb_t;
 typedef struct pd_mc_entry_s pd_mc_entry_t;
 
 }    // namespace pd

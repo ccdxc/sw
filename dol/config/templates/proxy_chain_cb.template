@@ -1,0 +1,31 @@
+# PROXYC CB Object Template File.
+meta:
+    id: PROXYCCB
+    grpc:
+        package                       : proxyccb
+        service                       : ProxycCb
+        apis:
+            create:
+                name                  : ProxycCbCreate
+                message               : ProxycCbRequestMsg
+            get:
+                name                  : ProxycCbGet
+                message               : ProxycCbGetRequestMsg
+
+id                              : 0 # PROXYC CB Local ID
+spec                            : None # (REF) PROXYC CB Spec from Base Config.
+pi                              : 0
+ci                              : 0
+proxyccb_flags                  : 0
+my_txq_base                     : 0
+my_txq_ring_size_shift          : 0
+my_txq_entry_size_shift         : 0
+chain_txq_base                  : 0
+chain_txq_ring_indices_addr     : 0
+chain_txq_ring_size_shift       : 0
+chain_txq_entry_size_shift      : 0
+chain_txq_lif                   : 0
+chain_txq_qtype                 : 0
+chain_txq_qid                   : 0
+chain_txq_ring                  : 0
+

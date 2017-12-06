@@ -36,10 +36,11 @@ typedef struct rawrcb_s {
 
     /*
      * Note that ordering of fields below does not matter;
-     * data will get written to HBM according to P4+ table entry
+     * data will get written to HBM according to P4+ table entry's
      * ordering defined in rawr_rxdma_p4plus_ingress.h
      * see hal/pd/iris/rawrcb_pd.cc)
      */
+    uint16_t              rawrcb_flags;
     uint32_t              chain_rxq_base;           // next service chain RxQ base
     uint32_t              chain_rxq_ring_indices_addr;
     uint8_t               chain_rxq_ring_size_shift;
@@ -54,11 +55,6 @@ typedef struct rawrcb_s {
     uint8_t               chain_txq_ring_size_shift;
     uint8_t               chain_txq_entry_size_shift;
     uint8_t               chain_txq_ring_index_select;
-    uint8_t               chain_txq_doorbell_no_sched;
-
-    uint8_t               desc_valid_bit_upd;       // descriptor valid bit update
-    uint8_t               desc_valid_bit_req;       // descriptor valid bit required
-    uint8_t               redir_pipeline_lpbk_enable; // redir pipeline loopback indicator
 
     hal_handle_t          hal_handle;               // HAL allocated handle
 
@@ -69,8 +65,12 @@ typedef struct rawrcb_s {
     ht_ctxt_t             hal_handle_ht_ctxt;       // hal handle based hash table ctxt
 } __PACK__ rawrcb_t;
 
-// max. number of RAWR CBs supported  (TODO: we can take this from cfg file)
-#define HAL_MAX_RAWRCB                           2048
+#define HAL_MAX_RAWRCB_HT_SIZE          1024        // hash table size
+
+/*
+ * Number of PI/CI pairs defined in rawrcb_t above
+ */
+#define HAL_NUM_RAWRCB_RINGS_MAX        0
 
 // allocate a RAWRCB instance
 static inline rawrcb_t *
@@ -96,7 +96,6 @@ rawrcb_init (rawrcb_t *rawrcb)
 
     // initialize the operational state
     rawrcb->pd = NULL;
-    rawrcb->desc_valid_bit_req = TRUE;
 
     // initialize meta information
     rawrcb->ht_ctxt.reset();

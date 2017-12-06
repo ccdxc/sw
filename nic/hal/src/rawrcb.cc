@@ -3,9 +3,9 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/rawrcb.hpp"
-// #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/app_redir_shared.h"
 
 namespace hal {
 void *
@@ -73,6 +73,10 @@ validate_rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_RAWR_CB_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
+    if (spec.key_or_handle().rawrcb_id() >= RAWRCB_NUM_ENTRIES_MAX) {
+        rsp->set_api_status(types::API_STATUS_RAWR_CB_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
     return HAL_RET_OK;
 }
 
@@ -97,20 +101,25 @@ hal_ret_t
 rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    rawrcb_t                *rawrcb;
+    rawrcb_t                *rawrcb = NULL;
     pd::pd_rawrcb_args_t    pd_rawrcb_args;
 
     // validate the request message
     ret = validate_rawrcb_create(spec, rsp);
+    if (ret != HAL_RET_OK) {
+        goto cleanup;
+    }
     
     // instantiate RAWR CB
     rawrcb = rawrcb_alloc_init();
     if (rawrcb == NULL) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-        return HAL_RET_OOM;
+        ret = HAL_RET_OOM;
+        goto cleanup;
     }
 
     rawrcb->cb_id = spec.key_or_handle().rawrcb_id();
+    rawrcb->rawrcb_flags = spec.rawrcb_flags(); 
     rawrcb->chain_rxq_base = spec.chain_rxq_base(); 
     rawrcb->chain_rxq_ring_indices_addr = spec.chain_rxq_ring_indices_addr(); 
     rawrcb->chain_rxq_ring_size_shift = spec.chain_rxq_ring_size_shift();
@@ -125,11 +134,6 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
     rawrcb->chain_txq_lif = spec.chain_txq_lif();
     rawrcb->chain_txq_qtype = spec.chain_txq_qtype();
     rawrcb->chain_txq_qid = spec.chain_txq_qid();
-    rawrcb->chain_txq_doorbell_no_sched = spec.chain_txq_doorbell_no_sched();
-
-    rawrcb->desc_valid_bit_upd = spec.desc_valid_bit_upd();
-    rawrcb->desc_valid_bit_req = spec.desc_valid_bit_req();
-    rawrcb->redir_pipeline_lpbk_enable = spec.redir_pipeline_lpbk_enable();
 
     rawrcb->hal_handle = hal_alloc_handle();
 
@@ -154,7 +158,9 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
 
 cleanup:
 
-    rawrcb_free(rawrcb);
+    if (rawrcb) {
+        rawrcb_free(rawrcb);
+    }
     return ret;
 }
 
@@ -176,6 +182,7 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
         return HAL_RET_RAWR_CB_NOT_FOUND;
     }
     
+    rawrcb->rawrcb_flags = spec.rawrcb_flags(); 
     rawrcb->chain_rxq_base = spec.chain_rxq_base(); 
     rawrcb->chain_rxq_ring_indices_addr = spec.chain_rxq_ring_indices_addr(); 
     rawrcb->chain_rxq_ring_size_shift = spec.chain_rxq_ring_size_shift();
@@ -190,11 +197,7 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
     rawrcb->chain_txq_lif = spec.chain_txq_lif();
     rawrcb->chain_txq_qtype = spec.chain_txq_qtype();
     rawrcb->chain_txq_qid = spec.chain_txq_qid();
-    rawrcb->chain_txq_doorbell_no_sched = spec.chain_txq_doorbell_no_sched();
 
-    rawrcb->desc_valid_bit_upd = spec.desc_valid_bit_upd();
-    rawrcb->desc_valid_bit_req = spec.desc_valid_bit_req();
-    rawrcb->redir_pipeline_lpbk_enable = spec.redir_pipeline_lpbk_enable();
 
     pd::pd_rawrcb_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = rawrcb;
@@ -246,6 +249,7 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
     // fill config spec of this RAWR CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_rawrcb_id(rrawrcb.cb_id);
     
+    rsp->mutable_spec()->set_rawrcb_flags(rrawrcb.rawrcb_flags);
     rsp->mutable_spec()->set_chain_rxq_base(rrawrcb.chain_rxq_base);
     rsp->mutable_spec()->set_chain_rxq_ring_indices_addr(rrawrcb.chain_rxq_ring_indices_addr);
     rsp->mutable_spec()->set_chain_rxq_ring_size_shift(rrawrcb.chain_rxq_ring_size_shift);
@@ -260,11 +264,6 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_txq_lif(rrawrcb.chain_txq_lif);
     rsp->mutable_spec()->set_chain_txq_qtype(rrawrcb.chain_txq_qtype);
     rsp->mutable_spec()->set_chain_txq_qid(rrawrcb.chain_txq_qid);
-    rsp->mutable_spec()->set_chain_txq_doorbell_no_sched(rrawrcb.chain_txq_doorbell_no_sched);
-
-    rsp->mutable_spec()->set_desc_valid_bit_upd(rrawrcb.desc_valid_bit_upd);
-    rsp->mutable_spec()->set_desc_valid_bit_req(rrawrcb.desc_valid_bit_req);
-    rsp->mutable_spec()->set_redir_pipeline_lpbk_enable(rrawrcb.redir_pipeline_lpbk_enable);
 
     // fill operational state of this RAWR CB
     rsp->mutable_status()->set_rawrcb_handle(rawrcb->hal_handle);

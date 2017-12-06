@@ -44,6 +44,7 @@ class RawcCbObject(base.ConfigObjectBase):
         #req_spec.meta.rawccb_id             = self.id
         req_spec.key_or_handle.rawccb_id    = self.id
         if req_spec.__class__.__name__ != 'RawcCbGetRequest':
+           req_spec.rawccb_flags                 = self.rawccb_flags
            req_spec.my_txq_base                  = self.my_txq_base
            req_spec.my_txq_ring_size_shift       = self.my_txq_ring_size_shift
            req_spec.my_txq_entry_size_shift      = self.my_txq_entry_size_shift
@@ -64,6 +65,7 @@ class RawcCbObject(base.ConfigObjectBase):
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'RawcCbResponse':
+            self.rawccb_flags                 = resp_spec.spec.rawccb_flags
             self.my_txq_base                  = resp_spec.spec.my_txq_base
             self.my_txq_ring_size_shift       = resp_spec.spec.my_txq_ring_size_shift
             self.my_txq_entry_size_shift      = resp_spec.spec.my_txq_entry_size_shift

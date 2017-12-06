@@ -8,6 +8,7 @@ from config.objects.raw_chain_cb        import RawcCbHelper
 import test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
+import test.app_redir.app_redir_shared as app_redir_shared
 
 
 def Setup(infra, module):
@@ -30,7 +31,7 @@ def TestCaseSetup(tc):
     rawrcb = tc.infra_data.ConfigStore.objects.db[rawrcbid]
     # let HAL fill in defaults for chain_rxq_base, etc.
     rawrcb.chain_rxq_base = 0
-    rawrcb.redir_pipeline_lpbk_enable = 1
+    rawrcb.rawrcb_flags = app_redir_shared.app_redir_dol_pipeline_loopbk_en
     rawrcb.SetObjValPd()
 
     RawcCbHelper.main(id)

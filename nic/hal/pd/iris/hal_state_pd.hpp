@@ -184,6 +184,14 @@ public:
     slab *rawccb_slab(void) const { return rawccb_slab_; }
     ht *rawccb_hwid_ht(void) const { return rawccb_hwid_ht_; }
 
+    // get APIs for Proxy Redirect CB related state
+    slab *proxyrcb_slab(void) const { return proxyrcb_slab_; }
+    ht *proxyrcb_hwid_ht(void) const { return proxyrcb_hwid_ht_; }
+
+    // get APIs for Proxy Chain CB related state
+    slab *proxyccb_slab(void) const { return proxyccb_slab_; }
+    ht *proxyccb_hwid_ht(void) const { return proxyccb_hwid_ht_; }
+
     // get APIs for RW table related state
     slab *rw_entry_slab(void) const { return rw_entry_slab_; }
     ht *rw_table_ht(void) const { return rw_table_ht_; }
@@ -450,6 +458,12 @@ private:
         ht         *rawrcb_hwid_ht_;
     } __PACK__;
 
+    // Proxy Redirect CB related state
+    struct {
+        slab       *proxyrcb_slab_;
+        ht         *proxyrcb_hwid_ht_;
+    } __PACK__;
+
     // TXS scheduler related state
     struct {
         BMAllocator    *txs_scheduler_map_idxr_;
@@ -459,6 +473,12 @@ private:
     struct {
         slab       *rawccb_slab_;
         ht         *rawccb_hwid_ht_;
+    } __PACK__;
+
+    // Proxy Chain CB related state
+    struct {
+        slab       *proxyccb_slab_;
+        ht         *proxyccb_hwid_ht_;
     } __PACK__;
 
     // utils slabs

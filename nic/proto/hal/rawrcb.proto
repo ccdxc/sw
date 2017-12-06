@@ -28,23 +28,20 @@ message RawrCbKeyHandle {
 message RawrCbSpec {
   types.ObjectMeta      meta                       = 1;    // common object meta
   RawrCbKeyHandle       key_or_handle              = 2;    // rawrcb being created/updated
-  uint32                chain_rxq_base             = 3;    // next service chain RxQ base
-  uint32                chain_rxq_ring_indices_addr = 4;
-  uint32                chain_rxq_ring_size_shift  = 5;
-  uint32                chain_rxq_entry_size_shift = 6;
-  uint32                chain_rxq_ring_index_select= 7;
-  uint32                chain_txq_base             = 8;    // next service chain TxQ base
-  uint32                chain_txq_ring_indices_addr= 9;
-  uint32                chain_txq_ring_size_shift  = 10;
-  uint32                chain_txq_entry_size_shift = 11;
-  uint32                chain_txq_ring_index_select= 12;
-  uint32                chain_txq_lif              = 13;
-  uint32                chain_txq_qtype            = 14;
-  uint32                chain_txq_qid              = 15;
-  uint32                chain_txq_doorbell_no_sched= 16;
-  uint32                desc_valid_bit_upd         = 17;
-  uint32                desc_valid_bit_req         = 18;
-  uint32                redir_pipeline_lpbk_enable = 19;
+  uint32                rawrcb_flags               = 3;
+  uint32                chain_rxq_base             = 4;    // next service chain RxQ base
+  uint32                chain_rxq_ring_indices_addr= 5;
+  uint32                chain_rxq_ring_size_shift  = 6;
+  uint32                chain_rxq_entry_size_shift = 7;
+  uint32                chain_rxq_ring_index_select= 8;
+  uint32                chain_txq_base             = 9;    // next service chain TxQ base
+  uint32                chain_txq_ring_indices_addr= 10;
+  uint32                chain_txq_ring_size_shift  = 11;
+  uint32                chain_txq_entry_size_shift = 12;
+  uint32                chain_txq_ring_index_select= 13;
+  uint32                chain_txq_lif              = 14;
+  uint32                chain_txq_qtype            = 15;
+  uint32                chain_txq_qid              = 16;
 }
 
 // RawrCbRequestMsg is batched add or modify rawrcb request
