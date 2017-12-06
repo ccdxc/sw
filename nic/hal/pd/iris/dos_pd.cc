@@ -608,7 +608,7 @@ dos_pd_program_ddos_src_dst_table (dos_policy_t *dosp,
                               pnw->nw_key.ip_pfx.len,
                               dosp_prop->service.is_icmp,
                               dport, dosp_prop->service.ip_proto,
-                              ten_pd->ten_hw_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
+                              ten_pd->vrf_hw_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
                               base_pol_idx, P4TBL_ID_DDOS_SRC_DST,
                               &tcam_idx);
                 HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
@@ -699,7 +699,7 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
         ret = dos_pd_program_ddos_service_tcam(&pi_ip_ent->ip_addr,
                 dosp->ingress.service.is_icmp,
                 dport, dosp->ingress.service.ip_proto,
-                ten_pd->ten_hw_id, DDOS_SERVICE_DDOS_SERVICE_HIT_ID,
+                ten_pd->vrf_hw_id, DDOS_SERVICE_DDOS_SERVICE_HIT_ID,
                 base_pol_idx, P4TBL_ID_DDOS_SERVICE, &tcam_idx);
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     }

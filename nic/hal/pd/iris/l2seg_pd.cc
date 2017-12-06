@@ -12,38 +12,53 @@ namespace pd {
 
 #define inp_prop data.input_properties_action_u.input_properties_input_properties
 void *
-l2seg_pd_hwid_get_hw_key_func(void *entry)
+flow_lkupid_get_hw_key_func(void *entry)
 {
-    hal_handle_id_ht_entry_t    *ht_entry;
-    l2seg_t                     *l2seg = NULL;
-    pd_l2seg_t                  *l2seg_pd = NULL;
+    hal_handle_id_ht_entry_t *ht_entry = NULL;
+    l2seg_t                  *l2seg    = NULL;
+    pd_l2seg_t               *l2seg_pd = NULL;
+    vrf_t                    *vrf      = NULL;
+    pd_vrf_t                 *vrf_pd   = NULL;
 
     HAL_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
     }
-    l2seg = (l2seg_t *)hal_handle_get_obj(ht_entry->handle_id);
-    l2seg_pd = (pd_l2seg_t *)l2seg->pd;
-    return (void *)&(l2seg_pd->l2seg_ten_hw_id);
+    if (hal_handle_get_from_handle_id(ht_entry->handle_id)->obj_id() == 
+                                      HAL_OBJ_ID_L2SEG) {
+        l2seg = (l2seg_t *)hal_handle_get_obj(ht_entry->handle_id);
+        l2seg_pd = (pd_l2seg_t *)l2seg->pd;
+        return (void *)&(l2seg_pd->l2seg_fl_lkup_id);
+    } else if (hal_handle_get_from_handle_id(ht_entry->handle_id)->obj_id() ==
+                                             HAL_OBJ_ID_VRF){
+        vrf = (vrf_t *)hal_handle_get_obj(ht_entry->handle_id);
+        vrf_pd = (pd_vrf_t *)vrf->pd;
+        return (void *)&(vrf_pd->vrf_fl_lkup_id);
+    } else {
+        // TODO: Remove assert eventually
+        HAL_ASSERT(0);
+        return NULL;
+    }
 }
 
 uint32_t
-l2seg_pd_hwid_compute_hw_hash_func (void *key, uint32_t ht_size)
+flow_lkupid_compute_hw_hash_func(void *key, uint32_t ht_size)
 {
-    return hal::utils::hash_algo::fnv_hash(key, sizeof(l2seg_hw_id_t)) % ht_size;
+    return hal::utils::hash_algo::fnv_hash(key, sizeof(uint32_t)) % ht_size;
 }
 
 bool
-l2seg_pd_hwid_compare_hw_key_func (void *key1, void *key2)
+flow_lkupid_compare_hw_key_func(void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(l2seg_hw_id_t *)key1 == *(l2seg_hw_id_t *)key2) {
+    if (*(uint32_t *)key1 == *(uint32_t *)key2) {
         return true;
     }
     return false;
 }
 
+// Deprecated: Remove it once FTE uses new API
 l2seg_t *
 find_l2seg_by_hwid (l2seg_hw_id_t hwid)
 {
@@ -51,6 +66,45 @@ find_l2seg_by_hwid (l2seg_hw_id_t hwid)
     return l2seg_pd ? (l2seg_t*) l2seg_pd->l2seg : NULL;
 }
  
+//-----------------------------------------------------------------------------
+// Get the PI vrf or l2seg given the flow lookup id
+//-----------------------------------------------------------------------------
+hal_ret_t pd_get_object_from_flow_lkupid(uint32_t flow_lkupid, 
+                                         hal_obj_id_t *obj_id,
+                                         void **pi_obj)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    hal_handle_id_ht_entry_t    *entry;
+
+    *obj_id = HAL_OBJ_ID_NONE;
+    *pi_obj = NULL;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->
+        flow_lkupid_ht()->lookup(&flow_lkupid);
+    if (entry == NULL) {
+        HAL_TRACE_ERR("{}:unable to find vrf/l2seg for flow_lkupid:{}",
+                      __FUNCTION__, flow_lkupid);
+        ret = HAL_RET_FLOW_LKUP_ID_NOT_FOUND;
+        goto end;
+    }
+    if (hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                                      HAL_OBJ_ID_L2SEG) {
+        *obj_id = HAL_OBJ_ID_L2SEG;
+        *pi_obj = hal_handle_get_obj(entry->handle_id);
+    } else if (hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+                                             HAL_OBJ_ID_VRF){
+        *obj_id = HAL_OBJ_ID_VRF;
+        *pi_obj = hal_handle_get_obj(entry->handle_id);
+    } else {
+        // TODO: Remove assert eventually
+        HAL_ASSERT(0);
+        ret = HAL_RET_ERR;
+        goto end;
+    }
+
+end:
+    return ret;
+}
 
 //------------------------------------------------------------------------------
 // insert a l2segment to HAL config db
@@ -62,7 +116,7 @@ l2seg_pd_add_to_db (pd_l2seg_t *pd_l2seg, hal_handle_t handle)
     hal_handle_id_ht_entry_t    *entry;
 
     HAL_TRACE_DEBUG("pd-l2seg:{}:adding to l2seg hwid hash table. hwid:{} => ",
-                    __FUNCTION__, pd_l2seg->l2seg_ten_hw_id);
+                    __FUNCTION__, pd_l2seg->l2seg_fl_lkup_id);
 
     // allocate an entry to establish mapping from l2seg hwid to its handle
     entry =
@@ -74,8 +128,8 @@ l2seg_pd_add_to_db (pd_l2seg_t *pd_l2seg, hal_handle_t handle)
 
     // add mapping from vrf id to its handle
     entry->handle_id = handle;
-    ret = g_hal_state_pd->l2seg_hwid_ht()->insert_with_key(&pd_l2seg->l2seg_ten_hw_id,
-                                                       entry, &entry->ht_ctxt);
+    ret = g_hal_state_pd->flow_lkupid_ht()->insert_with_key(&pd_l2seg->l2seg_fl_lkup_id,
+                                                            entry, &entry->ht_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-l2seg:{}:failed to add hw id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
@@ -95,8 +149,8 @@ l2seg_pd_del_from_db (pd_l2seg_t *pd_l2seg)
 
     HAL_TRACE_DEBUG("pd-l2seg:{}:removing from hwid hash table", __FUNCTION__);
     // remove from hash table
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->l2seg_hwid_ht()->
-        remove(&pd_l2seg->l2seg_ten_hw_id);
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->flow_lkupid_ht()->
+        remove(&pd_l2seg->l2seg_fl_lkup_id);
 
     if (entry) {
         // free up
@@ -292,7 +346,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
         inp_prop.dir       = FLOW_DIR_FROM_UPLINK;
     }
 
-    inp_prop.vrf              = l2seg_pd->l2seg_ten_hw_id;
+    inp_prop.vrf              = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.l4_profile_idx   = 0;
     inp_prop.ipsg_enable      = 0;
     inp_prop.src_lport        = 0;
@@ -457,12 +511,12 @@ l2seg_pd_alloc_hwid(pd_l2seg_t *pd_l2seg)
     if (ret != HAL_RET_OK) {
         goto end;
     }
-    pd_l2seg->l2seg_ten_hw_id = ten_pd->ten_hw_id << HAL_PD_VRF_SHIFT | 
+    pd_l2seg->l2seg_fl_lkup_id = ten_pd->vrf_hw_id << HAL_PD_VRF_SHIFT | 
                                 pd_l2seg->l2seg_hw_id; 
     HAL_TRACE_DEBUG("pd-l2seg:{}:l2seg_hwid: {},ten_hwid: {}, "
-            "l2seg_ten_hw_id: {} ", 
-            __FUNCTION__, pd_l2seg->l2seg_hw_id, ten_pd->ten_hw_id, 
-            pd_l2seg->l2seg_ten_hw_id);
+            "l2seg_fl_lkup_id: {} ", 
+            __FUNCTION__, pd_l2seg->l2seg_hw_id, ten_pd->vrf_hw_id, 
+            pd_l2seg->l2seg_fl_lkup_id);
 
 end:
     return ret;
@@ -628,9 +682,9 @@ end:
 // Returns the vrf hwid of the l2seg (used as lkp_vrf in flow key)
 //-----------------------------------------------------------------------------
 l2seg_hw_id_t
-pd_l2seg_get_ten_hwid(l2seg_t *l2seg)
+pd_l2seg_get_flow_lkupid(l2seg_t *l2seg)
 {
-    return ((pd_l2seg_t *)l2seg->pd)->l2seg_ten_hw_id;
+    return ((pd_l2seg_t *)l2seg->pd)->l2seg_fl_lkup_id;
 }
 
 //-----------------------------------------------------------------------------

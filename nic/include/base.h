@@ -188,7 +188,7 @@ do {                                                       \
     ENTRY(HAL_RET_IF_ENIC_TYPE_INVALID,       40, "enic type invalid")         \
     ENTRY(HAL_RET_IF_ENIC_INFO_INVALID,       41, "enic info invalid")         \
     ENTRY(HAL_RET_IF_INFO_INVALID,            42, "if info invalid")           \
-    ENTRY(HAL_RET_VRF_ID_INVALID,             43, "vrf id invalid")         \
+    ENTRY(HAL_RET_VRF_ID_INVALID,             43, "vrf id invalid")            \
     ENTRY(HAL_RET_NWSEC_ID_INVALID,           44, "nwsec id invalid")          \
     ENTRY(HAL_RET_INTERFACE_ID_INVALID,       45, "interface id invalid")      \
     ENTRY(HAL_RET_DOS_POLICY_ID_INVALID,      46, "dos policy id invalid")     \
@@ -206,9 +206,10 @@ do {                                                       \
     ENTRY(HAL_RET_PORT_NOT_FOUND,             58, "port not found ")           \
     ENTRY(HAL_RET_NW_HANDLE_NOT_FOUND,        59, "nw handle not found")       \
     ENTRY(HAL_RET_EP_HANDLE_NOT_FOUND,        60, "ep handle not found")       \
-    ENTRY(HAL_RET_EXISTING_PROXY_SESSION,     61, "Existing proxy session")       \
+    ENTRY(HAL_RET_EXISTING_PROXY_SESSION,     61, "Existing proxy session")    \
     ENTRY(HAL_RET_PROXYR_CB_NOT_FOUND,        62, "Proxy redirect CB not found")\
     ENTRY(HAL_RET_PROXYC_CB_NOT_FOUND,        63, "Proxy chain CB not found")  \
+    ENTRY(HAL_RET_FLOW_LKUP_ID_NOT_FOUND,     64, "flow lookup id not found")  \
                                                                                \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

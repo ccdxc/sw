@@ -305,12 +305,12 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     if (ms->vrf_match) {
         vrf = vrf_lookup_by_handle(ms->vrf_handle);
         key.flow_lkp_metadata_lkp_vrf = 
-            ((pd_vrf_t *)(vrf->pd))->ten_hw_id << ten_shift;
+            ((pd_vrf_t *)(vrf->pd))->vrf_hw_id << ten_shift;
         mask.flow_lkp_metadata_lkp_vrf_mask = ten_mask;
     } else if (ms->l2seg_match) {
         l2seg = find_l2seg_by_handle(ms->l2seg_handle);
         key.flow_lkp_metadata_lkp_vrf = 
-            ((pd_l2seg_t *)(l2seg->pd))->l2seg_ten_hw_id;
+            ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
         mask.flow_lkp_metadata_lkp_vrf_mask = ten_mask | l2seg_mask;
     }
 

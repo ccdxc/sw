@@ -83,7 +83,7 @@ public:
 
     // get APIs for L2 segment related state
     slab *l2seg_slab(void) const { return l2seg_slab_; }
-    ht *l2seg_hwid_ht(void) const { return l2seg_hwid_ht_; }
+    ht *flow_lkupid_ht(void) const { return flow_lkupid_ht_; }
     indexer *l2seg_cpu_idxr(void) const { return l2seg_cpu_idxr_; }
 
     // get APIs for mc entry related state
@@ -295,7 +295,7 @@ private:
     // l2seg related state
     struct {
         slab       *l2seg_slab_;
-        ht         *l2seg_hwid_ht_;
+        ht         *flow_lkupid_ht_;
         indexer    *l2seg_cpu_idxr_;
     } __PACK__;
 

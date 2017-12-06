@@ -411,7 +411,7 @@ l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
         rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg->hal_handle);
         // TODO: REMOVE DOL test only
         rsp->mutable_l2segment_status()->set_vrf_id(
-            hal::pd::pd_l2seg_get_ten_hwid(l2seg));
+            hal::pd::pd_l2seg_get_flow_lkupid(l2seg));
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));

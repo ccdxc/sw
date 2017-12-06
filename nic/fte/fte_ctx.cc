@@ -47,6 +47,7 @@ ctx_t::extract_flow_key()
     key_.dir = cpu_rxhdr_->lkp_dir;
 
     // Lookup l2seg using vrf id
+    // TODO: Bharat: Please start using pd_get_object_from_flow_lkupid
     hal::l2seg_t *l2seg =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
     if (l2seg == NULL) {
         HAL_TRACE_ERR("fte: l2seg not found, hwid={}", cpu_rxhdr_->lkp_vrf);
@@ -168,6 +169,7 @@ ctx_t::lookup_flow_objs()
             return HAL_RET_EP_NOT_FOUND;            
         }
         // lookup l2seg from cpuheader lkp_vrf
+        // TODO: Bharat: Please start using pd_get_object_from_flow_lkupid
         sl2seg_ =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
         HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         //sif_ = hal::find_if_by_hwid(cpu_rxhdr_->src_lif);
@@ -409,7 +411,7 @@ ctx_t::update_flow_table()
             iflow_attrs.lkp_inst = 1;
         }
 
-        iflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_ten_hwid(sl2seg_);
+        iflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(sl2seg_);
 
         // TODO(goli) fix tnnl_rw_idx lookup
         if (iflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_NOP_ID) {
@@ -461,7 +463,7 @@ ctx_t::update_flow_table()
             return HAL_RET_L2SEG_NOT_FOUND;
         }
 
-        rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_ten_hwid(dl2seg_);
+        rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(dl2seg_);
 
         // TODO(goli) fix tnnl w_idx lookup
         if (rflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_NOP_ID) {

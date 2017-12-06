@@ -21,7 +21,7 @@ struct pd_l2seg_s {
     // operational state of l2seg pd
     l2seg_hw_id_t       l2seg_hw_id;         // hw id for this segment
 
-    uint32_t            l2seg_ten_hw_id;     // used in data plane as vrf   
+    uint32_t            l2seg_fl_lkup_id;     // used in data plane as vrf   
     uint32_t            l2seg_fromcpu_id;    // traffic from CPU
 
     // meta data maintained for l2seg pd
@@ -61,7 +61,7 @@ l2seg_pd_init (pd_l2seg_t *l2seg_pd)
     l2seg_pd->l2seg = NULL;
 
     l2seg_pd->l2seg_hw_id      = INVALID_INDEXER_INDEX;
-    l2seg_pd->l2seg_ten_hw_id  = INVALID_INDEXER_INDEX;
+    l2seg_pd->l2seg_fl_lkup_id  = INVALID_INDEXER_INDEX;
     l2seg_pd->l2seg_fromcpu_id = INVALID_INDEXER_INDEX;
 
 
@@ -104,12 +104,13 @@ l2seg_pd_mem_free (pd_l2seg_t *l2seg_pd)
 static inline hal_ret_t
 add_l2seg_pd_to_db (pd_l2seg_t *l2seg_pd)
 {
-    g_hal_state_pd->l2seg_hwid_ht()->insert(l2seg_pd, &l2seg_pd->hw_ht_ctxt);
+    g_hal_state_pd->flow_lkupid_ht()->insert(l2seg_pd, &l2seg_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 #endif
 
 // find a l2seg pd instance given its hw id
+// Deprecated: Remove find_l2seg_by_hwid along with this function
 static inline pd_l2seg_t *
 find_l2seg_pd_by_hwid (l2seg_hw_id_t hwid)
 {
@@ -118,7 +119,7 @@ find_l2seg_pd_by_hwid (l2seg_hw_id_t hwid)
     pd_l2seg_t                  *l2seg_pd = NULL;
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->
-        l2seg_hwid_ht()->lookup(&hwid);
+        flow_lkupid_ht()->lookup(&hwid);
     if (entry) {
         l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
         l2seg_pd = (pd_l2seg_t *)l2seg->pd;
@@ -127,9 +128,9 @@ find_l2seg_pd_by_hwid (l2seg_hw_id_t hwid)
     return NULL;
 }
 
-extern void *l2seg_pd_hwid_get_hw_key_func(void *entry);
-extern uint32_t l2seg_pd_hwid_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool l2seg_pd_hwid_compare_hw_key_func(void *key1, void *key2);
+extern void *flow_lkupid_get_hw_key_func(void *entry);
+extern uint32_t flow_lkupid_compute_hw_hash_func(void *key, uint32_t ht_size);
+extern bool flow_lkupid_compare_hw_key_func(void *key1, void *key2);
 
 hal_ret_t l2seg_pd_alloc_res(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_alloc_cpuid(pd_l2seg_t *pd_l2seg);
