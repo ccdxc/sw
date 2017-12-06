@@ -24,6 +24,7 @@ import infra.common.parser  as parser
 import infra.common.utils  as utils
 from infra.common.logging import logger
 import infra.common.objects as objects
+import grpc_proxy
 
 objects.CallbackField.SetPackagePath("config_validator.cfg.callbacks")
 
@@ -62,6 +63,11 @@ logger.info("Building Config dependency information")
 config_mgr.BuildConfigDeps()
 
 config_mgr.SortConfigExternalDeps()
+
+# In the intermediate stage now, add just the pass-through server.
+# Will change this in the next commit TODO
+grpc_proxy.initClient()
+grpc_proxy.serve()
 
 test_specs = parser.ParseDirectory("config_validator/test/specs", "*.spec")
 for test_spec in test_specs:

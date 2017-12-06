@@ -18,6 +18,7 @@ class ConfigMetaMapper():
         self.__key_type_to_config = {}
         self.__config_to_key_type = {}
         self.__ordered_objects = []
+        self.dol_message_map = {}
     
     def Add(self, key_type, service_object, config_object):
         assert key_type is not None
@@ -27,6 +28,9 @@ class ConfigMetaMapper():
         # Create a reverse map of config to key type as well. We assume that there cannot
         # be more than one config referring to a key type.
         self.__config_to_key_type[config_object] = key_type
+
+        # Message type to object map.
+        self.dol_message_map[config_object._cfg_meta._create._req_msg] = config_object
 
     def SortExternalDeps(self):
         # Create a list of objects as per the way they are topologically sorted. 
@@ -217,6 +221,22 @@ class ConfigObject():
                 random_obj = ref.GetRandomConfig()
                 self.ext_ref_objects[ref.key_type] = random_obj
                 random_obj.dep_obj_database[self.object_helper.key_type].append(self)
+
+    def process_message(self, op_type, dol_message):
+        crud_op = self._cfg_meta_object.OperHandler(op_type)
+        gen_data = crud_op._req_meta_obj.process_message(message=dol_message)
+
+        try:
+            message = json_format.Parse(json.dumps(gen_data), crud_op._req_msg(),
+                                        ignore_unknown_fields=False)
+        except:
+            print (gen_data)
+            raise
+        assert not self.key_or_handle
+        key_or_handle = GrpcReqRspMsg.GetKeyObject(message)
+        assert key_or_handle
+        self.key_or_handle =  json_format.MessageToDict(key_or_handle)
+        return message
         
     def generate(self, op_type, forced_references=None):
         crud_op = self._cfg_meta_object.OperHandler(op_type)
@@ -254,8 +274,11 @@ class ConfigObject():
         crud_op = self._cfg_meta_object.OperHandler(op_type)
         return crud_op._post_cb
     
-    def process(self, op_type, redo=False, exp_api_status='API_STATUS_OK', forced_references=None):
+    def process(self, op_type, redo=False, forced_references=None, dol_message=None):
         crud_oper = self._cfg_meta_object.OperHandler(op_type)
+        if dol_message:
+            req_message = self.process_message(op_type, dol_message)
+            return 'API_STATUS_OK'
         if not redo:
             req_message = self.generate(op_type, forced_references=forced_references)
         else:
@@ -308,12 +331,20 @@ class ConfigObjectHelper(object):
     def __repr__(self):
         return str(self._spec.Service)
 
+    def ReadDolConfig(self, message):
+        logger.info("Reading DOL config for %s" %(self))
+        cfg_object = ConfigObject(self._cfg_meta, self)
+        self._config_objects.append(cfg_object)
+        ret_status = cfg_object.process(ConfigObjectMeta.CREATE, dol_message=message)
+        assert ret_status == 'API_STATUS_OK'
+        return True
+
     def CreateConfigs(self, count, status, forced_references=None):
         logger.info("Creating configuration for %s, count : %d" % (self, count))
         for _ in range(0, count):
             cfg_object = ConfigObject(self._cfg_meta, self)
             self._config_objects.append(cfg_object)
-            ret_status = cfg_object.process(ConfigObjectMeta.CREATE, exp_api_status=status, forced_references=forced_references)
+            ret_status = cfg_object.process(ConfigObjectMeta.CREATE, forced_references=forced_references)
             if ret_status != status:
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
@@ -439,3 +470,7 @@ def ResetConfigs():
 
 def GetRandomConfigObjectByKeyType(key_type):
     return cfg_meta_mapper.GetRandomConfigOject(key_type)
+
+def CreateConfigFromDol(message):
+    object_helper = cfg_meta_mapper.dol_message_map[type(message)]
+    object_helper.ReadDolConfig(message)

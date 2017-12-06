@@ -55,6 +55,7 @@ class GrpcMetaField:
         self._grpc_field = grpc_field
         self._ext_ref = None
         self.oneOf = False
+        self.containingOneof = None
     
     def __repr__(self):
         return json.dumps({"type" : str(self.type), "label" : self.label})
@@ -73,6 +74,9 @@ class GrpcMetaField:
             cls._meta_fields_[meta_field] = subclass
             return subclass
         return decorator
+
+    def process_data(self, message):
+        return self.type.process_data(message)
     
     def generate_data(self, key=None, ext_refs=None, is_key_field=False):
         if self._ext_ref:
@@ -112,6 +116,9 @@ class GrpcMetaFieldUint32(GrpcMetaField):
         super(GrpcMetaFieldUint32, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_UINT32
         self._range = self.get_range()
+
+    def process_data(self, message):
+        return message
         
     def generate_data(self, key, ext_refs, is_key_field=False):
         return  random.randint(self._range[0], self._range[1])
@@ -122,6 +129,9 @@ class GrpcMetaFieldUint64(GrpcMetaField):
     def __init__(self, grpc_field):
         super(GrpcMetaFieldUint64, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_UINT64
+
+    def process_data(self, message):
+        return message
     
     def generate_data(self, key, ext_refs, is_key_field=False):
         return  random.randint(0, 99999)
@@ -132,6 +142,11 @@ class GrpcMetaFieldString(GrpcMetaField):
     def __init__(self, grpc_field):
         super(GrpcMetaFieldString, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_STRING
+
+    def process_data(self, message):
+        if message.__class__.__name__ == 'bytes':
+            return message.decode("utf-8")
+        return message
     
     def generate_data(self, key, ext_refs, is_key_field=False):
         letters = string.ascii_lowercase
@@ -143,6 +158,9 @@ class GrpcMetaFieldBool(GrpcMetaField):
     def __init__(self, grpc_field):
         super(GrpcMetaFieldBool, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_BOOL
+
+    def process_data(self, message):
+        return message
     
     def generate_data(self, key, ext_refs, is_key_field=False):
         return random.choice([True, False])
@@ -153,6 +171,9 @@ class GrpcMetaFieldEnum(GrpcMetaField):
     def __init__(self, grpc_field):
         super(GrpcMetaFieldEnum, self).__init__(grpc_field)
         self.type = descriptor.FieldDescriptor.CPPTYPE_ENUM
+
+    def process_data(self, message):
+        return message
     
     def generate_data(self, key, ext_refs, is_key_field=False):
         enum_value = random.randint(0, len(self._grpc_field.enum_type.values) - 1)
