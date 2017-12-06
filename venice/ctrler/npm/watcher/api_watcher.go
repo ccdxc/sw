@@ -236,8 +236,11 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 				Object: &ep,
 			}
 
-			// inject into watch channel
-			w.vmmEpWatcher <- watchEvent
+			// ignore the message if it doesnt have the smartnic id
+			if nif.Status.SmartNIC_ID != "" {
+				// inject into watch channel
+				w.vmmEpWatcher <- watchEvent
+			}
 		}
 
 	}

@@ -71,6 +71,8 @@ func (w *Watcher) handleEndpointEvent(et kvstore.WatchEventType, ep *network.End
 
 	// handle based on event type
 	switch et {
+	case kvstore.Updated:
+		fallthrough
 	case kvstore.Created:
 		// ask statemgr to create the endpoint
 		_, err = nw.CreateEndpoint(ep)
@@ -78,8 +80,6 @@ func (w *Watcher) handleEndpointEvent(et kvstore.WatchEventType, ep *network.End
 			log.Errorf("Error creating endpoint {%+v}. Err: %v", ep, err)
 			return
 		}
-	case kvstore.Updated:
-		// FIXME:
 	case kvstore.Deleted:
 		// ask statemgr to delete the endpoint
 		_, err := nw.DeleteEndpoint(&ep.ObjectMeta)

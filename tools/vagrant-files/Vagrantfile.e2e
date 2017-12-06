@@ -74,7 +74,7 @@ def configure_alpine_vm(node, node_name, share)
             ## setup basic environment for the VM
             echo -n "#{node_name}" > /etc/hostname
             hostname -F /etc/hostname
-	    addgroup vagrant docker || echo "ignoring failure"
+            addgroup vagrant docker || echo "ignoring failure"
             # Install required packages
             apk update
             apk add libpcap-dev
@@ -159,6 +159,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
             echo "export PENS_NODES=#{venice_ips.join(",")}" >> /etc/profile.d/env.sh
             echo "export PENS_QUORUM_NODENAMES=#{venice_node_names.join(",")}" >> /etc/profile.d/env.sh
+            echo "export PENS_CLUSTER_VIP=192.168.30.10" >> /etc/profile.d/env.sh
+            echo "export PENSERVER=localhost:9000" >> /etc/profile.d/env.sh
+            echo "export PYTHONIOENCODING=utf-8" >> /etc/profile.d/env.sh
+            echo 'export KUBECONFIG=$HOME/admin.conf' >> /etc/profile.d/env.sh
             echo "export NAPLES_NODES=#{naples_ips.join(",")}" >> /etc/profile.d/env.sh
             echo "export HOSTSIM_NODES=#{hostsim_ips.join(",")}" >> /etc/profile.d/env.sh
             source /etc/profile.d/env.sh

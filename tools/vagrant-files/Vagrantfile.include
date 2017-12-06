@@ -61,6 +61,7 @@ def preamble_script(postamble)
     echo "export PENS_QUORUM_NODENAMES=$4" >> /etc/profile.d/env.sh
     echo "export PENS_CLUSTER_VIP=$5" >> /etc/profile.d/env.sh
     echo 'export KUBECONFIG=$HOME/admin.conf' >> /etc/profile.d/env.sh
+    echo "export PYTHONIOENCODING=utf-8" >> /etc/profile.d/env.sh
     source /etc/profile.d/env.sh
 
     # Increase mmap count to support elasticsearch
