@@ -41,6 +41,7 @@ class FlowObject(base.ConfigObjectBase):
         self.__dten     = self.__dseg.tenant
         self.__span     = span
         self.__flowhash = None
+        self.multicast  = False 
         self.ing_mirror_sessions = []
         self.egr_mirror_sessions = []
         if span:
@@ -699,6 +700,16 @@ class FlowObject(base.ConfigObjectBase):
             match = self.__dep.intf.IsFilterMatch(selectors.dst.interface)
             cfglogger.debug("- Destination Interface Filter Match =", match)
             if match == False: return match
+        # Match Source Lif
+        if self.__sep and self.__sep.remote == False:
+            match = self.__sep.intf.lif.IsFilterMatch(selectors.src.lif)
+            cfglogger.debug("- Source Lif Filter Match =", match)
+            if match == False: return match
+        # Match Destination Lif
+        if self.__dep and self.__dep.remote == False:
+            match = self.__dep.intf.lif.IsFilterMatch(selectors.dst.lif)
+            cfglogger.debug("- Destination Lif Filter Match =", match)
+            if match == False: return match
         # Match Flow
         match = super().IsFilterMatch(selectors.flow.filters)
         cfglogger.debug("- Flow Filter Match =", match)
@@ -714,10 +725,14 @@ class FlowObject(base.ConfigObjectBase):
         obj.src.endpoint = self.__sep
         if self.__sep:
             obj.src.intf = self.__sep.GetInterface()
+            if self.__sep.remote == False:
+                obj.src.lif = obj.src.intf.lif
         obj.src.l4lb = self.__sfep.l4lb
         obj.dst.endpoint = self.__dep
         if self.__dep:
             obj.dst.intf = self.__dep.GetInterface()
+            if self.__dep.remote == False:
+                obj.dst.lif = obj.dst.intf.lif
         obj.dst.l4lb = self.__dfep.l4lb
         obj.ingress_mirror.session1 = self.GetIngressMirrorSession(idx = 1)
         obj.ingress_mirror.session2 = self.GetIngressMirrorSession(idx = 2)

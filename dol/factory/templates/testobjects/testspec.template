@@ -8,11 +8,13 @@ selectors:
         segment     : filter://any
         endpoint    : filter://any
         interface   : filter://any
+        lif         : filter://any
     dst:
         tenant      : filter://any
         segment     : filter://any
         endpoint    : filter://any
         interface   : filter://any
+        lif         : filter://any
     flow: None
     maxflows: 0
     session: None

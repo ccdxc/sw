@@ -30,10 +30,23 @@ def __get_enic(tc, args):
         return None
     
     oiflist = tc.pvtdata.pruned_oiflist
-    if len(oiflist) < args.idx:
+    if len(oiflist) == 0 or len(oiflist) < args.idx:
+        pdb.set_trace()
         return None
     enic = oiflist[args.idx]
     return enic
+
+def GetPromiscuousEnicRxRing(tc, args = None):
+    enic = tc.config.src.tenant.GetPromiscuousEnic()
+    ring = __get_ring_from_enic(enic, 'RX', 'Q0', 'R0')
+    tc.info("PromiscuousRxRing: Enic:%s RxCqRing:%s" % (enic.GID(), ring.GID()))
+    return ring
+
+def GetPromiscuousEnicRxCompRing(tc, args = None):
+    enic = tc.config.src.tenant.GetPromiscuousEnic()
+    ring = __get_ring_from_enic(enic, 'RX', 'Q0', 'R1')
+    tc.info("PromiscuousRxRing: Enic:%s RxCqRing:%s" % (enic.GID(), ring.GID()))
+    return ring
 
 def GetEncapVlanIdForMulticastCopy(tc, pkt, args = None):
     enic = __get_enic(tc, args)

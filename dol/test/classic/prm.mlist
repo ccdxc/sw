@@ -1,0 +1,25 @@
+# Feature Test Modules List
+feature:
+    id          : classic
+    sub         : prm
+    package     : test.classic
+    module      : classic
+    enable      : True
+    ignore      : False
+    runorder    : 10
+
+modules:
+    - module:
+        name    : TX_UUC
+        spec    : tx_prm.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment   : filter://native=False
+
+    - module:
+        name    : RX_UUC
+        spec    : rx_prm.testspec
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment   : filter://native=False
+

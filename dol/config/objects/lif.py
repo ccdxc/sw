@@ -238,6 +238,7 @@ class LifObject(base.ConfigObjectBase):
         cfglogger.info("Setting PROMISCOUS mode for LIF:%s" % self.GID())
         self.promiscous = True
         return
+
     def IsPromiscous(self):
         return self.promiscous
 
@@ -245,8 +246,12 @@ class LifObject(base.ConfigObjectBase):
         cfglogger.info("Setting ALL MULTICAST mode for LIF:%s" % self.GID())
         self.allmulticast = True
         return
+
     def IsAllMulticast(self):
         return self.allmulticast
+
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
 
 class LifObjectHelper:
     def __init__(self):
@@ -257,8 +262,8 @@ class LifObjectHelper:
 
     def Generate(self, tenant, spec, namespace, n_prom, n_allmc):
         count = namespace.GetCount()
-        cfglogger.info("Creating %d Lifs. for Tenant:%s" %\
-                       (count, tenant.GID()))
+        cfglogger.info("Creating %d Lifs. for Tenant:%s NProm:%d NAllmc:%d" %\
+                       (count, tenant.GID(), n_prom, n_allmc))
         for l in range(count):
             lif = LifObject(tenant, spec, namespace)
             self.lifs.append(lif)

@@ -22,6 +22,7 @@ class MulticastGroupObject(base.ConfigObjectBase):
         self.GID("McGroup%04d" % self.id)
 
         self.type = spec.type.upper()
+        self.config = getattr(spec, 'config', True)
         self.group = spec.group.get()
         self.source = spec.source.get()
         self.l3type = spec.l3type.upper()
@@ -98,6 +99,7 @@ class MulticastGroupObject(base.ConfigObjectBase):
         for int in self.oifs.GetAllInList():
             if int == oif:
                 return
+        
         if remote:
             self.uplink_list.append(oif)
             self.oifs.Add(oif)
@@ -108,9 +110,14 @@ class MulticastGroupObject(base.ConfigObjectBase):
             self.enic_list.append(oif)
             return
 
+        if self.IsEnabled() == False:
+            cfglogger.info("Skip adding registered ENICs to ALL Multicast Group.")
+            return
+
         if len(self.enic_list) >= MAX_ENICS_PER_GROUP:
             cfglogger.info("Reached MAX_ENICS_PER_GROUP. Not adding OIF:%s" % (oif.GID()))
             return
+
         self.enic_list.append(oif)
         self.oifs.Add(oif)
         return
@@ -144,10 +151,15 @@ class MulticastGroupObject(base.ConfigObjectBase):
         self.hal_handle = resp_spec.entry_status.multicast_handle
         return
 
+    def IsEnabled(self):
+        return self.config
+
 # Helper Class to Generate/Configure/Manage OifList Objects.
 class MulticastGroupObjectHelper:
     def __init__(self):
         self.groups = []
+        self.cfg_groups = []
+        self.allmc_groups = []
         return
 
     def __add_local_eps(self, group, segment, spec):
@@ -175,11 +187,17 @@ class MulticastGroupObjectHelper:
             self.__add_local_eps(group, segment, gsp.entry)
             self.__add_remote_eps(group, segment, gsp.entry)
             group.Show()
+
             self.groups.append(group)
+            if group.IsEnabled():
+                self.cfg_groups.append(group)
+            else:
+                self.allmc_groups.append(group)
+
         Store.objects.SetAll(self.groups)
         return
 
     def Configure(self):
         cfglogger.info("Configuring %d Multicast Groups." % len(self.groups))
-        halapi.ConfigureMulticastGroups(self.groups)
+        halapi.ConfigureMulticastGroups(self.cfg_groups)
         return

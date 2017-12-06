@@ -5,6 +5,7 @@ selectors:
         segment     : filter://fabencap=VLAN
         endpoint    : filter://remote=False,access=False
         interface   : filter://any
+        lif         : filter://allmulticast=False
     flow            : filter://fwtype=L2
     maxflows        : None
 
@@ -60,14 +61,6 @@ packets:
                 prio: 0
 
     - packet:
-        id          : EXP_PKT_COPY0     # Expected packet on Enics
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetClassicEnicPacketEncapsForMulticastCopy
-        headers     :
-            qtag:
-                vlan: ref://testcase/config/src/segment/vlan_id # Retain/Strip
-
-    - packet:
         id          : EXP_PKT_COPY1_ALLMC     # Expected packet on Enics
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetClassicEnicPacketEncapsForMulticastCopy
@@ -85,28 +78,12 @@ buffers:
            data : ref://testcase/packets/id=TX_PKT/rawbytes
 
     - buffer:
-        id      : RX_BUF_COPY0  # Input Buffer
-        template: ref://factory/templates/id=ETH_BUFFER
-        fields:
-            bind: True
-            size: 1518
-            data: None
-
-    - buffer:
         id      : RX_BUF_COPY1_ALLMC  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
             size: 1518
             data: None
-
-    - buffer:
-        id      : EXP_BUF_COPY0  # Expected Buffer
-        template: ref://factory/templates/id=ETH_BUFFER
-        fields:
-            bind  : False
-            size  : ref://testcase/packets/id=EXP_PKT_COPY0/size
-            data  : ref://testcase/packets/id=EXP_PKT_COPY0/rawbytes
 
     - buffer:
         id      : EXP_BUF_COPY1_ALLMC  # Expected Buffer
@@ -128,27 +105,12 @@ descriptors:
             vlan_tag : callback://networking/packets/GetVlanId
 
     - descriptor:
-        id      : RX_DESC_COPY0 # Input Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_RX
-        fields:
-            _buf  : ref://testcase/buffers/id=RX_BUF_COPY0
-            addr  : ref://testcase/buffers/id=RX_BUF_COPY0/addr
-            len   : ref://testcase/buffers/id=RX_BUF_COPY0/size
-
-    - descriptor:
         id      : RX_DESC_COPY1_ALLMC # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             _buf  : ref://testcase/buffers/id=RX_BUF_COPY1_ALLMC
             addr  : ref://testcase/buffers/id=RX_BUF_COPY1_ALLMC/addr
             len   : ref://testcase/buffers/id=RX_BUF_COPY1_ALLMC/size
-
-    - descriptor:
-        id      : EXP_DESC_COPY0 # Expected Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
-        fields:
-            _buf          : ref://testcase/buffers/id=EXP_BUF_COPY0
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY0/size
 
     - descriptor:
         id      : EXP_DESC_COPY1_ALLMC # Expected Descriptor
@@ -164,12 +126,8 @@ trigger:
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
 
         - descriptor:
-            object  : ref://testcase/descriptors/id=RX_DESC_COPY0
-            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=0
-
-        - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_COPY1_ALLMC
-            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=1
+            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=0
 
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
@@ -184,9 +142,5 @@ expect:
 
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=EXP_DESC_COPY0
-            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=0
-
-        - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_COPY1_ALLMC
-            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=1
+            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=0
