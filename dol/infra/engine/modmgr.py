@@ -4,6 +4,7 @@ import pdb
 import importlib
 import subprocess
 import operator
+import random
 
 import infra.common.dyml        as dyml
 import infra.common.defs        as defs
@@ -30,10 +31,15 @@ MODULE_CB_TEARDOWN      = 'Teardown'
 
 class ModuleStats:
     def __init__(self):
+        self.Reset()
+        return
+
+    def Reset(self):
         self.passed     = 0
         self.failed     = 0
         self.ignored    = 0
         self.total      = 0
+        return
 
 class ModuleIterator:
     def __init__(self, elems):
@@ -50,6 +56,9 @@ class ModuleIterator:
 
     def End(self):
         return self.idx == len(self.elems)
+
+    def Reset(self):
+        self.idx = 0
 
 class Module(objects.FrameworkObject):
     def __init__(self, spec):
@@ -251,6 +260,8 @@ class Module(objects.FrameworkObject):
         return
 
     def __process_results(self):
+        self.stats.Reset()
+        self.stats.total = len(self.CompletedTestCases)
         for tc in self.CompletedTestCases:
             self.__update_stats(tc)
         return
@@ -276,8 +287,8 @@ class Module(objects.FrameworkObject):
             self.iterator.Next()
 
         self.__unload()
-        self.stats.total = len(self.CompletedTestCases)
         self.__process_results()
+        self.iterator.Reset()
         return
 
 class ModuleDatabase:
@@ -352,6 +363,11 @@ class ModuleDatabase:
         return
 
     def GetAll(self):
+        if GlobalOptions.shuffle != 1:
+            modlist = list(self.db.values())
+            random.shuffle(modlist)
+            return modlist
+
         return sorted(self.db.values(), key=operator.attrgetter('runorder'))
 
     def Add(self, spec):

@@ -40,6 +40,8 @@ parser.add_argument('--skipverify', dest='skipverify',
                     action='store_true', help='Skip Verification all tests.')
 parser.add_argument('--tcscale', dest='tcscale', default=None,
                     help='Testcase Scale Factor.')
+parser.add_argument('--shuffle', dest='shuffle', default=1,
+                    help='Shuffle tests and loop for X times.')
 #parser.add_argument('--cfgscale', dest='cfgscale', default=None,
 #                    help='Configuration Scale Factor.')
 GlobalOptions = parser.parse_args()

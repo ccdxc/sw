@@ -37,9 +37,10 @@ def CreateInfraData():
     return obj
 
 def ExecuteAllModules():
-    for module in ModuleStore.GetAll():
-        infra_data = CreateInfraData()
-        module.main(infra_data)
+    for s in range(int(GlobalOptions.shuffle)):
+        for module in ModuleStore.GetAll():
+            infra_data = CreateInfraData()
+            module.main(infra_data)
  
 def GetSummaryAndResult():
     print("\nResult Summary:")

@@ -233,6 +233,9 @@ def run_dol(args):
         cmd.append('--dryrun')
     if args.configonly is True:
         cmd.append('--config-only')
+    if args.shuffle is not None:
+        cmd.append('--shuffle')
+        cmd.append(args.shuffle)
 
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
@@ -404,6 +407,8 @@ def main():
                         default=None, help="Run E2E TLS DOL")
     parser.add_argument("--gft", dest='gft', action="store_true",
                         default=False, help="GFT tests")
+    parser.add_argument('--shuffle', dest='shuffle', default=None,
+                        help='Shuffle tests and loop for X times.')
     args = parser.parse_args()
 
     if args.cleanup:
