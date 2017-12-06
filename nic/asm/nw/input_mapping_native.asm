@@ -30,8 +30,8 @@ native_ipv4_packet_common:
   sub           r7, k.ipv4_totalLen, r6, 2
   phvwr         p.l4_metadata_tcp_data_len, r7
 
-  phvwrpair     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr, \
-                    p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr
+  phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
+                    p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
   phvwrpair     p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags, \
                     p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
   phvwr         p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
@@ -43,9 +43,9 @@ native_ipv4_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
 
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
   phvwr.e       p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
-  phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
+  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
+                    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
 native_ipv4_esp_packet:
   phvwr.e       p.flow_lkp_metadata_lkp_proto, IP_PROTO_IPSEC_ESP
@@ -65,8 +65,8 @@ native_ipv6_packet_common:
   phvwr         p.l4_metadata_tcp_data_len, r7
 
   seq           c1, k.l3_metadata_ipv6_ulp, IP_PROTO_UDP
-  phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
-  phvwr.c1      p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
+  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
+                    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
   phvwr         p.flow_lkp_metadata_lkp_src, k.{ipv6_srcAddr_sbit0_ebit31, \
@@ -94,7 +94,7 @@ native_non_ip_packet_common:
   seq           c1, k.vlan_tag_valid, 1
   phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.vlan_tag_etherType
   phvwr.!c1     p.flow_lkp_metadata_lkp_dport, k.ethernet_etherType
-  phvwrpair     p.flow_lkp_metadata_lkp_src[47:0], k.ethernet_srcAddr, \
-                    p.flow_lkp_metadata_lkp_dst[47:0], k.ethernet_dstAddr
+  phvwrpair     p.flow_lkp_metadata_lkp_dst[47:0], k.ethernet_dstAddr, \
+                    p.flow_lkp_metadata_lkp_src[47:0], k.ethernet_srcAddr
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr

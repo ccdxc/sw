@@ -2173,7 +2173,10 @@ class capri_gress_pa:
             self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             return False
 
-        for n_hf in new_hfs:
+        # do name base sorting to make it stable across builds
+        new_fs = [_nf for _nf in new_hfs if isinstance(_nf, capri_field)]
+        new_fs = sorted(new_fs, key=lambda cf: cf.hfname)
+        for n_hf in new_fs:
             if not isinstance(n_hf, capri_field):
                 continue
             # index_key => byte-aligned, rt justified

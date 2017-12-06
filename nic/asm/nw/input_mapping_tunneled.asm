@@ -27,8 +27,8 @@ tunneled_ipv4_packet_common:
 
   phvwr         p.tunnel_metadata_tunnel_terminate, 1
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
-  phvwrpair     p.flow_lkp_metadata_lkp_src[31:0], k.inner_ipv4_srcAddr, \
-                    p.flow_lkp_metadata_lkp_dst[31:0], k.inner_ipv4_dstAddr
+  phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.inner_ipv4_dstAddr, \
+                    p.flow_lkp_metadata_lkp_src[31:0], k.inner_ipv4_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol
   phvwrpair     p.flow_lkp_metadata_ipv4_flags, k.inner_ipv4_flags, \
                     p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
@@ -73,8 +73,8 @@ tunneled_non_ip_packet:
 tunneled_non_ip_packet_common:
   phvwr         p.tunnel_metadata_tunnel_terminate, 1
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_MAC
-  phvwrpair     p.flow_lkp_metadata_lkp_src[47:0], k.inner_ethernet_srcAddr, \
-                    p.flow_lkp_metadata_lkp_dst[47:0], k.inner_ethernet_dstAddr
+  phvwrpair     p.flow_lkp_metadata_lkp_dst[47:0], k.inner_ethernet_dstAddr, \
+                    p.flow_lkp_metadata_lkp_src[47:0], k.inner_ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dport, k.inner_ethernet_etherType
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
