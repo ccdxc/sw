@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"math"
+
 	apiclient "github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -37,5 +39,6 @@ func NewGrpcUpstream(url string, logger log.Logger, opts ...Option) (apiclient.S
 		rpcopts = append(rpcopts, rpckit.WithLoggerEnabled(false))
 		rpcopts = append(rpcopts, rpckit.WithStatsEnabled(false))
 	}
+	rpcopts = append(rpcopts, rpckit.WithMaxMsgSize(math.MaxInt32))
 	return apiclient.NewGrpcAPIClient(url, logger, rpcopts...)
 }

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/venice/utils/log"
 
@@ -36,10 +37,11 @@ type etcdStore struct {
 }
 
 // NewEtcdStore creates a new etcdStore.
-func NewEtcdStore(servers []string, codec runtime.Codec) (kvstore.Interface, error) {
+func NewEtcdStore(servers []string, codec runtime.Codec, grpcOpts ...grpc.DialOption) (kvstore.Interface, error) {
 	config := clientv3.Config{
 		Endpoints:   servers,
 		DialTimeout: timeout,
+		DialOptions: grpcOpts,
 	}
 
 	client, err := clientv3.New(config)

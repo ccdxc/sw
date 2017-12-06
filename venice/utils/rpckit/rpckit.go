@@ -46,6 +46,7 @@ type options struct {
 	enableTracer bool              // option to enable tracer middleware
 	enableLogger bool              // option to enable logging middleware
 	enableStats  bool              // option to enable Stats middleware
+	maxMsgSize   int               // Max message size allowed on the connections
 	tlsProvider  TLSProvider       // provides TLS parameters for all RPC clients and servers
 	balancer     grpc.Balancer     // Load balance RPCs between available servers (client option)
 }
@@ -84,6 +85,13 @@ func WithTLSProvider(provider TLSProvider) Option {
 func WithTracerEnabled(enabled bool) Option {
 	return func(o *options) {
 		o.enableTracer = enabled
+	}
+}
+
+// WithMaxMsgSize specifies the max message size permitted on the transport
+func WithMaxMsgSize(size int) Option {
+	return func(o *options) {
+		o.maxMsgSize = size
 	}
 }
 
@@ -320,6 +328,10 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 	// For service targets, use the balancer.
 	if serviceTarget {
 		grpcOpts = append(grpcOpts, grpc.WithBalancer(rpcClient.balancer))
+	}
+
+	if rpcClient.maxMsgSize != 0 {
+		grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(rpcClient.maxMsgSize))
 	}
 
 	grpcOpts = append(grpcOpts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),

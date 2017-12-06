@@ -3,6 +3,8 @@ package store
 import (
 	"fmt"
 
+	"google.golang.org/grpc"
+
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	"github.com/pensando/sw/venice/utils/kvstore/memkv"
@@ -22,14 +24,15 @@ type Config struct {
 	// Servers is the list of servers to connect to.
 	Servers []string
 	// Codec is the codec to use for serializing/deserializing objects.
-	Codec runtime.Codec
+	Codec       runtime.Codec
+	GrpcOptions []grpc.DialOption
 }
 
 // New creates a new KVStore based on provided configuration.
 func New(c Config) (kvstore.Interface, error) {
 	switch c.Type {
 	case KVStoreTypeEtcd:
-		return etcd.NewEtcdStore(c.Servers, c.Codec)
+		return etcd.NewEtcdStore(c.Servers, c.Codec, c.GrpcOptions...)
 	case KVStoreTypeMemkv:
 		return memkv.NewMemKv(c.Servers, c.Codec)
 	}

@@ -3,9 +3,11 @@ package apisrvpkg
 import (
 	"context"
 	"fmt"
+	"math"
 	"sync"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -55,7 +57,9 @@ type apiSrv struct {
 func (a *apiSrv) addKvConnToPool() error {
 	a.nextKvMutex.Lock()
 	defer a.nextKvMutex.Unlock()
-	k, err := store.New(a.config.Kvstore)
+	cfg := a.config.Kvstore
+	cfg.GrpcOptions = append(cfg.GrpcOptions, grpc.WithMaxMsgSize(math.MaxInt32))
+	k, err := store.New(cfg)
 	if err != nil {
 		errors.Wrap(err, "could not create KV conn pool")
 		return err

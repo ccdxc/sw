@@ -64,7 +64,7 @@ type tInfo struct {
 var (
 	tinfo          tInfo
 	etcdcluster    = []string{"http://192.168.69.63:22379"}
-	orderSetup     = true
+	orderSetup     = false
 	oper           = "update" // get or update
 	totalReqs      uint64
 	timeouts       uint64
@@ -302,6 +302,19 @@ func runTest(clntCount int) {
 	shutdownAPIServer()
 }
 
+func runList() {
+	tinfo.count = reqCount
+	setupEtcdBackedAPIServer(etcdcluster, 1)
+	opt := api.ListWatchOptions{}
+	r, err := tinfo.apiclPool[0].BookstoreV1().Book().List(context.TODO(), &opt)
+	if err != nil {
+		fmt.Printf("List returned error (%s)\n", err)
+	} else {
+		fmt.Printf("List succeeded got %d items\n", len(r))
+	}
+	shutdownAPIServer()
+}
+
 func main() {
 	operp := flag.String("oper", "get", "operation to benchmark")
 	reqCountp := flag.Int("req-count", 100000, "number of requests")
@@ -309,6 +322,7 @@ func main() {
 	objCountp := flag.Int("obj-count", 5000, "number of objects")
 	kvstore := flag.String("kvdest", "localhost:2379", "Comma seperated list of etcd servers")
 	clntPoolSizep := flag.Int("api-clients", 500, "number of api server clients for workers to use")
+	list := flag.Bool("list", false, "Run list operation only")
 	flag.Parse()
 
 	reqCount = *reqCountp
@@ -332,8 +346,12 @@ func main() {
 	tinfo.hist = make(map[string]*testResult)
 	oper = *operp
 	grpclog.SetLogger(l)
-	runTest(1)
-	runTest(1000)
+	if *list {
+		runList()
+	} else {
+		runTest(1)
+		runTest(1000)
+	}
 	fmt.Printf("Total requests: %d timeouts: %d\n", totalReqs, timeouts)
 	rec.PrintAll()
 	for k, v := range tinfo.hist {
