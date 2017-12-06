@@ -15,6 +15,7 @@
 
 #define rx_table_s3_t0_action update_input_desc_aol 
 #define rx_table_s3_t1_action update_output_desc_aol 
+#define rx_table_s3_t2_action read_random_number_from_barco 
 
 #define rx_table_s4_t0_action ipsec_cb_tail_enqueue_input_desc 
 
@@ -22,7 +23,20 @@
 #include "esp_ipv4_tunnel_h2n_headers.p4"
 #include "../ipsec_defines.h"
 
+header_type ipsec_random_number_t {
+    fields {
+        random_number1 : 64;
+        random_number2 : 64;
+    }
+}
 
+header_type ipsec_to_stage2_t {
+    fields {
+        is_random : 8;
+        stage2_pad1 : 56;
+        stage2_pad2 : 64;
+    }
+}
 
 header_type ipsec_to_stage3_t {
     fields {
@@ -128,7 +142,15 @@ metadata ipsec_rxdma_global_t ipsec_global;
 @pragma scratch_metadata
 metadata ipsec_rxdma_global_t ipsec_global_scratch;
 
+@pragma scratch_metadata
+metadata ipsec_random_number_t ipsec_random_number_scratch;
+
 //to_stage
+@pragma pa_header_union ingress to_stage_2
+metadata ipsec_to_stage2_t ipsec_to_stage2;
+@pragma scratch_metadata
+metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
+
 @pragma pa_header_union ingress to_stage_3
 metadata ipsec_to_stage3_t ipsec_to_stage3;
 @pragma scratch_metadata
@@ -253,6 +275,12 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
 }
 
 //stage 3
+action read_random_number_from_barco(random_number)
+{
+    modify_field( ipsec_random_number_scratch.random_number1, random_number);
+}
+
+//stage 3
 action update_output_desc_aol(addr0, offset0, length0,
                               addr1, offset1, length1,
                               addr2, offset2, length2,
@@ -323,6 +351,12 @@ action allocate_input_page_index(in_page_index)
     modify_field(t0_s2s.in_page_addr, IN_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * in_page_index));
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T2_S2S
+    if (ipsec_to_stage2.is_random == 1) {
+        modify_field(p42p4plus_hdr.table2_valid, 1);
+        modify_field(common_te2_phv.table_pc, 0);  //random-number read PC
+        modify_field(common_te2_phv.table_raw_table_size, 3); // 8 bytes or 16 bytes 
+        modify_field(common_te2_phv.table_addr, 0); // some hash define of barco crypt mem for now
+    }
 }
 
 //stage 2 
@@ -460,6 +494,10 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
 
     modify_field(ipsec_to_stage3.iv_size, iv_size);
     modify_field(ipsec_to_stage3.iv_salt, iv_salt);
+
+    if (flags & IPSEC_FLAGS_RANDOM_MASK == IPSEC_FLAGS_RANDOM_MASK) {
+       modify_field(ipsec_to_stage2.is_random, 1);
+    }
 
     modify_field(p42p4plus_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0); 

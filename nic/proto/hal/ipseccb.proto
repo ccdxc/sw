@@ -53,6 +53,7 @@ message IpsecCbSpec {
   uint32                new_key_index         = 24;
   uint32                is_nat_t              = 25;
   uint32                flags                 = 26;
+  uint32                is_random             = 27;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request
