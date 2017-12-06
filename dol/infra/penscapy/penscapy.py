@@ -259,25 +259,25 @@ class ISCSI(Packet):
     name = "ISCSI"  # 36 bytes inside TCP payload
     fields_desc = [
         BitField("reserved0",                           0,      1),
-        BitField("imm_delivery",                        0,      1),         # only for cmd
-        BitField("opcode",                              0,      6),         # cmd = 0x01, resp = 0x21
-        BitField("final",                               0,      1),         # always set to 1 for resp
-        BitField("read_data",                           0,      1),         # only for cmd
-        BitField("write_data",                          0,      1),         # only for cmd
-        BitField("bidir_overflow",                      0,      1),         # only for resp
-        BitField("bidir_underflow",                     0,      1),         # only for resp
-        BitField("attributes",                          0,      3),         # bit1 and bit2 are overflow/underflow bits in resp
-        BitField("status",                              0,      8),         # only valid for resp
-        BitField("response",                            0,      8),         # only valid for resp
+        BitField("imm_delivery",                        0,      1), # only for cmd
+        BitField("opcode",                              0,      6), # cmd = 0x01, resp = 0x21
+        BitField("final",                               0,      1), # always set to 1 for resp
+        BitField("cmd_read",                            0,      1), # only for cmd
+        BitField("cmd_write",                           0,      1), # only for cmd
+        BitField("bidir_overflow",                      0,      1), # only for resp
+        BitField("bidir_underflow",                     0,      1), # only for resp
+        BitField("attributes",                          0,      3), # bit1 and bit2 are overflow/underflow bits in resp
+        BitField("response",                            0,      8), # only valid for resp
+        BitField("resp_status",                         0,      8), # only valid for resp
         BitField("total_ahs_length",                    0,      8),
         BitField("data_seg_length",                     0,      24),
-        BitField("lun",                                 0,      64),        # only for cmd
+        BitField("lun",                                 0,      64), # only for cmd
         BitField("tag_id",                              0,      32),
-        BitField("exp_data_xfer_len_or_snack_tag",      0,      32),
-        BitField("cmd_or_stat_seq_number",              0,      32),
-        BitField("exp_stats_or_exp_cmd_seq_number",     0,      32),
-        BitField("max_cmd_seq_number",                  0,      32),        # only for resp
-        BitField("expected_data_seq_number",            0,      32),        # only for resp
+        BitField("cmd_data_length",                     0,      32),
+        BitField("cmd_seq_number",                      0,      32),
+        BitField("exp_stats_seq_number",                0,      32),
+        BitField("cmd_scsi_cdb_op",                     0,      8), # only for resp
+        BitField("skip_further",                        0,      24), # only for resp
     ]
 bind_layers(TCP, ISCSI, dport=3260)
 

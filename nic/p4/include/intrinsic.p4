@@ -80,7 +80,7 @@ header_type p4_to_p4plus_p4pt_header_t {
         table1_valid        : 1;
         table2_valid        : 1;
         table3_valid        : 1;
-        flow_hash           : 32;
+        p4pt_idx            : 24;
         payload_len         : 16;
         pad                 : 6;
         flow_role           : 1;

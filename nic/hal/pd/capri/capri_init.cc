@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 59
+#define CAPRI_P4PLUS_NUM_SYMBOLS 64
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -563,6 +563,31 @@ capri_p4p_asm_init()
     symbols[58].params[0].val = get_start_offset(CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR);
     symbols[58].params[1].name = RDMA_PCIE_ATOMIC_BASE_ADDR;
     symbols[58].params[1].val = CAPRI_PCIE_ATOMIC_BASE_ADDR;
+
+    symbols[59].name = "p4pt.bin";
+    symbols[59].num_params = 1;
+    symbols[59].params[0].name = P4PT_TCB_BASE;
+    symbols[59].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_MEM);
+
+    symbols[60].name = "p4pt_update_tcb.bin";
+    symbols[60].num_params = 1;
+    symbols[60].params[0].name = P4PT_TCB_ISCSI_REC_BASE;
+    symbols[60].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_REC_MEM);
+
+    symbols[61].name = "p4pt_update_tcb_rec.bin";
+    symbols[61].num_params = 1;
+    symbols[61].params[0].name = P4PT_TCB_ISCSI_STATS_BASE;
+    symbols[61].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_STATS_MEM);
+
+    symbols[62].name = "p4pt_update_tcb_stats.bin";
+    symbols[62].num_params = 1;
+    symbols[62].params[0].name = P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE;
+    symbols[62].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_MEM);
+
+    symbols[63].name = "p4pt_update_read_latency_distribution.bin";
+    symbols[63].num_params = 1;
+    symbols[63].params[0].name = P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_BASE;
+    symbols[63].params[0].val = get_start_offset(CAPRI_HBM_REG_P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_MEM);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

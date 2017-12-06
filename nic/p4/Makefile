@@ -13,6 +13,7 @@ LIBDIRS = \
           ipfix \
           adminq \
           gft \
+          p4pt \
           $(NULL)
 
 PGMDIRS = $(NULL)

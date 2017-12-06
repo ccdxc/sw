@@ -425,7 +425,7 @@ action p4plus_app_p4pt() {
     add_header(p4_to_p4plus_p4pt);
     modify_field(p4_to_p4plus_p4pt.p4plus_app_id,
                  control_metadata.p4plus_app_id);
-    modify_field(p4_to_p4plus_p4pt.flow_hash, rewrite_metadata.entropy_hash);
+    modify_field(p4_to_p4plus_p4pt.p4pt_idx, flow_info_metadata.flow_index);
     modify_field(p4_to_p4plus_p4pt.flow_dir, control_metadata.lkp_flags_egress);
 
     remove_header(ethernet);

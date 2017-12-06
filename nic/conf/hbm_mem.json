@@ -241,6 +241,26 @@
         {
             "name": "brq-ring-xts1",
             "size_kb": 128
+        },
+        {
+            "name": "p4pt-tcb",
+            "size_kb": 2048
+        },
+        {
+            "name": "p4pt-iscsi-rec",
+            "size_kb": 2048
+        },
+        {
+            "name": "p4pt-tcb-iscsi-stats",
+            "size_kb": 2048
+        },
+        {
+            "name": "p4pt-tcb-iscsi-read-latency-distribution",
+            "size_kb": 2048
+        },
+        {
+            "name": "p4pt-tcb-iscsi-write-latency-distribution",
+            "size_kb": 2048
         }
     ]
 }

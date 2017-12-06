@@ -419,7 +419,7 @@
 #define P4PLUS_CPU_PKT_SZ              36
 #define P4PLUS_IPSEC_HDR_SZ            18
 #define P4PLUS_RAW_REDIR_HDR_SZ        40
-#define P4PLUS_P4PT_HDR_SZ             8
+#define P4PLUS_P4PT_HDR_SZ             7
 
 /*****************************************************************************/
 /* P4 fixed header size constants (in bytes)                                */

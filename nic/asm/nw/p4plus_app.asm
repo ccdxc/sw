@@ -183,7 +183,7 @@ p4plus_app_rdma:
 p4plus_app_p4pt:
   phvwr       p.p4_to_p4plus_p4pt_valid, TRUE
   phvwr       p.p4_to_p4plus_p4pt_p4plus_app_id, k.control_metadata_p4plus_app_id
-  phvwr       p.p4_to_p4plus_p4pt_flow_hash, k.rewrite_metadata_entropy_hash
+  phvwr       p.p4_to_p4plus_p4pt_p4pt_idx, k.flow_info_metadata_flow_index
 
   add         r1, r0, r0
   seq         c1, k.tcp_valid, TRUE

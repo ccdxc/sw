@@ -9,16 +9,20 @@ include $(TOPDIR)/make/Make.inc
 
 PROJ = p4pt
 OBJ_DIR = ../../obj/p4plus_bin
-ASM_HDR_DIR = ../../gen/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(TOPDIR)/include
+ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(TOPDIR)/include -I../common-p4+/include
 SRC_DIR = .
-
 
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
     $(SRC_DIR)/p4pt.s \
-	$(NULL)
+    $(SRC_DIR)/p4pt_update_tcb.s \
+    $(SRC_DIR)/p4pt_update_tcb_rec.s \
+    $(SRC_DIR)/p4pt_update_tcb_stats.s \
+    $(SRC_DIR)/p4pt_update_read_latency_distribution.s \
+    $(SRC_DIR)/p4pt_update_write_latency_distribution.s \
+    $(NULL)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

@@ -86,6 +86,12 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_APP_REDIR_PROXYC   "app-redir-proxyc"
 #define CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE   "rdma-eq-intr-table"
 #define CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR "rdma-atomic-resource-addr"
+#define CAPRI_HBM_REG_P4PT_TCB_MEM       "p4pt-tcb"
+#define CAPRI_HBM_REG_P4PT_TCB_ISCSI_REC_MEM "p4pt-tcb-iscsi-rec"
+#define CAPRI_HBM_REG_P4PT_TCB_ISCSI_STATS_MEM "p4pt-tcb-iscsi-stats"
+#define CAPRI_HBM_REG_P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_MEM "p4pt-tcb-iscsi-read-latency-distribution"
+#define CAPRI_HBM_REG_P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_MEM "p4pt-tcb-iscsi-write-latency-distribution"
+
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512
@@ -123,6 +129,12 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 
 #define RDMA_ATOMIC_RESOURCE_ADDR   "rdma_atomic_resource_addr"
 #define RDMA_PCIE_ATOMIC_BASE_ADDR  "rdma_pcie_atomic_base_addr"
+
+#define P4PT_TCB_BASE 					"p4pt_tcb_base"
+#define P4PT_TCB_ISCSI_REC_BASE 			"p4pt_tcb_iscsi_rec_base"
+#define P4PT_TCB_ISCSI_STATS_BASE 			"p4pt_tcb_iscsi_stats_base"
+#define P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE 	"p4pt_tcb_iscsi_read_latency_distribution_base"
+#define P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_BASE 	"p4pt_tcb_iscsi_write_latency_distribution_base"
 
 typedef struct capri_descr_s {
         uint64_t        scratch[8];

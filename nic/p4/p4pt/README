@@ -1,0 +1,360 @@
+/*
+ * p4pt pipeline workflow
+ *
+ * design limitations/reality:
+ *  - stage0 must be given any payload content; maximum payload to stag0 is about 48bytes
+ *  - qid must be used to identify the protocol that is being parsed, if all bytes must be parsed in stage0
+ *  - for ipfix thread to fetch p4pt data, p4pt_idx must be saved in the flow results
+ *    - p4pt_idx, programmed by hal/fte is also given to stage0 in p4pt_intrinsic_header
+ *  - payload data is not availabe beyond p4+ stage0, i.e. it must be into s2s or to_stage headers
+ *  - there are 8 stages s0 to s7, each having access for upto 4 tables (t0 to t3)
+ *    - common_global headers (128 bits) are available to all table lookups in all stages
+ *    - s2s headers (160 bits) are available to a given table (t0) across all stages (column)
+ *    - to_stage headers (128 bits) are available to a given stage across all tables (row)
+ *    - remaining bits can't be passed on from one to another stage i.e. must be in three blocks of specific size
+ *    - the union pragma declaration can help override the default dummy headers
+ *  - p4 can do 64 bytes (512 bits) of d vector in each stage from table lookup results
+ *  - table memory and areas are not locked across stages i.e. each stage/table combo must access unique memory
+ *  - hbm writes are not guaranteed to be available across later stages for read pursposes
+ *  - p4 semantics:
+ *    - scratch header are meant to hint p4 to not drop a declared header format which is used in p4+
+ *    - k and d vectors are declared in p4 for semantic reasons that are then used in p4+
+ *    
+ * stages (high level)
+ *
+ *  - stage0: parse protocol header, setup lookup p4tcb
+ *    - k vector: common_rxdma_header, p4_to_p4plus_p4pt_header
+ *    - d vector: qid (TBD: defined by what HAL programs)
+ *    - parse p4pt_header.iscsi_payload into p4pt_s2s; p4pt_s2s is available through all stages
+ *      if qid != 0:  // 0 for iscsi, other qids reserved for other protocols
+ *         return
+ *
+ *      iscsi_header = p4_to_p4plus_p4pt_header.payload
+ * 
+ *      if iscsi_header.opcode == 0x1:
+ *         p4pt_s2s.req = 1
+ *      else if iscsi_header.opcode == 0x21:
+ *         p4pt_s2s.resp = 1
+ *      else:
+ *         exit 			// exit entire pipeline, we don't know how to parse this packet
+ *
+ *      if scsi_header.read:
+ *         if iscsi_header.cmd_scsi_cdb_op & 0x1F == 0x8:
+ *            p4pt_s2s.read = 1
+ *         else:
+ *            exit			// scsi and iscsi do not match up
+ *      if scsi_header.write:
+ *         if iscsi_header.cmd_scsi_cdb_op & 0x1F == 0xA:
+ *            p4pt_s2s.write = 1
+ *         else:
+ *            exit			// scsi and iscsi do not match up
+ *      else:
+ *         exit				// exit if this is neither read, nor write operation
+ *
+ *      if p4pt_s2s.req:
+ *         p4pt_s2s.data_len = iscsi_header.data_seg_length
+ *         p4pt_s2s.lun = iscsi_header.lun
+ *         p4pt_s2s.tag_id = iscsi_header.tag_id
+ *      else:
+ *         p4pt_s2s.status = iscsi_header.status
+ *    - p4pt_global.p4pt_idx = p4pt_header.p4pt_idx
+ *    - setup launch a p4ptcb table lookup: addr = P4PT_TCB_BASE_ADDR + p4pt_header.p4pt_idx * P4PT_TCB_SIZE  // each record is 512 bits (64 bytes)
+ *      set table0: valid
+ *    - exit:
+ *      set all tables invalid
+ *
+ * - stage1: update p4tcb, setup lookup p4tcb_rec
+ *    - k vector: p4pt_global, p4pt_s2s
+ *    - d vector: p4tcb
+ *    - lookup p4pt_s2s.tag_id in the keys within p4tcb.rec_key0 - p4tcb.rec_key9
+ *    - if found:
+ *         curr_idx = found rec's idx
+ *      else:
+ *         if p4pt.resp:		// resp with no matching request
+ *            goto stage3 		// bail out TBD: - set something in global to hint to skip stage3
+ *         curr_idx = p4pt_global.next_idx
+ *         p4tcb.next_idx = curr_idx + 1
+ *         p4tcb.key[curr_idx] = p4pt_s2s.tag_id
+ *      setup launch p4pt_tcb_rec lookup: addr = p4tcb.base_addr + curr_idx * p4tcb.rec_size   // each rec is 7 words for iscsi
+ *      p4pt_global.rec_idx = curr_idx
+ *      write p4tcb
+ *
+ * - stage2: update p4tcb_rec, setup lookup p4tcb_tcb_iscsi_stats
+ *    - k vector: p4pt_global, p4pt_s2s
+ *    - d vector: p4pt_iscsi_rec
+ *    - if p4pt_s2s.resp:
+ *         p4pt_iscsi_rec.status = p4pt_s2s.status
+ *         p4pt_global.latency = p4pt_iscsi_rec.req_timestamp - time.now()
+ *      else:  			// assume response
+ *         p4pt_iscsi_rec.tag_id == p4pt_s2s.tag_id
+ *         p4pt_iscsi_rec.lun == p4pt_s2s.lun
+ *         p4pt_iscsi_rec.req_timestamp = curr_time()
+ *         p4pt_iscsi_rec.
+ *      if p4pt_s2s.read && p4pt_s2s.resp:
+ *         p4pt_iscsi_rec.data_length = data_seg_length
+ *      else if p4pt_s2s.write && p4pt_s2s.req:
+ *         p4pt_iscsi_rec.data_length = data_seg_length
+ *    - setup launch p4pt_tcb_iscsi_stats lookup: addr = P4PT_TCB_ISCSI_STATS_BASE_ADDR + p4pt_global.p4pt_idx * P4PT_TCB_ISCSI_STATS_SIZE
+ *    - write p4pt_iscsi_rec
+ *
+ * - stage3: write p4tcb_tcb_iscsi_stats, setup lookup p4pt_tcb_iscsi_read_latency_distribution
+ *    - k vector: p4pt_global, p4pt_s2s
+ *    - d vector: p4pt_tcb_iscsi_stats
+ *    - if p4pt_s2s.read:
+ *         if p4pt_s2s.req:
+ *             p4pt_tcb_iscsi_stats.read_resp++
+ *         else:
+ *             p4pt_tcb_iscsi_stats.read_reqs++
+ *             p4pt_tcb_iscsi_stats.read_bytes += p4pt_s2s.data_len
+ *             p4pt_tcb_iscsi_stats.total_read_latency += p4pt_global.latency
+ *         if p4pt_s2s.stats != 0:
+ *             p4pt_tcb_iscsi_stats.read_errors++
+ *      if p4pt_s2s.write:
+ *         if p4pt_s2s.req:
+ *             p4pt_tcb_iscsi_stats.write_bytes += p4pt_s2s.data_len
+ *             p4pt_tcb_iscsi_stats.write_resp++
+ *         else:
+ *             p4pt_tcb_iscsi_stats.write_reqs++
+ *             p4pt_tcb_iscsi_stats.total_write_latency += p4pt_global.latency
+ *         if p4pt_s2s.stats != 0:
+ *             p4pt_tcb_iscsi_stats.read_errors++
+ *    - setup launch p4pt_tcb_iscsi_read_latency_distribution 
+ *         lookup addr = P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE_ADDR + p4pt_global.p4pt_idx * P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_SIZE
+ *    - write p4tcb_tcb_iscsi_stats
+ *         
+ * - stage 4: write p4pt_tcb_iscsi_read_latency_distribution, setup lookup p4pt_tcb_iscsi_write_latency_distribution
+ *    - k vector: p4pt_global, p4pt_s2s
+ *    - d vector: p4pt_tcb_iscsi_read_latency_distribution
+ *    - if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE15_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range15++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE14_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range14++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE13_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range13++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE12_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range12++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION1RANGE11_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range11++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE10_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range10++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE9_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range9++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE8_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range8++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE7_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range7++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE6_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range6++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE5_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range5++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE4_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range4++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE3_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range3++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE2_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range2++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE1_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range1++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE0_LOW
+ *         p4pt_tcb_iscsi_read_latency_distribution.range0++
+ *      setup launch p4pt_tcb_iscsi_read_latency_distribution 
+ *         lookup addr = P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE_ADDR + p4pt_global.p4pt_idx * P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_SIZE
+ *      write p4pt_tcb_iscsi_read_latency_distribution
+ *
+ * - stage 5: write p4pt_tcb_iscsi_write_latency_distribution
+ *    - k vector: p4pt_global, p4pt_s2s
+ *    - d vector: p4pt_tcb_iscsi_write_latency_distribution
+ *    - if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE15_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range15++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE14_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range14++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE13_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range13++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE12_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range12++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION1RANGE11_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range11++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE10_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range10++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE9_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range9++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE8_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range8++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE7_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range7++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE6_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range6++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE5_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range5++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE4_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range4++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE3_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range3++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE2_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range2++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE1_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range1++
+ *      else if p4pt_s2s.data_len > P4PT_ISCSI_LATENCY_DISTRIBUTION_RANGE0_LOW
+ *         p4pt_tcb_iscsi_write_latency_distribution.range0++
+ *      setup launch p4pt_tcb_iscsi_write_latency_distribution 
+ *         lookup addr = P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE_ADDR + p4pt_global.p4pt_idx * P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_SIZE
+ *      write p4pt_tcb_iscsi_write_latency_distribution
+ *
+ * well known headers:
+ *   // raw iscsi header: ref: https://tools.ietf.org/html/rfc3720#section-10.2.4
+ *   // upto 33 bytes (or lesser); type casted and used as payload
+ *   - p4pt_iscsi_header:
+ *     {
+ *         skip0				2;
+ *         opcode                              	6;  // cmd = 0x01, resp = 0x21
+ *         req_read                             1;
+ *         req_write                            1;
+ *         skip1                               	16;
+ *         rsp_status                          	8;  // only valid for resp
+ *         skip2				32; 
+ *         cmd_lun                           	64;
+ *         tag_id                               32;
+ *         cmd_data_len				32; // for cmd, from expected data transfer length
+ *         skip3                                64;
+ *         cmd_scsi_cdb_op                      8;  // specifies read/write scsi operation
+ *     }
+ *
+ *   // Per TCB Information kept for iscsi protocol:
+ *   //   p4ptcb: 					= 512
+ *   //   p4pt_tcb_iscsi_stats				= 512
+ *   //   p4pt_tcb_iscsi_read_latency_distribution:	= 512 
+ *   //   p4pt_tcb_iscsi_write_latency_distribution:	= 512 
+ *   //   iscsi_rec: 256 * 10 				= 2560
+ *   //   ----------------------------------------------------
+ *   //                                                   4608 (576 bytes)
+ *
+ *   // p4ptcb index by p4pt_idx, contains l7 records for various keys within l7 payload
+ *   - p4ptcb: 512 bits (including reserved)
+ *     {
+ *         // L7 Records - populated dynamically as sessions discovered within a flow
+ *         // There are upto 10 kept at a given time for each tcb (connection)
+ *         // These records are identified using uint32 key (a hash, or the value itself)
+ *         // The address for the record is base_address + num_rec*sizeof(rec)
+ *         // A record is protocol specific cb e.g. p4pt_iscsi_rec
+ *
+ *         // next_idx is a circular value to be used for next l7 rec that is discovered
+ *         next_idx 4;
+ *         // base_address of the first l7-rec
+ *         base_addr 16;
+ *         // rec_size is the rec's size in words (32 bits)
+ *         rec_size 4;
+ *         // reserved bits
+ *         reserved0 8;
+ *
+ *         // upto 10 keys 
+ *         rec_key0 32;
+ *         rec_key1 32;
+ *         rec_key2 32;
+ *         rec_key3 32;
+ *         rec_key4 32;
+ *         rec_key5 32;
+ *         rec_key6 32;
+ *         rec_key7 32;
+ *         rec_key8 32;
+ *         rec_key9 32;
+ *
+ *         reserved 160;
+ *     }
+ *
+ *   // p4pt_tcb_iscsi_stats define common metrics per tcb (aka connection) 
+ *   - p4pt_tcb_iscsi_stats: 448 bits
+ *     {
+ *         // common counters
+ *         read_reqs 			32;
+ *         write_reqs 			32;
+ *         read_bytes 			32;
+ *         write_bytes 			64;
+ *         read_errors  		64;
+ *         write_errors 		32;
+ *         total_read_latency 		64;
+ *         read_latency_divisor 	32;
+ *         write_latency 		64;
+ *         write_latency_divisor 	32;
+ *         reserved             	64;
+ *     }
+ *
+ *   // p4pt_tcb_iscsi_latency_distribution define latency distribution in 16 buckets of log scale
+ *   - p4pt_tcb_iscsi_read_latency_distribution: 512 bits
+ *     {
+ *         range0  32;
+ *         range1  32;
+ *         range2  32;
+ *         range3  32;
+ *         range4  32;
+ *         range5  32;
+ *         range6  32;
+ *         range7  32;
+ *         range8  32;
+ *         range9  32;
+ *         range10 32;
+ *         range11 32;
+ *         range12 32;
+ *         range13 32;
+ *         range14 32;
+ *         range15 32;
+ *     }
+ *   // p4pt_tcb_iscsi_latency_distribution define latency distribution in 16 buckets of log scale
+ *   - p4pt_tcb_iscsi_write_latency_distribution: 512 bits
+ *     {
+ *         range0  32;
+ *         range1  32;
+ *         range2  32;
+ *         range3  32;
+ *         range4  32;
+ *         range5  32;
+ *         range6  32;
+ *         range7  32;
+ *         range8  32;
+ *         range9  32;
+ *         range10 32;
+ *         range11 32;
+ *         range12 32;
+ *         range13 32;
+ *         range14 32;
+ *         range15 32;
+ *     }
+ *
+ *   // each p4pt_iscsi_rec keeps per (lun, tag_id) telemetry information
+ *   - p4pt_iscsi_rec: 256 bits
+ *     {
+ *         reserved       22;		// reserved
+ *         read           1;		// 1 if this is a read operation
+ *         write          1;		// 1 if this is write operation
+ *         status         8;		// last status code
+ *         tag_id         32;		// tag_id
+ *         lun            64		// lun corresponding to this rec
+ *         req_timestamp  64		// timestamp for req/resp correlation
+ *         data_length    32		// data_length (read/write) request
+ *         reserved1      32		// reserved
+ *     }
+ *
+ *   // p4pt global header; contains enough information to do lookups in various stages
+ *   - p4pt_global:  (max 128 bits)
+ *     {
+ *         qid                  24;  // protocol identifier
+ *         p4pt_idx 		24;  // ptp4_idx is the tcb's idx
+ *         rec_idx 		4;   // rec_idx (0-9) that this session is assigned to or belong to
+ *         latency              32;  // would latency be more than 32 bits wide?
+ *         reserved             44;  // reserved
+ *     }
+ *
+ *   // p4pt inter stage header; contains enough information to do lookups in various stages
+ *   - p4pt_s2s: 160 (max 160 bits)
+ *     {
+ *         req                  1;   // 1 if this is a request packet
+ *         resp                 1;   // 1 if this is a response packet
+ *         read                 1;   // 1 if this is a read operation, 0 otherwise
+ *         write                1;   // 1 if this is a read operation, 0 otherwise
+ *         reserved             28;  // reserved
+ *         status               8;   // only valid for resp
+ *         data_len             24;
+ *         lun                  64;  // only for cmd
+ *         tag_id               32;
+ *     }
+ *
+ */
