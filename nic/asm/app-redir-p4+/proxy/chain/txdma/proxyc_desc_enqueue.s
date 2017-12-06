@@ -43,7 +43,7 @@ proxyc_s3_desc_enqueue:
      */
     add         r_qentry_size_shift, r0, k.common_phv_chain_txq_entry_size_shift
     sllv        r_qentry_addr, r_qentry_addr, r_qentry_size_shift
-    add         r_qentry_addr, r_qentry_addr, k.{common_phv_chain_txq_base}.wx
+    add         r_qentry_addr, r_qentry_addr, k.common_phv_chain_txq_base
     phvwr       p.dma_chain_dma_cmd_addr, r_qentry_addr
 
     phvwr       p.chain_txq_desc_addr_descr_addr, k.to_s3_desc

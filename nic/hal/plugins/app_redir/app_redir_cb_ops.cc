@@ -319,7 +319,7 @@ app_redir_proxyccb_chain_txq_build(const flow_key_t& flow_key,
 {
     HAL_TRACE_DEBUG("{} for cb_id {}", __FUNCTION__, proxyccb.cb_id);
 
-    proxyccb.chain_txq_lif = htons(app_redir_proxyc_chain_lif_eval(flow_key));
+    proxyccb.chain_txq_lif = app_redir_proxyc_chain_lif_eval(flow_key);
 
     /*
      * When chain_txq_base is left at zero, PD will automatically fill
@@ -330,7 +330,7 @@ app_redir_proxyccb_chain_txq_build(const flow_key_t& flow_key,
     proxyccb.chain_txq_base  = 0;
     proxyccb.chain_txq_qtype = 0;
     proxyccb.chain_txq_ring  = 0;
-    proxyccb.chain_txq_qid = htonl(proxyccb.cb_id & PROXYCCB_NUM_ENTRIES_MASK);
+    proxyccb.chain_txq_qid   = proxyccb.cb_id & PROXYCCB_NUM_ENTRIES_MASK;
 
     return HAL_RET_OK;
 }

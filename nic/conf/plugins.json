@@ -76,6 +76,7 @@
             "deps"      : [],
             "features"  : [
                 "tcp", 
+                "tcp-trigger-flow", 
                 "quiesce",
                 "tls", 
                 "ipsec",

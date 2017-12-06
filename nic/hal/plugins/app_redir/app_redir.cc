@@ -482,10 +482,7 @@ app_redir_pkt_process(fte::ctx_t& ctx)
          * DOL can force an immediate packet send
          */
         if (redir_ctx.redir_flags() & PEN_APP_REDIR_PIPELINE_LOOPBK_EN) {
-
-            /*
-             * TODO: set a state in appid feature to skip detection
-             */
+            ctx.set_appid_state(APPID_STATE_ABORT);
         }
     }
 
@@ -504,47 +501,30 @@ app_redir_test_flow_dol_port_check(fte::ctx_t& ctx,
     fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
     const flow_key_t&       flow_key = ctx.key();
 
-    if (ctx.pkt()) {
-        switch (flow_key.flow_type) {
+    switch (flow_key.flow_type) {
 
-        case hal::FLOW_TYPE_V4:
-        case hal::FLOW_TYPE_V6:
+    case hal::FLOW_TYPE_V4:
+    case hal::FLOW_TYPE_V6:
 
-            if (flow_key.proto == IPPROTO_TCP) {
-                if ((flow_key.sport == dol_port)   ||
-                    (flow_key.dport == dol_port)) {
+        if (flow_key.proto == IPPROTO_TCP) {
+            if ((flow_key.sport == dol_port)   ||
+                (flow_key.dport == dol_port)) {
 
-                    redir_ctx.set_redir_policy_applic(true);
-                    ctx.set_appid_state(APPID_STATE_NOT_NEEDED); // TODO
-                    return true;
-                }
+                redir_ctx.set_redir_policy_applic(true);
+                ctx.set_appid_state(APPID_STATE_NOT_NEEDED); // TODO
+                return true;
             }
-            break;
-
-        default:
-            break;
         }
+        break;
+
+    default:
+        break;
     }
 #endif
 
     return false;
 }
 
-
-/*
- * Temporary: criteria check for appid DOL testing,
- */
-static bool
-app_redir_test_flow_criteria_check(fte::ctx_t& ctx)
-{
-
-#define APP_REDIR_KISMET_PORT       2501
-#define APP_REDIR_MYSQL_PORT        3306
-
-    return app_redir_test_flow_dol_port_check(ctx, APP_REDIR_KISMET_PORT) ||
-           app_redir_test_flow_dol_port_check(ctx, APP_REDIR_MYSQL_PORT);
-}
-           
 
 /*
  * Temporary: criteria check for appid DOL testing with
@@ -586,6 +566,9 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
         }
     }
 
+    if (!pfi) {
+        HAL_TRACE_DEBUG("app_redir is not applicable for the flow");
+    }
     return pfi;
 }
 
@@ -601,6 +584,8 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
 {
     fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
     proxy_flow_info_t       *pfi;
+    proxy_flow_info_t       *rpfi = NULL;
+    flow_key_t              rev_flow_key;
     hal_ret_t               ret = HAL_RET_OK;
 
     pfi = app_redir_proxy_flow_info_find(ctx, flow_key, include_tcp_tls_flows);
@@ -611,6 +596,24 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
          */
         if (!ctx.pkt() || !ctx.flow_miss() || !redir_ctx.redir_policy_applic()) {
             goto done;
+        }
+
+        if (ctx.existing_session()) {
+
+            /*
+             * Ignore direction. Always set it to 0 for flow_info lookup.
+             */
+            rev_flow_key = ctx.get_key(redir_ctx.chain_rev_role());
+            rev_flow_key.dir = 0;
+            rpfi = app_redir_proxy_flow_info_find(ctx, rev_flow_key,
+                                                  include_tcp_tls_flows);
+            if (!rpfi) {
+                HAL_TRACE_DEBUG("app_redir existing_session for rev_role {} "
+                                "not found", redir_ctx.chain_rev_role());
+
+                ret = HAL_RET_FLOW_NOT_FOUND;
+                goto done;
+            }
         }
 
         /*
@@ -624,10 +627,15 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
 
         pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
         assert(pfi);
+        if (rpfi) {
+            pfi->qid1 = rpfi->qid1;
+            pfi->qid2 = rpfi->qid2;
+        }
     }
 
     if (pfi) {
         redir_ctx.set_proxy_flow_info(pfi);
+        redir_ctx.set_redir_policy_applic(true);
     }
 
 done:
@@ -759,20 +767,8 @@ app_redir_miss_exec(fte::ctx_t& ctx)
      * Evaluate initial flow ID
      */
     app_redir_rev_role_set(ctx);
-    if (ctx.pkt()) {
-        if (app_redir_test_flow_criteria_check(ctx)) {
-            app_redir_proxy_flow_info_update(ctx, true);
-        }
-
-    } else {
-
-        /*
-         * Handle proxy flow update for DOL testing purposes, i.e.,
-         * when infra creates these flows before any packets are sent.
-         */
-        include_tcp_tls_flows = app_redir_test_tcp_tls_flow_criteria_check(ctx);
-        app_redir_proxy_flow_info_update(ctx, include_tcp_tls_flows);
-    }
+    include_tcp_tls_flows = app_redir_test_tcp_tls_flow_criteria_check(ctx);
+    app_redir_proxy_flow_info_update(ctx, include_tcp_tls_flows);
 
     return app_redir_pipeline_action(ctx);
 }
@@ -822,7 +818,7 @@ app_redir_exec_fini(fte::ctx_t& ctx)
                  * works out correctly, that is, the CBs will end up
                  * getting programmed first.
                  */
-                if ((ret == HAL_RET_OK) && ctx.pkt()) {
+                if (ctx.pkt()) {
                     ret = redir_ctx.tcp_tls_proxy_flow() ?
                           app_redir_proxyrcb_proxyccb_create(ctx) :
                           app_redir_rawrcb_rawccb_create(ctx);
@@ -834,10 +830,11 @@ app_redir_exec_fini(fte::ctx_t& ctx)
          * Queue the packet for forwarding to the next service chain if not
          * dropped by any app features and the packet did not come from SPAN.
          */
-        if ((ret == HAL_RET_OK)                 &&
-            redir_ctx.redir_policy_applic()     &&
-            redir_ctx.chain_pkt_verdict_pass()  &&
-            !redir_ctx.chain_pkt_span_instance()) {
+        if ((ret == HAL_RET_OK)                  &&
+            redir_ctx.redir_policy_applic()      &&
+            redir_ctx.chain_pkt_verdict_pass()   &&
+            !redir_ctx.chain_pkt_span_instance() &&
+            (ctx.flow_miss() && !redir_ctx.tcp_tls_proxy_flow())) {
 
             app_redir_pkt_tx_enqueue(ctx);
         }

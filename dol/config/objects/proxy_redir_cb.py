@@ -5,6 +5,7 @@ import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
 import config.resmgr            as resmgr
+import config.objects.flow      as flow
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
@@ -12,6 +13,9 @@ from config.objects.swdr        import SwDscrRingHelper
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
+
+AF_INET = 2
+AF_INET = 10
 
 class ProxyrCbObject(base.ConfigObjectBase):
     def __init__(self):
@@ -25,6 +29,7 @@ class ProxyrCbObject(base.ConfigObjectBase):
         self.id = qid
         gid = "ProxyrCb%04d" % qid
         self.GID(gid)
+        self.af = AF_INET
         # self.spec = spec_obj
         # cfglogger.info("  - %s" % self)
 
@@ -36,6 +41,7 @@ class ProxyrCbObject(base.ConfigObjectBase):
         # assert(len(self.uplinks) > 0)
         cfglogger.info("  - %s" % self)
 
+        self.proxyrcbq = SwDscrRingHelper.main("PROXYRCBQ", gid, self.id)
         return
 
 
@@ -54,12 +60,28 @@ class ProxyrCbObject(base.ConfigObjectBase):
            req_spec.chain_rxq_entry_size_shift   = self.chain_rxq_entry_size_shift
            req_spec.chain_rxq_ring_index_select  = self.chain_rxq_ring_index_select
 
-           req_spec.ip_sa                        = self.ip_sa
-           req_spec.ip_da                        = self.ip_da
+           req_spec.af                           = self.af
+           req_spec.ip_sa.ip_af                  = haldefs.common.IP_AF_INET
+           req_spec.ip_sa.v4_addr                = 0
+           req_spec.ip_da.ip_af                  = haldefs.common.IP_AF_INET
+           req_spec.ip_da.v4_addr                = 0
+
+           #if self.IsIPV4:
+           #    req_spec.af                       = AF_INET
+           #    req_spec.ip_sa.ip_af              = haldefs.common.IP_AF_INET
+           #    req_spec.ip_sa.v4_addr            = self.sip.getnum()
+           #    req_spec.ip_da.ip_af              = haldefs.common.IP_AF_INET
+           #    req_spec.ip_da.v4_addr            = self.sip.getnum()
+           #else:
+           #    req_spec.af                       = AF_INET6
+           #    req_spec.ip_sa.ip_af              = haldefs.common.IP_AF_INET6
+           #    req_spec.ip_sa.v6_addr            = self.sip.getnum().to_bytes(16, 'big')
+           #    req_spec.ip_da.ip_af              = haldefs.common.IP_AF_INET6
+           #    req_spec.ip_da.v6_addr            = self.sip.getnum().to_bytes(16, 'big')
+
            req_spec.sport                        = self.sport
            req_spec.dport                        = self.dport
            req_spec.vrf                          = self.vrf
-           req_spec.af                           = self.af
            req_spec.ip_proto                     = self.ip_proto
 
         return
@@ -82,12 +104,17 @@ class ProxyrCbObject(base.ConfigObjectBase):
             self.pi                           = resp_spec.spec.pi
             self.ci                           = resp_spec.spec.ci
 
-            self.ip_sa                        = resp_spec.spec.ip_sa
-            self.ip_da                        = resp_spec.spec.ip_da
+            #if resp_spec.spec.af == AF_INET:
+            #    self.sip                      = objects.Ipv6Address(integer=resp_spec.spec.ip_sa.v4_addr)
+            #    self.dip                      = objects.Ipv6Address(integer=resp_spec.spec.ip_da.v4_addr)
+            #else:
+            #    self.sip                      = objects.Ipv6Address(integer=resp_spec.spec.ip_sa.v6_addr)
+            #    self.dip                      = objects.Ipv6Address(integer=resp_spec.spec.ip_da.v6_addr)
+
+            self.af                           = resp_spec.spec.af
             self.sport                        = resp_spec.spec.sport
             self.dport                        = resp_spec.spec.dport
             self.vrf                          = resp_spec.spec.vrf
-            self.af                           = resp_spec.spec.af
             self.ip_proto                     = resp_spec.spec.ip_proto
 
         return

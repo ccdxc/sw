@@ -37,6 +37,8 @@ SOURCES = \
 		cpucb_svc.cc \
 		rawrcb_svc.cc \
 		rawccb_svc.cc \
+		proxyrcb_svc.cc \
+		proxyccb_svc.cc \
 		system_svc.cc \
 		$(NULL)
 

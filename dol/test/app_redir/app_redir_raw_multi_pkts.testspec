@@ -53,6 +53,17 @@ packets:
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_FF64/data 
 
+    - packet:
+        id          : PKT3
+        clone       : ref://testcase/packets/id=PKT1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        headers     :
+            tcp:
+                seq     : 0x3abababa
+                ack     : 0x3fefefef
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+
 session:
     - step:
         trigger:
@@ -65,15 +76,39 @@ session:
                  - packet:
                      object  : ref://testcase/packets/id=PKT1
                      port    : ref://testcase/config/dst/endpoint/intf/ports
+
+                 # First packet is a flow miss, so also expect a packet on the FTE (CPU) port.
+                 # Note that FTE will install flows in both directions so subsequent packets
+                 # are all expected to be flow hits.
+                 - packet:
+                     object  : ref://testcase/packets/id=PKT1
+                     port    : 128
+
     - step:
         trigger:
              packets:
+                 # Flow hit expects packet on port. Even though the packet is also
+                 # redirected to CPU, it is thru a different LIF and does not
+                 # translate to port 128 so we don't expect anything on that.
                  - packet:
                      object  : ref://testcase/packets/id=PKT2
                      port    : ref://testcase/config/src/endpoint/intf/ports
         expect:
+             delay  : 1
              packets:
                  - packet:
                      object  : ref://testcase/packets/id=PKT2
+                     port    : ref://testcase/config/dst/endpoint/intf/ports
+
+    - step:
+        trigger:
+             packets:
+                 - packet:
+                     object  : ref://testcase/packets/id=PKT3
+                     port    : ref://testcase/config/src/endpoint/intf/ports
+        expect:
+             packets:
+                 - packet:
+                     object  : ref://testcase/packets/id=PKT3
                      port    : ref://testcase/config/dst/endpoint/intf/ports
 

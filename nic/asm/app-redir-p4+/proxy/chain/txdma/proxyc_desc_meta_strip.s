@@ -88,7 +88,7 @@ proxyc_s2_desc_meta_strip:
      * for the corresponding TxQ ring.
      */
     add         r_chain_indices_addr, r0, \
-                k.{to_s2_chain_txq_ring_indices_addr}.wx    // delay slot
+                k.to_s2_chain_txq_ring_indices_addr     // delay slot
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           proxyc_s3_desc_enqueue,
                           r_chain_indices_addr,

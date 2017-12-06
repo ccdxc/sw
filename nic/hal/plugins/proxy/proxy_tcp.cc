@@ -346,6 +346,10 @@ update_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         flowupd.fwding.qid = pfi->qid2;
     }
 
+    HAL_TRACE_DEBUG("tc-proxy: flow forwarding role: {} qid1: {} qid2: {}",
+                    ctx.role(), pfi->qid1, pfi->qid2);
+    HAL_TRACE_DEBUG("tc-proxy: updating lport = {} for sport = {} dport = {}",
+                    flowupd.fwding.lport, ctx.key().sport, ctx.key().dport);
     return ctx.update_flow(flowupd);
 }
 
@@ -399,12 +403,6 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
         return fte::PIPELINE_END; 
     }
 
-
-    if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
-        HAL_TRACE_DEBUG("tcp-proxy: responder side. ignoring.");
-        return fte::PIPELINE_CONTINUE;
-    }
-
     return fte::PIPELINE_CONTINUE;
 }
 
@@ -414,13 +412,26 @@ tcp_exec_trigger_flow(fte::ctx_t& ctx)
     proxy_flow_info_t*      pfi = NULL;
     flow_key_t              flow_key = ctx.key();
 
+    if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
+        HAL_TRACE_DEBUG("tcp-proxy-trigger-flow: responder side. ignoring.");
+        return fte::PIPELINE_CONTINUE;
+    }
+
+    HAL_TRACE_DEBUG("tcp-proxy-trigger-flow: protobuf_request {}",
+                    ctx.protobuf_request());
+
     if (!ctx.protobuf_request()) {
         uint16_t shw_vlan_id, dhw_vlan_id;
+
+        // Ignore direction. Always set it to 0
+        flow_key.dir = 0;
 
         // get the flow info for the tcp proxy service 
         pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP,
                                   &flow_key);
         if (pfi) {
+            HAL_TRACE_DEBUG("tc-proxy-trigger-flow: lport = {}",
+                            pfi->proxy->meta->lif_info[0].lport_id);
 
             if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.sl2seg(), &shw_vlan_id) == HAL_RET_OK) {
               HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
@@ -510,7 +521,7 @@ tcp_transmit_pkt(unsigned char* pkt,
                  bool is_connect_req, 
                  uint16_t dst_lif, 
                  uint16_t src_lif, 
-        		 hal::flow_direction_t dir, 
+                 hal::flow_direction_t dir, 
                  uint16_t hw_vlan_id) 
 {
     if (gl_ctx) {

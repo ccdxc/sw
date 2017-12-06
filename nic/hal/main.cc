@@ -50,6 +50,8 @@
 #include "nic/hal/lkl/lkl_api.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/rawccb_svc.hpp"
+#include "nic/hal/svc/proxyrcb_svc.hpp"
+#include "nic/hal/svc/proxyccb_svc.hpp"
 #include "nic/hal/svc/crypto_apis_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/quiesce_svc.hpp"
@@ -94,6 +96,8 @@ svc_reg (const std::string& server_addr)
     CryptoKeyServiceImpl     crypto_key_svc; 
     RawrCbServiceImpl        rawrcb_svc;
     RawcCbServiceImpl        rawccb_svc;
+    ProxyrCbServiceImpl      proxyrcb_svc;
+    ProxycCbServiceImpl      proxyccb_svc;
     CryptoApisServiceImpl    crypto_apis_svc;
     EventServiceImpl         event_svc;
     QuiesceServiceImpl       quiesce_svc;
@@ -132,6 +136,8 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&crypto_key_svc);
     server_builder.RegisterService(&rawrcb_svc);
     server_builder.RegisterService(&rawccb_svc);
+    server_builder.RegisterService(&proxyrcb_svc);
+    server_builder.RegisterService(&proxyccb_svc);
     server_builder.RegisterService(&crypto_apis_svc);
     server_builder.RegisterService(&event_svc);
     server_builder.RegisterService(&quiesce_svc);

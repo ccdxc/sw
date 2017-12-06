@@ -25,6 +25,8 @@ class ProxycCbObject(base.ConfigObjectBase):
         self.id = qid
         gid = "ProxycCb%04d" % qid
         self.GID(gid)
+        self.chain_txq_lif = 1001
+        self.chain_txq_qid = qid
         # self.spec = spec_obj
         # cfglogger.info("  - %s" % self)
 

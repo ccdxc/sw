@@ -151,7 +151,7 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
     data.u.start_d.chain_txq_ring = proxyccb->chain_txq_ring;
 
     if (!proxyccb->chain_txq_base) {
-        lif = ntohs(proxyccb->chain_txq_lif);
+        lif = proxyccb->chain_txq_lif;
         assert((lif == SERVICE_LIF_TCP_PROXY) || (lif == SERVICE_LIF_TLS_PROXY));
         ret = p4pd_proxyc_wring_eval(proxyccb->cb_id,
                                      lif == SERVICE_LIF_TCP_PROXY ?

@@ -1,0 +1,73 @@
+# TCP/TLS Proxy Redirect TestSpec file.
+selectors:
+    # Update: Vikasd
+    # Choose the config, that only selects flows matching below packet
+    # templates.
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=False
+        interface   : filter://any
+    flow        : filter://proto=TCP,label=PROXY-REDIR,fwtype=L2,direction=IFLOW
+    maxflows    : 1
+
+# Packet section defines the set of input and output packets. Input packets
+# will be used in triggers and output packets will be used in expect
+packets:
+    - packet:
+        id          : PKT_SYN
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        payloadsize : 0
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                seq     : 0x1abababa
+                ack     : 0x1fefefef
+                flags   : syn
+
+session:
+    - step:
+        direction   : iflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+
+        expect:
+            delay   : 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    #port    : ref://testcase/config/dst/endpoint/intf/ports
+
+    - step:
+        direction   : iflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    #port    : ref://testcase/config/dst/endpoint/intf/ports
+

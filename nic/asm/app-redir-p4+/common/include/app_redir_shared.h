@@ -59,16 +59,16 @@
  * nic/conf/hbm_mem.json for the corresponding HBM regions ("app-redir-rawc",
  * "app-redir-proxyr", etc.) as well as the "lif2qstate_map" region.
  */
-#define RAWRCB_NUM_ENTRIES_MAX              1024
-#define RAWCCB_NUM_ENTRIES_MAX              1024
+#define RAWRCB_NUM_ENTRIES_MAX              4096
+#define RAWCCB_NUM_ENTRIES_MAX              4096
 #define RAWRCB_NUM_ENTRIES_MASK             (RAWRCB_NUM_ENTRIES_MAX - 1)
 #define RAWCCB_NUM_ENTRIES_MASK             (RAWCCB_NUM_ENTRIES_MAX - 1)
 
 /*
  * Number of proxy CBs must be >= number of supported TCP/TLS proxy control blocks
  */
-#define PROXYRCB_NUM_ENTRIES_MAX            1024
-#define PROXYCCB_NUM_ENTRIES_MAX            1024
+#define PROXYRCB_NUM_ENTRIES_MAX            4096
+#define PROXYCCB_NUM_ENTRIES_MAX            4096
 #define PROXYRCB_NUM_ENTRIES_MASK           (PROXYRCB_NUM_ENTRIES_MAX - 1)
 #define PROXYCCB_NUM_ENTRIES_MASK           (PROXYCCB_NUM_ENTRIES_MAX - 1)
  

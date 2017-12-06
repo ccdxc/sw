@@ -69,6 +69,10 @@ def TestCaseSetup(tc):
 
 def TestCaseVerify(tc):
 
+    num_pkts = 1
+    if hasattr(tc.module.args, 'num_pkts'):
+        num_pkts = int(tc.module.args.num_pkts)
+
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     # Verify chain_rxq_base
     rawrcbid = "RawrCb%04d" % id
@@ -111,29 +115,33 @@ def TestCaseVerify(tc):
     rawccbq_cur.Configure()
 
     # Verify PI for RNMDR got incremented
-    if (rnmdr_cur.pi == rnmdr.pi):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
+        print("RNMDR pi check failed old %d new %d expected %d" %
+                     (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
         return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
 
     # Verify PI for RNMPR or RNMPR_SMALL got incremented
-    if (rnmpr_cur.pi == rnmpr.pi) and (rnmpr_small_cur.pi == rnmpr_small.pi):
-        print("One of RNMPR pi check failed old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-        print("Or RNMPR_SMALL pi check failed old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
+    if ((rnmpr_cur.pi+rnmpr_small_cur.pi) != (rnmpr.pi+rnmpr_small.pi+num_pkts)):
+        print("RNMPR pi check failed old %d new %d expected %d" %
+                  (rnmpr.pi+rnmpr_small.pi, rnmpr_cur.pi+rnmpr_small_cur.pi,
+                   rnmpr.pi+rnmpr_small.pi+num_pkts))
         return False
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
 
     # Rx: verify PI for ARQ got incremented
-    if (arq_cur.pi == arq.pi):
-        print("ARQ pi check failed old %d new %d" % (arq.pi, arq_cur.pi))
+    if (arq_cur.pi != arq.pi+num_pkts):
+        print("ARQ pi check failed old %d new %d expected %d" %
+                   (arq.pi, arq_cur.pi, arq.pi+num_pkts))
         return False
     print("ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
 
     # Tx: verify PI for RAWCCB got incremented
     rawccb_cur.GetObjValPd()
-    if (rawccb_cur.pi == rawccb.pi):
-        print("RAWCCB pi check failed old %d new %d" % (rawccb.pi, rawccb_cur.pi))
+    if (rawccb_cur.pi != rawccb.pi+num_pkts):
+        print("RAWCCB pi check failed old %d new %d expected %d" %
+                      (rawccb.pi, rawccb_cur.pi, rawccb.pi+num_pkts))
         return False
     print("RAWCCB pi old %d new %d" % (rawccb.pi, rawccb_cur.pi))
 
