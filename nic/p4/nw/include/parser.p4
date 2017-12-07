@@ -24,11 +24,11 @@ header_type parser_metadata_t {
         inner_ipv6_nextHdr              : 8;
         l4_trailer                      : 16;
         l4_len                          : 16;
-        //Parser local field to specify destination field 
+        //Parser local field to specify destination field
         //to store icrc value. No PHV allocated.
         ipv6_options_len                : 16;
         inner_ipv6_options_len          : 16;
-        icrc                            : 32; 
+        icrc                            : 32;
     }
 }
 @pragma pa_parser_local
@@ -188,6 +188,14 @@ header tcp_option_four_sack_t tcp_option_four_sack;
 @pragma no_ohi xgress
 header tcp_option_timestamp_t tcp_option_timestamp;
 
+// UDP options
+header udp_opt_eol_t udp_opt_eol;
+header udp_opt_nop_t udp_opt_nop;
+header udp_opt_ocs_t udp_opt_ocs;
+header udp_opt_mss_t udp_opt_mss;
+header udp_opt_timestamp_t udp_opt_timestamp;
+header udp_opt_unknown_t udp_opt_unknown;
+
 // IPv4 Options
 header ipv4_option_EOL_t ipv4_option_EOL;
 header ipv4_option_NOP_t ipv4_option_NOP;
@@ -216,6 +224,11 @@ header udp_t inner_udp;
 header capri_i2e_metadata_t capri_i2e_metadata;
 
 header p4_to_p4plus_ipsec_header_t p4_to_p4plus_ipsec;
+
+@pragma synthetic_header
+@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_ts_value udp_opt_timestamp.ts_value
+@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_ts_echo  udp_opt_timestamp.ts_echo
+@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_mss      udp_opt_mss.mss
 header p4_to_p4plus_roce_header_t p4_to_p4plus_roce;
 
 @pragma synthetic_header
@@ -1240,19 +1253,74 @@ parser parse_udp_payload {
 }
 
 @pragma xgress egress
+@pragma header_ordering udp_opt_ocs udp_opt_mss udp_opt_timestamp udp_opt_nop udp_opt_unknown
 parser parse_udp_options {
     return select (current(0,8)) {
-       0x02 : parse_udp_option_ocs;
-       // Add others here
-       default : ingress;
+       UDP_KIND_EOL : parse_udp_option_eol;
+       UDP_KIND_NOP : parse_udp_option_nop;
+       UDP_KIND_OCS : parse_udp_option_ocs;
+       UDP_KIND_MSS : parse_udp_option_mss;
+       UDP_KIND_TIMESTAMP : parse_udp_option_timestamp;
+       default : parse_udp_option_unknown;
     }
 }
 
 @pragma xgress egress
-header udp_opt_ocs_t udp_opt_ocs;
+parser parse_udp_option_eol {
+    extract(udp_opt_eol);
+    return ingress;
+}
+
+@pragma xgress egress
+parser parse_udp_option_nop {
+    extract(udp_opt_nop);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 1);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+@pragma xgress egress
 parser parse_udp_option_ocs {
     extract(udp_opt_ocs);
-    return ingress;
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 2);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+@pragma xgress egress
+parser parse_udp_option_mss {
+    extract(udp_opt_mss);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 4);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+@pragma xgress egress
+parser parse_udp_option_timestamp {
+    extract(udp_opt_timestamp);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 10);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+@pragma xgress egress
+@pragma no_extract
+parser parse_udp_option_unknown {
+    extract(udp_opt_unknown);
+    set_metadata(parser_metadata.l4_trailer,
+                 parser_metadata.l4_trailer - udp_opt_unknown.len);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
 }
 
 @pragma xgress egress

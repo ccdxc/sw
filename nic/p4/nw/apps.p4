@@ -229,6 +229,13 @@ action p4plus_app_rdma() {
         }
     }
 
+    if (udp_opt_timestamp.valid == TRUE) {
+        modify_field(p4_to_p4plus_roce.roce_opt_ts_valid, TRUE);
+    }
+    if (udp_opt_mss.valid == TRUE) {
+        modify_field(p4_to_p4plus_roce.roce_opt_mss_valid, TRUE);
+    }
+
     remove_header(ethernet);
     remove_header(vlan_tag);
     remove_header(ipv4);

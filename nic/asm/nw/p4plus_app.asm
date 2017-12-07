@@ -172,6 +172,8 @@ p4plus_app_rdma:
   seq         c1, k.ipv6_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit0_ebit3[3:2]
   phvwr       p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
+  phvwrpair   p.p4_to_p4plus_roce_roce_opt_ts_valid, k.udp_opt_timestamp_valid, \
+                p.p4_to_p4plus_roce_roce_opt_mss_valid, k.udp_opt_mss_valid
   phvwr       p.ethernet_valid, FALSE
   phvwr       p.vlan_tag_valid, FALSE
   phvwr       p.ipv4_valid, FALSE
