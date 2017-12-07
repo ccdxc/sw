@@ -523,6 +523,7 @@ class IcrcDeParserProfile:
                     mask_profile[k]['value'] = str(v)
                 else:
                     mask_profile[prefix+k+suffix]['value'] = str(v)
+        mask_profile['_modified'] = True
 
     def L4MaskProfileConfigGenerate(self, mask_profile):
         prefix = 'fld_'
@@ -535,6 +536,7 @@ class IcrcDeParserProfile:
                     mask_profile[k]['value'] = str(v)
                 else:
                     mask_profile[prefix+k+suffix]['value'] = str(v)
+        mask_profile['_modified'] = True
 
     def MaskProfileLogGenerate(self):
         prefix = 'fld_'
@@ -904,7 +906,7 @@ class Icrc:
         #64 1bits are added to icrc computation.
         prof_obj.IcrcProfileStartAdjSet(0, 8)
         prof_obj.IcrcProfileShiftLeftSet(0, 0)
-        prof_obj.IcrcProfileEndAdjSet(0, 0)
+        prof_obj.IcrcProfileEndAdjSet(0, 4)
         prof_obj.IcrcProfileMaskAdjSet(0, 0)
         #Icrc calculation till end of packet.
         prof_obj.IcrcProfileEndEopSet(1)
@@ -917,7 +919,7 @@ class Icrc:
         mask_field['mask_en']   = 1
         mask_field['use_ohi']   = 0
         mask_field['start_adj'] = 0
-        mask_field['end_adj']   = 8
+        mask_field['end_adj']   = 7  #End is inclusive in HW
         mask_field['fill']  = 1
         mask_field['skip_first_nibble']  = 0
         prof_obj.IcrcMaskProfileMaskFieldAdd(fld_inst, mask_field)
@@ -932,7 +934,7 @@ class Icrc:
             #Use mask-ohi for udp.csum field.
             mask_field['use_ohi']   = 0
             mask_field['start_adj'] = l3hdr_ifld.offset / 8
-            mask_field['end_adj']   = (l3hdr_ifld.offset + l3hdr_ifld.width) / 8
+            mask_field['end_adj']   = (l3hdr_ifld.offset + l3hdr_ifld.width) / 8 - 1 #End is inclusive in HW
             mask_field['fill']      = 1
             mask_field['skip_first_nibble']  = 0
             if l3hdr_ifld.offset % 8 == 4:
@@ -963,7 +965,7 @@ class Icrc:
             #Use mask-ohi for udp.csum field.
             mask_field['use_ohi']   = 1
             mask_field['start_adj'] = hdr_ifld.offset / 8
-            mask_field['end_adj']   = (hdr_ifld.offset + hdr_ifld.width) / 8
+            mask_field['end_adj']   = (hdr_ifld.offset + hdr_ifld.width) / 8 - 1 #End is inclusive in HW
             mask_field['fill']      = 1
             mask_field['skip_first_nibble']  = 0
             if hdr_ifld.offset % 8 == 4:
@@ -1397,13 +1399,16 @@ class Icrc:
         fld_inst = 0
         mask_field              = {}
         mask_field['en']   = 1
-        mask_field['start'] = 0
-        mask_field['end']   = 8
+        mask_field['start'] = 8
+        mask_field['end']   = 1  #End is inclusive in HW
         mask_field['fill']  = 1
         mask_field['skip_first_nibble']  = 0
+        #TODO : Enable following lines once dprsr fix is released
+        #mask_field['start_sub']  = 1
+        #mask_field['end_sub']  = 1
         prof_obj.IcrcMaskProfileMaskFieldAdd(fld_inst, mask_field)
 
-        leading_64b_byte_len = 8
+        leading_64b_byte_len = 0
 
         l3hdr_iflds = calfldobj.L3HdrInvariantFieldsGet()
         fld_inst = 1
@@ -1411,7 +1416,7 @@ class Icrc:
             mask_field              = {}
             mask_field['en']        = 1
             mask_field['start']     = l3hdr_ifld.offset / 8
-            mask_field['end']       = (l3hdr_ifld.offset + l3hdr_ifld.width) / 8
+            mask_field['end']       = (l3hdr_ifld.offset + l3hdr_ifld.width) / 8  - 1 #End is inclusive in HW
             mask_field['fill']      = 1
             mask_field['skip_first_nibble']  = 0
             if l3hdr_ifld.offset % 8 == 4:
@@ -1446,7 +1451,7 @@ class Icrc:
             mask_field              = {}
             mask_field['en']        = 1
             mask_field['start']     = hdr_ifld.offset / 8
-            mask_field['end']       = (hdr_ifld.offset + hdr_ifld.width) / 8
+            mask_field['end']       = (hdr_ifld.offset + hdr_ifld.width) / 8  - 1 #End is inclusive in HW
             mask_field['fill']      = 1
             mask_field['skip_first_nibble']  = 0
             if hdr_ifld.offset % 8 == 4:
