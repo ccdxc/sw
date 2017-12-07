@@ -68,7 +68,13 @@ void appid_test_ctrl_thread_run(appid_test* this_test);
 class appid_test : public ::testing::Test {
 public:
     void control_thread_exec() {
-        scanner_init(hal::HAL_THREAD_ID_PERIODIC);
+        if (scanner_init(hal::HAL_THREAD_ID_CFG) != HAL_RET_OK) {
+            return;
+        }
+        if (scanner_init(hal::HAL_THREAD_ID_PERIODIC) != HAL_RET_OK) {
+            scanner_cleanup(hal::HAL_THREAD_ID_CFG);
+            return;
+        }
         for (int i = 0; i < 10; i++) {
             // TODO: tune this number
             // run the main loop enough times to finish initializing pkt threads
@@ -82,6 +88,7 @@ public:
 	    this_thread::sleep_for(std::chrono::milliseconds{10});
         }
         scanner_cleanup(hal::HAL_THREAD_ID_PERIODIC);
+        scanner_cleanup(hal::HAL_THREAD_ID_CFG);
     }
 
 protected:

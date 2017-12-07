@@ -427,6 +427,9 @@ public:
     bool redir_policy_applic() const { return redir_policy_applic_; }
     void set_redir_policy_applic(bool yesno) { redir_policy_applic_ = yesno; }
 
+    bool was_appid_scanned() const { return was_appid_scanned_; }
+    void set_was_appid_scanned(bool yesno) { was_appid_scanned_ = yesno; }
+
     uint8_t chain_qtype() const { return chain_qtype_; }
     void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
 
@@ -460,7 +463,8 @@ private:
     types::WRingType                chain_wring_type_;
     bool                            chain_pkt_enqueued_ : 1,
                                     pipeline_end_       : 1,
-                                    redir_policy_applic_: 1;
+                                    redir_policy_applic_: 1,
+                                    was_appid_scanned_: 1;
     app_redir_verdict_t             chain_pkt_verdict_;
     pen_app_redir_header_v1_full_t  redir_miss_hdr_;
     uint8_t                         *redir_miss_pkt_p_;

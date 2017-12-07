@@ -361,7 +361,9 @@ app_redir_test_flow_criteria_check(fte::ctx_t& ctx)
                     (flow_key.dport == APP_REDIR_MYSQL_PORT)) {
 
                     redir_ctx.set_redir_policy_applic(true);
-                    ctx.set_appid_state(APPID_STATE_NOT_NEEDED); // TODO
+                    if (ctx.appid_state() == APPID_STATE_INIT) {
+                        ctx.set_appid_state(APPID_STATE_NEEDED); // TODO
+                    }
                     return true;
                 }
             }
