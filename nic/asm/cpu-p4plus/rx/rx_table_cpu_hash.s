@@ -11,7 +11,7 @@ struct rx_table_cpu_hash_k k;
     .param cpu_rx_read_arqrx_pindex_start
     .align
 
-cpu_rx_hash_start:
+rx_table_cpu_hash:
     sne     c1, k.toeplitz_key2_data[3:0], P4PLUS_APPTYPE_CPU
     bcf     [c1], cpu_hash_calc_done
     nop

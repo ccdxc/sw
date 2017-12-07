@@ -27,7 +27,7 @@ SRC_FILES := \
     $(SRC_DIR)/cpu_read_arqrx_pindex.s \
     $(SRC_DIR)/cpu_desc_alloc.s \
     $(SRC_DIR)/cpu_page_alloc.s \
-    $(SRC_DIR)/cpu_rx_hash.s \
+    $(SRC_DIR)/rx_table_cpu_hash.s \
     $(SRC_DIR)/cpu_write_arq.s \
 	
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
