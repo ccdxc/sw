@@ -14,9 +14,9 @@ typedef struct ccmd {
            src_is_list:1,
            dst_is_list:1,
            cksum_en:1,
-           cksum_type:1, // 0-ALDER32, 1-CRC32
+           cksum_adler:1,    // 0-ADLER32, 1-CRC32
            sha_en:1,
-           sha2_type:1,  // 0-512, 1-256
+           sha256:1,         // 0-512, 1-256
            rsvd5b:5;
 } ccmd_t;
 
