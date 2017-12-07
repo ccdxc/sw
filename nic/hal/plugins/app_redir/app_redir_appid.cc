@@ -67,14 +67,11 @@ exec_appid_start(fte::ctx_t& ctx)
 
     app_redir_policy_applic_set(ctx);
 
-    if (!ctx.app_redir().was_appid_scanned()) {
-        // Don't call scanner twice for the same pkt
-        ctx.set_appid_state(APPID_STATE_IN_PROGRESS);
-        ret = appid_scan(ctx);
-        ctx.app_redir().set_was_appid_scanned(true);
-    } else {
-        HAL_TRACE_DEBUG("exec_appid_start: Skip appid scanning on second pass");
-    }
+    // TODO: skip scanning for flow_miss rflow
+
+    ctx.set_appid_state(APPID_STATE_IN_PROGRESS);
+    ret = appid_scan(ctx);
+
     return ret;
 }
 
@@ -87,13 +84,9 @@ exec_appid_continue(fte::ctx_t& ctx)
 
     app_redir_policy_applic_set(ctx);
 
-    if (!ctx.app_redir().was_appid_scanned()) {
-        // Don't call scanner twice for the same pkt
-        ret = appid_scan(ctx);
-        ctx.app_redir().set_was_appid_scanned(true);
-    } else {
-        HAL_TRACE_DEBUG("exec_appid_continue: Skip appid scanning on second pass");
-    }
+    // TODO: skip scanning for flow_miss rflow
+
+    ret = appid_scan(ctx);
 
     return ret;
 }

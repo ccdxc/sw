@@ -69,10 +69,12 @@ class appid_test : public ::testing::Test {
 public:
     void control_thread_exec() {
         if (scanner_init(hal::HAL_THREAD_ID_CFG) != HAL_RET_OK) {
+            ctrl_mtx.unlock();
             return;
         }
         if (scanner_init(hal::HAL_THREAD_ID_PERIODIC) != HAL_RET_OK) {
             scanner_cleanup(hal::HAL_THREAD_ID_CFG);
+            ctrl_mtx.unlock();
             return;
         }
         for (int i = 0; i < 10; i++) {
