@@ -12,33 +12,50 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cmd"
 	grpcclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
+	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
 	apiServerWaitTime = time.Second
+	watcherQueueLen   = 1000
 )
 
 // CfgWatcherService watches for changes in Spec in kvstore and takes appropriate actions
 // for the node and cluster management. if needed
 type CfgWatcherService struct {
 	sync.Mutex
-	ctx             context.Context
-	cancel          context.CancelFunc
-	logger          log.Logger
-	clientConn      *grpc.ClientConn
-	apiClient       cmd.CmdV1Interface
+	sync.WaitGroup
+
+	// In memory DB of APIserver objects
+	cache *cache.Statemgr
+
+	// Logger
+	logger log.Logger
+
+	// Context
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	// API client & API server related attributes
+	apiServerAddr string // apiserver address, in service name or IP:port format
+	clientConn    *grpc.ClientConn
+	apiClient     cmd.CmdV1Interface
+
+	// Object watchers
 	clusterWatcher  kvstore.Watcher // Cluster object watcher
 	nodeWatcher     kvstore.Watcher // Node endpoint watcher
 	smartNICWatcher kvstore.Watcher // SmartNIC object watcher
 
+	// Event handlers
 	nodeEventHandler     types.NodeEventHandler
 	clusterEventHandler  types.ClusterEventHandler
 	smartNICEventHandler types.SmartNICEventHandler
@@ -60,25 +77,43 @@ func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICEv
 }
 
 // apiClientConn creates a gRPC client Connection to API server
-func apiClientConn() (*grpc.ClientConn, error) {
+func (k *CfgWatcherService) apiClientConn() (*grpc.ClientConn, error) {
 	servers := make([]string, 0)
 	for ii := range env.QuorumNodes {
 		servers = append(servers, fmt.Sprintf("%s:%s", env.QuorumNodes[ii], globals.CMDGRPCPort))
 	}
 	r := resolver.New(&resolver.Config{Name: "cmd", Servers: servers})
-	rpcClient, err := rpckit.NewRPCClient("cmd", globals.APIServer, rpckit.WithBalancer(balancer.New(r)))
+	rpcClient, err := rpckit.NewRPCClient("cmd", k.apiServerAddr, rpckit.WithBalancer(balancer.New(r)))
 	if err != nil {
-		log.Errorf("RPC client creation failed with error: %v", err)
+		k.logger.Errorf("#### RPC client creation failed with error: %v", err)
 		return nil, errors.NewInternalError(err)
 	}
 	return rpcClient.ClientConn, err
 }
 
 // NewCfgWatcherService creates a new Config Watcher service.
-func NewCfgWatcherService(logger log.Logger) *CfgWatcherService {
+func NewCfgWatcherService(logger log.Logger, apiServerAddr string, cache *cache.Statemgr) *CfgWatcherService {
 	return &CfgWatcherService{
-		logger: logger.WithContext("submodule", "cfgWatcher"),
+		logger:        logger.WithContext("submodule", "cfgWatcher"),
+		apiServerAddr: apiServerAddr,
+		cache:         cache,
 	}
+}
+
+// FindObject looks up an object in local cache
+func (k *CfgWatcherService) FindObject(kind, tenant, name string) (memdb.Object, error) {
+	return k.cache.FindObject(kind, tenant, name)
+}
+
+// ListObjects list all objects of a kind
+func (k *CfgWatcherService) ListObjects(kind string) []memdb.Object {
+	return k.cache.ListObjects(kind)
+}
+
+// WatchObjects watches object state for changes
+// TODO: Add support for watch with resource version
+func (k *CfgWatcherService) WatchObjects(kind string, watchChan chan memdb.Event) error {
+	return k.cache.WatchObjects(kind, watchChan)
 }
 
 // APIClient returns an interface to APIClient. Allows for sharing of grpc connection between various modules
@@ -101,6 +136,7 @@ func (k *CfgWatcherService) Start() {
 	}
 	k.logger.Infof("Starting config watcher service")
 	k.ctx, k.cancel = context.WithCancel(context.Background())
+
 	go k.waitForAPIServerOrCancel()
 }
 
@@ -116,17 +152,28 @@ func (k *CfgWatcherService) Stop() {
 	k.cancel = nil
 	k.clientConn.Close()
 	k.clientConn = nil
+
+	// wait for all go routines to exit
+	k.Wait()
 }
 
 // waitForAPIServerOrCancel blocks until APIServer is up, before getting in to the
 // business logic for this service.
 func (k *CfgWatcherService) waitForAPIServerOrCancel() {
+
+	// init wait group
+	k.Add(1)
+	defer k.Done()
+
 	opts := api.ListWatchOptions{}
 	ii := 0
 	for {
 		select {
 		case <-time.After(apiServerWaitTime):
-			c, err := apiClientConn()
+			c, err := k.apiClientConn()
+
+			k.logger.Infof("Apiclient: %+v err: %v ii: %d", c, err, ii)
+
 			if err != nil {
 				break
 			}
@@ -161,6 +208,10 @@ func (k *CfgWatcherService) stopWatchers() {
 
 // runUntilCancel implements the config Watcher service.
 func (k *CfgWatcherService) runUntilCancel() {
+
+	// init wait group
+	k.Add(1)
+	defer k.Done()
 
 	var err error
 	opts := api.ListWatchOptions{}

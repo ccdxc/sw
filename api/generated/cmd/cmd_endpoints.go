@@ -1247,6 +1247,11 @@ func makeURICmdV1AutoAddNodeCreateOper(in *Node) string {
 }
 
 //
+func makeURICmdV1AutoAddSmartNICCreateOper(in *SmartNIC) string {
+	return fmt.Sprint("/v1/cmd", "/smartnics")
+}
+
+//
 func makeURICmdV1AutoDeleteClusterDeleteOper(in *Cluster) string {
 	return fmt.Sprint("/v1/cmd", "/cluster/", in.Name)
 }
@@ -1485,7 +1490,20 @@ func (r *EndpointsCmdV1RestClient) AutoWatchNode(ctx context.Context, in *Node) 
 
 // AutoAddSmartNIC CRUD method for SmartNIC
 func (r *EndpointsCmdV1RestClient) AutoAddSmartNIC(ctx context.Context, in *SmartNIC) (*SmartNIC, error) {
-	return nil, errors.New("not allowed")
+	path := makeURICmdV1AutoAddSmartNICCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespCmdV1AutoAddSmartNIC(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*SmartNIC), nil
 }
 
 // AutoUpdateSmartNIC CRUD method for SmartNIC

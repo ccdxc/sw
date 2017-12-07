@@ -639,6 +639,30 @@
         "tags": [
           "CmdV1"
         ]
+      },
+      "post": {
+        "operationId": "AutoAddSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/cmdSmartNIC"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cmdSmartNIC"
+            }
+          }
+        ],
+        "tags": [
+          "CmdV1"
+        ]
       }
     },
     "/smartnics/{O.Name}": {
@@ -722,6 +746,18 @@
             "type": "string"
           },
           {
+            "name": "Spec.MgmtIp",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.NodeName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Status.SerialNum",
             "in": "query",
             "required": false,
@@ -729,12 +765,6 @@
           },
           {
             "name": "Status.PrimaryMacAddress",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Status.NodeName",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1048,13 +1078,15 @@
         },
         "Status": {
           "type": "string",
-          "title": "Ports holds a list of Port Specs"
+          "title": "Managment IP address of the naples node"
         },
         "LastTransitionTime": {
-          "type": "string"
+          "type": "string",
+          "description": "Workload node or Controller node."
         },
         "Reason": {
-          "type": "string"
+          "type": "string",
+          "title": "Ports holds a list of Port Specs"
         },
         "Message": {
           "type": "string"
@@ -1229,6 +1261,12 @@
         "Phase": {
           "type": "string"
         },
+        "MgmtIp": {
+          "type": "string"
+        },
+        "NodeName": {
+          "type": "string"
+        },
         "Ports": {
           "type": "array",
           "items": {
@@ -1250,9 +1288,6 @@
           "type": "string"
         },
         "PrimaryMacAddress": {
-          "type": "string"
-        },
-        "NodeName": {
           "type": "string"
         },
         "Ports": {

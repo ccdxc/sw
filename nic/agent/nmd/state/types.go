@@ -39,7 +39,6 @@ type NMD struct {
 	listener         net.Listener // socket listener
 	httpServer       *http.Server // HTTP server
 	isRestSrvRunning bool         // status of the REST server
-
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples

@@ -8,6 +8,7 @@ package cmd
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -363,6 +364,16 @@ func init() {
 		m := i.(*SmartNICCondition)
 
 		if _, ok := SmartNICCondition_ConditionType_value[m.Type]; !ok {
+			return false
+		}
+		return true
+	})
+
+	funcMapCmd["SmartNICSpec"] = make(map[string][]func(interface{}) bool)
+
+	funcMapCmd["SmartNICSpec"]["all"] = append(funcMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
+		m := i.(*SmartNICSpec)
+		if !validators.IPAddr(m.MgmtIp) {
 			return false
 		}
 		return true

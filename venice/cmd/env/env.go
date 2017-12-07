@@ -3,6 +3,7 @@ package env
 import (
 	"sync"
 
+	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/utils/certmgr"
@@ -25,6 +26,7 @@ var (
 	KVServers         []string
 	LeaderService     types.LeaderService // common leader service used by MasterService, NTP Service, VIPService etc
 	Mutex             sync.Mutex
+	StateMgr          *cache.Statemgr
 	MasterService     types.MasterService
 	NodeService       types.NodeService
 	VipService        types.VIPService
@@ -32,7 +34,8 @@ var (
 	NtpService        types.NtpService
 	K8sService        types.K8sService
 	ResolverService   types.ResolverService
-	RPCServer         *rpckit.RPCServer
+	NICService        types.SmartNICService
 	CfgWatcherService types.CfgWatcherService
 	CertMgr           *certmgr.CertificateMgr
+	RPCServer         *rpckit.RPCServer
 )

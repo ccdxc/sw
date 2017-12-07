@@ -6,17 +6,16 @@ import (
 	"sync"
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
 	api "github.com/pensando/sw/api"
-	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
-
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/ops"
+
+	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -364,13 +363,45 @@ func (m *masterService) handleClusterEvent(et kvstore.WatchEventType, cluster *c
 // handleSmartNIC handles SmartNIC updates
 func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.SmartNIC) {
 
-	log.Infof("SmartNIC update nic: %+v, type: %v", nic, et)
+	log.Debugf("SmartNIC update: nic: %+v event: %v", *nic, et)
+
 	switch et {
 	case kvstore.Created:
+
+		err := env.StateMgr.CreateSmartNIC(nic)
+		if err != nil {
+			log.Fatalf("Error creating smartnic {%+v}. Err: %v", nic, err)
+		}
+
+		// Initiate NIC registration only in cases where Phase is unknown or empty
+		// For Naples initiated case, the phase will be set to REGISTERING initially
+		if nic.Spec.Phase == cmd.SmartNICSpec_UNKNOWN.String() || nic.Spec.Phase == "" {
+			go env.NICService.InitiateNICRegistration(nic)
+		}
+
 		return
+
 	case kvstore.Updated:
+
+		err := env.StateMgr.UpdateSmartNIC(nic)
+		if err != nil {
+			log.Errorf("Error updating smartnic {%+v}. Err: %v", nic, err)
+		}
+
+		// Initiate NIC registration only in cases where Phase is unknown or empty
+		// For Naples initiated case, the phase will be set to REGISTERING initially
+		if nic.Spec.Phase == cmd.SmartNICSpec_UNKNOWN.String() || nic.Spec.Phase == "" {
+			go env.NICService.InitiateNICRegistration(nic)
+		}
+
 		return
+
 	case kvstore.Deleted:
+		env.NICService.DeleteNicFromRetryDB(nic)
+		err := env.StateMgr.DeleteSmartNIC(nic.Tenant, nic.Name)
+		if err != nil {
+			log.Errorf("Error deleting smartnic %s|%s. Err: %v", nic.Tenant, nic.Name, err)
+		}
 		return
 	}
 }

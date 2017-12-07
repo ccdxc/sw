@@ -1,21 +1,20 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package statemgr
+package cache
 
 import (
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/ctrler/npm/writer"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
 
 // Statemgr is the object state manager
 type Statemgr struct {
-	memDB  *memdb.Memdb  // database of all objects
-	writer writer.Writer // writer to apiserver
+	memDB *memdb.Memdb // database of all objects
 }
 
 // FindObject looks up an object in local db
 func (sm *Statemgr) FindObject(kind, tenant, name string) (memdb.Object, error) {
+
 	// form network key
 	ometa := api.ObjectMeta{
 		Tenant: tenant,
@@ -37,13 +36,19 @@ func (sm *Statemgr) WatchObjects(kind string, watchChan chan memdb.Event) error 
 	return sm.memDB.WatchObjects(kind, watchChan)
 }
 
+// StopWatchObjects Stops watches of network state
+func (sm *Statemgr) StopWatchObjects(kind string, watchChan chan memdb.Event) error {
+	// just remove the channel from the list of watchers
+	return sm.memDB.StopWatchObjects(kind, watchChan)
+}
+
 // NewStatemgr creates a new state manager object
-func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
+func NewStatemgr() *Statemgr {
+
 	// create new statemgr instance
 	statemgr := &Statemgr{
-		memDB:  memdb.NewMemdb(),
-		writer: wr,
+		memDB: memdb.NewMemdb(),
 	}
 
-	return statemgr, nil
+	return statemgr
 }

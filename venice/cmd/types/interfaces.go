@@ -272,3 +272,21 @@ type CfgWatcherService interface {
 	// accepting requests
 	APIClient() cmd.CmdV1Interface
 }
+
+// SmartNICService is responsible for lifecycle management of SmartNIC object
+type SmartNICService interface {
+
+	// MonitorHealth is responsible for monitoring health of SmartNIC objects
+	MonitorHealth()
+
+	// InitiateNICRegistration initiates post to naples config to switch to
+	// managed mode
+	InitiateNICRegistration(nic *cmd.SmartNIC)
+
+	// UpdateNicInRetryDB adds or updates a smartNIC in RetryDB that has NICs in
+	// active retry for initiating NIC registration to switch to managed mode
+	UpdateNicInRetryDB(nic *cmd.SmartNIC)
+
+	// DeleteNicFromRetryDB removes a smartNIC from RetryDB
+	DeleteNicFromRetryDB(nic *cmd.SmartNIC)
+}

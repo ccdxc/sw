@@ -255,10 +255,11 @@ message SmartNICSpec {
 
     // Various phases in lifecycle of a SmartNIC
     enum SmartNICPhase {
-        UNKNOWN      = 0; // Unknown status
-        REJECTED     = 1; // NIC is rejected, due to invalid cert
-        PENDING      = 2; // NIC is validated but waiting for manual approval
-        ADMITTED     = 3; // NIC is validated and admitted
+        UNKNOWN      = 0; // Unknown status, initial state.
+        REGISTERING  = 1; // NIC registration is in progress, set when Naples initiated registration
+        REJECTED     = 2; // NIC is rejected, due to invalid cert
+        PENDING      = 3; // NIC is validated but waiting for manual approval
+        ADMITTED     = 4; // NIC is validated and admitted
     }
 
     // Current phase of the SmartNIC.
@@ -273,12 +274,19 @@ message SmartNICSpec {
                                 (venice.check) = "StrEnum(SmartNICSpec.SmartNICPhase)",
                                 (gogoproto.jsontag) = "phase,omitempty"];
 
+    // Managment IP address of the naples node
+    string MgmtIp           = 2 [(gogoproto.nullable) = true,
+                                (venice.check) = "IPAddr()",
+                                (gogoproto.jsontag) = "mgmt-ip,omitempty"];
+
+    // Workload node or Controller node.
+    string NodeName         = 3 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "node-name,omitempty"];
+
     // Ports holds a list of Port Specs
-    repeated PortSpec Ports = 2 [(gogoproto.nullable) = false,
+    repeated PortSpec Ports = 4 [(gogoproto.nullable) = false,
                                 (gogoproto.jsontag) = "ports,omitempty"];
 }
-
-
 
 // SmartNICStatus contains current status of a SmartNIC
 message SmartNICStatus {
@@ -295,11 +303,6 @@ message SmartNICStatus {
     string PrimaryMacAddress                = 3 [(gogoproto.nullable) = true,
                                                 (gogoproto.jsontag) = "primary-mac-address,omitempty"];
 
-    // Node name, will be populated by an entity in Venice (CMD)
-    // based on host & nic inventory discovered via Orchestration interface
-    string NodeName                         = 4 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "node-name,omitempty"];
-
     // Ports holds a list of PortStatus
     repeated PortStatus Ports               = 5 [(gogoproto.nullable) = true,
                                                 (gogoproto.jsontag) = "ports,omitempty"];
@@ -310,8 +313,8 @@ message SmartNICCondition {
 
     // These are valid conditions of a SmartNIC
     enum ConditionType {
-        HEALTHY = 0; // NIC is healthy
-
+        HEALTHY     = 0; // NIC is healthy
+        UNREACHABLE = 1; // NIC is not reachable from Venice cluster
     }
 
     // Type indicates a certain NIC condition
@@ -434,7 +437,7 @@ service CmdV1 {
     };
     option(venice.apiRestService) = {
         Object: "SmartNIC"
-        Method: ["list"]
+        Method: ["post", "list"]
         Pattern: "/smartnics"
     };
 }

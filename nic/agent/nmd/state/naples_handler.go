@@ -15,10 +15,10 @@ const (
 	// ConfigURL in URL to configure a nic in classic mode
 	ConfigURL = "/api/v1/naples/"
 
-	// Max interval in millisecs for Registration retries
-	// Registration retry interval is initially exponential
-	// and is capped at 30min.
-	nicRegMaxInterval = (30 * 60 * 1000)
+	// Max retry interval in seconds for Registration retries
+	// Retry interval is initially exponential and is capped
+	// at 30min.
+	nicRegMaxInterval = (30 * 60)
 )
 
 // UpdateNaplesConfig updates a local Naples Config object
@@ -84,28 +84,44 @@ func (n *NMD) StartManagedMode() error {
 			return nil
 
 		// Register NIC
-		case <-time.After(n.nicRegInterval * time.Millisecond):
+		case <-time.After(n.nicRegInterval * time.Second):
 
 			// For the NIC in Naples Config, start the registration
 			mac := n.config.Spec.PrimaryMac
 
-			// Construct smartNIC object
-			nicObj := cmd.SmartNIC{
-				TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
-				ObjectMeta: api.ObjectMeta{Name: mac},
-				Spec:       cmd.SmartNICSpec{},
-				Status: cmd.SmartNICStatus{
-					NodeName: n.config.Spec.NodeName,
-				},
+			nicObj, _ := n.GetSmartNIC()
+
+			if nicObj != nil {
+
+				// Update smartNIC object
+				nicObj.TypeMeta.Kind = "SmartNIC"
+				nicObj.ObjectMeta.Name = mac
+				nicObj.Spec.Phase = cmd.SmartNICSpec_REGISTERING.String()
+				nicObj.Spec.MgmtIp = n.config.Spec.MgmtIp
+				nicObj.Spec.NodeName = n.config.Spec.NodeName
+
+			} else {
+
+				// Construct new smartNIC object
+				nicObj = &cmd.SmartNIC{
+					TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
+					ObjectMeta: api.ObjectMeta{Name: mac},
+					Spec: cmd.SmartNICSpec{
+						Phase:  cmd.SmartNICSpec_REGISTERING.String(),
+						MgmtIp: n.config.Spec.MgmtIp,
+						// TODO: get mgmt ip from platform
+						NodeName: n.config.Spec.NodeName,
+					},
+				}
 			}
 
 			// Send NIC register request to CMD
-			log.Infof("Registering NIC with CMD, mac: %+v", mac)
-			resp, err := n.RegisterSmartNICReq(&nicObj)
+			log.Infof("++++ Registering NIC with CMD : %+v", nicObj)
+			resp, err := n.RegisterSmartNICReq(nicObj)
 
 			// Cache it in nicDB
 			nicObj.Spec.Phase = resp.Phase
-			n.SetSmartNIC(&nicObj)
+			n.SetSmartNIC(nicObj)
 
 			// Error and Phase response is handled according to the following rules.
 			//
@@ -210,6 +226,7 @@ func (n *NMD) SendNICUpdates() error {
 			}
 
 			// Send nic status
+			log.Info("++++ Sending NIC health update: %+v", nicObj)
 			_, err := n.UpdateSmartNICReq(nicObj)
 			if err != nil {
 				log.Errorf("Error updating nic, name:%s  err: %+v",

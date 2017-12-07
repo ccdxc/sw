@@ -7,18 +7,19 @@ import (
 	"os"
 	"time"
 
-	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
-	"github.com/pensando/sw/venice/utils/netutils"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/apiclient"
+	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -196,7 +197,8 @@ func StartQuorumServices(c utils.Cluster) {
 	env.VipService = services.NewVIPService()
 	env.K8sService = services.NewK8sService()
 	env.ResolverService = services.NewResolverService(env.K8sService)
-	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger)
+	env.StateMgr = cache.NewStatemgr()
+	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
 	env.MasterService = services.NewMasterService(c.VirtualIP, services.WithK8sSvcMasterOption(env.K8sService),
 		services.WithResolverSvcMasterOption(env.ResolverService))
 
@@ -214,7 +216,7 @@ func StartQuorumServices(c utils.Cluster) {
 	}
 
 	// Create and register the RPC handler for SmartNIC service
-	go server.RegisterSmartNICServer()
+	go server.RegisterSmartNICServer(env.StateMgr)
 }
 
 // StartNodeServices starts services running on non-quorum node
