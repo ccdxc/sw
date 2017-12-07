@@ -76,9 +76,33 @@ def GetExpectedIpv4Options(testcase, packet):
     profile_name = iterelem.profile
     if 'IP_OPTIONS_ACTION_ALLOW' in profile_name:
         return __get_ipv4_option()
-    elif 'IP_OPTIONS_ACTION_DENY' in profile_name:
+    elif 'IP_OPTIONS_ACTION_DROP' in profile_name:
         return __get_ipv4_option()
     elif 'IP_OPTIONS_ACTION_EDIT' in profile_name:
+        return None
+    return None
+
+def __get_ipv6_option():
+    return [penscapy.IPv6ExtHdrHopByHop()]
+
+# For multiple IPv6 options
+# return [penscapy.IPv6ExtHdrHopByHop(), penscapy.IPv6ExtHdrDestOpt(), penscapy.IPv6ExtHdrRouting(), penscapy.IPv6ExtHdrFragment()]
+
+def GetInputIpv6Options(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'IPV6_OPTIONS_ACTION' in profile_name:
+        return __get_ipv6_option()
+    return None
+
+def GetExpectedIpv6Options(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'IPV6_OPTIONS_ACTION_ALLOW' in profile_name:
+        return __get_ipv6_option()
+    elif 'IPV6_OPTIONS_ACTION_DROP' in profile_name:
+        return __get_ipv6_option()
+    elif 'IPV6_OPTIONS_ACTION_EDIT' in profile_name:
         return None
     return None
 

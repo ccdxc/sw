@@ -62,6 +62,8 @@ packets:
                 flags   : callback://normalization/callbacks/GetInputIpv4Flags
                 options : callback://normalization/callbacks/GetInputIpv4Options
                 len     : callback://normalization/callbacks/GetInputIpv4Len
+            ipv6    :
+                extns   : callback://normalization/callbacks/GetInputIpv6Options
             icmp:
                 code    : callback://normalization/callbacks/GetInputIcmpCode
                 type    : callback://normalization/callbacks/GetInputIcmpType
@@ -87,6 +89,8 @@ packets:
                 flags   : callback://normalization/callbacks/GetExpectedIpv4Flags
                 options : callback://normalization/callbacks/GetExpectedIpv4Options
                 len     : callback://normalization/callbacks/GetExpectedIpv4Len
+            ipv6    :
+                extns   : callback://normalization/callbacks/GetExpectedIpv6Options
             icmp:
                 code    : callback://normalization/callbacks/GetExpectedIcmpCode
                 type    : callback://normalization/callbacks/GetExpectedIcmpType

@@ -47,6 +47,18 @@ profiles:
       fields:
          ip_options_action: EDIT
 
+    - id: SEC_PROF_IPV6_OPTIONS_ACTION_ALLOW
+      fields:
+         ip_options_action: ALLOW
+
+    - id: SEC_PROF_IPV6_OPTIONS_ACTION_DROP
+      fields:
+         ip_options_action: DROP
+
+    - id: SEC_PROF_IPV6_OPTIONS_ACTION_EDIT
+      fields:
+         ip_options_action: EDIT
+
     - id: SEC_PROF_IP_INVALID_LEN_ACTION_ALLOW
       fields:
          ip_invalid_len_action: ALLOW

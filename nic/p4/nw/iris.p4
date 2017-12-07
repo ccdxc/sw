@@ -51,6 +51,8 @@ header_type l3_metadata_t {
         inner_ip_frag            : 1;
         ipv6_ulp                 : 8;
         inner_ipv6_ulp           : 8;
+        ipv6_options_len         : 8;
+        inner_ipv6_options_len   : 8;
     }
 }
 

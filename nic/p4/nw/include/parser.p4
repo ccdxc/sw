@@ -819,12 +819,14 @@ parser parse_v6_ipsec_ah_hdr {
     return ingress;
 }
 
+#if 0
 parser parse_fragment_hdr {
     extract(v6_frag);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
     set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 8);
     return parse_ipv6_extn_hdrs;
 }
+#endif /* 0 */
 
 @pragma hdr_len parser_metadata.ipv6_options_len
 header ipv6_options_blob_t ipv6_options_blob;
@@ -867,6 +869,7 @@ parser parse_ipv6_extn_hdrs {
     // To store back into OHI payloadLen - Sum of option hdr len,
     // use set_metadata with zero len
     // set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer + 0);
+    set_metadata(l3_metadata.ipv6_options_len, parser_metadata.ipv6_options_len);
     return select(parser_metadata.ipv6_nextHdr) {
         0x0:  parse_v6_generic_ext_hdr; // hop-by-hop Hdr
         0x2b: parse_v6_generic_ext_hdr; // Routing Hdr
@@ -1737,6 +1740,7 @@ parser parse_inner_ipv6_extn_hdrs {
     // To store back into OHI payloadLen - Sum of option hdr len,
     // use set_metadata with zero len
     // set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer + 0);
+    set_metadata(l3_metadata.inner_ipv6_options_len, parser_metadata.inner_ipv6_options_len);
     return select(parser_metadata.inner_ipv6_nextHdr) {
         0x0:  parse_inner_v6_generic_ext_hdr; // hop-by-hop Hdr
         0x2b: parse_inner_v6_generic_ext_hdr; // Routing Hdr

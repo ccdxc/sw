@@ -53,6 +53,7 @@ tunneled_ipv6_packet_common:
   phvwr         p.l4_metadata_tcp_data_len, r6
 
   phvwr         p.tunnel_metadata_tunnel_terminate, 1
+  phvwr         p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
   phvwr         p.flow_lkp_metadata_ip_ttl, k.inner_ipv6_hopLimit
