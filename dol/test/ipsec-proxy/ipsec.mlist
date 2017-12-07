@@ -85,7 +85,7 @@ modules:
         package : test.ipsec-proxy
         module  : nat_t_pkt_from_uplink
         spec    : nat_t_pkt_from_uplink.testspec
-        ignore  : True 
+        ignore  : False 
         iterate :
             - flow: filter://type=IPV4,proto=UDP
     - module:
