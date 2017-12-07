@@ -447,7 +447,7 @@ int queues_setup() {
 
   // Initialize PVM SQs for processing Sequencer commands for PDMA
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqPdmaSQs); j++, i++) {
-    if (i == 39) {
+    if (i == 38 || i == 39) {
     if (seq_queue_setup(&pvm_sqs[i], i, (char *) kRocePdmaSqHandler,
                         kDefaultTotalRings, kDefaultHostRings) < 0) {
       printf("Failed to setup PVM Seq PDMA queue %d \n", i);

@@ -50,7 +50,7 @@ const uint32_t	kRoceEntrySize	 = 6; // Default is 64 bytes
 const uint32_t	kRoceNumEntries	 = 6; // Default is 64 entries
 const uint32_t kPvmRoceSqXlateTblSize	= (64 * 64); // 64 SQs x 64 bytes each
 
-const uint32_t kR2NNumBufs = 2;
+const uint32_t kR2NNumBufs = 4;
 const uint32_t kR2NDataSize = 4096;
 const uint32_t kR2NDataBufOffset = 4096;
 
@@ -80,6 +80,7 @@ uint64_t g_enic1_handle, g_enic2_handle;
 uint32_t g_rdma_pvm_roce_init_sq;
 uint32_t g_rdma_pvm_roce_tgt_sq;
 uint32_t g_rdma_pvm_roce_tgt_cq;
+
 
 }  // anonymous namespace
 
@@ -268,6 +269,7 @@ int rdma_p4_init() {
 
 namespace {
 
+// Fixed keys:
 const uint32_t kInitiatorCQLKey = 1;
 const uint32_t kInitiatorSQLKey = 2;
 const uint32_t kInitiatorRQLKey = 3;
@@ -280,11 +282,15 @@ const uint32_t kTargetRcvBuf1RKey = 8;
 // Initiator side recv buffers
 const uint32_t kInitiatorRcvBuf1LKey = 10;
 const uint32_t kInitiatorRcvBuf1RKey = 11;
-// Writeback data buf keyus
-const uint32_t kWriteBackBufLKey = 12;
-const uint32_t kWriteBackBufRKey = 13;
 
-// Send Buf Lkey (this is base value; each test case increments this)
+
+// Variable keys: 
+// Theese are base values which are incremented per test case
+
+// Writeback data buf keys 
+uint32_t WriteBackBufLKey = 16;
+uint32_t WriteBackBufRKey = 24;
+// Send Buf Lkey 
 uint32_t SendBufLKey = 32;
 
 // TODO: Fix this to at least 8K
@@ -318,6 +324,12 @@ void *target_rcv_buf_ptr_va = NULL;
 
 void SendBufLKeyIncr() { 
   SendBufLKey++;
+}
+
+
+void WriteBackBufKeysIncr() { 
+  WriteBackBufLKey++;
+  WriteBackBufRKey++;
 }
 
 void AllocHostMem() {
@@ -744,12 +756,15 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_
   return 0;
 }
 
-int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read_buf_ptr, uint64_t slba) {
+int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, 
+                     uint8_t **read_buf_ptr, uint64_t slba, 
+                     uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif) {
 
   if (!nvme_cmd_ptr || !read_buf_ptr) return -1;
 
-  // Increment the LKey at the beginning of each API
+  // Increment the variable keys at the beginning of each API
   SendBufLKeyIncr();
+  WriteBackBufKeysIncr();
 
   // Get userspace R2N buffer for read command and data. 
   void *r2n_buf_va;
@@ -778,7 +793,7 @@ int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read
   }
   // Register the HBM buffer with RDMA
   RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, r2n_hbm_buf_size, 
-                  kWriteBackBufLKey, kWriteBackBufRKey, true);
+                  WriteBackBufLKey, WriteBackBufRKey, true);
 
 
   // For the RDMA send WQE
@@ -802,7 +817,6 @@ int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read
 
   // Pre-form the (RDMA) write descriptor to point to the data buffer
   // TODO: Remove the write_data_buf pointer and do this in P4+
-  uint32_t seq_pdma_q = 39;
   uint32_t write_wqe_offset = offsetof(r2n::r2n_buf_t, write_desc) - offsetof(r2n::r2n_buf_t, cmd_buf);
   uint8_t *write_wqe = ((uint8_t *) r2n_buf_va) + write_wqe_offset;
   void *write_data_buf = (void *) (((uint8_t *) target_rcv_buf_ptr_va) + kR2NDataBufOffset);  
@@ -819,7 +833,7 @@ int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read
   utils::write_bit_fields(write_wqe, 110, 18, seq_pdma_q);
   utils::write_bit_fields(write_wqe, 128, 64, (uint64_t) r2n_hbm_buf_pa); // va == pa
   utils::write_bit_fields(write_wqe, 128+64, 32, (uint32_t) kR2NDataSize); // len
-  utils::write_bit_fields(write_wqe, 128+64+32, 32, kWriteBackBufRKey); // rkey
+  utils::write_bit_fields(write_wqe, 128+64+32, 32, WriteBackBufRKey); // rkey
   // Write SGE: local side buffer
   utils::write_bit_fields(write_wqe, 256, 64, (uint64_t) write_data_buf); // SGE-va
   utils::write_bit_fields(write_wqe, 256+64, 32, (uint32_t) kR2NDataSize); // SGE-len
@@ -836,8 +850,8 @@ int StartRoceReadSeq(uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, uint8_t **read
 
   // Now kickstart the sequencer
   tests::test_seq_read_roce(seq_pdma_q, r2n_hbm_buf_pa, host_mem_v2p((void *) read_data_buf),
-                            kR2NDataSize, g_rdma_hw_lif_id, kSQType, 0, 0, 
-                            initiator_sq_pindex);
+                            kR2NDataSize, pdma_dst_lif_override, pdma_dst_lif,
+                            g_rdma_hw_lif_id, kSQType, 0, 0, initiator_sq_pindex);
 
   return 0;
 }
