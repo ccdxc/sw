@@ -1396,7 +1396,7 @@ network_to_str (network_t *nw)
     buf = nw_str[nw_str_next++ & 0x3];
     memset(buf, 0, 50);
     if (nw) {
-        snprintf(buf, 50, "(tid:ippfx) : (%d:%s)", nw->nw_key.vrf_id,
+        snprintf(buf, 50, "(tid:ippfx) : (%lu:%s)", nw->nw_key.vrf_id,
                  ippfx2str(&nw->nw_key.ip_pfx));
     }
     return buf;

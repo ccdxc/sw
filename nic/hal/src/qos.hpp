@@ -312,7 +312,7 @@ hal_ret_t queue_update(qos::QueueSpec& spec,
                        qos::QueueResponse *rsp);
 
 
-typedef uint32_t policer_id_t;
+typedef uint64_t policer_id_t;
 
 #define HAL_MAX_POLICERS    2048
 

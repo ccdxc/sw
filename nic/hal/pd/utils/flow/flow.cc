@@ -552,7 +552,7 @@ Flow::alloc_flow_entry_index_(uint32_t *idx)
     hal_ret_t   rs = HAL_RET_OK;
 
     // Allocate an index in repl. table
-    indexer::status irs = flow_entry_indexer_->alloc(idx);
+    indexer::status irs = flow_entry_indexer_->alloc((uint32_t *)idx);
     if (irs != indexer::SUCCESS) {
         HAL_TRACE_DEBUG("Flow::{}: Flow Entry Capacity reached: {}", 
                         __FUNCTION__, flow_entry_indexer_->get_size());
@@ -572,7 +572,7 @@ Flow::free_flow_entry_index_(uint32_t idx)
 {
     hal_ret_t   rs = HAL_RET_OK;
 
-    indexer::status irs = flow_entry_indexer_->free(idx);
+    indexer::status irs = flow_entry_indexer_->free((uint32_t)idx);
     if (irs == indexer::DUPLICATE_FREE) {
         return HAL_RET_DUP_FREE;
     }
@@ -612,7 +612,7 @@ Flow::free_fhct_index(uint32_t idx)
 {
     hal_ret_t   rs = HAL_RET_OK;
 
-    indexer::status irs = flow_coll_indexer_->free(idx);
+    indexer::status irs = flow_coll_indexer_->free((uint32_t)idx);
     if (irs == indexer::DUPLICATE_FREE) {
         return HAL_RET_DUP_FREE;
     }

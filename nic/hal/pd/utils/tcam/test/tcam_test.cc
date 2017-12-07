@@ -175,7 +175,7 @@ TEST_F(tcam_test, test1) {
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
     input_mapping_native_actiondata data;
-    uint32_t tcam_idx = -1;
+    uint32_t tcam_idx = 0;
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));
@@ -275,7 +275,7 @@ TEST_F(tcam_test, test3) {
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
     input_mapping_native_actiondata data;
-    uint32_t tcam_idx = -1;
+    uint32_t tcam_idx = 0;
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));
@@ -323,7 +323,7 @@ TEST_F(tcam_test, test4) {
     input_mapping_native_swkey_t key, retr_key;
     input_mapping_native_swkey_mask_t key_mask, retr_key_mask;
     input_mapping_native_actiondata data, retr_data;
-    uint32_t tcam_idx = -1;
+    uint32_t tcam_idx = 0;
 
     hal_ret_t rs = HAL_RET_OK;
     memset(&key, 0, sizeof(key));
@@ -387,7 +387,7 @@ TEST_F(tcam_test, test5) {
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
     input_mapping_native_actiondata data;
-    uint32_t tcam_idx = -1;
+    uint32_t tcam_idx = 0;
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));
@@ -437,7 +437,7 @@ TEST_F(tcam_test, test6) {
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
     input_mapping_native_actiondata data;
-    uint32_t tcam_idx[100];
+    uint32_t tcam_idx[100] = {0};
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));
@@ -488,7 +488,7 @@ TEST_F(tcam_test, test7) {
     input_mapping_native_swkey_mask_t key_mask;
     input_mapping_native_actiondata data;
     uint32_t tcam_idx = 0;
-    uint32_t idx[100];
+    uint32_t idx[100] = {0};
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));
@@ -664,7 +664,7 @@ TEST_F(tcam_test, test10) {
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
     input_mapping_native_actiondata data;
-    uint32_t idx[100];
+    uint32_t idx[100] = {0};
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));
@@ -724,7 +724,7 @@ TEST_F(tcam_test, test11) {
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
     input_mapping_native_actiondata data;
-    uint32_t idx[100];
+    uint32_t idx[100] = {0};
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));

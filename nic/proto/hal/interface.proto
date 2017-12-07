@@ -359,7 +359,7 @@ enum IfEnicType {
 }
 
 message EnicInfo {
-    uint32                l2segment_id         = 1; // user (external) l2segment
+    uint64                l2segment_id         = 1; // user (external) l2segment
     fixed64               mac_address          = 2; // MAC address of the endpoint
     uint32                encap_vlan_id        = 3; // Encap Vlan
     kh.L2SegmentKeyHandle l2segment_key_handle = 4 [(gogoproto.jsontag) = "ref"];
@@ -392,13 +392,13 @@ message TrafficClassInfo {
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK
 message IfUplinkInfo {
   uint32           port_num              = 1;    // uplink port number
-  uint32           native_l2segment_id   = 2;    // L2 segment to map the packets to, if they are untagged
+  uint64           native_l2segment_id   = 2;    // L2 segment to map the packets to, if they are untagged
   TrafficClassInfo rx_traffic_class_info = 3;    // Info about how to derive traffic class on this interface
 }
 
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
 message IfUplinkPCInfo {
-  uint32            native_l2segment_id         = 1;    // L2 segment to map the packets to, if they are untagged
+  uint64            native_l2segment_id         = 1;    // L2 segment to map the packets to, if they are untagged
   TrafficClassInfo  rx_traffic_class_info       = 2;    // Info about how to derive traffic class on this interface
   repeated uint64   member_if_handle            = 3;    // uplink member ports
 }

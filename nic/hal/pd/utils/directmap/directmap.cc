@@ -571,7 +571,7 @@ DirectMap::alloc_index_(uint32_t *idx)
     hal_ret_t   rs = HAL_RET_OK;
 
     // Allocate an index in repl. table
-    indexer::status irs = dm_indexer_->alloc(idx);
+    indexer::status irs = dm_indexer_->alloc((uint32_t *)idx);
     if (irs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
@@ -588,7 +588,7 @@ DirectMap::alloc_index_withid_(uint32_t idx)
     hal_ret_t   rs = HAL_RET_OK;
 
     // Allocate an index in repl. table
-    indexer::status irs = dm_indexer_->alloc_withid(idx);
+    indexer::status irs = dm_indexer_->alloc_withid((uint32_t)idx);
     if (irs != indexer::SUCCESS) {
         rs = (irs == indexer::DUPLICATE_ALLOC) ? HAL_RET_DUP_INS_FAIL : HAL_RET_OOB;  
     }
@@ -605,7 +605,7 @@ DirectMap::free_index_(uint32_t idx)
 {
     hal_ret_t   rs = HAL_RET_OK;
 
-    indexer::status irs = dm_indexer_->free(idx);
+    indexer::status irs = dm_indexer_->free((uint32_t)idx);
     if (irs != indexer::SUCCESS) {
         rs = (irs == indexer::DUPLICATE_FREE) ? HAL_RET_DUP_FREE : HAL_RET_OOB;  
     }

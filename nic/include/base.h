@@ -41,22 +41,11 @@ typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
 // structures 
 //------------------------------------------------------------------------------
 typedef uint64_t        hal_handle_t;
-typedef uint16_t        etype_t;
-typedef uint16_t        bd_id_t;       // TBD - revisit
-typedef uint16_t        vlan_id_t;
-typedef uint16_t        vrf_id_t;
-typedef uint16_t        vif_id_t;
-typedef uint32_t        rule_id_t;
-typedef uint16_t        policer_id_t;
-typedef uint16_t        vlan_id_t;
-typedef uint16_t        lport_id_t;     // TBD - revisit
-typedef uint32_t        ifindex_t;
-typedef uint32_t        seg_id_t;
-typedef uint32_t        l2seg_id_t;
-typedef uint32_t        encap_id_t;
-typedef uint32_t        encap_id_t;
+typedef uint64_t        l2seg_id_t;
+typedef uint64_t        vrf_id_t;
+typedef uint32_t        etype_t;
+typedef uint32_t        vlan_id_t;
 typedef uint32_t        oif_list_id_t;
-
 //------------------------------------------------------------------------------
 // HAL config version type
 //------------------------------------------------------------------------------

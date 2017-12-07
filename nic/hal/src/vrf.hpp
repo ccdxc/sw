@@ -34,7 +34,7 @@ using vrf::VrfGetResponseMsg;
 
 namespace hal {
 
-typedef uint8_t vrf_hw_id_t;
+typedef uint32_t vrf_hw_id_t;
 
 typedef struct vrf_s {
     hal_spinlock_t     slock;                // lock to protect this structure

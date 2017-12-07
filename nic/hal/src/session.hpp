@@ -96,7 +96,7 @@ DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
 DEFINE_ENUM(appid_state_t, APPID_STATE)
 #undef APPID_STATE
 
-typedef uint16_t    appid_id_t;
+typedef uint32_t    appid_id_t;
 
 // NAT types
 enum nat_type_t {

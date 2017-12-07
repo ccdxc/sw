@@ -98,7 +98,7 @@ hal_ret_t capri_barco_obj_alloc(capri_barco_resources_t *capri_barco_res,
     if (res)
         *res = 0;
 
-    is = capri_barco_res->idxer->alloc((uint32_t*)&idx);
+    is = capri_barco_res->idxer->alloc(&idx);
     if (is != indexer::SUCCESS) {
         HAL_TRACE_ERR("{}: Failed to allocate", capri_barco_res->allocator_name);
         return HAL_RET_NO_RESOURCE;

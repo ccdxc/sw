@@ -587,7 +587,7 @@ proxy_flow_enable(types::ProxyType proxy_type,
 
     // Allocate QID for this flow
     if(alloc_qid) {
-        rs = proxy->qid_idxr_->alloc(&(pfi->qid1));
+        rs = proxy->qid_idxr_->alloc((uint32_t *)&(pfi->qid1));
         if(rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("Error in qid1 allocation, err: {}", rs);
             if(rsp)
@@ -595,7 +595,7 @@ proxy_flow_enable(types::ProxyType proxy_type,
             return HAL_RET_NO_RESOURCE;
         }
 
-        rs = proxy->qid_idxr_->alloc(&(pfi->qid2));
+        rs = proxy->qid_idxr_->alloc((uint32_t *)&(pfi->qid2));
         if(rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("Error in qid2 allocation, err: {}", rs);
             if(rsp)
