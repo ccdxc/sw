@@ -30,6 +30,7 @@ packets:
         id          : IN_PKT    # Input packet 
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
+        #icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -63,6 +64,7 @@ packets:
         id          : EXP_PKT    # Expected Ack packet
         payloadsize : 0
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
+        #icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :

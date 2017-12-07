@@ -14,6 +14,7 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
 
     tc.pvtdata.num_total_bytes = 0x40
+    #tc.pvtdata.num_total_bytes = 0x44 # 64B payload + 4B icrc
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()

@@ -46,6 +46,9 @@ f_p4plus_to_p4_2_other_apps:
   // set compute_icrc flag (rdma)
   seq           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
   phvwr.c1      p.control_metadata_checksum_ctl, (1 << CHECKSUM_CTL_IP_CHECKSUM)
+  //phvwr.c1      p.control_metadata_checksum_ctl, \
+  //                  ((1 << CHECKSUM_CTL_IP_CHECKSUM) | (1 << CHECKSUM_CTL_ICRC))
+
   phvwr.!c1     p.control_metadata_checksum_ctl, \
                     ((1 << CHECKSUM_CTL_IP_CHECKSUM) | (1 << CHECKSUM_CTL_L4_CHECKSUM))
 
