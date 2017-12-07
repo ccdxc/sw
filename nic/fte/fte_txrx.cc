@@ -8,6 +8,10 @@
 #include "nic/p4/nw/include/defines.h"
 #include "nic/include/cpupkt_api.hpp"
 
+namespace hal {
+extern hal::utils::thread* current_thread();
+}
+
 namespace fte {
 
 static const uint16_t MAX_SOFTQ_SLOTS(1024);
@@ -214,7 +218,7 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
 hal_ret_t
 inst_t::softq_enqueue(softq_fn_t fn, void *data)
 {
-    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::current_thread();
 
     HAL_TRACE_DEBUG("fte: softq enqueue fte.{} fn={:p} data={:p}",
                     id_, (void*)fn, data);

@@ -16,6 +16,29 @@ thread_local thread *t_curr_thread;
 LIFManager *g_lif_manager = nullptr;
 class hal_state *g_hal_state;
 
+slab*
+hal_handle_slab()
+{
+    return NULL;
+}
+
+slab*
+hal_handle_ht_entry_slab()
+{
+    return NULL;
+}
+
+ht*
+hal_handle_id_ht()
+{
+    return NULL;
+}
+
+void
+hal_handle_cfg_db_lock(bool readlock, bool lock)
+{
+    return;
+}
 
 hal_ret_t
 free_to_slab (hal_slab_t slab_id, void *elem)

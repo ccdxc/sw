@@ -6,6 +6,9 @@
 #include "nic/include/pal.hpp"
 
 namespace hal {
+
+extern hal::utils::thread* current_thread();
+
 namespace pd {
 
 // asic model's cfg port socket descriptor
@@ -66,7 +69,7 @@ asic_rw_queue_t    g_asic_rw_workq[HAL_THREAD_ID_MAX];
 bool
 is_hal_ctrl_thread()
 {
-    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::current_thread();
     hal::utils::thread *ctrl_thread = g_hal_threads[HAL_THREAD_ID_CONTROL];
 
     if (ctrl_thread == NULL || curr_thread == NULL) {
@@ -86,10 +89,10 @@ is_hal_ctrl_thread()
 bool
 is_asic_rw_thread()
 {
-    hal::utils::thread *curr_thread;
-    hal::utils::thread *asic_rw_thread;
-    
-    curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread    = NULL;
+    hal::utils::thread *asic_rw_thread = NULL;
+
+    curr_thread    = hal::current_thread();
     asic_rw_thread = g_hal_threads[HAL_THREAD_ID_ASIC_RW];
 
     if (curr_thread == NULL) {
@@ -128,7 +131,7 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
 {
     uint16_t           pindx;
 
-    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::current_thread();
 
     uint32_t           curr_tid = curr_thread->thread_id();
     asic_rw_entry_t    *rw_entry;
@@ -244,7 +247,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
 {
     hal_ret_t          ret;
     uint16_t           pindx;
-    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::current_thread();
     uint32_t           curr_tid = curr_thread->thread_id();
     asic_rw_entry_t    *rw_entry;
 
@@ -389,7 +392,7 @@ asic_port_cfg (uint32_t port_num,
     asic_rw_entry_t    *rw_entry = NULL;
     uint32_t           op = HAL_ASIC_RW_OPERATION_PORT;
 
-    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::current_thread();
     uint32_t           curr_tid = curr_thread->thread_id();
 
     if (g_asic_rw_workq[curr_tid].nentries >= HAL_ASIC_RW_Q_SIZE) {
@@ -551,7 +554,7 @@ asic_rw_start (void *ctxt)
     HAL_THREAD_INIT(ctxt);
 
     hal_cfg_t *hal_cfg =
-                (hal_cfg_t *)hal::utils::thread::current_thread()->data();
+                (hal_cfg_t *)hal::current_thread()->data();
     if (hal_cfg == NULL) {
         return NULL;
     }

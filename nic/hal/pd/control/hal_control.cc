@@ -11,6 +11,9 @@
 #include "nic/include/asic_pd.hpp"
 
 namespace hal {
+
+extern hal::utils::thread* current_thread();
+
 namespace pd {
 
 // per producer request queues
@@ -19,7 +22,7 @@ hal_ctrl_queue_t g_hal_ctrl_workq[HAL_THREAD_ID_MAX];
 //------------------------------------------------------------------------------
 // hal-control thread's forever loop
 //------------------------------------------------------------------------------
-static void
+void
 hal_control_loop (void)
 {
     uint32_t           qid;
@@ -80,7 +83,7 @@ hal_ret_t
 hal_control_notify (uint8_t operation, void *ctxt)
 {
     uint16_t           pindx;
-    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::current_thread();
     uint32_t           curr_tid = curr_thread->thread_id();
     hal_ctrl_entry_t   *rw_entry;
 
@@ -125,7 +128,7 @@ hal_control_start (void *ctxt)
     HAL_THREAD_INIT(ctxt);
 
     hal_cfg_t *hal_cfg =
-                (hal_cfg_t *)hal::utils::thread::current_thread()->data();
+                (hal_cfg_t *)hal::current_thread()->data();
     if (hal_cfg == NULL) {
         return NULL;
     }
@@ -151,12 +154,6 @@ hal_control_start (void *ctxt)
     while (!is_asic_rw_ready()) {
         pthread_yield();
     }
-
-    // initialize the port mac and serdes functions
-    hal::pd::port::port_init();
-
-    // keep polling the queue and serve requests
-    hal_control_loop();
 
     HAL_TRACE_DEBUG("hal-control thread done");
 

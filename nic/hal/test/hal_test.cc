@@ -46,7 +46,7 @@ using event::Event;
 using event::EventRequest;
 using event::EventResponse;
 
-const std::string&    hal_svc_endpoint_("localhost:50054");
+const std::string&    hal_svc_endpoint_("localhost:50053");
 
 class hal_client {
 public:
@@ -584,9 +584,10 @@ main (int argc, char** argv)
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
 
-    //port_test(&hclient, vrf_id);
+    port_test(&hclient, vrf_id);
     //ports_enable(&hclient, vrf_id);
-    ports_get(&hclient, vrf_id);
+    //ports_get(&hclient, vrf_id);
+    return 0;
 
     // delete a non-existent vrf
     hclient.vrf_delete_by_id(1);

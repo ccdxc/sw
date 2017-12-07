@@ -39,14 +39,15 @@ typedef struct catalog_asic_s {
 
 typedef enum platform_type_e {
     PLATFORM_TYPE_NONE = 0,
-    PLATFORM_TYPE_HAPS = 1,
+    PLATFORM_TYPE_SIM  = 1,
+    PLATFORM_TYPE_HAPS = 2,
 } platform_type_t;
 
 typedef struct catalog_s {
     uint32_t card_index;         // card index for the board
     uint32_t num_asics;          // number of asics on the board
     uint32_t num_uplink_ports;   // number of uplinks in the board
-    uint32_t vrf_id;          // vrf ID
+    uint32_t vrf_id;             // vrf ID
 
     // temporary platform type until HW access is abstracted
     platform_type_t  platform_type;
@@ -66,6 +67,9 @@ public:
     static ::port::PortSpeed catalog_speed_to_port_speed(std::string speed);
 
     static ::port::PortType catalog_type_to_port_type(std::string type);
+
+    static platform_type_t catalog_platform_type_to_platform_type(
+                                            std::string platform_type);
 
     catalog_t *catalog_db() { return &catalog_db_; }
 

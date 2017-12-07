@@ -121,7 +121,7 @@ catalog::populate_uplink_ports(ptree &prop_tree)
 }
 
 platform_type_t
-catalog_platform_type_to_platform_type(std::string platform_type)
+catalog::catalog_platform_type_to_platform_type(std::string platform_type)
 {
     if (platform_type == "haps") {
         return PLATFORM_TYPE_HAPS;
