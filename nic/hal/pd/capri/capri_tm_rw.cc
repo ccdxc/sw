@@ -4028,14 +4028,25 @@ capri_tm_repl_table_base_addr_set(uint32_t addr)
     return HAL_RET_OK;
 }
 
-/* Programs the # of tokens per replication table entry */
+/* Programs the replication table token size */
 hal_ret_t
-capri_tm_repl_table_num_tokens_set(uint32_t num_tokens)
+capri_tm_repl_table_token_size_set(uint32_t size_in_bits)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     pbc_csr.cfg_rpl.read();
-    pbc_csr.cfg_rpl.token_size(num_tokens);
+
+    // "Size of token in nodes. 0: 32 bits, 1: 48 bits, 2: 64 bits"
+    if (size_in_bits == 64) {
+        pbc_csr.cfg_rpl.token_size(2);
+    } else if (size_in_bits == 48) {
+        pbc_csr.cfg_rpl.token_size(1);
+    } else if (size_in_bits == 32) {
+        pbc_csr.cfg_rpl.token_size(0);
+    } else {
+        return HAL_RET_INVALID_ARG;
+    }
+
     pbc_csr.cfg_rpl.write();
     return HAL_RET_OK;
 }
