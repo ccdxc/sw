@@ -247,10 +247,10 @@ error:
     return HAL_RET_ERR;
 }
 
-static hal::appid_id_t scanner_appid_to_local_id(int appid)
+static appid_id_t scanner_appid_to_local_id(int appid)
 {
     // TODO: Snort to Pensando appid mapping
-    return (hal::appid_id_t) appid;
+    return (appid_id_t) appid;
 }
 
 #define MAX_SCANNER_APPID_STATE 4
