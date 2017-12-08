@@ -44,9 +44,6 @@ typedef struct flow_s flow_t;
 typedef struct session_s session_t;
 typedef struct app_session_s app_session_t;
 
-typedef uint32_t        session_id_t;
-typedef uint32_t        app_session_id_t;
-
 // flow type depends on the type of packets flow is for
 enum flow_type_t {
     FLOW_TYPE_L2   = 0,    // non-IP flow
@@ -95,8 +92,6 @@ DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
 
 DEFINE_ENUM(appid_state_t, APPID_STATE)
 #undef APPID_STATE
-
-typedef uint32_t    appid_id_t;
 
 // NAT types
 enum nat_type_t {

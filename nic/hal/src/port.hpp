@@ -36,8 +36,6 @@ using port::PortGetResponseMsg;
 
 namespace hal {
 
-typedef uint32_t port_num_t;
-
 typedef struct port_s {
     hal_spinlock_t   slock;           // lock to protect this structure
 

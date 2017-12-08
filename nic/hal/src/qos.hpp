@@ -71,8 +71,6 @@ hal_ret_t
 qos_action_to_qos_action_spec (const qos_action_t *qos_action,
                                  qos::QOSActions *spec);
 
-typedef uint32_t buf_pool_id_t;
-
 #define HAL_MAX_BUF_POOLS            (32*HAL_MAX_TM_PORTS)
 #define HAL_MAX_COSES                32
 
@@ -190,8 +188,6 @@ hal_ret_t buf_pool_update(qos::BufPoolSpec& spec,
 
 
 
-
-typedef uint32_t queue_id_t;
 
 #define HAL_MAX_QUEUE_NODES (HAL_MAX_TM_PORTS*52)
 
@@ -311,8 +307,6 @@ hal_ret_t queue_create(qos::QueueSpec& spec,
 hal_ret_t queue_update(qos::QueueSpec& spec,
                        qos::QueueResponse *rsp);
 
-
-typedef uint64_t policer_id_t;
 
 #define HAL_MAX_POLICERS    2048
 

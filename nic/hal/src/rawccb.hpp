@@ -27,8 +27,6 @@ using rawccb::RawcCbGetResponseMsg;
 
 namespace hal {
 
-typedef uint32_t          rawccb_id_t;
-
 typedef struct rawccb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     rawccb_id_t           cb_id;

@@ -262,7 +262,7 @@ const size_t APPID_MAX_DEPTH = 4;
 
 typedef struct appid_info_s {
     hal::appid_state_t state_;
-    hal::appid_id_t ids_[APPID_MAX_DEPTH];
+    appid_id_t ids_[APPID_MAX_DEPTH];
     void* cleanup_handle_;
     uint8_t id_count_;
 } __PACK__ appid_info_t;
@@ -275,14 +275,14 @@ inline void appid_info_init(appid_info_t& info) {
     appid_info_clear_ids(info);
 }
 
-inline hal::appid_id_t appid_info_id(const appid_info_t& info) {
+inline appid_id_t appid_info_id(const appid_info_t& info) {
     return info.id_count_ ? info.ids_[info.id_count_ - 1] : 0;
 }
-inline hal::appid_id_t appid_info_id(const appid_info_t& info, uint8_t idx) {
+inline appid_id_t appid_info_id(const appid_info_t& info, uint8_t idx) {
     assert(idx < APPID_MAX_DEPTH);
     return (idx < info.id_count_) ? info.ids_[idx] : 0;
 }
-inline void appid_info_set_id(appid_info_t& info, hal::appid_id_t id,
+inline void appid_info_set_id(appid_info_t& info, appid_id_t id,
                        uint8_t idx = APPID_MAX_DEPTH) {
     assert(info.id_count_ < APPID_MAX_DEPTH);
     if (idx >= APPID_MAX_DEPTH) idx = info.id_count_;

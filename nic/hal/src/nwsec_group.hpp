@@ -204,7 +204,6 @@ nwsec_policy_cfg_compare_key_func (void *key1, void *key2);
 // max. number of SGs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_NW_SEC_POLICY_CFG  8192
 
-typedef uint32_t nwsec_policy_cfg_id_t;
 // nwsec_policy_cfg related functions
 
 static inline nwsec_policy_cfg_t *
@@ -285,7 +284,6 @@ nwsec_group_compare_key_func (void *key1, void *key2);
 // max. number of SGs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_NW_SEC_GROUP_CFG  8192
 
-typedef uint32_t nwsec_group_id_t;
 // nwsec_policy_cfg related functions
 
 static inline nwsec_group_t *

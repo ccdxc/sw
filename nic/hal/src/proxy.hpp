@@ -69,10 +69,6 @@ enum {
     APP_REDIR_NUM_QTYPES_MAX
 };
 
-typedef uint32_t lif_id_t;
-typedef uint32_t  qtype_t;
-typedef uint64_t  qid_t;
-
 typedef struct proxy_meta_qtype_s {
     qtype_t     qtype_val;
     uint8_t     qstate_size;

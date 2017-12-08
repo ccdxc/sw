@@ -26,8 +26,6 @@ using cpucb::CpuCbGetResponse;
 using cpucb::CpuCbGetResponseMsg;
 namespace hal {
 
-typedef uint32_t cpucb_id_t;
-
 typedef struct cpucb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     cpucb_id_t            cb_id;                   // CB id

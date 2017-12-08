@@ -30,7 +30,6 @@ using tcpcb::TcpCbGetResponseMsg;
 
 namespace hal {
 
-typedef uint32_t tcpcb_id_t;
 typedef struct tcpcb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     tcpcb_id_t            cb_id;                   // TCP CB id

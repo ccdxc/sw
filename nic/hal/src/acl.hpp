@@ -18,8 +18,6 @@ using acl::AclResponse;
 
 namespace hal {
 
-typedef uint32_t acl_id_t;
-
 #define HAL_MAX_ACLS 512 
 
 typedef struct acl_eth_match_spec_s {

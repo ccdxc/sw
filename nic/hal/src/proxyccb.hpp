@@ -27,8 +27,6 @@ using proxyccb::ProxycCbGetResponseMsg;
 
 namespace hal {
 
-typedef uint32_t          proxyccb_id_t;
-
 typedef struct proxyccb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     proxyccb_id_t         cb_id;
