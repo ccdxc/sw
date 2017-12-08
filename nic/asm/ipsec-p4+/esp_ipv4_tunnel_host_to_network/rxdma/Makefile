@@ -12,7 +12,7 @@ PROJ = esp_ipv4_tunnel_h2n_rxdma
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../../include -I../../../common-p4+/include -I$(TOPDIR)/p4/ipsec-p4+ -I$(TOPDIR)/include -I../..
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../../include -I../../../common-p4+/include -I$(TOPDIR)/p4/ipsec-p4+ -I$(TOPDIR)/include -I../.. -I$(TOPDIR)/asm/proxy/tls/include -I$(TOPDIR)/asm/cpu-p4plus/include
 
 
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
@@ -29,6 +29,7 @@ SRC_FILES := \
     esp_ipv4_tunnel_h2n_allocate_output_page_index.s \
     esp_ipv4_tunnel_h2n_update_input_desc_aol.s \
     esp_ipv4_tunnel_h2n_update_output_desc_aol.s \
+    esp_ipv4_tunnel_h2n_read_random_number_from_barco.s \
     esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc.s 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
