@@ -33,8 +33,8 @@ const static uint32_t  kHbmRWBufSize         = (8 * 1024);
 
 const static uint32_t  kSeqDescSize          = 64;
 
-const static uint32_t  kSeqDbDataSize        = 8;
-const static uint64_t  kSeqDbDataMagic       = 0xAAAAAAAAAAAAAAAAULL;
+const static uint32_t  kSeqDbDataSize        = 4;
+const static uint32_t  kSeqDbDataMagic       = 0xAAAAAAAA;
 
 const static uint32_t  kAolSize              = 64;
 const static uint32_t  kXtsDescSize          = 128;
@@ -400,7 +400,7 @@ uint64_t get_next_slba() {
 }
 
 void reset_seq_db_data() {
-  *((uint64_t *) seq_db_data) = 0;
+  *((uint32_t *) seq_db_data) = 0;
 } 
 
 int form_read_cmd_with_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid, 
@@ -1279,6 +1279,8 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   utils::write_bit_fields(seq_pdma_desc, 128, 64, host_mem_v2p(write_buf));
   utils::write_bit_fields(seq_pdma_desc, 192, 64, write_hbm_buf);
   utils::write_bit_fields(seq_pdma_desc, 256, 32, kDefaultBufSize);
+  // Enable the next doorbell
+  utils::write_bit_fields(seq_pdma_desc, 408, 1, 1);
 
   // Fill the R2N descriptor
   uint64_t qaddr;
@@ -1356,11 +1358,13 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   memset(seq_pdma_desc, 0, kSeqDescSize);
 
   // Fill the PDMA descriptor
-  utils::write_bit_fields(seq_pdma_desc, 0, 64, host_mem_v2p(seq_db_data));
-  utils::write_bit_fields(seq_pdma_desc, 64, 64, kSeqDbDataMagic);
   utils::write_bit_fields(seq_pdma_desc, 128, 64, read_hbm_buf);
   utils::write_bit_fields(seq_pdma_desc, 192, 64, host_mem_v2p(read_buf));
   utils::write_bit_fields(seq_pdma_desc, 256, 32, kDefaultBufSize);
+  // Form the interrupt add/data and enable it
+  utils::write_bit_fields(seq_pdma_desc, 312, 64, host_mem_v2p(seq_db_data));
+  utils::write_bit_fields(seq_pdma_desc, 376, 32, kSeqDbDataMagic);
+  utils::write_bit_fields(seq_pdma_desc, 409, 1, 1);
 
   // Update the R2N WQE with the doorbell to the PDMA descriptor
   r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_pvm_lif(), SQ_TYPE, 
@@ -1384,8 +1388,8 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   // Poll for DMA completion of read data only if status is successful
   if (rc >= 0) {
     auto func2 = [] () {
-      if  (*((uint64_t *) seq_db_data) != kSeqDbDataMagic) {
-        //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data));
+      if  (*((uint32_t *) seq_db_data) != kSeqDbDataMagic) {
+        //printf("Sequencer magic incorrect %lx \n", *((uint32_t *) seq_db_data));
         return -1;
       }
       return 0;
@@ -2071,6 +2075,8 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
                              xts_ctx.seq_xts_index, &db_addr, &db_data);
   utils::write_bit_fields(seq_pdma_desc, 0, 64, db_addr);
   utils::write_bit_fields(seq_pdma_desc, 64, 64, bswap_64(db_data));
+  // Enable the next doorbell
+  utils::write_bit_fields(seq_pdma_desc, 408, 1, 1);
 
   // Fill the R2N descriptor
   uint64_t qaddr;
@@ -2159,11 +2165,13 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   // Sequencer #2: PDMA descriptor
 
   // Fill the PDMA descriptor
-  utils::write_bit_fields(seq_pdma_desc, 0, 64, host_mem_v2p(seq_db_data));
-  utils::write_bit_fields(seq_pdma_desc, 64, 64, kSeqDbDataMagic);
   utils::write_bit_fields(seq_pdma_desc, 128, 64, read_hbm_buf2);
   utils::write_bit_fields(seq_pdma_desc, 192, 64, host_mem_v2p(read_buf));
   utils::write_bit_fields(seq_pdma_desc, 256, 32, kDefaultBufSize);
+  // Form the interrupt add/data and enable it
+  utils::write_bit_fields(seq_pdma_desc, 312, 64, host_mem_v2p(seq_db_data));
+  utils::write_bit_fields(seq_pdma_desc, 376, 32, kSeqDbDataMagic);
+  utils::write_bit_fields(seq_pdma_desc, 409, 1, 1);
 
   // Update the R2N WQE with the doorbell to the PDMA descriptor
   r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_pvm_lif(), SQ_TYPE,
@@ -2184,8 +2192,8 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   int rv = poll(func1);
 
   auto func2 = [] () {
-    if  (*((uint64_t *) seq_db_data) != kSeqDbDataMagic) {
-      //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data));
+    if  (*((uint32_t *) seq_db_data) != kSeqDbDataMagic) {
+      //printf("Sequencer magic incorrect %lx \n", *((uint32_t *) seq_db_data));
       return -1;
     }
     return 0;
@@ -2261,6 +2269,8 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   utils::write_bit_fields(seq_pdma_desc, 128, 64, pdma_src_addr);
   utils::write_bit_fields(seq_pdma_desc, 192, 64, pdma_dst_addr);
   utils::write_bit_fields(seq_pdma_desc, 256, 32, pdma_data_size);
+  // Enable the next doorbell
+  utils::write_bit_fields(seq_pdma_desc, 408, 1, 1);
 
   // Fill the Sequencer ROCE descriptor
   uint64_t qaddr;
@@ -2303,13 +2313,15 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr,
   // Sequencer #1: PDMA descriptor
   seq_pdma_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   memset(seq_pdma_desc, 0, kSeqDescSize);
-  utils::write_bit_fields(seq_pdma_desc, 0, 64, host_mem_v2p(seq_db_data));
-  utils::write_bit_fields(seq_pdma_desc, 64, 64, kSeqDbDataMagic);
   utils::write_bit_fields(seq_pdma_desc, 128, 64, pdma_src_addr);
   utils::write_bit_fields(seq_pdma_desc, 192, 64, pdma_dst_addr);
   utils::write_bit_fields(seq_pdma_desc, 256, 32, pdma_data_size);
   utils::write_bit_fields(seq_pdma_desc, 300, 1, pdma_dst_lif_override);
   utils::write_bit_fields(seq_pdma_desc, 301, 11, pdma_dst_lif);
+  // Form the interrupt add/data and enable it
+  utils::write_bit_fields(seq_pdma_desc, 312, 64, host_mem_v2p(seq_db_data));
+  utils::write_bit_fields(seq_pdma_desc, 376, 32, kSeqDbDataMagic);
+  utils::write_bit_fields(seq_pdma_desc, 409, 1, 1);
 
   // Kickstart the ROCE program 
   tests::test_ring_doorbell(db_lif, db_qtype, db_qid, db_ring, db_index);
@@ -2475,8 +2487,8 @@ int test_run_rdma_lif_override() {
   if (rc >= 0) {
     printf("Successfully retrived status \n");
     auto func2 = [] () {
-      if  (*((uint64_t *) seq_db_data) != kSeqDbDataMagic) {
-        //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data));
+      if  (*((uint32_t *) seq_db_data) != kSeqDbDataMagic) {
+        //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) uint32_t));
         return -1;
       }
       return 0;
