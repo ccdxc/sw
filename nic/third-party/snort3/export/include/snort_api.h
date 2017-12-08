@@ -14,6 +14,8 @@ struct SnortFlowInfo
     void* flow_handle;
 };
 
+extern "C" {
+
 // Does basic initializations of snort main thread
 SO_PUBLIC int init_main_thread(int num_pkt_threads, std::string config_file_path, char* pcap_path=NULL);
 // Core of the main thread. Should be repeatedly invoked for life of the thread
@@ -51,5 +53,6 @@ SO_PUBLIC int cleanup_flow_by_key(uint8_t ip_proto, bool is_v6,
         const uint8_t* sip, const uint8_t* dip, uint16_t sport, uint16_t dport,
         uint16_t vlan_id, uint16_t tenant_id);
 
+}  // extern "C"
 
 #endif

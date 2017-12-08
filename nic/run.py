@@ -119,12 +119,13 @@ def run_model(args):
 
 
 def run_hal(args):
+    snort_dir = nic_dir + "/third-party/snort3/export"
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["HAL_PLUGIN_PATH"] = nic_dir + "/../bazel-bin/nic/hal/plugins/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" #+ ":" + nic_dir + "/third-party/snort3/export/bin"
-    os.environ["SNORT_LUA_PATH"] = nic_dir + "/third-party/snort3/export/lua/"
-    os.environ["LUA_PATH"] = nic_dir + "/third-party/snort3/export/lua/?.lua;;"
-    os.environ["SNORT_DAQ_PATH"] = nic_dir + "/third-party/snort3/export/daqs/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + snort_dir + "/bin/"
+    os.environ["SNORT_LUA_PATH"] = snort_dir + "/lua/"
+    os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
+    os.environ["SNORT_DAQ_PATH"] = snort_dir + "/daqs/"
 
     hal_dir = nic_dir + "/../bazel-bin/nic/hal"
     os.chdir(hal_dir)
