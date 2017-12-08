@@ -80,6 +80,7 @@ std::vector<tests::TestEntry> test_suite = {
 std::vector<tests::TestEntry> rdma_tests = {
   {&tests::test_run_rdma_e2e_write, "E2E write over RDMA", false},
   {&tests::test_run_rdma_e2e_read, "E2E read over RDMA", false},
+  {&tests::test_run_rdma_lif_override, "E2E read LIF override", false},
 };
 
 void sig_handler(int sig) {

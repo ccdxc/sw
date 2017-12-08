@@ -21,11 +21,11 @@ storage_tx_roce_pdma_entry_handler_start:
 
    // Setup the source of the mem2mem DMA into DMA cmd 1
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.src_addr, d.data_size,
-                     d.src_lif_override, d.src_lif_override, dma_m2m_1)
+                     d.src_lif_override, d.src_lif, dma_m2m_1)
 
    // Setup the destination of the mem2mem DMA into DMA cmd 2
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.dst_addr, d.data_size,
-                     d.dst_lif_override, d.dst_lif_override, dma_m2m_2)
+                     d.dst_lif_override, d.dst_lif, dma_m2m_2)
 
    // Copy the data for the doorbell into the PHV and setup a DMA command
    // to ring it
