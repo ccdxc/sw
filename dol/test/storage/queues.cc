@@ -26,6 +26,7 @@ const static uint32_t	kPvmNumSsdSQs	 	 = 4;
 const static uint32_t	kPvmNumSeqPdmaSQs	 = 3;
 const static uint32_t	kPvmNumSeqR2nSQs	 = 3;
 const static uint32_t	kPvmNumSeqXtsSQs	 = 3;
+const static uint32_t	kPvmNumSeqCompSQs	 = 4;
 const static uint32_t	kPvmNumSeqRoceSQs	 = 3;
 const static uint32_t	kPvmNumNvmeCQs		 = 1;
 const static uint32_t	kPvmNumR2nCQs		 = 0; // 2^0 => 1 queue
@@ -48,6 +49,7 @@ const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
 const static char	*kSeqXtsSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
 const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
+const static char	*kSeqCompSqHandler	 = "storage_tx_seq_comp_desc_handler.bin";
 
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
@@ -111,8 +113,18 @@ queues_t pvm_rqs[NUM_TO_VAL(kPvmNumHQs)];
 queues_t pvm_eqs[NUM_TO_VAL(kPvmNumEQs)];
 
 uint64_t nvme_lif, pvm_lif;
-uint32_t pvm_r2n_sq;
 
+uint32_t host_nvme_sq_base;
+uint32_t pvm_nvme_sq_base;
+uint32_t pvm_r2n_sq_base;
+uint32_t pvm_nvme_be_sq_base;
+uint32_t pvm_ssd_sq_base;
+uint32_t pvm_seq_pdma_sq_base;
+uint32_t pvm_seq_r2n_sq_base;
+uint32_t pvm_host_r2n_sq_base;
+uint32_t pvm_seq_xts_sq_base;
+uint32_t pvm_seq_roce_sq_base;
+uint32_t pvm_seq_comp_sq_base;
 
 void *pndx_data_va;
 uint64_t pndx_data_pa;
@@ -258,6 +270,7 @@ int queues_setup() {
   int i, j;
 
   // Initialize NVME SQs
+  host_nvme_sq_base = 0; // first queue
   for (i = 0; i < (int) NUM_TO_VAL(kNvmeNumSQs); i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&nvme_sqs[i], NUM_TO_VAL(kNvmeNumEntries),
@@ -305,6 +318,7 @@ int queues_setup() {
 
   // Initialize PVM SQs for processing commands from NVME VF only
   // Note: i is overall index across PVM SQs, j iterates the loop
+  pvm_nvme_sq_base = i;
   for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -332,8 +346,8 @@ int queues_setup() {
   // Note: Not incrementing nvme_be_q in for loop as the SSD handle is added to this
   //       by R2N module in datapath.
   // Save the R2N queue number
-  pvm_r2n_sq = i;
   uint32_t nvme_be_q = i + NUM_TO_VAL(kPvmNumR2nSQs);
+  pvm_r2n_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -359,6 +373,7 @@ int queues_setup() {
   // Note: Incrementing ssd_q in the for loop as the NVME backend corresponds 1:1 
   //       with the SSD
   uint32_t ssd_q = i + NUM_TO_VAL(kPvmNumNvmeBeSQs);
+  pvm_nvme_be_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeBeSQs); j++, i++, ssd_q++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -380,6 +395,7 @@ int queues_setup() {
   }
 
   // Initialize PVM SQs for processing SSD commands 
+  pvm_ssd_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSsdSQs); j++, i++) {
     // Physical address to update pindex
     uint64_t pi_pa;
@@ -444,6 +460,7 @@ int queues_setup() {
   }
 
   // Initialize PVM SQs for processing Sequencer commands for PDMA
+  pvm_seq_pdma_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqPdmaSQs); j++, i++) {
     if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqPdmaSqHandler,
                         kDefaultTotalRings, kDefaultHostRings) < 0) {
@@ -454,6 +471,7 @@ int queues_setup() {
   }
 
   // Initialize PVM SQs for processing Sequencer commands for R2N
+  pvm_seq_r2n_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqR2nSQs); j++, i++) {
     if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqR2nSqHandler,
                         kDefaultTotalRings, kDefaultNoHostRings) < 0) {
@@ -467,6 +485,7 @@ int queues_setup() {
   // This is strictly to avoid queue sharing between PVM and P4+ code.
   // Note: This is different from the Sequencer R2N entry handler queue 
   // created above.
+  pvm_host_r2n_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -489,6 +508,7 @@ int queues_setup() {
   }
 
   // Initialize PVM SQs for processing Sequencer commands for XTS
+  pvm_seq_xts_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqXtsSQs); j++, i++) {
     if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqXtsSqHandler,
                         kDefaultTotalRings, kDefaultHostRings) < 0) {
@@ -499,6 +519,7 @@ int queues_setup() {
   }
 
   // Initialize PVM SQs for processing Sequencer commands for ROCE
+  pvm_seq_roce_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqRoceSQs); j++, i++) {
     if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqR2nSqHandler,
                         kDefaultTotalRings, kDefaultNoHostRings) < 0) {
@@ -508,6 +529,18 @@ int queues_setup() {
     printf("Setup PVM Seq ROCE queue %d \n", i);
   }
 
+  // Initialize PVM SQs for processing Sequencer commands for compression
+  pvm_seq_comp_sq_base = i;
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqCompSQs); j++, i++) {
+    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqCompSqHandler,
+                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+      printf("Failed to setup PVM Seq Xts queue %d \n", i);
+      return -1;
+    }
+    printf("Setup PVM Seq Xts queue %d \n", i);
+  }
+
+  // Save PVM's last SQ
   pvm_last_sq = i;
   printf("PVM's last saved SQ %lu \n", pvm_last_sq);
 
@@ -681,9 +714,61 @@ uint16_t get_pvm_lif() {
   return (uint16_t) pvm_lif;
 }
 
-uint32_t get_pvm_r2n_sq() {
-  return (uint32_t) pvm_r2n_sq;
+uint32_t get_host_nvme_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kNvmeNumSQs));
+  return (host_nvme_sq_base + offset);
 }
+
+uint32_t get_pvm_nvme_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumNvmeSQs));
+  return (pvm_nvme_sq_base + offset);
+}
+
+uint32_t get_pvm_r2n_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumR2nSQs));
+  return (pvm_r2n_sq_base + offset);
+}
+
+uint32_t get_pvm_nvme_be_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumNvmeBeSQs));
+  return (pvm_nvme_be_sq_base + offset);
+}
+
+uint32_t get_pvm_ssd_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumSsdSQs));
+  return (pvm_ssd_sq_base + offset);
+}
+
+uint32_t get_pvm_seq_pdma_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumSeqPdmaSQs));
+  return (pvm_seq_pdma_sq_base + offset);
+}
+
+uint32_t get_pvm_seq_r2n_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumSeqR2nSQs));
+  return (pvm_seq_r2n_sq_base + offset);
+}
+
+uint32_t get_pvm_host_r2n_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumR2nSQs));
+  return (pvm_host_r2n_sq_base + offset);
+}
+
+uint32_t get_pvm_seq_xts_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumSeqXtsSQs));
+  return (pvm_seq_xts_sq_base + offset);
+}
+
+uint32_t get_pvm_seq_roce_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumSeqRoceSQs));
+  return (pvm_seq_roce_sq_base + offset);
+}
+
+uint32_t get_pvm_seq_comp_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumSeqCompSQs));
+  return (pvm_seq_comp_sq_base + offset);
+}
+
 
 void ring_nvme_e2e_ssd() {
   printf("*********** RINGING SSD DOORBELL for testing *********** \n");

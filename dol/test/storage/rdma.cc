@@ -912,7 +912,7 @@ int rdma_pvm_qs_init() {
 
   // Target R2N Xlate
   qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
-                                queues::get_pvm_r2n_sq(), 
+                                queues::get_pvm_r2n_sq(0),  // Only one R2N SQ
                                 pvm_roce_sq_xlate_addr, NULL);
   return 0;
 }

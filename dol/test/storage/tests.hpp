@@ -6,6 +6,43 @@
 
 namespace tests {
 
+typedef struct cp_seq_entry {
+  uint64_t next_doorbell_addr;
+  uint64_t next_doorbell_data;
+  uint64_t status_hbm_pa;
+  uint64_t src_hbm_pa;
+  uint64_t sgl_hbm_pa;
+  uint64_t intr_pa;
+  uint32_t intr_data;
+  uint16_t status_len;
+  uint16_t data_len;
+  // NOTE: Don't enable intr_en and next_doorbell_en together
+  //       as only one will be serviced
+  // Order of evaluation: 1. next_doorbell_en 2. intr_en
+  // TODO: These bitfields are interpretted in big endian 
+  //       fashion by P4+. For DOL it won't matter as we set bitfields.
+  //       For driver, need to define the order properly.
+  uint8_t  use_data_len:1;	// 0 = DIS, 1 =EN
+  uint8_t  status_dma_en:1;	// 0 = DIS, 1 =EN
+  uint8_t  next_doorbell_en:1;	// 0 = DIS, 1 =EN
+  uint8_t  intr_en:1;		// 0 = DIS, 1 =EN
+} cp_seq_entry_t;
+
+typedef struct cq_sq_ent_sgl {
+  uint64_t status_host_pa;
+  uint64_t addr[4];
+  uint16_t len[4];
+} cp_esq_ent_sgl_t;
+
+typedef struct cp_seq_params {
+  cp_seq_entry_t seq_ent;
+  uint32_t seq_index;
+  uint64_t ret_doorbell_addr;
+  uint64_t ret_doorbell_data;
+} cp_seq_params_t;
+
+int test_setup_cp_seq_ent(cp_seq_params_t *params);
+
 int test_setup();
 
 int check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size);

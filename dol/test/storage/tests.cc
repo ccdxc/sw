@@ -2533,4 +2533,34 @@ int test_run_rdma_lif_override() {
   return rc;
 }
 
+int test_setup_cp_seq_ent(cp_seq_params_t *params) {
+  if (!params) return -1;
+ 
+  uint32_t seq_comp_q  = queues::get_pvm_seq_comp_sq(params->seq_index);
+  uint16_t seq_comp_index;
+  uint8_t *seq_comp_desc;
+
+  // Sequencer #1: Compression descriptor
+  seq_comp_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_comp_q, &seq_comp_index);
+  memset(seq_comp_desc, 0, kSeqDescSize);
+  utils::write_bit_fields(seq_comp_desc, 0, 64, params->seq_ent.next_doorbell_addr);
+  utils::write_bit_fields(seq_comp_desc, 64, 64, params->seq_ent.next_doorbell_data);
+  utils::write_bit_fields(seq_comp_desc, 128, 64, params->seq_ent.status_hbm_pa);
+  utils::write_bit_fields(seq_comp_desc, 192, 64, params->seq_ent.src_hbm_pa);
+  utils::write_bit_fields(seq_comp_desc, 256, 64, params->seq_ent.sgl_hbm_pa);
+  utils::write_bit_fields(seq_comp_desc, 320, 64, params->seq_ent.intr_pa);
+  utils::write_bit_fields(seq_comp_desc, 384, 32, params->seq_ent.intr_data);
+  utils::write_bit_fields(seq_comp_desc, 416, 16, params->seq_ent.status_len);
+  utils::write_bit_fields(seq_comp_desc, 432, 16, params->seq_ent.data_len);
+  utils::write_bit_fields(seq_comp_desc, 448, 1, params->seq_ent.use_data_len);
+  utils::write_bit_fields(seq_comp_desc, 449, 1, params->seq_ent.status_dma_en);
+  utils::write_bit_fields(seq_comp_desc, 450, 1, params->seq_ent.next_doorbell_en);
+  utils::write_bit_fields(seq_comp_desc, 451, 1, params->seq_ent.intr_en);
+
+  // Form the doorbell to be returned by the API
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_comp_q, 0, seq_comp_index, 
+                             &params->ret_doorbell_addr, &params->ret_doorbell_data);
+  
+  return 0;
+}
 }  // namespace tests
