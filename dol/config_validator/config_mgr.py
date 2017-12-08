@@ -30,7 +30,7 @@ class ConfigMetaMapper():
         self.__config_to_key_type[config_object] = key_type
 
         # Message type to object map.
-        self.dol_message_map[config_object._cfg_meta._create._req_msg] = config_object
+        self.dol_message_map[config_object._cfg_meta._create._req_msg.__name__] = config_object
 
     def SortExternalDeps(self):
         # Create a list of objects as per the way they are topologically sorted. 
@@ -278,6 +278,7 @@ class ConfigObject():
         crud_oper = self._cfg_meta_object.OperHandler(op_type)
         if dol_message:
             req_message = self.process_message(op_type, dol_message)
+            self._msg_cache[op_type] = req_message
             return 'API_STATUS_OK'
         if not redo:
             req_message = self.generate(op_type, forced_references=forced_references)
@@ -329,15 +330,20 @@ class ConfigObjectHelper(object):
         self._ignore_ops = [ ConfigObjectHelper.__op_map[op.op] for op in self._service_object.ignore or []]
 
     def __repr__(self):
-        return str(self._spec.Service)
+        return str(self._spec.Service) + str(self._service_object.name)
 
     def ReadDolConfig(self, message):
         logger.info("Reading DOL config for %s" %(self))
         cfg_object = ConfigObject(self._cfg_meta, self)
         self._config_objects.append(cfg_object)
         ret_status = cfg_object.process(ConfigObjectMeta.CREATE, dol_message=message)
+        cfg_object._status = ConfigObject._CREATED
         assert ret_status == 'API_STATUS_OK'
         return True
+
+    def ModifyDolConfig(self, ):
+        self.DeleteConfigs(len(self._config_objects), 'API_STATUS_OK')
+        self.ReCreateConfigs(len(self._config_objects), 'API_STATUS_OK')
 
     def CreateConfigs(self, count, status, forced_references=None):
         logger.info("Creating configuration for %s, count : %d" % (self, count))
@@ -471,6 +477,22 @@ def ResetConfigs():
 def GetRandomConfigObjectByKeyType(key_type):
     return cfg_meta_mapper.GetRandomConfigOject(key_type)
 
-def CreateConfigFromDol(message):
-    object_helper = cfg_meta_mapper.dol_message_map[type(message)]
-    object_helper.ReadDolConfig(message)
+def ModifyConfigFromDol(message_name):
+    try:
+        object_helper = cfg_meta_mapper.dol_message_map[message_name]
+        object_helper.ModifyDolConfig()
+    except KeyError:
+        logger.info("Unsupported modify for object")
+        raise
+
+def CreateConfigFromDol(incoming_message):
+    try:
+        object_helper = cfg_meta_mapper.dol_message_map[type(incoming_message).__name__]
+    except KeyError:
+        # This object hasn't been enabled in Config Validator as yet. Return
+        logger.info("Not reading config from DOL for %s" %(type(incoming_message)))
+        return
+    messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
+    for message in messages:
+            object_helper.ReadDolConfig(message)
+

@@ -7,11 +7,12 @@ import config.hal.defs      as haldefs
 
 import grpc
 
-from infra.common.glopts import GlobalOptions
-from infra.common.logging import cfglogger
+from infra.common.glopts                  import GlobalOptions
+from infra.common.logging                 import cfglogger
+from config_validator.cv_signaling_client import SignalingClient
 
 import types_pb2            as types_pb2
-import vrf_pb2           as vrf_pb2
+import vrf_pb2              as vrf_pb2
 import interface_pb2        as interface_pb2
 import l2segment_pb2        as l2segment_pb2
 import endpoint_pb2         as endpoint_pb2
@@ -144,6 +145,9 @@ def init():
     cfglogger.info("Waiting for HAL to be ready ...")
     grpc.channel_ready_future(HalChannel).result()
     cfglogger.info("Connected to HAL!")
+    if GlobalOptions.configtoggle:
+        SignalingClient.Connect()
+        cfglogger.info("Connected to the config validator")
     return
 
 def IsHalDisabled():
@@ -398,8 +402,12 @@ def ConfigureSecurityProfiles(objlist, update = False):
     if IsHalDisabled(): return
     stub = nwsec_pb2.NwSecurityStub(HalChannel)
     api = stub.SecurityProfileCreate
+    msg = nwsec_pb2.SecurityProfileRequestMsg
     if update: api = stub.SecurityProfileUpdate
-    __config(objlist, nwsec_pb2.SecurityProfileRequestMsg, api)
+    __config(objlist, msg, api)
+    if not update and GlobalOptions.configtoggle:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def GetSecurityProfiles(objlist):

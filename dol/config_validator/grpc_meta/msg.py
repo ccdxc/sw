@@ -95,9 +95,12 @@ class GrpcMetaMsg:
         for field_name in self.fields:
             meta_field = self.fields[field_name]
             if meta_field.label == descriptor.FieldDescriptor.LABEL_REPEATED:
+                data = []
                 if meta_field.is_ext_ref_field():
                     assert meta_field._ext_ref in ext_refs
                     op_dict[field_name] = [ext_refs[meta_field._ext_ref].key_or_handle]
+                data.append(meta_field.generate_data(key,ext_refs))
+                op_dict[field_name] = data
             else:
                 if not meta_field.is_field_handle():
                     #We are generating Data, so don't bother to populate handle field.
@@ -158,6 +161,16 @@ class GrpcReqRspMsg:
         fields_by_json_name = dict((f.json_name, f)
                                    for f in message_descriptor.fields)
         return fields_by_json_name
+
+    @staticmethod
+    def split_repeated_messages(message):
+        requests = getattr(message, 'request')
+        messages = []
+        for request in requests:
+            sub_message = type(message)()
+            sub_message.request.extend([request])
+            messages.append(sub_message)
+        return messages
 
     def __construct_meta_object(self, message):
         meta_obj = GrpcMetaMsg.factory(type(message))
@@ -268,7 +281,6 @@ class GrpcReqRspMsg:
         for field in fields_by_json_name:
             obj = grpc_meta_types.GrpcMetaField()
             if fields_by_json_name[field].label == descriptor.FieldDescriptor.LABEL_REPEATED:
-                obj.label = descriptor.FieldDescriptor.LABEL_REPEATED
                 if fields_by_json_name[field].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
                     #TOOD, for now don't create a new one as its already there.
                     try:
@@ -278,7 +290,7 @@ class GrpcReqRspMsg:
                         sub_message = getattr(message, fields_by_json_name[field].name)[0]
                     except:
                         pass
-                    return GrpcReqRspMsg.__GetExtRefObjectsHelper(sub_message, ext_refs)
+                    ext_refs += GrpcReqRspMsg.__GetExtRefObjectsHelper(sub_message, ext_refs)
             else:
                 if fields_by_json_name[field].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
                     if grpc_meta_types.is_ext_ref_field(fields_by_json_name[field]):
@@ -294,4 +306,4 @@ class GrpcReqRspMsg:
         return self._meta_obj.process_data(message)
     
     def generate_message(self, key=None, ext_refs = None):
-        return {self.message_name : [self._meta_obj.generate_data(key, ext_refs)]} 
+        return self._meta_obj.generate_data(key, ext_refs)
