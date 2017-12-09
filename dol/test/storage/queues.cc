@@ -125,6 +125,10 @@ uint32_t pvm_host_r2n_sq_base;
 uint32_t pvm_seq_xts_sq_base;
 uint32_t pvm_seq_roce_sq_base;
 uint32_t pvm_seq_comp_sq_base;
+uint32_t host_nvme_cq_base;
+uint32_t pvm_nvme_cq_base;
+uint32_t pvm_r2n_cq_base;
+uint32_t pvm_nvme_be_cq_base;
 
 void *pndx_data_va;
 uint64_t pndx_data_pa;
@@ -293,6 +297,7 @@ int queues_setup() {
 
 
   // Initialize NVME CQs
+  host_nvme_cq_base = 0; // first queue
   for (i = 0; i < (int) NUM_TO_VAL(kNvmeNumCQs); i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&nvme_cqs[i], NUM_TO_VAL(kNvmeNumEntries),
@@ -318,7 +323,7 @@ int queues_setup() {
 
   // Initialize PVM SQs for processing commands from NVME VF only
   // Note: i is overall index across PVM SQs, j iterates the loop
-  pvm_nvme_sq_base = i;
+  pvm_nvme_sq_base = 0; // first queue
   for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -546,6 +551,7 @@ int queues_setup() {
 
   // Initialize PVM CQs for processing commands from NVME VF only
   // Note: i is overall index across PVM CQs, j iterates the loop
+  pvm_nvme_cq_base = 0; // first queue
   for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeCQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -569,7 +575,7 @@ int queues_setup() {
   }
 
   // Initialize PVM CQs for processing R2N commands 
-  uint32_t pvm_r2n_cq = i;
+  pvm_r2n_cq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nCQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
@@ -596,6 +602,7 @@ int queues_setup() {
   // Initialize PVM CQs for processing NVME backend commands 
   // Note: Incrementing ssd_q in the for loop as the NVME backend corresponds 1:1 
   //       with the SSD
+  pvm_nvme_be_cq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeBeCQs); j++, i++) {
     // For the special E2E SSD, use NvmeSsd class to initialize the queue
     if  (j == kE2eSsdhandle) {
@@ -621,7 +628,7 @@ int queues_setup() {
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kPvmNumEntries, pvm_cqs[i].paddr,
                                  kNvmeCQEntrySize, true, pvm_lif, CQ_TYPE,
-                                 pvm_r2n_cq, 0, 0, storage_hbm_ssd_bm_addr, 0, 0,
+                                 get_pvm_r2n_cq(0), 0, 0, storage_hbm_ssd_bm_addr, 0, 0,
                                  ssd_cndx_addr[j]) < 0) {
       printf("Failed to setup PVM NVME backend CQ %d state \n", i);
       return -1;
@@ -769,6 +776,26 @@ uint32_t get_pvm_seq_comp_sq(uint32_t offset) {
   return (pvm_seq_comp_sq_base + offset);
 }
 
+
+uint32_t get_host_nvme_cq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kNvmeNumCQs));
+  return (host_nvme_cq_base + offset);
+}
+
+uint32_t get_pvm_nvme_cq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumNvmeCQs));
+  return (pvm_nvme_cq_base + offset);
+}
+
+uint32_t get_pvm_r2n_cq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumR2nCQs));
+  return (pvm_r2n_cq_base + offset);
+}
+
+uint32_t get_pvm_nvme_be_cq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumNvmeBeCQs));
+  return (pvm_nvme_be_cq_base + offset);
+}
 
 void ring_nvme_e2e_ssd() {
   printf("*********** RINGING SSD DOORBELL for testing *********** \n");
