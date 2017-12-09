@@ -354,9 +354,11 @@ action p4plus_app_cpu() {
 
     if (ipv4.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu.ip_proto, ipv4.protocol);
+        modify_field(p4_to_p4plus_cpu.packet_type, CPU_PACKET_TYPE_IPV4);
     }
     if (ipv6.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu.ip_proto, ipv6.nextHdr);
+        modify_field(p4_to_p4plus_cpu.packet_type, CPU_PACKET_TYPE_IPV6);
     }
     if (udp.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu.l4_sport, udp.srcPort);

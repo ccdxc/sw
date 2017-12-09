@@ -98,10 +98,11 @@ header_type p4_to_p4plus_cpu_header_ext_t {
         ip_proto            : 8;
         l4_sport            : 16;
         l4_dport            : 16;
-        packet_len          : 16;
-        flow_hash           : 32;
+        packet_type         : 2;
+        packet_len          : 14;
         ip_sa               : 128;
-        ip_da               : 128;
+        ip_da1              : 64;
+        ip_da2              : 64;
     }
 }
 
@@ -247,9 +248,11 @@ action cpu_rxdma_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, tota
     modify_field(cpu_scratch_app.ip_proto, cpu_app_header.ip_proto);
     modify_field(cpu_scratch_app.l4_sport, cpu_app_header.l4_sport);
     modify_field(cpu_scratch_app.l4_dport, cpu_app_header.l4_dport);
+    modify_field(cpu_scratch_app.packet_type, cpu_app_header.packet_type);
     modify_field(cpu_scratch_app.packet_len, cpu_app_header.packet_len);
     modify_field(cpu_scratch_app.ip_sa, cpu_app_header.ip_sa);
-    modify_field(cpu_scratch_app.ip_da, cpu_app_header.ip_da);
+    modify_field(cpu_scratch_app.ip_da1, cpu_app_header.ip_da1);
+    modify_field(cpu_scratch_app.ip_da2, cpu_app_header.ip_da2);
 
     // d for stage 0
     modify_field(cpu_rxdma_initial_d.rsvd, rsvd);

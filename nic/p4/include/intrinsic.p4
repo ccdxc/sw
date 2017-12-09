@@ -214,8 +214,8 @@ header_type p4_to_p4plus_cpu_header_t {
         ip_proto            : 8;
         l4_sport            : 16;
         l4_dport            : 16;
-        packet_len          : 16;
-        flow_hash           : 32;
+        packet_type         : 2;
+        packet_len          : 14;
     }
 }
 

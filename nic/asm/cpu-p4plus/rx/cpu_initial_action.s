@@ -18,14 +18,9 @@ cpu_rx_read_shared_stage0_start:
     phvwr   p.quiesce_pkt_trlr_timestamp, r6.wx
     
     phvwr   p.common_phv_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
-    phvwr   p.t0_s2s_payload_len, k.cpu_app_header_packet_len
+    phvwr   p.t0_s2s_payload_len, k.{cpu_app_header_packet_len_sbit0_ebit5...cpu_app_header_packet_len_sbit6_ebit13}
     phvwr   p.common_phv_debug_dol, d.u.cpu_rxdma_initial_action_d.debug_dol
     phvwr   p.common_phv_flags, d.u.cpu_rxdma_initial_action_d.flags
-
-cpu_rx_hash_data:
-    /* fill data for hash */
-    phvwr   p.toeplitz_input0_data[63:32], k.{cpu_app_header_l4_sport, cpu_app_header_l4_dport}
-    phvwr   p.toeplitz_input0_data[127:64], k.cpu_app_header_ip_sa_sbit0_ebit103[71:8]
 
 cpu_rx_hash_key:
     // fill Symmetric hash key
@@ -39,6 +34,38 @@ cpu_rx_hash_key:
     phvwr   p.toeplitz_key2_data[127:64], r2
     # store APP Type in the last 4 unused-bits of key2
     phvwr   p.toeplitz_key2_data[3:0], P4PLUS_APPTYPE_CPU
+
+cpu_rx_hash_data:
+/* fill data for hash */
+    add     r1, r0, k.cpu_app_header_packet_type
+    .brbegin
+    br      r1[1:0]
+    nop
+        .brcase 0
+            b       table_read_DESC_SEMAPHORE
+            nop
+
+        .brcase 1
+            /* IPv4 */
+            phvwr   p.toeplitz_input0_data[63:32], k.{cpu_app_header_l4_sport, cpu_app_header_l4_dport}
+            phvwr   p.toeplitz_input0_data[127:64], k.cpu_app_header_ip_sa[95:32]
+            b       table_read_DESC_SEMAPHORE
+            nop
+
+        .brcase 2
+            /* IPv6 */
+            phvwr   p.toeplitz_input0_data, k.cpu_app_header_ip_sa
+            //phvwr   p.toeplitz_input1_data, k.{cpu_app_header_ip_da_sbit0_ebit87...cpu_app_header_ip_da_sbit88_ebit127}
+            phvwrpair p.toeplitz_input1_data[127:120], k.cpu_app_header_ip_da1_sbit0_ebit7,\
+                p.toeplitz_input1_data[119:64], k.cpu_app_header_ip_da1_sbit8_ebit63
+            phvwr   p.toeplitz_input1_data[63:0], k.cpu_app_header_ip_da2
+            phvwr   p.toeplitz_input2_data, k.{cpu_app_header_l4_sport, cpu_app_header_l4_dport}
+            b       table_read_DESC_SEMAPHORE
+            nop
+       
+        .brcase 3
+            illegal
+    .brend
 
 table_read_DESC_SEMAPHORE:
     addi    r3, r0, RNMDR_ALLOC_IDX 

@@ -98,7 +98,7 @@ rawr_s0_rx_start:
      *   sizeof(p4_to_p4plus_cpu_pkt_t) + complete packet length
      * to which we will add an app header of size P4PLUS_RAW_REDIR_HDR_SZ
      */
-    add         r_pkt_len, r0, k.rawr_app_header_packet_len
+    add         r_pkt_len, r0, k.{rawr_app_header_packet_len_sbit0_ebit5...rawr_app_header_packet_len_sbit6_ebit13}
     ble.s       r_pkt_len, r0, _packet_len_err_discard
     addi        r_pkt_len, r_pkt_len, P4PLUS_RAW_REDIR_HDR_SZ   // delay slot
     phvwr       p.common_phv_packet_len, r_pkt_len

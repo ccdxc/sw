@@ -424,7 +424,7 @@
 #define P4PLUS_ROCE_HDR_SZ             20
 #define P4PLUS_TCP_PROXY_HDR_SZ        71 /* 39 app hdr + 32 sack */
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      46
-#define P4PLUS_CPU_HDR_SZ              44
+#define P4PLUS_CPU_HDR_SZ              40
 #define P4PLUS_CPU_PKT_SZ              36
 #define P4PLUS_IPSEC_HDR_SZ            18
 #define P4PLUS_RAW_REDIR_HDR_SZ        40
@@ -479,6 +479,13 @@
 #define CPU_FLAGS_IPV6_VALID                   0x04
 #define CPU_FLAGS_IP_OPTIONS_PRESENT           0x08
 #define CPU_FLAGS_TCP_OPTIONS_PRESENT          0x10
+
+/*****************************************************************************/
+/* CPU header packet types                                                   */
+/*****************************************************************************/
+#define CPU_PACKET_TYPE_NONE                   0
+#define CPU_PACKET_TYPE_IPV4                   1
+#define CPU_PACKET_TYPE_IPV6                   2
 
 /*****************************************************************************/
 /* TCP OPTIONS                                                               */
