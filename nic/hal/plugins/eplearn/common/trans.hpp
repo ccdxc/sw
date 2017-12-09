@@ -17,7 +17,7 @@ using hal::utils::fsm_state_timer_ctx;
 using namespace hal;
 
 namespace hal {
-namespace network {
+namespace eplearn {
 
 typedef struct trans_ip_entry_key_s {
     vrf_id_t vrf_id;    // VRF id
@@ -41,6 +41,9 @@ public:
     virtual ~trans_t() {
         HAL_SPINLOCK_DESTROY(&this->slock_);
     }
+
+    virtual void log_error(const char *message)  {}
+    virtual void log_info(const char *message)  {}
 
     class trans_timer_t : public fsm_timer_t {
        public:
@@ -79,8 +82,11 @@ public:
             if (trans->sm_->state_machine_competed()) {
                 trans->marked_for_delete_ = true;
                 /* Assuming delayed delete is setup initiate the transaction delete. */
+                trans->log_info("Transaction completed, deleting...");
                 delete trans;
             }
+        } else {
+            trans->log_error("Transaction in marked for delete state, skipping processing");
         }
         HAL_SPINLOCK_UNLOCK(&trans->slock_);
     }

@@ -1,0 +1,21 @@
+meta:
+    id      : BOOTP
+    scapy   : BOOTP
+    size    : 28
+fields:
+    op      : 1
+    htype   : 1
+    hlen    : 6
+    hops    : 0
+    xid     : 0
+    secs    : 0
+    flags   : 0
+    ciaddr  : ipaddr/0.0.0.0
+    yiaddr  : ipaddr/0.0.0.0
+    siaddr  : ipaddr/0.0.0.0
+    giaddr  : ipaddr/0.0.0.0
+    chaddr  : None
+    sname   : None
+    file    : None
+    options : None
+       # - data : None

@@ -14,9 +14,7 @@
 // using namespace DHCP_EP_LEARN;
 
 namespace hal {
-namespace network {
-
-
+namespace eplearn {
 
 void dhcp_init()
 {
@@ -33,15 +31,20 @@ static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
     dhcp_trans_key_t trans_key;
     dhcp_event_data event_data;
 
+    HAL_TRACE_DEBUG("Processing DHCP event {} : ", event);
     dhcp_trans_t::init_dhcp_trans_key(raw_pkt->chaddr, xid,
             ctx.sep(), &trans_key);
     trans = dhcp_trans_t::find_dhcptrans_by_id(trans_key);
     if (trans == NULL) {
         if (add_entry) {
+            HAL_TRACE_DEBUG("Creating new DHCP transaction for event {}", event);
             trans = new dhcp_trans_t(decoded_packet, ctx);
         } else {
+            HAL_TRACE_ERR("No existing transaction found for event {}", event);
             return HAL_RET_ENTRY_NOT_FOUND;
         }
+    } else {
+        trans->log_info("Found an existing transaction");
     }
 
     event_data.decoded_packet = decoded_packet;
@@ -77,10 +80,18 @@ static std::map<int, process_func> process_func_map = {
 
 hal_ret_t dhcp_process_packet(fte::ctx_t &ctx) {
     struct packet *decoded_packet = NULL;
-    const uint8_t *buf = ctx.pkt();
     uint32_t len = ctx.pkt_len();
+    const unsigned char *ether_pkt = ctx.pkt();
+    hal_ret_t ret = HAL_RET_OK;
+    const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
 
-    hal_ret_t ret = parse_dhcp_packet(buf, len, &decoded_packet);
+    if (ether_pkt == nullptr) {
+        /* Skipping as not packet to process */
+        return ret;
+    }
+
+    ret = parse_dhcp_packet(ether_pkt + cpu_hdr->l3_offset,
+            len - cpu_hdr->l3_offset, &decoded_packet);
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error parsing DHCP packet");
@@ -88,14 +99,18 @@ hal_ret_t dhcp_process_packet(fte::ctx_t &ctx) {
     }
 
     struct option_data data;
-    ret = dhcp_lookup_option(decoded_packet, 53, &data);
+    ret = dhcp_lookup_option(decoded_packet, DHO_DHCP_MESSAGE_TYPE, &data);
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error looking up DHCP message type");
         return ret;
     }
 
     auto it = process_func_map.find(data.data[0]);
     if (it != process_func_map.end()) {
         it->second(decoded_packet, ctx);
+    } else {
+        HAL_TRACE_ERR("Cannot process option {} ",
+                data.data[0]);
     }
 
     if (decoded_packet != NULL) {
@@ -105,5 +120,5 @@ hal_ret_t dhcp_process_packet(fte::ctx_t &ctx) {
     return ret;
 }
 
-}  // namespace network
+}  // namespace eplearn
 }  // namespace hal

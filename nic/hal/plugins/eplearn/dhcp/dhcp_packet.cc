@@ -2,7 +2,7 @@
 // clang-format off
 #include "dhcp_packet.hpp"
 namespace hal {
-namespace network {
+namespace eplearn {
 hal_ret_t parse_dhcp_packet(const uint8_t *buf, uint32_t len,
                             struct packet **decoded_packet) {
     uint32_t payload_len;

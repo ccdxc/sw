@@ -33,7 +33,7 @@ extern twheel* g_twheel;
 }  // namespace hal
 
 namespace hal {
-namespace network {
+namespace eplearn {
 
 class dhcp_trans_t;  // forward
 
@@ -42,6 +42,7 @@ typedef struct dhcp_trans_key_s {
     vrf_id_t vrf_id;    //tenant id
     uint32_t xid;         // transaction ID.
     mac_addr_t mac_addr;  // MAC address of the endpoint
+
 } __PACK__ dhcp_trans_key_t;
 
 enum dhcp_fsm_state_t {
@@ -53,19 +54,20 @@ enum dhcp_fsm_state_t {
     DHCP_DONE,
 };
 
-enum dhcp_fsm_event_t {
-    DHCP_DISCOVER,
-    DHCP_OFFER,
-    DHCP_REQUEST,
-    DHCP_INFORM,
-    DHCP_ACK,
-    DHCP_NACK,
-    DHCP_DECLINE,
-    DHCP_RELEASE,
-    DHCP_INVALID_PACKET,
-    DHCP_ERROR,
-    DHCP_TIMEOUT,
-};
+#define DHCP_FSM_EVENT_ENTRIES(ENTRY)                      \
+    ENTRY(DHCP_DISCOVER,       0, "DHCP_DISCOVER")         \
+    ENTRY(DHCP_OFFER,          1, "DHCP_OFFER")            \
+    ENTRY(DHCP_REQUEST,        2, "DHCP_REQUEST")          \
+    ENTRY(DHCP_INFORM,         3, "DHCP_INFORM")           \
+    ENTRY(DHCP_ACK,            4, "DHCP_ACK")              \
+    ENTRY(DHCP_NACK,           5, "DHCP_NACK")             \
+    ENTRY(DHCP_DECLINE,        6, "DHCP_DECLINE")          \
+    ENTRY(DHCP_RELEASE,        7, "DHCP_RELEASE")          \
+    ENTRY(DHCP_INVALID_PACKET, 8, "DHCP_INVALID_PACKET")   \
+    ENTRY(DHCP_ERROR,          9, "DHCP_ERROR")            \
+    ENTRY(DHCP_TIMEOUT,        10, "DHCP_TIMEOUT")         \
+
+DEFINE_ENUM(dhcp_fsm_event_t, DHCP_FSM_EVENT_ENTRIES)
 
 class dhcp_ctx {
    public:
@@ -82,7 +84,7 @@ class dhcp_ctx {
 
 struct dhcp_event_data {
     const struct packet *decoded_packet;
-    const fte::ctx_t    *fte_ctx;
+    fte::ctx_t    *fte_ctx;
 };
 
 class dhcp_trans_t : public trans_t  {
@@ -119,6 +121,8 @@ private:
                                               fsm_event_data data);
         bool process_dhcp_bound_timeout(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_ack(fsm_state_ctx ctx, fsm_event_data data);
+        bool process_dhcp_offer(fsm_state_ctx ctx, fsm_event_data data);
+
         void bound_entry_func(fsm_state_ctx ctx);
 
        public:
@@ -185,6 +189,21 @@ private:
     void process_event(dhcp_fsm_event_t event, fsm_event_data data);
     const dhcp_ctx* get_ctx() { return &this->ctx_; }
     dhcp_fsm_state_t get_state() { return (dhcp_fsm_state_t)this->sm_->get_state(); }
+    virtual void log_info(const char *message) {
+        HAL_TRACE_INFO("(tenant id : {}, xid : {}, "
+                "macaddr : {}, ip : {}) : {} ",
+                this->trans_key_ptr()->vrf_id, this->trans_key_ptr()->xid,
+                macaddr2str(this->trans_key_ptr()->mac_addr),
+                        ipaddr2str(&ip_entry_key_ptr()->ip_addr), message);
+    }
+    virtual void log_error(const char *message) {
+        HAL_TRACE_ERR("(tenant id : {}, xid : {}, "
+                "macaddr : {}, ip : {}) : {} ",
+                this->trans_key_ptr()->vrf_id, this->trans_key_ptr()->xid,
+                macaddr2str(this->trans_key_ptr()->mac_addr),
+                ipaddr2str(&ip_entry_key_ptr()->ip_addr), message);
+    }
+
     virtual ~dhcp_trans_t();
 } __PACK__;
 
@@ -196,7 +215,7 @@ void* dhcptrans_get_handle_key_func(void* entry);
 uint32_t dhcptrans_compute_handle_hash_func(void* key, uint32_t ht_size);
 bool dhcptrans_compare_handle_key_func(void* key1, void* key2);
 
-}  // namespace network
+}  // namespace eplearn
 }  // namespace hal
 
 #endif /* FTE_EP_LEARN_DHCP_DHCP_TRANS_H_ */

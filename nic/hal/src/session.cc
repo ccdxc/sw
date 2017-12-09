@@ -379,20 +379,11 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                                      session, &session->hal_rflow_ht_ctxt);
     }
 
-    utils::dllist_reset(&session->sep_session_lentry);
     if (sep) {
-        HAL_SPINLOCK_LOCK(&sep->slock);
-        utils::dllist_add(&sep->session_list_head,
-                          &session->sep_session_lentry);
-        HAL_SPINLOCK_UNLOCK(&sep->slock);
+        ep_add_session(sep, session);
     }
-
-    utils::dllist_reset(&session->dep_session_lentry);
     if (dep) {
-        HAL_SPINLOCK_LOCK(&dep->slock);
-        utils::dllist_add(&dep->session_list_head,
-                          &session->dep_session_lentry);
-        HAL_SPINLOCK_UNLOCK(&dep->slock);
+        ep_add_session(dep, session);
     }
 
     utils::dllist_reset(&session->sif_session_lentry);

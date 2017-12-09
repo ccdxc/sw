@@ -811,7 +811,7 @@ ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
     dllist_for_each_safe(curr, next, &ep->session_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         session = find_session_by_handle(entry->handle_id);
-
+        HAL_ABORT(session != NULL);
         HAL_TRACE_DEBUG("pi-ep:{}:Callback for session_id: {}", __FUNCTION__,
                         session->config.session_id);
         // TODO: vmotion: Call FTE API to handle 

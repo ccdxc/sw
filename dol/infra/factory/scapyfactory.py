@@ -207,6 +207,17 @@ class ScapyHeaderBuilder_IPV6(ScapyHeaderBuilder_BASE):
         return v6hdr
 IPV6_builder = ScapyHeaderBuilder_IPV6()
 
+class ScapyHeaderBuilder_BOOTP(ScapyHeaderBuilder_BASE):
+    def build(self, hdr):
+        options =  hdr.fields.options
+        hdr.fields.options = None
+        bootphdr = super().build(hdr)
+        if options:
+            bootphdr = penscapy.BOOTP(bytes(bootphdr) + penscapy.dhcpmagic)
+            bootphdr = bootphdr / options
+        return bootphdr
+
+BOOTP_builder = ScapyHeaderBuilder_BOOTP()
 
 class ScapyHeaderBuilder_TFTP(ScapyHeaderBuilder_BASE):
     opcode_map = [

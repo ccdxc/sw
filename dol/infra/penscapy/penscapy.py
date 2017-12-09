@@ -335,6 +335,12 @@ class BTH(Packet):
             assert(0);
             return super().guess_payload_class()
 
+class DHCP_OPTIONS(Packet):
+    name = "DHCP_Options"
+    fields_desc = [
+        DHCPOptionsField("options", {})
+    ]
+    
 class UDP_OPTIONS(Packet):
     name = "UDP_Options"
     fields_desc = [

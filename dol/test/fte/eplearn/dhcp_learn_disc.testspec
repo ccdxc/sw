@@ -1,0 +1,76 @@
+# Test Spec
+selectors:
+    root            : ref://store/templates/id=ENDPOINT
+    endpoint        : filter://remote=False
+    tenant          : filter://overlay=VLAN,type=TENANT
+    segment         : filter://any
+
+packets:
+    - packet:
+        id          : BASE_DISCOVER_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_DHCP
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/root/macaddr
+                dst     : callback://eplearn/dhcp/GetDhcpDestMAC
+            qtag    :
+                vlan: ref://testcase/config/root/intf/encap_vlan_id
+            ipv4:
+                src     : callback://eplearn/dhcp/GetDhcpSrcIp
+                dst     : callback://eplearn/dhcp/GetDhcpDstIp
+            bootp:
+                op       : const/1
+                xid      : callback://eplearn/dhcp/GetDhcpXid
+                chaddr   : callback://eplearn/dhcp/GetDhcpChaddr
+                sname    : callback://eplearn/dhcp/GetDhcpSname
+                file     : callback://eplearn/dhcp/GetDhcpFile
+                options  : callback://eplearn/dhcp/GetDhcpOptions
+
+buffers:
+    - buffer:
+        id      : TXBUF_DISCOVER
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=BASE_DISCOVER_PKT/size
+           data : ref://testcase/packets/id=BASE_DISCOVER_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : TXDESCR_DISCOVER
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=TXBUF_DISCOVER
+            addr  : ref://testcase/buffers/id=TXBUF_DISCOVER/addr
+            len   : ref://testcase/buffers/id=TXBUF_DISCOVER/size
+    - descriptor:
+        id      : EX_TXDESCR_DISCOVER
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            err_code : 0x0
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=TXDESCR_DISCOVER
+                    ring    : ref://testcase/config/root/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
+            doorbell:
+                object: ref://testcase/config/root/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+
+        expect:
+            delay   : callback://eplearn/dhcp/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EX_TXDESCR_DISCOVER
+                    ring    : ref://testcase/config/root/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=BASE_DISCOVER_PKT
+                    port    : 128

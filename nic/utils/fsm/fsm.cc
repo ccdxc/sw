@@ -6,10 +6,13 @@ namespace hal {
 namespace utils {
 
 fsm_transition_t::fsm_transition_t(uint32_t event, fsm_transition_func function,
-                                   uint32_t next_state) {
+                                   uint32_t next_state, const char *event_name,
+                                   const char *next_state_name) {
     this->event = event;
     this->func = function;
     this->next_state = next_state;
+    this->event_name = event_name;
+    this->next_state_name = next_state_name;
 }
 
 /* State Machine definition could be allocated globally once and HAL restart
@@ -34,14 +37,14 @@ fsm_state_machine_t::fsm_state_machine_t(get_sm_func sm_func, uint32_t init_stat
     fsm_state_machine_def_t* sm = sm_func();
     auto result = sm->find(current_state);
 
-    if (result == sm->end()) {
-        assert(0);
-    }
+    HAL_ABORT(result != sm->end());
     fsm_state_t state = result->first;
     if (state.entry_func) {
         state.entry_func(NULL);
     }
 
+    HAL_TRACE_INFO("State machine initialized to state : {}",
+            state.get_state_name());
     if (this->timer_get_func_ && state.timeout) {
         this->cur_state_time_ctx_ =
             this->timer_get_func_()->add_timer(state.timeout, this);
@@ -54,13 +57,11 @@ void fsm_state_machine_t::_process_event_internal(uint32_t event,
     fsm_state_machine_def_t* sm = this->sm_get_func_();
 
     auto result = sm->find(current_state);
-    if (result == sm->end()) {
-        std::cout << "State not found...\n";
-        assert(0);
-    }
+    HAL_ABORT(result != sm->end());
 
     fsm_state_t state = result->first;
     std::vector<fsm_transition_t> transitions = result->second;
+    HAL_TRACE_INFO("Processing event at State {}", state.get_state_name());
     for (fsm_transition_t t : transitions) {
         if (t.event == event) {
             if (t.func != nullptr) {
@@ -75,6 +76,8 @@ void fsm_state_machine_t::_process_event_internal(uint32_t event,
             if (state.state_id == t.next_state) {
                 return;
             }
+            HAL_TRACE_INFO("Transition found for event {} , next state {}",
+                    t.event_name, t.next_state_name);
             if (state.exit_func) {
                 state.exit_func(this->ctx_);
             }
@@ -86,10 +89,8 @@ void fsm_state_machine_t::_process_event_internal(uint32_t event,
             }
             fsm_state_t newState(t.next_state);
             auto result = sm->find(newState);
-            if (result == sm->end()) {
-                /*  Assert, state not defined in SM */
-                assert(0);
-            }
+            /*  Assert, state not defined in SM */
+            HAL_ABORT(result != sm->end());
             current_state = result->first;
             /* Set the timeout default to Statically defined state machine.
              * In entry function caller can override the value.
@@ -101,6 +102,8 @@ void fsm_state_machine_t::_process_event_internal(uint32_t event,
             if (this->timer_get_func_ && this->timeout_) {
                 this->cur_state_time_ctx_ =
                     this->timer_get_func_()->add_timer(this->timeout_, this);
+                HAL_TRACE_INFO("Added timer {} for state {}",
+                        this->timeout_, t.next_state_name);
             }
             this->set_state(t.next_state);
             break;

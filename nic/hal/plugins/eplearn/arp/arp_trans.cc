@@ -11,7 +11,7 @@ using hal::utils::fsm_state_machine_t;
 
 namespace hal {
 
-namespace network {
+namespace eplearn {
 
 void *arptrans_get_key_func(void *entry) {
     HAL_ASSERT(entry != NULL);
@@ -38,17 +38,17 @@ arp_trans_t::trans_timer_t *arp_trans_t::arp_timer_ =
         new trans_timer_t(ARP_TIMER_ID);
 slab *arp_trans_t::arplearn_slab_ =
     slab::factory("arpLearn", HAL_SLAB_ARP_LEARN,
-                  sizeof(hal::network::arp_trans_t), 16, false,
+                  sizeof(arp_trans_t), 16, false,
                   true, true, true);
 ht *arp_trans_t::arplearn_key_ht_ =
-    ht::factory(HAL_MAX_ARP_TRANS, hal::network::arptrans_get_key_func,
-                hal::network::arptrans_compute_hash_func,
-                hal::network::arptrans_compare_key_func);
+    ht::factory(HAL_MAX_ARP_TRANS, arptrans_get_key_func,
+                arptrans_compute_hash_func,
+                arptrans_compare_key_func);
 ht *arp_trans_t::arplearn_ip_entry_ht_ =
     ht::factory(HAL_MAX_ARP_TRANS,
-                hal::network::trans_get_ip_entry_key_func,
-                hal::network::trans_compute_ip_entry_hash_func,
-                hal::network::trans_compare_ip_entry_key_func);
+                trans_get_ip_entry_key_func,
+                trans_compute_ip_entry_hash_func,
+                trans_compare_ip_entry_key_func);
 
 #define INIT_TIMEOUT       120 * TIME_MSECS_PER_SEC
 // This is default, entry func can override this.
@@ -105,8 +105,9 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
     hal_ret_t ret;
     ep_t *ep_entry = fte_ctx->sep();
 
+    trans->log_info("Processing ARP request.");
     if (ep_entry == nullptr) {
-        HAL_TRACE_ERR("Endpoint entry not found.");
+        trans->log_error("Endpoint entry not found.");
         trans->sm_->throw_event(ARP_ERROR, NULL);
         return false;
     }
@@ -120,6 +121,8 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
                 (trans->ip_entry_key_ptr())));
 
     if (other_trans != NULL) {
+        trans->log_error("Found an existing transaction, will be removed.");
+        other_trans->log_error("Initiating transaction delete.");
         arp_trans_t::process_transaction(other_trans, ARP_REMOVE, NULL);
     }
 
@@ -127,7 +130,7 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
             &trans->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
 
     if (ret != HAL_RET_OK) {
-       HAL_TRACE_ERR("pi-ep:{}:IP add update failed", __FUNCTION__);
+       trans->log_error("IP add update failed");
        trans->sm_->throw_event(ARP_ERROR, NULL);
        /* We should probably drop this packet as this ARP request may not be valid one */
        return false;
@@ -149,8 +152,9 @@ bool arp_trans_t::arp_fsm_t::process_rarp_reply(fsm_state_ctx ctx,
     hal_ret_t ret;
     ep_t *ep_entry = fte_ctx->dep();
 
+    trans->log_info("Processing RARP reply.");
     if (ep_entry == nullptr) {
-        HAL_TRACE_ERR("Endpoint entry not found.");
+        trans->log_error("Endpoint entry not found.");
         trans->sm_->throw_event(ARP_ERROR, NULL);
         return false;
     }
@@ -163,6 +167,8 @@ bool arp_trans_t::arp_fsm_t::process_rarp_reply(fsm_state_ctx ctx,
                 (trans->ip_entry_key_ptr())));
 
     if (other_trans != NULL) {
+        trans->log_error("Found an existing transaction, will be removed.");
+        other_trans->log_error("Initiating transaction delete.");
         arp_trans_t::process_transaction(other_trans, ARP_REMOVE, NULL);
     }
 
@@ -170,7 +176,7 @@ bool arp_trans_t::arp_fsm_t::process_rarp_reply(fsm_state_ctx ctx,
             &trans->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
 
     if (ret != HAL_RET_OK) {
-       HAL_TRACE_ERR("pi-ep:{}:IP add update failed", __FUNCTION__);
+       trans->log_error("IP add update failed");
        trans->sm_->throw_event(ARP_ERROR, NULL);
        /* We should probably drop this packet as this ARP request may not be valid one */
        return false;
@@ -190,8 +196,9 @@ bool arp_trans_t::arp_fsm_t::process_rarp_request(fsm_state_ctx ctx,
     const fte::ctx_t *fte_ctx = data->fte_ctx;
     ep_t *ep_entry = fte_ctx->sep();
 
+    trans->log_info("Processing RARP request.");
     if (ep_entry == nullptr) {
-        HAL_TRACE_ERR("Endpoint entry not found.");
+        trans->log_error("Endpoint entry not found.");
         trans->sm_->throw_event(ARP_ERROR, NULL);
         return false;
     }
@@ -209,14 +216,16 @@ bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
     const ip_addr_t *ip_addr = data->ip_addr;
     ep_t *ep_entry = fte_ctx->sep();
 
+    trans->log_info("Processing RARP renewal request.");
     if (ep_entry == nullptr) {
-        HAL_TRACE_ERR("Endpoint entry not found.");
+        trans->log_error("Endpoint entry not found.");
         trans->sm_->throw_event(ARP_ERROR, NULL);
         return false;
     }
 
     if (trans->protocol_address_match(ip_addr)) {
         /* Just a renewal, nothing to do, timeout will be updated. */
+        trans->log_info("Protocol address same, nothing to do.");
         return true;
     }
 
@@ -262,6 +271,7 @@ void arp_trans_t::process_event(arp_fsm_event_t event, fsm_event_data data) {
 }
 
 arp_trans_t::~arp_trans_t() {
+    this->log_info("Deleting transaction.");
     this->reset();
     delete this->sm_;
 }
@@ -281,7 +291,7 @@ void arp_trans_t::reset() {
         ret = endpoint_update_ip_delete(ep_entry,
                 &this->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-ep:{}:IP delete update failed", __FUNCTION__);
+            this->log_error("IP delete update failed");
         }
         ep_entry = this->get_ep_entry();
         HAL_ASSERT(ep_entry == NULL);
@@ -308,5 +318,5 @@ arp_fsm_state_t arp_trans_t::get_state() {
     return (arp_fsm_state_t)this->sm_->get_state();
 }
 
-}  // namespace network
+}  // namespace eplearn
 }  // namespace hal

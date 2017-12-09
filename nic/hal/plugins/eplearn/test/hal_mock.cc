@@ -31,6 +31,13 @@ void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
     ctx.init(cpu_rxhdr, pkt, pkt_len, iflow, rflow, {}, 0);
 }
 
+hal_ret_t fte::ctx_t::update_flow(const flow_update_t& flowupd,
+                   const hal::flow_role_t role)
+{
+    return HAL_RET_OK;
+}
+
+
 hal_ret_t
 mock_create_add_cb(hal::cfg_op_ctxt_t *cfg_ctxt)
 {

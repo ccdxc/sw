@@ -172,7 +172,6 @@ ctx_t::lookup_flow_objs()
         // TODO: Bharat: Please start using pd_get_object_from_flow_lkupid
         sl2seg_ =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
         HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
-        //sif_ = hal::find_if_by_hwid(cpu_rxhdr_->src_lif);
         //HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
 
         // Try to find sep by looking at L2.
@@ -180,6 +179,8 @@ ctx_t::lookup_flow_objs()
          sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
          if (sep_) {
              HAL_TRACE_INFO("fte: src ep found by L2 lookup, key={}", key_);
+             sif_ = hal::find_if_by_handle(sep_->if_handle);
+             HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
          }
     }
 

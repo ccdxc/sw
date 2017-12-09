@@ -236,6 +236,9 @@ class Module(objects.FrameworkObject):
         if GlobalOptions.tcid is None:
             return True
 
+        if isinstance(GlobalOptions.tcid, list):
+            return tcid in GlobalOptions.tcid
+            
         if not isinstance(GlobalOptions.tcid, int):
             GlobalOptions.tcid = utils.ParseInteger(GlobalOptions.tcid)
     
