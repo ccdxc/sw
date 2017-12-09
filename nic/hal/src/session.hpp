@@ -322,6 +322,8 @@ struct session_s {
     dllist_ctxt_t       feature_list_head;        // List of feature specific states
 } __PACK__;
 
+// Todo (Pavithra) - this is moved to ALG utils. Keeping it here until we 
+// have FTE call the plugins for session_get()
 //---------------------------------------------------------------------------------
 // ALG status per session
 //---------------------------------------------------------------------------------

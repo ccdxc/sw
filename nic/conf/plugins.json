@@ -26,6 +26,16 @@
             "deps"      : [],
             "features"  : ["sfw"]
         },
+        { 
+            "name"      : "alg_utils",
+            "provider"  : "pensando.io",
+            "lib"       : "alg_utils/libalg_utils.so",
+            "init_func" : "alg_utils_init",
+            "exit_func" : "alg_utils_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/sfw"],
+            "features"  : ["alg_utils"]
+        },
         {
             "name"      : "alg_sip",
             "provider"  : "pensando.io",
@@ -33,7 +43,7 @@
             "init_func" : "alg_sip_init",
             "exit_func" : "alg_sip_exit",
             "auto_load" : "true",
-            "deps"      : ["pensando.io/sfw"],
+            "deps"      : ["pensando.io/sfw", "pensando.io/alg_utils"],
             "features"  : ["alg_sip"]
         },
         {
@@ -43,7 +53,7 @@
             "init_func" : "alg_init",
             "exit_func" : "alg_exit",
             "auto_load" : "true",
-            "deps"      : ["pensando.io/sfw"],
+            "deps"      : ["pensando.io/sfw", "pensando.io/alg_utils"],
             "features"  : ["alg"]
         },
         {
