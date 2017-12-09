@@ -819,7 +819,6 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, uint8_t **nvme_cm
 
   // Pre-form the (RDMA) write descriptor to point to the data buffer
   // TODO: Remove the write_data_buf pointer and do this in P4+
-  uint32_t seq_pdma_q = queues::get_pvm_seq_pdma_sq(4);
   uint32_t write_wqe_offset = offsetof(r2n::r2n_buf_t, write_desc) - offsetof(r2n::r2n_buf_t, cmd_buf);
   uint8_t *write_wqe = ((uint8_t *) r2n_buf_va) + write_wqe_offset;
   void *write_data_buf = (void *) (((uint8_t *) target_rcv_buf_ptr_va) + kR2NDataBufOffset);  

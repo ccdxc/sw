@@ -2423,7 +2423,7 @@ int test_run_rdma_e2e_write() {
 }
 
 int test_run_rdma_e2e_read() {
-  uint32_t seq_pdma_q = 38;
+  uint32_t seq_pdma_q = queues::get_pvm_seq_pdma_sq(3);
   uint16_t ssd_handle = 2; // the SSD handle
   uint8_t *cmd_buf = NULL;
   uint8_t *data_buf = NULL;
@@ -2500,7 +2500,7 @@ int test_run_rdma_e2e_read() {
 }
 
 int test_run_rdma_lif_override() {
-  uint32_t seq_pdma_q = 39;
+  uint32_t seq_pdma_q = queues::get_pvm_seq_pdma_sq(4);
   uint16_t ssd_handle = 2; // the SSD handle
   uint8_t *cmd_buf = NULL;
   uint8_t *data_buf = NULL;
