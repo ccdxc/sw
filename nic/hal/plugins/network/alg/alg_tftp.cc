@@ -22,7 +22,7 @@ process_tftp_first_packet(fte::ctx_t& ctx)
     hal_ret_t               ret = HAL_RET_OK;
     fte::alg_proto_state_t  state = fte::ALG_PROTO_STATE_NONE;
     const uint8_t          *pkt = ctx.pkt();
-    uint8_t                 offset = 0;
+    uint32_t                offset = 0;
     uint16_t                tftpop = 0;
     fte::alg_entry_t         *alg_entry = NULL;
 
@@ -77,7 +77,7 @@ process_tftp(fte::ctx_t& ctx)
     hal_ret_t             ret = HAL_RET_OK;
     hal::flow_key_t       key = ctx.key();
     const uint8_t        *pkt = ctx.pkt();
-    uint8_t               offset = 0;
+    uint32_t              offset = 0;
     uint16_t              tftpop = 0;
     fte::alg_entry_t     *alg_entry = NULL;
     hal::session_t       *session = NULL;

@@ -131,9 +131,9 @@ packets:
         template    : ref://factory/packets/id=MSRPC_EPM_FLOOR
         headers     :
             base    :
-                lhs_len: 0x1300
+                lhs_len: 0x0100
                 proto  : 11
-                rhs_len: 0x0200
+                rhs_len: 0
 
     - packet:
         id          : EPMREQFLOORDPORT
@@ -153,7 +153,7 @@ packets:
                 lhs_len: 0x0100
                 proto  : 9
                 rhs_len: 0x400
- 
+                 
     - packet:
         id          : EPMRSPFLOORDPORT
         template    : ref://factory/packets/id=MSRPC_EPM_FLOOR

@@ -28,7 +28,7 @@ namespace hal {
 namespace net {
 
 void
-__parse_rpcb_res_hdr(const uint8_t *pkt, uint8_t offset, char *uaddr)
+__parse_rpcb_res_hdr(const uint8_t *pkt, uint32_t offset, char *uaddr)
 {
     uint32_t len = 0;
     
@@ -37,7 +37,7 @@ __parse_rpcb_res_hdr(const uint8_t *pkt, uint8_t offset, char *uaddr)
 }
 
 uint32_t
-__parse_rpcb_entry(const uint8_t *pkt, uint8_t offset, struct rpcb *rpcb)
+__parse_rpcb_entry(const uint8_t *pkt, uint32_t offset, struct rpcb *rpcb)
 {
     uint32_t len = 0;
 
@@ -59,7 +59,7 @@ __parse_rpcb_entry(const uint8_t *pkt, uint8_t offset, struct rpcb *rpcb)
 }
 
 uint32_t
-__parse_pmap_hdr(const uint8_t *pkt, uint8_t offset, struct pmaplist *pmap)
+__parse_pmap_hdr(const uint8_t *pkt, uint32_t offset, struct pmaplist *pmap)
 {
     pmap->pml_map.pm_prog = __pack_uint32(pkt, &offset);
     pmap->pml_map.pm_vers = __pack_uint32(pkt, &offset);
@@ -70,7 +70,7 @@ __parse_pmap_hdr(const uint8_t *pkt, uint8_t offset, struct pmaplist *pmap)
 }
 
 uint32_t
-__parse_call_hdr(const uint8_t *pkt, uint8_t offset, struct rpc_msg *cmsg)
+__parse_call_hdr(const uint8_t *pkt, uint32_t offset, struct rpc_msg *cmsg)
 {
     uint32_t len = 0;
    
@@ -92,7 +92,7 @@ __parse_call_hdr(const uint8_t *pkt, uint8_t offset, struct rpc_msg *cmsg)
 }
 
 uint32_t
-__parse_reply_hdr(const uint8_t *pkt, uint8_t offset, struct rpc_msg *rmsg)
+__parse_reply_hdr(const uint8_t *pkt, uint32_t offset, struct rpc_msg *rmsg)
 {
     uint32_t len = 0;
 
@@ -111,7 +111,7 @@ __parse_reply_hdr(const uint8_t *pkt, uint8_t offset, struct rpc_msg *rmsg)
 }
 
 uint32_t
-__parse_rpc_msg(const uint8_t *pkt, uint8_t offset, uint32_t pkt_len, struct rpc_msg *msg)
+__parse_rpc_msg(const uint8_t *pkt, uint32_t offset, uint32_t pkt_len, struct rpc_msg *msg)
 {
     uint32_t call_hdr_offset=0, reply_hdr_offset=0;
 
@@ -220,8 +220,8 @@ hal_ret_t
 parse_sunrpc_control_flow(fte::ctx_t& ctx)
 {
     const uint8_t           *pkt = ctx.pkt();
-    uint8_t                  rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
-    uint8_t                  pgm_offset = 0;
+    uint32_t                 rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
+    uint32_t                 pgm_offset = 0;
     fte::alg_entry_t        *alg_entry = NULL;
     struct rpc_msg           rpc_msg;
     fte::RPCMap             *map = NULL;
