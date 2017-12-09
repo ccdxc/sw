@@ -749,7 +749,9 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_
     initiator_sq_pindex = 0;
 
   // Now kickstart the sequencer
-  tests::test_seq_write_roce(35, 60, g_rdma_pvm_roce_init_sq, r2n_buf_pa, 
+  tests::test_seq_write_roce(queues::get_pvm_seq_pdma_sq(0),
+                             queues::get_pvm_seq_roce_sq(0), 
+                             g_rdma_pvm_roce_init_sq, r2n_buf_pa, 
 		             r2n_hbm_buf_pa, data_len, 
                              host_mem_v2p((void *) sqwqe), 64);
 
@@ -912,7 +914,7 @@ int rdma_pvm_qs_init() {
 
   // Target R2N Xlate
   qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
-                                queues::get_pvm_r2n_sq(), 
+                                queues::get_pvm_r2n_sq(0),  // Only one R2N SQ
                                 pvm_roce_sq_xlate_addr, NULL);
   return 0;
 }

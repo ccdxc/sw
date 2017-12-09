@@ -68,5 +68,9 @@ tbl_load:
                               storage_tx_roce_sq_xlate_start)
 
 exit:
+   // Setup the start and end DMA pointers
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_0_dma_cmd_eop,
+                 p4_txdma_intr_dma_cmd_ptr)
+
    LOAD_NO_TABLES
 

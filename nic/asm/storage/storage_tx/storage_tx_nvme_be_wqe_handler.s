@@ -30,11 +30,11 @@ storage_tx_nvme_be_wqe_handler_start:
    // Store whether command is a read command into the PHV
    phvwr	p.storage_kivec0_is_read, d.is_read[0]
 
-   // Ring the sequencer doorbell as needed
+   // Ring the sequencer doorbell if enabled
    seq		c1, d.db_enable, 1
    bcf		![c1], check_remote
    nop
-   SEQUENCER_DOORBELL_UPDATE(dma_p2m_3)
+   SEQUENCER_DOORBELL_FORM_UPDATE_RING(dma_p2m_3)
 
    // If R2N WQE is remote, push write data (if any) and status over ROCE
    // to the initiator on the remote side

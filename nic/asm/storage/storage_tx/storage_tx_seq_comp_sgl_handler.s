@@ -16,10 +16,6 @@ struct phv_ p;
 
 storage_tx_seq_comp_sgl_handler_start:
 
-   // Set the interrupt to indicate to the host that sequencer is done
-   SEQ_COMP_SET_INTR(dma_p2m_11)
-
-
    // Check if status needs to be DMAed
    seq		c1, STORAGE_KIVEC5_STATUS_DMA_EN, 0
    bcf		![c1], process_data
