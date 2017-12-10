@@ -523,6 +523,30 @@ action f_p4plus_to_p4_1() {
         add(ipv4.identification, ipv4.identification, p4plus_to_p4.ip_id_delta);
     }
 
+    // update IP length
+    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN) != 0) {
+        if (vlan_tag.valid == TRUE) {
+            subtract(scratch_metadata.packet_len,
+                     capri_p4_intrinsic.packet_len, 18);
+        } else {
+            subtract(scratch_metadata.packet_len,
+                     capri_p4_intrinsic.packet_len, 14);
+        }
+        if (ipv4.valid == TRUE) {
+            modify_field(ipv4.totalLen, scratch_metadata.packet_len);
+            subtract_from_field(scratch_metadata.packet_len, ipv4.ihl << 2);
+        } else {
+            if (ipv6.valid == TRUE) {
+                subtract_from_field(scratch_metadata.packet_len, 40);
+                modify_field(ipv6.payloadLen, scratch_metadata.packet_len);
+            }
+        }
+
+        // update tcp_data_len
+        modify_field(l4_metadata.tcp_data_len,
+                     (scratch_metadata.packet_len - (tcp.dataOffset) * 4));
+    }
+
     // update TCP sequence number
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO) != 0) {
         add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
@@ -546,25 +570,14 @@ action f_p4plus_to_p4_1() {
 }
 
 action f_p4plus_to_p4_2() {
-    // update IP length
-    if (vlan_tag.valid == TRUE) {
-        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.packet_len, 18);
+    // update UDP length
+    if (ipv4.valid == TRUE) {
+        subtract(scratch_metadata.packet_len, ipv4.totalLen, ipv4.ihl << 2);
     } else {
-        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.packet_len, 14);
-    }
-    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN) != 0) {
-        if (ipv4.valid == TRUE) {
-            modify_field(ipv4.totalLen, scratch_metadata.packet_len);
-            subtract_from_field(scratch_metadata.packet_len, ipv4.ihl << 2);
-        } else {
-            if (ipv6.valid == TRUE) {
-                subtract_from_field(scratch_metadata.packet_len, 40);
-                modify_field(ipv6.payloadLen, scratch_metadata.packet_len);
-            }
+        if (ipv6.valid == TRUE) {
+            modify_field(scratch_metadata.packet_len, ipv6.payloadLen);
         }
     }
-
-    // update UDP length
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN) != 0) {
         modify_field(udp.len, scratch_metadata.packet_len);
     }
@@ -581,14 +594,18 @@ action f_p4plus_to_p4_2() {
                    (1 << CHECKSUM_CTL_INNER_L4_CHECKSUM));
         }
     } else {
+        if (ipv4.valid == TRUE) {
+            bit_or(scratch_metadata.size8, scratch_metadata.size8,
+                   (1 << CHECKSUM_CTL_IP_CHECKSUM));
+        }
         if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_RDMA) {
             bit_or(scratch_metadata.size8, scratch_metadata.size8,
-                   ((1 << CHECKSUM_CTL_IP_CHECKSUM) |
-                    (1 << CHECKSUM_CTL_ICRC)));
+                   (1 << CHECKSUM_CTL_ICRC));
         } else {
-            bit_or(scratch_metadata.size8, scratch_metadata.size8,
-                   ((1 << CHECKSUM_CTL_IP_CHECKSUM) |
-                    (1 << CHECKSUM_CTL_L4_CHECKSUM)));
+            if ((udp.valid == TRUE) or (tcp.valid == TRUE)) {
+                bit_or(scratch_metadata.size8, scratch_metadata.size8,
+                        (1 << CHECKSUM_CTL_L4_CHECKSUM));
+            }
         }
     }
     modify_field(control_metadata.checksum_ctl, scratch_metadata.size8);

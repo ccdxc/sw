@@ -125,6 +125,9 @@ lb_ipv4_normalizaiton:
   // Edit Case. Need to check whether to update inner or outer
   phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_RSVD_MASK
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_RSVD_MASK
+  // Assumption is if we terminated the tunnel and looking inner then we will move all
+  // inner packets to outer, so we only need to tell checksum engine to update outer only.
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 lb_ipv4_norm_df_bit:
   b.c4        lb_ipv4_norm_options
@@ -137,6 +140,9 @@ lb_ipv4_norm_df_bit:
   // Edit Case. Need to check whether to update inner or outer
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_DF_MASK
   phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_DF_MASK
+  // Assumption is if we terminated the tunnel and looking inner then we will move all
+  // inner packets to outer, so we only need to tell checksum engine to update outer only.
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 lb_ipv4_norm_options:
   b.c4        lb_ipv4_norm_invalid_length
@@ -162,8 +168,9 @@ lb_ipv4_norm_options:
   phvwr       p.ipv4_totalLen, r2
   sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
-  b           lb_ipv4_norm_invalid_length
   phvwr       p.capri_p4_intrinsic_packet_len, r2
+  b           lb_ipv4_norm_invalid_length
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 
 lb_ipv4_norm_options_tunnel_terminate:
@@ -180,6 +187,9 @@ lb_ipv4_norm_options_tunnel_terminate:
   sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
   phvwr       p.capri_p4_intrinsic_packet_len, r2
+  // Assumption is if we terminated the tunnel and looking inner then we will move all
+  // inner packets to outer, so we only need to tell checksum engine to update outer only.
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 
 // Here we normalize the invalid length based on outer IP total len

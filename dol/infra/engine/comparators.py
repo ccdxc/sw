@@ -13,9 +13,9 @@ from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger as logger
 
 gl_ignore_fields = {
-    'IP'    : [ 'chksum' ],
-    'TCP'   : [ 'chksum' ],
-    'UDP'   : [ 'chksum' ],
+#    'IP'    : [ 'chksum' ],
+#    'TCP'   : [ 'chksum' ],
+#    'UDP'   : [ 'chksum' ],
     'ICMP'  : [ 'chksum' ],
     'CRC'   : [ 'crc' ],
     'ESP'   : [ 'data'],

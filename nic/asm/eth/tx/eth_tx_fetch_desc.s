@@ -23,6 +23,7 @@ eth_tx_fetch_desc:
 
   phvwri          p.common_te0_phv_table_lock_en, 1
 
+  phvwri          p.app_header_app_type, 1
   addi            r2, r0, loword(eth_tx_packet)
   addui           r2, r2, hiword(eth_tx_packet)
   srl             r1, r2, CAPRI_MPU_PC_SHIFT

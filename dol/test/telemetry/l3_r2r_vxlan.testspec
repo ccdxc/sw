@@ -148,7 +148,6 @@ packets:
                 vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
                 prio    : 0
             outerudp:
-                chksum  : 0
             vxlan       :
                 vni     : ref://testcase/config/src/segment/vxlan_id
             eth:

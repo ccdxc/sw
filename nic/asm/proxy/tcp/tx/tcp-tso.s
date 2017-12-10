@@ -52,8 +52,10 @@ dma_cmd_intrinsic:
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
     // app header
-    phvwr           p.tcp_app_header_p4plus_app_id, 1 // TODO: P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID
-    phvwri          p.tcp_app_header_flags, P4PLUS_TO_P4_FLAGS_LKP_INST | P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
+    phvwr           p.tcp_app_header_p4plus_app_id, P4PLUS_APPTYPE_TCPTLS
+    phvwri          p.tcp_app_header_flags, P4PLUS_TO_P4_FLAGS_LKP_INST | \
+                                            P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | \
+                                            P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM
 
     CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport,
                                 p4_intr_global_tm_instance_type,

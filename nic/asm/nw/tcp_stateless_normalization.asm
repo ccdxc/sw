@@ -136,6 +136,7 @@ lb_tcp_rsvd_flags:
   phvwr.c4    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
   phvwr       p.tcp_res, 0
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE
 
 
 // C2 has lb_tcp_unexpected_mss_action == ALLOW
@@ -200,6 +201,7 @@ lb_tcp_urg_flag_not_set:
   phvwr.c3    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
   phvwr       p.tcp_urgentPtr, 0
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE
 
 lb_tcp_urg_payload_missing:
   b.c2        lb_tcp_urg_ptr_not_set
@@ -216,6 +218,7 @@ lb_tcp_urg_payload_missing:
   // If not Allow/Drop then its EDIT
   phvwr       p.tcp_urgentPtr, 0
   phvwrmi     p.tcp_flags, 0x0, TCP_FLAG_URG
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE
 
 
 lb_tcp_urg_ptr_not_set:
@@ -231,6 +234,7 @@ lb_tcp_urg_ptr_not_set:
   phvwr.c3    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
   phvwrmi     p.tcp_flags, 0x0, TCP_FLAG_URG
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE
 
 
 lb_tcp_rst_with_data:
@@ -260,6 +264,7 @@ lb_tcp_rst_with_data:
   phvwr        p.l4_metadata_tcp_data_len, r0
   phvwr        p.capri_intrinsic_payload, 0
   phvwr        p.capri_deparser_len_trunc, 1 
+  phvwrmi      p.control_metadata_checksum_ctl, CHECKSUM_L3_L4_UPDATE_MASK, CHECKSUM_L3_L4_UPDATE_MASK
   // Edit option: TBD
   // 1. Change the l4_metadata.tcp_data_len to zero
   // 2. Update IP header total len
