@@ -99,7 +99,7 @@ descriptors:
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 0  # OP_TYPE_SEND
             status : 0  # CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetReqRxCQExpColor
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             smac: callback://rdma/rdma/GetZeroMAC
 
 trigger:

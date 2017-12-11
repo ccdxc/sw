@@ -383,6 +383,46 @@ modules:
         ignore  : False
  
     - module:
+        name    : RDMA_REQ_RX_COALESCED_ACK_EMPTY_RRQ
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_ack_empty_rrq
+        spec    : req_rx_coalesced_ack_empty_rrq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_ACK_NONEMPTY_RRQ
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_ack_nonempty_rrq
+        spec    : req_rx_coalesced_ack_nonempty_rrq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_READ_RESP_ACK
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_read_resp_ack
+        spec    : req_rx_coalesced_read_resp_ack.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_READ_RESP_ACK_2
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_read_resp_ack_2
+        spec    : req_rx_coalesced_read_resp_ack_2.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_ATOMIC_RESP_ACK
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_atomic_resp_ack
+        spec    : req_rx_coalesced_atomic_resp_ack.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY
         enable  : True
         package : test.rdma

@@ -101,7 +101,7 @@ packets:
                  psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
              aeth:
                 syndrome : 14 # TODO - credits
-                msn      : ref://testcase/pvtdata/msn
+                msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
              payload:
                  data    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/rawbytes
    
@@ -136,7 +136,7 @@ packets:
                  psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
              aeth:
                 syndrome : 14 # TODO - credits
-                msn      : ref://testcase/pvtdata/msn
+                msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
              payload:
                  data    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/rawbytes
 
@@ -204,11 +204,11 @@ descriptors:
         id      : EXP_CQ_WQE
         template: ref://factory/templates/id=DESC_RDMA_CQ
         fields:
-            wrid:  ref://testcase/pvtdata/msn
+            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 3 #OP_TYPE_READ
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetReqRxCQExpColor
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             smac   : callback://rdma/rdma/GetZeroMAC
 
 session:

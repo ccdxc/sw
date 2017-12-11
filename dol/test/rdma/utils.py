@@ -73,6 +73,23 @@ def ValidateRespRx2CQChecks(tc):
 
     return True
 
+def ValidateReqRxCQChecks(tc, desc_name):
+    rs = tc.config.rdmasession
+    rs.lqp.sq_cq.qstate.Read()
+    tc.pvtdata.sq_cq_post_qstate = rs.lqp.sq_cq.qstate.data
+    log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_cq_wqes) - 1
+
+    # verify that p_index is incremented by 1, as cqwqe is posted
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_cq_pre_qstate, tc.pvtdata.sq_cq_post_qstate, 'p_index0', ring0_mask, 1):
+        return False
+
+    # verify that color bit in CQWQE and CQCB are same
+    #tc.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_cq_post_qstate, 'color', tc.descriptors.Get(desc_name).color):
+        return False
+
+    return True
 
 def ValidateNoCQChanges(tc):
     rs = tc.config.rdmasession

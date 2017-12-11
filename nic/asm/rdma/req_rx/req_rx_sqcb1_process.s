@@ -18,27 +18,9 @@ struct req_rx_sqcb1_process_k_t k;
 .align
 req_rx_sqcb1_process:
 
-    bbeq      k.args.ecn_set, 0, skip_cnp_send
-    // Load dcqcn_cb to store timestamps and trigger Doorbell to generate CNP.
-    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, ECN_INFO_T, p_key, k.args.p_key)
-
-    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_dcqcn_ecn_process)
-    add     r2, d.header_template_addr, HDR_TEMPLATE_T_SIZE_BYTES //dcqcn_cb addr
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
-
-skip_cnp_send:
-    add            r2, r0, k.global.flags
-    beqi           r2, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
-    // TODO Check valid PSN
-
-    // TODO bth.psn < sqcb1_p->rexmit_psn, duplicate ack, drop
-    slt            c1, k.to_stage.bth_psn, d.rexmit_psn // Branch Delay Slot
-    bcf            [c1], duplicate_ack
-
-    // TODO Check pending_recirc_pkts_maxk
+    // Check pending_recirc_pkts_max
     sub            r1, d.token_id, d.nxt_to_go_token_id
+    mincr          r1, 8, r0
     bgti           r1, PENDING_RECIR_PKTS_MAX, recirc_cnt_exceed
 
     // get token_id for this packet
@@ -49,21 +31,54 @@ skip_cnp_send:
     bcf            [!c1], recirc
     tbladd         d.token_id, 1 // Branch Delay Slot
 
+    // invoke program to generate CNP using table 2, if ecn is set
+    bbeq      k.args.ecn_set, 0, process_rx_pkt
+    // Load dcqcn_cb to store timestamps and trigger Doorbell to generate CNP.
+    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, ECN_INFO_T, p_key, k.args.p_key)
+
+    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_dcqcn_ecn_process)
+    add     r1, d.header_template_addr, HDR_TEMPLATE_T_SIZE_BYTES //dcqcn_cb addr
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
+process_rx_pkt:
+    add            r2, r0, k.global.flags
+    beqi           r2, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
+
+    // TODO Check valid PSN
+
+    // skip ack sanity checks if there is no aeth hdr
     ARE_ALL_FLAGS_SET(c2, r2, REQ_RX_FLAG_AETH)
     bcf            [!c2], set_arg
-    nop            // Branch Delay Slot
+    add            r3, k.to_stage.syndrome, r0 // Branch Delay Slot
  
     // if (msn >= sqcb1_p->ssn) invalid_pkt_msn
     scwle24        c3, d.ssn, k.to_stage.msn 
     bcf            [c3], invalid_pkt_msn
-    nop            // Branch Delay Slot
 
+    // bth.psn >= sqcb1_p->rexmit_psn, valid ack
+    scwlt24        c1, k.to_stage.bth_psn, d.rexmit_psn // Branch Delay Slot
+    bcf            [!c1], process_aeth
+
+    // bth.psn < sqcb1_p->rexmit_psn, duplicate and not unsolicited p_ack, drop
+    ARE_ALL_FLAGS_SET(c2, r2, REQ_RX_FLAG_ACK) // Branch Delay Slot
+    ARE_ALL_FLAGS_SET_B(c4, r3, ACK_SYNDROME)
+    bcf            [!c2 | !c4], duplicate_ack
+
+    // unsolicited ack i.e. duplicate of most recent p_ack is allowed
+    sub            r4, d.rexmit_psn, -1  // Branch Delay Slot
+    mincr          r4, 24, r0
+    seq            c3, r4, k.to_stage.bth_psn
+    bcf            [!c3], duplicate_ack
+
+process_aeth:
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
-    SQCB1_ADDR_GET(r3)
+    SQCB1_ADDR_GET(r5)
 
-    IS_ANY_FLAG_SET_B(c3, r1, RNR_SYNDROME|RESV_SYNDROME|NAK_SYNDROME)
-    bcf            [c3], post_rexmit_psn
+    IS_ANY_FLAG_SET_B(c4, r3, RNR_SYNDROME|RESV_SYNDROME|NAK_SYNDROME)
+    bcf            [c4], post_rexmit_psn
     phvwr          p.rexmit_psn, k.to_stage.bth_psn // Branch Delay Slot
    
     // if ACK, rexmit_psn is ack_psn + 1
@@ -81,7 +96,7 @@ post_credits:
     phvwr          p.msn, k.to_stage.msn
     phvwr          p.credits, k.to_stage.syndrome[4:0]
 
-    add            r4, r3, SQCB1_MSN_OFFSET
+    add            r4, r5, SQCB1_MSN_OFFSET
     DMA_HBM_PHV2MEM_SETUP(r6, msn, credits, r4)
     bcf            [!c1], post_rexmit_psn
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
@@ -94,8 +109,10 @@ post_credits:
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
 
 post_rexmit_psn:
-    add            r4, r3, SQCB1_REXMIT_PSN_OFFSET
+    add            r4, r5, SQCB1_REXMIT_PSN_OFFSET
     DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, rexmit_psn, r4)
+    bcf            [c3], unsolicited_ack
+    nop            // Branch Delay Slot
 
 set_arg:
 
@@ -106,6 +123,7 @@ set_arg:
     CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, in_progress, d.in_progress)
     CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, cq_id, d.cq_id)
     CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, e_rsp_psn, d.e_rsp_psn)
+    CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, msn, d.msn)
     CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, rrq_empty, k.args.rrq_empty)
     CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, timer_active, d.timer_active)
     CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
@@ -121,16 +139,32 @@ set_arg:
     nop.e
     nop
 
+unsolicited_ack:
+    // if its unsolicted ack, just post credits, msn and exit, CQ posting not needed
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
+    CAPRI_SET_TABLE_0_VALID(0)
+    // TODO - need to do this as part of write-back for locking
+    tblmincri      d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
+    nop.e
+    nop
+
 duplicate_ack:
 recirc_cnt_exceed:
 recirc:
 invalid_pkt_msn:
+    CAPRI_SET_TABLE_0_VALID(0)
+    // TODO - need to do this as part of write-back for locking
+    tblmincri      d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
+    phvwr         p.common.p4_intr_global_drop, 1
 
     nop.e
     nop
 
 process_feedback:
     CAPRI_SET_TABLE_0_VALID(0)
+
+    // TODO - need to do this as part of write-back for locking
+    tblmincri      d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
 
     CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, tbl_id, 3)

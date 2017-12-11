@@ -86,7 +86,7 @@ packets:
                  psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
              aeth:
                 syndrome : 14 # TODO - credits
-                msn      : ref://testcase/pvtdata/msn
+                msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
              atomic_acketh:
                 orig_remdt : ref://testcase/pvtdata/cmp_data
              payload:
@@ -163,11 +163,11 @@ descriptors:
         id      : EXP_CQ_WQE
         template: ref://factory/templates/id=DESC_RDMA_CQ
         fields:
-            wrid:  ref://testcase/pvtdata/msn
+            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 6 #OP_TYPE_CMP_N_SWAP
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetReqRxCQExpColor
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             smac: callback://rdma/rdma/GetZeroMAC
 session:
 

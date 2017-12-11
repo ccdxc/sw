@@ -16,8 +16,10 @@ struct sqcb1_t d;
 
 .align
 req_tx_bktrack_sqcb1_process:
+    // if rexmit_psn is same as tx_psn, then this is a spurious timer expiry
+    // event. Just write back to release busy bits
     seq            c1, d.rexmit_psn, d.tx_psn
-    bcf            [c1], write_back
+    bcf            [c1], sqcb_write_back
     
     CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7) // Branch Delay Slot
     CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.rexmit_psn, d.rexmit_psn)
@@ -77,7 +79,7 @@ bktrack_sqpt:
     nop.e
     nop
 
-write_back:
+sqcb_write_back:
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, in_progress, k.args.in_progress)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, empty_rrq_bktrack, 1)

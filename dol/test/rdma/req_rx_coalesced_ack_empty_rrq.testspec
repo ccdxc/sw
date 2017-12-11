@@ -15,13 +15,11 @@ selectors:
         lqp         : filter://svc=0
         rqp         : filter://svc=0
 #    maxflows    : 1
-#  Restrict rdmasessions to 1 for timer expiry tests as expiry event will happen for
-#  all sessions at the same time and cannot be controlled at rdma session level
-    maxrdmasessions     : 1
+#    maxrdmasessions     : 1
 
 packets:
     - packet:
-        id          : BASE_PKT # Base packet
+        id          : BASE_PKT1 # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
@@ -29,7 +27,15 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : EXP_PKT # Base packet
+        id          : BASE_PKT2 # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : SEND_ONLY_1 # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH
         encaps      :
@@ -56,12 +62,44 @@ packets:
             bth:
                 opcode  : 4 # RDMA SEND Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+                psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : IN_PKT # Base packet
+        id          : SEND_ONLY_2 # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            #ipv6:
+            #    src     : ref://testcase/config/flow/sip
+            #    dst     : ref://testcase/config/flow/dip
+            #    hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 4 # RDMA SEND Only
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : ACK_PKT # Base packet
         payloadsize : 0
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
         encaps      :
@@ -88,27 +126,37 @@ packets:
              bth:
                  opcode  : 17 # Acknowledge
                  destqp  : ref://testcase/config/rdmasession/lqp/id
-                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
              aeth:
                 syndrome : 14 # TODO - credits
-                msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
+                msn      : callback://rdma/rdma/GetPktMsn/ack_num=1
              payload:
                  data    : None
 
 buffers:
     - buffer:
-        id      : BUF
+        id      : BUF1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=BASE_PKT/size
-                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+               - size    : ref://testcase/packets/id=BASE_PKT1/size
+                 data    : ref://testcase/packets/id=BASE_PKT1/rawbytes
+
+    - buffer:
+        id      : BUF2
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=BASE_PKT2/size
+                 data    : ref://testcase/packets/id=BASE_PKT2/rawbytes
 
 descriptors:
     - descriptor:
-        id      : DESC
+        id      : SQ_DESC1
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
             op_type : 0  # OP_TYPE_SEND
@@ -116,23 +164,37 @@ descriptors:
             num_sges: 1
 
             send    :
-                 len   : ref://testcase/packets/id=BASE_PKT/size
                
             sges:
-                - va  : ref://testcase/buffers/id=BUF/address
-                  len : ref://testcase/buffers/id=BUF/size
+                - va  : ref://testcase/buffers/id=BUF1/address
+                  len : ref://testcase/buffers/id=BUF1/size
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
+    - descriptor:
+        id      : SQ_DESC2
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            op_type : 0  # OP_TYPE_SEND
+            wrid    : 7
+            num_sges: 1
+
+            send    :
+               
+            sges:
+                - va  : ref://testcase/buffers/id=BUF2/address
+                  len : ref://testcase/buffers/id=BUF2/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
 
     - descriptor:
         id      : EXP_CQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_CQ
         fields:
-            wrid: callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 0 #OP_TYPE_READ
-            status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
-            smac: callback://rdma/rdma/GetZeroMAC
+            wrid    : callback://rdma/rdma/GetCQMsn/sq_wqe_num=1
+            qp      : ref://testcase/config/rdmasession/lqp/id
+            op_type : 0
+            status  : 0  #CQ_STATUS_SUCCESS
+            color   : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            smac    : callback://rdma/rdma/GetZeroMAC
 
 
 session:
@@ -140,9 +202,13 @@ session:
         trigger:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC
+                    object  : ref://testcase/descriptors/id=SQ_DESC1
                     ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
             
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=SQ_DESC2
+                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+
             doorbell:
                 object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
                 fields:
@@ -151,24 +217,18 @@ session:
         expect:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=EXP_PKT
+                    object  : ref://testcase/packets/id=SEND_ONLY_1
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
-    - step:
-        trigger:
-        #trigger is in .py file in Verify callback to fire the timer
-       
-        expect:
-            packets:
-                - packet: #retransmitted packet. same contents as above
-                    object  : ref://testcase/packets/id=EXP_PKT
+                - packet:
+                    object  : ref://testcase/packets/id=SEND_ONLY_2
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
     - step:
         trigger:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=IN_PKT
+                    object  : ref://testcase/packets/id=ACK_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
             
         expect:

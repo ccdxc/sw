@@ -15,7 +15,7 @@ selectors:
         lqp         : filter://svc=0
         rqp         : filter://svc=0
 #    maxflows    : 1
-    maxrdmasessions     : 1
+#    maxrdmasessions     : 1
 
 packets:
     - packet:
@@ -93,7 +93,7 @@ packets:
                  psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
              aeth:
                 syndrome : 14 # TODO - credits
-                msn      : ref://testcase/pvtdata/msn
+                msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
              payload:
                  data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/rawbytes
 
@@ -170,11 +170,11 @@ descriptors:
         id      : EXP_CQ_WQE
         template: ref://factory/templates/id=DESC_RDMA_CQ
         fields:
-            wrid:  ref://testcase/pvtdata/msn
+            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 3 #OP_TYPE_READ
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetReqRxCQExpColor
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             smac   : callback://rdma/rdma/GetZeroMAC
 
 session:

@@ -156,9 +156,7 @@ req_tx_add_headers_process:
         add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_PSN, d.tx_psn           
-        add            r1, d.msn, 0
-        mincr          r1, 24, 1
-        phvwr          RRQWQE_MSN, r1 
+        phvwr          RRQWQE_MSN, d.ssn
         
         // dma_cmd[3]
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
@@ -260,8 +258,7 @@ req_tx_add_headers_process:
         
         phvwr          RRQWQE_PSN, d.tx_psn
         phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
-        add            r1, d.msn, 1
-        phvwr          RRQWQE_MSN, r1 
+        phvwr          RRQWQE_MSN, d.ssn
         
         // dma_cmd[3] 
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
@@ -284,8 +281,7 @@ req_tx_add_headers_process:
         
         phvwr          RRQWQE_PSN, d.tx_psn
         phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
-        add            r1, d.msn, 1
-        phvwr          RRQWQE_MSN, r1 
+        phvwr          RRQWQE_MSN, d.ssn
         
         // dma_cmd[3] - rrqwqe
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)

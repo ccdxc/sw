@@ -49,6 +49,7 @@ def TestCaseStepVerify(tc, step):
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
     if step.step_id == 0:
+
         # verify that tx_psn is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
             return False
@@ -82,8 +83,10 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 1:
-        # verify that msn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 1):
+        msn = tc.pvtdata.sq_pre_qstate.ssn - 1
+
+        # verify that msn is incremented to that of ssn of this msg
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
             return False
 
         # verify that c_index of rrq is not incremented
@@ -114,6 +117,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
+        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
+            return False 
         ############     EQ VALIDATIONS #################
         if not ValidateEQChecks(tc):
             return False

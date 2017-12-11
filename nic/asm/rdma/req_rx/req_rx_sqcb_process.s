@@ -67,7 +67,7 @@ skip_cnp_send:
 ack:
     // remaining_payload_bytes != 0
     bne            r2, r0, invalid_pyld_len
-    nop
+    nop            // Branch Delay Slot
     b              next_stage_arg
     nop            // Branch Delay Slot
 

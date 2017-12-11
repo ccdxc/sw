@@ -5,7 +5,6 @@ import pdb
 import copy
 from infra.common.glopts import GlobalOptions
 
-
 def Setup(infra, module):
     return
 
@@ -17,18 +16,7 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
-    tc.pvtdata.va = 0x0102030405060708
-    tc.pvtdata.dma_len = 64
-    tc.pvtdata.r_key = 2
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
-
-    # Feeding timestamp from dcqcn_cb since model doesn't support timestamps.
-    # CNP delay timer is set to 50us. Capri clock runs at 1 tick per ns.
-    # So below clock values should generate CNP packet.
-    rs.lqp.ReadDcqcnCb()
-    rs.lqp.dcqcn_data.last_cnp_timestamp = 0xC350 # 50k ticks
-    rs.lqp.dcqcn_data.cur_timestamp = 0x186A0 # 100k ticks
-    rs.lqp.WriteDcqcnCb()
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
@@ -45,44 +33,43 @@ def TestCaseVerify(tc):
 
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseStepVerify() Implementation for Step: %d" %step.step_id)
+    tc.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
-    ring5_mask = (rs.lqp.num_rrq_wqes - 1)
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
-        
+
     if step.step_id == 0:
-        # verify that tx_psn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
+        # verify that tx_psn is incremented by 2
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 2):
             return False
-
-        # verify that p_index sq is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index0', ring0_mask, 1):
+        
+        # verify that p_index is incremented by 2
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index0', ring0_mask,  2):
             return False
-
-        # verify that c_index sq is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index0', ring0_mask, 1):
+        
+        # verify that c_index is incremented by 2
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index0', ring0_mask, 2):
             return False
-
-        # verify that p_index of rrq is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index5', ring5_mask, 1):
+        
+        # verify that ssn is incremented by 2
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'ssn', 2):
             return False
-
-        # verify that ssn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'ssn', 1):
+        
+        # verify that lsn is not incremented for send
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 0):
             return False
-
-        # verify that lsn incremented
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 1):
-            return False
-
+        
         # verify that busy is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
             return False
-
+        
         # verify that in_progress is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
+            return False
+
+        # verify that p_index of rrq is not incremented
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
             return False
 
     elif step.step_id == 1:
@@ -92,8 +79,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
             return False
 
-        # verify that c_index of rrq is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index5', ring5_mask, 1):
+        # verify that c_index of rrq is not incremented
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index5', tc.pvtdata.sq_post_qstate, 'c_index5'):
             return False
 
         # verify rexmit_psn is incremented to that of tx_psn
@@ -109,7 +96,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that tx_psn is not incremented
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 0):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'tx_psn', tc.pvtdata.sq_post_qstate, 'tx_psn'):
             return False
 
         # verify that token_id is incremented by 1
@@ -119,15 +106,15 @@ def TestCaseStepVerify(tc, step):
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
-
-        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_WQE'):
+     
+        # validate cqcb pindex and color
+        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
             return False
 
     # update current as pre_qstate ... so next step_id can use it as pre_qstate
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
 
     return True
-
 
 def TestCaseTeardown(tc):
     tc.info("RDMA TestCaseTeardown() Implementation.")
