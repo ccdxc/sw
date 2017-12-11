@@ -12,7 +12,8 @@ capri_model = {
         'flit_size' : 512, # max_size/num_flits
         'containers': {8: 640}, # {size:num} all 8 bit containers
         'wide_key_start_flit' : 2,
-        'gso_csum_phv_start' : 512 #Has to first 16b in a phv slot. 
+        'gso_csum_phv_start' : 512, # Has to first 16b in a phv slot. 
+        'parser_end_off_flit_loc' : 16,  # bits 16:31 in any phv flit
     },
     'match_action': {
         'num_stages' : 6,

@@ -88,6 +88,7 @@ class capri_field:
         self.is_predicate = False
         self.is_parser_extracted = False
         self.is_index_key = False       # key for an index table (needs special phv alignment)
+        self.is_parser_end_offset = False
         self.allow_relocation = False   # allow moving this field when allocating phvs
         self.is_alignment_pad = False
         self.phv_bit = -1   # bit index in phv
@@ -537,9 +538,10 @@ class capri_flit:
             #  >=0    0         X       1       : allocate at specified floc
             #  >=0    !0        L       0       : allocate at aligned_start >= floc
             #  >=0    !0        R       0       : allocate at start >= floc and aligned_end
-            #  <0      0        X       X       : allocate at any available location
-            #  <0     !0        L       X       : allocate at any available aligned_start
-            #  <0     !0        R       X       : allocate at any available aligned_end
+            #  -1      0        X       X       : allocate at any available location
+            #  -1     !0        L       X       : allocate at any available aligned_start
+            #  -1     !0        R       X       : allocate at any available aligned_end
+            #  -2     !0        R       X       : allocate using last free chunk
             if floc >= 0:
                 if (cs+cw) < floc:
                     # skip chunks that are entirely before specified floc
@@ -666,6 +668,7 @@ class capri_gress_pa:
         self.capri_p4_intr_hdr = None
         self.capri_deparser_len_hdr = None
         self.capri_gso_csum_hdr = None
+        self.parser_end_off_cf = None
 
     def initialize(self):
         hw_model = self.pa.be.hw_model
@@ -1786,7 +1789,6 @@ class capri_gress_pa:
             wct.isize = -1 # reset these values for the rest of the processing
             wct.key_size = -1 # reset these values for the rest of the processing
 
-
     def create_flits(self, add_hv=False):
         if self.pa.be.args.old_phv_allocation:
             return self._create_flits(add_hv)
@@ -1813,7 +1815,6 @@ class capri_gress_pa:
 
         flit = self.flits[0]
         self.add_intrinsic_meta_and_hv(flit, add_hv)
-
         hfid = 0
         for fid, flit in enumerate(self.flits):
             if hfid == len(self.hdr_fld_order):
@@ -1936,6 +1937,44 @@ class capri_gress_pa:
             return False
         return True
 
+    def allocate_parser_end_off_phv(self, start_flit):
+        # there are two places in a flit this can go, 16:31 or 528:543
+        # try both. If both the slots are used, use the next flit (can try previous
+        # flit as well) To make sure we do not find a place for this, last flit has a reserved
+        # slot for this (XXX)
+        cf = self.parser_end_off_cf
+        loc = self.pa.be.hw_model['phv']['parser_end_off_flit_loc']
+        phv_flit_size = self.pa.be.hw_model['phv']['flit_size']
+        for f in range(start_flit.id, len(self.flits)):
+            flit = self.flits[f] 
+            phv_bit = flit.flit_chunk_alloc(cf.width, flit.base_phv_bit+loc,
+                                        align=0, justify=0, fixed_loc=1, cross_512b=False)
+            if phv_bit >= 0:
+                cf.phv_bit = phv_bit
+                return
+            # try next phv flit location
+            phv_bit = flit.flit_chunk_alloc(cf.width, flit.base_phv_bit+loc+phv_flit_size,
+                                        align=0, justify=0, fixed_loc=1, cross_512b=False)
+            if phv_bit >= 0:
+                cf.phv_bit = phv_bit
+                return
+
+        # Try earlier flits
+        for f in range(0, start_flit.id):
+            flit = self.flits[f] 
+            phv_bit = flit.flit_chunk_alloc(cf.width, flit.base_phv_bit+loc,
+                                        align=0, justify=0, fixed_loc=1, cross_512b=False)
+            if phv_bit >= 0:
+                cf.phv_bit = phv_bit
+                return
+            # try next phv flit location
+            phv_bit = flit.flit_chunk_alloc(cf.width, flit.base_phv_bit+loc+phv_flit_size,
+                                        align=0, justify=0, fixed_loc=1, cross_512b=False)
+            if phv_bit >= 0:
+                cf.phv_bit = phv_bit
+                return
+        assert 0, "No phv location free for parser_end_offset"
+
     def allocate_phv_for_hf(self, flit, hf):
         # Assumptions:
         # - hf is either a header or metadata fld
@@ -1949,7 +1988,7 @@ class capri_gress_pa:
         # handled in a separate function
         # - Flit restriction is not applied
         # - meta flds can be hdr or fld unions
-        # - There are no connected/assicitated hdr and flds since flit restriction is not there
+        # - There are no connected/associtated hdr and flds since flit restriction is not there
 
         if hf in self.allocated_hf:
             return True
@@ -2005,6 +2044,7 @@ class capri_gress_pa:
         new_hfs = []
         bits_needed = 0
         hdr_size = 0
+        alloc_parser_end_off = False
         for n_hf in hf_list:
             # remove all the hfs already allocated
             if n_hf in self.allocated_hf:
@@ -2016,6 +2056,9 @@ class capri_gress_pa:
                 if n_hf.phv_bit >= 0:
                     # already assigned a phv
                     continue
+                if n_hf.is_parser_end_offset:
+                    alloc_parser_end_off = True
+                    continue
                 new_hfs.append(n_hf)
                 bits_needed += n_hf.storage_size()
             else:
@@ -2025,6 +2068,10 @@ class capri_gress_pa:
                     continue
                 hdr_size += hsize
                 new_hfs.append(n_hf)
+
+        # special case to allocate parser_end_offset
+        if alloc_parser_end_off:
+            self.allocate_parser_end_off_phv(flit)
 
         total_bits_needed = bits_needed + (hdr_size * 8)
         parser_flit_size = self.pa.be.hw_model['parser']['flit_size']
@@ -2684,6 +2731,11 @@ class capri_pa:
                     assert not cfi.parser_local, \
                         "Cannot used parser local field %s in ingress pipeline" % \
                         (cfi.hfname)
+                if cfi and 'parser_end_offset' in f.instance._parsed_pragmas and \
+                    f.name == f.instance._parsed_pragmas['parser_end_offset'].keys()[0]:
+                    cfi.is_parser_end_offset = True
+                    assert self.gress_pa[xgress.INGRESS].parser_end_off_cf == None, pdb.set_trace()
+                    self.gress_pa[xgress.INGRESS].parser_end_off_cf = cfi
             if (f.egress_read or f.egress_write):
                 cfe = self.gress_pa[xgress.EGRESS].allocate_field(f)
                 if cfe and is_scratch:
@@ -2692,6 +2744,11 @@ class capri_pa:
                     assert not cfe.parser_local, \
                         "Cannot used parser local field %s in egress pipeline" % \
                         (cfe.hfname)
+                if cfe and 'parser_end_offset' in f.instance._parsed_pragmas and \
+                    f.name == f.instance._parsed_pragmas['parser_end_offset'].keys()[0]:
+                    cfe.is_parser_end_offset = True
+                    assert self.gress_pa[xgress.EGRESS].parser_end_off_cf == None, pdb.set_trace()
+                    self.gress_pa[xgress.EGRESS].parser_end_off_cf = cfe
 
             # create all header fields.. if direction is not known, do it in both dir
             # this is done so that hdr and fleld unions can be processed before parser
