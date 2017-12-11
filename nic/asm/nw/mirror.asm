@@ -54,6 +54,9 @@ span_truncation:
   sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, 14
   slt         c1, r1, r2
-  phvwr.c1    p.capri_deparser_len_trunc_pkt_len, r1
-  phvwr.e     p.capri_intrinsic_tm_span_session, 0
-  phvwr.c1    p.{capri_intrinsic_payload,capri_deparser_len_trunc}, 0x1
+  nop.!c1.e
+  phvwr       p.capri_intrinsic_tm_span_session, 0
+  add         r3, r1, 14
+  phvwr       p.capri_p4_intrinsic_packet_len, r3
+  phvwr.e     p.capri_deparser_len_trunc_pkt_len, r1
+  phvwr       p.{capri_intrinsic_payload,capri_deparser_len_trunc}, 0x1

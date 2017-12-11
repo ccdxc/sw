@@ -111,10 +111,11 @@ packets:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: callback://networking/packets/GetExpectedPacketCos
 
-
     - packet:
         id          : ERSPAN_PKT1
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT1,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT1,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -133,10 +134,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT1,basepkt=PKT1
 
     - packet:
         id          : ERSPAN_PKT2
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT2,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT2,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -155,10 +160,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT2,basepkt=PKT1
 
     - packet:
         id          : ERSPAN_PKT3
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT3,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT3,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -177,82 +186,88 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT3,basepkt=PKT1
 
 
     - packet:
         id          : EG_ERSPAN_PKT1
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
             erspaneth:
-                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=1,dir=ingress
-                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=1,dir=ingress
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=1,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=1,dir=egress
             erspanqtag:
                 prio: 0
-                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=1,dir=ingress
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=1,dir=egress
             erspanipv4:
                 tos : 0
                 id  : 0
-                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=1,dir=ingress
-                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=ingress
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=1,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1,dir=egress
             erspangre:
             erspan:
                 sessionid: const/0
                 ver     : const/2
-            qtag:
-                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: callback://networking/packets/GetExpectedPacketCos
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
 
     - packet:
         id          : EG_ERSPAN_PKT2
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
             erspaneth:
-                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=2,dir=ingress
-                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=2,dir=ingress
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=2,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=2,dir=egress
             erspanqtag:
                 prio: 0
-                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=2,dir=ingress
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=2,dir=egress
             erspanipv4:
                 tos : 0
                 id  : 0
-                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=2,dir=ingress
-                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=ingress
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=2,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2,dir=egress
             erspangre:
             erspan:
                 sessionid: const/0
                 ver     : const/2
-            qtag:
-                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: callback://networking/packets/GetExpectedPacketCos
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
 
     - packet:
         id          : EG_ERSPAN_PKT3
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
             erspaneth:
-                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=3,dir=ingress
-                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=3,dir=ingress
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=3,dir=egress
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=3,dir=egress
             erspanqtag:
                 prio: 0
-                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=3,dir=ingress
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=3,dir=egress
             erspanipv4:
                 tos : 0
                 id  : 0
-                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=3,dir=ingress
-                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=ingress
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=3,dir=egress
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=3,dir=egress
             erspangre:
             erspan:
                 sessionid: const/0
                 ver     : const/2
-            qtag:
-                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: callback://networking/packets/GetExpectedPacketCos
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
+
 
 
     - packet:

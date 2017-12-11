@@ -62,6 +62,11 @@ packets:
         encaps      : 
         headers     :
 
+    - packet:
+        id          : EXP_PKT
+        clone       : ref://testcase/packets/id=BASE
+        encaps      : 
+        headers     :
 
     - packet:
         id          : SPAN_PKT1     # Span packet 1
@@ -102,7 +107,9 @@ packets:
 
     - packet:
         id          : ERSPAN_PKT1
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT1,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT1,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -121,10 +128,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT1,basepkt=PKT1
 
     - packet:
         id          : ERSPAN_PKT2
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT2,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT2,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -143,10 +154,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT2,basepkt=PKT1
 
     - packet:
         id          : ERSPAN_PKT3
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT3,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT3,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -165,11 +180,15 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT3,basepkt=PKT1
 
 
     - packet:
         id          : EG_ERSPAN_PKT1
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -188,10 +207,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT1,basepkt=EXP_PKT
 
     - packet:
         id          : EG_ERSPAN_PKT2
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -210,10 +233,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT2,basepkt=EXP_PKT
 
     - packet:
         id          : EG_ERSPAN_PKT3
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -232,7 +259,8 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
-
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT3,basepkt=EXP_PKT
 
     - packet:
         id          : TRUNCATE_PKT1

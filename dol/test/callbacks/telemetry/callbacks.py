@@ -13,7 +13,7 @@ def GetExpectedPacket(testcase, args):
     (id, direc, spantype, pkt, intf, pktlen) = ssns[args.sessionid -1]
     if intf == "AnyLocalEP":
         return None
-    if pktlen == 0:
+    if pktlen == 0 or spantype == "ERSPAN":
         return testcase.packets.Get(pkt)
     else:
         pktname = "TRUNCATE_PKT" + str(args.sessionid)
@@ -64,6 +64,8 @@ def GetTruncatePktSize(testcase, pkt, args):
         return 0
     (id, direc, spantype, pkt, intf, pktlen) = ssns[args.sessionid -1]
     retpkt = testcase.packets.Get(pkt)
+    if pktlen == 0:
+        return retpkt.size
     hdrsize = 0
     if spantype == "RSPAN":
         hdrsize = hdrsize + 4
@@ -71,8 +73,23 @@ def GetTruncatePktSize(testcase, pkt, args):
         hdrsize = hdrsize + 54
     if retpkt.size < pktlen:
         return retpkt.size
+    testcase.info("GetTruncatePktSize returning ", pktlen + hdrsize)
     return (pktlen + hdrsize)
-    
+
+def truncatePkt(testcase, pktbuf, pktlen, spantype, args):
+    args.end = pktlen
+    hdrsize = 0
+    if spantype == "RSPAN":
+        hdrsize = hdrsize + 4
+    if spantype == "ERSPAN":
+        hdrsize = hdrsize + 54
+    args.end = args.end + hdrsize
+    if pktlen == 0 or pktbuf.size <= pktlen:
+        args.end = pktbuf.size 
+    args.pktid = pktbuf.GID()
+    testcase.info("truncatePkt truncating %s to size %d" % (args.pktid, args.end))
+    return pktslicer.GetPacketSlice(testcase, pktbuf, args)
+
 
 def GetTruncatePacketPayload(testcase, pkt, args):
     case = testcase.pvtdata.span_case
@@ -82,8 +99,8 @@ def GetTruncatePacketPayload(testcase, pkt, args):
         args.pktid = "RAW_PKT1"
         return pktslicer.GetPacketSlice(testcase, pkt, args)
     (id, direc, spantype, pkt, intf, pktlen) = ssns[args.sessionid -1]
-    args.end = pktlen
     retpkt = testcase.packets.Get(pkt)
+    args.end = pktlen
     hdrsize = 0
     if spantype == "RSPAN":
         hdrsize = hdrsize + 4
@@ -91,8 +108,9 @@ def GetTruncatePacketPayload(testcase, pkt, args):
         hdrsize = hdrsize + 54
     args.end = args.end + hdrsize
     if retpkt.size >= pktlen:
-        args.end = retpkt.size 
+        args.end = retpkt.size
     args.pktid = pkt
+    testcase.info("GetTruncatePacketPayload truncating %s to size %d" % (args.pktid, args.end))
     return pktslicer.GetPacketSlice(testcase, retpkt, args)
 
 def GetTunnelSrcMac(testcase, pkt, args):
@@ -110,6 +128,7 @@ def GetTunnelSrcMac(testcase, pkt, args):
         tnl = telemetry.data.getErspanSession(id)
        
     if tnl is not None:
+        testcase.info("returning Tunnel Src mac ", tnl.remote_ep.segment.macaddr.get())
         return tnl.remote_ep.segment.macaddr
     return None
 
@@ -126,6 +145,7 @@ def GetTunnelDstMac(testcase, pkt, args):
     if tnl is None:
         tnl = telemetry.data.getErspanSession(id)
     if tnl is not None:
+        testcase.info("returning Tunnel Dst mac ", tnl.remote_ep.macaddr.get())
         return tnl.remote_ep.macaddr
     return None
 
@@ -143,7 +163,9 @@ def GetTunnelVlanEncap(testcase, pkt, args):
     if tnl is None:
         return None
     if tnl.local_dest:
+        testcase.info("returning Tunnel vlan encap ", tnl.remote_ep.intf.encap_vlan_id)
         return tnl.remote_ep.intf.encap_vlan_id
+    testcase.info("returning Tunnel vlan encap ", tnl.remote_ep.segment.vlan_id)
     return tnl.remote_ep.segment.vlan_id
 
 def GetTunnelSourceIP(testcase, pkt, args):
@@ -158,6 +180,7 @@ def GetTunnelSourceIP(testcase, pkt, args):
     if tnl is None:
         tnl = telemetry.data.getErspanSession(id)
     if tnl is not None:
+        testcase.info("returning Tunnel Source IP ", tnl.GetSrcIp().get())
         return tnl.GetSrcIp()
     return None
 
@@ -173,6 +196,7 @@ def GetTunnelDestIP(testcase, pkt, args):
     if tnl is None:
         tnl = telemetry.data.getErspanSession(id)
     if tnl is not None:
+        testcase.info("returning Tunnel Dest IP ", tnl.GetDestIp().get())
         return tnl.GetDestIp()
     return None
 
@@ -195,8 +219,10 @@ def GetTriggerRing(testcase, args):
     if ret is not None:
         (sess, direc, spantype, pkt, pktlen, obj) = ret
         if spantype == "ERSPAN":
+            testcase.info("returning Trigger ring for tnl dest ip %s lif %d" % (obj.GetDestIp().get(), obj.remote_ep.intf.lif.id))
             return obj.remote_ep.intf.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R0"]
         else:
+            testcase.info("returning Trigger ring for tnl dest ip %s lif %d" % (obj.GID(), obj.lif.id))
             return obj.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R0"]
     return None
 
@@ -205,8 +231,10 @@ def GetExpectRing(testcase, args):
     if ret is not None:
         (sess, direc, spantype, pkt, pktlen, obj) = ret
         if spantype == "ERSPAN":
+            testcase.info("returning Expect ring for tnl dest ip %s lif %d" % (obj.GetDestIp().get(), obj.remote_ep.intf.lif.id))
             return obj.remote_ep.intf.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R1"]
         else:
+            testcase.info("returning Expect ring for tnl dest ip %s lif %d" % (obj.GID(), obj.lif.id))
             return obj.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R1"]
     return None
 
@@ -216,7 +244,15 @@ def GetExpectBufSize(testcase, pkt, args):
         (sess, direc, spantype, pkt, pktlen, obj) = ret
         pktbuf = testcase.packets.Get(pkt)
         if pktlen != 0:
-            return pktlen
+            hdrsize = 0
+            if spantype == "ERSPAN":
+                hdrsize = 54
+            if pktbuf.size < pktlen:
+                testcase.info("GetExpectBufSize returning %s:%d / %d"% (pktbuf.GID(), pktbuf.size, pktlen))
+                return pktbuf.size
+            testcase.info("GetExpectBufSize returning %s:%d/%d" % (pktbuf.GID(), pktbuf.size, pktlen))
+            return pktlen + hdrsize
+        testcase.info("GetExpectBufSize returning %s:%d/%d" % (pktbuf.GID(), pktbuf.size, pktlen))
         return pktbuf.size
     return 0
 
@@ -225,7 +261,8 @@ def GetExpectBufData(testcase, pkt, args):
     if ret is not None:
         (sess, direc, spantype, pkt, pktlen, obj) = ret
         pktbuf = testcase.packets.Get(pkt)
-        return pktbuf.rawbytes
+        tpkt = truncatePkt(testcase, pktbuf, pktlen, spantype, args)
+        return bytes(tpkt)
     return None
 
 def GetTriggerRing1(testcase, args):
@@ -286,4 +323,63 @@ def GetCollectorVlan(testcase, args):
     if len(cs) < 1:
         return None
     return cs[0].vlan
+
+def GetErspanPayload(testcase, inpkt, args):
+    basepkt = testcase.packets.Get(args.basepkt)
+    case = testcase.pvtdata.span_case
+    ssns = telemetry.spanSessionData.getSessions(case)
+    plen = 0
+    found = False
+    for (id, direc, spantype, pkt, intf, pktlen) in ssns:
+        if pkt == args.pktid:
+            plen = pktlen
+            found = True
+            break
+    if not found:
+        plen = 0
+    args.end = plen
+    if plen == 0 or basepkt.size <= plen:
+        args.end = basepkt.size
+    args.pktid = args.basepkt
+    testcase.info("GetErspanPayload returning %s size %d" % (args.pktid, args.end))
+    return pktslicer.GetPacketSlice(testcase, basepkt, args)
+
+def GetErspanPktSize(testcase, inpkt, args):
+    basepkt = testcase.packets.Get(args.basepkt)
+    case = testcase.pvtdata.span_case
+    ssns = telemetry.spanSessionData.getSessions(case)
+    plen = 0
+    for (id, direc, spantype, pkt, intf, pktlen) in ssns:
+        if pkt == args.pktid:
+            plen = pktlen
+            break
+    if plen == 0:
+        return basepkt.size
+    hdrsize = 0
+    if spantype == "RSPAN":
+        hdrsize = hdrsize + 4
+    if spantype == "ERSPAN":
+        hdrsize = hdrsize + 54
+    if basepkt.size < pktlen:
+        testcase.info("GetErspanPktSize returning ", basepkt.size + hdrsize)
+        return (basepkt.size + hdrsize)
+    testcase.info("GetErspanPktSize returning ", plen + hdrsize)
+    return (plen + hdrsize)
+
+def GetErspanPayloadSize(testcase, inpkt, args):
+    basepkt = testcase.packets.Get(args.basepkt)
+    case = testcase.pvtdata.span_case
+    ssns = telemetry.spanSessionData.getSessions(case)
+    plen = 0
+    for (id, direc, spantype, pkt, intf, pktlen) in ssns:
+        if pkt == args.pktid:
+            plen = pktlen
+            break
+    if plen == 0:
+        return basepkt.size
+    if basepkt.size < pktlen:
+        return basepkt.size
+    testcase.info("GetErspanPktSize returning ", plen)
+    return plen
+
 
