@@ -29,7 +29,6 @@
 
 
 /*
->>>>>>> origin/proxy_redir_integ
  * Control Block sizes
  */
 #define RAWRCB_TABLE_ENTRY_SIZE             64
@@ -95,7 +94,7 @@
 
 /*
  * Proxy direction should be runtime evaluated but for simplification,
- * TCP and TLS are assigned the below values. These work as long as
+ * TCP and TLS are assigned the below values. These constants work as long as
  * TCP/TLS proxy flows are network-to-host or host-to-network
  * (i.e., not host-to-host or network-to-network).
  */
@@ -130,6 +129,7 @@
 #define APP_REDIR_DOL_SIM_PAGE_ALLOC_FULL   0x0020
 #define APP_REDIR_DOL_SIM_CHAIN_RXQ_FULL    0x0040
 #define APP_REDIR_DOL_SIM_CHAIN_TXQ_FULL    0x0080
+#define APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET 0x0100
 
  
 #ifndef NIC_DESC_ENTRY_0_OFFSET

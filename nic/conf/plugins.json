@@ -76,7 +76,7 @@
             "deps"      : [],
             "features"  : [
                 "tcp", 
-                "tcp-trigger-flow", 
+                "tcp-trigger-connection", 
                 "quiesce",
                 "tls", 
                 "ipsec",
@@ -122,7 +122,7 @@
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
                 "pensando.io/app-redir:app-redir-fini",
-                "pensando.io/proxy:tcp-trigger-flow",
+                "pensando.io/proxy:tcp-trigger-connection",
                 "pensando.io/proxy:app-p4pt"
             ],
             "inbound_features": [
@@ -141,7 +141,7 @@
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
                 "pensando.io/app-redir:app-redir-fini",
-                "pensando.io/proxy:tcp-trigger-flow",
+                "pensando.io/proxy:tcp-trigger-connection",
                 "pensando.io/proxy:app-p4pt"
            ]
         },
@@ -154,7 +154,7 @@
         },
         {
             "name": "app-redir",
-            "selector": { "lif": "SERVICE_LIF_APP_REDIR"},
+            "selector": { "lif": "SERVICE_LIF_APP_REDIR", "qtype_mask": 1, "qtype": 0},
             "outbound_features": [
                 "pensando.io/app-redir:app-redir",
                 "pensando.io/app-redir:app-redir-appid",

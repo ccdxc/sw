@@ -7,12 +7,12 @@ selectors:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=True
-        interface   : filter://any
+        qpair       : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=False
-        interface   : filter://any
+        endpoint    : filter://remote=True
+        qpair       : filter://any
     flow        : filter://proto=TCP,label=PROXY-REDIR,fwtype=L2,direction=IFLOW
     maxflows    : 1
 
@@ -20,9 +20,9 @@ selectors:
 # will be used in triggers and output packets will be used in expect
 packets:
     - packet:
-        id          : PKT_SYN
+        id          : PKT1
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : 0
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
@@ -34,40 +34,28 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                seq     : 0x1abababa
-                ack     : 0x1fefefef
-                flags   : syn
+                seq     : callback://tcpcb/tcpcb/GetSeqNum
+                ack     : callback://tcpcb/tcpcb/GetAckNum
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
-session:
-    - step:
-        direction   : iflow
-        trigger:
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=PKT_SYN
-                    port    : ref://testcase/config/src/endpoint/intf/ports
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
 
-        expect:
-            delay   : 1
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=PKT_SYN
-                    #port    : ref://testcase/config/dst/endpoint/intf/ports
-
-    - step:
-        direction   : iflow
-        trigger:
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=PKT_SYN
-                    port    : ref://testcase/config/src/endpoint/intf/ports
-
-        expect:
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=PKT_SYN
-                    #port    : ref://testcase/config/dst/endpoint/intf/ports
-
+expect:
+    # packet has gone thru encryption/decryption so we cannot expect
+    # the same packet contents back.
+    #packets:
+    #   - packet:
+    #        object  : ref://testcase/packets/id=PKT1
+    #        port    : ref://testcase/config/dst/endpoint/intf/ports

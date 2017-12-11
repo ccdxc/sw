@@ -79,7 +79,7 @@ rawc_s1_my_txq_entry_consume:
      * for the corresponding TxQ ring.
      */
     add         r_chain_indices_addr, r0, \
-                k.{to_s1_chain_txq_ring_indices_addr}.wx // delay slot
+                k.to_s1_chain_txq_ring_indices_addr     // delay slot
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           rawc_s2_chain_txq_desc_enqueue,
                           r_chain_indices_addr,

@@ -332,6 +332,13 @@ app_redir_proxyccb_chain_txq_build(const flow_key_t& flow_key,
     proxyccb.chain_txq_ring  = 0;
     proxyccb.chain_txq_qid   = proxyccb.cb_id & PROXYCCB_NUM_ENTRIES_MASK;
 
+    /*
+     * TCP proxy (but not TLS proxy) expects to receive descriptor that has
+     * already been adjusted to point to the beginning of the AOL area.
+     */
+    if (proxyccb.chain_txq_lif == SERVICE_LIF_TCP_PROXY) {
+        proxyccb.proxyccb_flags |= APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET;
+    }
     return HAL_RET_OK;
 }
 

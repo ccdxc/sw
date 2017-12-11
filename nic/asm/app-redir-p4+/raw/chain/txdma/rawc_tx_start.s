@@ -42,15 +42,15 @@ rawc_s0_tx_start:
     phvwr       p.to_s1_my_txq_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE
     phvwr       p.to_s1_my_txq_qid, CAPRI_TXDMA_INTRINSIC_QID
 
-    phvwr       p.common_phv_chain_txq_base, d.chain_txq_base
+    phvwr       p.common_phv_chain_txq_base, d.{chain_txq_base}.wx
     phvwr       p.common_phv_chain_txq_ring_size_shift, d.chain_txq_ring_size_shift
     phvwr       p.common_phv_chain_txq_entry_size_shift, d.chain_txq_entry_size_shift
-    phvwr       p.common_phv_chain_txq_lif, d.chain_txq_lif
+    phvwr       p.common_phv_chain_txq_lif, d.{chain_txq_lif}.hx
     phvwr       p.common_phv_chain_txq_qtype, d.chain_txq_qtype
-    phvwr       p.common_phv_chain_txq_qid, d.chain_txq_qid
+    phvwr       p.common_phv_chain_txq_qid, d.{chain_txq_qid}.wx
     phvwr       p.common_phv_chain_txq_ring, d.chain_txq_ring
     
-    phvwr       p.to_s1_chain_txq_ring_indices_addr, d.chain_txq_ring_indices_addr
+    phvwr       p.to_s1_chain_txq_ring_indices_addr, d.{chain_txq_ring_indices_addr}.wx
     phvwr       p.to_s1_my_txq_ring_size_shift, d.my_txq_ring_size_shift
 
     /*

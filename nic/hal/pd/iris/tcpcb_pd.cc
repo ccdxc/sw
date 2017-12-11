@@ -247,14 +247,15 @@ p4pd_add_or_del_tcpcb_write_l7q_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(!del) {
         // Get L7Q address
         wring_hw_id_t  q_base;
+        uint32_t proxyrcb_id = PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, tcpcb_pd->tcpcb->cb_id);
+
         ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYR,
-                                     PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, tcpcb_pd->tcpcb->cb_id),
-                                     &q_base);
+                                     proxyrcb_id, &q_base);
         if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to receive l7q base for tcp cb: {}",
-                    tcpcb_pd->tcpcb->cb_id);
+            HAL_TRACE_ERR("Failed to receive l7q base for proxyrcb_id: {}",
+                    proxyrcb_id);
         } else {
-            HAL_TRACE_DEBUG("l7q id: {:#x}, base: {:#x}", tcpcb_pd->tcpcb->cb_id, q_base);
+            HAL_TRACE_DEBUG("l7q id: {:#x}, base: {:#x}", proxyrcb_id, q_base);
             data.u.write_l7q_d.l7q_base = q_base;
         }
     }

@@ -34,7 +34,6 @@ proxyc_s0_tx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
-    phvwr       p.to_s1_my_txq_ring, r7[0:0]
     
     /*
      * qid is our flow ID context

@@ -40,13 +40,14 @@ def TestCaseSetup(tc):
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcp_proxy.init_tcb_inorder(tc, tcb)
+    tcb.bytes_rcvd = 0
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
-    tcb.l7_proxy_type = 0
-    tcb.debug_dol = 0
+    tcb.l7_proxy_type = tcp_proxy.l7_proxy_type_REDIR
+    tcb.debug_dol = tcp_proxy.tcp_debug_dol_pkt_to_serq
     tcb.SetObjValPd()
 
-    _proxyrcb_id = app_redir_shared.proxyr_oper_cb_id(app_redir_shared.proxyr_tls_proxy_dir, id)
+    _proxyrcb_id = app_redir_shared.proxyr_oper_cb_id(app_redir_shared.proxyr_tcp_proxy_dir, id)
     ProxyrCbHelper.main(_proxyrcb_id)
     proxyrcbid = "ProxyrCb%04d" % _proxyrcb_id
     # 1. Configure PROXYRCB in HBM before packet injection
@@ -67,27 +68,30 @@ def TestCaseSetup(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
 
-    tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy
-    tlscb.other_fid = app_redir_shared.proxyr_oper_cb_id(app_redir_shared.proxyr_tls_proxy_dir, id)
-    tlscb.l7_proxy_type = tcp_proxy.l7_proxy_type_REDIR 
+    #tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy
+    tlscb.other_fid = 0xffff
+    tlscb.l7_proxy_type = 0
 
     if tc.module.args.key_size == 16:
-        tcp_tls_proxy.tls_aes128_decrypt_setup(tc, tlscb)
+        tcp_tls_proxy.tls_aes128_encrypt_setup(tc, tlscb)
     elif tc.module.args.key_size == 32:
-        tcp_tls_proxy.tls_aes256_decrypt_setup(tc, tlscb)
+        tcp_tls_proxy.tls_aes256_encrypt_setup(tc, tlscb)
 
-    _proxyccb_id = app_redir_shared.proxyc_oper_cb_id(app_redir_shared.proxyc_tcp_proxy_dir, id)
+    _proxyccb_id = app_redir_shared.proxyc_oper_cb_id(app_redir_shared.proxyc_tls_proxy_dir, id)
     ProxycCbHelper.main(_proxyccb_id)
     proxyccbid = "ProxycCb%04d" % _proxyccb_id
     # 1. Configure PROXYCCB in HBM before packet injection
     proxyccb = tc.infra_data.ConfigStore.objects.db[proxyccbid]
     # let HAL fill in defaults for my_txq_base, etc.
     proxyccb.my_txq_base = 0
-    proxyccb.chain_txq_lif = app_redir_shared.service_lif_tcp_proxy
+    proxyccb.chain_txq_lif = app_redir_shared.service_lif_tls_proxy
     proxyccb.chain_txq_qtype = 0
     proxyccb.chain_txq_qid = id
     proxyccb.chain_txq_ring = 0
-    proxyccb.proxyccb_flags = app_redir_shared.app_redir_chain_desc_add_aol_offset
+
+    # TLS as a chain destination does not expect app_redir_chain_desc_add_aol_offset
+    #proxyccb.proxyccb_flags = app_redir_shared.app_redir_chain_desc_add_aol_offset
+    proxyccb.proxyccb_flags = 0
     proxyccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
@@ -97,6 +101,10 @@ def TestCaseSetup(tc):
     rnmpr.Configure()
     rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
     rnmpr_small.Configure()
+
+    serqid = "TLSCB%04d_SERQ" % id
+    serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
+    serq.Configure()
 
     proxyrcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[proxyrcbid])
     proxyrcb.GetObjValPd()
@@ -116,6 +124,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(proxyrcb)
     tc.pvtdata.Add(proxyccb)
     tc.pvtdata.Add(proxyccbq)
+    tc.pvtdata.Add(serq)
     return
 
 def TestCaseVerify(tc):
@@ -132,8 +141,24 @@ def TestCaseVerify(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
 
+    tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
+    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % 
+          (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
+    print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" %
+          (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    tlscb_cur.GetObjValPd()
+    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" %
+          (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
+    print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" %
+          (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+
+    if ((tlscb_cur.enc_requests - tlscb.enc_requests) != (tlscb_cur.enc_completions - tlscb.enc_completions)):
+        print("enc requests not equal to completions %d %d %d %d" %
+              (tlscb_cur.enc_requests, tlscb.enc_requests, tlscb_cur.enc_completions, tlscb.enc_completions))
+        return False
+
     # Verify chain_rxq_base
-    _proxyrcb_id = app_redir_shared.proxyr_oper_cb_id(app_redir_shared.proxyr_tls_proxy_dir, id)
+    _proxyrcb_id = app_redir_shared.proxyr_oper_cb_id(app_redir_shared.proxyr_tcp_proxy_dir, id)
     proxyrcbid = "ProxyrCb%04d" % _proxyrcb_id
     proxyrcb = tc.pvtdata.db[proxyrcbid]
     proxyrcb_cur = tc.infra_data.ConfigStore.objects.db[proxyrcbid]
@@ -145,7 +170,7 @@ def TestCaseVerify(tc):
     print("chain_rxq_base value post-sync from HBM 0x%x" % proxyrcb_cur.chain_rxq_base)
 
     # Verify my_txq_base
-    _proxyccb_id = app_redir_shared.proxyc_oper_cb_id(app_redir_shared.proxyc_tcp_proxy_dir, id)
+    _proxyccb_id = app_redir_shared.proxyc_oper_cb_id(app_redir_shared.proxyc_tls_proxy_dir, id)
     proxyccbid = "ProxycCb%04d" % _proxyccb_id
     proxyccb = tc.pvtdata.db[proxyccbid]
     proxyccb_cur = tc.infra_data.ConfigStore.objects.db[proxyccbid]

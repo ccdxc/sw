@@ -689,9 +689,6 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     pkt_ = pkt;
     pkt_len_ = pkt_len;
 
-    // TODO(goli) move it to plugin
-    app_redir().set_redir_policy_applic(cpu_rxhdr->lif==hal::SERVICE_LIF_APP_REDIR);
-
     if ((cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) ||
         ((cpu_rxhdr->lif == hal::SERVICE_LIF_APP_REDIR) &&
          (cpu_rxhdr->qtype != APP_REDIR_PROXYR_QTYPE))) {
@@ -928,8 +925,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     hal_ret_t ret;
 
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
-    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() &&
-       (!app_redir().redir_policy_applic() || app_redir().tcp_tls_proxy_flow())) {
+    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() && !app_redir().redir_policy_applic()) {
         queue_txpkt(pkt_, pkt_len_);
     }
 

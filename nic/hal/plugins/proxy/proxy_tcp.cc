@@ -407,18 +407,15 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
 }
 
 fte::pipeline_action_t
-tcp_exec_trigger_flow(fte::ctx_t& ctx)
+tcp_exec_trigger_connection(fte::ctx_t& ctx)
 {
     proxy_flow_info_t*      pfi = NULL;
     flow_key_t              flow_key = ctx.key();
 
     if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
-        HAL_TRACE_DEBUG("tcp-proxy-trigger-flow: responder side. ignoring.");
+        HAL_TRACE_DEBUG("{}: responder side. ignoring.", __FUNCTION__);
         return fte::PIPELINE_CONTINUE;
     }
-
-    HAL_TRACE_DEBUG("tcp-proxy-trigger-flow: protobuf_request {}",
-                    ctx.protobuf_request());
 
     if (!ctx.protobuf_request()) {
         uint16_t shw_vlan_id, dhw_vlan_id;
@@ -430,9 +427,6 @@ tcp_exec_trigger_flow(fte::ctx_t& ctx)
         pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP,
                                   &flow_key);
         if (pfi) {
-            HAL_TRACE_DEBUG("tc-proxy-trigger-flow: lport = {}",
-                            pfi->proxy->meta->lif_info[0].lport_id);
-
             if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.sl2seg(), &shw_vlan_id) == HAL_RET_OK) {
               HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
             }

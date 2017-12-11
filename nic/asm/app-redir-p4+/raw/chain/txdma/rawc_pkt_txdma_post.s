@@ -31,7 +31,7 @@ rawc_s3_pkt_txdma_post:
      * pages in the current descriptor, that is, if we need to do so
      * as indicated in k.to_s3_do_cleanup_discard.
      */
-    add         r_cpu_flags, r0, d.flags    
+    add         r_cpu_flags, r0, d.{flags}.hx
     smeqh       c1, r_cpu_flags, PEN_APP_REDIR_A0_RNMPR_SMALL,  \
                                  PEN_APP_REDIR_A0_RNMPR_SMALL
     phvwri.c1   p.t1_s2s_aol_A0_small, TRUE

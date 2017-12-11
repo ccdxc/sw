@@ -228,7 +228,6 @@ header_type to_stage_1_phv_t {
         my_txq_qid                      : 24;
         my_txq_lif                      : 11;
         my_txq_qtype                    : 3;
-        my_txq_ring                     : 1;
     }
 }
 
@@ -433,7 +432,6 @@ action consume(desc) {
     modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
     modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
     modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
-    modify_field(to_s1_scratch.my_txq_ring, to_s1.my_txq_ring);
     
     // from ki global
     GENERATE_GLOBAL_K

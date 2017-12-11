@@ -59,7 +59,7 @@ dma_cmd_l7q_slot:
     nop
 
 tls_l7q_produce:
-    add         r7, k.to_s5_other_fid, PROXYR_OPER_CB_OFFSET(PROXYR_TLS_PROXY_DIR)
+    add         r7, k.to_s5_other_fid, r0
     CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd5_dma_cmd,
                                 LIF_APP_REDIR, 
                                 APP_REDIR_PROXYR_QTYPE, 

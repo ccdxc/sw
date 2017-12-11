@@ -30,6 +30,7 @@ proxyr_s1_flow_key_post_read:
      * Note: fields are written individually here due to NCC (though not
      * all NCC versions apparently) reordering of fields in k-vec.
      */
+    phvwr       p.p4plus_cpu_pkt_lkp_vrf, d.{vrf}.hx
     phvwr       p.pen_proxyr_hdr_v1_vrf, d.vrf
     phvwr       p.pen_proxyr_hdr_v1_ip_sa, d.ip_sa
     phvwr       p.pen_proxyr_hdr_v1_ip_da, d.ip_da

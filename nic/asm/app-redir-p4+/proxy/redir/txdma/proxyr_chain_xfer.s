@@ -100,18 +100,20 @@ proxyr_s6_chain_xfer:
     phvwri      p.dma_meta_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(p4plus_cpu_pkt_src_lif)
     phvwri      p.dma_meta_dma_cmd_phv_end_addr, \
-                CAPRI_PHV_END_OFFSET(p4plus_cpu_pkt_tcp_ws)
+                CAPRI_PHV_END_OFFSET(pen_app_redir_version_hdr_end_pad)
     phvwri      p.dma_meta_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 
     /*
      * Second flit
      */    
-    addi        r_page_addr, r_page_addr, P4PLUS_CPU_PKT_SZ
+    addi        r_page_addr, r_page_addr, P4PLUS_CPU_PKT_SZ + \
+                                          PEN_APP_REDIR_HEADER_SIZE + \
+                                          PEN_APP_REDIR_VERSION_HEADER_SIZE
     phvwr       p.dma_proxyr_hdr_dma_cmd_addr, r_page_addr
     phvwri      p.dma_proxyr_hdr_dma_cmd_phv_start_addr, \
-                CAPRI_PHV_START_OFFSET(pen_app_redir_hdr_h_dest)
+                CAPRI_PHV_START_OFFSET(pen_proxyr_hdr_v1_flow_id)
     phvwri      p.dma_proxyr_hdr_dma_cmd_phv_end_addr, \
-                CAPRI_PHV_END_OFFSET(pen_proxyr_hdr_v1_end_pad)
+                CAPRI_PHV_END_OFFSET(pen_proxyr_hdr_v1_redir_miss_pkt_p)
     phvwri      p.dma_proxyr_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     
     addi        r_scratch, r0, P4PLUS_CPU_PKT_SZ + \
@@ -140,7 +142,7 @@ proxyr_s6_chain_xfer:
     add         r_scratch, r0, k.{common_phv_chain_entry_size_shift_sbit0_ebit2...\
                                   common_phv_chain_entry_size_shift_sbit3_ebit4}
     sllv        r_chain_entry, r_chain_entry, r_scratch
-    add         r_chain_entry, r_chain_entry, k.{common_phv_chain_ring_base}.wx
+    add         r_chain_entry, r_chain_entry, k.common_phv_chain_ring_base
     phvwr       p.dma_chain_dma_cmd_addr, r_chain_entry
 
     /*

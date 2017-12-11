@@ -8,7 +8,7 @@ namespace proxy {
 extern "C" hal_ret_t proxy_plugin_init();
 
 fte::pipeline_action_t tcp_exec(fte::ctx_t &ctx);
-fte::pipeline_action_t tcp_exec_trigger_flow(fte::ctx_t &ctx);
+fte::pipeline_action_t tcp_exec_trigger_connection(fte::ctx_t &ctx);
 fte::pipeline_action_t quiesce_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t tls_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t ipsec_exec(fte::ctx_t &ctx);

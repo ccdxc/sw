@@ -530,7 +530,10 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
 {
     lklshim_flow_t      *flow;
     lklshim_flow_key_t  flow_key;
-    types::AppRedirType l7_proxy_type;
+    types::AppRedirType tcp_iqid_l7_type;
+    types::AppRedirType tcp_rqid_l7_type;
+    types::AppRedirType tls_iqid_l7_type;
+    types::AppRedirType tls_rqid_l7_type;
 
 
     ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
@@ -555,17 +558,22 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     flow->rqid = rqid;
     lklshim_flow_by_qid[rqid] = flow;
     flow->src_lif = src_lif;
-    l7_proxy_type = find_proxyrcb_by_id(PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, flow->iqid)) || 
-                    find_proxyrcb_by_id(PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, flow->rqid)) ?
-                    types::APP_REDIR_TYPE_REDIRECT : types::APP_REDIR_TYPE_NONE;
-    proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true, hw_vlan_id, l7_proxy_type);
-    proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false, hw_vlan_id, l7_proxy_type);
+    tcp_iqid_l7_type = find_proxyrcb_by_id(PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, flow->iqid)) ?
+                       types::APP_REDIR_TYPE_REDIRECT : types::APP_REDIR_TYPE_NONE;
+    proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true, hw_vlan_id, tcp_iqid_l7_type);
+    tcp_rqid_l7_type = find_proxyrcb_by_id(PROXYR_OPER_CB_ID(PROXYR_TCP_PROXY_DIR, flow->rqid)) ?
+                       types::APP_REDIR_TYPE_REDIRECT : types::APP_REDIR_TYPE_NONE;
+    proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false, hw_vlan_id, tcp_rqid_l7_type);
     // create tlscb
-    hal::tls::tls_api_init_flow(flow->iqid, false, l7_proxy_type);
-    hal::tls::tls_api_init_flow(flow->rqid, true, l7_proxy_type);
+    tls_iqid_l7_type = find_proxyrcb_by_id(PROXYR_OPER_CB_ID(PROXYR_TLS_PROXY_DIR, flow->iqid)) ?
+                       types::APP_REDIR_TYPE_REDIRECT : types::APP_REDIR_TYPE_NONE;
+    hal::tls::tls_api_init_flow(flow->iqid, false, tls_iqid_l7_type);
+    tls_rqid_l7_type = find_proxyrcb_by_id(PROXYR_OPER_CB_ID(PROXYR_TLS_PROXY_DIR, flow->rqid)) ?
+                       types::APP_REDIR_TYPE_REDIRECT : types::APP_REDIR_TYPE_NONE;
+    hal::tls::tls_api_init_flow(flow->rqid, true, tls_rqid_l7_type);
 
     if (dir == hal::FLOW_DIR_FROM_ENIC) {
-        hal::tls::tls_api_init_flow(flow->iqid, flow->rqid, l7_proxy_type);
+        hal::tls::tls_api_init_flow(flow->iqid, flow->rqid, tls_iqid_l7_type);
         flow->hostns.skbuff = pkt_skb;
         flow->netns.skbuff = NULL;
         flow->hostns.state = FLOW_STATE_SYN_RCVD;
@@ -587,7 +595,7 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
         lklshim_create_listen_sockets(dir, flow);
         lklshim_trigger_flow_connection(flow, dir);
     } else {
-        hal::tls::tls_api_init_flow(flow->rqid, flow->iqid, l7_proxy_type);
+        hal::tls::tls_api_init_flow(flow->rqid, flow->iqid, tls_rqid_l7_type);
         flow->netns.skbuff = pkt_skb;
         flow->hostns.skbuff = NULL;
         flow->netns.state = FLOW_STATE_SYN_RCVD;

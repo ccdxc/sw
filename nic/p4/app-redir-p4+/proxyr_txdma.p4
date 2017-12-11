@@ -238,9 +238,15 @@ header_type common_global_phv_t {
     }
 }
 
-header_type header_phv_pad_224_t {
+header_type header_phv_pad_64_t {
     fields {
-        hdr_pad                         : 224;
+        hdr_pad                         : 64;
+    }    
+}
+
+header_type header_phv_pad_80_t {
+    fields {
+        hdr_pad                         : 80;
     }    
 }
 
@@ -264,7 +270,6 @@ header_type to_stage_1_phv_t {
         my_txq_qid                      : 24;
         my_txq_lif                      : 11;
         my_txq_qtype                    : 3;
-        my_txq_ring                     : 1;
     }
 }
 
@@ -368,7 +373,12 @@ metadata to_stage_7_phv_t               to_s7_scratch;
 /*
  * PHV following k (for app DMA etc.)
  */
- 
+@pragma dont_trim
+metadata ring_entry_t                   ring_entry; 
+
+@pragma dont_trim
+metadata pkt_descr_t                    aol;
+
 @pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_t         p4plus_cpu_pkt;
 
@@ -379,22 +389,19 @@ metadata p4_to_p4plus_cpu_pkt_t         p4plus_cpu_pkt;
  * to a completely new flit.
  */
 @pragma dont_trim
-metadata header_phv_pad_224_t           header_phv_pad_224;
-
-@pragma dont_trim
 metadata pen_app_redir_header_t         pen_app_redir_hdr;
 
 @pragma dont_trim
 metadata pen_app_redir_version_header_t pen_app_redir_version_hdr;
 
 @pragma dont_trim
+metadata header_phv_pad_80_t            header_phv_pad_80;
+
+@pragma dont_trim
 metadata pen_proxy_redir_header_v1_t    pen_proxyr_hdr_v1;
 
 @pragma dont_trim
-metadata ring_entry_t                   ring_entry; 
-
-@pragma dont_trim
-metadata pkt_descr_t                    aol;
+metadata header_phv_pad_64_t            header_phv_pad_64;
 
 /*
  * DMA descriptors for redirecting
@@ -481,7 +488,6 @@ action consume(desc) {
     modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
     modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
     modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
-    modify_field(to_s1_scratch.my_txq_ring, to_s1.my_txq_ring);
     
     // from ki global
     GENERATE_GLOBAL_K
@@ -507,7 +513,6 @@ action flow_key_post_read(ip_sa, ip_da, sport, dport,
     modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
     modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
     modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
-    modify_field(to_s1_scratch.my_txq_ring, to_s1.my_txq_ring);
 
     // from ki global
     GENERATE_GLOBAL_K

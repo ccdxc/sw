@@ -23,7 +23,7 @@ proxyc_s3_cpu_flags_post_read:
 
     CAPRI_CLEAR_TABLE1_VALID
 
-    add         r_cpu_flags, r0, d.flags    
+    add         r_cpu_flags, r0, d.{flags}.hx
     smeqh       c1, r_cpu_flags, PEN_APP_REDIR_A0_RNMPR_SMALL,  \
                                  PEN_APP_REDIR_A0_RNMPR_SMALL
     phvwri.c1   p.t1_s2s_aol_A0_small, TRUE
