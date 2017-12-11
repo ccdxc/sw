@@ -48,8 +48,8 @@ static inline int sip_xdigit2bin(char c, int delim)
  *
  * Convert IPv4 printable address to binary form 
  */
-static int sip_in4_pton(const char *src, int srclen, uint8_t *dst,
-                        int delim, const char **end)
+int sip_in4_pton(const char *src, int srclen, uint8_t *dst,
+                 int delim, const char **end)
 {
     const char *s;
     uint8_t *d;
@@ -106,8 +106,8 @@ out:
  *
  * Convert IPv6 printable address to binary form 
  */
-static int sip_in6_pton(const char *src, int srclen, uint8_t *dst,
-                        int delim, const char **end)
+int sip_in6_pton(const char *src, int srclen, uint8_t *dst,
+                 int delim, const char **end)
 {
     const char *s, *tok = NULL;
     uint8_t *d, *dc = NULL;
@@ -227,7 +227,8 @@ out:
  *
  * Find the length of the (textual) string until it reaches limit
  */
-static int sip_string_len(const char *buf, const char *limit, int *shift) {
+static int sip_string_len(const char *buf, const char *limit, int *shift)
+{
     int len = 0;
 
     while (buf < limit && isalpha(*buf)) {
@@ -242,7 +243,9 @@ static int sip_string_len(const char *buf, const char *limit, int *shift) {
  *
  * Find the length of the (digital) string until it reaches limit 
  */
-static int sip_digits_len(const char *buf, const char *limit, int *shift) {
+int sip_digits_len(fte::ctx_t &ctx, const char *buf, const char *limit,
+                   int *shift)
+{
     int len = 0;
 
     while (buf < limit && isdigit(*buf)) {
@@ -255,7 +258,8 @@ static int sip_digits_len(const char *buf, const char *limit, int *shift) {
 /*
  * sip_iswordc
  */
-static int sip_iswordc(const char c) {
+static int sip_iswordc(const char c)
+{
     if (isalnum(c) || c == '!' || c == '"' || c == '%' ||
         (c >= '(' && c <= '+') || c == ':' || c == '<' || c == '>' ||
         c == '?' || (c >= '[' && c <= ']') || c == '_' || c == '`' ||
@@ -270,7 +274,8 @@ static int sip_iswordc(const char c) {
  *
  * Find the length of the word string until it reaches limit 
  */
-static int sip_word_len(const char *buf, const char *limit) {
+static int sip_word_len(const char *buf, const char *limit)
+{
     int len = 0;
 
     while (buf < limit && sip_iswordc(*buf)) {
@@ -285,7 +290,9 @@ static int sip_word_len(const char *buf, const char *limit) {
  *
  * Find the call-id length until the string reaches limit
  */
-int sip_callid_len(const char *buf, const char *limit, int *shift) {
+int sip_callid_len(fte::ctx_t &ctx, const char *buf, const char *limit,
+                   int *shift)
+{
     int len, domain_len;
 
     len = sip_word_len(buf, limit);
@@ -308,7 +315,9 @@ int sip_callid_len(const char *buf, const char *limit, int *shift) {
  *
  * Find the media length until the string reaches limit
  */
-int sip_media_len(const char *buf, const char *limit, int *shift) {
+int sip_media_len(fte::ctx_t &ctx, const char *buf, const char *limit,
+                  int *shift)
+{
     int len = sip_string_len(buf, limit, shift);
 
     buf += len;
@@ -317,13 +326,13 @@ int sip_media_len(const char *buf, const char *limit, int *shift) {
     len++;
     buf++;
 
-    return len + sip_digits_len(buf, limit, shift);
+    return len + sip_digits_len(ctx, buf, limit, shift);
 }
 
 /*
  * sip_follow_continuation
  */
-static const char* sip_follow_continuation(const char *buf, const char *limit)
+const char* sip_follow_continuation(const char *buf, const char *limit)
 {
     /* Walk past newline */
     if (++buf >= limit)
@@ -368,11 +377,13 @@ const char * sip_skip_whitespace(const char *buf, const char *limit)
  *
  * Parse address from buffer to IP structure
  */
-static int sip_parse_addr(uint16_t af, const char *cp, const char **endp,
-                          ip_addr_t *addr, const char *limit, bool delim)
+int sip_parse_addr(fte::ctx_t &ctx, const char *cp,
+                   const char **endp, ip_addr_t *addr,
+                   const char *limit, bool delim)
 {
     const char *end;
     int ret;
+    int af = AF_INET;
 
     memset(addr, 0, sizeof(*addr));
     switch (af) {
@@ -412,20 +423,20 @@ static int sip_parse_addr(uint16_t af, const char *cp, const char **endp,
  *
  * Skip ip address. returns its length.
  */ 
-static int sip_epaddr_len(uint16_t af, const char *buf, const char *limit,
-                          int *shift)
+int sip_epaddr_len(fte::ctx_t &ctx, const char *buf, const char *limit,
+                   int *shift)
 {
     ip_addr_t addr;
     const char *aux = buf;
 
-    if (!sip_parse_addr(af, buf, &buf, &addr, limit, true)) {
+    if (!sip_parse_addr(ctx, buf, &buf, &addr, limit, true)) {
         return 0;
     }
 
     /* Port number */
     if (*buf == ':') {
         buf++;
-        buf += sip_digits_len(buf, limit, shift);
+        buf += sip_digits_len(ctx, buf, limit, shift);
     }
     return buf - aux;
 }
@@ -435,7 +446,7 @@ static int sip_epaddr_len(uint16_t af, const char *buf, const char *limit,
  *
  * Get address length, skiping user info
  */ 
-int sip_skp_epaddr_len(uint16_t af, const char *buf, const char *limit,
+int sip_skp_epaddr_len(fte::ctx_t &ctx, const char *buf, const char *limit,
                        int *shift)
 {
     const char *start = buf;
@@ -459,7 +470,7 @@ int sip_skp_epaddr_len(uint16_t af, const char *buf, const char *limit,
         *shift = s;
     }
 
-    return sip_epaddr_len(af, buf, limit, shift);
+    return sip_epaddr_len(ctx, buf, limit, shift);
 }
 
 
