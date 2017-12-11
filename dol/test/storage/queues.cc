@@ -81,6 +81,10 @@ const static uint32_t	kQstateCndxOffset	 = 10;
 
 const static uint32_t	kHbmSsdBitmapSize	 = (16 * 4096);
 
+// BDFs for NVME and PVM LIF
+const static uint32_t	kNvmeLifBdf		= 1;
+const static uint32_t	kPvmLifBdf		= 2;
+
 namespace queues {
 
 // Special SSD marked for running E2e traffic with queues from 
@@ -259,6 +263,12 @@ int queues_setup() {
   }
   printf("NVME LIF created\n");
 
+  if (hal_if::set_lif_bdf(nvme_lif, kNvmeLifBdf) < 0) {
+    printf("Can't set NVME LIF %lu BDF %u \n", nvme_lif, kNvmeLifBdf);
+    return -1;
+  }
+  printf("Successfully set NVME LIF %lu BDF %u \n", nvme_lif, kNvmeLifBdf);
+  
   bzero(&pvm_lif_params, sizeof(pvm_lif_params));
   lif_params_init(&pvm_lif_params, SQ_TYPE, kPvmNumEntries, kPvmNumSQs);
   lif_params_init(&pvm_lif_params, CQ_TYPE, kPvmNumEntries, kPvmNumCQs);
@@ -271,6 +281,12 @@ int queues_setup() {
   }
   printf("PVM LIF created\n");
 
+  if (hal_if::set_lif_bdf(pvm_lif, kPvmLifBdf) < 0) {
+    printf("Can't set PVM LIF %lu BDF %u \n", pvm_lif, kPvmLifBdf);
+    return -1;
+  }
+  printf("Successfully set PVM LIF %lu BDF %u \n", pvm_lif, kPvmLifBdf);
+  
   int i, j;
 
   // Initialize NVME SQs

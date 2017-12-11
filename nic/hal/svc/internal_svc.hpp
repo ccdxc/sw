@@ -14,6 +14,8 @@ using internal::GetProgramAddressRequestMsg;
 using internal::ProgramAddressResponseMsg;
 using internal::AllocHbmAddressRequestMsg;
 using internal::AllocHbmAddressResponseMsg;
+using internal::ConfigureLifBdfRequestMsg;
+using internal::ConfigureLifBdfResponseMsg;
 
 class InternalServiceImpl final : public Internal::Service {
 public:
@@ -25,6 +27,10 @@ public:
     Status AllocHbmAddress(ServerContext *context,
                            const AllocHbmAddressRequestMsg *reqs,
                            AllocHbmAddressResponseMsg *resps) override;
+
+    Status ConfigureLifBdf(ServerContext *context,
+                           const ConfigureLifBdfRequestMsg *reqs,
+                           ConfigureLifBdfResponseMsg *resps) override;
 };
 
 #endif    // __INTERNAL_SVC_HPP__

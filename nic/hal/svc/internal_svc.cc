@@ -29,3 +29,14 @@ InternalServiceImpl::AllocHbmAddress(
     }
     return Status::OK;
 }
+
+Status
+InternalServiceImpl::ConfigureLifBdf(
+    ServerContext *context, const ConfigureLifBdfRequestMsg *reqs,
+    ConfigureLifBdfResponseMsg *resps) {
+
+    for (int i = 0; i < reqs->reqs_size(); i++) {
+        hal::ConfigureLifBdf(reqs->reqs(i), resps->add_resps());
+    }
+    return Status::OK;
+}
