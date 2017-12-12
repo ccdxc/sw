@@ -18,28 +18,28 @@
 namespace tests {
 
 static const uint64_t cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_GLB_BYTE_ADDRESS;
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_GLB_BYTE_ADDRESS;
 
 static const uint64_t cfg_dist = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_BYTE_ADDRESS;
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_BYTE_ADDRESS;
 
 static const uint64_t cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_UENG_W0_BYTE_ADDRESS;
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_UENG_W0_BYTE_ADDRESS;
 
 static const uint64_t cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
 
 static const uint64_t cfg_hotq_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
 
 static const uint64_t cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS;
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_PD_IDX_BYTE_ADDRESS;
 
 static const uint64_t cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
 
 static const uint64_t cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_BYTE_ADDRESS;
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_BYTE_ADDRESS;
 
 static const uint32_t kNumSubqEntries = 4096;
 static const uint32_t kQueueMemSize = sizeof(cp_desc_t) * kNumSubqEntries;
@@ -89,7 +89,7 @@ static bool status_poll(bool in_hbm) {
 }
 
 void
-compression_init()
+decompression_init()
 {
   queue_mem = alloc_host_mem(kQueueMemSize);
   assert(queue_mem != nullptr);
@@ -117,8 +117,8 @@ compression_init()
   assert(utils::hbm_addr_alloc(kSGLBufSize, &hbm_sgl_buf_pa) == 0);
 
   // Pre-fill input buffers.
-  bcopy(uncompressed_data, datain_buf, kDatainBufSize);
-  write_mem(hbm_datain_buf_pa, (uint8_t *)datain_buf, kDatainBufSize);
+  bcopy(compressed_data, ((uint8_t *)datain_buf)+8, kCompressedDataSize);
+  write_mem(hbm_datain_buf_pa+8, ((uint8_t *)datain_buf)+8, kCompressedDataSize);
 
   // Write queue base.
   uint32_t cfg_glob_data;
@@ -126,14 +126,14 @@ compression_init()
   write_reg(cfg_glob, (cfg_glob_data & 0xFFFF0000u) | kCPVersion);
   write_reg(cfg_q_base, queue_mem_pa & 0xFFFFFFFFu);
   write_reg(cfg_q_base + 4, (queue_mem_pa >> 32) & 0xFFFFFFFFu);
-  // Enable all 16 engines.
-  write_reg(cfg_ueng, 0xFFFF);
+  // Enable all engines.
+  write_reg(cfg_ueng, 0x3);
   // Enable cold/warm queue.
   write_reg(cfg_dist, 0x1);
 
   queue_index = 0;
 
-  printf("Compression init done\n");
+  printf("Decompression init done\n");
 }
 
 static void populate_sgls(uint16_t data_len, uint16_t num_entries,
@@ -184,11 +184,26 @@ static void populate_sgls(uint16_t data_len, uint16_t num_entries,
   }
 }
 
-static int run_cp_test(comp_test_t *params) {
+static int run_dc_test(comp_test_t *params) {
   static uint32_t counter = 0;
+  cp_hdr_t cp_hdr = {0};
   counter++;
   cp_desc_t d;
   bzero(&d, sizeof(d));
+  if (params->cmd_bits.cksum_en) {
+    if (params->cmd_bits.cksum_adler)
+      cp_hdr.cksum = kADLER32Sum;
+    else
+      cp_hdr.cksum = kCRC32Sum;
+  }
+  cp_hdr.data_len = kCompressedDataSize;
+  cp_hdr.version = kCPVersion;
+  // HACK, temporary fix until model/RTL is fixed.
+  printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
+  uint64_t *h = (uint64_t *)&cp_hdr;
+  *h = bswap_64(*h);
+  *((uint64_t *)datain_buf) = *h;
+  write_mem(hbm_datain_buf_pa, (uint8_t *)h, sizeof(cp_hdr_t));
 
   printf("Starting testcase %s\n", params->test_name.c_str());
   d.cmd = params->cmd;
@@ -252,74 +267,31 @@ static int run_cp_test(comp_test_t *params) {
 
   cp_status_sha512_t *st = (cp_status_sha512_t *)status_buf;
   if (!status_poll(params->status_is_hbm)) {
-    printf("ERROR: Compression status never came\n");
+    printf("ERROR: decompression status never came\n");
     return -1;
   }
   if (!st->valid) {
-    printf("ERROR: Compression valid bit not set\n");
+    printf("ERROR: status valid bit not set\n");
     return -1;
   }
   if (st->err) {
-    printf("ERROR: Compression generated err = 0x%x\n", st->err);
+    printf("ERROR: decompression generated err = 0x%x\n", st->err);
     return -1;
   }
-  uint16_t expected_data_len = kCompressedDataSize;
-  if (params->cmd_bits.insert_header) {
-    expected_data_len += 8;
-  }
-  if (st->output_data_len != expected_data_len) {
+  if (st->output_data_len != kUncompressedDataSize) {
     printf("ERROR: output data len mismatch, expected %u, received %u\n",
-           expected_data_len, st->output_data_len);
+           kUncompressedDataSize, st->output_data_len);
     return -1;
   }
   if (params->dst_is_hbm) {
-    read_mem(hbm_dataout_buf_pa, (uint8_t *)dataout_buf, expected_data_len);
-  }
-  uint8_t *data_start = (uint8_t *)dataout_buf;
-  if (params->cmd_bits.insert_header) {
-    // HACK, temporary fix until model/RTL is fixed.
-    printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
-    uint64_t *h = (uint64_t *)dataout_buf;
-    *h = bswap_64(*h);
-    cp_hdr_t *hdr = (cp_hdr_t *)dataout_buf;
-    if (params->cmd_bits.cksum_en) {
-      uint32_t expected_cksum =
-          params->cmd_bits.cksum_adler ? kADLER32Sum : kCRC32Sum;
-      if (hdr->cksum != expected_cksum) {
-        printf("ERROR: CKSUM mismatch. Expected 0x%x, Got 0x%x\n",
-               expected_cksum, hdr->cksum);
-        return -1;
-      }
-    }
-    if (hdr->data_len != kCompressedDataSize) {
-      printf("ERROR: wrong data len in the compression header. "
-             "Expected %d, got %d\n", kCompressedDataSize, hdr->data_len);
-      return -1;
-    }
-    if (hdr->version != kCPVersion) {
-      printf("ERROR: wrong version in the compression header. "
-             "Expected 0x%x, got 0x%x\n", kCPVersion, hdr->version);
-      return -1;
-    }
-    data_start += 8;
+    read_mem(hbm_dataout_buf_pa, (uint8_t *)dataout_buf, kUncompressedDataSize);
   }
   if (st->partial_data != counter) {
     printf("ERROR: partial data in status does not match the expected value\n");
     return -1;
   }
-  if (params->cmd_bits.sha_en) {
-    int sha_len = params->cmd_bits.sha256 ? 32 : 64;
-    uint8_t *expected_sha = params->cmd_bits.sha256 ? sha256_post : sha512_post;
-    if (bcmp(st->sha512, expected_sha, sha_len) != 0) {
-      printf("ERROR: SHA mismatch.\nExpected:\n");
-      utils::dump(expected_sha, sha_len);
-      printf("Received:\n");
-      utils::dump(st->sha512, sha_len);
-      return -1;
-    }
-  }
-  if (bcmp(data_start, compressed_data, kCompressedDataSize) != 0) {
-    printf("ERROR: compressed data does not match with expected output.\n");
+  if (bcmp(dataout_buf, uncompressed_data, kUncompressedDataSize) != 0) {
+    printf("ERROR: uncompressed data does not match with expected output.\n");
     return -1;
   }
   uint64_t *db_data = (uint64_t *)(((uint8_t *)status_buf) + 1024);
@@ -351,214 +323,194 @@ static int run_cp_test(comp_test_t *params) {
   return 0;
 }
 
-int compress_host_flat() {
+int decompress_host_flat() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_hbm_flat() {
+int decompress_hbm_flat() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
   spec.src_is_hbm   = 1;
   spec.dst_is_hbm   = 1;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_host_to_hbm_flat() {
+int decompress_host_to_hbm_flat() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
   spec.dst_is_hbm   = 1;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_hbm_to_host_flat() {
+int decompress_hbm_to_host_flat() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
   spec.src_is_hbm   = 1;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_host_sgl() {
+int decompress_host_sgl() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 3;
   spec.num_dst_sgls = 2;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_hbm_sgl() {
+int decompress_hbm_sgl() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 3;
   spec.num_dst_sgls = 2;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
   spec.src_is_hbm   = 1;
   spec.dst_is_hbm   = 1;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_host_nested_sgl() {
+int decompress_host_nested_sgl() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 4;
   spec.num_dst_sgls = 4;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_hbm_nested_sgl() {
+int decompress_hbm_nested_sgl() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 4;
   spec.num_dst_sgls = 4;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
   spec.src_is_hbm   = 1;
   spec.dst_is_hbm   = 1;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_nested_sgl_in_hbm() {
+int decompress_nested_sgl_in_hbm() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 4;
   spec.num_dst_sgls = 4;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
   spec.src_is_hbm   = 1;
   spec.src_sgl_is_hbm   = 1;
   spec.dst_is_hbm   = 1;
   spec.dst_sgl_is_hbm   = 1;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_return_through_hbm() {
+int decompress_return_through_hbm() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.num_src_sgls = 4;
   spec.num_dst_sgls = 4;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
   spec.dst_is_hbm   = 1;
   spec.dst_sgl_is_hbm   = 1;
   spec.status_is_hbm = 1;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_adler_sha256() {
+int decompress_adler() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.cmd_bits.sha_en = 1;
-  spec.cmd_bits.sha256 = 1;
+  spec.cmd          = 2;
   spec.cmd_bits.cksum_en = 1;
   spec.cmd_bits.cksum_adler = 1;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_crc_sha512() {
+int decompress_crc() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.cmd_bits.sha_en = 1;
-  spec.cmd_bits.sha256 = 0;
+  spec.cmd          = 2;
   spec.cmd_bits.cksum_en = 1;
   spec.cmd_bits.cksum_adler = 0;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
 
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
-int compress_doorbell_odata() {
+int decompress_doorbell_odata() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
-  spec.cmd          = 5;
+  spec.cmd          = 2;
   spec.cmd_bits.doorbell_on = 1;
   spec.cmd_bits.opaque_tag_on = 1;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
+  spec.datain_len   = kCompressedDataSize + 8;
   spec.dataout_len  = 4096;
 
-  return run_cp_test(&spec);
-}
-
-int compress_max_features() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 0x7FD;
-  spec.num_src_sgls = 7;
-  spec.num_dst_sgls = 8;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.src_sgl_is_hbm = 1;
-  spec.dst_is_hbm = 1;
-  spec.status_is_hbm = 1;
-
-  return run_cp_test(&spec);
+  return run_dc_test(&spec);
 }
 
 }  // namespace tests

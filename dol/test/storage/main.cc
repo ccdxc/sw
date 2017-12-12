@@ -101,6 +101,19 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_crc_sha512, "Compress with CRC32 and SHA512", false},
   {&tests::compress_doorbell_odata, "Compress with DMA end writes", false},
   {&tests::compress_max_features, "Compress with multiple features", false},
+  {&tests::decompress_host_flat, "Decompress Host->Host flat buf", false},
+  {&tests::decompress_hbm_flat, "Decompress HBM->HBM flat buf", false},
+  {&tests::decompress_host_to_hbm_flat, "Decompress Host->HBM flat buf", false},
+  {&tests::decompress_hbm_to_host_flat, "Decompress HBM->Host flat buf", false},
+  {&tests::decompress_host_sgl, "Decompress Host->Host sgl buf", false},
+  {&tests::decompress_hbm_sgl, "Decompress HBM->HBM sgl buf", false},
+  {&tests::decompress_host_nested_sgl, "Decompress Host->Host nested sgl buf", false},
+  {&tests::decompress_hbm_nested_sgl, "Decompress HBM->HBM nested sgl buf", false},
+  {&tests::decompress_nested_sgl_in_hbm, "Decompress Nested sgl buf in HBM", false},
+  {&tests::decompress_return_through_hbm, "Decompress Status/dest-buf in HBM", false},
+  {&tests::decompress_adler, "Decompress with Adler32", false},
+  {&tests::decompress_crc, "Decompress with CRC32", false},
+  {&tests::decompress_doorbell_odata, "Decompress with DMA end writes", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
@@ -166,6 +179,9 @@ int main(int argc, char**argv) {
   printf("Going to init compression\n");
   tests::compression_init();
   printf("Compression configuration completed \n");
+  printf("Going to init decompression\n");
+  tests::decompression_init();
+  printf("Decompression configuration completed \n");
 
   if (rdma_init() < 0) {
     printf("RDMA Setup failed\n");
