@@ -826,13 +826,11 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, uint8_t **nvme_cm
 
 
   // Pre-form the (RDMA) write descriptor to point to the data buffer
-  // TODO: Remove the write_data_buf pointer and do this in P4+
   uint32_t write_wqe_offset = offsetof(r2n::r2n_buf_t, write_desc) - offsetof(r2n::r2n_buf_t, cmd_buf);
   uint8_t *write_wqe = ((uint8_t *) r2n_buf_va) + write_wqe_offset;
   void *write_data_buf = (void *) (((uint8_t *) target_rcv_buf_ptr_va) + kR2NDataBufOffset);  
 
-  // Start the write WQE formation
-  utils::write_bit_fields(write_wqe, 0, 64,  host_mem_v2p(write_data_buf)); // wrid
+  // Start the write WQE formation (WRID will be filled by P4+)
   utils::write_bit_fields(write_wqe, 64, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
   utils::write_bit_fields(write_wqe, 72, 8, 1);  // Num SGEs = 1
   utils::write_bit_fields(write_wqe, 192, 32, (uint32_t) kR2NDataSize);  // data len
@@ -844,7 +842,12 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, uint8_t **nvme_cm
   utils::write_bit_fields(write_wqe, 128, 64, (uint64_t) r2n_hbm_buf_pa); // va == pa
   utils::write_bit_fields(write_wqe, 128+64, 32, (uint32_t) kR2NDataSize); // len
   utils::write_bit_fields(write_wqe, 128+64+32, 32, WriteBackBufRKey); // rkey
+
   // Write SGE: local side buffer
+  // TODO: Remove the write_data_buf pointer and do this in P4+ in production code
+  //       The reason it can't be done in DOL environment is because the P4+ code
+  //       does not know the VA of the host. In production code, this buffer will be
+  //       setup with the VA:PA identity mapping of the HBM buffer.
   utils::write_bit_fields(write_wqe, 256, 64, (uint64_t) write_data_buf); // SGE-va
   utils::write_bit_fields(write_wqe, 256+64, 32, (uint32_t) kR2NDataSize); // SGE-len
   utils::write_bit_fields(write_wqe, 256+64+32, 32, kTargetRcvBuf1LKey); // SGE-lkey

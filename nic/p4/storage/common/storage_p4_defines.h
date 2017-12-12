@@ -908,12 +908,12 @@ header_type storage_pad0_t {
 }
 header_type storage_pad1_t {
   fields {
-    pad		: 168;
+    pad		: 104;
   }
 }
 
 // Capri doorbell address, data definitions and macros to manipulate them
-header_type storage_doorbell_addr_t {
+header_type storage_capri_addr_t {
   fields {
     addr	: 64;	// 64 bit address
   }
