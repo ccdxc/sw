@@ -14,10 +14,9 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
 
     tc.pvtdata.num_total_bytes = 0x3f
-    tc.pvtdata.roce_opt_ts_list = [0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]
-    tc.pvtdata.roce_opt_ts_value = 0x11223344
-    tc.pvtdata.roce_opt_ts_echo = 0x55667788
-    tc.pvtdata.roce_opt_mss = 0xabcd
+    tc.pvtdata.roce_opt_ts_value = 0
+    tc.pvtdata.roce_opt_ts_echo = 0
+    tc.pvtdata.roce_opt_mss = 0
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()

@@ -20,6 +20,7 @@
 #define LOG_SIZEOF_CQCB_T   5   // 2^5 = 32 Bytes
 #define LOG_CB_UNIT_SIZE_BYTES 6
 #define CB_UNIT_SIZE_BYTES  64
+#define CB3_OFFSET_BYTES (3 * 64)
 
 #define LOG_SIZEOF_EQCB_T   5   // 2^5 = 32 Bytes
 

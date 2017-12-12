@@ -63,11 +63,6 @@ packets:
                 options :
                     - kind   : NOP
                       data   : 0x00
-                    - kind   : MSS
-                      data   : ref://testcase/pvtdata/roce_opt_mss
-                    - kind   : TIME
-                      #data   : ref://testcase/pvtdata/roce_opt_ts_list
-                      data   : 0x11223344 0x55667788
                     - kind   : EOP
                       data   : 0x00
 

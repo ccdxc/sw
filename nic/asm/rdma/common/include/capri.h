@@ -42,6 +42,10 @@
 #define CAPRI_APP_DATA_RAW_FLAGS k.rdma_bth_raw_flags
 #define CAPRI_APP_DATA_PAYLOAD_LEN k.{rdma_bth_payload_len_sbit0_ebit5...rdma_bth_payload_len_sbit6_ebit13}
 
+#define CAPRI_APP_DATA_ROCE_OPT_TS_VALID k.{rdma_bth_roce_opt_ts_valid}
+#define CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO k.{rdma_bth_roce_opt_ts_value...rdma_bth_roce_opt_ts_echo}
+#define CAPRI_APP_DATA_ROCE_OPT_MSS k.{rdma_bth_roce_opt_mss}
+
 #define CAPRI_RECIRC_REASON_NONE                    0
 #define CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE   1
 #define CAPRI_RECIRC_REASON_INORDER_WORK_DONE       2

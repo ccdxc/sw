@@ -10,13 +10,20 @@ header_type p4_to_p4plus_roce_bth_header_t {
         table1_valid        : 1;
         table2_valid        : 1;
         table3_valid        : 1;
-        rdma_hdr_len        : 8;
+        //Parsed UDP options valid flags
+        roce_opt_ts_valid   : 1;
+        roce_opt_mss_valid  : 1;
+        //currently, this field rdma_hdr_len is not used in p4+ code
+        //however, 6 bits is the minimum needed and can not go down further
+        rdma_hdr_len        : 6;
         raw_flags           : 16;
         ecn                 : 2;
         payload_len         : 14;
         //Parsed UDP options
-        roce_opt_timestamp  : 64;
-        roce_opt_new        : 32;
+        roce_opt_ts_value   : 32;
+        roce_opt_ts_echo    : 32;
+        roce_opt_mss        : 16;
+        roce_opt_pad        : 16;
         roce_int_recirc_hdr : 16;
 
         // BTH header

@@ -61,6 +61,17 @@ resp_rx_rqcb_process:
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
     CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
 
+    //Temporary code to test UDP options
+    //For now, checking on ts flag for both options ts and mss to avoid performance cost
+    bbeq     CAPRI_APP_DATA_ROCE_OPT_TS_VALID, 0, skip_roce_opt_parsing
+    //get rqcb3 address
+    add      r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB3_OFFSET_BYTES
+    memwr.d  r5, CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO
+    add      r5, r5, 8
+    memwr.h  r5, CAPRI_APP_DATA_ROCE_OPT_MSS
+
+skip_roce_opt_parsing:
+
     // get a tokenid for the fresh packet
     phvwr   p.common.rdma_recirc_token_id, d.token_id
 

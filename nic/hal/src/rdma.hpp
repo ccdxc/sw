@@ -1067,6 +1067,12 @@ typedef struct rqcb2_s {
     uint8_t             rsvd1[6];
 } PACKED rqcb2_t;
 
+typedef struct rqcb3_s {
+    uint8_t  pad[54];
+    uint16_t roce_opt_mss;
+    uint32_t roce_opt_ts_echo;
+    uint32_t roce_opt_ts_value;
+} PACKED rqcb3_t;
 
 typedef struct rqcb4_s {
     uint8_t  rsvd[28];

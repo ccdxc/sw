@@ -176,12 +176,15 @@ action rdma_stage0_bth_action () {
     modify_field(rdma_bth_scr.table1_valid, rdma_bth.table1_valid);
     modify_field(rdma_bth_scr.table2_valid, rdma_bth.table2_valid);
     modify_field(rdma_bth_scr.table3_valid, rdma_bth.table3_valid);
+    modify_field(rdma_bth_scr.roce_opt_ts_valid, rdma_bth.roce_opt_ts_valid);
+    modify_field(rdma_bth_scr.roce_opt_mss_valid, rdma_bth.roce_opt_mss_valid);
     modify_field(rdma_bth_scr.rdma_hdr_len, rdma_bth.rdma_hdr_len);
     modify_field(rdma_bth_scr.raw_flags, rdma_bth.raw_flags);
     modify_field(rdma_bth_scr.ecn, rdma_bth.ecn);
     modify_field(rdma_bth_scr.payload_len, rdma_bth.payload_len);
-    modify_field(rdma_bth_scr.roce_opt_timestamp, rdma_bth.roce_opt_timestamp);
-    modify_field(rdma_bth_scr.roce_opt_new, rdma_bth.roce_opt_new);
+    modify_field(rdma_bth_scr.roce_opt_ts_value, rdma_bth.roce_opt_ts_value);
+    modify_field(rdma_bth_scr.roce_opt_ts_echo, rdma_bth.roce_opt_ts_echo);
+    modify_field(rdma_bth_scr.roce_opt_mss, rdma_bth.roce_opt_mss);
     modify_field(rdma_bth_scr.roce_int_recirc_hdr, rdma_bth.roce_int_recirc_hdr);
 
     // bth params

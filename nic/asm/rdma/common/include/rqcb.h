@@ -105,6 +105,14 @@ struct rqcb1_t {
     header_template_size: 8;
 };
 
+struct rqcb3_t {
+    //Temporarily storing these params here for DOL testing purpose
+    roce_opt_ts_value: 32;
+    roce_opt_ts_echo:  32;
+    roce_opt_mss:      16;
+    pad: 432;
+};
+
 struct rqcb4_t {
     num_bytes: 64;
     num_pkts: 32;
