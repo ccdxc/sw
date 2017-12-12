@@ -123,11 +123,12 @@ struct intr_ctrl {
 	u32 rsvd4:31;
 	u32 coal_timer:6;
 	u32 rsvd5:26;
-	u32 rsvd6[11];
+	u32 rsvd6[3];
 } __packed;
 
-#define intr_to_mask(intr_ctrl)		((void *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)	((void *)(intr_ctrl) + 8)
+#define intr_to_mask(intr_ctrl)			((void *)(intr_ctrl) + 4)
+#define intr_to_credits(intr_ctrl)		((void *)(intr_ctrl) + 8)
+#define intr_to_mask_on_assert(intr_ctrl)	((void *)(intr_ctrl) + 12)
 
 struct intr_status {
 	u32 status[2];
@@ -135,7 +136,7 @@ struct intr_status {
 
 static inline void ionic_struct_size_checks(void) {
 	BUILD_BUG_ON(sizeof(struct doorbell) != 8);
-	BUILD_BUG_ON(sizeof(struct intr_ctrl) != 64);
+	BUILD_BUG_ON(sizeof(struct intr_ctrl) != 32);
 	BUILD_BUG_ON(sizeof(struct intr_status) != 8);
 	BUILD_BUG_ON(sizeof(struct admin_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct admin_comp) != 16);
@@ -283,6 +284,7 @@ struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index);
+void ionic_intr_mask_on_assertion(struct intr *intr);
 void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer);
 void ionic_intr_mask(struct intr *intr, bool mask);

@@ -314,20 +314,6 @@ static int ionic_qcq_enable(struct qcq *qcq)
 #endif
 }
 
-#ifndef INTERRUPTS
-#define POLL_TIMER_PERIOD	(HZ/10)
-static void ionic_poll_timer(unsigned long data)
-{
-	struct lif *lif = (struct lif *)data;
-
-	napi_schedule(&lif->txqcqs[0]->napi);
-	napi_schedule(&lif->rxqcqs[0]->napi);
-
-	mod_timer(&lif->poll_timer,
-		  round_jiffies(jiffies + POLL_TIMER_PERIOD));
-}
-#endif
-
 static void ionic_rx_fill(struct queue *q);
 
 static int ionic_open(struct net_device *netdev)
@@ -350,11 +336,6 @@ static int ionic_open(struct net_device *netdev)
 		if (err)
 			return err;
 	}
-
-#ifndef INTERRUPTS
-	setup_timer(&lif->poll_timer, ionic_poll_timer, (unsigned long)lif);
-	mod_timer(&lif->poll_timer, jiffies);
-#endif
 
 	return 0;
 }
@@ -392,9 +373,6 @@ static int ionic_stop(struct net_device *netdev)
 	unsigned int i;
 	int err;
 
-#ifndef INTERRUPTS
-	del_timer_sync(&lif->poll_timer);
-#endif
 	netif_carrier_off(netdev);
 	netif_tx_disable(netdev);
 
@@ -432,9 +410,7 @@ static int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 
 static int ionic_adminq_napi(struct napi_struct *napi, int budget)
 {
-	ionic_napi(napi, -1, ionic_adminq_service, NULL);
-
-	return budget;
+	return ionic_napi(napi, budget, ionic_adminq_service, NULL);
 }
 
 static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
@@ -747,9 +723,7 @@ static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
 
 static int ionic_tx_napi(struct napi_struct *napi, int budget)
 {
-	ionic_napi(napi, -1, ionic_tx_service, NULL);
-
-	return budget;
+	return ionic_napi(napi, budget, ionic_tx_service, NULL);
 }
 
 static void ionic_tx_tcp_inner_pseudo_csum(struct sk_buff *skb)
@@ -1262,6 +1236,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 		if (err < 0)
 			goto err_out_free_intr;
 		new->intr.vector = err;
+		ionic_intr_mask_on_assertion(&new->intr);
 	} else {
 		new->intr.index = INTR_INDEX_NOT_ASSIGNED;
 	}
