@@ -410,9 +410,7 @@ static int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 
 static int ionic_adminq_napi(struct napi_struct *napi, int budget)
 {
-	ionic_napi(napi, -1, ionic_adminq_service, NULL);
-
-	return budget;
+	return ionic_napi(napi, budget, ionic_adminq_service, NULL);
 }
 
 static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
@@ -725,9 +723,7 @@ static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
 
 static int ionic_tx_napi(struct napi_struct *napi, int budget)
 {
-	ionic_napi(napi, -1, ionic_tx_service, NULL);
-
-	return budget;
+	return ionic_napi(napi, budget, ionic_tx_service, NULL);
 }
 
 static void ionic_tx_tcp_inner_pseudo_csum(struct sk_buff *skb)
