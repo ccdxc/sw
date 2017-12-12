@@ -10,7 +10,7 @@ struct phv_               p;
 #define COMPUTE_L4_CSUM       k.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM]
 #define COMPUTE_INNER_IP_CSUM k.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_IP_CHECKSUM]
 #define COMPUTE_INNER_L4_CSUM k.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_L4_CHECKSUM]
-
+#define UNTIL_HW_FIX
 %%
 
 nop:

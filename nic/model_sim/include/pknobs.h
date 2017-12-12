@@ -483,13 +483,13 @@ namespace pknobs{
       }
     }
     virtual int64 eval(){
-
+      if (curr_idx == 0) shuffle();
       int64 ret_value = (*knob_vec[curr_idx]).eval();
       curr_idx++;
       //if cycle is over, reset count
       if (curr_idx == knob_vec.size()){
         curr_idx = 0;
-        shuffle();
+        //shuffle();
       }
 
       return ret_value;

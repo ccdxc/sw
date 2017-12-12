@@ -208,6 +208,10 @@ public:
         }
     }
 
+    virtual void clear_dirty_bits() {
+        int rc;
+        J1FA(rc, dirty_bits);
+    }
 
 
     // TODO: Add unaligned accesses
@@ -260,7 +264,7 @@ public:
         const unsigned char * p = data;
         unsigned int curr_len = get_max_block_size(addr, len);
         unsigned int offset = get_page_offset(addr);
-        unsigned int orig_len = len;
+        set_dirty_bits(addr, len);
         while (len) {
             addr_t page_num = get_page_num(addr);
             unsigned char * ptr = get_page_ptr(page_num, true);
@@ -274,7 +278,6 @@ public:
             curr_len = len < page_size ? len : page_size;
             offset = 0;
         }
-        set_dirty_bits(addr, orig_len);
         return true;
     }
 

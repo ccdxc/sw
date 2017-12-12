@@ -43,6 +43,7 @@ SOURCES = \
     cap_pict_csr.cc \
     cap_txs_csr.cc \
     cap_pbc_csr.cc \
+    cap_pbchbm_csr.cc \
     cap_pbm_csr.cc \
     cap_wa_csr.cc \
     cap_dpr_csr.cc \
@@ -68,6 +69,8 @@ SOURCES = \
     cap_ms_csr.cc \
     cap_msr_csr.cc \
     cap_msh_csr.cc \
+    cap_mss_csr.cc \
+    cap_em_csr.cc \
     LogMsg.cc \
     cpu.cc \
     cpu_hal_if.cc \

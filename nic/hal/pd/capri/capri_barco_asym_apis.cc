@@ -110,20 +110,6 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)xg, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param xg into ilist memory @ {:x}", (uint64_t) curr_ptr); 
-        ret = HAL_RET_INVALID_ARG;
-        goto cleanup;
-    }
-    curr_ptr += 32;
-
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)yg, 32)) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param yg into ilist memory @ {:x}", (uint64_t) curr_ptr); 
-        ret = HAL_RET_INVALID_ARG;
-        goto cleanup;
-    }
-    curr_ptr += 32;
-
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)a, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param a into ilist memory @ {:x}", (uint64_t) curr_ptr); 
         ret = HAL_RET_INVALID_ARG;
@@ -166,7 +152,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     ilist_dma_descr.next = 0;
     ilist_dma_descr.int_en = 0;
     ilist_dma_descr.discard = 0;
-    ilist_dma_descr.realign = 0;
+    ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
@@ -184,7 +170,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     olist_dma_descr.next = 0;
     olist_dma_descr.int_en = 0;
     olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 0;
+    olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (2 * 32 ); /* Outputs: x3, y3 */
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
@@ -393,7 +379,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(uint8_t *p, uint8_t *n,
     key_dma_descr.next = 0;
     key_dma_descr.int_en = 0;
     key_dma_descr.discard = 0;
-    key_dma_descr.realign = 0;
+    key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
@@ -480,7 +466,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(uint8_t *p, uint8_t *n,
     ilist_dma_descr.next = 0;
     ilist_dma_descr.int_en = 0;
     ilist_dma_descr.discard = 0;
-    ilist_dma_descr.realign = 0;
+    ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
@@ -498,7 +484,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(uint8_t *p, uint8_t *n,
     olist_dma_descr.next = 0;
     olist_dma_descr.int_en = 0;
     olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 0;
+    olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (2 * 32 ); /* Outputs: r, s */
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
@@ -735,7 +721,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     key_dma_descr.next = 0;
     key_dma_descr.int_en = 0;
     key_dma_descr.discard = 0;
-    key_dma_descr.realign = 0;
+    key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
@@ -829,7 +815,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     ilist_dma_descr.next = 0;
     ilist_dma_descr.int_en = 0;
     ilist_dma_descr.discard = 0;
-    ilist_dma_descr.realign = 0;
+    ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
@@ -847,7 +833,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     olist_dma_descr.next = 0;
     olist_dma_descr.int_en = 0;
     olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 0;
+    olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (0 * 32 ); /* No outputs */
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
@@ -1023,7 +1009,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     key_dma_descr.next = 0;
     key_dma_descr.int_en = 0;
     key_dma_descr.discard = 0;
-    key_dma_descr.realign = 0;
+    key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
@@ -1103,7 +1089,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     ilist_dma_descr.next = 0;
     ilist_dma_descr.int_en = 0;
     ilist_dma_descr.discard = 0;
-    ilist_dma_descr.realign = 0;
+    ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
@@ -1121,7 +1107,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     olist_dma_descr.next = 0;
     olist_dma_descr.int_en = 0;
     olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 0;
+    olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (1 * 256); /* cipher text */
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
@@ -1303,7 +1289,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     key_dma_descr.next = 0;
     key_dma_descr.int_en = 0;
     key_dma_descr.discard = 0;
-    key_dma_descr.realign = 0;
+    key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
@@ -1383,7 +1369,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     ilist_dma_descr.next = 0;
     ilist_dma_descr.int_en = 0;
     ilist_dma_descr.discard = 0;
-    ilist_dma_descr.realign = 0;
+    ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
@@ -1401,7 +1387,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     olist_dma_descr.next = 0;
     olist_dma_descr.int_en = 0;
     olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 0;
+    olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (1 * 256); /* plain text */
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
@@ -1684,7 +1670,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
     key_dma_descr.next = 0;
     key_dma_descr.int_en = 0;
     key_dma_descr.discard = 0;
-    key_dma_descr.realign = 0;
+    key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr3);
     if (capri_hbm_write_mem(key_dma_descr_addr3, (uint8_t*)&key_dma_descr,
@@ -1764,7 +1750,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
     ilist_dma_descr.next = 0;
     ilist_dma_descr.int_en = 0;
     ilist_dma_descr.discard = 0;
-    ilist_dma_descr.realign = 0;
+    ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
@@ -1782,7 +1768,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
     olist_dma_descr.next = 0;
     olist_dma_descr.int_en = 0;
     olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 0;
+    olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (1 * 256); /* plain text */
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
@@ -1996,7 +1982,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d,
     key_dma_descr.next = 0;
     key_dma_descr.int_en = 0;
     key_dma_descr.discard = 0;
-    key_dma_descr.realign = 0;
+    key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
@@ -2076,7 +2062,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d,
     ilist_dma_descr.next = 0;
     ilist_dma_descr.int_en = 0;
     ilist_dma_descr.discard = 0;
-    ilist_dma_descr.realign = 0;
+    ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
@@ -2094,7 +2080,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d,
     olist_dma_descr.next = 0;
     olist_dma_descr.int_en = 0;
     olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 0;
+    olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (1 * 256); /* sig */
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
@@ -2277,7 +2263,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     key_dma_descr.next = 0;
     key_dma_descr.int_en = 0;
     key_dma_descr.discard = 0;
-    key_dma_descr.realign = 0;
+    key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
@@ -2364,7 +2350,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     ilist_dma_descr.next = 0;
     ilist_dma_descr.int_en = 0;
     ilist_dma_descr.discard = 0;
-    ilist_dma_descr.realign = 0;
+    ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
@@ -2382,7 +2368,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     olist_dma_descr.next = 0;
     olist_dma_descr.int_en = 0;
     olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 0;
+    olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (0 * 256); /* None */
     if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
