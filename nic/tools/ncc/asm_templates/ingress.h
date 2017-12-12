@@ -145,7 +145,7 @@ struct ${table}_k {
 struct ${table}_${actionname}_d {
 //::                # Action Data before Key bits in case of Hash table.
 //::                adata_bits_before_key = 0
-//::                if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
+//::                if not pddict['tables'][table]['is_toeplitz'] and pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
 //::                    mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::                    if len(pddict['tables'][table]['actions']) > 1:
 //::                        actionpc_bits = 8
@@ -177,8 +177,10 @@ struct ${table}_${actionname}_d {
 //::                        for actionfld in actionfldlist:
 //::                            actionfldname, actionfldwidth = actionfld
 //::                            little_str = ''
-//::                            if actionfldname in pddict['tables'][table]['le_action_params']:
-//::                                little_str = ' (little)'
+//::                            if actionname in pddict['tables'][table]['le_action_params'].keys():
+//::                                if actionfldname in pddict['tables'][table]['le_action_params'][actionname]:
+//::                                    little_str = ' (little)'
+//::                                #endif
 //::                            #endif
 //::                            if actionfldwidth <= fill_adata:
     ${actionfldname} : ${actionfldwidth} ${little_str};
@@ -352,8 +354,10 @@ struct ${table}_${actionname}_d {
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        little_str = ''
-//::                        if actionfldname in pddict['tables'][table]['le_action_params']:
-//::                            little_str = ' (little)'
+//::                        if actionname in pddict['tables'][table]['le_action_params'].keys():
+//::                            if actionfldname in pddict['tables'][table]['le_action_params'][actionname]:
+//::                                little_str = ' (little)'
+//::                            #endif
 //::                        #endif
 //::                        if skip_adatafld and actionfldname != last_actionfldname:
 //::                            continue
@@ -370,8 +374,10 @@ struct ${table}_${actionname}_d {
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        little_str = ''
-//::                        if actionfldname in pddict['tables'][table]['le_action_params']:
-//::                            little_str = ' (little)'
+//::                        if actionname in pddict['tables'][table]['le_action_params'].keys():
+//::                            if actionfldname in pddict['tables'][table]['le_action_params'][actionname]:
+//::                                little_str = ' (little)'
+//::                            #endif
 //::                        #endif
     ${actionfldname} : ${actionfldwidth} ${little_str};
 //::                    #endfor

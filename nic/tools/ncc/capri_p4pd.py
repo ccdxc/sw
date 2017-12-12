@@ -1307,7 +1307,7 @@ class capri_p4pd:
             # List of (action-name, list of action-data-fields)
             # one per p4 action.
             tdict['actions'] = keydict['actions']
-            tdict['le_action_params'] = ctable.le_action_param_set
+            tdict['le_action_params'] = ctable.le_action_params
 
             # Indicates where table resides.
             tdict['location'] = 'HBM' if ctable.is_hbm else 'P4Pipe'
@@ -1324,6 +1324,11 @@ class capri_p4pd:
                 tdict['type'] = 'Mpu'
             elif ctable.match_type == match_type.EXACT_HASH:
                 tdict['type'] = 'Hash'
+            if ctable.is_toeplitz_hash():
+                tdict['is_toeplitz'] = True
+            else:
+                tdict['is_toeplitz'] = False
+
             if ctable.collision_ct:
                 tdict['hash_overflow_tbl'] = ctable.collision_ct.p4_table.name
             else:
