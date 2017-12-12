@@ -760,7 +760,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_
 
 int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, 
                      uint8_t **read_buf_ptr, uint64_t slba, 
-                     uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif) {
+                     uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif, uint32_t bdf) {
 
   if (!nvme_cmd_ptr || !read_buf_ptr) return -1;
 
@@ -786,6 +786,14 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, uint8_t **nvme_cm
   uint8_t *read_data_buf = ((uint8_t *) r2n_buf_va) + kR2NDataBufOffset;
   memset(read_data_buf, 0, kR2NDataSize);
   *read_buf_ptr = read_data_buf;
+
+  // Register the memory if LIF override is setup
+  if (pdma_dst_lif_override != 0) {
+    uint64_t match_addr = host_mem_v2p(read_data_buf) | (((uint64_t) (bdf & 0xFF)) << 52);
+    printf("Registering address %lx \n", match_addr);
+    // TODO: Enable this call after model supports BDF in the address passed to burst_write
+    //register_mem_addr(match_addr);
+  }
 
   // Get the HBM buffer for the write back data for the read command
   uint64_t r2n_hbm_buf_pa;

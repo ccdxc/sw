@@ -44,7 +44,13 @@ class HostMem : public pen_mem_base {
   }
   virtual bool burst_read(uint64_t addr, unsigned char *data,
                           unsigned int len, bool secure, bool reverse_bo) {
+    uint64_t orig_addr = addr;
     addr &= (1ULL << 52) - 1;
+    for (int i = 0; i < match_addr.size(); i++) {
+       if ((addr == (match_addr[i] & ((1ULL << 52) - 1))) && (orig_addr != match_addr[i])) {
+         return false;
+       }
+    }
     if ((addr >= kShmSize) || ((addr + len) > kShmSize))
       return false;
     void *sa = (void *)((uint64_t)shmaddr_ + addr);
@@ -53,17 +59,27 @@ class HostMem : public pen_mem_base {
   }
   virtual bool burst_write(uint64_t addr, const unsigned char *data,
                            unsigned int len, bool secure, bool reverse_bo) {
+    uint64_t orig_addr = addr;
     addr &= (1ULL << 52) - 1;
+    for (int i = 0; i < match_addr.size(); i++) {
+       if ((addr == (match_addr[i] & ((1ULL << 52) - 1))) && (orig_addr != match_addr[i])) {
+         return false;
+       }
+    }
     if ((addr >= kShmSize) || ((addr + len) > kShmSize))
       return false;
     void *da = (void *)((uint64_t)shmaddr_ + addr);
     bcopy(data, da, len);
     return true;
   }
+  void set_match_addr(uint64_t addr) {
+    match_addr.push_back(addr);
+  }
 
  private:
   int shmid_;
   void *shmaddr_;
+  vector<uint64_t> match_addr;
 };
 
 }  // namespace utils
@@ -318,6 +334,13 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                     buff->type = BUFF_TYPE_STATUS;
                     buff->status = 0;
                 }
+            }
+            break;
+
+        case BUFF_TYPE_REGISTER_MEM_ADDR:
+            {
+                g_host_mem.set_match_addr(buff->addr);
+                std::cout << std::hex << "Registered address: 0x" << buff->addr << std::endl;
             }
             break;
 

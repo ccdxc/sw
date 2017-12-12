@@ -82,8 +82,8 @@ const static uint32_t	kQstateCndxOffset	 = 10;
 const static uint32_t	kHbmSsdBitmapSize	 = (16 * 4096);
 
 // BDFs for NVME and PVM LIF
-const static uint32_t	kNvmeLifBdf		= 1;
-const static uint32_t	kPvmLifBdf		= 2;
+const static uint32_t	kNvmeLifBdf		= 0xA;
+const static uint32_t	kPvmLifBdf		= 0xB;
 
 namespace queues {
 
@@ -735,6 +735,10 @@ uint16_t get_nvme_lif() {
 
 uint16_t get_pvm_lif() {
   return (uint16_t) pvm_lif;
+}
+
+uint32_t get_nvme_bdf() {
+  return kNvmeLifBdf;
 }
 
 uint32_t get_host_nvme_sq(uint32_t offset) {
