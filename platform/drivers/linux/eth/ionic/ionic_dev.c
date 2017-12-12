@@ -383,7 +383,7 @@ void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer)
 {
 	struct intr_ctrl ctrl = {
-		.credits = credits,
+		.int_credits = credits,
 		.unmask = unmask,
 		.coal_timer_reset = reset_timer,
 	};
