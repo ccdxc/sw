@@ -85,8 +85,8 @@ struct resp_tx_rqcb_to_rqcb1_info_t {
     rsqwqe_addr: 64;
     log_pmtu: 5;
     serv_type: 3;
-    new_rsq_c_index: 16;
-    pad: 72;
+    new_rsq_c_index: 12;
+    pad: 76;
 };
 
 struct resp_tx_rqcb1_process_k_t {
@@ -104,8 +104,9 @@ struct resp_tx_rqcb1_to_rsqwqe_info_t {
     header_template_addr: 32;
     read_rsp_in_progress: 1;
     rsvd0: 7;
-    new_rsq_c_index: 16;
-    pad: 72;
+    new_rsq_c_index: 12;
+    header_template_size: 8;
+    pad: 68;
 };
 
 struct resp_tx_rsqwqe_process_k_t {
@@ -124,8 +125,9 @@ struct resp_tx_rsqwqe_to_rkey_info_t {
     key_id: 1;
     send_aeth: 1;
     last_or_only: 1;
-    transfer_bytes: 16;
-    new_rsq_c_index: 16;
+    transfer_bytes: 12;
+    new_rsq_c_index: 12;
+    header_template_size: 8;
 };
 
 struct resp_tx_rsqrkey_process_k_t {

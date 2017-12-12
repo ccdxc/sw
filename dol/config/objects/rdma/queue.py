@@ -101,7 +101,7 @@ class RdmaRQstate(Packet):
         ByteField("num_sges", 0),
         IntField("current_sge_offset", 0),
         ByteField("p4plus_to_p4_flags", 0),
-        ByteField("rsvd", 0),
+        ByteField("header_template_size", 0),
 
         #RQCB2
         BitField("rqcb2", 0, 512),
@@ -211,7 +211,7 @@ class RdmaSQstate(Packet):
         BitField("err_retry_ctr", 0, 3),
         BitField("rsvd3", 0, 2),
         ByteField("p4plus_to_p4_flags", 0),
-        ByteField("rsvd4", 0),
+        ByteField("header_template_size", 0),
         ByteField("rsvd5", 0),
         ByteField("rsvd6", 0),
         ByteField("rsvd7", 0),

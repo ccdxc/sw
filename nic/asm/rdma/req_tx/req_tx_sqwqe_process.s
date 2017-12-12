@@ -101,6 +101,7 @@ set_sge_arg:
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, op_type, d.base.op_type)
     CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, imm_data, inv_key, d.{send.imm_data...send.inv_key})
     // if UD copy ah_handle
+    CAPRI_SET_FIELD_C(r7, WQE_TO_SGE_T, ah_size, d.ud_send.ah_size, c1)
     CAPRI_SET_FIELD_C(r7, WQE_TO_SGE_T, ah_handle, d.ud_send.ah_handle, c1)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)

@@ -35,7 +35,8 @@ struct req_tx_wqe_to_sge_info_t {
     num_valid_sges                 : 8;
     current_sge_offset             : 32;
     remaining_payload_bytes        : 16;
-    payload_offset                 : 16;
+    ah_size                        : 8;
+    rsvd                           : 8;
     dma_cmd_start_index            : 6; // TODO Different from "C" code due to space scarcity
     imm_data                       : 32;
     union {
@@ -111,7 +112,13 @@ struct req_tx_sqcb_write_back_info_t {
     current_sge_id               : 8;
     current_sge_offset           : 32;
     sq_c_index                   : 16;
-    rrq_p_index                  : 16;
+    union {
+        rrq_p_index                  : 16;
+        struct {
+            ah_size                  : 8;
+            rsvd                     : 8;
+        };
+    };
     union op_t op;
 };
 

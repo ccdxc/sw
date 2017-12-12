@@ -730,6 +730,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb0.pt_base_addr =
         rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey()));
     sqcb_p->sqcb1.header_template_addr = header_template_addr;
+    sqcb_p->sqcb1.header_template_size = sizeof(header_template_v4_t);
     sqcb_p->sqcb1.log_rrq_size = log2(num_rrq_wqes);
     sqcb_p->sqcb1.rrq_base_addr =
         g_rdma_manager->HbmAlloc(sizeof(rrqwqe_t) << sqcb_p->sqcb1.log_rrq_size);
@@ -758,6 +759,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     stage0_req_tx_prog_addr(&offset_verify);
     HAL_ASSERT(offset == offset_verify);
+
+    HAL_TRACE_DEBUG("SQCB Header Template Size: {}\n", sqcb_p->sqcb1.header_template_size);
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writing initial SQCB State, SQCB->PT: {}", 
@@ -791,6 +794,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.congestion_mgmt_enable = TRUE;  // Set always to be true for now.
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
     rqcb.rqcb1.header_template_addr = header_template_addr;
+    rqcb.rqcb1.header_template_size = sizeof(header_template_v4_t);
     rqcb.rqcb1.p4plus_to_p4_flags = 0xA;
     //rqcb.rqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                 P4PLUS_TO_P4_UPDATE_IP_LEN);
@@ -801,6 +805,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     stage0_resp_tx_prog_addr(&offset_verify);
     HAL_ASSERT(offset == offset_verify);
+
+    HAL_TRACE_DEBUG("RQCB Header Template Size: {}\n", rqcb.rqcb1.header_template_size);
 
     HAL_TRACE_DEBUG("{}: Create QP successful for LIF: {}  RQCB->PT: {}", 
                     __FUNCTION__, lif, rqcb.rqcb0.pt_base_addr);
@@ -853,8 +859,10 @@ hal_ret_t
 rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
 {
     uint32_t     header_template_addr;
+    uint32_t     header_template_size;
     uint8_t      smac[ETH_ADDR_LEN], dmac[ETH_ADDR_LEN];
     header_template_t temp;
+    ip_addr_t    ip_addr;
     
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA AH Create", __FUNCTION__);
@@ -880,37 +888,71 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
                     "udp_sport: {} udp_dport: {}",
                     __FUNCTION__, spec.ethtype(),
                     spec.vlan(), spec.vlan_pri(), spec.vlan_cfi(),
-                    spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(),
-                    spec.ip_saddr(), spec.ip_daddr(),
+                    spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(), 0, 0,
+                    //spec.ip_saddr(), spec.ip_daddr(),
                     spec.udp_sport(), spec.udp_dport());
 
     memset(&temp, 0, sizeof(temp));
-    memcpy(&temp.eth.dmac, dmac, MAC_SIZE);
-    memcpy(&temp.eth.smac, smac, MAC_SIZE);
-    temp.eth.ethertype = 0x8100;
-    temp.vlan.pri = spec.vlan_pri();
-    temp.vlan.vlan = spec.vlan();
-    temp.vlan.ethertype = spec.ethtype();
-    temp.ip.version = spec.ip_ver();
-    temp.ip.ihl = 5;
-    temp.ip.tos = spec.ip_tos();
-    temp.ip.ttl = spec.ip_ttl();
-    temp.ip.protocol = 17;
-    temp.ip.saddr = spec.ip_saddr();
-    temp.ip.daddr = spec.ip_daddr();
-    temp.ip.id = 1;
-    temp.udp.sport = spec.udp_sport();
-    temp.udp.dport = spec.udp_dport();
 
-    header_template_addr = g_rdma_manager->HbmAlloc(sizeof(header_template_t));
+    if (spec.ip_ver() == 6) {
+        memcpy(&temp.v6.eth.dmac, dmac, MAC_SIZE);
+        memcpy(&temp.v6.eth.smac, smac, MAC_SIZE);
+        temp.v6.eth.ethertype = 0x8100;
+        temp.v6.vlan.pri = spec.vlan_pri();
+        temp.v6.vlan.vlan = spec.vlan();
+        temp.v6.vlan.ethertype = spec.ethtype();
+        temp.v6.ip.version = spec.ip_ver();
+        temp.v6.ip.tc = spec.ip_tos();
+        temp.v6.ip.hop_limit = spec.ip_ttl();
+        temp.v6.ip.nh = 17;
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr()); 
+        pd::memrev((uint8_t*)&ip_addr.addr.v6_addr, sizeof(ip_addr.addr.v6_addr));
+        temp.v6.ip.saddr = ip_addr.addr.v6_addr;
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr()); 
+        pd::memrev((uint8_t*)&ip_addr.addr.v6_addr, sizeof(ip_addr.addr.v6_addr));
+        temp.v6.ip.daddr = ip_addr.addr.v6_addr;
+        temp.v6.ip.flow_label = 0;
+        temp.v6.udp.sport = spec.udp_sport();
+        temp.v6.udp.dport = spec.udp_dport();
+        header_template_size = sizeof(temp.v6);
+
+        HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipv6addr2str(temp.v6.ip.saddr), ipv6addr2str(temp.v6.ip.daddr));
+
+    } else {
+        memcpy(&temp.v4.eth.dmac, dmac, MAC_SIZE);
+        memcpy(&temp.v4.eth.smac, smac, MAC_SIZE);
+        temp.v4.eth.ethertype = 0x8100;
+        temp.v4.vlan.pri = spec.vlan_pri();
+        temp.v4.vlan.vlan = spec.vlan();
+        temp.v4.vlan.ethertype = spec.ethtype();
+        temp.v4.ip.version = spec.ip_ver();
+        temp.v4.ip.ihl = 5;
+        temp.v4.ip.tos = spec.ip_tos();
+        temp.v4.ip.ttl = spec.ip_ttl();
+        temp.v4.ip.protocol = 17;
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr()); 
+        temp.v4.ip.saddr = ip_addr.addr.v4_addr;
+        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr()); 
+        temp.v4.ip.daddr = ip_addr.addr.v4_addr;
+        temp.v4.ip.id = 1;
+        temp.v4.udp.sport = spec.udp_sport();
+        temp.v4.udp.dport = spec.udp_dport();
+        header_template_size = sizeof(temp.v4);
+        HAL_TRACE_DEBUG("SIP4 : {}  DIP4: {} \n", temp.v4.ip.saddr, temp.v4.ip.daddr);
+
+    }
+    HAL_TRACE_DEBUG("Header Template Size: {}\n", header_template_size);
+
+    header_template_addr = g_rdma_manager->HbmAlloc(header_template_size);
     HAL_ASSERT(header_template_addr);
     HAL_ASSERT(header_template_addr != (uint32_t)-ENOMEM);
 
-    pd::memrev((uint8_t*)&temp, sizeof(temp));
-    capri_hbm_write_mem((uint64_t)header_template_addr, (uint8_t*) &temp, sizeof(temp));
+    pd::memrev((uint8_t*)&temp, header_template_size);
+    capri_hbm_write_mem((uint64_t)header_template_addr, (uint8_t*)&temp, header_template_size);
 
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->set_ah_handle(header_template_addr);
+    rsp->set_ah_size(header_template_size);
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
@@ -967,6 +1009,10 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             break;
         
         case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
+
+            sqcb_p->sqcb1.header_template_size = spec.header_template().size();
+            rqcb_p->rqcb1.header_template_size = spec.header_template().size();
+
             header_template_addr = sqcb_p->sqcb1.header_template_addr;
             header_template_t header_template;
 
@@ -977,6 +1023,9 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 
             HAL_TRACE_DEBUG("{}: Update: Setting header_template content to: {}", 
                             __FUNCTION__, spec.header_template());
+
+            HAL_TRACE_DEBUG("{}: Update: Setting rqcb/sqcb header_template_size to {}, {}",
+                            __FUNCTION__, rqcb_p->rqcb1.header_template_size, sqcb_p->sqcb1.header_template_size);  
         break;
 
         default:

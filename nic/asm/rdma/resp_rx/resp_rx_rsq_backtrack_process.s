@@ -23,6 +23,7 @@ struct rsqwqe_d_t d;
 
 #define ADJUST_INFO_T struct resp_rx_rsq_backtrack_adjust_info_t
 #define RSQ_BT_INFO_T struct resp_rx_rsq_backtrack_info_t 
+#define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
 
 
 %%
@@ -30,6 +31,11 @@ struct rsqwqe_d_t d;
 
 .align
 resp_rx_rsq_backtrack_process:
+
+    //copy to_stage params to the next stage
+    CAPRI_GET_STAGE_NEXT_ARG(resp_rx_phv_t, r1)
+    #copy va, r_key, len from to-stage-current to to-stage-next
+    CAPRI_SET_FIELD_RANGE(r1, RSQ_BT_TO_S_INFO_T, va, len, k.{to_stage.s0.backtrack.va...to_stage.s0.backtrack.len})
 
 req_compare:
     

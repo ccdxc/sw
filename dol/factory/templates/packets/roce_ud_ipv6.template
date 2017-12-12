@@ -1,0 +1,14 @@
+meta:
+    id: ROCE_UD_IPV6
+
+headers:
+    - header:
+        id      : ipv6
+        template: ref://store/headers/id=IPV6
+        fields:
+            nh: ipproto/17
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:

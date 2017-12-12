@@ -45,6 +45,15 @@ class PADDING(Packet):
         StrLenField("data", "")
     ]
 
+class ROCE_UD_IPV4_PAD(Packet):
+    name = "ROCE_UD_IPV4_PAD"
+    fields_desc = [
+        IntField("data0", ""),
+        IntField("data1", ""),
+        IntField("data2", ""),
+        IntField("data3", ""),
+        IntField("data4", "")
+    ]
 
 class CRC(Packet):
     name = "CRC"

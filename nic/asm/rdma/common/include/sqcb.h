@@ -128,7 +128,8 @@ struct sqcb1_t {
     err_retry_ctr                  : 3;
     rsvd3                          : 2;
     p4plus_to_p4_flags             : 8;
-    rvsd4                          : 56;
+    header_template_size           : 8;
+    rvsd4                          : 48;
 };
 
 struct sqcb_t {

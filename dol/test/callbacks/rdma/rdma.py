@@ -206,3 +206,12 @@ def GetAtomicData(tc, pkt, args = None):
         val = val << 8
         val = val | b
     return val
+
+def PickPktTemplate(tc, pkt, args = None):
+    if tc.config.rdmasession.session.IsIPV6():
+       template = args.v6
+    else:
+       template = args.v4
+    tc.info("ChoosePacketTemplateByFlow: Picking %s" % (template))
+    return infra_api.GetPacketTemplate(template)
+    

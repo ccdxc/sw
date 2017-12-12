@@ -133,8 +133,8 @@ message RdmaAhSpec {
   uint32                   ip_ver          = 8;
   uint32                   ip_tos          = 9;
   uint32                   ip_ttl          = 10;
-  uint32                   ip_saddr        = 11;
-  uint32                   ip_daddr        = 12;
+  types.IPAddress          ip_saddr        = 11;
+  types.IPAddress          ip_daddr        = 12;
 
   uint32                   udp_sport       = 13;
   uint32                   udp_dport       = 14;
@@ -149,6 +149,7 @@ message RdmaAhRequestMsg {
 message RdmaAhResponse {
   types.ApiStatus     api_status       = 1;    // API status code
   uint32              ah_handle        = 2;    // Header template addr
+  uint32              ah_size          = 3;    // Header template size
 }
 
 // RdmaAhResponseMsg is response to RdmaAhRequestmsg

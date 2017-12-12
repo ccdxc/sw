@@ -466,7 +466,8 @@ struct sqwqe_ud_send_t {
     imm_data           : 32;
     q_key              : 32;
     length             : 32;
-    dst_qp             : 32;
+    dst_qp             : 24;
+    ah_size            :  8;
     ah_handle          : 32;
 };
 
@@ -772,6 +773,18 @@ struct iphdr_t {
 /*The options start here. */
 };
 
+struct ipv6hdr_t {
+    version     : 4;
+    tc          : 8;
+    flow_label  : 20;
+    payload_len : 16;
+    nh          : 8;
+    hop_limit   : 8;
+    saddr       : 128;
+    daddr       : 128;
+};
+
+
 struct vlanhdr_t {
     pri            : 3;
     cfi            : 1;
@@ -780,13 +793,25 @@ struct vlanhdr_t {
 };
 
 
-struct header_template_t {
+struct header_template_v4_t {
     struct ethhdr_t     eth; 
     struct vlanhdr_t    vlan;
     struct iphdr_t      ip;
     struct udphdr_t     udp;
 };
 
+struct header_template_v6_t {
+    struct ethhdr_t     eth; 
+    struct vlanhdr_t    vlan;
+    struct ipv6hdr_t    ip;
+    struct udphdr_t     udp;
+};
+
+union header_template_t {
+    struct header_template_v4_t v4;
+    struct header_template_v6_t v6;
+};
+    
 #define HDR_TEMPLATE_T struct header_template_t
 #define HDR_TEMPLATE_T_SIZE_BYTES (sizeof(struct header_template_t)/8)
  

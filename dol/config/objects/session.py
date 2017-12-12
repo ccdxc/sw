@@ -53,6 +53,7 @@ class SessionObject(base.ConfigObjectBase):
         self.label = self.label.upper()
 
         assert(initiator.proto == responder.proto)
+        assert(initiator.type == responder.type)
         self.proto = initiator.proto
 
         self.iflow = flow.FlowObject(self, self.initiator, self.responder,

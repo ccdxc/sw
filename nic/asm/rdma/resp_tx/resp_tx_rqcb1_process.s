@@ -37,6 +37,7 @@ resp_tx_rqcb1_process:
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, serv_type, k.args.serv_type)
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, log_pmtu, k.args.log_pmtu)
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, header_template_addr, d.header_template_addr)
+    CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, header_template_size, d.header_template_size)
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, read_rsp_in_progress, d.read_rsp_in_progress)
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, new_rsq_c_index, k.args.new_rsq_c_index)
 

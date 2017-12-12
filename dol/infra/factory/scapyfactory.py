@@ -488,6 +488,8 @@ class RawPacketParser:
         rawhdr = self.__get_raw_hdr(pkt)
         if rawhdr is None:
             return pkt
+        if rawhdr.underlayer == None:
+           pdb.set_trace()
         rawhdr.underlayer.remove_payload()
 
         nxthdrs = self.__process_nxthdrs(bytes(rawhdr))

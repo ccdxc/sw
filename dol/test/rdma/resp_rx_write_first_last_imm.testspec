@@ -37,7 +37,7 @@ packets:
    - packet:
         id          : IN_FIRST_PKT    # Input packet - first
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1954,pkt_num=0
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH 
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -52,10 +52,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -73,7 +73,7 @@ packets:
    - packet:
         id          : IN_LAST_PKT    # Input packet - last
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1954,pkt_num=1
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_IMMDT
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_IMMDT,v6=ETH_IPV6_UDP_BTH_IMMDT
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -88,6 +88,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -103,7 +107,7 @@ packets:
    - packet:
         id          : EXP_PKT    # Expected Ack packet
         payloadsize : 0
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -118,10 +122,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport

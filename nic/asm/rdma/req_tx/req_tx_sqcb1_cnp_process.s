@@ -45,7 +45,7 @@ add_headers:
 
     // dma_cmd[1] - header_template
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_HEADER_TEMPLATE)
-    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr)
+    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, d.header_template_size, d.header_template_addr)
 
     // Load dcqcn_cb to fetch pkey to fill in BTH
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r2)

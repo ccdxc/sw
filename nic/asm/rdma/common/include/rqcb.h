@@ -103,7 +103,7 @@ struct rqcb1_t {
     num_sges: 8;
     current_sge_offset: 32;
     p4plus_to_p4_flags: 8;
-    rsvd: 8;
+    header_template_size: 8;
 };
 
 struct rqcb4_t {

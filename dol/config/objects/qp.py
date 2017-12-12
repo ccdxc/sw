@@ -252,7 +252,7 @@ class QpObject(base.ConfigObjectBase):
         logger.info("Config Objects for %s" % (self.GID()))
         return
 
-    def ConfigureHeaderTemplate(self, rdma_session, forward):
+    def ConfigureHeaderTemplate(self, rdma_session, forward, isipv6):
         cfglogger.info("rdma_session: %s" % rdma_session.GID())
         cfglogger.info("session: %s" % rdma_session.session.GID())
         cfglogger.info("flow_ep1: %s ep1: %s" \
@@ -268,15 +268,22 @@ class QpObject(base.ConfigObjectBase):
         cfglogger.info("dport: %s" % rdma_session.session.iflow.dport)
         cfglogger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
         cfglogger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
+        cfglogger.info("isipv6: %d" % (isipv6))
 
         EthHdr = scapy.Ether(src=rdma_session.session.initiator.ep.macaddr.get(),
                              dst=rdma_session.session.responder.ep.macaddr.get())
         Dot1qHdr = scapy.Dot1Q(vlan=rdma_session.session.initiator.ep.intf.encap_vlan_id,
                                prio=rdma_session.session.iflow.txqos.cos)
-        IpHdr = scapy.IP(src=rdma_session.session.initiator.addr.get(),
-                         dst=rdma_session.session.responder.addr.get(),
-                         tos=rdma_session.session.iflow.txqos.dscp,
-                         len = 0, chksum = 0)
+        if isipv6:
+            IpHdr = scapy.IPv6(src=rdma_session.session.initiator.addr.get(),
+                             dst=rdma_session.session.responder.addr.get(),
+                             tc=rdma_session.session.iflow.txqos.dscp,
+                             plen = 0)
+        else:
+            IpHdr = scapy.IP(src=rdma_session.session.initiator.addr.get(),
+                             dst=rdma_session.session.responder.addr.get(),
+                             tos=rdma_session.session.iflow.txqos.dscp,
+                             len = 0, chksum = 0)
         UdpHdr = scapy.UDP(sport=rdma_session.session.iflow.sport,
                            dport=rdma_session.session.iflow.dport,
                            len = 0, chksum = 0)
@@ -293,9 +300,9 @@ class QpObject(base.ConfigObjectBase):
     # Routines to read and write to dcqcn_cb    
     def WriteDcqcnCb(self):
         if (GlobalOptions.dryrun): return
-        # dcqcn_cb is located after header_template. header_template is 46 bytes len.
-        cfglogger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 46, 64))
-        model_wrap.write_mem(self.header_temp_addr + 46, bytes(self.dcqcn_data), 64)
+        # dcqcn_cb is located after header_template. header_template is 66 bytes len.
+        cfglogger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 66, 64))
+        model_wrap.write_mem(self.header_temp_addr + 66, bytes(self.dcqcn_data), 64)
         self.ReadDcqcnCb()
         return
 
@@ -304,9 +311,9 @@ class QpObject(base.ConfigObjectBase):
             dcqcn_data = bytes(64)
             self.dcqcn_data = RdmaDCQCNstate(dcqcn_data)
             return
-        self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + 46, 64))
+        self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + 66, 64))
         self.dcqcn_data.show()
-        cfglogger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 46, 64))
+        cfglogger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 66, 64))
         return
 
 class RdmaDCQCNstate(scapy.Packet):

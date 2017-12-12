@@ -6,6 +6,8 @@ feature:
     module      : rdma
     enable      : True
     ignore      : False
+#   selectors:
+#       maxrdmasessions: 8
 
 modules:
     - module:

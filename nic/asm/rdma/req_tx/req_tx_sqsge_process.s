@@ -156,6 +156,7 @@ sge_loop:
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, num_sges, r5)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, current_sge_id, r1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, current_sge_offset, r2)
+    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, ah_size, k.args.ah_size)
     CAPRI_SET_FIELD_RANGE(r7, SQCB_WRITE_BACK_T, op.send_wr.imm_data, op.send_wr.inv_key, k.{args.imm_data...args.inv_key})
     // rest of the fields are initialized to default
 

@@ -795,8 +795,8 @@ typedef struct udphdr_s {
 } PACKED udphdr_t;
 
 typedef struct iphdr_s {
-    uint32_t   daddr;
-    uint32_t   saddr;
+    ipv4_addr_t daddr;
+    ipv4_addr_t saddr;
     uint16_t   check;
     uint8_t    protocol;
     uint8_t    ttl;
@@ -808,6 +808,18 @@ typedef struct iphdr_s {
     uint8_t    version:4;
 /*The options start here. */
 } PACKED iphdr_t;
+
+typedef struct ipv6hdr_s {
+    ipv6_addr_t  daddr;
+    ipv6_addr_t  saddr;
+    uint32_t   hop_limit:8;
+    uint32_t   nh:8;
+    uint32_t   payload_len:16;
+    uint32_t   flow_label:20;
+    uint32_t   tc:8;
+    uint32_t   version:4;;
+} PACKED ipv6hdr_t;
+
 
 #define MAC_SIZE 6
 
@@ -903,7 +915,8 @@ typedef struct sqcb0_s {
 } PACKED sqcb0_t;
 
 typedef struct sqcb1_s {
-    uint8_t rsvd4[7];
+    uint8_t rsvd4[6];
+    uint8_t header_template_size;
     uint8_t p4plus_to_p4_flags;
     uint32_t rsvd3:2;
     uint32_t err_retry_ctr:3;
@@ -945,11 +958,23 @@ typedef struct sqcb_s {
     sqcb1_t sqcb1; // 63-127 bytes
 } PACKED sqcb_t;
 
-typedef struct header_template_s {
+typedef struct header_template_v4_s {
     udphdr_t    udp;
     iphdr_t     ip;
     vlanhdr_t   vlan;
     ethhdr_t    eth;
+} PACKED header_template_v4_t;
+
+typedef struct header_template_v6_s {
+    udphdr_t    udp;
+    ipv6hdr_t   ip;
+    vlanhdr_t   vlan;
+    ethhdr_t    eth;
+} PACKED header_template_v6_t;
+
+typedef union header_template_s {
+    header_template_v4_t v4;
+    header_template_v6_t v6;
 } PACKED header_template_t;
 
 #define RQ_RING_ID            RING_ID_0
@@ -1006,7 +1031,7 @@ typedef struct rqcb0_s {
 
 //rqcb1_t is the 2nd 64B of rqcb
 typedef struct rqcb1_s {
-    uint8_t rsvd[1];
+    uint8_t header_template_size;
     uint8_t p4plus_to_p4_flags;
     uint32_t current_sge_offset;
     uint8_t  num_sges;
