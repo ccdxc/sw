@@ -135,7 +135,7 @@ appid_exec(fte::ctx_t& ctx)
     }
 
     if(ctx.flow_miss()) {
-        if (!ctx.appid_completed())
+        if (ctx.appid_started() && !ctx.appid_completed())
             app_redir_policy_applic_set(ctx);
     } else if(!ctx.appid_updated() && !ctx.appid_completed()) {
         fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
