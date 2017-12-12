@@ -21,16 +21,9 @@ storage_tx_roce_rq_push_start:
    // TODO: Push error handling
    QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, tbl_load)
 
-   // HACK: This is because RDMA base address is only 32 bits and we are 
-   //       passing a host based queue here
-   // TODO: Fix this and remove hack after we resolve this with RDMA folks
-   addi		r7, r0, 1
-   sll		r7, r7, 63
-   add		r7, r7, d.base_addr
-
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.
-   QUEUE_PUSH_ADDR(r7, d.p_ndx, d.entry_size)
+   QUEUE_PUSH_ADDR(d.base_addr, d.p_ndx, d.entry_size)
 
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_m2m_2)

@@ -287,20 +287,20 @@ int setup_roce_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 0, 8, pc_offset);
   utils::write_bit_fields(q_state, 40, 4, total_rings);
   utils::write_bit_fields(q_state, 44, 4, host_rings);
-  utils::write_bit_fields(q_state, 96, 32, base_addr);
-  utils::write_bit_fields(q_state, 133, 5, entry_size);
-  utils::write_bit_fields(q_state, 138, 5, num_entries);
-  utils::write_bit_fields(q_state, 192, 28, next_pc);
+  utils::write_bit_fields(q_state, 96, 64, base_addr);
+  utils::write_bit_fields(q_state, 165, 5, entry_size);
+  utils::write_bit_fields(q_state, 170, 5, num_entries);
+  utils::write_bit_fields(q_state, 224, 28, next_pc);
   // Program only if rrq is used in P4+
   if (rrq_valid) {
-    utils::write_bit_fields(q_state, 220, 34, rrq_qaddr);
-    utils::write_bit_fields(q_state, 254, 11, rrq_lif);
-    utils::write_bit_fields(q_state, 265, 3, rrq_qtype);
-    utils::write_bit_fields(q_state, 268, 24, rrq_qid);
+    utils::write_bit_fields(q_state, 252, 34, rrq_qaddr);
+    utils::write_bit_fields(q_state, 286, 11, rrq_lif);
+    utils::write_bit_fields(q_state, 297, 3, rrq_qtype);
+    utils::write_bit_fields(q_state, 300, 24, rrq_qid);
   }
-  utils::write_bit_fields(q_state, 292, 11, rsq_lif);
-  utils::write_bit_fields(q_state, 303, 3, rsq_qtype);
-  utils::write_bit_fields(q_state, 306, 24, rsq_qid);
+  utils::write_bit_fields(q_state, 324, 11, rsq_lif);
+  utils::write_bit_fields(q_state, 335, 3, rsq_qtype);
+  utils::write_bit_fields(q_state, 338, 24, rsq_qid);
 
   //utils::dump(q_state);
 
@@ -351,14 +351,14 @@ int setup_roce_cq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 0, 8, pc_offset);
   utils::write_bit_fields(q_state, 40, 4, total_rings);
   utils::write_bit_fields(q_state, 44, 4, host_rings);
-  utils::write_bit_fields(q_state, 96, 32, base_addr);
-  utils::write_bit_fields(q_state, 133, 5, entry_size);
-  utils::write_bit_fields(q_state, 138, 5, num_entries);
-  utils::write_bit_fields(q_state, 272, 28, next_pc);
-  utils::write_bit_fields(q_state, 300, 34, xlate_addr);
-  utils::write_bit_fields(q_state, 334, 11, rcq_lif);
-  utils::write_bit_fields(q_state, 345, 3, rcq_qtype);
-  utils::write_bit_fields(q_state, 348, 24, rcq_qid);
+  utils::write_bit_fields(q_state, 96, 64, base_addr);
+  utils::write_bit_fields(q_state, 165, 5, entry_size);
+  utils::write_bit_fields(q_state, 170, 5, num_entries);
+  utils::write_bit_fields(q_state, 304, 28, next_pc);
+  utils::write_bit_fields(q_state, 332, 34, xlate_addr);
+  utils::write_bit_fields(q_state, 366, 11, rcq_lif);
+  utils::write_bit_fields(q_state, 377, 3, rcq_qtype);
+  utils::write_bit_fields(q_state, 380, 24, rcq_qid);
 
   //utils::dump(q_state);
 

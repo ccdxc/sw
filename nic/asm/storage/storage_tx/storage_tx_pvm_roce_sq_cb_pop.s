@@ -49,16 +49,9 @@ storage_tx_pvm_roce_sq_cb_pop_start:
    phvwr	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
    phvwr	p.storage_kivec1_src_qid, STAGE0_KIVEC_QID
    
-   // HACK: This is because RDMA base address is only 32 bits and we are 
-   //       passing a host based queue here
-   // TODO: Fix this and remove hack after we resolve this with RDMA folks
-   addi		r7, r0, 1
-   sll		r7, r7, 63
-   add		r7, r7, d.base_addr
-
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
-   LOAD_TABLE_FOR_INDEX(r7, r6, d.entry_size, d.entry_size,
+   LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size,
                         d.next_pc)
 clear_doorbell:
    // Update the queue doorbell to clear the scheduler bit
