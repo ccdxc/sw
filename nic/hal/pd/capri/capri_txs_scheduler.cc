@@ -14,6 +14,7 @@
 
 #include "nic/include/base.h"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
+#include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 
 #ifndef HAL_GTEST
@@ -33,6 +34,7 @@ capri_txs_scheduler_init ()
 
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t &txs_csr = cap0.txs.txs;
+    cap_psp_csr_t &psp_csr = cap0.pt.pt.psp;
     uint64_t      txs_sched_hbm_base_addr;
     uint16_t      dtdm_lo_map, dtdm_hi_map;
 
@@ -72,6 +74,17 @@ capri_txs_scheduler_init ()
 
     // Asic polling routine to check if init is done and kickstart scheduler.
     cap_txs_init_done(0, 0);
+
+    //Init PSP block to enable mapping tm_oq value in PHV.
+    psp_csr.cfg_npv_values.read();
+    psp_csr.cfg_npv_values.tm_oq_map_enable(1);
+    psp_csr.cfg_npv_values.write();
+
+    //Program one-to-one mapping from cos to tm_oq.
+    for (int i = 0; i < NUM_MAX_COSES ; i++) {
+        psp_csr.cfg_npv_cos_to_tm_oq_map[i].tm_oq(i);
+        psp_csr.cfg_npv_cos_to_tm_oq_map[i].write();
+    }
 
     HAL_TRACE_DEBUG("CAPRI-TXS::{}: Set hbm base addr for TXS sched to {:#x}",
                     __func__, txs_sched_hbm_base_addr);
