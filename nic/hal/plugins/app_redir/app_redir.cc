@@ -543,7 +543,6 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
           proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
 
     if (!pfi && include_tcp_tls_flows) {
-
         /*
          * See if flow was configured as TCP/TLS proxy flow
          */

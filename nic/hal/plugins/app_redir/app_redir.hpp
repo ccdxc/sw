@@ -3,6 +3,7 @@
 #ifndef __APP_REDIR_H__
 #define __APP_REDIR_H__
 
+#include <stdint.h>
 #include "nic/include/fte.hpp"
 #include "app_redir_headers.hpp"
 
@@ -12,9 +13,9 @@ namespace app_redir {
 void app_redir_pkt_verdict_set(fte::ctx_t& ctx,
                                fte::app_redir_verdict_t verdict);
 hal_ret_t app_redir_policy_applic_set(fte::ctx_t& ctx);
-hal_ret_t appid_cleanup_flow(fte::appid_info_t& appid_info);
 uint8_t *app_redir_pkt(fte::ctx_t& ctx);
 size_t app_redir_pkt_len(fte::ctx_t& ctx);
+hal_ret_t appid_cleanup_flow(hal::appid_info_t& appid_info);
 
 /* 
  * From network, packet will go to TCP, TLS (for decryption),
@@ -61,6 +62,24 @@ app_redir_proxyc_oper_cb_id_eval(const flow_key_t& flow_key,
     return flow_key.dir == FLOW_DIR_FROM_UPLINK ?
            PROXYC_OPER_CB_ID(PROXYC_TCP_PROXY_DIR, cb_id) : 
            PROXYC_OPER_CB_ID(PROXYC_TLS_PROXY_DIR, cb_id);
+}
+
+inline hal_ret_t
+app_to_appid(std::string app, uint32_t& appid)
+{
+    // TODO: Hack for now
+    if(app == "DNS") {
+        appid = 617;
+    } else if(app == "MYSQL") {
+        appid = 747;
+    } else if(app == "HTTP") {
+        appid = 676;
+    }else if(app == "HTTPS") {
+        appid = 1122;
+    }else if(app == "ANY") {
+        appid = 0;
+    }
+    return HAL_RET_OK;
 }
 
 } // namespace app_redir 

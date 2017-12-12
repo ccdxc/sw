@@ -245,6 +245,10 @@ ctx_t::lookup_session()
     }
 
     HAL_TRACE_DEBUG("fte: found existing session");
+    // Copy appid_info from session to context
+    if(session_->appid_info) {
+        appid_info_ = *session_->appid_info;
+    }
 
     hflow = session_->iflow;
 
@@ -260,6 +264,9 @@ ctx_t::lookup_session()
                             state->feature_name, (void*)state);
         }
     }
+
+    if(role_ == hal::FLOW_ROLE_INITIATOR)
+        valid_iflow_ = true;
 
     // TODO(goli) handle post svc flows
     if (hflow->config.role == hal::FLOW_ROLE_INITIATOR) {
@@ -304,6 +311,7 @@ ctx_t::create_session()
     cleanup_hal_ = false;
     num_handlers_ = 0;
    
+    valid_iflow_ = true;
     // read rkey from spec
     if (protobuf_request()) {
         if (sess_spec_->has_responder_flow()) {
@@ -394,12 +402,15 @@ ctx_t::update_flow_table()
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
     }
 
-    if ((!flow_miss() && !app_redir().proxy_flow_info())
-            || ignore_session_create()) {
-      return HAL_RET_OK;
+    if (ignore_session_create()) {
+        return HAL_RET_OK;
     }
 
-    for (uint8_t stage = 0; stage <= istage_; stage++) {
+    if (!(flow_miss() || (app_redir_pipeline() && appid_completed()))) {
+        return HAL_RET_OK;
+    }
+
+    for (uint8_t stage = 0; valid_iflow_ && stage <= istage_; stage++) {
         flow_t *iflow = iflow_[stage];
         hal::flow_cfg_t &iflow_cfg = iflow_cfg_list[stage];
         hal::flow_pgm_attrs_t& iflow_attrs = iflow_attrs_list[stage];
@@ -510,11 +521,15 @@ ctx_t::update_flow_table()
     if (hal_cleanup() == true) {
         // Cleanup session if hal_cleanup is set
         if (session_) {
+            if(session_->appid_info)
+                HAL_FREE(hal::HAL_MEM_ALLOC_APPID_INFO, session_->appid_info);
             ret = hal::session_delete(&session_args, session_);
         }
     } else if (session_) { 
         // Update session if it already exists
         ret = hal::session_update(&session_args, session_);
+        if(session_->appid_info)
+            *(session_->appid_info) = appid_info_;
     } else {
         // Create a new HAL session
         ret = hal::session_create(&session_args, &session_handle, &session);
@@ -528,6 +543,9 @@ ctx_t::update_flow_table()
                                            &state->session_feature_lentry);
                 }
             }
+            session_->appid_info = (hal::appid_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_APPID_INFO,
+                                                      sizeof(hal::appid_info_t));
+            *(session_->appid_info) = appid_info_;
         }
     }
 
@@ -831,11 +849,6 @@ ctx_t::update_flow(const flow_update_t& flowupd,
     case FLOWUPD_INGRESS_INFO:
         ret = flow->set_ingress_info(flowupd.ingress_info);
         LOG_FLOW_UPDATE(ingress_info);
-        break;
-
-    case FLOWUPD_APPID:
-        ret = flow->set_appid_info(flowupd.appid_info);
-        LOG_FLOW_UPDATE(appid_info);
         break;
     }
 
@@ -1171,15 +1184,5 @@ std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
     return os << "}";
 }
 
-std::ostream& operator<<(std::ostream& os, const appid_info_t& val)
-{
-    os << "{state=" << val.state_;
-    if (val.id_count_) {
-        for (uint8_t i = 0; i < val.id_count_; i++) {
-            os << ",id=" << appid_info_id(val, i);
-        }
-    }
-    return os << "}";
-}
 
 } // namespace fte

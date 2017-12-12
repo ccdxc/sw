@@ -263,8 +263,9 @@ enum ALGName {
 // SecurityGroupSpec
 message FirewallRuleSpec {
     repeated  Service   svc                = 2;    // application service
-    FirewallAction      action             = 3;    // action to take
-    bool                log                = 4;    // log if this rule is hit
+    repeated  string    apps               = 3;    // For appid based policy enforcement
+    FirewallAction      action             = 4;    // action to take
+    bool                log                = 5;    // log if this rule is hit 
 }
 
 // ingress policy for the security group

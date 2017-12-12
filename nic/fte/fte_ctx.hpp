@@ -25,7 +25,6 @@ namespace fte {
     ENTRY(FLOWUPD_KEY,           6, "flow key update")                  \
     ENTRY(FLOWUPD_MCAST_COPY,    7, "flow mcast copy update")           \
     ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")                     \
-    ENTRY(FLOWUPD_APPID,         9, "update flow appid")                \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -259,39 +258,30 @@ typedef struct ingress_info_s {
 
 std::ostream& operator<<(std::ostream& os, const ingress_info_t& val);
 
-const size_t APPID_MAX_DEPTH = 4;
 
-typedef struct appid_info_s {
-    hal::appid_state_t state_;
-    appid_id_t ids_[APPID_MAX_DEPTH];
-    void* cleanup_handle_;
-    uint8_t id_count_;
-} __PACK__ appid_info_t;
+inline void appid_info_clear_ids(hal::appid_info_t& info) { info.id_count_ = 0; }
 
-inline void appid_info_clear_ids(appid_info_t& info) { info.id_count_ = 0; }
-
-inline void appid_info_init(appid_info_t& info) {
+inline void appid_info_init(hal::appid_info_t& info) {
     info.state_ = hal::APPID_STATE_INIT;
     info.cleanup_handle_ = nullptr;
     appid_info_clear_ids(info);
 }
 
-inline appid_id_t appid_info_id(const appid_info_t& info) {
+inline appid_id_t appid_info_id(const hal::appid_info_t& info) {
     return info.id_count_ ? info.ids_[info.id_count_ - 1] : 0;
 }
-inline appid_id_t appid_info_id(const appid_info_t& info, uint8_t idx) {
-    assert(idx < APPID_MAX_DEPTH);
+inline appid_id_t appid_info_id(const hal::appid_info_t& info, uint8_t idx) {
+    assert(idx < hal::APPID_MAX_DEPTH);
     return (idx < info.id_count_) ? info.ids_[idx] : 0;
 }
-inline void appid_info_set_id(appid_info_t& info, appid_id_t id,
-                       uint8_t idx = APPID_MAX_DEPTH) {
-    assert(info.id_count_ < APPID_MAX_DEPTH);
-    if (idx >= APPID_MAX_DEPTH) idx = info.id_count_;
+inline void appid_info_set_id(hal::appid_info_t& info, appid_id_t id,
+                       uint8_t idx = hal::APPID_MAX_DEPTH) {
+    assert(info.id_count_ < hal::APPID_MAX_DEPTH);
+    if (idx >= hal::APPID_MAX_DEPTH) idx = info.id_count_;
     info.ids_[idx] = id;
     info.id_count_++;
 }
 
-std::ostream& operator<<(std::ostream& os, const appid_info_t& val);
 
 typedef struct flow_update_s {
     flow_update_type_t type;
@@ -305,7 +295,7 @@ typedef struct flow_update_s {
         ingress_info_t ingress_info;
         hal::flow_key_t key;
         mcast_info_t mcast_info;
-        appid_info_t appid_info;
+        hal::appid_info_t appid_info;
     };
 }__PACK__ flow_update_t;
 
@@ -594,7 +584,11 @@ public:
         return HAL_RET_OK;
     }
 
-    bool flow_miss() const { return (arm_lifq_==FLOW_MISS_LIFQ); }
+    bool flow_miss() const { return (arm_lifq_== FLOW_MISS_LIFQ); }
+    bool app_redir_pipeline() const { return (arm_lifq_.lif == APP_REDIR_LIFQ.lif); }
+
+    bool valid_iflow() const { return valid_iflow_; }
+    void set_valid_iflow(bool val) { valid_iflow_ = val; }
 
     bool valid_rflow() const { return valid_rflow_; }
     void set_valid_rflow(bool val) { valid_rflow_ = val; }
@@ -621,11 +615,11 @@ public:
 
     app_redir_ctx_t& app_redir() { return app_redir_; }
 
-    bool appid_updated() const { return appid_updated_; }
+    bool appid_updated() const { return (appid_updated_ && appid_info_.id_count_ != 0); }
     void set_appid_updated(bool updated) { appid_updated_ = updated; }
 
-    appid_info_t &appid_info() { return appid_info_; };
-    void set_appid_info(appid_info_t &info) { appid_info_ = info; };
+    hal::appid_info_t &appid_info() { return appid_info_; };
+    void set_appid_info(hal::appid_info_t &info) { appid_info_ = info; };
 
     hal::appid_state_t appid_state() const { return appid_info_.state_; }
     void set_appid_state(hal::appid_state_t state) {appid_info_.state_ = state; }
@@ -657,6 +651,33 @@ public:
         feature_state_[feature_id_].session_state = state;
         return HAL_RET_OK;
     }
+
+    bool dfw_done() const { return dfw_done_; }
+    void set_dfw_done(bool val) { dfw_done_ = val; }
+
+    bool appid_completed() {
+        if(appid_info_.state_ == hal::APPID_STATE_FOUND ||
+           appid_info_.state_ == hal::APPID_STATE_NOT_FOUND ||
+           appid_info_.state_ == hal::APPID_STATE_ABORT) {
+          return true;
+        }
+        return false;
+    }
+
+    bool appid_started() { return appid_info_.state_ != hal::APPID_STATE_INIT; }   
+    void set_appid_needed() {
+        if(!appid_started())
+            appid_info_.state_ = hal::APPID_STATE_NEEDED;
+        else
+            HAL_ASSERT(0);
+    }
+    void set_appid_not_needed() {
+        if(!appid_started())
+            appid_info_.state_ = hal::APPID_STATE_NOT_NEEDED;
+        else
+            HAL_ASSERT(0);
+    }
+    bool appid_needed() { return appid_info_.state_ == hal::APPID_STATE_NEEDED; }
 
     // protected methods accessed by gtest
 protected:
@@ -697,6 +718,7 @@ private:
     hal::flow_role_t      role_;            // current flow role
     uint8_t               istage_;          // current iflow stage
     uint8_t               rstage_;          // current rflow stage
+    bool                  valid_iflow_;     // Is iflow valid
     bool                  valid_rflow_;     // Is rflow valid
     bool                  ignore_session_create_; //ignore session creation for the flow.
     flow_t                *iflow_[MAX_STAGES];       // iflow 
@@ -713,8 +735,9 @@ private:
     app_redir_ctx_t       app_redir_;
 
     /* appID state */
-    appid_info_t          appid_info_;
+    hal::appid_info_t     appid_info_;
     bool                  appid_updated_;
+    bool                  dfw_done_;
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();

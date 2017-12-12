@@ -13,6 +13,7 @@ tunnels:
     - spec  : ref://store/specs/id=TUNNEL_VXLAN
 
 security_profile: None
+security_policy: ref://store/specs/id=SECURITY_POLICY_PROXY
 
 sessions:
     unidest:

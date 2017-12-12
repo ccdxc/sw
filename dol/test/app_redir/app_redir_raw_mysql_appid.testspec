@@ -1,0 +1,205 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://fwtype=L2
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : BASE_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        #encaps      :
+        #    - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+    - packet:
+        id          : PKT_SYN
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : 0
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                #sport   : ref://testcase/config/flow/sport
+                sport   : 46625
+                dport   : 3307
+                #seq     : callback://tcpcb/tcpcb/GetSeqNum
+                #ack     : callback://tcpcb/tcpcb/GetAckNum
+                seq     : 0
+                ack     : 0
+                flags   : syn
+
+    - packet:
+        id          : PKT_SYN_ACK
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : 0
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/endpoint/macaddr
+                dst     : ref://testcase/config/src/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
+            tcp:
+                sport   : 3307
+                dport   : 46625
+                #dport   : ref://testcase/config/flow/sport
+                #seq     : callback://tcpcb/tcpcb/GetReverseFlowSeqNum
+                #ack     : callback://tcpcb/tcpcb/GetReverseFlowAckNum
+                seq     : 0
+                ack     : 0x1
+                flags   : syn,ack
+
+    - packet:
+        id          : PKT_ACK
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : 0
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : 46625
+                dport   : 3307
+                seq     : 0x1
+                ack     : 0x1
+                flags   : ack
+
+    - packet:
+        id          : PKT_MYSQL_AUTH_NATIVE_PASSWORD
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_MYSQL_AUTH_NATIVE_PASSWORD/size
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/endpoint/macaddr
+                dst     : ref://testcase/config/src/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
+            tcp:
+                sport   : 3307
+                dport   : 46625
+                seq     : 0x1
+                ack     : 0x1
+                flags   : ack
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_MYSQL_AUTH_NATIVE_PASSWORD/data
+                
+    - packet:
+        id          : PKT_MYSQL_AUTH_NATIVE_PASSWORD_REPLY
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_MYSQL_AUTH_NATIVE_PASSWORD/size
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : 46625
+                dport   : 3307
+                seq     : 0x1
+                ack     : 0x4f
+                flags   : ack
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_MYSQL_AUTH_NATIVE_PASSWORD/data                
+        
+session:
+    - step:
+        direction   : iflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+        expect:
+            delay   : 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+
+                # First packet is a flow miss, so also expect a packet on the FTE (CPU) port.
+                # Note that FTE will install flows in both directions so subsequent packets
+                # are all expected to be flow hits.
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    port    : 128
+    - step:
+        direction   : rflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN_ACK
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+        expect:
+            delay   : 1
+            packets:
+                # Flow hit expects packet on port. Even though the packet is also
+                # redirected to CPU, it is thru a different LIF and does not
+                # translate to port 128 so we don't expect anything on that.
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN_ACK
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+    - step:
+        direction   : iflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_ACK
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+        expect:
+            delay   : 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_ACK
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+    - step:
+        direction   : rflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_MYSQL_AUTH_NATIVE_PASSWORD
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+
+        expect:
+            delay   : 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_MYSQL_AUTH_NATIVE_PASSWORD
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+    - step:
+        direction   : iflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_MYSQL_AUTH_NATIVE_PASSWORD_REPLY
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+
+        expect:
+            delay   : 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_MYSQL_AUTH_NATIVE_PASSWORD_REPLY
+                    port    : ref://testcase/config/dst/endpoint/intf/ports                    

@@ -12,9 +12,9 @@ hal_ret_t
 appid_scan(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
-    fte::appid_info_t appid_info;
+    hal::appid_info_t appid_info;
 
-    appid_info_init(appid_info);
+    fte::appid_info_init(appid_info);
     ret = scanner_run(appid_info, app_redir_pkt(ctx), app_redir_pkt_len(ctx),
                       &ctx.app_redir());
     if (ret != HAL_RET_OK) {
@@ -51,7 +51,7 @@ error:
 }
 
 hal_ret_t
-appid_cleanup_flow(fte::appid_info_t& appid_info)
+appid_cleanup_flow(hal::appid_info_t& appid_info)
 {
     if (appid_info.cleanup_handle_) {
         scanner_cleanup_flow(appid_info.cleanup_handle_);
@@ -64,8 +64,6 @@ hal_ret_t
 exec_appid_start(fte::ctx_t& ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
-
-    app_redir_policy_applic_set(ctx);
 
     // TODO: skip scanning for flow_miss rflow
 
@@ -81,9 +79,6 @@ exec_appid_continue(fte::ctx_t& ctx)
     hal_ret_t ret = HAL_RET_OK;
 
     // TODO: add packet counting here, to avoid going past 5 packets max
-
-    app_redir_policy_applic_set(ctx);
-
     // TODO: skip scanning for flow_miss rflow
 
     ret = appid_scan(ctx);
@@ -95,7 +90,7 @@ fte::pipeline_action_t
 appid_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
-    fte::appid_info_t orig_appid_info = ctx.appid_info(); 
+    hal::appid_info_t orig_appid_info = ctx.appid_info();
 
     // Assume appid state will not change, until it does
     ctx.set_appid_updated(false);
@@ -133,13 +128,19 @@ appid_exec(fte::ctx_t& ctx)
 
     // Update flow if appid state has changed
     if (0 != memcmp((uint8_t*)&orig_appid_info, (uint8_t*)&ctx.appid_info(),
-                    sizeof(fte::appid_info_t))) {
+                    sizeof(hal::appid_info_t))) {
         // app state and/or app id
         HAL_TRACE_INFO("appid_info changing from {} to {}", orig_appid_info, ctx.appid_info());
-        fte::flow_update_t flowupd = {type: fte::FLOWUPD_APPID};
-        flowupd.appid_info = ctx.appid_info();
         ctx.set_appid_updated(true);
-        ctx.update_flow(flowupd);
+    }
+
+    if(ctx.flow_miss()) {
+        if (!ctx.appid_completed())
+            app_redir_policy_applic_set(ctx);
+    } else if(!ctx.appid_updated() && !ctx.appid_completed()) {
+        fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+        redir_ctx.set_pipeline_end(true);
+        return app_redir_exec_fini(ctx);
     }
 
     ctx.set_feature_status(ret);

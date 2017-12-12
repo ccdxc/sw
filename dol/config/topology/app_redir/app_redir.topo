@@ -1,7 +1,7 @@
 # Configuration Spec
 # # Topology specification
 meta:
-    id: TOPO_PROXY
+    id: TOPO_APP_REDIR
 
 uplink:
     - entry:
@@ -21,25 +21,17 @@ uplinkpc: None
 acls: None
 qos : False
 tenants:
-    -   spec    : ref://store/specs/id=TENANT_INFRA_PROXY
+    -   spec    : ref://store/specs/id=TENANT_APP_REDIR
         count   : 1
         lifns   : range/101/110
-    -   spec    : ref://store/specs/id=TENANT_PROXY
-        count   : 1
-        lifns   : range/111/120
-    -   spec    : ref://store/specs/id=TENANT_VXLAN_PROXY
-        count   : 1
-        lifns   : range/121/130
 
 cpu:
     - entry:
         id      : Cpu1
         lif_id  : 1003
 
-security_profiles: ref://store/specs/id=SECURITY_PROFILES_PROXY
-security_policy: ref://store/specs/id=SECURITY_POLICY_PROXY
-proxy: True
-ipsec: True
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_APP_REDIR
+security_policy: ref://store/specs/id=SECURITY_POLICY_APP_REDIR
 
 timers:
     - entry:

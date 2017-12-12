@@ -916,8 +916,9 @@ func _Service_OneofSizer(msg proto.Message) (n int) {
 // SecurityGroupSpec
 type FirewallRuleSpec struct {
 	Svc    []*Service     `protobuf:"bytes,2,rep,name=svc" json:"svc,omitempty"`
-	Action FirewallAction `protobuf:"varint,3,opt,name=action,proto3,enum=nwsec.FirewallAction" json:"action,omitempty"`
-	Log    bool           `protobuf:"varint,4,opt,name=log,proto3" json:"log,omitempty"`
+	Apps   []string       `protobuf:"bytes,3,rep,name=apps" json:"apps,omitempty"`
+	Action FirewallAction `protobuf:"varint,4,opt,name=action,proto3,enum=nwsec.FirewallAction" json:"action,omitempty"`
+	Log    bool           `protobuf:"varint,5,opt,name=log,proto3" json:"log,omitempty"`
 }
 
 func (m *FirewallRuleSpec) Reset()                    { *m = FirewallRuleSpec{} }
@@ -928,6 +929,13 @@ func (*FirewallRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorNws
 func (m *FirewallRuleSpec) GetSvc() []*Service {
 	if m != nil {
 		return m.Svc
+	}
+	return nil
+}
+
+func (m *FirewallRuleSpec) GetApps() []string {
+	if m != nil {
+		return m.Apps
 	}
 	return nil
 }
@@ -3803,13 +3811,28 @@ func (m *FirewallRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	if len(m.Apps) > 0 {
+		for _, s := range m.Apps {
+			dAtA[i] = 0x1a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
 	if m.Action != 0 {
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintNwsec(dAtA, i, uint64(m.Action))
 	}
 	if m.Log {
-		dAtA[i] = 0x20
+		dAtA[i] = 0x28
 		i++
 		if m.Log {
 			dAtA[i] = 1
@@ -5964,6 +5987,12 @@ func (m *FirewallRuleSpec) Size() (n int) {
 	if len(m.Svc) > 0 {
 		for _, e := range m.Svc {
 			l = e.Size()
+			n += 1 + l + sovNwsec(uint64(l))
+		}
+	}
+	if len(m.Apps) > 0 {
+		for _, s := range m.Apps {
+			l = len(s)
 			n += 1 + l + sovNwsec(uint64(l))
 		}
 	}
@@ -8936,6 +8965,35 @@ func (m *FirewallRuleSpec) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Apps", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNwsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNwsec
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Apps = append(m.Apps, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
 			}
@@ -8954,7 +9012,7 @@ func (m *FirewallRuleSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Log", wireType)
 			}
