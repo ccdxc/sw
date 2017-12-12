@@ -1606,8 +1606,12 @@ class capri_gress_pa:
                 if flit_phv < 512 and flit_phv+blen > 512:
                     #pdb.set_trace()
                     foffset += 512-flit_phv
+                    self.logger.critical("Field %s crosses 512b boundary, at %d, %d " % \
+                        (cf.hfname, flit_phv, blen))
                 elif flit_phv+blen > flit_sz:
                     foffset += flit_sz-flit_phv
+                    self.logger.critical("Field %s crosses 512b boundary, at %d, %d " % \
+                        (cf.hfname, flit_phv, blen))
             # fix union-ed flds if this is storage for the union
             if cf.is_fld_union_storage:
                 for uf in self.fld_unions[cf][0]:
@@ -1904,7 +1908,7 @@ class capri_gress_pa:
                     max_offset = self.p4_plus_assign_phv_to_hdr_flds(hf, phv_bit)
                     if max_offset != (phv_bit+hdr_size):
                         # P4plus - special case with hdr unions
-                        # -start all hdrs at the same phv as the storage header
+                        # start all hdrs at the same phv as the storage header
                         first_cf = self.get_field(get_hfname(hf.fields[0]))
                         assert first_cf
                         phv_bit = first_cf.phv_bit
