@@ -2616,7 +2616,7 @@ def capri_parser_output_decoders(parser):
                                                          csum_phdr_t)
                 if csum_prof != None:
                     #For handling wide register store word_size  *  profile#
-                    csum_prof['word_size'] = str(int(csum_t['word_size'], 16) * cprof_inst)
+                    csum_prof['word_size'] = str(hex(int(csum_t['word_size'], 16) * cprof_inst))
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
                             = csum_prof
@@ -2625,7 +2625,7 @@ def capri_parser_output_decoders(parser):
                             = True 
                 if csum_phdr_prof != None:
                     #For handling wide register store word_size  *  profile#
-                    csum_phdr_prof['word_size'] = str(int(csum_phdr_t['word_size'], 16) * phdr_inst)
+                    csum_phdr_prof['word_size'] = str(hex(int(csum_phdr_t['word_size'], 16) * phdr_inst))
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
                                                           = csum_phdr_prof
@@ -2652,7 +2652,7 @@ def capri_parser_output_decoders(parser):
                                                           icrc_t)
                 if icrc_prof != None:
                     #For handling wide register store word_size  *  profile#
-                    icrc_prof['word_size'] = str(int(icrc_t['word_size'], 16) * prof_inst)
+                    icrc_prof['word_size'] = str(hex(int(icrc_t['word_size'], 16) * prof_inst))
                     ppa_json['cap_ppa']['registers']\
                       ['cap_ppa_csr_cfg_crc_profile[%d]' % prof_inst] = icrc_prof
                     ppa_json['cap_ppa']['registers']\
@@ -2665,7 +2665,7 @@ def capri_parser_output_decoders(parser):
                                                           icrc_mask_t)
                 if icrc_mask_prof != None:
                     #For handling wide register store word_size  *  profile#
-                    icrc_mask_prof['word_size'] = str(int(icrc_mask_t['word_size'], 16) * prof_inst)
+                    icrc_mask_prof['word_size'] = str(hex(int(icrc_mask_t['word_size'], 16) * prof_inst))
                     ppa_json['cap_ppa']['registers']\
                       ['cap_ppa_csr_cfg_crc_mask_profile[%d]' % prof_inst] = icrc_mask_prof
                     ppa_json['cap_ppa']['registers']\
