@@ -27,8 +27,6 @@ using ipseccb::IpsecCbGetResponseMsg;
 
 namespace hal {
 
-typedef uint32_t ipseccb_id_t;
-
 typedef struct ipseccb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     ipseccb_id_t          cb_id;                   // CB id
@@ -57,6 +55,7 @@ typedef struct ipseccb_s {
     ip_addr_t             dip6;
     uint8_t               is_v6; 
     uint8_t               is_nat_t;
+    uint8_t               is_random;
     uint8_t               flags;
     uint16_t              vrf_vlan;
     uint32_t              last_replay_seq_no;

@@ -47,6 +47,11 @@ pd_vrf_create (pd_vrf_args_t *args)
         goto end;
     }
 
+    // Add to flow lookup id HT
+    ret = vrf_pd_add_to_db(vrf_pd, ((vrf_t *)(vrf_pd->vrf))->hal_handle);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
 end:
     if (ret != HAL_RET_OK) {
         vrf_pd_cleanup(vrf_pd);
@@ -87,6 +92,13 @@ pd_vrf_delete (pd_vrf_args_t *args)
         HAL_TRACE_ERR("pd-vrf:{}:unable to deprogram hw", __FUNCTION__);
     }
 
+    // remove from db
+    ret = vrf_pd_del_from_db(vrf_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf:{}:unable to delete from db", __FUNCTION__);
+        goto end;
+    }
+
     // dealloc resources and free
     ret = vrf_pd_cleanup(vrf_pd);
     if (ret != HAL_RET_OK) {
@@ -94,7 +106,62 @@ pd_vrf_delete (pd_vrf_args_t *args)
                       __FUNCTION__);
     }
 
+end:
     return ret;
+}
+
+//------------------------------------------------------------------------------
+// insert the vrf into flow lookup id DB
+//------------------------------------------------------------------------------
+hal_ret_t
+vrf_pd_add_to_db (pd_vrf_t *pd_vrf, hal_handle_t handle)
+{
+    hal_ret_t                   ret;
+    hal_handle_id_ht_entry_t    *entry;
+
+    HAL_TRACE_DEBUG("pd-vrf:{}:adding to flow lkup id hash table. fl_lkup_id:{} => ",
+                    __FUNCTION__, pd_vrf->vrf_fl_lkup_id);
+
+    // allocate an entry to establish mapping from vrf hwid to its handle
+    entry =
+        (hal_handle_id_ht_entry_t *)g_hal_state->
+        hal_handle_id_ht_entry_slab()->alloc();
+    if (entry == NULL) {
+        return HAL_RET_OOM;
+    }
+
+    // add mapping from vrf id to its handle
+    entry->handle_id = handle;
+    ret = g_hal_state_pd->flow_lkupid_ht()->insert_with_key(&pd_vrf->vrf_fl_lkup_id,
+                                                            entry, &entry->ht_ctxt);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-vrf:{}:failed to add hw id to handle mapping, "
+                      "err : {}", __FUNCTION__, ret);
+        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// delete a vrf from hwid database
+//------------------------------------------------------------------------------
+hal_ret_t
+vrf_pd_del_from_db (pd_vrf_t *pd_vrf)
+{
+    hal_handle_id_ht_entry_t    *entry = NULL;
+
+    HAL_TRACE_DEBUG("pd-vrf:{}:removing from flow lkup id hash table", __FUNCTION__);
+    // remove from hash table
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->flow_lkupid_ht()->
+        remove(&pd_vrf->vrf_fl_lkup_id);
+
+    if (entry) {
+        // free up
+        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    }
+
+    return HAL_RET_OK;
 }
 
 // ----------------------------------------------------------------------------
@@ -175,7 +242,7 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
     key.vlan_tag_vid        = vrf_pd->vrf_fromcpu_vlan_id;
     inp_prop.dir            = FLOW_DIR_FROM_UPLINK;
 
-    inp_prop.vrf              = vrf_pd->vrf_lookup_id;
+    inp_prop.vrf              = vrf_pd->vrf_fl_lkup_id;
     inp_prop.l4_profile_idx   = 0;
     inp_prop.ipsg_enable      = 0;
     inp_prop.src_lport        = 0;
@@ -409,19 +476,19 @@ vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
 
     // allocate h/w id for this vrf
     rs = g_hal_state_pd->vrf_hwid_idxr()->
-                         alloc((uint32_t *)&vrf_pd->ten_hw_id);
+                         alloc((uint32_t *)&vrf_pd->vrf_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed to alloc ten_hw_id err: {}", 
+        HAL_TRACE_ERR("pd-vrf:{}:failed to alloc vrf_hw_id err: {}", 
                       __FUNCTION__, rs);
-        vrf_pd->ten_hw_id = INVALID_INDEXER_INDEX;
+        vrf_pd->vrf_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
 
-    vrf_pd->vrf_lookup_id = vrf_pd->ten_hw_id << HAL_PD_VRF_SHIFT;
+    vrf_pd->vrf_fl_lkup_id = vrf_pd->vrf_hw_id << HAL_PD_VRF_SHIFT;
 
-    HAL_TRACE_DEBUG("pd-vrf:{}:allocated vrf_hw_id:{}, vrf_lookup_id:{}", 
-                    __FUNCTION__, vrf_pd->ten_hw_id, vrf_pd->vrf_lookup_id);
+    HAL_TRACE_DEBUG("pd-vrf:{}:allocated vrf_hw_id:{}, vrf_fl_lkup_id:{}", 
+                    __FUNCTION__, vrf_pd->vrf_hw_id, vrf_pd->vrf_fl_lkup_id);
 
     if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
         ret = pd_vrf_program_gipo_termination_prefix(vrf_pd);
@@ -446,17 +513,17 @@ vrf_pd_dealloc_res(pd_vrf_t *vrf_pd)
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     rs;
 
-    if (vrf_pd->ten_hw_id != INVALID_INDEXER_INDEX) {
-        rs = g_hal_state_pd->vrf_hwid_idxr()->free(vrf_pd->ten_hw_id);
+    if (vrf_pd->vrf_hw_id != INVALID_INDEXER_INDEX) {
+        rs = g_hal_state_pd->vrf_hwid_idxr()->free(vrf_pd->vrf_hw_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-vrf:{}:failed to free ten_hw_id err: {}", 
-                          __FUNCTION__, vrf_pd->ten_hw_id);
+            HAL_TRACE_ERR("pd-vrf:{}:failed to free vrf_hw_id err: {}", 
+                          __FUNCTION__, vrf_pd->vrf_hw_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("pd-vrf:{}:freed ten_hw_id: {}", 
-                        __FUNCTION__, vrf_pd->ten_hw_id);
+        HAL_TRACE_DEBUG("pd-vrf:{}:freed vrf_hw_id: {}", 
+                        __FUNCTION__, vrf_pd->vrf_hw_id);
     }
 
     if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
@@ -723,7 +790,7 @@ end:
 uint32_t
 pd_vrf_get_lookup_id(vrf_t *vrf)
 {
-    return ((pd_vrf_t *)vrf->pd)->vrf_lookup_id;
+    return ((pd_vrf_t *)vrf->pd)->vrf_fl_lkup_id;
 }
 
 

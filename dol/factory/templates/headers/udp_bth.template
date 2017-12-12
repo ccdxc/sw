@@ -1,0 +1,10 @@
+meta:    
+    id      : UDP_BTH
+    scapy   : UDP
+    size    : 8
+
+fields:
+    sport   : 100
+    dport   : 200
+    len     : None # Scapy will fill this
+    chksum  : 0

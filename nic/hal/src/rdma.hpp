@@ -795,8 +795,8 @@ typedef struct udphdr_s {
 } PACKED udphdr_t;
 
 typedef struct iphdr_s {
-    uint32_t   daddr;
-    uint32_t   saddr;
+    ipv4_addr_t daddr;
+    ipv4_addr_t saddr;
     uint16_t   check;
     uint8_t    protocol;
     uint8_t    ttl;
@@ -808,6 +808,18 @@ typedef struct iphdr_s {
     uint8_t    version:4;
 /*The options start here. */
 } PACKED iphdr_t;
+
+typedef struct ipv6hdr_s {
+    ipv6_addr_t  daddr;
+    ipv6_addr_t  saddr;
+    uint32_t   hop_limit:8;
+    uint32_t   nh:8;
+    uint32_t   payload_len:16;
+    uint32_t   flow_label:20;
+    uint32_t   tc:8;
+    uint32_t   version:4;;
+} PACKED ipv6hdr_t;
+
 
 #define MAC_SIZE 6
 
@@ -871,7 +883,8 @@ typedef enum rdma_pkt_opc_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t  rsvd2;
+    uint8_t  rsvd2: 5;
+    uint8_t  state: 3;
     uint16_t spec_sq_cindex;
     uint8_t  cb1_byte;
     uint8_t  busy: 1;        //tx
@@ -903,7 +916,8 @@ typedef struct sqcb0_s {
 } PACKED sqcb0_t;
 
 typedef struct sqcb1_s {
-    uint8_t rsvd4[7];
+    uint8_t rsvd4[6];
+    uint8_t header_template_size;
     uint8_t p4plus_to_p4_flags;
     uint32_t rsvd3:2;
     uint32_t err_retry_ctr:3;
@@ -945,11 +959,23 @@ typedef struct sqcb_s {
     sqcb1_t sqcb1; // 63-127 bytes
 } PACKED sqcb_t;
 
-typedef struct header_template_s {
+typedef struct header_template_v4_s {
     udphdr_t    udp;
     iphdr_t     ip;
     vlanhdr_t   vlan;
     ethhdr_t    eth;
+} PACKED header_template_v4_t;
+
+typedef struct header_template_v6_s {
+    udphdr_t    udp;
+    ipv6hdr_t   ip;
+    vlanhdr_t   vlan;
+    ethhdr_t    eth;
+} PACKED header_template_v6_t;
+
+typedef union header_template_s {
+    header_template_v4_t v4;
+    header_template_v6_t v6;
 } PACKED header_template_t;
 
 #define RQ_RING_ID            RING_ID_0
@@ -970,10 +996,12 @@ typedef struct rqcb0_s {
     uint8_t  adjust_rsq_c_index;
     uint32_t e_psn: 24;
 
+    uint32_t  congestion_mgmt_enable:1;
+    uint32_t  immdt_as_dbell:1;
     uint32_t  cache: 1;
     uint32_t  rsq_quiesce: 1;
     uint32_t  adjust_rsq_c_index_in_progress: 1;
-    uint32_t  rsvd1:3;
+    uint32_t  disable_speculation:1;
     uint32_t  in_progress: 1;
     uint32_t  busy: 1;
     uint32_t  srq_enabled: 1;
@@ -987,9 +1015,7 @@ typedef struct rqcb0_s {
     uint8_t  nxt_to_go_token_id;
     uint8_t  token_id;
     uint8_t  log_rsq_size: 5;
-    uint8_t  rsvd0:1;
-    uint8_t  congestion_mgmt_enable:1;
-    uint8_t  immdt_as_dbell:1;
+    uint8_t  state: 3;
 
     union {
         uint32_t rsq_base_addr;
@@ -1006,7 +1032,7 @@ typedef struct rqcb0_s {
 
 //rqcb1_t is the 2nd 64B of rqcb
 typedef struct rqcb1_s {
-    uint8_t rsvd[1];
+    uint8_t header_template_size;
     uint8_t p4plus_to_p4_flags;
     uint32_t current_sge_offset;
     uint8_t  num_sges;
@@ -1041,6 +1067,12 @@ typedef struct rqcb2_s {
     uint8_t             rsvd1[6];
 } PACKED rqcb2_t;
 
+typedef struct rqcb3_s {
+    uint8_t  pad[54];
+    uint16_t roce_opt_mss;
+    uint32_t roce_opt_ts_echo;
+    uint32_t roce_opt_ts_value;
+} PACKED rqcb3_t;
 
 typedef struct rqcb4_s {
     uint8_t  rsvd[28];
@@ -1070,8 +1102,13 @@ typedef struct rqcb_s {
 
 //dcqcn_cb_t dynamically allocated to store dcqcn related info in HBM
 typedef struct dcqcn_cb_s {
-    uint8_t             rsvd[50];
+    uint8_t             rsvd[31];
     uint64_t            cur_timestamp: 48; // For model testing only. Will be removed.
+    uint8_t             num_sched_drop; // For model testing only. Number of times packet was scheduled
+                                        // and dropped due to insufficient tokens. 
+    uint64_t            cur_avail_tokens;
+    uint64_t            last_sched_timestamp: 48;
+    uint32_t            rate_enforced;
     uint16_t            partition_key;
     uint64_t            last_cnp_timestamp: 48;
 } PACKED dcqcn_cb_t;

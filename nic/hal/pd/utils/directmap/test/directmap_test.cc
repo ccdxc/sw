@@ -55,7 +55,7 @@ TEST_F(dm_test, test1) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
-    uint32_t index;
+    uint32_t index = 0;
     dm.actionid = 1;
 
     hal_ret_t rt;
@@ -79,7 +79,7 @@ TEST_F(dm_test, test2) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
-    uint32_t index;
+    uint32_t index = 0;
     dm.actionid = 1;
 
     hal_ret_t rt;
@@ -115,7 +115,7 @@ TEST_F(dm_test, test3) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
-    uint32_t index;
+    uint32_t index = 0;
     const uint64_t *stats;
     dm.actionid = 1;
 
@@ -164,7 +164,7 @@ TEST_F(dm_test, test4) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
-    uint32_t index;
+    uint32_t index = 0;
     dm.actionid = 1;
 
     hal_ret_t rt;
@@ -203,7 +203,7 @@ TEST_F(dm_test, test5) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm, retr_dm;
-    uint32_t index;
+    uint32_t index = 0;
     dm.actionid = 1;
 
     hal_ret_t rt;
@@ -242,7 +242,7 @@ TEST_F(dm_test, test6) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
-    uint32_t index;
+    uint32_t index = 0;
     dm.actionid = 1;
 
     hal_ret_t rt;
@@ -270,7 +270,7 @@ TEST_F(dm_test, test7) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
-    uint32_t index[25];
+    uint32_t index[25] = {0};
     dm.actionid = 1;
 
     hal_ret_t rt;
@@ -309,7 +309,7 @@ TEST_F(dm_test, test8) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
-    uint32_t index;
+    uint32_t index = 0;
     dm.actionid = 1;
 
     hal_ret_t rt;
@@ -345,7 +345,7 @@ TEST_F(dm_test, test9) {
             sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
-    uint32_t index;
+    uint32_t index = 0;
     const uint64_t *stats;
     dm.actionid = 1;
 

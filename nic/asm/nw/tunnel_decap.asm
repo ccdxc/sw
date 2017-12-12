@@ -24,6 +24,8 @@ remove_tunnel_hdrs:
   sub.c1      r1, r1, 4
 
   phvwr       p.capri_p4_intrinsic_packet_len, r1
-  .assert(offsetof(p, vxlan_valid) - offsetof(p, gre_valid) == 15)
-  phvwrmi.e   p.{vxlan_valid...gre_valid}, 0, 0xC005
+  .assert(offsetof(p, vxlan_valid) - offsetof(p, vxlan_gpe_valid) == 2)
+  phvwrmi     p.{vxlan_valid...vxlan_gpe_valid}, 0, 0x7
+  .assert(offsetof(p, nvgre_valid) - offsetof(p, gre_valid) == 2)
+  phvwrmi.e   p.{nvgre_valid...gre_valid}, 0, 0x5
   phvwr       p.{mpls_2_valid...mpls_0_valid}, 0

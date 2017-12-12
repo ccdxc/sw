@@ -22,11 +22,11 @@ tcp_tx_sesq_read_ci_stage1_start:
 
         sne             c1, k.common_phv_pending_asesq, r0
 
-        add.c1          r3, r0, d.{desc_addr}.dx
-        add.c1          r3, r3, NIC_DESC_ENTRY_0_OFFSET
+        add.c1          r3, d.{desc_addr}.dx, NIC_DESC_ENTRY_0_OFFSET
         add.!c1         r3, r0, d.desc_addr
-        phvwr           p.to_s5_sesq_desc_addr, r3
-        phvwr           p.to_s3_sesq_desc_addr, r3
+
+        sub             r4, r3, NIC_DESC_ENTRY_0_OFFSET
+        phvwr           p.to_s3_sesq_desc_addr, r4
 
         CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_tx_sesq_consume_stage2_start)
 

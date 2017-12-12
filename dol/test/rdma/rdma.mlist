@@ -6,6 +6,8 @@ feature:
     module      : rdma
     enable      : True
     ignore      : False
+#   selectors:
+#       maxrdmasessions: 8
 
 modules:
     - module:
@@ -55,6 +57,15 @@ modules:
         module  : req_tx_send_only
         spec    : req_tx_send_only_inline.testspec
         ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_DCQCN_PASS
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inline_dcqcn_pass
+        spec    : req_tx_send_only_inline_dcqcn_pass.testspec
+        ignore  : False
+
  
     - module:
         name    : RDMA_TX_SEND_ONLY_INLINE_16B
@@ -62,6 +73,14 @@ modules:
         package : test.rdma
         module  : req_tx_send_only
         spec    : req_tx_send_only_inline_16B.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_DCQCN_RL
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inline_dcqcn_rl
+        spec    : req_tx_send_only_inline_dcqcn_rl.testspec
         ignore  : False
  
     - module:
@@ -383,6 +402,46 @@ modules:
         ignore  : False
  
     - module:
+        name    : RDMA_REQ_RX_COALESCED_ACK_EMPTY_RRQ
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_ack_empty_rrq
+        spec    : req_rx_coalesced_ack_empty_rrq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_ACK_NONEMPTY_RRQ
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_ack_nonempty_rrq
+        spec    : req_rx_coalesced_ack_nonempty_rrq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_READ_RESP_ACK
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_read_resp_ack
+        spec    : req_rx_coalesced_read_resp_ack.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_READ_RESP_ACK_2
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_read_resp_ack_2
+        spec    : req_rx_coalesced_read_resp_ack_2.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_ATOMIC_RESP_ACK
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_atomic_resp_ack
+        spec    : req_rx_coalesced_atomic_resp_ack.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY
         enable  : True
         package : test.rdma
@@ -408,11 +467,19 @@ modules:
 
     - module:
         name    : RDMA_RX_SEND_ONLY_OPTIONS
-        enable  : False
+        enable  : True
         package : test.rdma
         module  : resp_rx_send_only_options
         spec    : resp_rx_send_only_options.testspec
-        ignore  : True
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_NO_OPTIONS
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_no_options
+        spec    : resp_rx_send_only_no_options.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_RX_SEND_ONLY_DBELL

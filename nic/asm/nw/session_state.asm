@@ -736,12 +736,16 @@ lb_tcp_data_len_gt_mss_size:
   phvwr.c1     p.udp_len, r5
   sub.c1       r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
   phvwr.c1     p.inner_ipv4_totalLen, r5
+  phvwrmi      p.control_metadata_checksum_ctl, CHECKSUM_L3_L4_UPDATE_MASK, CHECKSUM_L3_L4_UPDATE_MASK 
+  // Update the checksum calculation.
   // Finally update the tcp_data_len to MSS value which will be used by
   // connection tracking code
   add          r2, r4, r0 // Updating tcp_data_len to mss
+  // Update the phv with the new tcp data len as its used in checksum calculation
+  phvwr        p.l4_metadata_tcp_data_len, r2
   phvwr        p.capri_intrinsic_payload, 0
   phvwr        p.capri_deparser_len_trunc, 1
- 
+
 lb_tcp_data_len_gt_win_size:
   b.c2         lb_tcp_unexpected_sack_option
   seq          c2, k.l4_metadata_tcp_unexpected_sack_option_action, \
@@ -763,9 +767,12 @@ lb_tcp_data_len_gt_win_size:
   phvwr.c1     p.udp_len, r5
   sub.c1       r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
   phvwr.c1     p.inner_ipv4_totalLen, r5
+  phvwrmi      p.control_metadata_checksum_ctl, CHECKSUM_L3_L4_UPDATE_MASK, CHECKSUM_L3_L4_UPDATE_MASK 
   // Finally update the tcp_data_len to MSS value which will be used by
   // connection tracking code
   add          r2, r6, r0 // Updating tcp_data_len to rcvr_win_sz
+  // Update the phv with the new tcp data len as its used in checksum calculation
+  phvwr        p.l4_metadata_tcp_data_len, r2
   phvwr        p.capri_intrinsic_payload, 0
   phvwr        p.capri_deparser_len_trunc, 1
 

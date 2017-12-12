@@ -10,10 +10,11 @@ selectors:
 #        segment     : filter://any
 #        endpoint    : filter://remote=True
 #        interface   : filter://any
-#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+#   flow            : filter://type=IPV4
     rdmasession     :
         lqp         : filter://svc=0
         rqp         : filter://svc=0
+        session     : filter://IsIPV6=0
 #    maxflows    : 1
 #    maxrdmasessions     : 1
 
@@ -21,7 +22,7 @@ packets:
     - packet:
         id          : READ_REQ # Transmit packet
         payloadsize : 0
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -36,10 +37,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -65,7 +66,7 @@ packets:
     - packet:
          id          : READ_RESP_ONLY    # Receive packet 
          payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
-         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
          headers     :
@@ -81,10 +82,11 @@ packets:
                  dst     : ref://testcase/config/rdmasession/session/initiator/addr
                  ttl     : 64
                  tos     : 192 # Setting ECN bits in TOS to 11 indicating congestion.
-             #ipv6:
-             #    src     : ref://testcase/config/flow/sip
-             #    dst     : ref://testcase/config/flow/dip
-             #    hlim    : 64
+             ipv6:
+                 src     : ref://testcase/config/rdmasession/session/responder/addr
+                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                 hlim    : 64
+                 tc      : 192 # Setting ECN bits in TOS to 11 indicating congestion.
              udp:
                  sport   : ref://testcase/config/rdmasession/session/iflow/sport
                  dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -95,14 +97,14 @@ packets:
                  p_key   : 55
              aeth:
                 syndrome : 14 # TODO - credits
-                msn      : ref://testcase/pvtdata/msn
+                msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
              payload:
                  data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/rawbytes
 
     - packet:
         id          : CNP_PKT    # Expected CNP packet
         payloadsize : 16
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -117,10 +119,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -195,11 +197,11 @@ descriptors:
         id      : EXP_CQ_WQE
         template: ref://factory/templates/id=DESC_RDMA_CQ
         fields:
-            wrid:  ref://testcase/pvtdata/msn
+            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 3 #OP_TYPE_READ
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetReqRxCQExpColor
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             smac: callback://rdma/rdma/GetZeroMAC
             
 session:

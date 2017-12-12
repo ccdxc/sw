@@ -1,0 +1,48 @@
+# Test Spec
+selectors:
+    root            : ref://store/templates/id=ENDPOINT
+    endpoint        : filter://remote=False
+    tenant          : filter://overlay=VLAN,type=TENANT
+    segment         : filter://any
+    #maxsessions    : 2
+
+packets:
+    - packet:
+        id          : BASE_OFFER_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_DHCP
+        encaps      : callback://eplearn/dhcp/GetDhcpSeverPacketEncaps
+        headers     :
+            eth:
+                src     : callback://eplearn/dhcp/GetDhcpServerMAC
+                dst     : ref://testcase/config/root/macaddr 
+            qtag:
+                vlan    : callback://eplearn/dhcp/GetDhcpServerVlan 
+            ipv4:
+                src     : callback://eplearn/dhcp/GetDhcpServerIp
+                dst     : callback://eplearn/dhcp/GetRootIP
+            bootp:
+                op       : const/2
+                xid      : callback://eplearn/dhcp/GetDhcpXid
+                chaddr   : callback://eplearn/dhcp/GetDhcpChaddr
+                yiaddr   : callback://eplearn/dhcp/GetRootIP
+                siaddr   : callback://eplearn/dhcp/GetDhcpServerIp
+                sname    : callback://eplearn/dhcp/GetDhcpSname
+                file     : callback://eplearn/dhcp/GetDhcpFile
+                options  : callback://eplearn/dhcp/GetDhcpOptions
+
+
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=BASE_OFFER_PKT
+                    port    : callback://eplearn/dhcp/GetDhcpServerPort
+
+        expect:
+            delay   : callback://eplearn/dhcp/GetExpectDelay
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=BASE_OFFER_PKT
+                    port    : 128

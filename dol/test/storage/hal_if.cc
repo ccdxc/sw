@@ -115,6 +115,24 @@ int create_lif(lif_params_t *params, uint64_t *lif_id) {
   return 0;
 }
 
+int set_lif_bdf(uint32_t hw_lif_id, uint32_t bdf_id) {
+  grpc::ClientContext context;
+  internal::ConfigureLifBdfRequestMsg req_msg;
+  internal::ConfigureLifBdfResponseMsg resp_msg;
+
+  auto req = req_msg.add_reqs();
+  req->set_lif(hw_lif_id);
+  req->set_bdf(bdf_id);
+
+  auto status = internal_stub->ConfigureLifBdf(&context, req_msg, &resp_msg);
+  if (!status.ok())
+    return -1;
+
+  // TODO: Check number of responses ? 
+  if (resp_msg.resps(0).status() != 0) return -1;
+  else return 0;
+}
+
 int get_pgm_base_addr(const char *prog_name, uint64_t *base_addr) {
   grpc::ClientContext context;
   internal::GetProgramAddressRequestMsg req_msg;

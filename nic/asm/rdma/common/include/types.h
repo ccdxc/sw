@@ -20,6 +20,7 @@
 #define LOG_SIZEOF_CQCB_T   5   // 2^5 = 32 Bytes
 #define LOG_CB_UNIT_SIZE_BYTES 6
 #define CB_UNIT_SIZE_BYTES  64
+#define CB3_OFFSET_BYTES (3 * 64)
 
 #define LOG_SIZEOF_EQCB_T   5   // 2^5 = 32 Bytes
 
@@ -466,7 +467,8 @@ struct sqwqe_ud_send_t {
     imm_data           : 32;
     q_key              : 32;
     length             : 32;
-    dst_qp             : 32;
+    dst_qp             : 24;
+    ah_size            :  8;
     ah_handle          : 32;
 };
 
@@ -772,6 +774,18 @@ struct iphdr_t {
 /*The options start here. */
 };
 
+struct ipv6hdr_t {
+    version     : 4;
+    tc          : 8;
+    flow_label  : 20;
+    payload_len : 16;
+    nh          : 8;
+    hop_limit   : 8;
+    saddr       : 128;
+    daddr       : 128;
+};
+
+
 struct vlanhdr_t {
     pri            : 3;
     cfi            : 1;
@@ -780,13 +794,25 @@ struct vlanhdr_t {
 };
 
 
-struct header_template_t {
+struct header_template_v4_t {
     struct ethhdr_t     eth; 
     struct vlanhdr_t    vlan;
     struct iphdr_t      ip;
     struct udphdr_t     udp;
 };
 
+struct header_template_v6_t {
+    struct ethhdr_t     eth; 
+    struct vlanhdr_t    vlan;
+    struct ipv6hdr_t    ip;
+    struct udphdr_t     udp;
+};
+
+union header_template_t {
+    struct header_template_v4_t v4;
+    struct header_template_v6_t v6;
+};
+    
 #define HDR_TEMPLATE_T struct header_template_t
 #define HDR_TEMPLATE_T_SIZE_BYTES (sizeof(struct header_template_t)/8)
  
@@ -870,8 +896,13 @@ struct p4_to_p4plus_roce_header_t {
 struct dcqcn_cb_t {
     last_cnp_timestamp: 48;
     partition_key: 16;
+    rate_enforced: 32; // DCQCN enforced rate in kbps.
+    last_sched_timestamp: 48;
+    cur_avail_tokens: 64;
+    // For model testing only. Number of times packet was scheduled and dropped due to insufficient tokens.
+    num_sched_drop: 8;
     cur_timestamp: 48; // For debugging on Model since model doesnt have timestamps
-    pad : 400;
+    pad : 248;
 };
 
 

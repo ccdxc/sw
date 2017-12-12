@@ -53,7 +53,7 @@
 #define STORAGE_KIVEC1_XTS_DESC_SIZE	\
 	k.{storage_kivec1_xts_desc_size_sbit0_ebit7...storage_kivec1_xts_desc_size_sbit8_ebit15}
 #define STORAGE_KIVEC1_DEVICE_ADDR	\
-	k.{storage_kivec1_device_addr_sbit0_ebit7...storage_kivec1_device_addr_sbit32_ebit33}
+	k.{storage_kivec1_device_addr_sbit0_ebit31...storage_kivec1_device_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD	\
 	k.storage_kivec1_roce_cq_new_cmd
 
@@ -74,19 +74,16 @@
 #define STORAGE_KIVEC4_DATA_LEN		\
 	k.{storage_kivec4_data_len_sbit0_ebit7...storage_kivec4_data_len_sbit8_ebit15}
 
-#define STORAGE_KIVEC5_STATUS_ADDR	\
+#define STORAGE_KIVEC5_STATUS_ADDR		\
 	k.{storage_kivec5_status_addr_sbit0_ebit7...storage_kivec5_status_addr_sbit40_ebit63}
-#define STORAGE_KIVEC5_STATUS_LEN	\
+#define STORAGE_KIVEC5_STATUS_LEN		\
 	k.{storage_kivec5_status_len_sbit0_ebit7...storage_kivec5_status_len_sbit8_ebit15}
-#define STORAGE_KIVEC5_STATUS_DMA_EN	\
-	k.storage_kivec5_status_dma_en
-#define STORAGE_KIVEC5_STATUS_ERR	\
+#define STORAGE_KIVEC5_STATUS_ERR		\
 	k.storage_kivec5_status_err
-
-#define STORAGE_KIVEC6_INTR_ADDR	\
-	k.{storage_kivec6_intr_addr_sbit0_ebit31...storage_kivec6_intr_addr_sbit32_ebit63}
-#define STORAGE_KIVEC6_INTR_DATA	\
-	k.storage_kivec6_intr_data
+#define STORAGE_KIVEC5_STATUS_DMA_EN		\
+	k.storage_kivec5_status_dma_en
+#define STORAGE_KIVEC5_DATA_LEN_FROM_DESC	\
+	k.storage_kivec5_data_len_from_desc
 
 #define STAGE0_KIVEC_LIF		\
 	k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
@@ -265,16 +262,6 @@
    or		r7, r7, r1;						\
 
 // DMA write w_ndx to c_ndx via to pop the entry. Doorbell update is needed 
-// to reset the scheduler bit. 
-#define QUEUE_POP_ROCE_DOORBELL_UPDATE					\
-   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX,	\
-                       r0, STORAGE_KIVEC1_SRC_QID, r0)			\
-   DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,\
-                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_C_NDX)	\
-   DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
-                     r7, dma_p2m_0)					\
-
-// DMA write w_ndx to c_ndx via to pop the entry. Doorbell update is needed 
 // to reset the scheduler bit.
 #define QUEUE_POP_DOORBELL_UPDATE					\
    DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX,	\
@@ -351,14 +338,23 @@
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
 // Setup the sequencer doorbell based on the lif, type, qid specified in
-// the WQE.
-#define SEQUENCER_DOORBELL_UPDATE(_dma_cmd_ptr)				\
+// the WQE and ring it.
+#define SEQUENCER_DOORBELL_FORM_UPDATE_RING(_dma_cmd_ptr)		\
    DOORBELL_DATA_SETUP(seq_doorbell_data_data, d.db_index, r0, 		\
                        d.db_qid, r0)					\
    DOORBELL_ADDR_SETUP(d.db_lif, d.db_qtype, DOORBELL_SCHED_WR_SET,	\
                        DOORBELL_UPDATE_P_NDX)				\
    DMA_PHV2MEM_SETUP(seq_doorbell_data_data, seq_doorbell_data_data,	\
                      r7, _dma_cmd_ptr)					\
+
+// Ring the sequencer doorbell based on the data provided in the 
+// d-vector. Fence the interrupt with previous DMA writes.
+#define SEQUENCER_DOORBELL_RING(_dma_cmd_ptr)				\
+   phvwr	p.seq_doorbell_data_data, d.next_db_data;		\
+   add		r7, r0, d.next_db_addr;					\
+   DMA_PHV2MEM_SETUP(seq_doorbell_data_data, seq_doorbell_data_data,	\
+                     r7, _dma_cmd_ptr)					\
+   DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
 // Set the data to be pushed across the PCI layer to be the p_ndx. Issue
 // DMA write of this data to the address in the d-vector. Set the fence
@@ -372,19 +368,10 @@
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
 
-// Raise an interrupt using the address and data stored in the K+I vector
-#define SEQ_COMP_SET_INTR(_dma_cmd_ptr)					\
-   add		r1, r0, STORAGE_KIVEC6_INTR_DATA;			\
-   phvwr	p.seq_doorbell_data_data, r1.dx;			\
-   add		r7, r0, STORAGE_KIVEC6_INTR_ADDR;			\
-   DMA_PHV2MEM_SETUP(seq_doorbell_data_data, seq_doorbell_data_data,	\
-                     r7, _dma_cmd_ptr)					\
-   DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
-
-
-// Raise an interrupt by using the address and data specified in the
-// d-vector
-#define PCI_QUEUE_PUSH_INTR_UPDATE(_dma_cmd_ptr)			\
+// Raise an interrupt across the PCI layer by using the address and data 
+// specified in the d-vector. Fence the interrupt with previous 
+// DMA writes.
+#define PCI_RAISE_INTERRUPT(_dma_cmd_ptr)				\
    phvwr	p.pci_intr_data_data, d.intr_data;			\
    add		r7, r0, d.intr_addr;					\
    DMA_PHV2MEM_SETUP(pci_intr_data_data, pci_intr_data_data,		\

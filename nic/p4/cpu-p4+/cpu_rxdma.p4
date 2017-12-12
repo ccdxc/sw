@@ -16,16 +16,19 @@
 #define rx_table_s1_t1_action read_cpu_desc 
 #define rx_table_s1_t2 cpu_rx_read_cpu_page
 #define rx_table_s1_t2_action read_cpu_page 
-#define rx_table_s1_t3 cpu_rx_read_arqrx
-#define rx_table_s1_t3_action read_arqrx 
 
 #define rx_table_s2_t1 cpu_rx_desc_alloc
 #define rx_table_s2_t1_action desc_alloc
 #define rx_table_s2_t2 cpu_rx_page_alloc
 #define rx_table_s2_t2_action page_alloc
 
-#define rx_table_s3_t0 cpu_rx_write_arqrx
-#define rx_table_s3_t0_action write_arqrx
+// Stage 3 is for hash defined in common rxdma
+
+#define rx_table_s4_t0 cpu_rx_read_arqrx
+#define rx_table_s4_t0_action read_arqrx 
+
+#define rx_table_s5_t0 cpu_rx_write_arqrx
+#define rx_table_s5_t0_action write_arqrx
 
 #include "../common-p4+/common_rxdma.p4"
 #include "cpu_rx_common.p4"
@@ -82,19 +85,27 @@ header_type page_alloc_d_t {
     }
 }
 
-// d for stage 3 table 0
-header_type write_arqrx_d_t {
-    fields {
-        nde_addr                : 64;
-        nde_offset              : 16;
-        nde_len                 : 16;
-        curr_ts                 : 64;
-    }
-}
-
 /******************************************************************************
  * Global PHV definitions
  *****************************************************************************/
+header_type p4_to_p4plus_cpu_header_ext_t {
+    fields {
+        p4plus_app_id       : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
+        ip_proto            : 8;
+        l4_sport            : 16;
+        l4_dport            : 16;
+        packet_type         : 2;
+        packet_len          : 14;
+        ip_sa               : 128;
+        ip_da1              : 64;
+        ip_da2              : 64;
+    }
+}
+
 header_type common_global_phv_t {
     fields {
         // global k (max 128)
@@ -112,6 +123,16 @@ header_type dma_phv_pad_t {
 /******************************************************************************
  * Stage to stage PHV definitions
  *****************************************************************************/
+header_type common_t0_s2s_phv_t {
+    fields {
+        page                    : 32;
+        descr                   : 32;
+	    arqrx_base              : 32;
+        arqrx_pindex            : 16;
+        payload_len             : 16;
+        hash                    : 32;
+    }
+}
 
 header_type s2_t1_s2s_phv_t {
     fields {
@@ -123,6 +144,7 @@ header_type s2_t2_s2s_phv_t {
         page_pindex             : 16;
     }
 }
+
 
 /******************************************************************************
  * Header unions for d-vector
@@ -137,16 +159,13 @@ metadata read_cpudr_d_t read_cpudr_d;
 metadata read_cpupr_d_t read_cpupr_d;
 
 @pragma scratch_metadata
-metadata arq_rx_pi_d_t read_arqrx_d;
-
-@pragma scratch_metadata
 metadata desc_alloc_d_t desc_alloc_d;
 
 @pragma scratch_metadata
 metadata page_alloc_d_t page_alloc_d;
 
 @pragma scratch_metadata
-metadata write_arqrx_d_t write_arqrx_d;
+metadata arq_rx_pi_d_t write_arqrx_d;
 
 /******************************************************************************
  * Header unions for PHV layout
@@ -157,9 +176,9 @@ metadata common_global_phv_t common_phv;
 metadata common_global_phv_t common_global_scratch;
 
 @pragma pa_header_union ingress app_header
-metadata p4_to_p4plus_cpu_header_t cpu_app_header;
+metadata p4_to_p4plus_cpu_header_ext_t cpu_app_header;
 @pragma scratch_metadata
-metadata p4_to_p4plus_cpu_header_t cpu_scratch_app;
+metadata p4_to_p4plus_cpu_header_ext_t cpu_scratch_app;
 
 @pragma scratch_metadata
 metadata s2_t1_s2s_phv_t s2_t1_s2s_scratch;
@@ -171,10 +190,10 @@ metadata s2_t2_s2s_phv_t s2_t2_s2s_scratch;
 @pragma pa_header_union ingress common_t2_s2s
 metadata s2_t2_s2s_phv_t s2_t2_s2s;
 
-@pragma pa_header_union ingress to_stage_3
-metadata cpu_common_to_stage_phv_t to_s3;
+@pragma pa_header_union ingress common_t0_s2s
+metadata common_t0_s2s_phv_t t0_s2s;
 @pragma scratch_metadata
-metadata cpu_common_to_stage_phv_t to_s3_scratch;
+metadata common_t0_s2s_phv_t t0_s2s_scratch;
 
 /******************************************************************************
  * PHV following k (for app DMA etc.)
@@ -226,8 +245,14 @@ action cpu_rxdma_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, tota
     modify_field(cpu_scratch_app.table1_valid, cpu_app_header.table1_valid);
     modify_field(cpu_scratch_app.table2_valid, cpu_app_header.table2_valid);
     modify_field(cpu_scratch_app.table3_valid, cpu_app_header.table3_valid);
+    modify_field(cpu_scratch_app.ip_proto, cpu_app_header.ip_proto);
+    modify_field(cpu_scratch_app.l4_sport, cpu_app_header.l4_sport);
+    modify_field(cpu_scratch_app.l4_dport, cpu_app_header.l4_dport);
+    modify_field(cpu_scratch_app.packet_type, cpu_app_header.packet_type);
     modify_field(cpu_scratch_app.packet_len, cpu_app_header.packet_len);
-    modify_field(cpu_scratch_app.flow_hash, cpu_app_header.flow_hash);
+    modify_field(cpu_scratch_app.ip_sa, cpu_app_header.ip_sa);
+    modify_field(cpu_scratch_app.ip_da1, cpu_app_header.ip_da1);
+    modify_field(cpu_scratch_app.ip_da2, cpu_app_header.ip_da2);
 
     // d for stage 0
     modify_field(cpu_rxdma_initial_d.rsvd, rsvd);
@@ -255,14 +280,6 @@ action read_cpu_page(page_pindex, page_pindex_full) {
     // d for stage 1 table 2 
     modify_field(read_cpupr_d.page_pindex, page_pindex);
     modify_field(read_cpupr_d.page_pindex_full, page_pindex_full);
-}
-
-// Stage 1 table 3 action
-action read_arqrx(pi_0, pi_1, pi_2) {
-    // d for srage 2 table 3
-    modify_field(read_arqrx_d.pi_0, pi_0);
-    modify_field(read_arqrx_d.pi_1, pi_1);
-    modify_field(read_arqrx_d.pi_2, pi_2);
 }
 
 /*
@@ -296,18 +313,24 @@ action page_alloc(page, pad) {
     modify_field(page_alloc_d.pad, pad);
 }
 
+// Stage 4 table 0 action
+action read_arqrx() {
+}
+
+
 /*
- * Stage 3 table 0 action
+ * Stage 5 table 0 action
  */
-action write_arqrx(nde_addr, nde_offset, nde_len, curr_ts) {
+action write_arqrx(pi_0, pi_1, pi_2) {
     // k + i for stage 3
 
-    // from to_stage 3
-    modify_field(to_s3_scratch.page, to_s3.page);
-    modify_field(to_s3_scratch.descr, to_s3.descr);
-    modify_field(to_s3_scratch.arqrx_pindex, to_s3.arqrx_pindex);
-    modify_field(to_s3_scratch.arqrx_base, to_s3.arqrx_base);
-    modify_field(to_s3_scratch.payload_len, to_s3.payload_len);
+    // from t0_s2s
+    modify_field(t0_s2s_scratch.page, t0_s2s.page);
+    modify_field(t0_s2s_scratch.descr, t0_s2s.descr);
+    modify_field(t0_s2s_scratch.arqrx_pindex, t0_s2s.arqrx_pindex);
+    modify_field(t0_s2s_scratch.arqrx_base, t0_s2s.arqrx_base);
+    modify_field(t0_s2s_scratch.payload_len, t0_s2s.payload_len);
+    modify_field(t0_s2s_scratch.hash, t0_s2s.hash);
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -315,9 +338,8 @@ action write_arqrx(nde_addr, nde_offset, nde_len, curr_ts) {
     // from stage 2 to stage 3
 
     // d for stage 3 table 0
-    modify_field(write_arqrx_d.nde_addr, nde_addr);
-    modify_field(write_arqrx_d.nde_offset, nde_offset);
-    modify_field(write_arqrx_d.nde_len, nde_len);
-    modify_field(write_arqrx_d.curr_ts, curr_ts);
+    modify_field(write_arqrx_d.pi_0, pi_0);
+    modify_field(write_arqrx_d.pi_1, pi_1);
+    modify_field(write_arqrx_d.pi_2, pi_2);
 }
 

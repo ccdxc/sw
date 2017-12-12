@@ -34,6 +34,7 @@ action tunneled_ipv6_packet() {
     modify_field(flow_lkp_metadata.lkp_proto, l3_metadata.inner_ipv6_ulp);
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv6.hopLimit);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
+    modify_field(l3_metadata.ip_option_seen, l3_metadata.inner_ip_option_seen);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     modify_field(l4_metadata.tcp_data_len,

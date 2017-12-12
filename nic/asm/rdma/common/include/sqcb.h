@@ -91,7 +91,8 @@ struct sqcb0_t {
     };
 
     spec_sq_cindex: 16;
-    rsvd2: 8;
+    state: 3;
+    rsvd2: 5;
 };
 
 struct sqcb1_t {
@@ -128,7 +129,8 @@ struct sqcb1_t {
     err_retry_ctr                  : 3;
     rsvd3                          : 2;
     p4plus_to_p4_flags             : 8;
-    rvsd4                          : 56;
+    header_template_size           : 8;
+    rvsd4                          : 48;
 };
 
 struct sqcb_t {

@@ -104,6 +104,7 @@ action mirror_truncate(truncate_len) {
     if ((truncate_len != 0) and
         (truncate_len < capri_p4_intrinsic.packet_len)) {
         modify_field(capri_deparser_len.trunc_pkt_len, truncate_len);
+        modify_field(capri_p4_intrinsic.packet_len, truncate_len, 14);
     }
 }
 

@@ -155,6 +155,8 @@ decode_udp_ip_header(struct interface_info *interface,
   /* UDP check sum may be optional (udp.uh_sum == 0) or not ready if checksum
    * offloading is in use */
   udp_packets_seen++;
+  //* Ignore check sum for now */
+  udp.check = 0;
   if (udp.check && csum_ready) {
     /* Check the UDP header checksum - since the received packet header
      * contains the UDP checksum calculated by the transmitter, calculating
@@ -195,19 +197,10 @@ decode_udp_ip_header(struct interface_info *interface,
 ssize_t extract_dhcp_payload_offset(uint8_t *buf, uint32_t len,
                                      uint32_t *pkt_len) {
     struct hardware from;
-    ssize_t offset;
+    ssize_t offset = 0;
     uint32_t bufix = 0;
     uint32_t paylen;
     struct sockaddr_in in_from;
-
-    offset = decode_ethernet_header((unsigned char*)buf, bufix, &from);
-
-    if (offset < 0) {
-        return offset;
-    }
-
-    bufix += offset;
-    len -= offset;
 
     offset = decode_udp_ip_header(NULL, buf, bufix, &in_from,
                         len, &paylen, 1);

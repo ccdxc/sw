@@ -87,6 +87,15 @@
 #define UDP_PORT_NATT                  4500
 
 /*****************************************************************************/
+/* UDP option types (kind)                                                   */
+/*****************************************************************************/
+#define UDP_KIND_EOL                    0
+#define UDP_KIND_NOP                    1
+#define UDP_KIND_OCS                    2
+#define UDP_KIND_MSS                    5
+#define UDP_KIND_TIMESTAMP              6
+
+/*****************************************************************************/
 /* GRE services                                                              */
 /*****************************************************************************/
 #define GRE_PROTO_NVGRE                0x20006558
@@ -319,6 +328,12 @@
 #define ICMPV6_ECHO_REPLY_TYPE_CODE      0x8100
 
 /*****************************************************************************/
+/* DHCP related                                                              */
+/*****************************************************************************/
+#define DHCP_CLIENT_PORT               67
+#define DHCP_SERVER_PORT               68
+
+/*****************************************************************************/
 /* Policer color                                                           */
 /*****************************************************************************/
 #define POLICER_COLOR_GREEN            0
@@ -340,6 +355,9 @@
 #define CHECKSUM_CTL_INNER_IP_CHECKSUM  3
 #define CHECKSUM_CTL_INNER_L4_CHECKSUM  4
 
+#define CHECKSUM_L3_L4_UPDATE_MASK        (1<<CHECKSUM_CTL_IP_CHECKSUM | 1 << CHECKSUM_CTL_L4_CHECKSUM)
+#define CHECKSUM_INNER_L3_L4_UPDATE_MASK  (1<<CHECKSUM_CTL_IP_CHECKSUM | 1 << CHECKSUM_CTL_L4_CHECKSUM | \
+                                           1<<CHECKSUM_CTL_INNER_IP_CHECKSUM | 1 << CHECKSUM_CTL_INNER_L4_CHECKSUM)
 // IPSEC
 #define IPSEC_HEADER_AH                1
 #define IPSEC_HEADER_ESP               2
@@ -415,7 +433,7 @@
 #define P4PLUS_ROCE_HDR_SZ             20
 #define P4PLUS_TCP_PROXY_HDR_SZ        71 /* 39 app hdr + 32 sack */
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      46
-#define P4PLUS_CPU_HDR_SZ              44
+#define P4PLUS_CPU_HDR_SZ              40
 #define P4PLUS_CPU_PKT_SZ              36
 #define P4PLUS_IPSEC_HDR_SZ            18
 #define P4PLUS_RAW_REDIR_HDR_SZ        40
@@ -470,6 +488,13 @@
 #define CPU_FLAGS_IPV6_VALID                   0x04
 #define CPU_FLAGS_IP_OPTIONS_PRESENT           0x08
 #define CPU_FLAGS_TCP_OPTIONS_PRESENT          0x10
+
+/*****************************************************************************/
+/* CPU header packet types                                                   */
+/*****************************************************************************/
+#define CPU_PACKET_TYPE_NONE                   0
+#define CPU_PACKET_TYPE_IPV4                   1
+#define CPU_PACKET_TYPE_IPV6                   2
 
 /*****************************************************************************/
 /* TCP OPTIONS                                                               */

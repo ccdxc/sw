@@ -104,6 +104,7 @@ func (md *Memdb) getObjdb(kind string) *Objdb {
 }
 
 // WatchObjects watches for changes on an object kind
+// TODO: Add support for watch support with resource version
 func (md *Memdb) WatchObjects(kind string, watchChan chan Event) error {
 	// get objdb
 	od := md.getObjdb(kind)
@@ -114,6 +115,24 @@ func (md *Memdb) WatchObjects(kind string, watchChan chan Event) error {
 
 	// add the channel to watch list and return
 	od.watchers = append(od.watchers, watchChan)
+	return nil
+}
+
+// StopWatchObjects removes watches given the kind and watchChan
+func (md *Memdb) StopWatchObjects(kind string, watchChan chan Event) error {
+	// get objdb
+	od := md.getObjdb(kind)
+
+	// lock object db
+	od.Lock()
+	defer od.Unlock()
+
+	for i, other := range od.watchers {
+		if other == watchChan {
+			od.watchers = append(od.watchers[:i], od.watchers[i+1:]...)
+			break
+		}
+	}
 	return nil
 }
 

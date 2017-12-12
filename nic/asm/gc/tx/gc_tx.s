@@ -63,7 +63,7 @@ gc_tx_handle_rnmdr_tcp:
      */
     add             r5, d.{ring_base}.dx, RNMDR_GC_PRODUCER_TCP, RNMDR_GC_PER_PRODUCER_SHIFT
     add             r5, r5, d.{ci_0}.hx, RNMDR_TABLE_ENTRY_SIZE_SHFT
-    tbladd          d.{ci_0}.hx, 1
+    tblmincri       d.{ci_0}.hx, RNMDR_GC_PER_PRODUCER_SHIFT, 1
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_GC)
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, CAPRI_HBM_GC_RNMDR_QID, CAPRI_RNMDR_GC_TCP_RING_PRODUCER, d.{ci_0}.hx)
@@ -88,7 +88,7 @@ gc_tx_handle_tnmdr_tcp:
      */
     add             r5, d.{ring_base}.dx, TNMDR_GC_PRODUCER_TCP, TNMDR_GC_PER_PRODUCER_SHIFT
     add             r5, r5, d.{ci_0}.hx, TNMDR_TABLE_ENTRY_SIZE_SHFT
-    tbladd          d.{ci_0}.hx, 1
+    tblmincri       d.{ci_0}.hx, TNMDR_GC_PER_PRODUCER_SHIFT, 1
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_GC)
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, CAPRI_HBM_GC_TNMDR_QID, CAPRI_TNMDR_GC_TCP_RING_PRODUCER, d.{ci_0}.hx)

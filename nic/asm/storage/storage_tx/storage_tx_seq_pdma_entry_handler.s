@@ -27,17 +27,46 @@ storage_tx_seq_pdma_entry_handler_start:
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.dst_addr, d.data_size,
                      d.dst_lif_override, d.dst_lif_override, dma_m2m_2)
 
-   // Copy the data for the doorbell into the PHV and setup a DMA command
-   // to ring it
-   phvwr	p.qpush_doorbell_data_data, d.next_db_data
-   DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,
-                     d.next_db_addr, dma_p2m_3)
+   // Order of evaluation of next doorbell and interrupts
+   // 1. If next_db_en is set => ring the next doorbell and don't raise interrupt
+   // 2. If next_db_en is not set and intr_en is set => raise interrupt
+   // 2. If next_db_en is not set and intr_en is not set => do nothing more
 
-   // Set the fence bit for the doorbell 
-   DMA_PHV2MEM_FENCE(dma_p2m_3)
+   // Check if next doorbell is to be enabled and branch
+   seq		c1, d.next_db_en, 1
+   bcf		![c1], check_intr
+   nop
+
+   // Ring the sequencer doorbell based on addr/data provided in the descriptor
+   SEQUENCER_DOORBELL_RING(dma_p2m_3)
 
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_3_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
 
+   // Done ringing doorbell, don't fire the interrupt in this path
+   b		tbl_load
+
+check_intr:
+   // Check if interrupt is enabled and branch
+   seq		c1, d.intr_en, 1
+   bcf		![c1], pdma_only
+   nop
+
+   // Raise interrupt update based on addr/data provided in descriptor
+   PCI_RAISE_INTERRUPT(dma_p2m_3)
+
+   // Setup the start and end DMA pointers
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_3_dma_cmd_eop,
+                 p4_txdma_intr_dma_cmd_ptr)
+
+   // Done firing the interrupt, exit
+   b		tbl_load
+
+pdma_only:
+   // Setup the start and end DMA pointers to just the PDMA portions
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_2_dma_cmd_eop,
+                 p4_txdma_intr_dma_cmd_ptr)
+
+tbl_load:
    LOAD_NO_TABLES

@@ -17,6 +17,8 @@ void app_redir_init() {
     fte::register_feature(FTE_FEATURE_APP_REDIR, app_redir_exec);
     fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, appid_exec);
     fte::register_feature(FTE_FEATURE_APP_REDIR_FINI, app_redir_exec_fini);
+
+    scanner_init(hal::HAL_THREAD_ID_CFG);
 }
 
 void app_redir_exit() {

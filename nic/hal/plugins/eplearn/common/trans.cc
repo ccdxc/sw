@@ -7,7 +7,7 @@
 #include "nic/hal/plugins/eplearn/common/trans.hpp"
 
 namespace hal {
-namespace network {
+namespace eplearn {
 
 void *trans_get_ip_entry_key_func(void *entry) {
     HAL_ASSERT(entry != NULL);
@@ -27,5 +27,5 @@ bool trans_compare_ip_entry_key_func(void *key1, void *key2) {
     return false;
 }
 
-}  //  namespace network
+}  //  namespace eplearn
 }  //  namespace hal

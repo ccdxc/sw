@@ -3,6 +3,8 @@ import argparse
 import pdb
 import sys
 
+import infra.common.utils as utils
+
 parser = argparse.ArgumentParser(description='DOL Framework')
 parser.add_argument('--nohal', dest='no_hal',
                     action='store_true', help='No Connection to HAL')
@@ -42,6 +44,9 @@ parser.add_argument('--tcscale', dest='tcscale', default=None,
                     help='Testcase Scale Factor.')
 parser.add_argument('--shuffle', dest='shuffle', default=1,
                     help='Shuffle tests and loop for X times.')
+parser.add_argument('--configtoggle', dest='configtoggle',
+                    action='store_true', help='Enable configuration toggle '
+                    'for enabled features')
 #parser.add_argument('--cfgscale', dest='cfgscale', default=None,
 #                    help='Configuration Scale Factor.')
 GlobalOptions = parser.parse_args()
@@ -51,3 +56,8 @@ def ValidateGlopts():
         print("Error: Manadatory args 'topo' and 'feature' are missing.")
         print("Usage: ./main.py --topo <topology-name> --feature <feature1,feature2...>")
         sys.exit(1)
+    
+    if GlobalOptions.tcid is not None:
+        GlobalOptions.tcid = [utils.ParseInteger(tcid)
+                                  for tcid in GlobalOptions.tcid.split(',')]
+        

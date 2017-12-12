@@ -29,7 +29,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : 63
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -44,10 +44,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
             udp:
                 len     : callback://common/callbacks/GetUdpLength
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
@@ -64,22 +64,17 @@ packets:
                     - kind   : NOP
                       data   : 0x00
                     - kind   : MSS
-                      data   : 0x0102
+                      data   : ref://testcase/pvtdata/roce_opt_mss
                     - kind   : TIME
-                      data   : 0x01020304 0x05060708
-                    - kind   : PEN1
-                      data   : 0x0A0B
-                    - kind   : PEN2
-                      data   : 0x0A0B0C0D
-                    - kind   : PEN3
-                      data   : 0x0A0B0C0D 0x0C0D0E0F
+                      #data   : ref://testcase/pvtdata/roce_opt_ts_list
+                      data   : 0x11223344 0x55667788
                     - kind   : EOP
                       data   : 0x00
 
    - packet:
         id          : EXP_PKT    # Expected Ack packet
         payloadsize : 0
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -94,10 +89,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport

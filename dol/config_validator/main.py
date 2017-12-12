@@ -3,6 +3,8 @@ import os,sys
 import pdb
 import grpc
 from base64 import test
+import zmq
+
 paths = [
     '/nic/gen/proto/',
     '/nic/gen/proto/hal/',
@@ -24,8 +26,25 @@ import infra.common.parser  as parser
 import infra.common.utils  as utils
 from infra.common.logging import logger
 import infra.common.objects as objects
+import grpc_proxy
+import threading
 
 objects.CallbackField.SetPackagePath("config_validator.cfg.callbacks")
+
+def start_zmq_server():
+    logger.info("Starting ZMQ server for signaling DOL!")
+    context = zmq.Context()
+    socket = context.socket(zmq.REP)
+    socket.bind("ipc://%s/zmqsockcv" % ws_top)
+    while True:
+        #  Wait for next request from client
+        message = socket.recv().decode("utf-8")
+        print( "Received Config Complete for message type: ", message)
+        config_mgr.ModifyConfigFromDol(message)
+        socket.send_string ("Proceed")
+
+# Create a thread for zmq signaling with DOL
+threading.Thread(target=start_zmq_server).start()
 
 def get_hal_channel():
     if 'HAL_GRPC_PORT' in os.environ:
@@ -62,6 +81,11 @@ logger.info("Building Config dependency information")
 config_mgr.BuildConfigDeps()
 
 config_mgr.SortConfigExternalDeps()
+
+# In the intermediate stage now, add just the pass-through server.
+# Will change this in the next commit TODO
+grpc_proxy.initClient()
+grpc_proxy.serve()
 
 test_specs = parser.ParseDirectory("config_validator/test/specs", "*.spec")
 for test_spec in test_specs:

@@ -12,15 +12,14 @@ import (
 	gorun "runtime"
 	"strings"
 	"testing"
+	"time"
 
 	trace "golang.org/x/net/trace"
 	rpc "google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 
-	"time"
-
 	api "github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
+	apicache "github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
@@ -30,6 +29,8 @@ import (
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/cmd/cache"
+	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/globals"
@@ -78,7 +79,7 @@ func getNodeID(index int) string {
 }
 
 func getRESTUrl(index int) string {
-	return fmt.Sprintf(":%d", 20000+index)
+	return fmt.Sprintf(":%d", 10000+index)
 }
 
 func getDBPath(index int) string {
@@ -95,9 +96,15 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 		return nil, err
 	}
 	tInfo.rpcServer = rpcServer
+	cmdenv.RPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = smartnic.NewRPCServer(tInfo, smartnic.HealthWatchInterval, smartnic.DeadInterval)
+	tInfo.smartNICServer, err = smartnic.NewRPCServer(tInfo,
+		smartnic.HealthWatchInterval,
+		smartnic.DeadInterval,
+		globals.NmdRESTPort,
+		cache.NewStatemgr())
+
 	if err != nil {
 		fmt.Printf("Error creating Smart NIC server: %v", err)
 		return nil, err
@@ -339,7 +346,7 @@ func Setup(m *testing.M) {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "Nic-Admission",
+		Module:      "Nic-Admission-Test",
 		Format:      log.LogFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       false,
@@ -385,7 +392,7 @@ func Setup(m *testing.M) {
 
 	// Create api client
 	apiServerAddr := "localhost" + ":" + tInfo.apiServerPort
-	apiCl, err := cache.NewGrpcUpstream(apiServerAddr, tInfo.l)
+	apiCl, err := apicache.NewGrpcUpstream(apiServerAddr, tInfo.l)
 	if err != nil {
 		fmt.Printf("Cannot create gRPC client - %v", err)
 		os.Exit(-1)

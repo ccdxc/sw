@@ -9,7 +9,6 @@ import pprint
 import re
 import sys
 import infra.common.defs as defs
-from infra.common.logging import logger
 from collections import OrderedDict
 from scapy.packet import Packet
 from io import StringIO

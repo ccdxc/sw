@@ -18,7 +18,8 @@ struct phv_ p;
 storage_tx_seq_comp_status_handler_start:
 
    // Store the data length and error status in the K+I vector for later use
-   phvwr	p.storage_kivec4_data_len, d.data_len
+   seq		c1, STORAGE_KIVEC5_DATA_LEN_FROM_DESC, 1
+   phvwr.c1	p.storage_kivec4_data_len, d.data_len
    phvwr	p.storage_kivec5_status_err, d.err
   
    // Set the table and program address 

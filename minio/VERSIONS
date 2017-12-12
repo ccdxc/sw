@@ -1,4 +1,4 @@
 # format: <name> <version>
-asic_libs 1.10.12
-ncc_tools 1.10.12
-third_party_libs 1.1.20
+asic_libs 1.10.17
+ncc_tools 1.10.14
+third_party_libs 1.1.23

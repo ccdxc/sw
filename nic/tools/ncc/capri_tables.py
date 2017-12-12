@@ -315,8 +315,8 @@ class capri_table:
         self.end_key_off_delta = 0
         self.last_flit_start_key_off = -1   # for wide key and toeplitz has tables
         self.last_flit_end_key_off = -1     # for wide key and toeplitz has tables
-        self.le_action_param_set = None  #Collection of action paramerters that
-                                          #are in little endian format.
+        self.le_action_params = {}       #Collection of action paramerters that
+                                            #are in little endian format.
 
     def is_hash_table(self):
         return True if (self.match_type == match_type.EXACT_HASH_OTCAM or \
@@ -4898,12 +4898,12 @@ class capri_gress_tm:
                             ctable.meta_fields.append(cf)
 
                     data_size = 0
-                    le_action_param_set = set()
+                    le_action_params = {}
                     for act in t.actions:
                         if 'little_endian' in act._parsed_pragmas:
-                            le_action_param_set = le_action_param_set.union(\
-                                                  set(get_pragma_param_list(act.\
-                                                   _parsed_pragmas['little_endian'])))
+                            le_action_params[act.name] = \
+                                                  get_pragma_param_list(act.\
+                                                   _parsed_pragmas['little_endian'])
                         action_data = zip(act.signature, act.signature_widths)
                         ctable.action_data[act.name] = []
                         ad_size = 0
@@ -4915,7 +4915,7 @@ class capri_gress_tm:
                         if ad_size > data_size:
                             data_size = ad_size
 
-                    ctable.le_action_param_set = le_action_param_set
+                    ctable.le_action_params = le_action_params
 
                     ctable.d_size = data_size
                     if ctable.num_actions() > 1:

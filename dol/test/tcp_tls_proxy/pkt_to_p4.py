@@ -102,10 +102,18 @@ def TestCaseSetup(tc):
         rnmdr.SetMeta()
     tc.pvtdata.Add(rnmdr)
 
+    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
+    tnmdr.Configure()
+    tc.pvtdata.Add(tnmdr)
+
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     rnmpr.Configure()
     tc.pvtdata.Add(rnmpr)
         
+    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
+    tnmpr.Configure()
+    tc.pvtdata.Add(tnmpr)
+
     return
 
 def TestCaseTrigger(tc):
@@ -168,6 +176,13 @@ def TestCaseVerify(tc):
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.Configure()
+
+    tnmdr = tc.pvtdata.db["TNMDR"]
+    tnmpr = tc.pvtdata.db["TNMPR"]
+    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
+    tnmdr_cur.Configure()
+    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
+    tnmpr_cur.Configure()
 
     # Print stats
     if same_flow:
@@ -272,9 +287,11 @@ def TestCaseVerify(tc):
             (rnmdr.pi, rnmdr.ci, rnmdr_cur.pi, rnmdr_cur.ci))
     print("RNMPR old pi=%d,ci=%d / new pi=%d,ci=%d" %
             (rnmpr.pi, rnmpr.ci, rnmpr_cur.pi, rnmpr_cur.ci))
-    if tc.pvtdata.free_rnmdr and rnmdr_cur.ci != rnmdr.ci + num_rx_pkts:
-        print("free rnmdr verification failed")
-        return False
+
+    print("TNMDR old pi=%d,ci=%d / new pi=%d,ci=%d" %
+            (tnmdr.pi, tnmdr.ci, tnmdr_cur.pi, tnmdr_cur.ci))
+    print("TNMPR old pi=%d,ci=%d / new pi=%d,ci=%d" %
+            (tnmpr.pi, tnmpr.ci, tnmpr_cur.pi, tnmpr_cur.ci))
 
     print("retx_xmit_cursor before 0x%lx after 0x%lx" % \
             (tcpcb_cur.retx_xmit_cursor, other_tcpcb_cur.retx_xmit_cursor))
@@ -290,6 +307,28 @@ def TestCaseVerify(tc):
             print("retx_snd_una %d is not %d" % 
                     (other_tcpcb_cur.retx_snd_una, tc.packets.Get('PKT1').payloadsize))
             return False
+
+        #
+        # We have two packets coming in, and one packet cleaned, so
+        # pi should increment by 2 and ci by 1
+        #
+        if rnmdr_cur.pi != rnmdr.pi + 2:
+            print("rnmdr cur pi %d does not match expected %d" % \
+                    (rnmdr_cur.pi, rnmdr.pi + 2))
+            return False
+        if rnmpr_cur.pi != rnmpr.pi + 2:
+            print("rnmpr cur pi %d does not match expected %d" % \
+                    (rnmpr_cur.pi, rnmpr.pi + 2))
+            return False
+        if tc.pvtdata.bypass_barco:
+            if rnmdr_cur.ci != rnmdr.ci + 1:
+                print("rnmdr cur pi %d does not match expected %d" % \
+                        (rnmdr_cur.pi, rnmdr.pi + 1))
+                return False
+            if rnmpr_cur.ci != rnmpr.ci + 1:
+                print("rnmpr cur ci %d does not match expected %d" % \
+                        (rnmpr_cur.ci, rnmpr.ci + 1))
+                return False
     if tc.pvtdata.test_retx and tc.pvtdata.test_retx == 'complete':
         if other_tcpcb_cur.retx_xmit_cursor != 0:
             print("retx_xmit_cursor is not 0")
@@ -301,6 +340,27 @@ def TestCaseVerify(tc):
                     (other_tcpcb_cur.retx_snd_una, tc.packets.Get('PKT1').payloadsize + \
                             tc.packets.Get('PKT2').payloadsize))
             return False
+        #
+        # We have two packets coming in, and two packets cleaned, so
+        # pi should increment by 2 and ci by 2
+        #
+        if rnmdr_cur.pi != rnmdr.pi + 2:
+            print("rnmdr cur %d pi does not match expected %d" % \
+                    (rnmdr_cur.pi, rnmdr.pi + 2))
+            return False
+        if rnmpr_cur.pi != rnmpr.pi + 2:
+            print("rnmpr cur %d pi does not match expected %d" % \
+                    (rnmpr_cur.pi, rnmpr.pi + 2))
+            return False
+        if tc.pvtdata.bypass_barco:
+            if rnmdr_cur.ci != rnmdr.ci + 2:
+                print("rnmdr cur %d pi does not match expected %d" % \
+                        (rnmdr_cur.pi, rnmdr.pi + 2))
+                return False
+            if rnmpr_cur.ci != rnmpr.ci + 2:
+                print("rnmpr cur ci %d does not match expected %d" % \
+                        (rnmpr_cur.ci, rnmpr.ci + 2))
+                return False
 
     if tc.pvtdata.test_cong_avoid:
         if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + 1:

@@ -16,7 +16,7 @@ headers:
 
     - header:
         id      : udp
-        template: ref://store/headers/id=UDP
+        template: ref://store/headers/id=UDP_BTH
         fields:
 
     - header:

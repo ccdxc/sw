@@ -126,13 +126,13 @@ capri_tm_init(void);
 hal_ret_t
 capri_tm_repl_table_base_addr_set(uint32_t addr);
 
-/** capri_tm_repl_table_num_tokens_set
- * API to program the number of tokens per replication table entry
+/** capri_tm_repl_table_token_size_set
+ * API to program the size of the replication token
  *
- * @param num_tokens[in]: Number of tokens per replication table entry
+ * @param num_tokens[in]: Size of the token in bits
  * @return hal_ret_t: Status of the operation
  */
 hal_ret_t
-capri_tm_repl_table_num_tokens_set(uint32_t num_tokens);
+capri_tm_repl_table_token_size_set(uint32_t size_in_bits);
 
 #endif

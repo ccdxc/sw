@@ -33,8 +33,6 @@ using nwsec::DoSService;
 
 namespace hal {
 
-typedef uint32_t dos_policy_id_t;
-
 typedef struct dos_service_s {
     uint8_t         ip_proto;       // IP protocol
     bool            is_icmp;        // Is ICMP msg type ?

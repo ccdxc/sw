@@ -171,7 +171,7 @@ header_type pci_q_state_t {
     push_addr	: 64;	// Address where the push data (pndx) is to be written
     intr_addr	: 64;	// Address where the MSI-X interrupt is to be raised
     intr_data	: 32;	// Preformed data for raising the MSI-X interrupt
-    intr_en	: 1;	// If interrupts are enabled 
+    intr_en	:  1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
     pad		: 143;	// Align to 64 bytes
   }
 }
@@ -577,7 +577,8 @@ header_type storage_kivec4_t {
     w_ndx		: 16;	// Working consumer index
     sgl_addr		: 64;	// Address where destination SGL will be placed for PDMA
     data_addr		: 64;	// Address where compression data will be placed
-    data_len		: 16;	// Output bits
+    data_len		: 16;	// Length of compression data (either from descriptor or 
+				// from the compression status)
   }
 }
 
@@ -586,16 +587,10 @@ header_type storage_kivec5_t {
   fields {
     status_addr		: 64;	// Address where compression status will be placed
     status_len		: 16;	// Length of the compression status
-    status_dma_en	:  8;	// 1 => DMA status, 0 => don't DMA status
     status_err		:  3;	// Error status (0: success: >0: failure)
-  }
-}
-
-// kivec6: header union with to_stage_3
-header_type storage_kivec6_t {
-  fields {
-    intr_addr		: 64;	// Address where interrupt needs to be written
-    intr_data		: 64;	// Data that needs to be written for interrupt
+    status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA status
+    data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
+				// 0 => Use the data lenghth in the status
   }
 }
 
@@ -638,8 +633,9 @@ header_type storage_kivec6_t {
 #define STORAGE_KIVEC5_USE(scratch, kivec)				\
   modify_field(scratch.status_addr, kivec.status_addr);			\
   modify_field(scratch.status_len, kivec.status_len);			\
-  modify_field(scratch.status_dma_en, kivec.status_dma_en);		\
   modify_field(scratch.status_err, kivec.status_err);			\
+  modify_field(scratch.status_dma_en, kivec.status_dma_en);		\
+  modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);	\
 
 #define STORAGE_KIVEC6_USE(scratch, kivec)				\
   modify_field(scratch.intr_addr, kivec.intr_addr);			\
@@ -948,6 +944,13 @@ header_type seq_pdma_entry_t {
     src_lif		: 11;	// Source LIF id used to override
     dst_lif_override	: 1;	// Override the source LIF in the PDMA
     dst_lif		: 11;	// Destination LIF id used to override
+    intr_addr		: 64;	// Address where the MSI-X interrupt is to be raised
+    intr_data		: 32;	// Preformed data for raising the MSI-X interrupt
+    next_db_en		:  1;	// 1 => Ring next sequencer doorbell, 0 => don't ring
+    intr_en		:  1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
+				// NOTE: Don't enable intr_en and next_db_en together
+				//       as only one will be serviced
+				// Order of evaluation: 1. next_db_en 2. intr_en
   }
 }
 
@@ -978,13 +981,23 @@ header_type seq_barco_entry_t {
 // Sequencer metadata compression entry
 header_type seq_comp_desc_t {
   fields {
+    next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
+    next_db_data	: 64;	// 64 bit data of the next doorbell to ring
     status_addr		: 64;	// Address where compression status will be placed
     data_addr		: 64;	// Address where compression data will be placed
     sgl_addr		: 64;	// Address where destination SGL will be placed for PDMA
     intr_addr		: 64;	// Address where interrupt needs to be written
-    intr_data		: 64;	// Data that needs to be written for interrupt
+    intr_data		: 32;	// Data that needs to be written for interrupt
     status_len		: 16;	// Length of the compression status
-    status_dma_en	:  8;	// 1 => DMA status, 0 => don't DMA status
+    data_len		: 16;	// Length of the compression data
+    data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
+				// 0 => Use the data lenghth in the status
+    status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA 
+    next_db_en		:  1;	// 1 => Ring next sequencer doorbell, 0 => don't ring
+    intr_en		:  1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
+				// NOTE: Don't enable intr_en and next_db_en together
+				//       as only one will be serviced
+				// Order of evaluation: 1. next_db_en 2. intr_en
   }
 }
 

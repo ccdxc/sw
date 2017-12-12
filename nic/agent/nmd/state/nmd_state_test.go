@@ -377,8 +377,9 @@ func TestNaplesModeTransitions(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:           nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac:     nicKey1,
-			ClusterAddress: []string{"192.168.30.10:9200"},
+			ClusterAddress: []string{"192.168.30.10:9002"},
 			NodeName:       "esx-001",
+			MgmtIp:         "10.10.10.10",
 		},
 	}
 

@@ -2,7 +2,7 @@
 #include "nic/include/fte_db.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/hal/plugins/network/alg/alg_utils.hpp"
-#include "nic/hal/plugins/firewall/firewall.hpp"
+#include "nic/hal/plugins/sfw/core.hpp"
 
 namespace fte {
 
@@ -18,10 +18,10 @@ std::ostream& operator<<(std::ostream& os, const fte::alg_entry_t& val)
 hal_ret_t
 expected_flow_handler(fte::ctx_t &ctx, fte::expected_flow_t *wentry)
 {
-    hal::firewall::firewall_info_t *firewall_info =
-        (hal::firewall::firewall_info_t*)ctx.feature_state(hal::firewall::FTE_FEATURE_FIREWALL);
+    hal::plugins::sfw::sfw_info_t *sfw_info =
+        (hal::plugins::sfw::sfw_info_t*)ctx.feature_state(hal::plugins::sfw::FTE_FEATURE_SFW);
     fte::alg_entry_t *entry = (fte::alg_entry_t*)wentry;
-    firewall_info->skip_firewall = entry->skip_firewall;
+    sfw_info->skip_sfw = entry->skip_sfw;
     ctx.set_alg_entry((void *)entry);
     return HAL_RET_OK;
 }
@@ -51,7 +51,7 @@ alloc_and_init_alg_entry(fte::ctx_t& ctx)
 
 /*-----------------------------------------------------------------------
 - This API can be used to insert a new entry into the FTE Expected flow table
-  when the firewall has indicated ALG action on the flow.
+  when the stateful firewall has indicated ALG action on the flow.
 -------------------------------------------------------------------------*/
 fte::alg_entry_t *
 insert_alg_entry(fte::ctx_t& ctx)
@@ -80,8 +80,8 @@ alg_completion_hdlr (fte::ctx_t& ctx, bool status)
 {
     hal::app_session_t    *app = NULL;
     HAL_TRACE_DEBUG("Invoked ALG Completion Handler status: {}", status);
-    hal::firewall::firewall_info_t *firewall_info =
-        (hal::firewall::firewall_info_t*)ctx.feature_state(hal::firewall::FTE_FEATURE_FIREWALL);
+    hal::plugins::sfw::sfw_info_t *sfw_info =
+        (hal::plugins::sfw::sfw_info_t*)ctx.feature_state(hal::plugins::sfw::FTE_FEATURE_SFW);
 
     // Insert ALG entry on completion
     if (status) {
@@ -89,7 +89,7 @@ alg_completion_hdlr (fte::ctx_t& ctx, bool status)
             // Todo (Pavithra) -- cleanup during session timeout callback
             app = (hal::app_session_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, 
                                                       sizeof(hal::app_session_t));
-            app->alg_info.alg = firewall_info->alg_proto;
+            app->alg_info.alg = sfw_info->alg_proto;
             ctx.session()->app_session = app;
         }
         insert_alg_entry(ctx);
@@ -121,7 +121,7 @@ insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map,
     entry->entry.key.proto = (types::IPProtocol)map->prot;
     entry->entry.key.flow_type = (map->addr_family == fte::ALG_ADDRESS_FAMILY_IPV6)?FLOW_TYPE_V6:FLOW_TYPE_V4;
     entry->alg_proto_state = proto_state;
-    entry->skip_firewall = TRUE;
+    entry->skip_sfw = TRUE;
 
     // Save the program number and SUN/MS RPC control dport (could be user specified)
     // We would replace this with the incoming one for Firewall lookup.

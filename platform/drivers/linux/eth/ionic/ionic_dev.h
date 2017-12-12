@@ -66,68 +66,78 @@ struct doorbell {
 
 /**
  * struct intr_ctrl - Interrupt control register
- * @coal_init:        Coalescing timer initial value, in
+ * @coalescing_init:  Coalescing timer initial value, in
  *                    microseconds.  When an interrupt is sent
  *                    the interrupt coalescing timer current
- *                    value (coalescing_curr) is initialized with
+ *                    value (@coalescing_curr) is initialized with
  *                    this value and begins counting down.  No
  *                    more interrupts are sent until the
  *                    coalescing timer reaches 0.  When
- *                    coalescing_init=0 interrupt coalescing is
+ *                    @coalescing_init=0 interrupt coalescing is
  *                    effectively disabled and every interrupt
  *                    assert results in an interrupt.  Reset
  *                    value: 0.
- * @mask:             Interrupt mask.  When mask=1 the interrupt
+ * @mask:             Interrupt mask.  When @mask=1 the interrupt
  *                    resource will not send an interrupt.  When
- *                    mask=0 the interrupt resource will send an
+ *                    @mask=0 the interrupt resource will send an
  *                    interrupt if an interrupt event is pending
  *                    or on the next interrupt assertion event.
  *                    Reset value: 1.
- * @credits:          Interrupt mask.  When mask=1 the interrupt
- *                    resource will not send an interrupt.  When
- *                    mask=0 the interrupt resource will send an
- *                    interrupt if an interrupt event is pending
- *                    or on the next interrupt assertion event.
- * @unmask:           When this bit is written with a 1 the
- *                    interrupt resource will set mask=0.
- * @coal_timer_reset: When this bit is written with a 1 the
- *                    coalescing_curr will be reloaded with
- *                    coalescing_init to reset the coalescing
- *                    timer.
+ * @int_credits:      Interrupt credits.  This register indicates
+ *                    how many interrupt events the hardware has
+ *                    sent.  When written by software this
+ *                    register atomically decrements @int_credits
+ *                    by the value written.  When @int_credits
+ *                    becomes 0 then the “pending interrupt” bit
+ *                    in the Interrupt Status register is cleared
+ *                    by the hardware and any pending but unsent
+ *                    interrupts are cleared.
+ *                    The upper 2 bits are special flags:
+ *                       Bits 0-15: Interrupt Events -- Interrupt
+ *                       event count.
+ *                       Bit 16: @unmask -- When this bit is
+ *                       written with a 1 the interrupt resource
+ *                       will set mask=0.
+ *                       Bit 17: @coal_timer_reset -- When this
+ *                       bit is written with a 1 the
+ *                       @coalescing_curr will be reloaded with
+ *                       @coalescing_init to reset the coalescing
+ *                       timer.
  * @mask_on_assert:   Automatically mask on assertion.  When
- *                    mask_on_assert=1 the interrupt resource
- *                    will set mask=1 whenever an interrupt is
+ *                    @mask_on_assert=1 the interrupt resource
+ *                    will set @mask=1 whenever an interrupt is
  *                    sent.  When using interrupts in Legacy
  *                    Interrupt mode the driver must select
- *                    mask_on_assert=0 for proper interrupt
+ *                    @mask_on_assert=0 for proper interrupt
  *                    operation.
- * @coal_timer:       Coalescing timer current value, in
+ * @coalescing_curr:  Coalescing timer current value, in
  *                    microseconds.  When this value reaches 0
  *                    the interrupt resource is again eligible to
  *                    send an interrupt.  If an interrupt event
- *                    is already pending when coalescing_curr
+ *                    is already pending when @coalescing_curr
  *                    reaches 0 the pending interrupt will be
  *                    sent, otherwise an interrupt will be sent
  *                    on the next interrupt assertion event.
  */
 struct intr_ctrl {
-	u32 coal_init:6;
+	u32 coalescing_init:6;
 	u32 rsvd:26;
 	u32 mask:1;
 	u32 rsvd2:31;
-	u32 credits:16;
+	u32 int_credits:16;
 	u32 unmask:1;
 	u32 coal_timer_reset:1;
 	u32 rsvd3:14;
 	u32 mask_on_assert:1;
 	u32 rsvd4:31;
-	u32 coal_timer:6;
+	u32 coalescing_curr:6;
 	u32 rsvd5:26;
-	u32 rsvd6[11];
+	u32 rsvd6[3];
 } __packed;
 
-#define intr_to_mask(intr_ctrl)		((void *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)	((void *)(intr_ctrl) + 8)
+#define intr_to_mask(intr_ctrl)			((void *)(intr_ctrl) + 4)
+#define intr_to_credits(intr_ctrl)		((void *)(intr_ctrl) + 8)
+#define intr_to_mask_on_assert(intr_ctrl)	((void *)(intr_ctrl) + 12)
 
 struct intr_status {
 	u32 status[2];
@@ -135,7 +145,7 @@ struct intr_status {
 
 static inline void ionic_struct_size_checks(void) {
 	BUILD_BUG_ON(sizeof(struct doorbell) != 8);
-	BUILD_BUG_ON(sizeof(struct intr_ctrl) != 64);
+	BUILD_BUG_ON(sizeof(struct intr_ctrl) != 32);
 	BUILD_BUG_ON(sizeof(struct intr_status) != 8);
 	BUILD_BUG_ON(sizeof(struct admin_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct admin_comp) != 16);
@@ -283,6 +293,7 @@ struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index);
+void ionic_intr_mask_on_assertion(struct intr *intr);
 void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer);
 void ionic_intr_mask(struct intr *intr, bool mask);

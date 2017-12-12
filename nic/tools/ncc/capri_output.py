@@ -2348,7 +2348,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         dst_phv = None
         val = 0
         use_or = False
-        assert mid < max_mid
         if op.op_type == meta_op.EXTRACT_REG:
             #pdb.set_trace() # un-tested so far
             assert op.rid != None
@@ -2402,6 +2401,8 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         if current_flit == None:
             current_flit = flit
         assert current_flit == flit, pdb.set_trace()
+
+        assert mid < max_mid, "%s:%s:Out of meta instructions %s" % (parser.d, nxt_cs.name, set_ops)
 
         sram['meta_inst'][mid]['phv_idx']['value'] = str((dst_phv / 8) & 0x7F)
         if mux_inst_id == None:
@@ -2616,7 +2617,7 @@ def capri_parser_output_decoders(parser):
                                                          csum_phdr_t)
                 if csum_prof != None:
                     #For handling wide register store word_size  *  profile#
-                    csum_prof['word_size'] = str(int(csum_t['word_size'], 16) * cprof_inst)
+                    csum_prof['word_size'] = str(hex(int(csum_t['word_size'], 16) * cprof_inst))
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
                             = csum_prof
@@ -2625,7 +2626,7 @@ def capri_parser_output_decoders(parser):
                             = True 
                 if csum_phdr_prof != None:
                     #For handling wide register store word_size  *  profile#
-                    csum_phdr_prof['word_size'] = str(int(csum_phdr_t['word_size'], 16) * phdr_inst)
+                    csum_phdr_prof['word_size'] = str(hex(int(csum_phdr_t['word_size'], 16) * phdr_inst))
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
                                                           = csum_phdr_prof
@@ -2652,7 +2653,7 @@ def capri_parser_output_decoders(parser):
                                                           icrc_t)
                 if icrc_prof != None:
                     #For handling wide register store word_size  *  profile#
-                    icrc_prof['word_size'] = str(int(icrc_t['word_size'], 16) * prof_inst)
+                    icrc_prof['word_size'] = str(hex(int(icrc_t['word_size'], 16) * prof_inst))
                     ppa_json['cap_ppa']['registers']\
                       ['cap_ppa_csr_cfg_crc_profile[%d]' % prof_inst] = icrc_prof
                     ppa_json['cap_ppa']['registers']\
@@ -2665,7 +2666,7 @@ def capri_parser_output_decoders(parser):
                                                           icrc_mask_t)
                 if icrc_mask_prof != None:
                     #For handling wide register store word_size  *  profile#
-                    icrc_mask_prof['word_size'] = str(int(icrc_mask_t['word_size'], 16) * prof_inst)
+                    icrc_mask_prof['word_size'] = str(hex(int(icrc_mask_t['word_size'], 16) * prof_inst))
                     ppa_json['cap_ppa']['registers']\
                       ['cap_ppa_csr_cfg_crc_mask_profile[%d]' % prof_inst] = icrc_mask_prof
                     ppa_json['cap_ppa']['registers']\
@@ -2691,6 +2692,19 @@ def capri_parser_output_decoders(parser):
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['num_phv_flit']['value'] = str(6)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']\
         ['state_lkp_catchall_entry']['value'] = str(idx)
+    # gso csum will be written by a separate checksum instruction, enabling it here is ok
+    # even if checksum inst is not executed
+    # ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['gso_csum_en'] = True
+    '''
+    Enable it once model is avaialble
+    if parser.be.pa.gress_pa[parser.d].parser_end_off_cf:
+        phv_flit_sz = parser.be.hw_model['phv']['flit_size']
+        end_offset_flit = parser.be.pa.gress_pa[parser.d].parser_end_off_cf.phv_bit / phv_flit_sz
+        ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['end_offset_en'] = True
+        ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['end_offset_flit_num'] = \
+            str(end_offset_flit)
+    '''
+
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['_modified'] = True
     idx += 1
     parser.logger.info('%s:Tcam states used %d' % (parser.d.name, idx))
@@ -3074,12 +3088,6 @@ def capri_te_cfg_output(stage):
                     se['lkup']['value'] = te_consts['mpu_only']
                 else:
                     assert 0, pdb.set_trace()
-                # over-ride hash type to mpu-only if there is no table in mem
-                if ct.is_hash_table() and ct.num_entries == 0:
-                    # this also covers toeplitz hash
-                    stage.gtm.tm.logger.warning('%s: Stage %d: Table %s changed to MPU-ONLY' % \
-                        (stage.gtm.d.name, stage.id, ct.p4_table.name))
-                    se['lkup']['value'] = te_consts['mpu_only']
                 if ct.is_wide_key:
                     if fid == ct.flits_used[0]:
                         se['hash_chain']['value'] = str(0)
@@ -3155,6 +3163,7 @@ def capri_te_cfg_output(stage):
         # cycle of the sequencer
         for kmid in range(num_km):
             se['km_new_key%d' % kmid]['value'] = str(1)
+        se['_modified'] = True
 
         stage.gtm.tm.logger.debug( \
             "%s:Stage %d:Table profile (catch-all)TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
@@ -3260,6 +3269,12 @@ def capri_te_cfg_output(stage):
         json_tbl_['addr_vf_id_en']['value'] = str(0)
         json_tbl_['addr_vf_id_loc']['value'] = str(0)
 
+        if ct.num_entries and ct.otcam_ct:
+            #This value is used by Otcam table to jump to sram area
+            #associated with TCAM but present at end of hash-table's
+            #sram-area.
+            json_tbl_['oflow_base_idx']['value'] = str(ct.num_entries)
+
         entry_size = ct.d_size
         if ct.is_hash_table():
             if ct.is_overflow:
@@ -3269,11 +3284,6 @@ def capri_te_cfg_output(stage):
 
         entry_sizeB = (entry_size + 7) / 8   # convert to bytes
         lg2entry_size = log2size(entry_sizeB)
-        if ct.num_entries and ct.otcam_ct:
-            #This value is used by Otcam table to jump to sram area
-            #associated with TCAM but present at end of hash-table's
-            #sram-area.
-            json_tbl_['oflow_base_idx']['value'] = str(ct.num_entries)
 
         if ct.is_hbm and not ct.is_raw and not ct.is_raw_index:
             json_tbl_['addr_shift']['value'] = str(lg2entry_size)
@@ -3297,6 +3307,16 @@ def capri_te_cfg_output(stage):
             json_tbl_['lg2_entry_size']['value'] = str(6)
         else:
             json_tbl_['chain_shift']['value'] = str(0)
+
+        # special case - for hash table w/ no mem access, overwrite log2entry and axi values
+        if ct.num_entries == 0 and ct.is_hash_table():
+            # this also covers toeplitz hash
+            lg2entry_size = 7 # special values used by h/w to not launch mem read operation
+            json_tbl_['axi']['value'] = str(0) # make it hbm for lg2_Entry_sz to take effect
+            stage.gtm.tm.logger.warning('%s: Stage %d: Table %s set to HASH-ONLY (no mem access)' % \
+                        (stage.gtm.d.name, stage.id, ct.p4_table.name))
+            #se['lkup']['value'] = te_consts['mpu_only']
+            se['lkup']['value'] = te_consts['hash_only']
 
         json_tbl_['_modified'] = True
         stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:cap_te_csr_cfg_table_property[%d]:\n%s" % \

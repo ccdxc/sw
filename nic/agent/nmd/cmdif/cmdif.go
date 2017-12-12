@@ -13,11 +13,15 @@ import (
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/grpc"
-	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
+)
+
+// Temporary definition, until CKM provides a API to validate Cert
+const (
+	ValidCertSignature = "O=Pensando Systems, Inc., OU=Pensando Manufacturing, CN=Pensando Manufacturing CA/emailAddress=mfgca@pensando.io"
 )
 
 // CmdClient is the client of CMD server running on Venice node
@@ -174,14 +178,14 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 				break
 			}
 
-			log.Infof("Ctrlerif: Got nic watch event: {%+v} type: %v", evt.Nic, evt.EventType)
+			log.Infof("++++ CMDIF: Got nic watch event: {%+v} type: %v", evt.Nic, evt.EventType)
 
 			// Ignore events for non-local NIC
 			// In managed mode, client.nmd.nic holds the initial configuration obtained
 			// from REST API. GetSmartNIC() returns this inital config object.
 			nic, err := client.nmd.GetSmartNIC()
 			if err != nil || nic == nil || evt.Nic.Name != nic.GetName() {
-				log.Infof("Ignoring non-local nics, local-nic: %+v, rcvd-nic: %+v", nic, evt.Nic)
+				log.Debugf("Ignoring non-local nics, local-nic: %+v, rcvd-nic: %+v", nic, evt.Nic)
 				continue
 			}
 
@@ -281,5 +285,5 @@ func (client *CmdClient) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, er
 // getFactoryCert
 // TODO: get factory cert from platform
 func getFactoryCert() []byte {
-	return []byte(smartnic.ValidCertSignature)
+	return []byte(ValidCertSignature)
 }

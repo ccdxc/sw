@@ -49,6 +49,8 @@ class fsm_state_t {
   static void state_entry(fsm_state_ctx ctx) {}
 
   static void state_exit(fsm_state_ctx ctx) {}
+
+  const char* get_state_name() { return name_.c_str(); }
 };
 
 class fsm_transition_t {
@@ -56,9 +58,12 @@ public:
   uint32_t event;
   fsm_transition_func func;
   uint32_t next_state;
+  const char *event_name;
+  const char *next_state_name;
 
   fsm_transition_t(uint32_t event, fsm_transition_func function,
-                   uint32_t next_state);
+                   uint32_t next_state, const char *event_name,
+                   const char *next_state_name);
 };
 
 typedef std::map<fsm_state_t, std::vector<fsm_transition_t>>
@@ -132,7 +137,7 @@ class fsm_state_machine_t {
 };
 
 #define FSM_TRANSITION(event, function, next_state) \
-    fsm_transition_t(event, function, next_state),
+    fsm_transition_t(event, function, next_state, #event, #next_state),
 
 #define FSM_STATE_BEGIN(state_id, timer, entry_func, exit_func) \
     {                                                           \

@@ -19,8 +19,9 @@ from infra.common.glopts        import GlobalOptions
 
 from config.objects.session     import SessionHelper
 
-from scapy.utils import inet_aton, inet_ntoa
+from scapy.utils import inet_aton, inet_ntoa, inet_pton
 import struct
+import socket
 
 class RdmaSessionObject(base.ConfigObjectBase):
     def __init__(self):
@@ -33,10 +34,12 @@ class RdmaSessionObject(base.ConfigObjectBase):
         self.lqp = lqp
         self.rqp = rqp
         self.ah_handle = 0
+        self.ah_size = 0
         self.session = session
+        self.IsIPV6 = session.IsIPV6()
 
     def Configure(self):
-        self.lqp.ConfigureHeaderTemplate(self, True)
+        self.lqp.ConfigureHeaderTemplate(self, True, self.session.IsIPV6())
         #self.rqp.ConfigureHeaderTemplate(self, False)
         self.lqp.set_dst_qp(self.rqp.id)
         if self.lqp.svc == 3:
@@ -65,15 +68,26 @@ class RdmaSessionObject(base.ConfigObjectBase):
 
         req_spec.smac = bytes(self.session.initiator.ep.macaddr.getnum().to_bytes(6, 'little'))
         req_spec.dmac = bytes(self.session.responder.ep.macaddr.getnum().to_bytes(6, 'little'))
-        req_spec.ethtype = 0x800
+        if self.session.IsIPV6():
+             req_spec.ethtype = 0x86dd
+             req_spec.ip_ver = 6
+             req_spec.ip_saddr.ip_af = haldefs.common.IP_AF_INET6
+             req_spec.ip_saddr.v6_addr = self.session.initiator.addr.getnum().to_bytes(16, 'big')
+             req_spec.ip_daddr.ip_af = haldefs.common.IP_AF_INET6
+             req_spec.ip_daddr.v6_addr = self.session.responder.addr.getnum().to_bytes(16, 'big')
+        else:
+             req_spec.ethtype = 0x800
+             req_spec.ip_ver = 4
+             req_spec.ip_saddr.ip_af = haldefs.common.IP_AF_INET
+             req_spec.ip_saddr.v4_addr = self.session.initiator.addr.getnum()
+             req_spec.ip_daddr.ip_af = haldefs.common.IP_AF_INET
+             req_spec.ip_daddr.v4_addr = self.session.responder.addr.getnum()
+
+        req_spec.ip_tos = self.session.iflow.txqos.dscp
         req_spec.vlan = self.session.initiator.ep.intf.encap_vlan_id
         req_spec.vlan_pri = self.session.iflow.txqos.cos
         req_spec.vlan_cfi = 0
-        req_spec.ip_ver = 4
-        req_spec.ip_tos = self.session.iflow.txqos.dscp
         req_spec.ip_ttl = 64
-        req_spec.ip_saddr = struct.unpack("!L",inet_aton(self.session.initiator.addr.get()))[0]
-        req_spec.ip_daddr = struct.unpack("!L",inet_aton(self.session.responder.addr.get()))[0]
         req_spec.udp_sport = int(self.session.iflow.sport)
         req_spec.udp_dport = int(self.session.iflow.dport)
         
@@ -81,11 +95,16 @@ class RdmaSessionObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         cfglogger.info("ProcessHALResponse:: RDMA Session: %s Session: %s "
-                       "Remote QP: %s Local QP: %s\n" %\
-                        (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID()))
+                       "Remote QP: %s Local QP: %s ah_handle: %d, ah_size: %d\n" %\
+                        (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID(), 
+                         resp_spec.ah_handle, resp_spec.ah_size))
 
         self.ah_handle = resp_spec.ah_handle
+        self.ah_size = resp_spec.ah_size
         return
+
+    def IsIPV6(self):
+        return self.IsIPV6
 
     def IsFilterMatch(self, selectors):
         cfglogger.debug('Matching RDMA Session: %s' % self.GID())
@@ -97,6 +116,11 @@ class RdmaSessionObject(base.ConfigObjectBase):
         match = self.rqp.IsFilterMatch(selectors.rdmasession.rqp)
         cfglogger.debug("- RQP Filter Match =", match)
         if match == False: return  match
+        
+        if hasattr(selectors.rdmasession, 'session'):
+            match = super().IsFilterMatch(selectors.rdmasession.session.filters)
+            cfglogger.debug("- IsIPV6 Filter Match =", match)
+            if match == False: return  match
         
         return True
 

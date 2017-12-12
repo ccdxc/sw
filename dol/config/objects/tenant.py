@@ -106,6 +106,13 @@ class TenantObject(base.ConfigObjectBase):
     def GetClassicEnics(self):
         return self.classic_enics
 
+    def GetPromiscuousEnic(self):
+        for e in self.classic_enics:
+            if e.IsPromiscous():
+                return e
+        pdb.set_trace()
+        return None
+
     def GetClassicEnicsForConfig(self):
         if self.enic_config_done is False:
             self.enic_config_done = True

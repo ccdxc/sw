@@ -63,10 +63,10 @@ packets:
                 len     : 156
                 id      : 0
                 tos     : 0
-                chksum  : 0
             udp:
                 sport : 4500
                 dport : 4500
+                chksum  : 1355
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
                 seq     : callback://ipsec/ipsec/GetSeqNo
@@ -89,10 +89,10 @@ packets:
                 len     : 156
                 id      : 0
                 tos     : 0
-                chksum  : 0
             udp:
                 sport : 4500
                 dport : 4500
+                chksum  : 1355
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
                 seq     : callback://ipsec/ipsec/GetSeqNo

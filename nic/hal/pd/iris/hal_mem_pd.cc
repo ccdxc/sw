@@ -79,11 +79,11 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((l2seg_slab_ != NULL), false);
 
-    l2seg_hwid_ht_ = ht::factory(HAL_MAX_HW_L2SEGMENTS,
-                                 hal::pd::l2seg_pd_hwid_get_hw_key_func,
-                                 hal::pd::l2seg_pd_hwid_compute_hw_hash_func,
-                                 hal::pd::l2seg_pd_hwid_compare_hw_key_func);
-    HAL_ASSERT_RETURN((l2seg_hwid_ht_ != NULL), false);
+    flow_lkupid_ht_ = ht::factory(HAL_MAX_HW_L2SEGMENTS + HAL_MAX_HW_VRFS,
+                                 hal::pd::flow_lkupid_get_hw_key_func,
+                                 hal::pd::flow_lkupid_compute_hw_hash_func,
+                                 hal::pd::flow_lkupid_compare_hw_key_func);
+    HAL_ASSERT_RETURN((flow_lkupid_ht_ != NULL), false);
 
     l2seg_cpu_idxr_ = hal::utils::indexer::factory(HAL_MAX_HW_L2SEGMENTS, 
                                                    true, /* thread safe */
@@ -459,7 +459,7 @@ hal_state_pd::hal_state_pd()
     nwsec_profile_hwid_idxr_ = NULL;
 
     l2seg_slab_ = NULL;
-    l2seg_hwid_ht_ = NULL; 
+    flow_lkupid_ht_ = NULL; 
     l2seg_cpu_idxr_ = NULL;
 
     mc_entry_slab_ = NULL;
@@ -565,7 +565,7 @@ hal_state_pd::~hal_state_pd()
     nwsec_profile_hwid_idxr_ ? indexer::destroy(nwsec_profile_hwid_idxr_) : HAL_NOP;
 
     l2seg_slab_ ? slab::destroy(l2seg_slab_) : HAL_NOP;
-    l2seg_hwid_ht_ ? ht::destroy(l2seg_hwid_ht_) : HAL_NOP;
+    flow_lkupid_ht_ ? ht::destroy(flow_lkupid_ht_) : HAL_NOP;
     l2seg_cpu_idxr_ ? indexer::destroy(l2seg_cpu_idxr_) : HAL_NOP;
 
     mc_entry_slab_ ? slab::destroy(mc_entry_slab_) : HAL_NOP;

@@ -4,7 +4,7 @@
 #include "nic/p4/nw/include/defines.h"
 
 namespace hal {
-namespace network {
+namespace eplearn {
 
 void arp_init() {}
 
@@ -14,14 +14,7 @@ bool is_arp_flow(const hal::flow_key_t *key) {
 }
 
 
-bool is_arp_broadcast(const hal::flow_key_t *key) {
-    for (int i = 0; i < ETHER_ADDR_LEN; i++) {
-        if ((((key->dmac[i] + 1) & key->dmac[i]) != 0)) {
-            return false;
-        }
-    }
-    return true;
-}
+
 
 static hal_ret_t arp_process_req_entry(uint16_t opcode, uint8_t *hw_address,
         uint8_t *protocol_address, fte::ctx_t &ctx) {
@@ -36,6 +29,7 @@ static hal_ret_t arp_process_req_entry(uint16_t opcode, uint8_t *hw_address,
                                     ctx.sep(), ARP_TRANS_IPV4, &trans_key);
     trans = arp_trans_t::find_arptrans_by_id(trans_key);
     if (trans == NULL) {
+        HAL_TRACE_INFO("Creating new ARP transaction {}", event);
         trans = new arp_trans_t(hw_address, ARP_TRANS_IPV4, ctx);
     }
     if (opcode == ARPOP_REVREQUEST) {
@@ -48,6 +42,7 @@ static hal_ret_t arp_process_req_entry(uint16_t opcode, uint8_t *hw_address,
     ip_addr.addr.v4_addr = ntohl(ip_addr.addr.v4_addr);
     event_data.ip_addr = &ip_addr;
     event_data.fte_ctx = &ctx;
+    HAL_TRACE_INFO("Processing ARP event {}", event);
     arp_trans_t::process_transaction(trans, event,
                                  (fsm_event_data)(&event_data));
     return HAL_RET_OK;
@@ -58,7 +53,7 @@ static hal_ret_t arp_process_entry(struct ether_arp *arphead,
     arp_trans_key_t trans_key;
     arp_event_data_t event_data;
     arp_trans_t *trans;
-    uint32_t event;
+    arp_fsm_event_t event;
     uint16_t opcode = ntohs(arphead->ea_hdr.ar_op);
     ip_addr_t ip_addr = {0};
 
@@ -71,6 +66,7 @@ static hal_ret_t arp_process_entry(struct ether_arp *arphead,
         trans = arp_trans_t::find_arptrans_by_id(trans_key);
         if (trans == nullptr) {
             /* Did not see a RARP request, but seeing an RARP response */
+            HAL_TRACE_ERR("RARP request missing, ignoring RARP response.");
             return HAL_RET_OK;
         }
         event = RARP_REPLY;
@@ -78,6 +74,7 @@ static hal_ret_t arp_process_entry(struct ether_arp *arphead,
                 sizeof(ip_addr.addr.v4_addr));
         event_data.ip_addr = &ip_addr;
         event_data.fte_ctx = &ctx;
+        HAL_TRACE_INFO("Processing ARP event {}", event);
         arp_trans_t::process_transaction(trans, event,
                                      (fsm_event_data)(&event_data));
     }
@@ -145,7 +142,7 @@ hal_ret_t arp_process_packet(fte::ctx_t &ctx) {
 
     ret = validate_arp_packet(arphead, ctx);
     if (ret != HAL_RET_OK) {
-         goto out;
+        goto out;
      }
     opcode = ntohs(arphead->ea_hdr.ar_op);
     HAL_TRACE_INFO("ARP: Processing ARP type {} , SRC {} ",
@@ -156,5 +153,5 @@ out:
     return ret;
 }
 
-}  // namespace network
+}  // namespace eplearn
 }  // namespace hal

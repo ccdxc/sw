@@ -87,8 +87,8 @@ f_ip_normalization_optimal:
 
   bcf         [c1 & c5], lb_ipv4_normalizaiton_optimal
   seq         c2, k.vlan_tag_valid, 1
-  bcf         [c2 & c6], lb_ipv6_normalization_optimal
-  nop         // Add ipv6 specific instruction here
+  bcf         [c1 & c6], lb_ipv6_normalization_optimal
+  seq         c1, k.l3_metadata_ip_option_seen, TRUE
   jr          r7
 
 lb_ipv4_normalizaiton_optimal:
@@ -100,18 +100,19 @@ lb_ipv4_normalizaiton_optimal:
   sle.!c1     c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}
   jr.!c1      r7  // IPv4 Good Packet
-  b.c1        lb_ip_normalizaiton // bad packet
+  b.c1        lb_ipv4_normalizaiton // bad packet
   nop
 
+// c1 has ipv6_options_blob_valid == TRUE
 lb_ipv6_normalization_optimal:
-  jr          r7
+  jr.!c1      r7
+  b.c1        lb_ipv6_normalization
   nop
   // Good packet end
 
-lb_ip_normalizaiton:
+lb_ipv4_normalizaiton:
   // Will fall through non-optimal logic for bad packet cases
   // c5 - v4 packet, c6 - v6 packet
-  b.c6        lb_ipv6_normalization
   seq         c7, k.tunnel_metadata_tunnel_terminate, 1
   seq         c4, d.u.l4_profile_d.ip_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
   b.c4        lb_ipv4_norm_df_bit
@@ -124,6 +125,9 @@ lb_ip_normalizaiton:
   // Edit Case. Need to check whether to update inner or outer
   phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_RSVD_MASK
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_RSVD_MASK
+  // Assumption is if we terminated the tunnel and looking inner then we will move all
+  // inner packets to outer, so we only need to tell checksum engine to update outer only.
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 lb_ipv4_norm_df_bit:
   b.c4        lb_ipv4_norm_options
@@ -136,6 +140,9 @@ lb_ipv4_norm_df_bit:
   // Edit Case. Need to check whether to update inner or outer
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_DF_MASK
   phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_DF_MASK
+  // Assumption is if we terminated the tunnel and looking inner then we will move all
+  // inner packets to outer, so we only need to tell checksum engine to update outer only.
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 lb_ipv4_norm_options:
   b.c4        lb_ipv4_norm_invalid_length
@@ -161,8 +168,9 @@ lb_ipv4_norm_options:
   phvwr       p.ipv4_totalLen, r2
   sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
-  b           lb_ipv4_norm_invalid_length
   phvwr       p.capri_p4_intrinsic_packet_len, r2
+  b           lb_ipv4_norm_invalid_length
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 
 lb_ipv4_norm_options_tunnel_terminate:
@@ -179,6 +187,9 @@ lb_ipv4_norm_options_tunnel_terminate:
   sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
   phvwr       p.capri_p4_intrinsic_packet_len, r2
+  // Assumption is if we terminated the tunnel and looking inner then we will move all
+  // inner packets to outer, so we only need to tell checksum engine to update outer only.
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 
 // Here we normalize the invalid length based on outer IP total len
@@ -236,8 +247,51 @@ lb_ipv4_norm_ttl:
 
 
 lb_ipv6_normalization:
+  seq         c7, k.tunnel_metadata_tunnel_terminate, 1
+  seq         c4, d.u.l4_profile_d.ip_options_action, NORMALIZATION_ACTION_ALLOW
+  b.c4        lb_ipv6_norm_hop_limit
+  seq         c4, d.u.l4_profile_d.ip_normalize_ttl, 0
+  seq         c1, k.l3_metadata_ip_option_seen, 1
+  b.!c1       lb_ipv6_norm_hop_limit
+  seq         c1, d.u.l4_profile_d.ip_options_action, NORMALIZATION_ACTION_DROP
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
+  phvwr.c1    p.capri_intrinsic_drop, 1
+  // Edit Case. Need to check whether to update inner or outer
+  // We also need to update
+  // 1. First mark the ipv6 option blob as not valid.
+  // 2. Update the nxt_hdr in main ipv6 hdr to ulp
+  // 3. IPv6 payload length in packet
+  // 4. capri_p4_intrinsic.packet_len needs to be reduced
+  b.c7        lb_ipv6_norm_options_tunnel_terminate
+  phvwr.!c7   p.ipv6_options_blob_valid, 0
+  phvwr       p.ipv6_nextHdr, k.l3_metadata_ipv6_ulp
+  sub         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
+                  k.l3_metadata_ipv6_options_len
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+  sub         r1, k.ipv6_payloadLen, k.l3_metadata_ipv6_options_len
+  b           lb_ipv6_norm_hop_limit
+  phvwr       p.ipv6_payloadLen, r1
+
+lb_ipv6_norm_options_tunnel_terminate:
+  phvwr       p.inner_ipv6_options_blob_valid, 0
+  phvwr       p.inner_ipv6_nextHdr, k.l3_metadata_inner_ipv6_ulp
+  sub         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
+                  k.l3_metadata_inner_ipv6_options_len
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+  sub         r1, k.inner_ipv6_payloadLen, k.l3_metadata_inner_ipv6_options_len
+  phvwr       p.inner_ipv6_payloadLen, r1
+  sub         r1, k.udp_len, k.l3_metadata_inner_ipv6_options_len
+  phvwr       p.udp_len, r1
+  sub         r1, k.ipv4_totalLen, k.l3_metadata_inner_ipv6_options_len
+  phvwr       p.ipv4_totalLen, r1
+  
+  
+lb_ipv6_norm_hop_limit:
   jr r7
   nop
+
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:

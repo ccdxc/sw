@@ -1,0 +1,40 @@
+# Feature Test Modules List
+feature:
+    id       : fte2
+    sub      : eplearn
+    package  : test.fte.eplearn
+    module   : dhcp_learn
+    runorder : 1
+    enable   : True
+    ignore   : True
+    args     :
+
+modules:
+    - module:
+        name    : DHCP_DISCOVER
+        spec    : dhcp_learn_disc.testspec
+        iterate :
+              - type     : DHCP_DISCOVER
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=False
+    - module:
+        name    : DHCP_OFFER
+        spec    : dhcp_learn_offer.testspec
+        iterate :
+              - type     : DHCP_OFFER
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=False
+    - module:
+        name    : DHCP_REQUEST
+        spec    : dhcp_learn_req.testspec
+        iterate :
+              - type     : DHCP_REQUEST
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=False
+    - module:
+        name    : DHCP_ACK
+        spec    : dhcp_learn_ack.testspec
+        iterate :
+              - type     : DHCP_ACK
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=False

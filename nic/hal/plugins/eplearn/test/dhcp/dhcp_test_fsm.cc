@@ -22,7 +22,7 @@
 #include <tins/tins.h>
 
 using namespace Tins;
-using namespace hal::network;
+using namespace hal::eplearn;
 using hal::utils::twheel;
 using namespace hal;
 
@@ -70,6 +70,10 @@ void dhcp_topo_setup()
     NetworkSpec                 nw_spec, nw_spec1;
     NetworkResponse             nw_rsp, nw_rsp1;
     NetworkKeyHandle            *nkh = NULL;
+    InterfaceSpec               enicif_spec;
+    InterfaceResponse           enicif_rsp;
+    LifSpec                     lif_spec;
+    LifResponse                 lif_rsp;
 
 
     // Create vrf
@@ -139,19 +143,35 @@ void dhcp_topo_setup()
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(2);
-    up_spec.mutable_if_uplink_info()->set_port_num(2);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::interface_create(up_spec, &up_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
+
+
+
     dummy_ten = vrf_lookup_by_id(1);
     ASSERT_TRUE(dummy_ten != NULL);
 
     //ep_t *dummy_ep;
     for (int i = 0; i < MAX_ENDPOINTS; i++) {
+
+        // Create a lif
+        lif_spec.mutable_key_or_handle()->set_lif_id(i + 1);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+
+        enicif_spec.set_type(intf::IF_TYPE_ENIC);
+        enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(i + 1);
+        enicif_spec.mutable_key_or_handle()->set_interface_id(i + 100);
+        enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(2);
+        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(2);
+
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::interface_create(enicif_spec, &up_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
+
        ep_spec.mutable_vrf_key_handle()->set_vrf_id(1);;
        ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
        ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
@@ -249,8 +269,9 @@ void dhcp_packet_send(hal_handle_t ep_handle,
     ep_t *dummy_ep = find_ep_by_handle(ep_handle);
     fte::cpu_rxhdr_t cpu_hdr;
     cpu_hdr.flags = 0;
+    cpu_hdr.l3_offset = L2_ETH_HDR_LEN;
     fte_ctx_init(ctx, dummy_ten,
-            dummy_ep, NULL, &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL);
+            dummy_ep, dummy_ep, &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL);
     hal_ret_t ret = dhcp_process_packet(ctx);
     ASSERT_EQ(ret, HAL_RET_OK);
 }
@@ -277,7 +298,7 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
 
         ctx = trans->get_ctx();
         ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, ETH_ADDR_LEN), 0);
-        ASSERT_EQ(trans->get_state(), hal::network::DHCP_SELECTING);
+        ASSERT_EQ(trans->get_state(), DHCP_SELECTING);
 
         dhcp_packet_send(*dhcp_server_ep,
                 DHCP::Flags::OFFER, xid, chaddr);
@@ -286,7 +307,7 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
         ASSERT_TRUE(trans != NULL);
         ctx = trans->get_ctx();
         ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, ETH_ADDR_LEN), 0);
-        ASSERT_EQ(trans->get_state(), hal::network::DHCP_SELECTING);
+        ASSERT_EQ(trans->get_state(), DHCP_SELECTING);
     }
     std::vector<uint8_t> server_identifier = {4, 3, 2, 1};
     // Create a DHCP::option
@@ -303,7 +324,7 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, ETH_ADDR_LEN), 0);
-    ASSERT_EQ(trans->get_state(), hal::network::DHCP_REQUESTING);
+    ASSERT_EQ(trans->get_state(), DHCP_REQUESTING);
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()),
               0);
@@ -325,7 +346,7 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
-    ASSERT_EQ(trans->get_state(), hal::network::DHCP_BOUND);
+    ASSERT_EQ(trans->get_state(), DHCP_BOUND);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, chaddr, ETH_ADDR_LEN), 0);
     struct in_addr yiaddr;
@@ -470,7 +491,7 @@ TEST_F(dhcp_fsm_test, dhcp_inform) {
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_,
             ep->l2_key.mac_addr, ETH_ADDR_LEN), 0);
-    ASSERT_EQ(trans->get_state(), hal::network::DHCP_BOUND);
+    ASSERT_EQ(trans->get_state(), DHCP_BOUND);
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()),
               0);
@@ -520,7 +541,7 @@ TEST_F(dhcp_fsm_test, dhcp_inform_decline) {
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, ep->l2_key.mac_addr, ETH_ADDR_LEN), 0);
-    ASSERT_EQ(trans->get_state(), hal::network::DHCP_BOUND);
+    ASSERT_EQ(trans->get_state(), DHCP_BOUND);
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()),
               0);
@@ -580,7 +601,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, ep->l2_key.mac_addr, ETH_ADDR_LEN), 0);
-    ASSERT_EQ(trans->get_state(), hal::network::DHCP_RENEWING);
+    ASSERT_EQ(trans->get_state(), DHCP_RENEWING);
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()),
               0);
@@ -609,7 +630,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans != NULL);
-    ASSERT_EQ(trans->get_state(), hal::network::DHCP_BOUND);
+    ASSERT_EQ(trans->get_state(), DHCP_BOUND);
 
     inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
@@ -683,7 +704,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_nack) {
     ASSERT_TRUE(trans != NULL);
     ctx = trans->get_ctx();
     ASSERT_EQ(memcmp(ctx->chaddr_, ep->l2_key.mac_addr, ETH_ADDR_LEN), 0);
-    ASSERT_EQ(trans->get_state(), hal::network::DHCP_RENEWING);
+    ASSERT_EQ(trans->get_state(), DHCP_RENEWING);
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()),
               0);

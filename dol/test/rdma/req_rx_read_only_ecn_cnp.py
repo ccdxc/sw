@@ -16,6 +16,8 @@ def TestCaseSetup(tc):
     tc.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
+    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.sq.qstate.Write()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.va = 0x0102030405060708
     tc.pvtdata.dma_len = 64
@@ -86,8 +88,10 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 1:
-        # verify that msn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 1):
+        msn = tc.pvtdata.sq_pre_qstate.ssn - 1
+
+        # verify that msn is incremented to that of ssn of this msg
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
             return False
 
         # verify that c_index of rrq is incremented by 1
@@ -106,8 +110,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
             return False
 
-        # verify that tx_psn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
+        # verify that tx_psn is not incremented
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 0):
             return False
 
         # verify that token_id is incremented by 1
@@ -118,9 +122,20 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
+        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_WQE'):
+            return False
+
+    # update current as pre_qstate ... so next step_id can use it as pre_qstate
+    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
+
     return True
 
 
 def TestCaseTeardown(tc):
     tc.info("RDMA TestCaseTeardown() Implementation.")
+    #Disable congestion-mgmt in qstate.
+    rs = tc.config.rdmasession
+    rs.lqp.sq.qstate.Read()
+    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 0;
+    rs.lqp.sq.qstate.Write()
     return

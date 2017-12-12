@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include "nic/hal/pd/common/pd_api.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -63,15 +64,18 @@ protected:
 // ----------------------------------------------------------------------------
 TEST_F(vrf_test, test1) 
 {
-    hal_ret_t                       ret;
-    VrfSpec                      ten_spec;
-    VrfResponse                  ten_rsp;
-    SecurityProfileSpec             sp_spec;
-    SecurityProfileResponse         sp_rsp;
-    VrfDeleteRequest             del_req;
-    VrfDeleteResponse            del_rsp;
-    slab_stats_t                    *pre = NULL, *post = NULL;
-    bool                            is_leak = false;
+    hal_ret_t               ret;
+    VrfSpec                 ten_spec;
+    VrfResponse             ten_rsp;
+    SecurityProfileSpec     sp_spec;
+    SecurityProfileResponse sp_rsp;
+    VrfDeleteRequest        del_req;
+    VrfDeleteResponse       del_rsp;
+    slab_stats_t            *pre      = NULL   , *post = NULL;
+    bool                    is_leak   = false;
+    hal::hal_obj_id_t       obj_id;
+    void                    *obj;
+    hal::vrf_t              *vrf = NULL;
 
 
     // Create nwsec
@@ -93,6 +97,13 @@ TEST_F(vrf_test, test1)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    ret = hal::pd::pd_get_object_from_flow_lkupid(4096, &obj_id, &obj);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    vrf = (hal::vrf_t *)obj;
+    ASSERT_TRUE(vrf->vrf_id == 1);
+
 
     // Delete vrf
     del_req.mutable_key_or_handle()->set_vrf_id(1);
@@ -128,6 +139,9 @@ TEST_F(vrf_test, test2)
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
     NetworkKeyHandle                *nkh = NULL;
+    hal::hal_obj_id_t       obj_id;
+    void                    *obj;
+    hal::l2seg_t                 *l2seg;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
@@ -196,6 +210,12 @@ TEST_F(vrf_test, test2)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    ret = hal::pd::pd_get_object_from_flow_lkupid(4097, &obj_id, &obj);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    l2seg = (hal::l2seg_t *)obj;
+    ASSERT_TRUE(l2seg->seg_id == 21);
 
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);

@@ -397,32 +397,45 @@ header_type udp_payload_t {
 
 header_type udp_opt_ocs_t {
     fields {
-        kind :      8;  // 0x02
+        kind :      8;
         chksum :    8;
     }
 }
 header_type udp_opt_timestamp_t {
     fields {
-        kind :      8;  // 0x06
-        len  :      8;  // 10
+        kind : 8;
+        len  : 8;
+        ts_value : 32;
+        ts_echo : 32;
     }
 }
 
 header_type udp_opt_mss_t {
     fields {
-        kind :      8;  // 0x05
-        len  :      8;  // 4
+        kind :  8;
+        len :  8;
+        mss :  16;
     }
 }
 header_type udp_opt_nop_t {
     fields {
-        kind :      8;  // 0x01
+        kind : 8;
     }
 }
 header_type udp_opt_eol_t {
     fields {
-        kind :      8;  // 0x00
+        kind : 8;
     }
+}
+
+header_type udp_opt_unknown_t {
+    fields {
+        kind : 8;
+        len : 8;
+        data : *;
+    }
+    length : len;
+    max_length : 40;
 }
 
 header_type gre_t {

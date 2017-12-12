@@ -1,0 +1,61 @@
+# Test Spec
+selectors:
+    root            : ref://store/templates/id=ENDPOINT
+    endpoint        : filter://remote=True
+    tenant          : filter://overlay=VXLAN,type=TENANT
+    segment         : filter://fabencap=VXLAN
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_ARP
+        headers     :
+            eth:
+                src     : ref://testcase/config/root/macaddr
+                dst     : callback://eplearn/arp/GetArpDestMAC
+                type    : callback://eplearn/arp/GetArpEtherType
+            arp:
+                op      : callback://networking/arp/GetArpOpcode
+                hwsrc   : callback://eplearn/arp/GetArpSourceMAC
+                psrc    : callback://eplearn/arp/GetArpSourceIP
+                hwdst   : callback://eplearn/arp/GetArpDestMAC
+                pdst    : callback://eplearn/arp/GetArpDestIP
+
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : PKT1 # Input Packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://eplearn/arp/GetPacketEncaps
+        headers     :
+            outereth    :
+                src     : ref://testcase/config/root/intf/rmacaddr
+                dst     : ref://testcase/config/root/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/root/intf/rtep
+                dst     : ref://testcase/config/root/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/root/segment/vxlan_id
+            qtag:
+                vlan    : ref://testcase/config/root/intf/vlan_id
+    - packet:
+        id          : PKT3 # Expected Packet on FTE
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : None
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/root/intf/ports
+
+expect:
+    delay   : callback://eplearn/arp/GetExpectDelay
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT3
+            port    : 128

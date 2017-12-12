@@ -12,12 +12,14 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -198,6 +200,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		}
 
 		env.KVStore = kv
+		env.StateMgr = cache.NewStatemgr()
 		// Create leader service before its users
 		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
 		env.SystemdService = services.NewSystemdService()
@@ -258,23 +261,31 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 }
 
 // RegisterSmartNICServer creates and register smartNIC server with retries
-func RegisterSmartNICServer() {
+func RegisterSmartNICServer(smgr *cache.Statemgr) {
 
 	// Start smartNIC gRPC server
 	for i := 0; i < maxIters; i++ {
 
 		// create new smartNIC server
-		nicServer, err := smartnic.NewRPCServer(env.CfgWatcherService, smartnic.HealthWatchInterval, smartnic.DeadInterval)
+		nicServer, err := smartnic.NewRPCServer(env.CfgWatcherService,
+			smartnic.HealthWatchInterval,
+			smartnic.DeadInterval,
+			globals.NmdRESTPort,
+			smgr)
 		if err != nil {
 			time.Sleep(apiClientWaitTimeMsec * time.Millisecond)
 			continue
 		}
 
+		// Update NIC service
+		env.NICService = nicServer
+
 		// Launch go routine to monitor health updates of smartNIC objects and update status
 		go func() {
-			nicServer.MonitorHealth()
+			env.NICService.MonitorHealth()
 		}()
 
+		// Register smartNIC gRPC server
 		grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, nicServer)
 		return
 	}

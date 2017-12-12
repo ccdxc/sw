@@ -96,8 +96,8 @@ rq:
     //TODO: to stop scheduler ringing for ever, artificially move c_index to p_index. 
     //      proxy_c_index would track the real c_index
     DOORBELL_WRITE_CINDEX(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, RQ_RING_ID, RQ_P_INDEX, DB_ADDR, DB_DATA) 
-    nop.e
-    nop
+    phvwr.e   p.common.p4_intr_global_drop, 1
+    nop //Exit Slot
 
 check_rsq:
     // set DMA cmd ptr   (dma cmd idx with in flit is zero)

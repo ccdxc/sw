@@ -20,7 +20,8 @@ sessions:
     unidest:
         ipv4:
             - ref://store/specs/id=SESSION_UDP_RDMA
-        ipv6: None
+        ipv6:
+            - ref://store/specs/id=SESSION_UDP_RDMA
         mac: None
 
 lif: ref://store/specs/id=LIF_ETH_RDMA

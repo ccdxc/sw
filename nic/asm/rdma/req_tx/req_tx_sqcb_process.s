@@ -23,6 +23,7 @@ struct rdma_stage0_table_k k;
     //.param    req_tx_add_headers_process
     .param    req_tx_write_back_process
     .param    req_tx_sqcb1_cnp_process
+    .param    req_tx_sqcb1_dcqcn_addr_fetch_process
 
 .align
 req_tx_sqcb_process:
@@ -61,7 +62,6 @@ req_tx_sqcb_process:
     seq            c1, CNP_C_INDEX, CNP_P_INDEX
     bcf            [c1], process_credits
     // sqcb1
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r4) 
     tblwr          CNP_C_INDEX, CNP_P_INDEX
     add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
@@ -70,8 +70,7 @@ req_tx_sqcb_process:
 
     nop.e
     nop
-
- 
+     
 process_credits: 
     ARE_ALL_RINGS_EMPTY(c1, r7[MAX_SQ_HOST_RINGS-1:0], FC_RING_ID_BITMAP)
     bcf          [c1], process_sq_or_sq_bktrack
@@ -164,6 +163,15 @@ sq_bktrack:
     nop
 
 process_sq:
+
+    // Load sqcb1 to fetch dcqcn_cb addr if congestion_mgmt is enabled.
+    bbeq           d.congestion_mgmt_enable, 0, process_send
+    add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
+    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r2)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqcb1_dcqcn_addr_fetch_process)
+    CAPRI_NEXT_TABLE_I_READ(r2, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
+process_send:
     seq            c3, d.need_credits, 1
     bcf            [c3], exit
                           
@@ -224,10 +232,7 @@ process_sq:
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqpt_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
 
-    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
-
-    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
 
     tblmincri      SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
@@ -283,13 +288,11 @@ in_progress:
 
     CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
 
     CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
 
-    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
 

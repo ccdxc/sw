@@ -6,6 +6,43 @@
 
 namespace tests {
 
+typedef struct cp_seq_entry {
+  uint64_t next_doorbell_addr;
+  uint64_t next_doorbell_data;
+  uint64_t status_hbm_pa;
+  uint64_t src_hbm_pa;
+  uint64_t sgl_hbm_pa;
+  uint64_t intr_pa;
+  uint32_t intr_data;
+  uint16_t status_len;
+  uint16_t data_len;
+  // NOTE: Don't enable intr_en and next_doorbell_en together
+  //       as only one will be serviced
+  // Order of evaluation: 1. next_doorbell_en 2. intr_en
+  // TODO: These bitfields are interpretted in big endian 
+  //       fashion by P4+. For DOL it won't matter as we set bitfields.
+  //       For driver, need to define the order properly.
+  uint8_t  use_data_len:1;	// 0 = DIS, 1 =EN
+  uint8_t  status_dma_en:1;	// 0 = DIS, 1 =EN
+  uint8_t  next_doorbell_en:1;	// 0 = DIS, 1 =EN
+  uint8_t  intr_en:1;		// 0 = DIS, 1 =EN
+} cp_seq_entry_t;
+
+typedef struct cq_sq_ent_sgl {
+  uint64_t status_host_pa;
+  uint64_t addr[4];
+  uint16_t len[4];
+} cp_esq_ent_sgl_t;
+
+typedef struct cp_seq_params {
+  cp_seq_entry_t seq_ent;
+  uint32_t seq_index;
+  uint64_t ret_doorbell_addr;
+  uint64_t ret_doorbell_data;
+} cp_seq_params_t;
+
+int test_setup_cp_seq_ent(cp_seq_params_t *params);
+
 int test_setup();
 
 int check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size);
@@ -104,13 +141,16 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
 			uint64_t roce_wqe_addr, uint32_t roce_wqe_size);
 
 int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr, 
-                        uint64_t pdma_dst_addr, uint32_t pdma_data_size,
-                        uint16_t db_lif, uint16_t db_qtype, uint32_t db_qid,
-                        uint16_t db_ring, uint16_t db_index);
+                       uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+                       uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif,
+                       uint16_t db_lif, uint16_t db_qtype, uint32_t db_qid,
+                       uint16_t db_ring, uint16_t db_index);
 
 int test_run_rdma_e2e_write();
 
 int test_run_rdma_e2e_read();
+
+int test_run_rdma_lif_override();
 
 struct TestEntry {
   std::function<int(void)> test_fn;

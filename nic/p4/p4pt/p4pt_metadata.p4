@@ -23,11 +23,12 @@ header_type p4pt_iscsi_app_header_t {
         cmd_write           : 1;
         skip2               : 13;
         resp_status         : 8;  // only valid for resp
-        skip3               : 32; 
+        skip3               : 32;
         cmd_lun             : 64;
         tag_id              : 32;
         cmd_data_length     : 32; // for cmd, from expected data transfer length
-        skip4               : 64;
+        skip4               : 8;
+        skip5               : 56;
         cmd_scsi_cdb_op     : 8;  // specifies read/write scsi operation
     }
 }

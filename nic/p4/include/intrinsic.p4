@@ -96,15 +96,17 @@ header_type p4_to_p4plus_roce_header_t {
         table2_valid        : 1;
         table3_valid        : 1;
         //Parsed UDP options valid flags
-        roce_opt_ts_vld     : 1;
-        roce_opt_msss_vld   : 1;
+        roce_opt_ts_valid   : 1;
+        roce_opt_mss_valid  : 1;
         rdma_hdr_len        : 6;  // copied directly from p4 rdma table
         raw_flags           : 16; // copied directly from p4 rdma table
         ecn                 : 2;
         payload_len         : 14;
         //Parsed UDP options
-        roce_opt_timestamp  : 64;
-        roce_opt_new        : 32;
+        roce_opt_ts_value   : 32;
+        roce_opt_ts_echo    : 32;
+        roce_opt_mss        : 16;
+        roce_opt_pad        : 16;
         roce_int_recirc_hdr : 16;
     }
 }
@@ -212,8 +214,8 @@ header_type p4_to_p4plus_cpu_header_t {
         ip_proto            : 8;
         l4_sport            : 16;
         l4_dport            : 16;
-        packet_len          : 16;
-        flow_hash           : 32;
+        packet_type         : 2;
+        packet_len          : 14;
     }
 }
 

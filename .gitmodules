@@ -4,3 +4,6 @@
 [submodule "nic/p4-hlir"]
 	path = nic/p4-hlir
 	url = git@github.com:pensando/p4-hlir.git
+[submodule "nic/debug_cli/click_repl"]
+	path = nic/debug_cli/click_repl
+	url = git@github.com:pensando/click-repl

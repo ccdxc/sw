@@ -15,11 +15,12 @@
 #define EPM_PROTO_UUID 0x0d
 #define EPM_PROTO_CN   0x0b
 #define EPM_PROTO_DG   0x0a
-#define EPM_PROTO_TCP_PORT 0x07
-#define EPM_PROTO_UDP_PORT 0x08
-#define EPM_PROTO_HOST_ADDR 0x09
-#define MAX_FLOORS     5
-#define MAX_CONTEXT    256 
+#define EPM_PROTO_TCP  0x07
+#define EPM_PROTO_UDP  0x08
+#define EPM_PROTO_IP   0x09
+#define MSRPC_DEFAULT_FLOORS 3
+#define MAX_FLOORS     65535
+#define MAX_CONTEXT    255
 #define WORD_BYTES     4
 #define SHORT_BYTES    2
 
@@ -123,6 +124,7 @@ typedef struct msrpc_bind_ack_hdr_s {
     uint16_t        max_recv_frag;
     uint32_t        assoc_group_id;
     port_any_t      sec_addr; 
+    uint16_t        pad;
     p_result_list_t rlist;
 } msrpc_bind_ack_hdr_t;
 
@@ -130,7 +132,7 @@ typedef struct msrpc_req_hdr_s {
     uint32_t   alloc_hint;
     uint16_t   ctxt_id;
     uint16_t   opnum;
-    uint32_t   uuid_ptr;
+    uint64_t   uuid_ptr;
     uuid_t     uuid;
 } msrpc_req_hdr_t;
 
@@ -159,8 +161,8 @@ typedef struct msrcp_twr_p_s {
 } msrpc_twr_p_t;
 
 typedef struct msrpc_map_twr_s {
-    uint32_t       twr_ptr;
-    uint32_t       twr_lgth;
+    uint64_t       twr_ptr;
+    uint64_t       twr_lgth;
     msrpc_twr_p_t  twr_arr;
 } msrpc_map_twr_t;
 
@@ -173,9 +175,9 @@ typedef struct msrpc_epm_req_hdr_s {
 typedef struct msrpc_epm_rsp_hdr_s {
     msrpc_handle_t   hdl;
     uint32_t         num_twrs;
-    uint32_t         max_cnt;
-    uint32_t         offset;
-    uint32_t         actual_cnt;
+    uint64_t         max_cnt;
+    uint64_t         offset;
+    uint64_t         actual_cnt;
     msrpc_map_twr_t  twr;
 } msrpc_epm_rsp_hdr_t;
 

@@ -18,8 +18,6 @@ namespace hal {
 using hal::if_t;
 using hal::lif_t;
 
-typedef uint8_t mirror_session_id_t;
-
 #define MIRROR_DESTTYPES(ENTRY)                                  \
     ENTRY(MIRROR_DEST_NONE,     0,  "Disabled")                  \
     ENTRY(MIRROR_DEST_LOCAL,    1,  "Local Destination")          \

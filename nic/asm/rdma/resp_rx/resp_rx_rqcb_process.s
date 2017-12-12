@@ -61,6 +61,17 @@ resp_rx_rqcb_process:
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
     CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
 
+    //Temporary code to test UDP options
+    //For now, checking on ts flag for both options ts and mss to avoid performance cost
+    bbeq     CAPRI_APP_DATA_ROCE_OPT_TS_VALID, 0, skip_roce_opt_parsing
+    //get rqcb3 address
+    add      r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB3_OFFSET_BYTES
+    memwr.d  r5, CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO
+    add      r5, r5, 8
+    memwr.h  r5, CAPRI_APP_DATA_ROCE_OPT_MSS
+
+skip_roce_opt_parsing:
+
     // get a tokenid for the fresh packet
     phvwr   p.common.rdma_recirc_token_id, d.token_id
 
@@ -171,8 +182,7 @@ process_write:
 
     bcf [!c1], write_non_first_pkt
     CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 1, !c1) //BD Slot
-    CAPRI_RXDMA_RETH_VA(r5)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, va, r5)
+    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, va, CAPRI_RXDMA_RETH_VA)
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, len, CAPRI_RXDMA_RETH_DMA_LEN)
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
 
@@ -369,8 +379,7 @@ process_write_only:
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)
 
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_RXDMA_RETH_VA(r5)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, va, r5)
+    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, va, CAPRI_RXDMA_RETH_VA)
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, len, CAPRI_RXDMA_RETH_DMA_LEN)
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
 
@@ -433,10 +442,9 @@ process_read_atomic:
 
     // common params for both read/atomic
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_RXDMA_RETH_VA(r5)
-    phvwr       p.rsqwqe.read.va, r5
+    phvwr       p.rsqwqe.read.va, CAPRI_RXDMA_RETH_VA
     phvwr       p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY
-    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, va, r5)
+    CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, va, CAPRI_RXDMA_RETH_VA)
     CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
     CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, rsq_p_index, NEW_RSQ_P_INDEX)
     CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, skip_rsq_dbell, d.rsq_quiesce)
@@ -534,52 +542,15 @@ duplicate_rd_atomic:
 
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_READ_REQ)
     // RETH and ATOMICETH have VA, r_key at same location 
-    CAPRI_RXDMA_RETH_VA(r1)
-    add             r5, r0, CAPRI_RXDMA_RETH_R_KEY
     cmov            r6, c2, CAPRI_RXDMA_RETH_DMA_LEN, 8
 
     // since there is no space in stage-to-stage data, using to-stage
     // to populate va/r_key/len so that it is accessible to backtrack_process
     // function which may get called multiple times in successive stages
     // during backtrack process
-    CAPRI_GET_STAGE_0_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-
     CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-
-    CAPRI_GET_STAGE_2_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-
-    CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-
-    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-
-    CAPRI_GET_STAGE_5_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-
-    CAPRI_GET_STAGE_6_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-
-    CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, CAPRI_RXDMA_RETH_VA)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
     CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
 
     seq         c3, d.rsq_quiesce, 1

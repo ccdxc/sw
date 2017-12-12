@@ -27,7 +27,6 @@ modules:
 
     - module:
         name    : BCAST_VLAN_STRIP
-        enable  : False
         spec    : rx_bc_vlan_strip.testspec
         iterate :
             - flood     : True

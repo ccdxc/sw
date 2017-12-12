@@ -48,7 +48,7 @@ process_atomic:
 
     // header template
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
-    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, HDR_TEMPLATE_T_SIZE_BYTES, k.args.header_template_addr)
+    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, k.args.header_template_size, k.args.header_template_addr)
 
     // bth
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_BTH)
@@ -155,6 +155,7 @@ next:
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, transfer_va, XFER_VA)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, log_pmtu, k.args.log_pmtu)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, header_template_addr, k.args.header_template_addr)
+    CAPRI_SET_FIELD(r4, RKEY_INFO_T, header_template_size, k.args.header_template_size)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, curr_read_rsp_psn, CURR_PSN)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, new_rsq_c_index, k.args.new_rsq_c_index)
 

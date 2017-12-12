@@ -53,8 +53,6 @@ using intf::IfType;
 
 namespace hal {
 
-typedef uint64_t if_id_t;
-
 typedef struct qos_actions_s {
     hal_handle_t        queue_handle;
     hal_handle_t        policer_handle;

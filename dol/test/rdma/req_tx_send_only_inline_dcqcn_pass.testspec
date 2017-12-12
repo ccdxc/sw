@@ -1,0 +1,89 @@
+# Test Spec
+selectors:
+#    src:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=False
+#        interface   : filter://any
+#    dst:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=True
+#        interface   : filter://any
+#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#    maxflows    : 1
+#    maxrdmasessions     : 1
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+    - packet:
+        id          : EXP_PKT # Base packet
+        payloadsize : 32  # 32 bytes of inline data
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 4 # RDMA SEND Only
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            op_type : 0  # OP_TYPE_SEND
+            wrid    : 6
+            inline_data_vld : 1
+            send    :
+                len             : 32
+                inline_data     : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC
+            //ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ
+            ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+
+    doorbell:
+        object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+        fields:
+            upd : 0x3 # DB_SCHED_WR(1)
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports

@@ -207,6 +207,17 @@ class ScapyHeaderBuilder_IPV6(ScapyHeaderBuilder_BASE):
         return v6hdr
 IPV6_builder = ScapyHeaderBuilder_IPV6()
 
+class ScapyHeaderBuilder_BOOTP(ScapyHeaderBuilder_BASE):
+    def build(self, hdr):
+        options =  hdr.fields.options
+        hdr.fields.options = None
+        bootphdr = super().build(hdr)
+        if options:
+            bootphdr = penscapy.BOOTP(bytes(bootphdr) + penscapy.dhcpmagic)
+            bootphdr = bootphdr / options
+        return bootphdr
+
+BOOTP_builder = ScapyHeaderBuilder_BOOTP()
 
 class ScapyHeaderBuilder_TFTP(ScapyHeaderBuilder_BASE):
     opcode_map = [
@@ -246,12 +257,18 @@ class IcrcHeaderBuilder:
     def __init__(self, packet):
         spkt = packet.GetScapyPacket()
         self.spkt = spkt.copy()
+        self.spkt = self.spkt[penscapy.IP]
         return
 
     def __get_icrc(self):
         self.rawbytes = bytes(self.spkt)
-        self.icrc = binascii.crc32(self.rawbytes)
-        #self.icrc = penscapy.struct.pack("I", val)
+        # ICRC calculation starts with 64 bits of 1's followed
+        # packet (IP header to payload until before the ICRC)
+        self.rawbytes = bytes([0xFF] * 8) + bytes(self.spkt)
+        #logger.info("ICRC for packet - len: %d" % len(self.rawbytes))
+        #ScapyPacketObject.ShowRawPacket(self.rawbytes[:-4], logger)
+        self.icrc = binascii.crc32(self.rawbytes[:-4])  #Skip ICRC hdr 4B when calculating ICRC
+        #logger.info("Calculated ICRC: 0x%x" % self.icrc)
         return
 
     def __add_for_ipv6(self):
@@ -271,6 +288,7 @@ class IcrcHeaderBuilder:
         return
 
     def GetIcrc(self):
+        self.spkt = self.spkt / penscapy.ICRC()
         if penscapy.IPv6 in self.spkt:
             self.__add_for_ipv6()
         elif penscapy.IP in self.spkt:
@@ -330,7 +348,9 @@ class ScapyPacketObject:
     def __add_icrc_header(self, packet):
         hdr = FactoryStore.headers.Get('ICRC')
         builder = IcrcHeaderBuilder(packet)
-        hdr.fields.icrc = builder.GetIcrc()
+        icrc = builder.GetIcrc()                                                                                
+        hdr.fields.icrc = (((icrc << 24) & 0xFF000000) | ((icrc <<  8) & 0x00FF0000) | ((icrc >>  8) & 0x0000FF00) | ((icrc >> 24) & 0x000000FF))
+        #logger.info("ICRC after byte swap: 0x%x" % hdr.fields.icrc) 
         
         self.__add_header(hdr)
         return
@@ -468,6 +488,8 @@ class RawPacketParser:
         rawhdr = self.__get_raw_hdr(pkt)
         if rawhdr is None:
             return pkt
+        if rawhdr.underlayer == None:
+           pdb.set_trace()
         rawhdr.underlayer.remove_payload()
 
         nxthdrs = self.__process_nxthdrs(bytes(rawhdr))

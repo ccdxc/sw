@@ -26,8 +26,8 @@ struct pd_vrf_s {
     // operational state of vrf pd
     uint32_t           gipo_imn_idx[3];      // Input mapping native table idx
     uint32_t           gipo_imt_idx[3];      // Input mapping tunneled table idx
-    vrf_hw_id_t        ten_hw_id;            // hw id for this VRF
-    uint32_t           vrf_lookup_id;        // Used by IPSec for flow lookup
+    vrf_hw_id_t        vrf_hw_id;            // hw id for this VRF
+    uint32_t           vrf_fl_lkup_id;        // Used by IPSec for flow lookup
     uint32_t           vrf_fromcpu_vlan_id;  // From CPU vlan id
     indexer            *l2seg_hw_id_idxr_;   // indexer for l2segs in this ten
 
@@ -57,10 +57,11 @@ vrf_pd_init (pd_vrf_t *vrf_pd)
         return NULL;
     }
     vrf_pd->vrf = NULL;
-    vrf_pd->ten_hw_id = INVALID_INDEXER_INDEX;
+    vrf_pd->vrf_hw_id = INVALID_INDEXER_INDEX;
 
     vrf_pd->l2seg_hw_id_idxr_ = 
-        hal::utils::indexer::factory(HAL_MAX_HW_L2SEGMENTS);
+        hal::utils::indexer::factory(HAL_MAX_HW_L2SEGMENTS,
+                                     true, true);
     HAL_ASSERT_RETURN((vrf_pd->l2seg_hw_id_idxr_ != NULL), NULL);
 
     // Prevention of usage of 0
@@ -123,6 +124,9 @@ hal_ret_t vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd);
 
 hal_ret_t vrf_pd_alloc_cpuid(pd_vrf_t *pd_vrf);
 hal_ret_t vrf_pd_dealloc_cpuid(pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_add_to_db (pd_vrf_t *pd_vrf, 
+                            hal_handle_t handle);
+hal_ret_t vrf_pd_del_from_db (pd_vrf_t *pd_vrf);
 
 }   // namespace pd
 }   // namespace hal

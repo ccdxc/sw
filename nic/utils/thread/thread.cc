@@ -6,7 +6,6 @@
 namespace hal {
 
 extern bool gl_super_user;
-extern thread *g_hal_threads[HAL_THREAD_ID_MAX];
 
 namespace utils {
 
@@ -199,9 +198,7 @@ thread::stop(void)
 thread*
 hal::utils::thread::current_thread()
 {
-    return hal::utils::thread::t_curr_thread_ ?
-                        hal::utils::thread::t_curr_thread_ :
-                        g_hal_threads[HAL_THREAD_ID_CFG];
+    return hal::utils::thread::t_curr_thread_;
 }
 
 }    // namespace hal

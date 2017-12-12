@@ -7,7 +7,7 @@ overlay : vlan
 
 enics:
     classic     : 4
-    promiscuous : 1
+    promiscous  : 1
     allmulti    : 1
 
 segments:

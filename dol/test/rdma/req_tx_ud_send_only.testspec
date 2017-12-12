@@ -15,7 +15,7 @@ selectors:
         lqp         : filter://svc=3
         rqp         : filter://svc=3
 #    maxflows    : 1
-#    maxrdmasessions     : 4
+#    maxrdmasessions     : 1
 
 packets:
     - packet:
@@ -29,7 +29,7 @@ packets:
     - packet:
         id          : EXP_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_DETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_DETH,v6=ETH_IPV6_UDP_BTH_DETH
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -44,10 +44,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -85,6 +85,7 @@ descriptors:
                 q_key:  ref://testcase/pvtdata/q_key
                 dst_qp: ref://testcase/pvtdata/dst_qp
                 ah_handle: ref://testcase/pvtdata/ah_handle
+                ah_size: ref://testcase/pvtdata/ah_size
                 
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address
@@ -99,7 +100,7 @@ descriptors:
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 0  # OP_TYPE_SEND
             status : 0  # CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetReqRxCQExpColor
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             smac: callback://rdma/rdma/GetZeroMAC
 
 trigger:

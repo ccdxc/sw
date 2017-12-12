@@ -23,9 +23,10 @@
 #define tx_table_s3_t0 s3_t0_tcp_tx
 
 #define tx_table_s4_t0 s4_t0_tcp_tx
+#define tx_table_s4_t1 s4_t1_tcp_tx
 
 #define tx_table_s5_t0 s5_t0_tcp_tx
-#
+
 #define tx_table_s6_t0 s6_t0_tcp_tx
 
 #define tx_table_s7_t0 s7_t0_tcp_tx
@@ -47,7 +48,8 @@
 #define tx_table_s3_t0_action retx
 
 #define tx_table_s4_t0_action cc_and_fra
-#
+#define tx_table_s4_t1_action read_nmdr_gc_pi
+
 #define tx_table_s5_t0_action xmit
 
 #define tx_table_s6_t0_action tso
@@ -75,7 +77,8 @@
     modify_field(common_global_scratch.pending_asesq, common_phv.pending_asesq); \
     modify_field(common_global_scratch.debug_dol_dont_tx, common_phv.debug_dol_dont_tx); \
     modify_field(common_global_scratch.debug_dol_free_rnmdr, common_phv.debug_dol_free_rnmdr);\
-    modify_field(common_global_scratch.debug_dol_dont_start_retx_timer, common_phv.debug_dol_dont_start_retx_timer);
+    modify_field(common_global_scratch.debug_dol_dont_start_retx_timer, common_phv.debug_dol_dont_start_retx_timer);\
+    modify_field(common_global_scratch.debug_dol_bypass_barco, common_phv.debug_dol_bypass_barco);
 
 /******************************************************************************
  * D-vectors
@@ -144,6 +147,12 @@ header_type tcp_cc_and_fra_d_t {
     }
 }
 
+header_type read_nmdr_gc_d_t {
+    fields {
+        nmdr_gc_pi              : 32;
+    }
+}
+
 // d for stage 5
 header_type tcp_xmit_d_t {
     fields {
@@ -178,6 +187,7 @@ header_type common_global_phv_t {
         debug_dol_dont_tx       : 1;
         debug_dol_free_rnmdr    : 1;
         debug_dol_dont_start_retx_timer : 1;
+        debug_dol_bypass_barco : 1;
     }
 }
 
@@ -216,7 +226,6 @@ header_type to_stage_4_phv_t {
 header_type to_stage_5_phv_t {
     fields {
         snd_cwnd                : 16;
-        sesq_desc_addr          : HBM_ADDRESS_WIDTH;
         addr                    : HBM_ADDRESS_WIDTH;
         offset                  : OFFSET_WIDTH;
         len                     : LEN_WIDTH;
@@ -274,6 +283,12 @@ header_type common_t0_s2s_phv_t {
     }
 }
 
+header_type common_t1_s2s_phv_t {
+    fields {
+        free_desc_addr          : HBM_ADDRESS_WIDTH;
+    }
+}
+
 /******************************************************************************
  * Header unions for d-vector
  *****************************************************************************/
@@ -293,6 +308,8 @@ metadata tcp_retx_d_t retx_d;
 metadata tcp_cc_and_fra_d_t cc_and_fra_d;
 @pragma scratch_metadata
 metadata tcp_xmit_d_t xmit_d;
+@pragma scratch_metadata
+metadata read_nmdr_gc_d_t read_nmdr_gc_d;
 @pragma scratch_metadata
 metadata tso_d_t tso_d;
 
@@ -324,6 +341,8 @@ metadata to_stage_7_phv_t to_s7;
 
 @pragma pa_header_union ingress common_t0_s2s
 metadata common_t0_s2s_phv_t t0_s2s;
+@pragma pa_header_union ingress common_t1_s2s
+metadata common_t1_s2s_phv_t t1_s2s;
 
 
 @pragma scratch_metadata
@@ -343,6 +362,8 @@ metadata to_stage_7_phv_t to_s7_scratch;
 
 @pragma scratch_metadata
 metadata common_t0_s2s_phv_t t0_s2s_scratch;
+@pragma scratch_metadata
+metadata common_t1_s2s_phv_t t1_s2s_scratch;
 
 /******************************************************************************
  * PHV following k (for app DMA etc.)
@@ -676,6 +697,20 @@ action cc_and_fra(CC_AND_FRA_SHARED_PARAMS) {
 }
 
 /*
+ * Stage 4 table 1 action
+ */
+action read_nmdr_gc_pi(nmdr_gc_pi) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from stage to stage
+    modify_field(t1_s2s_scratch.free_desc_addr, t1_s2s.free_desc_addr);
+
+    // d for stage 4 table 1 read-rnmdr-idx
+    modify_field(read_nmdr_gc_d.nmdr_gc_pi, nmdr_gc_pi);
+}
+
+/*
  * Stage 5 table 0 action
  */
 action xmit(XMIT_SHARED_PARAMS) {
@@ -684,7 +719,6 @@ action xmit(XMIT_SHARED_PARAMS) {
 
     // from to_stage 5
     modify_field(to_s5_scratch.snd_cwnd, to_s5.snd_cwnd);
-    modify_field(to_s5_scratch.sesq_desc_addr, to_s5.sesq_desc_addr);
     modify_field(to_s5_scratch.addr, to_s5.addr);
     modify_field(to_s5_scratch.offset, to_s5.offset);
     modify_field(to_s5_scratch.len, to_s5.len);
@@ -706,7 +740,6 @@ action xmit(XMIT_SHARED_PARAMS) {
     // d for stage 4 table 0
     GENERATE_XMIT_SHARED_D
 }
-
 
 /*
  * Stage 6 table 0 action

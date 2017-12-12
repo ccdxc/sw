@@ -37,6 +37,10 @@ packets:
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
+            iscsi:
+                opcode  : 0x21
+                cmd_read  : 1
+                cmd_write : 1
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 trigger:

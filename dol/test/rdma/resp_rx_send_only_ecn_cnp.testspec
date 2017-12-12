@@ -10,10 +10,11 @@ selectors:
 #       segment     : filter://any
 #       endpoint    : filter://remote=False
 #       interface   : filter://any
-#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+#   flow            : filter://type=IPV4
     rdmasession     :
         lqp         : filter://svc=0
         rqp         : filter://svc=0
+        session     : filter://IsIPV6=0
 #    maxflows    : 1 
 #    maxrdmasessions     : 4 
 
@@ -29,7 +30,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -45,6 +46,11 @@ packets:
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 ttl     : 64
                 tos     : 192 # Setting ECN bits in TOS to 11 indicating congestion.
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+                #tc      : 192 # TODO add IPv6 related stuff here
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -60,7 +66,7 @@ packets:
    - packet:
         id          : EXP_PKT_1    # Expected Ack packet
         payloadsize : 0
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -75,6 +81,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -91,7 +101,7 @@ packets:
    - packet:
         id          : EXP_PKT_2    # Expected CNP packet
         payloadsize : 16
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -106,10 +116,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport

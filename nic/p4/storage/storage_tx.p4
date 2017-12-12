@@ -77,8 +77,6 @@ metadata storage_kivec5_t storage_kivec5;
 metadata storage_kivec2_t storage_kivec2;
 @pragma pa_header_union ingress to_stage_3
 metadata storage_kivec3_t storage_kivec3;
-@pragma pa_header_union ingress to_stage_3
-metadata storage_kivec6_t storage_kivec6;
 
 // Push/Pop doorbells
 @pragma dont_trim
@@ -256,9 +254,6 @@ metadata storage_kivec4_t storage_kivec4_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec5_t storage_kivec5_scratch;
-
-@pragma scratch_metadata
-metadata storage_kivec6_t storage_kivec6_scratch;
 
 @pragma scratch_metadata
 metadata ssd_cmds_t ssd_cmds;
@@ -1457,7 +1452,8 @@ action nvme_be_wqe_release(bitmap) {
 
 action seq_pdma_entry_handler(next_db_addr, next_db_data, src_addr, dst_addr,
                               data_size, src_lif_override, src_lif,
-                              dst_lif_override, dst_lif) {
+                              dst_lif_override, dst_lif, intr_addr, intr_data,
+                              next_db_en, intr_en) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_pdma_entry.next_db_addr, next_db_addr);
@@ -1469,6 +1465,10 @@ action seq_pdma_entry_handler(next_db_addr, next_db_data, src_addr, dst_addr,
   modify_field(seq_pdma_entry.src_lif, src_lif);
   modify_field(seq_pdma_entry.dst_lif_override, dst_lif_override);
   modify_field(seq_pdma_entry.dst_lif, dst_lif);
+  modify_field(seq_pdma_entry.intr_addr, intr_addr);
+  modify_field(seq_pdma_entry.intr_data, intr_data);
+  modify_field(seq_pdma_entry.next_db_en, next_db_en);
+  modify_field(seq_pdma_entry.intr_en, intr_en);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -1480,16 +1480,34 @@ action seq_pdma_entry_handler(next_db_addr, next_db_data, src_addr, dst_addr,
                            seq_pdma_entry.dst_addr, 0, seq_pdma_entry.data_size,
                            0, 0, 0)
 
-  // Copy the doorbell data to PHV
-  modify_field(qpush_doorbell_data.data, seq_pdma_entry.next_db_data);
 
-  // Setup the doorbell to be rung based on a fence with the previous mem2mem DMA
-  modify_field(doorbell_addr.addr, seq_pdma_entry.next_db_addr);
-  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
-                           0,
-                           PHV_FIELD_OFFSET(qpush_doorbell_data.data),
-                           PHV_FIELD_OFFSET(qpush_doorbell_data.data),
-                           0, 0, 0, 0)
+  // Setup the doorbell to be rung if the doorbell enabled is set.
+  // Fence with the previous mem2mem DMA for ordering.
+  if (seq_pdma_entry.next_db_en == 1) {
+    // Copy the doorbell addr and data
+    modify_field(doorbell_addr.addr, seq_pdma_entry.next_db_addr);
+    modify_field(qpush_doorbell_data.data, seq_pdma_entry.next_db_data);
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
+                             0,
+                             PHV_FIELD_OFFSET(seq_doorbell_data.data),
+                             PHV_FIELD_OFFSET(seq_doorbell_data.data),
+                             0, 0, 0, 0)
+  }
+
+  // Fire the interrupt if there is no doorbell to be rung and if the
+  // interrupt enabled bit is set. Fence with the previous mem2mem DMA
+  // for ordering.
+  if ((seq_pdma_entry.next_db_en ==  0) and 
+      (seq_pdma_entry.intr_en == 1)) {
+    // Copy the doorbell addr and data
+    modify_field(pci_intr_addr.addr, seq_pdma_entry.intr_addr);
+    modify_field(pci_intr_data.data, seq_pdma_entry.intr_data);
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
+                             0,
+                             PHV_FIELD_OFFSET(pci_intr_data.data),
+                             PHV_FIELD_OFFSET(pci_intr_data.data),
+                             0, 0, 0, 0)
+  }
 
   // Exit the pipeline here 
 }
@@ -2003,31 +2021,66 @@ action pvm_roce_sq_wqe_process(wrid, op_type, complete_notify, fence,
  *                         and save the other fields into I vector.
  *****************************************************************************/
 
-@pragma little_endian status_addr data_addr sgl_addr intr_addr intr_data status_len
-action seq_comp_desc_handler(status_addr, data_addr, sgl_addr, intr_addr, 
-                              intr_data, status_len, status_dma_en) {
+//@pragma little_endian next_db_addr next_db_data status_addr data_addr sgl_addr intr_addr intr_data status_len data_len
+action seq_comp_desc_handler(next_db_addr, next_db_data, status_addr, data_addr, 
+                             sgl_addr, intr_addr, intr_data, status_len, data_len,
+                             data_len_from_desc, status_dma_en, next_db_en, intr_en) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
 
   // For D vector generation (type inference). No need to translate this to ASM.
+  modify_field(seq_comp_desc_scratch.next_db_addr, next_db_addr);
+  modify_field(seq_comp_desc_scratch.next_db_data, next_db_data);
   modify_field(seq_comp_desc_scratch.status_addr, status_addr);
   modify_field(seq_comp_desc_scratch.data_addr, data_addr);
   modify_field(seq_comp_desc_scratch.sgl_addr, sgl_addr);
   modify_field(seq_comp_desc_scratch.intr_addr, intr_addr);
   modify_field(seq_comp_desc_scratch.intr_data, intr_data);
   modify_field(seq_comp_desc_scratch.status_len, status_len);
+  modify_field(seq_comp_desc_scratch.data_len, data_len);
+  modify_field(seq_comp_desc_scratch.data_len_from_desc, data_len_from_desc);
   modify_field(seq_comp_desc_scratch.status_dma_en, status_dma_en);
+  modify_field(seq_comp_desc_scratch.next_db_en, next_db_en);
+  modify_field(seq_comp_desc_scratch.intr_en, intr_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(storage_kivec4.sgl_addr, seq_comp_desc_scratch.sgl_addr);
   modify_field(storage_kivec4.data_addr, seq_comp_desc_scratch.data_addr);
+  modify_field(storage_kivec4.data_len, seq_comp_desc_scratch.data_len);
   modify_field(storage_kivec5.status_addr, seq_comp_desc_scratch.status_addr);
   modify_field(storage_kivec5.status_len, seq_comp_desc_scratch.status_len);
   modify_field(storage_kivec5.status_dma_en, seq_comp_desc_scratch.status_dma_en);
-  modify_field(storage_kivec6.intr_addr, seq_comp_desc_scratch.intr_addr);
-  modify_field(storage_kivec6.intr_data, seq_comp_desc_scratch.intr_data);
+  modify_field(storage_kivec5.data_len_from_desc, seq_comp_desc_scratch.data_len_from_desc);
+
+  // Setup the doorbell to be rung if the doorbell enabled is set.
+  // Fence with the SGL mem2mem DMA for ordering.
+  if (seq_comp_desc_scratch.next_db_en == 1) {
+    // Copy the doorbell addr and data
+    modify_field(doorbell_addr.addr, seq_comp_desc_scratch.next_db_addr);
+    modify_field(seq_doorbell_data.data, seq_comp_desc_scratch.next_db_addr);
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
+                             0,
+                             PHV_FIELD_OFFSET(seq_doorbell_data.data),
+                             PHV_FIELD_OFFSET(seq_doorbell_data.data),
+                             0, 0, 0, 0)
+  }
+
+  // Fire the interrupt if there is no doorbell to be rung and if the
+  // interrupt enabled bit is set. Fence with the SGL mem2mem DMA
+  // for ordering.
+  if ((seq_comp_desc_scratch.next_db_en ==  0) and 
+      (seq_comp_desc_scratch.intr_en == 1)) {
+    // Copy the doorbell addr and data
+    modify_field(pci_intr_addr.addr, seq_comp_desc_scratch.intr_addr);
+    modify_field(pci_intr_data.data, seq_comp_desc_scratch.intr_data);
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
+                             0,
+                             PHV_FIELD_OFFSET(pci_intr_data.data),
+                             PHV_FIELD_OFFSET(pci_intr_data.data),
+                             0, 0, 0, 0)
+  }
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -2060,8 +2113,12 @@ action seq_comp_status_handler(rsvd2, err, rsvd1, data_len, rsvd3) {
   modify_field(seq_comp_status_scratch.data_len, data_len);
   modify_field(seq_comp_status_scratch.rsvd3, rsvd3);
 
-  // Store the data length and error status in the K+I vector for later use
-  modify_field(storage_kivec4.data_len, seq_comp_status_scratch.data_len);
+  // Store the data length in the K+I vector for later use if the descriptor
+  // has not provided this information
+  if (storage_kivec5.data_len_from_desc == 0) {
+    modify_field(storage_kivec4.data_len, seq_comp_status_scratch.data_len);
+  }
+  // Store the error status in the K+I vector for later use
   modify_field(storage_kivec5.status_err, seq_comp_status_scratch.err);
 
   // Load the address where compression destination SGL is stored for 
@@ -2084,7 +2141,6 @@ action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3,
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC4_USE(storage_kivec4_scratch, storage_kivec4)
   STORAGE_KIVEC5_USE(storage_kivec5_scratch, storage_kivec5)
-  STORAGE_KIVEC6_USE(storage_kivec6_scratch, storage_kivec6)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_comp_sgl_scratch.status_addr, status_addr);
@@ -2096,16 +2152,6 @@ action seq_comp_sgl_handler(status_addr, addr0, addr1, addr2, addr3,
   modify_field(seq_comp_sgl_scratch.len1, len1);
   modify_field(seq_comp_sgl_scratch.len2, len2);
   modify_field(seq_comp_sgl_scratch.len3, len3);
-
-  // DMA of interrupt - this should be the last to fence with other DMAs
-  modify_field(doorbell_addr.addr, storage_kivec6.intr_addr);
-  modify_field(seq_doorbell_data.data, storage_kivec6.intr_data);
-  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
-                           0,
-                           PHV_FIELD_OFFSET(seq_doorbell_data.data),
-                           PHV_FIELD_OFFSET(seq_doorbell_data.data),
-                           0, 0, 0, 0)
-
 
   // DMA of status (only if enabled)
   if (storage_kivec5.status_dma_en != 0) {

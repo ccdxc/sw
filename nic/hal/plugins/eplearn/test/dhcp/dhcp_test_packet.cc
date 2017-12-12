@@ -2,12 +2,13 @@
 #include <gtest/gtest.h>
 // clang-format off
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_packet.hpp"
+#include "nic/include/eth.h"
 // clang-format on
 
 #include <tins/tins.h>
 
 using namespace Tins;
-using namespace hal::network;
+using namespace hal::eplearn;
 class dhcp_test : public ::testing::Test {
  protected:
   dhcp_test() {
@@ -124,7 +125,8 @@ TEST_F(dhcp_test, dhcp_discover_parse_test) {
     struct dhcp_packet *pkt;
 
     hal_ret_t ret =
-        parse_dhcp_packet(&buffer[0], buffer.size(), &decoded_packet);
+        parse_dhcp_packet(&buffer[L2_ETH_HDR_LEN],
+                buffer.size(), &decoded_packet);
 
     ASSERT_EQ(ret, HAL_RET_OK);
     pkt = decoded_packet->raw;
@@ -248,8 +250,8 @@ TEST_F(dhcp_test, dhcp_offer_parse_test) {
 
     struct packet *decoded_packet;
 
-    hal_ret_t ret =
-        parse_dhcp_packet(&buffer[0], buffer.size(), &decoded_packet);
+    hal_ret_t ret = parse_dhcp_packet(&buffer[L2_ETH_HDR_LEN],
+                buffer.size(), &decoded_packet);
 
     ASSERT_EQ(ret, HAL_RET_OK);
     /* Parse options */

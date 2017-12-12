@@ -4,18 +4,23 @@
 #include "cpu-table.h"
 
 struct phv_ p;
-struct cpu_rx_read_arqrx_k k;
-struct cpu_rx_read_arqrx_d d;
 
 %%
+    .param cpu_rx_write_arq_start
+    .param ARQRX_QIDXR_BASE
+    .param ARQRX_BASE
     .align
 cpu_rx_read_arqrx_pindex_start:
-    CAPRI_CLEAR_TABLE3_VALID
+
+CAPRI_CLEAR_TABLE0_VALID
     
-    // TODO: CPU-id should be calculated based on hash rather than 0 
-    CPU_ARQ_PIDX_READ_INC(r4, 0, d, u.read_arqrx_d.pi_0)
+    phvwri  p.t0_s2s_arqrx_base, ARQRX_BASE
     
-    // pindex will be in r4
-    phvwr   p.to_s3_arqrx_pindex, r4
+    CPU_ARQRX_QIDX_ADDR(0, r3, ARQRX_QIDXR_BASE)
+    CAPRI_NEXT_TABLE_READ(0, 
+                          TABLE_LOCK_EN,
+                          cpu_rx_write_arq_start,
+                          r3,
+                          TABLE_SIZE_512_BITS)
     nop.e
     nop

@@ -46,7 +46,7 @@ req_tx_sqpt_process:
     //CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
     //CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, r1)
 
-    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, r1)
 
     //CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)

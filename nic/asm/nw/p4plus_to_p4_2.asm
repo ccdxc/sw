@@ -8,23 +8,11 @@ struct phv_             p;
 %%
 
 f_p4plus_to_p4_2:
-  // update IP length
-  seq           c2, k.vlan_tag_valid, TRUE
-  cmov          r1, c2, 18, 14
-  sub           r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                       capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
-  seq           c3, k.ipv4_valid, TRUE
-  sub.c3        r2, r1, k.ipv4_ihl, 2
-  seq           c4, k.ipv6_valid, TRUE
-  sub.c4        r2, r1, 40
-  smeqb         c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN, \
-                    P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
-  andcf         c3, [c2]
-  andcf         c4, [c2]
-  phvwr.c3      p.ipv4_totalLen, r1
-  phvwr.c4      p.ipv6_payloadLen, r2
-
   // update UDP length
+  seq           c3, k.ipv4_valid, TRUE
+  sub.c3        r2, k.ipv4_totalLen, k.ipv4_ihl, 2
+  seq           c4, k.ipv6_valid, TRUE
+  sub.c4        r2, k.ipv6_payloadLen, r0
   smeqb         c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN, \
                     P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN
   phvwr.c2      p.udp_len, r2
@@ -42,12 +30,16 @@ f_p4plus_to_p4_2:
   phvwr         p.p4plus_to_p4_valid, FALSE
 
 f_p4plus_to_p4_2_other_apps:
-  // update compute checksum flags (all other apps)
+  // compute IP header checksum if ipv4.valid is true
+  phvwr.c3      p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
+
   // set compute_icrc flag (rdma)
   seq           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
-  phvwr.c1      p.control_metadata_checksum_ctl, (1 << CHECKSUM_CTL_IP_CHECKSUM)
-  phvwr.!c1     p.control_metadata_checksum_ctl, \
-                    ((1 << CHECKSUM_CTL_IP_CHECKSUM) | (1 << CHECKSUM_CTL_L4_CHECKSUM))
+  //phvwr.c1      p.control_metadata_checksum_ctl[CHECKSUM_CTL_ICRC], TRUE
+  seq           c2, k.udp_valid, TRUE
+  seq           c3, k.tcp_valid, TRUE
+  setcf.!c1     c1, [!c2 & !c3]
+  phvwr.!c1     p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE
 
   // remove the headers
   phvwr.e       p.capri_txdma_intrinsic_valid, FALSE

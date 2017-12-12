@@ -450,7 +450,6 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawr_scratch_app.ip_proto, rawr_app_header.ip_proto);
     modify_field(rawr_scratch_app.l4_sport, rawr_app_header.l4_sport);
     modify_field(rawr_scratch_app.l4_dport, rawr_app_header.l4_dport);
-    modify_field(rawr_scratch_app.flow_hash, rawr_app_header.flow_hash);
     
     // packet_len is length of packet plus sizeof(p4_to_p4plus_cpu_pkt_t)
     // as set by P4 apps.p4

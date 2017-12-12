@@ -1143,8 +1143,6 @@ action ip_normalization_checks() {
         subtract_from_field(ipv4.totalLen, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
         // IP header checksum update.
         subtract_from_field(capri_p4_intrinsic.packet_len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
-
-
     }
     if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
         (tunnel_metadata.tunnel_terminate == TRUE) and
@@ -1158,7 +1156,6 @@ action ip_normalization_checks() {
         subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
     }
 
-    }
 
     // Outer IP Header length to frame length validation
     // !!! TODO !!!
@@ -1233,6 +1230,66 @@ action ip_normalization_checks() {
     // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
     // ip_normalize_ttl
     //
+
+    }
+    if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6)
+    {
+        // For V6 Packet we will do the following normalization checks
+        // 1. Normalize Hop Limit
+        // 2. IPv6 Extension header strip.
+        // 3. Normalize Payload Length 
+        //    The size of the payload in octets, including any extension headers.
+        //    The length is set to zero when a Hop-by-Hop extension header carries
+        //    a Jumbo Payload option. So we have to check zero payload length as
+        //    we are not interpreting each individual IPv6 Option.
+        //
+        // ASM Code will also take care of tunnel termination
+
+        // IPv6 with option extension headers
+        if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_DROP) and
+            (l3_metadata.ip_option_seen == TRUE)) {
+            modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
+        }
+
+        // If you use "subtract()" (takes 3 args - subtract(dest, src1, src2)), 
+        // then you don't need the dummy modify fields. When "subtract_from is used,
+        // the dest is not considered as one of the fields that is read in the 
+        // action - this has to be fixed in the HLIR.
+        if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
+            (l3_metadata.ip_option_seen == TRUE) and
+            (tunnel_metadata.tunnel_terminate == FALSE)) {
+            // mark the IP option header valid to zero
+            // remove_header(ipv6_options_blob);
+            modify_field(ipv6_options_blob.valid, 0);
+            modify_field(ipv6.nextHdr, l3_metadata.ipv6_ulp);
+            // We also need to update
+            // 1. IPv6 payload length in packet
+            // 2. capri_p4_intrinsic.packet_len needs to be reduced.
+            subtract(ipv6.payloadLen, ipv6.payloadLen, l3_metadata.ipv6_options_len);
+            subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 
+                      l3_metadata.ipv6_options_len);
+        }
+        if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
+            (l3_metadata.ip_option_seen == TRUE) and
+            (tunnel_metadata.tunnel_terminate == TRUE)) {
+            // mark the IP option header valid to zero
+            // remove_header(ipv6_options_blob);
+            modify_field(inner_ipv6_options_blob.valid, 0);
+            modify_field(inner_ipv6.nextHdr, l3_metadata.inner_ipv6_ulp);
+            // We also need to update
+            // 1. IPv6 payload length in inner IPv6 packet
+            // 2. Outer UDP Packet length
+            // 3. Outer IP packet Length
+            // 4. capri_p4_intrinsic.packet_len needs to be reduced.
+            subtract(inner_ipv6.payloadLen, inner_ipv6.payloadLen, l3_metadata.inner_ipv6_options_len);
+            subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 
+                      l3_metadata.inner_ipv6_options_len);
+            subtract(udp.len, udp.len, l3_metadata.inner_ipv6_options_len);
+            subtract(ipv4.totalLen, ipv4.totalLen, l3_metadata.inner_ipv6_options_len);
+        }
+
+    }
+
 }
 
 action icmp_normalization() {

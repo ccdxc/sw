@@ -22,7 +22,7 @@
 
 using namespace Tins;
 using namespace hal;
-using namespace hal::network;
+using namespace hal::eplearn;
 using hal::utils::twheel;
 
 /*

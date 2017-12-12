@@ -5,7 +5,6 @@ package statemgr
 import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/writer"
-
 	"github.com/pensando/sw/venice/utils/memdb"
 )
 

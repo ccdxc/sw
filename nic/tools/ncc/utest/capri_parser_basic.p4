@@ -76,11 +76,14 @@ header_type parser_metadata_t {
 header_type mau_metadata_t {
     fields {
         c_offset : 16;
+        end_offset : 16;
     }
 }
+
 @pragma pa_parser_local
 metadata parser_metadata_t parser_metadata;
 
+@pragma parser_end_offset end_offset
 metadata mau_metadata_t mau_metadata;
 
 @pragma parser_write_only
@@ -150,6 +153,7 @@ action nop() {
 }
 action check_coffset() {
     modify_field(mau_metadata.c_offset, 0);
+    modify_field(mau_metadata.end_offset, mau_metadata.end_offset+1);
 }
 
 table abc {

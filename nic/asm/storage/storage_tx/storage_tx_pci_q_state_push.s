@@ -46,7 +46,7 @@ storage_tx_pci_q_state_push_start:
 
 send_intr:
    // Raise the interrupt with a DMA update
-   PCI_QUEUE_PUSH_INTR_UPDATE(dma_p2m_5)
+   PCI_RAISE_INTERRUPT(dma_p2m_5)
 
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_5_dma_cmd_eop,

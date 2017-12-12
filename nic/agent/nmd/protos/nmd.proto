@@ -52,6 +52,10 @@ message NaplesSpec {
     // Name of the Host
     string NodeName                 = 4 [(gogoproto.nullable) = true,
                                         (gogoproto.jsontag) = "nodeName,omitempty"];
+
+    // Managment IP address of the naples node
+    string MgmtIp                   = 5 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "mgmtIp,omitempty"];
 }
 
 // NaplesStatus contains current status of a Naples I/O subsystem

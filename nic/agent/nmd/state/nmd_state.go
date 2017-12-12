@@ -253,7 +253,7 @@ func (n *NMD) StartRestServer() error {
 	n.isRestSrvRunning = true
 	n.Unlock()
 
-	log.Infof("Starting NMD Rest server at %s", n.GetListenURL())
+	log.Infof("Started NMD Rest server at %s", n.GetListenURL())
 
 	// Launch the server
 	go n.httpServer.Serve(listener)

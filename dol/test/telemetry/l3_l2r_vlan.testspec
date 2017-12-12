@@ -149,7 +149,9 @@ packets:
 
     - packet:
         id          : ERSPAN_PKT1
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT1,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT1,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -168,10 +170,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT1,basepkt=PKT1
 
     - packet:
         id          : ERSPAN_PKT2
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT2,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT2,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -190,10 +196,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT2,basepkt=PKT1
 
     - packet:
         id          : ERSPAN_PKT3
-        clone       : ref://testcase/packets/id=PKT1
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=ERSPAN_PKT3,basepkt=PKT1
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=ERSPAN_PKT3,basepkt=PKT1
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -212,10 +222,15 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=ERSPAN_PKT3,basepkt=PKT1
+
 
     - packet:
         id          : EG_ERSPAN_PKT1
-        clone       : ref://testcase/packets/id=PKT2
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT1,basepkt=PKT2
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT1,basepkt=PKT2
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -234,25 +249,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
-            eth:
-                src     : ref://testcase/config/dst/segment/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                prio    : callback://networking/packets/GetExpectedPacketCos
-                vlan    : ref://testcase/config/dst/segment/vlan_id
-            ipv4:
-                tos     : ref://testcase/config/flow/txqos/dscp
-                ttl     : callback://networking/packets/GetRoutedTtl
-            ipv6:
-                tc      : ref://testcase/config/flow/txqos/dscp
-                hlim    : callback://networking/packets/GetRoutedTtl
-            tcp:
-                flags: ack
-
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT1,basepkt=PKT2
 
     - packet:
         id          : EG_ERSPAN_PKT2
-        clone       : ref://testcase/packets/id=PKT2
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT2,basepkt=PKT2
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT2,basepkt=PKT2
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -271,24 +275,14 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
-            eth:
-                src     : ref://testcase/config/dst/segment/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                prio    : callback://networking/packets/GetExpectedPacketCos
-                vlan    : ref://testcase/config/dst/segment/vlan_id
-            ipv4:
-                tos     : ref://testcase/config/flow/txqos/dscp
-                ttl     : callback://networking/packets/GetRoutedTtl
-            ipv6:
-                tc      : ref://testcase/config/flow/txqos/dscp
-                hlim    : callback://networking/packets/GetRoutedTtl
-            tcp:
-                flags: ack
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT2,basepkt=PKT2
 
     - packet:
         id          : EG_ERSPAN_PKT3
-        clone       : ref://testcase/packets/id=PKT2
+        template    : ref://testcase/packets/id=RAW
+        payloadsize : callback://telemetry/callbacks/GetErspanPayloadSize/pktid=EG_ERSPAN_PKT3,basepkt=PKT2
+        #size        : callback://telemetry/callbacks/GetErspanPktSize/pktid=EG_ERSPAN_PKT3,basepkt=PKT2
         encaps      :
             - ref://factory/packets/id=ENCAP_ERSPAN
         headers         :
@@ -307,20 +301,9 @@ packets:
             erspan:
                 sessionid: const/0
                 ver     : const/2
-            eth:
-                src     : ref://testcase/config/dst/segment/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                prio    : callback://networking/packets/GetExpectedPacketCos
-                vlan    : ref://testcase/config/dst/segment/vlan_id
-            ipv4:
-                tos     : ref://testcase/config/flow/txqos/dscp
-                ttl     : callback://networking/packets/GetRoutedTtl
-            ipv6:
-                tc      : ref://testcase/config/flow/txqos/dscp
-                hlim    : callback://networking/packets/GetRoutedTtl
-            tcp:
-                flags: ack
+            payload :
+                data: callback://telemetry/callbacks/GetErspanPayload/pktid=EG_ERSPAN_PKT3,basepkt=PKT2
+
 
     - packet:
         id          : TRUNCATE_PKT1

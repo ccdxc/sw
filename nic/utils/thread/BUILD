@@ -12,5 +12,6 @@ cc_library(
         "//nic/third-party/spdlog",
         "//nic/utils/ht",
         "//nic/utils/list:list_includes",
+        "//nic/hal/lib:hal_handle",
     ],
 )

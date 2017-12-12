@@ -674,7 +674,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     }
 
     // Data
-    inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
+    inp_prop.vrf = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.dir = FLOW_DIR_FROM_ENIC;
     inp_prop.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;
     inp_prop.ipsg_enable = 0;
@@ -773,7 +773,7 @@ pd_enicif_pd_repgm_inp_prop_l2seg(pd_if_args_t *args,
     }
 
     // Data
-    inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
+    inp_prop.vrf = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.dir = FLOW_DIR_FROM_ENIC;
     inp_prop.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;
     inp_prop.ipsg_enable = 0;
@@ -1088,7 +1088,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
         HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
 
         data.actionid = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
-        inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_ten_hw_id;
+        inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_fl_lkup_id;
         inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_ENIC;
         // inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
         inp_prop_mac_vlan_data.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;

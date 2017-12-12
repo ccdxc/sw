@@ -1,0 +1,27 @@
+meta:
+    id: ETH_IPV4_UDP_DHCP
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x800
+ 
+    - header:
+        id      : ipv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/17
+   
+    - header:
+        id      : udp
+        template: ref://store/headers/id=UDP
+        fields: 
+            dport: 67
+            sport: 68
+
+    - header:
+        id      : bootp
+        template: ref://store/headers/id=BOOTP
+        fields:

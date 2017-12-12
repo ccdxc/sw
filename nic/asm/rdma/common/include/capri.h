@@ -18,9 +18,7 @@
 #define CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT k.p4_intr_recirc_count
 #define CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT k.p4_intr_recirc_count
 
-#define CAPRI_RXDMA_RETH_VA(_r) \
-    add _r, k.{rdma_bth_reth_reth_va_2_sbit0_ebit7...rdma_bth_reth_reth_va_2_sbit8_ebit31}, k.{rdma_bth_reth_reth_va_1_sbit0_ebit7...rdma_bth_reth_reth_va_1_sbit8_ebit31}, 32
-
+#define CAPRI_RXDMA_RETH_VA k.{rdma_bth_reth_reth_va_1_sbit0_ebit7...rdma_bth_reth_reth_va_2_sbit8_ebit31}
 
 #define CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA(_r) \
     add _r, k.{rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit56_ebit63}, k.{rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit0_ebit15...rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit48_ebit55}, 8
@@ -43,6 +41,10 @@
 // app data fields
 #define CAPRI_APP_DATA_RAW_FLAGS k.rdma_bth_raw_flags
 #define CAPRI_APP_DATA_PAYLOAD_LEN k.{rdma_bth_payload_len_sbit0_ebit5...rdma_bth_payload_len_sbit6_ebit13}
+
+#define CAPRI_APP_DATA_ROCE_OPT_TS_VALID k.{rdma_bth_roce_opt_ts_valid}
+#define CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO k.{rdma_bth_roce_opt_ts_value...rdma_bth_roce_opt_ts_echo}
+#define CAPRI_APP_DATA_ROCE_OPT_MSS k.{rdma_bth_roce_opt_mss}
 
 #define CAPRI_RECIRC_REASON_NONE                    0
 #define CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE   1
@@ -174,6 +176,9 @@ struct capri_intrinsic_ring_t {
 // f1 is the most significant field and fn is the least significant field in big-endian format
 #define CAPRI_SET_FIELD_RANGE(_base_r, _s, _f1, _fn, _src_range)    \
     phvwrp  _base_r, offsetof(_s, _fn), CAPRI_SIZEOF_RANGE(_s, _f1, _fn), _src_range
+
+#define CAPRI_SET_FIELD_RANGE_C(_base_r, _s, _f1, _fn, _src_range, _c_flag)    \
+    phvwrp._c_flag  _base_r, offsetof(_s, _fn), CAPRI_SIZEOF_RANGE(_s, _f1, _fn), _src_range
 
 #define CAPRI_GET_TABLE_ADDR(_addr_r, _table_base_r, _eid, _entry_size_shift) \
     add  _addr_r, r0, _eid; \
@@ -469,6 +474,44 @@ _I_K_next:;
 
 #define CAPRI_GET_STAGE_7_ARG(_phv_name, _arg_base_r) \
     add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_7_to_stage_data);
+
+#bits 6-2 has the stage-id, we care about 4:2 only, max 8 stages 0-7
+#branch on current stage-id, so 0 maps to 1 etc.,
+#define CAPRI_GET_STAGE_NEXT_ARG(_phv_name, _arg_base_r) \
+    mfspr   _arg_base_r, spr_mpuid; \
+    srl     _arg_base_r, _arg_base_r, 2; \
+    nop; #mandated by br instruction \
+    .brbegin; \
+    br      _arg_base_r[2:0]; \
+    nop; \
+    .brcase 0; \
+        b _STAGE_K_next; \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_1_to_stage_data); \
+    .brcase 1; \
+        b _STAGE_K_next; \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_2_to_stage_data); \
+    .brcase 2; \
+        b _STAGE_K_next; \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_3_to_stage_data); \
+    .brcase 3; \
+        b _STAGE_K_next; \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_4_to_stage_data); \
+    .brcase 4; \
+        b _STAGE_K_next; \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_5_to_stage_data); \
+    .brcase 5; \
+        b _STAGE_K_next; \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_6_to_stage_data); \
+    .brcase 6; \
+        b _STAGE_K_next; \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_7_to_stage_data); \
+    .brcase 7; \
+        b _STAGE_K_next; \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_0_to_stage_data); \
+    .brend; \
+_STAGE_K_next:;
+
+
 
 // DMA related defines
 

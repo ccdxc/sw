@@ -26,7 +26,7 @@ using hal::utils::fsm_state_timer_ctx;
 using hal::utils::twheel;
 
 namespace hal {
-namespace network {
+namespace eplearn {
 
 enum arp_fsm_state_t {
     ARP_INIT,
@@ -35,15 +35,16 @@ enum arp_fsm_state_t {
     ARP_DONE,
 };
 
-enum arp_fsm_event_t {
-    ARP_ADD,
-    RARP_REQ,
-    RARP_REPLY,
-    ARP_REMOVE,
-    ARP_ERROR,
-    ARP_DUPLICATE,
-    ARP_TIMEOUT,
-};
+#define DHCP_FSM_EVENT_ENTRIES(ENTRY)        \
+    ENTRY(ARP_ADD,       0, "ARP_ADD")       \
+    ENTRY(RARP_REQ,      1, "RARP_REQ")      \
+    ENTRY(RARP_REPLY,    2, "RARP_REPLY")    \
+    ENTRY(ARP_REMOVE,    3, "ARP_REMOVE")    \
+    ENTRY(ARP_ERROR,     4, "ARP_ERROR")     \
+    ENTRY(ARP_DUPLICATE, 5, "ARP_DUPLICATE") \
+    ENTRY(ARP_TIMEOUT,   6, "ARP_TIMEOUT")   \
+
+DEFINE_ENUM(arp_fsm_event_t, DHCP_FSM_EVENT_ENTRIES)
 
 enum arp_trans_type_t {
     ARP_TRANS_IPV4,
@@ -168,6 +169,20 @@ private:
             fte::ctx_t &ctx);
     arp_fsm_state_t get_state();
     void reset();
+    virtual void log_info(const char *message) {
+        HAL_TRACE_INFO("(tenant id : {}, l2_segid : {}, "
+                "macaddr : {}, ip : {}) : {} ",
+                this->trans_key_ptr()->vrf_id, this->trans_key_ptr()->l2_segid,
+                macaddr2str(this->trans_key_ptr()->mac_addr),
+                        ipaddr2str(&ip_entry_key_ptr()->ip_addr), message);
+    }
+    virtual void log_error(const char *message) {
+        HAL_TRACE_ERR("(tenant id : {}, l2_segid : {}, "
+                "macaddr : {}, ip : {}) : {} ",
+                this->trans_key_ptr()->vrf_id, this->trans_key_ptr()->l2_segid,
+                macaddr2str(this->trans_key_ptr()->mac_addr),
+                ipaddr2str(&ip_entry_key_ptr()->ip_addr), message);
+    }
     virtual ~arp_trans_t();
 
 } __PACK__;
@@ -180,7 +195,7 @@ void *arptrans_get_handle_key_func(void *entry);
 uint32_t arptrans_compute_handle_hash_func(void *key, uint32_t ht_size);
 bool arptrans_compare_handle_key_func(void *key1, void *key2);
 
-}  // namespace network
+}  // namespace eplearn
 }  // namespace hal
 
 #endif /* HAL_PLUGINS_NETWORK_EP_LEARN_ARP_TEST_ARP_TRANS_HPP_ */

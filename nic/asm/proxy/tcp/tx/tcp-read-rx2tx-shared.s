@@ -64,8 +64,6 @@ tcp_tx_read_rx2tx_shared_process:
 tcp_tx_launch_sesq:
     // TODO check pi != ci
     phvwr           p.to_s2_sesq_cidx, d.{ci_0}.hx
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FREE_RNMDR, TCP_TX_DDOL_FREE_RNMDR
-    phvwri.c1       p.common_phv_debug_dol_free_rnmdr, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
     add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
@@ -105,6 +103,8 @@ tcp_tx_pending_rx2tx:
     phvwri          p.common_phv_pending_rx2tx, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
     phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
+    phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, d.{ci_1}.hx)

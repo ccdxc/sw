@@ -28,6 +28,8 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
 
+    print("TestCaseSetup(): Start")
+
     tc.pvtdata = ObjectDatabase(logger)
     tcp_proxy.SetupProxyArgs(tc)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
@@ -61,6 +63,10 @@ def TestCaseSetup(tc):
 
     tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
                             tcp_tls_proxy.tls_debug_dol_sesq_stop
+    if hasattr(tc.module.args, 'reassemble'):
+        if tc.module.args.reassemble == True:
+            print("Enabling reassembly support")
+            tlscb.debug_dol = tlscb.debug_dol | tcp_tls_proxy.tls_debug_dol_dec_reasm_path
     tlscb.other_fid = 0xffff
 
     if tc.module.args.key_size == 16:
@@ -118,11 +124,13 @@ def TestCaseVerify(tc):
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     brq_cur.Configure()
 
-    # 1. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+1):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        return False
-    print("Old RNMDR PI: %d, New RNMDR PI: %d" % (rnmdr.pi, rnmdr_cur.pi))
+    # 1. Verify PI for RNMDR got incremented by respective amount
+    # This will be done only for non-reassemble scenarios
+    if (not hasattr(tc.module.args, 'reassemble')) or (tc.module.args.reassemble != True):
+        if (rnmdr_cur.pi != rnmdr.pi+1):
+            print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+            return False
+        print("Old RNMDR PI: %d, New RNMDR PI: %d" % (rnmdr.pi, rnmdr_cur.pi))
 
 
     # 2. Verify PI for TNMDR got incremented by 1

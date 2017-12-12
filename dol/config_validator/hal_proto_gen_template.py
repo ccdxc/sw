@@ -6,6 +6,7 @@ import os
 import sys
 from concurrent import futures
 import pdb
+import config_mgr
 
 proxyServer = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
 channel = grpc.insecure_channel('localhost:50054')
@@ -48,6 +49,7 @@ class ${service[0]}(${fileGrpcName}.${servicerName}):
 //::         for table in service[1].methods_by_name.items():
     def ${table[0]}(self, request, context):
          stub = ${fileGrpcName}.${stubName}(channel)
+         config_mgr.CreateConfigFromDol(request)
          response = stub.${table[0]}(request)
          return response
 

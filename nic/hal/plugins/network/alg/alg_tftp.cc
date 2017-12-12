@@ -22,7 +22,7 @@ process_tftp_first_packet(fte::ctx_t& ctx)
     hal_ret_t               ret = HAL_RET_OK;
     fte::alg_proto_state_t  state = fte::ALG_PROTO_STATE_NONE;
     const uint8_t          *pkt = ctx.pkt();
-    uint8_t                 offset = 0;
+    uint32_t                offset = 0;
     uint16_t                tftpop = 0;
     fte::alg_entry_t         *alg_entry = NULL;
 
@@ -60,7 +60,7 @@ process_tftp_first_packet(fte::ctx_t& ctx)
         // Set Rflow to be invalid and ALG proto state
         // We want the flow miss to happen on Rflow
         ctx.set_valid_rflow(false);
-        alg_entry->skip_firewall = TRUE;
+        alg_entry->skip_sfw = TRUE;
         alg_entry->entry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
         alg_entry->entry.key.sport = 0;
         alg_entry->alg_proto_state = state;
@@ -77,7 +77,7 @@ process_tftp(fte::ctx_t& ctx)
     hal_ret_t             ret = HAL_RET_OK;
     hal::flow_key_t       key = ctx.key();
     const uint8_t        *pkt = ctx.pkt();
-    uint8_t               offset = 0;
+    uint32_t              offset = 0;
     uint16_t              tftpop = 0;
     fte::alg_entry_t     *alg_entry = NULL;
     hal::session_t       *session = NULL;

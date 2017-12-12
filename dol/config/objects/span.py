@@ -34,7 +34,7 @@ class SpanSessionObject(base.ConfigObjectBase):
         self.erspan_dest = None
         self.erspan_src = None
         eps = tenant.GetRemoteEps()
-        self.ep = eps[(self.id -1) % 3]
+        self.ep = eps[(self.id -1) %len(eps)]
         self.intf = self.ep.intf
         self.Show()
         return

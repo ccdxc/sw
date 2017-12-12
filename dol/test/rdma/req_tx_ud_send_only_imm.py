@@ -19,6 +19,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.q_key = 0x11111111  #TODO:Need to get from rqp->q_key
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
     tc.pvtdata.ah_handle = tc.config.rdmasession.ah_handle
+    tc.pvtdata.ah_size = tc.config.rdmasession.ah_size
     tc.pvtdata.imm_data = 0x0F0E0D0C;
     tc.pvtdata.wrid = 0x1122334455667788;
 

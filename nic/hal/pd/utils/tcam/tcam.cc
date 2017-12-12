@@ -529,7 +529,7 @@ Tcam::alloc_index_(uint32_t *idx, bool lowest)
     hal_ret_t   rs = HAL_RET_OK;
     
     // Allocate an index in repl. table
-    indexer::status irs = tcam_indexer_->alloc(idx, lowest, 1);
+    indexer::status irs = tcam_indexer_->alloc((uint32_t *)idx, lowest, 1);
     if (irs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
@@ -546,7 +546,7 @@ Tcam::alloc_index_withid_(uint32_t idx)
     hal_ret_t   rs = HAL_RET_OK;
     
     // Allocate an index in repl. table
-    indexer::status irs = tcam_indexer_->alloc_withid(idx);
+    indexer::status irs = tcam_indexer_->alloc_withid((uint32_t)idx);
     if (irs != indexer::SUCCESS) {
         rs = (irs == indexer::DUPLICATE_ALLOC) ? HAL_RET_DUP_INS_FAIL : HAL_RET_OOB;
     }

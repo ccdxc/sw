@@ -1,0 +1,6 @@
+{
+  "platform_type" : "haps",
+  "sw" : {
+    "grpc_port": "50053"
+  }
+}

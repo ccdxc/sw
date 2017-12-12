@@ -190,7 +190,7 @@ l4lb_to_str(l4lb_service_entry_t *l4lb)
     buf = ep_str[ep_str_next++ & 0x3];
     memset(buf, 0, 50);
     if (l4lb) {
-        snprintf(buf, 100, "ten_id:%d, serv_ip:%s, proto:%d, serv_port:%d, serv_mac:%s",
+        snprintf(buf, 100, "ten_id:%lu, serv_ip:%s, proto:%d, serv_port:%d, serv_mac:%s",
                 l4lb->l4lb_key.vrf_id, ipaddr2str(&l4lb->l4lb_key.service_ip),
                 l4lb->l4lb_key.proto, l4lb->l4lb_key.service_port, 
                 ether_ntoa((struct ether_addr*)(l4lb->serv_mac_addr)));

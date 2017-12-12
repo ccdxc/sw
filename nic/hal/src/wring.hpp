@@ -31,8 +31,6 @@ using wring::WRingSetMetaResponse;
 
 namespace hal {
 
-typedef uint32_t wring_id_t;
-
 typedef struct barco_gcm_desc_s {
     uint64_t                ilist_addr;
     uint64_t                olist_addr;

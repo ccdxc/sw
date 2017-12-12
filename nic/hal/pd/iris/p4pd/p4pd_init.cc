@@ -22,6 +22,15 @@ using hal::pd::utils::priority_t;
 namespace hal {
 namespace pd {
 
+struct nacl_match_entry_t {
+    uint8_t lkp_type;
+    uint8_t lkp_type_mask;
+    uint16_t dport_type;
+    uint16_t dport_mask;
+    uint8_t flow_miss_ingress;
+    uint8_t flow_miss_ingress_mask;
+};
+
 static hal_ret_t
 p4pd_ddos_policers_init (void)
 {
@@ -523,8 +532,7 @@ p4pd_nacl_smart_nic_mode_init (void)
 }
 
 static hal_ret_t
-p4pd_nacl_dport_match_tp_cpu_init (uint8_t lkp_type,
-        uint16_t dport_match)
+p4pd_nacl_match_tp_cpu_init (const nacl_match_entry_t *entry)
 {
     hal_ret_t               ret = HAL_RET_OK;
     acl_tcam                *acl_tbl = NULL;
@@ -546,17 +554,17 @@ p4pd_nacl_dport_match_tp_cpu_init (uint8_t lkp_type,
 
     key.control_metadata_from_cpu = 0;
     mask.control_metadata_from_cpu_mask = 1;
-    key.flow_lkp_metadata_lkp_type = lkp_type;
-    mask.flow_lkp_metadata_lkp_type_mask =
-            ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+    key.flow_lkp_metadata_lkp_type = entry->lkp_type;
+    mask.flow_lkp_metadata_lkp_type_mask = entry->lkp_type_mask;
 
     key.entry_inactive_nacl = 0;
     mask.entry_inactive_nacl_mask = 1;
 
-    key.control_metadata_flow_miss_ingress = 1;
-    mask.control_metadata_flow_miss_ingress_mask = 1;
-    key.flow_lkp_metadata_lkp_dport = dport_match;
-    mask.flow_lkp_metadata_lkp_dport_mask = 0xffff;
+    key.control_metadata_flow_miss_ingress = entry->flow_miss_ingress;
+    mask.control_metadata_flow_miss_ingress_mask =
+            entry->flow_miss_ingress_mask;
+    key.flow_lkp_metadata_lkp_dport = entry->dport_type;
+    mask.flow_lkp_metadata_lkp_dport_mask = entry->dport_mask;
 
     data.nacl_action_u.nacl_nacl_permit.dst_lport = CPU_LPORT;
     data.nacl_action_u.nacl_nacl_permit.dst_lport_en = 1;
@@ -586,23 +594,72 @@ p4pd_nacl_dport_match_tp_cpu_init (uint8_t lkp_type,
 }
 
 
+
+/*
+ * Setup all EP learning related NACL entries.
+ */
 static hal_ret_t
-p4pd_nacl_arp_init (void)
+p4pd_nacl_eplearn_init (void)
 {
     hal_ret_t ret;
+    nacl_match_entry_t entry;
 
-    ret = p4pd_nacl_dport_match_tp_cpu_init(FLOW_KEY_LOOKUP_TYPE_MAC,
-            ETHERTYPE_ARP);
+    entry = { 0 };
+    entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
+    entry.lkp_type_mask = ~(entry.lkp_type & 0);
+    entry.dport_type = ETHERTYPE_ARP;
+    entry.dport_mask = 0xffff;
+    entry.flow_miss_ingress = 1;
+    entry.flow_miss_ingress_mask = 1;
+    ret = p4pd_nacl_match_tp_cpu_init(&entry);
     if (ret != HAL_RET_OK) {
         goto out;
     }
-    ret = p4pd_nacl_dport_match_tp_cpu_init(FLOW_KEY_LOOKUP_TYPE_IPV6,
-            ICMP_NEIGHBOR_SOLICITATION << 8 | 0);
+
+    entry = { 0 };
+    entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
+    entry.lkp_type_mask = ~(entry.lkp_type & 0);
+    entry.dport_type = ICMP_NEIGHBOR_SOLICITATION << 8 | 0;
+    entry.dport_mask = 0xffff;
+    entry.flow_miss_ingress = 1;
+    entry.flow_miss_ingress_mask = 1;
+    ret = p4pd_nacl_match_tp_cpu_init(&entry);
     if (ret != HAL_RET_OK) {
         goto out;
     }
-    ret = p4pd_nacl_dport_match_tp_cpu_init(FLOW_KEY_LOOKUP_TYPE_IPV6,
-            ICMP_NEIGHBOR_ADVERTISEMENT <<8 | 0);
+
+    entry = { 0 };
+    entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
+    entry.lkp_type_mask = ~(entry.lkp_type & 0);
+    entry.dport_type = ICMP_NEIGHBOR_ADVERTISEMENT << 8 | 0;
+    entry.dport_mask = 0xffff;
+    entry.flow_miss_ingress = 1;
+    entry.flow_miss_ingress_mask = 1;
+    ret = p4pd_nacl_match_tp_cpu_init(&entry);
+    if (ret != HAL_RET_OK) {
+        goto out;
+    }
+
+    entry = { 0 };
+    entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
+    entry.lkp_type_mask = ~(entry.lkp_type & 0);
+    entry.dport_type = DHCP_CLIENT_PORT;
+    entry.dport_mask = 0xffff;
+    entry.flow_miss_ingress = 1;
+    entry.flow_miss_ingress_mask = 0;
+    ret = p4pd_nacl_match_tp_cpu_init(&entry);
+    if (ret != HAL_RET_OK) {
+        goto out;
+    }
+
+    entry = { 0 };
+    entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
+    entry.lkp_type_mask = ~(entry.lkp_type & 0);
+    entry.dport_type = DHCP_SERVER_PORT;
+    entry.dport_mask = 0xffff;
+    entry.flow_miss_ingress = 1;
+    entry.flow_miss_ingress_mask = 0;
+    ret = p4pd_nacl_match_tp_cpu_init(&entry);
     if (ret != HAL_RET_OK) {
         goto out;
     }
@@ -1208,7 +1265,7 @@ roce_opcode_info_t opc_to_info[DECODE_ROCE_OPCODE_TABLE_SIZE] = {
     {1, sizeof(rdma_bth_t)+sizeof(rdma_reth_t), Q_TYPE_RDMA_RQ,
      (RESP_RX_FLAG_READ_REQ)}, //12 - read-request
     {1, sizeof(rdma_bth_t)+sizeof(rdma_aeth_t), Q_TYPE_RDMA_SQ,
-     (REQ_RX_FLAG_FIRST | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_AETH)}, //13 - read-response-first
+     (REQ_RX_FLAG_FIRST | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_AETH | REQ_RX_FLAG_COMPLETION)}, //13 - read-response-first
     {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_SQ,
      (REQ_RX_FLAG_MIDDLE | REQ_RX_FLAG_READ_RESP)}, //14 - read-response-middle
     {1, sizeof(rdma_bth_t)+sizeof(rdma_aeth_t), Q_TYPE_RDMA_SQ,
@@ -1549,7 +1606,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_drop_stats_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_nacl_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_nacl_arp_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_nacl_eplearn_init() == HAL_RET_OK);
 
     // initialize all P4 egress tables with default entries, if any
     HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);

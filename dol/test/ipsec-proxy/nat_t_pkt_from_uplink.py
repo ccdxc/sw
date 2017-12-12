@@ -164,23 +164,6 @@ def TestCaseVerify(tc):
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
 
-    # 10. Verify SeqNo increment
-    if (ipseccb_cur.esn_lo != seq+1):
-        print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
-        return False
-
-    # 11. Verify IV increment
-    if (ipseccb_cur.iv != iv+1):
-        print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
-        return False
-    print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
-    if (rnmpr.ringentries[rnmpr.pi].handle != brq_cur.ring_entries[brq.pi].iv_addr):
-        print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
-        return False
-    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].status_addr - 56)):
-        print("Status Addr not as expected in BRQ Req 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].status_addr))
-        return False
-
     return True
 
 def TestCaseTeardown(tc):

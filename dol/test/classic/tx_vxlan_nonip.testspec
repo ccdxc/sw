@@ -1,0 +1,111 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=False,access=False
+    dst:
+        tenant  : filter://type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True,access=False
+    flow        : filter://fwtype=L2,type=MAC
+    maxflows    : None
+
+packets:
+    - packet:
+        id          : BASE_PKT    # Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH
+        headers     :
+            eth:
+                src     : 00:11:11:11:11:11
+                dst     : 00:22:22:22:22:22
+                type    : ref://testcase/config/flow/ethertype
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+
+    - packet:
+        id          : IN_PKT    # Input packet 
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+            - ref://factory/packets/id=ENCAP_VXLAN
+        headers     :
+            outereth:
+                src : ref://testcase/config/src/endpoint/macaddr
+                dst : ref://testcase/config/dst/endpoint/macaddr
+            qtag    :
+                vlan: ref://testcase/config/src/segment/vlan_id
+            outeripv4:
+                src : 11.0.0.1
+                dst : 11.0.0.2
+            vxlan   :
+                vni : 8192
+
+    - packet:
+        id          : EXP_PKT    # Expected packet 
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+            - ref://factory/packets/id=ENCAP_VXLAN
+        headers     :
+            outereth:
+                src : ref://testcase/config/src/endpoint/macaddr
+                dst : ref://testcase/config/dst/endpoint/macaddr
+            qtag    :
+                vlan: ref://testcase/config/dst/segment/vlan_id
+                prio: ref://testcase/config/flow/txqos/cos
+            outeripv4:
+                src : 11.0.0.1
+                dst : 11.0.0.2
+            vxlan   :
+                vni : 8192
+
+buffers:
+    - buffer:
+        id      : BUF1 # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=IN_PKT/size
+           data : ref://testcase/packets/id=IN_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            err_code : 0x0
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
+    doorbell:
+        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    packets:
+        - packet:
+            object  : callback://classic/callbacks/GetTxExpectedPacket/expktid=IN_PKT
+            port    : callback://classic/callbacks/GetTxExpectedPorts
+#        - packet:
+#            object  : callback://classic/callbacks/GetCpuPacket/expktid=IN_PKT
+#            port    : 128
+
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1

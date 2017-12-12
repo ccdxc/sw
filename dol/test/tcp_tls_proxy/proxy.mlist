@@ -208,6 +208,32 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : PKT_TO_BSQ_AES128_GCM_DECRYPT_REASM
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_decrypt
+        spec    : one_tls_aes128_gcm_record_pkt.testspec
+        args    :
+            cipher_suite: GCM
+            maxflows: 1
+            key_size : 16
+            reassemble : True
+        iterate  :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_BSQ_AES128_GCM_DECRYPT_MULTI_SEGMENT_REASM
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_decrypt
+        spec    : one_tls_aes128_gcm_record_pkt_multi_segment.testspec
+        args    :
+            cipher_suite: GCM
+            maxflows: 1
+            key_size : 16
+            reassemble : True
+        iterate  :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : PKT_TO_BSQ_AES256_GCM_ENCRYPT
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
@@ -248,6 +274,7 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ_AES256_CCM_ENCRYPT_USE_RANDOM_IV
+        enable  : False
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
@@ -262,6 +289,7 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ_AES256_CCM_ENCRYPT
+        enable  : False
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
@@ -275,6 +303,7 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ_AES256_CCM_DECRYPT
+        enable  : False
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes256_ccm_record_pkt.testspec
@@ -350,13 +379,14 @@ modules:
             test_timer : 1
 
     - module:
-        name    : UL_TO_UL_BYPASS_BARCO_FREE_RNMDR
-        spec    : uplink_to_uplink.testspec
+        name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_COMPLETE
+        spec    : uplink_to_uplink_clean_retx_complete.testspec
         module  : pkt_to_p4
         args    :
-            free_rnmdr : 1
+            num_pkts : 2
             bypass_barco : 1
             maxflows : 1
+            test_retx : complete
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_PARTIAL
@@ -367,16 +397,6 @@ modules:
             bypass_barco : 1
             maxflows : 1
             test_retx : partial
-
-    - module:
-        name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_COMPLETE
-        spec    : uplink_to_uplink_clean_retx_complete.testspec
-        module  : pkt_to_p4
-        args    :
-            num_pkts : 2
-            bypass_barco : 1
-            maxflows : 1
-            test_retx : complete
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_CONG_AVOID
@@ -527,7 +547,7 @@ modules:
         spec    : pkt_to_arq.testspec
         iterate :
             - flow: filter://type=IPV4
-
+    
     - module:
         name    : PKT_TO_ARQ_TO_UPLINK
         package : test.tcp_tls_proxy
@@ -535,6 +555,14 @@ modules:
         spec    : pkt_to_arq_to_uplink.testspec
         iterate :
             - flow: filter://type=IPV4
+    
+    - module:
+        name    : PKT_TO_ARQ_TO_UPLINK_V6
+        package : test.tcp_tls_proxy
+        module  : pkt_to_arq_to_uplink
+        spec    : pkt_to_arq_to_uplink_v6.testspec
+        iterate :
+            - flow: filter://type=IPV6
 
     - module:
         name    : SYN_ACK_TO_ARQ

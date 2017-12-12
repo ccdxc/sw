@@ -40,6 +40,7 @@ struct phv_ p;
     *      // if response, we only look for status to be updated in phv
     *      if p4pt_s2s.resp:
     *         p4pt_s2s.status = iscsi_header.status
+    *         p4pt_s2s.tag_id = iscsi_header.tag_id
     *         goto prep_p4ptcb_lookup
     *
     *      // must be req
@@ -139,18 +140,18 @@ p4pt_parse_iscsi:
     *         exit                  // exit if this is neither read, nor write operation
     *
     */
-    seq      c1, k.p4pt_iscsi_app_header_cmd_read, 1
+    seq      c1, k.p4pt_iscsi_app_header_cmd_read, TRUE
     and      r1, k.p4pt_iscsi_app_header_cmd_scsi_cdb_op, 0xF
     seq      c3, r1, 0x8
     setcf    c4, [c1 & c3]
-    phvwr.c4 p.p4pt_s2s_read, 1
+    phvwr.c4 p.p4pt_s2s_read, TRUE
     bcf      [c1 & !c3], p4pt_exit
     nop
 
-    seq      c2, k.p4pt_iscsi_app_header_cmd_write, 1
+    seq      c2, k.p4pt_iscsi_app_header_cmd_write, TRUE
     seq      c3, r1, 0xA
     setcf    c4, [c2 & c3]
-    phvwr.c4 p.p4pt_s2s_write, 1
+    phvwr.c4 p.p4pt_s2s_write, TRUE
     bcf      [c2 & !c3], p4pt_exit
     nop
 
@@ -160,16 +161,19 @@ p4pt_parse_iscsi:
    /*
     *      p4pt_s2s.data_length = iscsi_header.data_seg_length
     *      p4pt_s2s.lun = iscsi_header.lun
-    *      p4pt_s2s.tag_id = iscsi_header.tag_id
     *      prep_p4ptcb_lookup
     *
     */
     phvwr    p.p4pt_s2s_data_length, k.p4pt_iscsi_app_header_cmd_data_length
-    phvwr    p.p4pt_s2s_tag_id[31:16], k.p4pt_iscsi_app_header_tag_id_sbit0_ebit15
-    phvwr    p.p4pt_s2s_tag_id[15:0], k.p4pt_iscsi_app_header_tag_id_sbit16_ebit31
     phvwr    p.p4pt_s2s_lun, k.p4pt_iscsi_app_header_cmd_lun
 
 prep_p4ptcb_lookup:
+   /*
+    *      p4pt_s2s.tag_id = iscsi_header.tag_id
+    */
+    phvwr    p.p4pt_s2s_tag_id[31:16], k.p4pt_iscsi_app_header_tag_id_sbit0_ebit15
+    phvwr    p.p4pt_s2s_tag_id[15:0], k.p4pt_iscsi_app_header_tag_id_sbit16_ebit31
+
    /*
     *         // enable table0 lookup for p4ptcb
     *         // each record is 512 bits (64 bytes)
@@ -177,10 +181,10 @@ prep_p4ptcb_lookup:
     */
     addi     r1, r0, loword(p4pt_tcb_base)
     addui    r1, r1, hiword(p4pt_tcb_base)
-    add      r1, r1, k.p4pt_iscsi_app_header_p4pt_idx, 6  // 64 bytes record
+    add      r1, r1, k.p4pt_iscsi_app_header_p4pt_idx, 6
     phvwr    p.common_te0_phv_table_addr, r1
     phvwri   p.common_te0_phv_table_pc, p4pt_update_tcb_start[33:6]
-    phvwr    p.common_te0_phv_table_raw_table_size, 6            // Q is this in #words, 64?
+    phvwr    p.common_te0_phv_table_raw_table_size, 6
     phvwr.e  p.common_te0_phv_table_lock_en, 0
     phvwr    p.app_header_table0_valid, 1
 

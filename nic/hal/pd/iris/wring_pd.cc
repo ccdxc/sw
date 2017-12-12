@@ -15,6 +15,7 @@ namespace pd {
 static pd_wring_meta_t g_meta[types::WRingType_MAX + 1];
 
 hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
+hal_ret_t serq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 hal_ret_t arqrx_get_hw_meta(pd_wring_t* wring_pd);
 hal_ret_t barco_gcm0_get_hw_meta(pd_wring_t* wring_pd);
 
@@ -27,7 +28,7 @@ wring_pd_meta_init() {
      */
 
     g_meta[types::WRING_TYPE_SERQ] = 
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, 64, SERQ_WRING_SLOT_SIZE, "", 0, 0, 0, serq_slot_parser, NULL};
  
     g_meta[types::WRING_TYPE_NMDR_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, CAPRI_TNMDR_RING_SIZE,
@@ -333,6 +334,15 @@ hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *sl
                         sizeof(wring->slot_info.gcm_desc.barco_status))) {
         HAL_TRACE_ERR("Failed to read the Barco Status information from HBM");    
     }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t serq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
+{
+
+    /* We still only return the descriptor pointer */
+    wring->slot_value = ntohll(*(uint64_t *)slot);
 
     return HAL_RET_OK;
 }

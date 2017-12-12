@@ -70,7 +70,11 @@ lb_padding_done:
   // r1 - new TCP Header length including options
   add          r2, r0, k.tcp_dataOffset, 2
   seq          c1, r1, r2
-  // Update the bits for updating TCP Checksum 
+  // Update checksums
+  // Assumption is if we terminated the tunnel and looking inner then we will move all
+  // inner packets to outer, so we only need to tell checksum engine to update outer only.
+  // Only TCP checksum as there is no packet length change which can affect IP Checksum
+  phvwr         p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE
   nop.c1.e
   nop
  
@@ -87,5 +91,9 @@ lb_padding_done:
   phvwr.c1     p.udp_len, r4
   add.c1       r4, k.inner_ipv4_totalLen, r3.s
   phvwr.c1     p.inner_ipv4_totalLen, r4
+  // Update checksums
+  // Assumption is if we terminated the tunnel and looking inner then we will move all
+  // inner packets to outer, so we only need to tell checksum engine to update outer only.
+  phvwrmi      p.control_metadata_checksum_ctl, CHECKSUM_L3_L4_UPDATE_MASK, CHECKSUM_L3_L4_UPDATE_MASK
   nop.e
   nop

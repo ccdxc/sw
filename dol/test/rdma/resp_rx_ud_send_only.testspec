@@ -21,7 +21,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_DETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_DETH,v6=ETH_IPV6_UDP_BTH_DETH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -36,10 +36,10 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 ttl     : 64
-            #ipv6:
-            #    src     : ref://testcase/config/flow/sip
-            #    dst     : ref://testcase/config/flow/dip
-            #    hlim    : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -52,14 +52,31 @@ packets:
                 srcqp   : ref://testcase/config/rdmasession/rqp/id
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
-                
+
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : 104  # 40B ip hdr (incase of v4, its 20B ipv4 hdr + 20B pad) + payload 64
-        template    : ref://factory/packets/id=PAYLOAD
+        payloadsize : 64
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ROCE_UD_IPV4,v6=ROCE_UD_IPV6
         headers     :
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+                len     : 112 #from the IN_PKT
+            pad:
+                data0   : 00000000
+                data1   : 00000000
+                data2   : 00000000
+                data3   : 00000000
+                data4   : 00000000
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+                plen    : 92 #from the IN_PKT
             payload:
-                data : callback://rdma/rdma/GetUDPacketPayload/pktid=IN_PKT,starthdr=ipv4,endhdr=ipv4,pl_size=64
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+               
 buffers:
     - buffer:
         id      : RQ_BUF

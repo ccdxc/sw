@@ -61,19 +61,26 @@ std::vector<tests::TestEntry> test_suite = {
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
   {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
-  {&tests::compress_host_flat, "Host->Host flat buf", false},
-  {&tests::compress_hbm_flat, "HBM->HBM flat buf", false},
-  {&tests::compress_host_to_hbm_flat, "Host->HBM flat buf", false},
-  {&tests::compress_hbm_to_host_flat, "HBM->Host flat buf", false},
-  {&tests::compress_host_sgl, "Host->Host sgl buf", false},
-  {&tests::compress_hbm_sgl, "HBM->HBM sgl buf", false},
-  //{&tests::compress_host_nested_sgl, "Host->Host nested sgl buf", false},
-  //{&tests::compress_hbm_nested_sgl, "HBM->HBM nested sgl buf", false},
+  {&tests::compress_host_flat, "Compress Host->Host flat buf", false},
+  {&tests::compress_hbm_flat, "Compress HBM->HBM flat buf", false},
+  {&tests::compress_host_to_hbm_flat, "Compress Host->HBM flat buf", false},
+  {&tests::compress_hbm_to_host_flat, "Compress HBM->Host flat buf", false},
+  {&tests::compress_host_sgl, "Compress Host->Host sgl buf", false},
+  {&tests::compress_hbm_sgl, "Compress HBM->HBM sgl buf", false},
+  {&tests::compress_host_nested_sgl, "Compress Host->Host nested sgl buf", false},
+  {&tests::compress_hbm_nested_sgl, "Compress HBM->HBM nested sgl buf", false},
+  {&tests::compress_nested_sgl_in_hbm, "Compress Nested sgl buf in HBM", false},
+  {&tests::compress_return_through_hbm, "Compress Status/dest-buf in HBM", false},
+  {&tests::compress_adler_sha256, "Compress with Adler32 and SHA256", false},
+  {&tests::compress_crc_sha512, "Compress with CRC32 and SHA512", false},
+  {&tests::compress_doorbell_odata, "Compress with DMA end writes", false},
+  {&tests::compress_max_features, "Compress with multiple features", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
   {&tests::test_run_rdma_e2e_write, "E2E write over RDMA", false},
   {&tests::test_run_rdma_e2e_read, "E2E read over RDMA", false},
+  {&tests::test_run_rdma_lif_override, "E2E read LIF override", false},
 };
 
 void sig_handler(int sig) {

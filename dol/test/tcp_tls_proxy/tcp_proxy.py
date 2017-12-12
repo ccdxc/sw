@@ -14,7 +14,7 @@ tcp_debug_dol_pkt_to_l7q = 0x40
 
 tcp_tx_debug_dol_dont_send_ack = 0x1
 tcp_tx_debug_dol_dont_tx = 0x2
-tcp_tx_debug_dol_free_rnmdr = 0x4
+tcp_tx_debug_dol_bypass_barco = 0x4
 tcp_tx_debug_dol_dont_start_retx_timer = 0x8
 
 tcp_state_ESTABLISHED = 1
@@ -48,7 +48,6 @@ def SetupProxyArgs(tc):
     test_retx_timer = 0
     test_cancel_retx_timer = 0
     ooo_seq_delta = 0
-    free_rnmdr = 0
     num_pkts = 1
     test_retx = None
     sem_full = None
@@ -74,9 +73,6 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'ooo_seq_delta'):
         ooo_seq_delta = tc.module.args.ooo_seq_delta
         tc.module.logger.info("- ooo_seq_delta %s" % tc.module.args.ooo_seq_delta)
-    if hasattr(tc.module.args, 'free_rnmdr'):
-        free_rnmdr = tc.module.args.free_rnmdr
-        tc.module.logger.info("- free_rnmdr %s" % tc.module.args.free_rnmdr)
     if hasattr(tc.module.args, 'num_pkts'):
         num_pkts = tc.module.args.num_pkts
         tc.module.logger.info("- num_pkts %s" % tc.module.args.num_pkts)
@@ -111,9 +107,6 @@ def SetupProxyArgs(tc):
         if 'ooo_seq_delta' in iterelem.__dict__:
             ooo_seq_delta = iterelem.ooo_seq_delta
             tc.module.logger.info("- ooo_seq_delta %s" % iterelem.ooo_seq_delta)
-        if 'free_rnmdr' in iterelem.__dict__:
-            free_rnmdr = iterelem.free_rnmdr
-            tc.module.logger.info("- free_rnmdr %s" % iterelem.free_rnmdr)
         if 'num_pkts' in iterelem.__dict__:
             num_pkts = iterelem.num_pkts
             tc.module.logger.info("- num_pkts %s" % iterelem.num_pkts)
@@ -130,7 +123,6 @@ def SetupProxyArgs(tc):
     tc.pvtdata.test_retx_timer = test_retx_timer
     tc.pvtdata.test_cancel_retx_timer = test_cancel_retx_timer
     tc.pvtdata.ooo_seq_delta = ooo_seq_delta
-    tc.pvtdata.free_rnmdr = free_rnmdr
     tc.pvtdata.num_pkts = num_pkts
     tc.pvtdata.test_retx = test_retx
     tc.pvtdata.sem_full = sem_full
@@ -143,6 +135,7 @@ def init_tcb_inorder(tc, tcb):
     tc.pvtdata.flow1_rcv_nxt = tcb.rcv_nxt
     tc.pvtdata.flow1_snd_nxt = tcb.snd_nxt
     tc.pvtdata.flow1_snd_una = tcb.snd_una
+    tc.pvtdata.flow1_bytes_rxed = 0
     tcb.rcv_tsval = 0x1AFAFAFA
     tcb.ts_recent = 0x1AFAFAF0
     tcb.snd_wnd = 1000
@@ -158,8 +151,6 @@ def init_tcb_inorder(tc, tcb):
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
-    if tc.pvtdata.free_rnmdr:
-        tcb.debug_dol_tx |= tcp_tx_debug_dol_free_rnmdr
     if not tc.pvtdata.test_retx_timer:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
     if tc.pvtdata.same_flow:
@@ -168,6 +159,8 @@ def init_tcb_inorder(tc, tcb):
     else:
         tcb.source_port = tc.config.flow.dport
         tcb.dest_port = tc.config.flow.sport
+    if tc.pvtdata.bypass_barco:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
 
     vlan_id = 0
     if tc.pvtdata.same_flow:
@@ -243,10 +236,11 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
-    if tc.pvtdata.free_rnmdr:
-        tcb.debug_dol_tx |= tcp_tx_debug_dol_free_rnmdr
     if not tc.pvtdata.test_retx_timer:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
+    if tc.pvtdata.bypass_barco:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
+
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport
     vlan_id = 0

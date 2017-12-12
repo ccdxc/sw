@@ -4,7 +4,7 @@
 #include "nic/p4/nw/include/defines.h"
 
 namespace hal {
-namespace network {
+namespace eplearn {
 
 bool is_neighbor_discovery_flow(const hal::flow_key_t *key)
 {
@@ -133,5 +133,5 @@ out:
     return ret;
 }
 
-}  // namespace network
+}  // namespace eplearn
 }  // namspace hal

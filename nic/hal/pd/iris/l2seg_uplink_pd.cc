@@ -112,7 +112,7 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
     key.capri_intrinsic_lif = if_get_hw_lif_id(args->intf);
 
     // Data
-    inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
+    inp_prop.vrf = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.dir = FLOW_DIR_FROM_UPLINK;
     inp_prop.l4_profile_idx = nwsec_prof ? nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
     inp_prop.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
@@ -301,7 +301,7 @@ l2seg_uplink_inp_prop_form_data (pd_l2seg_uplink_args_t *args,
     memset(&data, 0, sizeof(data));
 
     // Data
-    inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
+    inp_prop.vrf = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.dir = FLOW_DIR_FROM_UPLINK;
     inp_prop.l4_profile_idx = nwsec_prof ? nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
     inp_prop.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;

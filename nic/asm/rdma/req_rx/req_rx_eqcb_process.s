@@ -46,14 +46,16 @@ req_rx_eqcb_process:
 
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, REQ_RX_DMA_CMD_START_FLIT_ID, DMA_CMD_INDEX)
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQWQE_START, PHV_EQWQE_END, EQWQE_P)
-    add             DMA_CMD_INDEX, DMA_CMD_INDEX, 1
-    add             DMA_CMD_BASE, DMA_CMD_BASE, DMA_CMD_SIZE_BITS
+    #need to move this end-of-command one down when interrupt dma command is enabled
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
     // RDMA_EQ_INTR_TABLE_BASE is 34 bytes, so load it into register using 2 instructions
     addui       EQ_INT_ADDR, r0, hiword(RDMA_EQ_INTR_TABLE_BASE)
     addi        EQ_INT_ADDR, EQ_INT_ADDR, loword(RDMA_EQ_INTR_TABLE_BASE)
 
     add             EQ_INT_ADDR, EQ_INT_ADDR, d.int_num, RDMA_EQ_INTR_TABLE_ENTRY_SIZE_SHFT
+    add             DMA_CMD_INDEX, DMA_CMD_INDEX, 1
+    add             DMA_CMD_BASE, DMA_CMD_BASE, DMA_CMD_SIZE_BITS
     //DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_NUM_START, PHV_EQ_INT_NUM_END, EQ_INT_ADDR)
     
     CAPRI_SET_TABLE_I_VALID(TBL_ID, 0)

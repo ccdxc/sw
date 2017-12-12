@@ -16,6 +16,11 @@ nfveps: 0
 
 security_profile: None
 
+fte:
+    ep_learn:
+        ipv4: True
+        ipv6: True
+
 sessions:
     unidest:
         ipv4:

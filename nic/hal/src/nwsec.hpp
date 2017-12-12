@@ -30,8 +30,6 @@ using nwsec::SecurityProfileGetResponseMsg;
 
 namespace hal {
 
-typedef uint32_t nwsec_profile_id_t;
-
 typedef struct nwsec_profile_s {
     hal_spinlock_t        slock;                  // lock to protect this structure
     nwsec_profile_id_t    profile_id;             // profile id

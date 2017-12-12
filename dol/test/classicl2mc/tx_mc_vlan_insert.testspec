@@ -113,8 +113,8 @@ buffers:
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind  : False
-            size  : ref://testcase/packets/id=EXP_PKT_COPY0/size
-            data  : ref://testcase/packets/id=EXP_PKT_COPY0/rawbytes
+            size  : ref://testcase/packets/id=EXP_PKT_COPY1_ALLMC/size
+            data  : ref://testcase/packets/id=EXP_PKT_COPY1_ALLMC/rawbytes
 
 descriptors:
     - descriptor:
@@ -151,7 +151,7 @@ descriptors:
             bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY0/size
 
     - descriptor:
-        id      : EXP_DESC_COPY0 # Expected Descriptor
+        id      : EXP_DESC_COPY1_ALLMC # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY1_ALLMC

@@ -5,41 +5,49 @@ package smartnic
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"testing"
+	"time"
 
 	"google.golang.org/grpc/grpclog"
 
-	"time"
-
 	api "github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
+	apicache "github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	nmd "github.com/pensando/sw/nic/agent/nmd"
+	"github.com/pensando/sw/nic/agent/nmd/platform"
+	proto "github.com/pensando/sw/nic/agent/nmd/protos"
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	cmdapi "github.com/pensando/sw/venice/cmd/apiclient"
+	"github.com/pensando/sw/venice/cmd/cache"
+	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	cmdsvc "github.com/pensando/sw/venice/cmd/services"
+	"github.com/pensando/sw/venice/cmd/services/mock"
+	"github.com/pensando/sw/venice/globals"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	ventrace "github.com/pensando/sw/venice/utils/trace"
 )
 
 const (
 	smartNICServerURL = "localhost:9199"
+	resolverURLs      = ":" + globals.CMDGRPCPort
 	// TODO: This is a temporary way of testing invalid cert
 	invalidCertSignature = "unknown-cert"
-
-	healthInterval   = 1 * time.Second
-	deadtimeInterval = 3 * time.Second
+	healthInterval       = 1 * time.Second
+	deadtimeInterval     = 3 * time.Second
 )
 
 type testInfo struct {
 	l              log.Logger
-	apiServerPort  string
+	apiServerAddr  string
 	apiServer      apiserver.Server
 	apiClient      apiclient.Services
 	rpcServer      *rpckit.RPCServer
@@ -54,7 +62,25 @@ func (t testInfo) APIClient() cmd.CmdV1Interface {
 var tInfo testInfo
 
 // runRPCServer creates a smartNIC server for SmartNIC service.
-func createRPCServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpckit.RPCServer, error) {
+func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, error) {
+
+	// set cmd logger, statemgr & quorum nodes
+	cmdenv.Logger = tInfo.l
+	cmdenv.QuorumNodes = []string{"localhost"}
+	cmdenv.StateMgr = cache.NewStatemgr()
+
+	// Start CMD config watcher
+	testIP := "localhost"
+	l := mock.NewLeaderService("testMaster")
+	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
+	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr, cmdenv.StateMgr)
+	cmdenv.MasterService = cmdsvc.NewMasterService(testIP,
+		cmdsvc.WithLeaderSvcMasterOption(l),
+		cmdsvc.WithSystemdSvcMasterOption(s),
+		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
+		cmdsvc.WithCfgWatcherMasterOption(cw))
+	cw.Start()
+
 	// create an RPC server.
 	rpcServer, err := rpckit.NewRPCServer("smartNIC", url)
 	if err != nil {
@@ -62,30 +88,32 @@ func createRPCServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 		return nil, err
 	}
 	tInfo.rpcServer = rpcServer
+	cmdenv.RPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = NewRPCServer(tInfo, healthInterval, deadtimeInterval)
+	tInfo.smartNICServer, err = NewRPCServer(tInfo, healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr)
 	if err != nil {
 		fmt.Printf("Error creating SmartNIC RPC server: %v", err)
 		return nil, err
 	}
+
+	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
+	rpcServer.Start()
+	cmdenv.NICService = tInfo.smartNICServer
 
 	// Launch go routine to monitor health updates of smartNIC objects and update status
 	go func() {
 		tInfo.smartNICServer.MonitorHealth()
 	}()
 
-	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
-	rpcServer.Start()
-
 	return rpcServer, nil
 }
 
 // createRPCServerClient creates rpc client and server for SmartNIC service
-func createRPCServerClient(m *testing.M) (*rpckit.RPCServer, *rpckit.RPCClient) {
+func createRPCServerClient() (*rpckit.RPCServer, *rpckit.RPCClient) {
 
 	// start the rpc server
-	rpcServer, err := createRPCServer(m, smartNICServerURL, "", "", "")
+	rpcServer, err := createRPCServer(smartNICServerURL, "", "", "")
 	if err != nil {
 		fmt.Printf("Error connecting to grpc server. Err: %v", err)
 		return nil, nil
@@ -102,8 +130,57 @@ func createRPCServerClient(m *testing.M) (*rpckit.RPCServer, *rpckit.RPCClient) 
 	return rpcServer, rpcClient
 }
 
-// TestRegisterSmartNIC tests RegisterNIC functionality
-func TestRegisterSmartNIC(t *testing.T) {
+// Create NMD and Agent
+func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error) {
+
+	// create a platform agent
+	pa, err := platform.NewNaplesPlatformAgent()
+	if err != nil {
+		log.Fatalf("Error creating platform agent. Err: %v", err)
+	}
+
+	// create the new NMD
+	ag, err := nmd.NewAgent(pa, dbPath, nodeID, smartNICServerURL, resolverURLs, restURL, "classic")
+	if err != nil {
+		t.Errorf("Error creating NMD. Err: %v", err)
+	}
+
+	return ag, err
+}
+
+// stopAgent stops NMD server and deletes emDB file
+func stopNMD(t *testing.T, ag *nmd.Agent, dbPath string) {
+
+	ag.Stop()
+	err := os.Remove(dbPath)
+	if err != nil {
+		log.Errorf("Error deleting emDB file: %s, err: %v", dbPath, err)
+	}
+}
+
+func getNodeID(index int) string {
+	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
+}
+
+func getRESTPort(index int) string {
+	return fmt.Sprintf("%d", 15000+index)
+}
+
+func getRESTUrl(index int) string {
+	return fmt.Sprintf("localhost:%s", getRESTPort(index))
+}
+
+func getDBPath(index int) string {
+	return fmt.Sprintf("/tmp/nmd-%d.db", index)
+}
+
+// TestRegisterSmartNICByNaples tests RegisterNIC
+// functionality initiated by User
+func TestRegisterSmartNICByNaples(t *testing.T) {
+
+	// Init required components
+	testSetup()
+	defer testTeardown()
 
 	testCases := []struct {
 		name        string
@@ -221,9 +298,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 				TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 				ObjectMeta: ometa,
 				Spec: cmd.SmartNICSpec{
-					Phase: cmd.SmartNICSpec_UNKNOWN.String(),
-				},
-				Status: cmd.SmartNICStatus{
+					Phase:    cmd.SmartNICSpec_REGISTERING.String(),
 					NodeName: tc.nodeName,
 				},
 			}
@@ -434,6 +509,10 @@ func TestRegisterSmartNIC(t *testing.T) {
 
 func TestUpdateSmartNIC(t *testing.T) {
 
+	// Init required components
+	testSetup()
+	defer testTeardown()
+
 	// Verify create nic
 	nic := cmd.SmartNIC{
 		TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
@@ -464,13 +543,253 @@ func TestUpdateSmartNIC(t *testing.T) {
 }
 
 func TestDeleteSmartNIC(t *testing.T) {
+
+	testSetup()
+	defer testTeardown()
+
 	// Verify Delete SmartNIC object
 	ometa := api.ObjectMeta{Name: "1111.1111.1111"}
 	err := tInfo.smartNICServer.DeleteSmartNIC(ometa)
 	Assert(t, err != nil, "SmartNIC object - 1111.1111.1111 - should not exist")
 }
 
-func testSetup(m *testing.M) {
+// TestSmartNICConfigByUser tests the following scenario & actions
+// - SmartNIC config by user with Mgmt-IP
+// - CMD would post naples config via REST to initiate nic registration
+//   in managed mode
+// - NMD would next do NIC registration
+// - CMD would validate NIC and admit NIC into cluster.
+func TestSmartNICConfigByUser(t *testing.T) {
+
+	// Init required components
+	testSetup()
+	defer testTeardown()
+
+	nodeID := getNodeID(1)
+	dbPath := getDBPath(1)
+	restURL := getRESTUrl(1)
+
+	// Cleanup any prior DB files
+	os.Remove(dbPath)
+
+	// create Agent and NMD
+	ag, err := createNMD(t, dbPath, nodeID, restURL)
+	defer stopNMD(t, ag, dbPath)
+	Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
+
+	nm := ag.GetNMD()
+
+	// Validate default classic mode
+	f1 := func() (bool, []interface{}) {
+
+		cfg := nm.GetNaplesConfig()
+		if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
+			return true, nil
+		}
+		return false, nil
+	}
+	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+
+	// Create SmartNIC object in Venice
+	nic := cmd.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name: nodeID,
+		},
+		Spec: cmd.SmartNICSpec{
+			MgmtIp:   "localhost",
+			Phase:    "UNKNOWN",
+			NodeName: nodeID,
+		},
+	}
+
+	_, err = tInfo.apiClient.CmdV1().SmartNIC().Create(context.Background(), &nic)
+	if err != nil {
+		t.Errorf("Failed to created smartnic: %+v, err: %v", nic, err)
+	}
+
+	// Verify the Naples received the config and switched to Managed Mode
+	f4 := func() (bool, []interface{}) {
+
+		// validate the mode is managed
+		cfg := nm.GetNaplesConfig()
+		log.Infof("NaplesConfig: %v", cfg)
+		if cfg.Spec.Mode != proto.NaplesMode_MANAGED_MODE {
+			log.Errorf("Failed to switch to managed mode")
+			return false, nil
+		}
+
+		// Fetch smartnic object
+		nic, err := nm.GetSmartNIC()
+		if nic == nil || err != nil {
+			log.Errorf("NIC not found in nicDB, mac:%s", nodeID)
+			return false, nil
+		}
+
+		// Verify NIC is admitted
+		if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+			log.Errorf("NIC is not admitted")
+			return false, nil
+		}
+
+		// Verify Update NIC task is running
+		if nm.GetUpdStatus() == false {
+			log.Errorf("Update NIC is not in progress")
+			return false, nil
+		}
+
+		// Verify REST server is not up
+		if nm.GetRestServerStatus() == true {
+			log.Errorf("REST server is still up")
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("1s"), string("60s"))
+
+	// Validate SmartNIC object state is updated on Venice
+	f5 := func() (bool, []interface{}) {
+
+		meta := api.ObjectMeta{
+			Name: nodeID,
+		}
+		nicObj, err := tInfo.apiClient.CmdV1().SmartNIC().Get(context.Background(), &meta)
+		if err != nil || nicObj == nil || nicObj.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+			log.Errorf("Failed to validate phase of SmartNIC object, mac:%s, phase: %s err: %v",
+				nodeID, nicObj.Spec.Phase, err)
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
+
+	// Validate Workload Node object is created
+	f6 := func() (bool, []interface{}) {
+
+		meta := api.ObjectMeta{
+			Name: nodeID,
+		}
+		nodeObj, err := tInfo.apiClient.CmdV1().Node().Get(context.Background(), &meta)
+		if err != nil || nodeObj == nil {
+			log.Errorf("Failed to GET Node object, mac:%s, %v", nodeID, err)
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f6, "Failed to verify creation of required Node object", string("10ms"), string("30s"))
+
+	// Verify Deletion of SmartNIC object
+	f7 := func() (bool, []interface{}) {
+		ometa := api.ObjectMeta{Name: nodeID}
+		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
+		if err != nil {
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
+
+	// Verify Deletion of Node object
+	f8 := func() (bool, []interface{}) {
+		ometa := api.ObjectMeta{Name: nodeID}
+		err = tInfo.smartNICServer.DeleteNode(ometa)
+		if err != nil {
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f8, fmt.Sprintf("Failed to verify deletion of Node object"))
+}
+
+func TestSmartNICConfigByUserErrorCases(t *testing.T) {
+
+	// Init required components
+	testSetup()
+	defer testTeardown()
+
+	nodeID := getNodeID(1)
+	dbPath := getDBPath(1)
+	restURL := getRESTUrl(1)
+
+	// Cleanup any prior DB files
+	os.Remove(dbPath)
+
+	// create Agent and NMD
+	ag, err := createNMD(t, dbPath, nodeID, restURL)
+	defer stopNMD(t, ag, dbPath)
+	Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
+
+	nm := ag.GetNMD()
+
+	// Validate default classic mode
+	f1 := func() (bool, []interface{}) {
+
+		cfg := nm.GetNaplesConfig()
+		if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
+			return true, nil
+		}
+		return false, nil
+	}
+	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+
+	// Create SmartNIC object in Venice
+	nic := cmd.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name: nodeID,
+		},
+		Spec: cmd.SmartNICSpec{
+			MgmtIp:   "remotehost", // unreachable hostname for testing error case
+			Phase:    "UNKNOWN",
+			NodeName: nodeID,
+		},
+	}
+
+	_, err = tInfo.apiClient.CmdV1().SmartNIC().Create(context.Background(), &nic)
+	if err != nil {
+		t.Errorf("Failed to created smartnic: %+v, err: %v", nic, err)
+	}
+
+	// Verify SmartNIC object has UNREACHABLE condition
+	f2 := func() (bool, []interface{}) {
+
+		meta := api.ObjectMeta{
+			Name: nodeID,
+		}
+		nicObj, err := tInfo.apiClient.CmdV1().SmartNIC().Get(context.Background(), &meta)
+		if err != nil || nicObj == nil || len(nicObj.Status.Conditions) == 0 ||
+			nicObj.Status.Conditions[0].Type != cmd.SmartNICCondition_UNREACHABLE.String() ||
+			nicObj.Status.Conditions[0].Status != cmd.ConditionStatus_TRUE.String() {
+			log.Errorf("Failed to validate SmartNIC condition, nicObj: %+v, err: %v",
+				nicObj, err)
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f2, "Failed to verify SmartNIC object has UNREACHABLE condition set",
+		string("10ms"), string("30s"))
+
+	// Verify Deletion of SmartNIC object
+	f3 := func() (bool, []interface{}) {
+		ometa := api.ObjectMeta{Name: nodeID}
+		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
+		if err != nil {
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f3, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
+}
+
+func testSetup() {
+
+	// Disable open trace
+	ventrace.DisableOpenTrace()
 
 	// Create api server
 	apiServerAddress := ":0"
@@ -496,16 +815,10 @@ func testSetup(m *testing.M) {
 	if err != nil {
 		os.Exit(-1)
 	}
-	_, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		os.Exit(-1)
-	}
-
-	tInfo.apiServerPort = port
 
 	// Create api client
-	apiServerAddr := "localhost" + ":" + tInfo.apiServerPort
-	apiCl, err := cache.NewGrpcUpstream(apiServerAddr, tInfo.l)
+	tInfo.apiServerAddr = addr
+	apiCl, err := apicache.NewGrpcUpstream(tInfo.apiServerAddr, tInfo.l)
 	if err != nil {
 		fmt.Printf("Cannot create gRPC client - %v", err)
 		os.Exit(-1)
@@ -513,7 +826,7 @@ func testSetup(m *testing.M) {
 	tInfo.apiClient = apiCl
 
 	// create gRPC server for smartNIC service and gRPC client
-	tInfo.rpcServer, tInfo.rpcClient = createRPCServerClient(m)
+	tInfo.rpcServer, tInfo.rpcClient = createRPCServerClient()
 	if tInfo.rpcServer == nil || tInfo.rpcClient == nil {
 		fmt.Printf("Err creating rpc server & client")
 		os.Exit(-1)
@@ -532,7 +845,7 @@ func testSetup(m *testing.M) {
 			Name: "testCluster",
 		},
 		Spec: cmd.ClusterSpec{
-			AutoAdmitNICs: false,
+			AutoAdmitNICs: true,
 		},
 	}
 	_, err = tInfo.apiClient.CmdV1().Cluster().Create(context.Background(), clRef)
@@ -542,7 +855,19 @@ func testSetup(m *testing.M) {
 	}
 }
 
-func testTeardown(m *testing.M) {
+func testTeardown() {
+
+	// delete cluster object
+	clRef := &cmd.Cluster{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+	}
+	_, err := tInfo.apiClient.CmdV1().Cluster().Delete(context.Background(), &clRef.ObjectMeta)
+	if err != nil {
+		fmt.Printf("Error deleting Cluster object, %v", err)
+		os.Exit(-1)
+	}
 
 	// stop the rpc client and server
 	tInfo.rpcClient.Close()
@@ -554,14 +879,8 @@ func testTeardown(m *testing.M) {
 
 func TestMain(m *testing.M) {
 
-	// Setup
-	testSetup(m)
-
 	// Run tests
 	rcode := m.Run()
-
-	// Tear down
-	testTeardown(m)
 
 	os.Exit(rcode)
 }

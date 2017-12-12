@@ -78,7 +78,7 @@
         },
         {
             "name": "serq",
-            "size_kb": 16384
+            "size_kb": 65536
         },
         {
             "name": "bsq",
@@ -247,7 +247,7 @@
             "size_kb": 2048
         },
         {
-            "name": "p4pt-iscsi-rec",
+            "name": "p4pt-tcb-iscsi-rec",
             "size_kb": 2048
         },
         {

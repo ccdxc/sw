@@ -23,18 +23,17 @@ struct req_rx_sqcb0_to_sqcb1_info_t {
 };
 
 struct req_rx_sqcb1_to_rrqwqe_info_t {
-    // cur_wqe_ptr          : 64;
     cur_sge_offset          : 32;
     remaining_payload_bytes : 32;
     cq_id                   : 24;
     cur_sge_id              : 8;
     e_rsp_psn               : 24;
+    msn                     : 24;
     in_progress             : 1;
     rrq_empty               : 1;
     timer_active            : 1;
     dma_cmd_start_index     : 4;
     rrq_cindex              : 8;
-    pad                     : 24;
 };
 
 struct req_rx_rrqwqe_to_sge_info_t {

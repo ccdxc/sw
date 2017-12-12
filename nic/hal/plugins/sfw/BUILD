@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name = "firewall",
+    name = "sfw",
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.hpp"]),
     deps = [
@@ -17,6 +17,6 @@ cc_library(
 )
 
 cc_library(
-    name = "firewall_includes",
-    hdrs = ["firewall.hpp"],
+    name = "sfw_includes",
+    hdrs = ["core.hpp"],
 )    

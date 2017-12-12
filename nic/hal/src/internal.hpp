@@ -19,6 +19,9 @@ void GetProgramAddress(const internal::ProgramAddressReq& req,
 void AllocHbmAddress(const internal::HbmAddressReq &req,
                        internal::HbmAddressResp *resp);
 
+void ConfigureLifBdf(const internal::LifBdfReq &req,
+                     internal::LifBdfResp *resp);
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

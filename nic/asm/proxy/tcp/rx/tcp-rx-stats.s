@@ -16,6 +16,7 @@ struct s6_t0_tcp_rx_k k;
 %%
 	.align	
 tcp_rx_stats_stage_start:
+    CAPRI_CLEAR_TABLE_VALID(0)
 
 // TODO: Move to multi stats update
 

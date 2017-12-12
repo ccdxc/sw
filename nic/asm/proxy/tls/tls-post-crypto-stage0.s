@@ -18,6 +18,7 @@ struct tx_table_s0_t0_d d;
 
 	.param		tls_enc_post_crypto_process
    	.param		tls_dec_post_crypto_process
+    .param      tls_dec_post_crypto_aesgcm_newseg_process
 	
 tls_post_crypto_process:
 	phvwr	    p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow 
@@ -29,7 +30,13 @@ tls_post_crypto_process:
     nop.e
     nop
 tls_post_crypto_dec:     
+    smeqb       c1, d.u.read_tls_stg0_d.debug_dol, TLS_DDOL_DEC_REASM_PATH, TLS_DDOL_DEC_REASM_PATH 
+    bcf         [c1], tls_post_crypto_dec_reasm
+    nop
     j           tls_dec_post_crypto_process
+    nop
+tls_post_crypto_dec_reasm:
+    j           tls_dec_post_crypto_aesgcm_newseg_process
     nop
     nop.e
     nop

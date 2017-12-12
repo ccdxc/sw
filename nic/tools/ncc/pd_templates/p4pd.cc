@@ -2182,8 +2182,10 @@ hash_${table}_unpack_action_data(uint32_t tableid,
     uint8_t *packed_action_data;
     uint16_t bits_to_copy;
     uint16_t dest_start_bit;
-
+    
+    (void)src_start_bit;
     (void)bits_from_adata_before_key;
+    (void)copy_before_key;
     (void)*packed_action_data;
     (void)bits_to_copy;
     (void)dest_start_bit;

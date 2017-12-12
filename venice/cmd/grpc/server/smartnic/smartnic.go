@@ -6,16 +6,22 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cmd"
+	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
+	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
+	"github.com/pensando/sw/venice/cmd/cache"
+	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	perror "github.com/pensando/sw/venice/utils/errors"
-	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 const (
@@ -26,6 +32,14 @@ const (
 	// DeadInterval is default dead time interval, after
 	// which NIC health status is declared UNKNOWN by CMD
 	DeadInterval = 120 * time.Second
+
+	// Max retry interval in seconds for Registration retries
+	// Retry interval is initially exponential and is capped
+	// at 30min.
+	nicRegMaxInterval = (30 * 60)
+
+	// ValidCertSignature is a Temporary definition, until CKM provides a API to validate Cert
+	ValidCertSignature = "O=Pensando Systems, Inc., OU=Pensando Manufacturing, CN=Pensando Manufacturing CA/emailAddress=mfgca@pensando.io"
 )
 
 var (
@@ -34,6 +48,8 @@ var (
 
 // RPCServer implements SmartNIC gRPC service.
 type RPCServer struct {
+	sync.Mutex
+
 	// ClientGetter is an interface to get the API client.
 	ClientGetter APIClientGetter
 
@@ -42,6 +58,17 @@ type RPCServer struct {
 
 	// DeadIntvl is the dead time interval
 	DeadIntvl time.Duration
+
+	// REST port of NMD agent
+	RestPort string
+
+	// Map of smartNICs in active retry, which are
+	// marked unreachable due to failure to post naples
+	// config to the NMD agent.
+	RetryNicDB map[string]*cmd.SmartNIC
+
+	// reference to state manager
+	stateMgr *cache.Statemgr
 }
 
 // APIClientGetter is an interface that returns an API Client.
@@ -50,7 +77,7 @@ type APIClientGetter interface {
 }
 
 // NewRPCServer returns a SmartNIC RPC server object
-func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Duration) (*RPCServer, error) {
+func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Duration, restPort string, stateMgr *cache.Statemgr) (*RPCServer, error) {
 	if clientGetter == nil {
 		return nil, fmt.Errorf("Client getter is nil")
 	}
@@ -58,13 +85,48 @@ func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Durati
 		ClientGetter:     clientGetter,
 		HealthWatchIntvl: healthInvl,
 		DeadIntvl:        deadInvl,
+		RestPort:         restPort,
+		RetryNicDB:       make(map[string]*cmd.SmartNIC),
+		stateMgr:         stateMgr,
 	}, nil
 }
 
-// Temporary definition, until CKM provides a API to validate Cert
-const (
-	ValidCertSignature = "O=Pensando Systems, Inc., OU=Pensando Manufacturing, CN=Pensando Manufacturing CA/emailAddress=mfgca@pensando.io"
-)
+func (s *RPCServer) getNicKey(nic *cmd.SmartNIC) string {
+	return fmt.Sprintf("%s|%s", nic.Tenant, nic.Name)
+}
+
+// UpdateNicInRetryDB updates NIC entry in RetryDB
+func (s *RPCServer) UpdateNicInRetryDB(nic *cmd.SmartNIC) {
+	s.Lock()
+	defer s.Unlock()
+	s.RetryNicDB[s.getNicKey(nic)] = nic
+}
+
+// NicExistsInRetryDB checks whether NIC exists in RetryDB
+func (s *RPCServer) NicExistsInRetryDB(nic *cmd.SmartNIC) bool {
+	s.Lock()
+	defer s.Unlock()
+	_, exists := s.RetryNicDB[s.getNicKey(nic)]
+	return exists
+}
+
+// DeleteNicFromRetryDB deletes NIC from RetryDB
+func (s *RPCServer) DeleteNicFromRetryDB(nic *cmd.SmartNIC) {
+	s.Lock()
+	defer s.Unlock()
+	delete(s.RetryNicDB, s.getNicKey(nic))
+}
+
+// GetNicInRetryDB returns NIC object with match key
+func (s *RPCServer) GetNicInRetryDB(key string) *cmd.SmartNIC {
+	s.Lock()
+	defer s.Unlock()
+	nicObj, ok := s.RetryNicDB[key]
+	if ok {
+		return nicObj
+	}
+	return nil
+}
 
 // IsValidFactoryCert inspects the certificate for validity and returns boolean
 func (s *RPCServer) IsValidFactoryCert(cert []byte) bool {
@@ -147,7 +209,7 @@ func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
 	// Check if object exists
 	var nodeObj *cmd.Node
 	ometa := api.ObjectMeta{
-		Name: nic.Status.NodeName,
+		Name: nic.Spec.NodeName,
 	}
 	refObj, err := s.GetNode(ometa)
 	if err != nil || refObj == nil {
@@ -156,7 +218,7 @@ func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
 		node := &cmd.Node{
 			TypeMeta: api.TypeMeta{Kind: "Node"},
 			ObjectMeta: api.ObjectMeta{
-				Name: nic.Status.NodeName,
+				Name: nic.Spec.NodeName,
 			},
 			Spec: cmd.NodeSpec{
 				Roles: []string{cmd.NodeSpec_WORKLOAD.String()},
@@ -172,6 +234,7 @@ func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
 
 		// Update the Nics list in Node status
 		refObj.Status.Nics = append(refObj.Status.Nics, nic.ObjectMeta.Name)
+		log.Debugf("++++ Updating Node: %+v", refObj)
 		nodeObj, err = cl.Node().Update(context.Background(), refObj)
 	}
 
@@ -225,11 +288,15 @@ func (s *RPCServer) UpdateSmartNIC(obj *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 		nicObj, err = cl.SmartNIC().Create(context.Background(), obj)
 	} else {
 
-		// Update the object with CAS semantics
-		obj.ObjectMeta.ResourceVersion = refObj.ObjectMeta.ResourceVersion
-		nicObj, err = cl.SmartNIC().Update(context.Background(), obj)
+		// Update the object with CAS semantics, the phase and status conditions
+		if obj.Spec.Phase != "" {
+			refObj.Spec.Phase = obj.Spec.Phase
+		}
+		refObj.Status.Conditions = obj.Status.Conditions
+		nicObj, err = cl.SmartNIC().Update(context.Background(), refObj)
 	}
 
+	log.Info("++++ UpdateSmartNIC nic: %+v", nicObj)
 	return nicObj, err
 }
 
@@ -308,7 +375,7 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 		_, err = s.UpdateNode(&nic)
 		if err != nil {
 			log.Errorf("Error creating or updating Node object, node: %s mac: %s err: %v",
-				nic.Status.NodeName, nic.ObjectMeta.Name, err)
+				nic.Spec.NodeName, nic.ObjectMeta.Name, err)
 		}
 	}
 
@@ -322,19 +389,9 @@ func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (
 		return nil, errAPIServerDown
 	}
 
-	obj := req.GetNic()
-
-	// Get existing Object from Object store
-	ometa := api.ObjectMeta{Name: obj.ObjectMeta.Name, Tenant: obj.ObjectMeta.Tenant}
-	refObj, err := cl.SmartNIC().Get(context.Background(), &ometa)
-	if err != nil {
-		log.Errorf("Error getting SmartNIC object: %+v err: %v", obj, err)
-		return &grpc.UpdateNICResponse{Nic: nil}, err
-	}
-
 	// Update smartNIC object with CAS semantics
-	obj.ObjectMeta.ResourceVersion = refObj.ObjectMeta.ResourceVersion
-	nicObj, err := cl.SmartNIC().Update(context.Background(), &obj)
+	obj := req.GetNic()
+	nicObj, err := s.UpdateSmartNIC(&obj)
 
 	if err != nil || nicObj == nil {
 		log.Errorf("Error updating SmartNIC object: %+v err: %v", obj, err)
@@ -344,95 +401,92 @@ func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (
 	return &grpc.UpdateNICResponse{Nic: nicObj}, nil
 }
 
-// WatchNICs watches smartNICs for changes and sends them as streaming rpc
+//ListSmartNICs lists all smartNICs matching object selector
+func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]cmd.SmartNIC, error) {
+	var niclist []cmd.SmartNIC
+	// get all smartnics
+	nics, err := s.stateMgr.ListSmartNICs()
+	if err != nil {
+		return nil, err
+	}
+
+	// walk all smartnics and add it to the list
+	for _, nic := range nics {
+		niclist = append(niclist, nic.SmartNIC)
+	}
+
+	return niclist, nil
+}
+
+// WatchNICs watches smartNICs objects for changes and sends them as streaming rpc
 func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNIC_WatchNICsServer) error {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return errAPIServerDown
-	}
-
 	// watch for changes
-	opts := api.ListWatchOptions{}
-	var watcher kvstore.Watcher
-	watcher, err := cl.SmartNIC().Watch(stream.Context(), &opts)
-	if err != nil {
-		log.Errorf("Failed to start watch, err: %v", err)
-		return err
-	}
-	defer watcher.Stop()
+	watchChan := make(chan memdb.Event, memdb.WatchLen)
+	defer close(watchChan)
+	s.stateMgr.WatchObjects("SmartNIC", watchChan)
+	defer s.stateMgr.StopWatchObjects("SmartNIC", watchChan)
 
-	// first get a list of all existing smartNICs
-	opts = api.ListWatchOptions{}
-	nics, err := cl.SmartNIC().List(stream.Context(), &opts)
+	// first get a list of all smartnics
+	nics, err := s.ListSmartNICs(context.Background(), sel)
 	if err != nil {
-		log.Errorf("Error getting a list of nics, err: %v", err)
+		log.Errorf("Error getting a list of smartnics. Err: %v", err)
 		return err
 	}
+
+	ctx := stream.Context()
 
 	// send the objects out as a stream
 	for _, nic := range nics {
 		watchEvt := grpc.SmartNICEvent{
 			EventType: api.EventType_CreateEvent,
-			Nic:       *nic,
+			Nic:       nic,
 		}
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			log.Errorf("Error sending stream, err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 	}
 
+	// loop forever on watch channel
 	for {
 		select {
-		case ev, ok := <-watcher.EventChan():
-			log.Infof("received event [%v]", ok)
+		// read from channel
+		case evt, ok := <-watchChan:
 			if !ok {
-				log.Errorf("publisher watcher closed")
-				return errors.New("Error reading smartNIC watch channel")
+				log.Errorf("Error reading from channel. Closing watch")
+				return errors.New("Error reading from channel")
 			}
-			log.Infof(" SmartNIC watch event [%+v]", *ev)
 
-			// get event type
+			// get event type from memdb event
 			var etype api.EventType
-			switch ev.Type {
-			case kvstore.Created:
+			switch evt.EventType {
+			case memdb.CreateEvent:
 				etype = api.EventType_CreateEvent
-			case kvstore.Updated:
+			case memdb.UpdateEvent:
 				etype = api.EventType_UpdateEvent
-			case kvstore.Deleted:
+			case memdb.DeleteEvent:
 				etype = api.EventType_DeleteEvent
 			}
 
-			var nicObj *cmd.SmartNIC
-			nicObj, ok = ev.Object.(*cmd.SmartNIC)
-			if !ok {
-				log.Errorf("Invalid object type, expected SmartNIC")
-				return errors.New("Invalid object type")
-			}
-
-			// construct the smartNIC object
-			watchEvt := grpc.SmartNICEvent{
-				EventType: etype,
-				Nic: cmd.SmartNIC{
-					TypeMeta:   nicObj.TypeMeta,
-					ObjectMeta: nicObj.ObjectMeta,
-					Spec: cmd.SmartNICSpec{
-						Phase: nicObj.Spec.Phase,
-					},
-					Status: cmd.SmartNICStatus{
-						PrimaryMacAddress: nicObj.Status.PrimaryMacAddress,
-					},
-				},
-			}
-
-			err = stream.Send(&watchEvt)
+			// convert to smartnic object
+			nic, err := cache.SmartNICStateFromObj(evt.Obj)
 			if err != nil {
-				log.Errorf("Error sending stream. Err: %v", err)
 				return err
 			}
-		case <-stream.Context().Done():
-			log.Errorf("Context cancelled for SmartNIC Watcher")
-			return stream.Context().Err()
+
+			// construct the smartnic event object
+			watchEvt := grpc.SmartNICEvent{
+				EventType: etype,
+				Nic:       nic.SmartNIC,
+			}
+			err = stream.Send(&watchEvt)
+			if err != nil {
+				log.Errorf("Error sending stream. Err: %v closing watch", err)
+				return err
+			}
+		case <-ctx.Done():
+			return ctx.Err()
 		}
 	}
 }
@@ -441,6 +495,8 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNIC_WatchNIC
 // smartNIC objects every 30sec. For NICs that haven't received
 // health updates in over 120secs, CMD would mark the status as unknown.
 func (s *RPCServer) MonitorHealth() {
+
+	log.Info("+++++ Launching Monitor Health")
 	for {
 		select {
 
@@ -452,6 +508,7 @@ func (s *RPCServer) MonitorHealth() {
 				log.Errorf("Failed to get API client")
 				continue
 			}
+
 			// Get a list of all existing smartNICs
 			opts := api.ListWatchOptions{}
 			nics, err := cl.SmartNIC().List(context.Background(), &opts)
@@ -460,7 +517,7 @@ func (s *RPCServer) MonitorHealth() {
 				continue
 			}
 
-			log.Debugf("Health watch timer callback, #nics: %d", len(nics))
+			log.Infof("Health watch timer callback, #nics: %d %+v", len(nics), nics)
 
 			// Iterate on smartNIC objects
 			for _, nic := range nics {
@@ -469,7 +526,7 @@ func (s *RPCServer) MonitorHealth() {
 
 					condition := nic.Status.Conditions[i]
 
-					// Inspect Health condition with status that is marked healthy or unhealthy (i.e not unknown)
+					// Inspect HEALTH condition with status that is marked healthy or unhealthy (i.e not unknown)
 					if condition.Type == cmd.SmartNICCondition_HEALTHY.String() && condition.Status != cmd.ConditionStatus_UNKNOWN.String() {
 
 						// parse the last reported time
@@ -499,6 +556,101 @@ func (s *RPCServer) MonitorHealth() {
 					}
 
 				}
+			}
+		}
+	}
+}
+
+// InitiateNICRegistration does the naples config POST for managed mode
+// to the NMD REST endpoint using the configured Mgmt-IP. Failures will
+// be retried for maxIters and after that NIC status will be updated to
+// UNREACHABLE.
+// Further retries for UNREACHABLE nics will be handled by
+// NIC health watcher which runs periodically.
+func (s *RPCServer) InitiateNICRegistration(nic *cmd.SmartNIC) {
+
+	var retryInterval time.Duration
+	retryInterval = 1
+
+	var err error
+	var resp nmdstate.NaplesConfigResp
+
+	// check if Nic exists in RetryDB
+	if s.NicExistsInRetryDB(nic) == true {
+		s.UpdateNicInRetryDB(nic)
+		log.Debugf("Nic registration retry is ongoing, nic: %s", nic.Name)
+		return
+	}
+
+	// Add Nic to the RetryDB
+	s.UpdateNicInRetryDB(nic)
+	log.Infof("Initiating nic registration for Naples, MAC: %s IP:%+v", nic.Name, nic.Spec.MgmtIp)
+
+	for {
+		select {
+		case <-time.After(retryInterval * time.Second):
+
+			if s.NicExistsInRetryDB(nic) == false {
+				// If NIC is deleted stop the retry
+				return
+			}
+
+			nicObj := s.GetNicInRetryDB(s.getNicKey(nic))
+
+			// Config to switch to Managed mode
+			naplesCfg := nmd.Naples{
+				ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
+				TypeMeta:   api.TypeMeta{Kind: "Naples"},
+				Spec: nmd.NaplesSpec{
+					Mode:           nmd.NaplesMode_MANAGED_MODE,
+					PrimaryMac:     nicObj.Name,
+					ClusterAddress: []string{env.RPCServer.GetListenURL()},
+					NodeName:       nicObj.Spec.NodeName,
+					MgmtIp:         nicObj.Spec.MgmtIp,
+				},
+			}
+
+			nmdURL := fmt.Sprintf("http://%s:%s%s", nicObj.Spec.MgmtIp, s.RestPort, nmdstate.ConfigURL)
+			log.Infof("Posting Naples config: %+v to Naples-Ip: %s", naplesCfg, nmdURL)
+
+			err = netutils.HTTPPost(nmdURL, &naplesCfg, &resp)
+			if err == nil {
+				log.Infof("Nic registration post request to Naples node successful, nic:%s", nic.Name)
+				s.DeleteNicFromRetryDB(nic)
+				return
+			}
+
+			// Update NIC status condition.
+			// Naples may be unreachable if the configured Mgmt-IP is either invalid
+			// or if it is valid but part of another Venice cluster and in that case
+			// the REST port would have been shutdown (hence unreachable) after it is
+			// admitted in managed mode.
+			log.Errorf("Retrying, failed to post naples config, nic: %s err: %+v resp: %+v", nic.Name, err, resp)
+			nic := cmd.SmartNIC{
+				TypeMeta:   nicObj.TypeMeta,
+				ObjectMeta: nicObj.ObjectMeta,
+				Status: cmd.SmartNICStatus{
+					Conditions: []*cmd.SmartNICCondition{
+						{
+							Type:               cmd.SmartNICCondition_UNREACHABLE.String(),
+							Status:             cmd.ConditionStatus_TRUE.String(),
+							LastTransitionTime: time.Now().Format(time.RFC3339),
+							Reason:             fmt.Sprintf("Failed to post naples config after several attempts, response: %+v", resp),
+							Message:            fmt.Sprintf("Naples REST endpoint: %s:%s is not reachable", nic.Spec.MgmtIp, s.RestPort),
+						},
+					},
+				},
+			}
+			_, err = s.UpdateSmartNIC(&nic)
+			if err != nil {
+				log.Errorf("Error updating the NIC status as unreachable nic:%s err:%v", nicObj.Name, err)
+			}
+
+			// Retry with backoff, capped at nicRegMaxInterval
+			if 2*retryInterval <= nicRegMaxInterval {
+				retryInterval = 2 * retryInterval
+			} else {
+				retryInterval = nicRegMaxInterval
 			}
 		}
 	}

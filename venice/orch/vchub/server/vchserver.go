@@ -9,18 +9,16 @@ package server
 
 import (
 	"fmt"
-	"net"
 	"reflect"
 	"time"
 
 	context "golang.org/x/net/context"
 
-	"google.golang.org/grpc"
-
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/vchub/store"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
@@ -32,7 +30,7 @@ const (
 // VchServer implements vchub.apiserver
 type VchServer struct {
 	name      string
-	listener  net.Listener
+	server    *rpckit.RPCServer
 	stats     orch.Stats
 	listenURL string
 	errCh     chan error
@@ -217,28 +215,21 @@ func (as *VchServer) Inspect(c context.Context, e *orch.Empty) (*orch.Stats, err
 
 // NewVCHServer creates and starts a vchub api server
 func NewVCHServer(listenURL string) (*VchServer, error) {
-	lis, err := net.Listen("tcp", listenURL)
+	name := "VCHub-API"
+	server, err := rpckit.NewRPCServer(name, listenURL)
 	if err != nil {
 		log.Infof("failed to listen: %v", err)
 		return nil, err
 	}
-	errCh := make(chan error)
-	s := grpc.NewServer()
+	s := server.GrpcServer
 	asInstance = &VchServer{
-		name:      "VCHub-API",
-		listener:  lis,
+		name:      name,
+		server:    server,
 		listenURL: listenURL,
-		errCh:     errCh,
 	}
 	orch.RegisterOrchApiServer(s, asInstance)
-	go func() {
-		err := s.Serve(lis)
-		if asInstance.listener != nil {
-			errCh <- err
-		}
-
-		close(errCh)
-	}()
+	asInstance.errCh = server.DoneCh
+	asInstance.server.Start()
 	log.Infof("VCHub API server started at %s", listenURL)
 	return asInstance, nil
 }
@@ -250,10 +241,9 @@ func (as *VchServer) ErrOut() <-chan error {
 
 // StopServer stops the vchub api server
 func (as *VchServer) StopServer() {
-	if as.listener != nil {
-		l := as.listener
-		as.listener = nil
-		l.Close()
+	if as.server != nil {
+		as.server.Stop()
+		as.server = nil
 		log.Infof("VCHub API server at %s stopped", as.listenURL)
 	}
 }

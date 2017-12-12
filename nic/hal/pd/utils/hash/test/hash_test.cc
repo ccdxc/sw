@@ -534,7 +534,7 @@ TEST_F(hash_test, test8) {
     hal_ret_t rs = HAL_RET_OK;
     input_properties_swkey_t key;
     input_properties_actiondata data;
-    uint32_t hash_idx[100];
+    uint32_t hash_idx[100] = {0};
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));

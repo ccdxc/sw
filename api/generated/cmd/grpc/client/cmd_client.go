@@ -757,7 +757,7 @@ func (a *restObjCmdV1SmartNIC) Watch(ctx context.Context, options *api.ListWatch
 func (a *restObjCmdV1SmartNIC) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
-		return false
+		return true
 	case apiserver.UpdateOper:
 		return true
 	case apiserver.GetOper:

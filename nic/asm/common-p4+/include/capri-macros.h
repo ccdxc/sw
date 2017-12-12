@@ -318,6 +318,8 @@
 #define TNMDR_ALLOC_IDX                CAPRI_SEM_TNMDR_ALLOC_INF_ADDR
 #define TNMDR_FREE_IDX                 CAPRI_SEM_TNMDR_FREE_INC_ADDR
 
+#define TCP_NMDR_GC_IDX                CAPRI_SEM_TCP_NMDR_GC_IDX_INC_ADDR
+
 #define ARQ_PRODUCER_IDX               0xba00ba60
 #define ARQ_CONSUMER_IDX               0xba00ba68
 

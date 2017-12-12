@@ -8,6 +8,9 @@ import infra.common.defs as defs
 from infra.common.objects import MacAddressBase
 
 def GetSeqNum (tc, pkt):
+    # HACK: Account for RXed bytes here
+    # to be used for next TCP segment
+    tc.pvtdata.flow1_bytes_rxed += pkt.payloadsize
     return tc.pvtdata.flow1_rcv_nxt
 
 def GetAckNum (tc, pkt):
@@ -27,7 +30,9 @@ def GetReverseFlowAckNumAckTwoPkts (tc, pkt):
             tc.packets.Get('PKT2').payloadsize
 
 def GetNxtPktSeqNum (tc, pkt):
-    return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
+    pktSeqNum = tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.flow1_bytes_rxed
+    tc.pvtdata.flow1_bytes_rxed += pkt.payloadsize
+    return pktSeqNum
 
 def GetNxtPktAckNum (tc, pkt):
     return tc.pvtdata.flow1_snd_una

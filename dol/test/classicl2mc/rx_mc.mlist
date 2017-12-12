@@ -25,7 +25,6 @@ modules:
 
     - module:
         name    : MCAST_VLAN_STRIP
-        enable  : False
         spec    : rx_mc_vlan_strip.testspec
         iterate :
             - flow      : filter://type=MAC,label=CLASSICL2MC

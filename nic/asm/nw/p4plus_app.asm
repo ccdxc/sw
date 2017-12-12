@@ -81,11 +81,13 @@ p4plus_app_cpu:
   add         r6, r0, r0 // pass packet start offset = 0
 
 p4plus_app_cpu_raw_redir_common:
-  or          r1, r0, r0
-  seq         c1, k.ipv4_valid, TRUE
-  seq         c2, k.ipv6_valid, TRUE
-  phvwr.c1    p.p4_to_p4plus_cpu_ip_proto, k.ipv4_protocol
-  phvwr.c2    p.p4_to_p4plus_cpu_ip_proto, k.ipv6_nextHdr
+  or            r1, r0, r0
+  seq           c1, k.ipv4_valid, TRUE
+  seq           c2, k.ipv6_valid, TRUE
+  phvwrpair.c1  p.p4_to_p4plus_cpu_ip_proto, k.ipv4_protocol, \
+                    p.p4_to_p4plus_cpu_packet_type, CPU_PACKET_TYPE_IPV4
+  phvwrpair.c2  p.p4_to_p4plus_cpu_ip_proto, k.ipv6_nextHdr, \
+                    p.p4_to_p4plus_cpu_packet_type, CPU_PACKET_TYPE_IPV6
 
   seq         c1, k.tcp_valid, TRUE
   bcf         [!c1], p4plus_app_cpu_l4_icmp
@@ -172,6 +174,8 @@ p4plus_app_rdma:
   seq         c1, k.ipv6_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit0_ebit3[3:2]
   phvwr       p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
+  phvwrpair   p.p4_to_p4plus_roce_roce_opt_ts_valid, k.udp_opt_timestamp_valid, \
+                p.p4_to_p4plus_roce_roce_opt_mss_valid, k.udp_opt_mss_valid
   phvwr       p.ethernet_valid, FALSE
   phvwr       p.vlan_tag_valid, FALSE
   phvwr       p.ipv4_valid, FALSE

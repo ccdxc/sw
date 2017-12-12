@@ -28,8 +28,6 @@ using rawrcb::RawrCbGetResponseMsg;
 namespace hal {
 
 
-typedef uint32_t          rawrcb_id_t;
-
 typedef struct rawrcb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     rawrcb_id_t           cb_id;

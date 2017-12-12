@@ -30,4 +30,14 @@
  */
 hal_ret_t capri_pxb_pcie_init();
 
+/** capri_pxb_cfg_lif_bdf
+ * API to configure a LIF with a BDF
+ *
+ * @lif: Lif number
+ * @bdf: BDF number
+ *
+ * @return hal_ret_t: Status of the operation
+ */
+hal_ret_t capri_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf);
+
 #endif //__CAPRI_PCB_PCIE_HPP__

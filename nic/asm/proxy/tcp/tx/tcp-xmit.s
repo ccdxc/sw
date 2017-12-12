@@ -198,7 +198,6 @@ tcp_init_xmit:
     seq             c1, d.xmit_cursor_addr, r0
     jr.!c1          r7
     nop
-    //tblwr           d.xmit_desc, k.to_s5_sesq_desc_addr
     tblwr           d.xmit_cursor_addr, k.to_s5_addr
     tblwr           d.xmit_offset, k.to_s5_offset
     tblwr           d.xmit_len, k.to_s5_len

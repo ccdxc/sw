@@ -31,3 +31,26 @@ modules:
         iterate :
             - flow      : filter://type=MAC,label=CLASSICL2MC
               segment   : filter://native=False
+
+    - module:
+        name    : MCAST_ALLMC
+        spec    : tx_allmc.testspec
+        iterate :
+            - flow      : filter://type=MAC,label=CLASSIC_ALLMC
+              segment   : filter://native=False
+
+    - module:
+        name    : MCAST_ACCESS_ALLMC
+        spec    : tx_allmc_access.testspec
+        iterate :
+            - flow      : filter://type=MAC,label=CLASSIC_ALLMC
+              segment   : filter://native=False
+
+
+    - module:
+        name    : MCAST_VLAN_INSERT_ALLMC
+        enable  : False
+        spec    : tx_allmc_vlan_insert.testspec
+        iterate :
+            - flow      : filter://type=MAC,label=CLASSIC_ALLMC
+              segment   : filter://native=False

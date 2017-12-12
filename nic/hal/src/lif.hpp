@@ -26,7 +26,6 @@ using hal::utils::bitmap;
 
 namespace hal {
 
-typedef uint32_t lif_id_t;
 // typedef struct if_s if_t;
 
 // PKtFilter structure

@@ -57,7 +57,9 @@ typedef struct map {
 
 typedef struct rpcinfo {
     uint8_t     rpc_frag_cont;
-    uint8_t     msrpc_ctxt_id;
+    uint8_t     msrpc_64bit;
+    uint8_t     msrpc_ctxt_id[256];
+    uint8_t     num_msrpc_ctxt;
     uint8_t     rpcvers;
     RPCMap      rpc_map;
 } RPCInfo;
@@ -67,7 +69,7 @@ typedef struct alg_entry_s {
     expected_flow_t         entry;           /* Flow key and handler */
     hal::session_t         *session;         /* Back pointer to control session */
     alg_proto_state_t       alg_proto_state;
-    bool                    skip_firewall;
+    bool                    skip_sfw;
     union {   
         // ALG Protocol specific Information
         RPCInfo                 rpcinfo;
@@ -86,8 +88,22 @@ namespace hal {
 namespace net {
 
 // Big-Endian util
+inline uint64_t
+__be_pack_uint64(const uint8_t *buf, uint32_t *idx)
+{
+    int shift = 56;
+    uint64_t val = 0;
+
+    do {
+       val = val | (buf[(*idx)++]<<shift);
+       shift -= 8;
+    } while (shift >= 0);
+
+    return val;
+}
+
 inline uint32_t
-__be_pack_uint32(const uint8_t *buf, uint8_t *idx)
+__be_pack_uint32(const uint8_t *buf, uint32_t *idx)
 {
     int shift = 24;
     uint32_t val = 0;
@@ -101,7 +117,7 @@ __be_pack_uint32(const uint8_t *buf, uint8_t *idx)
 }
 
 inline uint16_t
-__be_pack_uint16(const uint8_t *buf, uint8_t *idx)
+__be_pack_uint16(const uint8_t *buf, uint32_t *idx)
 {
     int shift = 8;
     uint32_t val = 0;
@@ -115,8 +131,22 @@ __be_pack_uint16(const uint8_t *buf, uint8_t *idx)
 }
 
 //Little Endian util
+inline uint64_t
+__le_pack_uint64(const uint8_t *buf, uint32_t *idx)
+{
+    int shift = 0;
+    uint64_t val = 0;
+
+    do {
+       val = val | (buf[(*idx)++]<<shift);
+       shift += 8;
+    } while (shift <= 56);
+
+    return val;
+}
+
 inline uint32_t
-__le_pack_uint32(const uint8_t *buf, uint8_t *idx)
+__le_pack_uint32(const uint8_t *buf, uint32_t *idx)
 {
     int shift = 0;
     uint32_t val = 0;
@@ -130,7 +160,7 @@ __le_pack_uint32(const uint8_t *buf, uint8_t *idx)
 }
 
 inline uint32_t
-__pack_uint32(const uint8_t *buf, uint8_t *idx, uint8_t format=0)
+__pack_uint32(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
 {
     if (format == 1) {
         return (__le_pack_uint32(buf, idx));
@@ -140,7 +170,7 @@ __pack_uint32(const uint8_t *buf, uint8_t *idx, uint8_t format=0)
 }
 
 inline uint16_t
-__le_pack_uint16(const uint8_t *buf, uint8_t *idx)
+__le_pack_uint16(const uint8_t *buf, uint32_t *idx)
 {
     int shift = 0;
     uint32_t val = 0;
@@ -154,12 +184,22 @@ __le_pack_uint16(const uint8_t *buf, uint8_t *idx)
 }
 
 inline uint16_t
-__pack_uint16(const uint8_t *buf, uint8_t *idx, uint8_t format=0)
+__pack_uint16(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
 {
     if (format == 1) {
         return (__le_pack_uint16(buf, idx));
     } else {
         return (__be_pack_uint16(buf, idx));
+    }
+}
+
+inline uint64_t
+__pack_uint64(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
+{
+    if (format == 1) {
+        return (__le_pack_uint64(buf, idx));
+    } else {
+        return (__be_pack_uint64(buf, idx));
     }
 }
 

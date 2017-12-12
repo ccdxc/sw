@@ -160,6 +160,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->vrf_vlan = (int16_t)spec.vrf_vlan();
     ipseccb->is_v6 = spec.is_v6();
     ipseccb->is_nat_t = spec.is_nat_t();
+    ipseccb->is_random = spec.is_random();
     ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
      
@@ -242,6 +243,7 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->vrf_vlan = (uint16_t)spec.vrf_vlan(); 
     ipseccb->is_v6 = spec.is_v6();
     ipseccb->is_nat_t = spec.is_nat_t();
+    ipseccb->is_random = spec.is_random();
     ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
      
@@ -343,6 +345,7 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     rsp->mutable_spec()->set_ci(ripseccb.ci);
     rsp->mutable_spec()->set_is_v6(ripseccb.is_v6);
     rsp->mutable_spec()->set_is_nat_t(ripseccb.is_nat_t);
+    rsp->mutable_spec()->set_is_random(ripseccb.is_random);
     rsp->mutable_spec()->set_vrf_vlan(ripseccb.vrf_vlan);
 
     // fill operational state of this IPSEC CB

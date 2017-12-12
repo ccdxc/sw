@@ -15,9 +15,9 @@ cc_test(
         ":bitmap",
         "//nic/hal/test:hal_mock",
         "//nic/utils/trace:trace",
-        # "//nic/utils/trace:trace",
+        "//nic/hal/periodic",
 
-        # External 
+        # External
         "//:gtest",
      ],
 )

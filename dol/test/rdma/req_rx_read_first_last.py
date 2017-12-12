@@ -79,8 +79,10 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 1:
-        # verify that msn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 1):
+        msn = tc.pvtdata.sq_pre_qstate.ssn - 1
+
+        # verify that msn is incremented to that of ssn of this msg
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
             return False
 
         # verify that c_index of rrq is incremented by 1
@@ -99,8 +101,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
             return False
 
-        # verify that tx_psn is incremented by 2
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 2):
+        # verify that tx_psn is not incremented
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 0):
             return False
 
         # verify that token_id is incremented by 2
@@ -110,6 +112,12 @@ def TestCaseStepVerify(tc, step):
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 2):
             return False
+
+        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_WQE'):
+            return False
+
+    # update current as pre_qstate ... so next step_id can use it as pre_qstate
+    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
 
     return True
 

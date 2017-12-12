@@ -302,10 +302,16 @@ class spanSessionData:
                 (3, "egress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
                 ],
             "SPAN_LOCAL_INGRESS_LOCAL_EP":  [
-                (1, "egress", "LOCAL", "SPAN_PKT1", "AnyLocalEP", 0),
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "AnyLocalEP", 0),
                 ],
             "ERSPAN_LOCAL_INGRESS_LOCAL_EP":  [
-                (1, "egress", "ERSPAN", "ERSPAN_PKT1", "AnyLocalEP", 0),
+                (1, "ingress", "ERSPAN", "ERSPAN_PKT1", "AnyLocalEP", 0),
+                ],
+            "SPAN_LOCAL_EGRESS_LOCAL_EP":  [
+                (1, "egress", "LOCAL", "EG_SPAN_PKT1", "AnyLocalEP", 0),
+                ],
+            "ERSPAN_LOCAL_EGRESS_LOCAL_EP":  [
+                (1, "egress", "ERSPAN", "EG_ERSPAN_PKT1", "AnyLocalEP", 0),
                 ],
             "SPAN_ERSPAN_LOCAL_ING_EG_LOCAL_EP1":  [
                 (1, "ingress", "LOCAL", "SPAN_PKT1", "AnyLocalEP", 0),
@@ -345,6 +351,9 @@ class spanSessionData:
                 ],
             "SPAN_LOCAL_INGRESS_UPLINK_SNAP1000": [
                 (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 1000),
+                ],
+            "SPAN_LOCAL_INGRESS_UPLINK_LOCAL_EP_SNAP64": [
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "AnyLocalEP", 64),
                 ],
             "L3_SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
                 (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
@@ -462,6 +471,9 @@ class spanSessionData:
         #pdb.set_trace()
         self.erspan_sess_map[id] = tnl
 
+    def getCurErspanSession(self, id):
+        return self._cur_erspan_sessions[(id - 1) % len(self._cur_erspan_sessions)]
+
     def addErspanSession(self, tnl):
         self._cur_erspan_sessions.append(tnl)
 
@@ -565,7 +577,7 @@ def setup_span(infra, module, case):
                 tnl = data.getLocalErspanSession(lspancount)
                 lobj = tnl
             else:
-                tnl = data.getErspanSession(count)
+                tnl = data.getCurErspanSession(count)
             data.setErspanSession(id - 1, tnl)
             module.logger.info("Setting SpanSession %s(%d) Dst: %s Src: %s " % (sessname, id - 1, tnl.rtep.get(), tnl.ltep.get())) 
             sess.erspan_dest = tnl.GetDestIp()

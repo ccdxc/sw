@@ -9,6 +9,7 @@
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/if_utils.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
 using intf::Interface;
 using intf::LifSpec;
@@ -82,5 +83,13 @@ void AllocHbmAddress(const internal::HbmAddressReq &req,
         resp->set_addr(addr);
         resp->set_size(size);
     }
+}
+
+void ConfigureLifBdf(const internal::LifBdfReq &req,
+                     internal::LifBdfResp *resp) {
+   int ret = capri_pxb_cfg_lif_bdf(req.lif(), req.bdf());
+   resp->set_lif(req.lif());
+   resp->set_bdf(req.bdf());
+   resp->set_status(ret);
 }
 }    // namespace hal

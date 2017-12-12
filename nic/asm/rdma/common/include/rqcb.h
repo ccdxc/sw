@@ -46,9 +46,7 @@ struct rqcb0_t {
         q_key: 32;
     };
 
-    immdt_as_dbell: 1;
-    congestion_mgmt_enable:1;
-    rsvd0: 1;
+    state: 3;
     log_rsq_size: 5;
     
     token_id: 8;
@@ -65,10 +63,11 @@ struct rqcb0_t {
     busy: 1;
     in_progress: 1;
     disable_speculation: 1;
-    rsvd1: 2; 
     adjust_rsq_c_index_in_progress: 1;
     rsq_quiesce: 1;
     cache: 1;
+    immdt_as_dbell: 1;
+    congestion_mgmt_enable:1;
 
 
     e_psn: 24;
@@ -103,7 +102,15 @@ struct rqcb1_t {
     num_sges: 8;
     current_sge_offset: 32;
     p4plus_to_p4_flags: 8;
-    rsvd: 8;
+    header_template_size: 8;
+};
+
+struct rqcb3_t {
+    //Temporarily storing these params here for DOL testing purpose
+    roce_opt_ts_value: 32;
+    roce_opt_ts_echo:  32;
+    roce_opt_mss:      16;
+    pad: 432;
 };
 
 struct rqcb4_t {

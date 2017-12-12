@@ -14,8 +14,21 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
 
     tc.pvtdata.num_total_bytes = 0x3f
+    tc.pvtdata.roce_opt_ts_list = [0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]
+    tc.pvtdata.roce_opt_ts_value = 0x11223344
+    tc.pvtdata.roce_opt_ts_echo = 0x55667788
+    tc.pvtdata.roce_opt_mss = 0xabcd
 
     # Read RQ pre state
+    rs.lqp.rq.qstate.Read()
+    #tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+
+    # Clear & Write back roce_opt values in RQCB3
+    rs.lqp.rq.qstate.data.roce_opt_ts_value = 0
+    rs.lqp.rq.qstate.data.roce_opt_ts_echo = 0
+    rs.lqp.rq.qstate.data.roce_opt_mss = 0
+    rs.lqp.rq.qstate.Write()
+
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
 
@@ -76,6 +89,18 @@ def TestCaseVerify(tc):
 
     # verify that max_pkts_in_any_msg is 1
     if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([1, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
+        return False
+
+    # verify that supplied roce_opt_ts_value is written to the RQCB3->roce_opt_ts_value
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'roce_opt_ts_value', tc.pvtdata.roce_opt_ts_value):
+        return False
+
+    # verify that supplied roce_opt_ts_echo is written to the RQCB3->roce_opt_ts_echo
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'roce_opt_ts_echo', tc.pvtdata.roce_opt_ts_echo):
+        return False
+
+    # verify that supplied roce_opt_mss is written to the RQCB3->roce_opt_mss
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'roce_opt_mss', tc.pvtdata.roce_opt_mss):
         return False
 
     ############     CQ VALIDATIONS #################
