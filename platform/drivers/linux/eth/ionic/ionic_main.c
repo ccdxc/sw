@@ -314,20 +314,6 @@ static int ionic_qcq_enable(struct qcq *qcq)
 #endif
 }
 
-#ifndef INTERRUPTS
-#define POLL_TIMER_PERIOD	(HZ/10)
-static void ionic_poll_timer(unsigned long data)
-{
-	struct lif *lif = (struct lif *)data;
-
-	napi_schedule(&lif->txqcqs[0]->napi);
-	napi_schedule(&lif->rxqcqs[0]->napi);
-
-	mod_timer(&lif->poll_timer,
-		  round_jiffies(jiffies + POLL_TIMER_PERIOD));
-}
-#endif
-
 static void ionic_rx_fill(struct queue *q);
 
 static int ionic_open(struct net_device *netdev)
@@ -350,11 +336,6 @@ static int ionic_open(struct net_device *netdev)
 		if (err)
 			return err;
 	}
-
-#ifndef INTERRUPTS
-	setup_timer(&lif->poll_timer, ionic_poll_timer, (unsigned long)lif);
-	mod_timer(&lif->poll_timer, jiffies);
-#endif
 
 	return 0;
 }
@@ -392,9 +373,6 @@ static int ionic_stop(struct net_device *netdev)
 	unsigned int i;
 	int err;
 
-#ifndef INTERRUPTS
-	del_timer_sync(&lif->poll_timer);
-#endif
 	netif_carrier_off(netdev);
 	netif_tx_disable(netdev);
 

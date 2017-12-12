@@ -372,7 +372,6 @@ int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer)
 {
-#ifdef INTERRUPTS
 	struct intr_ctrl ctrl = {
 		.credits = credits,
 		.unmask = unmask,
@@ -381,12 +380,10 @@ void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 
 	iowrite32(*(u32 *)intr_to_credits(&ctrl),
 		  intr_to_credits(intr->ctrl));
-#endif
 }
 
 void ionic_intr_mask(struct intr *intr, bool mask)
 {
-#ifdef INTERRUPTS
 	struct intr_ctrl ctrl = {
 		.mask = mask ? 1 : 0,
 	};
@@ -394,7 +391,6 @@ void ionic_intr_mask(struct intr *intr, bool mask)
 	iowrite32(*(u32 *)intr_to_mask(&ctrl),
 		  intr_to_mask(intr->ctrl));
 	(void)ioread32(intr_to_mask(intr->ctrl)); /* flush write */
-#endif
 }
 
 int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,

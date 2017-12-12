@@ -101,9 +101,6 @@ struct lif {
 	struct net_device *netdev;
 	struct ionic *ionic;
 	bool registered;
-#ifndef NO_INTERRUPTS
-	struct timer_list poll_timer;
-#endif
 	unsigned int index;
 	struct qcq *adminqcq;
 	struct qcq **txqcqs;
