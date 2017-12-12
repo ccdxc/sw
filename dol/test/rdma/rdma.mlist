@@ -57,6 +57,15 @@ modules:
         module  : req_tx_send_only
         spec    : req_tx_send_only_inline.testspec
         ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_DCQCN_PASS
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inline_dcqcn_pass
+        spec    : req_tx_send_only_inline_dcqcn_pass.testspec
+        ignore  : False
+
  
     - module:
         name    : RDMA_TX_SEND_ONLY_INLINE_16B
@@ -64,6 +73,14 @@ modules:
         package : test.rdma
         module  : req_tx_send_only
         spec    : req_tx_send_only_inline_16B.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_DCQCN_RL
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inline_dcqcn_rl
+        spec    : req_tx_send_only_inline_dcqcn_rl.testspec
         ignore  : False
  
     - module:

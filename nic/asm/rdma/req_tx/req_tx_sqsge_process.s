@@ -13,7 +13,7 @@ struct req_tx_sqsge_process_k_t k;
 
 %%
     .param    req_tx_sqlkey_process
-    .param    req_tx_write_back_process
+    .param    req_tx_dcqcn_enforce_process
     .param    req_tx_sqsge_iterate_process
 
 .align
@@ -164,10 +164,11 @@ sge_loop:
     seq            c1, r1[6:2], STAGE_3
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)
 
-    bcf            [c1], write_back
-    SQCB0_ADDR_GET(r1) // Branch Delay Slot
+    seq           c2, k.to_stage.sq.congestion_mgmt_enable, 1  
+    bcf           [c1 & c2], write_back
+    add            r1, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr // Branch Delay Slot
 
 write_back_mpu_only:
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r1)

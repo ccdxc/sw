@@ -124,6 +124,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define P4_FLOW_STATS_BASE              "p4_flow_stats_base"
 #define P4_FLOW_ATOMIC_STATS_BASE       "p4_flow_atomic_stats_base"
 #define NUM_CLOCK_TICKS_PER_CNP         "rdma_num_clock_ticks_per_cnp"
+#define NUM_CLOCK_TICKS_PER_US          "rdma_num_clock_ticks_per_us"
 #define RDMA_EQ_INTR_TABLE_BASE         "hbm_rdma_eq_intr_table_base"
 
 #define RDMA_ATOMIC_RESOURCE_ADDR   "rdma_atomic_resource_addr"

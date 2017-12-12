@@ -16,6 +16,8 @@ def TestCaseSetup(tc):
     tc.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
+    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.sq.qstate.Write()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.va = 0x0102030405060708
     tc.pvtdata.dma_len = 64
@@ -131,4 +133,9 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     tc.info("RDMA TestCaseTeardown() Implementation.")
+    #Disable congestion mgmt in qstate
+    rs = tc.config.rdmasession
+    rs.lqp.sq.qstate.Read()
+    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 0;
+    rs.lqp.sq.qstate.Write()
     return

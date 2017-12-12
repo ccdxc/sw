@@ -321,8 +321,12 @@ class RdmaDCQCNstate(scapy.Packet):
     fields_desc = [
         scapy.BitField("last_cnp_timestamp", 0, 48),
         scapy.BitField("partition_key", 0, 16),
+        scapy.IntField("rate_enforced", 0),
+        scapy.BitField("last_sched_timestamp", 0, 48),
+        scapy.LongField("cur_avail_tokens", 0),
+        scapy.ByteField("num_sched_drop", 0),
         scapy.BitField("cur_timestamp", 0, 48),
-        scapy.BitField("pad", 0, 400),
+        scapy.BitField("pad", 0, 248),
     ]
 
 class QpObjectHelper:

@@ -9,10 +9,11 @@ struct req_tx_sqwqe_process_k_t k;
 #define WQE_TO_SGE_T struct req_tx_wqe_to_sge_info_t
 #define RRQWQE_TO_HDR_T struct req_tx_rrqwqe_to_hdr_info_t
 #define SQCB_WRITE_BACK_T struct req_tx_sqcb_write_back_info_t
+#define TO_STAGE_T struct req_tx_to_stage_t
 
 %%
     .param    req_tx_sqsge_process
-    .param    req_tx_write_back_process
+    .param    req_tx_dcqcn_enforce_process
 
 .align
 req_tx_sqwqe_process:
@@ -150,8 +151,8 @@ read:
     // leave rest of variables to FALSE
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    SQCB0_ADDR_GET(r2)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)
+    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
@@ -195,8 +196,8 @@ atomic:
     // leave rest of variables to FALSE
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    SQCB0_ADDR_GET(r2)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)
+    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
@@ -229,6 +230,8 @@ inline_data:
     //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
     //SQCB1_ADDR_GET(r2)
     //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.packet_len, d.send.length)
 
     CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
@@ -240,8 +243,8 @@ inline_data:
     // leave rest of variables to FALSE
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    SQCB0_ADDR_GET(r2)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)
+    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 

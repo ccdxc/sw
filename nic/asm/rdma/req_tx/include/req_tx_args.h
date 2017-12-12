@@ -189,7 +189,10 @@ struct req_tx_bktrack_sqcb1_write_back_info_t {
 struct req_tx_sq_to_stage_t {
     wqe_addr                     : 64;
     spec_cindex                  : 16; 
-    pad                          : 48;
+    header_template_addr         : 32;
+    packet_len                   : 14;
+    congestion_mgmt_enable       : 1;   
+    rate_enforce_failed          : 1;
 };
 
 struct req_tx_bktrack_to_stage_t {

@@ -741,7 +741,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb0.log_wqe_size = log2(sqwqe_size);
     sqcb_p->sqcb0.log_num_wqes = log2(num_sq_wqes);
     sqcb_p->sqcb0.log_pmtu = log2(spec.pmtu());
-    sqcb_p->sqcb0.congestion_mgmt_enable = TRUE;  // Set always to be true for now.
+    sqcb_p->sqcb0.congestion_mgmt_enable = FALSE;  
     sqcb_p->sqcb1.cq_id = spec.sq_cq_num();
     sqcb_p->sqcb0.service = spec.svc();
     sqcb_p->sqcb1.service = spec.svc();
