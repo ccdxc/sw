@@ -91,7 +91,8 @@ struct sqcb0_t {
     };
 
     spec_sq_cindex: 16;
-    rsvd2: 8;
+    state: 3;
+    rsvd2: 5;
 };
 
 struct sqcb1_t {

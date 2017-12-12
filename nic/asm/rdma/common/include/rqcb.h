@@ -46,9 +46,7 @@ struct rqcb0_t {
         q_key: 32;
     };
 
-    immdt_as_dbell: 1;
-    congestion_mgmt_enable:1;
-    rsvd0: 1;
+    state: 3;
     log_rsq_size: 5;
     
     token_id: 8;
@@ -65,10 +63,11 @@ struct rqcb0_t {
     busy: 1;
     in_progress: 1;
     disable_speculation: 1;
-    rsvd1: 2; 
     adjust_rsq_c_index_in_progress: 1;
     rsq_quiesce: 1;
     cache: 1;
+    immdt_as_dbell: 1;
+    congestion_mgmt_enable:1;
 
 
     e_psn: 24;

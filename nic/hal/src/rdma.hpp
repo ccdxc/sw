@@ -883,7 +883,8 @@ typedef enum rdma_pkt_opc_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t  rsvd2;
+    uint8_t  rsvd2: 5;
+    uint8_t  state: 3;
     uint16_t spec_sq_cindex;
     uint8_t  cb1_byte;
     uint8_t  busy: 1;        //tx
@@ -995,10 +996,12 @@ typedef struct rqcb0_s {
     uint8_t  adjust_rsq_c_index;
     uint32_t e_psn: 24;
 
+    uint32_t  congestion_mgmt_enable:1;
+    uint32_t  immdt_as_dbell:1;
     uint32_t  cache: 1;
     uint32_t  rsq_quiesce: 1;
     uint32_t  adjust_rsq_c_index_in_progress: 1;
-    uint32_t  rsvd1:3;
+    uint32_t  disable_speculation:1;
     uint32_t  in_progress: 1;
     uint32_t  busy: 1;
     uint32_t  srq_enabled: 1;
@@ -1012,9 +1015,7 @@ typedef struct rqcb0_s {
     uint8_t  nxt_to_go_token_id;
     uint8_t  token_id;
     uint8_t  log_rsq_size: 5;
-    uint8_t  rsvd0:1;
-    uint8_t  congestion_mgmt_enable:1;
-    uint8_t  immdt_as_dbell:1;
+    uint8_t  state: 3;
 
     union {
         uint32_t rsq_base_addr;
