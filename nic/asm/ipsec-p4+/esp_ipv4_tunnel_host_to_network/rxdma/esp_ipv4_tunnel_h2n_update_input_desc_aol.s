@@ -82,7 +82,9 @@ dma_cmd_write_iv_to_in_desc:
     addi r3, r3, IPSEC_SALT_HEADROOM
     phvwri p.dma_cmd_iv_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_iv_dma_cmd_addr, r3
+    seq c1, k.ipsec_to_stage3_iv_size, 16
     phvwri p.dma_cmd_iv_dma_cmd_phv_start_addr, IPSEC_IN_DESC_IV_START
-    phvwri p.dma_cmd_iv_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_END 
+    phvwri.!c1 p.dma_cmd_iv_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_END 
+    phvwri.c1 p.dma_cmd_iv_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV2_END 
     nop.e 
     nop
