@@ -20,6 +20,7 @@ bool write_mem(uint64_t addr, uint8_t * data, uint32_t size);
 void step_doorbell (uint64_t addr, uint64_t data);
 bool dump_hbm(void);
 void step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
+void register_mem_addr(uint64_t addr);
 
 // mac config APIs to model
 int lib_model_mac_msg_send (uint32_t port_num,

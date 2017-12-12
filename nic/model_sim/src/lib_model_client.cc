@@ -337,3 +337,21 @@ int lib_model_mac_msg_send (uint32_t port_num,
     return rc;
 }
 
+void register_mem_addr(uint64_t addr)
+{
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
+    char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    buffer_hdr_t *buff;
+
+    buff = (buffer_hdr_t *) buffer;
+    buff->type = BUFF_TYPE_REGISTER_MEM_ADDR;
+
+    if (__lmodel_env)
+        return;
+    buff->addr = addr;
+    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    return;
+}

@@ -55,5 +55,25 @@ capri_pxb_pcie_init ()
     return HAL_RET_OK;
 }
 
+hal_ret_t
+capri_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
 
+    HAL_TRACE_DEBUG("CAPRI-PXB::{}: Configuring LIF {} with BDF {}",
+                    __func__, lif, bdf);
 
+    if (lif >= CAPRI_PCIE_MAX_LIFS) {
+      HAL_TRACE_DEBUG("CAPRI-PXB::{}: LIF {} exceeded MAX_LIFS {}",
+                      __func__, lif, CAPRI_PCIE_MAX_LIFS);
+      return HAL_RET_ERR;
+    }
+    pxb_csr.dhs_itr_pcihdrt.entry[lif].bdf(bdf);
+    pxb_csr.dhs_itr_pcihdrt.entry[lif].write();
+
+    HAL_TRACE_DEBUG("CAPRI-PXB::{}: Successfully configured LIF {} with BDF {}",
+                    __func__, lif, bdf);
+
+    return HAL_RET_OK;
+}

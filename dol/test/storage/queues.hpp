@@ -32,6 +32,8 @@ uint16_t get_nvme_lif();
 
 uint16_t get_pvm_lif();
 
+uint32_t get_nvme_bdf();
+
 uint32_t get_host_nvme_sq(uint32_t offset);
 
 uint32_t get_pvm_nvme_sq(uint32_t offset);

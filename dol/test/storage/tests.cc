@@ -2430,7 +2430,7 @@ int test_run_rdma_e2e_read() {
   int rc;
 
 
-  StartRoceReadSeq(seq_pdma_q, ssd_handle, &cmd_buf, &data_buf, rolling_write_slba, 0, 0);
+  StartRoceReadSeq(seq_pdma_q, ssd_handle, &cmd_buf, &data_buf, rolling_write_slba, 0, 0, 0);
   printf("Started read command send over ROCE \n");
 
   struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
@@ -2508,7 +2508,7 @@ int test_run_rdma_lif_override() {
 
 
   StartRoceReadSeq(seq_pdma_q, ssd_handle, &cmd_buf, &data_buf, rolling_write_slba,
-                   1, queues::get_nvme_lif());
+                   1, queues::get_nvme_lif(), queues::get_nvme_bdf());
   printf("Started read command send over ROCE \n");
 
   struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
