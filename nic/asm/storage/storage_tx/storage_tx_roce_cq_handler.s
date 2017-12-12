@@ -69,11 +69,9 @@ storage_tx_roce_cq_handler_start:
 check_xfer:
    // If (operation type is write or write_imm) and status is success,
    // then transfer is done
-   sne		c1, d.op_type, ROCE_OP_TYPE_WRITE
-   sne		c2, d.op_type, ROCE_OP_TYPE_WRITE_IMM
-   bcf		[c1 & c2], exit
    sne		c1, d.status, ROCE_CQ_STATUS_SUCCESS
    bcf		[c1], exit
+   nop
    
    // Store the ROCE message sequence number in the PHV so that it be
    // used to reclaim the SQ entries
