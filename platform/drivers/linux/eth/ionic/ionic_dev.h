@@ -126,8 +126,9 @@ struct intr_ctrl {
 	u32 rsvd6[11];
 } __packed;
 
-#define intr_to_mask(intr_ctrl)		((void *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)	((void *)(intr_ctrl) + 8)
+#define intr_to_mask(intr_ctrl)			((void *)(intr_ctrl) + 4)
+#define intr_to_credits(intr_ctrl)		((void *)(intr_ctrl) + 8)
+#define intr_to_mask_on_assert(intr_ctrl)	((void *)(intr_ctrl) + 12)
 
 struct intr_status {
 	u32 status[2];
@@ -283,6 +284,7 @@ struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index);
+void ionic_intr_mask_on_assertion(struct intr *intr);
 void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer);
 void ionic_intr_mask(struct intr *intr, bool mask);

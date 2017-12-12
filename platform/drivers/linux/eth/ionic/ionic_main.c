@@ -1240,6 +1240,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 		if (err < 0)
 			goto err_out_free_intr;
 		new->intr.vector = err;
+		ionic_intr_mask_on_assertion(&new->intr);
 	} else {
 		new->intr.index = INTR_INDEX_NOT_ASSIGNED;
 	}

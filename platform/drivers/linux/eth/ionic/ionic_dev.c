@@ -369,6 +369,16 @@ int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 	return 0;
 }
 
+void ionic_intr_mask_on_assertion(struct intr *intr)
+{
+	struct intr_ctrl ctrl = {
+		.mask_on_assert = 1,
+	};
+
+	iowrite32(*(u32 *)intr_to_mask_on_assert(&ctrl),
+		  intr_to_mask_on_assert(intr->ctrl));
+}
+
 void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer)
 {
