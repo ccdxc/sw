@@ -677,7 +677,10 @@ public:
         else
             HAL_ASSERT(0);
     }
-    bool appid_needed() { return appid_info_.state_ == hal::APPID_STATE_NEEDED; }
+    bool appid_needed() {
+        return (appid_info_.state_ == hal::APPID_STATE_NEEDED) ||
+               (appid_info_.state_ == hal::APPID_STATE_IN_PROGRESS) ;
+    }
 
     // protected methods accessed by gtest
 protected:

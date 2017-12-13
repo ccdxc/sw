@@ -65,6 +65,5 @@ modules:
         name    : APP_REDIR_RAW_MYSQL_APPID
         module  : app_redir_raw_appid
         spec    : app_redir_raw_mysql_appid.testspec
-        ignore  : True
         iterate :
             - flow: filter://type=IPV4

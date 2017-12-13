@@ -124,7 +124,7 @@ dllist_move (dllist_ctxt_t *dst_head, dllist_ctxt_t *src_head)
  */
 #define dllist_for_each_safe(pos, n, head)                              \
     for (pos = head ? (head)->next : NULL, n = pos ? pos->next : NULL;  \
-            pos != (head) && head != NULL;                              \
+            pos != (head) && pos != NULL;                              \
          pos = n, n = pos->next)
 
 

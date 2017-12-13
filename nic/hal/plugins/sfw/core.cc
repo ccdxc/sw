@@ -55,10 +55,10 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
 
     // TODO: Can nwsec_plcy_svc be NULL?
     if(!nwsec_plcy_svc || matched_svc) { // svc is wildcard or matched a specific service
-        dllist_ctxt_t *lnode2 = NULL;
+        dllist_ctxt_t *lnode2 = NULL, *lnext = NULL;
         nwsec_policy_appid_t *appid_policy = NULL;
-        dllist_for_each(lnode2, &nwsec_plcy_rules->appid_list_head) {
-            appid_policy = dllist_entry(lnode, nwsec_policy_appid_t, lentry);
+        dllist_for_each_safe(lnode2, lnext, &nwsec_plcy_rules->appid_list_head) {
+            appid_policy = dllist_entry(lnode2, nwsec_policy_appid_t, lentry);
             if(appid_policy) {
                 if(!ctx.appid_started()) {
                     ctx.set_appid_needed();
@@ -89,8 +89,6 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
         }
     }
 
-    ctx.set_dfw_done(true);
-    ctx.set_appid_not_needed();
     return HAL_RET_FTE_RULE_NO_MATCH;
 }
 
@@ -175,6 +173,11 @@ net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
         }
     }
 
+    if(ctx.flow_miss() && !ctx.dfw_done()) {
+        ctx.set_dfw_done(true);
+        if(!ctx.appid_needed())
+            ctx.set_appid_not_needed();
+    }
     // ToDo (lseshan) Handle SP miss condition
     // For now hardcoding to ALLOW but we have read default action and act
     // accordingly

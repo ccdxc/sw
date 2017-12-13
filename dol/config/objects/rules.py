@@ -48,7 +48,8 @@ class RuleObject(base.ConfigObjectBase):
         for svc_obj in self.svc_objs:
             svc_req_spec  = req_spec.svc.add()
             svc_obj.PrepareHALRequestSpec(svc_req_spec)
-        req_spec.apps.extend(self.apps)    	
+        if len(self.apps) > 0:
+            req_spec.apps.extend(self.apps)    	
         action = "FIREWALL_ACTION_" + self.action
         req_spec.action = haldefs.nwsec.FirewallAction.Value(action)
         req_spec.log    = self.log
