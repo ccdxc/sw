@@ -72,7 +72,8 @@ rawr_s0_rx_start:
      */
     phvwr       p.pen_raw_redir_hdr_v1_flow_id, CAPRI_RXDMA_INTRINSIC_QID // delay slot
     bcf         [!c1 & !c2], _qstate_cfg_err_discard
-    add         r_pkt_len, r0, k.rawr_app_header_packet_len // delay slot
+    add         r_pkt_len, r0, k.{rawr_app_header_packet_len_sbit0_ebit5...\
+                                  rawr_app_header_packet_len_sbit6_ebit13} // delay slot
     bcf         [c1], _chain_rxq_set
     phvwr       p.common_phv_chain_ring_base, r_chain_txq_base  // delay slot
     phvwr       p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_txq_ring_size_shift

@@ -9,7 +9,7 @@ int32_t get_pc_offset(const char *handle, const char *prog_name,
                       const char *label, uint8_t *offset);
 
 const static char *kHBMLabel = "lif2qstate_map";
-const static uint32_t kHBMSizeKB = 16384;
+const static uint32_t kHBMSizeKB = 20480;
 const static uint32_t kAllocUnit = 4096;
 
 namespace hal {
