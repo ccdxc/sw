@@ -1,6 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/utils/eventmgr/eventmgr.hpp"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace utils {
@@ -14,7 +15,7 @@ event_map_get_key_func (void *entry)
 static uint32_t
 event_map_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(event_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(event_id_t)) % ht_size;
 }
 
 static bool
@@ -36,7 +37,7 @@ listener_map_get_key_func (void *entry)
 static uint32_t
 listener_map_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(void *)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(void *)) % ht_size;
 }
 
 static bool
@@ -62,7 +63,7 @@ eventmgr::init(uint32_t max_events)
 
     event_map_slab_ = slab::factory("eventmgr", HAL_SLAB_EVENT_MAP,
                                     sizeof(event_state_t), 16, true,
-                                    true, true, true);
+                                    true, true);
     if (event_map_slab_ == NULL) {
         ht::destroy(event_map_);
         event_map_ = NULL;
@@ -71,7 +72,7 @@ eventmgr::init(uint32_t max_events)
 
     event_listener_state_slab_ = slab::factory("eventmgr", HAL_SLAB_EVENT_MAP_LISTENER,
                                                sizeof(event_listener_state_t), 16,
-                                               true, true, true, true);
+                                               true, true, true);
     if (event_listener_state_slab_ == NULL) {
         ht::destroy(event_map_);
         event_map_ = NULL;
@@ -89,7 +90,7 @@ eventmgr::init(uint32_t max_events)
 
     listener_slab_ = slab::factory("eventmgr", HAL_SLAB_EVENT_LISTENER,
                                    sizeof(listener_state_t), 8, true, true,
-                                   true, true);
+                                   true);
     if (listener_slab_ == NULL) {
         ht::destroy(event_map_);
         event_map_ = NULL;
@@ -229,13 +230,15 @@ hal_ret_t
 eventmgr::add_eventmap_entry_(event_state_t *event_state)
 {
     hal_ret_t    ret;
+    sdk_ret_t    sdk_ret;
 
-    ret = event_map_->insert_with_key(&event_state->event_id, event_state,
-                                      &event_state->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = event_map_->insert_with_key(&event_state->event_id, event_state,
+                                          &event_state->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add event map entry for event {}, err {}",
                       event_state->event_id, ret);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
 
@@ -243,12 +246,14 @@ hal_ret_t
 eventmgr::del_eventmap_entry_(event_state_t *event_state)
 {
     hal_ret_t    ret;
+    sdk_ret_t    sdk_ret;
 
-    ret = event_map_->remove_entry(event_state, &event_state->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = event_map_->remove_entry(event_state, &event_state->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to del event map entry for event {}, err {}",
                       event_state->event_id, ret);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
 
@@ -256,12 +261,14 @@ hal_ret_t
 eventmgr::add_listener_map_entry_(listener_state_t *lstate)
 {
     hal_ret_t    ret;
+    sdk_ret_t    sdk_ret;
 
-    ret = listener_map_->insert_with_key(&lstate->lctxt, lstate,
-                                         &lstate->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = listener_map_->insert_with_key(&lstate->lctxt, lstate,
+                                             &lstate->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add listener map entry, err {}", ret);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
 

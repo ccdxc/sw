@@ -6,7 +6,7 @@
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/fte/fte.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/include/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/twheel.hpp"
 #include "nic/include/periodic.hpp"
 #include "../common/trans.hpp"
@@ -14,7 +14,7 @@
 #define HAL_MAX_ARP_TRANS 512
 #define ARP_TIMER_ID 254
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::fsm_state_t;
 using hal::utils::fsm_state_ctx;
 using hal::utils::fsm_event_data;

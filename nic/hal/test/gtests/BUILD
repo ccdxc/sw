@@ -3,18 +3,21 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
 load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_test(
     name = "network_test",
     srcs = ["network_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 cc_test(
     name = "acl_test",
     srcs = ["acl_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -22,6 +25,7 @@ cc_test(
     srcs = ["nwsec_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -29,12 +33,14 @@ cc_test(
     srcs = ["tunnelif_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 cc_test(
     name = "vrf_test",
     srcs = ["vrf_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -42,6 +48,7 @@ cc_test(
     srcs = ["l2seg_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -49,6 +56,7 @@ cc_test(
     srcs = ["endpoint_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -56,6 +64,7 @@ cc_test(
     srcs = ["internal_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 
@@ -64,6 +73,7 @@ cc_test(
     srcs = ["bm_allocator_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -71,6 +81,7 @@ cc_test(
     srcs = ["buf_pool_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -78,6 +89,7 @@ cc_test(
     srcs = ["cpuif_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -85,6 +97,7 @@ cc_test(
     srcs = ["enicif_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -92,6 +105,7 @@ cc_test(
     srcs = ["lif_manager_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -99,6 +113,7 @@ cc_test(
     srcs = ["lif_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -106,6 +121,7 @@ cc_test(
     srcs = ["policer_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -113,6 +129,7 @@ cc_test(
     srcs = ["queue_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -120,6 +137,7 @@ cc_test(
     srcs = ["session_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -127,6 +145,7 @@ cc_test(
     srcs = ["tcpcb_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -134,6 +153,7 @@ cc_test(
     srcs = ["tlscb_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -141,6 +161,7 @@ cc_test(
     srcs = ["uplinkif_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -148,6 +169,7 @@ cc_test(
     srcs = ["uplinkpc_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -155,6 +177,7 @@ cc_test(
     srcs = ["scheduler_tx_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -164,6 +187,7 @@ cc_test(
         "//nic/p4/gft/include:p4_gft_includes",
         "//nic:gft_p4pd"] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -175,4 +199,5 @@ cc_test(
     ] + gl_deps_list,
     linkopts = ["-lsnort"] + 
         gl_linkopts_list,
+    copts = sdk_copts,
 )

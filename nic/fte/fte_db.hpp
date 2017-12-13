@@ -2,7 +2,7 @@
 
 
 #include "nic/include/base.h"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 
 namespace fte {
 
@@ -20,7 +20,7 @@ typedef hal_ret_t (*expected_flow_handler_t)(ctx_t& ctx, expected_flow_t* entry)
 struct expected_flow_s {
     hal::flow_key_t           key;
     expected_flow_handler_t   handler;
-    hal::utils::ht_ctxt_t     expected_flow_ht_ctxt;  
+    sdk::lib::ht_ctxt_t     expected_flow_ht_ctxt;  
 };
 
 hal_ret_t insert_expected_flow(expected_flow_t *entry);

@@ -2,6 +2,8 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
+
 cc_library(
     name = "linkmgr_includes",
     hdrs = [
@@ -17,7 +19,9 @@ cc_binary(
         "//nic:asic_includes",
         "//nic/include:base_includes",
         "//nic:gen_proto_includes",
-        "//nic/utils/indexer:indexer",
+        "//nic:sdk_indexer",
+        "//nic:sdk_logger",
+        "//nic:sdk_ht",
         "//nic/model_sim/include:modelsim_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/thread",
@@ -42,4 +46,5 @@ cc_binary(
         "-lprotobuf",
         "-rdynamic",
     ],
+    copts = sdk_copts,
 )

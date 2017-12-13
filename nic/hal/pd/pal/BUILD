@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
     name = "pal",
@@ -23,7 +24,7 @@ cc_library(
 
     copts = [
         "-DCAPRI_HAL"
-    ],
+    ] + sdk_copts,
 
     alwayslink = 1,
 )

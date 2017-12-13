@@ -156,7 +156,7 @@ mem_db::init(void)
     // initialize slab for HAL handles
     hal_handle_slab_ = slab::factory("hal-handle",
                                      hal::HAL_SLAB_HANDLE, sizeof(hal::hal_handle),
-                                     64, true, true, true, true);
+                                     64, true, true, true);
     if (NULL == hal_handle_slab_) {
         HAL_TRACE_ERR("{} hal handle slab allocation failed", __FUNCTION__);
         return false;
@@ -165,7 +165,7 @@ mem_db::init(void)
     hal_handle_ht_entry_slab_ = slab::factory("hal-handle-ht-entry",
                                               hal::HAL_SLAB_HANDLE_HT_ENTRY,
                                               sizeof(hal::hal_handle_ht_entry_t),
-                                              64, true, true, true, true);
+                                              64, true, true, true);
     if (NULL == hal_handle_ht_entry_slab_) {
         HAL_TRACE_ERR("{} hal handle ht entry allocation failed", __FUNCTION__);
         return false;
@@ -174,7 +174,7 @@ mem_db::init(void)
 	hal_handle_id_ht_entry_slab_ = slab::factory("hal-handle-id-ht-entry",
                                                  hal::HAL_SLAB_HANDLE_ID_HT_ENTRY,
                                                  sizeof(hal::hal_handle_id_ht_entry_t),
-                                                 64, true, true, true, true);
+                                                 64, true, true, true);
     if (NULL == hal_handle_id_ht_entry_slab_) {
         HAL_TRACE_ERR("{} handle ht allocation failed", __FUNCTION__);
         return false;
@@ -183,7 +183,7 @@ mem_db::init(void)
     // initialize port related data structures
     port_slab_ = slab::factory("port", hal::HAL_SLAB_PORT,
                                sizeof(linkmgr::port_t), 8,
-                               false, true, true, true);
+                               false, true, true);
     if (NULL == port_slab_) {
         HAL_TRACE_ERR("{} port allocation failed", __FUNCTION__);
         return false;

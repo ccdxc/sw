@@ -9,6 +9,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include "nic/include/trace.hpp"
+#include "nic/sdk/include/base.hpp"
 
 #define __IN__
 #define __OUT__
@@ -33,6 +34,9 @@ typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
 #define HAL_L2SEGMENT_ID_INVALID                     0
 #define HAL_PC_INVALID                               0xFF
 #define HAL_PORT_INVALID                             0xFF
+#define INVALID_INDEXER_INDEX                        0xFFFFFFFF
+
+using sdk::sdk_ret_t;
 
 //------------------------------------------------------------------------------
 // basic types used in the packet processing path
@@ -80,7 +84,7 @@ typedef uint32_t        appid_id_t;
 typedef uint32_t cfg_version_t;
 #define HAL_CFG_VER_NONE            0
 
-#define __ASSERT__(x)            assert(x)
+#define __HAL_ASSERT__(x)            assert(x)
 
 #define HAL_ABORT(cond)                                    \
 do {                                                       \
@@ -93,7 +97,7 @@ do {                                                       \
 do {                                                       \
     if (!(cond)) {                                         \
         HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
-        __ASSERT__(FALSE);                                 \
+        __HAL_ASSERT__(FALSE);                                 \
         return rv;                                         \
     }                                                      \
 } while (FALSE)
@@ -102,7 +106,7 @@ do {                                                       \
 do {                                                       \
     if (!(cond)) {                                         \
         HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
-        __ASSERT__(FALSE);                                 \
+        __HAL_ASSERT__(FALSE);                                 \
         return;                                            \
     }                                                      \
 } while (FALSE)
@@ -111,12 +115,12 @@ do {                                                       \
 do {                                                       \
     if (!(cond)) {                                         \
         HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
-        __ASSERT__(FALSE);                                 \
+        __HAL_ASSERT__(FALSE);                                 \
         goto label;                                        \
     }                                                      \
 } while (FALSE)
 
-#define HAL_ASSERT(cond)                             __ASSERT__(cond)
+#define HAL_ASSERT(cond)                             __HAL_ASSERT__(cond)
 #define HAL_NOP                                      ((void) FALSE)
 
 //-----------------------------------------------------------------------------
@@ -236,6 +240,42 @@ DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
 
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
+
+static hal_ret_t
+hal_sdk_ret_to_hal_ret(sdk_ret_t sdk_ret) 
+{
+    switch (sdk_ret) {
+    case sdk::SDK_RET_OK:
+        return HAL_RET_OK;
+    case sdk::SDK_RET_OOM:
+        return HAL_RET_OOM;
+    case sdk::SDK_RET_INVALID_ARG:
+        return HAL_RET_INVALID_ARG;
+    case sdk::SDK_RET_INVALID_OP:
+        return HAL_RET_INVALID_OP;
+    case sdk::SDK_RET_ENTRY_NOT_FOUND:
+        return HAL_RET_ENTRY_NOT_FOUND;
+    case sdk::SDK_RET_ENTRY_EXISTS:
+        return HAL_RET_ENTRY_EXISTS;
+    case sdk::SDK_RET_NO_RESOURCE:
+        return HAL_RET_NO_RESOURCE;
+    case sdk::SDK_RET_TABLE_FULL:
+        return HAL_RET_TABLE_FULL;
+    case sdk::SDK_RET_DUPLICATE_INS:
+        return HAL_RET_DUP_INS_FAIL;
+    case sdk::SDK_RET_OOB:
+        return HAL_RET_OOB;
+    case sdk::SDK_RET_HW_PROGRAM_ERR:
+        return HAL_RET_HW_PROG_ERR;
+    case sdk::SDK_RET_RETRY:
+        return HAL_RET_RETRY;
+    case sdk::SDK_RET_NOOP:
+        return HAL_RET_NOOP;
+    case sdk::SDK_RET_ERR:
+    default:
+        return HAL_RET_ERR;
+    }
+}
 
 #endif    // __BASE_H__
 

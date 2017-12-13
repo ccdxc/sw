@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
 load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 
 cc_library(
@@ -15,6 +16,7 @@ cc_library(
         "//nic/utils/list:list_includes",
     ],
     alwayslink = 1,
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -25,4 +27,5 @@ cc_test(
         ":fsm",
     ] + gl_deps_list,
     linkopts = gl_linkopts_list,
+    copts = sdk_copts,
 )

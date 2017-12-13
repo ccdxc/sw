@@ -3,11 +3,12 @@
 #include "nic/include/trace.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/base.h"
-#include "nic/utils/slab/slab.hpp"
 #include "nic/utils/mtrack/mtrack.hpp"
+#include "nic/sdk/include/slab.hpp"
 
 using hal::hal_slab_t;
-using hal::utils::slab;
+using sdk::lib::slab_id_t;
+using sdk::lib::slab;
 using hal::utils::mem_mgr;
 using hal::utils::mtrack_info_t;
 

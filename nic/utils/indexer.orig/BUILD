@@ -9,7 +9,6 @@ cc_library(
     deps = [
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/mtrack:mtrack"
     ],
 )
 

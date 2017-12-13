@@ -1,4 +1,5 @@
 -I ../../../..
+-I ../../../../nic/sdk
 -I ../../../hal/svc
 -I ../../../hal/pd
 -I ../../../gen/iris/include

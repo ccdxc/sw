@@ -1,16 +1,16 @@
 #ifndef __PROXY_HPP__
 #define __PROXY_HPP__
 
-#include "nic/utils/indexer/indexer.hpp"
+#include "nic/sdk/include/indexer.hpp"
 #include "nic/include/base.h"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/gen/proto/hal/proxy.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/session.hpp"
 
-using hal::utils::indexer;
-using hal::utils::ht_ctxt_t;
+using sdk::lib::indexer;
+using sdk::lib::ht_ctxt_t;
 
 using proxy::ProxySpec;
 using proxy::ProxyStatus;

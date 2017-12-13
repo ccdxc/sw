@@ -18,7 +18,7 @@ buf_pool_get_key_func (void *entry)
 uint32_t
 buf_pool_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(buf_pool_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(buf_pool_id_t)) % ht_size;
 }
 
 bool
@@ -41,7 +41,7 @@ buf_pool_get_handle_key_func(void *entry)
 uint32_t
 buf_pool_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 bool
@@ -223,7 +223,7 @@ queue_get_key_func (void *entry)
 uint32_t
 queue_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(queue_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(queue_id_t)) % ht_size;
 }
 
 bool
@@ -246,7 +246,7 @@ queue_get_handle_key_func (void *entry)
 uint32_t
 queue_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 bool
@@ -634,7 +634,7 @@ policer_get_key_func (void *entry)
 uint32_t
 policer_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(policer_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(policer_id_t)) % ht_size;
 }
 
 bool
@@ -657,7 +657,7 @@ policer_get_handle_key_func(void *entry)
 uint32_t
 policer_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 bool

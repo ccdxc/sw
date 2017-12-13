@@ -24,7 +24,7 @@ tnnl_rw_entry_pd_get_key_func (void *entry)
 uint32_t
 tnnl_rw_entry_pd_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return hal::utils::hash_algo::fnv_hash(key, sizeof(pd_tnnl_rw_entry_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(pd_tnnl_rw_entry_key_t)) % ht_size;
 }
 
 //-----------------------------------------------------------------------------
@@ -132,7 +132,7 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
         rs = g_hal_state_pd->tnnl_rw_tbl_idxr()->alloc(&tmp_tnnl_rw_idx);
         if (rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("pd-tnnl_rw: Resource Exhaustion Usage: {} for ",
-                          g_hal_state_pd->tnnl_rw_tbl_idxr()->usage());
+                          g_hal_state_pd->tnnl_rw_tbl_idxr()->num_indices_allocated());
             tnnl_rw_entry_key_trace(tnnl_rw_key);
             ret = HAL_RET_NO_RESOURCE;
         }
@@ -155,7 +155,7 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     tnnl_rwe->ref_cnt++;
 
     HAL_TRACE_DEBUG("pd-tnnl_rw: Usage: {} ref_cnt: {} Allocated tnnl_rw_id: {} for ",
-                    g_hal_state_pd->tnnl_rw_tbl_idxr()->usage(),
+                    g_hal_state_pd->tnnl_rw_tbl_idxr()->num_indices_allocated(),
                     tnnl_rwe->ref_cnt,
                     tmp_tnnl_rw_idx);
     tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
@@ -204,7 +204,7 @@ tnnl_rw_entry_find_or_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key, uint32_t *tnnl_
         tnnl_rwe->ref_cnt++;
         HAL_TRACE_DEBUG("pd-tnnl_rw: Usage: {} ref_cnt: {} Find/Alloc "
                         "tnnl_rw_id: {} for ",
-                        g_hal_state_pd->tnnl_rw_tbl_idxr()->usage(),
+                        g_hal_state_pd->tnnl_rw_tbl_idxr()->num_indices_allocated(),
                         tnnl_rwe->ref_cnt,
                         tnnl_rwe->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(tnnl_rw_key);
@@ -259,7 +259,7 @@ tnnl_rw_entry_delete(pd_tnnl_rw_entry_key_t *tnnl_rw_key)
     tnnl_rwe->ref_cnt--;
 
     HAL_TRACE_DEBUG("pd-tnnl_rw: Usage: {} ref_cnt: {} Delete tnnl_rw_id: {} for ",
-                    g_hal_state_pd->tnnl_rw_tbl_idxr()->usage(),
+                    g_hal_state_pd->tnnl_rw_tbl_idxr()->num_indices_allocated(),
                     tnnl_rwe->ref_cnt,
                     tnnl_rwe->tnnl_rw_idx);
     tnnl_rw_entry_key_trace(tnnl_rw_key);

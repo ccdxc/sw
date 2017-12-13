@@ -78,7 +78,7 @@ proxy_flow_ht_get_key_func (void *entry)
 uint32_t
 proxy_flow_ht_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size;
 }
 
 bool
@@ -101,7 +101,7 @@ proxy_get_key_func (void *entry)
 uint32_t
 proxy_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(types::ProxyType)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(types::ProxyType)) % ht_size;
 }
 
 bool
@@ -124,7 +124,7 @@ proxy_get_handle_key_func (void *entry)
 uint32_t
 proxy_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 bool
@@ -340,7 +340,7 @@ proxy_factory(types::ProxyType type)
     HAL_ASSERT(proxy->flow_ht_ != NULL);
 
     // Instantiate QID indexer
-    proxy->qid_idxr_ = hal::utils::indexer::factory(HAL_MAX_QID);
+    proxy->qid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_QID);
     HAL_ASSERT(NULL != proxy->qid_idxr_);
 
    // initialize default params

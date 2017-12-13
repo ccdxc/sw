@@ -1,4 +1,4 @@
-.PHONY: hal hal-clean
+.PHONY: sdk hal hal-clean
 default: hal
 
 TOPDIR = .
@@ -51,8 +51,7 @@ deps-test-shell:
 deps-test-build:
 	NO_PULL=1 make build
 
-
-hal:
+hal: sdk
 	$(MAKE) bazel-build
 	$(MAKE) bazel-gtests
 	$(MAKE) post-make
@@ -68,57 +67,61 @@ capmodel:
 go-proto:
 	$(MAKE) -C agent/netagent/datapath/halproto
 
-bazel-build:
+sdk:
+	#cd sdk && bazel $(BZL_OPT) build -s --keep_going ... && cd -
+	$(MAKE) -C sdk lib
+
+DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
+SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
+bazel-build: sdk
 	$(MAKE) -C p4
 	$(MAKE) -C asm
 	$(MAKE) -C proto
 	$(MAKE) V=1 -j8 -C gen/proto/hal
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:linkmgr
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/...
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto:all
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //protos:all
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/hal:all
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/test/storage:storage_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr:linkmgr
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
 	$(MAKE) capmodel
 	#$(MAKE) go-proto
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proxy-e2etest:all 
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/proxy-e2etest:all 
 
 bazel-gtests:
 	# PI gtests
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test:hal_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test/gtests:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test:hal_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test/gtests:all
 	# PI Utils
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/bitmap:bitmap_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:host_mem_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/indexer:indexer_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/list:list_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/pt:pt_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/shm:shmseg_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/slab:slab_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/block_list:block_list_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/fsm:fsm_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/twheel:twheel_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) fte:fte_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/bitmap:bitmap_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:host_mem_test
+	# Deprecated: Moved to sdk
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/indexer:inde
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/list:list_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/pt:pt_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/shm:shmseg_test
+	# Deprecated: Moved to sdk
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/slab:slab_te
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/block_list:block_list_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/twheel:twheel_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
 	# TODO: Revisit
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/eplearn:dhcp_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/eplearn:arp_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:dhcp_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:arp_test
 	# PD Utils
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/acl_tcam:acl_tcam_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/directmap:directmap_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/flow:flow_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/hash:hash_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/met:met_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/tcam:tcam_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/directmap:directmap_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/hash:hash_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/tcam:tcam_test
 	# PD
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/iris/test:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
 
 post-make:
 	mkdir -p obj/cano
 	mv obj/asm_bin/*.cano obj/cano 2>/dev/null || :
 	mv obj/p4plus_bin/*.cano obj/cano 2>/dev/null || :
-
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
 SNORT_EXPORT_DIR = $(TOPDIR_ABS)/third-party/snort3/export
@@ -156,11 +159,13 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	# PI Utils gtests
 	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
 	cd ../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"
-	cd ../bazel-bin && ./nic/utils/indexer/indexer_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/indexer_test.xml"
+	# Moved to a different repo
+	#cd ../bazel-bin && ./nic/utils/indexer/indexer_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/indexer_test.xml"
 	cd ../bazel-bin && ./nic/utils/list/list_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/list_test.xml"
 	cd ../bazel-bin && ./nic/utils/pt/pt_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/pt_test.xml"
 	cd ../bazel-bin && ./nic/utils/shm/shmseg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/shmseg_test.xml"
-	cd ../bazel-bin && ./nic/utils/slab/slab_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/slab_test.xml"
+	# Moved to a different repo
+	# cd ../bazel-bin && ./nic/utils/slab/slab_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/slab_test.xml"
 	cd ../bazel-bin && ./nic/utils/block_list/block_list_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/block_list_test.xml"
 	cd ../bazel-bin && ./nic/utils/fsm/fsm_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fsm_test.xml"
 	cd ../bazel-bin && ./nic/utils/twheel/twheel_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/twheel_test.xml"
@@ -205,14 +210,14 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/nwsec_val.xml ./nic/hal/test/gtests/nwsec_test --gtest_output="xml:$(VAL_TR)/nwsec_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/scheduler_tx_test.xml ./nic/hal/test/gtests/scheduler_tx_test --gtest_output="xml:$(VAL_TR)/scheduler_tx_test.xml"
 
-gft-build:
+gft-build: sdk
 	$(MAKE) capmodel
 	$(MAKE) -C p4
 	$(MAKE) -C asm
 	$(MAKE) -C proto
 	$(MAKE) -j4 -C gen/proto/hal
-	bazel build --copt=-DGFT hal:hal
-	bazel build --copt=-DGFT hal/test/gtests:gft_test
+	bazel build --copt=-DGFT $(SDK_OPTS) hal:hal
+	bazel build --copt=-DGFT $(SDK_OPTS) hal/test/gtests:gft_test
 
 clean:
 	bazel clean

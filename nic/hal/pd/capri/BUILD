@@ -2,6 +2,8 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
+
 cc_library(
     name = "capri_includes",
     srcs = [],
@@ -19,8 +21,8 @@ cc_library(
 
 capri_util_deps = [
     "//nic/utils/bm_allocator:bm_allocator",
-    "//nic/utils/slab:slab",
-    "//nic/utils/indexer:indexer",
+    "//nic:sdk_slab",
+    "//nic:sdk_indexer",
     "//nic/utils/catalog:catalog",
 ]
 
@@ -32,47 +34,41 @@ capri_pd_deps = [
 
 cc_library(
     name = "capri",
-
     srcs = [
-        "capri_tbl_rw.cc",
-        "capri_loader.cc",
-        "capri_qstate.cc",
-        "capri_config.cc",
-        "capri_hbm.cc",
-        "capri_barco_crypto.cc",
-        "capri_tm_rw.cc",
-        "capri_init.cc",
-        "capri_repl.cc",
-        "capri_txs_scheduler.cc",
-        "capri_pxb_pcie.cc",
-        "capri_barco_rings.cc",
-        "capri_barco_res.cc",
         "capri_barco_asym_apis.cc",
         "capri_barco_asym_tests.cc",
+        "capri_barco_crypto.cc",
+        "capri_barco_res.cc",
+        "capri_barco_rings.cc",
         "capri_barco_sym_apis.cc",
-        "capri_barco_sym_tests.cc"
+        "capri_barco_sym_tests.cc",
+        "capri_config.cc",
+        "capri_hbm.cc",
+        "capri_init.cc",
+        "capri_loader.cc",
+        "capri_pxb_pcie.cc",
+        "capri_qstate.cc",
+        "capri_repl.cc",
+        "capri_tbl_rw.cc",
+        "capri_tm_rw.cc",
+        "capri_txs_scheduler.cc",
     ],
-
     hdrs = [
     ] + glob(["*.hpp"]) + glob(["*.h"]),
-
-    deps = [
-        "//nic:asic_includes",
-        "//nic:gen_includes",
-        "//nic:gen_proto_includes",
-        "//nic:capricsr_int",
-        "//nic/include:base_includes",
-        "//nic/utils/block_list:block_list",
-        "//nic/model_sim/include:modelsim_includes",
-        "//nic/p4/nw/include:p4_nw_includes",
-        "//nic/third-party/spdlog",
-    ]
-    + capri_util_deps
-    + capri_pd_deps,
-
     copts = [
-        "-DCAPRI_HAL"
-    ],
-
+        "-DCAPRI_HAL",
+    ] + sdk_copts,
+    deps = [
+               "//nic:asic_includes",
+               "//nic:gen_includes",
+               "//nic:gen_proto_includes",
+               "//nic:capricsr_int",
+               "//nic/include:base_includes",
+               "//nic/utils/block_list:block_list",
+               "//nic/model_sim/include:modelsim_includes",
+               "//nic/p4/nw/include:p4_nw_includes",
+               "//nic/third-party/spdlog",
+           ] + capri_util_deps +
+           capri_pd_deps,
     alwayslink = 1,
 )

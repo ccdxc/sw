@@ -42,7 +42,7 @@ hal_ret_t pd_crypto_free_key(int32_t key_idx)
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     is = indexer::SUCCESS;
 
-    if (!g_hal_state_pd->crypto_pd_keys_idxr()->is_alloced(key_idx)) {
+    if (!g_hal_state_pd->crypto_pd_keys_idxr()->is_index_allocated(key_idx)) {
         HAL_TRACE_ERR("SessKey: Freeing non-allocated key: {}", key_idx);
         return HAL_RET_INVALID_ARG;
     }

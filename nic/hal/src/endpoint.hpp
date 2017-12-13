@@ -5,7 +5,7 @@
 #include "nic/include/list.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/ip.h"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/gen/proto/hal/endpoint.pb.h"
@@ -35,9 +35,9 @@ using endpoint::EndpointDeleteRequest;
 using kh::EndpointL2Key;
 using kh::EndpointKey;
 
-using hal::utils::ht_ctxt_t;
 using endpoint::EndpointVMotionState;
 using namespace endpoint;
+using sdk::lib::ht_ctxt_t;
 
 namespace hal {
 

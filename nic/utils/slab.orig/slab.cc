@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
-#include "nic/utils/slab/slab.hpp"
+#include "nic/sdk/include/slab.hpp"
 #include "nic/include/hal_mem.hpp"
 #include <cxxabi.h>
 #include <execinfo.h>

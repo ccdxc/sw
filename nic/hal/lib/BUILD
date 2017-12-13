@@ -2,6 +2,8 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
+
 cc_library(
     name = "hal_handle_includes",
     hdrs = [
@@ -19,7 +21,10 @@ cc_library(
     ],
     deps = [
         "//nic/utils/list:list_includes",
-        "//nic/utils/ht:ht",
-        "//nic/utils/slab:slab",
+        "//nic:sdk_include",
+        "//nic:sdk_ht",
+        "//nic:sdk_slab",
+        "//nic/third-party/spdlog",
     ],
+    copts = sdk_copts,
 )

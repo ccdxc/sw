@@ -20,9 +20,9 @@
 #include <string>
 #include <map>
 #include "nic/include/hal_mem.hpp"
-#include "nic/utils/indexer/indexer.hpp"
+#include "nic/sdk/include/indexer.hpp"
 
-using hal::utils::indexer;
+using sdk::lib::indexer;
 
 namespace hal {
 namespace pd {

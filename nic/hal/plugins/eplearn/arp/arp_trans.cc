@@ -19,7 +19,7 @@ void *arptrans_get_key_func(void *entry) {
 }
 
 uint32_t arptrans_compute_hash_func(void *key, uint32_t ht_size) {
-    return utils::hash_algo::fnv_hash(key, sizeof(arp_trans_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(arp_trans_key_t)) % ht_size;
 }
 
 bool arptrans_compare_key_func(void *key1, void *key2) {
@@ -39,7 +39,7 @@ arp_trans_t::trans_timer_t *arp_trans_t::arp_timer_ =
 slab *arp_trans_t::arplearn_slab_ =
     slab::factory("arpLearn", HAL_SLAB_ARP_LEARN,
                   sizeof(arp_trans_t), 16, false,
-                  true, true, true);
+                  true, true);
 ht *arp_trans_t::arplearn_key_ht_ =
     ht::factory(HAL_MAX_ARP_TRANS, arptrans_get_key_func,
                 arptrans_compute_hash_func,

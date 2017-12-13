@@ -2,11 +2,14 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
+
 cc_binary(
     name = "hal",
     srcs = [
         "main.cc",
     ],
+    copts = sdk_copts,
     linkopts = [
         "-lzmq",
         "-lpthread",
@@ -19,19 +22,19 @@ cc_binary(
     deps = [
         ":hal_src",
         # PI
-        "//nic/fte:fte",
+        "//nic/fte",
         "//nic/hal/periodic",
         "//nic/hal/svc:hal_svc",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
-        "//nic/hal/plugins:plugins",
+        "//nic/utils/host_mem",
+        "//nic/hal/plugins",
         "//nic/hal/plugins/proxy:proxyplugin",
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",
         "//nic:halproto",
         "//nic:grpc",
-        "//nic/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
+        "//nic/third-party/isc-dhcp",  # TODO(move to eplearn plugin)
         #"//nic:snort3",  # TODO(move to app_redir plugin)
 
         # PD
@@ -73,45 +76,48 @@ cc_library(
     hdrs = [
         "hal.hpp",
     ] + glob(["src/*.hpp"]),
+    copts = sdk_copts,
     deps = [
-        "//nic/hal/periodic",
-        "//nic/include:base_includes",
-        "//nic/hal:hal_includes",
         "//nic:asic_includes",
-        "//nic/hal/pd/common:pdcommon",
-        "//nic/p4/include:p4_common_includes",
-        "//nic/p4/nw/include:p4_nw_includes",
-        "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
-        "//nic/hal/plugins:plugins_includes",
-        "//nic/hal/plugins/network:network_includes",
-        "//nic/hal/plugins/proxy:proxyplugin_includes",
-        "//nic/hal/plugins/app_redir:app_redir_includes",
-        "//nic/utils/bm_allocator:bm_allocator",
-        "//nic/utils/thread:thread",
-        "//nic/utils/print:print",
-        "//nic/utils/slab:slab",
-        "//nic/utils/block_list:block_list",
-        "//nic/utils/indexer:indexer",
-        "//nic/utils/ht:ht",
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
-        "//nic/hal/pd/capri:capri_includes",
-        "//nic/hal/pd/iris:iris_includes",
-        "//nic/utils/host_mem:host_mem_includes",
-        "//nic/third-party/spdlog",
-        "//nic/hal/tls:tls_api",
-        "//nic/utils/fsm:fsm",
+        "//nic:sdk_ht",
+        "//nic:sdk_indexer",
+        "//nic:sdk_slab",
+        "//nic:sdk_logger",
+        "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         "//nic/fte:fte_includes",
-        "//nic/utils/eventmgr:eventmgr",
+        "//nic/hal:hal_includes",
+        "//nic/hal/pd/capri:capri_includes",
+        "//nic/hal/pd/common:pdcommon",
+        "//nic/hal/pd/iris:iris_includes",
+        "//nic/hal/periodic",
+        "//nic/hal/plugins:plugins_includes",
+        "//nic/hal/plugins/app_redir:app_redir_includes",
+        "//nic/hal/plugins/network:network_includes",
+        "//nic/hal/plugins/proxy:proxyplugin_includes",
+        "//nic/hal/tls:tls_api",
+        "//nic/include:base_includes",
+        "//nic/p4/include:p4_common_includes",
+        "//nic/p4/nw/include:p4_nw_includes",
+        "//nic/third-party/spdlog",
+        "//nic/utils/block_list",
+        "//nic/utils/bm_allocator",
         "//nic/utils/catalog",
+        "//nic/utils/eventmgr",
+        "//nic/utils/fsm",
+        "//nic/utils/host_mem:host_mem_includes",
+        "//nic/utils/print",
+        "//nic/utils/thread",
     ],
 )
 
 cc_library(
     name = "hal_includes",
     srcs = [],
-    hdrs = ["hal.hpp",] + 
-            glob(["src/*.hpp",]),
+    hdrs = ["hal.hpp"] + glob([
+        "src/*.hpp",
+    ]),
 )
 
 cc_library(

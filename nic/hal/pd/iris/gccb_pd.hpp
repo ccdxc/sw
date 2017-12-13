@@ -3,10 +3,10 @@
 
 #include "nic/include/base.h"
 #include "nic/include/capri_common.h"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 
 namespace hal {
 namespace pd {

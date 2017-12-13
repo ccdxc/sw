@@ -129,7 +129,7 @@ hal_ret_t capri_barco_obj_free_by_id(capri_barco_resources_t *capri_barco_res,
         return HAL_RET_INVALID_ARG;
     }
 
-    if (!capri_barco_res->idxer->is_alloced(res_id)) {
+    if (!capri_barco_res->idxer->is_index_allocated(res_id)) {
         HAL_TRACE_ERR("{}: Freeing unallocated descriptor: {}", capri_barco_res->allocator_name, res_id);
         return HAL_RET_INVALID_ARG;
     }

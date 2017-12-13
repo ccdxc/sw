@@ -4,12 +4,12 @@
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
 #include "nic/include/list.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/gen/proto/hal/rawrcb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 
 using rawrcb::RawrCbSpec;

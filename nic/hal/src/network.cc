@@ -38,7 +38,7 @@ network_get_key_func (void *entry)
 uint32_t
 network_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(network_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(network_key_t)) % ht_size;
 }
 
 // ----------------------------------------------------------------------------
@@ -61,6 +61,7 @@ static inline hal_ret_t
 network_add_to_db (network_t *nw, hal_handle_t handle)
 {
     hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
     HAL_TRACE_DEBUG("pi-network:{}:adding to network key hash table", 
@@ -75,14 +76,15 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
 
     // add mapping from vrf id to its handle
     entry->handle_id = handle;
-    ret = g_hal_state->network_key_ht()->insert_with_key(&nw->nw_key,
+    sdk_ret = g_hal_state->network_key_ht()->insert_with_key(&nw->nw_key,
                                                          entry, 
                                                          &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-network:{}:failed to network key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     // TODO: Check if this is the right place
     nw->hal_handle = handle;

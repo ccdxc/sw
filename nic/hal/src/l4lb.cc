@@ -21,7 +21,7 @@ l4lb_get_key_func(void *entry)
 uint32_t
 l4lb_compute_key_hash_func(void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(l4lb_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(l4lb_key_t)) % ht_size;
 }
 
 bool
@@ -44,7 +44,7 @@ l4lb_get_handle_key_func(void *entry)
 uint32_t
 l4lb_compute_handle_hash_func(void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 bool

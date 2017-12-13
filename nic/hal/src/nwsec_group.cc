@@ -37,7 +37,7 @@ nwsec_policy_cfg_get_key_func (void *entry)
 uint32_t
 nwsec_policy_cfg_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key,
+    return sdk::lib::hash_algo::fnv_hash(key,
                                       sizeof(nwsec_policy_key_t)) % ht_size;
 }
 
@@ -376,7 +376,7 @@ nwsec_group_get_key_func (void *entry)
 uint32_t
 nwsec_group_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key,
+    return sdk::lib::hash_algo::fnv_hash(key,
                                       sizeof(nwsec_group_id_t)) % ht_size;
 }
 

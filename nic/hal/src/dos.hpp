@@ -5,12 +5,12 @@
 
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/include/pd.hpp"
 
 #define HAL_NWSEC_INVALID_SG_ID        uint32_t (~0)
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 
 using nwsec::DoSPolicySpec;
 using nwsec::DoSPolicyStatus;

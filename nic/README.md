@@ -1,4 +1,4 @@
-## HAL Coding Style (C/C++/protobuf only)
+## HAL Coding Style (C/C++/protobuf only) 
 
 * Except for the protobuf generated files, don't use camel case for anything
   including class names, function names, variable names etc.

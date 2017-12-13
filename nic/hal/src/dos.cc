@@ -13,7 +13,7 @@ uint32_t
 dos_policy_id_compute_hash_func (void *key, uint32_t ht_size)
 {
     HAL_ASSERT(key != NULL);
-    return utils::hash_algo::fnv_hash(key,
+    return sdk::lib::hash_algo::fnv_hash(key,
                                       sizeof(dos_policy_id_t)) % ht_size;
 }
 

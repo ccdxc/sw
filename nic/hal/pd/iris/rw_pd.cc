@@ -25,7 +25,7 @@ rw_entry_pd_get_key_func (void *entry)
 uint32_t
 rw_entry_pd_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return hal::utils::hash_algo::fnv_hash(key, sizeof(pd_rw_entry_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(pd_rw_entry_key_t)) % ht_size;
 }
 
 //-----------------------------------------------------------------------------
@@ -109,8 +109,8 @@ rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
 	} else {
 		rs = g_hal_state_pd->rw_tbl_idxr()->alloc(&tmp_rw_idx);
         if (rs != indexer::SUCCESS) {
-            buf.write("PD-RW: Resource Exhaustion Usage: {} [ rw_act: {}, ",
-                    g_hal_state_pd->rw_tbl_idxr()->usage(), rw_key->rw_act);
+            buf.write("PD-RW: Resource Exhaustion num_indices_allocated: {} [ rw_act: {}, ",
+                    g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(), rw_key->rw_act);
             buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
             buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
             HAL_TRACE_ERR(buf.c_str());
@@ -135,7 +135,7 @@ rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
     rwe->ref_cnt++;
 
 	buf.write("PD-RW: Usage: {} ref_cnt: {} Allocated rw_id: {} for [ rw_act: {}, ",
-					g_hal_state_pd->rw_tbl_idxr()->usage(),
+					g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
                     rwe->ref_cnt,
 				    tmp_rw_idx, 
 					rw_key->rw_act);
@@ -181,7 +181,7 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
         // Increment the ref count
         rwe->ref_cnt++;
         buf.write("PD-RW: Usage: {} ref_cnt: {} Find/Alloc rw_id: {} for [ rw_act: {}, ",
-                  g_hal_state_pd->rw_tbl_idxr()->usage(),
+                  g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
                   rwe->ref_cnt,
                   rwe->rw_idx, 
                   rw_key->rw_act);
@@ -238,7 +238,7 @@ rw_entry_delete(pd_rw_entry_key_t *rw_key)
     rwe->ref_cnt--;
 
     buf.write("PD-RW: Usage: {} ref_cnt: {} Delete rw_id: {} for [ rw_act: {}, ",
-            g_hal_state_pd->rw_tbl_idxr()->usage(),
+            g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
             rwe->ref_cnt,
             rwe->rw_idx, 
             rw_key->rw_act);

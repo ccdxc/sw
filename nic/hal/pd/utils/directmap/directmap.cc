@@ -2,7 +2,7 @@
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/include/hal_lock.hpp"
 // #include "nic/utils/thread/thread.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 
 using hal::pd::utils::DirectMap;
 
@@ -76,8 +76,11 @@ DirectMap::DirectMap(std::string table_name, uint32_t table_id,
 
     // Initialize the indexer
     // dm_indexer_ = new indexer(num_entries, thread_safe = thread_safe_);
+#if 0
     dm_indexer_ = indexer::factory(num_entries, thread_safe_, false, 
                                    HAL_MEM_ALLOC_DIRECT_MAP_INDEXER);
+#endif
+    dm_indexer_ = indexer::factory(num_entries, thread_safe_, false);
 
     // Initialize hash table if sharing is enabled
 
@@ -138,7 +141,7 @@ DirectMap::dm_entry_compute_hash_func(void *key, uint32_t ht_size)
     ht_key = ht_entry->data;
     HAL_ASSERT(ht_key != NULL);
 
-    return hal::utils::hash_algo::fnv_hash(ht_key, ht_entry->len) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(ht_key, ht_entry->len) % ht_size;
 }
 
 bool
@@ -339,7 +342,7 @@ DirectMap::update(uint32_t index, void *data)
         rs = HAL_RET_INVALID_ARG;
         goto end;
     }
-    if (!dm_indexer_->is_alloced(index)) {
+    if (!dm_indexer_->is_index_allocated(index)) {
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
@@ -449,7 +452,7 @@ DirectMap::remove(uint32_t index, void *data)
         rs = HAL_RET_INVALID_ARG;
         goto end;
     }
-    if (!dm_indexer_->is_alloced(index)) {
+    if (!dm_indexer_->is_index_allocated(index)) {
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
@@ -493,7 +496,7 @@ DirectMap::retrieve(uint32_t index, void *data)
         goto end;
     }
 
-    if (!dm_indexer_->is_alloced(index)) {
+    if (!dm_indexer_->is_index_allocated(index)) {
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
@@ -525,7 +528,7 @@ DirectMap::iterate(direct_map_iterate_func_t iterate_func, const void *cb_data)
     tmp_data = HAL_CALLOC(HAL_MEM_ALLOC_DIRECT_MAP_HW_DATA, hwdata_len_);
 
     for (uint32_t i = 0; i < num_entries_; i++) {
-        if (dm_indexer_->is_alloced(i)) {
+        if (dm_indexer_->is_index_allocated(i)) {
             // P4-API: Read API
             pd_err = p4pd_global_entry_read(table_id_, i, NULL, NULL, tmp_data); 
             HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
@@ -693,7 +696,7 @@ DirectMap::stats_update(DirectMap::api ap, hal_ret_t rs)
 hal_ret_t
 DirectMap::add_directmap_entry_to_db(directmap_entry_t *dme)
 {
-    return entry_ht_->insert(dme, &dme->ht_ctxt);
+    return hal_sdk_ret_to_hal_ret(entry_ht_->insert(dme, &dme->ht_ctxt));
 }
 
 // ----------------------------------------------------------------------------
@@ -720,7 +723,7 @@ DirectMap::find_directmap_entry(directmap_entry_t *key)
 uint32_t
 DirectMap::table_num_entries_in_use(void)
 {
-    return dm_indexer_->usage();
+    return dm_indexer_->num_indices_allocated();
 }
 
 // ----------------------------------------------------------------------------

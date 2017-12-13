@@ -35,7 +35,7 @@ lklshim_flow_get_key_func(void *entry)
 uint32_t
 lklshim_flow_compute_key_hash_func(void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(lklshim_flow_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(lklshim_flow_key_t)) % ht_size;
 }
 
 bool
@@ -58,7 +58,7 @@ lklshim_lsock_get_key_func(void *entry)
 uint32_t
 lklshim_lsock_compute_key_hash_func(void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(int)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(int)) % ht_size;
 }
 
 bool
@@ -96,13 +96,13 @@ lklshim_mem_init(void)
     // initialize SLAB for flow entry allocations
     lklshim_flowdb_slab = slab::factory("lklshim_flowdb", HAL_SLAB_LKLSHIM_FLOWDB,
                                 sizeof(lklshim_flow_t), 16,
-                                false, true, true, true);
+                                false, true, true);
     HAL_ASSERT_RETURN((lklshim_flowdb_slab != NULL), false);
 
     // initialize SLAB for listen-socket entry allocations
     lklshim_lsockdb_slab = slab::factory("lklshim_lsockdb", HAL_SLAB_LKLSHIM_LSOCKDB,
                                 sizeof(lklshim_listen_sockets_t), 16,
-                                false, true, true, true);
+                                false, true, true);
     HAL_ASSERT_RETURN((lklshim_lsockdb_slab != NULL), false);
 
     // initialize hash-table for lklshim flow entries

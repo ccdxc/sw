@@ -8,7 +8,7 @@
 
 #include "nic/include/hal_lock.hpp"
 
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/utils/list/list.hpp"
 
 #include "linkmgr_src.hpp"
@@ -73,19 +73,19 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 {
     switch (slab_id) {
     case HAL_SLAB_HANDLE:
-        linkmgr::g_linkmgr_state->hal_handle_slab()->free_(elem);
+        linkmgr::g_linkmgr_state->hal_handle_slab()->free(elem);
         break;
 
     case HAL_SLAB_HANDLE_HT_ENTRY:
-        linkmgr::g_linkmgr_state->hal_handle_ht_entry_slab()->free_(elem);
+        linkmgr::g_linkmgr_state->hal_handle_ht_entry_slab()->free(elem);
         break;
 
     case HAL_SLAB_HANDLE_ID_HT_ENTRY:
-        linkmgr::g_linkmgr_state->hal_handle_id_ht_entry_slab()->free_(elem);
+        linkmgr::g_linkmgr_state->hal_handle_id_ht_entry_slab()->free(elem);
         break;
 
     case HAL_SLAB_PORT:
-        linkmgr::g_linkmgr_state->port_slab()->free_(elem);
+        linkmgr::g_linkmgr_state->port_slab()->free(elem);
         break;
 
     default:
@@ -104,7 +104,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 {
     switch (slab_id) {
     case HAL_SLAB_PORT_PD:
-        linkmgr::pd::g_linkmgr_state_pd->port_slab()->free_(elem);
+        linkmgr::pd::g_linkmgr_state_pd->port_slab()->free(elem);
         break;
 
     default:

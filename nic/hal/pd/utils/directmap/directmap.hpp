@@ -11,18 +11,17 @@
 #ifndef __DIRECT_MAP_HPP__
 #define __DIRECT_MAP_HPP__
 
-
 #include <string>
 #include "nic/include/base.h"
-#include "nic/utils/indexer/indexer.hpp"
+#include "nic/sdk/include/indexer.hpp"
 #include "nic/include/hal_lock.hpp"
-//#include "nic/utils/ht/ht.hpp"
+//#include "nic/sdk/include/ht.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 
 using hal::pd::utils::directmap_entry_t;
-using hal::utils::indexer;
-using hal::utils::ht;
+using sdk::lib::ht;
+using sdk::lib::indexer;
 
 namespace hal {
 namespace pd {
@@ -160,3 +159,4 @@ public:
 }   // namespace hal
 
 #endif // __DIRECT_MAP_HPP__
+

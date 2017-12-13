@@ -227,6 +227,7 @@ hal_handle_t
 hal_handle_alloc (hal_obj_id_t obj_id)
 {
     hal_ret_t                ret;
+    sdk_ret_t                sdk_ret;
     hal_handle_t             handle_id;
     hal_handle               *handle;
     hal_handle_ht_entry_t    *entry;
@@ -253,18 +254,19 @@ hal_handle_alloc (hal_obj_id_t obj_id)
     // prepare the entry to be inserted
     entry->handle = handle;
     entry->ht_ctxt.reset();
-    ret = hal_handle_id_ht()->insert_with_key(&handle_id,
-                                              entry, &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = hal_handle_id_ht()->insert_with_key(&handle_id,
+                                                  entry, &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add handle id {} to handle obj", handle_id);
         hal_handle_ht_entry_slab()->free(entry);
         handle->~hal_handle();
         hal_handle_slab()->free(handle);
         return HAL_HANDLE_INVALID;
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
-    HAL_TRACE_DEBUG("Assigned hal_handle:{} for an object of obj_id:{}", 
-                    handle_id, obj_id);
+    HAL_TRACE_DEBUG("Assigned hal_handle:{} for an object of obj_id:{}, ret:{}", 
+                    handle_id, obj_id, ret);
     return handle_id;
 }
 

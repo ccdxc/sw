@@ -3,7 +3,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/list.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/ip.h"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/l2segment.hpp"
@@ -13,7 +13,7 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/src/qos.hpp"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 
 using session::FlowKeyL2;

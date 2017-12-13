@@ -7,3 +7,6 @@
 [submodule "nic/debug_cli/click_repl"]
 	path = nic/debug_cli/click_repl
 	url = git@github.com:pensando/click-repl
+[submodule "nic/sdk"]
+	path = nic/sdk
+	url = https://github.com/pensando/sdk

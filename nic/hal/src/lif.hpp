@@ -5,7 +5,7 @@
 #include "nic/include/eth.h"
 #include "nic/include/ip.h"
 #include "nic/include/list.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
@@ -22,7 +22,7 @@ using intf::LifDeleteResponse;
 using intf::LifGetRequest;
 using intf::LifGetResponse;
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 using hal::utils::bitmap;
 

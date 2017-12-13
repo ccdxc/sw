@@ -1,7 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
+
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
     name = "hash",
@@ -15,13 +17,14 @@ cc_library(
         "hash.hpp",
         "hash_entry.hpp",
     ],
+    copts = sdk_copts,
     deps = [
+        "//nic:sdk_indexer",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/pd/utils/tcam",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/indexer",
-        #"//nic/utils/thread",
+        "//nic/utils/thread",  # May not be needed
     ],
 )
 
@@ -38,9 +41,10 @@ cc_test(
         "-lzmq",
         "-lpthread",
         "-pthread",
-        "-lprotobuf"
+        "-lprotobuf",
     ],
     deps = gl_deps_list + [
-    		"//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
+        "//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
     ],
+    copts = sdk_copts,
 )

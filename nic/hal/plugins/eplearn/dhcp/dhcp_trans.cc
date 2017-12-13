@@ -12,7 +12,7 @@ void *dhcptrans_get_key_func(void *entry) {
 }
 
 uint32_t dhcptrans_compute_hash_func(void *key, uint32_t ht_size) {
-    return utils::hash_algo::fnv_hash(key, sizeof(dhcp_trans_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(dhcp_trans_key_t)) % ht_size;
 }
 
 bool dhcptrans_compare_key_func(void *key1, void *key2) {
@@ -42,7 +42,7 @@ dhcp_trans_t::trans_timer_t *dhcp_trans_t::dhcp_timer_ =
             new trans_timer_t(DHCP_TIMER_ID);
 slab *dhcp_trans_t::dhcplearn_slab_ = slab::factory("dhcpLearn", HAL_SLAB_DHCP_LEARN,
                                 sizeof(dhcp_trans_t), 16,
-                                false, true, true, true);
+                                false, true, true);
 ht *dhcp_trans_t::dhcplearn_key_ht_ =
     ht::factory(HAL_MAX_DHCP_TRANS, dhcptrans_get_key_func,
                 dhcptrans_compute_hash_func,

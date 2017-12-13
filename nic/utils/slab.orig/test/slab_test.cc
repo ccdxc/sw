@@ -1,4 +1,4 @@
-#include "nic/utils/slab/slab.hpp"
+#include "nic/sdk/include/slab.hpp"
 #include <gtest/gtest.h>
 
 using hal::utils::slab;

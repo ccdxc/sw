@@ -9,13 +9,13 @@
 #include "nic/include/hal_cfg.hpp"
 
 #include "nic/utils/list/list.hpp"
-#include "nic/utils/ht/ht.hpp"
-#include "nic/utils/slab/slab.hpp"
+#include "nic/sdk/include/ht.hpp"
+#include "nic/sdk/include/slab.hpp"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
-using hal::utils::slab;
-using hal::utils::ht;
+using sdk::lib::slab;
+using sdk::lib::ht;
 
 namespace hal {
 
@@ -117,7 +117,7 @@ hal_handle_id_get_key_func (void *entry)
 static inline uint32_t
 hal_handle_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 static inline bool

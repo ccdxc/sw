@@ -5,11 +5,11 @@
 
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/include/pd.hpp"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 
 using nwsec::SecurityGroupSpec;
 using nwsec::SecurityGroupRequestMsg;
@@ -339,6 +339,7 @@ static inline hal_ret_t
 add_nwsec_group_to_db (nwsec_group_t *nwsec_grp)
 {
     hal_ret_t                       ret;
+    sdk_ret_t                       sdk_ret;
     hal_handle_id_ht_entry_t        *entry;
 
     HAL_TRACE_DEBUG("Adding to security group hash table sg_id {}", nwsec_grp->sg_id);
@@ -350,15 +351,16 @@ add_nwsec_group_to_db (nwsec_group_t *nwsec_grp)
     // add mapping from security group id to its handle
     entry->handle_id   = nwsec_grp->hal_handle;
 
-    ret = g_hal_state->nwsec_group_ht()->insert_with_key(&nwsec_grp->sg_id, entry,
-                                                         &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = g_hal_state->nwsec_group_ht()->insert_with_key(&nwsec_grp->sg_id, entry,
+                                                             &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add security group {} to handle mapping, "
                       "err : {}", nwsec_grp->sg_id, ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);;
     //nwsec_grp->hal_handle = handle_id;
-    return HAL_RET_OK;
+    return ret;
 }
 
 // find a security group by key

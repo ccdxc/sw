@@ -6,4 +6,5 @@ cc_library(
     name = "base_includes",
     srcs = [],
     hdrs = glob(["*.hpp", "*.h"]),
+    deps = ["//nic:sdk_base_include"]
 )

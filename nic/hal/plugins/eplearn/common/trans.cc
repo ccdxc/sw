@@ -1,6 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/include/ip.h"
-#include "nic/include/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/fte/fte.hpp"
 #include <netinet/if_ether.h>
 #include <arpa/inet.h>
@@ -15,8 +15,8 @@ void *trans_get_ip_entry_key_func(void *entry) {
 }
 
 uint32_t trans_compute_ip_entry_hash_func(void *key, uint32_t ht_size) {
-    return utils::hash_algo::fnv_hash(key,
-                                      sizeof(trans_ip_entry_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key,
+                                         sizeof(trans_ip_entry_key_t)) % ht_size;
 }
 
 bool trans_compare_ip_entry_key_func(void *key1, void *key2) {

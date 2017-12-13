@@ -1,10 +1,10 @@
 #ifndef __LINKMGR_STATE_PD_HPP__
 #define __LINKMGR_STATE_PD_HPP__
 
-#include "nic/utils/slab/slab.hpp"
+#include "nic/sdk/include/slab.hpp"
 #include "port.hpp"
 
-using hal::utils::slab;
+using sdk::lib::slab;
 
 namespace linkmgr {
 namespace pd {
