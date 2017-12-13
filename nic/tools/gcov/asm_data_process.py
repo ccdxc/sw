@@ -3,11 +3,12 @@ import csv
 import subprocess
 import json
 import pdb
+import glob
 import operator
 from collections import defaultdict
 import env as env
 import utils
-
+import pandas as pd
 
 class Stats:
     def __init__(self, instructions = 0, cycles = 0, table_type = None):
@@ -93,9 +94,9 @@ class ModuleData(StatObj):
             table_keys += self.direction_data[dir].total_stats.tables.keys()
         table_keys = set(table_keys) 
         ModuleData.__dump_csv_header(fp, table_keys)
-        for dir in self.direction_data:
+        for dir in sorted(self.direction_data, reverse=True):
             direction_data = self.direction_data[dir]
-            for stage in direction_data.stage_data:
+            for stage in sorted(direction_data.stage_data):
                 stage_data = direction_data.stage_data[stage]
                 ModuleData.__dump_csv_line(fp, dir, str(stage), 
                               stage_data.total_stats, self.num_of_test_cases, table_keys)
@@ -139,33 +140,75 @@ class TableDataMap:
             range_addr = range(int(row[1], 16), int(row[2], 16) + 1)
             self.by_addr_range[range_addr] = table 
     
+def create_html_page(index_page_name):
+
+    header = """<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Summary</title>
+</head>
+
+<body>"""
+    index_page = open(index_page_name, "w+")
+    index_page.write(header)
+    return index_page
+
+def close_html_page(index_page):
+    trailer= """</body>
+
+</html>"""
+    index_page.write(trailer + "\n")
+    index_page.close()
+        
+def generate_feature_sub_stats(output_dir, page_name="instructions_summary.html"):
+    os.chdir(output_dir)
+    summary_page = create_html_page(page_name)
+    asm_cov_str = "<br><strong>Feature Report</strong></br>"
+    summary_page.write(asm_cov_str)    
+    p4_data_path = output_dir + "/"
+    feature_frames = defaultdict(lambda: {"total" : pd.DataFrame(), "sub" : {} })
+    for root, dirs, files in os.walk(p4_data_path):
+        for dir in dirs:
+            splits = (dir.split("_"))
+            feature = splits[0]
+            sub = "_".join(splits[1:])
+            allFiles = glob.glob(root + "/" + dir + "/"  +  "*.csv")
+            list_ = []
+            feature_sub_frames = defaultdict(lambda: pd.DataFrame())
+            for file_ in allFiles:
+                df = pd.read_csv(file_,index_col=None, header=0)
+                feature_sub_frames[sub] = pd.concat([feature_sub_frames[feature], df])
+            feature_frames[feature]["total"] = pd.concat([feature_frames[feature]["total"], feature_sub_frames[sub]])
+            feature_frames[feature]["sub_data"] = feature_sub_frames
+
+    for feature, data in feature_frames.items():
+        cmd = "mkdir -p " + p4_data_path + feature
+        subprocess.call([cmd], shell=True)        
+        frame = data["total"]
+        frame[["Instructions", "Cycles"]] = frame[["Instructions", "Cycles"]].astype(int)
+        by_feature = frame.groupby(['Direction', 'Stage']).mean()
+        #Set Precision
+        float_keys = [key for key in dict(by_feature.dtypes) if dict(by_feature.dtypes)[key] in ['float64', 'int64']]
+        for key in float_keys:
+            by_feature[key] = by_feature[key].map(lambda x: '%4.1f' % x)
+        #Sort by Direction, Stage
+        by_feature = by_feature.reset_index().sort_values(['Direction', 'Stage'],
+                                                           ascending=[False,True]).set_index(["Direction", "Stage"])
+        csv_file = p4_data_path + feature + "/" + "mean.csv"
+        html_file = p4_data_path + feature + "/" + "mean.html"
+        by_feature.to_csv(csv_file)
+        utils.convert_csv_to_html(csv_file, html_file,  feature)
+        line = "<br><a href=%s>%s</a></br>" % (os.path.relpath(html_file, os.getcwd()), feature)
+        summary_page.write(line)
+    close_html_page(summary_page)
+    os.chdir(env.nic_dir)
+
 
 def generate_pipeline_summary_page(output_dir, page_name="instructions_summary.html"):
     os.chdir(output_dir)
-    def create_html_page(index_page_name):
-
-        header = """<!DOCTYPE html>
-    <html>
-
-    <head>
-      <title>Summary</title>
-    </head>
-
-    <body>"""
-        index_page = open(index_page_name, "w+")
-        index_page.write(header)
-        return index_page
-    
-    def close_html_page(index_page):
-        trailer= """</body>
-
-    </html>"""
-        index_page.write(trailer + "\n")
-        index_page.close()
-
-
     summary_page = create_html_page(page_name)
-    asm_cov_str = "<br><strong>Features</strong></br>"
+    asm_cov_str = "<br><strong>Module Report</strong></br>"
     summary_page.write(asm_cov_str)
     p4_data_path = output_dir + "/"
     for feature in next(os.walk(p4_data_path))[1]:
