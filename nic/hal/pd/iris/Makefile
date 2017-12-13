@@ -88,6 +88,7 @@ SOURCES = \
 		  proxyccb_pd.cc \
 		  system_pd.cc \
 		  scheduler_pd.cc \
+		  eth_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

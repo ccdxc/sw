@@ -11,6 +11,7 @@
 #include "nic/hal/src/if_utils.hpp"
 #include "nic/hal/src/rdma.hpp"
 #include "nic/hal/src/lif.hpp"
+#include "nic/hal/src/eth.hpp"
 
 using hal::pd::pd_if_args_t;
 using hal::pd::pd_if_lif_upd_args_t;
@@ -137,9 +138,12 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
             HAL_TRACE_ERR("Invalid entry in LifSpec : purpose={}", ent.purpose());
             return HAL_RET_INVALID_ARG;
         }
-        lif->qtypes[ent.purpose()] = ent.type_num();
         lif->cos_bmp |= (1 << ent.cos_a().cos());
         lif->cos_bmp |= (1 << ent.cos_b().cos());
+
+        lif->qinfo[ent.purpose()].type = ent.type_num();
+        lif->qinfo[ent.purpose()].size = (uint16_t)pow(2, ent.size());
+        lif->qinfo[ent.purpose()].num_queues = (uint16_t)pow(2, ent.entries());
     }
 
     // make sure that when you are creating with hw_lif_id the lif is alloced
@@ -253,6 +257,13 @@ validate_lif_create(LifSpec& spec, LifResponse *rsp)
                       spec.key_or_handle().lif_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_ENTRY_EXISTS;
+    }
+
+    // Check if RSS key is correct size
+    if (spec.rss().enable() && spec.rss().key().size() > ETH_RSS_KEY_LENGTH) {
+        HAL_TRACE_ERR("{}: Invalid key size {}",
+                      __FUNCTION__, spec.rss().key().size());
+        return HAL_RET_INVALID_ARG;
     }
 
 end:
@@ -526,9 +537,15 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
                                               receive_promiscuous();
     lif->packet_filters.receive_all_multicast = spec.packet_filter().
                                                 receive_all_multicast();
-    //lif->allmulti          = spec.allmulti();
-    lif->enable_rdma         = spec.enable_rdma();
-    lif->rdma_max_keys       = spec.rdma_max_keys();
+    // RSS configuration
+    lif->rss.enable = spec.rss().enable();
+    lif->rss.type = spec.rss().type();
+    memcpy(&lif->rss.key, (uint8_t *)spec.rss().key().c_str(),
+           sizeof(lif->rss.key));
+
+    //lif->allmulti = spec.allmulti();
+    lif->enable_rdma = spec.enable_rdma();
+    lif->rdma_max_keys = spec.rdma_max_keys();
     lif->rdma_max_pt_entries = spec.rdma_max_pt_entries();
 
     // allocate hal handle id
@@ -605,6 +622,13 @@ validate_lif_update (LifSpec& spec, LifResponse *rsp)
         ret =  HAL_RET_INVALID_ARG;
     }
 
+    // Check if RSS key is correct size
+    if (spec.rss().enable() && spec.rss().key().size() > ETH_RSS_KEY_LENGTH) {
+        HAL_TRACE_ERR("{}: Invalid key size {}",
+                      __FUNCTION__, spec.rss().key().size());
+        return HAL_RET_INVALID_ARG;
+    }
+
     return ret;
 }
 
@@ -621,8 +645,10 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t         *lnode     = NULL;
     dhl_entry_t           *dhl_entry = NULL;
     lif_t                 *lif       = NULL;
+    lif_t                 *lif_clone = NULL;
     lif_update_app_ctxt_t *app_ctxt  = NULL;
     uint32_t              hw_lif_id;
+    LifSpec                     *spec = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -633,15 +659,29 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt  = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    spec = app_ctxt->spec;
 
     lif = (lif_t *)dhl_entry->obj;
+    lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("pi-lif:{}:update upd CB {}",
                     __FUNCTION__, lif->lif_id);
 
+    // Update PI clone
+    if (app_ctxt->vlan_strip_en_changed) {
+        lif_clone->vlan_strip_en = spec->vlan_strip_en();
+    }
+
+    if (app_ctxt->rss_config_changed) {
+        lif_clone->rss.enable = spec->rss().enable();
+        lif_clone->rss.type = spec->rss().type();
+        memcpy(&lif_clone->rss.key, (uint8_t *)spec->rss().key().c_str(),
+               sizeof(lif_clone->rss.key));
+    }
+
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_lif_upd_args_init(&args);
-    args.lif                   = lif;
+    args.lif                   = lif_clone;
     args.vlan_strip_en_changed = app_ctxt->vlan_strip_en_changed;
     args.vlan_strip_en         = app_ctxt->vlan_strip_en;
     args.qstate_map_init_set   = app_ctxt->qstate_map_init_set;
@@ -662,6 +702,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
         lif->qstate_init_done = true;
     }
+    args.rss_config_changed = app_ctxt->rss_config_changed;
 
     ret = pd::pd_lif_update(&args);
     if (ret != HAL_RET_OK) {
@@ -733,6 +774,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->pinned_uplink_changed) {
         lif_clone->pinned_uplink = app_ctxt->new_pinned_uplink;
     }
+
     dllist_move(&lif_clone->if_list_head, &lif->if_list_head);
 
     HAL_TRACE_DEBUG("Printing IFs from clone:");
@@ -829,6 +871,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 {
     hal_ret_t ret   = HAL_RET_OK;
     LifSpec   *spec = app_ctxt->spec;
+    int cmp;
 
     // Handle vlan_strip_en change
     if (lif->vlan_strip_en != spec->vlan_strip_en()) {
@@ -849,6 +892,15 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 
     if (spec->lif_qstate_map_size() && !lif->qstate_init_done) {
         app_ctxt->qstate_map_init_set = true;
+    }
+
+    cmp = memcmp(lif->rss.key, (uint8_t*)spec->rss().key().c_str(),
+                 sizeof(lif->rss.key));
+    if (lif->rss.enable != spec->rss().enable() ||
+        lif->rss.type != spec->rss().type() ||
+        cmp) {
+        app_ctxt->rss_config_changed = true;
+        HAL_TRACE_DEBUG("pi-lif:{}:rss configuration changed", __FUNCTION__);
     }
 
     return ret;
@@ -900,7 +952,9 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         goto end;
     }
 
-    if (!app_ctxt.vlan_strip_en_changed && !app_ctxt.qstate_map_init_set) {
+    if (!(app_ctxt.vlan_strip_en_changed ||
+          app_ctxt.qstate_map_init_set ||
+          app_ctxt.rss_config_changed)) {
         HAL_TRACE_ERR("pi-lif:{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }

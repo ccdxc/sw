@@ -3,8 +3,8 @@ feature:
     sub         : rx_hdr_flags
     package     : test.eth
     module      : eth
-    enable      : True
-    ignore      : True
+    enable      : False
+    ignore      : False
 
 modules:
     - module:

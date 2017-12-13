@@ -261,6 +261,10 @@
         {
             "name": "p4pt-tcb-iscsi-write-latency-distribution",
             "size_kb": 2048
+        },
+        {
+            "name": "rss_indir_table",
+            "size_kb": 1024
         }
     ]
 }

@@ -31,7 +31,8 @@ cc_library(
 cc_library(
     name = "iris_includes",
     srcs = [],
-    hdrs = ["rdma_pd.hpp",
+    hdrs = ["eth_pd.hpp",
+            "rdma_pd.hpp",
             "hal_state_pd.hpp",
             "rw_pd.hpp",
             "tnnl_rw_pd.hpp",

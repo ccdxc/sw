@@ -1,10 +1,13 @@
 #! /usr/bin/python3
 
 import math
+
 import config.resmgr            as resmgr
 import config.objects.ring      as ring
 from infra.common.logging   import cfglogger
 from infra.common.defs import status
+from infra.common.glopts import GlobalOptions
+
 
 class EthRingObject(ring.RingObject):
     def __init__(self):
@@ -27,18 +30,23 @@ class EthRingObject(ring.RingObject):
         self.exp_color = 1  # Expect this color until ring wrap, then toggle
 
     def Configure(self):
+        if GlobalOptions.dryrun:
+            return
+
         # Make sure ring_size is a power of 2
         assert (self.size != 0) and ((self.size & (self.size - 1)) == 0)
         self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
+        resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
         cfglogger.info("Creating Ring %s" % self)
         self.queue.descriptors = [None] * self.size
 
     def Post(self, descriptor):
-        cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.queue.qstate.get_pindex(self.num), self))
+        if GlobalOptions.dryrun:
+            return status.SUCCESS
 
-        # Is Ring Full?
-        if (self.queue.qstate.get_pindex(self.num) + 1) % self.size == self.queue.qstate.get_cindex(self.num):
-            return status.RETRY
+        assert(self.num == 0)   # Only allow posting buffers on Ring 0
+
+        cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.queue.qstate.get_pindex(self.num), self))
 
         # Check descriptor compatibility
         assert(self.desc_size == descriptor.size)
@@ -55,6 +63,11 @@ class EthRingObject(ring.RingObject):
         return status.SUCCESS
 
     def Consume(self, descriptor):
+        if GlobalOptions.dryrun:
+            return status.SUCCESS
+
+        assert(self.num == 1)   # Only allow consuming completions from Ring 1
+
         cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.queue.qstate.get_cindex(self.num), self))
 
         # Check descriptor compatibility

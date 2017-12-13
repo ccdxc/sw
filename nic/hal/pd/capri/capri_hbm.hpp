@@ -2,6 +2,7 @@
 #define __CAPRI_HBM_HPP__
 
 #define CAPRI_HBM_MEM_REG_NAME_MAX_LEN 80
+#define CARPI_HBM_MEM_NUM_MEM_REGS 128
 
 #define JP4_ATOMIC_STATS         "atomic_stats"
 
@@ -90,7 +91,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_P4PT_TCB_ISCSI_STATS_MEM "p4pt-tcb-iscsi-stats"
 #define CAPRI_HBM_REG_P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_MEM "p4pt-tcb-iscsi-read-latency-distribution"
 #define CAPRI_HBM_REG_P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_MEM "p4pt-tcb-iscsi-write-latency-distribution"
-
+#define CAPRI_HBM_REG_RSS_INDIR_TABLE    "rss_indir_table"
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512

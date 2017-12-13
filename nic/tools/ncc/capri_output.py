@@ -3098,6 +3098,13 @@ def capri_te_cfg_output(stage):
                     else:
                         se['hash_chain']['value'] = str(1)
                         se['hash_store']['value'] = str(1)
+
+                if ct.num_entries == 0 and ct.is_hash_table():
+                    stage.gtm.tm.logger.warning(\
+                        '%s: Stage %d:sram[%d]:Table %s change lkp_type %s to HASH-ONLY (no mem access)' % \
+                            (stage.gtm.d.name, stage.id, sidx, ct.p4_table.name, se['lkup']['value']))
+                    #se['lkup']['value'] = te_consts['mpu_only']
+                    se['lkup']['value'] = te_consts['hash_only']
             else:
                 se['lkup']['value'] = te_consts['no_op']
                 se['hash_chain']['value'] = str(0)
@@ -3313,10 +3320,6 @@ def capri_te_cfg_output(stage):
             # this also covers toeplitz hash
             lg2entry_size = 7 # special values used by h/w to not launch mem read operation
             json_tbl_['axi']['value'] = str(0) # make it hbm for lg2_Entry_sz to take effect
-            stage.gtm.tm.logger.warning('%s: Stage %d: Table %s set to HASH-ONLY (no mem access)' % \
-                        (stage.gtm.d.name, stage.id, ct.p4_table.name))
-            #se['lkup']['value'] = te_consts['mpu_only']
-            se['lkup']['value'] = te_consts['hash_only']
 
         json_tbl_['_modified'] = True
         stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:cap_te_csr_cfg_table_property[%d]:\n%s" % \

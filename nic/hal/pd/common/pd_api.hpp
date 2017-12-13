@@ -96,6 +96,7 @@ typedef struct pd_lif_upd_args_s {
     bool    vlan_strip_en_changed;
     bool    vlan_strip_en;
     bool    qstate_map_init_set;
+    bool    rss_config_changed;
 } pd_lif_upd_args_t;
 
 typedef struct pd_port_args_s {

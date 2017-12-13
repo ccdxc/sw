@@ -18,7 +18,7 @@ targets:
   vxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo vxlan --feature vxlan" ]
   ipsg:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo eth --feature ipsg" ]
   firewall:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo firewall --feature firewall" ]
-  admin:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo admin --feature admin" ]
+  # admin:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo admin --feature admin" ]
   pin:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo fte --feature fte,hostpin --hostpin" ]
   pin2:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo fte --feature fte2 --hostpin" ]
   pinvxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo fte --feature ftevxlan,hpvxlan --hostpin" ]

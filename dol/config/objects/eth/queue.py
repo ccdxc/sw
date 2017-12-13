@@ -53,8 +53,9 @@ class EthQstate(Packet):
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
         LELongField("cq_base", 0),
-        BitField("color", 0, 1),
-        BitField("__pad0", 0, 39),
+        LEShortField("rss_type", 0),    # For TX queues it is __pad
+        BitField("color", 1, 1),
+        BitField("__pad0", 0, 23),
     ]
 
 
@@ -98,23 +99,33 @@ class EthQstateObject(object):
         lgh.ShowScapyObject(data)
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
 
+    def set_ring_count(self, host, total):
+        assert(isinstance(host, int) and isinstance(total, int))
+        self.data[EthQstate].host = host
+        self.data[EthQstate].total = total
+        model_wrap.write_mem(self.addr + 5, bytes(ctypes.c_uint8(host << 4 | total)), 1)
+
     def incr_pindex(self, ring):
+        assert(isinstance(ring, int))
         assert(ring < 7)
         value = (self.get_pindex(ring) + 1) & (self.get_ring_size() - 1)
         setattr(self.data[EthQstate], 'p_index%d' % ring, value)
         model_wrap.write_mem(self.addr + 8 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
 
     def incr_cindex(self, ring):
+        assert(isinstance(ring, int))
         assert(ring < 7)
         value = (self.get_cindex(ring) + 1) & (self.get_ring_size() - 1)
         setattr(self.data[EthQstate], 'c_index%d' % ring, value)
         model_wrap.write_mem(self.addr + 10 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
 
     def get_pindex(self, ring):
+        assert(isinstance(ring, int))
         assert(ring < 7)
         return getattr(self.data[EthQstate], 'p_index%d' % ring)
 
     def get_cindex(self, ring):
+        assert(isinstance(ring, int))
         assert(ring < 7)
         return getattr(self.data[EthQstate], 'c_index%d' % ring)
 
@@ -122,37 +133,44 @@ class EthQstateObject(object):
         return int(math.pow(2, self.data[EthQstate].ring_size))
 
     def set_pindex(self, ring, value):
+        assert(isinstance(ring, int) and isinstance(value, int))
         assert(ring < 7)
         assert(value < self.get_ring_size())
         setattr(self.data[EthQstate], 'p_index%d' % ring, value)
         model_wrap.write_mem(self.addr + 8 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
 
     def set_cindex(self, ring, value):
+        assert(isinstance(ring, int) and isinstance(value, int))
         assert(ring < 7)
         assert(value < self.get_ring_size())
         setattr(self.data[EthQstate], 'c_index%d' % ring, value)
         model_wrap.write_mem(self.addr + 10 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
 
     def set_enable(self, value):
+        assert(isinstance(value, int))
         self.data[EthQstate].enable = value
         model_wrap.write_mem(self.addr + 40, bytes(ctypes.c_uint8(value)), 1)
 
     def set_ring_base(self, value):
+        assert(isinstance(value, int))
         self.data[EthQstate].ring_base = value
         model_wrap.write_mem(self.addr + 41, bytes(ctypes.c_uint64(value)), 8)
 
     def set_ring_size(self, value):
+        assert(isinstance(value, int))
         value = int(math.log(value, 2))
         self.data[EthQstate].ring_size = value
         model_wrap.write_mem(self.addr + 49, bytes(ctypes.c_uint16(value)), 2)
 
     def set_cq_base(self, value):
+        assert(isinstance(value, int))
         self.data[EthQstate].cq_base = value
         model_wrap.write_mem(self.addr + 51, bytes(ctypes.c_uint64(value)), 8)
 
-    def set_color(self, value):
-        self.data[EthQstate].color = value
-        model_wrap.write_mem(self.addr + 59, bytes(ctypes.c_uint8(value << 7)), 1)
+    def set_rss_type(self, value):
+        assert(isinstance(value, int))
+        self.data[EthQstate].rss_type = value
+        model_wrap.write_mem(self.addr + 59, bytes(ctypes.c_uint16(value)), 2)
 
     def Show(self, lgh = cfglogger):
         lgh.ShowScapyObject(self.data)
@@ -173,6 +191,11 @@ class AdminQstateObject(object):
         data = AdminQstate(model_wrap.read_mem(self.addr, self.size))
         lgh.ShowScapyObject(data)
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
+
+    def set_ring_count(self, host, total):
+        self.data[AdminQstate].host = host
+        self.data[AdminQstate].total = total
+        model_wrap.write_mem(self.addr + 5, bytes(ctypes.c_uint8(host << 4 | total)), 1)
 
     def incr_pindex(self, ring):
         assert(ring < 7)
@@ -210,7 +233,7 @@ class AdminQstateObject(object):
     def set_cq_base(self, value):
         pass
 
-    def set_color(self, value):
+    def set_rss_type(self, value):
         pass
 
     def get_ring_size(self):
@@ -229,6 +252,8 @@ class EthQueueObject(QueueObject):
         super().Init(queue_type, spec)
         self.id = qid
         self.GID("Q%d" % self.id)
+        self.queue_type = queue_type
+        self.spec = spec
 
     @property
     def qstate(self):
@@ -251,15 +276,15 @@ class EthQueueObject(QueueObject):
         req_spec.qid = 0    # HACK
         req_spec.label.handle = "p4plus"
         if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-            req_spec.queue_state = bytes(EthQstate(host=1, total=1))
+            req_spec.queue_state = bytes(EthQstate())
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "eth_tx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
-            req_spec.queue_state = bytes(EthQstate(host=1, total=1))
+            req_spec.queue_state = bytes(EthQstate())
             req_spec.label.prog_name = "rxdma_stage0.bin"
             req_spec.label.label = "eth_rx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
-            req_spec.queue_state = bytes(AdminQstate(host=1, total=1))
+            req_spec.queue_state = bytes(AdminQstate())
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "adminq_stage0"
         else:
@@ -272,13 +297,14 @@ class EthQueueObject(QueueObject):
     def ConfigureRings(self):
         self.obj_helper_ring.Configure()
         self.qstate.set_enable(1)
+        self.qstate.set_ring_count(1, 1)
         for ring in self.obj_helper_ring.rings:
             if ring.id == 'R0':
                 self.qstate.set_ring_base(ring._mem.pa)
                 self.qstate.set_ring_size(ring.size)
+                self.qstate.set_rss_type(self.queue_type.lif.rss_type)
             elif ring.id == 'R1':
                 self.qstate.set_cq_base(ring._mem.pa)
-                self.qstate.set_color(1)
             else:
                 raise NotImplementedError
         self.qstate.Read()

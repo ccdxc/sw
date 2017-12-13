@@ -34,8 +34,9 @@ header_type eth_rx_cq_desc_p {
 
 // d for stage 0
 header_type eth_rx_qstate_d {
+    // Max 512 bits
     fields {
-        //pc : 8;
+        pc : 8;
         rsvd : 8;
         cosA : 4;
         cosB : 4;
@@ -66,6 +67,7 @@ header_type eth_rx_qstate_d {
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;
+        rss_type : 16;
         color : 1;
     }
 }
@@ -82,17 +84,12 @@ header_type eth_rx_desc_d {
  * K+I Headers
  ***/
 
-header_type eth_rx_global_k {
-    // global k (max 128 bits)
+header_type eth_rx_t0_s2s_k {
+    // t0 s2s k (max 160 bits)
     fields {
         packet_len : 16;
-    }
-}
-
-header_type eth_rx_to_stage_1_k {
-    // to_stage k (max 128 bits)
-    fields {
         cq_desc_addr : 64;
+        qstate_addr : 34;
     }
 }
 
@@ -112,11 +109,14 @@ metadata eth_rx_desc_d eth_rx_desc;
 // Union with Common-RXDMA PHV headers
 
 // App header (Available in STAGE=0)
+
+/* NOTE: Defined in Common-P4+
 @pragma pa_header_union ingress app_header
 metadata p4_to_p4plus_classic_nic_header_t p4_to_p4plus;
 @pragma scratch_metadata
 metadata p4_to_p4plus_classic_nic_header_t p4_to_p4plus_scratch;
-
+*/
+/*
 // Global PHV headers (Available in STAGES=ALL, MPUS=ALL)
 @pragma pa_header_union ingress common_global
 metadata eth_rx_global_k eth_rx_global;
@@ -129,7 +129,6 @@ metadata eth_rx_to_stage_1_k eth_rx_to_s1;
 @pragma scratch_metadata
 metadata eth_rx_to_stage_1_k eth_rx_to_s1_scratch;
 
-/*
 @pragma pa_header_union ingress to_stage_2
 metadata eth_rx_to_stage_2_k eth_rx_to_s2;
 @pragma scratch_metadata
@@ -160,6 +159,26 @@ metadata eth_rx_to_stage_7_k eth_rx_to_s7;
 @pragma scratch_metadata
 metadata eth_rx_to_stage_7_k eth_rx_to_s7_scratch;
 */
+@pragma pa_header_union ingress common_t0_s2s
+metadata eth_rx_t0_s2s_k eth_rx_t0_s2s;
+@pragma scratch_metadata
+metadata eth_rx_t0_s2s_k eth_rx_t0_s2s_scratch;
+/*
+@pragma pa_header_union ingress common_t1_s2s
+metadata eth_rx_t1_s2s_k eth_rx_t1_s2s;
+@pragma scratch_metadata
+metadata eth_rx_t1_s2s_k eth_rx_t1_s2s_scratch;
+
+@pragma pa_header_union ingress common_t2_s2s
+metadata eth_rx_t2_s2s_k eth_rx_t2_s2s;
+@pragma scratch_metadata
+metadata eth_rx_t2_s2s_k eth_rx_t2_s2s_scratch;
+
+@pragma pa_header_union ingress common_t3_s2s
+metadata eth_rx_t3_s2s_k eth_rx_t3_s2s;
+@pragma scratch_metadata
+metadata eth_rx_t3_s2s_k eth_rx_t3_s2s_scratch;
+*/
 
 // Stage N to N+1 PHV headers (Available in STAGE=N,N+1 MPUS=ALL)
 
@@ -175,8 +194,7 @@ metadata eth_rx_cq_desc_p eth_rx_cq_desc;
 metadata dma_cmd_pkt2mem_t dma_cmd0;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd1;
-@pragma dont_trim       // HACK: Workaround for dma command padding issue
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd2;
-@pragma dont_trim       // HACK: Workaround for dma command padding issue
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd3;
-

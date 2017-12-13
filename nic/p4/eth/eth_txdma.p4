@@ -32,7 +32,7 @@ header_type eth_tx_qstate_d {
         eval_last : 8;
         host : 4;
         total : 4;
-        pid : 16;                // 8 B
+        pid : 16;
 
         p_index0 : 16;
         c_index0 : 16;
@@ -49,12 +49,13 @@ header_type eth_tx_qstate_d {
         p_index6 : 16;
         c_index6 : 16;
         p_index7 : 16;
-        c_index7 : 16;          // 40 B
+        c_index7 : 16;
 
         enable : 8;
         ring_base : 64;
         ring_size : 16;
-        cq_ring_base : 64;    // 59 B
+        cq_ring_base : 64;
+        __pad : 16;
         color : 1;
     }
 }
@@ -171,10 +172,6 @@ metadata eth_tx_cq_desc_p eth_tx_cq_desc;
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t dma_cmd0;
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t txdma_intr;
+metadata dma_cmd_mem2pkt_t dma_cmd1;
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t dma_cmd1;
-@pragma dont_trim
-metadata dma_cmd_mem2pkt_t dma_cmd2;
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd3;
+metadata dma_cmd_phv2mem_t dma_cmd2;

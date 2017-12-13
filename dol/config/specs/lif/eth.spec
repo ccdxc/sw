@@ -2,6 +2,9 @@
 meta:
     id: LIF_ETH
 
+rss:
+  enable: True
+
 queue_types:
     - queue_type:
         id          : TX
