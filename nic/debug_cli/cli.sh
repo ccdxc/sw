@@ -10,7 +10,9 @@
 #
 # runs the penshell
 #
+CURR_DIR=`dirname $0`
+ABS_CURR_DIR=`readlink -f $CURR_DIR`
+NIC_DIR=`dirname $ABS_CURR_DIR`
 
-export PYTHONPATH=swig/pyfiles:../gen/proto/hal:../third-party/lib64/python2.7:$PYTHONPATH
-export GRPC_SERVER="localhost:50054"
-python penshell_main.py repl
+cd $NIC_DIR/gen/iris/cli
+./debug_hal_cli.sh
