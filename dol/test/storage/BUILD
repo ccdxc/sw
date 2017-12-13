@@ -11,6 +11,7 @@ cc_library(
         "hal_if.hpp",
     ],
     deps = [
+        "//external:gflags",
         "//nic:halproto",
         "//nic:gen_proto_includes",
     ]
@@ -172,6 +173,7 @@ cc_binary(
         ":rdma",
         ":compression",
         "//nic:grpc",
+        "//external:gflags",
     ],
     copts = [ "-g" ],
     linkopts = [

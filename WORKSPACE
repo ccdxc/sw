@@ -21,7 +21,7 @@ py_proto_repositories()
 # gflags
 git_repository(
     name = "com_github_gflags_gflags",
-    commit = "9314597d4b742ed6f95665241345e590a0f5759b",
+    commit = "77592648e3f3be87d6c7123eb81cbad75f9aef5a",
     remote = "https://github.com/gflags/gflags.git",
 )
 

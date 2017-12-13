@@ -10,9 +10,9 @@
 #include "nic/gen/proto/hal/barco_rings.pb.h"
 #include "nic/gen/proto/hal/barco_rings.grpc.pb.h"
 #include "dol/test/storage/hal_if.hpp"
+#include "gflags/gflags.h"
 
-
-extern uint64_t hal_port;
+DECLARE_uint64(hal_port);
 
 const static uint32_t  kDefaultQStateSize   = 64;
 
@@ -42,7 +42,7 @@ void init_hal_if() {
     return;
 
   char host_addr[32];
-  sprintf(host_addr, "localhost:%lu", hal_port);
+  sprintf(host_addr, "localhost:%lu", FLAGS_hal_port);
   hal_channel = std::move(grpc::CreateChannel(
       host_addr, grpc::InsecureChannelCredentials()));
 
