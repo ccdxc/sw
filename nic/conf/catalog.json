@@ -13,23 +13,31 @@
         {
             "name"      : "capri",
             "num"       : "0",
-            "max_ports" : "4",
+            "max_ports" : "8",
             "ports"     :
             [
-                { "port_num" : "1", "mac_id" : "0", "mac_ch" : "0" },
-                { "port_num" : "2", "mac_id" : "0", "mac_ch" : "1" },
-                { "port_num" : "3", "mac_id" : "0", "mac_ch" : "2" },
-                { "port_num" : "4", "mac_id" : "0", "mac_ch" : "3" }
+                { "port_num" : "0", "mac_id" : "0", "mac_ch" : "0", "sbus_addr" : "0" },
+                { "port_num" : "1", "mac_id" : "0", "mac_ch" : "1", "sbus_addr" : "0" },
+                { "port_num" : "2", "mac_id" : "0", "mac_ch" : "2", "sbus_addr" : "0" },
+                { "port_num" : "3", "mac_id" : "0", "mac_ch" : "3", "sbus_addr" : "0" },
+                { "port_num" : "4", "mac_id" : "1", "mac_ch" : "0", "sbus_addr" : "1" },
+                { "port_num" : "5", "mac_id" : "1", "mac_ch" : "1", "sbus_addr" : "1" },
+                { "port_num" : "6", "mac_id" : "1", "mac_ch" : "2", "sbus_addr" : "1" },
+                { "port_num" : "7", "mac_id" : "1", "mac_ch" : "3", "sbus_addr" : "1" }
             ]
         }
     ],
 
-    "num_uplink_ports" : "4",
+    "num_uplink_ports" : "8",
     "uplink_ports"     :
     [
-        {"port_num" : "1", "asic" : "0", "asic_port" : "1" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
-        {"port_num" : "2", "asic" : "0", "asic_port" : "2" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
-        {"port_num" : "3", "asic" : "0", "asic_port" : "3" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
-        {"port_num" : "4", "asic" : "0", "asic_port" : "4" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" }
+        {"port_num" : "1", "asic" : "0", "asic_port" : "0" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
+        {"port_num" : "2", "asic" : "0", "asic_port" : "1" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
+        {"port_num" : "3", "asic" : "0", "asic_port" : "2" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
+        {"port_num" : "4", "asic" : "0", "asic_port" : "3" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
+        {"port_num" : "5", "asic" : "0", "asic_port" : "4" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
+        {"port_num" : "6", "asic" : "0", "asic_port" : "5" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
+        {"port_num" : "7", "asic" : "0", "asic_port" : "6" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
+        {"port_num" : "8", "asic" : "0", "asic_port" : "7" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" }
     ]
 }

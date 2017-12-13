@@ -10,8 +10,9 @@ hal_ret_t
 catalog::populate_asic_port(ptree::value_type &asic_port,
                             catalog_asic_port_t *asic_port_p)
 {
-    asic_port_p->mac_id = asic_port.second.get<uint32_t>("mac_id", 0);
-    asic_port_p->mac_ch = asic_port.second.get<uint32_t>("mac_ch", 0);
+    asic_port_p->mac_id    = asic_port.second.get<uint32_t>("mac_id", 0);
+    asic_port_p->mac_ch    = asic_port.second.get<uint32_t>("mac_ch", 0);
+    asic_port_p->sbus_addr = asic_port.second.get<uint32_t>("sbus_addr", 0);
 
     return HAL_RET_OK;
 }
@@ -112,7 +113,7 @@ catalog::populate_uplink_ports(ptree &prop_tree)
     for (ptree::value_type &uplink_port : prop_tree.get_child("uplink_ports")) {
         catalog_uplink_port_t *uplink_port_p =
                             &catalog_db_.uplink_ports[
-                            uplink_port.second.get<uint32_t>("port_num", 0)];
+                            uplink_port.second.get<uint32_t>("port_num", 0) - 1];
 
         populate_uplink_port(uplink_port, uplink_port_p);
     }
@@ -223,7 +224,7 @@ catalog::destroy(catalog *clog)
 catalog_uplink_port_t*
 catalog::uplink_port(uint32_t port)
 {
-    return &catalog_db_.uplink_ports[port];
+    return &catalog_db_.uplink_ports[port-1];
 }
 
 catalog_asic_port_t*
@@ -247,6 +248,35 @@ uint32_t
 catalog::vrf_id()
 {
     return catalog_db_.vrf_id;
+}
+
+uint32_t
+catalog::sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
+{
+    uint32_t mac_id      = asic_num;
+    uint32_t mac_ch      = asic_port;
+    uint32_t l_asic_num  = 0;
+    uint32_t l_asic_port = 0;
+
+    // TODO work around until port pd structure is
+    // updated to hold asic number and asic port
+    for (l_asic_num = 0; l_asic_num < MAX_ASICS; ++l_asic_num) {
+        for (l_asic_port = 0; l_asic_port < MAX_ASIC_PORTS; ++l_asic_port) {
+            catalog_asic_port_t *catalog_asic_port =
+                        &catalog_db_.asics[l_asic_num].ports[l_asic_port];
+            if (catalog_asic_port->mac_id == mac_id &&
+                catalog_asic_port->mac_ch == mac_ch) {
+                return catalog_db_.asics[l_asic_num].
+                                    ports[l_asic_port + lane].sbus_addr;
+            }
+        }
+    }
+
+    return 0x0;
+#if 0
+    hal::utils::catalog_asic_t *asic = catalog_db_.asics[asic_num];
+    return asic->ports[asic_port + lane].sbus_addr;
+#endif
 }
 
 }    // namespace utils

@@ -74,6 +74,7 @@ bazel-build:
 	$(MAKE) -C proto
 	$(MAKE) V=1 -j8 -C gen/proto/hal
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:linkmgr
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/...
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto:all
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //protos:all

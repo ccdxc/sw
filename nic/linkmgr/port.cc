@@ -175,10 +175,19 @@ port::port_mac_faults_get()
     return port::mac_fn.mac_faults_get(mac_port_num);
 }
 
+uint32_t
+port::port_sbus_addr(uint32_t lane)
+{
+    return sbus_addr(mac_id_, mac_ch_, lane);
+}
+
 hal_ret_t
 port::port_serdes_cfg()
 {
-    port::serdes_fn.serdes_cfg(0x0 /* sbus */);
+    uint32_t lane = 0;
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        port::serdes_fn.serdes_cfg(port_sbus_addr(lane));
+    }
 
     return HAL_RET_OK;
 }
@@ -186,9 +195,11 @@ port::port_serdes_cfg()
 hal_ret_t
 port::port_serdes_tx_rx_enable(bool enable)
 {
-    port::serdes_fn.serdes_tx_rx_enable(
-            0x0 /* sbus */,
-            enable);
+    uint32_t lane = 0;
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        port::serdes_fn.serdes_tx_rx_enable(port_sbus_addr(lane),
+                                            enable);
+    }
 
     return HAL_RET_OK;
 }
@@ -196,9 +207,11 @@ port::port_serdes_tx_rx_enable(bool enable)
 hal_ret_t
 port::port_serdes_output_enable(bool enable)
 {
-    port::serdes_fn.serdes_output_enable(
-            0x0 /* sbus */,
-            enable);
+    uint32_t lane = 0;
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        port::serdes_fn.serdes_output_enable(port_sbus_addr(lane),
+                                             enable);
+    }
 
     return HAL_RET_OK;
 }
@@ -206,9 +219,11 @@ port::port_serdes_output_enable(bool enable)
 hal_ret_t
 port::port_serdes_reset(bool reset)
 {
-    port::serdes_fn.serdes_reset(
-            0x0 /* sbus */,
-            reset);
+    uint32_t lane = 0;
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        port::serdes_fn.serdes_reset(port_sbus_addr(lane),
+                                     reset);
+    }
 
     return HAL_RET_OK;
 }
@@ -216,13 +231,33 @@ port::port_serdes_reset(bool reset)
 bool
 port::port_serdes_signal_detect()
 {
-    return port::serdes_fn.serdes_signal_detect(0x0 /* sbus */);
+    uint32_t lane = 0;
+    bool signal_detect = false;
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        signal_detect = port::serdes_fn.serdes_signal_detect(
+                                        port_sbus_addr(lane));
+        if (signal_detect == false) {
+            break;
+        }
+    }
+    return signal_detect;
 }
 
 bool
 port::port_serdes_rdy()
 {
-    return port::serdes_fn.serdes_rdy(0x0 /* sbus */);
+    uint32_t lane = 0;
+    bool serdes_rdy = false;
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        serdes_rdy =  port::serdes_fn.serdes_rdy(port_sbus_addr(lane));
+        if (serdes_rdy == false) {
+            break;
+        }
+    }
+
+    return serdes_rdy;
 }
 
 hal_ret_t

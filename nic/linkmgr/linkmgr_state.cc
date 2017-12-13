@@ -65,7 +65,7 @@ cfg_db::factory(void)
 //------------------------------------------------------------------------------
 cfg_db::~cfg_db()
 {
-    port_id_ht_ ? delete port_id_ht_ : HAL_NOP;
+    port_id_ht_ ? ht::destroy(port_id_ht_) : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------
@@ -230,10 +230,10 @@ mem_db::factory(void)
 //------------------------------------------------------------------------------
 mem_db::~mem_db()
 {
-    hal_handle_slab_ ? delete hal_handle_slab_ : HAL_NOP;
-    hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
-    hal_handle_id_ht_entry_slab_ ? delete hal_handle_id_ht_entry_slab_ : HAL_NOP;
-    port_slab_ ? delete port_slab_ : HAL_NOP;
+    hal_handle_slab_ ? slab::destroy(hal_handle_slab_) : HAL_NOP;
+    hal_handle_ht_entry_slab_ ? slab::destroy(hal_handle_ht_entry_slab_) : HAL_NOP;
+    hal_handle_id_ht_entry_slab_ ? slab::destroy(hal_handle_id_ht_entry_slab_) : HAL_NOP;
+    port_slab_ ? slab::destroy(port_slab_) : HAL_NOP;
 }
 
 //----------------------------------------------------------------------------

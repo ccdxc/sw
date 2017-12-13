@@ -51,6 +51,11 @@ bool hw_access_mock_mode()
     return g_linkmgr_state->catalog()->access_mock_mode();
 }
 
+uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
+{
+    return g_linkmgr_state->catalog()->sbus_addr(asic_num, asic_port, lane);
+}
+
 hal::utils::platform_type_t platform_type()
 {
     return g_linkmgr_state->catalog()->platform_type();
@@ -140,6 +145,18 @@ linkmgr_catalog_init(std::string catalog_file)
     return hal::utils::catalog::factory(catalog_file);
 }
 
+static void *
+linkmgr_periodic_loop_start (void *ctxt)
+{
+    // initialize timer wheel
+    hal::periodic::periodic_thread_init(ctxt);
+
+    // run main loop
+    hal::periodic::periodic_thread_run(ctxt);
+
+    return NULL;
+}
+
 //------------------------------------------------------------------------------
 //  spawn and setup all the HAL threads
 //------------------------------------------------------------------------------
@@ -163,7 +180,7 @@ linkmgr_thread_init (void)
                         std::string("periodic-thread").c_str(),
                         thread_id,
                         HAL_CONTROL_CORE_ID,
-                        hal::periodic::periodic_thread_start,
+                        linkmgr_periodic_loop_start,
                         thread_prio - 1, SCHED_RR, true);
     HAL_ABORT(g_linkmgr_threads[thread_id] != NULL);
     g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
@@ -1242,7 +1259,7 @@ port_delete (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
                              port_delete_abort_cb,
                              port_delete_cleanup_cb);
 end:
-    rsp->add_api_status(hal::hal_prepare_rsp(ret));
+    rsp->add_response()->set_api_status(hal::hal_prepare_rsp(ret));
 
     hal::hal_api_trace(" API End: port delete ");
     return ret;

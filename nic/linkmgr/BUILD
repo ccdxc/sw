@@ -24,6 +24,7 @@ cc_binary(
         "//nic/utils/twheel",
         "//nic/utils/mtrack:mtrack",
         "//nic/utils/catalog",
+        "//nic/utils/block_list:block_list",
         "//nic/linkmgr:linkmgr_includes",
         "//nic/hal/lib:hal_handle_includes",
         "//nic/hal/lib:hal_handle",
