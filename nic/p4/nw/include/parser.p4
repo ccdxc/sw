@@ -876,6 +876,12 @@ parser parse_ipv6_ulp {
     }
 }
 
+parser parse_ipv6_tcp {
+    set_metadata(parser_csum.l4_len, parser_metadata.l4_trailer + 0);
+    set_metadata(parser_csum.inner_l4_len, parser_metadata.l4_trailer + 0);
+    return parse_tcp;
+}
+
 @pragma header_ordering v6_generic 
 parser parse_ipv6_extn_hdrs {
     set_metadata(l3_metadata.ip_option_seen, 1);
@@ -899,6 +905,7 @@ parser parse_ipv6 {
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
     set_metadata(parser_metadata.l4_trailer, ipv6.payloadLen);
     set_metadata(l3_metadata.ipv6_ulp, latest.nextHdr);
+    set_metadata(parser_csum.l4_len, ipv6.payloadLen + 0);
     return select(parser_metadata.ipv6_nextHdr) {
         // go to ulp if no extention headers to avoid a state transition
         IP_PROTO_ICMPV6 : parse_icmpv6;
@@ -1039,7 +1046,6 @@ parser parse_tcp {
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.dstPort);
     set_metadata(parser_metadata.parse_tcp_counter, (tcp.dataOffset << 2) - 20);
-    set_metadata(parser_csum.l4_len, parser_metadata.l4_trailer + 0);
     return select(parser_metadata.parse_tcp_counter) {
         0 : ingress;
         0x80 mask 0x80: parse_tcp_option_error;
@@ -1783,7 +1789,7 @@ parser parse_inner_ipv6_ulp {
     set_metadata(l3_metadata.inner_ipv6_ulp, parser_metadata.inner_ipv6_nextHdr);
     return select(parser_metadata.inner_ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
-        IP_PROTO_TCP : parse_tcp;
+        IP_PROTO_TCP : parse_ipv6_tcp;
         IP_PROTO_UDP : parse_inner_udp;
         default: ingress;
     }

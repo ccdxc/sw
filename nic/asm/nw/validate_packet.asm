@@ -94,6 +94,7 @@ f_check_parser_errors:
   phvwr       p.capri_intrinsic_drop, 1
 
 check_parser_errors_uplink:
+  phvwr       p.control_metadata_checksum_results, k.capri_intrinsic_csum_err
   seq         c3, k.capri_p4_intrinsic_crc_err, 0
   // TBD : remove the following line to enable iCRC error handling
   seq         c3, r0, r0
@@ -106,4 +107,3 @@ check_parser_errors_uplink:
 malformed_packet:
   phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
-

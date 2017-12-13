@@ -7,6 +7,11 @@ action p4plus_app_default () {
 }
 
 action p4plus_app_tcp_proxy() {
+    // drop packet on checksum error
+    if (control_metadata.checksum_results != 0) {
+        drop_packet();
+    }
+
     if ((tcp.flags & TCP_FLAG_SYN) == TCP_FLAG_SYN) {
         f_p4plus_cpu_pkt(0);
         f_egress_tcp_options_fixup();
@@ -169,6 +174,11 @@ action p4plus_app_classic_nic() {
 }
 
 action p4plus_app_ipsec() {
+    // drop packet on checksum error
+    if (control_metadata.checksum_results != 0) {
+        drop_packet();
+    }
+
     add_header(p4_to_p4plus_ipsec);
     modify_field(p4_to_p4plus_ipsec.p4plus_app_id,
                  control_metadata.p4plus_app_id);
@@ -219,6 +229,11 @@ action p4plus_app_ipsec() {
 }
 
 action p4plus_app_rdma() {
+    // drop packet on checksum error
+    if (control_metadata.checksum_results != 0) {
+        drop_packet();
+    }
+
     modify_field(p4_to_p4plus_roce.p4plus_app_id,
                  control_metadata.p4plus_app_id);
     if (ipv4.valid == TRUE) {
@@ -346,6 +361,11 @@ action f_p4plus_cpu_pkt(offset) {
 }
 
 action p4plus_app_cpu() {
+    // drop packet on checksum error
+    if (control_metadata.checksum_results != 0) {
+        drop_packet();
+    }
+
     add_header(p4_to_p4plus_cpu);
     add_header(p4_to_p4plus_cpu_ip);
     modify_field(p4_to_p4plus_cpu.p4plus_app_id,
@@ -391,6 +411,11 @@ action p4plus_app_cpu() {
 }
 
 action p4plus_app_raw_redir() {
+    // drop packet on checksum error
+    if (control_metadata.checksum_results != 0) {
+        drop_packet();
+    }
+
     add_header(p4_to_p4plus_cpu);
     add_header(p4_to_p4plus_cpu_ip);
     modify_field(p4_to_p4plus_cpu.p4plus_app_id,
@@ -431,6 +456,11 @@ action p4plus_app_raw_redir() {
 }
 
 action p4plus_app_p4pt() {
+    // drop packet on checksum error
+    if (control_metadata.checksum_results != 0) {
+        drop_packet();
+    }
+
     add_header(p4_to_p4plus_p4pt);
     modify_field(p4_to_p4plus_p4pt.p4plus_app_id,
                  control_metadata.p4plus_app_id);
