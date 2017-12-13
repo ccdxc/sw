@@ -20,6 +20,7 @@
 typedef struct simclient_s {
     int s;
     int open:1;
+    int sync_writes:1;
     msg_handler_t handler;
 } simclient_t;
 
@@ -30,11 +31,13 @@ simc_do_write(simmsgtype_t msgtype,
               u_int16_t bdf, u_int8_t bar,
               u_int64_t addr, u_int8_t size, u_int64_t val)
 {
-    int s = simclient.s;
+    simclient_t *sc = &simclient;
+    int s = sc->s;
 
     if (!simclient.open) return -EBADF;
 
-    return sim_do_write(s, msgtype, bdf, bar, addr, size, val);
+    return sim_do_write(s, msgtype, bdf, bar, addr, size, val,
+                        sc->handler, sc->sync_writes);
 }
 
 static int
@@ -77,6 +80,7 @@ simc_open(const char *myname, const char *addrstr, msg_handler_t handler)
     int s = simc_socket(addrstr);
     if (s >= 0) {
         simclient.open = 1;
+        simclient.sync_writes = 1;
         simclient.s = s;
         simclient.handler = handler;
         strncpy(m.u.init.name, myname, sizeof(m.u.init.name) - 1);
@@ -159,6 +163,24 @@ simc_readres(u_int16_t bdf,
 }
 
 int
+simc_writeres(u_int16_t bdf,
+              u_int64_t addr, u_int32_t size, u_int8_t error)
+{
+    int s = simclient.s;
+    simmsg_t m = {
+        .msgtype = SIMMSG_WRRESP,
+        .u.writeres.bdf = bdf,
+        .u.writeres.addr = addr,
+        .u.writeres.size = size,
+        .u.writeres.error = error,
+    };
+
+    if (!simclient.open) return -EBADF;
+
+    return sim_writen(s, &m, sizeof(m));
+}
+
+int
 simc_readn(void *buf, size_t size)
 {
     if (!simclient.open) return -EBADF;
@@ -190,4 +212,11 @@ simc_recv_and_handle(void)
         }
     }
     return n;
+}
+
+int
+simc_sync_ack(void)
+{
+    if (!simclient.open) return -EBADF;
+    return sim_sync_ack(simclient.s, simclient.handler);
 }

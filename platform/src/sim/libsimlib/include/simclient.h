@@ -26,10 +26,13 @@ int simc_iowr(u_int16_t bdf, u_int8_t bar,
 
 int simc_readres(u_int16_t bdf,
                  u_int64_t addr, u_int32_t size, void *buf, u_int8_t error);
+int simc_writeres(u_int16_t bdf,
+                  u_int64_t addr, u_int32_t size, u_int8_t error);
 
 int simc_recv(simmsg_t *m);
 int simc_recv_and_handle(void);
 int simc_readn(void *buf, size_t size);
 void simc_discard(size_t size);
+int simc_sync_ack(void);
 
 #endif /* __SIMCLIENT_H__ */

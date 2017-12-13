@@ -70,6 +70,11 @@ msg_handler(int fd, simmsg_t *m)
     case SIMMSG_MEMWR:
         process_memwr(fd, m);
         break;
+    case SIMMSG_WRRESP:
+        break;
+    case SIMMSG_SYNC_REQ:
+        simc_sync_ack();
+        break;
     default:
         fprintf(stderr, "unknown msg type %d\n", m->msgtype);
         break;
@@ -258,7 +263,7 @@ process_cmdline(void)
                 fprintf(stderr, "%s: unknown command\n", av[0]);
             }
         }
-        fputs("simclient: ", stdout); fflush(stdout);
+        fputs("simclient> ", stdout); fflush(stdout);
     } else {
         exit(0);
     }

@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <assert.h>
 #include <sys/types.h>
 
 #include "pciehsvc.h"
@@ -28,6 +29,7 @@ typedef struct simctx_s {
 
 static simctx_t simctx;
 static int verbose_flag;
+static int errors_are_fatal = 1;
 
 void
 verbose(const char *fmt, ...)
@@ -88,6 +90,10 @@ static void
 sim_server_error(const char *fmt, va_list ap)
 {
     vfprintf(stderr, fmt, ap);
+
+    if (errors_are_fatal) {
+        assert(0);
+    }
 }
 
 static int
@@ -140,6 +146,28 @@ static simdev_api_t sim_server_api = {
 static void
 zmq_sim_recv(int clientfd, void *arg)
 {
+    fd_set rfds;
+    struct timeval tv;
+    int r;
+
+    FD_ZERO(&rfds);
+    FD_SET(simctx.clientfd, &rfds);
+
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+
+    /*
+     * zmq_poll noticed there was some activity on clientfd
+     * but the pending message maybe have been read while
+     * service some other zmq msg so the "read notice" might
+     * now be stale info.  Check again here to see if there is
+     * really something for us to read/handle now.
+     */
+    r = select(clientfd + 1, &rfds, NULL, NULL, &tv);
+    if (r < 0 || !FD_ISSET(simctx.clientfd, &rfds)) {
+        return;
+    }
+
     if (sims_client_recv_and_handle(simctx.clientfd) == 0) {
         verbose("lost connection to client\n");
         zmq_wait_remove_fd(simctx.clientfd);
@@ -170,13 +198,16 @@ sim_server_init(int argc, char *argv[])
         exit(1);
     }
     optind = 0;
-    while ((opt = getopt(argc, argv, "d:v")) != -1) {
+    while ((opt = getopt(argc, argv, "d:ev")) != -1) {
         switch (opt) {
         case 'd':
             if (simdev_add_dev(optarg) < 0) {
                 fprintf(stderr, "simdev_add_dev %s failed\n", optarg);
                 exit(1);
             }
+            break;
+        case 'e':
+            errors_are_fatal = 0;
             break;
         case 'v':
             verbose_flag = 1;
@@ -221,4 +252,16 @@ sim_server_write_clientmem(const u_int64_t addr,
     u_int16_t bdf = 0x0300; /* XXX */
 
     return sims_memwr(s, bdf, addr, len, buf);
+}
+
+int
+sim_server_sync_request() {
+    int s = simctx.clientfd;
+    return sims_sync_request(s);
+}
+
+int
+sim_server_sync_release() {
+    int s = simctx.clientfd;
+    return sims_sync_release(s);
 }

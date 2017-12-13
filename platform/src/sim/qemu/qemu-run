@@ -17,8 +17,8 @@ export LD_LIBRARY_PATH=${N}
 
 QEMU_VERSION=2.9.0
 QEMU_DIR=$SCRIPT_PATH/qemu-$QEMU_VERSION
-$QEMU_DIR/x86_64-softmmu/qemu-system-x86_64 \
-    -machine q35 -m 256 -vnc :11 \
+$GDB $QEMU_DIR/x86_64-softmmu/qemu-system-x86_64 \
+    -machine q35 -smp 4 -nographic -m 256 \
     -serial telnet::1034,server,nowait \
     -monitor telnet::1035,server,nowait \
     -netdev user,id=net0,hostfwd=tcp::1037-:22 \
