@@ -45,6 +45,8 @@ p4plus_app_classic_nic_no_vlan_strip:
 
 .align
 p4plus_app_tcp_proxy:
+  sne         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
   smeqb       c1, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   balcf       r7, [c1], f_p4plus_cpu_pkt
   add         r6, r0, r0 // pass packet start offset = 0
@@ -77,7 +79,9 @@ p4plus_app_tcp_proxy:
 
 .align
 p4plus_app_cpu:
-  phvwr       p.p4_to_p4plus_cpu_table0_valid, TRUE
+  sne         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+  phvwr.!c1   p.p4_to_p4plus_cpu_table0_valid, TRUE
   add         r6, r0, r0 // pass packet start offset = 0
 
 p4plus_app_cpu_raw_redir_common:
@@ -126,7 +130,9 @@ p4plus_app_cpu_common:
 
 .align
 p4plus_app_ipsec:
-  phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
+  sne         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+  phvwr.!c1   p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
   add         r4, k.flow_lkp_metadata_lkp_dport,k.flow_lkp_metadata_lkp_sport, 16
@@ -151,7 +157,6 @@ p4plus_app_ipsec:
   add.e       r3, r6, r1
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r3
 
-.align
 p4plus_app_ipsec_ipv6:
   phvwri      p.v6_generic_valid, 0
   seq         c3, k.udp_valid, TRUE
@@ -163,12 +168,15 @@ p4plus_app_ipsec_ipv6:
 
 .align
 p4plus_app_raw_redir:
-  b           p4plus_app_cpu_raw_redir_common
+  sne         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+  b.!c1       p4plus_app_cpu_raw_redir_common
   add         r6, r0, P4PLUS_RAW_REDIR_HDR_SZ // pass packet start offset
 
 .align
-.assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4plus_app_rdma:
+  sne         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
   seq         c1, k.ipv4_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_roce_ecn, k.ipv4_diffserv[7:6]
   seq         c1, k.ipv6_valid, TRUE
@@ -185,7 +193,9 @@ p4plus_app_rdma:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4plus_app_p4pt:
-  phvwr       p.p4_to_p4plus_p4pt_valid, TRUE
+  sne         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+  phvwr.!c1   p.p4_to_p4plus_p4pt_valid, TRUE
   phvwr       p.p4_to_p4plus_p4pt_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.p4_to_p4plus_p4pt_p4pt_idx, k.flow_info_metadata_flow_index
 

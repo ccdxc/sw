@@ -21,6 +21,7 @@ esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc:
     phvwr p.esp_header_spi, d.spi
     phvwr p.esp_header_seqno, d.esn_lo
     phvwr p.esp_header_iv, d.iv
+    smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
 
 esp_ipv4_tunnel_h2n_dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
@@ -35,7 +36,8 @@ esp_ipv4_tunnel_h2n_dma_cmd_fill_esp_hdr:
     add r1, r1, d.iv_size
     phvwr p.dma_cmd_fill_esp_hdr_dma_cmd_addr, r1
     phvwri p.dma_cmd_fill_esp_hdr_dma_cmd_phv_start_addr, IPSEC_ESP_HDR_PHV_START
-    phvwri p.dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr, IPSEC_ESP_HDR_PHV_END
+    phvwri.!c3 p.dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr, IPSEC_ESP_HDR_PHV_END
+    phvwri.c3 p.dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr, IPSEC_ESP2_HDR_PHV_END
   
 esp_ipv4_tunnel_h2n_dma_cmd_to_write_input_desc_aol:
     phvwri p.dma_cmd_in_desc_aol_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM

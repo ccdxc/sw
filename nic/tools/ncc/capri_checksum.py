@@ -548,6 +548,8 @@ class Checksum:
                         for parsestate in parser.get_ext_cstates(hdr):
                             if calfldobj not in parsestate.verify_cal_field_objs:
                                 parsestate.verify_cal_field_objs.append(calfldobj)
+                                if calfldobj.CsumPayloadHdrTypeGet() == 'udp':
+                                    parsestate.enable_udp_zero_csum_error = 1
 
 
 
@@ -1180,7 +1182,8 @@ class Checksum:
         log_str += ParserCalField._build_csum_instr(sram, calfldobj, csum_instr,
                                           1, csum_unit,csum_profile,\
                                           hdr_ohi_id, len_ohi_id,\
-                                          phdr_profile, phdr_ohi_id)
+                                          phdr_profile, phdr_ohi_id, \
+                                          parse_state.enable_udp_zero_csum_error)
         csum_instr += 1
         calfldobj.ParserCsumObjAddLog(log_str)
         assert(csum_instr < len(sram['csum_inst'])), pdb.set_trace()
@@ -1355,7 +1358,7 @@ class Checksum:
         start_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiStartSelGet()
         log_str += ParserGsoCalField._build_csum_instr(sram, calfldobj, csum_instr,
                                                        1, csum_unit,csum_profile,\
-                                                       start_ohi_id)
+                                                       start_ohi_id, 0)
         csum_instr += 1
         calfldobj.GsoCsumObjAddLog(log_str)
         assert(csum_instr < len(sram['csum_inst'])), pdb.set_trace()

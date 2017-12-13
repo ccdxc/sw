@@ -48,6 +48,7 @@ header_type esp_header_t {
         spi : 32;
         seqno : 32;
         iv    : 64;
+        iv2   : 64;
     }
 }
 

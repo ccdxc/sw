@@ -11,6 +11,7 @@ struct phv_ p;
     .align
 
 esp_ipv4_tunnel_h2n_read_random_number_from_barco:
-    phvwr p.esp_header_iv, d.random_number
+    phvwr p.esp_header_iv, d.random_number1
+    phvwr p.esp_header_iv2, d.random_number2
     nop.e
     nop

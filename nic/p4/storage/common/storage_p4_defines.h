@@ -197,7 +197,7 @@ header_type roce_cq_cb_t {
     pid		: 16;	// PID value to be compared with that from host
     p_ndx	: 16;	// Producer Index
     c_ndx	: 16;	// Consumer Index
-    base_addr	: 32;	// Base address of queue entries
+    base_addr	: 64;	// Base address of queue entries
     page_size	: 5;	// Size of each page (power of 2 of this value)
     entry_size	: 5;	// Size of each WQE (power of 2 of this value)
     num_entries	: 5;	// Number of WQE (power of 2 of this value)
@@ -211,7 +211,7 @@ header_type roce_cq_cb_t {
     rcq_lif	: 11;	// ROCE's CQ LIF number
     rcq_qtype	: 3;	// ROCE's CQ LIF type (within the LIF)
     rcq_qid	: 24;	// ROCE's CQ queue number (within the LIF)
-    pad		: 140;	// Align to 64 bytes
+    pad		: 108;	// Align to 64 bytes
   }
 }
 
@@ -230,13 +230,13 @@ header_type roce_rq_cb_t {
     p_ndx	: 16;	// Producer Index
     c_ndx	: 16;	// Consumer Index
     extra_rings	: 160;	// Additional rings used by ROCE RQ
-    base_addr	: 32;	// Base address of queue entries
+    base_addr	: 64;	// Base address of queue entries
     rsvd0	: 72;	// Data used be ROCE internally
     pmtu	: 5;	// PMTU size (power of 2 of this value)
     page_size	: 5;	// Size of each page (power of 2 of this value)
     entry_size	: 5;	// Size of each WQE (power of 2 of this value)
     num_entries	: 5;	// Number of WQE (power of 2 of this value)
-    pad		: 132;	// Align to 64 bytes
+    pad		: 100;	// Align to 64 bytes
   }
 }
 
@@ -256,7 +256,7 @@ header_type pvm_roce_sq_cb_t {
     pid		: 16;	// PID value to be compared with that from host
     p_ndx	: 16;	// Producer Index
     c_ndx	: 16;	// Consumer Index
-    base_addr	: 32;	// Base address of queue entries
+    base_addr	: 64;	// Base address of queue entries
     page_size	: 5;	// Size of each page (power of 2 of this value)
     entry_size	: 5;	// Size of each WQE (power of 2 of this value)
     num_entries	: 5;	// Number of WQE (power of 2 of this value)
@@ -271,7 +271,7 @@ header_type pvm_roce_sq_cb_t {
     rsq_lif	: 11;	// PVM's R2N LIF number
     rsq_qtype	: 3;	// PVM's R2N LIF type (within the LIF)
     rsq_qid	: 24;	// PVM's R2N queue number (within the LIF)
-    pad		: 182;	// Align to 64 bytes
+    pad		: 150;	// Align to 64 bytes
   }
 }
 
@@ -908,12 +908,12 @@ header_type storage_pad0_t {
 }
 header_type storage_pad1_t {
   fields {
-    pad		: 168;
+    pad		: 104;
   }
 }
 
 // Capri doorbell address, data definitions and macros to manipulate them
-header_type storage_doorbell_addr_t {
+header_type storage_capri_addr_t {
   fields {
     addr	: 64;	// 64 bit address
   }

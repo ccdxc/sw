@@ -130,7 +130,7 @@ def TestCaseVerify(tc):
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % \
              (rnmdr.ringentries[rnmdr.pi].handle,
               serq_cur.ringentries[tlscb.serq_pi].handle))
-        #return False
+        return False
     
     # 6. Verify PI for RNMPR got incremented by 1
     if (rnmpr_cur.pi != rnmpr.pi+1):

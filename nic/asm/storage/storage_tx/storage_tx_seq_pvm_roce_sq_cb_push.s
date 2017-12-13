@@ -27,10 +27,6 @@ storage_tx_seq_pvm_roce_sq_cb_push_start:
 
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_m2m_2)
-   // HACK: This is because RDMA base address is only 32 bits and we are 
-   //       passing a host based queue here
-   // TODO: Fix this and remove hack after we resolve this with RDMA folks
-   phvwr	p.dma_m2m_2_dma_cmd_host_addr, 1
    
    // Push the entry to the queue (this increments p_ndx and writes to table)
    QUEUE_PUSH(d.p_ndx, d.num_entries)

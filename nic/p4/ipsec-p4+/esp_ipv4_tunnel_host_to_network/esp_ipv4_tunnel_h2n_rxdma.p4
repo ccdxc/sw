@@ -173,8 +173,8 @@ metadata barco_descriptor_t barco_desc_out;
 
 @pragma dont_trim
 metadata doorbell_data_t db_data;
-@pragma dont_trim
-metadata doorbell_data_pad_t db_data_pad;
+//@pragma dont_trim
+//metadata doorbell_data_pad_t db_data_pad;
 
 //dma commands
 @pragma dont_trim
@@ -275,9 +275,10 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
 }
 
 //stage 3
-action read_random_number_from_barco(random_number)
+action read_random_number_from_barco(random_number1, random_number2)
 {
-    modify_field( ipsec_random_number_scratch.random_number1, random_number);
+    modify_field( ipsec_random_number_scratch.random_number1, random_number1);
+    modify_field( ipsec_random_number_scratch.random_number2, random_number2);
 }
 
 //stage 3

@@ -31,23 +31,19 @@ tcp_rx_write_l7q_stage_start:
 
 dma_cmd_l7_descr:
     /* Set the DMA_WRITE CMD for descr */
-    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(dma_cmd7_dma_cmd_type) / 16)
     add         r5, k.{s5_t2_s2s_l7_descr_sbit0_ebit15...s5_t2_s2s_l7_descr_sbit16_ebit31}, r0
     addi        r1, r5, NIC_DESC_ENTRY_0_OFFSET
 
-    phvwr       p.aol_A0, k.{to_s5_page}.dx
+    phvwr       p.aol_A1, k.{to_s5_page}.dx
     addi        r3, r0, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
-    phvwr       p.aol_O0, r3.wx
-    phvwr       p.aol_L0, k.{to_s5_payload_len}.wx
-    phvwr       p.aol_A1, r0
-    phvwr       p.aol_O1, r0
-    phvwr       p.aol_L1, r0
+    phvwr       p.aol_O1, r3.wx
+    phvwr       p.aol_L1, k.{to_s5_payload_len}.wx
     phvwr       p.aol_A2, r0
     phvwr       p.aol_O2, r0
     phvwr       p.aol_L2, r0
     phvwr       p.aol_next_addr, r0
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd7_dma_cmd, r1, aol_A0, aol_next_pkt)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd7_dma_cmd, r1, aol_A1, aol_next_pkt)
     addi        r7, r0, 1
     /*
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ

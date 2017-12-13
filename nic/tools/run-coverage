@@ -107,7 +107,15 @@ if [ $OUT -ne 0 ];then
    exit 1
 fi
 set -o pipefail
-$NIC_DIR/tools/gcov/run.py $IGNORE_ERRORS --config $config_file --max-job-run-time $max_job_run_time 2>&1 | tee $NIC_DIR/coverage.log
+
+#Install Virtual Env if not installed before.
+pip3 install --user pipenv
+#Setup path for Pipenv
+export PATH=$PATH:~/.local/bin/
+#Install Pandas 
+pipenv install pandas
+
+pipenv run python3 $NIC_DIR/tools/gcov/run.py $IGNORE_ERRORS --config $config_file --max-job-run-time $max_job_run_time 2>&1 | tee $NIC_DIR/coverage.log
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Coverage run failed."

@@ -35,26 +35,43 @@ storage_tx_roce_cq_handler_start:
    phvwri	p.r2n_wqe_opcode, R2N_OPCODE_PROCESS_WQE
    phvwri	p.storage_kivec1_roce_cq_new_cmd, 1
    
-   // Overwrite the PRP1 to point to the data offset
-   // TODO: Based on the data size, need to fix up PRP list
+   // Store the data buffer pointer in r5 and the R2N buffer pointer in r6
    add		r6, r0, d.wrid_msn
    subi		r6, r6, R2N_BUF_NVME_BE_CMD_OFFSET
-   addi		r7, r6, R2N_BUF_DATA_OFFSET
-   phvwr	p.nvme_cmd_dptr1, r7.dx
+   addi		r5, r6, R2N_BUF_DATA_OFFSET
+
+   // Overwrite the PRP1 to point to the data buffer
+   // TODO: Based on the data size, need to fix up this pointer to PRP list
+   phvwr	p.nvme_cmd_dptr1, r5.dx
    addi		r7, r6, R2N_BUF_NVME_CMD_PRP1_OFFSET
    DMA_PHV2MEM_SETUP(nvme_cmd_dptr1, nvme_cmd_dptr1, r7, dma_p2m_2)
 
+   // Overwrite the RDMA write request to point to the data buffer
+
+   // Step 1: Write the address to PHV
+   phvwr	p.r2n_data_buff_addr_addr, r5
+
+   // Step 2: Setup the DMA for setting WRID
+   addi		r7, r6, R2N_BUF_WRITE_REQ_WRID_OFFSET
+   DMA_PHV2MEM_SETUP(r2n_data_buff_addr_addr, r2n_data_buff_addr_addr, r7, dma_p2m_3)
+
+   // Step 3: Setup the DMA for setting write request pointer in the SGE
+   // TODO:   Enable this in P4+ in production code.  The reason it can't be done in
+   //         DOL environment is because the P4+ code does not know the VA of the host. 
+   //         In production code, this buffer will be setup with the VA:PA identity 
+   //         mapping of the HBM buffer.
+   addi		r7, r6, R2N_BUF_WRITE_REQ_SGE0_OFFSET
+   //DMA_PHV2MEM_SETUP(r2n_data_buff_addr_addr, r2n_data_buff_addr_addr, r7, dma_p2m_4)
+   
    // Load the table for the next stage
    b		tbl_load
 
 check_xfer:
    // If (operation type is write or write_imm) and status is success,
    // then transfer is done
-   sne		c1, d.op_type, ROCE_OP_TYPE_WRITE
-   sne		c2, d.op_type, ROCE_OP_TYPE_WRITE_IMM
-   bcf		[c1 & c2], exit
    sne		c1, d.status, ROCE_CQ_STATUS_SUCCESS
    bcf		[c1], exit
+   nop
    
    // Store the ROCE message sequence number in the PHV so that it be
    // used to reclaim the SQ entries

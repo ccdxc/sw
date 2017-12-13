@@ -154,6 +154,8 @@ action check_parser_errors() {
                              (1 << DROP_PARSER_LEN_ERR));
                 drop_packet();
             }
+            modify_field(control_metadata.checksum_results,
+                         capri_intrinsic.csum_err);
         } else {
             if ((capri_p4_intrinsic.len_err != 0) and
                 ((p4plus_to_p4.flags &

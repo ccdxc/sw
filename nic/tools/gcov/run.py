@@ -32,6 +32,8 @@ FNULL = open(os.devnull, 'w')
 
 instruction_summary_page_name = "instructions_summary.html"
 
+feature_summary_page_name = "feature_summary.html"
+
 def get_obj_dirs(obj_dir_type, top_dir, relative_path):
 
     obj_dir_map_func = {"hierarchical"   : lambda top_dir, relative_path : [top_dir + "/" + "/".join(relative_path.split("/")[1:]) + "/"],
@@ -487,7 +489,11 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
 
     instructions_summary_page = env.p4_data_output_path + "/" + instruction_summary_page_name
     line = "<br><br><a href=%s>%s</a></br> </br>" % (os.path.relpath(instructions_summary_page, os.getcwd()),
-                                                "ASM Instructions Statistics")
+                                                "ASM Detailed Instructions Statistics")
+    op_file.write(line)
+    feature_summary_page = env.p4_data_output_path + "/" + feature_summary_page_name
+    line = "<a href=%s>%s</a>" % (os.path.relpath(feature_summary_page, os.getcwd()),
+                                                "ASM Feature Instructions Statistics")
     op_file.write(line)
     
     trailer= """</body>
@@ -517,6 +523,7 @@ if __name__ == '__main__':
                                     env.asm_out_final, env.p4_data_output_path)
             asm_data_process.generate_pipeline_summary_page(env.p4_data_output_path,
                                                              instruction_summary_page_name)
-
+            asm_data_process.generate_feature_sub_stats(env.p4_data_output_path,
+                                                        feature_summary_page_name)
     generate_coverage_summary_page(env.coverage_output_path)
 

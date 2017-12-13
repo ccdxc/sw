@@ -59,7 +59,6 @@ packets:
                 len     : 164
                 id      : 0
                 tos     : 0
-                chksum  : 0
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
                 iv      : callback://ipsec/ipsec/GetIv

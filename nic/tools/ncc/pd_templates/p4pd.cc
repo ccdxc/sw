@@ -3008,7 +3008,53 @@ ${table}_hwkey_unbuild(uint32_t tableid,
  * Return Value: 
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
-//::        if pddict['tables'][table]['type'] == 'Ternary':
+//::        if pddict['tables'][table]['type'] == 'Ternary' and pddict['tables'][table]['otcam']:
+static p4pd_error_t
+${table}_entry_read(uint32_t tableid,
+                    uint32_t index,
+                    ${table}_swkey_t *swkey, 
+                    ${table}_swkey_mask_t *swkey_mask,
+                    ${table}_actiondata *actiondata)
+{
+    uint8_t  hwentry_x[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint8_t  hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint16_t hwentry_bit_len;
+
+    capri_tcam_table_hw_entry_read(tableid, index, hwentry_x, hwentry_y,
+                                   &hwentry_bit_len);
+    if (!hwentry_bit_len) {
+        return (P4PD_FAIL);
+    }
+    int pad = (hwentry_bit_len % 16) ? (16 - (hwentry_bit_len % 16)) : 0;
+    p4pd_swizzle_bytes(hwentry_x, hwentry_bit_len + pad);
+    p4pd_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
+    ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_bit_len,
+                                  swkey, swkey_mask);
+    capri_table_hw_entry_read(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, hwentry, &hwentry_bit_len);
+    if (!hwentry_bit_len) {
+        return (P4PD_SUCCESS);
+    }
+    pad = (hwentry_bit_len % 16) ? (16 - (hwentry_bit_len % 16)) : 0;
+    p4pd_swizzle_bytes(hwentry, hwentry_bit_len+pad);
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                action_pc_added = True
+//::            else:
+//::                action_pc_added = False
+//::            #endif
+//::            if action_pc_added:
+    uint8_t actionpc = hwentry[0]; // First byte is always action-pc
+    actiondata->actionid = capri_get_action_id(tableid, actionpc);
+    int adatabyte = 1;
+//::            else:
+    actiondata->actionid = 0;
+    int adatabyte = 0;
+//::            #endif
+    ${table}_unpack_action_data(tableid, actiondata->actionid,
+                                hwentry + adatabyte, actiondata);
+    return (P4PD_SUCCESS);
+}
+//::        elif pddict['tables'][table]['type'] == 'Ternary':
 static p4pd_error_t
 ${table}_entry_read(uint32_t tableid,
                     uint32_t index,
