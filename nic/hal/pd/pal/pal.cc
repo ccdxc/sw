@@ -10,30 +10,6 @@ pal_init_cfg (bool sim)
 {
     bzero(&gl_pal_info, sizeof(gl_pal_info));
     gl_pal_info.sim = sim;
-    gl_pal_info.baseaddr = NULL;
-    gl_pal_info.devfd = -1;
-    return PAL_RET_OK;
-}
-
-static pal_ret_t
-pal_mmap_device ()
-{
-    gl_pal_info.devfd = open("/dev/mem", O_RDWR|O_SYNC);
-    if (gl_pal_info.devfd < 0) {
-        HAL_TRACE_ERR("Failed to open /dev/mem");
-        return PAL_RET_NOK;
-    }
-    
-    // Non HBM Region to mmap()
-    // 0x01000000 to 0x6fffffff
-    gl_pal_info.baseaddr = mmap((void *)0x01000000, 0x6effffff,
-                                PROT_READ|PROT_WRITE,
-                                MAP_SHARED, gl_pal_info.devfd, 0);
-    if (gl_pal_info.baseaddr == NULL) {
-        HAL_TRACE_ERR("Failed to mmap /dev/mem");
-        return PAL_RET_NOK;
-    }
-
     return PAL_RET_OK;
 }
 
@@ -47,7 +23,7 @@ pal_init (bool sim)
         return pal_init_sim();
     } else {
         HAL_TRACE_DEBUG("Initializing PAL");
-        return pal_mmap_device();
+        return pal_hw_init();
     }
 
     return PAL_RET_OK;

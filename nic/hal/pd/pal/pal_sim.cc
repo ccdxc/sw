@@ -119,7 +119,7 @@ pal_sim_connect ()
 }
 
 pal_ret_t
-pal_init_rwvectors ()
+pal_sim_init_rwvectors ()
 {
     gl_pal_info.rwvecs.reg_read = pal_sim_reg_read;
     gl_pal_info.rwvecs.reg_write = pal_sim_reg_write;
@@ -149,7 +149,7 @@ pal_init_sim ()
     rv = pal_sim_dlopen();
     HAL_ASSERT(IS_PAL_API_SUCCESS(rv));
 
-    rv = pal_init_rwvectors();
+    rv = pal_sim_init_rwvectors();
     HAL_ASSERT(IS_PAL_API_SUCCESS(rv));
 
     rv = pal_sim_connect();
