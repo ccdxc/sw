@@ -455,6 +455,7 @@ class capri_parse_state:
                                                 #l4_verify_len value
         self.verify_cal_field_objs = [] # List of objects (At most 2 supported
                                         # in a parse state)
+        self.enable_udp_zero_csum_error = 0
         self.phdr_offset_ohi_id = -1    # In case of phdr capture IP hdr offset
                                         # start in this ohi_sel.
         self.totalLen_ohi_id = -1       # used to store ohi# where

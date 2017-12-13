@@ -541,7 +541,7 @@ class ParserCalField:
     @staticmethod
     def _build_csum_instr(sram, calfldobj, csum_instr, enable, csum_unit,\
                           csum_profile, hdr_ohi_id, len_ohi_id, phdr_profile, \
-                          phdr_ohi_id):
+                          phdr_ohi_id, enable_csum_zero_error):
 
         sram['csum_inst'][csum_instr]['en']['value']        = str(enable)
         sram['csum_inst'][csum_instr]['unit_sel']['value']  = str(csum_unit)
@@ -558,11 +558,7 @@ class ParserCalField:
         else:
             sram['csum_inst'][csum_instr]['phdr_en']['value'] = str(phdr_en)
 
-        # !!! TODO Forcing all checksum with zero value to ignore checksum
-        # verification. Will suppressing work inner packet too ? -- 
-        # Is it needed to treat inner packet checksum not to 
-        # ignore checksum ?? !!!!
-        sram['csum_inst'][csum_instr]['dis_zero']['value'] = str(0)
+        sram['csum_inst'][csum_instr]['dis_zero']['value'] = str(enable_csum_zero_error)
 
         log_str = ''
         log_str += 'Csum Instruction\n'
@@ -575,6 +571,7 @@ class ParserCalField:
         log_str += '        phdr_en         = %d\n' % (phdr_en)
         log_str += '        phdr_sel        = %d\n' % (phdr_profile)
         log_str += '        phdr_ohiID_sel  = %d\n' % (phdr_ohi_id)
+        log_str += '        dis_zero        = %d\n' % (enable_csum_zero_error)
         log_str += '\n'
 
         return log_str
