@@ -45,6 +45,8 @@ int sim_server_read_clientmem(const u_int64_t addr,
 int sim_server_write_clientmem(const u_int64_t addr,
                                const void *buf, 
                                const size_t len);
+int sim_server_sync_request(void);
+int sim_server_sync_release(void);
 
 /* exported api's from model_server to sim_server */
 int
@@ -129,7 +131,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             env->step_network_pkt(pkt_vector, buff->port);
             buff->type = BUFF_TYPE_STATUS;
             buff->status = 0;
-    	    std::cout << "step_network_pkt port: " << port << " size: " << buff->size << std::endl;
+            std::cout << "step_network_pkt port: " << port << " size: " << buff->size << std::endl;
         }
             break;
         case BUFF_TYPE_GET_NEXT_PKT:
@@ -139,7 +141,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint32_t cos;
             /* Get output packet from the model */
             if (!env->get_next_pkt(out_pkt, port, cos)) {
-    	        std::cout << "ERROR: no packet" << std::endl;
+                //std::cout << "ERROR: no packet" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -147,7 +149,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 buff->port = port;
                 buff->cos = cos;
                 memcpy(buff->data, out_pkt.data(), out_pkt.size());
-    	        std::cout << "get_next_pkt port: " << port << " cos: " << cos << " size: " << buff->size << std::endl;
+                std::cout << "get_next_pkt port: " << port << " cos: " << cos << " size: " << buff->size << std::endl;
             }
         }
             break;
@@ -159,7 +161,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             bool ret = env->read_reg(addr, data);
             ret = true;
             if (!ret) {
-    	        std::cout << "ERROR: Reading register" << std::endl;
+                std::cout << "ERROR: Reading register" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -177,7 +179,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             bool ret = env->write_reg(addr, data);
             ret = true;
             if (!ret) {
-    	        std::cout << "ERROR: Writing register" << std::endl;
+                std::cout << "ERROR: Writing register" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -193,7 +195,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             bool ret = env->read_mem(addr, buff->data, buff->size);
             ret = true;
             if ((buff->size > MODEL_ZMQ_BUFF_SIZE) || !ret) {
-    	        std::cout << "ERROR: Reading memory" << std::endl;
+                std::cout << "ERROR: Reading memory" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -207,7 +209,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             bool ret = env->write_mem(addr, buff->data, buff->size);
             ret = true;
             if ((buff->size > MODEL_ZMQ_BUFF_SIZE) || !ret) {
-    	        std::cout << "ERROR: Writing memory" << std::endl;
+                std::cout << "ERROR: Writing memory" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -225,7 +227,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             env->step_doorbell(addr, data);
             buff->type = BUFF_TYPE_STATUS;
             buff->status = 0;
-    	    std::cout << "step_doorbell addr: " << std::hex << addr << 
+            std::cout << "step_doorbell addr: " << std::hex << addr << 
                          " data: " << std::hex << data << std::endl;
         }
             break;
@@ -252,7 +254,9 @@ zmq_model_recv(void *socket, void *arg)
 
     zmq_recv (socket, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
     buff = (buffer_hdr_t *) recv_buff;
+    sim_server_sync_request();
     process_buff(buff, g_env);
+    sim_server_sync_release();
     zmq_send (socket, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
 }
 

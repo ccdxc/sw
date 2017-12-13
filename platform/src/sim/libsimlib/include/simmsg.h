@@ -15,6 +15,9 @@ typedef enum simmsgtype_e {
     SIMMSG_IOWR,
     SIMMSG_RDRESP,
     SIMMSG_WRRESP,
+    SIMMSG_SYNC_REQ,
+    SIMMSG_SYNC_ACK,
+    SIMMSG_SYNC_REL,
 } simmsgtype_t;
 
 #define PACKED __attribute__((packed))
@@ -22,7 +25,7 @@ typedef enum simmsgtype_e {
 typedef struct simmsg_s {
     u_int16_t magic;
     u_int16_t msgtype;
-    u_int32_t _pad;
+    struct simmsg_s *link;
     union {
         struct {
             char name[32];
@@ -59,7 +62,6 @@ typedef struct simmsg_s {
             u_int8_t  bar;
             u_int64_t addr;
             u_int32_t size;
-            u_int64_t val;
             u_int8_t  error;
         } PACKED writeres;
         struct {

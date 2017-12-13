@@ -73,9 +73,21 @@ static char *
 socket_un_default_path(void)
 {
     static char path[256];
-    char *user;
+    char *env, *user;
 
-    user = getenv("USER");
+    env = getenv("SIMSOCK_PATH");
+    if (env != NULL) {
+        strncpy(path, env, sizeof(path));
+        return path;
+    }
+
+    user = NULL;
+    if (user == NULL) {
+        user = getenv("SUDO_USER");
+    }
+    if (user == NULL) {
+        user = getenv("USER");
+    }
     snprintf(path, sizeof(path), "/tmp/simsock-%s", user);
     return path;
 }

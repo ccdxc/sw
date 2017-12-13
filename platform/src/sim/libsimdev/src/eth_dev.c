@@ -57,6 +57,8 @@ typedef struct qstate_app_eth {
     uint64_t    ring_base;
     uint16_t    ring_size;
     uint64_t    cq_ring_base;
+    uint32_t    intr_assert_addr;
+    uint8_t     color;
 } __attribute__((packed)) qstate_app_eth_t;
 
 typedef qstate_app_eth_t qstate_app_ethtx_t;
@@ -292,15 +294,23 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
         return;
     }
 
-    memset(&qs, 0, sizeof(qs));
+    if (eth_read_txqstate(sd, cmd->index, &qs) < 0) {
+        simdev_error("devcmd_txq_init: read_qstate %d failed\n", cmd->index);
+        comp->status = 1;
+        return;
+    }
+
     qs.host = 2;
     qs.total = 2;
     qs.pid = cmd->pid;
+    memset(&qs.p_index0, 0, 32);
     qsethtx = (qstate_app_ethtx_t *)qs.app_data;
-    qsethtx->ring_base = cmd->ring_base;
+    qsethtx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethtx->ring_size = cmd->ring_size;
-    qsethtx->cq_ring_base = roundup(cmd->ring_base + (1<<cmd->ring_size),4096);
+    qsethtx->cq_ring_base = roundup(cmd->ring_base + (1 << cmd->ring_size), 4096);
     qsethtx->enable = cmd->E;
+    qsethtx->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
+    qsethtx->color = 0xff;
 
     if (eth_write_txqstate(sd, cmd->index, &qs) < 0) {
         simdev_error("devcmd_txq_init: write_txqstate %d failed\n",
@@ -344,15 +354,23 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
         return;
     }
 
-    memset(&qs, 0, sizeof(qs));
+    if (eth_read_rxqstate(sd, cmd->index, &qs) < 0) {
+        simdev_error("devcmd_rxq_init: read_qstate %d failed\n", cmd->index);
+        comp->status = 1;
+        return;
+    }
+
     qs.host = 2;
     qs.total = 2;
     qs.pid = cmd->pid;
+    memset(&qs.p_index0, 0, 32);
     qsethrx = (qstate_app_ethrx_t *)qs.app_data;
-    qsethrx->ring_base = cmd->ring_base;
+    qsethrx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethrx->ring_size = cmd->ring_size;
-    qsethrx->cq_ring_base = roundup(cmd->ring_base + (1<<cmd->ring_size),4096);
+    qsethrx->cq_ring_base = roundup(cmd->ring_base + (1 << cmd->ring_size), 4096);
     qsethrx->enable = 1;
+    qsethrx->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
+    qsethrx->color = 0xff;
 
     if (eth_write_rxqstate(sd, cmd->index, &qs) < 0) {
         simdev_error("devcmd_rxq_init: write_rxqstate %d failed\n",
@@ -442,6 +460,49 @@ devcmd_station_mac_addr_get(struct admin_cmd *acmd, struct admin_comp *acomp)
 }
 
 static void
+devcmd_mtu_set(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    struct mtu_set_cmd *cmd = (void *)acmd;
+#if 0
+    mtu_set_comp *comp = (void *)acomp;
+#endif
+
+    simdev_log("devcmd_mtu_set: mtu %d\n", cmd->mtu);
+}
+
+static void
+devcmd_rx_mode_set(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    struct rx_mode_set_cmd *cmd = (void *)acmd;
+#if 0
+    rx_mode_set_comp *comp = (void *)acomp;
+#endif
+    const u_int16_t m = cmd->rx_mode;
+
+    simdev_log("devcmd_rx_mode_set: rx_mode 0x%x %c%c%c%c%c\n",
+               m,
+               m & RX_MODE_F_UNICAST   ? 'u': '-',
+               m & RX_MODE_F_MULTICAST ? 'm': '-',
+               m & RX_MODE_F_BROADCAST ? 'b': '-',
+               m & RX_MODE_F_PROMISC   ? 'p': '-',
+               m & RX_MODE_F_ALLMULTI  ? 'a': '-');
+}
+
+static void
+devcmd_rx_filter_add(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    simdev_log("devcmd_rx_filter_add:\n");
+    /* XXX */
+}
+
+static void
+devcmd_rx_filter_del(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    simdev_log("devcmd_rx_filter_del:\n");
+    /* XXX */
+}
+
+static void
 devcmd_debug_q_dump(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     struct debug_q_dump_cmd *cmd = (void *)acmd;
@@ -516,6 +577,18 @@ devcmd(struct dev_cmd_regs *dc)
         break;
     case CMD_OPCODE_STATION_MAC_ADDR_GET:
         devcmd_station_mac_addr_get(cmd, comp);
+        break;
+    case CMD_OPCODE_MTU_SET:
+        devcmd_mtu_set(cmd, comp);
+        break;
+    case CMD_OPCODE_RX_MODE_SET:
+        devcmd_rx_mode_set(cmd, comp);
+        break;
+    case CMD_OPCODE_RX_FILTER_ADD:
+        devcmd_rx_filter_add(cmd, comp);
+        break;
+    case CMD_OPCODE_RX_FILTER_DEL:
+        devcmd_rx_filter_del(cmd, comp);
         break;
     case CMD_OPCODE_DEBUG_Q_DUMP:
         devcmd_debug_q_dump(cmd, comp);
@@ -799,6 +872,8 @@ bar_db_wr(int bar, int reg,
     *(u64 *)&db = val;
     qid = (db.qid_hi << 8) | db.qid_lo;
 
+    offset |= (0xb << 17);
+
     simdev_log("doorbell: pid %d qid %d ring %d index %d\n",
                reg, qid, db.ring, db.p_index);
     simdev_doorbell(base + offset, val);
@@ -964,14 +1039,15 @@ eth_memrd(simdev_t *sd, simmsg_t *m, u_int64_t *valp)
 static void
 eth_memwr(simdev_t *sd, simmsg_t *m)
 {
+    const u_int16_t bdf  = m->u.write.bdf;
     const u_int8_t  bar  = m->u.write.bar;
     const u_int64_t addr = m->u.write.addr;
     const u_int8_t  size = m->u.write.size;
     const u_int64_t val  = m->u.write.val;
 
     current_sd = sd;
-
     bar_wr(bar, addr, size, val);
+    sims_writeres(sd->fd, bdf, bar, addr, size, 0);
 }
 
 static int
@@ -995,6 +1071,7 @@ eth_iord(simdev_t *sd, simmsg_t *m, u_int64_t *valp)
 static void
 eth_iowr(simdev_t *sd, simmsg_t *m)
 {
+    const u_int16_t bdf  = m->u.write.bdf;
     const int       bar  = m->u.write.bar;
     const u_int64_t addr = m->u.write.addr;
     const u_int8_t  size = m->u.write.size;
@@ -1003,6 +1080,7 @@ eth_iowr(simdev_t *sd, simmsg_t *m)
     current_sd = sd;
 
     bar_wr(bar, addr, size, val);
+    sims_writeres(sd->fd, bdf, bar, addr, size, 0);
 }
 
 static void

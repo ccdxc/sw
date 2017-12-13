@@ -15,8 +15,10 @@ int sim_do_read(int s, simmsgtype_t msgtype, u_int16_t bdf, u_int8_t bar,
                 u_int64_t addr, u_int32_t size, u_int64_t *val,
                 msg_handler_t msg_handler);
 int sim_do_write(int s, simmsgtype_t msgtype, u_int16_t bdf, u_int8_t bar,
-                 u_int64_t addr, u_int32_t size, u_int64_t val);
+                 u_int64_t addr, u_int32_t size, u_int64_t val,
+                 msg_handler_t msg_handler, int sync);
 void sim_discard(int s, size_t size);
+int sim_sync_ack(int s, msg_handler_t msg_handler);
 
 int sim_wait_for_resp(int s, simmsgtype_t msgtype, simmsg_t *m,
                       msg_handler_t msg_handler);
