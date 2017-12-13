@@ -40,10 +40,6 @@ storage_tx_pvm_roce_sq_cb_push_start:
 
    // DMA command address update to store the destination address
    DMA_ADDR_UPDATE(r7, dma_m2m_4)
-   // HACK: This is because RDMA base address is only 32 bits and we are 
-   //       passing a host based queue here
-   // TODO: Fix this and remove hack after we resolve this with RDMA folks
-   phvwr	p.dma_m2m_4_dma_cmd_host_addr, 1
    
    // Increment the p_ndx stored in GPR r6 so that the status WQE descriptor
    // will occupy the next slot
@@ -71,10 +67,6 @@ push_status:
 
    // DMA command address update to store the destination address
    DMA_ADDR_UPDATE(r7, dma_m2m_6)
-   // HACK: This is because RDMA base address is only 32 bits and we are 
-   //       passing a host based queue here
-   // TODO: Fix this and remove hack after we resolve this with RDMA folks
-   phvwr	p.dma_m2m_6_dma_cmd_host_addr, 1
    
    // Ring the doorbell for the recipient of the push.
    ROCE_QUEUE_PUSH_DOORBELL_RING(dma_p2m_7)

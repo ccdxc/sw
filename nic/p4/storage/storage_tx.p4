@@ -120,8 +120,14 @@ metadata nvme_sta_t nvme_sta;
 @pragma dont_trim
 metadata ssd_ci_t ssd_ci;
 
+// Barco XTS ring doorbell data
 @pragma dont_trim
 metadata barco_xts_ring_t xts_doorbell_data;
+
+// R2N data buffer address that needs to be fixed up for passing to ROCE
+// for RDMA Write command
+@pragma dont_trim
+metadata storage_capri_addr_t r2n_data_buff_addr;
 
 // TODO: Remove this when NCC supports pragma for aligning this at 16 byte boundary
 @pragma dont_trim
@@ -232,10 +238,10 @@ metadata roce_rq_cb_t roce_rq_cb_scratch;
 metadata nvme_be_cmd_hdr_t nvme_be_cmd_hdr;
 
 @pragma scratch_metadata
-metadata storage_doorbell_addr_t doorbell_addr;
+metadata storage_capri_addr_t doorbell_addr;
 
 @pragma scratch_metadata
-metadata storage_doorbell_addr_t pci_intr_addr;
+metadata storage_capri_addr_t pci_intr_addr;
 
 @pragma scratch_metadata
 metadata storage_kivec0_t storage_kivec0_scratch;
@@ -1804,8 +1810,9 @@ action roce_cq_handler(wrid_msn, op_type, status, rsvd0, qp, rsvd1) {
     modify_field(r2n_wqe.handle, wrid_msn);
     modify_field(r2n_wqe.is_remote, 1);
 
-    // TODO: 1. Fix the pointers and PRPs in the R2N buffer
-    //       2. Fix the opcode, size etc in R2N WQE
+    // In ASM: 1. Fix the pointers and PRPs in the R2N buffer
+    //         2. Fix the opcode, size etc in R2N WQE
+    //         3. Fix the data pointer in the write request 
 
     // Set the roce_cq_new_cmd bit in the K+I vector
     modify_field(storage_kivec1.roce_cq_new_cmd, 1);
