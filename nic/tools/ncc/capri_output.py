@@ -3318,7 +3318,8 @@ def capri_te_cfg_output(stage):
         # special case - for hash table w/ no mem access, overwrite log2entry and axi values
         if ct.num_entries == 0 and ct.is_hash_table():
             # this also covers toeplitz hash
-            lg2entry_size = 7 # special values used by h/w to not launch mem read operation
+            # special values (7) is used by h/w to not launch mem read operation
+            json_tbl_['lg2_entry_size']['value'] = str(7)
             json_tbl_['axi']['value'] = str(0) # make it hbm for lg2_Entry_sz to take effect
 
         json_tbl_['_modified'] = True
