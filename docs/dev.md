@@ -36,6 +36,24 @@ $ vagrant ssh node1
 ```
 
 This will compile the code, package it as containers and run the pensando base container on each node and init the cluster by posting a JSON message to CMD. After this step, all pensando services and k8s will be running on all nodes
+```
+[vagrant@node1 sw]$ kubectl get pods -o wide
+NAME                             READY     STATUS    RESTARTS   AGE       IP              NODE
+pen-apigw-19qdk                  1/1       Running   0          30m       192.168.30.11   node1
+pen-apigw-9qhmc                  1/1       Running   0          30m       192.168.30.13   node3
+pen-apigw-zn2l0                  1/1       Running   0          30m       192.168.30.12   node2
+pen-apiserver-427759635-250c1    1/1       Running   0          30m       192.168.30.11   node1
+pen-collector-1221202462-57nbz   1/1       Running   0          30m       192.168.30.11   node1
+pen-filebeat-r823q               1/1       Running   0          30m       192.168.30.13   node3
+pen-filebeat-scn1t               1/1       Running   0          30m       192.168.30.11   node1
+pen-filebeat-xq1m8               1/1       Running   0          30m       192.168.30.12   node2
+pen-influx-2461472228-4k4z6      1/1       Running   0          30m       192.168.30.11   node1
+pen-npm-2316830654-6td2m         1/1       Running   0          30m       192.168.30.13   node3
+pen-ntp-rs3x5                    1/1       Running   0          30m       192.168.30.12   node2
+pen-ntp-xnfxm                    1/1       Running   0          30m       192.168.30.11   node1
+pen-ntp-zh3nk                    1/1       Running   0          30m       192.168.30.13   node3
+pen-vchub-3041794971-blzzq       1/1       Running   0          30m       192.168.30.12   node2
+```
 
 ##### 5. Stop the cluster
 ```

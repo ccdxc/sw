@@ -229,5 +229,9 @@ time.sleep(5)
 if not args.noinit:
     initCluster(addrList[0])
 
+# copy kubectl config
+pool = ThreadPool(len(addrList))
+pool.map(lambda x: x.runCmd("sudo cp -f /etc/kubernetes/kubelet.conf $HOME/admin.conf && sudo chown $(id -u):$(id -g) $HOME/admin.conf"), nodes)
+
 print "################### Created Pensando Cluster #####################"
 sys.exit(0)
