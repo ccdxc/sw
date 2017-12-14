@@ -48,6 +48,7 @@ typedef struct comp_test {
 } comp_test_t;
 
 void compression_init();
+void decompression_init();
 int compress_host_flat();
 int compress_hbm_flat();
 int compress_host_to_hbm_flat();
@@ -62,6 +63,20 @@ int compress_adler_sha256();
 int compress_crc_sha512();
 int compress_doorbell_odata();
 int compress_max_features();
+
+int decompress_host_flat();
+int decompress_hbm_flat();
+int decompress_host_to_hbm_flat();
+int decompress_hbm_to_host_flat();
+int decompress_host_sgl();
+int decompress_hbm_sgl();
+int decompress_host_nested_sgl();
+int decompress_hbm_nested_sgl();
+int decompress_nested_sgl_in_hbm();
+int decompress_return_through_hbm();
+int decompress_adler();
+int decompress_crc();
+int decompress_doorbell_odata();
 
 }  // namespace tests
 

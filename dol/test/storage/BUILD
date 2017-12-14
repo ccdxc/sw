@@ -67,6 +67,7 @@ cc_library(
     name = "compression",
     srcs = [
         "compression.cc",
+        "decompression.cc",
         "compression.hpp",
         "compression_test.hpp",
         "compression_data.cc",
