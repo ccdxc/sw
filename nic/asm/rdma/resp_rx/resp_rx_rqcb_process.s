@@ -563,8 +563,13 @@ duplicate_rd_atomic:
     // in quiesce mode, make sure hi_index is 1 more than RSQ_P_INDEX.
     // since previous mincr has decremented by 1, we are incrementing by 2 here.
     mincr.c3    r5, d.log_rsq_size, +2
+    seq         c4, RSQ_P_INDEX, RSQ_C_INDEX
+    add         r6, r0, RSQ_C_INDEX
+    // if rsq is empty, we need to start with c_index-1
+    mincr.c4    r6, d.log_rsq_size, -1
+
     CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, hi_index, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, index, RSQ_C_INDEX)
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, index, r6)
     CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, rsq_base_addr, d.rsq_base_addr)
     CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_pmtu, d.log_pmtu)
     CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, walk, RSQ_EVAL_MIDDLE)
@@ -574,7 +579,7 @@ duplicate_rd_atomic:
     CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, read_or_atomic, r5)
     
     //load entry at cindex first
-    add         r3, d.rsq_base_addr, RSQ_C_INDEX, LOG_SIZEOF_RSQWQE_T
+    add         r3, d.rsq_base_addr, r6, LOG_SIZEOF_RSQWQE_T
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rsq_backtrack_process)
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)

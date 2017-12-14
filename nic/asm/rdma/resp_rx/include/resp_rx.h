@@ -121,18 +121,18 @@ struct resp_rx_phv_t {
     };
     
     // scratch (flit 7):
-    // size: 43 =  2 + 2 + 8 + 8 + 2 + 7 + 4 + 1 + 8 + 1
+    // size: 42 =  2 + 2 + 8 + 8 + 1 + 7 + 4 + 1 + 8 + 1
     spec_cindex: 16;
     eq_int_num: 16;
     db_data1: 64;
     db_data2: 64;
-    adjust_rsq_c_index: 16;
+    adjust_rsq_c_index: 8;
     struct ack_info_t ack_info;
     struct eqwqe_t eqwqe;
     my_token_id: 8;
     immdt_as_dbell_data: 64;
     atomic_release_byte: 8;
-    pad: 168;   //21B
+    pad: 176;   //22B
 
     // scratch (flit 6)
     // size: 64  = 32 + 32

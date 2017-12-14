@@ -22,7 +22,7 @@ resp_rx_rsq_backtrack_adjust_process:
 
     // increment nxt_to_go_token_id to release control to others
     tbladd      d.nxt_to_go_token_id, 1
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_START)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_START)
 
 check_adjust_c_index:
     seq         c1, k.args.adjust_c_index, 1
@@ -32,17 +32,21 @@ check_adjust_c_index:
     // quiesce and adjust_rsq_c_index_in_progress are used by same RxDMA pipeline,
     // hence keep them as tblwr
     tblwr       d.adjust_rsq_c_index_in_progress, 1
-    tblwr       d.rsq_quiesce, 1
 
     // store current value of pindex as rsq_pindex_prime so that we know
     // the backtrack end boundary. once rsq_pindex is retracted to index+1 below,
     // then onwards we expect duplicates to come inorder and lock-step manner.
     // only when rsq_pindex reaches to rsq_pindex_prime, we resume the normal
     // activity
-    tblwr       d.rsq_pindex_prime, RSQ_P_INDEX
     add         NEW_RSQ_PINDEX, r0, k.args.index
     mincr       NEW_RSQ_PINDEX, d.log_rsq_size, 1
     
+    // special case: if index+1 is already equal to rsq_p_index, there is no
+    // need to put into quiesce mode
+    seq         c3, NEW_RSQ_PINDEX, RSQ_P_INDEX
+    tblwr.!c3   d.rsq_quiesce, 1
+    tblwr.!c3   d.rsq_pindex_prime, RSQ_P_INDEX
+
     // use DMA instructions to update adjust_rsq_c_index and ringing backtrack
     // doorbell. Put a fence on backtrack doorbell so that it is rung only
     // after adjust_rsq_c_index is committed to HBM

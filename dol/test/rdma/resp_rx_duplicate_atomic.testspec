@@ -1,0 +1,404 @@
+# Test Spec
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#    maxflows    : 1 
+#   maxrdmasessions     : 1 
+
+packets:
+   - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+   - packet:
+        id          : ORIG_DATA # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : 01 02 03 04 05 06 07 08
+
+   - packet:
+        id          : ORIG_DATA_LITTLE # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : 08 07 06 05 04 03 02 01
+
+   - packet:
+        id          : ADD_DATA # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : 01 02 01 02 01 02 01 01
+
+   - packet:
+        id          : FINAL_DATA # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : 02 04 04 06 06 08 08 09
+
+   - packet:
+        id          : FINAL_DATA_LITTLE # Base packet
+        payloadsize : 8
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : 09 08 08 06 06 04 04 02
+
+   - packet:
+        id          : ATOMIC_REQ_PKT    # Input packet 
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMICETH,v6=ETH_IPV6_UDP_BTH_ATOMICETH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 20    #RDMA FetchAdd
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+                a       : 1
+            atomiceth: 
+                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=0
+                r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+                swapdt  : callback://rdma/rdma/GetAtomicData/pktid=ADD_DATA
+                #ref://testcase/packets/id=ADD_DATA/rawbytes
+                cmpdt   : 0
+
+   - packet:
+        id          : SEND_REQ_PKT 
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 4 # Send Only
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1
+            payload:
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+   - packet:
+        id          : ATOMIC_RSP_PKT    # Expected AtomicAck Packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 18 # AtomicACK
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+            aeth:
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
+            atomic_acketh:
+                orig_remdt : callback://rdma/rdma/GetAtomicData/pktid=ORIG_DATA
+
+   - packet:
+        id          : ACK_PKT 
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 17 # RDMA READ Response Only
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1
+            aeth:
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=2
+
+   - packet:
+        id          : DUP_ATOMIC_RSP_PKT    # Duplicate AtomicAck Packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 18 # AtomicACK
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+            aeth:
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=2
+            atomic_acketh:
+                orig_remdt : callback://rdma/rdma/GetAtomicData/pktid=ORIG_DATA
+
+buffers:
+    - buffer:
+        id      : ORIG_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=ORIG_DATA_LITTLE/size
+                 data    : ref://testcase/packets/id=ORIG_DATA_LITTLE/rawbytes
+
+    - buffer:
+        id      : XFER_BUF
+        template: ref://factory/templates/id=RDMA_XFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 0
+           size    : ref://testcase/packets/id=ORIG_DATA_LITTLE/size
+
+    - buffer:
+        id      : EXP_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=FINAL_DATA_LITTLE/size
+                 data    : ref://testcase/packets/id=FINAL_DATA_LITTLE/rawbytes
+
+    - buffer:
+        id      : RQ_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=BASE_PKT/size
+                 data    : None
+
+    - buffer:
+        id      : EXP_RQ_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=BASE_PKT/size
+                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+
+descriptors:
+    - descriptor:
+        id      : RQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            wrid: 5
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF/address
+                  len : ref://testcase/buffers/id=RQ_BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+
+    - descriptor:
+        id      : EXP_RQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            buff: ref://testcase/buffers/id=EXP_RQ_BUF
+            wrid: 5
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF/address
+                  len : ref://testcase/buffers/id=RQ_BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+
+    - descriptor:
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
+            qp: ref://testcase/config/rdmasession/lqp/id
+            op_type: 17 #OP_TYPE_SEND_RCVD
+            status : 0  #CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetCQExpColor
+            smac: callback://rdma/rdma/GetZeroMAC
+
+session:
+    - step:
+        trigger:
+            # post a receive descriptor
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=RQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ/doorbell
+                fields:
+                    upd : 0x3 # DB_SCHED_WR(1)
+
+            # send an atomic request
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=ATOMIC_REQ_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+        expect:
+            # expect atomic data operation and corresponding response
+            descriptors:
+                - descriptor:
+                    object : ref://testcase/buffers/id=EXP_BUF
+                    ring   : ref://testcase/buffers/id=XFER_BUF
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=ATOMIC_RSP_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+    - step:
+        trigger:
+            # now inject a send request
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=SEND_REQ_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+        expect:
+            # expect receive buffer transfer and completion posting
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=ACK_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+    - step:
+        trigger:
+            # now send a duplicate atomic request
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=ATOMIC_REQ_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+        expect:
+            # expect original atomic response
+            # NOTE: duplicate atomic request should NOT re-execute
+            # the atomic operation. It should return the same data 
+            # that was returned in the original atomic response.
+            # Below expectation is sufficient to test this. Because,
+            # if the duplicate atomic request was re-executing the
+            # atomic operation, it would have added the add-data one
+            # more time (due to fetch-and-add behavior) and that 
+            # wouldn't match the below packet.
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=DUP_ATOMIC_RSP_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+

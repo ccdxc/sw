@@ -480,7 +480,6 @@ _I_K_next:;
 #define CAPRI_GET_STAGE_NEXT_ARG(_phv_name, _arg_base_r) \
     mfspr   _arg_base_r, spr_mpuid; \
     srl     _arg_base_r, _arg_base_r, 2; \
-    nop; #mandated by br instruction \
     .brbegin; \
     br      _arg_base_r[2:0]; \
     nop; \

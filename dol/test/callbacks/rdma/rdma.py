@@ -215,3 +215,18 @@ def PickPktTemplate(tc, pkt, args = None):
     tc.info("ChoosePacketTemplateByFlow: Picking %s" % (template))
     return infra_api.GetPacketTemplate(template)
     
+# return a psn which is pkt_num less than e_psn
+def GetRqDupPsn(tc, pkt, args = None):
+    return tc.pvtdata.rq_pre_qstate.e_psn - args.pkt_num
+
+# return ack_nak_psn stored in rqcb
+def GetRqAckNakPsn(tc, pkt, args = None):
+    return tc.pvtdata.rq_pre_qstate.ack_nak_psn
+
+# return aeth syndrome stored in rqcb
+def GetRqAethSyndrome(tc, pkt, args = None):
+    return tc.pvtdata.rq_pre_qstate.aeth_syndrome
+
+# return aeth msn stored in rqcb
+def GetRqAethMsn(tc, pkt, args = None):
+    return tc.pvtdata.rq_pre_qstate.aeth_msn

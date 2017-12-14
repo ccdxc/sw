@@ -127,7 +127,7 @@ compare_done:
 eval_middle:
     //TODO:
     // is search_psn < wqe_p->psn ?
-    scwle24 c1, k.args.search_psn, d.psn
+    scwlt24 c1, k.args.search_psn, d.psn
     // if this condition is true, that means what we are searching
     // for is already executed (and that is why cindex has reached
     // this far in the first place) and hence initiate backward search.
