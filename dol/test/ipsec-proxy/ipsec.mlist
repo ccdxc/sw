@@ -53,6 +53,15 @@ modules:
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
+        name    : NZ_KEY_TCP_PKT 
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : nz_key_tcp_pkt
+        spec    : nz_key_tcp_pkt.testspec 
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+    - module:
         name    : ICMP_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy
