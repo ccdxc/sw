@@ -35,6 +35,7 @@ typedef struct barco_symm_descr_s {
     uint64_t                explicit_iv;
     uint32_t                barco_status;
     uint32_t                header_size;
+    uint32_t                second_key_desc_index;
 } barco_symm_descr_t;
 
 typedef struct barco_asym_descr_s {

@@ -33,7 +33,6 @@ tls_stage0:
 	        .brcase 2
 	            j tls_pre_crypto_process
 	            nop
-
 	.brend
 
 	nop.e

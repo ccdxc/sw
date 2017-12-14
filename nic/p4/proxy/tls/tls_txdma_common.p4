@@ -73,6 +73,9 @@ debug_dol, barco_command, barco_key_desc_index, salt, explicit_iv, l7_proxy_type
 #define TLSCB_0_PARAMS_NON_STG0                                                                         \
     pc, TLSCB_0_PARAMS
 
+#define TLSCB_0_7_PARAMS_NON_STG0 \
+    barco_hmac_key_desc_index, pc, TLSCB_0_PARAMS
+
 #define GENERATE_TLSCB_0_D_NON_STG0                                                                     \
     modify_field(tlscb_0_d.pc, pc);                                                                     \
     GENERATE_TLSCB_0_D
@@ -100,13 +103,14 @@ header_type tlscb_1_t {
         other_fid                       : 16;
         l7q_base                        : HBM_ADDRESS_WIDTH;
         sw_l7q_pi                       : 16;
-        // Total used   : 442 bits, pending: 80
-        pad                             : 80;
+        barco_hmac_key_desc_index       : 32;
+        // Total used   : 464 bits, pending: 48
+        pad                             : 48;
     }
 }
 
 #define TLSCB_1_PARAMS                                                                                  \
-qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi
+qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi, barco_hmac_key_desc_index
 #
 
 #define GENERATE_TLSCB_1_D                                                                              \
@@ -122,9 +126,10 @@ qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, n
     modify_field(tlscb_1_d.nxt_data_len, nxt_data_len);                                                 \
     modify_field(tlscb_1_d.next_tls_hdr_offset, next_tls_hdr_offset);                                   \
     modify_field(tlscb_1_d.cur_tls_data_len, cur_tls_data_len);                                         \
-    modify_field(tlscb_1_d.other_fid, other_fid);          \
-    modify_field(tlscb_1_d.l7q_base, l7q_base);          \
-    modify_field(tlscb_1_d.sw_l7q_pi, sw_l7q_pi);          \
+    modify_field(tlscb_1_d.other_fid, other_fid);                                                       \
+    modify_field(tlscb_1_d.l7q_base, l7q_base);                                                         \
+    modify_field(tlscb_1_d.sw_l7q_pi, sw_l7q_pi);                                                       \
+    modify_field(tlscb_1_d.barco_hmac_key_desc_index, barco_hmac_key_desc_index);                       \
 
 /* TODO:
     - ipage reference counting support 
@@ -198,6 +203,7 @@ header_type barco_desc_t {
         sector_num                          : 32;
         doorbell_address                    : 64;
         doorbell_data                       : 64;
+        second_key_desc_index               : 32;
     }
 }
 
@@ -240,14 +246,15 @@ header_type tls_stage_pre_crypto_stats_d_t {
         tnmpr_alloc                     : 16;
         enc_requests                    : 16;
         dec_requests                    : 16;
+	mac_requests                    : 16;
         debug_stage0_3_thread           : 16;
         debug_stage4_7_thread           : 16;
-        // TBD: Total used   : 96 bits, pending: 416
-        pad                             : 160;
+        // TBD: Total used   : 112 bits, pending: 400
+        pad                             : 144;
     }
 }
 #define STG_PRE_CRYPTO_STATS_ACTION_PARAMS                                                          \
-tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, debug_stage0_3_thread, debug_stage4_7_thread, pad
+tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, mac_requests, debug_stage0_3_thread, debug_stage4_7_thread, pad
 #
 
 #define GENERATE_STG_PRE_CRYPTO_STATS_D                                                             \
@@ -255,6 +262,7 @@ tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, debug_stage0_3_thread, debu
     modify_field(tls_pre_crypto_stats_d.tnmpr_alloc, tnmpr_alloc);                                  \
     modify_field(tls_pre_crypto_stats_d.enc_requests, enc_requests);                                \
     modify_field(tls_pre_crypto_stats_d.dec_requests, dec_requests);                                \
+    modify_field(tls_pre_crypto_stats_d.mac_requests, mac_requests);                                \
     modify_field(tls_pre_crypto_stats_d.debug_stage0_3_thread, debug_stage0_3_thread);              \
     modify_field(tls_pre_crypto_stats_d.debug_stage4_7_thread, debug_stage4_7_thread);              \
     modify_field(tls_pre_crypto_stats_d.pad, pad);
@@ -262,26 +270,34 @@ tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, debug_stage0_3_thread, debu
 
 header_type tls_stage_post_crypto_stats_d_t {
     fields {
+        tnmdr_alloc                     : 16;
+        tnmpr_alloc                     : 16;
         rnmdr_free                      : 16;
         rnmpr_free                      : 16;
+        enc_requests                    : 16;
         enc_completions                 : 16;
         dec_completions                 : 16;
+        mac_completions                 : 16;
         debug_stage0_3_thread           : 16;
         debug_stage4_7_thread           : 16;
         // TBD: Total used   : 96 bits, pending: 416
-        pad                             : 160;
+        pad                             : 96;
     }
 }
 
 #define STG_POST_CRYPTO_STATS_ACTION_PARAMS                                                             \
-rnmdr_free,rnmpr_free, enc_completions, dec_completions, debug_stage0_3_thread, debug_stage4_7_thread, pad
+tnmdr_alloc, tnmpr_alloc, rnmdr_free,rnmpr_free, enc_requests, enc_completions, dec_completions, mac_completions, debug_stage0_3_thread, debug_stage4_7_thread, pad
 #
 
 #define GENERATE_STG_POST_CRYPTO_STATS_D                                                                \
+    modify_field(tls_post_crypto_stats_d.tnmdr_alloc, tnmdr_alloc);                                     \
+    modify_field(tls_post_crypto_stats_d.tnmpr_alloc, tnmpr_alloc);                                     \
     modify_field(tls_post_crypto_stats_d.rnmdr_free, rnmdr_free);                                       \
     modify_field(tls_post_crypto_stats_d.rnmpr_free, rnmpr_free);                                       \
+    modify_field(tls_post_crypto_stats_d.enc_requests, enc_requests);                                   \
     modify_field(tls_post_crypto_stats_d.enc_completions, enc_completions);                             \
     modify_field(tls_post_crypto_stats_d.dec_completions, dec_completions);                             \
+    modify_field(tls_post_crypto_stats_d.mac_completions, mac_completions);                             \
     modify_field(tls_post_crypto_stats_d.debug_stage0_3_thread, debug_stage0_3_thread);                 \
     modify_field(tls_post_crypto_stats_d.debug_stage4_7_thread, debug_stage4_7_thread);                 \
     modify_field(tls_post_crypto_stats_d.pad, pad);

@@ -105,6 +105,14 @@
             "size_kb": 128
         },
         {
+            "name": "brq-ring-mpp2",
+            "size_kb": 128
+        },
+        {
+            "name": "brq-ring-mpp3",
+            "size_kb": 128
+        },
+        {
             "name": "crypto-sym-msg-descr",
             "size_kb": 64
         },
@@ -191,6 +199,10 @@
         {
             "name":"ipsec_ip_header",
             "size_kb": 64
+        },
+        {
+            "name": "tls_proxy_pad_table",
+            "size_kb": 1
         },
         {
             "name": "sesq",

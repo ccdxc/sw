@@ -117,11 +117,11 @@ def TestCaseVerify(tc):
 
     # 2. Verify enc_requests
     if (tlscb_cur.enc_requests != tlscb.enc_requests+1):
-        print("enc_requests not as expected")
+        print("enc_requests not as expected %d %d" %(tlscb_cur.enc_requests, tlscb.enc_requests))
         return False
 
     if (tlscb_cur.pre_debug_stage0_7_thread != 0x117711):
-        print("pre_debug_stage0_7_thread not as expected")
+        print("pre_debug_stage0_7_thread not as expected %x" % tlscb_cur.pre_debug_stage0_7_thread)
         return False
 
     # 3. Verify pi/ci got update got updated for BRQ

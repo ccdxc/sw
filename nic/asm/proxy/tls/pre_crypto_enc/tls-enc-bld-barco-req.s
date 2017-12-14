@@ -37,8 +37,8 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_output_list_address, r1.dx
     CAPRI_OPERAND_DEBUG(r1.dx)
 
-    phvwr       p.barco_desc_key_desc_index, d.{u.tls_bld_brq4_d.barco_key_desc_index}.wx
-    CAPRI_OPERAND_DEBUG(d.{u.tls_bld_brq4_d.barco_key_desc_index}.wx)
+    phvwr       p.barco_desc_key_desc_index, d.u.tls_bld_brq4_d.barco_key_desc_index
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_key_desc_index)
 
     phvwri      p.to_s6_enc_requests, 1
 

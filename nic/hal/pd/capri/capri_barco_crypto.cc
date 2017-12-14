@@ -115,6 +115,14 @@ hal_ret_t capri_barco_crypto_init(void)
         return ret;
     }
 
+    /*
+     * Initialize the padding pattern table for use with TLS-proxy.
+     */
+    ret = capri_barco_crypto_init_tls_pad_table();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
 #if 0
     hal_ret_t capri_barco_asym_run_tests(void);
     ret = capri_barco_asym_run_tests();
@@ -264,6 +272,32 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
         return HAL_RET_INVALID_ARG;
     }
 
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_barco_crypto_init_tls_pad_table(void)
+{
+    uint8_t  tls_pad_bytes[CAPRI_MAX_TLS_PAD_SIZE], i, j;
+    uint64_t tls_pad_base_addr = 0;
+
+    HAL_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table"); 
+
+    /*
+     * Block-size 16.
+     * Pad bytes pattern:
+     *   - 16 contiguous blocks with 1st block all 0s, 2nd block all 1s etc.
+     */
+    for (i = 0; i < 16; i++) {
+        for (j = 0; j < 16; j++) {
+            tls_pad_bytes[16*(i) + j] = i;
+        }
+    }
+
+    tls_pad_base_addr = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
+    if (tls_pad_base_addr) {
+        capri_hbm_write_mem(tls_pad_base_addr, tls_pad_bytes, CAPRI_MAX_TLS_PAD_SIZE);
+    }
     return HAL_RET_OK;
 }
 

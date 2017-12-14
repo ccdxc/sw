@@ -54,6 +54,8 @@ def TestCaseSetup(tc):
 
     if tc.module.args.cipher_suite == "CCM":
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"])
+    elif tc.module.args.cipher_suite == "CBC":
+        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"])
     else:
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
     brq.Configure()
@@ -99,6 +101,8 @@ def TestCaseVerify(tc):
     tnmpr = tc.pvtdata.db["TNMPR"]
     if tc.module.args.cipher_suite == "CCM":
         brq = tc.pvtdata.db["BRQ_ENCRYPT_CCM"]
+    elif tc.module.args.cipher_suite == "CBC":
+        brq = tc.pvtdata.db["BRQ_ENCRYPT_CBC"]
     else:
         brq = tc.pvtdata.db["BRQ_ENCRYPT"]
 
@@ -120,6 +124,8 @@ def TestCaseVerify(tc):
 
     if tc.module.args.cipher_suite == "CCM":
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"]
+    elif tc.module.args.cipher_suite == "CBC":
+        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"]
     else:
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     brq_cur.Configure()
@@ -144,6 +150,8 @@ def TestCaseVerify(tc):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+
+    print("BRQ: Current PI %d" % brq_cur.pi)
 
     # 3. Verify input descriptor on the BRQ
     if rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40):
@@ -172,13 +180,19 @@ def TestCaseVerify(tc):
         return False
     print("BRQ Crypto Key Index Check: Success : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].key_desc_index, tlscb.crypto_key_idx))
 
-    # 7. Verify Salt
+    # 7. Verify BRQ Descriptor HMAC Key Index field
+    #     Activate this check when HW support for AES-CBC-HMAC-SHA2, currently we use software chaining
+    #if brq_cur.ring_entries[brq_cur.pi-1].second_key_desc_index != tlscb.crypto_hmac_key_idx:
+        #print("BRQ Crypto HMAC Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].second_key_desc_index, tlscb.crypto_hmac_key_idx))
+        #return False
+
+    # 8. Verify Salt
     if brq_cur.ring_entries[brq_cur.pi-1].salt != tlscb.salt:
         print("Salt Check Failed: Got 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].salt, tlscb.salt))
         return False
     print("Salt Check Success: Got 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].salt, tlscb.salt))
         
-    # 8. Verify Explicit IV
+    # 9. Verify Explicit IV
     # This is bound to fail until the DoL payload issue is fixed
     tls_explicit_iv = tcp_tls_proxy.tls_explicit_iv(tc.module.args.key_size)
     if brq_cur.ring_entries[brq_cur.pi-1].explicit_iv != tls_explicit_iv:
@@ -188,7 +202,7 @@ def TestCaseVerify(tc):
     print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
                             (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
 
-    # 9. Verify header size, this is the AAD size and is 13 bytes 
+    # 10. Verify header size, this is the AAD size and is 13 bytes 
     if brq_cur.ring_entries[brq_cur.pi-1].header_size != 0xd:
         print("Header Size Check Failed: Got 0x%x, Expected: 0xd" %
                                 (brq_cur.ring_entries[brq_cur.pi-1].header_size))
@@ -196,7 +210,7 @@ def TestCaseVerify(tc):
     print("Header Size Check Success: Got 0x%x, Expected: 0xd" %
                             (brq_cur.ring_entries[brq_cur.pi-1].header_size))
 
-    # 10. Barco Status check
+    # 11. Barco Status check
     if brq_cur.ring_entries[brq_cur.pi-1].barco_status != 0:
         print("Barco Status Check Failed: Got 0x%x, Expected: 0" %
                                 (brq_cur.ring_entries[brq_cur.pi-1].barco_status))

@@ -1,6 +1,7 @@
 /*
  *	Implements the read tnmdr free idx of the TxDMA P4+ tls  pipeline
  *  Also writes the freed object into the object ring slot
+ *  Stage 3, Table 1
  */
 
 #include "tls-phv.h"

@@ -46,18 +46,19 @@ message BarcoGetReqDescrEntryRequestMsg {
 
 // Required fields of the Barco Symmetric crypto Request descriptor
 message BarcoSymmReqDescrMsg {
-  fixed64           ilist_addr          = 1;
-  fixed64           olist_addr          = 2;
-  uint32            command             = 3;
-  uint32            key_desc_index      = 4;
-  fixed64           iv_addr             = 5;
-  fixed64           status_addr         = 6;
-  fixed64           doorbell_addr       = 7;
-  fixed64           doorbell_data       = 8;
-  uint32            salt                = 9;
-  fixed64           explicit_iv         = 10;
-  uint32            header_size         = 11;
-  uint32            barco_status        = 12;
+  fixed64           ilist_addr            = 1;
+  fixed64           olist_addr            = 2;
+  uint32            command               = 3;
+  uint32            key_desc_index        = 4;
+  fixed64           iv_addr               = 5;
+  fixed64           status_addr           = 6;
+  fixed64           doorbell_addr         = 7;
+  fixed64           doorbell_data         = 8;
+  uint32            salt                  = 9;
+  fixed64           explicit_iv           = 10;
+  uint32            header_size           = 11;
+  uint32            barco_status          = 12;
+  uint32            second_key_desc_index = 13;
 }
 
 // Required fields of the Barco ASymmetric crypto Request descriptor

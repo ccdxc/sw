@@ -61,6 +61,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_CRYPTO_ASYM_DMA_DESCR "crypto-asym-dma-descr"
 #define CAPRI_HBM_REG_BARCO_RING_MPP0    "brq-ring-mpp0"
 #define CAPRI_HBM_REG_BARCO_RING_MPP1    "brq-ring-mpp1"
+#define CAPRI_HBM_REG_BARCO_RING_MPP2    "brq-ring-mpp2"
+#define CAPRI_HBM_REG_BARCO_RING_MPP3    "brq-ring-mpp3"
 #define CAPRI_HBM_REG_CRYPTO_SYM_MSG_DESCR "crypto-sym-msg-descr"
 #define CAPRI_HBM_REG_CRYPTO_HBM_MEM     "crypto-hbm-mem"
 #define CAPRI_BARCO_KEY_DESC             "key-desc-array"
@@ -68,6 +70,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_ASYM_KEY_DESCR     "crypto-asym-key-desc-array"
 #define CAPRI_HBM_REG_IPSEC_PAD_TABLE    "ipsec_pad_table"
 #define CAPRI_HBM_REG_IPSEC_IP_HDR       "ipsec_ip_header"
+#define CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE "tls_proxy_pad_table"
 #define CAPRI_HBM_REG_BSQ                "bsq"
 #define CAPRI_HBM_REG_SERQ               "serq"
 #define CAPRI_HBM_REG_SESQ               "sesq"
@@ -116,6 +119,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define IPSEC_CB_BASE "ipsec_cb_base"
 #define IPSEC_PAD_BYTES_HBM_TABLE_BASE "ipsec_pad_table_base"
 #define IPSEC_IP_HDR_BASE "ipsec_ip_hdr_base"
+
+#define TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE "tls_pad_table_base"
 
 #define ARQRX_BASE              "hbm_arqrx_base"
 #define ARQTX_BASE              "hbm_arqtx_base"

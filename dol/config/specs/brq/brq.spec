@@ -27,3 +27,16 @@ entries :
         count: 16
         entry_defn: "BRQ_CCM_ENTRY"
         type: 6
+    - entry:
+        name: "BRQ_ENCRYPT_CBC"
+        defn: "BRQ_CBC"
+        count: 16
+        entry_defn: "BRQ_CBC_ENTRY"
+        type: 8
+    - entry:
+        name: "BRQ_DECRYPT_CBC"
+        defn: "BRQ_CBC"
+        count: 16
+        entry_defn: "BRQ_CBC_ENTRY"
+        type: 8
+

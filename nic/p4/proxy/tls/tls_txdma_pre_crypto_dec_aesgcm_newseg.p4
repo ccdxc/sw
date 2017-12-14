@@ -137,6 +137,11 @@ header_type odesc_opage_ref_t {
     }
 }
 
+header_type pad_to_dma_cmds_t {
+    fields {
+        pad                     : 96;
+    }
+}
 
 @pragma scratch_metadata
 metadata tlscb_0_t tlscb_0_d;
@@ -353,6 +358,9 @@ metadata ring_entry_t ring_entry;
 @pragma dont_trim
 metadata barco_dbell_t barco_dbell;
 
+@pragma dont_trim
+metadata pad_to_dma_cmds_t pad_to_dma_cmds;
+
 /* Start of DMA commands */
 
 /* PHV Scratch: phv_scratch_new_tail_addr  */
@@ -387,7 +395,7 @@ metadata dma_cmd_phv2mem_t dma_cmd_odesc;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_aad_iv_authtag;
 
-/* PHV Scratch: barco_desc_input_list_address - barco_desc_doorbell_data */
+/* PHV Scratch: barco_desc_input_list_address - barco_desc_second_key_desc_index */
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_barco_desc;
 

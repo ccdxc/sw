@@ -112,7 +112,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_to_eth_rekey
         spec    : decrypt_ipsec_to_eth_rekey.testspec 
-        ignore  : False 
+        ignore  : True 
         iterate :
             - flow: filter://type=IPV4
     - module:

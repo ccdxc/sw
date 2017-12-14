@@ -36,12 +36,12 @@ class CryptoKeyObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        if req_spec.__class__.__name__ == 'CryptoKeyCreateResponse':
+        if resp_spec.__class__.__name__ == 'CryptoKeyCreateResponse':
             self.keyindex = resp_spec.keyindex
             cfglogger.info("CRYPTO_KEY Get %s = %s" %\
                        (self.keyindex, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
-        if req_spec.__class__.__name__ == 'CryptoKeyUpdateResponse':
+        if resp_spec.__class__.__name__ == 'CryptoKeyUpdateResponse':
             assert(req_spec.key.keyindex == resp_spec.keyindex)
             cfglogger.info("CRYPTO_KEY Update %s = %s" %\
                        (self.keyindex, \

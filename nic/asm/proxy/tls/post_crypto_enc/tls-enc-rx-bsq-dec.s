@@ -1,5 +1,6 @@
 /*
  * 	Implements the reading of BSQ to pick up the completed decryption barco request
+ *  Stage 1, Table 0
  */
 
 #include "tls-constants.h"

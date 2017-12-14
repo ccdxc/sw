@@ -30,6 +30,7 @@ class TlsCbObject(base.ConfigObjectBase):
         self.serq = SwDscrRingHelper.main("SERQ", gid, self.id)
         self.bsq = SwDscrRingHelper.main("BSQ", gid, self.id)
         self.crypto_key = CryptoKeyHelper.main() 
+        self.crypto_hmac_key = CryptoKeyHelper.main() 
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -40,6 +41,7 @@ class TlsCbObject(base.ConfigObjectBase):
             req_spec.explicit_iv               = self.explicit_iv
             req_spec.command                   = self.command
             req_spec.crypto_key_idx            = self.crypto_key_idx
+            req_spec.crypto_hmac_key_idx       = self.crypto_hmac_key_idx
             req_spec.is_decrypt_flow           = self.is_decrypt_flow
             req_spec.other_fid                 = self.other_fid
             req_spec.l7_proxy_type             = self.l7_proxy_type
@@ -58,12 +60,15 @@ class TlsCbObject(base.ConfigObjectBase):
             self.tnmpr_alloc = resp_spec.spec.tnmpr_alloc
             self.enc_requests = resp_spec.spec.enc_requests
             self.dec_requests = resp_spec.spec.dec_requests
+            self.mac_requests = resp_spec.spec.mac_requests
             self.rnmdr_free = resp_spec.spec.rnmdr_free
             self.rnmpr_free = resp_spec.spec.rnmpr_free
             self.enc_completions = resp_spec.spec.enc_completions
             self.dec_completions = resp_spec.spec.dec_completions
+            self.mac_completions = resp_spec.spec.mac_completions
             self.enc_failures = resp_spec.spec.enc_failures
             self.dec_failures = resp_spec.spec.dec_failures
+            self.mac_failures = resp_spec.spec.mac_failures
             self.pre_debug_stage0_7_thread = resp_spec.spec.pre_debug_stage0_7_thread
             self.post_debug_stage0_7_thread = resp_spec.spec.post_debug_stage0_7_thread
             self.other_fid = resp_spec.spec.other_fid

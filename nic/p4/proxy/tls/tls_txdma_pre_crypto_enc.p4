@@ -217,7 +217,7 @@ header_type s3_t2_s2s_phv_t {
 
 header_type barco_desc_pad_t {
     fields {
-        pad                     : 96;
+        pad                     : 64;
     }
 }
 
@@ -512,8 +512,6 @@ action tls_pre_crypto_stats6(STG_PRE_CRYPTO_STATS_ACTION_PARAMS) {
     modify_field(to_s6_scratch.dec_requests, to_s6.dec_requests);
     modify_field(to_s6_scratch.debug_stage0_3_thread, to_s6.debug_stage0_3_thread);
     modify_field(to_s6_scratch.debug_stage4_7_thread, to_s6.debug_stage4_7_thread);
-
-
 
 
     GENERATE_STG_PRE_CRYPTO_STATS_D

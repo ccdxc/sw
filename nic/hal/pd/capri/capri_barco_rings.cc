@@ -23,6 +23,8 @@ hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring,
 					void *req, uint32_t *req_tag);
 hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring);
 hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring);
+hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring);
+hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 
 capri_barco_ring_t  barco_rings[] = {
@@ -106,8 +108,34 @@ capri_barco_ring_t  barco_rings[] = {
         NULL,
     },
     {   // BARCO_RING_MPP2
+        BARCO_RING_MPP2_STR,
+        CAPRI_HBM_REG_BARCO_RING_MPP2,
+        0,
+        128,
+        1024,
+        128,
+        0,
+        0,
+        0,
+        0,
+        capri_barco_mpp2_init,
+        NULL,
+        NULL,
     },
     {   // BARCO_RING_MPP3
+        BARCO_RING_MPP3_STR,
+        CAPRI_HBM_REG_BARCO_RING_MPP3,
+        0,
+        128,
+        1024,
+        128,
+        0,
+        0,
+        0,
+        0,
+        capri_barco_mpp3_init,
+        NULL,
+        NULL,
     },
     {   // BARCO_RING_MPP4
     },
@@ -650,6 +678,145 @@ hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
     return capri_barco_mpp1_key_array_init();
 }
 
+hal_ret_t capri_barco_mpp2_key_array_init(void)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
+    hal_ret_t                           ret = HAL_RET_OK;
+    uint64_t                            key_array_base;
+    uint32_t                            key_array_key_count;
+    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t                            region_sz = 0;
+
+    // Currently sharing the same key descriptor array as GCM
+    // Eventually all symmetric protocols will share one large key array
+    key_array_base = get_start_offset(key_desc_array);
+    /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
+     * but confirm
+     */
+    assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
+    region_sz = get_size_kb(key_desc_array) * 1024;
+    key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
+
+    mpse.dhs_crypto_ctl.mpp2_key_array_base_w0.fld(key_array_base & 0xffffffff);
+    mpse.dhs_crypto_ctl.mpp2_key_array_base_w0.write();
+    mpse.dhs_crypto_ctl.mpp2_key_array_base_w1.fld(key_array_base >> 32);
+    mpse.dhs_crypto_ctl.mpp2_key_array_base_w1.write();
+
+    mpse.dhs_crypto_ctl.mpp2_key_array_size.fld(key_array_key_count);
+    mpse.dhs_crypto_ctl.mpp2_key_array_size.write();
+    HAL_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count {} setup @ {:x}",
+            key_array_key_count, key_array_base);
+
+    return ret;
+}
+
+hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
+    hal_ret_t                           ret = HAL_RET_OK;
+
+    ret = capri_barco_ring_common_init(barco_ring);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    mpns.dhs_crypto_ctl.mpp2_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp2_ring_base_w0.write();
+    mpns.dhs_crypto_ctl.mpp2_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    mpns.dhs_crypto_ctl.mpp2_ring_base_w1.write();
+
+    mpns.dhs_crypto_ctl.mpp2_ring_size.fld(barco_ring->ring_size);
+    mpns.dhs_crypto_ctl.mpp2_ring_size.write();
+
+    mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w0.write();
+    mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w1.write();
+
+    mpns.dhs_crypto_ctl.mpp2_producer_idx.fld(barco_ring->producer_idx);
+    mpns.dhs_crypto_ctl.mpp2_producer_idx.write();
+
+    mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld(barco_ring->consumer_idx);
+    mpns.dhs_crypto_ctl.mpp2_consumer_idx.write();
+
+    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+
+    return capri_barco_mpp2_key_array_init();
+}
+
+hal_ret_t capri_barco_mpp3_key_array_init(void)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
+    hal_ret_t                           ret = HAL_RET_OK;
+    uint64_t                            key_array_base;
+    uint32_t                            key_array_key_count;
+    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t                            region_sz = 0;
+
+    // Currently sharing the same key descriptor array as GCM
+    // Eventually all symmetric protocols will share one large key array
+    key_array_base = get_start_offset(key_desc_array);
+    /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
+     * but confirm
+     */
+    assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
+    region_sz = get_size_kb(key_desc_array) * 1024;
+    key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
+
+    mpse.dhs_crypto_ctl.mpp3_key_array_base_w0.fld(key_array_base & 0xffffffff);
+    mpse.dhs_crypto_ctl.mpp3_key_array_base_w0.write();
+    mpse.dhs_crypto_ctl.mpp3_key_array_base_w1.fld(key_array_base >> 32);
+    mpse.dhs_crypto_ctl.mpp3_key_array_base_w1.write();
+
+    mpse.dhs_crypto_ctl.mpp3_key_array_size.fld(key_array_key_count);
+    mpse.dhs_crypto_ctl.mpp3_key_array_size.write();
+    HAL_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count {} setup @ {:x}",
+            key_array_key_count, key_array_base);
+
+    return ret;
+}
+
+hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
+    hal_ret_t                           ret = HAL_RET_OK;
+
+    ret = capri_barco_ring_common_init(barco_ring);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    mpns.dhs_crypto_ctl.mpp3_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp3_ring_base_w0.write();
+    mpns.dhs_crypto_ctl.mpp3_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    mpns.dhs_crypto_ctl.mpp3_ring_base_w1.write();
+
+    mpns.dhs_crypto_ctl.mpp3_ring_size.fld(barco_ring->ring_size);
+    mpns.dhs_crypto_ctl.mpp3_ring_size.write();
+
+    mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w0.write();
+    mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w1.write();
+
+    mpns.dhs_crypto_ctl.mpp3_producer_idx.fld(barco_ring->producer_idx);
+    mpns.dhs_crypto_ctl.mpp3_producer_idx.write();
+
+    mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld(barco_ring->consumer_idx);
+    mpns.dhs_crypto_ctl.mpp3_consumer_idx.write();
+
+    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+
+    return capri_barco_mpp3_key_array_init();
+}
+
+
 bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag)
 {
     capri_barco_ring_t          *barco_ring;
@@ -769,6 +936,7 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
     symm_req_descr->doorbell_addr = req_descr->doorbell_addr;
     symm_req_descr->doorbell_data = req_descr->doorbell_data;
     symm_req_descr->header_size = req_descr->header_size;
+    symm_req_descr->second_key_desc_index = req_descr->second_key_descr_idx;
 
     /* IV is not directly located in the ring, hence dereference it */
     
@@ -813,6 +981,18 @@ hal_ret_t capri_barco_ring_meta_get(types::BarcoRings ring_type, uint32_t *pi, u
       *pi = mpns.dhs_crypto_ctl.mpp1_producer_idx.fld().convert_to<uint32_t>();
       mpns.dhs_crypto_ctl.mpp1_consumer_idx.read();
       *ci = mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld().convert_to<uint32_t>();
+      break;
+    case types::BarcoRings::BARCO_RING_MPP2:
+      mpns.dhs_crypto_ctl.mpp2_producer_idx.read();
+      *pi = mpns.dhs_crypto_ctl.mpp2_producer_idx.fld().convert_to<uint32_t>();
+      mpns.dhs_crypto_ctl.mpp2_consumer_idx.read();
+      *ci = mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld().convert_to<uint32_t>();
+      break;
+    case types::BarcoRings::BARCO_RING_MPP3:
+      mpns.dhs_crypto_ctl.mpp3_producer_idx.read();
+      *pi = mpns.dhs_crypto_ctl.mpp3_producer_idx.fld().convert_to<uint32_t>();
+      mpns.dhs_crypto_ctl.mpp3_consumer_idx.read();
+      *ci = mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld().convert_to<uint32_t>();
       break;
     default:
       HAL_TRACE_ERR("{}: Ring type not supported yet",

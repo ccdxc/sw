@@ -15,6 +15,8 @@ namespace pd {
 /* FIXME: this needs to be driven from HAL PD, but the includes do not make it to capri */
 #define CRYPTO_KEY_COUNT_MAX                (64 * 1024)
 
+#define CAPRI_MAX_TLS_PAD_SIZE              512
+
 hal_ret_t capri_barco_rings_init(void);
 hal_ret_t capri_barco_res_allocator_init(void);
 hal_ret_t capri_barco_crypto_init(void);
@@ -23,6 +25,7 @@ hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type,
         uint32_t key_size);
 hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
         uint8_t *key, uint32_t *key_size);
+hal_ret_t capri_barco_crypto_init_tls_pad_table(void);
 
 /* Barco Crypto specific definitions */
 typedef struct capri_barco_key_desc_s {

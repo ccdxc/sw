@@ -34,3 +34,7 @@ crypto_key_idx              : 0
 is_decrypt_flow             : 0
 other_fid                   : 0xFFFF
 l7_proxy_type               : 0
+crypto_hmac_key_idx         : 0
+mac_requests                : 0
+mac_completions             : 0
+mac_failures                : 0

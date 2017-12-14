@@ -10,6 +10,11 @@
 
 #define TLS_READ_ADDR                  CAPRI_READ_ADDR
 
+#define TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE tls_pad_table_base
+
+#define TLS_WORD_SWAP(_num32) \
+      (((_num32 & 0xff) << 24) | ((_num32 & 0xff00) << 8) | ((_num32 >> 8) & 0xff00) | (_num32 >> 24))
+
 /*
  * Generate random number using Barco DRBG. The read of the random number
  * will be done after the request has indicated completion.

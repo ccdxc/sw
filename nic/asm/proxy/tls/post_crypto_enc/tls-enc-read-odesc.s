@@ -19,8 +19,17 @@ struct phv_                 p;
     .param      tls_enc_read_aad_process
 
 tls_enc_post_read_odesc:
+
+    /*
+     * If its the post-encrypt of AES-CBC-HMAC-SHA2, the output page is
+     * already setup in previous stage (post-hmac). Adjust the odesc AOLs accordingly.
+     */
+    bbeq        k.to_s4_do_post_cbc_enc, 1, tls_enc_post_read_odesc_do_cbc
+    nop	
+	
     phvwr       p.odesc_A0, d.u.tls_read_odesc_d.A0
     phvwr       p.odesc_O0, d.u.tls_read_odesc_d.O0
+
     /* Account for 16 bytes of additional authentication tag */
     addi        r2, r0, TLS_AES_GCM_AUTH_TAG_SIZE
     add         r1, d.{u.tls_read_odesc_d.L0}.wx, r2
@@ -38,4 +47,28 @@ tls_enc_post_read_odesc:
 tls_enc_post_read_odesc_done:
     nop.e
     nop.e
+    
+tls_enc_post_read_odesc_do_cbc:
+    phvwr       p.odesc_A0, d.u.tls_read_odesc_d.A0
+
+    /*
+     * The TLS-header (5 bytes) + Random-IV (16 bytes) is already present in the
+     * opage setup in the previous post-mac pipeline. So we'll just reset the
+     * odesc offset to include that for the final packet, and fix up the L0 accordingly.
+     * We don't strictly need to read the AAD from the header into PHV, as the opage has
+     * everything setup already in the AES-CBC case, but we'll trigger a table-read anyway,
+     * to have the same flow as non AES-CBC post-encrypt pipeline.
+     */
+    sub         r3, d.{u.tls_read_odesc_d.O0}.wx, (TLS_HDR_SIZE + TLS_AES_CBC_RANDOM_IV_SIZE)
+    phvwr       p.odesc_O0, r3.wx
+
+    add         r4, d.{u.tls_read_odesc_d.L0}.wx, (TLS_HDR_SIZE + TLS_AES_CBC_RANDOM_IV_SIZE)
+    phvwr       p.odesc_L0, r4.wx
+
+    add         r5, d.{u.tls_read_odesc_d.A0}.dx, r3
+	
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_read_aad_process,
+                          r5, TABLE_SIZE_512_BITS)
+    nop.e
+    nop
     

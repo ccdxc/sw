@@ -88,6 +88,7 @@ class BRQEntryObject(base.ConfigObjectBase):
                 self.olist_addr = resp_spec.symm_req_descr.olist_addr
                 self.command = resp_spec.symm_req_descr.command
                 self.key_desc_index = resp_spec.symm_req_descr.key_desc_index
+                self.second_key_desc_index = resp_spec.symm_req_descr.second_key_desc_index
                 self.iv_addr = resp_spec.symm_req_descr.iv_addr
                 self.status_addr = resp_spec.symm_req_descr.status_addr
                 self.doorbell_addr = resp_spec.symm_req_descr.doorbell_addr
@@ -96,8 +97,8 @@ class BRQEntryObject(base.ConfigObjectBase):
                 self.explicit_iv = resp_spec.symm_req_descr.explicit_iv
                 self.barco_status = resp_spec.symm_req_descr.barco_status
                 self.header_size = resp_spec.symm_req_descr.header_size
-                cfglogger.info("Entry(%s): ila: %x. ola: %x, cmd: %x, kdi: %x, ia: %x, sa: %x, da: %x, dd: %x" %
-                                (self.ID(), self.ilist_addr, self.olist_addr, self.command, self.key_desc_index,
+                cfglogger.info("Entry(%s): ila: %x. ola: %x, cmd: %x, kdi: %x, skdi: %x, ia: %x, sa: %x, da: %x, dd: %x" %
+                                (self.ID(), self.ilist_addr, self.olist_addr, self.command, self.key_desc_index, self.second_key_desc_index,
                                 self.iv_addr, self.status_addr, self.doorbell_addr, self.doorbell_data))
             else:
                 assert(0)

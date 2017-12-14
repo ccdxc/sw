@@ -18,10 +18,22 @@ struct tx_table_s0_t0_d d;
 
 	.param		tls_enc_pre_crypto_process
    	.param		tls_dec_pre_crypto_process
-    .param      tls_dec_pre_crypto_aesgcm_newseg_process
+        .param          tls_dec_pre_crypto_aesgcm_newseg_process
+	.param          tls_mac_pre_crypto_process
 	
 tls_pre_crypto_process:
-	phvwr	    p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow 
+
+    /*
+     * The barco-command[31:24] is checked for AES-CBC-HMAC-SHA2 cipher for
+     * MAC-then-encrypt case, in which case we need to do 2-pass with Barco
+     * with 1st pass for HMAC request, and 2nd pass for AES-CBC encryption.
+     * (endian-swapped) */
+    add         r3, d.u.read_tls_stg0_d.barco_command[7:0], r0
+    indexb      r2, r3, [0x73, 0x74], 0
+    bnei.s      r2, -1, tls_pre_crypto_mac
+    nop
+	
+    phvwr       p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
     seq         c1, r0, d.u.read_tls_stg0_d.dec_flow
     bcf         [!c1], tls_pre_crypto_dec
     nop
@@ -39,6 +51,11 @@ tls_pre_crypto_dec:
     nop
 tls_pre_crypto_dec_reasm:
     j           tls_dec_pre_crypto_aesgcm_newseg_process
+    nop
+    nop.e
+    nop
+tls_pre_crypto_mac:
+    j           tls_mac_pre_crypto_process
     nop
     nop.e
     nop

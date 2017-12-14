@@ -43,8 +43,8 @@ table_read_QUEUE_BRQ:
     add         r1, r0, k.{to_s5_odesc}
     phvwr       p.odesc_dma_src_odesc, r1.dx
 
-    phvwr       p.barco_desc_key_desc_index, d.{u.tls_bld_brq5_d.barco_key_desc_index}.wx
-    CAPRI_OPERAND_DEBUG(d.{u.tls_bld_brq5_d.barco_key_desc_index}.wx)
+    phvwr       p.barco_desc_key_desc_index, d.u.tls_bld_brq5_d.barco_key_desc_index
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_key_desc_index)
 
     phvwr       p.crypto_iv_salt, d.u.tls_bld_brq5_d.salt
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.salt)

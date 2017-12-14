@@ -32,7 +32,8 @@ tls_enc_rx_serq_process:
 	nop
 	/*    TAIL_DESC(cb, name) = desc; */
 	tblwr.c1	d.qtail, k.to_s2_idesc
-    add         r1, r0, k.to_s2_idesc
+        add         r1, r0, k.to_s2_idesc
+
 dma_cmd_enc_desc_entry_last:
 	/* SET_DESC_ENTRY(TAIL_DESC(cb,name), MAX_ENTRIES_PER_DESC - 1, desc, 0, 0); */
 	

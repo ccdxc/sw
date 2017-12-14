@@ -205,7 +205,7 @@ tls_dec_aesgcm_equeue_barco:
     addi            r1, r0, BRQ_BASE
     add             r1, r1, r2
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_barco_desc_dma_cmd, r1,\
-                barco_desc_input_list_address, barco_desc_doorbell_data)
+                barco_desc_input_list_address, barco_desc_second_key_desc_index)
 
 
 

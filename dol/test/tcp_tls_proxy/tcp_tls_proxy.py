@@ -33,7 +33,7 @@ def tls_cb_verify (fwdata, usrdata):
 
 tls_aes128_gcm_explicit_iv = 0x627788b54033b07f
 def tls_aes128_decrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES128-GCM Decrypt Setup:")
+    tc.module.logger.info("AES128-%s Decrypt Setup:" % (tc.module.args.cipher_suite))
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
@@ -41,13 +41,27 @@ def tls_aes128_decrypt_setup(tc, tlscb):
     key = b'\x19\xe4\xa3\x26\xa5\x0a\xf1\x29\x06\x3c\x11\x0c\x7f\x03\xf9\x5e'
     tlscb.crypto_key.Update(key_type, key_size, key)
 
+    if hasattr(tc.module.args, 'hmac_key_size'):
+        if tc.module.args.hmac_key_size == 16:
+            key_type = types_pb2.CRYPTO_KEY_TYPE_HMAC
+            key_size = 16
+            key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        elif tc.module.args.hmac_key_size == 32:
+            key_type = types_pb2.CRYPTO_KEY_TYPE_HMAC
+            key_size = 32
+            key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        tlscb.crypto_hmac_key.Update(key_type, key_size, key)            
+
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":
         tlscb.command = 0x05100c10
+    elif tc.module.args.cipher_suite == "CBC":
+        tlscb.command = 0x73300000
     else:
         tlscb.command = 0x30100000
 
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
+    tlscb.crypto_hmac_key_idx = tlscb.crypto_hmac_key.keyindex
     # Salt: 0xaf 0x98 0xc5 0xe2
     tlscb.salt = 0xe2c598af
 
@@ -60,7 +74,7 @@ def tls_aes128_decrypt_setup(tc, tlscb):
     return
 
 def tls_aes128_encrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES128-GCM Encrypt Setup:")
+    tc.module.logger.info("AES128-%s Encrypt Setup:" % (tc.module.args.cipher_suite))
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
@@ -68,13 +82,27 @@ def tls_aes128_encrypt_setup(tc, tlscb):
     key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
     tlscb.crypto_key.Update(key_type, key_size, key)
 
+    if hasattr(tc.module.args, 'hmac_key_size'):
+        if tc.module.args.hmac_key_size == 16:
+            key_type = types_pb2.CRYPTO_KEY_TYPE_HMAC
+            key_size = 16
+            key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        elif tc.module.args.hmac_key_size == 32:
+            key_type = types_pb2.CRYPTO_KEY_TYPE_HMAC
+            key_size = 32
+            key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        tlscb.crypto_hmac_key.Update(key_type, key_size, key)            
+
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":
         tlscb.command = 0x05000c10
+    elif tc.module.args.cipher_suite == "CBC":
+        tlscb.command = 0x73200000
     else:
         tlscb.command = 0x30000000
 
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
+    tlscb.crypto_hmac_key_idx = tlscb.crypto_hmac_key.keyindex
     tlscb.salt = 0x12345678
     # IV: 
     tlscb.explicit_iv = 0x0100000000000000
@@ -86,7 +114,7 @@ def tls_aes128_encrypt_setup(tc, tlscb):
 # Explicit IV : 0x94 0xcb 0x98 0x62 0x80 0xff 0xdb 0x23
 tls_aes256_gcm_explicit_iv = 0x23dbff806298cb94
 def tls_aes256_decrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES256-GCM Decrypt Setup:")
+    tc.module.logger.info("AES256-%s Decrypt Setup:" % (tc.module.args.cipher_suite))
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
@@ -94,13 +122,27 @@ def tls_aes256_decrypt_setup(tc, tlscb):
     key = b'\x30\xdb\x63\x16\x2b\x2f\x4e\xb6\xce\x4b\xbd\x21\x7e\xf7\x64\xc6\xdb\xfb\xf9\xec\x3b\x83\x8b\xa9\x19\xf8\xfd\xb8\x81\xbd\x9a\xc3'
     tlscb.crypto_key.Update(key_type, key_size, key)
 
+    if hasattr(tc.module.args, 'hmac_key_size'):
+        if tc.module.args.hmac_key_size == 16:
+            key_type = types_pb2.CRYPTO_KEY_TYPE_HMAC
+            key_size = 16
+            key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        elif tc.module.args.hmac_key_size == 32:
+            key_type = types_pb2.CRYPTO_KEY_TYPE_HMAC
+            key_size = 32
+            key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        tlscb.crypto_hmac_key.Update(key_type, key_size, key)            
+
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":
         tlscb.command = 0x05100c10
+    elif tc.module.args.cipher_suite == "CBC":
+        tlscb.command = 0x73300000
     else:
         tlscb.command = 0x30100000
 
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
+    tlscb.crypto_hmac_key_idx = tlscb.crypto_hmac_key.keyindex
     # Salt: 0x1a 0x8c 0x86 0x99
     tlscb.salt = 0x99868c1a
 
@@ -113,7 +155,7 @@ def tls_aes256_decrypt_setup(tc, tlscb):
     return
 
 def tls_aes256_encrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES256-GCM Encrypt Setup:")
+    tc.module.logger.info("AES256-%s Encrypt Setup:" % (tc.module.args.cipher_suite))
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
@@ -121,13 +163,31 @@ def tls_aes256_encrypt_setup(tc, tlscb):
     key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
     tlscb.crypto_key.Update(key_type, key_size, key)
 
+    tc.module.logger.info("AES256-%s Encrypt Setup: - crypto key index %d" % (tc.module.args.cipher_suite, tlscb.crypto_key.keyindex))
+
+    if hasattr(tc.module.args, 'hmac_key_size'):
+        if tc.module.args.hmac_key_size == 16:
+            key_type = types_pb2.CRYPTO_KEY_TYPE_HMAC
+            key_size = 16
+            key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xcc'
+        elif tc.module.args.hmac_key_size == 32:
+            key_type = types_pb2.CRYPTO_KEY_TYPE_HMAC
+            key_size = 32
+            key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xcc'
+        tlscb.crypto_hmac_key.Update(key_type, key_size, key)            
+
+        tc.module.logger.info("AES256-%s Encrypt Setup: - crypto HMAC key index %d" % (tc.module.args.cipher_suite, tlscb.crypto_hmac_key.keyindex))
+
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":
         tlscb.command = 0x05000c10
+    elif tc.module.args.cipher_suite == "CBC":
+        tlscb.command = 0x73200000
     else:
         tlscb.command = 0x30000000
 
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
+    tlscb.crypto_hmac_key_idx = tlscb.crypto_hmac_key.keyindex
     tlscb.salt = 0x12345678
 
     # IV: 

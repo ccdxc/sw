@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 77
+#define CAPRI_P4PLUS_NUM_SYMBOLS 82
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -666,6 +666,31 @@ capri_p4p_asm_init()
     symbols[76].params[0].val = 0x3;
     symbols[76].params[1].name = CAPRI_CPU_MAX_ARQID;
     symbols[76].params[1].val = 0x2; 
+
+    symbols[77].name = "tls-mac-queue-brq.bin";
+    symbols[77].num_params = 1;
+    symbols[77].params[0].name = BRQ_BASE;
+    symbols[77].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP2);
+
+    symbols[78].name = "tls-mac-queue-enc-brq.bin";
+    symbols[78].num_params = 1;
+    symbols[78].params[0].name = BRQ_BASE;
+    symbols[78].params[0].val = get_start_offset(CAPRI_HBM_REG_BARCO_RING_MPP3);
+
+    symbols[79].name = "tls-mac-read-idesc.bin";
+    symbols[79].num_params = 1;
+    symbols[79].params[0].name = TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE;
+    symbols[79].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
+
+    symbols[80].name = "tls-mac-read-tnmdr-alloc-idx.bin";
+    symbols[80].num_params = 1;
+    symbols[80].params[0].name = TNMDR_TABLE_BASE;
+    symbols[80].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+
+    symbols[81].name = "tls-mac-read-tnmpr-alloc-idx.bin";
+    symbols[81].num_params = 1;
+    symbols[81].params[0].name = TNMPR_TABLE_BASE;
+    symbols[81].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

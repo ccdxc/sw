@@ -30,7 +30,7 @@ typedef uint64_t    tlscb_hw_id_t;
 typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats1_t {
     uint64_t tnmdr_alloc;
     uint64_t enc_requests;
-    uint64_t stats2;
+    uint64_t mac_requests;
     uint64_t stats3;
     uint64_t stats4;
     uint64_t stats5;
@@ -42,7 +42,7 @@ typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats1_t {
 typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats2_t {
     uint64_t tnmpr_alloc;
     uint64_t dec_requests;
-    uint64_t stats2;
+    uint64_t mac_requests;
     uint64_t stats3;
     uint64_t stats4;
     uint64_t stats5;
@@ -55,8 +55,8 @@ typedef struct __attribute__((__packed__)) __tls_tx_post_crypto_stats1_t {
     uint64_t rnmdr_free;
     uint64_t enc_completions;
     uint64_t enc_failures;
-    uint64_t stats3;
-    uint64_t stats4;
+    uint64_t mac_completions;
+    uint64_t mac_failures;
     uint64_t stats5;
     uint64_t stats6;
     uint64_t stats7;
@@ -67,8 +67,8 @@ typedef struct __attribute__((__packed__)) __tls_tx_post_crypto_stats2_t {
     uint64_t rnmpr_free;
     uint64_t dec_completions;
     uint64_t dec_failures;
-    uint64_t stats3;
-    uint64_t stats4;
+    uint64_t mac_completions;
+    uint64_t mac_failures;
     uint64_t stats5;
     uint64_t stats6;
     uint64_t stats7;

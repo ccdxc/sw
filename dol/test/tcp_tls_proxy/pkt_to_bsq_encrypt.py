@@ -74,6 +74,8 @@ def TestCaseSetup(tc):
 
     if tc.module.args.cipher_suite == "CCM":
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"])
+    elif tc.module.args.cipher_suite == "CBC":
+        brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"])
     else:
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
 
@@ -100,16 +102,16 @@ def TestCaseVerify(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d mac_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests, tlscb_cur.mac_requests))
+    print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions, tlscb_cur.mac_completions))
     print("pre-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
     tlscb_cur.GetObjValPd()
-    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d mac_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests, tlscb_cur.mac_requests))
+    print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions, tlscb_cur.mac_completions))
     print("post-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
 
-    print("snapshot3: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
-    print("snapshot3: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
+    print("snapshot3: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d mac_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests, tlscb.mac_requests))
+    print("snapshot3: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions, tlscb.mac_completions))
 
     # 0. Verify the counters
     #if ((tlscb_cur.tnmdr_alloc - tlscb.tnmdr_alloc) != (tlscb_cur.rnmdr_free - tlscb.rnmdr_free)):
@@ -125,10 +127,16 @@ def TestCaseVerify(tc):
         print("enc requests not equal to completions %d %d %d %d" % (tlscb_cur.enc_requests, tlscb.enc_requests, tlscb_cur.enc_completions, tlscb.enc_completions))
         return False
 
+    if ((tlscb_cur.mac_requests - tlscb.mac_requests) != (tlscb_cur.mac_completions - tlscb.mac_completions)):
+        print("mac requests not equal to completions %d %d %d %d" % (tlscb_cur.mac_requests, tlscb.mac_requests, tlscb_cur.mac_completions, tlscb.mac_completions))
+        return False
+
     # 1. Verify threading
 
     # When using random value for IV, there will be an additional DRBG table read program launched
-    if ((tlscb.debug_dol & tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random) == tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random):
+    if tc.module.args.cipher_suite == "CBC": 
+        pre_debug_stage0_7_thread = 0x111911
+    elif ((tlscb.debug_dol & tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random) == tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random):
         pre_debug_stage0_7_thread = 0x137711
     else:
         pre_debug_stage0_7_thread = 0x117711
@@ -170,6 +178,8 @@ def TestCaseVerify(tc):
 
     if tc.module.args.cipher_suite == "CCM":
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"]
+    elif tc.module.args.cipher_suite == "CBC":
+        brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"]
     else:
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     brq_cur.Configure()
@@ -212,8 +222,12 @@ def TestCaseVerify(tc):
 
     # 9. Verify BRQ Descriptor Command field
     if brq_cur.ring_entries[brq_cur.pi-1].command != tlscb.command:
-        print("BRQ Command Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].command, tlscb.command))
-        return False
+
+        # In case of AES-CBC-HMAC_SHA2 cipher (MAC-then-encrypt), there is software chaining of 2 barco
+        # passes, HMAC in the 1st pass, and AES-CBC in the 2nd pass, hence barco command will be AES-CBC
+        if tc.module.args.cipher_suite != "CBC" or brq_cur.ring_entries[brq_cur.pi-1].command != 0x1000000:
+            print("BRQ Command Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].command, tlscb.command))
+            return False
 
 
     # 10. Verify BRQ Descriptor Key Index field
@@ -221,16 +235,23 @@ def TestCaseVerify(tc):
         print("BRQ Crypto Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].key_desc_index, tlscb.crypto_key_idx))
         return False
 
-    # 11. Verify Salt
-    if brq_cur.ring_entries[brq_cur.pi-1].salt != tlscb.salt:
+    # 11. Verify BRQ Descriptor HMAC Key Index field
+    #     Activate this check when HW support for AES-CBC-HMAC-SHA2, currently we use software chaining
+    #if brq_cur.ring_entries[brq_cur.pi-1].second_key_desc_index != tlscb.crypto_hmac_key_idx:
+        #print("BRQ Crypto HMAC Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].second_key_desc_index, tlscb.crypto_hmac_key_idx))
+        #return False
+
+    # 12. Verify Salt
+    #     In case of AES-CBC-HMAC-SHA2 ciphers, we use random IV with no salt.
+    if brq_cur.ring_entries[brq_cur.pi-1].salt != tlscb.salt and tc.module.args.cipher_suite != "CBC":
         print("Salt Check Failed: Got 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].salt, tlscb.salt))
         return False
     print("Salt Check Success: Got 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].salt, tlscb.salt))
         
-    # 12. Verify Explicit IV
+    # 13. Verify Explicit IV
     tls_explicit_iv = tlscb.explicit_iv
 
-    # When using random value for IV from DRBG, the IV field from tlscb will not match, as expected.
+    # When using random value for IV from DRBG or AES-CBC-HMAC-SHA2 cipher, the IV field from tlscb will not match, as expected.
     if ((tlscb.debug_dol & tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random) != tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random):
         if brq_cur.ring_entries[brq_cur.pi-1].explicit_iv != tls_explicit_iv:
             print("Explicit IV Check Failed: Got 0x%x, Expected: 0x%x" %
@@ -239,16 +260,22 @@ def TestCaseVerify(tc):
     print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
           (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
 
-    # 13. Verify header size, this is the AAD size and is 13 bytes 
-    if brq_cur.ring_entries[brq_cur.pi-1].header_size != 0xd:
+    # 14. Verify header size, this is the AAD size and is 13 bytes 
+    #     In case of AES-CBC-HMAC-SHA2 (MAC-then-encrypt) ciphers, there is no header with
+    #     software-chaining in the 2nd pass of barco (AES-CBC encrypt).
+    if tc.module.args.cipher_suite == "CBC":
+       hdr_size = 0x0
+    else:
+       hdr_size = 0xd
+    if brq_cur.ring_entries[brq_cur.pi-1].header_size != hdr_size:
         print("Header Size Check Failed: Got 0x%x, Expected: 0xd" %
                                 (brq_cur.ring_entries[brq_cur.pi-1].header_size))
         return False
     else:
-        print("Header Size Check Success: Got 0x%x, Expected: 0xd" %
-                                (brq_cur.ring_entries[brq_cur.pi-1].header_size))
+        print("Header Size Check Success: Got 0x%x, Expected: %x" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].header_size, hdr_size))
 
-    # 14. Barco Status check
+    # 15. Barco Status check
     if brq_cur.ring_entries[brq_cur.pi-1].barco_status != 0:
         print("Barco Status Check Failed: Got 0x%x, Expected: 0" %
                                 (brq_cur.ring_entries[brq_cur.pi-1].barco_status))
@@ -257,7 +284,7 @@ def TestCaseVerify(tc):
         print("Barco Status Check Success: Got 0x%x, Expected: 0" %
                                 (brq_cur.ring_entries[brq_cur.pi-1].barco_status))
 
-    # 15. Verify page
+    # 16. Verify page
     #if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
     #    print("Page handle not as expected in brq_cur.swdre_list")
         #return False

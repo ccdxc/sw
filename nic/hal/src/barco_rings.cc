@@ -78,6 +78,7 @@ hal_ret_t BarcoGetReqDescrEntry(const BarcoGetReqDescrEntryRequest& request,
 	response->mutable_symm_req_descr()->set_explicit_iv(symm_req_descr.explicit_iv);
 	response->mutable_symm_req_descr()->set_header_size(symm_req_descr.header_size);
 	response->mutable_symm_req_descr()->set_barco_status(symm_req_descr.barco_status);
+	response->mutable_symm_req_descr()->set_second_key_desc_index(symm_req_descr.second_key_desc_index);
 	break;
     }
 

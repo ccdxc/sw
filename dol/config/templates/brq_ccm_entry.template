@@ -1,15 +1,16 @@
 meta:
     id: BRQ_CCM_ENTRY
 
-ilist_addr      : 0
-olist_addr      : 0
-command         : 0
-key_desc_index  : 0
-iv_addr         : 0
-status_addr     : 0
-doorbell_addr   : 0
-doorbell_data   : 0
-salt            : 0
-explicit_iv     : 0
-barco_status    : 0
-header_size     : 0
+ilist_addr             : 0
+olist_addr             : 0
+command                : 0
+key_desc_index         : 0
+iv_addr                : 0
+status_addr            : 0
+doorbell_addr          : 0
+doorbell_data          : 0
+salt                   : 0
+explicit_iv            : 0
+barco_status           : 0
+header_size            : 0
+second_key_desc_index  : 0

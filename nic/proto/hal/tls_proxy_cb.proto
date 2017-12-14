@@ -57,6 +57,10 @@ message TlsCbSpec {
   bool                  is_decrypt_flow            = 28;
   uint32                other_fid                  = 29;
   types.AppRedirType    l7_proxy_type              = 30;
+  uint32                crypto_hmac_key_idx        = 31;
+  fixed64               mac_requests               = 32;
+  fixed64               mac_completions            = 33;
+  fixed64               mac_failures               = 34;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

@@ -106,7 +106,7 @@ dma_cmd_enc_brq_slot:
 
 	/* Fill the barco request */        
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r1, barco_desc_input_list_address,
-                                barco_desc_doorbell_data)
+                                barco_desc_second_key_desc_index)
 dma_cmd_idesc:
     /* Already setup in Stage 2, Table 0 */
     add         r1, r0, k.to_s5_idesc

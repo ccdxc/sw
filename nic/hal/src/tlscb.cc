@@ -112,6 +112,7 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->cb_id = spec.key_or_handle().tlscb_id();
     tlscb->command = spec.command(); 
     tlscb->crypto_key_idx = spec.crypto_key_idx();
+    tlscb->crypto_hmac_key_idx = spec.crypto_hmac_key_idx();
     tlscb->debug_dol = spec.debug_dol();
     tlscb->salt = spec.salt();
     tlscb->explicit_iv = spec.explicit_iv();
@@ -169,6 +170,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     
     tlscb->command = spec.command();
     tlscb->crypto_key_idx = spec.crypto_key_idx();
+    tlscb->crypto_hmac_key_idx = spec.crypto_hmac_key_idx();
     tlscb->debug_dol = spec.debug_dol();
     tlscb->salt = spec.salt();
     tlscb->explicit_iv = spec.explicit_iv();
@@ -253,9 +255,13 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     rsp->mutable_spec()->set_dec_failures(rtlscb.dec_failures);
     rsp->mutable_spec()->set_pre_debug_stage0_7_thread(rtlscb.pre_debug_stage0_7_thread);
     rsp->mutable_spec()->set_post_debug_stage0_7_thread(rtlscb.post_debug_stage0_7_thread);
+    rsp->mutable_spec()->set_mac_requests(rtlscb.mac_requests);
+    rsp->mutable_spec()->set_mac_completions(rtlscb.mac_completions);
+    rsp->mutable_spec()->set_mac_failures(rtlscb.mac_failures);
 
     rsp->mutable_spec()->set_command(rtlscb.command);
     rsp->mutable_spec()->set_crypto_key_idx(rtlscb.crypto_key_idx);
+    rsp->mutable_spec()->set_crypto_hmac_key_idx(rtlscb.crypto_hmac_key_idx);
     rsp->mutable_spec()->set_debug_dol(rtlscb.debug_dol);
     rsp->mutable_spec()->set_salt(rtlscb.salt);
     rsp->mutable_spec()->set_explicit_iv(rtlscb.explicit_iv);

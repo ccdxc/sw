@@ -260,7 +260,7 @@ header_type s3_t2_s2s_phv_t {
 
 header_type pad_to_dma_cmds_t {
     fields {
-        pad                     : 32;
+        pad                     : 0;
     }
 }
 

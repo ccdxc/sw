@@ -75,7 +75,8 @@ typedef struct barco_symm_req_descriptor_s {
     uint32_t                sector_num;
     uint64_t                doorbell_addr;
     uint64_t                doorbell_data;
-    uint8_t                 reserved[44];
+    uint32_t                second_key_descr_idx;
+    uint8_t                 reserved[320];
 }  __attribute__((__packed__)) barco_symm_req_descriptor_t;
 
 typedef struct barco_sym_msg_descriptor_s {
@@ -135,6 +136,8 @@ typedef struct capri_barco_ring_s {
 #define BARCO_RING_XTS1_STR     "Barco XTS1"
 #define BARCO_RING_MPP0_STR     "Barco MPP0"
 #define BARCO_RING_MPP1_STR     "Barco MPP1"
+#define BARCO_RING_MPP2_STR     "Barco MPP2"
+#define BARCO_RING_MPP3_STR     "Barco MPP3"
 
 
 hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag);
