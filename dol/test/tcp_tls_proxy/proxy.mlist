@@ -436,6 +436,36 @@ modules:
             bypass_barco : 1
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_FIN
+        spec    : uplink_to_uplink_fin.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            fin : 1
+            send_ack : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_FIN_ACK
+        spec    : uplink_to_uplink_fin_ack.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            fin : 1
+            fin_ack : 1
+            send_ack : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_FIN_ACK_FIN
+        spec    : uplink_to_uplink_fin_ack_fin.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            fin : 1
+            fin_ack : 1
+            send_ack : 1
+            final_fin : 1
+
+    - module:
         name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4

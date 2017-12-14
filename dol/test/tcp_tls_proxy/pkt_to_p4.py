@@ -234,7 +234,7 @@ def TestCaseVerify(tc):
         return False
 
     # 5. Verify pkt rx stats
-    if tcpcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + num_rx_pkts:
+    if not tc.pvtdata.final_fin and tcpcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + num_rx_pkts:
         print("pkt rx stats not as expected")
         return False
 
@@ -370,6 +370,34 @@ def TestCaseVerify(tc):
         if other_tcpcb_cur.snd_cwnd_cnt != 0:
             print("cong_avoid: failed to set snd_cwnd_cnt to 0")
             return False
+
+    if tc.pvtdata.fin:
+        print("tcpcb state = %s, other_tcpcb state = %s" % \
+                (tcpcb.state, other_tcpcb.state))
+        print("tcpcb_cur state = %s, other_tcpcb_cur state = %s" % \
+                (tcpcb_cur.state, other_tcpcb_cur.state))
+        if not tc.pvtdata.final_fin and tcpcb_cur.state != tcp_proxy.tcp_state_CLOSE_WAIT:
+            print("flow 1 state not CLOSE_WAIT as expected")
+            return False
+        elif tc.pvtdata.final_fin and tcpcb_cur.state != tcp_proxy.tcp_state_CLOSE:
+            print("flow 1 state not CLOSE as expected")
+            return False
+        if not tc.pvtdata.fin_ack and not tc.pvtdata.final_fin:
+            # flow 2 should be in fin_wait1, but since it doesn't receive any
+            # packet the state doesn't move from ESTABLISHED (state is only
+            # maintained in rxdma)
+            if other_tcpcb_cur.state != tcp_proxy.tcp_state_ESTABLISHED:
+                print("flow 2 state not FIN_WAIT1 as expected")
+                return False
+        elif not tc.pvtdata.final_fin:
+            if other_tcpcb_cur.state != tcp_proxy.tcp_state_FIN_WAIT2:
+                print("flow 2 state not FIN_WAIT2 as expected")
+                return False
+        else:
+            if other_tcpcb_cur.state != tcp_proxy.tcp_state_TIME_WAIT:
+                print("flow 2 state not TIME_WAIT as expected")
+                return False
+
     return True
 
 def TestCaseTeardown(tc):

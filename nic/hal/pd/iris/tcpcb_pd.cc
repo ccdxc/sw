@@ -135,6 +135,17 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rx_d.snd_wnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_wnd);
         data.u.tcp_rx_d.rcv_mss = htons((uint16_t)tcpcb_pd->tcpcb->rcv_mss);
         data.u.tcp_rx_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
+        switch (data.u.tcp_rx_d.state) {
+            case TCP_SYN_SENT:
+            case TCP_SYN_RECV:
+            case TCP_CLOSE:
+            case TCP_LISTEN:
+            case TCP_NEW_SYN_RECV:
+                data.u.tcp_rx_d.parsed_state |= TCP_PARSED_STATE_HANDLE_IN_CPU;
+                break;
+            default:
+                data.u.tcp_rx_d.parsed_state &= ~TCP_PARSED_STATE_HANDLE_IN_CPU;
+        }
 
         HAL_TRACE_DEBUG("TCPCB rcv_nxt: 0x{0:x}", data.u.tcp_rx_d.rcv_nxt);
         HAL_TRACE_DEBUG("TCPCB snd_una: 0x{0:x}", data.u.tcp_rx_d.snd_una);
@@ -549,6 +560,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.read_rx2tx_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
         data.u.read_rx2tx_d.pending_ack_send = tcpcb_pd->tcpcb->pending_ack_send;
+        data.u.read_rx2tx_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
         // TODO : fix this hardcoding
         data.u.read_rx2tx_d.rto = htons(100);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: 0x{0:x}", data.u.read_rx2tx_d.snd_wnd);

@@ -38,6 +38,10 @@ tcp_tx_enqueue:
     bal.c1          r7, tcp_init_xmit
     nop
 
+    seq             c1, k.common_phv_fin, 1
+    bal.c1          r7, tcp_tx_handle_fin
+    nop
+
     /*
      * For RTO case, snd_nxt is snd_una, initialize snd_nxt for other cases
      */
@@ -201,6 +205,13 @@ tcp_init_xmit:
     tblwr           d.xmit_cursor_addr, k.to_s5_addr
     tblwr           d.xmit_offset, k.to_s5_offset
     tblwr           d.xmit_len, k.to_s5_len
+    jr              r7
+    nop
+
+tcp_tx_handle_fin:
+    seq             c1, k.to_s5_state, TCP_ESTABLISHED
+    tbladd.c1       d.snd_nxt, 1
+    phvwr           p.tx2rx_fin_sent, 1
     jr              r7
     nop
 

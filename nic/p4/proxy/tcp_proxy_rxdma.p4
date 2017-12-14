@@ -75,13 +75,13 @@
     modify_field(common_global_scratch.fid, common_phv.fid); \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
-    modify_field(common_global_scratch.pkts_acked, common_phv.pkts_acked); \
     modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
     modify_field(common_global_scratch.quick, common_phv.quick); \
     modify_field(common_global_scratch.ecn_flags, common_phv.ecn_flags); \
     modify_field(common_global_scratch.process_ack_flag, \
                             common_phv.process_ack_flag); \
     modify_field(common_global_scratch.syn, common_phv.syn); \
+    modify_field(common_global_scratch.fin, common_phv.fin); \
     modify_field(common_global_scratch.ece, common_phv.ece); \
     modify_field(common_global_scratch.is_dupack, common_phv.is_dupack); \
     modify_field(common_global_scratch.ooo_rcv, common_phv.ooo_rcv); \
@@ -95,7 +95,7 @@
     modify_field(common_global_scratch.write_arq, common_phv.write_arq); \
     modify_field(common_global_scratch.write_tcp_app_hdr, common_phv.write_tcp_app_hdr); \
     modify_field(common_global_scratch.l7_proxy_en, common_phv.l7_proxy_en); \
-    modify_field(common_global_scratch.l7_proxy_type_span, common_phv.l7_proxy_type_span);
+    modify_field(common_global_scratch.l7_proxy_type_redirect, common_phv.l7_proxy_type_redirect);
 
 /******************************************************************************
  * D-vectors
@@ -152,6 +152,7 @@ header_type tcp_rx_d_t {
         pred_flags              : 8;
         ecn_flags               : 8;
         state                   : 8;
+        parsed_state            : 8;
         quick                   : 4;
         snd_wscale              : 4;
         pending                 : 3;
@@ -161,6 +162,7 @@ header_type tcp_rx_d_t {
         fastopen_rsk            : 1;
         pingpong                : 1;
         ooo_in_rx_q             : 1;
+        alloc_descr             : 1;
     }
 }
 
@@ -400,12 +402,12 @@ header_type common_global_phv_t {
         fid                     : 24;
         qstate_addr             : 32;
         snd_una                 : 32;
-        pkts_acked              : 8;
         debug_dol               : 8;
         quick                   : 3;
         ecn_flags               : 2;
         process_ack_flag        : 1;
         syn                     : 1;
+        fin                     : 1;
         ece                     : 1;
         is_dupack               : 1;
         ooo_rcv                 : 1;
@@ -419,7 +421,7 @@ header_type common_global_phv_t {
         write_arq               : 1;
         write_tcp_app_hdr       : 1;
         l7_proxy_en             : 1;
-        l7_proxy_type_span      : 1;
+        l7_proxy_type_redirect  : 1;
     }
 }
 
@@ -437,6 +439,7 @@ header_type s1_s2s_phv_t {
         ip_dsfield              : 8;
         rcv_mss_shft            : 4;
         quick_acks_decr         : 4;
+        fin_sent                : 1;
     }
 }
 
@@ -634,25 +637,29 @@ header_type dma_phv_pad_t {
 metadata dma_phv_pad_t  dma_pad;
 
 @pragma dont_trim
-metadata dma_cmd_pkt2mem_t dma_cmd0;
+metadata dma_cmd_pkt2mem_t pkt_dma;                 // dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd1;
+metadata dma_cmd_phv2mem_t pkt_descr_dma;           // dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd2;
+metadata dma_cmd_phv2mem_t tcp_flags_dma;           // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd3;
+metadata dma_cmd_phv2mem_t rx2tx_or_cpu_hdr_dma;    // dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd4;
+metadata dma_cmd_phv2mem_t ring_slot;               // dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd5;
+metadata dma_cmd_phv2mem_t rx2tx_extra_dma;         // dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd6;
+metadata dma_cmd_phv2mem_t tx_doorbell_or_timer;    // dma cmd 6
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd7;
+metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 7
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd8;
+metadata dma_cmd_phv2mem_t l7_descr;                // dma cmd 8
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd9;
+metadata dma_cmd_phv2mem_t l7_ring_slot;            // dma cmd 9
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t l7_doorbell;             // dma cmd 10
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd10;               // dma cmd 11
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
@@ -668,7 +675,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
                   serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old,
                   pad2, serq_cidx,
                   pad1, prr_out, snd_nxt, rcv_wup, packets_out, ecn_flags_tx, quick_acks_decr,
-                  pad1_tx2rx) {
+                  fin_sent, pad1_tx2rx) {
     // k + i for stage 0
 
     // from intrinsic
@@ -724,6 +731,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(read_tx2rxd.packets_out, packets_out);
     modify_field(read_tx2rxd.ecn_flags_tx, ecn_flags_tx);
     modify_field(read_tx2rxd.quick_acks_decr, quick_acks_decr);
+    modify_field(read_tx2rxd.fin_sent, fin_sent);
     modify_field(read_tx2rxd.pad1_tx2rx, pad1_tx2rx);
 }
 
@@ -733,8 +741,8 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
 action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time,
         snd_una, snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
         bytes_acked, snd_wnd, rcv_mss, rto, pred_flags, ecn_flags, state,
-        ato, quick, snd_wscale, pending, ca_flags, write_serq,
-        pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q) {
+        parsed_state, ato, quick, snd_wscale, pending, ca_flags, write_serq,
+        pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q, alloc_descr) {
     // k + i for stage 1
 
 
@@ -777,6 +785,7 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_ti
     modify_field(s1_s2s_scratch.rcv_mss_shft, s1_s2s.rcv_mss_shft);
     modify_field(s1_s2s_scratch.rcv_tstamp, s1_s2s.rcv_tstamp);
     modify_field(s1_s2s_scratch.quick_acks_decr, s1_s2s.quick_acks_decr);
+    modify_field(s1_s2s_scratch.fin_sent, s1_s2s.fin_sent);
 
     // d for stage 1 tcp-rx
     modify_field(tcp_rx_d.ooo_rcv_bitmap, ooo_rcv_bitmap);
@@ -798,6 +807,7 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_ti
     modify_field(tcp_rx_d.pred_flags, pred_flags);
     modify_field(tcp_rx_d.ecn_flags, ecn_flags);
     modify_field(tcp_rx_d.state, state);
+    modify_field(tcp_rx_d.parsed_state, parsed_state);
     modify_field(tcp_rx_d.ato, ato);
     modify_field(tcp_rx_d.quick, quick);
     modify_field(tcp_rx_d.snd_wscale, snd_wscale);
@@ -808,6 +818,7 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_ti
     modify_field(tcp_rx_d.fastopen_rsk, fastopen_rsk);
     modify_field(tcp_rx_d.pingpong, pingpong);
     modify_field(tcp_rx_d.ooo_in_rx_q, ooo_in_rx_q);
+    modify_field(tcp_rx_d.alloc_descr, alloc_descr);
 }
 
 /*

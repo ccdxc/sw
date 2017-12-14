@@ -8,22 +8,32 @@ import infra.common.defs as defs
 from infra.common.objects import MacAddressBase
 
 def GetSeqNum (tc, pkt):
+    fin = 0
+    if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
+        fin = 1
     # HACK: Account for RXed bytes here
     # to be used for next TCP segment
-    tc.pvtdata.flow1_bytes_rxed += pkt.payloadsize
+    tc.pvtdata.flow1_bytes_rxed += pkt.payloadsize + fin
     return tc.pvtdata.flow1_rcv_nxt
 
 def GetAckNum (tc, pkt):
     return tc.pvtdata.flow1_snd_una
 
 def GetReverseFlowSeqNum (tc, pkt):
+    fin = 0
+    if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
+        fin = 1
+    tc.pvtdata.flow2_bytes_rxed += pkt.payloadsize + fin
     return tc.pvtdata.flow2_rcv_nxt
 
 def GetReverseFlowAckNum (tc, pkt):
     return tc.pvtdata.flow2_snd_una
 
 def GetReverseFlowAckNumAckOnePkt (tc, pkt):
-    return tc.pvtdata.flow2_snd_una + tc.packets.Get('PKT1').payloadsize
+    fin = 0
+    if 'F' in tc.packets.Get('PKT1').headers.tcp.fields.flags:
+        fin = 1
+    return tc.pvtdata.flow2_snd_una + tc.packets.Get('PKT1').payloadsize + fin
 
 def GetReverseFlowAckNumAckTwoPkts (tc, pkt):
     return tc.pvtdata.flow2_snd_una + tc.packets.Get('PKT1').payloadsize + \
@@ -38,16 +48,19 @@ def GetNxtPktAckNum (tc, pkt):
     return tc.pvtdata.flow1_snd_una
 
 def GetPktOutSeqNum (tc, pkt):
+    fin = 0
+    if 'F' in tc.packets.Get('PKT1').headers.tcp.fields.flags:
+        fin = 1
     if tc.pvtdata.same_flow:
-        return tc.pvtdata.flow1_snd_nxt
+        return tc.pvtdata.flow1_snd_nxt + fin
     else:
-        return tc.pvtdata.flow2_snd_nxt
+        return tc.pvtdata.flow2_snd_nxt + fin
 
 def GetPktOutAckNum (tc, pkt):
     if tc.pvtdata.same_flow:
         return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
     else:
-        return tc.pvtdata.flow2_rcv_nxt
+        return tc.pvtdata.flow2_rcv_nxt + tc.pvtdata.flow2_bytes_rxed
 
 def GetNxtPktOutSeqNum (tc, pkt):
     return GetPktOutSeqNum(tc, pkt) + pkt.payloadsize
@@ -65,7 +78,10 @@ def GetAckPktSeqNum (tc, pkt):
     return tc.pvtdata.flow1_snd_nxt
 
 def GetAckPktAckNum (tc, pkt):
-    return tc.pvtdata.flow1_rcv_nxt + tc.packets.Get('PKT1').payloadsize
+    fin = 0
+    if 'F' in tc.packets.Get('PKT1').headers.tcp.fields.flags:
+        fin = 1
+    return tc.pvtdata.flow1_rcv_nxt + tc.packets.Get('PKT1').payloadsize + fin
 
 def GetReverseFlowAckPktSeqNum (tc, pkt):
     return tc.pvtdata.flow2_snd_nxt + tc.packets.Get('PKT1').payloadsize

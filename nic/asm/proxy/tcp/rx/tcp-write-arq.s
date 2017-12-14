@@ -38,9 +38,9 @@ dma_cmd_data:
 
 #if 1
     addi        r6, r6, (70+NIC_CPU_HDR_SIZE_BYTES)
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, r6)
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, r6)
 #else
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, k.to_s5_payload_len)
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.to_s5_payload_len)
 #endif
         
      b          dma_cmd_descr
@@ -67,7 +67,7 @@ dma_cmd_cpu_hdr:
     phvwri      p.cpu_hdr3_tcp_ws, 0
     add         r1, r0, k.to_s5_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr3_tcp_ws)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr3_tcp_ws)
         
 dma_cmd_descr:    
     /* Set the DMA_WRITE CMD for descr */
@@ -90,7 +90,7 @@ dma_cmd_descr:
 #endif
     phvwr       p.aol_L0, r4.wx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1, aol_A0, aol_next_pkt)    
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(pkt_descr_dma_dma_cmd, r1, aol_A0, aol_next_pkt)    
     
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_LEAVE_IN_ARQ, TCP_DDOL_LEAVE_IN_ARQ
@@ -101,7 +101,7 @@ dma_cmd_arq_slot:
                    r6,
                    k.to_s5_xrq_base,
                    ring_entry_descr_addr,
-                   dma_cmd3_dma_cmd, 
+                   ring_slot_dma_cmd, 
                    1, 
                    1, 
                    c1)  

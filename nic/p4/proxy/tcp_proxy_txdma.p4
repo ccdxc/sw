@@ -19,6 +19,7 @@
 
 #define tx_table_s2_t0 s2_t0_tcp_tx
 #define tx_table_s2_t1 s2_t1_tcp_tx
+#define tx_table_s2_t2 s2_t2_tcp_tx
 
 #define tx_table_s3_t0 s3_t0_tcp_tx
 
@@ -44,6 +45,7 @@
 
 #define tx_table_s2_t0_action read_descr
 #define tx_table_s2_t1_action sesq_consume
+#define tx_table_s2_t2_action read_tcp_flags
 
 #define tx_table_s3_t0_action retx
 
@@ -68,6 +70,7 @@
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
     modify_field(common_global_scratch.process_ack_flag, common_phv.process_ack_flag); \
+    modify_field(common_global_scratch.fin, common_phv.fin); \
     modify_field(common_global_scratch.pending_rx2tx, common_phv.pending_rx2tx); \
     modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
     modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
@@ -133,6 +136,13 @@ header_type tcp_tx_pending_d_t {
 // d for stage 2
 // Reads sesq or retx_head descriptor, uses pkt_descr_aol_t
 
+// d for stage 2 table 2
+header_type tcp_tx_read_tcp_flags_d_t {
+    fields {
+        tcp_flags               : 8;
+    }
+}
+
 // d for stage 3
 header_type tcp_retx_d_t {
     fields {
@@ -177,6 +187,7 @@ header_type common_global_phv_t {
         qstate_addr             : HBM_ADDRESS_WIDTH;
         snd_una                 : SEQ_NUMBER_WIDTH;
         process_ack_flag        : 16;
+        fin                     : 1;
         pending_rx2tx           : 1;
         pending_sesq            : 1;
         pending_ack_send        : 1;
@@ -229,6 +240,7 @@ header_type to_stage_5_phv_t {
         addr                    : HBM_ADDRESS_WIDTH;
         offset                  : OFFSET_WIDTH;
         len                     : LEN_WIDTH;
+        state                   : 8;
         rcv_mss_shft            : 4;
         quick                   : 4;
         pingpong                : 1;
@@ -302,6 +314,8 @@ metadata read_sesq_ci_d_t read_sesq_ci_d;
 metadata tcp_tx_pending_d_t pending_d;
 @pragma scratch_metadata
 metadata pkt_descr_aol_t read_descr_d;
+@pragma scratch_metadata
+metadata tcp_tx_read_tcp_flags_d_t read_tcp_flags_d;
 @pragma scratch_metadata
 metadata tcp_retx_d_t retx_d;
 @pragma scratch_metadata
@@ -425,7 +439,7 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
 pi_4, ci_4, pi_5, ci_5, debug_dol_tx, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd, ft_pi, __unused_cwnd, \
-rto, pending_ft_clear, pending_ft_reset, pending_ack_send, pending_snd_una_update
+rto, state, pending_ft_clear, pending_ft_reset, pending_ack_send, pending_snd_una_update
 
 
 #define GENERATE_RX2TX_D                                                                               \
@@ -458,6 +472,7 @@ rto, pending_ft_clear, pending_ft_reset, pending_ack_send, pending_snd_una_updat
     modify_field(rx2tx_d.ft_pi, ft_pi);                                                                \
     modify_field(rx2tx_d.__unused_cwnd, __unused_cwnd);                                                \
     modify_field(rx2tx_d.rto, rto);                                                                    \
+    modify_field(rx2tx_d.state, state);                                                                \
     modify_field(rx2tx_d.pending_ft_clear, pending_ft_clear);                                          \
     modify_field(rx2tx_d.pending_ft_reset, pending_ft_reset);                                          \
     modify_field(rx2tx_d.pending_ack_send, pending_ack_send);                                          \
@@ -640,6 +655,16 @@ action sesq_consume() {
 }
 
 /*
+ * Stage 2 table 2 action
+ */
+action read_tcp_flags(tcp_flags) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // d for stage 2 table 2
+    modify_field(read_tcp_flags_d.tcp_flags, tcp_flags);
+}
+/*
  * Stage 3 table 0 action
  */
 action retx(RETX_SHARED_PARAMS) {
@@ -722,6 +747,7 @@ action xmit(XMIT_SHARED_PARAMS) {
     modify_field(to_s5_scratch.addr, to_s5.addr);
     modify_field(to_s5_scratch.offset, to_s5.offset);
     modify_field(to_s5_scratch.len, to_s5.len);
+    modify_field(to_s5_scratch.state, to_s5.state);
     modify_field(to_s5_scratch.rcv_mss_shft, to_s5.rcv_mss_shft);
     modify_field(to_s5_scratch.quick, to_s5.quick);
     modify_field(to_s5_scratch.pingpong, to_s5.pingpong);

@@ -25,7 +25,8 @@
         packets_out                     : 16                    ;\
         ecn_flags_tx                    : 8                     ;\
         quick_acks_decr                 : 4                     ;\
-        pad1_tx2rx                      : 4                     ;\
+        fin_sent                        : 1                     ;\
+        pad1_tx2rx                      : 3                     ;\
 
 
 #define RX2TX_SHARED_STATE \
@@ -35,11 +36,12 @@
         ft_pi                           : 16                    ;\
         __unused_cwnd                   : WINDOW_WIDTH          ;\
         rto                             : 16                    ;\
+        state                           : 8                     ;\
         pending_ft_clear                : 1                     ;\
         pending_ft_reset                : 1                     ;\
         pending_ack_send                : 1                     ;\
         pending_snd_una_update          : 1                     ;\
-        pad1_rx2tx                      : 28                    ;
+        pad1_rx2tx                      : 20                    ;
 
 
 #define RX2TX_SHARED_EXTRA_STATE \

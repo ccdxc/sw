@@ -33,6 +33,8 @@
 #define TCP_NEW_SYN_RECV  12
 #define TCP_MAX_STATES    13 /* Leave at the end! */
 
+#define TCP_PARSED_STATE_HANDLE_IN_CPU      0x01
+
 
 #define TCP_STATE_MASK    0xF
 

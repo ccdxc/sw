@@ -303,6 +303,7 @@
 #define TCP_DDOL_DONT_RING_TX_DOORBELL  0x10
 #define TCP_DDOL_DEL_ACK_TIMER          0x20
 #define TCP_DDOL_PKT_TO_L7Q             0x40
+#define TCP_DDOL_BYPASS_BARCO           0x80
 // Tx encodings
 #define TCP_TX_DDOL_DONT_SEND_ACK       0x1
 #define TCP_TX_DDOL_DONT_TX             0x2

@@ -43,7 +43,7 @@ dma_cmd_l7_descr:
     phvwr       p.aol_L2, r0
     phvwr       p.aol_next_addr, r0
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd7_dma_cmd, r1, aol_A1, aol_next_pkt)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(l7_descr_dma_cmd, r1, aol_A1, aol_next_pkt)
     addi        r7, r0, 1
     /*
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
@@ -58,7 +58,7 @@ dma_cmd_l7q_slot:
 
     // increment pi as a part of ringing dorrbell
     phvwr       p.l7_ring_entry_descr_addr, k.{s5_t2_s2s_l7_descr_sbit0_ebit15...s5_t2_s2s_l7_descr_sbit16_ebit31}
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd8_dma_cmd, r1, l7_ring_entry_descr_addr, l7_ring_entry_descr_addr)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(l7_ring_slot_dma_cmd, r1, l7_ring_entry_descr_addr, l7_ring_entry_descr_addr)
     addi        r7, r7, 1
 
 tcp_l7q_produce:
@@ -66,14 +66,14 @@ tcp_l7q_produce:
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_L7Q, TCP_DDOL_PKT_TO_L7Q
     bcf         [!c1], ring_doorbell
     nop
-    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd8_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(l7_ring_slot_dma_cmd)
     b           flow_write_l7q_process_done
     nop
 ring_doorbell:
 
 #if PROXYR_TCP_PROXY_DIR
     add         r5, k.common_phv_fid, PROXYR_OPER_CB_OFFSET(PROXYR_TCP_PROXY_DIR)
-    CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd9_dma_cmd, 
+    CAPRI_DMA_CMD_RING_DOORBELL2(l7_doorbell_dma_cmd, 
                                  LIF_APP_REDIR,
                                  APP_REDIR_PROXYR_QTYPE,
                                  r5,
@@ -82,7 +82,7 @@ ring_doorbell:
                                  db_data_pid, 
                                  db_data_index)
 #else
-    CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd9_dma_cmd, 
+    CAPRI_DMA_CMD_RING_DOORBELL2(l7_doorbell_dma_cmd, 
                                  LIF_APP_REDIR,
                                  APP_REDIR_PROXYR_QTYPE,
                                  k.common_phv_fid,
@@ -92,7 +92,7 @@ ring_doorbell:
                                  db_data_index)
 #endif                                 
     tbladd      d.{l7q_pidx}.hx, 1
-    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd9_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(l7_doorbell_dma_cmd)
     addi        r7, r0, 1
 
 flow_write_l7q_process_done:

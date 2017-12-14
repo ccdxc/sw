@@ -1,6 +1,7 @@
 #ifndef __PROXY_CONSTANTS_H
 #define __PROXY_CONSTANTS_H
 
+#define NIC_DESC_ENTRY_TCP_FLAGS_OFFSET      56
 #define NIC_DESC_ENTRY_0_OFFSET              64         /* &((nic_desc_t *)0)->entry[0]*/
 #define NIC_DESC_ENTRY_L_OFFSET              96         /* &((nic_desc_t *)0)->entry[1]*/
 #define NIC_DESC_ENTRY_SIZE                  16         /* sizeof(nic_desc_entry_t) */

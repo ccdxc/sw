@@ -72,7 +72,7 @@ dma_cmd_tcp_header:
     phvwr           p.tcp_header_seq_no, k.t0_s2s_snd_nxt
     phvwr           p.tcp_header_ack_no, k.to_s6_rcv_nxt
     phvwr           p.tcp_header_data_ofs, 5
-    phvwr           p.tcp_header_flags, TCPHDR_ACK
+    //phvwr           p.tcp_header_flags, TCPHDR_ACK
     phvwr           p.tcp_header_window, k.t0_s2s_snd_wnd
     phvwr           p.tx2rx_quick_acks_decr, d.quick_acks_decr
 

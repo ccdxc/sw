@@ -35,12 +35,17 @@ struct s1_t0_tcp_rx_d d;
 tcp_rx_process_stage1_start:
     CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
 
+    tblwr           d.u.tcp_rx_d.alloc_descr, 1
+    phvwri          p.common_phv_write_serq, 1
+
     /*
      * Adjust quick based on acks sent in tx pipeline
      */
     tblssub         d.u.tcp_rx_d.quick, k.s1_s2s_quick_acks_decr
 
     sne             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
+    seq.!c1         c1, k.common_phv_fin, 1
+    seq.!c1         c1, k.s1_s2s_fin_sent, 1
     sne             c2, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
     slt             c3, k.To_s1_snd_nxt, k.To_s1_ack_seq
     slt             c4, d.u.tcp_rx_d.rcv_tsval, d.u.tcp_rx_d.ts_recent
@@ -203,7 +208,6 @@ table_read_setup_next:
      * c7 = drop
      */
     bcf             [c7], flow_rx_drop
-    phvwri          p.common_phv_write_serq, 1
 
 table_read_RTT:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
@@ -214,25 +218,28 @@ table_read_RTT:
      */
     bcf             [c6], tcp_rx_end
 
-    /*
-     * For pure ack not going to cpu, don't allocate buffers
-     * TODO : check for FIN/RST as well
-     */
-    seq             c5, k.s1_s2s_payload_len, r0
-    seq             c4, k.common_phv_syn, 1
-    bcf             [c5 & !c4], tcp_rx_end
 table_read_RNMDR_ALLOC_IDX:
+    /*
+     * Allocate page and descriptor if alloc_descr is 1.
+     * TODO : we can optimize to not allocate page if
+     * payload_len is 0
+     */
+    seq             c3, d.u.tcp_rx_d.alloc_descr, 1
+    //bcf             [!c3], table_read_RNMPR_ALLOC_IDX
+    bcf             [!c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
                         RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 table_read_RNMPR_ALLOC_IDX:
+    //seq             c3, k.s1_s2s_payload_len, r0
+    //bcf             [c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
                         RNMPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 table_read_L7_RNDMR_ALLOC_IDX:
     seq             c1, k.common_phv_l7_proxy_en, 1
     b.!c1.e         tcp_rx_end
-    seq             c2, k.common_phv_l7_proxy_type_span, 1
-    phvwri.!c2      p.app_header_table1_valid, 0
-    phvwri.!c2      p.common_phv_write_serq, 0
+    seq             c2, k.common_phv_l7_proxy_type_redirect, 1
+    phvwri.c2       p.app_header_table1_valid, 0
+    phvwri.c2       p.common_phv_write_serq, 0
     CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_stage2_start,
                         RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 
@@ -249,7 +256,8 @@ tcp_ack:
     slt             c2, k.To_s1_snd_nxt, k.To_s1_ack_seq
     seq             c3, d.u.tcp_rx_d.pending, ICSK_TIME_EARLY_RETRANS
     seq             c4, d.u.tcp_rx_d.pending, ICSK_TIME_LOSS_PROBE
-    bcf             [c1 | c2 | c3 | c4], slow_tcp_ack
+    sne             c5, d.u.tcp_rx_d.state, TCP_ESTABLISHED
+    bcf             [c1 | c2 | c3 | c4 | c5], slow_tcp_ack
 
     // TODO: process_ack_flag is 1 bit, check how these flags are to be used
     // and fix code
@@ -288,6 +296,28 @@ fast_tcp_in_ack_event:
      nop
 
 slow_tcp_ack:
+    seq             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
+    sne             c2, k.To_s1_snd_nxt, k.To_s1_ack_seq
+    bcf             [c1 | c2], slow_tcp_ack_established
+
+    /*
+     *                    (recv ack)
+     * State (LAST_ACK)   ----------> TCP_CLOSE
+     * State (FIN_WAIT_1) ----------> FIN_WAIT_2
+     * State (CLOSING) ----------> TIME_WAIT
+     */
+    seq             c1, d.u.tcp_rx_d.state, TCP_LAST_ACK
+    tblwr.c1        d.u.tcp_rx_d.state, TCP_CLOSE
+    // TODO : Inform ARM that the connection is closed
+
+    seq             c1, d.u.tcp_rx_d.state, TCP_FIN_WAIT1
+    tblwr.c1        d.u.tcp_rx_d.state, TCP_FIN_WAIT2
+
+    // TODO : either inform ARM or start time wait timer
+    seq             c1, d.u.tcp_rx_d.state, TCP_CLOSING
+    tblwr.c1        d.u.tcp_rx_d.state, TCP_TIME_WAIT
+
+slow_tcp_ack_established:
     /* If the ack is older than previous acks
      * then we can probably ignore it.
          *
@@ -538,6 +568,11 @@ tcp_in_ack_event:
      bcf            [!c3], no_queue
      nop
 
+     // TODO : we bal into tcp_ack and this runs, however below code
+     // further does a bal. Forcibly return for now and see how to make
+     // that code run
+     jr             r7
+
 tcp_ecn_check_ce:
     sne             c4, r7, r0
 
@@ -694,18 +729,26 @@ tcp_enter_quickack_mode:
     add             r7, r0, r0
 
 tcp_rx_slow_path:
-    /* Check if the state is TCP_ESTABLISHED. If not packet is given to CPU */
-    seq             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
-    phvwri.!c1      p.common_phv_write_arq, 1
+    seq             c1, k.s1_s2s_payload_len, r0
+    tblwr.c1        d.u.tcp_rx_d.alloc_descr, 0
+    phvwri.c1       p.common_phv_write_serq, 0
+
+    seq             c1, k.common_phv_syn, 1
+    tblwr.c1        d.u.tcp_rx_d.alloc_descr, 1
+    phvwri.c1       p.common_phv_write_serq, 1
+
+    smeqb           c1, d.u.tcp_rx_d.parsed_state, \
+                            TCP_PARSED_STATE_HANDLE_IN_CPU, \
+                            TCP_PARSED_STATE_HANDLE_IN_CPU
+    phvwri.c1       p.common_phv_write_arq, 1
 
     seq             c2, d.u.tcp_rx_d.state, TCP_LISTEN
-
     phvwri.c2       p.common_phv_write_tcp_app_hdr,1
     phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.To_s1_seq.wx
     phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.To_s1_ack_seq.wx
     phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s1_flags
 
-    bcf             [!c1], flow_rx_process_done
+    bcf             [c1], flow_rx_process_done
     setcf           c7, [!c0]
     /* Setup the to-stage/stage-to-stage variables */
     phvwr           p.common_phv_snd_una, d.u.tcp_rx_d.snd_una
@@ -724,6 +767,59 @@ tcp_rx_slow_path:
     bcf             [!c1], slow_path
     nop
 
+    /*
+     * Handle close (fin sent in tx pipeline)
+     *
+     * State (EST) --> FIN_WAIT_1
+     * State (CLOSE_WAIT) --> LAST_ACK
+     */
+    setcf           c2, [!c0]
+    seq             c1, k.s1_s2s_fin_sent, 1
+
+    seq.c1          c2, d.u.tcp_rx_d.state, TCP_ESTABLISHED
+    tblwr.c2        d.u.tcp_rx_d.state, TCP_FIN_WAIT1
+
+    seq.c1          c2, d.u.tcp_rx_d.state, TCP_CLOSE_WAIT
+    tblwr.c2        d.u.tcp_rx_d.state, TCP_LAST_ACK
+
+    /*
+     * EST (recv: FIN) --> CLOSE_WAIT, increment sequence number
+     * FIN_WAIT_1 (recv: FIN) --> CLOSING, increment sequence number
+     * FIN_WAIT_2 (recv: FIN) --> TIME_WAIT, increment sequence number
+     * 
+     */
+    seq             c1, k.common_phv_fin, 1
+    b.!c1           tcp_rx_slow_path_post_fin_handling
+
+    seq             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
+    tblwr.c1        d.u.tcp_rx_d.state, TCP_CLOSE_WAIT
+
+    seq             c2, d.u.tcp_rx_d.state, TCP_FIN_WAIT1
+    tblwr.c2        d.u.tcp_rx_d.state, TCP_CLOSING
+
+    // TODO : hand off to arm or start time_wait timer
+    seq             c3, d.u.tcp_rx_d.state, TCP_FIN_WAIT2
+    tblwr.c3        d.u.tcp_rx_d.state, TCP_TIME_WAIT
+
+    /*
+     * TODO : Until TLS code is ready, do not send FIN packets to TLS
+     * unless bypass_barco is set
+     */
+    smeqb           c4, k.common_phv_debug_dol, TCP_DDOL_BYPASS_BARCO, TCP_DDOL_BYPASS_BARCO
+    b.!c4           tcp_rx_slow_path_post_fin_handling
+
+    setcf           c1, [c1 | c2 | c3]
+    b.!c1           tcp_rx_slow_path_post_fin_handling
+    tbladd.c1       d.u.tcp_rx_d.rcv_nxt, 1
+    tblwr.c1        d.u.tcp_rx_d.alloc_descr, 1
+    phvwri.c1       p.common_phv_write_serq, 1
+    phvwr.c1        p.common_phv_pending_txdma, 1
+    phvwr.c1        p.rx2tx_pending_ack_send, 1
+    phvwr.c1        p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
+
+    phvwr           p.rx2tx_state, d.u.tcp_rx_d.state
+
+tcp_rx_slow_path_post_fin_handling:
     /*   /* If PAWS failed, check it more carefully in slow path */
     /* if ((s32)(tp->rx_opt.rcv_tsval - tp->rx_opt.ts_recent) < 0) {
 
@@ -743,7 +839,10 @@ tcp_rx_slow_path:
 
     seq             c1, k.s1_s2s_payload_len, r0
     phvwr.c1        p.common_phv_process_ack_flag, r0
-    b.c1            tcp_event_data_rcv_done
+    bal.c1          r7, tcp_ack
+    nop
+    seq             c1, k.s1_s2s_payload_len, r0
+    b.c1            flow_rx_process_done
     nop
 
 tcp_queue_rcv:

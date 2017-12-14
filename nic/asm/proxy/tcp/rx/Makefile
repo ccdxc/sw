@@ -39,8 +39,6 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-l7-rdesc-alloc.s \
     $(SRC_DIR)/tcp-rtt.s \
     $(SRC_DIR)/tcp-rx.s \
-    $(SRC_DIR)/tcp-sack2.s \
-    $(SRC_DIR)/tcp-sack4.s \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \
     $(SRC_DIR)/tcp-write-serq.s \

@@ -18,6 +18,7 @@ struct s1_t1_tcp_tx_read_sesq_ci_d d;
         .align
         .param          tcp_tx_sesq_consume_stage2_start
         .param          tcp_tx_read_descr_start
+        .param          tcp_tx_read_tcp_flags_start
 tcp_tx_sesq_read_ci_stage1_start:
 
         sne             c1, k.common_phv_pending_asesq, r0
@@ -30,8 +31,18 @@ tcp_tx_sesq_read_ci_stage1_start:
 
         CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_tx_sesq_consume_stage2_start)
 
-		CAPRI_NEXT_TABLE_READ_e(0, TABLE_LOCK_DIS,
+		CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                         tcp_tx_read_descr_start, r3, TABLE_SIZE_512_BITS)
 
+        b.c1            read_sesq_ci_end
+        /*
+         * Launch stage to read tcp flags
+         */
+        add             r3, r4, NIC_DESC_ENTRY_TCP_FLAGS_OFFSET
+		CAPRI_NEXT_TABLE_READ_e(2, TABLE_LOCK_DIS,
+                        tcp_tx_read_tcp_flags_start, r3, TABLE_SIZE_8_BITS)
+
+        nop
+read_sesq_ci_end:
         nop.e
         nop

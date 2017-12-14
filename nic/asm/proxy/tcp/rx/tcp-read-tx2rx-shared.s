@@ -37,6 +37,8 @@ tcp_rx_read_shared_stage0_start:
     phvwr           p.common_phv_fid, k.p4_rxdma_intr_qid
     smeqb           c1, k.tcp_app_header_flags, TCPHDR_SYN, TCPHDR_SYN
     phvwri.c1       p.common_phv_syn, 1
+    smeqb           c1, k.tcp_app_header_flags, TCPHDR_FIN, TCPHDR_FIN
+    phvwri.c1       p.common_phv_fin, 1
     and             r2, k.tcp_app_header_flags, TCPHDR_ACK
     /* If we see a pure SYN drop it */
     sne             c1, r1, r0
@@ -78,6 +80,9 @@ tcp_rx_read_shared_stage0_start:
     tblwr           d.quick_acks_decr_old, d.quick_acks_decr
     phvwr           p.s1_s2s_quick_acks_decr, r1
 
+    phvwr           p.s1_s2s_fin_sent, d.fin_sent
+    tblwr           d.fin_sent, 0
+
     phvwr        p.to_s5_payload_len, k.{tcp_app_header_payload_len_sbit0_ebit7, tcp_app_header_payload_len_sbit8_ebit15}
     phvwr        p.s1_s2s_payload_len, k.{tcp_app_header_payload_len_sbit0_ebit7, tcp_app_header_payload_len_sbit8_ebit15}
     CAPRI_OPERAND_DEBUG(k.{tcp_app_header_payload_len_sbit0_ebit7 COMMA tcp_app_header_payload_len_sbit8_ebit15})
@@ -85,8 +90,8 @@ tcp_rx_read_shared_stage0_start:
 read_l7_proxy_cfg:
     sne         c1, d.l7_proxy_type, L7_PROXY_TYPE_NONE
     phvwri.c1   p.common_phv_l7_proxy_en, 1
-    seq         c2, d.l7_proxy_type, L7_PROXY_TYPE_SPAN
-    phvwri.c2   p.common_phv_l7_proxy_type_span, 1
+    seq         c2, d.l7_proxy_type, L7_PROXY_TYPE_REDIR
+    phvwri.c2   p.common_phv_l7_proxy_type_redirect, 1
 
 table_read_RX:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,

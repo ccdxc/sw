@@ -28,9 +28,10 @@ tcp_rx_write_serq_stage_start:
     CAPRI_OPERAND_DEBUG(k.s5_s2s_debug_stage4_7_thread)
     tblwr       d.debug_stage0_3_thread, k.s5_s2s_debug_stage0_3_thread
     tblwr       d.debug_stage4_7_thread, k.s5_s2s_debug_stage4_7_thread
-    sne         c1, k.common_phv_write_arq, r0
-    seq         c2, k.to_s5_payload_len, r0
-    setcf       c7, [!c1 & c2]
+    seq         c1, k.common_phv_write_arq, 1
+    seq         c2, k.common_phv_write_serq, 1
+    seq         c3, k.common_phv_l7_proxy_type_redirect, 1
+    setcf       c7, [!c1 & !c2 & !c3]
     seq         c3, k.common_phv_fatal_error, 1
     bcf         [c7 | c3], flow_write_serq_drop
     nop
@@ -43,6 +44,12 @@ tcp_rx_write_serq_stage_start:
 dma_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
 
+    /*
+     * If payload len is 0, skip DMA of page
+     */
+    seq         c1, k.to_s5_payload_len, 0
+    b.c1        dma_cmd_descr
+
     /* Set the DMA_WRITE CMD for data */
     add         r1, k.to_s5_page, k.s5_s2s_ooo_offset
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
@@ -52,19 +59,22 @@ dma_cmd_data:
      * accumulated payload len. We need to pass only the current
      * packet length. For now the DMA works if we pass a larger length
      */
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, k.to_s5_payload_len)
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.to_s5_payload_len)
     sne         c1, k.common_phv_ooo_rcv, r0
     bcf         [c1], dma_ooo_process
 
-    /* if (k.write_serq) is set in a previous stage , trigger writes to serq slot */
+dma_cmd_descr:
+    /*
+     * If write_serq is 0, don't DMA to descriptor (we could get here for
+     * l7 proxy redirect case, in which case, l7 asm file has DMA instructions
+     * to l7 descr)
+     */
     seq         c1, k.common_phv_write_serq, 1
     bcf         [!c1], dma_cmd_write_rx2tx_shared 
     nop
 
-dma_cmd_descr:
     /* Set the DMA_WRITE CMD for descr */
-    add         r5, k.to_s5_descr, r0
-    addi        r1, r5, NIC_DESC_ENTRY_0_OFFSET
+    add         r1, k.to_s5_descr, NIC_DESC_ENTRY_0_OFFSET
 
     phvwr       p.aol_A0, k.{to_s5_page}.dx
     addi        r3, r0, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
@@ -78,12 +88,15 @@ dma_cmd_descr:
     phvwr       p.aol_L2, r0
     phvwr       p.aol_next_addr, r0
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, aol_A0, aol_next_pkt)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(pkt_descr_dma_dma_cmd, r1, aol_A0, aol_next_pkt)
     addi        r7, r0, 1
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
     bcf         [c1], dma_cmd_write_rx2tx_shared
     nop
+dma_tcp_flags:
+    add         r1, k.to_s5_descr, NIC_DESC_ENTRY_TCP_FLAGS_OFFSET
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(tcp_flags_dma_dma_cmd, r1, tcp_app_header_flags, tcp_app_header_flags)
 dma_cmd_serq_slot:
     CAPRI_OPERAND_DEBUG(d.{serq_pidx}.hx)
     sll         r5, d.{serq_pidx}.hx, NIC_SERQ_ENTRY_SIZE_SHIFT
@@ -93,7 +106,7 @@ dma_cmd_serq_slot:
 
     phvwr       p.ring_entry_descr_addr, k.to_s5_descr
     /* The new SERQ defintion includes the descriptor pointer followed by the first AOL */
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1, ring_entry_descr_addr, aol_L0)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(ring_slot_dma_cmd, r1, ring_entry_descr_addr, aol_L0)
     addi        r7, r7, 1
 dma_cmd_write_rx2tx_shared:
     /* Set the DMA_WRITE CMD for copying rx2tx shared data from phv to mem */
@@ -101,13 +114,13 @@ dma_cmd_write_rx2tx_shared:
     bcf         [!c1], tcp_serq_produce
     nop
     add         r5, TCP_TCB_RX2TX_SHARED_WRITE_OFFSET, k.common_phv_qstate_addr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r5, rx2tx_snd_una, rx2tx_pad1_rx2tx)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r5, rx2tx_snd_una, rx2tx_pad1_rx2tx)
     addi        r7, r7, 1
 
 dma_cmd_write_rx2tx_extra_shared:
     /* Set the DMA_WRITE CMD for copying rx2tx extra shared data from phv to mem */
     add         r5, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, k.common_phv_qstate_addr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r5, rx2tx_extra_ato_deadline, rx2tx_extra__padding)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_extra_dma_dma_cmd, r5, rx2tx_extra_ato_deadline, rx2tx_extra__padding)
     addi        r7, r7, 1
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
@@ -122,10 +135,10 @@ dma_cmd_ring_tcp_tx_doorbell:
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_RING_TX_DOORBELL, TCP_DDOL_DONT_RING_TX_DOORBELL
     bcf         [c1 & !c7], tcp_serq_produce
 
-    CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd5_dma_cmd, LIF_TCP, 0,k.common_phv_fid, TCP_SCHED_RING_PENDING_RX2TX,
+    CAPRI_DMA_CMD_RING_DOORBELL2(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0,k.common_phv_fid, TCP_SCHED_RING_PENDING_RX2TX,
                                  0, db_data2_pid, db_data2_index)
 
-    phvwri.c7   p.dma_cmd5_dma_cmd_eop, 1
+    phvwri.c7   p.tx_doorbell_or_timer_dma_cmd_eop, 1
     b.c7        flow_write_serq_process_done
     addi        r7, r7, 1
     b           tcp_serq_produce
@@ -133,14 +146,14 @@ dma_cmd_ring_tcp_tx_doorbell:
 
 dma_cmd_start_del_ack_timer:
     tbladd      d.ft_pi, 1
-    phvwri      p.dma_cmd5_dma_cmd_addr, CAPRI_FAST_TIMER_ADDR(LIF_TCP)
+    phvwri      p.tx_doorbell_or_timer_dma_cmd_addr, CAPRI_FAST_TIMER_ADDR(LIF_TCP)
     // result will be in r3
     CAPRI_OPERAND_DEBUG(k.s5_s2s_ato)
     CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_FT, k.s5_s2s_ato)
     phvwr       p.{db_data2_pid...db_data2_index}, r3.dx
-    phvwri      p.dma_cmd5_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(db_data2_pid)
-    phvwri      p.dma_cmd5_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(db_data2_index)
-    phvwri      p.dma_cmd5_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri      p.tx_doorbell_or_timer_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(db_data2_pid)
+    phvwri      p.tx_doorbell_or_timer_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(db_data2_index)
+    phvwri      p.tx_doorbell_or_timer_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.rx2tx_ft_pi, d.ft_pi
 
 tcp_serq_produce:
@@ -154,25 +167,25 @@ tcp_serq_produce:
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_RING_TX_DOORBELL, TCP_DDOL_DONT_RING_TX_DOORBELL
     seq         c4, k.common_phv_l7_proxy_en, 1
     setcf       c3, [!c1 & c2 & !c4]
-    phvwri.c3   p.dma_cmd4_dma_cmd_eop, 1
+    phvwri.c3   p.rx2tx_extra_dma_dma_cmd_eop, 1
     nop
     // L7 IPS: write_serq is set to 0. it is already handled by write_serq flag
     // L7 IDS: write_l7q will do more DMA. So skip stop fence here 
     bcf         [c4], flow_write_serq_process_done
     nop
 
-    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd5_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(tx_doorbell_or_timer_dma_cmd)
     b           flow_write_serq_process_done
     nop
 ring_doorbell:
     tbladd      d.{serq_pidx}.hx, 1
 
-    CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd6_dma_cmd, LIF_TLS, 0, k.common_phv_fid, 0,
+    CAPRI_DMA_CMD_RING_DOORBELL2(tls_doorbell_dma_cmd, LIF_TLS, 0, k.common_phv_fid, 0,
                                  k.to_s5_xrq_pidx, db_data_pid, db_data_index)
     sne         c1, k.common_phv_l7_proxy_en, r0
     bcf         [c1], flow_write_serq_process_done
     nop
-    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd6_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(tls_doorbell_dma_cmd)
     addi        r7, r7, 1
 
 flow_write_serq_process_done:
@@ -232,7 +245,7 @@ tcp_write_serq_stats_end:
 
 dma_ooo_process:
     b           stats
-    phvwr       p.dma_cmd0_dma_cmd_eop, 1
+    phvwr       p.pkt_dma_dma_cmd_eop, 1
     // TODO: need to send ack
 
 flow_write_serq_drop:
@@ -241,6 +254,6 @@ flow_write_serq_drop:
     phvwri.!c1  p.p4_intr_global_drop, 1
     b.!c1       flow_write_serq_process_done
     nop
-    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(dma_cmd3_dma_cmd_type) / 16)
+    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(rx2tx_or_cpu_hdr_dma_dma_cmd_type) / 16)
     b           dma_cmd_write_rx2tx_shared
     nop

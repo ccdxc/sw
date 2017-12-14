@@ -54,7 +54,7 @@
 
 //#define TCP_PHV_HEADERS_END      3088
 #define TCP_PHV_TXDMA_COMMANDS_START    (CAPRI_PHV_START_OFFSET(intrinsic_dma_dma_cmd_type) / 16)
-#define TCP_PHV_RXDMA_COMMANDS_START    (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
+#define TCP_PHV_RXDMA_COMMANDS_START    (CAPRI_PHV_START_OFFSET(pkt_dma_dma_cmd_type) / 16)
 #define TCP_PHV_DMA_COMMANDS_END        6144
 #define TCP_PHV_DMA_COMMAND_ADDR_OFFSET 0
 #define TCP_PHV_DMA_COMMAND_ADDR_LEN    64

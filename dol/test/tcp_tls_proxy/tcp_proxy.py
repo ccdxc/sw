@@ -11,6 +11,7 @@ tcp_debug_dol_leave_in_arq = 0x8
 tcp_debug_dol_dont_ring_tx_doorbell = 0x10
 tcp_debug_dol_del_ack_timer = 0x20
 tcp_debug_dol_pkt_to_l7q = 0x40
+tcp_debug_dol_bypass_barco = 0x80
 
 tcp_tx_debug_dol_dont_send_ack = 0x1
 tcp_tx_debug_dol_dont_tx = 0x2
@@ -52,6 +53,9 @@ def SetupProxyArgs(tc):
     test_retx = None
     sem_full = None
     test_cong_avoid = 0
+    fin = 0
+    fin_ack = 0
+    final_fin = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -82,6 +86,12 @@ def SetupProxyArgs(tc):
         sem_full = tc.module.args.sem_full
     if hasattr(tc.module.args, 'test_cong_avoid'):
         test_cong_avoid = tc.module.args.test_cong_avoid
+    if hasattr(tc.module.args, 'fin'):
+        fin = tc.module.args.fin
+    if hasattr(tc.module.args, 'fin_ack'):
+        fin_ack = tc.module.args.fin_ack
+    if hasattr(tc.module.args, 'final_fin'):
+        final_fin = tc.module.args.final_fin
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -116,6 +126,9 @@ def SetupProxyArgs(tc):
         if 'test_cong_avoid' in iterelem.__dict__:
             test_cong_avoid = iterelem.test_cong_avoid
             tc.module.logger.info("- test_cong_avoid %s" % iterelem.test_cong_avoid)
+        if 'fin' in iterelem.__dict__:
+            fin = iterelem.fin
+            tc.module.logger.info("- fin %s" % iterelem.fin)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack = send_ack
@@ -127,6 +140,9 @@ def SetupProxyArgs(tc):
     tc.pvtdata.test_retx = test_retx
     tc.pvtdata.sem_full = sem_full
     tc.pvtdata.test_cong_avoid = test_cong_avoid
+    tc.pvtdata.fin = fin
+    tc.pvtdata.fin_ack = fin_ack
+    tc.pvtdata.final_fin = final_fin
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -161,6 +177,7 @@ def init_tcb_inorder(tc, tcb):
         tcb.dest_port = tc.config.flow.sport
     if tc.pvtdata.bypass_barco:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
+        tcb.debug_dol |= tcp_debug_dol_bypass_barco
 
     vlan_id = 0
     if tc.pvtdata.same_flow:
@@ -221,6 +238,7 @@ def init_tcb_inorder2(tc, tcb):
     tc.pvtdata.flow2_rcv_nxt = tcb.rcv_nxt
     tc.pvtdata.flow2_snd_nxt = tcb.snd_nxt
     tc.pvtdata.flow2_snd_una = tcb.snd_una
+    tc.pvtdata.flow2_bytes_rxed = 0
     tcb.rcv_tsval = 0x2AFAFAFA
     tcb.ts_recent = 0x2AFAFAF0
     tcb.snd_wnd = 1000
@@ -240,6 +258,7 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
     if tc.pvtdata.bypass_barco:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
+        tcb.debug_dol |= tcp_debug_dol_bypass_barco
 
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport
