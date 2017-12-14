@@ -368,20 +368,15 @@ descriptors:
             _buf          : ref://testcase/buffers/id=EXBUF
             bytes_written : ref://testcase/buffers/id=EXBUF/size
 
-
 trigger:
-
     descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=TXDESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
-
         - descriptor:
             object  : ref://testcase/descriptors/id=RXDESC
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
 
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+        - descriptor:
+            object  : ref://testcase/descriptors/id=TXDESC
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay

@@ -17,10 +17,6 @@ class RingObject(objects.FrameworkObject):
         self.id = spec.id
         self.size = spec.size
         self.queue = queue
-
-        self.doorbell = doorbell.Doorbell()
-        self.doorbell.Init(self, spec)
-
         self.descriptor_template = spec.desc.Get(FactoryStore)
         return
 

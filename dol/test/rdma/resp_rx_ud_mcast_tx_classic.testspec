@@ -236,7 +236,7 @@ session:
             doorbell:
                 object  : callback://rdma/rdma/GetRdmaRxRingDoorBellForMulticastCopy/idx=1
                 fields:
-                upd : 0x3 # DB_SCHED_WR(1)
+                  upd : 0x3 # DB_SCHED_WR(1)
         expect:
 
     - step:
@@ -244,13 +244,7 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=TX_DESC_ENIC
-                    #ring    : ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Enic8/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
                     ring    : ref://testcase/config/rdmasession/lqp/tx/rings/id=R0
-
-            doorbell:
-                #object: ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Enic8/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-                object: ref://testcase/config/rdmasession/lqp/tx/rings/id=R0/doorbell
-
 
         expect:
             packets:

@@ -66,7 +66,6 @@ packets:
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
-
 buffers:
     - buffer:
         id      : BUF1
@@ -90,9 +89,6 @@ trigger:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC1
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
-
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
 
 expect:
     packets:

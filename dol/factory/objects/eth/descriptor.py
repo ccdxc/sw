@@ -217,7 +217,10 @@ class EthRxCqDescriptorObject(EthDescriptorObject):
         return
 
     def GetCompletionIndex(self):
-        return self._data[self.__data_class__]['completion_index']
+        return self._data[self.__data_class__].completion_index
+
+    def GetColor(self):
+        return self._data[self.__data_class__].color
 
 
 class EthTxDescriptorObject(EthDescriptorObject):
@@ -238,6 +241,9 @@ class EthTxCqDescriptorObject(EthDescriptorObject):
     def GetCompletionIndex(self):
         return self._data[self.__data_class__].completion_index
 
+    def GetColor(self):
+        return self._data[self.__data_class__].color
+
 
 class AdminDescriptorObject(EthDescriptorObject):
     __data_class__ = AdminDesciptor
@@ -255,4 +261,7 @@ class AdminCqDescriptorObject(EthDescriptorObject):
         return
 
     def GetCompletionIndex(self):
-        return self._data[self.__data_class__]['completion_index']
+        return self._data[self.__data_class__].completion_index
+
+    def GetColor(self):
+        return self._data[self.__data_class__].color

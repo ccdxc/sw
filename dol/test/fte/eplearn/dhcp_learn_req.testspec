@@ -59,9 +59,6 @@ session:
                     object  : ref://testcase/descriptors/id=TXDESCR_REQUEST
                     ring    : ref://testcase/config/root/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
 
-            doorbell:
-                object: ref://testcase/config/root/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-
         expect:
             delay   : callback://eplearn/dhcp/GetExpectDelay
             descriptors:

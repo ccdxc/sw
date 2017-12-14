@@ -32,9 +32,6 @@ trigger:
             object  : ref://testcase/descriptors/id=DESC1
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=ADMIN/queues/id=Q0/rings/id=R0
 
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=ADMIN/queues/id=Q0/rings/id=R0/doorbell
-
 expect:
     descriptors:
         - descriptor:

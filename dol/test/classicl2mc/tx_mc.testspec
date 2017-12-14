@@ -158,10 +158,6 @@ descriptors:
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=TX_DESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
-
-        - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_COPY0
             ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=0
 
@@ -169,8 +165,9 @@ trigger:
             object  : ref://testcase/descriptors/id=RX_DESC_COPY1_ALLMC
             ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=1
 
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+        - descriptor:
+            object  : ref://testcase/descriptors/id=TX_DESC
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay

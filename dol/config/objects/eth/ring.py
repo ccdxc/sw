@@ -7,12 +7,16 @@ import config.objects.ring      as ring
 from infra.common.logging   import cfglogger
 from infra.common.defs import status
 from infra.common.glopts import GlobalOptions
+import config.objects.eth.doorbell as doorbell
 
 
 class EthRingObject(ring.RingObject):
     def __init__(self):
         super().__init__()
         self._mem = None
+        self.pi = 0     # Local PI
+        self.ci = 0     # Local CI
+        self.exp_color = 1  # Expect this color until ring wrap, then toggle
 
     def __str__(self):
         return ("%s Lif:%s/QueueType:%s/Queue:%s/Ring:%s/Mem:%s/Size:%d/DescSize:%d" %
@@ -26,15 +30,19 @@ class EthRingObject(ring.RingObject):
     def Init(self, queue, spec):
         super().Init(queue, spec)
         self.num = int(getattr(spec, 'num', 0))
+        assert isinstance(self.num, int) and self.num < 2
+        self.size = int(getattr(spec, 'size', 0))
+        assert isinstance(self.size, int) and (self.size != 0) and ((self.size & (self.size - 1)) == 0)
         self.desc_size = self.descriptor_template.meta.size
-        self.exp_color = 1  # Expect this color until ring wrap, then toggle
+        assert isinstance(self.desc_size, int) and (self.desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
+        self.doorbell = doorbell.Doorbell()
+        self.doorbell.Init(self, spec)
 
     def Configure(self):
         if GlobalOptions.dryrun:
             return
 
         # Make sure ring_size is a power of 2
-        assert (self.size != 0) and ((self.size & (self.size - 1)) == 0)
         self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
         resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
         cfglogger.info("Creating Ring %s" % self)
@@ -44,53 +52,60 @@ class EthRingObject(ring.RingObject):
         if GlobalOptions.dryrun:
             return status.SUCCESS
 
-        assert(self.num == 0)   # Only allow posting buffers on Ring 0
-
-        cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.queue.qstate.get_pindex(self.num), self))
-
         # Check descriptor compatibility
+        assert(descriptor is not None)
         assert(self.desc_size == descriptor.size)
 
+        cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.pi, self))
+
         # Bind the descriptor to the ring
-        descriptor.Bind(self._mem + (self.desc_size * self.queue.qstate.get_pindex(self.num)))
+        descriptor.Bind(self._mem + (self.desc_size * self.pi))
         # Remember descriptor for completion processing
-        self.queue.descriptors[self.queue.qstate.get_pindex(self.num)] = descriptor
+        self.queue.descriptors[self.pi] = descriptor
         descriptor.Write()
 
         # Increment posted index
-        self.queue.qstate.incr_pindex(self.num)
-        self.queue.qstate.Read()
+        self.pi += 1
+        self.pi %= self.size
+
+        # Ring the doorbell
+        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+            self.doorbell.Ring(upd=0x8)
+        elif self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
+            self.doorbell.Ring(upd=0xb)
+
         return status.SUCCESS
 
     def Consume(self, descriptor):
         if GlobalOptions.dryrun:
             return status.SUCCESS
 
-        assert(self.num == 1)   # Only allow consuming completions from Ring 1
-
-        cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.queue.qstate.get_cindex(self.num), self))
-
         # Check descriptor compatibility
+        assert(descriptor is not None)
         assert(self.desc_size == descriptor.size)
 
+        cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.ci, self))
+
         # Bind the descriptor to the ring
-        descriptor.Bind(self._mem + (self.desc_size * self.queue.qstate.get_cindex(self.num)))
+        descriptor.Bind(self._mem + (self.desc_size * self.ci))
         # Retreive descriptor for completion processing
-        d = self.queue.descriptors[self.queue.qstate.get_cindex(self.num)]
-        if descriptor._buf is not None and d._buf is not None:
-            descriptor._buf.Bind(d._buf._mem)
+        d = self.queue.descriptors[self.ci]
+        if descriptor.GetBuffer() is not None and d.GetBuffer() is not None:
+            descriptor.GetBuffer().Bind(d.GetBuffer()._mem)
         descriptor.Read()
 
         # Have we received a completion?
-        if descriptor._data.color != self.exp_color:
+        if descriptor.GetColor() != self.exp_color:
             return status.RETRY
 
         # Increment consumer index
-        self.queue.qstate.incr_cindex(self.num)
+        self.ci += 1
+        self.ci %= self.size
+
         # If we have reached the end of the ring then, toggle the expected color
-        if self.queue.qstate.get_cindex(self.num) + 1 > self.size:
+        if self.ci + 1 > self.size:
             self.exp_color = 0 if self.exp_color else 1
-        self.queue.qstate.Read()
+
         return status.SUCCESS
 
 

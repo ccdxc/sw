@@ -466,9 +466,6 @@ descriptors:
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
-        - descriptor:
             object  : ref://testcase/descriptors/id=SDESC1
             ring    : callback://telemetry/callbacks/GetTriggerRing/sessionid=1
         - descriptor:
@@ -480,9 +477,9 @@ trigger:
         - descriptor:
             object  : ref://testcase/descriptors/id=SDESC4
             ring    : callback://telemetry/callbacks/GetTriggerRing/sessionid=4
-
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
 
 expect:
     descriptors:

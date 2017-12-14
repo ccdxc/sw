@@ -64,9 +64,6 @@ trigger:
             object  : ref://testcase/descriptors/id=TXDESCR
             ring    : ref://testcase/config/root/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
 
-    doorbell:
-        object: ref://testcase/config/root/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-
 expect:
     delay   : callback://eplearn/arp/GetExpectDelay
     descriptors:

@@ -5,6 +5,7 @@ import config.objects.ring      as ring
 
 from infra.common.logging   import cfglogger
 from infra.factory.store    import FactoryStore
+import config.objects.rdma.doorbell as doorbell
 
 import model_sim.src.model_wrap as model_wrap
 
@@ -21,6 +22,8 @@ class RdmaRingObject(ring.RingObject):
     def Init(self, queue, spec):
         super().Init(queue, spec)
         self.desc_size = self.descriptor_template.meta.size
+        self.doorbell = doorbell.Doorbell()
+        self.doorbell.Init(self, spec)
 
     def SetRingParams(self, host, mem_handle, address, size, desc_size):
         self.host = host

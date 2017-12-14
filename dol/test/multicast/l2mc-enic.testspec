@@ -110,14 +110,12 @@ descriptors:
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=TX_DESC_ENIC15
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
-        - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_ENIC16
             ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic16/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
 
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+        - descriptor:
+            object  : ref://testcase/descriptors/id=TX_DESC_ENIC15
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay
