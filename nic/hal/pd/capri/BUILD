@@ -72,3 +72,10 @@ cc_library(
            capri_pd_deps,
     alwayslink = 1,
 )
+
+genrule(
+    name = "capri_tm_rw_gen",
+    srcs = ["//nic:tools/ncc/tenjin_wrapper.py", ":capri_tm_rw.template.cc"],
+    outs = [":capri_tm_rw.cc"],
+    cmd = "python $(location //nic:tools/ncc/tenjin_wrapper.py) --template $(location :capri_tm_rw.template.cc) --outfile $(location :capri_tm_rw.cc)"
+)

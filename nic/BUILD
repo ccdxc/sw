@@ -450,3 +450,5 @@ cc_library(
     ],
     deps = ["//nic:sdk_include"],
 )
+
+exports_files(["tools/ncc/tenjin_wrapper.py"])

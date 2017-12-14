@@ -1,6 +1,7 @@
 
 import sys
 import tenjin
+import argparse
 
 
 def render_template(out, name, context, templates_dir, prefix=None):
@@ -17,7 +18,10 @@ def render_template(out, name, context, templates_dir, prefix=None):
            if prefix else tenjin.PrefixedLinePreprocessor()]
     # disable HTML escaping
     template_globals = {"to_str": str, "escape": str}
-    engine = TemplateEngine(path=[templates_dir], pp=pp, cache=False)
+    if templates_dir:
+        engine = TemplateEngine(path=[templates_dir], pp=pp, cache=False)
+    else:
+        engine = TemplateEngine(pp=pp, cache=False)
     out.write(engine.render(name, context, template_globals))
 
 
@@ -36,3 +40,18 @@ class TemplateEngine(tenjin.Engine):  # pragma: no cover
         context.update(kwargs)
         template = self.get_template(template_name, context, globals)
         return template.render(context, globals, _buf=locals["_buf"])
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--template", required=True, help="Template file") 
+    parser.add_argument("--outfile", required=True, help="Output file") 
+    parser.add_argument("--prefix", default="//::", help="Tenjin prefix") 
+    args = parser.parse_args()
+
+    template = args.template
+    out_file = args.outfile
+    tenjin_prefix = args.prefix
+
+    dic = {}
+    with open(out_file, "w") as of:
+        render_template(of, template, dic, None, prefix=tenjin_prefix)
