@@ -39,10 +39,6 @@ tcp_rx_write_serq_stage_start:
 
     /* r4 is loaded at the beginning of the stage with current timestamp value */
     tblwr       d.curr_ts, r4
-    /* if (k.write_serq) is set in a previous stage , trigger writes to serq slot */
-    sne         c1, k.common_phv_write_serq, r0
-    bcf         [!c1], flow_write_serq_process_done
-    nop
 
 dma_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
@@ -59,6 +55,11 @@ dma_cmd_data:
     CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, k.to_s5_payload_len)
     sne         c1, k.common_phv_ooo_rcv, r0
     bcf         [c1], dma_ooo_process
+
+    /* if (k.write_serq) is set in a previous stage , trigger writes to serq slot */
+    seq         c1, k.common_phv_write_serq, 1
+    bcf         [!c1], dma_cmd_write_rx2tx_shared 
+    nop
 
 dma_cmd_descr:
     /* Set the DMA_WRITE CMD for descr */
@@ -143,17 +144,23 @@ dma_cmd_start_del_ack_timer:
     phvwr       p.rx2tx_ft_pi, d.ft_pi
 
 tcp_serq_produce:
+    seq         c1, k.common_phv_write_serq, 1
+    bcf         [!c1], flow_write_serq_process_done
+    nop
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
     bcf         [!c1 & !c2], ring_doorbell
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_RING_TX_DOORBELL, TCP_DDOL_DONT_RING_TX_DOORBELL
-    setcf       c3, [!c1 & c2]
+    seq         c4, k.common_phv_l7_proxy_en, 1
+    setcf       c3, [!c1 & c2 & !c4]
     phvwri.c3   p.dma_cmd4_dma_cmd_eop, 1
     nop
-    sne         c1, k.common_phv_l7_proxy_en, r0
-    bcf         [c1], flow_write_serq_process_done
+    // L7 IPS: write_serq is set to 0. it is already handled by write_serq flag
+    // L7 IDS: write_l7q will do more DMA. So skip stop fence here 
+    bcf         [c4], flow_write_serq_process_done
     nop
+
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd5_dma_cmd)
     b           flow_write_serq_process_done
     nop
