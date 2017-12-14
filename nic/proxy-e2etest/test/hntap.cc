@@ -42,13 +42,13 @@
 
 #define PKTBUF_LEN              2000
 
-#define HNTAP_LIF_ID      14 
+#define HNTAP_LIF_ID      15 
 #define HNTAP_QSTATE_ADDR 0xa4512000
 #define HNTAP_IOMEM_BASE  0xb39d2000
 
 int host_tap_fd, net_tap_fd;
 
-void hntap_dump_pkt(char *pkt, int len);
+int hntap_dump_pkt(char *pkt, int len);
 void hntap_nat(char *pkt, int len);
 
 extern int tls_server_main(int argv, char *argc[]);
@@ -870,7 +870,7 @@ hntap_handle_net_rx (char *pktbuf, int nread)
 
 }
 
-void 
+int 
 hntap_dump_pkt(char *pkt, int len)
 {
   int i;
@@ -928,8 +928,9 @@ hntap_dump_pkt(char *pkt, int len)
               ntohs(tcp->window),
               ntohs(tcp->check),
               ntohs(tcp->urg_ptr));
-    }
+    } else return -1;
   }
+  return 0;
 }
 
 
@@ -990,7 +991,11 @@ hntap_do_select_loop (void)
 	    num_hosttap_pkts++;
 	    TLOG("Host-Tap %d: Read %d bytes from host tap interface\n", num_hosttap_pkts, nread);
 	    hntap_host_ether_header_add(pktbuf);
-	    hntap_dump_pkt(pktbuf, nread + sizeof(struct vlan_header_t));
+	    int ret = hntap_dump_pkt(pktbuf, nread + sizeof(struct vlan_header_t));
+            if (ret == -1) {
+	      TLOG("Not an TCP packet\n");
+	      continue;
+            }
 	    /*
 	     * Setup and write to the Host-memory interface for model to read.
 	     */
@@ -1019,7 +1024,11 @@ hntap_do_select_loop (void)
       TLOG("Net-Tap %d: Read %d bytes from network tap interface\n", num_nettap_pkts, nread);
       hntap_net_ether_header_add(pktbuf);
       TLOG("Added ether header\n");
-      hntap_dump_pkt(pktbuf, nread + sizeof(struct ether_header_t));
+      int ret = hntap_dump_pkt(pktbuf, nread + sizeof(struct ether_header_t));
+      if (ret == -1) {
+	  TLOG("Not an TCP packet \n");
+	  continue;
+      }
 
       /*
        * Write to the ZMQ interface to modeal for Network Rx packet path.

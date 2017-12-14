@@ -129,7 +129,11 @@ p4pd_input_mapping_native_init (void)
     mask.mpls_0_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
-    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        mask.tunnel_metadata_tunnel_type_mask = 0x0;
+    } else {
+        mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    }
 
     // set the action
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV4_PACKET_ID;
@@ -161,7 +165,11 @@ p4pd_input_mapping_native_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        mask.tunnel_metadata_tunnel_type_mask = 0x0;
+    } else {
+        mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    }
 
     // set the action
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV6_PACKET_ID;
@@ -193,7 +201,11 @@ p4pd_input_mapping_native_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        mask.tunnel_metadata_tunnel_type_mask = 0x0;
+    } else {
+        mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    }
 
     // set the action
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_NON_IP_PACKET_ID;
@@ -241,7 +253,11 @@ p4pd_input_mapping_tunneled_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        mask.tunnel_metadata_tunnel_type_mask = 0x0;
+    } else {
+        mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    }
     // set the action
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
     // insert into the tcam now
@@ -271,7 +287,11 @@ p4pd_input_mapping_tunneled_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        mask.tunnel_metadata_tunnel_type_mask = 0x0;
+    } else {
+        mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    }
 
     // set the action
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
@@ -303,7 +323,11 @@ p4pd_input_mapping_tunneled_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        mask.tunnel_metadata_tunnel_type_mask = 0x0;
+    } else {
+        mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+    }
 
     // set the action
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;

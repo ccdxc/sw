@@ -88,19 +88,34 @@ l2seg_uplink_deprogram_hw(pd_l2seg_uplink_args_t *args)
 hal_ret_t
 l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profile_t *nwsec_prof)
 {
-    uint32_t                    uplink_ifpc_id = 0;
-    bool                        is_native = FALSE;
-    types::encapType            enc_type;
-    pd_l2seg_t                  *l2seg_pd;
-    Hash                        *inp_prop_tbl = NULL;
-    hal_ret_t                   ret = HAL_RET_OK;
-    uint32_t                    hash_idx = 0;
-    l2seg_t                     *infra_pi_l2seg = NULL;
-    input_properties_swkey_t    key;
-    input_properties_actiondata data;
+    uint32_t                                uplink_ifpc_id = 0;
+    bool                                    is_native = FALSE;
+    types::encapType                        enc_type;
+    pd_l2seg_t                              *l2seg_pd;
+    Hash                                    *inp_prop_tbl = NULL;
+    hal_ret_t                               ret = HAL_RET_OK;
+    uint32_t                                hash_idx = 0;
+    l2seg_t                                 *infra_pi_l2seg = NULL;
+    input_properties_swkey_t                key;
+    input_properties_otcam_swkey_mask_t     *key_mask = NULL;
+    input_properties_actiondata             data;
+    bool                                    direct_to_otcam = false;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
+
+    // Temporary change to use overflow tcam till we figure out on how
+    // to avoid using tunnel_vnid and tunnel_type as key in
+    // input_properties table for classic_nic mode.
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        key_mask = (input_properties_otcam_swkey_mask_t *)HAL_CALLOC(HAL_MEM_ALLOC_INP_PROP_KEY_MASK, 
+                              sizeof(input_properties_otcam_swkey_mask_t));
+        key_mask->capri_intrinsic_lif_mask = 0xFFFF;
+        key_mask->vlan_tag_vid_mask = 0xFFFF;
+        key_mask->vlan_tag_valid_mask = 0xFF;
+        key_mask->entry_inactive_input_properties_mask = 0xFF;
+        direct_to_otcam = true;
+    }
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(args->l2seg);
     is_native = is_l2seg_native(args->l2seg, args->intf);
@@ -154,7 +169,8 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
                         key.vlan_tag_valid, key.vlan_tag_vid);
 
         // Insert
-        ret = inp_prop_tbl->insert(&key, &data, &hash_idx);
+        ret = inp_prop_tbl->insert(&key, &data, &hash_idx, key_mask, 
+                                   direct_to_otcam);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}: Unable to program for "
                           "(l2seg, upif): ({}, {})",
@@ -176,12 +192,14 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
         key.vlan_tag_valid = 1;
         key.vlan_tag_vid = 0;
 
-        HAL_TRACE_DEBUG("{}: input properties (lif, vlan_v, vlan) : "
+        HAL_TRACE_DEBUG("{}: input properties (lif, vlan_v, vlan) lkup_id:{}: "
                         "({}, {}, {}) => ",
-                        __FUNCTION__, key.capri_intrinsic_lif, 
+                        __FUNCTION__, l2seg_pd->l2seg_fl_lkup_id,
+			key.capri_intrinsic_lif,
                         key.vlan_tag_valid, key.vlan_tag_vid);
         // Insert
-        ret = inp_prop_tbl->insert(&key, &data, &hash_idx);
+        ret = inp_prop_tbl->insert(&key, &data, &hash_idx, 
+                                   key_mask, direct_to_otcam);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}:unable to program "
                           "prio. entry for (l2seg, upif): ({}, {})",
@@ -207,7 +225,8 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
                         __FUNCTION__, key.capri_intrinsic_lif, 
                         key.vlan_tag_valid, key.vlan_tag_vid);
         // Insert
-        ret = inp_prop_tbl->insert(&key, &data, &hash_idx);
+        ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
+                                   key_mask, direct_to_otcam);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}:unable to program "
                           "untag entry for (l2seg, upif): ({}, {})",
@@ -222,6 +241,10 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
         }
 
         l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id] = hash_idx;
+    }
+
+    if (key_mask) {
+        HAL_FREE(HAL_MEM_ALLOC_INP_PROP_KEY_MASK, key_mask);
     }
 
 end:

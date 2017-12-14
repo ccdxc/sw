@@ -643,17 +643,33 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                                 pd_if_args_t *args,
                                 table_oper_t oper)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    input_properties_swkey_t    key;
-    input_properties_actiondata data;
-    if_t                        *hal_if = (if_t *)pd_enicif->pi_if;
-    if_t                        *uplink = NULL;
-    pd_l2seg_t                  *l2seg_pd;
-    Hash                        *inp_prop_tbl = NULL;
-    uint32_t                    hash_idx = INVALID_INDEXER_INDEX;
+    hal_ret_t                               ret = HAL_RET_OK;
+    input_properties_swkey_t                key;
+    input_properties_otcam_swkey_mask_t     *key_mask = NULL;
+    input_properties_actiondata             data;
+    if_t                                    *hal_if = (if_t *)pd_enicif->pi_if;
+    if_t                                    *uplink = NULL;
+    pd_l2seg_t                              *l2seg_pd;
+    Hash                                    *inp_prop_tbl = NULL;
+    uint32_t                                hash_idx = INVALID_INDEXER_INDEX;
+    bool                                    direct_to_otcam = false;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
+
+    // Temporary change to use overflow tcam till we figure out on how
+    // to avoid using tunnel_vnid and tunnel_type as key in 
+    // input_properties table for classic_nic mode.
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        key_mask = (input_properties_otcam_swkey_mask_t *)
+            HAL_CALLOC(HAL_MEM_ALLOC_INP_PROP_KEY_MASK, 
+                       sizeof(input_properties_otcam_swkey_mask_t));
+        key_mask->capri_intrinsic_lif_mask = 0xFFFF;
+        key_mask->vlan_tag_vid_mask = 0xFFFF;
+        key_mask->vlan_tag_valid_mask = 0xFF;
+        key_mask->entry_inactive_input_properties_mask = 0xFF;
+        direct_to_otcam = true;
+    }
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
@@ -686,7 +702,8 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
 
     if (oper == TABLE_OPER_INSERT) {
         // Insert
-        ret = inp_prop_tbl->insert(&key, &data, &hash_idx);
+        ret = inp_prop_tbl->insert(&key, &data, &hash_idx, 
+                                   key_mask, direct_to_otcam);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-enicif:{}:classic: unable to program for "
                           "(l2seg, upif): ({}, {})",
@@ -729,6 +746,10 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                             "table:input_properties index:{} ", __FUNCTION__,
                             hash_idx);
         }
+    }
+
+    if (key_mask) {
+        HAL_FREE(HAL_MEM_ALLOC_INP_PROP_KEY_MASK, key_mask);
     }
 
 end:

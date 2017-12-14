@@ -166,7 +166,7 @@ def init_tcb_inorder(tc, tcb):
     if tc.pvtdata.same_flow:
         if tc.config.src.endpoint.intf.type == 'UPLINK':
             # is there a better way to find the lif?
-            tcb.source_lif = tc.config.src.endpoint.intf.port - 1
+            tcb.source_lif = tc.config.src.endpoint.intf.port
             if tc.config.src.segment.native == False:
                 vlan_id = tc.config.src.segment.vlan_id
         elif hasattr(tc.config.src.endpoint.intf, 'encap_vlan_id'):
@@ -175,7 +175,7 @@ def init_tcb_inorder(tc, tcb):
     else:
         if tc.config.dst.endpoint.intf.type == 'UPLINK':
             # is there a better way to find the lif?
-            tcb.source_lif = tc.config.dst.endpoint.intf.port - 1
+            tcb.source_lif = tc.config.dst.endpoint.intf.port
             if tc.config.dst.segment.native == False:
                 vlan_id = tc.config.dst.segment.vlan_id
         elif hasattr(tc.config.dst.endpoint.intf, 'encap_vlan_id'):
@@ -246,7 +246,7 @@ def init_tcb_inorder2(tc, tcb):
     vlan_id = 0
     if tc.config.src.endpoint.intf.type == 'UPLINK':
         # is there a better way to find the lif?
-        tcb.source_lif = tc.config.src.endpoint.intf.port - 1
+        tcb.source_lif = tc.config.src.endpoint.intf.port
         if tc.config.src.segment.native == False:
             vlan_id = tc.config.src.segment.vlan_id
     elif hasattr(tc.config.src.endpoint.intf, 'encap_vlan_id'):
