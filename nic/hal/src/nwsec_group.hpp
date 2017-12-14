@@ -213,6 +213,7 @@ nwsec_policy_rules_init(nwsec_policy_rules_t *nwsec_plcy_rules)
         return NULL;
     }
     dllist_reset(&nwsec_plcy_rules->fw_svc_list_head);
+    dllist_reset(&nwsec_plcy_rules->appid_list_head);
     dllist_reset(&nwsec_plcy_rules->lentry);
     HAL_SPINLOCK_INIT(&nwsec_plcy_rules->slock, PTHREAD_PROCESS_PRIVATE);
 

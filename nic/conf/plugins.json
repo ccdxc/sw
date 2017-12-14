@@ -180,6 +180,7 @@
             "outbound_features": [
                 "pensando.io/app-redir:app-redir",
                 "pensando.io/app-redir:app-redir-appid",
+                "pensando.io/sfw:sfw",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
@@ -188,6 +189,7 @@
             "inbound_features": [
                 "pensando.io/app-redir:app-redir",
                 "pensando.io/app-redir:app-redir-appid",
+                "pensando.io/sfw:sfw",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",

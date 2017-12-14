@@ -295,7 +295,6 @@ typedef struct flow_update_s {
         ingress_info_t ingress_info;
         hal::flow_key_t key;
         mcast_info_t mcast_info;
-        hal::appid_info_t appid_info;
     };
 }__PACK__ flow_update_t;
 
@@ -652,19 +651,16 @@ public:
         return HAL_RET_OK;
     }
 
-    bool dfw_done() const { return dfw_done_; }
-    void set_dfw_done(bool val) { dfw_done_ = val; }
-
     bool appid_completed() {
         if(appid_info_.state_ == hal::APPID_STATE_FOUND ||
            appid_info_.state_ == hal::APPID_STATE_NOT_FOUND ||
+           appid_info_.state_ == hal::APPID_STATE_STOPPED ||
            appid_info_.state_ == hal::APPID_STATE_ABORT) {
           return true;
         }
         return false;
     }
 
-    bool appid_started() { return appid_info_.state_ != hal::APPID_STATE_INIT; }   
     void set_appid_needed() {
         if(!appid_started())
             appid_info_.state_ = hal::APPID_STATE_NEEDED;
@@ -677,9 +673,15 @@ public:
         else
             HAL_ASSERT(0);
     }
-    bool appid_needed() {
+    bool appid_in_progress() {
         return (appid_info_.state_ == hal::APPID_STATE_NEEDED) ||
                (appid_info_.state_ == hal::APPID_STATE_IN_PROGRESS) ;
+    }
+    bool appid_started() {
+        return (appid_in_progress() || appid_completed()) ;
+    }
+    bool appid_needed() {
+        return appid_info_.state_ == hal::APPID_STATE_NEEDED;
     }
 
     // protected methods accessed by gtest
@@ -740,7 +742,6 @@ private:
     /* appID state */
     hal::appid_info_t     appid_info_;
     bool                  appid_updated_;
-    bool                  dfw_done_;
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();

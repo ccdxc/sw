@@ -239,7 +239,7 @@ ctx_t::lookup_session()
         }
     }
 
-    session_ = hal::session_lookup(key_, std::addressof(role_));
+    session_ = hal::session_lookup(key_, &role_);
     if (!session_) {
         return HAL_RET_SESSION_NOT_FOUND;
     }
@@ -251,6 +251,11 @@ ctx_t::lookup_session()
     }
 
     hflow = session_->iflow;
+    if(role_ != hal::FLOW_ROLE_INITIATOR) {
+        role_ = hal::FLOW_ROLE_INITIATOR;
+        key_ = hflow->config.key;
+        swap_flow_objs();
+    }
 
     // Init feature sepcific session state
     hal::utils::dllist_ctxt_t   *entry;
