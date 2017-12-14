@@ -13,6 +13,12 @@ struct rawc_desc_enqueue_desc_enqueue_d d;
 #define r_qentry_size_shift         r4
 #define r_db_addr_scratch           r5
 #define r_db_data_scratch           r6
+#define r_desc                      r7
+
+/*
+ * Register reuse
+ */
+#define r_rawccb_flags              r_qentry_addr
 
 %%
 
@@ -49,10 +55,19 @@ rawc_s2_chain_txq_desc_enqueue:
      */
     add         r_qentry_size_shift, r0, k.common_phv_chain_txq_entry_size_shift
     sllv        r_qentry_addr, r_qentry_addr, r_qentry_size_shift
-    add         r_qentry_addr, r_qentry_addr, k.{common_phv_chain_txq_base}.wx
+    add         r_qentry_addr, r_qentry_addr, k.common_phv_chain_txq_base
     phvwr       p.dma_chain_dma_cmd_addr, r_qentry_addr
 
-    phvwr       p.chain_txq_desc_addr_descr_addr, k.t0_s2s_desc
+    /*
+     * Service chain's queue may be expecting to get a desc that has already
+     * been adjusted to point to the beginning of the AOL area.
+     */
+    add         r_rawccb_flags, r0, k.common_phv_rawccb_flags
+    smeqh       c1, r_rawccb_flags, APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET,\
+                                    APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET
+    add.c1      r_desc, k.t0_s2s_desc, NIC_DESC_ENTRY_0_OFFSET
+    add.!c1     r_desc, k.t0_s2s_desc, r0
+    phvwr       p.chain_txq_desc_addr_descr_addr, r_desc
     phvwri      p.dma_chain_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(chain_txq_desc_addr_descr_addr)
     phvwri      p.dma_chain_dma_cmd_phv_end_addr, \
@@ -76,7 +91,7 @@ rawc_s2_chain_txq_desc_enqueue:
                             r0, // current PI is actually dontcare for DB_INC_PINDEX
                             r_db_data_scratch)
                         
-    phvwr       p.chain_txq_db_data_data, r_db_data_scratch
+    phvwr       p.chain_txq_db_data_data, r_db_data_scratch.dx
     phvwr       p.dma_doorbell_dma_cmd_addr, r_db_addr_scratch
     phvwri      p.dma_doorbell_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(chain_txq_db_data_data)

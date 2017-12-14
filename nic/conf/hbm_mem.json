@@ -34,7 +34,7 @@
         },
         {
             "name": "lif2qstate_map",
-            "size_kb": 16384
+            "size_kb": 20480
         },
         {
             "name": "ipsec-cb",

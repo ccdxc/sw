@@ -12,6 +12,11 @@ struct proxyc_desc_enqueue_desc_enqueue_d   d;
 #define r_db_data_scratch           r6
 #define r_desc                      r7
 
+/*
+ * Register reuse
+ */
+#define r_proxyccb_flags            r_qentry_addr
+ 
 %%
 
     .param      proxyc_s4_cleanup_discard
@@ -43,10 +48,19 @@ proxyc_s3_desc_enqueue:
      */
     add         r_qentry_size_shift, r0, k.common_phv_chain_txq_entry_size_shift
     sllv        r_qentry_addr, r_qentry_addr, r_qentry_size_shift
-    add         r_qentry_addr, r_qentry_addr, k.{common_phv_chain_txq_base}.wx
+    add         r_qentry_addr, r_qentry_addr, k.common_phv_chain_txq_base
     phvwr       p.dma_chain_dma_cmd_addr, r_qentry_addr
 
-    phvwr       p.chain_txq_desc_addr_descr_addr, k.to_s3_desc
+    /*
+     * Service chain's queue may be expecting to get a desc that has already
+     * been adjusted to point to the beginning of the AOL area.
+     */
+    add         r_proxyccb_flags, r0, k.common_phv_proxyccb_flags
+    smeqh       c1, r_proxyccb_flags, APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET,\
+                                      APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET
+    add.c1      r_desc, k.to_s3_desc, NIC_DESC_ENTRY_0_OFFSET
+    add.!c1     r_desc, k.to_s3_desc, r0
+    phvwr       p.chain_txq_desc_addr_descr_addr, r_desc
     phvwri      p.dma_chain_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(chain_txq_desc_addr_descr_addr)
     phvwri      p.dma_chain_dma_cmd_phv_end_addr,   \
@@ -70,7 +84,7 @@ proxyc_s3_desc_enqueue:
                             r0, // current PI is actually dontcare for DB_INC_PINDEX
                             r_db_data_scratch)
                         
-    phvwr       p.chain_txq_db_data_data, r_db_data_scratch
+    phvwr       p.chain_txq_db_data_data, r_db_data_scratch.dx
     phvwr       p.dma_doorbell_dma_cmd_addr, r_db_addr_scratch
     phvwri      p.dma_doorbell_dma_cmd_phv_start_addr,  \
                 CAPRI_PHV_START_OFFSET(chain_txq_db_data_data)
@@ -91,7 +105,7 @@ proxyc_s3_desc_enqueue:
  */
 proxyc_s3_cleanup_discard_prep:
 
-    add         r_desc, k.{to_s3_desc}.dx, NIC_DESC_ENTRY_0_OFFSET
+    add         r_desc, k.to_s3_desc, NIC_DESC_ENTRY_0_OFFSET
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
                           proxyc_s4_cleanup_discard,
                           r_desc,

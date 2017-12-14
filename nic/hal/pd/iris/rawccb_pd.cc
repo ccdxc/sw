@@ -70,6 +70,29 @@ p4pd_get_rawc_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+p4pd_rawc_wring_eval(uint32_t qid,
+                     types::WRingType wring_type,
+                     wring_hw_id_t& wring_base,
+                     uint8_t& ring_size_shift,
+                     uint8_t& entry_size_shift)
+{
+    pd_wring_meta_t     *pd_wring_meta;
+    hal_ret_t           ret;
+
+    pd_wring_meta = wring_pd_get_meta(wring_type);
+    ret = wring_pd_get_base_addr(wring_type, qid, &wring_base);
+    if (!pd_wring_meta) {
+        ret = HAL_RET_WRING_NOT_FOUND;
+    }
+    if (ret == HAL_RET_OK) {
+        ring_size_shift  = log2(pd_wring_meta->num_slots);
+        entry_size_shift = log2(pd_wring_meta->slot_size_in_bytes);
+    }
+
+    return ret;
+}
+
 static hal_ret_t 
 p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd,
                                      bool del,
@@ -78,42 +101,42 @@ p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd,
     rawc_tx_start_d     data = {0};
     uint8_t             *data_p = (uint8_t *)&data;
     rawccb_t            *rawccb;
-    pd_wring_meta_t     *pd_wring_meta;
     hal_ret_t           ret = HAL_RET_OK;
     uint64_t            pc_offset = 0;
     wring_hw_id_t       my_txq_base;
     uint32_t            data_len = sizeof(data);
     rawccb_hw_addr_t    hw_addr = rawccb_pd->hw_addr;
+    uint8_t             ring_size_shift;
+    uint8_t             entry_size_shift;
 
     rawccb = rawccb_pd->rawccb;
-    if (rawccb->my_txq_base) {
-        data.u.start_d.my_txq_base = rawccb->my_txq_base;
-        data.u.start_d.my_txq_ring_size_shift = rawccb->my_txq_ring_size_shift;
-        data.u.start_d.my_txq_entry_size_shift = rawccb->my_txq_entry_size_shift;
-    } else {
+    data.u.start_d.my_txq_base = rawccb->my_txq_base;
+    data.u.start_d.my_txq_ring_size_shift = rawccb->my_txq_ring_size_shift;
+    data.u.start_d.my_txq_entry_size_shift = rawccb->my_txq_entry_size_shift;
+
+    if (!rawccb->my_txq_base) {
 
         /*
          * Provide reasonable defaults for above
          */
-        pd_wring_meta = wring_pd_get_meta(types::WRING_TYPE_APP_REDIR_RAWC);
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_RAWC,
-                                     rawccb->cb_id, &my_txq_base);
-        if((ret == HAL_RET_OK) && pd_wring_meta) {
-            HAL_TRACE_DEBUG("RAWCCB {} my_txq_base: {:#x}",
-                            rawccb->cb_id, my_txq_base);
-            data.u.start_d.my_txq_base = my_txq_base;
-            data.u.start_d.my_txq_ring_size_shift =
-                           log2(pd_wring_meta->num_slots);
-            data.u.start_d.my_txq_entry_size_shift =
-                           log2(pd_wring_meta->slot_size_in_bytes);
-            HAL_TRACE_DEBUG("RAWCCB my_txq_ring_size_shift: {} "
-                            "my_txq_entry_size_shift: {}",
-                            data.u.start_d.my_txq_ring_size_shift,
-                            data.u.start_d.my_txq_entry_size_shift);
-        } else {
-            HAL_TRACE_ERR("Failed to receive WRING_TYPE_APP_REDIR_RAWC");
-            ret = HAL_RET_WRING_NOT_FOUND;
+        ret = p4pd_rawc_wring_eval(rawccb->cb_id, types::WRING_TYPE_APP_REDIR_RAWC,
+                                   my_txq_base, ring_size_shift, entry_size_shift);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{} wring info not found for WRING_TYPE_APP_REDIR_RAWC",
+                          __FUNCTION__);
+            goto done;
         }
+
+        data.u.start_d.my_txq_base = my_txq_base;
+        data.u.start_d.my_txq_ring_size_shift  = ring_size_shift;
+        data.u.start_d.my_txq_entry_size_shift = entry_size_shift;
+
+        HAL_TRACE_DEBUG("RAWCCB {} my_txq_base: {:#x}",
+                        rawccb->cb_id, my_txq_base);
+        HAL_TRACE_DEBUG("RAWCCB my_txq_ring_size_shift: {} "
+                        "my_txq_entry_size_shift: {}",
+                        data.u.start_d.my_txq_ring_size_shift,
+                        data.u.start_d.my_txq_entry_size_shift);
     }
 
     data.u.start_d.chain_txq_base = rawccb->chain_txq_base;
@@ -133,6 +156,7 @@ p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd,
         if(p4pd_get_rawc_tx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to get pc address");
             ret = HAL_RET_HW_FAIL;
+            goto done;
         }
         pc_offset = (pc_offset >> 6);
         HAL_TRACE_DEBUG("RAWCCB programming action-id: {:#x}", pc_offset);
@@ -160,6 +184,8 @@ p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd,
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for RAWCCB");
         ret = HAL_RET_HW_FAIL;
     }
+
+done:
     return ret;
 }
 

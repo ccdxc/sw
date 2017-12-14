@@ -87,6 +87,7 @@ std::ostream& operator<<(std::ostream& os, const plugin_t& val)
 struct pipeline_t {
     std::string name;
     bool wildcard_qid;
+    uint32_t qtype_mask;
     fte::lifqid_t lifq;
     std::vector<std::string> outbound_features;
     std::vector<std::string> inbound_features;
@@ -98,6 +99,7 @@ std::ostream& operator<<(std::ostream& os, const pipeline_t& val)
 {
     os << "{ name=" << val.name;
     os << ", wildcard_qid=" << val.wildcard_qid;
+    os << ", qtype_mask=" << val.qtype_mask;
     os << ", lifq=" << val.lifq;
     os << ", outbound_features=[";
     for (const std::string &name :  val.outbound_features) {
@@ -234,6 +236,14 @@ bool plugin_manager_t::parse_pipeline(const pt::ptree &tree, pipeline_t *pipelin
         return false;
     }
 
+    if (auto qtype = tree.get_optional<std::string>("selector.qtype")) {
+        pipeline->lifq.qtype = atoi(qtype->c_str());
+    }
+
+    if (auto qtype_mask = tree.get_optional<std::string>("selector.qtype_mask")) {
+        pipeline->qtype_mask = atoi(qtype_mask->c_str());
+    }
+
     if (auto qid = tree.get_optional<std::string>("selector.qid")) {
         if (pipeline->lifq.lif == hal::SERVICE_LIF_CPU) {
             types::CpucbId id;
@@ -319,6 +329,9 @@ void plugin_manager_t::register_pipeline(pipeline_t *pipeline)
 {
     fte::lifqid_t mask = { 0x7FF, 0x7, 0xFFFFFF };
     mask.qid = pipeline->wildcard_qid ? 0: 0xFFFFFF;
+    if (pipeline->qtype_mask) {
+        mask.qtype = pipeline->qtype_mask;
+    }
     fte::register_pipeline(pipeline->name, pipeline->lifq,
                            pipeline->outbound_features,
                            pipeline->inbound_features,

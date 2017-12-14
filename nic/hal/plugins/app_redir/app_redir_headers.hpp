@@ -80,9 +80,9 @@ typedef struct pen_proxy_redir_header_v1_s {
     uint16_t            dport;
     uint8_t             af;
     uint8_t             ip_proto;
-
     uint8_t             tcp_flags;
-    uint8_t             end_pad;
+    uint8_t             pad;
+    uint64_t            redir_miss_pkt_p;
 } __attribute__ ((__packed__)) pen_proxy_redir_header_v1_t;
 
 #define PEN_PROXY_REDIR_HEADER_V1_SIZE  sizeof(pen_proxy_redir_header_v1_t)

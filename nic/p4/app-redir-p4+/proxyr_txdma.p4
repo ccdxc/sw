@@ -151,11 +151,6 @@ header_type proxyrcb_flow_key_t {
         /*
          * NOTE: cb is programmed by HAL and would work best when
          * fields are aligned on whole byte boundary.
-         *
-         * The following static flow key fields (from vrf to ip_proto)
-         * must be sized and ordered exactly as defined in the structure
-         * pen_proxy_redir_header_v1_t in 
-         * asm/app-redir-p4+/common/include/app_redir_headers.h
          */
         vrf                             : 16;
         ip_sa                           : 128;
@@ -243,9 +238,15 @@ header_type common_global_phv_t {
     }
 }
 
-header_type header_phv_pad_224_t {
+header_type header_phv_pad_64_t {
     fields {
-        hdr_pad                         : 224;
+        hdr_pad                         : 64;
+    }    
+}
+
+header_type header_phv_pad_80_t {
+    fields {
+        hdr_pad                         : 80;
     }    
 }
 
@@ -372,7 +373,12 @@ metadata to_stage_7_phv_t               to_s7_scratch;
 /*
  * PHV following k (for app DMA etc.)
  */
- 
+@pragma dont_trim
+metadata ring_entry_t                   ring_entry; 
+
+@pragma dont_trim
+metadata pkt_descr_t                    aol;
+
 @pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_t         p4plus_cpu_pkt;
 
@@ -383,22 +389,19 @@ metadata p4_to_p4plus_cpu_pkt_t         p4plus_cpu_pkt;
  * to a completely new flit.
  */
 @pragma dont_trim
-metadata header_phv_pad_224_t           header_phv_pad_224;
-
-@pragma dont_trim
 metadata pen_app_redir_header_t         pen_app_redir_hdr;
 
 @pragma dont_trim
 metadata pen_app_redir_version_header_t pen_app_redir_version_hdr;
 
 @pragma dont_trim
+metadata header_phv_pad_80_t            header_phv_pad_80;
+
+@pragma dont_trim
 metadata pen_proxy_redir_header_v1_t    pen_proxyr_hdr_v1;
 
 @pragma dont_trim
-metadata ring_entry_t                   ring_entry; 
-
-@pragma dont_trim
-metadata pkt_descr_t                    aol;
+metadata header_phv_pad_64_t            header_phv_pad_64;
 
 /*
  * DMA descriptors for redirecting

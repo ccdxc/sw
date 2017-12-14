@@ -25,8 +25,8 @@ chain_rxq_ring_indices_addr     : 0
 chain_rxq_ring_size_shift       : 0
 chain_rxq_entry_size_shift      : 0
 chain_rxq_ring_index_select     : 0
-ip_sa                           : 0
-ip_da                           : 0
+ip_sa                           : None
+ip_da                           : None
 sport                           : 0
 dport                           : 0
 vrf                             : 0

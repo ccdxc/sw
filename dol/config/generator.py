@@ -55,6 +55,8 @@ def process(topospec):
         SwDscrRingHelper.main("ARQ")
         SwDscrRingHelper.main("ARQ-TX")
         SwDscrRingHelper.main("RAWCCBQ")
+        SwDscrRingHelper.main("PROXYRCBQ")
+        SwDscrRingHelper.main("PROXYCCBQ")
 
     # Generate all sessions
     SessionHelper.main()

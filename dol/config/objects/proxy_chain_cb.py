@@ -13,6 +13,8 @@ from config.objects.swdr        import SwDscrRingHelper
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 
+import test.app_redir.app_redir_shared as app_redir_shared
+
 class ProxycCbObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -23,6 +25,7 @@ class ProxycCbObject(base.ConfigObjectBase):
     def Init(self, qid):
         if halapi.IsHalDisabled(): qid = resmgr.ProxycCbIdAllocator.get()
         self.id = qid
+        self.chain_txq_lif = app_redir_shared.service_lif_tcp_proxy
         gid = "ProxycCb%04d" % qid
         self.GID(gid)
         # self.spec = spec_obj

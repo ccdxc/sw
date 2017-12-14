@@ -3,8 +3,6 @@
 import pdb
 import copy
 from config.objects.proxycb_service    import ProxyCbServiceHelper
-from config.objects.raw_redir_cb        import RawrCbHelper
-from config.objects.raw_chain_cb        import RawcCbHelper
 import test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
@@ -25,6 +23,10 @@ def TestCaseSetup(tc):
     tc.pvtdata = ObjectDatabase(logger)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
 
+    # For this test, we'd like app_redir flow miss pipeline to configure
+    # the necessary rawr/rawc CBs so we refrain from doing that here.
+
+
     # Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmdr.Configure()
@@ -43,6 +45,10 @@ def TestCaseSetup(tc):
 
 def TestCaseVerify(tc):
 
+    num_pkts = 1
+    if hasattr(tc.module.args, 'num_pkts'):
+        num_pkts = int(tc.module.args.num_pkts)
+
     # Fetch current values from Platform
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
@@ -59,23 +65,26 @@ def TestCaseVerify(tc):
     arq_cur.Configure()
 
     # Verify PI for RNMDR got incremented
-    if (rnmdr_cur.pi == rnmdr.pi):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        #return False
+    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
+        print("RNMDR pi check failed old %d new %d expected %d" % 
+                     (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
+        return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
 
     # Verify PI for RNMPR or RNMPR_SMALL got incremented
-    if (rnmpr_cur.pi == rnmpr.pi) and (rnmpr_small_cur.pi == rnmpr_small.pi):
-        print("One of RNMPR pi check failed old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-        print("Or RNMPR_SMALL pi check failed old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
-        #return False
+    if ((rnmpr_cur.pi+rnmpr_small_cur.pi) != (rnmpr.pi+rnmpr_small.pi+num_pkts)):
+        print("RNMPR pi check failed old %d new %d expected %d" %
+                  (rnmpr.pi+rnmpr_small.pi, rnmpr_cur.pi+rnmpr_small_cur.pi,
+                   rnmpr.pi+rnmpr_small.pi+num_pkts))
+        return False
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
 
     # Rx: verify PI for ARQ got incremented
-    if (arq_cur.pi == arq.pi):
-        print("ARQ pi check failed old %d new %d" % (arq.pi, arq_cur.pi))
-        #return False
+    if (arq_cur.pi != arq.pi+num_pkts):
+        print("ARQ pi check failed old %d new %d expected %d" %
+                   (arq.pi, arq_cur.pi, arq.pi+num_pkts))
+        return False
     print("ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
 
     return True

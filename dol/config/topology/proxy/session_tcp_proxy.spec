@@ -36,10 +36,49 @@ entries:
         label: raw-redir-multi
         tracking: False
         timestamp: False
+        fte: True
         responder: 
             port : const/19694
         initiator: 
             port : const/19695
+
+    - entry:
+        label: raw-redir-known-appid
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/3306 # mysql port
+        initiator:
+            port : const/46624
+
+    - entry:
+        label: raw-redir-known-appid
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/2501 # kismet port
+        initiator:
+            port : const/46624
+
+    - entry:
+        label: proxy-redir-dec
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/23763
+        initiator: 
+            port : const/23764
+
+    - entry:
+        label: proxy-redir-enc
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/23765
+        initiator: 
+            port : const/23766
 
     - entry:
         label: p4pt

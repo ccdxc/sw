@@ -37,7 +37,7 @@ proxyr_s0_tx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
-    
+
     /*
      * qid is our flow ID context
      */
@@ -58,11 +58,11 @@ proxyr_s0_tx_start:
     phvwr       p.p4plus_cpu_pkt_qid, r_my_txq_qid.wx
     phvwr       p.pen_proxyr_hdr_v1_flow_id, r_my_txq_qid
 
-    phvwr.c1    p.common_phv_chain_ring_base, d.u.start_d.chain_rxq_base
-    phvwr.c1    p.common_phv_chain_ring_size_shift, d.u.start_d.chain_rxq_ring_size_shift
-    phvwr.c1    p.common_phv_chain_entry_size_shift, d.u.start_d.chain_rxq_entry_size_shift
-    phvwr.c1    p.common_phv_chain_ring_index_select, d.u.start_d.chain_rxq_ring_index_select
-    phvwr.c1    p.to_s5_chain_ring_indices_addr, d.u.start_d.chain_rxq_ring_indices_addr
+    phvwr       p.common_phv_chain_ring_base, d.{u.start_d.chain_rxq_base}.wx
+    phvwr       p.common_phv_chain_ring_size_shift, d.u.start_d.chain_rxq_ring_size_shift
+    phvwr       p.common_phv_chain_entry_size_shift, d.u.start_d.chain_rxq_entry_size_shift
+    phvwr       p.common_phv_chain_ring_index_select, d.u.start_d.chain_rxq_ring_index_select
+    phvwr       p.to_s5_chain_ring_indices_addr, d.{u.start_d.chain_rxq_ring_indices_addr}.wx
     
     /*
      * Two sentinels surround the programming of CB byte sequence:
@@ -84,9 +84,10 @@ proxyr_s0_tx_start:
      * PI assumed to have been incremented by doorbell write by a producer program;
      * double check for queue not empty in case we somehow got erroneously scheduled.
      */
+    phvwr       p.to_s1_my_txq_ring_size_shift, d.u.start_d.my_txq_ring_size_shift
     add         r_ci, r0, d.{u.start_d.ci_0}.hx
-    mincr       r_ci, d.u.start_d.my_txq_ring_size_shift, r0
     add         r_pi, r0, d.{u.start_d.pi_0}.hx
+    mincr       r_ci, d.u.start_d.my_txq_ring_size_shift, r0
     mincr       r_pi, d.u.start_d.my_txq_ring_size_shift, r0
     beq         r_ci, r_pi, _my_txq_ring_empty
     phvwr       p.to_s1_my_txq_ci_curr, r_ci    // delay slot

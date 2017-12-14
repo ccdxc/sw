@@ -1,10 +1,12 @@
 # /usr/bin/python3
+import socket
 import pdb
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
 import config.resmgr            as resmgr
+import config.objects.flow      as flow
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
@@ -36,6 +38,7 @@ class ProxyrCbObject(base.ConfigObjectBase):
         # assert(len(self.uplinks) > 0)
         cfglogger.info("  - %s" % self)
 
+        self.proxyrcbq = SwDscrRingHelper.main("PROXYRCBQ", gid, self.id)
         return
 
 
@@ -54,12 +57,21 @@ class ProxyrCbObject(base.ConfigObjectBase):
            req_spec.chain_rxq_entry_size_shift   = self.chain_rxq_entry_size_shift
            req_spec.chain_rxq_ring_index_select  = self.chain_rxq_ring_index_select
 
-           req_spec.ip_sa                        = self.ip_sa
-           req_spec.ip_da                        = self.ip_da
-           req_spec.sport                        = self.sport
-           req_spec.dport                        = self.dport
-           req_spec.vrf                          = self.vrf
            req_spec.af                           = self.af
+           #if self.af == socket.AF_INET:
+           #    req_spec.ip_sa.ip_af              = haldefs.common.IP_AF_INET
+           #    req_spec.ip_sa.v4_addr            = socket.htonl(self.ip_sa.v4_addr)
+           #    req_spec.ip_da.ip_af              = haldefs.common.IP_AF_INET
+           #    req_spec.ip_da.v4_addr            = socket.htonl(self.ip_da.v4_addr)
+           #elif self.af == socket.AF_INET6:
+           #    req_spec.ip_sa.ip_af              = haldefs.common.IP_AF_INET6
+           #    req_spec.ip_sa.v6_addr            = self.ip_sa.getnum().to_bytes(16, 'big')
+           #    req_spec.ip_da.ip_af              = haldefs.common.IP_AF_INET6
+           #    req_spec.ip_da.v6_addr            = self.ip_da.getnum().to_bytes(16, 'big')
+
+           req_spec.sport                        = socket.htons(self.sport)
+           req_spec.dport                        = socket.htons(self.dport)
+           req_spec.vrf                          = socket.htons(self.vrf)
            req_spec.ip_proto                     = self.ip_proto
 
         return
@@ -82,12 +94,17 @@ class ProxyrCbObject(base.ConfigObjectBase):
             self.pi                           = resp_spec.spec.pi
             self.ci                           = resp_spec.spec.ci
 
-            self.ip_sa                        = resp_spec.spec.ip_sa
-            self.ip_da                        = resp_spec.spec.ip_da
-            self.sport                        = resp_spec.spec.sport
-            self.dport                        = resp_spec.spec.dport
-            self.vrf                          = resp_spec.spec.vrf
+            #if resp_spec.spec.af == socket.AF_INET:
+            #    self.ip_sa                    = socket.ntohl(resp_spec.spec.ip_sa.v4_addr)
+            #    self.ip_da                    = socket.ntohl(resp_spec.spec.ip_da.v4_addr)
+            #elif resp_spec.spec.af == socket.AF_INET6:
+            #    self.ip_sa                    = objects.Ipv6Address(integer=resp_spec.spec.ip_sa.v6_addr)
+            #    self.ip_da                    = objects.Ipv6Address(integer=resp_spec.spec.ip_da.v6_addr)
+
             self.af                           = resp_spec.spec.af
+            self.sport                        = socket.ntohs(resp_spec.spec.sport)
+            self.dport                        = socket.ntohs(resp_spec.spec.dport)
+            self.vrf                          = socket.ntohs(resp_spec.spec.vrf)
             self.ip_proto                     = resp_spec.spec.ip_proto
 
         return

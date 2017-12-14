@@ -39,7 +39,7 @@ rawr_s5_chain_pindex_pre_alloc:
      */
     seq         c1, k.common_phv_chain_to_rxq, r0   // delay slot
     bcf         [c1], _chain_txq_ring_indices_launch
-    add         r_ring_indices_addr, r0, k.{to_s5_chain_ring_indices_addr}.wx    // delay slot
+    add         r_ring_indices_addr, r0, k.to_s5_chain_ring_indices_addr // delay slot
 
     /*
      * Chain to ARM RxQ: access HBM queue index table directly

@@ -33,6 +33,8 @@ import rdma_pb2             as rdma_pb2
 import cpucb_pb2            as cpucb_pb2
 import rawrcb_pb2           as rawrcb_pb2
 import rawccb_pb2           as rawccb_pb2
+import proxyrcb_pb2         as proxyrcb_pb2
+import proxyccb_pb2         as proxyccb_pb2
 import multicast_pb2        as multicast_pb2
 import barco_rings_pb2      as barco_rings_pb2
 
@@ -289,6 +291,27 @@ def GetRawrCbs(objlist):
              stub.RawrCbGet)
     return
 
+def ConfigureProxyrCbs(objlist):
+    if IsHalDisabled(): return
+    stub = proxyrcb_pb2.ProxyrCbStub(HalChannel)
+    __config(objlist, proxyrcb_pb2.ProxyrCbRequestMsg,
+             stub.ProxyrCbCreate)
+    return
+
+def UpdateProxyrCbs(objlist):
+    if IsHalDisabled(): return
+    stub = proxyrcb_pb2.ProxyrCbStub(HalChannel)
+    __config(objlist, proxyrcb_pb2.ProxyrCbRequestMsg,
+             stub.ProxyrCbUpdate)
+    return
+
+def GetProxyrCbs(objlist):
+    if IsHalDisabled(): return
+    stub = proxyrcb_pb2.ProxyrCbStub(HalChannel)
+    __config(objlist, proxyrcb_pb2.ProxyrCbGetRequestMsg,
+             stub.ProxyrCbGet)
+    return
+
 def ConfigureRawcCbs(objlist):
     if IsHalDisabled(): return
     stub = rawccb_pb2.RawcCbStub(HalChannel)
@@ -308,6 +331,27 @@ def GetRawcCbs(objlist):
     stub = rawccb_pb2.RawcCbStub(HalChannel)
     __config(objlist, rawccb_pb2.RawcCbGetRequestMsg,
              stub.RawcCbGet)
+    return
+
+def ConfigureProxycCbs(objlist):
+    if IsHalDisabled(): return
+    stub = proxyccb_pb2.ProxycCbStub(HalChannel)
+    __config(objlist, proxyccb_pb2.ProxycCbRequestMsg,
+             stub.ProxycCbCreate)
+    return
+
+def UpdateProxycCbs(objlist):
+    if IsHalDisabled(): return
+    stub = proxyccb_pb2.ProxycCbStub(HalChannel)
+    __config(objlist, proxyccb_pb2.ProxycCbRequestMsg,
+             stub.ProxycCbUpdate)
+    return
+
+def GetProxycCbs(objlist):
+    if IsHalDisabled(): return
+    stub = proxyccb_pb2.ProxycCbStub(HalChannel)
+    __config(objlist, proxyccb_pb2.ProxycCbGetRequestMsg,
+             stub.ProxycCbGet)
     return
 
 def GetTcpCbs(objlist):

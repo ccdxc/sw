@@ -73,7 +73,8 @@ validate_proxyccb_create (ProxycCbSpec& spec, ProxycCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_PROXYC_CB_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
-    if (spec.key_or_handle().proxyccb_id() >= PROXYCCB_NUM_ENTRIES_MAX) {
+    if (spec.key_or_handle().proxyccb_id() >= 
+             (PROXYCCB_NUM_ENTRIES_MAX * PROXYCCB_NUM_ENTRIES_MAX_MULT)) {
         rsp->set_api_status(types::API_STATUS_PROXYC_CB_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }

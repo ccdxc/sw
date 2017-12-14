@@ -143,20 +143,25 @@ rawr_s6_chain_xfer:
     add         r_chain_entry, r0, r_chain_pindex      // chain pindex from caller
     add         r_scratch, r0, k.common_phv_chain_entry_size_shift
     sllv        r_chain_entry, r_chain_entry, r_scratch
-    add         r_chain_entry, r_chain_entry, k.{common_phv_chain_ring_base}.wx
+    add         r_chain_entry, r_chain_entry, k.common_phv_chain_ring_base
     phvwr       p.dma_chain_dma_cmd_addr, r_chain_entry
 
     /*
-     * Some service chain queue may require descriptor valid bit to be set
+     * Service chain's queue may be expecting to get a desc that has already
+     * been adjusted to point to the beginning of the AOL area.
+     */
+    smeqh       c1, r_rawrcb_flags, APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET,\
+                                    APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET
+    add.c1      r_desc, k.{to_s6_desc_sbit0_ebit31...\
+                           to_s6_desc_sbit32_ebit33}, NIC_DESC_ENTRY_0_OFFSET
+    add.!c1     r_desc, k.{to_s6_desc_sbit0_ebit31...\
+                           to_s6_desc_sbit32_ebit33}, r0
+    /*
+     * The same queue may also require descriptor valid bit to be set
      */
     smeqh       c1, r_rawrcb_flags, APP_REDIR_DESC_VALID_BIT_REQ,  \
                                     APP_REDIR_DESC_VALID_BIT_REQ
-    add.c1      r_desc, k.{to_s6_desc_sbit0_ebit31...\
-                           to_s6_desc_sbit32_ebit33},\
-                1, DESC_VALID_BIT_SHIFT
-    add.!c1     r_desc, k.{to_s6_desc_sbit0_ebit31...\
-                           to_s6_desc_sbit32_ebit33}, r0
-    
+    add.c1      r_desc, r_desc, 1, DESC_VALID_BIT_SHIFT
     phvwr       p.ring_entry_descr_addr, r_desc // content for this PHV2MEM
     phvwri      p.dma_chain_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
@@ -196,7 +201,7 @@ rawr_s6_chain_xfer:
                             r0, // curr PI is dontcare for DB_INC_PINDEX
                             r_txq_db_data)
                         
-    phvwr       p.chain_txq_db_data_data, r_txq_db_data
+    phvwr       p.chain_txq_db_data_data, r_txq_db_data.dx
     phvwr       p.dma_doorbell_dma_cmd_addr, r_txq_db_addr
     phvwri      p.dma_doorbell_dma_cmd_phv_start_addr,\
                 CAPRI_PHV_START_OFFSET(chain_txq_db_data_data)
