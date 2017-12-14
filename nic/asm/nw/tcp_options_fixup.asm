@@ -8,6 +8,8 @@ struct phv_              p;
 %%
 
 tcp_options_fixup:
+  seq         c1, k.tcp_valid, TRUE
+  nop.!c1.e
   seq         c1, k.tcp_options_blob_valid, TRUE
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr.c1.e  p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0

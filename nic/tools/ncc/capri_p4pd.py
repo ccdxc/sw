@@ -599,7 +599,7 @@ class capri_p4pd:
             kdict['wide_key_len']           = 0
         # Build all table action data fields
         tblactions = []
-        if ctable.is_writeback and not ctable.is_raw and not ctable.is_raw_index:
+        if not ctable.is_hbm and ctable.is_writeback and not ctable.is_raw and not ctable.is_raw_index:
             #Pad actiondata so that sum of all action data fields and action-id
             #is next multiple of 128b
             action_pc_size = 8 if len(ctable.action_data) > 1 else 0

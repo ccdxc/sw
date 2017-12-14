@@ -315,6 +315,7 @@ action ddos_src_vf_policer_action(ddos_src_vf_policer_idx,
 }
 
 @pragma stage 4
+@pragma table_write
 table ddos_src_vf_policer_action {
     reads {
         ddos_metadata.ddos_src_vf_policer_idx : exact;
@@ -410,6 +411,7 @@ action ddos_service_policer_action(ddos_service_policer_idx,
 }
 
 @pragma stage 3
+@pragma table_write
 table ddos_service_policer_action {
     reads {
         ddos_metadata.ddos_service_policer_idx : exact;
@@ -506,6 +508,7 @@ action ddos_src_dst_policer_action(ddos_src_dst_policer_idx,
 }
 
 @pragma stage 3
+@pragma table_write
 table ddos_src_dst_policer_action {
     reads {
         ddos_metadata.ddos_src_dst_policer_idx : exact;

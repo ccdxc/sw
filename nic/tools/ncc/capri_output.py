@@ -3139,47 +3139,50 @@ def capri_te_cfg_output(stage):
 
         prof_idx += 1
 
-    if len(stage.active_predicates) > 0 and \
-        prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles']:
+    if len(stage.active_predicates) > 0:
+        if prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles']:
+            # create a catch-all entry to execute NO tables
+            # ASIC seems to use tcam entry 0 on miss (Initally plan was to skip table lookups on miss)
+            # If all entries al already programmed.. we can skip this... but need to make sure if there
+            # can be a tcam miss - XXX
+            '''
+            assert prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles'], \
+                pdb.set_trace()
+            '''
+            te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
+            _fill_te_tcam_catch_all(te)
 
-        # create a catch-all entry to execute NO tables
-        # ASIC seems to use tcam entry 0 on miss (Initally plan was to skip table lookups on miss)
-        # If all entries al already programmed.. we can skip this... but need to make sure if there
-        # can be a tcam miss - XXX
-        '''
-        assert prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles'], \
-            pdb.set_trace()
-        '''
-        te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
-        _fill_te_tcam_catch_all(te)
+            json_tbl_prof = json_regs['cap_te_csr_cfg_table_profile[%d]' % prof_idx]
+            json_tbl_prof['mpu_results']['value'] = str(0)
+            json_tbl_prof['seq_base']['value'] = str(sidx)
+            json_tbl_prof['_modified'] = True
 
-        json_tbl_prof = json_regs['cap_te_csr_cfg_table_profile[%d]' % prof_idx]
-        json_tbl_prof['mpu_results']['value'] = str(0)
-        json_tbl_prof['seq_base']['value'] = str(sidx)
-        json_tbl_prof['_modified'] = True
+            json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
+            json_sram_ext['adv_phv_flit']['value'] = str(1)
+            json_sram_ext['done']['value'] = str(1)
+            json_sram_ext['_modified'] = True
 
-        json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
-        json_sram_ext['adv_phv_flit']['value'] = str(1)
-        json_sram_ext['done']['value'] = str(1)
-        json_sram_ext['_modified'] = True
+            # setup sram entry to launch no lookup
+            se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
+            se['lkup']['value'] = te_consts['no_op']
+            # For good measures, hw model checks that key-makers are cleared on very first
+            # cycle of the sequencer
+            for kmid in range(num_km):
+                se['km_new_key%d' % kmid]['value'] = str(1)
+            se['_modified'] = True
 
-        # setup sram entry to launch no lookup
-        se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
-        se['lkup']['value'] = te_consts['no_op']
-        # For good measures, hw model checks that key-makers are cleared on very first
-        # cycle of the sequencer
-        for kmid in range(num_km):
-            se['km_new_key%d' % kmid]['value'] = str(1)
-        se['_modified'] = True
-
-        stage.gtm.tm.logger.debug( \
-            "%s:Stage %d:Table profile (catch-all)TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
-                (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'],
-                te['mask']['value'], 0, [], 0))
-        stage.gtm.tm.logger.debug(\
-                    "%s:Stage[%d]:cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]:\n%s" % \
-                    (stage.gtm.d.name, stage.id, sidx,
-                    te_ctrl_sram_print(se, json_sram_ext)))
+            stage.gtm.tm.logger.debug( \
+                "%s:Stage %d:Table profile (catch-all)TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
+                    (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'],
+                    te['mask']['value'], 0, [], 0))
+            stage.gtm.tm.logger.debug(\
+                        "%s:Stage[%d]:cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]:\n%s" % \
+                        (stage.gtm.d.name, stage.id, sidx,
+                        te_ctrl_sram_print(se, json_sram_ext)))
+        else:
+            stage.gtm.tm.logger.critical( \
+                "%s:Stage[%d]:No space to create catch-all table profile" % \
+                (stage.gtm.d.name, stage.id))
 
     for ct in stage.ct_list:
         if ct.is_otcam:
