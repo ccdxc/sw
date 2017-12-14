@@ -18,7 +18,7 @@
 #define NIC_ASQ_ENTRY_SIZE              8
 #define NIC_ASQ_ENTRY_SIZE_SHIFT        3          /* for 8B */
 
-#define CPU_TO_P4PLUS_HDR_SIZE          8
+#define CPU_TO_P4PLUS_HDR_SIZE          9
 #define P4PLUS_TO_P4_HDR_SIZE           10
 #define VLAN_TAG_HDR_SIZE               4
 

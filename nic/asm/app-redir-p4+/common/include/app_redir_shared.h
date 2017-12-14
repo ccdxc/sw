@@ -148,7 +148,7 @@
 /*
  * p4_to_p4plus app header immediately after rx_splitter_offset
  */
-#define CPU_TO_P4PLUS_HEADER_SIZE           8
+#define CPU_TO_P4PLUS_HEADER_SIZE           9
 
 /*
  * Descriptor valid bit

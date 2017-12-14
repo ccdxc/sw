@@ -15,7 +15,7 @@ cpu_tx_write_pkt_start:
 dma_cmd_global_intrinsic:
     phvwri  p.p4_intr_global_tm_iport, 9
     phvwri  p.p4_intr_global_tm_oport, 11
-    phvwri  p.p4_intr_global_tm_oq, 0
+    phvwr   p.p4_intr_global_tm_oq, k.to_s5_tm_oq
     phvwr   p.p4_intr_global_lif, k.to_s5_src_lif
 
     addi    r5, r0, CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16

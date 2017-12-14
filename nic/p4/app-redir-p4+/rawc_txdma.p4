@@ -3,6 +3,7 @@
  *********************************************************************************/
 
 #include "../common-p4+/common_txdma_dummy.p4"
+#include "../cpu-p4+/cpu_rxtx_common.p4"
 #include "app_redir_defines.h"
 
 /*
@@ -234,19 +235,6 @@ header_type to_stage_1_phv_t {
         my_txq_lif                      : 11;
         my_txq_qtype                    : 3;
     }
-}
-
-
-/*
- * cpu_to_p4plus_header_t as defined in HAL cpupkt_headers.hpp
- */
-header_type cpu_to_p4plus_header_t {
-    fields {
-        flags                           : 16;
-        src_lif                         : 16;
-        hw_vlan_id                      : 16;
-        l2_offset                       : 16;
-    }    
 }
 
 /*

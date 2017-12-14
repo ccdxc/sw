@@ -68,6 +68,8 @@ typedef struct cpu_to_p4plus_header_s {
     uint16_t    src_lif;
     uint16_t    hw_vlan_id;
     uint16_t    l2_offset;
+    uint8_t     pad    : 3;
+    uint8_t     tm_oq  : 5;
 } __attribute__ ((__packed__)) cpu_to_p4plus_header_t;
 
 } // namespace pd       

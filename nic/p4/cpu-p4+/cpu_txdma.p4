@@ -35,24 +35,6 @@
 /********************
  * Packet Headers
  *******************/
-/*
- * flags bits
- * 0 : do not update dot1q
- * 1 : Add/update  VLAN tag
- */
-header_type cpu_to_p4plus_header_t {
-    fields {
-        flags                   : 16;
-        src_lif                 : 16;
-
-        // hw_vlan_id
-        hw_vlan_id              : 16;
-
-        // offsets
-        l2_offset               : 16;
-    }    
-}
-
 header_type vlan_hdr_t {
     fields {
         etherType               : 16;
@@ -131,6 +113,7 @@ header_type to_stage_5_phv_t {
         offset                  : 16;
         len                     : 16;
         vlan_tag_exists         : 1;
+        tm_oq                   : 5;
     }    
 }
 
@@ -309,11 +292,12 @@ action asq_consume() {
 
 
 // Stage 3 table 0
-action read_cpu_hdr(flags, src_lif, hw_vlan_id, l2_offset) {
+action read_cpu_hdr(flags, src_lif, hw_vlan_id, l2_offset, tm_oq) {
     modify_field(read_cpu_hdr_d.flags, flags);
     modify_field(read_cpu_hdr_d.src_lif, src_lif);
     modify_field(read_cpu_hdr_d.hw_vlan_id, hw_vlan_id);
     modify_field(read_cpu_hdr_d.l2_offset, l2_offset);
+    modify_field(read_cpu_hdr_d.tm_oq, tm_oq);
 }
 
 // Stage 3 table 1
@@ -336,4 +320,5 @@ action write_pkt() {
     modify_field(to_s5_scratch.offset, to_s5.offset);
     modify_field(to_s5_scratch.len, to_s5.len);
     modify_field(to_s5_scratch.vlan_tag_exists, to_s5.vlan_tag_exists);
+    modify_field(to_s5_scratch.tm_oq, to_s5.tm_oq);
 }

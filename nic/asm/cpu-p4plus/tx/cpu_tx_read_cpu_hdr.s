@@ -15,8 +15,9 @@ cpu_tx_read_cpu_hdr_start:
     CAPRI_OPERAND_DEBUG(d.{u.read_cpu_hdr_d.src_lif}.hx)
     CAPRI_OPERAND_DEBUG(d.{u.read_cpu_hdr_d.hw_vlan_id}.hx)
     CAPRI_OPERAND_DEBUG(d.{u.read_cpu_hdr_d.l2_offset}.hx)
+    CAPRI_OPERAND_DEBUG(d.u.read_cpu_hdr_d.tm_oq)
     phvwr   p.to_s5_src_lif, d.{u.read_cpu_hdr_d.src_lif}.hx
-    
+    phvwr   p.to_s5_tm_oq, d.u.read_cpu_hdr_d.tm_oq 
     // Check if vlan tag needs to be added
     seq     c1, d.{u.read_cpu_hdr_d.flags}.hx, CPU_TO_P4PLUS_FLAGS_UPD_VLAN
     bcf     [!c1], cpu_tx_read_cpu_hdr_done

@@ -3,8 +3,8 @@
  *********************************************************************************/
 
 #include "../common-p4+/common_txdma_dummy.p4"
+#include "../cpu-p4+/cpu_rxtx_common.p4"
 #include "app_redir_defines.h"
-
 /*
  * L7 Proxy Chain stage 0
  */
@@ -152,16 +152,6 @@ header_type chain_txq_ring_indices_d_t {
     }
 }
 
-
-// d for stage 3 table 1
-header_type cpu_to_p4plus_header_t {
-    fields {
-        flags                           : 16;
-        src_lif                         : 16;
-        hw_vlan_id                      : 16;
-        l2_offset                       : 16;
-    }    
-}
 
 // d for stage 4 table 1 is also pkt_descr_aol_t
 

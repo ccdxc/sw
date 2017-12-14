@@ -26,7 +26,7 @@ table_read_cpu_hdr:
                           TABLE_LOCK_DIS,
                           cpu_tx_read_cpu_hdr_start,
                           r3,
-                          TABLE_SIZE_64_BITS)
+                          TABLE_SIZE_128_BITS)
     nop.e
     nop
 
