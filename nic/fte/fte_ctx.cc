@@ -802,6 +802,9 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             // if (role == hal::FLOW_ROLE_INITIATOR) {
             //    valid_rflow_ = false;
             //}
+        } else if (flowupd.action == session::FLOW_ACTION_ALLOW) {
+            drop_ = false;
+            drop_flow_ = false;
         }
         LOG_FLOW_UPDATE(action);
         break;
