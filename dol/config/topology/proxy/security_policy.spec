@@ -11,8 +11,8 @@ policies:
                 log    :  True
                 svcs:
                     - svc:
-                        proto    : 0
-                        dst_port : 0
+                        proto    : 6
+                        dst_port : 3307
                 apps:
                     - app : "MYSQL"
 
@@ -25,7 +25,18 @@ policies:
                 log    :  True
                 svcs:
                     - svc:
-                        proto    : 0
-                        dst_port : 0
+                        proto    : 6
+                        dst_port : 3307
                 apps:
                     - app : "MYSQL"
+    - policy:
+        id         : SEC_POLICY_ALLOW13
+        default    : False
+        in_rules:
+            - rule:
+                action :  ALLOW
+                log    :  True
+                svcs:
+                    - svc:
+                        proto    : 0
+                        dst_port : 0
