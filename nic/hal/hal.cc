@@ -489,6 +489,10 @@ hal_init (hal_cfg_t *hal_cfg)
     // hal_state ??? how it this special compared to other global state ??
     g_lif_manager = new LIFManager();
 
+    // Allocate LIF 0, so that we don't use it later
+    int32_t hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
+    HAL_TRACE_DEBUG("Allocated hw_lif_id:{}", hw_lif_id);
+
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
 

@@ -3,7 +3,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/ip.h"
 #include "nic/gen/proto/hal/acl.pb.h"
 
@@ -12,7 +12,7 @@
 // TODO: REMOVE
 #define ACL_DOL_TEST_ONLY
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using acl::AclSpec;
 using acl::AclResponse;
 

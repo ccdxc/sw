@@ -432,7 +432,7 @@
 #define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
 #define P4PLUS_ROCE_HDR_SZ             20
 #define P4PLUS_TCP_PROXY_HDR_SZ        71 /* 39 app hdr + 32 sack */
-#define P4PLUS_CLASSIC_NIC_HDR_SZ      46
+#define P4PLUS_CLASSIC_NIC_HDR_SZ      48
 #define P4PLUS_CPU_HDR_SZ              40
 #define P4PLUS_CPU_PKT_SZ              36
 #define P4PLUS_IPSEC_HDR_SZ            18
@@ -463,11 +463,11 @@
 /*****************************************************************************/
 #define CLASSIC_NIC_HEADER_FLAGS_NONE          0x000
 #define CLASSIC_NIC_HEADER_FLAGS_IPV4          0x001
-#define CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP      0x002
-#define CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP      0x004
+#define CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP      0x003
+#define CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP      0x005
 #define CLASSIC_NIC_HEADER_FLAGS_IPV6          0x008
-#define CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP      0x010
-#define CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP      0x020
+#define CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP      0x018
+#define CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP      0x028
 
 /*****************************************************************************/
 /* Classic NIC checksum flags                                                */

@@ -10,9 +10,9 @@
 #define __DIRECTMAP_ENTRY_HPP__
 
 #include "nic/include/base.h"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 
 
 namespace hal {

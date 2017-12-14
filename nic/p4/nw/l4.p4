@@ -1041,6 +1041,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
 
 @pragma stage 4
 @pragma hbm_table
+@pragma table_write
 table session_state {
     reads {
         flow_info_metadata.session_state_index : exact;
@@ -1632,6 +1633,10 @@ action tcp_session_normalization() {
 //    1. IP Total Length
 //    2. Control_metadata.packet len (TBD Update)
 action tcp_options_fixup() {
+    if (tcp.valid != TRUE) {
+        // return
+    }
+
     if (tcp_options_blob.valid == TRUE) {
         //remove_header(tcp_option_unknown);
         remove_header(tcp_option_eol);
@@ -1782,7 +1787,5 @@ control process_normalization {
     }
     apply(validate_packet);
 
-    if (tcp.valid == TRUE) {
-        apply(tcp_options_fixup);
-    }
+    apply(tcp_options_fixup);
 }

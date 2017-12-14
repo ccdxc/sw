@@ -13,11 +13,10 @@
 #include <string>
 #include <map>
 #include "nic/include/base.h"
-#include "nic/utils/indexer/indexer.hpp"
 #include "nic/include/hal_mem.hpp"
+#include "nic/sdk/include/indexer.hpp"
 
-
-using hal::utils::indexer;
+using sdk::lib::indexer;
 
 namespace hal {
 namespace pd {
@@ -121,3 +120,4 @@ public:
 } // hal
 
 #endif // __MET_HPP__
+

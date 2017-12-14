@@ -5,6 +5,7 @@ gl_deps_list = [
         "//nic/hal/periodic",
         "//nic/hal/svc:hal_svc",
         "//nic/utils/trace",
+        "//nic:sdk_logger",
         "//nic/utils/print",
         "//nic/hal/plugins:plugins",
         "//nic/hal/plugins/proxy:proxyplugin",
@@ -13,6 +14,8 @@ gl_deps_list = [
         "//nic/hal/test/utils:haltestutils",
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",
+        "//nic:grpc",
+        "//nic:halproto",
 
         # PD
         "//nic/hal/pd/common:pdcommon",
@@ -45,3 +48,5 @@ gl_linkopts_list = [
     "-lz",
     "-lprotobuf"
     ]
+
+sdk_copts = ["-Inic/sdk"]

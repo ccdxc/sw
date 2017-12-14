@@ -2,13 +2,13 @@
 #define _LKLSHIM_HPP_
 
 #include "nic/include/base.h"
-#include "nic/utils/slab/slab.hpp"
+#include "nic/sdk/include/slab.hpp"
 #include "nic/include/list.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 //#include "nic/hal/src/tcpcb.hpp"
 //#include "nic/hal/src/tlscb.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/src/session.hpp"
 
@@ -24,8 +24,8 @@
 extern "C" {
 #include <netinet/in.h>
 }
-using hal::utils::ht_ctxt_t;
-using hal::utils::slab;
+using sdk::lib::ht_ctxt_t;
+using sdk::lib::slab;
 
 namespace hal {
 

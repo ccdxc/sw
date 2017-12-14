@@ -101,13 +101,13 @@ simdev_read_reg(u_int64_t addr, u_int32_t *data)
     simdev_api_t *api = simdevinfo_api();
 
     if (api && api->read_reg) {
-        int r = api->read_reg(addr, data); 
-        if (r == 0) {
+        int r = api->read_reg(addr, data);
+        if (r) {
             simdev_log("read_reg 0x08%"PRIx64" = 0x%x\n", addr, *data);
         } else {
             simdev_log("read_reg addr 0x%08"PRIx64" failed\n", addr);
         }
-        return r;
+        return r ? 0 : -1;
     }
     return 0;
 }
@@ -131,8 +131,13 @@ simdev_write_reg(u_int64_t addr, u_int32_t data)
     simdev_api_t *api = simdevinfo_api();
 
     if (api && api->write_reg) {
-        simdev_log("write_reg 0x08%"PRIx64" = 0x%x\n", addr, data);
-        return api->write_reg(addr, data);
+        int r = api->write_reg(addr, data);
+        if (r) {
+            simdev_log("write_reg 0x08%"PRIx64" = 0x%x\n", addr, data);
+        } else {
+            simdev_log("write_reg addr 0x%08"PRIx64" failed\n", addr);
+        }
+        return r ? 0 : -1;
     }
     return 0;
 }

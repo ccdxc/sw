@@ -2,6 +2,8 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
+
 cc_library(
     name = "pt",
     srcs = glob(["*.cc"]),
@@ -12,9 +14,10 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/print",
-        "//nic/utils/slab",
+        "//nic:sdk_slab",
         "//nic/utils/thread",
     ],
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -23,8 +26,10 @@ cc_test(
     deps = [
         ":pt",
         "//nic/utils/trace",
+        "//nic:sdk_logger",
         "//nic/hal/test:hal_mock",
         # External
         "//:gtest",
     ],
+    copts = sdk_copts,
 )

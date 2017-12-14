@@ -6,12 +6,12 @@
 
 #include "nic/hal/lib/hal_handle.hpp"
 
-#include "nic/utils/slab/slab.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/slab.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/utils/catalog/catalog.hpp"
 
-using hal::utils::slab;
-using hal::utils::ht;
+using sdk::lib::slab;
+using sdk::lib::ht;
 using hal::cfg_op_t;
 using hal::hal_obj_id_t;
 

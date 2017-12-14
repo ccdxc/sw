@@ -28,7 +28,7 @@ action eth_tx_fetch_desc(
         pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
         p_index0, c_index0, p_index1, c_index1, p_index2, c_index2, p_index3, c_index3, 
         p_index4, c_index4, p_index5, c_index5, p_index6, c_index6, p_index7, c_index7, 
-        enable, ring_base, ring_size, cq_ring_base, color)
+        enable, ring_base, ring_size, cq_ring_base, __pad, color)
 {
     // For K+I struct generation
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -43,6 +43,7 @@ action eth_tx_fetch_desc(
     modify_field(eth_tx_qstate.ring_base, ring_base);
     modify_field(eth_tx_qstate.ring_size, ring_size);
     modify_field(eth_tx_qstate.cq_ring_base, cq_ring_base);
+    modify_field(eth_tx_qstate.__pad, __pad);
     modify_field(eth_tx_qstate.color, color);
 }
 

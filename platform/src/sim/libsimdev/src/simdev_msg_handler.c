@@ -14,6 +14,7 @@
 
 #include "src/lib/misc/include/maclib.h"
 #include "src/lib/misc/include/bdf.h"
+#include "src/sim/libsimlib/include/simclient.h"
 #include "src/sim/libsimdev/src/simdev_impl.h"
 #include "src/sim/libsimdev/include/simdevices.h"
 
@@ -84,6 +85,13 @@ simdev_msg_handler(int fd, simmsg_t *m)
     case SIMMSG_INIT:
         simdev_set_user(m->u.init.name);
         break;
+    case SIMMSG_WRRESP:
+        simdev_log("WRRESP 0x%08"PRIx64"\n", m->u.write.addr);
+        break;
+    case SIMMSG_SYNC_REQ:
+        simdev_log("SYNC_REQ\n");
+        simc_sync_ack();
+        break;
     case SIMMSG_CFGRD:
     case SIMMSG_CFGWR:
     case SIMMSG_MEMRD:
@@ -100,7 +108,7 @@ simdev_msg_handler(int fd, simmsg_t *m)
         break;
     }
     default:
-        simdev_error("unknown msg type %d\n", m->msgtype);
+        simdev_error("simdev_msg_handler: unknown msg type %d\n", m->msgtype);
         break;
     }
 }

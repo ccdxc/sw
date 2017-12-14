@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -21,7 +22,10 @@
 typedef struct simserver_s {
     int serverfd;
     msg_handler_t handler;
+    msg_handler_t saved_handler;
+    simmsg_t *pending_msgs;
     int open:1;
+    int sync_writes:1;
     int unix_socket:1;
     char unix_socket_path[265];
 } simserver_t;
@@ -32,6 +36,7 @@ int
 sims_memrd(int clientfd, const u_int16_t bdf, 
            const u_int64_t addr, const u_int32_t size, void *buf)
 {
+    simserver_t *ss = &simserver;
     simmsg_t m = {
         .msgtype = SIMMSG_MEMRD,
         .u.read.bdf = bdf,
@@ -42,8 +47,7 @@ sims_memrd(int clientfd, const u_int16_t bdf,
 
     r = sims_client_send(clientfd, &m);
     if (r >= 0) {
-        r = sim_wait_for_resp(clientfd, SIMMSG_RDRESP,
-                              &m, simserver.handler);
+        r = sim_wait_for_resp(clientfd, SIMMSG_RDRESP, &m, ss->handler);
         if (r >= 0 && m.u.readres.error == 0) {
             r = sim_readn(clientfd, buf, size);
         } else {
@@ -57,6 +61,7 @@ int
 sims_memwr(int clientfd, const u_int16_t bdf, 
            const u_int64_t addr, const u_int32_t size, const void *buf)
 {
+    simserver_t *ss = &simserver;
     simmsg_t m = {
         .msgtype = SIMMSG_MEMWR,
         .u.write.bdf = bdf,
@@ -68,6 +73,9 @@ sims_memwr(int clientfd, const u_int16_t bdf,
     r = sims_client_send(clientfd, &m);
     if (r >= 0) {
         r = sim_writen(clientfd, buf, size);
+    }
+    if (ss->sync_writes) {
+        r = sim_wait_for_resp(clientfd, SIMMSG_WRRESP, &m, ss->handler);
     }
     return r;
 }
@@ -87,6 +95,82 @@ sims_readres(int clientfd, u_int16_t bdf, u_int8_t bar,
     };
 
     return sims_client_send(clientfd, &m);
+}
+
+int
+sims_writeres(int clientfd, u_int16_t bdf, u_int8_t bar,
+              u_int64_t addr, u_int8_t size, u_int8_t error)
+{
+    simmsg_t m = {
+        .msgtype = SIMMSG_WRRESP,
+        .u.writeres.bdf = bdf,
+        .u.writeres.bar = bar,
+        .u.writeres.addr = addr,
+        .u.writeres.size = size,
+        .u.writeres.error = error,
+    };
+
+    return sims_client_send(clientfd, &m);
+}
+
+static void
+sims_pend_msgs(int fd, simmsg_t *m)
+{
+    simserver_t *ss = &simserver;
+    simmsg_t *newm, **pp;
+
+    newm = malloc(sizeof(simmsg_t));
+    assert(newm != NULL);
+    *newm = *m;
+    newm->link = NULL;
+
+    /* append newm to pending_msgs list */
+    pp = &ss->pending_msgs;
+    while (*pp) {
+        pp = &((*pp)->link);
+    }
+    *pp = newm;
+}
+
+int
+sims_sync_request(int clientfd)
+{
+    simserver_t *ss = &simserver;
+
+    assert(ss->pending_msgs == NULL);
+    ss->saved_handler = ss->handler;
+    ss->handler = sims_pend_msgs;
+    return 0;
+}
+
+int
+sims_sync_release(int clientfd)
+{
+    simserver_t *ss = &simserver;
+    simmsg_t *m;
+    int npending;
+    static int maxpending;
+
+    /* restore saved handler */
+    ss->handler = ss->saved_handler;
+    m = ss->pending_msgs;
+    if (ss->pending_msgs) {
+        ss->pending_msgs = NULL;
+    }
+    /* call handler for each pending msg */
+    npending = 0;
+    while (m) {
+        simmsg_t *m_to_free;
+        npending++;
+        ss->handler(clientfd, m);
+        m_to_free = m;
+        m = m->link;
+        free(m_to_free);
+    }
+    if (npending > maxpending) {
+        maxpending = npending;
+    }
+    return 0;
 }
 
 static int
@@ -117,9 +201,23 @@ sims_socket(const char *addrstr)
     }
 
     if (bind(s, &a.sa, a.sz) < 0) {
+        perror(ss->unix_socket_path);
         close(s);
         return -1;
     }
+
+    if (ss->unix_socket) {
+        if (getenv("SUDO_USER") != NULL) {
+            uid_t uid = strtoul(getenv("SUDO_UID"), NULL, 10);
+            gid_t gid = strtoul(getenv("SUDO_GID"), NULL, 10);
+
+            /* give ownership back to original user */
+            if (chown(ss->unix_socket_path, uid, gid)) {
+                perror(ss->unix_socket_path);
+            }
+        }
+    }
+
     listen(s, 5);
     return s;
 }
@@ -134,6 +232,7 @@ sims_open(const char *addrstr, msg_handler_t handler)
 
     simserver.serverfd = s;
     simserver.open = 1;
+    simserver.sync_writes = 1;
     simserver.handler = handler;
     return s;
 }

@@ -14,6 +14,8 @@ struct phv_ p;
 struct common_p4plus_stage0_app_header_table_k k;
 struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
+#define COMMA     ,
+
 %%
 
     .param          tcp_rx_process_stage1_start
@@ -53,8 +55,8 @@ tcp_rx_read_shared_stage0_start:
      * on the p42p4+ app header info
      */
     phvwr           p.to_s1_flags, k.tcp_app_header_flags
-    phvwr           p.to_s1_seq, k.tcp_app_header_seqNo
-    phvwr           p.to_s1_ack_seq, k.tcp_app_header_ackNo
+    phvwr           p.to_s1_seq, k.{tcp_app_header_seqNo_sbit0_ebit7, tcp_app_header_seqNo_sbit8_ebit31}
+    phvwr           p.to_s1_ack_seq, k.{tcp_app_header_ackNo_sbit0_ebit7, tcp_app_header_ackNo_sbit8_ebit31}
     phvwr           p.cpu_hdr2_tcp_window, k.{tcp_app_header_window}.hx
 
     //phvwr        p.prr_out, d.prr_out
@@ -76,9 +78,9 @@ tcp_rx_read_shared_stage0_start:
     tblwr           d.quick_acks_decr_old, d.quick_acks_decr
     phvwr           p.s1_s2s_quick_acks_decr, r1
 
-    phvwr        p.to_s5_payload_len, k.tcp_app_header_payload_len
-    phvwr        p.s1_s2s_payload_len, k.tcp_app_header_payload_len
-    CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)
+    phvwr        p.to_s5_payload_len, k.{tcp_app_header_payload_len_sbit0_ebit7, tcp_app_header_payload_len_sbit8_ebit15}
+    phvwr        p.s1_s2s_payload_len, k.{tcp_app_header_payload_len_sbit0_ebit7, tcp_app_header_payload_len_sbit8_ebit15}
+    CAPRI_OPERAND_DEBUG(k.{tcp_app_header_payload_len_sbit0_ebit7 COMMA tcp_app_header_payload_len_sbit8_ebit15})
 
 read_l7_proxy_cfg:
     sne         c1, d.l7_proxy_type, L7_PROXY_TYPE_NONE

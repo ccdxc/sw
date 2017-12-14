@@ -12,7 +12,7 @@ namespace hal {
 namespace utils {
 
 #define MAX_ASICS 1
-#define MAX_ASIC_PORTS 2
+#define MAX_ASIC_PORTS 8
 #define MAX_UPLINK_PORTS 8
 
 using boost::property_tree::ptree;
@@ -29,6 +29,7 @@ typedef struct catalog_uplink_port_s {
 typedef struct catalog_asic_port_s {
     uint32_t    mac_id;
     uint32_t    mac_ch;
+    uint32_t    sbus_addr;
 } catalog_asic_port_t;
 
 typedef struct catalog_asic_s {
@@ -85,6 +86,7 @@ public:
 
     bool access_mock_mode() { return catalog_db_.access_mock_mode; }
 
+    uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
 
 private:
     catalog_t    catalog_db_;   // catalog instance

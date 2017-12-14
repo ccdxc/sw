@@ -37,7 +37,7 @@ uint32_t
 vrf_id_compute_hash_func (void *key, uint32_t ht_size)
 {
     HAL_ASSERT(key != NULL);
-    return utils::hash_algo::fnv_hash(key, sizeof(vrf_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(vrf_id_t)) % ht_size;
 }
 
 // ----------------------------------------------------------------------------
@@ -60,6 +60,7 @@ static inline hal_ret_t
 vrf_add_to_db (vrf_t *vrf, hal_handle_t handle)
 {
     hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
     HAL_TRACE_DEBUG("pi-vrf:{}:adding to vrf id hash table", 
@@ -74,13 +75,14 @@ vrf_add_to_db (vrf_t *vrf, hal_handle_t handle)
 
     // add mapping from vrf id to its handle
     entry->handle_id = handle;
-    ret = g_hal_state->vrf_id_ht()->insert_with_key(&vrf->vrf_id,
-                                                       entry, &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = g_hal_state->vrf_id_ht()->insert_with_key(&vrf->vrf_id,
+                                                        entry, &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-vrf:{}:failed to add vrf id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }

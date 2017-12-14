@@ -184,16 +184,17 @@ header_type p4_to_p4plus_classic_nic_header_t {
         table1_valid        : 1;
         table2_valid        : 1;
         table3_valid        : 1;
-        header_flags        : 12;
-        flags               : 4;
         checksum_flags      : 8;
         l4_checksum         : 16;
         vlan_pcp            : 3;
         vlan_dei            : 1;
         vlan_vid            : 12;
         packet_len          : 16;
+        flags               : 4;
+        header_flags        : 12;
         l4_sport            : 16;
         l4_dport            : 16;
+        pad                 : 16;
     }
 }
 

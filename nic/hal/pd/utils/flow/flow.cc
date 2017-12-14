@@ -83,15 +83,23 @@ Flow::Flow(std::string table_name, uint32_t table_id,
 
     // Allocate indexer for Flow Collision Table, skip zero
     // flow_coll_indexer_ = new indexer(flow_coll_capacity_, true, true);
+#if 0
     flow_coll_indexer_ = indexer::factory(flow_coll_capacity_, true, 
                                           true, 
                                           HAL_MEM_ALLOC_FLOW_COLL_INDEXER);
+#endif
+    flow_coll_indexer_ = indexer::factory(flow_coll_capacity_, true, 
+                                          true);
 
     // Assumption: Max. number of flow entries will be hash table cap.
     // flow_entry_indexer_ = new indexer(flow_hash_capacity_);
+#if 0
     flow_entry_indexer_ = indexer::factory(flow_hash_capacity_, true,
                                            true,
                                            HAL_MEM_ALLOC_FLOW_ENTRY_INDEXER);
+#endif
+    flow_entry_indexer_ = indexer::factory(flow_hash_capacity_, true,
+                                           true);
 
     // Assumption: Delayed Delete is disabled.
     enable_delayed_del_ = FALSE;
@@ -693,7 +701,7 @@ Flow::table_num_entries_in_use(void)
 uint32_t
 Flow::oflow_table_num_entries_in_use(void)
 {
-    return flow_coll_indexer_->usage();
+    return flow_coll_indexer_->num_indices_allocated();
 }
 
 // ----------------------------------------------------------------------------
@@ -767,7 +775,7 @@ Flow::print_flow()
 		fe->print_fe();
 	}
 
-	HAL_ASSERT(flow_entry_map_.size() == flow_entry_indexer_->usage()); 
+	HAL_ASSERT(flow_entry_map_.size() == flow_entry_indexer_->num_indices_allocated()); 
 
 	return ret;
 }

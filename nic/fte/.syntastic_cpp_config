@@ -12,4 +12,5 @@
 -I ../hal/pd/common
 -I ../include
 -I ../..
+-I ../../nic/sdk
 -std=c++11

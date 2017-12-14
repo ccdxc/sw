@@ -88,17 +88,57 @@ sim_writen(int fd, const void *bufarg, const size_t n)
     }
 }
 
+/*
+ * We sent a msg and expect a response of a certain msgtype.
+ * Wait for the response here, but continue to handle incoming
+ * msgs while we wait.
+ */
 int
 sim_wait_for_resp(int s, simmsgtype_t msgtype, simmsg_t *m,
                   msg_handler_t msg_handler)
 {
+    int got_sync_req = 0;
+    int r = -1;
+
     while (sim_readn(s, m, sizeof(simmsg_t)) > 0) {
-        if (m->msgtype == msgtype)
-            return 0;
+        /*
+         * If this is the msg we were waiting for, we're done.
+         */
+        if (m->msgtype == msgtype) {
+            r = 0;
+            break;
+        }
+        /*
+         * While waiting for our msg we received a SYNC_REQ.
+         * This means our blocking request was sent from us
+         * at the same time as the peer sent a SYNC_REQ.
+         * We are still expecting the response we are waiting
+         * for so remember the pending SYNC_REQ and continue to
+         * drain the pipe waiting for our response.  After we
+         * get the response we are waiting for we can handle
+         * the SYNC_REQ below.
+         */
+        if (m->msgtype == SIMMSG_SYNC_REQ) {
+            got_sync_req = 1;
+            continue;
+        }
+        /*
+         * Not the msg we are waiting for, so pass to caller's
+         * handler for processing.  We will continue to wait
+         * for our response.
+         */
         if (msg_handler)
             msg_handler(s, m);
     }
-    return -1;
+    /*
+     * If we got a SYNC_REQ while waiting for our msgtype,
+     * ack it now that we have drained the pipe and received
+     * our expected response.
+     */
+    if (got_sync_req) {
+        sim_sync_ack(s, msg_handler);
+    }
+    return r;
 }
 
 int
@@ -131,7 +171,8 @@ sim_do_read(int s, simmsgtype_t msgtype,
 int
 sim_do_write(int s, simmsgtype_t msgtype,
              u_int16_t bdf, u_int8_t bar,
-             u_int64_t addr, u_int32_t size, u_int64_t val)
+             u_int64_t addr, u_int32_t size, u_int64_t val,
+             msg_handler_t msg_handler, int sync)
 {
     int r;
     simmsg_t m = {
@@ -146,12 +187,11 @@ sim_do_write(int s, simmsgtype_t msgtype,
     r = sim_writen(s, &m, sizeof(m));
     if (r < 0) return r;
 
-#ifdef SIM_SYNC_WRITES
-    r = sim_wait_for_resp(s, SIMMSG_WRRESP, &m);
-    if (r < 0) return r;
-    r = -m.u.writeres.error;
-#endif
-
+    if (sync) {
+        r = sim_wait_for_resp(s, SIMMSG_WRRESP, &m, msg_handler);
+        if (r < 0) return r;
+        r = -m.u.writeres.error;
+    }
     return r;
 }
 
@@ -168,3 +208,15 @@ sim_discard(int s, size_t size)
     }
 }
 
+int
+sim_sync_ack(int s, msg_handler_t msg_handler)
+{
+    simmsg_t m = {
+        .msgtype = SIMMSG_SYNC_ACK,
+    };
+
+    if (sim_writen(s, &m, sizeof(m)) < 0) {
+        return -1;
+    }
+    return sim_wait_for_resp(s, SIMMSG_SYNC_REL, &m, msg_handler);
+}

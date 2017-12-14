@@ -3,7 +3,7 @@
 #ifndef __LINKMGR_SRC_HPP__
 #define __LINKMGR_SRC_HPP__
 
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 
 #include "nic/include/base.h"
 #include "nic/include/list.hpp"
@@ -36,7 +36,7 @@ using port::PortGetResponseMsg;
 using hal::hal_handle_id_ht_entry_t;
 using hal::hal_handle_get_from_handle_id;
 using hal::hal_handle_get_obj;
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 
 namespace linkmgr {

@@ -1,8 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
+
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
 load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
     name = "met",
@@ -22,6 +24,7 @@ cc_library(
         "repl_list.hpp",
         "repl_table_entry.hpp",
     ],
+    copts = sdk_copts,
     deps = [
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/pd/capri",
@@ -29,8 +32,8 @@ cc_library(
         #"//nic/hal/pd/control",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/indexer",
-        #"//nic/utils/thread",
+        "//nic:sdk_indexer",
+        "//nic/utils/thread",  # May not be needed
     ],
 )
 
@@ -50,4 +53,5 @@ cc_test(
     srcs = ["test/met_test.cc"],
     linkopts = gl_linkopts_list,
     deps = gl_deps_list,
+    copts = sdk_copts,
 )

@@ -4,21 +4,22 @@
 #define __HAL_STATE_HPP__
 
 #include "nic/utils/list/list.hpp"
-#include "nic/utils/slab/slab.hpp"
-#include "nic/utils/indexer/indexer.hpp"
-#include "nic/utils/ht/ht.hpp"
 #include "nic/utils/catalog/catalog.hpp"
 #include "nic/include/eventmgr.hpp"
+#include "nic/sdk/include/slab.hpp"
+#include "nic/sdk/include/indexer.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/ip.h"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 
-using hal::utils::slab;
-using hal::utils::indexer;
-using hal::utils::ht;
+using sdk::lib::slab;
+using sdk::lib::indexer;
+using sdk::lib::ht;
 using hal::utils::bitmap;
 using hal::utils::eventmgr;
 using hal::utils::dllist_ctxt_t;
@@ -83,7 +84,6 @@ public:
 
     ht *port_id_ht(void) const { return port_id_ht_; }
 
-    // TODO: may have to create L2 and L3 HTs here !!
     ht *ep_hal_handle_ht(void) const { return ep_hal_handle_ht_; }
 
     ht *l4lb_ht(void) const { return l4lb_ht_; }
@@ -189,7 +189,6 @@ private:
     // l2segment related config
     struct {
         ht         *l2seg_id_ht_;
-        // ht         *l2seg_hal_handle_ht_;
     } __PACK__;
 
     // mc_entry related config
@@ -201,13 +200,11 @@ private:
     // LIF related config
     struct {
         ht         *lif_id_ht_;
-        // ht         *lif_hal_handle_ht_;
     } __PACK__;
 
     // interface related config
     struct {
         ht         *if_id_ht_;
-        // ht         *if_hal_handle_ht_;
     } __PACK__;
 
     // port related config
@@ -376,7 +373,6 @@ public:
     ~hal_mem_db();
 
     slab *get_slab(hal_slab_t slab_id);
-
     slab *hal_handle_slab(void) const { return hal_handle_slab_; }
     slab *hal_handle_ht_entry_slab(void) const { return hal_handle_ht_entry_slab_; }
     slab *hal_handle_list_entry_slab(void) const { return hal_handle_list_entry_slab_; }
@@ -669,7 +665,7 @@ private:
 extern class hal_state    *g_hal_state;
 
 static inline bool
-is_forwarding_mode_host_pinned()
+is_forwarding_mode_host_pinned (void)
 {
     return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED;
 }

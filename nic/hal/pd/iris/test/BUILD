@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_test(
     name = "rw_tbl_test",
@@ -16,6 +17,7 @@ cc_test(
     deps = gl_deps_list + [
     		"//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
     ],
+    copts = sdk_copts,
 )
 
 cc_test(
@@ -31,4 +33,5 @@ cc_test(
     deps =  gl_deps_list + [
 		"//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
     ],
+    copts = sdk_copts,
 )

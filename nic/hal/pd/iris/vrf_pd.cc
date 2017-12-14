@@ -117,6 +117,7 @@ hal_ret_t
 vrf_pd_add_to_db (pd_vrf_t *pd_vrf, hal_handle_t handle)
 {
     hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
     HAL_TRACE_DEBUG("pd-vrf:{}:adding to flow lkup id hash table. fl_lkup_id:{} => ",
@@ -132,14 +133,16 @@ vrf_pd_add_to_db (pd_vrf_t *pd_vrf, hal_handle_t handle)
 
     // add mapping from vrf id to its handle
     entry->handle_id = handle;
-    ret = g_hal_state_pd->flow_lkupid_ht()->insert_with_key(&pd_vrf->vrf_fl_lkup_id,
-                                                            entry, &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = g_hal_state_pd->flow_lkupid_ht()->
+        insert_with_key(&pd_vrf->vrf_fl_lkup_id,
+                        entry, &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pd-vrf:{}:failed to add hw id to handle mapping, "
-                      "err : {}", __FUNCTION__, ret);
+                      "err : {}", __FUNCTION__, sdk_ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
 
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
 
@@ -614,9 +617,10 @@ vrf_pd_cleanup(pd_vrf_t *vrf_pd)
 
     // Check if l2segs have been removed before vrf cleanup
     // index 0 is reserved.
-    if (vrf_pd->l2seg_hw_id_idxr_->usage() > 1) {
+    if (vrf_pd->l2seg_hw_id_idxr_->num_indices_allocated() > 1) {
         HAL_TRACE_ERR("pd-vrf:{}:l2seg idxr still in use. usage:{}", 
-                      __FUNCTION__, vrf_pd->l2seg_hw_id_idxr_->usage());
+                      __FUNCTION__, vrf_pd->l2seg_hw_id_idxr_->
+                      num_indices_allocated());
         ret = HAL_RET_INVALID_OP;
         goto end;
     }

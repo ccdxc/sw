@@ -3,7 +3,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/list.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
@@ -13,7 +13,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/hal/src/nwsec.hpp"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 using hal::utils::block_list;
 using kh::VrfKeyHandle;

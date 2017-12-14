@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
-licenses(["notice"])  # MIT license
 
+licenses(["notice"])  # MIT license
 
 cc_library(
     name = "capricsr_int",
@@ -187,54 +187,62 @@ cc_library(
     name = "asic_includes",
     srcs = [],
     hdrs = [
-            "asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h",
-            ] + 
-            glob(["asic/capri/model/capsim-master/lib/libmpuobj/include/*.h"]),
-    deps = [],
+        "asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h",
+    ] + glob([
+        "asic/capri/model/capsim-master/lib/libmpuobj/include/*.h",
+    ]),
     includes = [
-            "asic/capri/model/capsim-master/lib/libmpuobj/include",
-
-            ]
+        "asic/capri/model/capsim-master/lib/libmpuobj/include",
+    ],
+    deps = [],
 )
 
 cc_library(
     name = "p4pd",
     srcs = ["gen/iris/src/p4pd.cc"],
-    hdrs = ["gen/iris/include/p4pd.h",
-            ],
-    deps = ["//nic/include:base_includes",
-            "//nic:gen_includes",
-            ],
+    hdrs = [
+        "gen/iris/include/p4pd.h",
+    ],
+    deps = [
+        "//nic:gen_includes",
+        "//nic/include:base_includes",
+    ],
 )
 
 cc_library(
     name = "gft_p4pd",
     srcs = ["gen/gft/src/gft_p4pd.cc"],
-    hdrs = ["gen/gft/include/gft_p4pd.h",
-            ],
-    deps = ["//nic/include:base_includes",
-            "//nic:gen_includes",
-            ],
+    hdrs = [
+        "gen/gft/include/gft_p4pd.h",
+    ],
+    deps = [
+        "//nic:gen_includes",
+        "//nic/include:base_includes",
+    ],
 )
 
 cc_library(
     name = "p4pluspd_txdma",
     srcs = ["gen/common_txdma_actions/src/common_txdma_actions_p4pd.cc"],
-    hdrs = ["gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
-            ],
-    deps = ["//nic/include:base_includes",
-            "//nic:gen_includes",
-            ],
+    hdrs = [
+        "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
+    ],
+    deps = [
+        "//nic:gen_includes",
+        "//nic/include:base_includes",
+    ],
 )
 
 cc_library(
     name = "p4pluspd_rxdma",
     srcs = ["gen/common_rxdma_actions/src/common_rxdma_actions_p4pd.cc"],
-    hdrs = ["gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
-            ],
-    deps = ["//nic/include:base_includes",
-            "//nic:gen_includes",
-            ],
+    hdrs = [
+        "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
+    ],
+    deps = [
+        "//nic:gen_includes",
+        "//nic/include:base_includes",
+    ],
 )
 
 cc_library(
@@ -268,132 +276,177 @@ cc_library(
     name = "gen_proto_includes",
     srcs = [
     ] + glob(["gen/proto/hal/*.hpp"]),
-    hdrs = glob(["gen/proto/hal/*.hpp",
-                 "gen/proto/hal/*.h"]),
+    hdrs = glob([
+        "gen/proto/hal/*.hpp",
+        "gen/proto/hal/*.h",
+    ]),
 )
 
 cc_library(
     name = "halproto",
     srcs = [
-            "obj/libhalproto.so",
-            ],
+        "obj/libhalproto.so",
+    ],
     linkopts = [
-        "-Lnic/obj"
-        ],
+        "-Lnic/obj",
+    ],
 )
 
 cc_library(
     name = "grpc",
     srcs = [
-            "third-party/grpc/libgrpc++_reflection.a",
-            "third-party/grpc/libgrpc++.a",
-            "third-party/grpc/libgrpc_unsecure.a",
-            "third-party/grpc/libgrpc++_unsecure.a",
-            ],
+        "third-party/grpc/libgrpc++.a",
+        "third-party/grpc/libgrpc++_reflection.a",
+        "third-party/grpc/libgrpc++_unsecure.a",
+        "third-party/grpc/libgrpc_unsecure.a",
+    ],
     linkopts = [
         "-Lthird-party/grpc",
-        #"-L/usr/local/lib",
-        #"-lgrpc++"
-        ],
+    ],
 )
 
 cc_library(
     name = "lkl_includes",
     srcs = [
-            "third-party/lkl/export/include/lkl.h",
-            "third-party/lkl/export/include/lkl_host.h",
-            ],
+        "third-party/lkl/export/include/lkl.h",
+        "third-party/lkl/export/include/lkl_host.h",
+    ],
     hdrs = [
-            "third-party/lkl/export/include/lkl.h",
-            "third-party/lkl/export/include/lkl_host.h",
-            "third-party/lkl/export/include/lkl/autoconf.h",
-            #"third-party/lkl/export/include/lkl/asm/syscalls.h",
-            #"third-party/lkl/export/include/lkl/linux/types.h",
-            #"third-party/lkl/export/include/lkl/linux/stddef.h",
-            #"third-party/lkl/export/include/lkl/linux/posix_types.h",
-            #"third-party/lkl/export/include/lkl/asm/types.h",
-            #"third-party/lkl/export/include/lkl/asm/posix_types.h",
-            #"third-party/lkl/export/include/lkl/asm/bitsperlong.h",
-            #"third-party/lkl/export/include/lkl/asm-generic/types.h",
-            #"third-party/lkl/export/include/lkl/asm-generic/posix_types.h",
-            #"third-party/lkl/export/include/lkl/asm-generic/int-ll64.h",
-            ] + glob(["third-party/lkl/export/include/lkl/linux/*.h", 
-                      "third-party/lkl/export/include/lkl/asm/*.h", 
-                      "third-party/lkl/export/include/lkl/asm-generic/*.h",
-                      "third-party/lkl/export/include/lkl/linux/hdlc/*.h",
-                      "third-party/lkl/export/include/lkl/linux/byteorder/*.h"]), 
+        "third-party/lkl/export/include/lkl.h",
+        "third-party/lkl/export/include/lkl_host.h",
+        "third-party/lkl/export/include/lkl/autoconf.h",
+        #"third-party/lkl/export/include/lkl/asm/syscalls.h",
+        #"third-party/lkl/export/include/lkl/linux/types.h",
+        #"third-party/lkl/export/include/lkl/linux/stddef.h",
+        #"third-party/lkl/export/include/lkl/linux/posix_types.h",
+        #"third-party/lkl/export/include/lkl/asm/types.h",
+        #"third-party/lkl/export/include/lkl/asm/posix_types.h",
+        #"third-party/lkl/export/include/lkl/asm/bitsperlong.h",
+        #"third-party/lkl/export/include/lkl/asm-generic/types.h",
+        #"third-party/lkl/export/include/lkl/asm-generic/posix_types.h",
+        #"third-party/lkl/export/include/lkl/asm-generic/int-ll64.h",
+    ] + glob([
+        "third-party/lkl/export/include/lkl/linux/*.h",
+        "third-party/lkl/export/include/lkl/asm/*.h",
+        "third-party/lkl/export/include/lkl/asm-generic/*.h",
+        "third-party/lkl/export/include/lkl/linux/hdlc/*.h",
+        "third-party/lkl/export/include/lkl/linux/byteorder/*.h",
+    ]),
     includes = [
-            "third-party/lkl/export/include",
-            ],
+        "third-party/lkl/export/include",
+    ],
     deps = [],
 )
 
 cc_library(
     name = "lkl",
     srcs = [
-            "third-party/lkl/export/bin/liblkl.so",
-            ],
+        "third-party/lkl/export/bin/liblkl.so",
+    ],
     linkopts = [
-        "-Lthird-party/lkl/export/bin"
-        ],
+        "-Lthird-party/lkl/export/bin",
+    ],
 )
 
 cc_library(
     name = "openssl",
-    hdrs = glob(["third-party/openssl/include/openssl/*.h"]),
     srcs = [
-            "third-party/openssl/lib/libssl.a",
-            "third-party/openssl/lib/libcrypto.a",
-            ],
+        "third-party/openssl/lib/libssl.a",
+        "third-party/openssl/lib/libcrypto.a",
+    ],
+    hdrs = glob(["third-party/openssl/include/openssl/*.h"]),
     includes = [
-            "third-party/openssl/include",
-            ],
+        "third-party/openssl/include",
+    ],
     linkopts = [
         "-Lthird-party/openssl/lib -ldl",
-        ],
-
+    ],
 )
 
 cc_library(
     name = "openssl-native",
-    hdrs = glob(["third-party/openssl-native/include/openssl/*.h"]),
     srcs = [
-            "third-party/openssl-native/lib/libssl.a",
-            "third-party/openssl-native/lib/libcrypto.a",
-            ],
+        "third-party/openssl-native/lib/libssl.a",
+        "third-party/openssl-native/lib/libcrypto.a",
+    ],
+    hdrs = glob(["third-party/openssl-native/include/openssl/*.h"]),
     includes = [
-            "third-party/openssl-native/include",
-            ],
+        "third-party/openssl-native/include",
+    ],
     linkopts = [
         "-Lthird-party/openssl-native/lib -ldl",
-        ],
-
+    ],
 )
 
 cc_library(
     name = "snort3",
-    hdrs = glob(["third-party/snort3/export/include/*.h"]),
     srcs = [
-            "third-party/snort3/export/bin/libsnort.so",
-            ],
+        "third-party/snort3/export/bin/libsnort.so",
+    ],
+    hdrs = glob(["third-party/snort3/export/include/*.h"]),
     includes = [
-        "third-party/snort3/export/include"
-        ],
+        "third-party/snort3/export/include",
+    ],
 )
 
 cc_library(
     name = "libtirpc",
     hdrs = glob(["third-party/libtirpc/export/*.h"]),
     includes = [
-        "third-party/libtirpc/export"
-        ],
+        "third-party/libtirpc/export",
+    ],
 )
 
 # Used by dol/test/storage/BUILD
 cc_inc_library(
     name = "compression_asic_hdrs",
     hdrs = [
-      "asic/capri/design/common/cap_addr_define.h",
-      "asic/capri/model/cap_he/readonly/cap_hens_csr_define.h",
+        "asic/capri/design/common/cap_addr_define.h",
+        "asic/capri/model/cap_he/readonly/cap_hens_csr_define.h",
     ],
+)
+
+cc_library(
+    name = "sdk_base_include",
+    hdrs = [
+        "sdk/include/base.hpp",
+        "sdk/include/logger.hpp"
+    ],
+)
+
+cc_library(
+    name = "sdk_include",
+    hdrs = glob(["sdk/include/*.hpp"]),
+)
+
+cc_library(
+    name = "sdk_logger",
+    srcs = [
+        "sdk/obj/liblogger.so",
+    ],
+    deps = ["//nic:sdk_include"],
+)
+
+cc_library(
+    name = "sdk_slab",
+    srcs = [
+        "sdk/bazel-bin/lib/slab/libslab.so",
+    ],
+    deps = ["//nic:sdk_include"],
+)
+
+cc_library(
+    name = "sdk_ht",
+    srcs = [
+        "sdk/bazel-bin/lib/ht/libht.so",
+    ],
+    deps = ["//nic:sdk_include"],
+)
+
+cc_library(
+    name = "sdk_indexer",
+    srcs = [
+        "sdk/bazel-bin/lib/indexer/libindexer.so",
+    ],
+    deps = ["//nic:sdk_include"],
 )

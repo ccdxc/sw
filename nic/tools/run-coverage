@@ -108,6 +108,8 @@ if [ $OUT -ne 0 ];then
 fi
 set -o pipefail
 
+#Set up locale encoding for pipenv
+localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
 #Install Virtual Env if not installed before.
 pip3 install --user pipenv
 #Setup path for Pipenv

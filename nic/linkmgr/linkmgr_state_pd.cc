@@ -33,7 +33,7 @@ linkmgr_state_pd::init()
 
     port_slab_ = slab::factory("port_pd", hal::HAL_SLAB_PORT_PD,
                                sizeof(linkmgr::pd::port), 8,
-                               false, true, true, true);
+                               false, true, true);
 
     if (NULL == port_slab_) {
         ret = HAL_RET_ERR;

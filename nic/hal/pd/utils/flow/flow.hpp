@@ -48,12 +48,12 @@
 #include <string>
 #include <map>
 #include <queue>
-#include "nic/utils/indexer/indexer.hpp"
+#include "nic/sdk/include/indexer.hpp"
 #include <boost/crc.hpp>
 #include "nic/include/hal_mem.hpp"
 
 using namespace std;
-using hal::utils::indexer;
+using sdk::lib::indexer;
 
 namespace hal {
 namespace pd {

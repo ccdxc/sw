@@ -5,13 +5,15 @@
 #include "nic/include/eth.h"
 #include "nic/include/ip.h"
 #include "nic/include/list.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/src/qos.hpp"
 
 #define NUM_MAX_COSES 16
+// Size of RSS seed in bytes
+#define ETH_RSS_KEY_LENGTH          40
 
 using intf::LifSpec;
 using intf::LifResponse;
@@ -20,7 +22,7 @@ using intf::LifDeleteResponse;
 using intf::LifGetRequest;
 using intf::LifGetResponse;
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 using hal::utils::bitmap;
 
@@ -35,6 +37,20 @@ typedef struct pkt_filter_s {
     bool    receive_promiscuous;   // Receive Unknown Unicast, Broadcast, Multicast. Not Known Unicast
 } __PACK__ pkt_filter_t;
 
+// Lif RSS config structure
+typedef struct lif_rss_info_s {
+    bool        enable;
+    int         type;
+    uint8_t     key[ETH_RSS_KEY_LENGTH];
+} __PACK__ lif_rss_info_t;
+
+// Lif queue info structure
+typedef struct lif_queue_info_s {
+    uint8_t     type;        // hardware queue type of queue
+    uint16_t    size;        // size of qstate
+    uint16_t    num_queues;  // number of queues
+} __PACK__ lif_queue_info_t;
+
 // LIF structure
 typedef struct lif_s {
     hal_spinlock_t      slock;           // lock to protect this structure
@@ -46,10 +62,11 @@ typedef struct lif_s {
     bool                enable_rdma;     // enable rdma on this LIF
     uint32_t            rdma_max_keys;
     uint32_t            rdma_max_pt_entries;
-    uint8_t             qtypes[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
-    uint16_t            cos_bmp;         // bitmap of COS values supported by this LIF.
-    bool                qstate_init_done;// qstate map init status.
-    pkt_filter_t        packet_filters;  // Packet Filter Modes
+    lif_queue_info_t    qinfo[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
+    uint16_t            cos_bmp;                     // bitmap of COS values supported by this LIF.
+    bool                qstate_init_done;            // qstate map init status.
+    pkt_filter_t        packet_filters;              // Packet Filter Modes
+    lif_rss_info_t      rss;                         // rss enable
 
     // operational state of interface
     hal_handle_t        hal_handle;      // HAL allocated handle
@@ -80,6 +97,7 @@ typedef struct lif_update_app_ctxt_s {
     uint64_t     vlan_strip_en_changed:1;
     uint64_t     pinned_uplink_changed:1;
     hal_handle_t new_pinned_uplink;
+    bool         rss_config_changed;
 } __PACK__ lif_update_app_ctxt_t;
 
 #define HAL_MAX_LIFS                                 1024

@@ -178,7 +178,7 @@ def generate_feature_sub_stats(output_dir, page_name="instructions_summary.html"
             feature_sub_frames = defaultdict(lambda: pd.DataFrame())
             for file_ in allFiles:
                 df = pd.read_csv(file_,index_col=None, header=0)
-                feature_sub_frames[sub] = pd.concat([feature_sub_frames[feature], df])
+                feature_sub_frames[sub] = pd.concat([feature_sub_frames[sub], df])
             feature_frames[feature]["total"] = pd.concat([feature_frames[feature]["total"], feature_sub_frames[sub]])
             feature_frames[feature]["sub_data"] = feature_sub_frames
 

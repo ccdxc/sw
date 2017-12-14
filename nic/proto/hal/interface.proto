@@ -141,6 +141,7 @@ message LifSpec {
   uint32                     rdma_max_keys           = 10;   // RDMA: max key entries
   uint32                     rdma_max_pt_entries     = 11;   // RDMA: max pt entries
   repeated QStateSetReq      lif_qstate              = 12;   // Initialize Qstate
+  LifRssSpec                 rss                     = 13;   // ETH: LIF RSS configuration
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -335,6 +336,13 @@ message LifGetResponseMsg {
   repeated LifGetResponse    response = 1;    // batched get response
 }
 
+// LifRssConfig is used to set Lif's RSS configuration
+message LifRssSpec {
+  bool          enable    = 1;    // RSS enable
+  LifRssType    type      = 2;    // RSS type
+  bytes         key       = 3;    // RSS key/seed
+}
+
 // types of interfaces
 enum IfType {
   IF_TYPE_NONE         = 0;
@@ -343,6 +351,20 @@ enum IfType {
   IF_TYPE_UPLINK_PC    = 3;    // interface representing NIC uplink port channel
   IF_TYPE_TUNNEL       = 4;    // interface representing tunnel
   IF_TYPE_CPU          = 5;    // interface representing CPU
+}
+
+// RSS Type
+enum LifRssType {
+  RSS_TYPE_NONE         = 0;
+  RSS_TYPE_IPV4         = 1;
+  RSS_TYPE_IPV4_TCP     = 2;
+  RSS_TYPE_IPV4_UDP     = 4;
+  RSS_TYPE_IPV6         = 8;
+  RSS_TYPE_IPV6_TCP     = 16;
+  RSS_TYPE_IPV6_UDP     = 32;
+  RSS_TYPE_IPV6_EX      = 64;
+  RSS_TYPE_IPV6_TCP_EX  = 128;
+  RSS_TYPE_IPV6_UDP_EX  = 256;
 }
 
 //------------------------------------------------------------------------------

@@ -18,11 +18,12 @@ export LD_LIBRARY_PATH=${N}
 cd $NIC_DIR
 echo $GDB $MODEL_SERVER \
     +PLOG_MAX_QUIT_COUNT=0 \
-    +plog=info \
-    +model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json \
+    +plog=${LOG_LEVEL:=err} \
+    ${IRIS_DEBUG:++model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json} \
     $*
+
 $GDB $MODEL_SERVER \
     +PLOG_MAX_QUIT_COUNT=0 \
-    +plog=info \
-    +model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json \
+    +plog=${LOG_LEVEL:=err} \
+    ${IRIS_DEBUG:++model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json} \
     $*

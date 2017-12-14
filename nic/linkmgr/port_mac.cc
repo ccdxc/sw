@@ -20,6 +20,7 @@ int mac_temac_regrd_haps (uint32_t chip, uint32_t port_num,
     uint64_t addr = 0x0;
 
     addr = MXP_BASE_HAPS +
+           (chip     * MXP_INST_STRIDE_HAPS) +
            (port_num * MXP_PORT_STRIDE_HAPS) +
            TEMAC_BASE_OFFSET_HAPS +
            offset;
@@ -35,6 +36,7 @@ int mac_temac_regwr_haps (uint32_t chip, uint32_t port_num,
     uint64_t addr = 0x0;
 
     addr = MXP_BASE_HAPS +
+           (chip     * MXP_INST_STRIDE_HAPS) +
            (port_num * MXP_PORT_STRIDE_HAPS) +
            TEMAC_BASE_OFFSET_HAPS +
            offset;
@@ -124,6 +126,7 @@ int mac_sgmii_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
     }
 
     addr = MXP_BASE_HAPS +
+           (chip     * MXP_INST_STRIDE_HAPS) +
            (port_num * MXP_PORT_STRIDE_HAPS) +
            SGMII_RESET_OFFSET_HAPS;
 
@@ -142,6 +145,7 @@ int mac_temac_reset_haps(uint32_t chip, uint32_t port_num, bool reset)
     }
 
     addr = MXP_BASE_HAPS +
+           (chip     * MXP_INST_STRIDE_HAPS) +
            (port_num * MXP_PORT_STRIDE_HAPS) +
            TEMAC_RESET_OFFSET_HAPS;
 
@@ -160,6 +164,7 @@ int mac_datapath_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
     }
 
     addr = MXP_BASE_HAPS +
+           (chip     * MXP_INST_STRIDE_HAPS) +
            (port_num * MXP_PORT_STRIDE_HAPS) +
            DATAPATH_RESET_OFFSET;
 
@@ -182,7 +187,14 @@ int mac_enable_haps (uint32_t port_num, uint32_t speed,
 int mac_soft_reset_haps (uint32_t port_num, uint32_t speed,
                          uint32_t num_lanes, bool reset)
 {
-    uint32_t chip = 0;
+    // MAC driver interfaces are agnostic of instance since the
+    // asic-lib handles only interms of mac port numbers.
+    // However, HAPS platform deals with instances as well.
+    // Repurpose chip as mac instance for HAPS
+
+    uint32_t chip = port_num / 4;
+    port_num = port_num % 4;
+
     uint32_t data = 0x0;
 
     if (reset == true) {
@@ -236,8 +248,9 @@ int mac_intr_enable_haps (uint32_t port_num, uint32_t speed,
 int mac_temac_stats_rd(uint32_t port_num, uint32_t size)
 {
     int i = 0;
-    uint32_t chip = 0x0;
     uint32_t data[1];
+    uint32_t chip = port_num / 4;
+    port_num = port_num % 4;
 
     size = 1;
 

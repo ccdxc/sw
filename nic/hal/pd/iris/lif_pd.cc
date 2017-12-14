@@ -8,6 +8,8 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/eth.hpp"
+
 
 namespace hal {
 namespace pd {
@@ -60,18 +62,36 @@ hal_ret_t
 pd_lif_update (pd_lif_upd_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    lif_t               *lif = args->lif;
+    pd_lif_t            *pd_lif = (pd_lif_t *)args->lif->pd_lif;
 
+    // Process VLAN offload config changes
     if (args->vlan_strip_en_changed) {
         HAL_TRACE_DEBUG("pd-lif:{}: vlan_strip_en changed. ", __FUNCTION__);
 
         // Program output mapping table
-        ret = lif_pd_pgm_output_mapping_tbl((pd_lif_t *)args->lif->pd_lif, 
+        ret = lif_pd_pgm_output_mapping_tbl(pd_lif,
                                             args, TABLE_OPER_UPDATE);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-lif:{}:unable to program hw", __FUNCTION__);
+            ret = HAL_RET_ERR;
+            goto end;
         }
-
     }
+
+    // Process ETH RSS configuration changes
+    if (args->rss_config_changed) {
+        HAL_TRACE_DEBUG("pd-lif:{}: rss config changed. ", __FUNCTION__);
+
+        ret = eth_rss_init(pd_lif->hw_lif_id, &lif->rss,
+            (lif_queue_info_t *)&lif->qinfo);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:unable to program hw for RSS", ret);
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+    }
+
     if (args->qstate_map_init_set) {
         HAL_TRACE_DEBUG("pd-lif:{}: qstate map init . ", __FUNCTION__);
         ret = scheduler_tx_pd_alloc((pd_lif_t *)args->lif->pd_lif);
@@ -86,6 +106,7 @@ pd_lif_update (pd_lif_upd_args_t *args)
             goto end;
         }
     }
+
 end:
     return ret;
 }
@@ -312,6 +333,7 @@ hal_ret_t
 lif_pd_program_hw (pd_lif_t *pd_lif)
 {
     hal_ret_t            ret;
+    lif_t                *lif = (lif_t *)pd_lif->pi_lif;
 
     // Program output mapping table
     ret = lif_pd_pgm_output_mapping_tbl(pd_lif, NULL, TABLE_OPER_INSERT);
@@ -323,6 +345,15 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
     ret = scheduler_tx_pd_program_hw(pd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx scheduler", __FUNCTION__);
+        goto end;
+    }
+
+    // ETH RSS configuration
+    ret = eth_rss_init(pd_lif->hw_lif_id, &lif->rss,
+        (lif_queue_info_t *)&lif->qinfo);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to program hw for RSS", ret);
+        ret = HAL_RET_ERR;
         goto end;
     }
 

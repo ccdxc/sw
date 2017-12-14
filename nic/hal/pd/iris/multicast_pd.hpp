@@ -4,12 +4,12 @@
 #define __HAL_PD_MULTICAST_HPP__
 
 #include "nic/include/base.h"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/common/pd_api.hpp"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 
 namespace hal {
 namespace pd {

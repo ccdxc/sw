@@ -874,29 +874,29 @@ modules:
         ignore  : False
  
     # RQ Atomic testcases
-#    - module:
-#        name    : RDMA_RX_ATOMIC_FETCHADD
-#        enable  : True
-#        package : test.rdma
-#        module  : resp_rx_atomic_fetchadd
-#        spec    : resp_rx_atomic_fetchadd.testspec
-#        ignore  : False
-#
-#    - module:
-#        name    : RDMA_RX_ATOMIC_CMPSWAP
-#        enable  : True
-#        package : test.rdma
-#        module  : resp_rx_atomic_cmpswap
-#        spec    : resp_rx_atomic_cmpswap.testspec
-#        ignore  : False
-#
-#    - module:
-#        name    : RDMA_RX_ATOMIC_CMPSWAP2
-#        enable  : True
-#        package : test.rdma
-#        module  : resp_rx_atomic_cmpswap2
-#        spec    : resp_rx_atomic_cmpswap2.testspec
-#        ignore  : False
+    - module:
+        name    : RDMA_RX_ATOMIC_FETCHADD
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_fetchadd
+        spec    : resp_rx_atomic_fetchadd.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_ATOMIC_CMPSWAP
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_cmpswap
+        spec    : resp_rx_atomic_cmpswap.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_ATOMIC_CMPSWAP2
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_cmpswap2
+        spec    : resp_rx_atomic_cmpswap2.testspec
+        ignore  : False
 
     # RQ Recirc testcases
     - module:

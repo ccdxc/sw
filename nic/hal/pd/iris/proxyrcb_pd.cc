@@ -37,7 +37,7 @@ proxyrcb_pd_get_hw_key_func (void *entry)
 uint32_t
 proxyrcb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 {
-    return hal::utils::hash_algo::fnv_hash(key, sizeof(proxyrcb_hw_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(proxyrcb_hw_id_t)) % ht_size;
 }
 
 bool

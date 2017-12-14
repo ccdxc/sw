@@ -23,7 +23,7 @@ lif_get_qtype(lif_t *pi_lif, intf::LifQPurpose purpose)
 {
     HAL_ASSERT_RETURN(purpose <= intf::LifQPurpose_MAX, 0);
 
-    return pi_lif->qtypes[purpose];
+    return pi_lif->qinfo[purpose].type;
 }
 
 //----------------------------------------------------------------------------

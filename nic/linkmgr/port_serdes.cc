@@ -25,8 +25,11 @@ bool serdes_rdy_haps(uint32_t sbus_addr)
 
 int serdes_output_enable_haps(uint32_t sbus_addr, bool enable)
 {
-    uint32_t chip = 0;
-    uint64_t addr = MXP_BASE_HAPS + PHY_RESET_OFFSET_HAPS;
+    // sbus_addr repurposed as instance id for HAPS
+    uint32_t chip = sbus_addr;
+    uint64_t addr = MXP_BASE_HAPS +
+                    (chip * MXP_INST_STRIDE_HAPS) +
+                    PHY_RESET_OFFSET_HAPS;
     uint32_t data = 0x0;
 
     if (enable == false) {

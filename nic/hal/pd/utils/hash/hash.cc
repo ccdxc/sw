@@ -117,7 +117,7 @@ Hash::~Hash()
 //
 // ---------------------------------------------------------------------------
 hal_ret_t 
-Hash::insert(void *key, void *data, uint32_t *index, 
+Hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
              bool direct_to_otcam)
 {
     hal_ret_t rs            = HAL_RET_OK;
@@ -126,6 +126,7 @@ Hash::insert(void *key, void *data, uint32_t *index,
     void *hwkey             = NULL;
     uint32_t dleft_index    = 0;
     uint32_t tcam_index     = 0;
+    bool key_mask_free      = false;
     HashEntryMap::iterator itr;
 
 
@@ -147,7 +148,7 @@ Hash::insert(void *key, void *data, uint32_t *index,
     dleft_index = generate_hash_(hwkey, hwkey_len_);
 
     itr = hash_entry_map_.find(dleft_index);
-    if (itr == hash_entry_map_.end()) {
+    if (itr == hash_entry_map_.end() && !direct_to_otcam) {
         HAL_TRACE_DEBUG("Hash::{}: dleft Insert ", __FUNCTION__);
         // he = new HashEntry(key, swkey_len_, data, swdata_len_, dleft_index);
 		he = HashEntry::factory(key, swkey_len_, data,
@@ -169,21 +170,25 @@ Hash::insert(void *key, void *data, uint32_t *index,
     } else {
         HAL_TRACE_DEBUG("Hash::{}: otcam Insert ", __FUNCTION__);
         he = itr->second;
-        if (!std::memcmp(he->get_key(), key, swkey_len_)) {
+        if (itr != hash_entry_map_.end() && 
+			!std::memcmp(he->get_key(), key, swkey_len_)) {
             rs = HAL_RET_DUP_INS_FAIL;
             goto end;
         }
 
         if (has_otcam_()) {
-            // initialize mask
-            // void *key_mask = ::operator new(swkey_len_);
-            void *key_mask = HAL_MALLOC(HAL_MEM_ALLOC_HASH_SW_KEY_MASK_INS, swkey_len_);
-            memset(key_mask, ~0, swkey_len_); 
+            if (key_mask == NULL) {
+                key_mask = HAL_MALLOC(HAL_MEM_ALLOC_HASH_SW_KEY_MASK_INS, swkey_len_);
+                memset(key_mask, ~0, swkey_len_); 
+                key_mask_free = true;
+            }
             
             // otcam insert
             rs = otcam_->insert(key, key_mask, data, &tcam_index);
+            if (key_mask_free) {
+                HAL_FREE(HAL_MEM_ALLOC_HASH_SW_KEY_MASK_INS, key_mask);
+            }
             // ::operator delete(key_mask);
-            HAL_FREE(HAL_MEM_ALLOC_HASH_SW_KEY_MASK_INS, key_mask);
             if (rs == HAL_RET_OK) {
                 *index = form_hash_idx_from_otcam_id_(tcam_index);
                 stats_incr(STATS_NUM_TCAM);

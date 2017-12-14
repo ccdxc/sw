@@ -136,6 +136,7 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
 
 @pragma stage 5
 @pragma hbm_table
+@pragma table_write
 table flow_stats {
     reads {
         flow_info_metadata.flow_index : exact;
@@ -151,7 +152,9 @@ control process_stats {
     if (capri_intrinsic.drop == TRUE) {
         apply(drop_stats);
     }
-    apply(flow_stats);
+    if (control_metadata.flow_miss_ingress == FALSE) {
+        apply(flow_stats);
+    }
     apply(ingress_tx_stats);
 }
 

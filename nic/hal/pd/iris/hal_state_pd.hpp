@@ -1,9 +1,9 @@
 #ifndef __HAL_STATE_PD_HPP__
 #define __HAL_STATE_PD_HPP__
 
-#include "nic/utils/indexer/indexer.hpp"
-#include "nic/utils/slab/slab.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/indexer.hpp"
+#include "nic/sdk/include/slab.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/hal/pd/utils/directmap/directmap.hpp"
 #include "nic/hal/pd/utils/hash/hash.hpp"
 #include "nic/hal/pd/utils/tcam/tcam.hpp"
@@ -15,11 +15,10 @@
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
 
-
-using hal::utils::indexer;
-using hal::utils::slab;
-using hal::utils::ht;
 using hal::BMAllocator;
+using sdk::lib::indexer;
+using sdk::lib::slab;
+using sdk::lib::ht;
 using hal::pd::utils::DirectMap;
 using hal::pd::utils::Hash;
 using hal::pd::utils::Tcam;

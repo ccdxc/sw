@@ -36,7 +36,7 @@ ep_get_l2_key_func (void *entry)
 uint32_t
 ep_compute_l2_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(ep_l2_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ep_l2_key_t)) % ht_size;
 }
 
 // ----------------------------------------------------------------------------
@@ -79,9 +79,9 @@ ep_compute_l3_hash_func (void *key, uint32_t ht_size)
 {
 #if 0
     HAL_TRACE_DEBUG("L3 key hash {}",
-                    utils::hash_algo::fnv_hash(key, sizeof(ep_l3_key_t)) % ht_size);
+                    sdk::lib::hash_algo::fnv_hash(key, sizeof(ep_l3_key_t)) % ht_size);
 #endif
-    return utils::hash_algo::fnv_hash(key, sizeof(ep_l3_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(ep_l3_key_t)) % ht_size;
 }
 
 //------------------------------------------------------------------------------
@@ -114,6 +114,7 @@ static inline hal_ret_t
 ep_add_to_l2_db (ep_t *ep, hal_handle_t handle)
 {
     hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
     HAL_TRACE_DEBUG("pi-ep:{}:adding to ep l2 hash table", 
@@ -128,13 +129,14 @@ ep_add_to_l2_db (ep_t *ep, hal_handle_t handle)
 
     // add mapping from vrf id to its handle
     entry->handle_id = handle;
-    ret = g_hal_state->ep_l2_ht()->insert_with_key(&ep->l2_key,
-                                                   entry, &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = g_hal_state->ep_l2_ht()->insert_with_key(&ep->l2_key,
+                                                       entry, &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     // TODO: Check if this is the right place
     ep->hal_handle = handle;
@@ -171,6 +173,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
                  hal_handle_t handle)
 {
     hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
     ep_l3_entry_t               *entry;
 
     HAL_TRACE_DEBUG("pi-ep:{}:adding to ep l2 hash table", 
@@ -186,13 +189,14 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
     entry->l3_key = *l3_key;
     entry->ep_ip = ep_ip;
     entry->ht_ctxt.reset();
-    ret = g_hal_state->ep_l3_entry_ht()->insert_with_key(l3_key,
+    sdk_ret = g_hal_state->ep_l3_entry_ht()->insert_with_key(l3_key,
                                                          entry, &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         g_hal_state->ep_l3_entry_slab()->free(entry);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }
@@ -884,6 +888,7 @@ hal_ret_t
 ep_make_clone (ep_t *ep, ep_t **ep_clone)
 {
     *ep_clone = ep_alloc_init();
+
     memcpy(*ep_clone, ep, sizeof(ep_t));
 
     pd::pd_ep_make_clone(ep, *ep_clone);
@@ -999,7 +1004,7 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assign clone as we are trying to free only the clone
     ep = (ep_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:update commit CB",
+    HAL_TRACE_DEBUG("pi-ep:{}:update abort CB",
                     __FUNCTION__);
 
     // Free PD

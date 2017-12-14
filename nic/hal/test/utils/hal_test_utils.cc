@@ -53,7 +53,7 @@ hal_initialize()
 void 
 hal_test_utils_slab_disable_delete()
 {
-    hal::utils::slab::g_delay_delete = false;
+    // sdk::lib::slab::g_delay_delete = false;
 }
 
 slab_stats_t *
@@ -67,7 +67,7 @@ hal_test_utils_collect_slab_stats()
 
     t_stats = stats;
     for (uint32_t i = hal::HAL_SLAB_NONE; i < hal::HAL_SLAB_MAX; i++) {
-        slab = hal_test_utils_get_slab((hal::hal_slab_t)i);
+        slab = hal_test_utils_get_slab((hal_slab_t)i);
         if (slab) {
             hal_test_utils_populate(t_stats, slab);
         }
@@ -97,7 +97,7 @@ hal_test_utils_populate (slab_stats_t *stats, slab *slab)
         return;
     }
 
-    stats->slab_id = slab->get_slab_id();
+    stats->slab_id = (hal_slab_t)slab->get_slab_id();
     stats->num_in_use = slab->num_in_use();
     stats->num_allocs = slab->num_allocs();
     stats->num_frees = slab->num_frees();

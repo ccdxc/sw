@@ -40,7 +40,7 @@ if_id_get_key_func (void *entry)
 uint32_t
 if_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(if_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(if_id_t)) % ht_size;
 }
 
 //------------------------------------------------------------------------------
@@ -63,6 +63,7 @@ static inline hal_ret_t
 if_add_to_db (if_t *hal_if, hal_handle_t handle)
 {
     hal_ret_t                ret;
+    sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t *entry;
 
     HAL_TRACE_DEBUG("pi-hal_if:{}:adding to hal_if id hash table", 
@@ -77,13 +78,14 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
 
     // add if_id -> handle
     entry->handle_id = handle;
-    ret = g_hal_state->if_id_ht()->insert_with_key(&hal_if->if_id,
-                                                   entry, &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = g_hal_state->if_id_ht()->insert_with_key(&hal_if->if_id,
+                                                       entry, &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to add if id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     return ret;
 }

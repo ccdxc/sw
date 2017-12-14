@@ -18,7 +18,7 @@ tcpcb_get_key_func (void *entry)
 uint32_t
 tcpcb_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(tcpcb_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(tcpcb_id_t)) % ht_size;
 }
 
 bool
@@ -41,7 +41,7 @@ tcpcb_get_handle_key_func (void *entry)
 uint32_t
 tcpcb_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 bool

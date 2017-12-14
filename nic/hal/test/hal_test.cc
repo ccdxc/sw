@@ -429,7 +429,7 @@ int ports_enable(hal_client *hclient, int vrf_id)
 {
     int port = 0;
 
-    for (port = 1; port <= 4; ++port) {
+    for (port = 1; port <= 8; ++port) {
         port_enable (hclient, vrf_id, port);
     }
 
@@ -453,7 +453,7 @@ int ports_get(hal_client *hclient, int vrf_id)
 {
     int port = 0;
 
-    for (port = 1; port <= 4; ++port) {
+    for (port = 1; port <= 8; ++port) {
         port_get (hclient, vrf_id, port);
     }
 
@@ -584,9 +584,9 @@ main (int argc, char** argv)
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
 
-    port_test(&hclient, vrf_id);
+    //port_test(&hclient, vrf_id);
     //ports_enable(&hclient, vrf_id);
-    //ports_get(&hclient, vrf_id);
+    ports_get(&hclient, vrf_id);
     return 0;
 
     // delete a non-existent vrf

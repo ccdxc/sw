@@ -177,7 +177,7 @@ def dump_coverage_data():
 def run_storage_dol(port):
     bin_dir = nic_dir + "/../bazel-bin/dol/test/storage"
     os.chdir(bin_dir)
-    cmd = ['./storage_test', str(port)]
+    cmd = ['./storage_test', '--hal_port', str(port)]
     p = Popen(cmd)
     p.communicate()
     return p.returncode

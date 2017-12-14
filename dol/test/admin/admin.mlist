@@ -3,7 +3,7 @@ feature:
     id          : admin
     package     : test.admin
     module      : admin
-    enable      : True
+    enable      : False
     ignore      : False
 
 modules:

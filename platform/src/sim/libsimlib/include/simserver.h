@@ -21,5 +21,9 @@ int sims_memwr(int clientfd, const u_int16_t bdf,
 int sims_readres(int clientfd, u_int16_t bdf, u_int8_t bar,
                  u_int64_t addr, u_int8_t size, 
                  u_int64_t val, u_int8_t error);
+int sims_writeres(int clientfd, u_int16_t bdf, u_int8_t bar,
+                  u_int64_t addr, u_int8_t size, u_int8_t error);
+int sims_sync_request(int clientfd);
+int sims_sync_release(int clientfd);
 
 #endif /* __SIMSERVER_H__ */

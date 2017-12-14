@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include "nic/utils/twheel/twheel.hpp"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace utils {
@@ -15,7 +16,7 @@ twheel::init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe)
 
     twentry_slab_ = slab::factory("twheel", HAL_SLAB_RSVD,
                                   sizeof(twentry_t), 256,
-                                  thread_safe, true, false, false);
+                                  thread_safe, true, false);
     if (twentry_slab_ == NULL) {
         return HAL_RET_OOM;
     }

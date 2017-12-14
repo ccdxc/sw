@@ -19,7 +19,7 @@
     .param      resp_rx_rqcb_process
     .param      req_rx_sqcb_process
     .param      cpu_rx_read_shared_stage0_start
-    .param      eth_rx_fetch_desc
+    .param      eth_rx_app_header
     .param      esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table
     .param      esp_ipv4_tunnel_n2h_rxdma_initial_table
     .param      rawr_s0_rx_start
@@ -51,7 +51,7 @@ rdma_req_rx_stage0:
 
 .align
 eth_rx_stage0:
-    j eth_rx_fetch_desc
+    j eth_rx_app_header
     nop
 
 .align

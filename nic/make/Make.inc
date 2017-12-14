@@ -1,14 +1,14 @@
 # Usage: make v=1 c=1 j=4 bazel-build
 #
-#   v: Verbose. Prints the commands bazel is executing
+#   V: Verbose. Prints the commands bazel is executing
 #   g: Enables debug. For now strip is always disabled.
 #   j: Specifies how many jobs bazel has to run
 #   c: Enables coverage compilation.
 
-ifeq ($(v),1)
+ifeq ($(V),1)
   VERBOSE = -s
 else
-  VERBOSE = 
+  VERBOSE =
 endif
 
 # For code coverage for HAL & ASM code

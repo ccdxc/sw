@@ -4,9 +4,10 @@
 #include <time.h>
 #include "nic/include/base.h"
 #include "nic/include/timestamp.h"
-#include "nic/utils/slab/slab.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/slab.hpp"
 
-using hal::utils::slab;
+using sdk::lib::slab;
 
 namespace hal {
 namespace utils {

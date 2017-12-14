@@ -1,7 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
+
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
     name = "flow",
@@ -24,14 +26,15 @@ cc_library(
         "flow_spine_entry.hpp",
         "flow_table_entry.hpp",
     ],
+    copts = sdk_copts,
     deps = [
         "//nic:gen_includes",
+        "//nic:sdk_indexer",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/indexer",
-        #"//nic/utils/thread",
-    ],
+        "//nic/utils/thread",
+    ],  # May not be needed
 )
 
 cc_library(
@@ -49,11 +52,12 @@ cc_library(
 cc_test(
     name = "flow_test",
     srcs = ["test/flow_test.cc"],
-    deps = gl_deps_list,
     linkopts = [
         "-lzmq",
         "-lpthread",
         "-pthread",
-        "-lprotobuf"
-     ],
+        "-lprotobuf",
+    ],
+    deps = gl_deps_list,
+    copts = sdk_copts,
 )

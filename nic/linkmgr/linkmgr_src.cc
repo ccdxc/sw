@@ -13,7 +13,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
 
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/utils/list/list.hpp"
 
 #include "nic/hal/periodic/periodic.hpp"
@@ -49,6 +49,11 @@ current_thread()
 bool hw_access_mock_mode()
 {
     return g_linkmgr_state->catalog()->access_mock_mode();
+}
+
+uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
+{
+    return g_linkmgr_state->catalog()->sbus_addr(asic_num, asic_port, lane);
 }
 
 hal::utils::platform_type_t platform_type()
@@ -140,6 +145,18 @@ linkmgr_catalog_init(std::string catalog_file)
     return hal::utils::catalog::factory(catalog_file);
 }
 
+static void *
+linkmgr_periodic_loop_start (void *ctxt)
+{
+    // initialize timer wheel
+    hal::periodic::periodic_thread_init(ctxt);
+
+    // run main loop
+    hal::periodic::periodic_thread_run(ctxt);
+
+    return NULL;
+}
+
 //------------------------------------------------------------------------------
 //  spawn and setup all the HAL threads
 //------------------------------------------------------------------------------
@@ -163,7 +180,7 @@ linkmgr_thread_init (void)
                         std::string("periodic-thread").c_str(),
                         thread_id,
                         HAL_CONTROL_CORE_ID,
-                        hal::periodic::periodic_thread_start,
+                        linkmgr_periodic_loop_start,
                         thread_prio - 1, SCHED_RR, true);
     HAL_ABORT(g_linkmgr_threads[thread_id] != NULL);
     g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
@@ -350,7 +367,7 @@ port_id_get_key_func (void *entry)
 uint32_t
 port_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return hal::utils::hash_algo::fnv_hash(key, sizeof(port_num_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(port_num_t)) % ht_size;
 }
 
 bool
@@ -370,6 +387,7 @@ static inline hal_ret_t
 port_add_to_db (port_t *pi_p, hal_handle_t handle)
 {
     hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
     HAL_TRACE_DEBUG("{}:adding to port id hash table",
@@ -384,13 +402,14 @@ port_add_to_db (port_t *pi_p, hal_handle_t handle)
 
     // add mapping from port num to its handle
     entry->handle_id = handle;
-    ret = g_linkmgr_state->port_id_ht()->insert_with_key(&pi_p->port_num,
+    sdk_ret = g_linkmgr_state->port_id_ht()->insert_with_key(&pi_p->port_num,
                                                        entry, &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to add port num to handle mapping, "
-                      "err : {}", __FUNCTION__, ret);
+                      "err : {}", __FUNCTION__, sdk_ret);
         g_linkmgr_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     // TODO: Check if this is the right place
     pi_p->hal_handle_id = handle;
@@ -1242,7 +1261,7 @@ port_delete (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
                              port_delete_abort_cb,
                              port_delete_cleanup_cb);
 end:
-    rsp->add_api_status(hal::hal_prepare_rsp(ret));
+    rsp->add_response()->set_api_status(hal::hal_prepare_rsp(ret));
 
     hal::hal_api_trace(" API End: port delete ");
     return ret;

@@ -5,9 +5,13 @@
 
 #include "nic/include/base.h"
 #include "nic/include/hal_lock.hpp"
-#include "nic/utils/slab/slab.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/slab.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/utils/list/list.hpp"
+
+using sdk::lib::ht;
+using sdk::lib::slab;
+using sdk::lib::ht_ctxt_t;
 
 namespace hal {
 namespace utils {

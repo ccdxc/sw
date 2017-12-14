@@ -168,7 +168,7 @@ public:
     uint32_t table_num_delete_errors(void);
 
     hal_ret_t insert(void *key, void *data, uint32_t *index, 
-                     bool direct_to_otcam = FALSE);
+                     void *key_mask = NULL, bool direct_to_otcam = FALSE);
     hal_ret_t update(uint32_t index, void *data);
     hal_ret_t remove(uint32_t index);
     hal_ret_t retrieve(uint32_t index, void *key, void *data);

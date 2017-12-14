@@ -1,4 +1,5 @@
 package(default_visibility = ["//visibility:public"])
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 licenses(["notice"])  # MIT license
 
@@ -14,5 +15,6 @@ cc_library(
         "//nic/third-party/spdlog",
         "//nic:gen_proto_includes",
     ],
+    copts = sdk_copts,
     alwayslink = 1,
 )

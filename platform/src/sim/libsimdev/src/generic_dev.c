@@ -42,14 +42,18 @@ void
 generic_cfgwr(simdev_t *sd, simmsg_t *m)
 {
     const u_int16_t bdf  = m->u.write.bdf;
+    const u_int8_t  bar  = m->u.write.bar;
     const u_int64_t addr = m->u.write.addr;
     const u_int8_t  size = m->u.write.size;
     const u_int64_t val  = m->u.write.val;
+    int r = 0;
 
     if (pciehsvc_cfgwr(bdf, addr, size, val) < 0) {
         fprintf(stderr, "pciehsvc_cfgwr size %d addr 0x%"PRIx64" failed\n",
                 size, addr);
+        r = EINVAL;
     }
+    sims_writeres(sd->fd, bdf, bar, addr, size, r);
 }
 
 int
@@ -71,14 +75,19 @@ generic_memrd(simdev_t *sd, simmsg_t *m, u_int64_t *valp)
 void
 generic_memwr(simdev_t *sd, simmsg_t *m)
 {
+    const u_int16_t bdf  = m->u.write.bdf;
+    const u_int8_t  bar  = m->u.write.bar;
     const u_int64_t addr = m->u.write.addr;
     const u_int8_t  size = m->u.write.size;
     const u_int64_t val  = m->u.write.val;
+    int r = 0;
 
     if (pciehsvc_memwr(addr, size, val) < 0) {
         fprintf(stderr, "pciehsvc_memwr size %d addr 0x%"PRIx64" failed\n",
                 size, addr);
+        r = EINVAL;
     }
+    sims_writeres(sd->fd, bdf, bar, addr, size, r);
 }
 
 int
@@ -102,14 +111,18 @@ generic_iord(simdev_t *sd, simmsg_t *m, u_int64_t *valp)
 void
 generic_iowr(simdev_t *sd, simmsg_t *m)
 {
+    const u_int16_t bdf  = m->u.write.bdf;
+    const u_int8_t  bar  = m->u.write.bar;
     const u_int64_t addr = m->u.write.addr;
     const u_int8_t  size = m->u.write.size;
     const u_int64_t val  = m->u.write.val;
+    int r = 0;
 
     if (pciehsvc_iowr(addr, size, val) < 0) {
         fprintf(stderr, "pciehsvc_iowr addr 0x%"PRIx64" size %d failed\n",
                 addr, size);
     }
+    sims_writeres(sd->fd, bdf, bar, addr, size, r);
 }
 
 int

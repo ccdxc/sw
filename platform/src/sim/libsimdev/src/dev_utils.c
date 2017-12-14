@@ -33,21 +33,38 @@ lif_qstate_map_addr(const int lif)
 }
 
 #define INTR_BASE               0x6000000
+
 #define INTR_MSIXCFG_OFFSET     0x0010000
 #define INTR_MSIXCFG_BASE       (INTR_BASE + INTR_MSIXCFG_OFFSET)
 #define INTR_MSIXCFG_STRIDE     0x10
+
 #define INTR_FWCFG_OFFSET       0x0020000
 #define INTR_FWCFG_BASE         (INTR_BASE + INTR_FWCFG_OFFSET)
 #define INTR_FWCFG_STRIDE       0x8
+
 #define INTR_DRVCFG_OFFSET      0x0040000
 #define INTR_DRVCFG_BASE        (INTR_BASE + INTR_DRVCFG_OFFSET)
 #define INTR_DRVCFG_STRIDE      0x20
+
 #define INTR_PBA_CFG_OFFSET     0x0060000
 #define INTR_PBA_CFG_BASE       (INTR_BASE + INTR_PBA_CFG_OFFSET)
 #define INTR_PBA_CFG_STRIDE     0x4
+
 #define INTR_PBA_OFFSET         0x0064000
 #define INTR_PBA_BASE           (INTR_BASE + INTR_PBA_OFFSET)
 #define INTR_PBA_STRIDE         0x8
+
+#define INTR_ASSERT_OFFSET      0x0068000
+#define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
+#define INTR_ASSERT_STRIDE      0x4
+
+#define INTR_COALESCE_OFFSET    0x006C000
+#define INTR_COALESCE_BASE      (INTR_BASE + INTR_COALESCE_OFFSET)
+#define INTR_COALESCE_STRIDE    0x8
+
+#define INTR_STATE_OFFSET       0x0070000
+#define INTR_STATE_BASE         (INTR_BASE + INTR_STATE_OFFSET)
+#define INTR_STATE_STRIDE       0x10
 
 u_int64_t
 intr_msixcfg_addr(const int intr)
@@ -68,6 +85,12 @@ intr_drvcfg_addr(const int intr)
 }
 
 u_int64_t
+intr_assert_addr(const int intr)
+{
+    return INTR_ASSERT_BASE + (intr * INTR_ASSERT_STRIDE);
+}
+
+u_int64_t
 intr_pba_addr(const int lif)
 {
     return INTR_PBA_BASE + (lif * INTR_PBA_STRIDE);
@@ -82,8 +105,8 @@ intr_pba_cfg_addr(const int lif)
 u_int64_t
 db_host_addr(const int lif)
 {
-#define DB_HOST_BASE            (0x68000000 + 0x00400000)
-#define DB_HOST_STRIDE          0xc
+#define DB_HOST_BASE            (0x00400000)
+#define DB_HOST_STRIDE          0x40
 
     return DB_HOST_BASE + (lif * DB_HOST_STRIDE);
 }

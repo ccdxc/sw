@@ -31,7 +31,7 @@ session_get_key_func (void *entry)
 uint32_t
 session_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(session_id_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(session_id_t)) % ht_size;
 }
 
 bool
@@ -56,7 +56,7 @@ session_get_handle_key_func(void *entry)
 uint32_t
 session_compute_handle_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
 }
 
 bool
@@ -79,7 +79,7 @@ session_get_iflow_key_func(void *entry)
 uint32_t
 session_compute_iflow_hash_func (void *key, uint32_t ht_size)
 {
-    return (utils::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size);
+    return (sdk::lib::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size);
 }
 
 bool
@@ -102,7 +102,7 @@ session_get_rflow_key_func(void *entry)
 uint32_t
 session_compute_rflow_hash_func (void *key, uint32_t ht_size)
 {
-    return (utils::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size);
+    return (sdk::lib::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size);
 }
 
 bool
@@ -125,7 +125,7 @@ flow_get_key_func (void *entry)
 uint32_t
 flow_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return utils::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size;
 }
 
 bool

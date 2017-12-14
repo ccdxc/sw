@@ -5,11 +5,10 @@
 #include "nic/include/eth.h"
 #include "nic/include/ip.h"
 #include "nic/include/list.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/gen/proto/hal/internal.pb.h"
 #include "nic/hal/src/internal.hpp"
-
 
 namespace hal {
 

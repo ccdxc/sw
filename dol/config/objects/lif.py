@@ -15,6 +15,7 @@ from infra.common.glopts        import GlobalOptions
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
+import test.callbacks.eth.toeplitz as toeplitz
 
 import pdb
 
@@ -81,6 +82,20 @@ class LifObject(base.ConfigObjectBase):
             self.pd_allocator = objects.TemplateFieldObject("range/0/128")
             self.mr_key_allocator = objects.TemplateFieldObject("range/0/1024")
 
+        if hasattr(spec, 'rss') and spec.rss.enable:
+            self.rss_enable = True
+            self.rss_type = (haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4") |
+                            haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4_TCP") |
+                            haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4_UDP") |
+                            haldefs.interface.LifRssType.Value("RSS_TYPE_IPV6") |
+                            haldefs.interface.LifRssType.Value("RSS_TYPE_IPV6_TCP") |
+                            haldefs.interface.LifRssType.Value("RSS_TYPE_IPV6_UDP"))
+            self.rss_key = toeplitz.toeplitz_msft_key
+        else:
+            self.rss_enable = False
+            self.rss_type = 0
+            self.rss_key = toeplitz.toeplitz_msft_key
+
         self.tenant     = tenant
         self.spec       = spec
         self.Show()
@@ -132,9 +147,9 @@ class LifObject(base.ConfigObjectBase):
             lif.queue_types_list.append(copy.copy(queue_type))
         for queue in self.queue_list:
             lif.queue_list.append(copy.copy(queue))
-            
+
         return lif
-    
+
     def Equals(self, other, lgh):
         if not isinstance(other, self.__class__):
             return False
@@ -142,14 +157,13 @@ class LifObject(base.ConfigObjectBase):
                    "rdma_max_keys"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-        
+
         for c_qtype, o_q_type in zip(self.queue_types_list, other.queue_types_list):
             if not c_qtype.Equals(o_q_type, lgh):
                 lgh.error("Queue Type mismatch")
                 return False
-       
+
         return True
-        
 
     def Show(self):
         cfglogger.info("- LIF   : %s" % self.GID())
@@ -166,6 +180,9 @@ class LifObject(base.ConfigObjectBase):
             req_spec.packet_filter.receive_broadcast = True
             req_spec.packet_filter.receive_promiscuous = self.promiscous
             req_spec.packet_filter.receive_all_multicast = self.allmulticast
+        req_spec.rss.enable = self.rss_enable
+        req_spec.rss.type = self.rss_type
+        req_spec.rss.key = bytes(self.rss_key)
         for queue_type in self.queue_types.GetAll():
             qstate_map_spec = req_spec.lif_qstate_map.add()
             queue_type.PrepareHALRequestSpec(qstate_map_spec)
@@ -174,6 +191,7 @@ class LifObject(base.ConfigObjectBase):
                 queue.PrepareHALRequestSpec(qstate_spec)
 
     def ProcessHALResponse(self, req_spec, resp_spec):
+
         self.hal_handle = resp_spec.status.lif_handle
         if (self.c_lib):
             self.CLibConfig(resp_spec)
@@ -208,7 +226,7 @@ class LifObject(base.ConfigObjectBase):
                 queue_type.ProcessHALGetResponse(qstate_spec)
             #TODO Still.
             #for q_spec, queue in zip(get_resp.spec.lif_qstate, self.queue_list):
-            #    queue.ProcessHALGetResponse(q_spec)                
+            #    queue.ProcessHALGetResponse(q_spec)
         else:
             self.status = None
             self.enable_rdma = None
@@ -280,7 +298,7 @@ class LifObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d LIFs." % len(self.lifs)) 
+        cfglogger.info("Configuring %d LIFs." % len(self.lifs))
         halapi.ConfigureLifs(self.lifs)
         for lif in self.lifs:
             lif.ConfigureQueueTypes()

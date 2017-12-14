@@ -1,6 +1,6 @@
 diff -uprN a/Makefile.target b/Makefile.target
 --- a/Makefile.target	2017-04-20 07:57:00.000000000 -0700
-+++ b/Makefile.target	2017-10-28 18:52:07.253707877 -0700
++++ b/Makefile.target	2017-11-12 16:32:47.230076840 -0800
 @@ -205,7 +205,7 @@ COMMON_LDADDS = $(trace-obj-y) ../libqem
  
  # build either PROG or PROGW
@@ -12,7 +12,7 @@ diff -uprN a/Makefile.target b/Makefile.target
  	$(call quiet-command,SetFile -a C $@,"SETFILE","$(TARGET_DIR)$@")
 diff -uprN a/hw/pci-bridge/Makefile.objs b/hw/pci-bridge/Makefile.objs
 --- a/hw/pci-bridge/Makefile.objs	2017-04-20 07:57:00.000000000 -0700
-+++ b/hw/pci-bridge/Makefile.objs	2017-10-28 18:52:07.253707877 -0700
++++ b/hw/pci-bridge/Makefile.objs	2017-11-12 16:32:47.230076840 -0800
 @@ -4,5 +4,14 @@ common-obj-$(CONFIG_PXB) += pci_expander
  common-obj-$(CONFIG_XIO3130) += xio3130_upstream.o xio3130_downstream.o
  common-obj-$(CONFIG_IOH3420) += ioh3420.o
@@ -30,7 +30,7 @@ diff -uprN a/hw/pci-bridge/Makefile.objs b/hw/pci-bridge/Makefile.objs
  common-obj-$(CONFIG_DEC_PCI) += dec.o
 diff -uprN a/default-configs/x86_64-softmmu.mak b/default-configs/x86_64-softmmu.mak
 --- a/default-configs/x86_64-softmmu.mak	2017-04-20 07:57:00.000000000 -0700
-+++ b/default-configs/x86_64-softmmu.mak	2017-10-28 18:52:07.253707877 -0700
++++ b/default-configs/x86_64-softmmu.mak	2017-11-12 16:32:47.230076840 -0800
 @@ -60,3 +60,4 @@ CONFIG_SMBIOS=y
  CONFIG_HYPERV_TESTDEV=$(CONFIG_KVM)
  CONFIG_PXB=y
@@ -38,8 +38,8 @@ diff -uprN a/default-configs/x86_64-softmmu.mak b/default-configs/x86_64-softmmu
 +CONFIG_SIMBRIDGE=y
 diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 --- a/hw/pci-bridge/simbridge.c	1969-12-31 16:00:00.000000000 -0800
-+++ b/hw/pci-bridge/simbridge.c	2017-10-29 15:37:39.377789421 -0700
-@@ -0,0 +1,929 @@
++++ b/hw/pci-bridge/simbridge.c	2017-11-12 16:43:54.965659383 -0800
+@@ -0,0 +1,919 @@
 +/*
 + * simbridge.c
 + */
@@ -304,6 +304,10 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +        .min_access_size = 1,
 +        .max_access_size = 8,
 +    },
++    .valid = {
++        .min_access_size = 1,
++        .max_access_size = 8,
++    },
 +};
 +
 +static const MemoryRegionOps io_ops = {
@@ -415,27 +419,7 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +
 +static void simdevice_msix_init(SimDevice *sd)
 +{
-+    PCIDevice *pd = PCI_DEVICE(sd);
-+    Error *local_err = NULL;
-+    int err;
-+
-+    /*
-+     * XXX
-+     * The correct thing to do here is walk through the PCIe
-+     * capabilities looking for the MSIX Cap header, and use the
-+     * information there to initialize.  For now, assume this is
-+     * an ethernet device where we hardcode the MSIX locations.
-+     */
-+    err = msix_init(pd, 64,
-+                    &sd->bar[0], 0, 0x6000,
-+                    &sd->bar[0], 0, 0x7000,
-+                    0, &local_err);
-+    if (err) {
-+        dbgprintf("msix_init failed: dev %04x\n", sd->simbdf);
-+        error_report_err(local_err);
-+        return;
-+    }
-+
++    return;
 +}
 +
 +static void simdevice_realize(PCIDevice *pd, Error **errp)
@@ -678,12 +662,12 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +
 +    if (sd == NULL) {
 +        dbgprintf("process_memrd: bdf %04x not found\n", bdf);
-+        simc_readres(fd, bdf, size, NULL, ENODEV);
++        simc_readres(bdf, addr, size, NULL, ENODEV);
 +        return -1;
 +    }
 +    if (size > sizeof(buf)) {
 +        dbgprintf("process_memrd: read size too large: 0x%x\n", size);
-+        simc_readres(fd, bdf, size, NULL, E2BIG);
++        simc_readres(bdf, addr, size, NULL, E2BIG);
 +        return -1;
 +    }
 +
@@ -691,19 +675,19 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +    if (pci_dma_read(pd, addr, buf, size) < 0) {
 +        dbgprintf("process_memrd: pci_dma_read 0x%"PRIx64" 0x%x failed\n",
 +                  addr, size);
-+        simc_readres(fd, bdf, size, NULL, EFAULT);
++        simc_readres(bdf, addr, size, NULL, EFAULT);
 +        return -1;
 +    }
 +    dbgprintf("    %02x %02x %02x %02x %02x %02x %02x %02x\n",
 +              buf[0], buf[1], buf[2], buf[3],
 +              buf[4], buf[5], buf[6], buf[7]);
-+    return simc_readres(fd, bdf, size, buf, 0);
++    return simc_readres(bdf, addr, size, buf, 0);
 +}
 +
 +static void
 +process_memwr(int fd, simmsg_t *m)
 +{
-+    const u_int16_t bdf = m->u.write.bdf;
++    const u_int16_t bdf  = m->u.write.bdf;
 +    const u_int64_t addr = m->u.write.addr;
 +    const u_int32_t size = m->u.write.size;
 +    SimDevice *sd = simdevices_find_bdf(bdf);
@@ -730,6 +714,7 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +              buf[0], buf[1], buf[2], buf[3],
 +              buf[4], buf[5], buf[6], buf[7]);
 +    pci_dma_write(pd, addr, buf, size);
++    simc_writeres(bdf, addr, size, 0);
 +}
 +
 +static void
@@ -741,6 +726,11 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +        break;
 +    case SIMMSG_MEMWR:
 +        process_memwr(fd, m);
++        break;
++    case SIMMSG_WRRESP:
++        break;
++    case SIMMSG_SYNC_REQ:
++        simc_sync_ack();
 +        break;
 +    default:
 +        dbgprintf("unknown msg type %d\n", m->msgtype);

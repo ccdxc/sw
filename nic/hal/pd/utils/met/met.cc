@@ -51,8 +51,11 @@ Met::Met(std::string table_name, uint32_t table_id,
     repl_entry_data_len_        = repl_entry_data_len;
 
     // repl_table_indexer_         = new indexer(repl_table_capacity_, TRUE, TRUE);
+#if 0
     repl_table_indexer_ = indexer::factory(repl_table_capacity_, TRUE, TRUE,
                                            HAL_MEM_ALLOC_MET_REPL_TABLE_INDEXER);
+#endif
+    repl_table_indexer_ = indexer::factory(repl_table_capacity_, TRUE, TRUE);
 
     // Initialize for Stats
     // stats_ = new uint64_t[STATS_MAX]();
@@ -66,8 +69,11 @@ Met::Met(std::string table_name, uint32_t table_id,
 Met::~Met() 
 {
     // delete repl_table_indexer_;
+#if 0
     indexer::destroy(repl_table_indexer_, 
                      HAL_MEM_ALLOC_MET_REPL_TABLE_INDEXER);
+#endif
+    indexer::destroy(repl_table_indexer_);
     HAL_FREE(HAL_MEM_ALLOC_MET_STATS, stats_);
 }
 
@@ -338,7 +344,7 @@ Met::stats_update(Met::api ap, hal_ret_t rs)
 uint32_t
 Met::table_num_entries_in_use(void)
 {
-    return repl_table_indexer_->usage();
+    return repl_table_indexer_->num_indices_allocated();
 }
 
 // ----------------------------------------------------------------------------

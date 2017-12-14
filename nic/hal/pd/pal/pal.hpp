@@ -27,8 +27,6 @@ typedef struct pal_rwvectors_s {
 
 typedef struct pal_info_s {
     bool                sim;
-    void                *baseaddr;
-    int                 devfd;
     pal_rwvectors_t    rwvecs;
 } pal_info_t;
 
@@ -37,6 +35,9 @@ pal_init(bool sim);
 
 pal_ret_t
 pal_init_sim();
+
+pal_ret_t
+pal_hw_init();
 
 pal_ret_t
 pal_reg_read(uint64_t addr, uint32_t *data);

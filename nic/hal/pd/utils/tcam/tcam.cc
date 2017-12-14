@@ -55,8 +55,9 @@ Tcam::Tcam(std::string table_name, uint32_t table_id,
     allow_dup_insert_   = allow_dup_insert;
 
     // tcam_indexer_       = new indexer(tcam_capacity_);
-    tcam_indexer_ = indexer::factory(tcam_capacity_, false, false, 
-                                     HAL_MEM_ALLOC_TCAM_INDEXER);
+    // tcam_indexer_ = indexer::factory(tcam_capacity_, false, false, 
+    //                                 HAL_MEM_ALLOC_TCAM_INDEXER);
+    tcam_indexer_ = indexer::factory(tcam_capacity_, false, false);
 
     hwkey_len_ = 0;
     hwkeymask_len_ = 0;
@@ -91,7 +92,8 @@ Tcam::~Tcam()
 {
     // delete tcam_indexer_;
     // delete[] stats_;
-    indexer::destroy(tcam_indexer_, HAL_MEM_ALLOC_TCAM_INDEXER);
+    // indexer::destroy(tcam_indexer_, HAL_MEM_ALLOC_TCAM_INDEXER);
+    indexer::destroy(tcam_indexer_);
     HAL_FREE(HAL_MEM_ALLOC_TCAM_STATS, stats_);
 }
 
@@ -656,7 +658,7 @@ Tcam::stats_update(Tcam::api ap, hal_ret_t rs)
 uint32_t
 Tcam::table_num_entries_in_use(void)
 {
-    return tcam_indexer_->usage();
+    return tcam_indexer_->num_indices_allocated();
 }
 
 // ----------------------------------------------------------------------------

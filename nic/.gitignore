@@ -27,3 +27,5 @@ tags
 conf/hal.ini
 third-party/snort3/export/bin/
 conf/hal.ini
+debug_cli/swig/ccfiles/p4pd_wrap.cc
+debug_cli/swig/pyfiles/p4pd.py

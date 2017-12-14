@@ -12,7 +12,7 @@ static void * expected_flow_get_key_func(void *entry)
 
 static uint32_t expected_flow_compute_hash_func(void *key, uint32_t ht_size)
 {
-    return (hal::utils::hash_algo::fnv_hash(key, 
+    return (sdk::lib::hash_algo::fnv_hash(key, 
                                             sizeof(hal::flow_key_t)) % ht_size);
 }
 
@@ -25,10 +25,10 @@ static bool expected_flow_compare_key_func (void *key1, void *key2)
 //------------------------------------------------------------------------------
 // Expected flow entries hash table
 //------------------------------------------------------------------------------
-static hal::utils::ht *expected_flow_ht()
+static sdk::lib::ht *expected_flow_ht()
 {
-    static hal::utils::ht* ht_ =
-        hal::utils::ht::factory(FTE_MAX_EXPECTED_FLOWS,
+    static sdk::lib::ht* ht_ =
+        sdk::lib::ht::factory(FTE_MAX_EXPECTED_FLOWS,
                                 expected_flow_get_key_func,
                                 expected_flow_compute_hash_func,
                                 expected_flow_compare_key_func);
@@ -44,7 +44,8 @@ insert_expected_flow(expected_flow_t *entry)
 {
     HAL_TRACE_DEBUG("fte::insert_expected_flow key={}", entry->key);
     entry->expected_flow_ht_ctxt.reset();
-    return expected_flow_ht()->insert(entry, &entry->expected_flow_ht_ctxt);
+    return hal_sdk_ret_to_hal_ret(expected_flow_ht()->
+                                  insert(entry, &entry->expected_flow_ht_ctxt));
 }
 
 //------------------------------------------------------------------------------

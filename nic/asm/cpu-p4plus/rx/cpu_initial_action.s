@@ -47,19 +47,19 @@ cpu_rx_hash_data:
 
         .brcase 1
             /* IPv4 */
-            phvwr   p.toeplitz_input0_data[63:32], k.{cpu_app_header_l4_sport, cpu_app_header_l4_dport}
-            phvwr   p.toeplitz_input0_data[127:64], k.cpu_app_header_ip_sa[95:32]
+            phvwr   p.toeplitz_input0_data[63:32], k.{cpu_app_header_l4_sport...cpu_app_header_l4_dport_sbit8_ebit15}
+            phvwr   p.toeplitz_input0_data[127:64], k.cpu_app_header_ip_sa_sbit8_ebit127[87:24]
             b       table_read_DESC_SEMAPHORE
             nop
 
         .brcase 2
             /* IPv6 */
-            phvwr   p.toeplitz_input0_data, k.cpu_app_header_ip_sa
+            phvwr   p.toeplitz_input0_data, k.{cpu_app_header_ip_sa_sbit0_ebit7, cpu_app_header_ip_sa_sbit8_ebit127}
             //phvwr   p.toeplitz_input1_data, k.{cpu_app_header_ip_da_sbit0_ebit87...cpu_app_header_ip_da_sbit88_ebit127}
             phvwrpair p.toeplitz_input1_data[127:120], k.cpu_app_header_ip_da1_sbit0_ebit7,\
                 p.toeplitz_input1_data[119:64], k.cpu_app_header_ip_da1_sbit8_ebit63
             phvwr   p.toeplitz_input1_data[63:0], k.cpu_app_header_ip_da2
-            phvwr   p.toeplitz_input2_data, k.{cpu_app_header_l4_sport, cpu_app_header_l4_dport}
+            phvwr   p.toeplitz_input2_data, k.{cpu_app_header_l4_sport...cpu_app_header_l4_dport_sbit8_ebit15}
             b       table_read_DESC_SEMAPHORE
             nop
        

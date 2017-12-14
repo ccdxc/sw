@@ -40,7 +40,7 @@ apply-patch: .patched
 configure: .configured
 
 .configured:
-	(cd $(QEMU) && ./configure --target-list=x86_64-softmmu) && \
+	(cd $(QEMU) && ./configure --target-list=x86_64-softmmu --enable-debug-info) && \
 	touch $@
 
 build: $(QEMU)

@@ -3,11 +3,11 @@
 
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
-#include "nic/utils/ht/ht.hpp"
+#include "nic/sdk/include/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "../../gen/proto/hal/qos.pb.h"
 
-using hal::utils::ht_ctxt_t;
+using sdk::lib::ht_ctxt_t;
 using hal::utils::bitmap;
 
 using qos::BufPoolSpec;

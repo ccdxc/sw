@@ -377,6 +377,89 @@ static void capri_program_p4plus_sram_table_mpu_pc(int tbl_id, cap_te_csr_t *te_
     te_csr->cfg_table_property[tbl_id].write();
 }
 
+#ifndef GFT
+/*
+ * RSS Topelitz Table
+ */
+
+#define ETH_RSS_INDIR_PROGRAM               "eth_rx_rss_indir.bin"
+// Maximum number of queue per LIF
+#define ETH_RSS_MAX_QUEUES                  (128)
+// Number of entries in a LIF's indirection table
+#define ETH_RSS_LIF_INDIR_TBL_LEN           ETH_RSS_MAX_QUEUES
+// Size of each LIF indirection table entry
+#define ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ      (sizeof(eth_rx_rss_indir_eth_rx_rss_indir_t))
+// Size of a LIF's indirection table
+#define ETH_RSS_LIF_INDIR_TBL_SZ            (ETH_RSS_LIF_INDIR_TBL_LEN * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ)
+// Max number of LIFs supported
+#define MAX_LIFS                            (2048)
+// Size of the entire LIF indirection table
+#define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
+
+static int capri_toeplitz_init()
+{
+    int tbl_id;
+    uint64_t pc;
+    uint32_t tbl_base;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_te_csr_t *te_csr = NULL;
+    p4pd_table_properties_t tbl_ctx;
+
+    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+                                   (char *) ETH_RSS_INDIR_PROGRAM,
+                                   &pc) < 0) {
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+                        (char *) CAPRI_P4PLUS_HANDLE,
+                        (char *) ETH_RSS_INDIR_PROGRAM);
+        return CAPRI_FAIL;
+    }
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+                    (char *) CAPRI_P4PLUS_HANDLE,
+                    (char *) ETH_RSS_INDIR_PROGRAM,
+                    pc);
+
+    // Program rss params table with the PC
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
+                                     &tbl_ctx);
+    te_csr = &cap0.pcr.te[tbl_ctx.stage];
+
+    tbl_id = tbl_ctx.stage_tableid;
+
+    tbl_base = get_start_offset(CAPRI_HBM_REG_RSS_INDIR_TABLE);
+    HAL_ASSERT(tbl_base > 0);
+    // Align the table address because while calculating the read address TE shifts the LIF
+    // value by LOG2 of size of the per lif indirection table.
+    tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
+
+    HAL_TRACE_DEBUG("rss_indir_table id {} table_base {}\n", tbl_id, tbl_base);
+
+    te_csr->cfg_table_property[tbl_id].read();
+    te_csr->cfg_table_property[tbl_id].mpu_pc((uint32_t) pc >> 6);
+    te_csr->cfg_table_property[tbl_id].mpu_pc_dyn(0);
+    // HBM Table
+    te_csr->cfg_table_property[tbl_id].axi(0); //1==table in SRAM, 0== table in HBM
+    // TE addr = hash
+    // TE mask = (1 << addr_sz) - 1
+    te_csr->cfg_table_property[tbl_id].addr_sz((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_LEN));
+    // TE addr <<= addr_shift
+    te_csr->cfg_table_property[tbl_id].addr_shift((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
+    // TE addr = (hash & mask) + addr_base
+    te_csr->cfg_table_property[tbl_id].addr_base(tbl_base);
+    // TE lif_shift_en
+    te_csr->cfg_table_property[tbl_id].addr_vf_id_en(1);
+    // TE lif_shift
+    te_csr->cfg_table_property[tbl_id].addr_vf_id_loc((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_SZ));
+    // addr |= (lif << lif_shift)
+    // TE addr = addr & ((1 << chain_shift) - 1) if 0 <= cycle_id < 63 else addr
+    te_csr->cfg_table_property[tbl_id].chain_shift(0x3f);
+    // size of each indirection table entry
+    te_csr->cfg_table_property[tbl_id].lg2_entry_size((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
+    te_csr->cfg_table_property[tbl_id].write();
+
+    return CAPRI_OK;
+}
+#endif
+
 static int capri_table_p4plus_init()
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -688,6 +771,9 @@ int capri_table_rw_init()
 
     /* Program p4plus recirc parameters. */
     capri_p4plus_recirc_init();
+
+    /* Program Toeplitz table */
+    capri_toeplitz_init();
 
     /* Timers */
     capri_timer_init();

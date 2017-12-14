@@ -8,8 +8,20 @@ feature:
 
 modules:
     - module:
-        name    : ISCSI_CMD
-        spec    : iscsi_cmd.testspec
+        name    : ISCSI_READ_CMD
+        spec    : iscsi_read_cmd.testspec
     - module:
-        name    : ISCSI_RESP
-        spec    : iscsi_cmd_resp.testspec
+        name    : ISCSI_READ_RESP
+        spec    : iscsi_read_resp.testspec
+    - module:
+        name    : ISCSI_READ_CMD2
+        spec    : iscsi_read_cmd2.testspec
+    - module:
+        name    : ISCSI_READ_RESP2
+        spec    : iscsi_read_resp2.testspec
+    - module:
+        name    : ISCSI_WRITE_CMD
+        spec    : iscsi_write_cmd.testspec
+    - module:
+        name    : ISCSI_WRITE_RESP
+        spec    : iscsi_write_resp.testspec

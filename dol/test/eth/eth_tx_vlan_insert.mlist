@@ -3,7 +3,7 @@ feature:
     sub         : tx_vlan_insert
     package     : test.eth
     module      : eth
-    enable      : True
+    enable      : False
     ignore      : False
 
 modules:

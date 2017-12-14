@@ -2,6 +2,8 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
+
 cc_library(
     name = "hal_mock",
     srcs = [
@@ -12,7 +14,8 @@ cc_library(
         "//nic/third-party/spdlog",
         "//nic/utils/thread:thread",
     ],
-    alwayslink = 1
+    alwayslink = 1,
+    copts = sdk_copts,
 )
 
 cc_binary(
@@ -27,6 +30,7 @@ cc_binary(
         "//nic:gen_proto_includes",
         "//nic:halproto",
         "//nic:grpc",
+        "//nic:sdk_logger",
     ],
     linkopts = [
         "-lzmq",

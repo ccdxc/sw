@@ -1,4 +1,5 @@
 #include "nic/utils/pt/pt.hpp"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace utils {
@@ -29,7 +30,7 @@ pt::init(const char *name, uint16_t max_key_len, bool thread_safe)
     // for nodes internally created by this library only
     ptnode_slab_ = slab::factory("pt", HAL_SLAB_RSVD,
                                  sizeof(ptnode_t) + max_key_len, 16,
-                                 thread_safe, true, false, true);
+                                 thread_safe, true, true);
     if (ptnode_slab_ == NULL) {
         return false;
     }

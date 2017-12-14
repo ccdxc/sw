@@ -31,19 +31,21 @@ namespace linkmgr {
 
 extern bool hw_access_mock_mode();
 extern hal::utils::platform_type_t platform_type();
+extern uint32_t sbus_addr(uint32_t asic, uint32_t asic_port, uint32_t lane);
 
 namespace pd {
 
 #define PORT_LANES_MAX 4
 
-#define MXP_BASE_HAPS           0x01020000
+#define MXP_BASE_HAPS           0x01d00000
+#define MXP_INST_STRIDE_HAPS    0x00100000
 #define MXP_PORT_STRIDE_HAPS    0x2000
 #define TEMAC_BASE_OFFSET_HAPS  0x1000
 
-#define PHY_RESET_OFFSET_HAPS    0x8000
-#define SGMII_RESET_OFFSET_HAPS  0x0
-#define TEMAC_RESET_OFFSET_HAPS  0x8
-#define DATAPATH_RESET_OFFSET    0xc
+#define PHY_RESET_OFFSET_HAPS    0x4
+#define SGMII_RESET_OFFSET_HAPS  0x2000
+#define TEMAC_RESET_OFFSET_HAPS  0x2008
+#define DATAPATH_RESET_OFFSET    0x200c
 
 #define MDIO_SETUP_OFFSET_HAPS   0x500
 #define MDIO_CTRL_OFFSET_HAPS    0x504
@@ -270,6 +272,9 @@ private:
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc();
+
+    // Get serdes sbus address for a port lane
+    uint32_t port_sbus_addr(uint32_t lane);
 };
 
 }    // namespace pd
