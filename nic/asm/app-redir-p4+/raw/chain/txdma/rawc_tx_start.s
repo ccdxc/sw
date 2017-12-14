@@ -59,9 +59,8 @@ rawc_s0_tx_start:
      * be true to indicate readiness.
      */
     sne         c1, d.rawccb_deactivate, RAWCCB_DEACTIVATE
-    seq         c2, d.rawccb_activate, RAWCCB_ACTIVATE
-    setcf       c3, [c1 & c2]
-    bal.!c3     r_return, _rawccb_not_ready
+    seq.c1      c1, d.rawccb_activate, RAWCCB_ACTIVATE
+    bal.!c1     r_return, _rawccb_not_ready
     phvwr       p.common_phv_rawccb_flags, d.{rawccb_flags}.hx // delay slot
     
     /*

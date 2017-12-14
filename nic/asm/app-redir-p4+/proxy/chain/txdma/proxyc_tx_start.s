@@ -59,9 +59,8 @@ proxyc_s0_tx_start:
      * be true to indicate readiness.
      */
     sne         c1, d.proxyccb_deactivate, PROXYCCB_DEACTIVATE
-    seq         c2, d.proxyccb_activate, PROXYCCB_ACTIVATE
-    setcf       c3, [c1 & c2]
-    bal.!c3     r_return, _proxyccb_not_ready
+    seq.c1      c1, d.proxyccb_activate, PROXYCCB_ACTIVATE
+    bal.!c1     r_return, _proxyccb_not_ready
     phvwr       p.common_phv_proxyccb_flags, d.{proxyccb_flags}.hx // delay slot
     
     /*

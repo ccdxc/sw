@@ -44,9 +44,8 @@ rawr_s0_rx_start:
      * be true to indicate readiness.
      */
     sne         c1, d.u.rawr_rx_start_d.rawrcb_deactivate, RAWRCB_DEACTIVATE
-    seq         c2, d.u.rawr_rx_start_d.rawrcb_activate, RAWRCB_ACTIVATE
-    setcf       c3, [c1 & c2]
-    b.!c3       _rawrcb_not_ready
+    seq.c1      c1, d.u.rawr_rx_start_d.rawrcb_activate, RAWRCB_ACTIVATE
+    b.!c1       _rawrcb_not_ready
     phvwr       p.common_phv_rawrcb_flags,\
                 d.{u.rawr_rx_start_d.rawrcb_flags}.hx // delay slot
     /*

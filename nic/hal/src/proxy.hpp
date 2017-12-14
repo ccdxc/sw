@@ -61,10 +61,6 @@ inline uint16_t parse_service_lif(const char *s)
     return _map[s];
 }
 
-typedef uint32_t lif_id_t;
-typedef uint8_t  qtype_t;
-typedef uint32_t  qid_t;
-
 typedef struct proxy_meta_qtype_s {
     qtype_t     qtype_val;
     uint8_t     qstate_size;

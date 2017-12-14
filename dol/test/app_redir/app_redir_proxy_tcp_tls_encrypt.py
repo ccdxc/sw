@@ -68,7 +68,9 @@ def TestCaseSetup(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
 
-    #tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy
+    #tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
+    #                  tcp_tls_proxy.tls_debug_dol_bypass_barco
+    tlscb.debug_dol = 0
     tlscb.other_fid = 0xffff
     tlscb.l7_proxy_type = 0
 

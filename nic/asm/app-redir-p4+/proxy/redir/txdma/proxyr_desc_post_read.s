@@ -10,7 +10,7 @@ struct proxyr_desc_desc_post_read_d     d;
  * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
 #define r_alloc_inf_addr            r3
-#define r_scratch                   r4
+#define r_len                       r4
 
 %%
 
@@ -34,8 +34,8 @@ proxyr_s2_desc_post_read:
      *  - AOL2: NULL
      */
     phvwr       p.to_s6_ppage, d.{A0}.dx
-    add         r_scratch, d.L1, d.L2
-    bne         r_scratch, r0, _aol_error
+    add         r_len, d.L1, d.L2
+    bne         r_len, r0, _aol_error
     seq         c1, d.L0, r0    // delay slot
     bcf         [c1], _aol_error
 
@@ -49,9 +49,7 @@ proxyr_s2_desc_post_read:
      * Shift A0 down so that A0 can be replaced with
      * meta page later
      */
-    phvwr       p.aol_A1, d.A0  // delay slot
-    phvwr       p.aol_O1, d.O0
-    phvwr       p.aol_L1, d.L0
+    phvwr       p.{aol_A1, aol_O1, aol_L1}, d.{A0, O0, L0}  // delay slot
     
     /*
      * Fetch/update memory page pindex for storing meta headers

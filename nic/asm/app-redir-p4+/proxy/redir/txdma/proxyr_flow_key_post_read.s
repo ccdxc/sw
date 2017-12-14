@@ -21,9 +21,8 @@ proxyr_s1_flow_key_post_read:
      * be true to indicate readiness.
      */
     sne         c1, k.to_s1_proxyrcb_deactivate, PROXYRCB_DEACTIVATE
-    seq         c2, d.proxyrcb_activate, PROXYRCB_ACTIVATE
-    setcf       c3, [c1 & c2]
-    b.!c3       _proxyrcb_not_ready
+    seq.c1      c1, d.proxyrcb_activate, PROXYRCB_ACTIVATE
+    b.!c1       _proxyrcb_not_ready
     
     /*
      * Populate more meta header fields with flow key.
@@ -32,10 +31,10 @@ proxyr_s1_flow_key_post_read:
      */
     phvwr       p.p4plus_cpu_pkt_lkp_vrf, d.{vrf}.hx
     phvwr       p.pen_proxyr_hdr_v1_vrf, d.vrf
-    phvwr       p.pen_proxyr_hdr_v1_ip_sa, d.ip_sa
-    phvwr       p.pen_proxyr_hdr_v1_ip_da, d.ip_da
-    phvwr       p.pen_proxyr_hdr_v1_sport, d.sport
-    phvwr       p.pen_proxyr_hdr_v1_dport, d.dport
+    phvwr       p.{pen_proxyr_hdr_v1_ip_sa, pen_proxyr_hdr_v1_ip_da}, \
+                d.{ip_sa, ip_da}
+    phvwr       p.{pen_proxyr_hdr_v1_sport, pen_proxyr_hdr_v1_dport}, \
+                d.{sport, dport}
     phvwr       p.pen_proxyr_hdr_v1_af, d.af
     phvwr.e     p.pen_proxyr_hdr_v1_ip_proto, d.ip_proto
     nop

@@ -36,9 +36,9 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : APP_REDIR_PROXY_TCP_TLS_DECRYPT
-        module  : app_redir_proxy_tcp_tls_decrypt
-        spec    : app_redir_proxy_one_tls_aes128_gcm.testspec
+        name    : APP_REDIR_PROXY_TCP_TLS_ENCRYPT
+        module  : app_redir_proxy_tcp_tls_encrypt
+        spec    : app_redir_proxy.testspec
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -47,12 +47,11 @@ modules:
             proxyr_meta_pages : 1
         iterate :
             - flow: filter://type=IPV4
-            
+
     - module:
-        name    : APP_REDIR_PROXY_TCP_TLS_ENCRYPT
-        module  : app_redir_proxy_tcp_tls_encrypt
-        spec    : app_redir_proxy.testspec
-        ignore  : True
+        name    : APP_REDIR_PROXY_TCP_TLS_DECRYPT
+        module  : app_redir_proxy_tcp_tls_decrypt
+        spec    : app_redir_proxy_one_tls_aes128_gcm.testspec
         args    :
             cipher_suite: GCM
             maxflows: 1

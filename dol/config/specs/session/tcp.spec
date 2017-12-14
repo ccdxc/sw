@@ -117,7 +117,16 @@ entries:
             port : const/46624
 
     - entry:
-        label: proxy-redir
+        label: proxy-redir-dec
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/23763
+        initiator: 
+            port : const/23764
+
+    - entry:
+        label: proxy-redir-enc
         tracking: False
         timestamp: False
         responder: 
