@@ -57,6 +57,16 @@
             "features"  : ["alg"]
         },
         {
+            "name"      : "alg_ftp",
+            "provider"  : "pensando.io",
+            "lib"       : "network/alg/libalg.so",
+            "init_func" : "alg_ftp_init",
+            "exit_func" : "alg_ftp_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/sfw", "pensando.io/alg_utils"],
+            "features"  : ["alg_ftp"]
+        },
+        {
             "name"      : "eplearn",
             "provider"  : "pensando.io",
             "lib"       : "eplearn/libeplearn.so",

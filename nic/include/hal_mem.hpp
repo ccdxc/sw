@@ -61,6 +61,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_EVENT_MAP,
     HAL_SLAB_EVENT_MAP_LISTENER,
     HAL_SLAB_EVENT_LISTENER,
+    HAL_SLAB_FTP_ALG_APPSESS,
+    HAL_SLAB_FTP_ALG_L4SESS,
+    HAL_SLAB_FTP_ALG_FTPINFO,
     HAL_SLAB_PI_MAX,  // NOTE: MUST be last PI slab id
 
     // PD Slabs

@@ -6,33 +6,259 @@ namespace hal {
 namespace plugins {
 namespace alg_utils {
 
+/*
+ * digit2bin
+ */
+static inline int xdigit2bin(char c, int delim)
+{
+    if (c == delim || c == '\0')
+        return IN6PTON_DELIM;
+    if (c == ':')
+        return IN6PTON_COLON_MASK;
+    if (c == '.')
+        return IN6PTON_DOT;
+    if (c >= '0' && c <= '9')
+        return (IN6PTON_XDIGIT | IN6PTON_DIGIT| (c - '0'));
+    if (c >= 'a' && c <= 'f')
+        return (IN6PTON_XDIGIT | (c - 'a' + 10));
+    if (c >= 'A' && c <= 'F')
+        return (IN6PTON_XDIGIT | (c - 'A' + 10));
+    if (delim == -1)
+        return IN6PTON_DELIM;
+    return IN6PTON_UNKNOWN;
+}
+
+/*
+ * in4_pton
+ *
+ * Convert IPv4 printable address to binary form
+ */
+int in4_pton(const char *src, int srclen, uint8_t *dst,
+             int delim, const char **end)
+{
+    const char *s;
+    uint8_t *d;
+    uint8_t dbuf[4];
+    int ret = 0;
+    int i;
+    int w = 0;
+
+    if (srclen < 0)
+        srclen = strlen(src);
+    s = src;
+    d = dbuf;
+    i = 0;
+    while(1) {
+        int c;
+        c = xdigit2bin(srclen > 0 ? *s : '\0', delim);
+        if (!(c & (IN6PTON_DIGIT | IN6PTON_DOT |
+                   IN6PTON_DELIM | IN6PTON_COLON_MASK))) {
+            goto out;
+        }
+        if (c & (IN6PTON_DOT | IN6PTON_DELIM | IN6PTON_COLON_MASK)) {
+            if (w == 0)
+                goto out;
+            *d++ = w & 0xff;
+            w = 0;
+            i++;
+            if (c & (IN6PTON_DELIM | IN6PTON_COLON_MASK)) {
+                if (i != 4)
+                    goto out;
+                break;
+            }
+            goto cont;
+        }
+        w = (w * 10) + c;
+        if ((w & 0xffff) > 255) {
+            goto out;
+        }
+cont:
+        if (i >= 4)
+            goto out;
+        s++;
+        srclen--;
+    }
+    ret = 1;
+    memcpy(dst, dbuf, sizeof(dbuf));
+out:
+    if (end)
+        *end = s;
+    return ret;
+}
+
+/*
+ * in6_pton
+ *
+ * Convert IPv6 printable address to binary form
+ */
+int in6_pton(const char *src, int srclen, uint8_t *dst,
+             int delim, const char **end)
+{
+    const char *s, *tok = NULL;
+    uint8_t *d, *dc = NULL;
+    uint8_t dbuf[16];
+    int ret = 0;
+    int i;
+    int state = IN6PTON_COLON_1_2 | IN6PTON_XDIGIT | IN6PTON_NULL;
+    int w = 0;
+
+    memset(dbuf, 0, sizeof(dbuf));
+
+    s = src;
+    d = dbuf;
+    if (srclen < 0)
+        srclen = strlen(src);
+
+    while (1) {
+        int c;
+
+        c = xdigit2bin(srclen > 0 ? *s : '\0', delim);
+        if (!(c & state))
+            goto out;
+        if (c & (IN6PTON_DELIM | IN6PTON_COLON_MASK)) {
+            /* process one 16-bit word */
+            if (!(state & IN6PTON_NULL)) {
+                *d++ = (w >> 8) & 0xff;
+                *d++ = w & 0xff;
+            }
+            w = 0;
+            if (c & IN6PTON_DELIM) {
+                /* We've processed last word */
+                break;
+            }
+            /*
+             * COLON_1 => XDIGIT
+             * COLON_2 => XDIGIT|DELIM
+             * COLON_1_2 => COLON_2
+             */
+            switch (state & IN6PTON_COLON_MASK) {
+            case IN6PTON_COLON_2:
+                dc = d;
+                state = IN6PTON_XDIGIT | IN6PTON_DELIM;
+                if ((dc - dbuf) >= (int)sizeof(dbuf))
+                    state |= IN6PTON_NULL;
+                break;
+            case IN6PTON_COLON_1|IN6PTON_COLON_1_2:
+                state = IN6PTON_XDIGIT | IN6PTON_COLON_2;
+                break;
+            case IN6PTON_COLON_1:
+                state = IN6PTON_XDIGIT;
+                break;
+            case IN6PTON_COLON_1_2:
+                state = IN6PTON_COLON_2;
+                break;
+            default:
+                state = 0;
+            }
+            tok = s + 1;
+            goto cont;
+        }
+
+        if (c & IN6PTON_DOT) {
+            ret = in4_pton(tok ? tok : s, srclen + (int)(s - tok),
+                           d, delim, &s);
+            if (ret > 0) {
+                d += 4;
+                break;
+            }
+            goto out;
+        }
+
+        w = (w << 4) | (0xff & c);
+        state = IN6PTON_COLON_1 | IN6PTON_DELIM;
+        if (!(w & 0xf000)) {
+            state |= IN6PTON_XDIGIT;
+        }
+        if (!dc && d + 2 < dbuf + sizeof(dbuf)) {
+            state |= IN6PTON_COLON_1_2;
+            state &= ~IN6PTON_DELIM;
+        }
+        if (d + 2 >= dbuf + sizeof(dbuf)) {
+            state &= ~(IN6PTON_COLON_1|IN6PTON_COLON_1_2);
+        }
+cont:
+        if ((dc && d + 4 < dbuf + sizeof(dbuf)) ||
+            d + 4 == dbuf + sizeof(dbuf)) {
+            state |= IN6PTON_DOT;
+        }
+        if (d >= dbuf + sizeof(dbuf)) {
+            state &= ~(IN6PTON_XDIGIT|IN6PTON_COLON_MASK);
+        }
+        s++;
+        srclen--;
+    }
+
+    i = 15; d--;
+
+    if (dc) {
+        while(d >= dc)
+            dst[i--] = *d--;
+        while(i >= dc - dbuf)
+            dst[i--] = 0;
+        while(i >= 0)
+            dst[i--] = *d--;
+    } else
+        memcpy(dst, dbuf, sizeof(dbuf));
+
+    ret = 1;
+out:
+    if (end)
+        *end = s;
+    return ret;
+}
+
+
+static void * app_sess_get_key_func(void *entry)
+{
+    HAL_ASSERT(entry != NULL);
+    return (void *)&(((app_session_t *)entry)->key);
+}
+
+static uint32_t app_sess_compute_hash_func(void *key, uint32_t ht_size)
+{
+    return (sdk::lib::hash_algo::fnv_hash(key,
+                                          sizeof(hal::flow_key_t)) % ht_size);
+}
+
+static bool app_sess_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    return (memcmp(key1, key2, sizeof(hal::flow_key_t)) == 0);
+}
+
 void alg_state::init(const char* feature_name, slab *app_sess_slab,
-                   slab *l4_sess_slab, slab *alg_state_slab,
+                   slab *l4_sess_slab, slab *alg_info_slab,
                    app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
                    l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr) {
      feature_ = feature_name;
      app_sess_slab_ = app_sess_slab;
      l4_sess_slab_ = l4_sess_slab;
-     alg_state_slab_ = alg_state_slab;
+     alg_info_slab_ = alg_info_slab;
      app_sess_cleanup_hdlr_ = app_sess_clnup_hdlr;
      l4_sess_cleanup_hdlr_ = exp_flow_clnup_hdlr;
+
+     app_sess_ht_ = sdk::lib::ht::factory(ALG_UTILS_MAX_APP_SESS,
+                                           app_sess_get_key_func,
+                                           app_sess_compute_hash_func,
+                                           app_sess_compare_key_func);
 
      return; 
 }
 
 alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
-                              slab *l4_sess_slab, slab *alg_state_slab,
+                              slab *l4_sess_slab, slab *alg_info_slab,
                               app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
                               l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr) {
     void         *mem = NULL;
     alg_state    *state = NULL;
 
-    mem = alg_state_slab->alloc();
+    mem = (alg_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
+                                       sizeof(alg_state_t));;
     HAL_ABORT(mem != NULL);
     state = new (mem) alg_state();
     
     state->init(feature_name, app_sess_slab, l4_sess_slab, 
-               alg_state_slab, app_sess_clnup_hdlr, exp_flow_clnup_hdlr);
+               alg_info_slab, app_sess_clnup_hdlr, exp_flow_clnup_hdlr);
 
     return state;
 }
@@ -46,16 +272,19 @@ alg_state::~alg_state() {
      app_sess_ht()->walk_safe(app_sess_walk_cb, (void *)this);
 }
 
-hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess, 
-                                               l4_alg_status_t *alg_status) {
-    alg_status = (l4_alg_status_t *)l4_sess_slab()->alloc();
-    if (alg_status == NULL) {
+hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
+                                               hal::flow_key_t key, 
+                                               l4_alg_status_t *exp_flow) {
+    exp_flow = (l4_alg_status_t *)l4_sess_slab()->alloc();
+    if (exp_flow == NULL) {
         return HAL_RET_OOM;
     }
 
-    memset(alg_status, 0, sizeof(l4_alg_status_t));
-    dllist_reset(&alg_status->exp_flow_lentry);
-    dllist_add(&app_sess->exp_flow_lhead, &alg_status->exp_flow_lentry);
+    exp_flow->app_session = app_sess;
+    memcpy(&exp_flow->entry.key, &key, sizeof(hal::flow_key_t));
+    fte::insert_expected_flow(&exp_flow->entry);
+    dllist_reset(&exp_flow->exp_flow_lentry);
+    dllist_add(&app_sess->exp_flow_lhead, &exp_flow->exp_flow_lentry);
 
     return HAL_RET_OK; 
 }
@@ -67,7 +296,7 @@ hal_ret_t alg_state::alloc_and_insert_l4_sess(app_session_t *app_sess,
         return HAL_RET_OOM;
     }
 
-    memset(alg_status, 0, sizeof(l4_alg_status_t));
+    alg_status->app_session = app_sess; 
     dllist_reset(&alg_status->l4_sess_lentry);
     dllist_add(&app_sess->l4_sess_lhead, &alg_status->l4_sess_lentry);
 
@@ -79,15 +308,22 @@ hal_ret_t alg_state::alloc_and_init_app_sess(app_session_t *app_sess) {
     if (app_sess == NULL) {
         return HAL_RET_OOM;
     }
-    memset(app_sess, 0, sizeof(app_session_t));
-
     app_sess_ht()->insert(app_sess, &app_sess->app_sess_ht_ctxt);
 
     return HAL_RET_OK;
 }
 
+void alg_state::move_expflow_to_l4sess(app_session_t *app_sess, 
+                                            l4_alg_status_t *exp_flow) {
+    fte::remove_expected_flow(exp_flow->entry.key);
+    dllist_del(&exp_flow->exp_flow_lentry);
+    dllist_reset(&exp_flow->exp_flow_lentry);
+    dllist_reset(&exp_flow->l4_sess_lentry);
+    dllist_add(&app_sess->l4_sess_lhead, &exp_flow->l4_sess_lentry);   
+}
+
 void alg_state::cleanup_app_session(app_session_t *app_sess) {
-    hal::utils::dllist_ctxt_t   *lentry, *next;
+    dllist_ctxt_t   *lentry, *next;
 
     // Cleanup any ALG specific info
     app_sess_cleanup_hdlr_(app_sess); 
@@ -98,7 +334,7 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
                                   l4_alg_status_t, exp_flow_lentry);
 
         fte::remove_expected_flow(exp_flow->entry.key);
-        hal::utils::dllist_del(&exp_flow->exp_flow_lentry);
+        dllist_del(&exp_flow->exp_flow_lentry);
         if (l4_sess_cleanup_hdlr_)
             l4_sess_cleanup_hdlr_(exp_flow);
         l4_sess_slab()->free(exp_flow);
@@ -109,7 +345,7 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
         l4_alg_status_t *l4_sess = dllist_entry(lentry,
                                    l4_alg_status_t, l4_sess_lentry);
 
-        hal::utils::dllist_del(&l4_sess->l4_sess_lentry);
+        dllist_del(&l4_sess->l4_sess_lentry);
         if (l4_sess_cleanup_hdlr_)
             l4_sess_cleanup_hdlr_(l4_sess); 
         l4_sess_slab()->free(l4_sess);
