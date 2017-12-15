@@ -16,11 +16,11 @@ selectors:
 packets:
     - packet:
         id          : PKT # Base packet
-        payloadsize : ref://factory/payloads/id=TCPOPT_BAD_LEN2/size
+        payloadsize : ref://factory/payloads/id=TCP_UNKNOWN_OPT_LEN_GT_PKT/size
         template    : ref://factory/packets/id=RAW
         headers     :
             payload:
-                data    : ref://factory/payloads/id=TCPOPT_BAD_LEN2/data
+                data    : ref://factory/payloads/id=TCP_UNKNOWN_OPT_LEN_GT_PKT/data
 
 trigger:
     packets:
@@ -29,7 +29,3 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT
-            port    : ref://testcase/config/dst/endpoint/intf/ports
