@@ -29,6 +29,7 @@ class IpsecCbObject(base.ConfigObjectBase):
         self.ipseccbq_base = SwDscrRingHelper.main("IPSECCBQ", gid, self.id)
         cfglogger.info("  - %s" % self)
         self.crypto_key = CryptoKeyHelper.main() 
+        self.new_crypto_key = CryptoKeyHelper.main() 
         self.sip6 = resmgr.TepIpv6SubnetAllocator.get()
         self.dip6 = resmgr.TepIpv6SubnetAllocator.get()
         self.sip6.v6_addr = self.sip6.getnum().to_bytes(16, 'big')
@@ -52,7 +53,7 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.spi                       = self.spi
             req_spec.new_spi                   = self.new_spi
             req_spec.key_index                 = self.crypto_key_idx
-            req_spec.new_key_index             = self.crypto_key_idx
+            req_spec.new_key_index             = self.new_key_idx
             req_spec.expected_seq_no           = self.expected_seq_no
             req_spec.seq_no_bmp                = self.seq_no_bmp
             req_spec.sip6.ip_af                = haldefs.common.IP_AF_INET6

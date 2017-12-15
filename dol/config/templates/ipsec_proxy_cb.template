@@ -22,6 +22,7 @@ esn_hi           : 0
 esn_lo           : 0
 spi              : 0
 crypto_key_idx   : 0
+new_key_idx      : 0
 expected_seq_no  : 0
 seq_no_bmp       : 0
 is_v6            : 0

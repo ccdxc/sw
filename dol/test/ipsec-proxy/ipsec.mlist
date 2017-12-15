@@ -107,6 +107,15 @@ modules:
         iterate :
             - flow: filter://type=IPV4
     - module:
+        name    : DECRYPT_PKT_TO_IPSECCBQ_REKEY
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : decrypt_ipsec_to_eth_rekey
+        spec    : decrypt_ipsec_to_eth_rekey.testspec 
+        ignore  : True 
+        iterate :
+            - flow: filter://type=IPV4
+    - module:
         name    : DECRYPT_LT_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy
