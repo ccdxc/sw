@@ -116,15 +116,13 @@
 // Load a table based on absolute address and size specified without immediate
 // PC input is a .param resolved by the loader (34-bit value)
 #define LOAD_TABLE_FOR_ADDR_SIZE_PARAM(_table_addr, _load_size, _pc)	\
-  addi		r1, r0, _pc;						\
-  srl		r1, r1, 6;						\
+  addi		r1, r0, _pc[33:6];					\
   LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, r1)			\
 
 // Load a table based on absolute address
 // PC input is a .param resolved by the loader (34-bit value)
 #define LOAD_TABLE_FOR_ADDR_PARAM(_table_addr, _load_size, _pc)		\
-  addi		r1, r0, _pc;						\
-  srl		r1, r1, 6;						\
+  addi		r1, r0, _pc[33:6];					\
   addi		r2, r0, _load_size;					\
   LOAD_TABLE_FOR_ADDR(_table_addr, r2, r1)				\
 
@@ -149,8 +147,7 @@
 // PC input is a .param resolved by the loader (34-bit value)
 #define LOAD_TABLE_FOR_INDEX_PARAM(_table_base, _entry_index,		\
                                    _entry_size,	_load_size, _pc)	\
-  addi		r4, r0, _pc;						\
-  srl		r4, r4, 6;						\
+  addi		r4, r0, _pc[33:6];					\
   LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size,		\
                        _load_size, r4)					\
 
