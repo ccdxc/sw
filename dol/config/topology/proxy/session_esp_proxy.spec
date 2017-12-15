@@ -13,4 +13,12 @@ entries:
             spi : const/1
         initiator: 
             spi : const/0
+    - entry:
+        label: esp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            spi : const/3
+        initiator: 
+            spi : const/2
 
