@@ -40,8 +40,9 @@ type Event struct {
 // Objdb contains objects of a specific kind
 type Objdb struct {
 	sync.Mutex
-	objects  map[string]Object
-	watchers []chan Event
+	WatchLock sync.RWMutex
+	objects   map[string]Object
+	watchers  []chan Event
 }
 
 // Memdb is database of all objects
@@ -57,11 +58,17 @@ func (od *Objdb) watchEvent(obj Object, et EventType) error {
 		EventType: et,
 		Obj:       obj,
 	}
-
+	od.WatchLock.RLock()
 	// send it to each watcher
 	for _, watchChan := range od.watchers {
-		watchChan <- ev
+		select {
+		case watchChan <- ev:
+		default:
+			// TODO: too slow agent and watcher events are greater than channel capacity..
+			// come up with a policy.. either close the connection or drop the events or something else
+		}
 	}
+	od.WatchLock.RUnlock()
 
 	return nil
 }
@@ -109,12 +116,10 @@ func (md *Memdb) WatchObjects(kind string, watchChan chan Event) error {
 	// get objdb
 	od := md.getObjdb(kind)
 
-	// lock object db
-	od.Lock()
-	defer od.Unlock()
-
+	od.WatchLock.Lock()
 	// add the channel to watch list and return
 	od.watchers = append(od.watchers, watchChan)
+	od.WatchLock.Unlock()
 	return nil
 }
 
@@ -124,15 +129,14 @@ func (md *Memdb) StopWatchObjects(kind string, watchChan chan Event) error {
 	od := md.getObjdb(kind)
 
 	// lock object db
-	od.Lock()
-	defer od.Unlock()
-
+	od.WatchLock.Lock()
 	for i, other := range od.watchers {
 		if other == watchChan {
 			od.watchers = append(od.watchers[:i], od.watchers[i+1:]...)
 			break
 		}
 	}
+	od.WatchLock.Unlock()
 	return nil
 }
 
@@ -140,44 +144,45 @@ func (md *Memdb) StopWatchObjects(kind string, watchChan chan Event) error {
 func (md *Memdb) AddObject(obj Object) error {
 	// get objdb
 	od := md.getObjdb(obj.GetObjectKind())
+	key := memdbKey(obj.GetObjectMeta())
 
 	// if we have the object, make this an update
 	od.Lock()
-	_, ok := od.objects[memdbKey(obj.GetObjectMeta())]
-	od.Unlock()
+	_, ok := od.objects[key]
 	if ok {
+		od.Unlock()
 		return md.UpdateObject(obj)
 	}
 
-	// lock object db
-	od.Lock()
-	defer od.Unlock()
-
 	// add it to db and send out watch notification
-	od.objects[memdbKey(obj.GetObjectMeta())] = obj
-	od.watchEvent(obj, CreateEvent)
+	od.objects[key] = obj
+	od.Unlock()
 
+	od.watchEvent(obj, CreateEvent)
 	return nil
 }
 
 // UpdateObject updates an object in memdb and sends out watch notifications
 func (md *Memdb) UpdateObject(obj Object) error {
+	key := memdbKey(obj.GetObjectMeta())
 	// get objdb
 	od := md.getObjdb(obj.GetObjectKind())
 
 	// lock object db
 	od.Lock()
-	defer od.Unlock()
 
 	// if we dont have the object, return error
-	_, ok := od.objects[memdbKey(obj.GetObjectMeta())]
+	_, ok := od.objects[key]
 	if !ok {
+		od.Unlock()
 		logrus.Errorf("Object {%+v} not found", obj.GetObjectMeta())
 		return errors.New("Object not found")
 	}
 
 	// add it to db and send out watch notification
-	od.objects[memdbKey(obj.GetObjectMeta())] = obj
+	od.objects[key] = obj
+	od.Unlock()
+
 	od.watchEvent(obj, UpdateEvent)
 
 	return nil
@@ -190,17 +195,18 @@ func (md *Memdb) DeleteObject(obj Object) error {
 
 	// lock object db
 	od.Lock()
-	defer od.Unlock()
 
 	// if we dont have the object, return error
 	_, ok := od.objects[memdbKey(obj.GetObjectMeta())]
 	if !ok {
+		od.Unlock()
 		logrus.Errorf("Object {%+v} not found", obj.GetObjectMeta())
 		return errors.New("Object not found")
 	}
 
 	// add it to db and send out watch notification
 	delete(od.objects, memdbKey(obj.GetObjectMeta()))
+	od.Unlock()
 	od.watchEvent(obj, DeleteEvent)
 
 	return nil

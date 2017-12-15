@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/generated/network/gateway"
@@ -84,6 +85,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.datapathKind = datapath.Kind(*datapathKind)
 
 	logger := log.GetNewLogger(log.GetDefaultConfig("venice_integ"))
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
 	// api server config
 	sch := runtime.NewScheme()
@@ -138,7 +140,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	go it.apiGw.Run(apigwConfig)
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, integTestApisrvURL, "", "")
+	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, integTestApisrvURL, "", nil)
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 
@@ -152,7 +154,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.datapaths = append(it.datapaths, dp)
 
 		// agent
-		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "", "")
+		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "", nil)
 		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}

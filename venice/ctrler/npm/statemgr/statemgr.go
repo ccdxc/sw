@@ -37,6 +37,12 @@ func (sm *Statemgr) WatchObjects(kind string, watchChan chan memdb.Event) error 
 	return sm.memDB.WatchObjects(kind, watchChan)
 }
 
+// StopWatchObjects Stops watches of network state
+func (sm *Statemgr) StopWatchObjects(kind string, watchChan chan memdb.Event) error {
+	// just remove the channel from the list of watchers
+	return sm.memDB.StopWatchObjects(kind, watchChan)
+}
+
 // NewStatemgr creates a new state manager object
 func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 	// create new statemgr instance

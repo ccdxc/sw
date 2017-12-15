@@ -3,12 +3,14 @@
 package restapi
 
 import (
+	"expvar"
 	"net"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -50,6 +52,9 @@ func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error
 		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
 		subRouter(sub, &srv)
 	}
+
+	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
+	router.Methods("DELETE").Subrouter().Handle("/debug/vars", debug.ClearHandler())
 
 	log.Infof("Starting server at %s", listenURL)
 

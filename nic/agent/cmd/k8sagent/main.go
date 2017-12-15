@@ -3,7 +3,9 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"strings"
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
@@ -13,6 +15,8 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // Main function
@@ -58,6 +62,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
 	}
+	resolverClient := resolver.New(&resolver.Config{Name: "netagent", Servers: strings.Split(*resolverURLs, ",")})
+
+	opt := tsdb.Options{
+		ClientName:     "netagent_" + macAddr.String(),
+		ResolverClient: resolverClient,
+	}
+	err = tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
+	if err != nil {
+		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
+	}
 
 	// create a network datapath
 	dp, err := datapath.NewFakeDatapath(*uplinkIf)
@@ -72,14 +86,14 @@ func main() {
 	}
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, *resolverURLs, ":"+globals.AgentRESTPort)
+	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, ":"+globals.AgentRESTPort, resolverClient)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}
 
 	log.Printf("NetAgent {%+v} is running", ag)
 
-	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmdURL, *resolverURLs, ":"+globals.NmdRESTPort, *mode)
+	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmdURL, ":"+globals.NmdRESTPort, *mode, resolverClient)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

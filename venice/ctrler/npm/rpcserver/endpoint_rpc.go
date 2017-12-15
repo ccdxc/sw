@@ -164,7 +164,9 @@ func (ep *EndpointRPCHandler) ListEndpoints(ctx context.Context, objsel *api.Obj
 func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.EndpointApi_WatchEndpointsServer) error {
 	// watch for changes
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
+	defer close(watchChan)
 	ep.stateMgr.WatchObjects("Endpoint", watchChan)
+	defer ep.stateMgr.StopWatchObjects("Endpoint", watchChan)
 
 	// get a list of all endpoints
 	endpoints, err := ep.ListEndpoints(context.Background(), ometa)
@@ -172,6 +174,8 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 		log.Errorf("Error getting a list of endpoints. Err: %v", err)
 		return err
 	}
+
+	ctx := stream.Context()
 
 	// walk all endpoints and send it out
 	for _, endpoint := range endpoints.Endpoints {
@@ -193,7 +197,6 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 		case evt, ok := <-watchChan:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
-				close(watchChan)
 				return errors.New("Error reading from channel")
 			}
 
@@ -248,6 +251,8 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 				log.Errorf("Error sending endpoint to stream. Err: %v", err)
 				return err
 			}
+		case <-ctx.Done():
+			return ctx.Err()
 		}
 	}
 

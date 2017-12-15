@@ -77,7 +77,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.6 strip ${TO_STRIP}
+	@# bypassing docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.6 strip ${TO_STRIP}
 	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
@@ -245,3 +245,5 @@ create-assets:
 
 pull-assets: ws-tools
 	bash scripts/pull-assets.sh
+
+.PHONY: build

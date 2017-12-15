@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // length of watcher channel
@@ -164,8 +165,8 @@ func (w *Watcher) runNetwatcher() {
 
 			log.Infof("Watcher: Got network watch event(%s): {%+v}", evt.Type, nw)
 
-			// TODO process each event in its own go routine
-			w.handleNetworkEvent(evt.Type, nw)
+			// TODO make sure we honor the order of events when handling events in parallel
+			go w.handleNetworkEvent(evt.Type, nw)
 		}
 	}
 }
@@ -295,7 +296,7 @@ func (w *Watcher) Stop() {
 }
 
 // NewWatcher returns a new watcher object
-func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL, resolverURLs string, debugStats *debug.Stats) (*Watcher, error) {
+func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string, resolver resolver.Interface, debugStats *debug.Stats) (*Watcher, error) {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
@@ -318,8 +319,8 @@ func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL, resolverURLs str
 	go watcher.runSgPolicyWatcher()
 
 	// handle api watchers
-	go watcher.runApisrvWatcher(watchCtx, apisrvURL, resolverURLs)
-	go watcher.runVmmWatcher(watchCtx, vmmURL, resolverURLs)
+	go watcher.runApisrvWatcher(watchCtx, apisrvURL, resolver)
+	go watcher.runVmmWatcher(watchCtx, vmmURL, resolver)
 
 	return watcher, nil
 }

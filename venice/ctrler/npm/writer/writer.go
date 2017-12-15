@@ -4,7 +4,6 @@ package writer
 
 import (
 	"context"
-	"strings"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
@@ -24,17 +23,17 @@ type Writer interface {
 
 // APISrvWriter is the writer instance
 type APISrvWriter struct {
-	apisrvURL    string
-	resolverURLs string
-	apicl        apiclient.Services
+	apisrvURL string
+	resolver  resolver.Interface
+	apicl     apiclient.Services
 }
 
 // NewAPISrvWriter returns an API server writer
-func NewAPISrvWriter(apiSrvURL, resolverURLs string) (Writer, error) {
+func NewAPISrvWriter(apiSrvURL string, resolver resolver.Interface) (Writer, error) {
 	// create apisrv writer instance
 	wr := APISrvWriter{
-		apisrvURL:    apiSrvURL,
-		resolverURLs: resolverURLs,
+		apisrvURL: apiSrvURL,
+		resolver:  resolver,
 	}
 
 	return &wr, nil
@@ -49,9 +48,7 @@ func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
 
 	// create the api client
 	l := log.WithContext("Pkg", "NpmApiWriter")
-	// create a resolver
-	r := resolver.New(&resolver.Config{Name: "npm", Servers: strings.Split(wr.resolverURLs, ",")})
-	apicl, err := apiclient.NewGrpcAPIClient(wr.apisrvURL, l, rpckit.WithBalancer(balancer.New(r)))
+	apicl, err := apiclient.NewGrpcAPIClient(wr.apisrvURL, l, rpckit.WithBalancer(balancer.New(wr.resolver)))
 	if err != nil {
 		log.Errorf("Failed to connect to gRPC server [%s]\n", wr.apisrvURL)
 		return nil, err

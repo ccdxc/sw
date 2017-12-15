@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm"
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/golang/mock/gomock"
 	. "gopkg.in/check.v1"
@@ -54,8 +55,10 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.numAgents = *numAgents
 	it.datapathKind = datapath.Kind(*datapathKind)
 
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, "", "", "")
+	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, "", "", nil)
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 

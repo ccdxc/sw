@@ -78,7 +78,7 @@ func TestApiWatcher(t *testing.T) {
 	time.Sleep(time.Millisecond * 10)
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, apisrvURL, vmmURL, "", debug.New(t.Name()))
+	watcher, err := NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debug.New(t.Name()).Build())
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)
@@ -211,7 +211,7 @@ func TestApiWatcherConnectDisconnect(t *testing.T) {
 	Assert(t, (kvs != nil), "Error creating kvstore")
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", vmmURL, "", debug.New(t.Name()))
+	watcher, err := NewWatcher(stateMgr, "", vmmURL, nil, debug.New(t.Name()).Build())
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)

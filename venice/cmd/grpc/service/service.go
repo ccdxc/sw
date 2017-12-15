@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	outCount = 16
+	outCount = 32
 )
 
 // RPCHandler handles all service gRPC calls.
@@ -56,6 +56,7 @@ func (s *RPCHandler) GetServiceInstance(ctx context.Context, req *types.ServiceI
 // breaking compatibility.
 func (s *RPCHandler) WatchServiceInstances(req *api.Empty, server types.ServiceAPI_WatchServiceInstancesServer) error {
 	ch := make(chan *types.ServiceInstanceEvent, outCount)
+	defer close(ch)
 	s.Lock()
 	s.watchChs = append(s.watchChs, ch)
 	s.Unlock()

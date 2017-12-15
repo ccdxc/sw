@@ -184,7 +184,7 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 	err = nm.DeleteSmartNIC(&nic)
 	AssertOk(t, err, "Error deleting nic")
 	nicObj, err := nm.GetSmartNIC()
-	Assert(t, (nicObj == nil), "NIC was still found in database after deleting", nm)
+	Assert(t, (nicObj == nil) && (err == nil), "NIC was still found in database after deleting", nm)
 }
 
 func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {

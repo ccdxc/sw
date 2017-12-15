@@ -3,6 +3,8 @@
 package state
 
 import (
+	"errors"
+
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/log"
@@ -11,6 +13,10 @@ import (
 // RegisterSmartNICReq registers a NIC with CMD
 func (n *NMD) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error) {
 
+	if n.cmd == nil {
+		log.Errorf("Failed to register NIC, mac: %s cmd not ready", nic.ObjectMeta.Name)
+		return grpc.RegisterNICResponse{}, errors.New("cmd not ready yet")
+	}
 	resp, err := n.cmd.RegisterSmartNICReq(nic)
 	if err != nil {
 		log.Errorf("Failed to register NIC, mac: %s err: %v", nic.ObjectMeta.Name, err)
@@ -24,6 +30,10 @@ func (n *NMD) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, 
 // UpdateSmartNICReq registers a NIC with CMD/Venice cluster
 func (n *NMD) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 
+	if n.cmd == nil {
+		log.Errorf("Failed to update NIC, mac: %s cmd not ready", nic.ObjectMeta.Name)
+		return nil, errors.New("cmd not ready yet")
+	}
 	nicObj, err := n.cmd.UpdateSmartNICReq(nic)
 	if err != nil || nic == nil {
 		log.Errorf("Failed to update NIC, mac: %s err: %v", nic.ObjectMeta.Name, err)

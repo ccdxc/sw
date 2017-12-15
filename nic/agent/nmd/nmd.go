@@ -6,6 +6,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // Agent is the wrapper object that contains
@@ -23,7 +24,7 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(platform state.PlatformAPI, nmdDbPath, nodeUUID, cmdURL, resolverURLs, nmdListenURL string, mode string) (*Agent, error) {
+func NewAgent(platform state.PlatformAPI, nmdDbPath, nodeUUID, cmdURL, nmdListenURL string, mode string, resolverClient resolver.Interface) (*Agent, error) {
 
 	// create new NMD instance
 	nm, err := state.NewNMD(platform, nmdDbPath, nodeUUID, nmdListenURL, mode)
@@ -34,7 +35,7 @@ func NewAgent(platform state.PlatformAPI, nmdDbPath, nodeUUID, cmdURL, resolverU
 	log.Infof("NMD {%+v} is running", nm)
 
 	// create the CMD client
-	cmdClient, err := cmdif.NewCmdClient(nm, cmdURL, resolverURLs)
+	cmdClient, err := cmdif.NewCmdClient(nm, cmdURL, resolverClient)
 	if err != nil {
 		log.Errorf("Error creating CMD client. Err: %v", err)
 		return nil, err

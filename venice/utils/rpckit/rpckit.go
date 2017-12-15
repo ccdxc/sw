@@ -18,6 +18,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+const defaultMaxMsgSize = 50 * 1024 * 1024
+
 // Singleton stats
 var once sync.Once
 var singletonMap *expvar.Map
@@ -332,6 +334,8 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 
 	if rpcClient.maxMsgSize != 0 {
 		grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(rpcClient.maxMsgSize))
+	} else {
+		grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(defaultMaxMsgSize))
 	}
 
 	grpcOpts = append(grpcOpts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),

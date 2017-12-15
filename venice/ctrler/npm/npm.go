@@ -38,6 +38,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm/writer"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // Netctrler is a netctrler instance
@@ -49,11 +50,11 @@ type Netctrler struct {
 }
 
 // NewNetctrler returns a controller instance
-func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL, resolverURLs string) (*Netctrler, error) {
+func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface) (*Netctrler, error) {
 
-	debugStats := debug.New(restURL)
+	debugStats := debug.New(restURL).Build()
 
-	wr, err := writer.NewAPISrvWriter(apisrvURL, resolverURLs)
+	wr, err := writer.NewAPISrvWriter(apisrvURL, resolver)
 	if err != nil {
 		log.Errorf("Error creating api server writer. Err: %v", err)
 		return nil, err
@@ -67,7 +68,7 @@ func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL, resolverURLs string) (*
 	}
 
 	// create watcher on api server
-	watcher, err := watcher.NewWatcher(stateMgr, apisrvURL, vmmURL, resolverURLs, debugStats)
+	watcher, err := watcher.NewWatcher(stateMgr, apisrvURL, vmmURL, resolver, debugStats)
 	if err != nil {
 		log.Errorf("Error creating api server watcher. Err: %v", err)
 		return nil, err

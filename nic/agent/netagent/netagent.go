@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 /* Rough Architecture for Pensando Agent
@@ -46,7 +47,7 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs, restListenURL string) (*Agent, error) {
+func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, restListenURL string, resolverClient resolver.Interface) (*Agent, error) {
 	// create a new network agent
 	nagent, err := state.NewNetAgent(dp, dbPath, nodeUUID)
 
@@ -56,7 +57,7 @@ func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs
 	}
 
 	// create the NPM client
-	npmClient, err := ctrlerif.NewNpmClient(nagent, ctrlerURL, resolverURLs)
+	npmClient, err := ctrlerif.NewNpmClient(nagent, ctrlerURL, resolverClient)
 	if err != nil {
 		log.Errorf("Error creating NPM client. Err: %v", err)
 		return nil, err

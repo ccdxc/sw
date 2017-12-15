@@ -19,9 +19,11 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 type mockAgent struct {
+	name string
 	sync.Mutex
 	nic        *cmd.SmartNIC
 	nicAdded   map[string]*cmd.SmartNIC
@@ -29,8 +31,9 @@ type mockAgent struct {
 	nicDeleted map[string]*cmd.SmartNIC
 }
 
-func createMockAgent() *mockAgent {
+func createMockAgent(name string) *mockAgent {
 	return &mockAgent{
+		name:       name,
 		nicAdded:   make(map[string]*cmd.SmartNIC),
 		nicUpdated: make(map[string]*cmd.SmartNIC),
 		nicDeleted: make(map[string]*cmd.SmartNIC),
@@ -45,7 +48,7 @@ func (ag *mockAgent) NaplesConfigHandler(req *http.Request) (interface{}, error)
 }
 
 func (ag *mockAgent) GetAgentID() string {
-	return "mockAgent"
+	return "mockAgent_" + ag.name
 }
 
 func (ag *mockAgent) CreateSmartNIC(n *cmd.SmartNIC) error {
@@ -170,6 +173,7 @@ func (srv *mockRPCServer) Stop() {
 }
 
 func TestCmdClient(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 	// create a mock rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -186,10 +190,10 @@ func TestCmdClient(t *testing.T) {
 	srv.nicdb["1111.1111.1111"] = &nic
 
 	// create a mock agent
-	ag := createMockAgent()
+	ag := createMockAgent(t.Name())
 
 	// create cmd client
-	cl, err := NewCmdClient(ag, testSrvURL, "")
+	cl, err := NewCmdClient(ag, testSrvURL, nil)
 	AssertOk(t, err, "Error creating cmd client")
 	log.Infof("Cmd client name: %s", cl.getAgentName())
 	defer cl.Stop()
@@ -214,6 +218,7 @@ func TestCmdClient(t *testing.T) {
 }
 
 func TestCmdClientWatch(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
 	// create a fake rpc server
 	srv := createRPCServer(t)
@@ -231,10 +236,10 @@ func TestCmdClientWatch(t *testing.T) {
 	srv.nicdb["1111.1111.1111"] = &nic
 
 	// create mock agent
-	ag := createMockAgent()
+	ag := createMockAgent(t.Name())
 
 	// create CMD client
-	cl, err := NewCmdClient(ag, testSrvURL, "")
+	cl, err := NewCmdClient(ag, testSrvURL, nil)
 	AssertOk(t, err, "Error creating CMD client")
 	Assert(t, (cl != nil), "Error creating CMD client")
 	defer cl.Stop()
@@ -265,6 +270,7 @@ func TestCmdClientWatch(t *testing.T) {
 }
 
 func TestCmdClientErrorHandling(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
 	// create a mock rpc server
 	srv := createRPCServer(t)
@@ -282,14 +288,10 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	srv.nicdb["1111.1111.1111"] = &nic
 
 	// create a mock agent
-	ag := createMockAgent()
-
-	// Test failure with invalid server URL
-	_, err := NewCmdClient(ag, "remotehost:4444", "")
-	Assert(t, err != nil, "Should have failed with incorrect srv URL")
+	ag := createMockAgent(t.Name())
 
 	// create cmd client
-	cl, err := NewCmdClient(ag, testSrvURL, "")
+	cl, err := NewCmdClient(ag, testSrvURL, nil)
 	AssertOk(t, err, "Error creating cmd client")
 	log.Infof("Cmd client name: %s", cl.getAgentName())
 	defer cl.Stop()

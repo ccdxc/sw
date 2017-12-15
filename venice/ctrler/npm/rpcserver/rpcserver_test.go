@@ -68,7 +68,7 @@ func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpcki
 	AssertOk(t, err, "Failed to create network")
 
 	// start the rpc server
-	rpcServer, err := NewRPCServer(testServerURL, stateMgr, debug.New(t.Name()))
+	rpcServer, err := NewRPCServer(testServerURL, stateMgr, debug.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating RPC server. Err: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestNetworkRPC(t *testing.T) {
 	AssertOk(t, err, "Error watching network")
 	evt, err := stream.Recv()
 	AssertOk(t, err, "Error receiving network")
-	Assert(t, (evt.Network.Spec.IPv4Subnet == "10.1.1.0/24"), "Received invalid network", evt)
+	Assert(t, (evt.NetworkEvents[0].Network.Spec.IPv4Subnet == "10.1.1.0/24"), "Received invalid network", evt)
 
 	// create second network and verify we receive a watch event
 	np := network.Network{
@@ -134,9 +134,9 @@ func TestNetworkRPC(t *testing.T) {
 	// verify we receive a watch event
 	evt, err = stream.Recv()
 	AssertOk(t, err, "Error receiving network")
-	Assert(t, (evt.EventType == api.EventType_CreateEvent), "Invalid event type", evt)
-	Assert(t, (evt.Network.Name == "net2"), "Received invalid network", evt)
-	Assert(t, (evt.Network.Spec.IPv4Subnet == "20.2.2.0/24"), "Received invalid network", evt)
+	Assert(t, (evt.NetworkEvents[0].EventType == api.EventType_CreateEvent), "Invalid event type", evt)
+	Assert(t, (evt.NetworkEvents[0].Network.Name == "net2"), "Received invalid network", evt)
+	Assert(t, (evt.NetworkEvents[0].Network.Spec.IPv4Subnet == "20.2.2.0/24"), "Received invalid network", evt)
 
 	// delete the network
 	err = stateMgr.DeleteNetwork(np.Tenant, np.Name)
@@ -145,9 +145,8 @@ func TestNetworkRPC(t *testing.T) {
 	// verify we receive an delete event
 	evt, err = stream.Recv()
 	AssertOk(t, err, "Error receiving from stream")
-	Assert(t, (evt.EventType == api.EventType_DeleteEvent), "Invalid event type", evt)
+	Assert(t, (evt.NetworkEvents[0].EventType == api.EventType_DeleteEvent), "Invalid event type", evt)
 
-	// stop the rpc server
 	rpcClient.Close()
 	rpcServer.Stop()
 	time.Sleep(time.Millisecond * 10)

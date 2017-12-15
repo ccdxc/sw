@@ -67,7 +67,7 @@ func main() {
 	// create a collector
 	c := tec.NewCollector(context.Background())
 	for _, be := range beList {
-		c.AddBackEnd(be)
+		c.AddBackEnd("http://" + be)
 		log.Infof("Added Backend %s", be)
 	}
 

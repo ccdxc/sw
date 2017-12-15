@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -30,10 +31,12 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	ventrace "github.com/pensando/sw/venice/utils/trace"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 const (
@@ -139,8 +142,9 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 		log.Fatalf("Error creating platform agent. Err: %v", err)
 	}
 
+	r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(resolverURLs, ",")})
 	// create the new NMD
-	ag, err := nmd.NewAgent(pa, dbPath, nodeID, smartNICServerURL, resolverURLs, restURL, "classic")
+	ag, err := nmd.NewAgent(pa, dbPath, nodeID, smartNICServerURL, restURL, "classic", r)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}
@@ -790,6 +794,7 @@ func testSetup() {
 
 	// Disable open trace
 	ventrace.DisableOpenTrace()
+	tsdb.Init(tsdb.DummyTransmitter{}, tsdb.Options{})
 
 	// Create api server
 	apiServerAddress := ":0"

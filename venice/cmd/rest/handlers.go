@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"expvar"
 	"net/http"
+	"net/http/pprof"
 	"path"
 
 	"github.com/go-martini/martini"
@@ -39,6 +40,20 @@ func NewRESTServer() *martini.ClassicMartini {
 	m.Get(uRLPrefix+clusterURL+"/:id", ClusterGetHandler)
 	m.Get(uRLPrefix+servicesURL, ServiceListHandler)
 	m.Get(debugPrefix+expvarURL, expvar.Handler())
+
+	m.Group("/debug/pprof", func(r martini.Router) {
+		r.Any("/", pprof.Index)
+		r.Any("/cmdline", pprof.Cmdline)
+		r.Any("/profile", pprof.Profile)
+		r.Any("/symbol", pprof.Symbol)
+		r.Any("/trace", pprof.Trace)
+		r.Any("/block", pprof.Handler("block").ServeHTTP)
+		r.Any("/heap", pprof.Handler("heap").ServeHTTP)
+		r.Any("/mutex", pprof.Handler("mutex").ServeHTTP)
+		r.Any("/goroutine", pprof.Handler("goroutine").ServeHTTP)
+		r.Any("/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+	})
+
 	return m
 }
 

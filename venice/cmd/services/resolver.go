@@ -13,7 +13,7 @@ import (
 
 // resolverService is responsible for resolving services in a Pensando cluster.
 type resolverService struct {
-	sync.Mutex
+	sync.RWMutex
 	k8sSvc    types.K8sService
 	svcMap    map[string]types.Service
 	running   bool
@@ -123,8 +123,6 @@ func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 // addSvcInstance adds a service instance to a service.
 func (r *resolverService) addSvcInstance(si *types.ServiceInstance) {
 	r.Lock()
-	defer r.Unlock()
-
 	svc, ok := r.svcMap[si.Service]
 	if !ok {
 		svc = types.Service{
@@ -141,12 +139,14 @@ func (r *resolverService) addSvcInstance(si *types.ServiceInstance) {
 
 	for ii := range svc.Instances {
 		if svc.Instances[ii].Name == si.Name {
+			r.Unlock()
 			return
 		}
 	}
 	log.Infof("Adding svc instance %+v", si)
 	svc.Instances = append(svc.Instances, si)
 	r.svcMap[si.Service] = svc
+	r.Unlock()
 	r.notify(types.ServiceInstanceEvent{
 		Type:     types.ServiceInstanceEvent_Added,
 		Instance: si,
@@ -156,10 +156,10 @@ func (r *resolverService) addSvcInstance(si *types.ServiceInstance) {
 // delSvcInstance deletes a service instance from a service.
 func (r *resolverService) delSvcInstance(si *types.ServiceInstance) {
 	r.Lock()
-	defer r.Unlock()
 
 	svc, ok := r.svcMap[si.Service]
 	if !ok {
+		r.Unlock()
 		return
 	}
 
@@ -168,6 +168,7 @@ func (r *resolverService) delSvcInstance(si *types.ServiceInstance) {
 			log.Infof("Deleting svc instance %+v", si)
 			svc.Instances = append(svc.Instances[:ii], svc.Instances[ii+1:]...)
 			r.svcMap[si.Service] = svc
+			r.Unlock()
 			r.notify(types.ServiceInstanceEvent{
 				Type:     types.ServiceInstanceEvent_Deleted,
 				Instance: si,
@@ -175,12 +176,13 @@ func (r *resolverService) delSvcInstance(si *types.ServiceInstance) {
 			return
 		}
 	}
+	r.Unlock()
 }
 
 // Get returns a Service.
 func (r *resolverService) Get(name string) *types.Service {
-	r.Lock()
-	defer r.Unlock()
+	r.RLock()
+	defer r.RUnlock()
 	svc, ok := r.svcMap[name]
 	if !ok {
 		return nil
@@ -190,8 +192,8 @@ func (r *resolverService) Get(name string) *types.Service {
 
 // GetInstance returns an instance of a Service.
 func (r *resolverService) GetInstance(name, instance string) *types.ServiceInstance {
-	r.Lock()
-	defer r.Unlock()
+	r.RLock()
+	defer r.RUnlock()
 	svc, ok := r.svcMap[name]
 	if !ok {
 		return nil
@@ -206,8 +208,8 @@ func (r *resolverService) GetInstance(name, instance string) *types.ServiceInsta
 
 // List returns all Services.
 func (r *resolverService) List() *types.ServiceList {
-	r.Lock()
-	defer r.Unlock()
+	r.RLock()
+	defer r.RUnlock()
 	slist := &types.ServiceList{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceList",
@@ -222,8 +224,8 @@ func (r *resolverService) List() *types.ServiceList {
 
 // ListInstances returns all Service instances.
 func (r *resolverService) ListInstances() *types.ServiceInstanceList {
-	r.Lock()
-	defer r.Unlock()
+	r.RLock()
+	defer r.RUnlock()
 	slist := &types.ServiceInstanceList{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstanceList",
@@ -259,6 +261,8 @@ func (r *resolverService) UnRegister(o types.ServiceInstanceObserver) {
 // All the observers are notified of the event even if someone fails,
 // returns first encountered error.
 func (r *resolverService) notify(e types.ServiceInstanceEvent) error {
+	r.RLock()
+	defer r.RUnlock()
 	var err error
 	for _, o := range r.observers {
 		er := o.OnNotifyServiceInstance(e)

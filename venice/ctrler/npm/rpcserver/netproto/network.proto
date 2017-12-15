@@ -47,6 +47,11 @@ message NetworkEvent {
     Network       Network   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "network,omitempty"];
 }
 
+message NetworkEventList {
+    repeated NetworkEvent networkEvents = 1;
+}
+
+
 // network controller api
 service NetworkApi {
     // options for auto generating rest endpoints
@@ -58,5 +63,5 @@ service NetworkApi {
 
 	rpc GetNetwork (api.ObjectMeta) returns (Network) {};
     rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
-    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEvent) {};
+    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEventList) {};
 }

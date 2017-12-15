@@ -15,9 +15,11 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 type fakeAgent struct {
+	name       string
 	netAdded   map[string]*netproto.Network
 	netUpdated map[string]*netproto.Network
 	netDeleted map[string]*netproto.Network
@@ -31,8 +33,9 @@ type fakeAgent struct {
 	sgDeleted map[string]*netproto.SecurityGroup
 }
 
-func createFakeAgent() *fakeAgent {
+func createFakeAgent(name string) *fakeAgent {
 	return &fakeAgent{
+		name:       name,
 		netAdded:   make(map[string]*netproto.Network),
 		netUpdated: make(map[string]*netproto.Network),
 		netDeleted: make(map[string]*netproto.Network),
@@ -49,7 +52,7 @@ func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif state.CtrlerAPI) error {
 }
 
 func (ag *fakeAgent) GetAgentID() string {
-	return "fakeAgent"
+	return "fakeAgent_" + ag.name
 }
 func (ag *fakeAgent) CreateNetwork(nt *netproto.Network) error {
 	ag.netAdded[objectKey(nt.ObjectMeta)] = nt
@@ -200,9 +203,10 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 			EventType: api.EventType_CreateEvent,
 			Network:   *net,
 		}
+		watchEvtList := netproto.NetworkEventList{NetworkEvents: []*netproto.NetworkEvent{&watchEvt}}
 
 		// send create event
-		err := stream.Send(&watchEvt)
+		err := stream.Send(&watchEvtList)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -210,7 +214,8 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 
 		// send update event
 		watchEvt.EventType = api.EventType_UpdateEvent
-		err = stream.Send(&watchEvt)
+		watchEvtList = netproto.NetworkEventList{NetworkEvents: []*netproto.NetworkEvent{&watchEvt}}
+		err = stream.Send(&watchEvtList)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -218,7 +223,8 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 
 		// send delete event
 		watchEvt.EventType = api.EventType_DeleteEvent
-		err = stream.Send(&watchEvt)
+		watchEvtList = netproto.NetworkEventList{NetworkEvents: []*netproto.NetworkEvent{&watchEvt}}
+		err = stream.Send(&watchEvtList)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -325,15 +331,16 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 }
 
 func TestNpmclient(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
 
 	// create a fake agent
-	ag := createFakeAgent()
+	ag := createFakeAgent(t.Name())
 
 	// create npm client
-	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), "")
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), nil)
 	AssertOk(t, err, "Error creating npm client")
 
 	epinfo := netproto.Endpoint{
@@ -369,6 +376,7 @@ func TestNpmclient(t *testing.T) {
 }
 
 func TestNpmClientWatch(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -402,10 +410,10 @@ func TestNpmClientWatch(t *testing.T) {
 	srv.epdb["testEndpoint"] = &epinfo
 
 	// create a fake agent
-	ag := createFakeAgent()
+	ag := createFakeAgent(t.Name())
 
 	// create npm client
-	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), "")
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), nil)
 	AssertOk(t, err, "Error creating npm client")
 	Assert(t, (cl != nil), "Error creating npm client")
 
@@ -459,6 +467,7 @@ func TestNpmClientWatch(t *testing.T) {
 }
 
 func TestSecurityGroupWatch(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -478,10 +487,10 @@ func TestSecurityGroupWatch(t *testing.T) {
 	srv.sgdb["testsg"] = &sg
 
 	// create a fake agent
-	ag := createFakeAgent()
+	ag := createFakeAgent(t.Name())
 
 	// create npm client
-	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), "")
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), nil)
 	AssertOk(t, err, "Error creating npm client")
 	Assert(t, (cl != nil), "Error creating npm client")
 

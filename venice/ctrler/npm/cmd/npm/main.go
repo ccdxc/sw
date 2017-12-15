@@ -4,10 +4,14 @@ package main
 
 import (
 	"flag"
+	"strings"
+
+	_ "net/http/pprof"
 
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // main function of network controller
@@ -45,8 +49,9 @@ func main() {
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
 
+	r := resolver.New(&resolver.Config{Name: "npm", Servers: strings.Split(*resolverURLs, ",")})
 	// create the controller
-	ctrler, err := npm.NewNetctrler(*listenURL, *restURL, globals.APIServer, globals.VCHub, *resolverURLs)
+	ctrler, err := npm.NewNetctrler(*listenURL, *restURL, globals.APIServer, globals.VCHub, r)
 	if err != nil || ctrler == nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}

@@ -5,7 +5,6 @@ package cmdif
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -30,13 +30,13 @@ type CmdClient struct {
 	sync.WaitGroup // wait group to wait on all go routines to exit
 
 	srvURL         string             // CMD rpc server URL
-	resolverURLs   string             // Resolver URLs
-	resolverClient resolver.Interface // Resolver client
+	resolverClient resolver.Interface // resolver Interface
 	rpcClient      *rpckit.RPCClient  // RPC client
-
-	nmd         state.NmdAPI       // NMD instance
-	watchCtx    context.Context    // ctx for object watch
-	watchCancel context.CancelFunc // cancel for object watch
+	nmd            state.NmdAPI       // NMD instance
+	watchCtx       context.Context    // ctx for object watch
+	watchCancel    context.CancelFunc // cancel for object watch
+	debugStats     *debug.Stats
+	startTime      time.Time
 }
 
 // objectKey returns object key from object meta
@@ -45,7 +45,7 @@ func objectKey(meta api.ObjectMeta) string {
 }
 
 // NewCmdClient creates an CMD client object
-func NewCmdClient(nmd state.NmdAPI, srvURL, resolverURLs string) (*CmdClient, error) {
+func NewCmdClient(nmd state.NmdAPI, srvURL string, resolverClient resolver.Interface) (*CmdClient, error) {
 
 	// watch contexts
 	watchCtx, watchCancel := context.WithCancel(context.Background())
@@ -53,23 +53,19 @@ func NewCmdClient(nmd state.NmdAPI, srvURL, resolverURLs string) (*CmdClient, er
 	// create CmdClient object
 	client := CmdClient{
 		srvURL:         srvURL,
-		resolverURLs:   resolverURLs,
-		resolverClient: resolver.New(&resolver.Config{Servers: strings.Split(resolverURLs, ",")}),
+		resolverClient: resolverClient,
 		nmd:            nmd,
 		watchCtx:       watchCtx,
 		watchCancel:    watchCancel,
+		startTime:      time.Now(),
 	}
+
+	client.debugStats = debug.New(fmt.Sprintf("cmdif-%s", client.getAgentName())).Tsdb().Kind("nmdStats").TsdbPeriod(5 * time.Second).Build()
 
 	// register the NMD client as a controller plugin
 	err := nmd.RegisterCMD(&client)
 	if err != nil {
 		log.Errorf("Error registering the controller interface. Err: %v", err)
-		return nil, err
-	}
-
-	// initialize rpc client
-	err = client.initRPC()
-	if err != nil {
 		return nil, err
 	}
 
@@ -189,8 +185,16 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 				continue
 			}
 
+			t, err := evt.Nic.ModTime.Time()
+			if err == nil && client.startTime.Before(t) && evt.EventType != api.EventType_DeleteEvent {
+				latency := time.Since(t)
+				if latency >= 0 {
+					client.debugStats.AddFloat("cum_nic_latency", float64(latency))
+				}
+			}
 			switch evt.EventType {
 			case api.EventType_CreateEvent:
+				client.debugStats.AddFloat("nic_create", 1.0)
 				// create the nic
 				err = client.nmd.CreateSmartNIC(&evt.Nic)
 				if err != nil {
@@ -198,6 +202,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 				}
 				// TODO: handle errors, in accordance with platform API which is TBD
 			case api.EventType_UpdateEvent:
+				client.debugStats.AddFloat("nic_update", 1.0)
 				// update the nic
 				err = client.nmd.UpdateSmartNIC(&evt.Nic)
 				if err != nil {
@@ -205,6 +210,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 				}
 				// TODO: handle errors, in accordance with platform API which is TBD
 			case api.EventType_DeleteEvent:
+				client.debugStats.AddFloat("nic_delete", 1.0)
 				// delete the nic
 				err = client.nmd.DeleteSmartNIC(&evt.Nic)
 				if err != nil {
@@ -223,10 +229,6 @@ func (client *CmdClient) Stop() {
 	client.Wait()
 
 	client.closeRPC()
-
-	if client.resolverClient != nil {
-		client.resolverClient.Stop()
-	}
 }
 
 // RegisterSmartNICReq send a register request for SmartNIC to CMD

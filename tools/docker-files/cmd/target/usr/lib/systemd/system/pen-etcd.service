@@ -10,7 +10,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
 	 --cgroups name=systemd --cgroups=cpu  run --rm --privileged --net=host --name pen-etcd \
 	 -v /var/lib/pensando/etcd:/var/lib/etcd -v /etc/pensando:/etc/pensando \
 	${REGISTRY_URL}/coreos/etcd:v3.2.10 \
-	etcd $NAME $DATA_DIR $ADV_CLIENT_URLS $LIS_CLIENT_URLS \
+	etcd --max-request-bytes 35000000 $NAME $DATA_DIR $ADV_CLIENT_URLS $LIS_CLIENT_URLS \
 	$INIT_CLUSTER $INIT_CLUSTER_STATE $INIT_CLUSTER_TOKEN $ADV_PEER_URLS \
 	$LIS_PEER_URLS
 ExecStop=/usr/bin/docker stop -t 2 pen-etcd

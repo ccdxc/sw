@@ -21,6 +21,7 @@ type Balancer interface {
 // balancer implements Balancer interface.
 type balancer struct {
 	sync.RWMutex
+	sync.WaitGroup
 	service  string             // name of the service
 	resolver resolver.Interface // resolver to use
 	upConns  []grpc.Address     // connections reported up by grpc
@@ -35,8 +36,6 @@ func New(resolver resolver.Interface) Balancer {
 	return &balancer{
 		resolver: resolver,
 		upConns:  make([]grpc.Address, 0),
-		upCh:     make(chan struct{}),
-		notifyCh: make(chan []grpc.Address, 128),
 	}
 }
 
@@ -44,14 +43,18 @@ func New(resolver resolver.Interface) Balancer {
 // resolver to track service changes.
 func (b *balancer) Start(target string, config grpc.BalancerConfig) error {
 	b.Lock()
-	defer b.Unlock()
 	if b.running {
+		b.Unlock()
 		return nil
 	}
+	b.upCh = make(chan struct{})
+	b.notifyCh = make(chan []grpc.Address, 128)
 	b.running = true
 	b.service = target
 	b.resolver.Register(b)
+	b.Unlock()
 	// Send the current state
+	b.Add(1)
 	go b.notifyServiceInstances()
 	return nil
 }
@@ -136,19 +139,25 @@ func (b *balancer) Notify() <-chan []grpc.Address {
 // Close closes the balancer.
 func (b *balancer) Close() error {
 	b.Lock()
-	defer b.Unlock()
 	if !b.running {
+		b.Unlock()
 		return nil
 	}
 	b.running = false
 	b.resolver.Deregister(b)
 	close(b.notifyCh)
 	close(b.upCh)
+
+	b.Unlock() // unlock before calling wait so that notifyServiceInstances can proceed with execution and complete
+
+	// wait for notifyServiceInstances to return. Only then can this balancer be reused for another Start()
+	b.Wait()
 	return nil
 }
 
 // notifyServiceInstances looks up instances of the service and updates the notify channel
 func (b *balancer) notifyServiceInstances() {
+	defer b.Done()
 	// gRPC wants the whole list, not incrementals.
 	siList := b.resolver.Lookup(b.service)
 	nodes := make([]grpc.Address, 0)
@@ -156,7 +165,11 @@ func (b *balancer) notifyServiceInstances() {
 		nodes = append(nodes, grpc.Address{Addr: siList.Items[ii].URL})
 	}
 	if len(nodes) != 0 {
-		b.notifyCh <- nodes
+		b.Lock()
+		if b.running {
+			b.notifyCh <- nodes
+		}
+		b.Unlock()
 	}
 }
 
@@ -168,6 +181,7 @@ func (b *balancer) OnNotifyResolver(event types.ServiceInstanceEvent) error {
 		return nil
 	}
 	b.Unlock()
+	b.Add(1)
 	b.notifyServiceInstances()
 	return nil
 }

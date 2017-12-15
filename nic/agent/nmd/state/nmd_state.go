@@ -70,7 +70,7 @@ func NewNMD(platform PlatformAPI, dbPath, nodeUUID, listenURL, mode string) (*NM
 
 	// check if naples config exists in emdb
 	cfgObj, err := emdb.Read(&config)
-	if cfgObj != nil {
+	if cfgObj != nil && err == nil {
 
 		// Use the persisted config moving forward
 		config = *cfgObj.(*nmd.Naples)
@@ -164,7 +164,7 @@ func (n *NMD) NaplesConfigHandler(r *http.Request) (interface{}, error) {
 		return resp, err
 	}
 
-	if err := json.Unmarshal(content, &req); err != nil {
+	if err = json.Unmarshal(content, &req); err != nil {
 		log.Errorf("Unmarshal err %s", content)
 		resp.ErrorMsg = err.Error()
 		return resp, err

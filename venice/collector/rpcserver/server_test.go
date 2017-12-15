@@ -181,4 +181,10 @@ func TestServer(t *testing.T) {
 	tu.Assert(t, tb.dbB.PointsWritten == 8, "Expected 8 points, got ", tb.dbB.PointsWritten)
 	tu.Assert(t, tb.dbA.PointsWritten == 8, "Expected 8 points, got ", tb.dbA.PointsWritten)
 	tu.Assert(t, tb.srv.badPoints == 1, "Expected 1 badPoints, got ", tb.srv.badPoints)
+
+	bundle = tb.getMetricBundle(0, "PktCount", "Counter")
+	bundle.Reporter = "UT"
+	bundle.DbName = testDB
+	tb.mc.WriteMetrics(context.Background(), bundle)
+	tu.Assert(t, tb.srv.badReqs == 2, "Expected 2 badReqs, got ", tb.srv.badReqs)
 }

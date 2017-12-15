@@ -131,7 +131,9 @@ func (srs *SecurityRPCServer) ListSecurityGroups(context.Context, *api.ObjectMet
 func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netproto.SecurityApi_WatchSecurityGroupsServer) error {
 	// watch for changes
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
+	defer close(watchChan)
 	srs.stateMgr.WatchObjects("SecurityGroup", watchChan)
+	defer srs.stateMgr.StopWatchObjects("SecurityGroup", watchChan)
 
 	// first get a list of all networks
 	sgl, err := srs.ListSecurityGroups(context.Background(), sel)
@@ -139,6 +141,8 @@ func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream ne
 		log.Errorf("Error getting a list of sgs. Err: %v", err)
 		return err
 	}
+
+	ctx := stream.Context()
 
 	// send the objects out as a stream
 	for _, sg := range sgl.SecurityGroups {
@@ -160,7 +164,6 @@ func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream ne
 		case evt, ok := <-watchChan:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
-				close(watchChan)
 				return errors.New("Error reading from channel")
 			}
 
@@ -204,9 +207,10 @@ func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream ne
 			err = stream.Send(&watchEvt)
 			if err != nil {
 				log.Errorf("Error sending stream. Err: %v", err)
-				close(watchChan)
 				return err
 			}
+		case <-ctx.Done():
+			return ctx.Err()
 		}
 	}
 

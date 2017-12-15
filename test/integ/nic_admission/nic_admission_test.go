@@ -38,10 +38,12 @@ import (
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	ventrace "github.com/pensando/sw/venice/utils/trace"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 const (
@@ -136,9 +138,12 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 	if err != nil {
 		log.Fatalf("Error creating platform agent. Err: %v", err)
 	}
-
+	var resolverClient resolver.Interface
+	if resolverURL != nil && *resolverURL != "" {
+		resolverClient = resolver.New(&resolver.Config{Servers: strings.Split(*resolverURL, ",")})
+	}
 	// create the new NMD
-	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, *resolverURL, restURL, *mode)
+	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, restURL, *mode, resolverClient)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}
@@ -157,6 +162,7 @@ func stopNMD(t *testing.T, ag *nmd.Agent, dbPath string) {
 }
 
 func TestCreateNMDs(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
 	for i := 1; i <= *numNaples; {
 

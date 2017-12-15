@@ -231,11 +231,14 @@ func (fs *Fswitch) addFwdEntry(ntwork string, ep *netproto.Endpoint, lif *LifEnt
 
 	// add to mac table
 	macKey := fmt.Sprintf("%s|%s", ntwork, mac.String())
-	fs.macaddrTable[macKey] = &fwd
 
 	// add to ip addr table
 	ipKey := fmt.Sprintf("%s|%s", fwd.Vrf, fwd.IPv4Addr.String())
+
+	fs.Lock()
+	fs.macaddrTable[macKey] = &fwd
 	fs.ipaddrTable[ipKey] = &fwd
+	fs.Unlock()
 
 	log.Infof("Added fwd entry: {%+v}, Lif: {%+v}", fwd, lif)
 
@@ -246,12 +249,15 @@ func (fs *Fswitch) addFwdEntry(ntwork string, ep *netproto.Endpoint, lif *LifEnt
 func (fs *Fswitch) delFwdEntry(ntwork string, ep *netproto.Endpoint) error {
 	// delete from mac table
 	macKey := fmt.Sprintf("%s|%s", ntwork, strings.ToLower(ep.Status.MacAddress))
-	delete(fs.macaddrTable, macKey)
 
 	// delete from ip addr table
 	ip, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 	ipKey := fmt.Sprintf("%s|%s", DefaultVRF, ip.String())
+
+	fs.Lock()
+	delete(fs.macaddrTable, macKey)
 	delete(fs.ipaddrTable, ipKey)
+	fs.Unlock()
 
 	return nil
 }
@@ -267,7 +273,10 @@ func (fs *Fswitch) addLif(port, ntwork string, vlan uint32) (*LifEntry, error) {
 
 	// add it to the table
 	lifKey := fmt.Sprintf("%s|%d", port, vlan)
+
+	fs.Lock()
 	fs.lifTable[lifKey] = &lif
+	fs.Unlock()
 
 	return &lif, nil
 }
@@ -276,7 +285,9 @@ func (fs *Fswitch) addLif(port, ntwork string, vlan uint32) (*LifEntry, error) {
 func (fs *Fswitch) delLif(port string, vlan uint32) error {
 	// delete it from the table
 	lifKey := fmt.Sprintf("%s|%d", port, vlan)
+	fs.Lock()
 	delete(fs.lifTable, lifKey)
+	fs.Unlock()
 
 	return nil
 }
@@ -285,6 +296,8 @@ func (fs *Fswitch) delLif(port string, vlan uint32) error {
 func (fs *Fswitch) findLif(port string, vlan uint32) (*LifEntry, error) {
 	// find the lif by port, vlan
 	lifKey := fmt.Sprintf("%s|%d", port, vlan)
+	fs.Lock()
+	defer fs.Unlock()
 	lif, ok := fs.lifTable[lifKey]
 	if !ok {
 		// find the lif by wildcard
@@ -313,8 +326,10 @@ func (fs *Fswitch) AddLocalEndpoint(port string, ep *netproto.Endpoint) error {
 		return err
 	}
 
+	fs.Lock()
 	// add to local epdb
 	fs.localEndpoints[ep.Name] = ep
+	fs.Unlock()
 
 	return nil
 }
@@ -335,7 +350,9 @@ func (fs *Fswitch) DelLocalEndpoint(port string, ep *netproto.Endpoint) error {
 	}
 
 	// remove from local epdb
+	fs.Lock()
 	delete(fs.localEndpoints, ep.Name)
+	fs.Unlock()
 
 	return nil
 }
@@ -357,7 +374,9 @@ func (fs *Fswitch) AddRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network
 	}
 
 	// add to remote epdb
+	fs.Lock()
 	fs.remoteEndpoints[ep.Name] = ep
+	fs.Unlock()
 
 	return nil
 }
@@ -372,7 +391,9 @@ func (fs *Fswitch) DelRemoteEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// remove from remote epdb
+	fs.Lock()
 	delete(fs.remoteEndpoints, ep.Name)
+	fs.Unlock()
 
 	return nil
 }

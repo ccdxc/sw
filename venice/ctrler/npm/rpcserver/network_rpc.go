@@ -5,6 +5,7 @@ package rpcserver
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -15,6 +16,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
+
+const maxWatchEventsPerMesage = 100
 
 // NetworkRPCServer is the network RPC server
 type NetworkRPCServer struct {
@@ -81,7 +84,9 @@ func (n *NetworkRPCServer) ListNetworks(ctx context.Context, sel *api.ObjectMeta
 func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.NetworkApi_WatchNetworksServer) error {
 	// watch for changes
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
+	defer close(watchChan)
 	n.stateMgr.WatchObjects("Network", watchChan)
+	defer n.stateMgr.StopWatchObjects("Network", watchChan)
 
 	// first get a list of all networks
 	networks, err := n.ListNetworks(context.Background(), sel)
@@ -90,13 +95,18 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 		return err
 	}
 
+	ctx := stream.Context()
+	watchEvtList := netproto.NetworkEventList{}
+
 	// send the objects out as a stream
 	for _, net := range networks.Networks {
-		watchEvt := netproto.NetworkEvent{
+		watchEvtList.NetworkEvents = append(watchEvtList.NetworkEvents, &netproto.NetworkEvent{
 			EventType: api.EventType_CreateEvent,
 			Network:   *net,
-		}
-		err = stream.Send(&watchEvt)
+		})
+	}
+	if len(watchEvtList.NetworkEvents) > 0 {
+		err = stream.Send(&watchEvtList)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -110,51 +120,63 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 		case evt, ok := <-watchChan:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
-				close(watchChan)
 				return errors.New("Error reading from channel")
 			}
+			watchEvtList = netproto.NetworkEventList{}
+			done := false
+			for done != true {
+				// get event type from memdb event
+				var etype api.EventType
+				switch evt.EventType {
+				case memdb.CreateEvent:
+					etype = api.EventType_CreateEvent
+				case memdb.UpdateEvent:
+					etype = api.EventType_UpdateEvent
+				case memdb.DeleteEvent:
+					etype = api.EventType_DeleteEvent
+				}
 
-			// get event type from memdb event
-			var etype api.EventType
-			switch evt.EventType {
-			case memdb.CreateEvent:
-				etype = api.EventType_CreateEvent
-			case memdb.UpdateEvent:
-				etype = api.EventType_UpdateEvent
-			case memdb.DeleteEvent:
-				etype = api.EventType_DeleteEvent
-			}
+				// convert to network object
+				net, err := statemgr.NetworkStateFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
 
-			// convert to network object
-			net, err := statemgr.NetworkStateFromObj(evt.Obj)
-			if err != nil {
-				return err
-			}
-
-			// construct the netproto object
-			watchEvt := netproto.NetworkEvent{
-				EventType: etype,
-				Network: netproto.Network{
-					TypeMeta:   net.TypeMeta,
-					ObjectMeta: net.ObjectMeta,
-					Spec: netproto.NetworkSpec{
-						IPv4Subnet:  net.Spec.IPv4Subnet,
-						IPv4Gateway: net.Spec.IPv4Gateway,
-						IPv6Subnet:  net.Spec.IPv6Subnet,
-						IPv6Gateway: net.Spec.IPv6Gateway,
+				// construct the netproto object
+				watchEvt := netproto.NetworkEvent{
+					EventType: etype,
+					Network: netproto.Network{
+						TypeMeta:   net.TypeMeta,
+						ObjectMeta: net.ObjectMeta,
+						Spec: netproto.NetworkSpec{
+							IPv4Subnet:  net.Spec.IPv4Subnet,
+							IPv4Gateway: net.Spec.IPv4Gateway,
+							IPv6Subnet:  net.Spec.IPv6Subnet,
+							IPv6Gateway: net.Spec.IPv6Gateway,
+						},
+						Status: netproto.NetworkStatus{
+							AllocatedVlanID: net.Spec.VlanID,
+						},
 					},
-					Status: netproto.NetworkStatus{
-						AllocatedVlanID: net.Spec.VlanID,
-					},
-				},
+				}
+				watchEvtList.NetworkEvents = append(watchEvtList.NetworkEvents, &watchEvt)
+
+				if len(watchChan) > 0 && len(watchEvtList.NetworkEvents) < maxWatchEventsPerMesage {
+					evt = <-watchChan
+				} else {
+					done = true
+				}
 			}
-			n.debugStats.Increment("NetworkWatchSentEvent")
-			err = stream.Send(&watchEvt)
+			err = stream.Send(&watchEvtList)
 			if err != nil {
 				log.Errorf("Error sending stream. Err: %v", err)
-				close(watchChan)
 				return err
 			}
+			if len(watchEvtList.NetworkEvents) != maxWatchEventsPerMesage {
+				time.Sleep(50 * time.Millisecond)
+			}
+		case <-ctx.Done():
+			return ctx.Err()
 		}
 	}
 

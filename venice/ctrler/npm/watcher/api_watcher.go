@@ -5,7 +5,6 @@ package watcher
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -21,6 +20,9 @@ import (
 
 // handleApisrvWatch handles api server watch events
 func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Services) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	// network watcher
 	opts := api.ListWatchOptions{}
 	netWatcher, err := apicl.NetworkV1().Network().Watch(ctx, &opts)
@@ -28,6 +30,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
+	defer netWatcher.Stop()
 
 	// sg watcher
 	sgWatcher, err := apicl.SecurityGroupV1().SecurityGroup().Watch(ctx, &opts)
@@ -35,6 +38,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
+	defer sgWatcher.Stop()
 
 	// sg policy watcher
 	sgpWatcher, err := apicl.SgpolicyV1().Sgpolicy().Watch(ctx, &opts)
@@ -42,6 +46,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
+	defer sgpWatcher.Stop()
 
 	// ep object watcher
 	epWatcher, err := apicl.EndpointV1().Endpoint().Watch(ctx, &opts)
@@ -49,6 +54,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
+	defer epWatcher.Stop()
 
 	// get all current networks
 	netList, err := apicl.NetworkV1().Network().List(ctx, &opts)
@@ -134,7 +140,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 }
 
 // runApisrvWatcher run API server watcher forever
-func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolverURLs string) {
+func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolver resolver.Interface) {
 	// if we have no URL, exit
 	if apisrvURL == "" {
 		return
@@ -147,13 +153,12 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 	// create logger
 	config := log.GetDefaultConfig("NpmApiWatcher")
 	l := log.GetNewLogger(config)
+	b := balancer.New(resolver)
 
 	// loop forever
 	for {
-		// create a resolver
-		r := resolver.New(&resolver.Config{Name: "npm", Servers: strings.Split(resolverURLs, ",")})
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l, rpckit.WithBalancer(balancer.New(r)))
+		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l, rpckit.WithBalancer(b))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", apisrvURL)
 		} else {
@@ -162,10 +167,10 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 			// handle api server watch events
 			w.handleApisrvWatch(ctx, apicl)
 		}
+		apicl.Close()
 
 		// if stop flag is set, we are done
 		if w.stopFlag {
-			apicl.Close()
 			log.Infof("Exiting API server watcher")
 			return
 		}
@@ -247,7 +252,7 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 }
 
 // runVmmWatcher runs grpc client to watch VMM events
-func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL, resolverURLs string) {
+func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string, resolver resolver.Interface) {
 	// if we have no URL, exit
 	if vmmURL == "" {
 		return
@@ -256,13 +261,12 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL, resolverURLs string
 	// setup wait group
 	w.waitGrp.Add(1)
 	defer w.waitGrp.Done()
+	b := balancer.New(resolver)
 
 	// loop forever
 	for {
-		// create a resolver
-		r := resolver.New(&resolver.Config{Name: "npm", Servers: strings.Split(resolverURLs, ",")})
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL, rpckit.WithBalancer(balancer.New(r)))
+		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL, rpckit.WithBalancer(b))
 		if err != nil {
 			log.Warnf("Error connecting to grpc server. Err: %v", err)
 		} else {
@@ -278,12 +282,12 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL, resolverURLs string
 				w.handleVmmEvents(stream)
 			}
 		}
+		if rpcClient != nil {
+			rpcClient.Close()
+		}
 
 		// if stop flag is set, we are done
 		if w.stopFlag {
-			if rpcClient != nil {
-				rpcClient.Close()
-			}
 			log.Infof("Exiting VMM watcher")
 			return
 		}
