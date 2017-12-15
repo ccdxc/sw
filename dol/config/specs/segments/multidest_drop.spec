@@ -5,9 +5,9 @@ meta:
 type        : tenant
 fabencap    : vlan
 native      : False
-broadcast   : drop
-multicast   : drop
-l4lb        : True
+broadcast   : flood
+multicast   : flood
+l4lb        : False
 endpoints   :
     useg    : 2
     pvlan   : 2

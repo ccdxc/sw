@@ -6,7 +6,7 @@ type        : span
 fabencap    : vlan
 native      : False
 broadcast   : flood
-multicast   : drop
+multicast   : flood
 l4lb        : False
 endpoints   :
     useg    : 1

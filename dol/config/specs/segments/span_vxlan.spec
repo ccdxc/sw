@@ -5,8 +5,8 @@ meta:
 type        : span
 fabencap    : vxlan
 native      : False
-broadcast   : drop
-multicast   : drop
+broadcast   : flood
+multicast   : flood
 l4lb        : False
 endpoints   :
     useg    : 1

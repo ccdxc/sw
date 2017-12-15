@@ -282,6 +282,19 @@ class SessionObjectHelper:
         self.ftessns = []
         self.ssns = []
         self.fep_pairs = {}
+        self.ldb = {}
+        return
+
+    def __add_to_ldb(self, session):
+        if session.label not in self.ldb:
+            self.ldb[session.label] = []
+
+        self.ldb[session.label].append(session)
+        return
+
+    def __add_session(self, session):
+        self.objs.append(session)
+        self.__add_to_ldb(session)
         return
 
     def __get_fep_pair_key(self, fep1, fep2):
@@ -322,7 +335,7 @@ class SessionObjectHelper:
         session = SessionObject()
         session.Init(flowep1, flowep2, group.session_spec)
 
-        self.objs.append(session)
+        self.__add_session(session)
         if session.IsFteEnabled():
             cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
             self.ftessns.append(session)
@@ -371,7 +384,7 @@ class SessionObjectHelper:
                 status = session.Init(flowep1, flowep2, t.entry)
                 if status != defs.status.SUCCESS:
                     continue
-                self.objs.append(session)
+                self.__add_session(session)
                 if session.IsFteEnabled():
                     cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
                     self.ftessns.append(session)
@@ -552,7 +565,13 @@ class SessionObjectHelper:
     def __get_matching_flows(self, selectors = None):
         timeprofiler.SelectorProfiler.Start()
         flows = []
-        for ssn in self.objs:
+
+        flow_label = selectors.GetFlowLabel()
+        if flow_label is not None:
+            search_objs = self.ldb[flow_label]
+        else:
+            search_objs = self.objs
+        for ssn in search_objs:
             if ssn.iflow and ssn.iflow.IsFilterMatch(selectors):
                 flows.append(ssn.iflow)
             if ssn.rflow and ssn.rflow.IsFilterMatch(selectors):

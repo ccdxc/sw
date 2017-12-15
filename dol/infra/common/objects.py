@@ -586,6 +586,7 @@ class FilterField(FrameworkFieldObject):
             assert(len(params) == 2)
             self.filters.append((params[0], params[1]))
         return
+
     def Extend(self, fobj):
         if isinstance(fobj, FilterField):
             obj = fobj
@@ -596,6 +597,13 @@ class FilterField(FrameworkFieldObject):
 
     def __str__(self):
         return self.string
+
+    def GetValueByKey(self, key):
+        for k,v in self.filters:
+            if key == k:
+                return v
+        return None
+
 
 class TspecReferenceFied(FrameworkFieldObject):
     def __init__(self, valobj):

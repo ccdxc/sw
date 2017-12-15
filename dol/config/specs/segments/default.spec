@@ -6,8 +6,8 @@ type        : tenant
 fabencap    : vlan
 native      : False
 broadcast   : flood
-multicast   : replicate
-l4lb        : True
+multicast   : flood
+l4lb        : False
 endpoints   :
     useg    : 2
     pvlan   : 2

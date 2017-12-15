@@ -53,6 +53,8 @@ class TestSpecConfigSelectors(objects.FrameworkObject):
     def SetFlow(self, flow):
         self.flow = flow
 
+    def GetFlowLabel(self):
+        return self.flow.GetValueByKey('label')
 
 class TestSpecSessionStepEntry(objects.FrameworkObject):
     def __init__(self):
