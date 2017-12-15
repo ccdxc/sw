@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 75
+#define CAPRI_P4PLUS_NUM_SYMBOLS 76
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -652,6 +652,13 @@ capri_p4p_asm_init()
     symbols[74].num_params = 1;
     symbols[74].params[0].name = NUM_CLOCK_TICKS_PER_US;
     symbols[74].params[0].val = 1000;
+
+    // Replace this with appropriate value based on 
+    // clock frequency.
+    symbols[75].name = "resp_tx_dcqcn_enforce_process.bin";
+    symbols[75].num_params = 1;
+    symbols[75].params[0].name = NUM_CLOCK_TICKS_PER_US;
+    symbols[75].params[0].val = 1000;
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

@@ -896,13 +896,15 @@ struct p4_to_p4plus_roce_header_t {
 struct dcqcn_cb_t {
     last_cnp_timestamp: 48;
     partition_key: 16;
-    rate_enforced: 32; // DCQCN enforced rate in kbps.
+    rate_enforced: 32; // DCQCN enforced rate in Mbps.
     last_sched_timestamp: 48;
+    delta_ticks_last_sched: 16;
     cur_avail_tokens: 64;
+    token_bucket_size: 64; // DCQCN enforced BC (committed-burst) in bits.
     // For model testing only. Number of times packet was scheduled and dropped due to insufficient tokens.
     num_sched_drop: 8;
     cur_timestamp: 48; // For debugging on Model since model doesnt have timestamps
-    pad : 248;
+    pad : 168;
 };
 
 

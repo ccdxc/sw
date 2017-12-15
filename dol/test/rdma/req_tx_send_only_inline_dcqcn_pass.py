@@ -28,8 +28,9 @@ def TestCaseSetup(tc):
     tc.pvtdata.dcqcn_pre_qstate = rs.lqp.dcqcn_data
     rs.lqp.dcqcn_data.last_sched_timestamp = 0xC350 # 50k ticks
     rs.lqp.dcqcn_data.cur_timestamp = 0x19E10 # 106k ticks
-    rs.lqp.dcqcn_data.rate_enforced = 1000  # 1 Mbps (rate_enforced is in kbps)
+    rs.lqp.dcqcn_data.rate_enforced = 1  # 1 Mbps (rate_enforced is in Mbps)
     rs.lqp.dcqcn_data.cur_avail_tokens = 200
+    rs.lqp.dcqcn_data.token_bucket_size = 150000 #150kb
     rs.lqp.WriteDcqcnCb()
 
     # ARM CQ and Set EQ's CI=PI for EQ enablement

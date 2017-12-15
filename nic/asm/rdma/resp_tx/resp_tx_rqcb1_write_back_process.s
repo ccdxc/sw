@@ -18,12 +18,11 @@ struct rqcb1_t d;
 
 resp_tx_rqcb1_write_back_process:
 
-    // Pin write_back_process to stage 4
-    mfspr           r1, spr_mpuid
-    seq             c1, r1[6:2], STAGE_4
-    bcf             [!c1], exit
+    bbeq       k.args.rate_enforce_failed, 1, dcqcn_rl_failure
+    CAPRI_SET_TABLE_1_VALID(0) // BD slot
 
-add_headers:
+
+add_headers_common:
 
     // intrinsic
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_INTRINSIC)
@@ -44,8 +43,11 @@ add_headers:
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, p4plus_to_p4, p4plus_to_p4);
     phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
     phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
-    phvwr          P4PLUS_TO_P4_VLAN_TAG, 0
 
+    bbeq           k.to_stage.s5.rqcb1_wb.ack_nak_process, 1, add_ack_header
+    phvwr          P4PLUS_TO_P4_VLAN_TAG, 0 //BD-slot
+
+rsq_write_back:
     tblwr       d.read_rsp_in_progress, k.args.read_rsp_in_progress
     seq         c1, k.args.read_rsp_in_progress, 1
     cmov        CURR_READ_RSP_PSN, c1, k.args.curr_read_rsp_psn, 0
@@ -55,12 +57,52 @@ add_headers:
     tblwr       d.curr_read_rsp_psn, CURR_READ_RSP_PSN
     tblwr       d.read_rsp_lock, 0
     bcf         [c1], exit
-    CAPRI_SET_TABLE_1_VALID(0) //BD Slot
 
     // TODO: ordering rules
     // ring doorbell to update RSQ_C_INDEX to NEW_RSQ_C_INDEX
     // currently it is done thru memwr. Need to see if it should be done thru DMA
-    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, RSQ_RING_ID, k.args.new_rsq_c_index, DB_ADDR, DB_DATA) 
+    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, RSQ_RING_ID, k.to_stage.s5.rqcb1_wb.new_c_index, DB_ADDR, DB_DATA)
+    nop.e
+    nop
+
+    
+add_ack_header:
+    add         r2, RDMA_PKT_OPC_ACK, k.to_stage.s5.rqcb1_wb.ack_nack_serv_type, BTH_OPC_SVC_SHIFT
+    phvwr       p.bth.opcode, r2
+    phvwr       p.bth.dst_qp, d.dst_qp
+
+    // prepare aeth
+    phvwr       p.aeth.msn, d.aeth.msn
+    phvwr       p.aeth.syndrome, d.aeth.syndrome
+
+    // prepare BTH
+    phvwr       p.bth.psn, d.ack_nak_psn
+    tblwr       d.last_ack_nak_psn, d.ack_nak_psn
+
+    // header_template
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
+    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, d.header_template_size, d.header_template_addr)
+
+    // BTH
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_BTH)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, bth, bth)
+
+    // AETH
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_AETH)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, aeth, aeth)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+
+    // TODO: ordering rules
+    // ring doorbell to update C_INDEX to P_INDEX
+    // currently it is done thru memwr. Need to see if it should be done thru DMA
+    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, ACK_NAK_RING_ID, k.to_stage.s5.rqcb1_wb.new_c_index, DB_ADDR, DB_DATA)
+    nop.e
+    nop
+    
+dcqcn_rl_failure:
+    // release read_rsp_lock.
+    tblwr       d.read_rsp_lock, 0
 
 exit:
     nop.e

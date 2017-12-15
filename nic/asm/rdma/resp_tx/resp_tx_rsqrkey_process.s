@@ -26,6 +26,7 @@ struct key_entry_aligned_t d;
 %%
     .param      resp_tx_rsqptseg_process
     .param      resp_tx_rqcb1_write_back_process
+    .param      resp_tx_dcqcn_enforce_process
 
 resp_tx_rsqrkey_process:
 
@@ -129,25 +130,32 @@ add_headers:
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, bth, bth)
 
     seq         c1, k.args.send_aeth, 1
-    bcf         [!c1], invoke_write_back
+    bcf         [!c1], invoke_dcqcn
     nop         //BD Slot
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_AETH)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, aeth, aeth)
 
-invoke_write_back:
-
-    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rqcb1_write_back_process)
-    RQCB1_ADDR_GET(RQCB1_ADDR)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
-
+invoke_dcqcn:
+    // Note: Next stage(DCQCN) does not use stage-to-stage keys. So this will be passed to write-back stage untouched!
     CAPRI_GET_TABLE_1_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, curr_read_rsp_psn, k.args.curr_read_rsp_psn)
     seq         c1, k.args.last_or_only, 1
     cmov        IN_PROGRESS, c1, 0, 1
     CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, read_rsp_in_progress, IN_PROGRESS)
-    CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, new_rsq_c_index, k.args.new_rsq_c_index)
+
+    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_dcqcn_enforce_process)
+    bbeq           k.to_stage.s3.rsq_rkey.congestion_mgmt_enable, 1, dcqcn
+    add            r3,  r0, k.to_stage.s3.rsq_rkey.dcqcn_cb_addr // BD slot
+
+dcqcn_mpu_only:
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, RAW_TABLE_PC, r3)
+    nop.e
+    nop
+
+dcqcn:
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
 
 exit:
     nop.e

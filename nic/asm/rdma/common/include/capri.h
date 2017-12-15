@@ -209,6 +209,11 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC(_base_r, _lock_en, _table_read_size, _table_pc_r) \
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r[63:CAPRI_RAW_TABLE_PC_SHIFT]; \
+
+#define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(_base_r, _lock_en, _table_read_size, _table_addr_r) \
+    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);\
+    phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
+
      
 #define CAPRI_SET_TABLE_0_VALID(_vld) \
     phvwri   p.common.app_header_table0_valid, _vld;

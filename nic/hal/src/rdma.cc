@@ -791,7 +791,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.cache = FALSE;
     rqcb.rqcb0.immdt_as_dbell = spec.immdt_as_dbell();
     rqcb.rqcb0.pd = spec.pd();
-    rqcb.rqcb0.congestion_mgmt_enable = TRUE;  // Set always to be true for now.
+    rqcb.rqcb0.congestion_mgmt_enable = FALSE;
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
     rqcb.rqcb1.header_template_addr = header_template_addr;
     rqcb.rqcb1.header_template_size = sizeof(header_template_v4_t);

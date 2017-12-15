@@ -13,6 +13,7 @@ struct rdma_stage0_table_k k;
 #define RQCB_TO_RQCB1_CNP_T struct resp_tx_rqcb_to_cnp_info_t
 #define ACK_INFO_T struct resp_tx_rqcb_to_ack_info_t
 #define BT_ADJUST_INFO_T struct resp_tx_rsq_backtrack_adjust_info_t 
+#define TO_STAGE_T struct resp_tx_to_stage_t
 
 #define RSQWQE_P            r1
 #define RQCB1_P             r2
@@ -27,9 +28,9 @@ struct rdma_stage0_table_k k;
 
 %%
     .param      resp_tx_rqcb1_process
-    .param      resp_tx_ack_process
     .param      resp_tx_rsq_backtrack_adjust_process
     .param      resp_tx_rqcb1_cnp_process
+    .param      resp_tx_ack_process
 
 resp_tx_rqcb_process:
     // copy intrinsic to global
@@ -100,6 +101,12 @@ rq:
     nop //Exit Slot
 
 check_rsq:
+    // Pass congestion_mgmt_enable flag to stages 3 and 4.
+    CAPRI_GET_STAGE_3_ARG(resp_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.rsq_rkey.congestion_mgmt_enable, d.congestion_mgmt_enable)
+    CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.congestion_mgmt_enable, d.congestion_mgmt_enable)
+
     // set DMA cmd ptr   (dma cmd idx with in flit is zero)
     TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID, 0)
 
@@ -113,10 +120,13 @@ rsq:
     add         NEW_RSQ_C_INDEX, r0, RSQ_C_INDEX
     mincr       NEW_RSQ_C_INDEX, d.log_rsq_size, 1
 
+    // send NEW_RSQ_C_INDEX to stage 5 (writeback)
+    CAPRI_GET_STAGE_5_ARG(resp_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.new_c_index, NEW_RSQ_C_INDEX)
+
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, rsqwqe_addr, RSQWQE_P)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, serv_type, d.serv_type)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, log_pmtu, d.log_pmtu)
-    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, new_rsq_c_index, NEW_RSQ_C_INDEX)
 
     CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rqcb1_process)
@@ -131,11 +141,14 @@ check_ack_nak:
     nop
 
 ack_nak:
-    CAPRI_SET_FIELD(r4, ACK_INFO_T, serv_type, d.serv_type)
-    CAPRI_SET_FIELD(r4, ACK_INFO_T, new_c_index, ACK_NAK_P_INDEX)
+    // send new_c_index,serv_type and ack processing flag to stage 5 (writeback)
+    CAPRI_GET_STAGE_5_ARG(resp_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.new_c_index, ACK_NAK_P_INDEX)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.ack_nak_process, 1)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.ack_nack_serv_type, d.serv_type)
 
     CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_ack_process)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_ack_process) 
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_P)
     
 exit:

@@ -31,6 +31,7 @@ struct resp_tx_rsqwqe_process_k_t k;
 %%
     .param      resp_tx_rsqrkey_process
     .param      resp_tx_rqcb1_write_back_process
+    .param      resp_tx_dcqcn_enforce_process
 
 resp_tx_rsqwqe_process:
 
@@ -64,14 +65,10 @@ process_atomic:
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
 
-    // invoke writeback in table 1
+    // invoke MPU only dcqcn in table 1.
     CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rqcb1_write_back_process)
-    RQCB1_ADDR_GET(RQCB1_ADDR)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
-
-    CAPRI_GET_TABLE_1_ARG(resp_tx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RQCB1_WB_INFO_T, new_rsq_c_index, k.args.new_rsq_c_index)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_dcqcn_enforce_process)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, RAW_TABLE_PC, r0)
 
     nop.e
     // invalidate table 0
@@ -157,7 +154,6 @@ next:
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, header_template_addr, k.args.header_template_addr)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, header_template_size, k.args.header_template_size)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, curr_read_rsp_psn, CURR_PSN)
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, new_rsq_c_index, k.args.new_rsq_c_index)
 
     KT_BASE_ADDR_GET(KT_BASE_ADDR, r1)
     

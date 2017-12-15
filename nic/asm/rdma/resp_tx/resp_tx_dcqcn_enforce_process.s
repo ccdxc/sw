@@ -1,25 +1,29 @@
-#include "req_tx.h"
+#include "resp_tx.h"
 #include "sqcb.h"
 
-struct req_tx_phv_t p;
+struct resp_tx_phv_t p;
 struct dcqcn_cb_t d;
-struct req_tx_add_headers_process_k_t k;
+
+// Note: This stage doesn't have any stage-to-stage info. k is used only to access to-stage info.
+struct resp_tx_rqcb1_write_back_process_k_t k;
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Feeding timestamp from dcqcn_cb for now since model doesn't have timestamps.
 #define CUR_TIMESTAMP d.cur_timestamp
-#define TO_STAGE_T struct req_tx_to_stage_t
 
 #define SECS_IN_KSEC         1000
 #define NUM_TOKENS_ACQUIRED  r4
 #define NUM_TOKENS_REQUIRED  r5
 
+#define RQCB1_WB_INFO_T struct resp_tx_rqcb1_write_back_info_t  
+#define RAW_TABLE_PC    r6
+
 %%
     .param rdma_num_clock_ticks_per_us
-    .param req_tx_write_back_process
+    .param resp_tx_rqcb1_write_back_process
 
 .align
-req_tx_dcqcn_enforce_process:
+resp_tx_dcqcn_enforce_process:
     
     // Pin dcqcn_enforce to stage 4
     mfspr         r1, spr_mpuid
@@ -27,7 +31,7 @@ req_tx_dcqcn_enforce_process:
     bcf           [!c1], bubble_to_next_stage
     
     // Skip this stage if congestion_mgmt is disabled.
-    seq           c2, k.to_stage.sq.congestion_mgmt_enable, 0 //delay slot
+    seq           c2, k.to_stage.s4.dcqcn.congestion_mgmt_enable, 0 //delay slot
     bcf           [c2], load_write_back
     nop
 
@@ -35,14 +39,15 @@ req_tx_dcqcn_enforce_process:
      * This is done in 2 steps.
      * 1. Replenish tokens based on time elapsed since last_sched_timestamp.
      * 2. Enforce rate to check if there are enough tokens to allow current PHV.
-     * Note: Unit of token here is bit. Each token corresponds to 1 bit of data.                     
+     * Note: Unit of token here is bit. Each token corresponds to 1 bit of data.
      */
-     // Check if we have reached max-tokens. If so, skip token-replenish.                             
-     slt           c3, d.cur_avail_tokens, d.token_bucket_size                                        
-     bcf           [!c3], rate_enforce             
 
-token_replenish:                                  
-    sub           r1, CUR_TIMESTAMP, d.last_sched_timestamp // BD-Slot
+    // Check if we have reached max-tokens. If so, skip token-replenish.
+    slt           c3, d.cur_avail_tokens, d.token_bucket_size
+    bcf           [!c3], rate_enforce
+
+token_replenish:
+    sub           r1, CUR_TIMESTAMP, d.last_sched_timestamp // BD slot
     add           r1, r1, d.delta_ticks_last_sched 
 
     // Calculate elapsed-time-in-us since last scheduled and store delta-ticks for use when next sched.
@@ -63,7 +68,7 @@ token_replenish:
 
 rate_enforce:
     // Calculate num-tokens-required for current pkt and check with available tokens
-    add           NUM_TOKENS_REQUIRED, r0, k.to_stage.sq.packet_len, 3
+    add           NUM_TOKENS_REQUIRED, r0, k.to_stage.s4.dcqcn.packet_len, 3
     slt           c3, d.cur_avail_tokens, NUM_TOKENS_REQUIRED
 
     bcf           [c3],  drop_phv
@@ -75,10 +80,10 @@ rate_enforce:
 
 load_write_back:            
     // DCQCN rate-enforcement passed. Load stage 5 for write-back
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rqcb1_write_back_process)
+    RQCB1_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r2)
 
     nop.e
     nop
@@ -88,21 +93,25 @@ bubble_to_next_stage:
     bcf           [!c1 | c2], exit
     nop           // Branch Delay Slot
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS)
+    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, k.to_stage.s3.dcqcn.dcqcn_cb_addr)
+
 exit:
     nop.e
     nop
 
 drop_phv:
-    // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
-    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.rate_enforce_failed, 1)
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    // DCQCN rate-enforcement failed. Drop PHV and load rqcb1.
+    phvwr         p.common.p4_intr_global_drop, 1 
+
+    CAPRI_GET_TABLE_1_ARG(resp_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, rate_enforce_failed, 1)
+
+    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rqcb1_write_back_process)
+    RQCB1_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r2)
 
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 
