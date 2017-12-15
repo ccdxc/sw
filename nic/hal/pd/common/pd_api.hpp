@@ -47,9 +47,7 @@ using hal::flow_key_t;
 using hal::flow_t;
 using hal::tlscb_t;
 using hal::tcpcb_t;
-using hal::buf_pool_t;
-using hal::queue_t;
-using hal::policer_t;
+using hal::qos_class_t;
 using hal::acl_t;
 using hal::wring_t;
 using hal::mirror_session_t;
@@ -97,6 +95,8 @@ typedef struct pd_lif_upd_args_s {
     bool    vlan_strip_en;
     bool    qstate_map_init_set;
     bool    rss_config_changed;
+    bool    rx_policer_changed;
+    bool    tx_policer_changed;
 } pd_lif_upd_args_t;
 
 typedef struct pd_port_args_s {
@@ -533,6 +533,7 @@ pd_debug_cli_write(uint32_t tableid,
 
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);
+uint32_t if_get_tm_oport(if_t *pi_if);
 uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
         rewrite_actions_en rw_act);
 uint32_t ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
@@ -608,54 +609,23 @@ hal_ret_t pd_proxyccb_delete(pd_proxyccb_args_t *proxyccb,
                              bool retain_in_db = true);
 hal_ret_t pd_proxyccb_get(pd_proxyccb_args_t *proxyccb);
 
-typedef struct pd_buf_pool_args_s {
-    buf_pool_t    *buf_pool;
-} __PACK__ pd_buf_pool_args_t;
+typedef struct pd_qos_class_args_s {
+    qos_class_t    *qos_class;
+} __PACK__ pd_qos_class_args_t;
 
 static inline void
-pd_buf_pool_args_init (pd_buf_pool_args_t *args)
+pd_qos_class_args_init (pd_qos_class_args_t *args)
 {
-    args->buf_pool = NULL;
+    args->qos_class = NULL;
     return;
 }
 
-hal_ret_t pd_buf_pool_create(pd_buf_pool_args_t *buf_pool);
+hal_ret_t pd_qos_class_create(pd_qos_class_args_t *qos_class);
+hal_ret_t pd_qos_class_delete(pd_qos_class_args_t *qos_class);
 
-typedef struct pd_queue_args_s {
-    uint32_t    cnt_l0;
-    queue_t    **l0_nodes;
-    uint32_t    cnt_l1;
-    queue_t    **l1_nodes;
-    uint32_t    cnt_l2;
-    queue_t    **l2_nodes;
-} __PACK__ pd_queue_args_t;
-
-static inline void
-pd_queue_args_init (pd_queue_args_t *args)
-{
-    args->cnt_l0 = 0;
-    args->cnt_l1 = 0;
-    args->cnt_l2 = 0;
-    args->l0_nodes = NULL;
-    args->l1_nodes = NULL;
-    args->l2_nodes = NULL;
-    return;
-}
-
-hal_ret_t pd_queue_create(pd_queue_args_t *queue);
-
-typedef struct pd_policer_args_s {
-    policer_t    *policer;
-} __PACK__ pd_policer_args_t;
-
-static inline void
-pd_policer_args_init (pd_policer_args_t *args)
-{
-    args->policer = NULL;
-    return;
-}
-
-hal_ret_t pd_policer_create(pd_policer_args_t *policer);
+hal_ret_t qos_class_get_qos_class_id(qos_class_t *qos_class, 
+                                     if_t *dest_if, 
+                                     uint32_t *qos_class_id);
 
 typedef struct pd_acl_args_s {
     acl_t    *acl;

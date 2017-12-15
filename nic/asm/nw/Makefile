@@ -30,8 +30,8 @@ SRC_FILES := \
     $(SRC_DIR)/ddos_src_vf_policer_action.asm \
     $(SRC_DIR)/decode_roce_opcode.asm \
     $(SRC_DIR)/drop_stats.asm \
-    $(SRC_DIR)/egress_policer_action.asm \
-    $(SRC_DIR)/egress_policer.asm \
+    $(SRC_DIR)/rx_policer_action.asm \
+    $(SRC_DIR)/rx_policer.asm \
     $(SRC_DIR)/flow_hash.asm \
     $(SRC_DIR)/flow_hash_overflow.asm \
     $(SRC_DIR)/flow_info.asm \
@@ -48,6 +48,7 @@ SRC_FILES := \
     $(SRC_DIR)/l4_profile.asm \
     $(SRC_DIR)/mirror.asm \
     $(SRC_DIR)/nacl.asm \
+    $(SRC_DIR)/qos.asm \
     $(SRC_DIR)/output_mapping.asm \
     $(SRC_DIR)/p4plus_app.asm \
     $(SRC_DIR)/p4plus_app_prep.asm \

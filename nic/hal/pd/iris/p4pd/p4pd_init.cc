@@ -776,6 +776,25 @@ p4pd_nacl_init (void)
 }
 
 static hal_ret_t
+p4pd_qos_init (void)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    DirectMap      *qos_tbl = NULL;
+    qos_actiondata d = {0};
+
+    qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
+    HAL_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
+
+    ret = qos_tbl->insert_withid(&d, 0);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-qos::{}: qos table write failure ret {}",
+                      __func__, ret);
+        return ret;
+    }
+    return ret;
+}
+
+static hal_ret_t
 p4pd_p4plus_app_init (void)
 {
     hal_ret_t                ret = HAL_RET_OK;
@@ -1631,6 +1650,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_nacl_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_nacl_eplearn_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_qos_init() == HAL_RET_OK);
 
     // initialize all P4 egress tables with default entries, if any
     HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);

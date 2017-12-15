@@ -100,11 +100,9 @@ public:
     ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
     ht *tcpcb_hal_handle_ht(void) const { return tcpcb_hal_handle_ht_; }
 
-    ht *buf_pool_id_ht(void) const { return buf_pool_id_ht_; }
-    ht *buf_pool_hal_handle_ht(void) const { return buf_pool_hal_handle_ht_; }
-
-    ht *queue_id_ht(void) const { return queue_id_ht_; }
-    ht *queue_hal_handle_ht(void) const { return queue_hal_handle_ht_; }
+    ht *qos_class_ht(void) const { return qos_class_ht_; }
+    bitmap *qos_cmap_pcp_bmp(void) const { return qos_cmap_pcp_bmp_; }
+    bitmap *qos_cmap_dscp_bmp(void) const { return qos_cmap_dscp_bmp_; }
 
     ht *ingress_policer_id_ht(void) const { return ingress_policer_id_ht_; }
     ht *ingress_policer_hal_handle_ht(void) const { return ingress_policer_hal_handle_ht_; }
@@ -232,12 +230,6 @@ private:
         ht         *l4lb_hal_handle_ht_;
     } __PACK__;
 
-    // buf-pool related config
-    struct {
-        ht         *buf_pool_id_ht_;
-        ht         *buf_pool_hal_handle_ht_;
-    } __PACK__;
-
     // TLS CB related config
     struct {
         ht         *tlscb_id_ht_;
@@ -250,10 +242,11 @@ private:
         ht         *tcpcb_hal_handle_ht_;
     } __PACK__;
 
-    // queue related config
+    // qos-class related config
     struct {
-        ht         *queue_id_ht_;
-        ht         *queue_hal_handle_ht_;
+        ht         *qos_class_ht_;
+        bitmap     *qos_cmap_pcp_bmp_;
+        bitmap     *qos_cmap_dscp_bmp_;
     } __PACK__;
 
     // policer related config
@@ -344,9 +337,6 @@ public:
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
     ht *flow_ht(void) const { return flow_ht_; }
-    bitmap *buf_pool_cos_usage_bmp(uint32_t port_num) const {
-        return cos_in_use_bmp_[port_num];
-    }
     ip_addr_t *mytep(void) { return &mytep_ip; }
     eventmgr *event_mgr(void) const { return event_mgr_; }
 
@@ -361,8 +351,6 @@ private:
     ht          *ep_l2_ht_;
     ht          *ep_l3_entry_ht_;
     ht          *flow_ht_;
-    // bitmap indicating if the cos is already assigned to a buffer pool
-    bitmap    *cos_in_use_bmp_[HAL_MAX_TM_PORTS];
     ip_addr_t mytep_ip;
 };
 
@@ -401,8 +389,7 @@ public:
     slab *session_slab(void) const { return session_slab_; }
     slab *tlscb_slab(void) const { return tlscb_slab_; }
     slab *tcpcb_slab(void) const { return tcpcb_slab_; }
-    slab *buf_pool_slab(void) const { return buf_pool_slab_; }
-    slab *queue_slab(void) const { return queue_slab_; }
+    slab *qos_class_slab(void) const { return qos_class_slab_; }
     slab *policer_slab(void) const { return policer_slab_; }
     slab *acl_slab(void) const { return acl_slab_; }
     slab *wring_slab(void) const { return wring_slab_; }
@@ -446,8 +433,7 @@ private:
     slab    *l4lb_slab_;
     slab    *tlscb_slab_;
     slab    *tcpcb_slab_;
-    slab    *buf_pool_slab_;
-    slab    *queue_slab_;
+    slab    *qos_class_slab_;
     slab    *policer_slab_;
     slab    *wring_slab_;
     slab    *acl_slab_;
@@ -569,18 +555,11 @@ public:
     ht *tcpcb_id_ht(void) const { return cfg_db_->tcpcb_id_ht(); }
     ht *tcpcb_hal_handle_ht(void) const { return cfg_db_->tcpcb_hal_handle_ht(); }
 
-    // get APIs for buf-pool state
-    slab *buf_pool_slab(void) const { return mem_db_->buf_pool_slab(); }
-    ht *buf_pool_id_ht(void) const { return cfg_db_->buf_pool_id_ht(); }
-    ht *buf_pool_hal_handle_ht(void) const { return cfg_db_->buf_pool_hal_handle_ht(); }
-    bitmap *buf_pool_cos_usage_bmp(uint32_t port_num) const {
-        return oper_db_->buf_pool_cos_usage_bmp(port_num);
-    }
-
-    // get APIs for queue state
-    slab *queue_slab(void) const { return mem_db_->queue_slab(); }
-    ht *queue_id_ht(void) const { return cfg_db_->queue_id_ht(); }
-    ht *queue_hal_handle_ht(void) const { return cfg_db_->queue_hal_handle_ht(); }
+    // get APIs for qos-class state
+    slab *qos_class_slab(void) const { return mem_db_->qos_class_slab(); }
+    ht *qos_class_ht(void) const { return cfg_db_->qos_class_ht(); }
+    bitmap *qos_cmap_pcp_bmp(void) const { return cfg_db_->qos_cmap_pcp_bmp(); }
+    bitmap *qos_cmap_dscp_bmp(void) const { return cfg_db_->qos_cmap_dscp_bmp(); }
 
     // get APIs for policer state
     slab *policer_slab(void) const { return mem_db_->policer_slab(); }

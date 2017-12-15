@@ -33,9 +33,52 @@ protected:
   static void SetUpTestCase() {
     hal_base_test::SetUpTestCase();
     hal_test_utils_slab_disable_delete();
+    qos_init();
   }
 
+  static void qos_init(void); 
+  static const qos::QosGroup cos_a_ = qos::DEFAULT;
+  static const qos::QosGroup cos_b_ = qos::USER_DEFINED_1;
+
 };
+
+void scheduler_tx_test::qos_init()
+{
+    // add 2 qos-classes
+    hal_ret_t        ret;
+    QosClassSpec     spec;
+    QosClassResponse rsp;
+
+    spec.Clear();
+
+    spec.mutable_key_or_handle()->set_qos_group(cos_a_);
+    spec.set_mtu(2000);
+    spec.mutable_buffer()->set_reserved_mtus(2);
+    spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(50);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::qos_class_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+
+    spec.Clear();
+    spec.mutable_key_or_handle()->set_qos_group(cos_b_);
+    spec.set_mtu(2000);
+    spec.mutable_buffer()->set_reserved_mtus(2);
+    spec.mutable_sched()->mutable_strict()->set_bps(10000);
+    spec.mutable_uplink_class_map()->set_dot1q_pcp(3);
+    spec.mutable_uplink_class_map()->add_ip_dscp(3);
+    spec.mutable_uplink_class_map()->add_ip_dscp(5);
+    spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
+    spec.mutable_marking()->set_dot1q_pcp(3);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::qos_class_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+}
+
 
 // ----------------------------------------------------------------------------
 // Create a lif with multiple queues and cos values and check programming goes through
@@ -53,15 +96,15 @@ TEST_F(scheduler_tx_test, test1)
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
     lif_spec.mutable_lif_qstate_map(0)->set_size(1);
     lif_spec.mutable_lif_qstate_map(0)->set_entries(15);
-    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_cos(3);
-    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_cos(4);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_qos_group(cos_a_);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_qos_group(cos_b_);
 
     lif_spec.add_lif_qstate_map();
     lif_spec.mutable_lif_qstate_map(1)->set_type_num(1);
     lif_spec.mutable_lif_qstate_map(1)->set_size(1);
     lif_spec.mutable_lif_qstate_map(1)->set_entries(17);
-    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_a()->set_cos(1);
-    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_b()->set_cos(2);
+    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_a()->set_qos_group(cos_a_);
+    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_b()->set_qos_group(cos_b_);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
@@ -85,15 +128,15 @@ TEST_F(scheduler_tx_test, test2)
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
     lif_spec.mutable_lif_qstate_map(0)->set_size(1);
     lif_spec.mutable_lif_qstate_map(0)->set_entries(15);
-    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_cos(10);
-    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_cos(11);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_qos_group(cos_a_);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_qos_group(cos_b_);
 
     lif_spec.add_lif_qstate_map();
     lif_spec.mutable_lif_qstate_map(1)->set_type_num(1);
     lif_spec.mutable_lif_qstate_map(1)->set_size(1);
     lif_spec.mutable_lif_qstate_map(1)->set_entries(13);
-    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_a()->set_cos(8);
-    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_b()->set_cos(10);
+    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_a()->set_qos_group(cos_a_);
+    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_b()->set_qos_group(cos_b_);
 
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -107,8 +150,8 @@ TEST_F(scheduler_tx_test, test2)
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
     lif_spec.mutable_lif_qstate_map(0)->set_size(1);
     lif_spec.mutable_lif_qstate_map(0)->set_entries(15);
-    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_cos(7);
-    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_cos(8);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_qos_group(cos_a_);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_qos_group(cos_b_);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
@@ -138,15 +181,15 @@ TEST_F(scheduler_tx_test, test3)
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
     lif_spec.mutable_lif_qstate_map(0)->set_size(1);
     lif_spec.mutable_lif_qstate_map(0)->set_entries(5);
-    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_cos(3);
-    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_cos(4);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_qos_group(cos_a_);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_qos_group(cos_b_);
 
     lif_spec.add_lif_qstate_map();
     lif_spec.mutable_lif_qstate_map(1)->set_type_num(1);
     lif_spec.mutable_lif_qstate_map(1)->set_size(1);
     lif_spec.mutable_lif_qstate_map(1)->set_entries(4);
-    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_a()->set_cos(1);
-    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_b()->set_cos(2);
+    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_a()->set_qos_group(cos_a_);
+    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_b()->set_qos_group(cos_b_);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_update(lif_spec, &lif_rsp);
@@ -176,8 +219,8 @@ TEST_F(scheduler_tx_test, test4)
     spec.mutable_lif_qstate_map(0)->set_type_num(1);
     spec.mutable_lif_qstate_map(0)->set_size(1);
     spec.mutable_lif_qstate_map(0)->set_entries(13);
-    spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_cos(3);
-    spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_cos(4);
+    spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_qos_group(cos_a_);
+    spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_qos_group(cos_b_);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);

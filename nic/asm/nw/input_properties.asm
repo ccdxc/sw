@@ -17,13 +17,11 @@ input_properties:
   phvwrpair     p.control_metadata_dst_lport[10:0], d.input_properties_d.dst_lport, \
                     p.control_metadata_src_lport[10:0], d.input_properties_d.src_lport
   phvwr         p.flow_lkp_metadata_lkp_vrf, d.input_properties_d.vrf
-  phvwrpair     p.{control_metadata_flow_miss_action,control_metadata_flow_miss_tm_oqueue}, \
-                    d.{input_properties_d.flow_miss_action,input_properties_d.flow_miss_tm_oqueue}, \
+  phvwrpair     p.{control_metadata_flow_miss_action,control_metadata_flow_miss_qos_class_id}, \
+                    d.{input_properties_d.flow_miss_action,input_properties_d.flow_miss_qos_class_id}, \
                     p.control_metadata_flow_miss_idx, d.input_properties_d.flow_miss_idx
   phvwrpair     p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable, \
                     p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
-  phvwrpair     p.flow_miss_metadata_tunnel_vnid[23:8], d.input_properties_d.bounce_vnid_sbit0_ebit15, \
-                    p.flow_miss_metadata_tunnel_vnid[7:0], d.input_properties_d.bounce_vnid_sbit16_ebit23
-  phvwrpair.e   p.qos_metadata_dscp, d.input_properties_d.dscp, \
-                    p.control_metadata_allow_flood, d.input_properties_d.allow_flood
+  phvwr         p.flow_miss_metadata_tunnel_vnid, d.input_properties_d.bounce_vnid
+  phvwr.e       p.control_metadata_allow_flood, d.input_properties_d.allow_flood
   phvwr         p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx

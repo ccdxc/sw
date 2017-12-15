@@ -132,13 +132,10 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	# PI gtests
 	$(CMD_OPTS) ./nic/hal/test/gtests/acl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/bm_allocator_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bm_allocator_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/buf_pool_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/buf_pool_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/cpuif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/cpuif_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/enicif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/enicif_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/lif_manager_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_manager_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/lif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/policer_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/policer_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/queue_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/queue_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/session_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/session_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/tlscb_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tlscb_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/uplinkif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkif_test.xml"
@@ -152,6 +149,7 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/nwsec_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/scheduler_tx_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/scheduler_tx_test.xml"
 	$(CMD_OPTS) $(SNORT_CMD_OPTS) ./nic/hal/test/gtests/appid_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/appid_test.xml"
+	$(CMD_OPTS) ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/qos_test.xml"
 
 	# Revisit as its failing intermittently in sanity
 	#$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
@@ -194,13 +192,10 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/vrf_val.xml ./nic/hal/test/gtests/vrf_test --gtest_output="xml:$(VAL_TR)/vrf_test.xml" 
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/acl_val.xml ./nic/hal/test/gtests/acl_test --gtest_output="xml:$(VAL_TR)/acl_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/bm_allocator_val.xml ./nic/hal/test/gtests/bm_allocator_test --gtest_output="xml:$(VAL_TR)/bm_allocator_test.xml"
-	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/buf_pool_val.xml ./nic/hal/test/gtests/buf_pool_test --gtest_output="xml:$(VAL_TR)/buf_pool_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/cpuif_val.xml ./nic/hal/test/gtests/cpuif_test --gtest_output="xml:$(VAL_TR)/cpuif_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/enicif_val.xml ./nic/hal/test/gtests/enicif_test --gtest_output="xml:$(VAL_TR)/enicif_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/lif_manager_val.xml ./nic/hal/test/gtests/lif_manager_test --gtest_output="xml:$(VAL_TR)/lif_manager_test.xml" 
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/lif_val.xml ./nic/hal/test/gtests/lif_test --gtest_output="xml:$(VAL_TR)/lif_test.xml"
-	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/policer_val.xml ./nic/hal/test/gtests/policer_test --gtest_output="xml:$(VAL_TR)/policer_test.xml"
-	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/queue_val.xml ./nic/hal/test/gtests/queue_test --gtest_output="xml:$(VAL_TR)/queue_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/session_val.xml ./nic/hal/test/gtests/session_test --gtest_output="xml:$(VAL_TR)/session_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/tlscb_val.xml ./nic/hal/test/gtests/tlscb_test --gtest_output="xml:$(VAL_TR)/tlscb_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/internal_val.xml ./nic/hal/test/gtests/internal_test --gtest_output="xml:$(VAL_TR)/internal_test.xml"
@@ -209,6 +204,7 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/tunnelif_val.xml ./nic/hal/test/gtests/tunnelif_test --gtest_output="xml:$(VAL_TR)/tunnelif_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/nwsec_val.xml ./nic/hal/test/gtests/nwsec_test --gtest_output="xml:$(VAL_TR)/nwsec_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/scheduler_tx_test.xml ./nic/hal/test/gtests/scheduler_tx_test --gtest_output="xml:$(VAL_TR)/scheduler_tx_test.xml"
+	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/qos_val.xml ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(VAL_TR)/qos_test.xml"
 
 gft-build: sdk
 	$(MAKE) capmodel

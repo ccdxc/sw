@@ -325,8 +325,8 @@ static int capri_stats_region_init()
     p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
     stats_base_addr += tbl_ctx.tabledepth * 32;
 
-    capri_table_constant_write(P4TBL_ID_EGRESS_POLICER_ACTION, stats_base_addr);
-    p4pd_table_properties_get(P4TBL_ID_EGRESS_POLICER_ACTION, &tbl_ctx);
+    capri_table_constant_write(P4TBL_ID_RX_POLICER_ACTION, stats_base_addr);
+    p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
     stats_base_addr += tbl_ctx.tabledepth * 32;
 
     capri_table_constant_write(P4TBL_ID_COPP_ACTION, stats_base_addr);

@@ -49,17 +49,16 @@ input_properties_mac_vlan:
                     d.input_properties_mac_vlan_d.src_lport
   phvwr         p.flow_lkp_metadata_lkp_vrf, d.input_properties_mac_vlan_d.vrf
   phvwrpair     p.{control_metadata_flow_miss_action, \
-                    control_metadata_flow_miss_tm_oqueue}, \
+                    control_metadata_flow_miss_qos_class_id}, \
                     d.{input_properties_mac_vlan_d.flow_miss_action, \
-                    input_properties_mac_vlan_d.flow_miss_tm_oqueue}, \
+                    input_properties_mac_vlan_d.flow_miss_qos_class_id}, \
                     p.control_metadata_flow_miss_idx, \
                     d.input_properties_mac_vlan_d.flow_miss_idx
   phvwrpair     p.control_metadata_ipsg_enable, \
                     d.input_properties_mac_vlan_d.ipsg_enable, \
                     p.flow_lkp_metadata_lkp_dir, \
                     d.input_properties_mac_vlan_d.dir
-  phvwrpair.e   p.qos_metadata_dscp, d.input_properties_mac_vlan_d.dscp, \
-                    p.control_metadata_allow_flood, \
+  phvwr.e       p.control_metadata_allow_flood, \
                     d.input_properties_mac_vlan_d.allow_flood
   phvwr         p.l4_metadata_profile_idx, d.input_properties_mac_vlan_d.l4_profile_idx
 

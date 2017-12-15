@@ -50,7 +50,6 @@ class EnicObject(base.ConfigObjectBase):
             self.encap_vlan_id = segment.vlan_id
         self.ep = None
         self.label = None
-        self.__init_qos()
         return
 
     def __pin_interface_for_hostpin_mode(self):
@@ -90,6 +89,8 @@ class EnicObject(base.ConfigObjectBase):
                 self.native_segment = ep.segment
             else:
                 self.segments.append(ep.segment)
+        # Init qos after setting up the lif
+        self.__init_qos()
         self.Show()
         return
 
@@ -125,10 +126,10 @@ class EnicObject(base.ConfigObjectBase):
         return summary
 
     def __init_qos(self):
-        self.txqos.cos = resmgr.QosCosAllocator.get()
-        self.rxqos.cos = resmgr.QosCosAllocator.get()
-        self.txqos.dscp = resmgr.QosDscpAllocator.get()
-        self.rxqos.dscp = resmgr.QosDscpAllocator.get()
+        self.txqos.cos = self.lif.GetTxQosCos()
+        self.rxqos.cos = 7
+        self.txqos.dscp = self.lif.GetTxQosDscp()
+        self.rxqos.dscp = 7
         return
 
     def GetTxQosCos(self):
@@ -192,13 +193,13 @@ class EnicObject(base.ConfigObjectBase):
             else:
                 assert(0)
 
-        # QOS stuff
-        if self.txqos.cos is not None:
-            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
-            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
-        if self.txqos.dscp is not None:
-            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
-            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
+#        # QOS stuff
+#        if self.txqos.cos is not None:
+#            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
+#            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
+#        if self.txqos.dscp is not None:
+#            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
+#            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
 
         return
 

@@ -16,6 +16,7 @@ cc_library(
         "capri_barco_sym_apis.hpp",
         "capri_barco_crypto.hpp",
         "capri_pxb_pcie.hpp",
+        "capri_tm_rw.hpp",
     ],
 )
 

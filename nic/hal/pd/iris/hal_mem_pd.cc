@@ -12,9 +12,7 @@
 #include "nic/hal/pd/iris/if_pd.hpp"
 #include "nic/hal/pd/iris/tunnelif_pd.hpp"
 #include "nic/hal/pd/iris/session_pd.hpp"
-#include "nic/hal/pd/iris/buf_pool_pd.hpp"
-#include "nic/hal/pd/iris/queue_pd.hpp"
-#include "nic/hal/pd/iris/policer_pd.hpp"
+#include "nic/hal/pd/iris/qos_pd.hpp"
 #include "nic/hal/pd/iris/acl_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
@@ -54,7 +52,7 @@ class hal_state_pd *g_hal_state_pd;
 bool
 hal_state_pd::init(void)
 {
-    uint32_t p, n;
+    uint32_t num_iqs = 0;
 
     // initialize vrf related data structures
     vrf_slab_ = slab::factory("Vrf PD", HAL_SLAB_VRF_PD,
@@ -187,43 +185,28 @@ hal_state_pd::init(void)
                                   true, true, true);
     HAL_ASSERT_RETURN((session_slab_ != NULL), false);
 
-    // initialize Buf-Pool PD related data structures
-    buf_pool_pd_slab_ = slab::factory("BUF_POOL_PD", HAL_SLAB_BUF_POOL_PD,
-                                      sizeof(hal::pd::pd_buf_pool_t), 8,
-                                      false, true, true);
-    HAL_ASSERT_RETURN((buf_pool_pd_slab_ != NULL), false);
+    // initialize Qos class PD related data structures
+    qos_class_pd_slab_ = slab::factory("QOS_CLASS_PD", HAL_SLAB_QOS_CLASS_PD,
+                                       sizeof(hal::pd::pd_qos_class_t), 8,
+                                       false, true, true);
+    HAL_ASSERT_RETURN((qos_class_pd_slab_ != NULL), false);
 
-    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
-        buf_pool_hwid_idxr_[p] = sdk::lib::indexer::factory(HAL_MAX_HW_BUF_POOLS_PER_PORT);
-        HAL_ASSERT_RETURN((buf_pool_hwid_idxr_[p] != NULL), false);
+    qos_iq_idxr_ = (indexer **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
+                               sizeof(bitmap *) * NUM_TM_PORT_TYPES);
+    HAL_ASSERT_RETURN((qos_iq_idxr_ != NULL), false);
+
+    for (int port_type = 0; port_type < NUM_TM_PORT_TYPES; port_type++) {
+        num_iqs = tm_get_num_iqs_for_port_type((tm_port_type_e)port_type);
+        qos_iq_idxr_[port_type] = sdk::lib::indexer::factory(num_iqs);
+        HAL_ASSERT_RETURN((qos_iq_idxr_[port_type] != NULL), false);
     }
-
-    // initialize Queue PD related data structures
-    queue_pd_slab_ = slab::factory("QUEUE_PD", HAL_SLAB_QUEUE_PD,
-                                   sizeof(hal::pd::pd_queue_t), 8,
-                                   false, true, true);
-    HAL_ASSERT_RETURN((queue_pd_slab_ != NULL), false);
-
-    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
-        for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
-            queue_hwid_idxr_[p][n] = 
-                sdk::lib::indexer::factory(queue_count_by_node_type(p, (queue_node_type_e)n));
-            HAL_ASSERT_RETURN((queue_hwid_idxr_[p][n] != NULL), false);
-        }
-    }
-
-    // initialize Policer PD related data structures
-    policer_pd_slab_ = slab::factory("POLICER_PD", HAL_SLAB_POLICER_PD,
-                                     sizeof(hal::pd::pd_policer_t), 8,
-                                     false, true, true);
-    HAL_ASSERT_RETURN((policer_pd_slab_ != NULL), false);
-
-    ingress_policer_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_INGRESS_POLICERS);
-    HAL_ASSERT_RETURN((ingress_policer_hwid_idxr_ != NULL), false);
-
-    egress_policer_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_EGRESS_POLICERS);
-    HAL_ASSERT_RETURN((egress_policer_hwid_idxr_ != NULL), false);
     
+    qos_common_oq_idxr_ = sdk::lib::indexer::factory(HAL_MAX_COMMON_OQS);
+    HAL_ASSERT_RETURN((qos_common_oq_idxr_ != NULL), false);
+
+    qos_rxdma_oq_idxr_ = sdk::lib::indexer::factory(HAL_MAX_RXDMA_ONLY_OQS);
+    HAL_ASSERT_RETURN((qos_rxdma_oq_idxr_ != NULL), false);
+
     // initialize TLSCB related data structures
     tlscb_slab_ = slab::factory("TLSCB PD", HAL_SLAB_TLSCB_PD,
                                 sizeof(hal::pd::pd_tlscb_t), 128,
@@ -449,8 +432,6 @@ hal_state_pd::init(void)
 //------------------------------------------------------------------------------
 hal_state_pd::hal_state_pd()
 {
-    uint32_t p, n;
-
     vrf_slab_ = NULL;
     vrf_hwid_idxr_ = NULL;
 
@@ -487,24 +468,11 @@ hal_state_pd::hal_state_pd()
 
     session_slab_ = NULL;
 
-    buf_pool_pd_slab_ = NULL;
-
-    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
-        buf_pool_hwid_idxr_[p] = NULL;
-    }
-
-    queue_pd_slab_ = NULL;
-    
-    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
-        for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
-            queue_hwid_idxr_[p][n] = NULL;
-        }
-    }
-
-    policer_pd_slab_ = NULL;
-    ingress_policer_hwid_idxr_ = NULL;
-    egress_policer_hwid_idxr_ = NULL;
-
+    qos_class_pd_slab_ = NULL;
+    qos_iq_idxr_ = NULL;
+    qos_common_oq_idxr_ = NULL;
+    qos_rxdma_oq_idxr_ = NULL;
+   
     acl_pd_slab_ = NULL;
     
     tlscb_slab_ = NULL;
@@ -555,7 +523,6 @@ hal_state_pd::hal_state_pd()
 hal_state_pd::~hal_state_pd()
 {
     uint32_t    tid;
-    uint32_t    p, n;
 
     vrf_slab_ ? slab::destroy(vrf_slab_) : HAL_NOP;
     vrf_hwid_idxr_ ? indexer::destroy(vrf_hwid_idxr_) : HAL_NOP;
@@ -592,21 +559,15 @@ hal_state_pd::~hal_state_pd()
     tcpcb_slab_ ? slab::destroy(tcpcb_slab_) : HAL_NOP;
     tcpcb_hwid_ht_ ? ht::destroy(tcpcb_hwid_ht_) : HAL_NOP;
 
-    buf_pool_pd_slab_ ? slab::destroy(buf_pool_pd_slab_) : HAL_NOP;
-    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
-        buf_pool_hwid_idxr_[p] ? indexer::destroy(buf_pool_hwid_idxr_[p]) : HAL_NOP;
-    }
-
-    queue_pd_slab_ ? slab::destroy(queue_pd_slab_) : HAL_NOP;
-    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
-        for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
-            queue_hwid_idxr_[p][n] ? indexer::destroy(queue_hwid_idxr_[p][n]) : HAL_NOP;
+    qos_class_pd_slab_ ? slab::destroy(qos_class_pd_slab_) : HAL_NOP;
+    if (qos_iq_idxr_) {
+        for (int port_type = 0; port_type < NUM_TM_PORT_TYPES; port_type++) {
+            qos_iq_idxr_[port_type] ? indexer::destroy(qos_iq_idxr_[port_type]) : HAL_NOP;
         }
+        HAL_FREE(HAL_MEM_ALLOC_PD, qos_iq_idxr_);
     }
-
-    policer_pd_slab_ ? slab::destroy(policer_pd_slab_) : HAL_NOP;
-    ingress_policer_hwid_idxr_ ? indexer::destroy(ingress_policer_hwid_idxr_) : HAL_NOP;
-    egress_policer_hwid_idxr_ ? indexer::destroy(egress_policer_hwid_idxr_) : HAL_NOP;
+    qos_common_oq_idxr_ ? indexer::destroy(qos_common_oq_idxr_) : HAL_NOP;
+    qos_rxdma_oq_idxr_ ? indexer::destroy(qos_rxdma_oq_idxr_) : HAL_NOP;
 
     acl_pd_slab_ ? slab::destroy(acl_pd_slab_) : HAL_NOP;
 
@@ -760,9 +721,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(session_slab_);
     GET_SLAB(tlscb_slab_);
     GET_SLAB(tcpcb_slab_);
-    GET_SLAB(buf_pool_pd_slab_);
-    GET_SLAB(queue_pd_slab_);
-    GET_SLAB(policer_pd_slab_);
+    GET_SLAB(qos_class_pd_slab_);
     GET_SLAB(acl_pd_slab_);
     GET_SLAB(wring_slab_);
     GET_SLAB(ipseccb_slab_);
@@ -1338,16 +1297,8 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->tcpcb_slab()->free(elem);
         break;
 
-    case HAL_SLAB_BUF_POOL_PD:
-        g_hal_state_pd->buf_pool_pd_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_QUEUE_PD:
-        g_hal_state_pd->queue_pd_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_POLICER_PD:
-        g_hal_state_pd->policer_pd_slab()->free(elem);
+    case HAL_SLAB_QOS_CLASS_PD:
+        g_hal_state_pd->qos_class_pd_slab()->free(elem);
         break;
 
     case HAL_SLAB_ACL_PD:

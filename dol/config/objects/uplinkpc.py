@@ -144,13 +144,13 @@ class UplinkPcObject(base.ConfigObjectBase):
         #    req_spec.if_uplink_pc_info.l2segment_id.append(seg.id)
         #    self.segment_ids.append(seg.id)
 
-        # QOS stuff
-        if self.txqos.cos is not None:
-            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
-            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
-        if self.txqos.dscp is not None:
-            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
-            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
+#        # QOS stuff
+#        if self.txqos.cos is not None:
+#            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
+#            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
+#        if self.txqos.dscp is not None:
+#            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
+#            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
 
 
         return

@@ -13,6 +13,7 @@
 #include "flow.p4"
 #include "ipsg.p4"
 #include "nacl.p4"
+#include "qos.p4"
 #include "roce.p4"
 #include "stats.p4"
 #include "tunnel.p4"
@@ -71,10 +72,11 @@ header_type control_metadata_t {
         recirc_reason                  : 2;
         uplink                         : 1;
         from_cpu                       : 1;
+        to_cpu                         : 1;
         cpu_copy                       : 1;
         src_lif                        : 11;
         flow_miss_action               : 2;
-        flow_miss_tm_oqueue            : 5;
+        flow_miss_qos_class_id         : 5;
         flow_miss_idx                  : 16;
         p4plus_app_id                  : 8;
         rdma_enabled                   : 1;
@@ -130,6 +132,8 @@ header_type scratch_metadata_t {
         egress_port                : 4;
         force_flow_hit             : 1;
         qid_en                     : 1;
+        qos_class_en               : 1;
+        tm_oq_overwrite            : 1;
         log_en                     : 1;
         ingress_mirror_en          : 1;
         egress_mirror_en           : 1;
@@ -137,7 +141,6 @@ header_type scratch_metadata_t {
         tunnel_rewrite_en          : 1;
         marking_overwrite          : 1;
         dst_lport_en               : 1;
-        egress_policer_en          : 1;
         entry_valid                : 1;
         export_en                  : 4;
         export_id                  : 4;
@@ -314,6 +317,7 @@ control ingress {
         process_flow_table();
         process_registered_macs();
         process_nacl();
+        process_qos();
         process_session_state();
         process_stats();
         process_ddos_ingress();
@@ -329,7 +333,7 @@ control egress {
         process_output_mapping();
         process_roce();
         process_rewrites();
-        process_egress_policer();
+        process_policer();
         process_ddos_egress();
     }
     process_tx_stats();

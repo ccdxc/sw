@@ -31,7 +31,6 @@ add_headers:
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type)
     phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
-    phvwri          p.common.p4_intr_global_tm_oq, 0
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_TXDMA_INTRINSIC)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, common.p4_txdma_intr_qid, common.p4_txdma_intr_txdma_rsv)

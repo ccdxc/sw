@@ -270,8 +270,8 @@ hal_prepare_rsp (hal_ret_t ret)
         case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
             return types::API_STATUS_NWSEC_PROFILE_NOT_FOUND;
             break;
-        case HAL_RET_POLICER_NOT_FOUND:
-            return types::API_STATUS_POLICER_NOT_FOUND;
+        case HAL_RET_QOS_CLASS_NOT_FOUND:
+            return types::API_STATUS_QOS_CLASS_NOT_FOUND;
             break;
         case HAL_RET_HANDLE_INVALID:
             return types::API_STATUS_HANDLE_INVALID;

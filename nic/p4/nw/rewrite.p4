@@ -11,17 +11,7 @@ header_type rewrite_metadata_t {
     }
 }
 
-header_type qos_metadata_t {
-    fields {
-        cos_en  : 1;
-        cos     : 3;
-        dscp_en : 1;
-        dscp    : 8;
-    }
-}
-
 metadata rewrite_metadata_t rewrite_metadata;
-metadata qos_metadata_t qos_metadata;
 
 action rewrite(mac_sa, mac_da) {
     if (vlan_tag.valid == TRUE) {
@@ -108,26 +98,29 @@ action mirror_truncate(truncate_len) {
     }
 }
 
-action local_span(dst_lport, truncate_len) {
+action local_span(dst_lport, truncate_len, span_tm_oqueue) {
     modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(control_metadata.dst_lport, dst_lport);
+    modify_field(control_metadata.egress_tm_oqueue, span_tm_oqueue);
     modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
     modify_field(tunnel_metadata.tunnel_originate, FALSE);
     mirror_truncate(truncate_len);
 }
 
-action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan) {
+action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan, span_tm_oqueue) {
     modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(control_metadata.dst_lport, dst_lport);
+    modify_field(control_metadata.egress_tm_oqueue, span_tm_oqueue);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(tunnel_metadata.tunnel_originate, TRUE);
     modify_field(rewrite_metadata.tunnel_vnid, vlan);
     mirror_truncate(truncate_len);
 }
 
-action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index) {
+action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index, span_tm_oqueue) {
     modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(control_metadata.dst_lport, dst_lport);
+    modify_field(control_metadata.egress_tm_oqueue, span_tm_oqueue);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(tunnel_metadata.tunnel_originate, TRUE);
     mirror_truncate(truncate_len);

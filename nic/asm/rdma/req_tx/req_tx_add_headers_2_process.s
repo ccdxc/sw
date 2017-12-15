@@ -18,7 +18,6 @@ req_tx_add_headers_2_process:
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type, 3)
     phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
-    phvwri          p.common.p4_intr_global_tm_oq, 0
 
     // No need to fill p4_txdma_intr fields as they are already filled before stage0
     // dma_cmd[0] : addr2 - p4_txdma_intr

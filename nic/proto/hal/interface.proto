@@ -88,35 +88,35 @@ message LifQStateMapEntry {
   // LIF -> Qstate array entry. There are 8 types numbered 0-7.
   // There can be at most one entry per type_num.
   // TODO: How does a user know what number to use here unless
-  //       it is enumerated or purpose is clear ???
-  uint32 type_num           = 1;
+  // it is enumerated or purpose is clear ???
+  uint32                type_num = 1;
 
   // This entry represents the size of the Q state
   // used by this type. This number represents the size
   // as 2^(5+size). e.g. for a size of 64, the size field
   // would be 1 i.e. 2^(5+1) = 64.
   // Max value for size today is 7 i.e. 4096 bytes.
-  uint32 size               = 2;
+  uint32                size     = 2;
 
   // entries field represent number of queues as a
   // power of 2. So a value of 3 means 8 queues.
   // Max value for entries today is 24 i.e. 16M queues.
-  uint32 entries            = 3;
+  uint32                entries  = 3;
 
   // Queue purpose is not needed by the hardware. It is used
   // internally by the HAL/FTE.
-  LifQPurpose purpose       = 4;
+  LifQPurpose           purpose  = 4;
 
   // Primary COS for this queue type. All queues in this type
   // will use this cos for scheduling/rate-limiting of data-traffic.
   // Rings within a queue can select between two coses based on
   // cos-sel in Qstate structure. By default cosA is set to 0.
-  qos.TrafficClass cos_a    = 5;
+  qos.QosClassKeyHandle cos_a    = 5;
 
   // Admin COS for this queue type. Mapping a ring to this cos
   // will exempt that ring from scheduler rate-limiting and gives
   // higher scheduling priority. By default cosB is set to 0.
-  qos.TrafficClass cos_b    = 6;
+  qos.QosClassKeyHandle cos_b    = 6;
 }
 
 // Packet filters to receive traffic
@@ -128,7 +128,7 @@ message PktFilter {
 
 // LIF object
 message LifSpec {
-  types.ObjectMeta           meta                    = 1;    // object meta
+  types.ObjectMeta           meta                    = 1;     // object meta
   // key_or_handle is LIF's key or handle
   kh.LifKeyHandle            key_or_handle           = 2 [(gogoproto.moretags) = "venice:\"key\""];
   uint64                     pinned_uplink_if_handle = 3;
@@ -142,6 +142,8 @@ message LifSpec {
   uint32                     rdma_max_pt_entries     = 11;   // RDMA: max pt entries
   repeated QStateSetReq      lif_qstate              = 12;   // Initialize Qstate
   LifRssSpec                 rss                     = 13;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer              = 14;    // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer              = 15;    // QOS Policer for rx traffic
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -271,39 +273,40 @@ message LifDeleteResponseMsg {
 
 // check which stats will be done by p4 and which will be done by p4+
 message LifTxStats {
-  uint64    frames_ok           = 1;
-  uint64    unicast_frames_ok   = 2;
-  uint64    multicast_brames_ok = 3;
-  uint64    broadcast_brames_ok = 4;
-  uint64    bytes_ok            = 5;
-  uint64    unicast_bytes_ok    = 6;
-  uint64    multicast_bytes_ok  = 7;
-  uint64    broadcast_bytes_ok  = 8;
-  uint64    tso                 = 9;
+  uint64           frames_ok           = 1;
+  uint64           unicast_frames_ok   = 2;
+  uint64           multicast_brames_ok = 3;
+  uint64           broadcast_brames_ok = 4;
+  uint64           bytes_ok            = 5;
+  uint64           unicast_bytes_ok    = 6;
+  uint64           multicast_bytes_ok  = 7;
+  uint64           broadcast_bytes_ok  = 8;
+  uint64           tso                 = 9;
 }
 
 message LifRxStats {
-  uint64    frames_total        = 1;
-  uint64    frames_ok           = 2;
-  uint64    unicast_frames_ok   = 3;
-  uint64    multicast_frames_ok = 4;
-  uint64    broadcast_frames_ok = 5;
-  uint64    bytes_ok            = 6;
-  uint64    unicast_bytes_ok    = 7;
-  uint64    multicast_bytes_ok  = 8;
-  uint64    broadcast_bytes_ok  = 9;
-  uint64    drops               = 10;
-  uint64    no_bufs             = 11;
-  uint64    errors              = 12;
-  uint64    rss                 = 13;
-  uint64    crc_errors          = 14;
-  uint64    frames_64           = 15;
-  uint64    frames_127          = 16;
-  uint64    frames_255          = 17;
-  uint64    frames_511          = 18;
-  uint64    frames_1024         = 19;
-  uint64    frames_1518         = 20;
-  uint64    frames_to_max       = 21;
+  uint64           frames_total        = 1;
+  uint64           frames_ok           = 2;
+  uint64           unicast_frames_ok   = 3;
+  uint64           multicast_frames_ok = 4;
+  uint64           broadcast_frames_ok = 5;
+  uint64           bytes_ok            = 6;
+  uint64           unicast_bytes_ok    = 7;
+  uint64           multicast_bytes_ok  = 8;
+  uint64           broadcast_bytes_ok  = 9;
+  uint64           drops               = 10;
+  uint64           no_bufs             = 11;
+  uint64           errors              = 12;
+  uint64           rss                 = 13;
+  uint64           crc_errors          = 14;
+  uint64           frames_64           = 15;
+  uint64           frames_127          = 16;
+  uint64           frames_255          = 17;
+  uint64           frames_511          = 18;
+  uint64           frames_1024         = 19;
+  uint64           frames_1518         = 20;
+  uint64           frames_to_max       = 21;
+  qos.PolicerStats policer_stats       = 22;    // Policer stats
 }
 // LifStats captures all the statistics of given LIF
 message LifStats {
@@ -403,26 +406,16 @@ message IfEnicInfo {
   }
 }
 
-// Interface attributes to specify the derivation of traffic class
-message TrafficClassInfo {
- bool                              dot1q_pcp_en               = 1;    // Use the PCP value in the 802.1Q header
- bool                              ip_dscp_en                 = 2;    // Use the DSCP value from IP header
- qos.TrafficClass                  default_traffic_class      = 3;    // Default value to use for traffic class
- repeated qos.TrafficClassQueueMap traffic_class_to_queue_map = 4;    // Mapping from the traffic class to the queues at P4 IG port
-}
-
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK
 message IfUplinkInfo {
   uint32           port_num              = 1;    // uplink port number
   uint64           native_l2segment_id   = 2;    // L2 segment to map the packets to, if they are untagged
-  TrafficClassInfo rx_traffic_class_info = 3;    // Info about how to derive traffic class on this interface
 }
 
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
 message IfUplinkPCInfo {
   uint64            native_l2segment_id         = 1;    // L2 segment to map the packets to, if they are untagged
-  TrafficClassInfo  rx_traffic_class_info       = 2;    // Info about how to derive traffic class on this interface
-  repeated uint64   member_if_handle            = 3;    // uplink member ports
+  repeated uint64   member_if_handle            = 2;    // uplink member ports
 }
 
 //------------------------------------------------------------------------------
@@ -473,8 +466,6 @@ message InterfaceSpec {
     IfTunnelInfo     if_tunnel_info    = 9;     // tunnel interface information
     IfCPUInfo        if_cpu_info       = 10;     // cpu interface informaton 
   }
-  qos.QOSActions     tx_qos_actions    = 11;    // QOS actions for packets transmitted from this interface
-  qos.QOSActions     rx_qos_actions    = 12;    // QOS actions for packets received on this interface
 }
 
 // InterfaceRequestMsg is batched request message that is used to do

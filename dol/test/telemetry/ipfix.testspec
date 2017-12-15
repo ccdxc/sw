@@ -475,11 +475,12 @@ packets:
                 src             : callback://telemetry/callbacks/GetCollectorSrcMac
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac
             qtag    :
-                prio            : callback://networking/packets/GetExpectedPacketCos
+                prio            : 0
                 vlan            : callback://telemetry/callbacks/GetCollectorVlan
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp
+                tos             : 0
                 id  : 0
             udp     :
                 sport           : 32007

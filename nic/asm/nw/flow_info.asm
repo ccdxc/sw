@@ -25,9 +25,9 @@ flow_info:
   phvwr       p.capri_intrinsic_tm_replicate_ptr, d.u.flow_info_d.multicast_ptr
   phvwr       p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
-  /* output queue selection */
-  phvwr       p.capri_intrinsic_tm_oq, d.u.flow_info_d.ingress_tm_oqueue
-  phvwr       p.control_metadata_egress_tm_oqueue, d.u.flow_info_d.egress_tm_oqueue
+  /* qos class selection */
+  seq         c1, d.u.flow_info_d.qos_class_en, 1
+  phvwr.c1    p.qos_metadata_qos_class_id, d.u.flow_info_d.qos_class_id
 
   /* qid */
   seq         c1, d.u.flow_info_d.qid_en, 1
@@ -40,9 +40,6 @@ flow_info:
 
   /* logging */
   phvwr       p.capri_intrinsic_tm_cpu, d.u.flow_info_d.log_en
-
-  /* policer indicies */
-  phvwr       p.policer_metadata_egress_policer_index, d.u.flow_info_d.egress_policer_index
 
   /* flow info */
   phvwr       p.flow_info_metadata_session_state_index, d.u.flow_info_d.session_state_index
@@ -69,23 +66,11 @@ flow_info:
                  u.flow_info_d.twice_nat_idx}
 
   /* tunnel info */
-  phvwr       p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
-  phvwr       p.rewrite_metadata_tunnel_rewrite_index, \
-                d.u.flow_info_d.tunnel_rewrite_index
-  phvwr.e     p.rewrite_metadata_tunnel_vnid, \
-                d.u.flow_info_d.tunnel_vnid
+  phvwr.e     p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
+  phvwrpair   p.rewrite_metadata_tunnel_rewrite_index[9:0], \
+                d.u.flow_info_d.tunnel_rewrite_index, \
+              p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid
 
-  /* qos info */
-  ASSERT_PHVWR(p, qos_metadata_cos_en, qos_metadata_dscp,
-               d, u.flow_info_d.cos_en, u.flow_info_d.dscp)
-  phvwr       p.{qos_metadata_cos_en, \
-                 qos_metadata_cos, \
-                 qos_metadata_dscp_en, \
-                 qos_metadata_dscp}, \
-              d.{u.flow_info_d.cos_en, \
-                 u.flow_info_d.cos, \
-                 u.flow_info_d.dscp_en, \
-                 u.flow_info_d.dscp}
 
 .align
 flow_miss:
@@ -103,7 +88,7 @@ flow_miss_common:
   seq         c3, k.l4_metadata_tcp_non_syn_first_pkt_drop, ACT_DROP
   bcf         [c1&c2&c3], flow_miss_tcp_non_syn_first_pkt_drop
   add         r1, r0, k.control_metadata_flow_miss_action
-  phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_flow_miss_tm_oqueue
+  phvwr       p.qos_metadata_qos_class_id, k.control_metadata_flow_miss_qos_class_id
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   .brbegin
   br          r1[1:0]

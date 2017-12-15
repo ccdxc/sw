@@ -5,7 +5,6 @@
 syntax = "proto3";
 
 import "types.proto";
-import "qos.proto";
 
 package l4lb;
 option go_package="halproto";
@@ -107,7 +106,6 @@ message L4LbServiceSpec {
   SessionAffinity      session_affinity   = 5;    // session affinity, if any
   LBMethod             load_balancer_type = 6;    // load balancing method
   HealthCheck          health_check       = 7;    // health check configuration
-  qos.QOSActions       qos_actions        = 8;    // QOS actions
 }
 
 // L4LbServiceRequestMsg is batched request message that is used to do

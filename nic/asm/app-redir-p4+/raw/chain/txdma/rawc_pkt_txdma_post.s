@@ -62,7 +62,6 @@ _cleanup_discard_check:
                 CAPRI_PHV_START_OFFSET(dma_intr_global_dma_cmd_type) / 16
     phvwri      p.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwri      p.p4_intr_global_tm_oport, TM_PORT_INGRESS
-    phvwri      p.p4_intr_global_tm_oq, 0
     
     /*
      * Set up DMA of cap_phv_intr_global_t header to packet domain

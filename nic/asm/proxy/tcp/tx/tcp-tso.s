@@ -42,7 +42,6 @@ tcp_write_xmit:
 dma_cmd_intrinsic:
     phvwri          p.p4_intr_global_tm_iport, 9
     phvwri          p.p4_intr_global_tm_oport, 11
-    phvwri          p.p4_intr_global_tm_oq, 0
     // We rang the doorbell with TCP proxy service lif, but the P4
     // pipeline needs the original source_lif of the packet to derive
     // the input properties, as well as for spoofing checks

@@ -435,8 +435,8 @@ drop_reason_to_define (const acl::DropReason drop_reason)
             return DROP_IPSG;
         case acl::INGRESS_POLICER__DROP:
             return DROP_INGRESS_POLICER;
-        case acl::EGRESS_POLICER__DROP:
-            return DROP_EGRESS_POLICER;
+        case acl::RX_POLICER__DROP:
+            return DROP_RX_POLICER;
         case acl::NACL__DROP:
             return DROP_NACL;
         case acl::MALFORMED_PKT__DROP:

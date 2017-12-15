@@ -65,6 +65,26 @@ pd_lif_update (pd_lif_upd_args_t *args)
     lif_t               *lif = args->lif;
     pd_lif_t            *pd_lif = (pd_lif_t *)args->lif->pd_lif;
 
+    if (args->rx_policer_changed) {
+        HAL_TRACE_DEBUG("pd-lif:{}: rx policer changed ", __FUNCTION__);
+
+        ret = lif_pd_rx_policer_program_hw(pd_lif, true);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:unable to program hw for rx policer", __FUNCTION__);
+            goto end;
+        }
+    }
+
+    if (args->tx_policer_changed) {
+        HAL_TRACE_DEBUG("pd-lif:{}: tx policer changed ", __FUNCTION__);
+
+        ret = lif_pd_tx_policer_program_hw(pd_lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx policer", __FUNCTION__);
+            goto end;
+        }
+    }
+
     // Process VLAN offload config changes
     if (args->vlan_strip_en_changed) {
         HAL_TRACE_DEBUG("pd-lif:{}: vlan_strip_en changed. ", __FUNCTION__);
@@ -335,6 +355,19 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
     hal_ret_t            ret;
     lif_t                *lif = (lif_t *)pd_lif->pi_lif;
 
+    // Program the policers
+    ret = lif_pd_rx_policer_program_hw(pd_lif, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to program hw for rx policer", __FUNCTION__);
+        goto end;
+    }
+    
+    ret = lif_pd_tx_policer_program_hw(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx policer", __FUNCTION__);
+        goto end;
+    }
+
     // Program output mapping table
     ret = lif_pd_pgm_output_mapping_tbl(pd_lif, NULL, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
@@ -382,6 +415,18 @@ lif_pd_deprogram_hw (pd_lif_t *pd_lif)
         goto end;
     }
 
+    ret = lif_pd_rx_policer_deprogram_hw(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to deprogram hw for rx policer", __FUNCTION__);
+        goto end;
+    }
+
+    ret = lif_pd_tx_policer_deprogram_hw(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to deprogram hw for tx policer", __FUNCTION__);
+        goto end;
+    }
+
 end:
     return ret;
 }
@@ -397,6 +442,85 @@ pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_upd_args_t *args)
     }
     return lif->vlan_strip_en;
 }
+
+hal_ret_t
+lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif)
+{
+    hal_ret_t             ret = HAL_RET_OK;
+    return ret;
+}
+
+hal_ret_t
+lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif)
+{
+    hal_ret_t             ret = HAL_RET_OK;
+
+    return ret;
+}
+
+#define RX_POLICER_ACTION(_arg) d.rx_policer_action_u.rx_policer_execute_rx_policer._arg
+hal_ret_t
+lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
+{
+    hal_ret_t             ret = HAL_RET_OK;
+    lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
+    DirectMap             *rx_policer_tbl = NULL;
+    rx_policer_actiondata d = {0};
+
+    rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
+    HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
+
+    d.actionid = RX_POLICER_EXECUTE_RX_POLICER_ID;
+    if (pi_lif->rx_policer.bps_rate == 0) {
+        RX_POLICER_ACTION(entry_valid) = 0;
+    } else {
+        RX_POLICER_ACTION(entry_valid) = 1;
+        RX_POLICER_ACTION(pkt_rate) = 0;
+        //TODO does this need memrev ?
+        memcpy(RX_POLICER_ACTION(burst), &pi_lif->rx_policer.burst_size, sizeof(uint32_t));
+        // TODO convert the rate into token-rate 
+        memcpy(RX_POLICER_ACTION(rate), &pi_lif->rx_policer.bps_rate, sizeof(uint32_t));
+    }
+
+    if (update) {
+        ret = rx_policer_tbl->update(pd_lif->hw_lif_id, &d);
+    } else {
+        ret = rx_policer_tbl->insert_withid(&d, pd_lif->hw_lif_id);
+    }
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}: rx policer table write failure, lif {}, ret {}",
+                      __FUNCTION__, lif_get_lif_id(pi_lif), ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("pd-lif:{}: lif {} hw_lif_id {} rate {} burst {} programmed",
+                    __FUNCTION__, lif_get_lif_id(pi_lif), 
+                    pd_lif->hw_lif_id, pi_lif->rx_policer.bps_rate,
+                    pi_lif->rx_policer.burst_size);
+    return ret;
+}
+#undef RX_POLICER_ACTION
+
+hal_ret_t
+lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
+{
+    hal_ret_t             ret = HAL_RET_OK;
+    DirectMap             *rx_policer_tbl = NULL;
+
+    rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
+    HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
+
+    ret = rx_policer_tbl->remove(pd_lif->hw_lif_id);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},unable to deprogram rx policer table",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    } else {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},deprogrammed rx policer table",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    }
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------

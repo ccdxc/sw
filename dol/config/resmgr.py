@@ -30,6 +30,7 @@ BlackHoleSegVlanAllocator   = objects.TemplateFieldObject("range/4090/4095")
 BlackHoleSegVxlanAllocator  = objects.TemplateFieldObject("range/0xDDDDD0/0xDDDDDF")
 
 AclIdAllocator          = objects.TemplateFieldObject("range/1/512")
+QosClassIdAllocator     = objects.TemplateFieldObject("range/1/16")
 SpanSessionIdAllocator  = objects.TemplateFieldObject("range/1/8")
 ColelctorIdAllocator    = objects.TemplateFieldObject("range/0/31")
 EpIdAllocator           = objects.TemplateFieldObject("range/1/4096")

@@ -5,6 +5,9 @@ meta:
 rss:
   enable: True
 
+cosA : QOS_CLASS_USER_DEFINED_1
+cosB : QOS_CLASS_USER_DEFINED_2
+
 queue_types:
     - queue_type:
         id          : TX

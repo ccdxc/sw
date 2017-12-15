@@ -166,56 +166,18 @@ hal_cfg_db::init(void)
                                        hal::tcpcb_compare_handle_key_func);
     HAL_ASSERT_RETURN((tcpcb_hal_handle_ht_ != NULL), false);
 
-    // initialize Buf-Pool related data structures
-    buf_pool_id_ht_ = ht::factory(HAL_MAX_BUF_POOLS,
-                                  hal::buf_pool_get_key_func,
-                                  hal::buf_pool_compute_hash_func,
-                                  hal::buf_pool_compare_key_func);
-    HAL_ASSERT_RETURN((buf_pool_id_ht_ != NULL), false);
+    // initialize Qos-class related data structures
+    qos_class_ht_ = ht::factory(HAL_MAX_QOS_CLASSES,
+                                hal::qos_class_get_key_func,
+                                hal::qos_class_compute_hash_func,
+                                hal::qos_class_compare_key_func);
+    HAL_ASSERT_RETURN((qos_class_ht_ != NULL), false);
 
-    buf_pool_hal_handle_ht_ = ht::factory(HAL_MAX_BUF_POOLS,
-                                          hal::buf_pool_get_handle_key_func,
-                                          hal::buf_pool_compute_handle_hash_func,
-                                          hal::buf_pool_compare_handle_key_func);
-    HAL_ASSERT_RETURN((buf_pool_hal_handle_ht_ != NULL), false);
+    qos_cmap_pcp_bmp_ = bitmap::factory(HAL_MAX_DOT1Q_PCP_VALS, true);
+    HAL_ASSERT_RETURN((qos_cmap_pcp_bmp_ != NULL), false);
 
-    // initialize Queue related data structures
-    queue_id_ht_ = ht::factory(HAL_MAX_QUEUE_NODES,
-                               hal::queue_get_key_func,
-                               hal::queue_compute_hash_func,
-                               hal::queue_compare_key_func);
-    HAL_ASSERT_RETURN((queue_id_ht_ != NULL), false);
-
-    queue_hal_handle_ht_ = ht::factory(HAL_MAX_QUEUE_NODES,
-                                       hal::queue_get_handle_key_func,
-                                       hal::queue_compute_handle_hash_func,
-                                       hal::queue_compare_handle_key_func);
-    HAL_ASSERT_RETURN((queue_hal_handle_ht_ != NULL), false);
-
-    // initialize Policer related data structures
-    ingress_policer_id_ht_ = ht::factory(HAL_MAX_POLICERS,
-                                         hal::policer_get_key_func,
-                                         hal::policer_compute_hash_func,
-                                         hal::policer_compare_key_func);
-    HAL_ASSERT_RETURN((ingress_policer_id_ht_ != NULL), false);
-
-    ingress_policer_hal_handle_ht_ = ht::factory(HAL_MAX_POLICERS,
-                                                 hal::policer_get_handle_key_func,
-                                                 hal::policer_compute_handle_hash_func,
-                                                 hal::policer_compare_handle_key_func);
-    HAL_ASSERT_RETURN((ingress_policer_hal_handle_ht_ != NULL), false);
-
-    egress_policer_id_ht_ = ht::factory(HAL_MAX_POLICERS,
-                                        hal::policer_get_key_func,
-                                        hal::policer_compute_hash_func,
-                                        hal::policer_compare_key_func);
-    HAL_ASSERT_RETURN((egress_policer_id_ht_ != NULL), false);
-
-    egress_policer_hal_handle_ht_ = ht::factory(HAL_MAX_POLICERS,
-                                                hal::policer_get_handle_key_func,
-                                                hal::policer_compute_handle_hash_func,
-                                                hal::policer_compare_handle_key_func);
-    HAL_ASSERT_RETURN((egress_policer_hal_handle_ht_ != NULL), false);
+    qos_cmap_dscp_bmp_ = bitmap::factory(HAL_MAX_IP_DSCP_VALS, true);
+    HAL_ASSERT_RETURN((qos_cmap_dscp_bmp_ != NULL), false);
 
     // initialize Acl related data structures
     acl_id_ht_ = ht::factory(HAL_MAX_ACLS,
@@ -395,16 +357,9 @@ hal_cfg_db::hal_cfg_db()
     nwsec_policy_cfg_ht_  = NULL;
     nwsec_group_ht_       = NULL;
 
-    buf_pool_id_ht_ = NULL;
-    buf_pool_hal_handle_ht_ = NULL;
-
-    queue_id_ht_ = NULL;
-    queue_hal_handle_ht_ = NULL;
-
-    ingress_policer_id_ht_ = NULL;
-    ingress_policer_hal_handle_ht_ = NULL;
-    egress_policer_id_ht_ = NULL;
-    egress_policer_hal_handle_ht_ = NULL;
+    qos_class_ht_ = NULL;
+    qos_cmap_pcp_bmp_ = NULL;
+    qos_cmap_dscp_bmp_ = NULL;
 
     acl_id_ht_ = NULL;
     acl_hal_handle_ht_ = NULL;
@@ -498,22 +453,15 @@ hal_cfg_db::~hal_cfg_db()
     l4lb_ht_ ? ht::destroy(l4lb_ht_) : HAL_NOP;
     l4lb_hal_handle_ht_ ? ht::destroy(l4lb_hal_handle_ht_) : HAL_NOP;
 
-    buf_pool_id_ht_ ? ht::destroy(buf_pool_id_ht_) : HAL_NOP;
-    buf_pool_hal_handle_ht_ ? ht::destroy(buf_pool_hal_handle_ht_) : HAL_NOP;
-
     tlscb_id_ht_ ? ht::destroy(tlscb_id_ht_) : HAL_NOP;
     tlscb_hal_handle_ht_ ? ht::destroy(tlscb_hal_handle_ht_) : HAL_NOP;
  
     tcpcb_id_ht_ ? ht::destroy(tcpcb_id_ht_) : HAL_NOP;
     tcpcb_hal_handle_ht_ ? ht::destroy(tcpcb_hal_handle_ht_) : HAL_NOP;
 
-    queue_id_ht_ ? ht::destroy(queue_id_ht_) : HAL_NOP;
-    queue_hal_handle_ht_ ? ht::destroy(queue_hal_handle_ht_) : HAL_NOP;
-
-    ingress_policer_id_ht_ ? ht::destroy(ingress_policer_id_ht_) : HAL_NOP;
-    ingress_policer_hal_handle_ht_ ? ht::destroy(ingress_policer_hal_handle_ht_) : HAL_NOP;
-    egress_policer_id_ht_ ? ht::destroy(egress_policer_id_ht_) : HAL_NOP;
-    egress_policer_hal_handle_ht_ ? ht::destroy(egress_policer_hal_handle_ht_) : HAL_NOP;
+    qos_class_ht_ ? ht::destroy(qos_class_ht_) : HAL_NOP;
+    qos_cmap_pcp_bmp_ ? bitmap::destroy(qos_cmap_pcp_bmp_) : HAL_NOP;
+    qos_cmap_dscp_bmp_ ? bitmap::destroy(qos_cmap_dscp_bmp_) : HAL_NOP;
 
     wring_id_ht_ ? ht::destroy(wring_id_ht_) : HAL_NOP;
     wring_hal_handle_ht_ ? ht::destroy(wring_hal_handle_ht_) : HAL_NOP;
@@ -663,12 +611,6 @@ hal_oper_db::init(void)
                            hal::flow_compare_key_func);
     HAL_ASSERT_RETURN((flow_ht_ != NULL), false);
 
-    for (uint32_t port = 0; port < HAL_ARRAY_SIZE(cos_in_use_bmp_); port++) {
-        cos_in_use_bmp_[port] = bitmap::factory(HAL_MAX_COSES,
-                                                true);
-        HAL_ASSERT_RETURN((cos_in_use_bmp_[port] != NULL), false);
-    }
-
     event_mgr_ = eventmgr::factory(HAL_MAX_EVENTS);
     HAL_ASSERT_RETURN((event_mgr_ != NULL), false);
 
@@ -680,16 +622,11 @@ hal_oper_db::init(void)
 //------------------------------------------------------------------------------
 hal_oper_db::hal_oper_db()
 {
-    uint32_t    i;
-
     hal_handle_id_ht_  = NULL;
     infra_l2seg_ = NULL;
     ep_l2_ht_ = NULL;
     ep_l3_entry_ht_ = NULL;
     flow_ht_ = NULL;
-    for (i = 0; i < HAL_ARRAY_SIZE(cos_in_use_bmp_); i++) {
-        cos_in_use_bmp_[i] = NULL;
-    }
     event_mgr_ = NULL;
 }
 
@@ -720,8 +657,6 @@ hal_oper_db::factory(void)
 //------------------------------------------------------------------------------
 hal_oper_db::~hal_oper_db()
 {
-    uint32_t    i;
-
     hal_handle_id_ht_ ? ht::destroy(hal_handle_id_ht_) : HAL_NOP;
 
     infra_l2seg_ = NULL;
@@ -730,12 +665,6 @@ hal_oper_db::~hal_oper_db()
     ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_) : HAL_NOP;
 
     flow_ht_ ? ht::destroy(flow_ht_) : HAL_NOP;
-
-    for (i = 0; i < HAL_ARRAY_SIZE(cos_in_use_bmp_); i++) {
-        if (cos_in_use_bmp_[i]) {
-            bitmap::destroy(cos_in_use_bmp_[i]);
-        }
-    }
 
     event_mgr_ ? eventmgr::destroy(event_mgr_) : HAL_NOP;
 }
@@ -888,23 +817,11 @@ hal_mem_db::init(void)
                                 false, true, true);
     HAL_ASSERT_RETURN((tcpcb_slab_ != NULL), false);
 
-    // initialize Buf-Pool related data structures
-    buf_pool_slab_ = slab::factory("BufPool", HAL_SLAB_BUF_POOL,
-                                   sizeof(hal::buf_pool_t), 8,
-                                   false, true, true);
-    HAL_ASSERT_RETURN((buf_pool_slab_ != NULL), false);
-
-    // initialize Queue related data structures
-    queue_slab_ = slab::factory("Queue", HAL_SLAB_QUEUE,
-                                sizeof(hal::queue_t), 8,
+    // initialize Qos-class related data structures
+    qos_class_slab_ = slab::factory("QosClass", HAL_SLAB_QOS_CLASS,
+                                sizeof(hal::qos_class_t), 8,
                                 false, true, true);
-    HAL_ASSERT_RETURN((queue_slab_ != NULL), false);
-
-    // initialize Policer related data structures
-    policer_slab_ = slab::factory("Policer", HAL_SLAB_POLICER,
-                                  sizeof(hal::policer_t), 8,
-                                  false, true, true);
-    HAL_ASSERT_RETURN((policer_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((qos_class_slab_ != NULL), false);
 
     // initialize WRing related data structures
     wring_slab_ = slab::factory("wring", HAL_SLAB_WRING,
@@ -1012,9 +929,7 @@ hal_mem_db::hal_mem_db()
     l4lb_slab_ = NULL;
     tlscb_slab_ = NULL;
     tcpcb_slab_ = NULL;
-    buf_pool_slab_ = NULL;
-    queue_slab_ = NULL;
-    policer_slab_ = NULL;
+    qos_class_slab_ = NULL;
     wring_slab_ = NULL;
     acl_slab_ = NULL;
     ipseccb_slab_ = NULL;
@@ -1080,9 +995,7 @@ hal_mem_db::~hal_mem_db()
     l4lb_slab_ ? slab::destroy(l4lb_slab_) : HAL_NOP;
     tlscb_slab_ ? slab::destroy(tlscb_slab_) : HAL_NOP;
     tcpcb_slab_ ? slab::destroy(tcpcb_slab_) : HAL_NOP;
-    buf_pool_slab_ ? slab::destroy(buf_pool_slab_) : HAL_NOP;
-    queue_slab_ ? slab::destroy(queue_slab_) : HAL_NOP;
-    policer_slab_ ? slab::destroy(policer_slab_) : HAL_NOP;
+    qos_class_slab_ ? slab::destroy(qos_class_slab_) : HAL_NOP;
     wring_slab_ ? slab::destroy(wring_slab_) : HAL_NOP;
     acl_slab_ ? slab::destroy(acl_slab_) : HAL_NOP;
     ipseccb_slab_ ? slab::destroy(ipseccb_slab_) : HAL_NOP;
@@ -1135,9 +1048,7 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(l4lb_slab_);
     GET_SLAB(tlscb_slab_);
     GET_SLAB(tcpcb_slab_);
-    GET_SLAB(buf_pool_slab_);
-    GET_SLAB(queue_slab_);
-    GET_SLAB(policer_slab_);
+    GET_SLAB(qos_class_slab_);
     GET_SLAB(wring_slab_);
     GET_SLAB(acl_slab_);
     GET_SLAB(ipseccb_slab_);
@@ -1365,16 +1276,8 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->tcpcb_slab()->free(elem);
         break;
 
-    case HAL_SLAB_BUF_POOL:
-        g_hal_state->buf_pool_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_QUEUE:
-        g_hal_state->queue_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_POLICER:
-        g_hal_state->policer_slab()->free(elem);
+    case HAL_SLAB_QOS_CLASS:
+        g_hal_state->qos_class_slab()->free(elem);
         break;
 
     case HAL_SLAB_ACL:

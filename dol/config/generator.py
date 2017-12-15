@@ -14,6 +14,7 @@ from config.objects.session             import SessionHelper
 from config.objects.rdma.session        import RdmaSessionHelper
 from config.objects.security_profile    import SecurityProfileHelper
 from config.objects.acl                 import AclHelper
+from config.objects.qos_class           import QosClassHelper
 from config.objects.proxy_service       import ProxyServiceHelper
 from config.objects.ipsec_proxy_cb      import IpsecCbHelper
 from config.objects.cpu                 import CpuHelper
@@ -25,7 +26,7 @@ from config.objects.security_policy     import SecurityGroupPolicyHelper
 from infra.common.logging               import cfglogger as cfglogger
 
 def process(topospec):
-    resmgr.InitQos(topospec)
+    QosClassHelper.main(topospec)
     # Security Profiles
     SecurityProfileHelper.main(topospec)
 

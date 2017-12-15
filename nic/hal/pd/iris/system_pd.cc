@@ -119,7 +119,7 @@ pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
     stats_entry->set_drop_ingress_policer(
         drop_reason & DROP_INGRESS_POLICER);
     stats_entry->set_drop_egress_policer(
-        drop_reason & DROP_EGRESS_POLICER);
+        drop_reason & DROP_RX_POLICER);
     stats_entry->set_drop_nacl(
         drop_reason & DROP_NACL);
     stats_entry->set_drop_malformed_pkt(

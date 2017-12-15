@@ -652,14 +652,14 @@ class FlowObject(base.ConfigObjectBase):
             self.nat_sport = flow_info.nat_sport
             self.nat_dport = flow_info.nat_dport
 
-        if flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en:
-            self.txqos.cos  = flow_info.eg_qos_actions.marking_spec.pcp
-        else:
-            self.txqos.cos = None
-        if flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en:
-            self.txqos.dscp  = flow_info.eg_qos_actions.marking_spec.dscp
-        else:
-            self.txqos.dscp = None
+#        if flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en:
+#            self.txqos.cos  = flow_info.eg_qos_actions.marking_spec.pcp
+#        else:
+#            self.txqos.cos = None
+#        if flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en:
+#            self.txqos.dscp  = flow_info.eg_qos_actions.marking_spec.dscp
+#        else:
+#            self.txqos.dscp = None
 
     def IsFilterMatch(self, selectors):
         cfglogger.debug("Matching %s Flow:%s, Session:%s" %\

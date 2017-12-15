@@ -48,6 +48,8 @@ TEST_F(lif_test, test1)
     spec.set_vlan_strip_en(1);
     //spec.set_allmulti(1);
     spec.mutable_key_or_handle()->set_lif_id(1);
+    spec.mutable_rx_policer()->set_bps_rate(10000);
+    spec.mutable_rx_policer()->set_burst_size(200);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);
@@ -56,6 +58,7 @@ TEST_F(lif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     spec.set_vlan_strip_en(0);
+    spec.mutable_rx_policer()->set_bps_rate(20000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_update(spec, &rsp);
     hal::hal_cfg_db_close();
@@ -63,6 +66,7 @@ TEST_F(lif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     spec.set_vlan_strip_en(0);
+    spec.mutable_rx_policer()->set_burst_size(300);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_update(spec, &rsp);
     hal::hal_cfg_db_close();

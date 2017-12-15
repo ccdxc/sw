@@ -77,14 +77,6 @@ cc_test(
 )
 
 cc_test(
-    name = "buf_pool_test",
-    srcs = ["buf_pool_test.cc"],
-    deps = [] + gl_deps_list,
-    linkopts = [] + gl_linkopts_list,
-    copts = sdk_copts,
-)
-
-cc_test(
     name = "cpuif_test",
     srcs = ["cpuif_test.cc"],
     deps = [] + gl_deps_list,
@@ -111,22 +103,6 @@ cc_test(
 cc_test(
     name = "lif_test",
     srcs = ["lif_test.cc"],
-    deps = [] + gl_deps_list,
-    linkopts = [] + gl_linkopts_list,
-    copts = sdk_copts,
-)
-
-cc_test(
-    name = "policer_test",
-    srcs = ["policer_test.cc"],
-    deps = [] + gl_deps_list,
-    linkopts = [] + gl_linkopts_list,
-    copts = sdk_copts,
-)
-
-cc_test(
-    name = "queue_test",
-    srcs = ["queue_test.cc"],
     deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
@@ -201,3 +177,12 @@ cc_test(
         gl_linkopts_list,
     copts = sdk_copts,
 )
+
+cc_test(
+    name = "qos_test",
+    srcs = ["qos_test.cc"],
+    deps = [] + gl_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)
+

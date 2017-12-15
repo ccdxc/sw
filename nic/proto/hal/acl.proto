@@ -105,7 +105,7 @@ enum DropReason {
   FLOW_MISS__DROP                       = 3;
   IPSG__DROP                            = 4;
   INGRESS_POLICER__DROP                 = 5;
-  EGRESS_POLICER__DROP                  = 6;
+  RX_POLICER__DROP                      = 6;
   NACL__DROP                            = 7;
   MALFORMED_PKT__DROP                   = 8;
   PING_OF_DEATH__DROP                   = 9;

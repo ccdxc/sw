@@ -3,8 +3,7 @@
 /*****************************************************************************/
 header_type policer_metadata_t {
     fields {
-        egress_policer_index  : 11;
-        egress_policer_color  : 1;
+        rx_policer_color  : 1;
     }
 }
 
@@ -13,11 +12,11 @@ metadata policer_metadata_t policer_metadata;
 /*****************************************************************************/
 /* Egress policer                                                            */
 /*****************************************************************************/
-action execute_egress_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
+action execute_rx_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
                               color_aware, rsvd, axi_wr_pend,
                               burst, rate, tbkt) {
     if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
-        modify_field(policer_metadata.egress_policer_color, POLICER_COLOR_RED);
+        modify_field(policer_metadata.rx_policer_color, POLICER_COLOR_RED);
         drop_packet();
     }
 
@@ -35,20 +34,19 @@ action execute_egress_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
 
 @pragma stage 4
 @pragma policer_table two_color
-table egress_policer {
+table rx_policer {
     reads {
-        policer_metadata.egress_policer_index : exact;
-
+        capri_intrinsic.lif : exact;
     }
     actions {
-        execute_egress_policer;
+        execute_rx_policer;
     }
-    size : EGRESS_POLICER_TABLE_SIZE;
+    size : RX_POLICER_TABLE_SIZE;
 }
 
-action egress_policer_action(permitted_packets, permitted_bytes,
+action rx_policer_action(permitted_packets, permitted_bytes,
                              denied_packets, denied_bytes) {
-    if (policer_metadata.egress_policer_color == POLICER_COLOR_RED) {
+    if (policer_metadata.rx_policer_color == POLICER_COLOR_RED) {
         add(scratch_metadata.policer_packets, denied_packets, 1);
         add(scratch_metadata.policer_bytes, denied_bytes,
             capri_p4_intrinsic.packet_len);
@@ -61,22 +59,22 @@ action egress_policer_action(permitted_packets, permitted_bytes,
 
 @pragma stage 5
 @pragma table_write
-table egress_policer_action {
+table rx_policer_action {
     reads {
-        policer_metadata.egress_policer_index : exact;
+        capri_intrinsic.lif : exact;
     }
     actions {
-        egress_policer_action;
+        rx_policer_action;
     }
-    size : EGRESS_POLICER_TABLE_SIZE;
+    size : RX_POLICER_TABLE_SIZE;
 }
 
-control process_egress_policer {
-    if (control_metadata.cpu_copy == TRUE) {
+control process_policer {
+    if (control_metadata.to_cpu == TRUE) {
         apply(copp);
         apply(copp_action);
     } else {
-        apply(egress_policer);
-        apply(egress_policer_action);
+        apply(rx_policer);
+        apply(rx_policer_action);
     }
 }

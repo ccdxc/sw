@@ -98,6 +98,17 @@ class LifObject(base.ConfigObjectBase):
 
         self.tenant     = tenant
         self.spec       = spec
+        
+        self.cosA = None
+        self.cosB = None
+        if self.tenant.IsQosEnabled():
+            self.cosA = getattr(spec, 'cosA', None)
+            self.cosB = getattr(spec, 'cosB', None)
+            if self.cosA:
+                self.cosA = Store.objects.Get(self.cosA)
+            if self.cosB:
+                self.cosB = Store.objects.Get(self.cosB)
+
         self.Show()
 
     def GetQpid(self):
@@ -127,6 +138,16 @@ class LifObject(base.ConfigObjectBase):
         if GlobalOptions.dryrun:
             return 0
         return self.qstate_base[type]
+
+    def GetTxQosCos(self):
+        if self.cosA:
+            return self.cosA.GetTxQosCos()
+        return 7
+
+    def GetTxQosDscp(self):
+        if self.cosA:
+            return self.cosA.GetTxQosDscp()
+        return 7
 
     def ConfigureQueueTypes(self):
         if GlobalOptions.dryrun:

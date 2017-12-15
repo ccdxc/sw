@@ -165,73 +165,72 @@ do {                                                       \
 // HAL return codes
 // NOTE: please number these enums properly for easier troubleshooting
 //------------------------------------------------------------------------------
-#define HAL_RET_ENTRIES(ENTRY)                                                 \
-    ENTRY(HAL_RET_OK,                         0, "ok")                         \
-    ENTRY(HAL_RET_OOM,                        1, "out of memory error")        \
-    ENTRY(HAL_RET_INVALID_ARG,                2, "invalid arg")                \
-    ENTRY(HAL_RET_INVALID_OP,                 3, "invalid operation")          \
-    ENTRY(HAL_RET_ENTRY_NOT_FOUND,            4, "lookup failure")             \
-    ENTRY(HAL_RET_ENTRY_EXISTS,               5, "already present")            \
-    ENTRY(HAL_RET_NO_RESOURCE,                6, "resource exhaustion")        \
-    ENTRY(HAL_RET_BATCH_FAIL,                 7, "batch processing failed")    \
+#define HAL_RET_ENTRIES(ENTRY)                                                     \
+    ENTRY(HAL_RET_OK,                         0, "ok")                             \
+    ENTRY(HAL_RET_OOM,                        1, "out of memory error")            \
+    ENTRY(HAL_RET_INVALID_ARG,                2, "invalid arg")                    \
+    ENTRY(HAL_RET_INVALID_OP,                 3, "invalid operation")              \
+    ENTRY(HAL_RET_ENTRY_NOT_FOUND,            4, "lookup failure")                 \
+    ENTRY(HAL_RET_ENTRY_EXISTS,               5, "already present")                \
+    ENTRY(HAL_RET_NO_RESOURCE,                6, "resource exhaustion")            \
+    ENTRY(HAL_RET_BATCH_FAIL,                 7, "batch processing failed")        \
     ENTRY(HAL_RET_BATCH_PARTIAL_FAIL,         8, "partial batch processing error") \
-    ENTRY(HAL_RET_HW_FAIL,                    9, "read/write into hw failure") \
-    ENTRY(HAL_RET_TABLE_FULL,                 10,"hw table full")              \
-    ENTRY(HAL_RET_OTCAM_FULL,                 11,"otcam table full")           \
-    ENTRY(HAL_RET_DUP_INS_FAIL,               12,"duplicate insert fail")      \
-    ENTRY(HAL_RET_HW_KEY_BLD_FAIL,            13,"p4 key builder fail")        \
-    ENTRY(HAL_RET_OOB,                        14,"out-of-bound error")         \
-    ENTRY(HAL_RET_FLOW_COLL,                  15,"flow collision")             \
-    ENTRY(HAL_RET_FLOW_OFLOW_FULL,            16,"flow oflow table full")      \
-    ENTRY(HAL_RET_FLOW_LIMT_REACHED,          17,"allowed flow limit reached") \
-    ENTRY(HAL_RET_DUP_FREE,                   18,"freeing multiple times")     \
-    ENTRY(HAL_RET_VRF_NOT_FOUND,              19,"vrf not found")           \
-    ENTRY(HAL_RET_L2SEG_NOT_FOUND,            20,"L2 segment not found")       \
-    ENTRY(HAL_RET_IF_NOT_FOUND,               21,"interface not found")        \
-    ENTRY(HAL_RET_EP_NOT_FOUND,               22,"endpoint not found")         \
-    ENTRY(HAL_RET_FLOW_NOT_FOUND,             23,"flow not found")             \
-    ENTRY(HAL_RET_SESSION_NOT_FOUND,          24,"session not found")          \
-    ENTRY(HAL_RET_HANDLE_INVALID,             25,"invalid hal handle")         \
-    ENTRY(HAL_RET_LIF_NOT_FOUND,              26,"LIF not found")              \
-    ENTRY(HAL_RET_HW_PROG_ERR,                27,"h/w programming error")      \
-    ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 28, "security profile not found") \
-    ENTRY(HAL_RET_TLS_CB_NOT_FOUND,           29, "TLS CB not found")          \
-    ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           30, "TCP CB not found")          \
-    ENTRY(HAL_RET_QUEUE_NOT_FOUND,            31,"interface not found")        \
-    ENTRY(HAL_RET_NETWORK_NOT_FOUND,          32,"network not found")          \
-    ENTRY(HAL_RET_WRING_NOT_FOUND,            33, "Wring not found")           \
-    ENTRY(HAL_RET_PROXY_NOT_FOUND,            34, "Proxy Service not found")   \
-    ENTRY(HAL_RET_POLICER_NOT_FOUND,          35, "Policer not found")         \
-    ENTRY(HAL_RET_OQUEUE_NOT_FOUND,           36, "Output queue not found")    \
-    ENTRY(HAL_RET_IPSEC_CB_NOT_FOUND,         37, "IPSEC CB not found")        \
-    ENTRY(HAL_RET_CPU_CB_NOT_FOUND,           38, "CPU CB not found")          \
-    ENTRY(HAL_RET_RETRY,                      39, "retry the operation")       \
-    ENTRY(HAL_RET_IF_ENIC_TYPE_INVALID,       40, "enic type invalid")         \
-    ENTRY(HAL_RET_IF_ENIC_INFO_INVALID,       41, "enic info invalid")         \
-    ENTRY(HAL_RET_IF_INFO_INVALID,            42, "if info invalid")           \
-    ENTRY(HAL_RET_VRF_ID_INVALID,             43, "vrf id invalid")            \
-    ENTRY(HAL_RET_NWSEC_ID_INVALID,           44, "nwsec id invalid")          \
-    ENTRY(HAL_RET_INTERFACE_ID_INVALID,       45, "interface id invalid")      \
-    ENTRY(HAL_RET_DOS_POLICY_ID_INVALID,      46, "dos policy id invalid")     \
-    ENTRY(HAL_RET_RAWR_CB_NOT_FOUND,          47, "Raw redirect CB not found") \
-    ENTRY(HAL_RET_L2SEG_ID_INVALID,           48, "l2seg id invalid")          \
-    ENTRY(HAL_RET_OBJECT_IN_USE,              49, "object in use")             \
-    ENTRY(HAL_RET_SG_ID_INVALID,              50, "seg id invalid")            \
-    ENTRY(HAL_RET_SG_NOT_FOUND,               51, "seg id not found")          \
-    ENTRY(HAL_RET_NOOP,                       52, "Hal No operation")          \
-    ENTRY(HAL_RET_RAWC_CB_NOT_FOUND,          53, "Raw chain CB not found")    \
-    ENTRY(HAL_RET_FTE_RULE_NO_MATCH,          54, "Firewall rule no match")    \
-    ENTRY(HAL_RET_APP_REDIR_FORMAT_UNKNOWN,   55, "App redir hdr fmt unknown") \
-    ENTRY(HAL_RET_APP_REDIR_HDR_LEN_ERR,      56, "App redir hdr_len error")   \
-    ENTRY(HAL_RET_APP_REDIR_HDR_ERR,          57, "App redir hdr error")       \
-    ENTRY(HAL_RET_PORT_NOT_FOUND,             58, "port not found ")           \
-    ENTRY(HAL_RET_NW_HANDLE_NOT_FOUND,        59, "nw handle not found")       \
-    ENTRY(HAL_RET_EP_HANDLE_NOT_FOUND,        60, "ep handle not found")       \
-    ENTRY(HAL_RET_EXISTING_PROXY_SESSION,     61, "Existing proxy session")    \
-    ENTRY(HAL_RET_PROXYR_CB_NOT_FOUND,        62, "Proxy redirect CB not found")\
-    ENTRY(HAL_RET_PROXYC_CB_NOT_FOUND,        63, "Proxy chain CB not found")  \
-    ENTRY(HAL_RET_FLOW_LKUP_ID_NOT_FOUND,     64, "flow lookup id not found")  \
-                                                                               \
+    ENTRY(HAL_RET_HW_FAIL,                    9, "read/write into hw failure")     \
+    ENTRY(HAL_RET_TABLE_FULL,                 10,"hw table full")                  \
+    ENTRY(HAL_RET_OTCAM_FULL,                 11,"otcam table full")               \
+    ENTRY(HAL_RET_DUP_INS_FAIL,               12,"duplicate insert fail")          \
+    ENTRY(HAL_RET_HW_KEY_BLD_FAIL,            13,"p4 key builder fail")            \
+    ENTRY(HAL_RET_OOB,                        14,"out-of-bound error")             \
+    ENTRY(HAL_RET_FLOW_COLL,                  15,"flow collision")                 \
+    ENTRY(HAL_RET_FLOW_OFLOW_FULL,            16,"flow oflow table full")          \
+    ENTRY(HAL_RET_FLOW_LIMT_REACHED,          17,"allowed flow limit reached")     \
+    ENTRY(HAL_RET_DUP_FREE,                   18,"freeing multiple times")         \
+    ENTRY(HAL_RET_VRF_NOT_FOUND,              19,"vrf not found")                  \
+    ENTRY(HAL_RET_L2SEG_NOT_FOUND,            20,"L2 segment not found")           \
+    ENTRY(HAL_RET_IF_NOT_FOUND,               21,"interface not found")            \
+    ENTRY(HAL_RET_EP_NOT_FOUND,               22,"endpoint not found")             \
+    ENTRY(HAL_RET_FLOW_NOT_FOUND,             23,"flow not found")                 \
+    ENTRY(HAL_RET_SESSION_NOT_FOUND,          24,"session not found")              \
+    ENTRY(HAL_RET_HANDLE_INVALID,             25,"invalid hal handle")             \
+    ENTRY(HAL_RET_LIF_NOT_FOUND,              26,"LIF not found")                  \
+    ENTRY(HAL_RET_HW_PROG_ERR,                27,"h/w programming error")          \
+    ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 28, "security profile not found")    \
+    ENTRY(HAL_RET_TLS_CB_NOT_FOUND,           29, "TLS CB not found")              \
+    ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           30, "TCP CB not found")              \
+    ENTRY(HAL_RET_QUEUE_NOT_FOUND,            31,"interface not found")            \
+    ENTRY(HAL_RET_NETWORK_NOT_FOUND,          32,"network not found")              \
+    ENTRY(HAL_RET_WRING_NOT_FOUND,            33, "Wring not found")               \
+    ENTRY(HAL_RET_PROXY_NOT_FOUND,            34, "Proxy Service not found")       \
+    ENTRY(HAL_RET_QOS_CLASS_NOT_FOUND,        35, "Qos class not found")           \
+    ENTRY(HAL_RET_IPSEC_CB_NOT_FOUND,         36, "IPSEC CB not found")            \
+    ENTRY(HAL_RET_CPU_CB_NOT_FOUND,           37, "CPU CB not found")              \
+    ENTRY(HAL_RET_RETRY,                      38, "retry the operation")           \
+    ENTRY(HAL_RET_IF_ENIC_TYPE_INVALID,       39, "enic type invalid")             \
+    ENTRY(HAL_RET_IF_ENIC_INFO_INVALID,       40, "enic info invalid")             \
+    ENTRY(HAL_RET_IF_INFO_INVALID,            41, "if info invalid")               \
+    ENTRY(HAL_RET_VRF_ID_INVALID,             42, "vrf id invalid")                \
+    ENTRY(HAL_RET_NWSEC_ID_INVALID,           43, "nwsec id invalid")              \
+    ENTRY(HAL_RET_INTERFACE_ID_INVALID,       44, "interface id invalid")          \
+    ENTRY(HAL_RET_DOS_POLICY_ID_INVALID,      45, "dos policy id invalid")         \
+    ENTRY(HAL_RET_RAWR_CB_NOT_FOUND,          46, "Raw redirect CB not found")     \
+    ENTRY(HAL_RET_L2SEG_ID_INVALID,           47, "l2seg id invalid")              \
+    ENTRY(HAL_RET_OBJECT_IN_USE,              48, "object in use")                 \
+    ENTRY(HAL_RET_SG_ID_INVALID,              49, "seg id invalid")                \
+    ENTRY(HAL_RET_SG_NOT_FOUND,               50, "seg id not found")              \
+    ENTRY(HAL_RET_NOOP,                       51, "Hal No operation")              \
+    ENTRY(HAL_RET_RAWC_CB_NOT_FOUND,          52, "Raw redirect CB not found")     \
+    ENTRY(HAL_RET_FTE_RULE_NO_MATCH,          53, "Firewall rule no match")        \
+    ENTRY(HAL_RET_APP_REDIR_FORMAT_UNKNOWN,   54, "App redir hdr fmt unknown")     \
+    ENTRY(HAL_RET_APP_REDIR_HDR_LEN_ERR,      55, "App redir hdr_len error")       \
+    ENTRY(HAL_RET_APP_REDIR_HDR_ERR,          56, "App redir hdr error")           \
+    ENTRY(HAL_RET_PORT_NOT_FOUND,             57, "port not found ")               \
+    ENTRY(HAL_RET_NW_HANDLE_NOT_FOUND,        58, "nw handle not found")           \
+    ENTRY(HAL_RET_EP_HANDLE_NOT_FOUND,        59, "ep handle not found")           \
+    ENTRY(HAL_RET_EXISTING_PROXY_SESSION,     60, "Existing proxy session")        \
+    ENTRY(HAL_RET_PROXYR_CB_NOT_FOUND,        61, "Proxy redirect CB not found")   \
+    ENTRY(HAL_RET_PROXYC_CB_NOT_FOUND,        62, "Proxy chain CB not found")      \
+    ENTRY(HAL_RET_FLOW_LKUP_ID_NOT_FOUND,     63, "flow lookup id not found")      \
+                                                                                   \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)

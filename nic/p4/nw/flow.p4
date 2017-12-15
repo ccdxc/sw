@@ -63,7 +63,7 @@ action flow_miss() {
     }
 
     modify_field (capri_intrinsic.tm_oport, TM_PORT_EGRESS);
-    modify_field(capri_intrinsic.tm_oq, control_metadata.flow_miss_tm_oqueue);
+    modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
 
     if ((control_metadata.flow_miss_action == FLOW_MISS_ACTION_CPU) or
         ((control_metadata.flow_miss_action == FLOW_MISS_ACTION_FLOOD) and
@@ -123,14 +123,13 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
 action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
-                 egress_policer_index,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
                  tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
-                 cos_en, cos, dscp_en, dscp, qid_en, log_en, rewrite_flags,
+                 qid_en, log_en, rewrite_flags,
                  flow_conn_track, flow_ttl, flow_role,
                  session_state_index, start_timestamp,
-                 ingress_tm_oqueue, egress_tm_oqueue,
+                 qos_class_en, qos_class_id,
                  expected_src_lif_check_en, expected_src_lif,
                  export_id1, export_id2, export_id3, export_id4) {
     /* expected src lif check */
@@ -147,9 +146,9 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
     modify_field(capri_intrinsic.tm_replicate_ptr, multicast_ptr);
     modify_field(control_metadata.dst_lport, dst_lport);
 
-    /* Output queue selection */
-    modify_field(capri_intrinsic.tm_oq, ingress_tm_oqueue);
-    modify_field(control_metadata.egress_tm_oqueue, egress_tm_oqueue);
+    if (qos_class_en == TRUE) {
+        modify_field(qos_metadata.qos_class_id, qos_class_id);
+    }
 
     /* qid */
     if (qid_en == TRUE) {
@@ -166,9 +165,6 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
     if (log_en == TRUE) {
         modify_field(capri_intrinsic.tm_cpu, TRUE);
     }
-
-    /* policer index */
-    modify_field(policer_metadata.egress_policer_index, egress_policer_index);
 
     /* flow info */
     modify_field(flow_info_metadata.session_state_index, session_state_index);
@@ -197,15 +193,10 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(rewrite_metadata.tunnel_vnid, tunnel_vnid);
 
-    /* qos rewrite data */
-    modify_field(qos_metadata.cos_en, cos_en);
-    modify_field(qos_metadata.dscp_en, dscp_en);
-    modify_field(qos_metadata.cos, cos);
-    modify_field(qos_metadata.dscp, dscp);
-
     /* dummy ops to keep compiler happy */
     modify_field(scratch_metadata.flow_start_timestamp, start_timestamp);
     modify_field(scratch_metadata.qid_en, qid_en);
+    modify_field(scratch_metadata.qos_class_en, qos_class_en);
     modify_field(scratch_metadata.log_en, log_en);
     modify_field(scratch_metadata.flag, expected_src_lif_check_en);
     modify_field(scratch_metadata.src_lif, expected_src_lif);
@@ -216,9 +207,6 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
 
     /* promote size of data fields to multiple of bytes */
     modify_field(scratch_metadata.size16, twice_nat_idx);
-    modify_field(scratch_metadata.size8, cos_en);
-    modify_field(scratch_metadata.size8, cos);
-    modify_field(scratch_metadata.size8, dscp_en);
 }
 
 action recirc_packet(recirc_reason) {
@@ -228,7 +216,6 @@ action recirc_packet(recirc_reason) {
     modify_field(recirc_header.src_tm_iport, control_metadata.tm_iport);
     modify_field(recirc_header.reason, recirc_reason);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
-    modify_field(capri_intrinsic.tm_oq, TM_P4_IG_RECIRC_QUEUE);
 }
 
 action flow_hit_from_vm_bounce(src_lif) {
@@ -240,14 +227,14 @@ action flow_hit_from_vm_bounce(src_lif) {
     modify_field(capri_intrinsic.lif, src_lif);
 }
 
-action flow_hit_to_vm_bounce(dst_lport, tm_oqueue) {
+action flow_hit_to_vm_bounce(dst_lport, qos_class_id) {
     remove_header(ethernet);
     remove_header(ipv4);
     remove_header(udp);
     remove_header(vxlan_gpe);
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
-    modify_field(capri_intrinsic.tm_oq, tm_oqueue);
+    modify_field(qos_metadata.qos_class_id, qos_class_id);
 }
 
 @pragma stage 2

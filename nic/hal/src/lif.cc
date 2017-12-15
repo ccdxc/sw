@@ -12,6 +12,7 @@
 #include "nic/hal/src/rdma.hpp"
 #include "nic/hal/src/lif.hpp"
 #include "nic/hal/src/eth.hpp"
+#include "nic/hal/src/qos.hpp"
 
 using hal::pd::pd_if_args_t;
 using hal::pd::pd_if_lif_upd_args_t;
@@ -111,8 +112,16 @@ lif_del_from_db (lif_t *lif)
 hal_ret_t
 lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
 {
+    hal_ret_t       ret = HAL_RET_OK;
     LIFQStateParams qs_params = { 0 };
     int32_t         ec        = 0;
+    qos_class_t     *cosA_class;
+    uint32_t        cosA;
+    qos_class_t     *cosB_class;
+    uint32_t        cosB;
+    if_t            *pinned_uplink_if;
+
+    pinned_uplink_if = find_if_by_handle(lif->pinned_uplink);
 
     for (int i = 0; i < spec.lif_qstate_map_size(); i++) {
         const auto &ent = spec.lif_qstate_map(i);
@@ -125,23 +134,52 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
                           ent.size(), ent.entries());
             return HAL_RET_INVALID_ARG;
         }
-        if ((ent.cos_a().cos() >= NUM_MAX_COSES) || (ent.cos_b().cos() >= NUM_MAX_COSES)) {
-            HAL_TRACE_ERR("Invalid cos value  in LifSpec : cosA={} cosB={}",
-                           ent.cos_a().cos(), ent.cos_b().cos());
-            return HAL_RET_INVALID_ARG;
+
+        if (ent.has_cos_a()) {
+            cosA_class = find_qos_class_by_key_handle(ent.cos_a());
+            if (cosA_class == NULL) {
+                HAL_TRACE_ERR("Qos-class does not exist");
+                return HAL_RET_QOS_CLASS_NOT_FOUND;
+            }
+            ret = pd::qos_class_get_qos_class_id(cosA_class, pinned_uplink_if, &cosA);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error deriving qos-class-id for Qos class "
+                              "{} ret {}",
+                              cosA_class->key, ret);
+                return ret;
+            }
+        } else {
+            cosA = 0;
+        }
+
+        if (ent.has_cos_b()) {
+            cosB_class = find_qos_class_by_key_handle(ent.cos_b());
+            if (cosB_class == NULL) {
+                HAL_TRACE_ERR("Qos-class does not exist");
+                return HAL_RET_QOS_CLASS_NOT_FOUND;
+            }
+            ret = pd::qos_class_get_qos_class_id(cosB_class, pinned_uplink_if, &cosB);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error deriving qos-class-id for Qos class "
+                              "{} ret {}",
+                              cosB_class->key, ret);
+                return ret;
+            }
+        } else {
+            cosB = 0;
         }
 
         qs_params.type[ent.type_num()].size    = ent.size();
         qs_params.type[ent.type_num()].entries = ent.entries();
-        qs_params.type[ent.type_num()].cosA    = ent.cos_a().cos();
-        qs_params.type[ent.type_num()].cosB    = ent.cos_b().cos();
+        qs_params.type[ent.type_num()].cosA    = cosA;
+        qs_params.type[ent.type_num()].cosB    = cosB;
 
         if (ent.purpose() > intf::LifQPurpose_MAX) {
             HAL_TRACE_ERR("Invalid entry in LifSpec : purpose={}", ent.purpose());
             return HAL_RET_INVALID_ARG;
         }
-        lif->cos_bmp |= (1 << ent.cos_a().cos());
-        lif->cos_bmp |= (1 << ent.cos_b().cos());
+        lif->cos_bmp |= (1 << cosA);
+        lif->cos_bmp |= (1 << cosB);
 
         lif->qinfo[ent.purpose()].type = ent.type_num();
         lif->qinfo[ent.purpose()].size = (uint16_t)pow(2, ent.size());
@@ -550,6 +588,14 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->rdma_max_keys = spec.rdma_max_keys();
     lif->rdma_max_pt_entries = spec.rdma_max_pt_entries();
 
+    if (spec.has_rx_policer()) {
+        qos_policer_update_from_spec(spec.rx_policer(), &lif->rx_policer);
+    }
+
+    if (spec.has_tx_policer()) {
+        qos_policer_update_from_spec(spec.tx_policer(), &lif->tx_policer);
+    }
+
     // allocate hal handle id
     hal_handle = hal_handle_alloc(HAL_OBJ_ID_LIF);
     if (hal_handle == HAL_HANDLE_INVALID) {
@@ -687,6 +733,8 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     args.vlan_strip_en_changed = app_ctxt->vlan_strip_en_changed;
     args.vlan_strip_en         = app_ctxt->vlan_strip_en;
     args.qstate_map_init_set   = app_ctxt->qstate_map_init_set;
+    args.rx_policer_changed    = app_ctxt->rx_policer_changed;
+    args.tx_policer_changed    = app_ctxt->tx_policer_changed;
     hw_lif_id                  = pd::pd_get_hw_lif_id(lif);
 
     if (app_ctxt->qstate_map_init_set) {
@@ -725,7 +773,7 @@ end:
 // - Both PI and PD objects cloned. 
 //------------------------------------------------------------------------------
 hal_ret_t
-lif_make_clone (lif_t *lif, lif_t **lif_clone)
+lif_make_clone (lif_t *lif, lif_t **lif_clone, LifSpec& spec)
 {
     *lif_clone = lif_alloc_init();
     memcpy(*lif_clone, lif, sizeof(lif_t));
@@ -734,6 +782,15 @@ lif_make_clone (lif_t *lif, lif_t **lif_clone)
     dllist_reset(&(*lif_clone)->if_list_head);
 
     pd::pd_lif_make_clone(lif, *lif_clone);
+
+    // Update the clone with the new values
+    if (spec.has_rx_policer()) {
+        qos_policer_update_from_spec(spec.rx_policer(), &(*lif_clone)->rx_policer);
+    }
+
+    if (spec.has_tx_policer()) {
+        qos_policer_update_from_spec(spec.tx_policer(), &(*lif_clone)->tx_policer);
+    }
 
     return HAL_RET_OK;
 }
@@ -874,6 +931,8 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     hal_ret_t ret   = HAL_RET_OK;
     LifSpec   *spec = app_ctxt->spec;
     int cmp;
+    policer_t new_rx_policer = {0};
+    policer_t new_tx_policer = {0};
 
     // Handle vlan_strip_en change
     if (lif->vlan_strip_en != spec->vlan_strip_en()) {
@@ -903,6 +962,22 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         cmp) {
         app_ctxt->rss_config_changed = true;
         HAL_TRACE_DEBUG("pi-lif:{}:rss configuration changed", __FUNCTION__);
+    }
+
+    if (spec->has_rx_policer()) {
+        qos_policer_update_from_spec(spec->rx_policer(), &new_rx_policer);
+    }
+    if (!qos_policer_spec_same(&lif->rx_policer, &new_rx_policer)) {
+        app_ctxt->rx_policer_changed = true;
+        HAL_TRACE_DEBUG("pi-lif:{}: rx policer configuration changed", __FUNCTION__);
+    }
+
+    if (spec->has_tx_policer()) {
+        qos_policer_update_from_spec(spec->tx_policer(), &new_tx_policer);
+    }
+    if (!qos_policer_spec_same(&lif->tx_policer, &new_tx_policer)) {
+        app_ctxt->tx_policer_changed = true;
+        HAL_TRACE_DEBUG("pi-lif:{}: tx policer configuration changed", __FUNCTION__);
     }
 
     return ret;
@@ -956,12 +1031,14 @@ lif_update (LifSpec& spec, LifResponse *rsp)
 
     if (!(app_ctxt.vlan_strip_en_changed ||
           app_ctxt.qstate_map_init_set ||
-          app_ctxt.rss_config_changed)) {
+          app_ctxt.rss_config_changed ||
+          app_ctxt.rx_policer_changed ||
+          app_ctxt.tx_policer_changed)) {
         HAL_TRACE_ERR("pi-lif:{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }
     
-    lif_make_clone(lif, (lif_t **)&dhl_entry.cloned_obj);
+    lif_make_clone(lif, (lif_t **)&dhl_entry.cloned_obj, spec);
 
     // form ctxt and call infra update object
     dhl_entry.handle  = lif->hal_handle;

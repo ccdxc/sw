@@ -7,26 +7,8 @@ namespace net {
 static inline hal_ret_t
 update_flow_from_qos_spec(fte::ctx_t& ctx)
 {
-    fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
-    qos_actions_t src_if_tx_qos_actions;
-
-    src_if_tx_qos_actions = ctx.sif()->tx_qos_actions;
-
-    //QoS action
-    if (src_if_tx_qos_actions.pcp_write_en) {
-        HEADER_SET_FLD(flowupd.header_rewrite, ether, dot1p,
-                       src_if_tx_qos_actions.pcp);
-    }
-    if (src_if_tx_qos_actions.dscp_write_en) {
-        if (ctx.key().flow_type == hal::FLOW_TYPE_V4) {
-            HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dscp,
-                           src_if_tx_qos_actions.dscp);
-        } else {
-            HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dscp,
-                           src_if_tx_qos_actions.dscp);
-        }
-    }
-    return ctx.update_flow(flowupd);
+    // TODO: For uplink and the proxy flows, set the qos-class-id
+    return HAL_RET_OK;
 }
 
 fte::pipeline_action_t

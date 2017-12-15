@@ -38,7 +38,7 @@ class TenantObject(base.ConfigObjectBase):
         self.hostpinned = GlobalOptions.hostpin
         self.spec = copy.deepcopy(spec)
         self.type = self.spec.type.upper()
-        self.qos_enable = getattr(topospec, 'qos_enable', False)
+        self.qos_enable = getattr(topospec, 'qos', False)
         self.ep_learn = None
         fte = getattr(self.spec , 'fte', None)
         if fte:

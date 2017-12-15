@@ -53,15 +53,6 @@ using intf::IfType;
 
 namespace hal {
 
-typedef struct qos_actions_s {
-    hal_handle_t        queue_handle;
-    hal_handle_t        policer_handle;
-    bool                pcp_write_en;
-    uint32_t            pcp;
-    bool                dscp_write_en;
-    uint32_t            dscp;
-} __PACK__ qos_actions_t;
-
 // l2seg entry used for classic enic if
 typedef struct if_l2seg_entry_s {
     hal_handle_t    l2seg_handle;               // l2segment handle
@@ -76,9 +67,6 @@ typedef struct if_s {
     intf::IfType        if_type;                     // interface type
     intf::IfStatus      if_admin_status;             // admin status
     vrf_id_t            tid;                         // vrf id (TODO: what is this for ?)
-    // tx/rx is wrt to the workload behind this if
-    qos_actions_t       tx_qos_actions;              // qos actions for packets from this if
-    qos_actions_t       rx_qos_actions;              // qos actions for packets to this if
 
     union {
         // enic interface info

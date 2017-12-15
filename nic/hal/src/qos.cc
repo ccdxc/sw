@@ -8,882 +8,635 @@
 
 namespace hal {
 
+// ----------------------------------------------------------------------------
+// hash table qos_group => ht_entry
+//  - Get key from entry
+// ----------------------------------------------------------------------------
 void *
-buf_pool_get_key_func (void *entry)
+qos_class_get_key_func (void *entry)
 {
+    hal_handle_id_ht_entry_t    *ht_entry;
+    qos_class_t                 *qos_class = NULL;
+
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((buf_pool_t *)entry)->buf_pool_id);
-}
-
-uint32_t
-buf_pool_compute_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(buf_pool_id_t)) % ht_size;
-}
-
-bool
-buf_pool_compare_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(buf_pool_id_t *)key1 == *(buf_pool_id_t *)key2) {
-        return true;
+    ht_entry = (hal_handle_id_ht_entry_t *)entry;
+    if (ht_entry == NULL) {
+        return NULL;
     }
-    return false;
+    qos_class = find_qos_class_by_handle(ht_entry->handle_id);
+    return (void *)&(qos_class->key);
 }
 
-void *
-buf_pool_get_handle_key_func(void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((buf_pool_t *)entry)->hal_handle);
-}
-
+// ----------------------------------------------------------------------------
+// hash table qos_group => entry - compute hash
+// ----------------------------------------------------------------------------
 uint32_t
-buf_pool_compute_handle_hash_func (void *key, uint32_t ht_size)
+qos_class_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(qos_class_key_t)) % ht_size;
 }
 
+// ----------------------------------------------------------------------------
+// hash table qos_group => entry - compare function
+// ----------------------------------------------------------------------------
 bool
-buf_pool_compare_handle_key_func (void *key1, void *key2)
+qos_class_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
+
+    if (!memcmp(key1, key2, sizeof(qos_class_key_t))) {
         return true;
     }
     return false;
 }
 
 //------------------------------------------------------------------------------
-// insert this buf_pool in all meta data structures
+// insert a qos_class to db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-add_buf_pool_to_db (buf_pool_t *buf_pool)
+qos_class_add_to_db (qos_class_t *qos_class, hal_handle_t handle)
 {
-    uint32_t cos;
-    hal_ret_t ret;
+    hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
+    hal_handle_id_ht_entry_t    *entry;
+    qos_uplink_cmap_t           *cmap = &qos_class->uplink_cmap;
 
-    g_hal_state->buf_pool_id_ht()->insert(buf_pool, &buf_pool->ht_ctxt);
-    g_hal_state->buf_pool_hal_handle_ht()->insert(buf_pool, &buf_pool->hal_handle_ht_ctxt);
-
-    // Add all the cos values part of this buf pool to the global cos map bmp
-    ret = buf_pool->spec.cos_bmp->first_set(&cos);
-    while (ret == HAL_RET_OK) {
-        g_hal_state->buf_pool_cos_usage_bmp(buf_pool->port_num)->set(cos);
-        ret = buf_pool->spec.cos_bmp->next_set(cos, &cos);
+    HAL_TRACE_DEBUG("pi-qos-class:{}:adding to qos_class hash table", 
+                    __func__);
+    // allocate an entry to establish mapping from qos_group to its handle
+    entry =
+        (hal_handle_id_ht_entry_t *)g_hal_state->
+        hal_handle_id_ht_entry_slab()->alloc();
+    if (entry == NULL) {
+        return HAL_RET_OOM;
     }
 
-    return HAL_RET_OK;
-}
-
-static hal_ret_t 
-validate_buf_pool_create (BufPoolSpec& spec,
-                          BufPoolResponse *rsp) 
-{
-    int c;
-
-    if (!spec.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_BUF_POOL_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
+    entry->handle_id = handle;
+    sdk_ret = g_hal_state->qos_class_ht()->insert_with_key(&qos_class->key,
+                                                   entry, &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        HAL_TRACE_ERR("pi-qos-class:{}:failed to add key to handle mapping, "
+                      "err : {}", __func__, ret);
+        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
-    if (spec.key_or_handle().key_or_handle_case() != 
-        qos::BufPoolKeyHandle::kBufPoolId) {
-        rsp->set_api_status(types::API_STATUS_BUF_POOL_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    /* Check that all the required parameters are present */
-    if (spec.tcs_size() == 0) {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    for (c = 0; c < spec.tcs_size(); c++) {
-        if (spec.tcs(c).cos() >= HAL_MAX_COSES) {
-            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-            return HAL_RET_INVALID_ARG;
+    // Update the global bmps for the cmaps
+    if (qos_class_is_user_defined(qos_class)) {
+        g_hal_state->qos_cmap_pcp_bmp()->set(cmap->dot1q_pcp);
+        for (unsigned i = 0; i < HAL_ARRAY_SIZE(cmap->ip_dscp); i++) {
+            if (cmap->ip_dscp[i]) {
+                g_hal_state->qos_cmap_dscp_bmp()->set(i);
+            }
         }
     }
 
-    return HAL_RET_OK;
-}
+    // TODO: Check if this is the right place
+    qos_class->hal_handle = handle;
 
-static bool
-is_cos_mapped_to_buf_pool (uint32_t port_num, uint32_t cos) 
-{
-    return g_hal_state->buf_pool_cos_usage_bmp(port_num)->is_set(cos);
-}
-
-hal_ret_t
-buf_pool_create (BufPoolSpec& spec,
-                 BufPoolResponse *rsp)
-{
-    hal_ret_t              ret;
-    buf_pool_t             *buf_pool = NULL;
-    pd::pd_buf_pool_args_t pd_buf_pool_args;
-    uint32_t               cos;
-    int                    c;
-
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-BUF-POOL:{}: BufPool create ", __func__);
-
-    ret = validate_buf_pool_create(spec, rsp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PI-BUF-POOL:{}: BufPool create request validation failed."
-                     " Err: {}",
-                      __func__, HAL_RET_INVALID_ARG);
-        return ret;
-    }
-
-    HAL_TRACE_DEBUG("PI-BUF-POOL:{}: BufPool create for id {}",
-                    __func__, spec.key_or_handle().buf_pool_id());
-
-    // Do some runtime validation
-    // Check that the COS values are not already part of some buf-pool
-    for (c = 0; c < spec.tcs_size(); c++) {
-        cos = spec.tcs(c).cos();
-        if (is_cos_mapped_to_buf_pool(spec.port_num(), cos)) {
-            HAL_TRACE_ERR("PI-BUF-POOL:{}: BufPool create for id {} failed.."
-                          "Cos {} already mapped to a buffer pool",
-                          __func__, spec.key_or_handle().buf_pool_id(), 
-                          cos);
-            rsp->set_api_status(types::API_STATUS_BUF_POOL_COS_MAP_EXISTS);
-            return HAL_RET_INVALID_ARG;
-        }
-    }
-
-    // allocate a buf-pool instance
-    buf_pool = buf_pool_alloc_init();
-    if (buf_pool == NULL) {
-        HAL_TRACE_ERR("PI-BUF-POOL:{}: Out of Memory. Err: {}",
-                      __func__, HAL_RET_OOM);
-        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-        ret = HAL_RET_OOM;
-        goto end;
-    }
-
-    // save the configs from the spec
-    buf_pool->buf_pool_id = spec.key_or_handle().buf_pool_id();
-    buf_pool->port_num = spec.port_num();
-    buf_pool->hal_handle = hal_alloc_handle();
-    
-    buf_pool->spec.reserved_bytes = spec.reserved_bytes();
-    buf_pool->spec.headroom_bytes = spec.headroom_bytes();
-    buf_pool->spec.sharing_factor = spec.sharing_factor();
-    buf_pool->spec.xon_threshold = spec.xon_threshold();
-    buf_pool->spec.xoff_clear_limit = spec.xoff_clear_limit();
-    buf_pool->spec.mtu = spec.mtu();
-
-    for (c = 0; c < spec.tcs_size(); c++) {
-        cos = spec.tcs(c).cos();
-        buf_pool->spec.cos_bmp->set(cos);
-    }
-
-    // allocate PD resources and program hardware
-    pd::pd_buf_pool_args_init(&pd_buf_pool_args);
-    pd_buf_pool_args.buf_pool = buf_pool;
-    ret = pd::pd_buf_pool_create(&pd_buf_pool_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD buf-pool create failure, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
-    }
-
-    // add this buf-pool to the db
-    add_buf_pool_to_db(buf_pool);
-    rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_status()->mutable_buf_pool_handle()->set_handle(buf_pool->hal_handle);
-
-end:
-
-    if (ret != HAL_RET_OK && buf_pool != NULL) {
-        buf_pool_free(buf_pool);
-    }
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
-hal_ret_t
-buf_pool_update (BufPoolSpec& spec,
-                 BufPoolResponse *rsp)
-{
-    return HAL_RET_OK;
-}
-
-
-
-void *
-queue_get_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((queue_t *)entry)->queue_id);
-}
-
-uint32_t
-queue_compute_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(queue_id_t)) % ht_size;
-}
-
-bool
-queue_compare_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(queue_id_t *)key1 == *(queue_id_t *)key2) {
-        return true;
-    }
-    return false;
-}
-
-void *
-queue_get_handle_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((queue_t *)entry)->hal_handle);
-}
-
-uint32_t
-queue_compute_handle_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
-
-bool
-queue_compare_handle_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
-    }
-    return false;
-}
-
 //------------------------------------------------------------------------------
-// remove the queues in all meta data structures
+// delete a qos_class from the config database
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-remove_queues_from_db (queue_t **l0_nodes, uint32_t cnt_l0,
-                       queue_t **l1_nodes, uint32_t cnt_l1,
-                       queue_t **l2_nodes, uint32_t cnt_l2)
+qos_class_del_from_db (qos_class_t *qos_class)
 {
-    uint32_t i;
-    queue_t *queue;
+    hal_handle_id_ht_entry_t    *entry;
+    qos_uplink_cmap_t           *cmap = &qos_class->uplink_cmap;
 
-    for (i = 0; l0_nodes && (i < cnt_l0); i++) {
-        queue = l0_nodes[i];
-        g_hal_state->queue_id_ht()->remove(&queue->queue_id);
-        g_hal_state->queue_hal_handle_ht()->remove(&queue->hal_handle);
+    HAL_TRACE_DEBUG("pi-qos-class:{}:removing from hash table", __func__);
+
+    // Update the global bmps for the cmaps
+    if (qos_class_is_user_defined(qos_class)) {
+        g_hal_state->qos_cmap_pcp_bmp()->clear(cmap->dot1q_pcp);
+        for (unsigned i = 0; i < HAL_ARRAY_SIZE(cmap->ip_dscp); i++) {
+            if (cmap->ip_dscp[i]) {
+                g_hal_state->qos_cmap_dscp_bmp()->clear(i);
+            }
+        }
     }
 
-    for (i = 0; l1_nodes && (i < cnt_l1); i++) {
-        queue = l1_nodes[i];
-        g_hal_state->queue_id_ht()->remove(&queue->queue_id);
-        g_hal_state->queue_hal_handle_ht()->remove(&queue->hal_handle);
+    // remove from hash table
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->qos_class_ht()->
+            remove(&qos_class->key);
+
+    if (entry) {
+        // free up
+        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
 
-    for (i = 0; l2_nodes && (i < cnt_l2); i++) {
-        queue = l2_nodes[i];
-        g_hal_state->queue_id_ht()->remove(&queue->queue_id);
-        g_hal_state->queue_hal_handle_ht()->remove(&queue->hal_handle);
-    }
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
-// insert the queues in all meta data structures
+// validate an incoming qos_class create request
 //------------------------------------------------------------------------------
-static inline hal_ret_t
-add_queues_to_db (queue_t **l0_nodes, uint32_t cnt_l0,
-                  queue_t **l1_nodes, uint32_t cnt_l1,
-                  queue_t **l2_nodes, uint32_t cnt_l2)
+static hal_ret_t
+validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 {
-    uint32_t i;
-    queue_t *queue;
+    bool        no_drop = false;
+    qos_group_t qos_group;
 
-    for (i = 0; i < cnt_l0; i++) {
-        queue = l0_nodes[i];
-        g_hal_state->queue_id_ht()->insert(queue, &queue->ht_ctxt);
-        g_hal_state->queue_hal_handle_ht()->insert(queue, &queue->hal_handle_ht_ctxt);
+    // key-handle field must be set
+    if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("pi-qos:{}:qos group not set in request", __func__);
+        return HAL_RET_INVALID_ARG;
     }
 
-    for (i = 0; i < cnt_l1; i++) {
-        queue = l1_nodes[i];
-        g_hal_state->queue_id_ht()->insert(queue, &queue->ht_ctxt);
-        g_hal_state->queue_hal_handle_ht()->insert(queue, &queue->hal_handle_ht_ctxt);
+    auto kh = spec.key_or_handle();
+    if (kh.key_or_handle_case() != QosClassKeyHandle::kQosGroup) {
+        // key-handle field set, but qos-group not provided
+        HAL_TRACE_ERR("pi-qos:{}:qos group not set in request", __func__);
+        return HAL_RET_INVALID_ARG;
     }
 
-    for (i = 0; i < cnt_l2; i++) {
-        queue = l2_nodes[i];
-        g_hal_state->queue_id_ht()->insert(queue, &queue->ht_ctxt);
-        g_hal_state->queue_hal_handle_ht()->insert(queue, &queue->hal_handle_ht_ctxt);
+    if (find_qos_class_by_key_handle(kh)) {
+        HAL_TRACE_ERR("pi-qos:{}:qos class already exists", __func__);
+        return HAL_RET_ENTRY_EXISTS;
     }
-    return HAL_RET_OK;
-}
 
-static bool 
-queue_node_cmp_fn (queue_t *q1, queue_t *q2)
-{
-    return q1->priority < q2->priority;
-}
+    // mtu should be set
+    if (!spec.mtu()) {
+        HAL_TRACE_ERR("pi-qos:{}:mtu not set in request", __func__);
+        return HAL_RET_INVALID_ARG;
+    }
 
-static hal_ret_t 
-validate_queue_create (QueueSpec& spec,
-                       QueueResponse *rsp) 
-{
-    qos::QueueInfo *queue_info;
-    int q;
+    // Buffer configuration should be present
+    if (!spec.has_buffer() || !spec.buffer().reserved_mtus()) {
+        HAL_TRACE_ERR("pi-qos:{}:buffer not set in request", __func__);
+        return HAL_RET_INVALID_ARG;
+    }
 
-    for (q = 0; q < spec.queues_size(); q++) {
-        queue_info = spec.mutable_queues(q); 
-        if (!queue_info->has_key_or_handle()) {
-            rsp->set_api_status(types::API_STATUS_BUF_POOL_ID_INVALID);
+    if (spec.has_pfc()) {
+        no_drop = true;
+    }
+
+    // Validate buffering configuration
+    if (!no_drop) {
+        if (spec.buffer().headroom_mtus() || 
+            spec.buffer().xon_threshold() ||
+            spec.buffer().xoff_clear_limit()) {
+            HAL_TRACE_ERR("pi-qos:{}:No-drop class buffer params set in request for drop class", 
+                          __func__);
             return HAL_RET_INVALID_ARG;
         }
-
-        if (queue_info->key_or_handle().key_or_handle_case() != 
-            qos::QueueKeyHandle::kQueueId) {
-            rsp->set_api_status(types::API_STATUS_BUF_POOL_ID_INVALID);
+    } else {
+        if (!spec.buffer().headroom_mtus() || 
+            !spec.buffer().xon_threshold() ||
+            !spec.buffer().xoff_clear_limit()) {
+            HAL_TRACE_ERR("pi-qos:{}:No-drop class buffer params not set in request", 
+                          __func__);
             return HAL_RET_INVALID_ARG;
         }
     }
 
+    // Scheduler configuration should be set
+    if (!spec.has_sched()) {
+        HAL_TRACE_ERR("pi-qos:{}:scheduler not set in request", __func__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    qos_group = qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
+    // Validate the uplink-class-map
+    if (qos_group_is_user_defined(qos_group)) {
+        if (!spec.has_uplink_class_map()) {
+            HAL_TRACE_ERR("pi-qos:{}:uplink class map not set", __func__);
+            return HAL_RET_INVALID_ARG;
+        }
+
+        // Do validations to check that the dot1q_pcp and ip_dscp are not 
+        // associated with other classes
+        if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.uplink_class_map().dot1q_pcp())) {
+            HAL_TRACE_ERR("pi-qos-class:{}: Dot1q pcp {} is already in use",
+                          __func__, spec.uplink_class_map().dot1q_pcp());
+            return HAL_RET_INVALID_ARG;
+        }
+
+        for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
+            if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.uplink_class_map().ip_dscp(i))) {
+                HAL_TRACE_ERR("pi-qos-class:{}: IP dscp {} is already in use",
+                              __func__, spec.uplink_class_map().ip_dscp(i));
+                return HAL_RET_INVALID_ARG;
+            }
+        }
+    } else if (spec.has_uplink_class_map()) {
+        HAL_TRACE_ERR("pi-qos:{}:uplink class map set for internal class", __func__);
+        return HAL_RET_INVALID_ARG;
+    }
+
     return HAL_RET_OK;
 }
 
-static queue_t*
-queue_node_alloc (queue_node_type_e node_type, queue_id_t queue_id,
-                  uint32_t port_num, uint32_t priority, sched_type_e sched_type)
-{
-    queue_t *node = NULL;
-
-    node = queue_alloc_init();
-    if (node == NULL) {
-        return NULL;
-    }
-    node->node_type = node_type;
-    node->queue_id = queue_id;
-    node->port_num = port_num;
-    node->hal_handle = hal_alloc_handle();
-    node->priority = priority;
-    node->sched_type = sched_type;
-    return node;
-}
-
-static inline sched_type_e
-get_sched_type (const qos::QueueSchedulerNode& sched_node)
-{
-    if (sched_node.has_dwrr()) {
-        return SCHED_TYPE_DWRR;
-    } else if (sched_node.has_strict()) {
-        return SCHED_TYPE_STRICT;
-    }
-    return SCHED_TYPE_NONE;
-}
-
-static inline uint32_t
-l1_l0_ratio_for_sched_policy (const qos::QueueSchedulerPolicy& sched_policy)
-{
-    switch (sched_policy) {
-        case qos::TM_QUEUE_SCHEDULER_2_4:
-            return 2;
-        case qos::TM_QUEUE_SCHEDULER_4_2:
-            return 4;
-        case qos::TM_QUEUE_SCHEDULER_8_1:
-            return 8;
-        default:
-            return 0;
-    }
-}
-
-static inline uint32_t
-l2_l1_ratio_for_sched_policy (const qos::QueueSchedulerPolicy& sched_policy)
-{
-    switch (sched_policy) {
-        case qos::TM_QUEUE_SCHEDULER_2_4:
-            return 4;
-        case qos::TM_QUEUE_SCHEDULER_4_2:
-            return 2;
-        case qos::TM_QUEUE_SCHEDULER_8_1:
-            return 1;
-        default:
-            return 0;
-    }
-}
-
+//------------------------------------------------------------------------------
+// PD Call to allocate PD resources and HW programming
+//------------------------------------------------------------------------------
 hal_ret_t
-queue_create (QueueSpec& spec,
-              QueueResponse *rsp)
+qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                        ret;
-    queue_t                          *l0_node;
-    queue_t                          *l1_node;
-    queue_t                          *l2_node;
-    pd::pd_queue_args_t              pd_queue_args;
-    uint32_t                         cnt_l0 = 0, cnt_l1 = 0, cnt_l2 = 0;
-    uint32_t                         l1_l0_ratio, l2_l1_ratio;
-    queue_t                          **l0_nodes = NULL;
-    queue_t                          **l1_nodes = NULL;
-    queue_t                          **l2_nodes = NULL;
-    uint32_t                         i, j;
-    uint32_t                         port_num;
-    qos::QueueInfo                   *l0_node_spec = NULL;
-    qos::QueueSchedulerNode          *l1_node_spec = NULL;
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd::pd_qos_class_args_t     pd_qos_class_args = { 0 };
+    dllist_ctxt_t               *lnode = NULL;
+    dhl_entry_t                 *dhl_entry = NULL;
+    qos_class_t                 *qos_class = NULL;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-QUEUE:{}: Queue create ", __func__);
-
-    ret = validate_queue_create(spec, rsp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PI-QUEUE:{}: Queue create request validation failed."
-                     " Err: {}",
-                      __func__, HAL_RET_INVALID_ARG);
-        return ret;
-    }
-
-    HAL_TRACE_DEBUG("PI-QUEUE:{}: Queue create for port {}",
-                    __func__, spec.port_num());
-
-    port_num = spec.port_num();
-    l1_l0_ratio = l1_l0_ratio_for_sched_policy(spec.scheduler_policy());
-    l2_l1_ratio = l2_l1_ratio_for_sched_policy(spec.scheduler_policy());
-
-    cnt_l0 = (uint32_t)spec.queues_size();
-    cnt_l1 = (uint32_t)spec.l1_nodes_size();
-    if (cnt_l1 != (1+((cnt_l0-1)/l1_l0_ratio))) {
-        HAL_TRACE_ERR("PI-QUEUE:{}: Queue create request failed."
-                      "Invalid count of queues {} and l1 nodes {} ",
-                      __func__, cnt_l0, cnt_l1);
-        rsp->set_api_status(types::API_STATUS_QUEUE_COUNT_INVALID);
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("pi-qos-class:{}: invalid cfg_ctxt", __func__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    cnt_l2 = 1 + ((cnt_l1 - 1)/l2_l1_ratio);
 
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    l0_nodes = (queue_t **) HAL_CALLOC(HAL_MEM_ALLOC_QOS,
-                                       sizeof(queue_t *) *
-                                       cnt_l0);
-    HAL_ASSERT(l0_nodes != NULL);
-    l1_nodes = (queue_t **) HAL_CALLOC(HAL_MEM_ALLOC_QOS,
-                                       sizeof(queue_t *) *
-                                       cnt_l1);
-    HAL_ASSERT(l1_nodes != NULL);
-    l2_nodes = (queue_t **) HAL_CALLOC(HAL_MEM_ALLOC_QOS,
-                                       sizeof(queue_t *) *
-                                       cnt_l2);
-    HAL_ASSERT(l2_nodes != NULL);
+    qos_class = (qos_class_t *)dhl_entry->obj;
 
-    // Create L2 nodes
-    for (i = 0; i < cnt_l2; i++) {
-        l2_node = queue_node_alloc(L2_NODE, 0, port_num, i, SCHED_TYPE_STRICT);
-        if (l2_node == NULL) {
-            HAL_TRACE_ERR("PI-QUEUE:{}: Out of Memory. Err: {}",
-                          __func__, HAL_RET_OOM);
-            rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-            ret = HAL_RET_OOM;
-            goto end;
-        }
-        l2_nodes[i] = l2_node;
-    }
+    HAL_TRACE_DEBUG("pi-qos-class:{}:create add CB {}",
+                    __func__, qos_class->key);
 
-    // Create the L1 nodes
-    for (i = 0; i < cnt_l1; i++) {
-        l1_node_spec = spec.mutable_l1_nodes(i);
-
-        l1_node = queue_node_alloc(L1_NODE, 0,
-                                   port_num, l1_node_spec->priority(),
-                                   get_sched_type(spec.l1_nodes(i)));
-        if (l1_node == NULL) {
-            HAL_TRACE_ERR("PI-QUEUE:{}: Out of Memory. Err: {}",
-                          __func__, HAL_RET_OOM);
-            rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-            ret = HAL_RET_OOM;
-            goto end;
-        }
-
-        switch(l1_node->sched_type) {
-            case SCHED_TYPE_DWRR:
-                l1_node->u.dwrr.weight = l1_node_spec->dwrr().weight();
-                break;
-            case SCHED_TYPE_STRICT:
-                l1_node->u.strict.rate = l1_node_spec->strict().rate();
-                break;
-            default:
-                break;
-        }
-        l1_nodes[i] = l1_node;
-    }
-
-    // Create the l0 nodes
-    for (i = 0; i < cnt_l0; i++) {
-        l0_node_spec = spec.mutable_queues(i); 
-
-        l0_node = queue_node_alloc(L0_NODE, l0_node_spec->key_or_handle().queue_id(),
-                                 port_num, l0_node_spec->queue_info().priority(),
-                                 get_sched_type(l0_node_spec->queue_info()));
-        if (l0_node == NULL) {
-            HAL_TRACE_ERR("PI-QUEUE:{}: Out of Memory. Err: {}",
-                          __func__, HAL_RET_OOM);
-            rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-            ret = HAL_RET_OOM;
-            goto end;
-        }
-
-        switch(l0_node->sched_type) {
-            case SCHED_TYPE_DWRR:
-                l0_node->u.dwrr.weight = l0_node_spec->queue_info().dwrr().weight();
-                break;
-            case SCHED_TYPE_STRICT:
-                l0_node->u.strict.rate = l0_node_spec->queue_info().strict().rate();
-                break;
-            default:
-                break;
-        }
-
-        l0_nodes[i] = l0_node;
-    }
-
-    /* Set the queue handles in the response message before sorting below */
-    for (i = 0; i < cnt_l0; i++) {
-        l0_node = l0_nodes[i];
-        rsp->add_status()->mutable_queue_handle()->set_handle(l0_node->hal_handle);
-    }
-
-    // Sort the L0 and L1 nodes according to their priority
-    std::sort(l0_nodes, l0_nodes + cnt_l0, queue_node_cmp_fn);
-    std::sort(l1_nodes, l1_nodes + cnt_l1, queue_node_cmp_fn);
-
-    // Now marry the L0, L1 and L2 nodes according to the scheduling policy
-    for (i = 0; i < cnt_l0; i++) {
-        j = i/l1_l0_ratio;
-        HAL_ASSERT((j < cnt_l1) && "Unexpected error");
-        l0_node = l0_nodes[i];
-        l1_node = l1_nodes[j];
-        l0_node->parent_handle = l1_node->hal_handle;
-    }
-
-    for (i = 0; i < cnt_l1; i++) {
-        j = i/l2_l1_ratio;
-        HAL_ASSERT((j < cnt_l2) && "Unexpected error");
-        l1_node = l1_nodes[i];
-        l2_node = l2_nodes[j];
-        l1_node->parent_handle = l2_node->hal_handle;
-    }
-
-    // add all the queues to the db before calling PD. PD 
-    // will query for the parent nodes
-    add_queues_to_db(l0_nodes, cnt_l0, l1_nodes, cnt_l1, l2_nodes, cnt_l2);
-
-    // allocate PD resources and program hardware
-    pd::pd_queue_args_init(&pd_queue_args);
-    pd_queue_args.cnt_l0 = cnt_l0;
-    pd_queue_args.cnt_l1 = cnt_l1;
-    pd_queue_args.cnt_l2 = cnt_l2;
-    pd_queue_args.l0_nodes = l0_nodes;
-    pd_queue_args.l1_nodes = l1_nodes;
-    pd_queue_args.l2_nodes = l2_nodes;
-    ret = pd::pd_queue_create(&pd_queue_args);
+    // PD Call to allocate PD resources and HW programming
+    pd::pd_qos_class_args_init(&pd_qos_class_args);
+    pd_qos_class_args.qos_class = qos_class;
+    ret = pd::pd_qos_class_create(&pd_qos_class_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD queue create failure, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
+        HAL_TRACE_ERR("pi-qos-class:{}:failed to create qos_class pd, err : {}", 
+                      __func__, ret);
     }
 
-    rsp->set_api_status(types::API_STATUS_OK);
 end:
-
-    if (ret != HAL_RET_OK) {
-        remove_queues_from_db(l0_nodes, cnt_l0, l1_nodes, cnt_l1, l2_nodes, cnt_l2);
-        for(i = 0; l0_nodes && (i < cnt_l0); i++) {
-            if (l0_nodes[i]) { queue_free(l0_nodes[i]); }
-        }
-        for(i = 0; l1_nodes && (i < cnt_l1); i++) {
-            if (l1_nodes[i]) { queue_free(l1_nodes[i]); }
-        }
-        for(i = 0; l2_nodes && (i < cnt_l2); i++) {
-            if (l2_nodes[i]) { queue_free(l2_nodes[i]); }
-        }
-        rsp->clear_status();
-    }
-
-    l0_nodes ? HAL_FREE(HAL_MEM_ALLOC_QOS, l0_nodes) : HAL_NOP;
-    l1_nodes ? HAL_FREE(HAL_MEM_ALLOC_QOS, l1_nodes) : HAL_NOP;
-    l2_nodes ? HAL_FREE(HAL_MEM_ALLOC_QOS, l2_nodes) : HAL_NOP;
-    
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
+
+//------------------------------------------------------------------------------
+// 1. Update PI DBs as qos_class_create_add_cb() was a success
+//      a. Add to qos_class id hash table
+//------------------------------------------------------------------------------
 hal_ret_t
-queue_update (QueueSpec& spec,
-              QueueResponse *rsp)
+qos_class_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    return HAL_RET_OK;
-}
+    hal_ret_t                   ret = HAL_RET_OK;
+    dllist_ctxt_t               *lnode = NULL;
+    dhl_entry_t                 *dhl_entry = NULL;
+    qos_class_t                 *qos_class = NULL;
+    hal_handle_t                hal_handle = 0;
 
-
-
-void *
-policer_get_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((policer_t *)entry)->policer_id);
-}
-
-uint32_t
-policer_compute_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(policer_id_t)) % ht_size;
-}
-
-bool
-policer_compare_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(policer_id_t *)key1 == *(policer_id_t *)key2) {
-        return true;
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("pi-qos-class:{}:invalid cfg_ctxt", __func__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
-    return false;
-}
 
-void *
-policer_get_handle_key_func(void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((policer_t *)entry)->hal_handle);
-}
+    // assumption is there is only one element in the list
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-uint32_t
-policer_compute_handle_hash_func (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
+    qos_class = (qos_class_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
 
-bool
-policer_compare_handle_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
+    HAL_TRACE_DEBUG("pi-qos-class:{}:create commit CB {}",
+                    __func__, qos_class->key);
+
+    // Add to DB
+    ret = qos_class_add_to_db (qos_class, hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-qos-class:{}:unable to add qos class:{} to DB", 
+                      __func__, qos_class->key);
+        goto end;
     }
-    return false;
+
+    HAL_TRACE_ERR("pi-qos-class:{}:added qos class:{} to DB", 
+                  __func__, qos_class->key);
+
+    // TODO: Increment the ref counts of dependent objects
+
+end:
+    return ret;
 }
 
 //------------------------------------------------------------------------------
-// insert this policer in all meta data structures
+// Qos class Cleanup.
+//  - PI Cleanup
+//  - Removes the existence of this qos class in HAL
 //------------------------------------------------------------------------------
-static inline hal_ret_t
-add_policer_to_db (policer_t *policer)
+hal_ret_t
+qos_class_cleanup(qos_class_t *qos_class)
 {
-    if (policer->spec.direction == INGRESS_QOS) {
-        g_hal_state->ingress_policer_id_ht()->insert(policer, &policer->ht_ctxt);
-        g_hal_state->ingress_policer_hal_handle_ht()->insert(policer, &policer->hal_handle_ht_ctxt);
-    } else {
-        g_hal_state->egress_policer_id_ht()->insert(policer, &policer->ht_ctxt);
-        g_hal_state->egress_policer_hal_handle_ht()->insert(policer, &policer->hal_handle_ht_ctxt);
+    hal_ret_t       ret = HAL_RET_OK;
+
+    // Remove from DB
+    ret = qos_class_del_from_db(qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-qos-class:{}:unable to delete qos class from DB", __func__);
+        goto end;
+    }
+    HAL_TRACE_ERR("pi-qos-class:{}:deleted qos class:{} from DB", 
+                  __func__, qos_class->key);
+
+    // Free qos class 
+    ret = qos_class_free(qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-qos-class:{}:unable to free qos class", __func__);
+        goto end;
     }
 
-    return HAL_RET_OK;
+end:
+    return ret;
 }
 
-static qos_direction_e 
-policer_proto_dir_to_enum (qos::PolicerDirection proto_dir)
+
+//------------------------------------------------------------------------------
+// qos_class_create_add_cb was a failure
+// 1. call delete to PD
+//      a. Deprogram HW
+//      b. Clean up resources
+//      c. Free PD object
+// 2. Remove object from hal_handle id based hash table in infra
+// 3. Free PI qos class 
+//------------------------------------------------------------------------------
+hal_ret_t
+qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    switch(proto_dir) {
-        case qos::INGRESS_POLICER:
-            return INGRESS_QOS;
-        case qos::EGRESS_POLICER:
-            return EGRESS_QOS;
-        default:
-            return INGRESS_QOS;
+    hal_ret_t               ret = HAL_RET_OK;
+    pd::pd_qos_class_args_t pd_qos_class_args = { 0 };
+    dllist_ctxt_t           *lnode = NULL;
+    dhl_entry_t             *dhl_entry = NULL;
+    qos_class_t             *qos_class = NULL;
+    hal_handle_t            hal_handle = 0;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("pi-qos-class:{}:invalid cfg_ctxt", __func__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    qos_class = (qos_class_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("pi-qos-class:{}:create abort CB {}", __func__);
+
+    // 1. delete call to PD
+    if (qos_class->pd) {
+        pd::pd_qos_class_args_init(&pd_qos_class_args);
+        pd_qos_class_args.qos_class = qos_class;
+        ret = pd::pd_qos_class_delete(&pd_qos_class_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pi-qos-class:{}:failed to delete qos_class pd, err : {}", 
+                          __func__, ret);
+        }
+    }
+
+    // 2. remove object from hal_handle id based hash table in infra
+    hal_handle_free(hal_handle);
+
+    // 3. Free PI qos class
+    qos_class_cleanup(qos_class);
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Dummy create cleanup callback
+// ----------------------------------------------------------------------------
+hal_ret_t
+qos_class_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Converts hal_ret_t to API status
+//------------------------------------------------------------------------------
+hal_ret_t
+qos_class_prepare_rsp (QosClassResponse *rsp, hal_ret_t ret, 
+                       hal_handle_t hal_handle)
+{
+    if (ret == HAL_RET_OK) {
+        rsp->mutable_status()->set_qos_class_handle(hal_handle);
+    }
+
+    rsp->set_api_status(hal_prepare_rsp(ret));
+
+    return HAL_RET_OK;
 }
 
 static hal_ret_t 
-validate_policer_create (PolicerSpec& spec,
-                         PolicerResponse *rsp) 
+update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
 {
-    if (!spec.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_POLICER_ID_INVALID);
+    qos_buf_t   *buffer = &qos_class->buffer;
+    uint8_t     pfc_cos;
+    bool        no_drop = false;
+
+    if (!spec.has_buffer()) {
         return HAL_RET_INVALID_ARG;
     }
 
-    if (spec.key_or_handle().key_or_handle_case() != 
-        qos::PolicerKeyHandle::kPolicerId) {
-        rsp->set_api_status(types::API_STATUS_POLICER_ID_INVALID);
+    if (spec.has_pfc()) {
+        no_drop = true;
+    }
+
+    buffer->reserved_mtus = spec.buffer().reserved_mtus();
+    if (no_drop) {
+        buffer->headroom_mtus =  spec.buffer().headroom_mtus();
+        buffer->xon_threshold =  spec.buffer().xon_threshold();
+        buffer->xoff_clear_limit =  spec.buffer().xoff_clear_limit();
+    }
+
+    for (int i = 0; i < spec.pfc().pfc_cos_size(); i++) {
+        pfc_cos = spec.pfc().pfc_cos(i);
+        if (pfc_cos >= HAL_MAX_PFC_COS_VALS) {
+            HAL_TRACE_ERR("pi-qos:{}: Invalid pfc cos value {}", 
+                          __func__, pfc_cos);
+            return HAL_RET_INVALID_ARG;
+        }
+
+        // TODO: Can pfc-cos be overlapping across different classes ? 
+        qos_class->pfc_cos[pfc_cos] = true;
+    }
+
+    qos_class->no_drop = no_drop;
+    return HAL_RET_OK;
+}
+
+static hal_ret_t 
+update_sched_params (QosClassSpec& spec, qos_class_t *qos_class)
+{
+    qos_sched_t *sched = &qos_class->sched;
+    if (!spec.has_sched()) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (spec.sched().has_dwrr()) {
+        sched->type = QOS_SCHED_TYPE_DWRR;
+        sched->dwrr.bw = spec.sched().dwrr().bw_percentage();
+    } else if (spec.sched().has_strict()) {
+        sched->type = QOS_SCHED_TYPE_STRICT;
+        sched->strict.bps = spec.sched().strict().bps();
+    } else {
         return HAL_RET_INVALID_ARG;
     }
 
     return HAL_RET_OK;
 }
 
-static inline void
-qos_extract_marking_action_from_spec (qos_marking_action_t *m_spec, 
-                                      const qos::MarkingActionSpec& spec)
-
+static hal_ret_t
+update_cmap_params (QosClassSpec& spec, qos_class_t *qos_class)
 {
-    m_spec->pcp_rewrite_en = spec.pcp_rewrite_en();
-    m_spec->pcp = spec.pcp();
-    m_spec->dscp_rewrite_en = spec.dscp_rewrite_en();
-    m_spec->dscp = spec.dscp();
+    qos_uplink_cmap_t *cmap = &qos_class->uplink_cmap;
+     
+
+    if (!qos_class_is_user_defined(qos_class)) {
+        return HAL_RET_OK;
+    }
+
+    if (!spec.has_uplink_class_map()) {
+        HAL_TRACE_ERR("pi-qos-class:{}: Invalid class map specified", 
+                      __func__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    cmap->dot1q_pcp = spec.uplink_class_map().dot1q_pcp();
+    for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
+        cmap->ip_dscp[spec.uplink_class_map().ip_dscp(i)] = true;
+    }
+
+    return HAL_RET_OK;
 }
 
-hal_ret_t
-policer_create (PolicerSpec& spec,
-                PolicerResponse *rsp)
+static hal_ret_t
+update_marking_params (QosClassSpec& spec, qos_class_t *qos_class)
 {
-    hal_ret_t             ret = HAL_RET_OK;
-    policer_t             *policer;
-    pd::pd_policer_args_t pd_policer_args;
+    qos_marking_action_t *marking = &qos_class->marking;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-POLICER:{}: Policer create ", __func__);
+    if (spec.has_marking()) {
+        marking->pcp_rewrite_en = spec.marking().dot1q_pcp_rewrite_en();
+        marking->pcp = spec.marking().dot1q_pcp();
+        marking->dscp_rewrite_en = spec.marking().ip_dscp_rewrite_en();
+        marking->dscp = spec.marking().ip_dscp();
+    }
 
-    ret = validate_policer_create(spec, rsp);
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+qos_class_populate_from_spec (qos_class_t *qos_class, QosClassSpec& spec)
+{
+    hal_ret_t ret;
+
+    qos_class->key.qos_group = 
+        qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
+    qos_class->mtu = spec.mtu();
+
+    ret = update_buffer_params(spec, qos_class);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PI-POLICER:{}: Policer create request validation failed."
-                     " Err: {}",
-                      __func__, HAL_RET_INVALID_ARG);
         return ret;
     }
 
-    HAL_TRACE_DEBUG("PI-POLICER:{}: Policer create for id {}",
-                    __func__, spec.key_or_handle().policer_id());
+    ret = update_sched_params(spec, qos_class);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
 
-    // allocate a policer instance
-    policer = policer_alloc_init();
-    if (policer == NULL) {
-        HAL_TRACE_ERR("PI-POLICER:{}: Out of Memory. Err: {}",
-                      __func__, HAL_RET_OOM);
-        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
+    ret = update_cmap_params(spec, qos_class);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    ret = update_marking_params(spec, qos_class);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// process a qos_class create request
+//------------------------------------------------------------------------------
+hal_ret_t
+qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    qos_class_t                 *qos_class = NULL;
+    dhl_entry_t                 dhl_entry = { 0 };
+    cfg_op_ctxt_t               cfg_ctxt = { 0 };
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("pi-qos-class:{}: qos_class create ", __func__);
+
+    ret = validate_qos_class_create(spec, rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-qos-class:{}: Validation failed ret {}", __func__, ret);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("pi-qos-class:{}: qos_class create for qos-group {} ", 
+                    __func__, 
+                    qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group()));
+
+    // instantiate qos class 
+    qos_class = qos_class_alloc_init();
+    if (qos_class == NULL) {
+        HAL_TRACE_ERR("pi-qos-class:{}:unable to allocate handle/memory ret: {}",
+                      __func__, ret);
         ret = HAL_RET_OOM;
         goto end;
     }
 
-    // save the configs from the spec
-    policer->policer_id = spec.key_or_handle().policer_id();
-    policer->hal_handle = hal_alloc_handle();
-    
-    policer->spec.direction = policer_proto_dir_to_enum(spec.direction());
-    policer->spec.bandwidth = spec.bandwidth();
-    policer->spec.burst_size = spec.burst_size();
-    if (spec.has_marking_spec()) {
-        qos_extract_marking_action_from_spec(&policer->spec.marking_action, spec.marking_spec());
-    }
+    // initialize the qos class record
+    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_PRIVATE);
 
-    // allocate PD resources and program hardware
-    pd::pd_policer_args_init(&pd_policer_args);
-    pd_policer_args.policer = policer;
-    ret = pd::pd_policer_create(&pd_policer_args);
+    // populate from the spec
+    ret = qos_class_populate_from_spec(qos_class, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD policer create failure, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        HAL_TRACE_ERR("pi-qos-class:{}: error in populating qos-class from spec",
+                      __func__);
         goto end;
     }
 
-    // add this policer to the db
-    add_policer_to_db(policer);
-    rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_status()->mutable_policer_handle()->set_handle(policer->hal_handle);
-
-end:
-
-    if (ret != HAL_RET_OK && policer != NULL) {
-        policer_free(policer);
+    // allocate hal handle id
+    qos_class->hal_handle = hal_handle_alloc(HAL_OBJ_ID_QOS_CLASS);
+    if (qos_class->hal_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("pi-qos-class:{}: failed to alloc handle", 
+                      __func__);
+        ret = HAL_RET_HANDLE_INVALID;
+        goto end;
     }
+
+    // form ctxt and call infra add
+    // app_ctxt.tenant = tenant;
+
+    dhl_entry.handle = qos_class->hal_handle;
+    dhl_entry.obj = qos_class;
+    utils::dllist_reset(&cfg_ctxt.dhl);
+    utils::dllist_reset(&dhl_entry.dllist_ctxt);
+    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_add_obj(qos_class->hal_handle, &cfg_ctxt, 
+                             qos_class_create_add_cb,
+                             qos_class_create_commit_cb,
+                             qos_class_create_abort_cb, 
+                             qos_class_create_cleanup_cb);
+
+    if (ret != HAL_RET_OK) {
+        // qos-class was freed during abort, pointer not valid anymore
+        qos_class = NULL;
+    }
+end:
+    if (ret != HAL_RET_OK) {
+        if (qos_class) {
+            qos_class_free(qos_class);
+            qos_class = NULL;
+        }
+    }
+
+    qos_class_prepare_rsp(rsp, ret, qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
-
-hal_ret_t
-policer_update (PolicerSpec& spec,
-                PolicerResponse *rsp)
-{
-    return HAL_RET_OK;
-}
-
-
-hal_ret_t
-qos_action_to_qos_action_spec (const qos_action_t *qos_action,
-                               qos::QOSActions *spec)
-{
-    spec->mutable_queue_key_or_handle()->mutable_queue_handle()->set_handle(qos_action->queue_handle);
-    spec->mutable_policer_key_or_handle()->mutable_policer_handle()->set_handle(qos_action->policer_handle);
-
-    qos::MarkingActionSpec *marking_spec = spec->mutable_marking_spec();
-    marking_spec->set_pcp_rewrite_en(qos_action->marking_action.pcp_rewrite_en);
-    marking_spec->set_pcp(qos_action->marking_action.pcp);
-    marking_spec->set_dscp_rewrite_en(qos_action->marking_action.dscp_rewrite_en);
-    marking_spec->set_dscp(qos_action->marking_action.dscp);
-
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-qos_extract_action_from_spec (qos_action_t *qos_action,
-                              const qos::QOSActions& spec,
-                              qos_direction_e direction)
-{
-    queue_id_t queue_id;
-    queue_t *queue;
-    hal_handle_t queue_handle;
-    policer_id_t policer_id;
-    policer_t *policer;
-    hal_handle_t policer_handle;
-
-    qos_action->direction = direction;
-
-    // Sanity checks
-    if (spec.has_queue_key_or_handle()) {
-        auto queue_kh = spec.queue_key_or_handle();
-        if (queue_kh.key_or_handle_case() == qos::QueueKeyHandle::kQueueId) {
-            queue_id = queue_kh.queue_id();
-            queue = find_queue_by_id(queue_id);
-        } else {
-            queue_handle = queue_kh.queue_handle().handle();
-            queue = find_queue_by_handle(queue_handle);
-        }
-
-        if (queue == NULL) {
-            HAL_TRACE_ERR("PI-QOS:{}: Output queue not found",
-                          __func__);
-            return HAL_RET_OQUEUE_NOT_FOUND;
-        }
-        qos_action->queue_valid = true;
-        qos_action->queue_handle = queue->hal_handle;
-    }
-
-    if (spec.has_policer_key_or_handle()) {
-        auto policer_kh = spec.policer_key_or_handle();
-        if (policer_kh.key_or_handle_case() == qos::PolicerKeyHandle::kPolicerId) {
-            policer_id = policer_kh.policer_id();
-            policer = find_policer_by_id(policer_id, direction);
-        } else {
-            policer_handle = policer_kh.policer_handle().handle();
-            policer = find_policer_by_handle(policer_handle, direction);
-        }
-
-        if (policer == NULL) {
-            HAL_TRACE_ERR("PI-QOS:{}: Policer not found",
-                          __func__);
-            return HAL_RET_POLICER_NOT_FOUND;
-        }
-        qos_action->policer_valid = true;
-        qos_action->policer_handle = policer->hal_handle;
-    }
-
-    if (spec.has_marking_spec()) {
-        if (direction == INGRESS_QOS) {
-            HAL_TRACE_ERR("PI-QOS:{}: Marking is not supported in ingress",
-                          __func__);
-            return HAL_RET_INVALID_ARG;
-        }
-
-        qos_extract_marking_action_from_spec(&qos_action->marking_action,
-                                             spec.marking_spec());
-    }
-    return HAL_RET_OK;
-}
-
 }    // namespace hal

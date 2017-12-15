@@ -296,8 +296,6 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     d.flow_info_action_u.flow_info_flow_info.multicast_ptr = flow_attrs->mcast_ptr;
 
     // TBD: where do these come from ?
-    // TBD: the following come when QoS model is defined
-    d.flow_info_action_u.flow_info_flow_info.egress_policer_index = 0;
     d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = flow_cfg->ing_mirror_session;
     d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id = flow_cfg->eg_mirror_session;
     // Set the tunnel originate flag
@@ -313,10 +311,9 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     }
     d.flow_info_action_u.flow_info_flow_info.twice_nat_idx = flow_attrs->twice_nat_idx;
 
-    d.flow_info_action_u.flow_info_flow_info.cos_en = flow_attrs->dot1p_en;
-    d.flow_info_action_u.flow_info_flow_info.cos = flow_attrs->dot1p;
-    d.flow_info_action_u.flow_info_flow_info.dscp_en = flow_attrs->dscp_en;
-    d.flow_info_action_u.flow_info_flow_info.dscp = flow_attrs->dscp;
+    // TODO Setup these params
+    d.flow_info_action_u.flow_info_flow_info.qos_class_en = 0;
+    d.flow_info_action_u.flow_info_flow_info.qos_class_id = 0;
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;

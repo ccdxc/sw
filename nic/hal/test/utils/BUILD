@@ -19,6 +19,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/utils/mtrack:mtrack",
         "//:gtest",
+        "//nic/hal/pd/capri:capri_includes",
     ],
     copts = sdk_copts
 )

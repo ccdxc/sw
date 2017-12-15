@@ -137,8 +137,6 @@ TEST_F(enicif_test, test1)
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(1);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(20);
-    enicif_spec.mutable_tx_qos_actions()->mutable_marking_spec()->set_pcp_rewrite_en(1);
-    enicif_spec.mutable_tx_qos_actions()->mutable_marking_spec()->set_pcp(12);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec, &enicif_rsp);
     hal::hal_cfg_db_close();

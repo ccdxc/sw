@@ -5,9 +5,9 @@
 syntax = "proto3";
 
 import "types.proto";
-import "qos.proto";
 import "telemetry.proto";
 import "nwsec.proto";
+import "qos.proto";
 
 package session;
 option go_package="halproto";
@@ -121,18 +121,17 @@ enum FlowType {
 // FlowInfo contains flow information like counters, forwarding information,
 // NAT rewrite information etc.
 message FlowInfo {
-  FlowAction      flow_action    = 1;    // flow action(s)
-  NatType         nat_type       = 2;    // NAT mode
-  types.IPAddress nat_sip        = 3;    // source IP to NAT to
-  uint32          nat_sport      = 4;    // source port to NAT to
-  types.IPAddress nat_dip        = 5;    // destination IP to NAT to
-  uint32          nat_dport      = 6;    // dstination port to NAT to
-  fixed64         nat_dmac       = 7;    // For DSR
-  FlowTCPState    tcp_state      = 8;    // TCP state, if any
-  qos.QOSActions  in_qos_actions = 9;    // QOS actions for the flow coming in (ingress P4 pipeline)
-  qos.QOSActions  eg_qos_actions = 10;    // QOS actions for the flow while going out (egress P4 pipeline)
-  repeated telemetry.MirrorSessionId  ing_mirror_sessions = 11;   // Mirror sessions to copy the flow to
-  repeated telemetry.MirrorSessionId  egr_mirror_sessions = 12;   // Mirror sessions to copy the flow to
+  FlowAction                         flow_action          = 1;     // flow action(s)
+  NatType                            nat_type             = 2;     // NAT mode
+  types.IPAddress                    nat_sip              = 3;     // source IP to NAT to
+  uint32                             nat_sport            = 4;     // source port to NAT to
+  types.IPAddress                    nat_dip              = 5;     // destination IP to NAT to
+  uint32                             nat_dport            = 6;     // dstination port to NAT to
+  fixed64                            nat_dmac             = 7;     // For DSR
+  FlowTCPState                       tcp_state            = 8;     // TCP state, if any
+  qos.QosClassKeyHandle              qos_class_key_handle = 9;     // QOS class for the flow
+  repeated telemetry.MirrorSessionId ing_mirror_sessions  = 10;    // Mirror sessions to copy the flow to
+  repeated telemetry.MirrorSessionId egr_mirror_sessions  = 11;    // Mirror sessions to copy the flow to
 }
 
 // ConnTrackInfo contains dynamic information that was recorded due to connection tracking

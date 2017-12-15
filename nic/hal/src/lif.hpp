@@ -67,6 +67,8 @@ typedef struct lif_s {
     bool                qstate_init_done;            // qstate map init status.
     pkt_filter_t        packet_filters;              // Packet Filter Modes
     lif_rss_info_t      rss;                         // rss enable
+    policer_t           rx_policer;      // Rx policer
+    policer_t           tx_policer;      // Tx policer
 
     // operational state of interface
     hal_handle_t        hal_handle;      // HAL allocated handle
@@ -96,6 +98,8 @@ typedef struct lif_update_app_ctxt_s {
     bool         qstate_map_init_set;
     uint64_t     vlan_strip_en_changed:1;
     uint64_t     pinned_uplink_changed:1;
+    uint64_t     rx_policer_changed:1;
+    uint64_t     tx_policer_changed:1;
     hal_handle_t new_pinned_uplink;
     bool         rss_config_changed;
 } __PACK__ lif_update_app_ctxt_t;

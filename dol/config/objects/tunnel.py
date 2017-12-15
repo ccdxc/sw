@@ -130,13 +130,13 @@ class TunnelObject(base.ConfigObjectBase):
             req_spec.if_tunnel_info.gre_info.destination.ip_af = haldefs.common.IP_AF_INET
             req_spec.if_tunnel_info.gre_info.destination.v4_addr = self.remote_ep.ipaddrs[0].getnum()
 
-        # QOS stuff
-        if self.txqos.cos is not None:
-            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
-            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
-        if self.txqos.dscp is not None:
-            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
-            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
+#        # QOS stuff
+#        if self.txqos.cos is not None:
+#            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
+#            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
+#        if self.txqos.dscp is not None:
+#            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
+#            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
  
         return
 

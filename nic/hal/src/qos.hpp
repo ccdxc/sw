@@ -6,44 +6,93 @@
 #include "nic/sdk/include/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "../../gen/proto/hal/qos.pb.h"
+#include "nic/include/pd.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using hal::utils::bitmap;
 
-using qos::BufPoolSpec;
-using qos::BufPoolKeyHandle;
-using qos::BufPoolRequestMsg;
-using qos::BufPoolResponse;
-using qos::BufPoolResponseMsg;
-using qos::BufPoolDeleteRequestMsg;
-using qos::BufPoolDeleteResponseMsg;
-using qos::BufPoolGetRequestMsg;
-using qos::BufPoolGetResponseMsg;
-using qos::QueueSpec;
-using qos::QueueKeyHandle;
-using qos::QueueRequestMsg;
-using qos::QueueResponse;
-using qos::QueueResponseMsg;
-using qos::QueueDeleteRequestMsg;
-using qos::QueueDeleteResponseMsg;
-using qos::QueueGetRequestMsg;
-using qos::QueueGetResponseMsg;
-using qos::PolicerSpec;
-using qos::PolicerKeyHandle;
-using qos::PolicerRequestMsg;
-using qos::PolicerResponse;
-using qos::PolicerResponseMsg;
-using qos::PolicerDeleteRequestMsg;
-using qos::PolicerDeleteResponseMsg;
-using qos::PolicerGetRequestMsg;
-using qos::PolicerGetResponseMsg;
+using qos::QosClassSpec;
+using qos::QosClassKeyHandle;
+using qos::QosClassRequestMsg;
+using qos::QosClassResponse;
+using qos::QosClassResponseMsg;
+using qos::QosClassDeleteRequestMsg;
+using qos::QosClassDeleteResponseMsg;
+using qos::QosClassGetRequestMsg;
+using qos::QosClassGetResponseMsg;
 
 namespace hal {
 
-typedef enum {
-    INGRESS_QOS = 0,
-    EGRESS_QOS = 1
-} qos_direction_e;
+#define HAL_MAX_DOT1Q_PCP_VALS 8
+#define HAL_MAX_IP_DSCP_VALS   64
+// Maximum pfc cos values
+#define HAL_MAX_PFC_COS_VALS HAL_MAX_DOT1Q_PCP_VALS
+
+#define QOS_GROUPS(ENTRY)                                       \
+    ENTRY(QOS_GROUP_DEFAULT,             0, "default")          \
+    ENTRY(QOS_GROUP_USER_DEFINED_1,      1, "user-defined-1")   \
+    ENTRY(QOS_GROUP_USER_DEFINED_2,      2, "user-defined-2")   \
+    ENTRY(QOS_GROUP_USER_DEFINED_3,      3, "user-defined-3")   \
+    ENTRY(QOS_GROUP_USER_DEFINED_4,      4, "user-defined-4")   \
+    ENTRY(QOS_GROUP_USER_DEFINED_5,      5, "user-defined-5")   \
+    ENTRY(QOS_GROUP_USER_DEFINED_6,      6, "user-defined-6")   \
+    ENTRY(QOS_GROUP_ADMIN,               7, "admin")            \
+    ENTRY(QOS_GROUP_CONTROL,             8, "control")          \
+    ENTRY(QOS_GROUP_SPAN,                9, "span")             \
+    ENTRY(QOS_GROUP_RX_PROXY_NO_DROP,   10, "rx-proxy-no-drop") \
+    ENTRY(QOS_GROUP_RX_PROXY_DROP,      11, "rx-proxy-drop")    \
+    ENTRY(QOS_GROUP_TX_PROXY_NO_DROP,   12, "tx-proxy-no-drop") \
+    ENTRY(QOS_GROUP_TX_PROXY_DROP,      13, "tx-proxy-drop")    \
+    ENTRY(QOS_GROUP_CPU_COPY,           14, "cpu-copy")         \
+    ENTRY(NUM_QOS_GROUPS,               15, "num-qos-groups")         
+
+DEFINE_ENUM(qos_group_t, QOS_GROUPS)
+#undef QOS_GROUOPS
+
+#define HAL_MAX_QOS_CLASSES NUM_QOS_GROUPS
+
+typedef struct qos_class_key_s {
+    qos_group_t qos_group;
+} __PACK__ qos_class_key_t;
+
+inline std::ostream& operator<<(std::ostream& os, const qos_class_key_t& s)
+{
+   return os << fmt::format("{{qos_group={}}}", s.qos_group);
+}
+
+typedef struct qos_buf_s {
+    uint32_t reserved_mtus;       // Number of bytes reserved
+    uint32_t headroom_mtus;       // Number of additional bytes reserved
+                                  // Before this is used, xoff will be asserted
+    uint32_t xon_threshold;       // Relative threshold from the
+                                  // max occupancy at which xoff will be cleared
+    uint32_t xoff_clear_limit;    // When the pool occupancy goes
+                                  // below this limit, xoff will be cleared
+} __PACK__   qos_buf_t;
+
+#define QOS_SCHED_TYPES(ENTRY)                       \
+    ENTRY(QOS_SCHED_TYPE_DWRR,          0, "dwrr")   \
+    ENTRY(QOS_SCHED_TYPE_STRICT,        1, "strict")
+
+DEFINE_ENUM(qos_sched_type_e, QOS_SCHED_TYPES);
+#undef QOS_SCHED_TYPES
+
+typedef struct qos_sched_s {
+    qos_sched_type_e type;
+    union {
+        struct {
+            uint32_t  bw;                // Bandwidth percentage for DWRR
+        } dwrr;
+        struct {
+            uint32_t  bps;               // Rate for strict priority scheduling
+        } strict;
+    } __PACK__;
+} __PACK__ qos_sched_t;
+
+typedef struct qos_uplink_cmap_s {
+    uint32_t    dot1q_pcp;
+    bool        ip_dscp[HAL_MAX_IP_DSCP_VALS];
+} __PACK__ qos_uplink_cmap_t;
 
 typedef struct qos_marking_action_s {
     bool     pcp_rewrite_en;     // Rewrite the 802.1q pcp value
@@ -52,366 +101,202 @@ typedef struct qos_marking_action_s {
     uint32_t dscp;               // DSCP value to mark with
 } __PACK__ qos_marking_action_t;
 
-// Structure to define qos action
-typedef struct qos_action_s {
-    qos_direction_e         direction;
-    bool                    queue_valid;    // Queue is valid
-    hal_handle_t            queue_handle;
-    bool                    policer_valid;  // Policer is enabled
-    hal_handle_t            policer_handle;
-    qos_marking_action_t    marking_action;
-} __PACK__ qos_action_t;
+// QosClass structure
+typedef struct qos_class_s {
+    hal_spinlock_t       slock;                            // lock to protect this structure
+    qos_class_key_t      key;                              // QOS group information
+    bool                 no_drop;                          // No drop class
 
-hal_ret_t
-qos_extract_action_from_spec (qos_action_t *qos_action,
-                              const qos::QOSActions& spec,
-                              qos_direction_e direction);
+    uint32_t             mtu;                              // MTU of the packets in bytes
+    qos_buf_t            buffer;                           // buffer configuration
+    bool                 pfc_cos[HAL_MAX_PFC_COS_VALS];    // PFC coses the class
+                                                           // participates in
+    qos_sched_t          sched;                            // scheduler configuration
+    qos_uplink_cmap_t    uplink_cmap;                      // Uplink class map
+    qos_marking_action_t marking;
 
-hal_ret_t
-qos_action_to_qos_action_spec (const qos_action_t *qos_action,
-                                 qos::QOSActions *spec);
+                                                           // operational state of qos-class
+    hal_handle_t         hal_handle;                       // HAL allocated handle
 
-#define HAL_MAX_BUF_POOLS            (32*HAL_MAX_TM_PORTS)
-#define HAL_MAX_COSES                32
+    pd::pd_qos_class_t   *pd;
+} __PACK__ qos_class_t;
 
-// Specifications for the buf-pool
-typedef struct buf_pool_spec_s {
-    uint32_t reserved_bytes;      // Number of bytes reserved for
-                                  // this pool
-    uint32_t headroom_bytes;      // Number of additional bytes
-                                  // reserved for this pool
-                                  // Before this is used, xoff will be asserted
-    uint32_t sharing_factor;      // Sharing factor used to grab
-                                  // buffers from shared pool
-    uint32_t xon_threshold;       // Relative threshold from the
-                                  // max occupancy at which xoff will be cleared
-    uint32_t xoff_clear_limit;    // When the pool occupancy goes
-                                  // below this limit, xoff will be cleared
-    uint32_t mtu;                 // MTU of the packets in bytes
-    bitmap   *cos_bmp;            // COS values using this buffer pool
-} __PACK__ buf_pool_spec_t;
+// CB data structures
+typedef struct qos_class_create_app_ctxt_s {
+} __PACK__ qos_class_create_app_ctxt_t;
 
-// Buf-Pool structure
-typedef struct buf_pool_s {
-    hal_spinlock_t  slock;                 // lock to protect this structure
-    buf_pool_id_t   buf_pool_id;           // buf-pool id assigned
-    uint32_t        port_num;              // buf-pool's port number
+typedef struct qos_class_update_app_ctxt_s {
+} __PACK__ qos_class_update_app_ctxt_t;
 
-    buf_pool_spec_t spec;
-
-    hal_handle_t    hal_handle;            // HAL allocated handle
-
-    ht_ctxt_t       ht_ctxt;               // buf_pool_id based hash table ctxt
-    ht_ctxt_t       hal_handle_ht_ctxt;    // hal handle based hash table ctxt
-
-    void            *pd_buf_pool;
-} __PACK__ buf_pool_t;
-
-static inline hal_ret_t
-buf_pool_free (buf_pool_t *buf_pool)
+// allocate a QosClass instance
+static inline qos_class_t *
+qos_class_alloc (void)
 {
-    buf_pool->spec.cos_bmp ? bitmap::destroy(buf_pool->spec.cos_bmp) : HAL_NOP;
+    qos_class_t    *qos_class;
 
-    HAL_SPINLOCK_DESTROY(&buf_pool->slock);
-    g_hal_state->buf_pool_slab()->free(buf_pool);
-    return HAL_RET_OK;
-}
-
-// allocate a buf-pool instance
-static inline buf_pool_t *
-buf_pool_alloc (void)
-{
-    buf_pool_t    *buf_pool;
-
-    buf_pool = (buf_pool_t *)g_hal_state->buf_pool_slab()->alloc();
-    if (buf_pool == NULL) {
+    qos_class = (qos_class_t *)g_hal_state->qos_class_slab()->alloc();
+    if (qos_class == NULL) {
         return NULL;
     }
-    buf_pool->spec.cos_bmp = bitmap::factory(HAL_MAX_COSES, true);
-    if (buf_pool->spec.cos_bmp == NULL) {
-        buf_pool_free(buf_pool);
+    return qos_class;
+}
+
+// initialize a QosClass instance
+static inline qos_class_t *
+qos_class_init (qos_class_t *qos_class)
+{
+    if (!qos_class) {
         return NULL;
     }
-    return buf_pool;
+    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_PRIVATE);
+
+    return qos_class;
 }
 
-// initialize a buf-pool instance
-static inline buf_pool_t *
-buf_pool_init (buf_pool_t *buf_pool)
+// allocate and initialize a qos_class instance
+static inline qos_class_t *
+qos_class_alloc_init (void)
 {
-    if (!buf_pool) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&buf_pool->slock, PTHREAD_PROCESS_PRIVATE);
-
-    // initialize the operational state
-
-    // initialize meta information
-    buf_pool->ht_ctxt.reset();
-    buf_pool->hal_handle_ht_ctxt.reset();
-
-    return buf_pool;
-}
-
-// allocate and initialize a buf-pool instance
-static inline buf_pool_t *
-buf_pool_alloc_init (void)
-{
-    return buf_pool_init(buf_pool_alloc());
-}
-
-static inline buf_pool_t *
-find_buf_pool_by_id (buf_pool_id_t buf_pool_id)
-{
-    return (buf_pool_t *)g_hal_state->buf_pool_id_ht()->lookup(&buf_pool_id);
-}
-
-static inline buf_pool_t *
-find_buf_pool_by_handle (hal_handle_t handle)
-{
-    return (buf_pool_t *)g_hal_state->buf_pool_hal_handle_ht()->lookup(&handle);
-}
-
-extern void *buf_pool_get_key_func(void *entry);
-extern uint32_t buf_pool_compute_hash_func(void *key, uint32_t ht_size);
-extern bool buf_pool_compare_key_func(void *key1, void *key2);
-
-extern void *buf_pool_get_handle_key_func(void *entry);
-extern uint32_t buf_pool_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool buf_pool_compare_handle_key_func(void *key1, void *key2);
-
-
-hal_ret_t buf_pool_create(qos::BufPoolSpec& spec,
-                          qos::BufPoolResponse *rsp);
-hal_ret_t buf_pool_update(qos::BufPoolSpec& spec,
-                          qos::BufPoolResponse *rsp);
-
-
-
-
-#define HAL_MAX_QUEUE_NODES (HAL_MAX_TM_PORTS*52)
-
-typedef enum {
-    L0_NODE = 0,
-    L1_NODE = 1,
-    L2_NODE = 2
-} queue_node_type_e;
-
-typedef enum {
-    SCHED_TYPE_NONE = 0,
-    SCHED_TYPE_STRICT = 1,
-    SCHED_TYPE_DWRR = 2
-} sched_type_e;
-
-typedef union sched_config_s {
-    struct {
-        uint32_t  weight;                // Weight for DWRR
-    } dwrr;
-    struct {
-        uint32_t  rate;                  // Rate for strict priority scheduling
-    } strict;
-} __PACK__ sched_config_t;
-
-// Queue structure
-typedef struct queue_s {
-    hal_spinlock_t    slock;                 // lock to protect this structure
-    queue_id_t        queue_id;              // Queue id assigned
-    uint32_t          port_num;              // Queue's port number
-
-    queue_node_type_e node_type;             // Node type
-    uint32_t          priority;              // Priority of the queue
-    sched_type_e      sched_type;            // Scheduler type for this queue
-    sched_config_t    u;
-
-    hal_handle_t      parent_handle;         // Parent queue node's handle
-
-
-    hal_handle_t      hal_handle;            // HAL allocated handle
-
-    ht_ctxt_t         ht_ctxt;               // queue_id based hash table ctxt
-    ht_ctxt_t         hal_handle_ht_ctxt;    // hal handle based hash table ctxt
-
-    void              *pd_queue;
-} __PACK__ queue_t;
-
-
-// allocate a Queue instance
-static inline queue_t *
-queue_alloc (void)
-{
-    queue_t    *queue;
-
-    queue = (queue_t *)g_hal_state->queue_slab()->alloc();
-    if (queue == NULL) {
-        return NULL;
-    }
-    return queue;
-}
-
-// initialize a Queue instance
-static inline queue_t *
-queue_init (queue_t *queue)
-{
-    if (!queue) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&queue->slock, PTHREAD_PROCESS_PRIVATE);
-
-    // initialize the operational state
-
-    // initialize meta information
-    queue->ht_ctxt.reset();
-    queue->hal_handle_ht_ctxt.reset();
-
-    return queue;
-}
-
-// allocate and initialize a queue instance
-static inline queue_t *
-queue_alloc_init (void)
-{
-    return queue_init(queue_alloc());
+    return qos_class_init(qos_class_alloc());
 }
 
 static inline hal_ret_t
-queue_free (queue_t *queue)
+qos_class_free (qos_class_t *qos_class)
 {
-    HAL_SPINLOCK_DESTROY(&queue->slock);
-    g_hal_state->queue_slab()->free(queue);
+    HAL_SPINLOCK_DESTROY(&qos_class->slock);
+    g_hal_state->qos_class_slab()->free(qos_class);
     return HAL_RET_OK;
 }
 
-static inline queue_t *
-find_queue_by_id (queue_id_t queue_id)
+static inline qos_group_t
+qos_spec_qos_group_to_qos_group (qos::QosGroup qos_group)
 {
-    return (queue_t *)g_hal_state->queue_id_ht()->lookup(&queue_id);
+    switch(qos_group) {
+        case qos::DEFAULT: 
+            return QOS_GROUP_DEFAULT;
+        case qos::USER_DEFINED_1: 
+            return QOS_GROUP_USER_DEFINED_1;
+        case qos::USER_DEFINED_2: 
+            return QOS_GROUP_USER_DEFINED_2;
+        case qos::USER_DEFINED_3: 
+            return QOS_GROUP_USER_DEFINED_3;
+        case qos::USER_DEFINED_4: 
+            return QOS_GROUP_USER_DEFINED_4;
+        case qos::USER_DEFINED_5: 
+            return QOS_GROUP_USER_DEFINED_5;
+        case qos::USER_DEFINED_6: 
+            return QOS_GROUP_USER_DEFINED_6;
+        case qos::CONTROL: 
+            return QOS_GROUP_CONTROL;
+        case qos::SPAN: 
+            return QOS_GROUP_SPAN;
+        case qos::INTERNAL_RX_PROXY_NO_DROP: 
+            return QOS_GROUP_RX_PROXY_NO_DROP;
+        case qos::INTERNAL_RX_PROXY_DROP: 
+            return QOS_GROUP_RX_PROXY_DROP;
+        case qos::INTERNAL_TX_PROXY_NO_DROP: 
+            return QOS_GROUP_TX_PROXY_NO_DROP;
+        case qos::INTERNAL_TX_PROXY_DROP: 
+            return QOS_GROUP_TX_PROXY_DROP;
+        case qos::INTERNAL_CPU_COPY: 
+            return QOS_GROUP_CPU_COPY;
+        default:
+            HAL_ASSERT(0);
+            return QOS_GROUP_DEFAULT;
+    }
 }
 
-static inline queue_t *
-find_queue_by_handle (hal_handle_t handle)
+static inline qos_class_t *
+find_qos_class_by_group (qos_group_t qos_group)
 {
-    return (queue_t *)g_hal_state->queue_hal_handle_ht()->lookup(&handle);
+    hal_handle_id_ht_entry_t    *entry;
+    qos_class_key_t             qos_class_key;
+    qos_class_t                 *qos_class;
+
+    qos_class_key.qos_group = qos_group;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        qos_class_ht()->lookup(&qos_class_key);
+    if (entry) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_QOS_CLASS);
+        qos_class = (qos_class_t *)hal_handle_get_obj(entry->handle_id);
+        return qos_class;
+    }
+    return NULL;
 }
 
-extern void *queue_get_key_func(void *entry);
-extern uint32_t queue_compute_hash_func(void *key, uint32_t ht_size);
-extern bool queue_compare_key_func(void *key1, void *key2);
+static inline qos_class_t *
+find_qos_class_by_handle (hal_handle_t handle)
+{
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
+               HAL_OBJ_ID_QOS_CLASS);
+    return (qos_class_t *)hal_handle_get_obj(handle);
+}
 
-extern void *queue_get_handle_key_func(void *entry);
-extern uint32_t queue_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool queue_compare_handle_key_func(void *key1, void *key2);
+static inline qos_class_t *
+find_qos_class_by_key_handle (const QosClassKeyHandle& kh)
+{
+    if (kh.key_or_handle_case() == QosClassKeyHandle::kQosGroup) {
+        return find_qos_class_by_group(qos_spec_qos_group_to_qos_group(kh.qos_group()));
+    } else if (kh.key_or_handle_case() == QosClassKeyHandle::kQosClassHandle) {
+        return find_qos_class_by_handle(kh.qos_class_handle());
+    }
+    return NULL;
+}
+
+extern void *qos_class_get_key_func(void *entry);
+extern uint32_t qos_class_compute_hash_func(void *key, uint32_t ht_size);
+extern bool qos_class_compare_key_func(void *key1, void *key2);
+
+static inline bool
+qos_group_is_user_defined (qos_group_t qos_group)
+{
+    switch(qos_group) {
+        case QOS_GROUP_USER_DEFINED_1:
+        case QOS_GROUP_USER_DEFINED_2:
+        case QOS_GROUP_USER_DEFINED_3:
+        case QOS_GROUP_USER_DEFINED_4:
+        case QOS_GROUP_USER_DEFINED_5:
+        case QOS_GROUP_USER_DEFINED_6:
+            return true;
+        default:
+            return false;
+    }
+    return false;
+}
+
+static inline bool
+qos_class_is_user_defined (qos_class_t *qos_class)
+{
+    return qos_group_is_user_defined(qos_class->key.qos_group);
+}
 
 
-hal_ret_t queue_create(qos::QueueSpec& spec,
-                       qos::QueueResponse *rsp);
-hal_ret_t queue_update(qos::QueueSpec& spec,
-                       qos::QueueResponse *rsp);
+// SVC CRUD APIs
+hal_ret_t qos_class_create(qos::QosClassSpec& spec,
+                           qos::QosClassResponse *rsp);
+hal_ret_t qos_class_update(qos::QosClassSpec& spec,
+                           qos::QosClassResponse *rsp);
 
-
-#define HAL_MAX_POLICERS    2048
-
-// Specifications for the Policer
-typedef struct policer_spec_s {
-    qos_direction_e      direction;
-    uint32_t             bandwidth;
-    uint32_t             burst_size;
-    qos_marking_action_t marking_action;
-} __PACK__ policer_spec_t;
-
-// Policer structure
 typedef struct policer_s {
-    hal_spinlock_t slock;                 // lock to protect this structure
-    policer_id_t   policer_id;           // Policer id assigned
-
-    policer_spec_t spec;
-
-    hal_handle_t   hal_handle;            // HAL allocated handle
-
-    ht_ctxt_t      ht_ctxt;               // policer_id based hash table ctxt
-    ht_ctxt_t      hal_handle_ht_ctxt;    // hal handle based hash table ctxt
-
-    void           *pd_policer;
+    uint32_t bps_rate; // rate in bytes-per-sec
+    uint32_t burst_size; // Burst size in bytes
 } __PACK__ policer_t;
 
-
-// allocate a Policer instance
-static inline policer_t *
-policer_alloc (void)
+static inline void
+qos_policer_update_from_spec(const qos::PolicerSpec &spec, policer_t *policer)
 {
-    policer_t    *policer;
-
-    policer = (policer_t *)g_hal_state->policer_slab()->alloc();
-    if (policer == NULL) {
-        return NULL;
-    }
-    return policer;
+    policer->bps_rate = spec.bps_rate();
+    policer->burst_size = spec.burst_size();
 }
 
-// initialize a Policer instance
-static inline policer_t *
-policer_init (policer_t *policer)
+static inline bool
+qos_policer_spec_same (policer_t *p1, policer_t *p2)
 {
-    if (!policer) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&policer->slock, PTHREAD_PROCESS_PRIVATE);
-
-    // initialize the operational state
-
-    // initialize meta information
-    policer->ht_ctxt.reset();
-    policer->hal_handle_ht_ctxt.reset();
-
-    return policer;
+    return !memcmp(p1, p2, sizeof(policer_t));
 }
-
-// allocate and initialize a policer instance
-static inline policer_t *
-policer_alloc_init (void)
-{
-    return policer_init(policer_alloc());
-}
-
-static inline hal_ret_t
-policer_free (policer_t *policer)
-{
-    HAL_SPINLOCK_DESTROY(&policer->slock);
-    g_hal_state->policer_slab()->free(policer);
-    return HAL_RET_OK;
-}
-
-static inline policer_t *
-find_policer_by_id (policer_id_t policer_id, qos_direction_e direction)
-{
-    if (direction == INGRESS_QOS) {
-        return (policer_t *)g_hal_state->ingress_policer_id_ht()->lookup(&policer_id);
-    } else {
-        return (policer_t *)g_hal_state->egress_policer_id_ht()->lookup(&policer_id);
-    }
-}
-
-static inline policer_t *
-find_policer_by_handle (hal_handle_t handle, qos_direction_e direction)
-{
-    if (direction == INGRESS_QOS) {
-        return (policer_t *)g_hal_state->ingress_policer_hal_handle_ht()->lookup(&handle);
-    } else {
-        return (policer_t *)g_hal_state->egress_policer_hal_handle_ht()->lookup(&handle);
-    }
-}
-
-extern void *policer_get_key_func(void *entry);
-extern uint32_t policer_compute_hash_func(void *key, uint32_t ht_size);
-extern bool policer_compare_key_func(void *key1, void *key2);
-
-extern void *policer_get_handle_key_func(void *entry);
-extern uint32_t policer_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool policer_compare_handle_key_func(void *key1, void *key2);
-
-hal_ret_t policer_create(qos::PolicerSpec& spec,
-                         qos::PolicerResponse *rsp);
-hal_ret_t policer_update(qos::PolicerSpec& spec,
-                         qos::PolicerResponse *rsp);
 
 }    // namespace hal
 

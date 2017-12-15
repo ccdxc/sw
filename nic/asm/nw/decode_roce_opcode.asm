@@ -23,6 +23,9 @@ decode_roce_opcode:
   phvwr       p.p4_to_p4plus_roce_rdma_hdr_len, d.u.decode_roce_opcode_d.len
   phvwr       p.control_metadata_p4plus_app_id, P4PLUS_APPTYPE_RDMA
 
+  seq         c1, d.u.decode_roce_opcode_d.tm_oq_overwrite, TRUE
+  phvwr.c1    p.capri_intrinsic_tm_oq, d.u.decode_roce_opcode_d.tm_oq
+
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   seq         c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_MULTICAST
   cmov        r1, c1, k.control_metadata_qid, k.roce_bth_destQP

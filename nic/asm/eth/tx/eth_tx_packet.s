@@ -24,7 +24,6 @@ eth_tx_packet:
     // Set intrinsics
     phvwri      p.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwri      p.p4_intr_global_tm_oport, TM_PORT_INGRESS
-    phvwri      p.p4_intr_global_tm_oq, 0
 
     // Setup DMA CMD PTR
     phvwri      p.p4_txdma_intr_dma_cmd_ptr, ETH_DMA_CMD_PTR

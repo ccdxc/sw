@@ -126,7 +126,7 @@ packets:
             - ref://factory/packets/id=ENCAP_QINQ
         headers     :
             outerqtag:
-                prio: ref://testcase/config/flow/txqos/cos
+                prio: 0
                 vlan: callback://telemetry/callbacks/GetRspanVlan
             qtag:
                 vlan    : ref://testcase/config/src/endpoint/intf/encap_vlan_id
@@ -195,7 +195,7 @@ packets:
                 src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=1,dir=ingress
                 dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=1,dir=ingress
             erspanqtag:
-                prio: callback://networking/packets/GetExpectedPacketCos
+                prio: 0
                 vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=1,dir=ingress
             erspanipv4:
                 tos : 0
@@ -221,7 +221,7 @@ packets:
                 src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=2,dir=ingress
                 dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=2,dir=ingress
             erspanqtag:
-                prio: callback://networking/packets/GetExpectedPacketCos
+                prio: 0
                 vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=2,dir=ingress
             erspanipv4:
                 tos : 0
@@ -247,7 +247,7 @@ packets:
                 src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=3,dir=ingress
                 dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=3,dir=ingress
             erspanqtag:
-                prio: callback://networking/packets/GetExpectedPacketCos
+                prio: 0
                 vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=3,dir=ingress
             erspanipv4:
                 tos : 0

@@ -25,6 +25,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/thread",
+        "//nic/hal/pd/capri:capri_includes",
     ],
 )
 

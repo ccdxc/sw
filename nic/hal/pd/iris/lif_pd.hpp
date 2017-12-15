@@ -33,6 +33,11 @@ hal_ret_t lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif,
                                         pd_lif_upd_args_t *args, 
                                         table_oper_t oper);
 hal_ret_t lif_pd_depgm_output_mapping_tbl (pd_lif_t *pd_lif);
+hal_ret_t lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update);
+hal_ret_t lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif);
+hal_ret_t lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif);
+hal_ret_t lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif);
+
 void link_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif);
 void delink_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif);
 hal_ret_t lif_pd_cleanup(pd_lif_t *lif_pd);

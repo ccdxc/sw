@@ -244,6 +244,10 @@ header_type p4_to_p4plus_cpu_pkt_t {
         tcp_options         : 8;
         tcp_mss             : 16;
         tcp_ws              : 8;
+
+        // qos
+        src_tm_iq           : 5; 
+        pad_1               : 3;
     }
 }
 

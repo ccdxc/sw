@@ -162,8 +162,6 @@ typedef struct flow_cfg_s {
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port
     uint16_t                  nat_dport;           // NAT destination port
-    qos_action_t              in_qos_action;       // Ingress qos action
-    qos_action_t              eg_qos_action;       // Egress qos action
     uint8_t                   eg_mirror_session;   // Mirror sessions in egress direction
     uint8_t                   ing_mirror_session;  // Mirror sessions in ingress direction
 } __PACK__ flow_cfg_t;
@@ -181,8 +179,6 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  qtype:3;             // Qtype
     uint64_t                  qid:24;              // Qid
     uint64_t                  lkp_inst:1;          // Flow instance
-    uint64_t                  dot1p_en:1;          //enable dot1p rewrite
-    uint64_t                  dscp_en:1;           //enable dscp rewrite
     uint64_t                  expected_src_lif_en:1;  // src lif check for host pinning
 
     uint32_t                  vrf_hwid;         // source l2seg vrf hwid (lkp_vrf)
@@ -194,8 +190,6 @@ typedef struct flow_pgm_attrs_s {
     ip_addr_t                 nat_ip;              // NAT IP, (dip for dnat/twice_nat, sip for snat)
     uint16_t                  nat_l4_port;         // NAT L4 port
     uint32_t                  twice_nat_idx;       // Twice nat index
-    uint8_t                   dot1p;               // Cos value
-    uint8_t                   dscp;                // dscp value
     uint16_t                  mcast_ptr;           // Mcast Pointer
     uint32_t                  expected_src_lif;    // src lif for host pinning check
 } __PACK__ flow_pgm_attrs_t;

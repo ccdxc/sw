@@ -14,6 +14,7 @@
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
 
 using hal::BMAllocator;
 using sdk::lib::indexer;
@@ -36,13 +37,6 @@ namespace pd {
 
 #define HAL_RW_TABLE_SIZE               4096
 #define HAL_TUNNEL_RW_TABLE_SIZE        1024
-
-#define HAL_MAX_HW_TM_PORTS             12
-#define HAL_MAX_HW_BUF_POOLS_PER_PORT   32
-#define HAL_MAX_HW_OQUEUES_PER_PORT     32
-#define HAL_HW_OQUEUE_NODE_TYPES        3
-#define HAL_MAX_HW_INGRESS_POLICERS     2048
-#define HAL_MAX_HW_EGRESS_POLICERS      2048
 
 #define HAL_MAX_HW_ACLS                 512 
 
@@ -134,14 +128,12 @@ public:
     slab *tcpcb_slab(void) const { return tcpcb_slab_; }
     ht *tcpcb_hwid_ht(void) const { return tcpcb_hwid_ht_; }
 
-    // get APIs for buf-pool related state
-    slab *buf_pool_pd_slab(void) const { return buf_pool_pd_slab_; }
-    indexer *buf_pool_hwid_idxr(uint32_t port_num) const { return buf_pool_hwid_idxr_[port_num]; }
-
     // get APIs for Queue related state
-    slab *queue_pd_slab(void) const { return queue_pd_slab_; }
-    indexer *queue_hwid_idxr(uint32_t port_num, uint32_t node_type) const { return queue_hwid_idxr_[port_num][node_type]; }
- 
+    slab *qos_class_pd_slab(void) const { return qos_class_pd_slab_; }
+    indexer *qos_iq_idxr(tm_port_type_e port_type) { return qos_iq_idxr_[port_type]; }
+    indexer *qos_common_oq_idxr() { return qos_common_oq_idxr_; }
+    indexer *qos_rxdma_oq_idxr() { return qos_rxdma_oq_idxr_; }
+
     // get APIs for Policer related state
     slab *policer_pd_slab(void) const { return policer_pd_slab_; }
     indexer *ingress_policer_hwid_idxr(void) const { return ingress_policer_hwid_idxr_; }
@@ -371,16 +363,14 @@ private:
         ht         *tcpcb_hwid_ht_;
     } __PACK__;
 
-    // Buf-Pool related state
+    // Qos related state
     struct {
-        slab       *buf_pool_pd_slab_;
-        indexer    *buf_pool_hwid_idxr_[HAL_MAX_HW_TM_PORTS];
-    } __PACK__;
-
-    // Queue related state
-    struct {
-        slab       *queue_pd_slab_;
-        indexer    *queue_hwid_idxr_[HAL_MAX_HW_TM_PORTS][HAL_HW_OQUEUE_NODE_TYPES];
+        slab       *qos_class_pd_slab_;
+        // Array of indexers for each of the tm port types - uplink, p4, dma
+        indexer    **qos_iq_idxr_;
+        indexer    *qos_common_oq_idxr_;
+        indexer    *qos_rxdma_oq_idxr_;
+        // Buffer island configuration
     } __PACK__;
 
     // Policer related state

@@ -1,0 +1,10 @@
+meta:
+    id: QOS_CLASS
+
+spec:
+    group: None
+    marking:
+        dot1q_pcp_en : False
+        dot1q_pcp : 0
+        ip_dscp_en : False
+        ip_dscp : 0

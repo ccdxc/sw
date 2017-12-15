@@ -8,8 +8,7 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
                    rewrite_en, rewrite_index, rewrite_flags,
                    tunnel_rewrite_en, tunnel_rewrite_index, tunnel_vnid,
                    tunnel_originate,
-                   dst_lport_en, dst_lport,
-                   egress_policer_en, egress_policer_index) {
+                   dst_lport_en, dst_lport) {
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.force_flow_hit, force_flow_hit);
     modify_field(scratch_metadata.qid_en, qid_en);
@@ -19,7 +18,6 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
     modify_field(scratch_metadata.rewrite_en, rewrite_en);
     modify_field(scratch_metadata.tunnel_rewrite_en, tunnel_rewrite_en);
     modify_field(scratch_metadata.dst_lport_en, dst_lport_en);
-    modify_field(scratch_metadata.egress_policer_en, egress_policer_en);
 
     if (force_flow_hit == TRUE) {
         modify_field(control_metadata.flow_miss, FALSE);
@@ -61,10 +59,6 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
         modify_field(control_metadata.dst_lport, dst_lport);
         modify_field(capri_intrinsic.tm_replicate_en, FALSE);
         modify_field(capri_intrinsic.tm_replicate_ptr, 0);
-    }
-
-    if (egress_policer_en == TRUE) {
-        modify_field(policer_metadata.egress_policer_index, egress_policer_index);
     }
 }
 

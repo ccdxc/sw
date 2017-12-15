@@ -442,12 +442,6 @@ flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
     flow_info->set_nat_sport(flow->config.nat_sport);
     flow_info->set_nat_dport(flow->config.nat_dport);
 
-    qos_action_to_qos_action_spec(&flow->config.in_qos_action,
-            flow_info->mutable_in_qos_actions());
-    qos_action_to_qos_action_spec(&flow->config.eg_qos_action,
-            flow_info->mutable_eg_qos_actions());
-
-
     /* TODO: Connection Tracking Info framework has to be done still.
     conn_track_to_conn_track_spec(flow,
             flow_data->mutable_conn_track_info());

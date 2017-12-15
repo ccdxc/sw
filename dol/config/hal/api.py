@@ -25,6 +25,7 @@ import tls_proxy_cb_pb2     as tlscb_pb2
 import descriptor_aol_pb2   as descriptor_aol_pb2
 import wring_pb2            as wring_pb2
 import acl_pb2              as acl_pb2
+import qos_pb2              as qos_pb2
 import proxy_pb2            as proxy_pb2
 import ipseccb_pb2          as ipseccb_pb2
 import l4lb_pb2             as l4lb_pb2
@@ -51,6 +52,7 @@ import barco_rings_pb2      as barco_rings_pb2
 #import descriptor_aol_pb2_grpc  as descriptor_aol_pb2_grpc
 #import wring_pb2_grpc           as wring_pb2_grpc
 #import acl_pb2_grpc             as acl_pb2_grpc
+#import qos_pb2_grpc             as qos_pb2_grpc
 #import proxy_pb2_grpc           as proxy_pb2_grpc
 #import ipseccb_pb2_grpc         as ipseccb_pb2_grpc
 #import l4lb_pb2_grpc            as l4lb_pb2_grpc
@@ -684,3 +686,11 @@ def GetBarcoRingMeta(objlist):
     __config(objlist, barco_rings_pb2.BarcoGetRingMetaRequestMsg,
              stub.BarcoGetRingMeta)
     return
+
+def ConfigureQosClass(objlist):
+    if IsHalDisabled(): return
+    stub = qos_pb2.QOSStub(HalChannel)
+    __config(objlist, qos_pb2.QosClassRequestMsg,
+             stub.QosClassCreate)
+    return
+

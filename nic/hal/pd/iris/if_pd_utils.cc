@@ -10,6 +10,7 @@
 #include "uplinkpc_pd.hpp"
 #include "nwsec_pd.hpp"
 #include "nic/include/interface_api.hpp"
+#include "nic/p4/nw/include/defines.h"
 
 using namespace hal;
 
@@ -305,6 +306,62 @@ if_get_uplink_lport_id(if_t *pi_if)
 
     return lport_id;
 }
+
+// ----------------------------------------------------------------------------
+// Given a PI If, get its tm_oport 
+// ----------------------------------------------------------------------------
+uint32_t
+if_get_tm_oport(if_t *pi_if) 
+{
+    intf::IfType               if_type;
+    uint32_t                   tm_port = HAL_PORT_INVALID;
+    dllist_ctxt_t              *lnode = NULL;
+    hal_handle_id_list_entry_t *entry = NULL;
+    if_t                       *pi_up_if;
+    ep_t                       *remote_tep_ep;
+    if_t                       *ep_if;
+    bool                       v4;
+    intf::IfType               tif_type;
+
+    if (pi_if == NULL) {
+        goto end;
+    }
+
+    if_type = intf_get_if_type(pi_if);
+    switch(if_type) {
+        case intf::IF_TYPE_ENIC:
+            tm_port = TM_PORT_DMA;
+            break;
+        case intf::IF_TYPE_UPLINK:
+            tm_port = uplinkif_get_port_num(pi_if);
+            break;
+        case intf::IF_TYPE_UPLINK_PC:
+            dllist_for_each(lnode, &(pi_if->mbr_if_list_head)) {
+                entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+                pi_up_if = find_if_by_handle(entry->handle_id);
+                tm_port = if_get_tm_oport(pi_up_if);
+                break;
+            }
+            break;
+        case intf::IF_TYPE_TUNNEL:
+            remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4);
+            ep_if = if_get_if_from_ep(remote_tep_ep);
+            tif_type = intf_get_if_type(ep_if);
+            HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
+            /* Recursive resolution to get the tm_oport*/
+            tm_port = if_get_tm_oport(ep_if);
+            break;
+        case intf::IF_TYPE_CPU:
+            tm_port = TM_PORT_DMA;
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+
+end:
+    return tm_port;
+}
+
 
 // ----------------------------------------------------------------------------
 // Get a PI Vrf from if - Applicable only for Enic. Dont call this for Upl.

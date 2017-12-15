@@ -70,8 +70,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
         rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
         break;
-    case HAL_RET_POLICER_NOT_FOUND:
-        rsp->set_api_status(types::API_STATUS_POLICER_NOT_FOUND);
+    case HAL_RET_QOS_CLASS_NOT_FOUND:
+        rsp->set_api_status(types::API_STATUS_QOS_CLASS_NOT_FOUND);
         break;
     case HAL_RET_HANDLE_INVALID:
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);

@@ -137,6 +137,14 @@
 #define TM_PORT_DMA                    9 /* Tx and Rx DMA */
 #define TM_PORT_EGRESS                 10
 #define TM_PORT_INGRESS                11
+#define TM_UPLINK_PORT_BEGIN           TM_PORT_UPLINK_0
+#define TM_UPLINK_PORT_END             TM_PORT_NCSI
+#define TM_DMA_PORT_BEGIN              TM_PORT_DMA
+#define TM_DMA_PORT_END                TM_PORT_DMA
+#define TM_P4_PORT_BEGIN               TM_PORT_EGRESS
+#define TM_P4_PORT_END                 TM_PORT_INGRESS
+#define TM_NUM_UPLINK_PORTS            (TM_UPLINK_PORT_END-TM_UPLINK_PORT_BEGIN+1)
+#define TM_NUM_PORTS                   (TM_PORT_INGRESS+1)
 
 /*****************************************************************************/
 /* TM reserved queues                                                        */
@@ -214,7 +222,7 @@
 #define DROP_FLOW_MISS                 3
 #define DROP_IPSG                      4
 #define DROP_INGRESS_POLICER           5
-#define DROP_EGRESS_POLICER            6
+#define DROP_RX_POLICER                6
 #define DROP_NACL                      7
 #define DROP_MALFORMED_PKT             8
 #define DROP_PING_OF_DEATH             9
@@ -442,7 +450,7 @@
 #define P4PLUS_TCP_PROXY_HDR_SZ        71 /* 39 app hdr + 32 sack */
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      48
 #define P4PLUS_CPU_HDR_SZ              40
-#define P4PLUS_CPU_PKT_SZ              36
+#define P4PLUS_CPU_PKT_SZ              37
 #define P4PLUS_IPSEC_HDR_SZ            18
 #define P4PLUS_RAW_REDIR_HDR_SZ        40
 #define P4PLUS_P4PT_HDR_SZ             7

@@ -93,8 +93,8 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
     // Update what was passed in.
     params->type[i].entries = __builtin_ffs(num_entries) - 1;
     qstate->type[i].num_queues = num_entries;
-    qstate->type[i].coses = ((params->type[i].cosA & 0x0f) |      
-                             ((params->type[i].cosB << 4) & 0xf0));
+    qstate->type[i].coses = ((params->type[i].cosB & 0x0f) |      
+                             ((params->type[i].cosA << 4) & 0xf0));
   }
   // Now put in the last entry. There is no align requirement.
   cur_size = params->type[i].size;
@@ -104,8 +104,8 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
   num_entries = params->type[i].entries;
   num_entries = 1 << num_entries;
   qstate->type[i].num_queues = num_entries;
-  qstate->type[i].coses = ((params->type[i].cosA & 0x0f) | 
-                           ((params->type[i].cosB << 4) & 0xf0));
+  qstate->type[i].coses = ((params->type[i].cosB & 0x0f) | 
+                           ((params->type[i].cosA << 4) & 0xf0));
 
   running_offset += (num_entries * cur_size);
   qstate->allocation_size = running_offset;

@@ -81,7 +81,6 @@ flow_hash_recirc:
   phvwr       p.recirc_header_src_tm_iport, k.control_metadata_tm_iport
   phvwr       p.recirc_header_reason, RECIRC_FLOW_HASH_OVERFLOW
   ori         r2, r2, 0x80000000
-  phvwr       p.recirc_header_overflow_entry_index, r2
-  phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
-  phvwr       p.capri_intrinsic_tm_oq, TM_P4_IG_RECIRC_QUEUE
+  phvwr.e     p.recirc_header_overflow_entry_index, r2
+  phvwr       p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
 

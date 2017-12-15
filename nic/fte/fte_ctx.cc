@@ -894,6 +894,8 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
             }
         }
     }
+
+    pkt_info->cpu_header.tm_oq = cpu_rxhdr_->src_tm_iq;
     
     if (p4plus_header) {
         pkt_info->p4plus_header = *p4plus_header;

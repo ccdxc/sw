@@ -294,6 +294,7 @@ header p4plus_to_p4_header_t p4plus_to_p4;
 parser start {
     extract(capri_intrinsic);
     set_metadata(control_metadata.tm_iport, capri_intrinsic.tm_iport + 0);
+    set_metadata(qos_metadata.qos_class_id, capri_intrinsic.tm_oq);
     return select(capri_intrinsic.tm_iport) {
         TM_PORT_INGRESS : parse_recirc;
         TM_PORT_DMA : parse_txdma;

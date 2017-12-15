@@ -48,12 +48,14 @@ set_tm_oport_common:
 
 .align
 redirect_to_cpu:
-  phvwr       p.capri_intrinsic_lif, d.u.redirect_to_cpu_d.dst_lif
-  phvwr       p.control_metadata_cpu_copy, TRUE
+  seq         c1, k.control_metadata_cpu_copy, TRUE
+  phvwr.c1    p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.cpu_copy_tm_oqueue
+  phvwr.!c1   p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.control_tm_oqueue
+  phvwr       p.control_metadata_to_cpu, TRUE
   seq         c1, d.u.redirect_to_cpu_d.egress_mirror_en, TRUE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
-  phvwr       p.capri_intrinsic_tm_oport, TM_PORT_DMA
-  phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.tm_oqueue
+  phvwrpair.e p.capri_intrinsic_tm_oport, TM_PORT_DMA, \
+              p.capri_intrinsic_lif, d.u.redirect_to_cpu_d.dst_lif
   phvwr       p.control_metadata_p4plus_app_id, P4PLUS_APPTYPE_CPU
 
 .align
