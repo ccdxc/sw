@@ -622,6 +622,9 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
     if (pfi) {
         redir_ctx.set_proxy_flow_info(pfi);
         redir_ctx.set_redir_policy_applic(true);
+        if (!ctx.appid_started()) {
+            ctx.set_appid_state(APPID_STATE_NEEDED);
+        }
     }
 
 done:
