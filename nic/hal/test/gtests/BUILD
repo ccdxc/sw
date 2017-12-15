@@ -23,7 +23,9 @@ cc_test(
 cc_test(
     name = "nwsec_test",
     srcs = ["nwsec_test.cc"],
-    deps = gl_deps_list,
+    deps = [
+        "//nic/hal/plugins/sfw:sfw",
+    ] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )

@@ -335,7 +335,7 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                         decodeuaddr(rpcb_list.rpcb_map.r_addr, &map->ip, &map->dport,
                                        addr_family);
                         if (isNullip(map->ip, addr_family)) {
-                            map->ip = ctx.key().sip;
+                            map->ip = ctx.key().dip;
                         }
                     } else {
                         map[idx].dport = __pack_uint32(pkt, &pgm_offset);
@@ -378,7 +378,7 @@ parse_sunrpc_control_flow(fte::ctx_t& ctx)
                         decodeuaddr(rpcb_list.rpcb_map.r_addr, &map->ip, &map->dport,
                                        addr_family);
                         if (isNullip(map->ip, addr_family)) {
-                            map->ip = ctx.key().sip;
+                            map->ip = ctx.key().dip;
                         }
                         HAL_TRACE_DEBUG("Dump entry dport: {}", map->dport);
                     } else {

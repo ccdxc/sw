@@ -31,6 +31,7 @@ class RuleObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         self.svc_objs =[]
+        self.apps =[]
 
     def Init(self, spec):
         self.action = spec.action.upper()
@@ -38,12 +39,17 @@ class RuleObject(base.ConfigObjectBase):
         for svc_spec in spec.svcs:
             svc_obj = SvcObject(svc_spec.svc)
             self.svc_objs.append(svc_obj)
+        if hasattr(spec, 'apps'):
+            for app_spec in spec.apps:
+                self.apps.append(app_spec.app.upper())
         return
 
     def PrepareHALRequestSpec(self, req_spec):
         for svc_obj in self.svc_objs:
             svc_req_spec  = req_spec.svc.add()
             svc_obj.PrepareHALRequestSpec(svc_req_spec)
+        if len(self.apps) > 0:
+            req_spec.apps.extend(self.apps)    	
         action = "FIREWALL_ACTION_" + self.action
         req_spec.action = haldefs.nwsec.FirewallAction.Value(action)
         req_spec.log    = self.log

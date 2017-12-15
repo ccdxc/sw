@@ -18,7 +18,7 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
                     net_sfw_match_result_t *match_rslt)
 {
     flow_key_t          flow_key;
-    nwsec_policy_svc_t  *nwsec_plcy_svc = NULL;
+    nwsec_policy_svc_t  *nwsec_plcy_svc = NULL, *matched_svc = NULL;
     dllist_ctxt_t       *lnode = NULL;
 
     flow_key = ctx.key();
@@ -29,39 +29,64 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
             //ToDo (lseshan) - identify the wildcard better way
             if (nwsec_plcy_svc->ipproto == 0) {
                 // Match all
-                match_rslt->valid  = 1;
-                match_rslt->alg    = nwsec_plcy_svc->alg;
-                match_rslt->action = (session::FlowAction)nwsec_plcy_rules->action;
-                match_rslt->log    = nwsec_plcy_rules->log;
+                matched_svc = nwsec_plcy_svc;
                 HAL_TRACE_DEBUG("Wild card Rule match {} {}", match_rslt->action, match_rslt->log);
-                return HAL_RET_OK;
+                break;
                 
-            }
-            //Compare proto
-            if (nwsec_plcy_svc->ipproto == flow_key.proto) {
+            } else if (nwsec_plcy_svc->ipproto == flow_key.proto) {        //Compare proto
                 if (nwsec_plcy_svc->ipproto == IPPROTO_ICMP ||
                     nwsec_plcy_svc->ipproto == IPPROTO_ICMPV6) {
                     //Check the icmp message type
                     if (nwsec_plcy_svc->icmp_msg_type == flow_key.icmp_type)
                     {
-                        match_rslt->valid    = 1;
-                        match_rslt->alg      = nwsec_plcy_svc->alg;
-                        match_rslt->action   = (session::FlowAction) nwsec_plcy_rules->action;
-                        match_rslt->log      = nwsec_plcy_rules->log;
-                        return HAL_RET_OK;
+                        matched_svc = nwsec_plcy_svc;
+                        break;
                     }
                 } else {
                     //Check the port match
                     if (nwsec_plcy_svc->dst_port == flow_key.dport) {
-                        //Fill the match actions
-                        match_rslt->valid    = 1;
-                        match_rslt->alg      = nwsec_plcy_svc->alg;
-                        match_rslt->action   = (session::FlowAction) nwsec_plcy_rules->action;
-                        match_rslt->log      = nwsec_plcy_rules->log;
-                        return HAL_RET_OK;
+                        matched_svc = nwsec_plcy_svc;
+                        break;
                     }
                 }
             }
+        }
+    }
+
+    // TODO: Can nwsec_plcy_svc be NULL?
+    if(!nwsec_plcy_svc || matched_svc) { // svc is wildcard or matched a specific service
+        dllist_ctxt_t *lnode2 = NULL;
+        nwsec_policy_appid_t *appid_policy = NULL;
+        if(!dllist_empty(&nwsec_plcy_rules->appid_list_head)) {
+            dllist_for_each(lnode2, &nwsec_plcy_rules->appid_list_head) {
+                appid_policy = dllist_entry(lnode2, nwsec_policy_appid_t, lentry);
+                if(appid_policy) {
+                    if(!ctx.appid_started()) {
+                        ctx.set_appid_needed();
+                        return HAL_RET_OK;
+                    }
+
+                    // Phase II invocation of dfw in flow miss pipeline or phase I invocation of dfw in l7 flow-hit pipeline
+                    hal::appid_info_t appid_info = ctx.appid_info();
+                    for(int i = 0; i < appid_info.id_count_; i++) {
+                        if(appid_policy->appid == appid_info.ids_[i]) {
+                            match_rslt->valid  = 1;
+                            if(matched_svc) match_rslt->alg = matched_svc->alg;
+                            match_rslt->action = (session::FlowAction)nwsec_plcy_rules->action;
+                            match_rslt->log    = nwsec_plcy_rules->log;
+                            return HAL_RET_OK;
+                        }
+                    }
+
+                }
+            }
+        } else if (matched_svc) {
+            if(!ctx.appid_started()) ctx.set_appid_not_needed();
+            match_rslt->valid  = 1;
+            match_rslt->alg = matched_svc->alg;
+            match_rslt->action = (session::FlowAction)nwsec_plcy_rules->action;
+            match_rslt->log    = nwsec_plcy_rules->log;
+            return HAL_RET_OK;
         }
     }
 
@@ -138,7 +163,8 @@ net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
             ret = net_sfw_check_policy_pair(ctx,
                                             sep->sgs.arr_sg_id[i],
                                             dep->sgs.arr_sg_id[j],
-                                            match_rslt);            if (ret == HAL_RET_OK) {
+                                            match_rslt);
+            if (ret == HAL_RET_OK) {
                 if (match_rslt->valid) {
                     return ret;
                 }
@@ -148,6 +174,10 @@ net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
         }
     }
 
+    if(ctx.flow_miss()) {
+        if(!ctx.appid_started())
+            ctx.set_appid_not_needed();
+    }
     // ToDo (lseshan) Handle SP miss condition
     // For now hardcoding to ALLOW but we have read default action and act
     // accordingly
@@ -208,21 +238,29 @@ fte::pipeline_action_t
 sfw_exec(fte::ctx_t& ctx)
 {
     hal_ret_t               ret;
-    net_sfw_match_result_t  match_rslt;
+    net_sfw_match_result_t  match_rslt = {};
     sfw_info_t              *sfw_info = (sfw_info_t*)ctx.feature_state();
 
     // security policy action
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
 
+    // If appid_needed is set, we are in phase2 invocation of dfw
+    // We need to proceed further only if appid feature has some new data or it has reached a terminal state
+    if(ctx.appid_started() && 
+       (!ctx.appid_updated() && !ctx.appid_completed())) {
+        return fte::PIPELINE_CONTINUE;
+    }
+
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction
     HAL_TRACE_DEBUG("Firewall lookup {}", (sfw_info->skip_sfw)?"skipped":"begin");
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !sfw_info->skip_sfw) {
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !sfw_info->skip_sfw && !sfw_info->sfw_done) {
         ret = net_sfw_pol_check_sg_policy(ctx, &match_rslt);
         if (ret == HAL_RET_OK) {
             if (match_rslt.valid) {
                 flowupd.action  = match_rslt.action;
                 sfw_info->alg_proto = match_rslt.alg;
+                sfw_info->sfw_done = true;
                 //ctx.log         = match_rslt.log;
             } else {
                 // ToDo ret value was ok but match_rslt.valid is 0

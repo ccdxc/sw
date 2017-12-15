@@ -269,12 +269,12 @@ static hal::appid_state_t scanner_appid_state_to_local_state(int state)
     return hal::APPID_STATE_ABORT;
 }
 
-static void scanner_flow_info_to_appid_info(SnortFlowInfo& flow_info, fte::appid_info_t& appid_info)
+static void scanner_flow_info_to_appid_info(SnortFlowInfo& flow_info, hal::appid_info_t& appid_info)
 {
-    appid_info_init(appid_info);
+    fte::appid_info_init(appid_info);
     for (int i = 0; i < NUM_APP_IDS; i++) {
         if (flow_info.appids[i]) {
-            appid_info_set_id(appid_info, scanner_appid_to_local_id(flow_info.appids[i]));
+            fte::appid_info_set_id(appid_info, scanner_appid_to_local_id(flow_info.appids[i]));
         }
     }
     appid_info.state_ = scanner_appid_state_to_local_state(flow_info.app_detection_status);
@@ -295,7 +295,7 @@ hal_ret_t scanner_run() {
 }
 
 /* submit a packet to scanner and run it */
-hal_ret_t scanner_run(fte::appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_len, void* ctx) {
+hal_ret_t scanner_run(hal::appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_len, void* ctx) {
     void *snort_flow_handle = nullptr;
     hal::utils::thread* t = hal::utils::thread::current_thread();
     uint32_t tid = t ? t->thread_id() : hal::HAL_THREAD_ID_FTE_MIN;
@@ -331,7 +331,7 @@ hal_ret_t scanner_run(fte::appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_
     return HAL_RET_OK;
 }
 
-hal_ret_t scanner_get_appid_info(const hal::flow_key_t& key, fte::appid_info_t& appid_info) {
+hal_ret_t scanner_get_appid_info(const hal::flow_key_t& key, hal::appid_info_t& appid_info) {
     struct SnortFlowInfo flow_info;
 
     if (key.flow_type == hal::FLOW_TYPE_L2) {

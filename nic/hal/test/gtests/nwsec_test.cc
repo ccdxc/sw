@@ -15,6 +15,9 @@
 #include <stdlib.h>
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include "nic/fte/fte_ctx.hpp"
+#include "nic/hal/src/nwsec_group.hpp"
+#include "nic/hal/plugins/sfw/core.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -347,6 +350,86 @@ TEST_F(nwsec_test, test4)
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
+}
+
+namespace hal {
+namespace plugins {
+namespace sfw {
+extern hal_ret_t
+net_sfw_match_rules(fte::ctx_t& ctx,
+                    hal::nwsec_policy_rules_t *rules,
+                    hal::plugins::sfw::net_sfw_match_result_t *rslt);
+extern hal_ret_t
+net_sfw_check_policy_pair(fte::ctx_t                    &ctx,
+                          uint32_t                      src_sg,
+                          uint32_t                      dst_sg,
+                          net_sfw_match_result_t   *match_rslt);
+}
+}
+}
+// Test to validate the appid logic in firewall.cc
+TEST_F(nwsec_test, test5)
+{
+    hal_ret_t ret;
+    fte::ctx_t ctx = {};
+    hal::nwsec_policy_rules_t rules;
+    hal::plugins::sfw::net_sfw_match_result_t rslt;
+
+    nwsec_policy_appid_t* nwsec_plcy_appid = NULL;
+    nwsec_plcy_appid = nwsec_policy_appid_alloc_and_init();
+    if (nwsec_plcy_appid == NULL) ASSERT_TRUE(0);
+
+    nwsec_plcy_appid->appid = 747;
+
+    //To Do: Check to Get lock on nwsec_plcy_rules ??
+    dllist_add_tail(&rules.appid_list_head,
+                    &nwsec_plcy_appid->lentry);
+
+    ret = hal::plugins::sfw::net_sfw_match_rules(ctx, &rules, &rslt);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(ctx.appid_needed());
+
+    ctx = {};
+    nwsec_policy_svc_t* nwsec_plcy_svc = nwsec_policy_svc_alloc_and_init();
+    if (nwsec_plcy_svc == NULL) ASSERT_TRUE(0);
+    nwsec_plcy_svc->ipproto = types::IPPROTO_NONE;
+    nwsec_plcy_svc->dst_port = 0;
+
+    dllist_add_tail(&rules.fw_svc_list_head,
+                    &nwsec_plcy_svc->lentry);
+
+    ret = hal::plugins::sfw::net_sfw_match_rules(ctx, &rules, &rslt);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(ctx.appid_needed());
+}
+
+TEST_F(nwsec_test, test6)
+{
+    hal_ret_t ret;
+    SecurityGroupPolicySpec sp_spec;
+    SecurityGroupPolicyResponse sp_rsp;
+    fte::ctx_t ctx = {};
+    hal::nwsec_policy_rules_t rules;
+    hal::plugins::sfw::net_sfw_match_result_t rslt;
+
+    // Create SecurityGroupPolicySpec
+    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(100);
+    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(102);
+
+    nwsec::FirewallRuleSpec *fw_rule = sp_spec.mutable_policy_rules()->add_in_fw_rules();
+    Service *svc =  fw_rule->add_svc();
+    svc->set_ip_protocol(types::IPPROTO_NONE);
+    svc->set_dst_port(0);
+    fw_rule->add_apps("MYSQL");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_group_policy_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    ret = net_sfw_check_policy_pair(ctx, 100, 102, &rslt);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(ctx.appid_needed());
 }
 
 int main(int argc, char **argv) {

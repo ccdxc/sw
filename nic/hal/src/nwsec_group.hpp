@@ -70,9 +70,16 @@ typedef struct nwsec_policy_svc_s {
     dllist_ctxt_t       lentry;
 } __PACK__ nwsec_policy_svc_t;
 
+typedef struct nwsec_policy_appid_s {
+    hal_spinlock_t      slock;              // Lock to protect this structure
+    uint32_t            appid;
+    dllist_ctxt_t       lentry;
+} __PACK__ nwsec_policy_appid_t;
+
 typedef  struct nwsec_policy_rules_s {
     hal_spinlock_t         slock;
     dllist_ctxt_t          fw_svc_list_head;
+    dllist_ctxt_t          appid_list_head;
     bool                   log;
     FirewallAction         action;
     dllist_ctxt_t          lentry;
@@ -148,6 +155,43 @@ nwsec_policy_svc_free(nwsec_policy_svc_t *nwsec_plcy_rules)
 }
 
 //-----------------------------------------------------------------------------
+//  APIs related to nwsec_policy_appid_t
+//_____________________________________________________________________________
+static inline nwsec_policy_appid_t *
+nwsec_policy_appid_alloc(void)
+{
+    nwsec_policy_appid_t *nwsec_plcy_appid;
+    nwsec_plcy_appid = (nwsec_policy_appid_t *)
+                        g_hal_state->nwsec_policy_appid_slab()->alloc();
+    return nwsec_plcy_appid;
+}
+
+static inline nwsec_policy_appid_t *
+nwsec_policy_appid_init(nwsec_policy_appid_t *nwsec_plcy_appids)
+{
+    if (!nwsec_plcy_appids) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&nwsec_plcy_appids->slock, PTHREAD_PROCESS_PRIVATE);
+    dllist_reset(&nwsec_plcy_appids->lentry);
+    return nwsec_plcy_appids;
+}
+
+static inline nwsec_policy_appid_t *
+nwsec_policy_appid_alloc_and_init(void)
+{
+    return nwsec_policy_appid_init(nwsec_policy_appid_alloc());
+}
+
+static inline hal_ret_t
+nwsec_policy_appid_free(nwsec_policy_appid_t *nwsec_plcy_rules)
+{
+    HAL_SPINLOCK_DESTROY(&nwsec_plcy_rules->slock);
+    g_hal_state->nwsec_policy_appid_slab()->free(nwsec_plcy_rules);
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
 //  APIs related to nwsec_policy_rules_t
 //_____________________________________________________________________________
 static inline nwsec_policy_rules_t *
@@ -169,6 +213,7 @@ nwsec_policy_rules_init(nwsec_policy_rules_t *nwsec_plcy_rules)
         return NULL;
     }
     dllist_reset(&nwsec_plcy_rules->fw_svc_list_head);
+    dllist_reset(&nwsec_plcy_rules->appid_list_head);
     dllist_reset(&nwsec_plcy_rules->lentry);
     HAL_SPINLOCK_INIT(&nwsec_plcy_rules->slock, PTHREAD_PROCESS_PRIVATE);
 

@@ -886,6 +886,11 @@ hal_mem_db::init(void)
                                            true, true, true);
     HAL_ASSERT_RETURN((nwsec_policy_svc_slab_ != NULL), false);
 
+    nwsec_policy_appid_slab_ = slab::factory("nwsec_policy_appid", HAL_SLAB_NWSEC_POLICY_APPID,
+                                           sizeof(hal::nwsec_policy_appid_t), 64,
+                                           true, true, true);
+    HAL_ASSERT_RETURN((nwsec_policy_appid_slab_ != NULL), false);
+
     nwsec_group_slab_ = slab::factory("nwsec_group", HAL_SLAB_NWSEC_GROUP,
                                        sizeof(hal::nwsec_group_t), 64,
                                        true, true, true);

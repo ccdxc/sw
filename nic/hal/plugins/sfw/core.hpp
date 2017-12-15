@@ -15,6 +15,7 @@ const std::string FTE_FEATURE_SFW("pensando.io/sfw:sfw");
 typedef struct sfw_info_s {
     ALGName         alg_proto;
     bool            skip_sfw;
+    bool            sfw_done;
 } sfw_info_t;
     
 typedef struct net_sfw_match_result_s {

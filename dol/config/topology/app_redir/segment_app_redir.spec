@@ -1,14 +1,13 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_NATIVE_PROXY
+    id: SEGMENT_APP_REDIR
 
 type        : tenant
-native      : True
+native      : False
 broadcast   : flood
 multicast   : flood
 l4lb        : True
 endpoints   :
-    sgenable: True
     useg    : 0
     pvlan   : 1
     direct  : 0

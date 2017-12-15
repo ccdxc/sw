@@ -734,10 +734,12 @@ session_lookup(flow_key_t key, flow_role_t *role)
 
     // Should we look at iflow first ?
     session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));
-    *role = FLOW_ROLE_RESPONDER;
+    if(role)
+        *role = FLOW_ROLE_RESPONDER;
     if (session == NULL) {
         session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(key));
-        *role = FLOW_ROLE_INITIATOR;
+        if (role)
+            *role = FLOW_ROLE_INITIATOR;
     }
 
     return session;
@@ -749,8 +751,23 @@ session_update(const session_args_t *args, session_t *session)
     hal_ret_t                ret;
     pd::pd_session_args_t    pd_session_args;
 
-    // Update PI Flows
-    if (args->valid_rflow) {
+    if(args->iflow[0]) {
+        session->iflow->config = *args->iflow[0];
+        session->iflow->pgm_attrs = *args->iflow_attrs[0];
+        if(session->iflow->assoc_flow && args->iflow[1]) {
+            session->iflow->assoc_flow->config = *args->iflow[1];
+            session->iflow->assoc_flow->pgm_attrs = *args->iflow_attrs[1];
+        }
+    }
+
+    if(session->rflow && args->rflow[0]) {
+        session->rflow->config = *args->rflow[0];
+        session->rflow->pgm_attrs = *args->rflow_attrs[0];
+        if(session->rflow->assoc_flow && args->rflow[1]) {
+            session->rflow->assoc_flow->config = *args->rflow[1];
+            session->rflow->assoc_flow->pgm_attrs = *args->rflow_attrs[1];
+        }
+    } else if (args->valid_rflow) {
         session->rflow = flow_create_fte(args->rflow[0], args->rflow[1],
                                          args->rflow_attrs[0], args->rflow_attrs[1],
                                          session);

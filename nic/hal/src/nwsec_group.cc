@@ -7,6 +7,7 @@
 #include "nic/hal/src/nwsec_group.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
+#include "nic/hal/plugins/app_redir/app_redir.hpp"
 
 
 namespace hal {
@@ -241,6 +242,34 @@ extract_rules_from_sg_spec(SecurityGroupPolicySpec& spec,
                 //To Do: Check to Get lock on nwsec_plcy_rules ??
                 dllist_add_tail(&nwsec_plcy_rules->fw_svc_list_head,
                                 &nwsec_plcy_svc->lentry);
+            }
+
+            nwsec_policy_appid_t* nwsec_plcy_appid = NULL;
+            uint32_t apps_sz = spec.policy_rules().in_fw_rules(i).apps_size();
+            HAL_TRACE_DEBUG("Policy_rules::Apps Size {}", apps_sz);
+            for (uint32_t apps_cnt = 0; apps_cnt < apps_sz; apps_cnt++) {
+                nwsec_plcy_appid = nwsec_policy_appid_alloc_and_init();
+                if (nwsec_plcy_appid == NULL) {
+                    HAL_TRACE_ERR("{}: unable to"
+                                  "allocate handle/memory"
+                                  "ret: {}", __FUNCTION__, ret);
+                    //ToDo:Cleanup the nwsec_plcy_rules allocated till now
+                    return HAL_RET_OOM;
+                }
+
+                uint32_t appid;
+                ret = hal::app_redir::app_to_appid(
+                          spec.policy_rules().in_fw_rules(i).apps(apps_cnt),
+                          appid);
+                // TODO: Handle resource cleanup before returning
+                if(HAL_RET_OK != ret) {
+                  return ret;
+                }
+                nwsec_plcy_appid->appid = appid;
+
+                 //To Do: Check to Get lock on nwsec_plcy_rules ??
+                dllist_add_tail(&nwsec_plcy_rules->appid_list_head,
+                                &nwsec_plcy_appid->lentry);
             }
             dllist_add_tail(&nwsec_plcy_cfg->rules_head,
                             &nwsec_plcy_rules->lentry);

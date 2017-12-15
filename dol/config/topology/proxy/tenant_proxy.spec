@@ -17,6 +17,7 @@ segments:
 nfveps: 0
 
 security_profile: ref://store/objects/id=SEC_PROF_ACTIVE
+security_policy: ref://store/specs/id=SECURITY_POLICY_PROXY
 
 sessions:
     unidest:
