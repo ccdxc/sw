@@ -287,7 +287,6 @@
 #define TCP_UNEXPECTED_PKT             0x1000
 #define TCP_RST_WITH_INVALID_ACK_NUM   0x2000
 
-
 /*****************************************************************************/
 /* TCP flags                                                                 */
 /*****************************************************************************/
@@ -355,9 +354,18 @@
 #define CHECKSUM_CTL_INNER_IP_CHECKSUM  3
 #define CHECKSUM_CTL_INNER_L4_CHECKSUM  4
 
-#define CHECKSUM_L3_L4_UPDATE_MASK        (1<<CHECKSUM_CTL_IP_CHECKSUM | 1 << CHECKSUM_CTL_L4_CHECKSUM)
-#define CHECKSUM_INNER_L3_L4_UPDATE_MASK  (1<<CHECKSUM_CTL_IP_CHECKSUM | 1 << CHECKSUM_CTL_L4_CHECKSUM | \
-                                           1<<CHECKSUM_CTL_INNER_IP_CHECKSUM | 1 << CHECKSUM_CTL_INNER_L4_CHECKSUM)
+#define CHECKSUM_L3_L4_UPDATE_MASK        \
+    (1<<CHECKSUM_CTL_IP_CHECKSUM | 1 << CHECKSUM_CTL_L4_CHECKSUM)
+#define CHECKSUM_INNER_L3_L4_UPDATE_MASK  \
+    (1<<CHECKSUM_CTL_IP_CHECKSUM | 1 << CHECKSUM_CTL_L4_CHECKSUM | \
+     1<<CHECKSUM_CTL_INNER_IP_CHECKSUM | 1 << CHECKSUM_CTL_INNER_L4_CHECKSUM)
+
+/*****************************************************************************/
+/* Checksum flags from parser (for compiling P4 code only, don't use in ASM  */
+/*****************************************************************************/
+#define CSUM_HDR_UDP                   1
+#define CSUM_HDR_TCP                   2
+
 // IPSEC
 #define IPSEC_HEADER_AH                1
 #define IPSEC_HEADER_ESP               2
@@ -453,12 +461,6 @@
 #define P4PLUS_TO_P4_HDR_SZ            10
 
 /*****************************************************************************/
-/* Classic NIC flags                                                         */
-/*****************************************************************************/
-#define CLASSIC_NIC_FLAGS_VLAN_NONE            0x0
-#define CLASSIC_NIC_FLAGS_VLAN_VALID           0x1
-
-/*****************************************************************************/
 /* Classic NIC header flags                                                  */
 /*****************************************************************************/
 #define CLASSIC_NIC_HEADER_FLAGS_NONE          0x000
@@ -468,17 +470,6 @@
 #define CLASSIC_NIC_HEADER_FLAGS_IPV6          0x008
 #define CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP      0x018
 #define CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP      0x028
-
-/*****************************************************************************/
-/* Classic NIC checksum flags                                                */
-/*****************************************************************************/
-#define CLASSIC_NIC_CSUM_FLAGS_NONE            0x00
-#define CLASSIC_NIC_CSUM_FLAGS_VERIFIED        0x01
-#define CLASSIC_NIC_CSUM_FLAGS_IP_OK           0x02
-#define CLASSIC_NIC_CSUM_FLAGS_L4_OK           0x04
-#define CLASSIC_NIC_CSUM_FLAGS_INNER_VERIFIED  0x08
-#define CLASSIC_NIC_CSUM_FLAGS_INNER_IP_OK     0x10
-#define CLASSIC_NIC_CSUM_FLAGS_INNER_L4_OK     0x20
 
 /*****************************************************************************/
 /* CPU flags                                                                 */

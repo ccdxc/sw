@@ -52,18 +52,18 @@ action eth_rx_app_header(
     modify_field(p4_to_p4plus_scratch.table2_valid, p4_to_p4plus.table2_valid);
     modify_field(p4_to_p4plus_scratch.table3_valid, p4_to_p4plus.table3_valid);
 
-    modify_field(p4_to_p4plus_scratch.checksum_flags, p4_to_p4plus.checksum_flags);
-    modify_field(p4_to_p4plus_scratch.l4_checksum, p4_to_p4plus.l4_checksum);
+    modify_field(p4_to_p4plus_scratch.csum, p4_to_p4plus.csum);
+    modify_field(p4_to_p4plus_scratch.csum_level, p4_to_p4plus.csum_level);
+    modify_field(p4_to_p4plus_scratch.csum_ok, p4_to_p4plus.csum_ok);
     modify_field(p4_to_p4plus_scratch.vlan_pcp, p4_to_p4plus.vlan_pcp);
     modify_field(p4_to_p4plus_scratch.vlan_dei, p4_to_p4plus.vlan_dei);
     modify_field(p4_to_p4plus_scratch.vlan_vid, p4_to_p4plus.vlan_vid);
+    modify_field(p4_to_p4plus_scratch.vlan_valid, p4_to_p4plus.vlan_valid);
     modify_field(p4_to_p4plus_scratch.packet_len, p4_to_p4plus.packet_len);
-    modify_field(p4_to_p4plus_scratch.flags, p4_to_p4plus.flags);
 
     modify_field(p4_to_p4plus_scratch.header_flags, p4_to_p4plus.header_flags);
     modify_field(p4_to_p4plus_scratch.l4_sport, p4_to_p4plus.l4_sport);
     modify_field(p4_to_p4plus_scratch.l4_dport, p4_to_p4plus.l4_dport);
-    modify_field(p4_to_p4plus_scratch.__pad, p4_to_p4plus.__pad);
     modify_field(p4_to_p4plus_scratch.ip_sa, p4_to_p4plus.ip_sa);
     modify_field(p4_to_p4plus_scratch.ip_da, p4_to_p4plus.ip_da);
 

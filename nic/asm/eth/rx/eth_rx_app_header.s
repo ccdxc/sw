@@ -20,7 +20,7 @@ eth_rx_app_header:
 
   // Build completion entry in the PHV
   phvwr           p.eth_rx_cq_desc_bytes_written, k.{p4_to_p4plus_packet_len}.hx
-  phvwr           p.eth_rx_cq_desc_checksum, k.{p4_to_p4plus_l4_checksum}.wx
+  phvwr           p.eth_rx_cq_desc_checksum, k.{p4_to_p4plus_csum}.wx
   phvwr           p.eth_rx_cq_desc_vlan_tag, k.{p4_to_p4plus_vlan_pcp...p4_to_p4plus_vlan_vid_sbit4_ebit11}.hx
 
 // Write RSS input to PHV

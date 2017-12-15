@@ -21,9 +21,9 @@ p4plus_app_classic_nic:
   add         r7, r0, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                          capri_p4_intrinsic_packet_len_sbit6_ebit13}
   seq         c1, k.control_metadata_vlan_strip, TRUE
-  seq         c2, k.vlan_tag_valid, TRUE
-  bcf         [!c1 | !c2], p4plus_app_classic_nic_no_vlan_strip
-  phvwr       p.p4_to_p4plus_classic_nic_flags, CLASSIC_NIC_FLAGS_VLAN_VALID
+  seq.c1      c1, k.vlan_tag_valid, TRUE
+  bcf         [!c1], p4plus_app_classic_nic_no_vlan_strip
+  phvwr.c1    p.p4_to_p4plus_classic_nic_vlan_valid, TRUE
   phvwr       p.ethernet_etherType, k.vlan_tag_etherType
   phvwr       p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_dei}, \
                  k.{vlan_tag_pcp...vlan_tag_dei}
@@ -33,6 +33,10 @@ p4plus_app_classic_nic:
   sub         r7, r7, 4
 
 p4plus_app_classic_nic_no_vlan_strip:
+  // checksum flags
+  seq         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1    p.p4_to_p4plus_classic_nic_csum_ok, TRUE
+
   phvwr       p.p4_to_p4plus_classic_nic_packet_len, r7
   phvwr       p.p4_to_p4plus_classic_nic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE

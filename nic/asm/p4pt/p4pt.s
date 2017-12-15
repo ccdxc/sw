@@ -112,7 +112,7 @@ p4pt_parse_iscsi:
     *      p4pt_global.p4pt_idx = p4pt_header.p4pt_idx
     */
     phvwr p.p4pt_global_qid, CAPRI_RXDMA_INTRINSIC_QID 
-    phvwr p.p4pt_global_p4pt_idx, k.{p4pt_iscsi_app_header_p4pt_idx_sbit0_ebit7, p4pt_iscsi_app_header_p4pt_idx_sbit8_ebit23}
+    phvwr p.p4pt_global_p4pt_idx, k.p4pt_iscsi_app_header_p4pt_idx
 
    /*
     *      // if response, we only look for status to be updated in phv
@@ -181,7 +181,7 @@ prep_p4ptcb_lookup:
     */
     addi     r1, r0, loword(p4pt_tcb_base)
     addui    r1, r1, hiword(p4pt_tcb_base)
-    add      r1, r1, k.{p4pt_iscsi_app_header_p4pt_idx_sbit0_ebit7, p4pt_iscsi_app_header_p4pt_idx_sbit8_ebit23}, 6  // 64 bytes record
+    add      r1, r1, k.p4pt_iscsi_app_header_p4pt_idx, 6  // 64 bytes record
     phvwr    p.common_te0_phv_table_addr, r1
     phvwri   p.common_te0_phv_table_pc, p4pt_update_tcb_start[33:6]
     phvwr    p.common_te0_phv_table_raw_table_size, 6

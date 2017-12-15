@@ -160,23 +160,6 @@ header_type p4_to_p4plus_tcp_proxy_sack_header_t {
  *  5       : ipv6 udp
  *  [6-11]  : unused
  */
-
-/*
- * flags :
- *  0       : vlan valid
- *  [1-3]   : unused
- */
-
-/*
- * checksum flags:
- *  0       : checksum verified by hardware
- *  1       : l3 checksum ok
- *  2       : l4 checksum ok
- *  3       : inner checksum verified by hardware
- *  4       : inner l3 checksum ok
- *  5       : inner l4 checksum ok
- *  [6-7]   : unused
- */
 header_type p4_to_p4plus_classic_nic_header_t {
     fields {
         p4plus_app_id       : 4;
@@ -184,17 +167,18 @@ header_type p4_to_p4plus_classic_nic_header_t {
         table1_valid        : 1;
         table2_valid        : 1;
         table3_valid        : 1;
-        checksum_flags      : 8;
-        l4_checksum         : 16;
+        flow_id             : 24;
         vlan_pcp            : 3;
         vlan_dei            : 1;
         vlan_vid            : 12;
         packet_len          : 16;
-        flags               : 4;
+        csum                : 16;
+        csum_level          : 2;
+        csum_ok             : 1;
+        vlan_valid          : 1;
         header_flags        : 12;
         l4_sport            : 16;
         l4_dport            : 16;
-        pad                 : 16;
     }
 }
 

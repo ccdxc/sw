@@ -132,17 +132,26 @@ action f_p4plus_app_classic_nic_prep() {
     if (inner_udp.valid == TRUE) {
         modify_field(p4_to_p4plus_classic_nic.l4_sport, inner_udp.srcPort);
         modify_field(p4_to_p4plus_classic_nic.l4_dport, inner_udp.dstPort);
-        modify_field(p4_to_p4plus_classic_nic.l4_checksum, inner_udp.checksum);
     } else {
         if (udp.valid == TRUE) {
             modify_field(p4_to_p4plus_classic_nic.l4_sport, udp.srcPort);
             modify_field(p4_to_p4plus_classic_nic.l4_dport, udp.dstPort);
-            modify_field(p4_to_p4plus_classic_nic.l4_checksum, udp.checksum);
         }
         if (tcp.valid == TRUE) {
             modify_field(p4_to_p4plus_classic_nic.l4_sport, tcp.srcPort);
             modify_field(p4_to_p4plus_classic_nic.l4_dport, tcp.dstPort);
-            modify_field(p4_to_p4plus_classic_nic.l4_checksum, tcp.checksum);
+        }
+    }
+
+    // checksum level (use generated value in ASM, not the ones in defines.h)
+    if (((control_metadata.checksum_results & (1 << CSUM_HDR_UDP)) != 0) or
+        (((control_metadata.checksum_results & (1 << CSUM_HDR_TCP)) != 0) and
+        ((inner_ipv4.valid == FALSE) and (inner_ipv6.valid == FALSE)))) {
+        if (((control_metadata.checksum_results & (1 << CSUM_HDR_TCP)) != 0) and
+            ((inner_ipv4.valid == FALSE) and (inner_ipv6.valid == FALSE))) {
+            modify_field(p4_to_p4plus_classic_nic.csum_level, 2);
+        } else {
+            modify_field(p4_to_p4plus_classic_nic.csum_level, 1);
         }
     }
 }
@@ -153,10 +162,12 @@ action p4plus_app_classic_nic() {
         modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
         modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
         modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
-        modify_field(p4_to_p4plus_classic_nic.flags,
-                     CLASSIC_NIC_FLAGS_VLAN_VALID);
+        modify_field(p4_to_p4plus_classic_nic.vlan_valid, TRUE);
         remove_header(vlan_tag);
         subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
+    }
+    if (control_metadata.checksum_results == 0) {
+        modify_field(p4_to_p4plus_classic_nic.csum_ok, TRUE);
     }
     modify_field(p4_to_p4plus_classic_nic.packet_len,
                  capri_p4_intrinsic.packet_len);
