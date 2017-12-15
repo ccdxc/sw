@@ -44,6 +44,8 @@ SOURCES = \
     cap_txs_csr.cc \
     cap_pbc_csr.cc \
     cap_pbchbm_csr.cc \
+    cap_pbchbmtx_csr.cc \
+    cap_pbchbmeth_csr.cc \	
     cap_pbm_csr.cc \
     cap_wa_csr.cc \
     cap_dpr_csr.cc \

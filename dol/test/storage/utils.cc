@@ -3,6 +3,9 @@
 
 namespace utils {
 
+const uint32_t kUtilsPageSize	= 4096;
+const uint64_t kUtilsPageMask	= 0xFFFFFFFFFFFFF000ULL;
+
 void __write_bit_(uint8_t *p, unsigned bit_off, bool val) {
   unsigned start_byte = bit_off >> 3;
   uint8_t mask = 1 << (7 - (bit_off & 7));
@@ -74,6 +77,23 @@ hbm_addr_alloc(uint32_t size, uint64_t *alloc_ptr)
   }
   *alloc_ptr = storage_hbm_addr + storage_hbm_running_size;
   storage_hbm_running_size += size;
+  return 0;
+}
+
+int
+hbm_addr_alloc_page_aligned(uint32_t size, uint64_t *alloc_ptr)
+{
+  if (!alloc_ptr) return -1;
+  if (((storage_hbm_addr + storage_hbm_running_size) & (kUtilsPageSize - 1)) == 0)
+    return hbm_addr_alloc(size, alloc_ptr);
+  uint32_t aligned_size = kUtilsPageSize + size;
+  if ((aligned_size + storage_hbm_running_size) >= storage_hbm_size) {
+    printf("total size %u running size %u requested size %u aligned size %u can't fit \n",
+           storage_hbm_size, storage_hbm_running_size, size, aligned_size);
+    return -1;
+  }
+  *alloc_ptr = (storage_hbm_addr + storage_hbm_running_size + kUtilsPageSize - 1) & kUtilsPageMask;
+  storage_hbm_running_size += aligned_size;
   return 0;
 }
 

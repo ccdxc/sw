@@ -18,6 +18,8 @@ int hbm_buf_init();
 
 int hbm_addr_alloc(uint32_t size, uint64_t *alloc_ptr);
 
+int hbm_addr_alloc_page_aligned(uint32_t size, uint64_t *alloc_ptr);
+
 }  // namespace utils
 
 

@@ -63,6 +63,10 @@ protected:
     {
         return my_id;
     }
+    virtual void set_host_mem_cpy(bool cpy)
+    {
+      cap_mod->set_host_mem_cpy(cpy);
+    }
 
     virtual ~cap_env_base();
 };

@@ -91,30 +91,30 @@ static bool status_poll(bool in_hbm) {
 void
 decompression_init()
 {
-  queue_mem = alloc_host_mem(kQueueMemSize);
+  queue_mem = alloc_page_aligned_host_mem(kQueueMemSize);
   assert(queue_mem != nullptr);
   queue_mem_pa = host_mem_v2p(queue_mem);
 
-  status_buf = alloc_host_mem(kStatusBufSize);
+  status_buf = alloc_page_aligned_host_mem(kStatusBufSize);
   assert(status_buf != nullptr);
   status_buf_pa = host_mem_v2p(status_buf);
 
-  datain_buf = alloc_host_mem(kDatainBufSize);
+  datain_buf = alloc_page_aligned_host_mem(kDatainBufSize);
   assert(datain_buf != nullptr);
   datain_buf_pa = host_mem_v2p(datain_buf);
 
-  dataout_buf = alloc_host_mem(kDataoutBufSize);
+  dataout_buf = alloc_page_aligned_host_mem(kDataoutBufSize);
   assert(dataout_buf != nullptr);
   dataout_buf_pa = host_mem_v2p(dataout_buf);
 
-  sgl_buf = (uint8_t *)alloc_host_mem(kSGLBufSize);
+  sgl_buf = (uint8_t *)alloc_page_aligned_host_mem(kSGLBufSize);
   assert(sgl_buf != nullptr);
   sgl_buf_pa = host_mem_v2p(sgl_buf);
 
-  assert(utils::hbm_addr_alloc(kDatainBufSize, &hbm_datain_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc(kDataoutBufSize, &hbm_dataout_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc(kStatusBufSize, &hbm_status_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc(kSGLBufSize, &hbm_sgl_buf_pa) == 0);
+  assert(utils::hbm_addr_alloc_page_aligned(kDatainBufSize, &hbm_datain_buf_pa) == 0);
+  assert(utils::hbm_addr_alloc_page_aligned(kDataoutBufSize, &hbm_dataout_buf_pa) == 0);
+  assert(utils::hbm_addr_alloc_page_aligned(kStatusBufSize, &hbm_status_buf_pa) == 0);
+  assert(utils::hbm_addr_alloc_page_aligned(kSGLBufSize, &hbm_sgl_buf_pa) == 0);
 
   // Pre-fill input buffers.
   bcopy(compressed_data, ((uint8_t *)datain_buf)+8, kCompressedDataSize);
@@ -199,9 +199,9 @@ static int run_dc_test(comp_test_t *params) {
   cp_hdr.data_len = kCompressedDataSize;
   cp_hdr.version = kCPVersion;
   // HACK, temporary fix until model/RTL is fixed.
-  printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
+  //printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
   uint64_t *h = (uint64_t *)&cp_hdr;
-  *h = bswap_64(*h);
+  //*h = bswap_64(*h);
   *((uint64_t *)datain_buf) = *h;
   write_mem(hbm_datain_buf_pa, (uint8_t *)h, sizeof(cp_hdr_t));
 

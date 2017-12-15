@@ -7,15 +7,15 @@
 namespace tests {
 
 typedef struct cp_seq_entry {
-  uint64_t next_doorbell_addr;
-  uint64_t next_doorbell_data;
-  uint64_t status_hbm_pa;
-  uint64_t src_hbm_pa;
-  uint64_t sgl_hbm_pa;
-  uint64_t intr_pa;
-  uint32_t intr_data;
-  uint16_t status_len;
-  uint16_t data_len;
+  uint64_t next_doorbell_addr;	// Next capri doorbell address (if chaining)
+  uint64_t next_doorbell_data;	// Next capri doorbell data (if chaining)
+  uint64_t status_hbm_pa;	// Status address in HBM. Provide this even if data_len is provided in desc.
+  uint64_t src_hbm_pa;		// Address of compression buffer in HBM (source of PDMA)
+  uint64_t sgl_pa;		// Address of the SGL in host (destination of PDMA)
+  uint64_t intr_pa;		// MSI-X Interrupt address
+  uint32_t intr_data;		// MSI-X Interrupt data
+  uint16_t status_len;		// Length of the status header
+  uint16_t data_len;		// Remaining data length of compression buffer
   // NOTE: Don't enable intr_en and next_doorbell_en together
   //       as only one will be serviced
   // Order of evaluation: 1. next_doorbell_en 2. intr_en
@@ -29,18 +29,19 @@ typedef struct cp_seq_entry {
 } cp_seq_entry_t;
 
 typedef struct cq_sq_ent_sgl {
-  uint64_t status_host_pa;
-  uint64_t addr[4];
-  uint16_t len[4];
+  uint64_t status_host_pa;	// Status address in host. Destination for the PDMA of status.
+  uint64_t addr[4];		// Destination Address in the SGL for compression data PDMA
+  uint16_t len[4];		// Length of the SGL element for compression data PDMA
 } cp_esq_ent_sgl_t;
 
 typedef struct cp_seq_params {
-  cp_seq_entry_t seq_ent;
-  uint32_t seq_index;
-  uint64_t ret_doorbell_addr;
-  uint64_t ret_doorbell_data;
+  cp_seq_entry_t seq_ent;	// Compression sequencer descriptor
+  uint32_t seq_index;		// Compression sequencer queue (0 ... 15)
+  uint64_t ret_doorbell_addr;	// Doorbell address that is formed for the compression sequencer (filled by API)
+  uint64_t ret_doorbell_data;	// Doorbell data that is formed for the compression sequencer (filled by API)
 } cp_seq_params_t;
 
+// API return values: 0 => successs; < 0 => failure
 int test_setup_cp_seq_ent(cp_seq_params_t *params);
 
 int test_setup();

@@ -29,7 +29,7 @@ const static uint32_t  kR2nStatusSize        = 64;
 const static uint32_t  kR2nStatusNvmeOffset  = 16;
 
 const static uint32_t  kHbmSsdBitmapSize     = (16 * 4096);
-const static uint32_t  kHbmRWBufSize         = (8 * 1024);
+const static uint32_t  kHbmRWBufSize         = 4096;
 
 const static uint32_t  kSeqDescSize          = 64;
 
@@ -123,40 +123,33 @@ int test_setup() {
   if (!read_buf|| !write_buf || !read_buf2) return -1;
   printf("read_buf address %p write_buf address %p\n", read_buf, write_buf);
 
+  // Note: Read/Write buffer allocations have to be page aligned for use in PRP
   // Allocate the read buffer in HBM for the sequencer
-  if (utils::hbm_addr_alloc(kHbmRWBufSize, &read_hbm_buf) < 0) {
+  if (utils::hbm_addr_alloc_page_aligned(kHbmRWBufSize, &read_hbm_buf) < 0) {
     printf("Can't allocate Read HBM buffer \n");
     return -1;
   }
-  // Align it to a 4K page for PRP usage
-  read_hbm_buf = (read_hbm_buf + 4095) & 0xFFFFFFFFFFFFF000L;
 
   // Allocate the write buffer in HBM for the sequencer
-  if (utils::hbm_addr_alloc(kHbmRWBufSize, &write_hbm_buf) < 0) {
+  if (utils::hbm_addr_alloc_page_aligned(kHbmRWBufSize, &write_hbm_buf) < 0) {
     printf("Can't allocate Write HBM buffer \n");
     return -1;
   }
-  // Align it to a 4K page for PRP usage
-  write_hbm_buf = (write_hbm_buf + 4095) & 0xFFFFFFFFFFFFF000L;
 
   printf("HBM read_buf address %lx write_buf address %lx\n",
          read_hbm_buf, write_hbm_buf);
 
   // Allocate the read buffer2 in HBM for the sequencer
-  if (utils::hbm_addr_alloc(kHbmRWBufSize, &read_hbm_buf2) < 0) {
+  if (utils::hbm_addr_alloc_page_aligned(kHbmRWBufSize, &read_hbm_buf2) < 0) {
     printf("Can't allocate Read HBM buffer \n");
     return -1;
   }
-  // Align it to a 4K page for PRP usage
-  read_hbm_buf2 = (read_hbm_buf2 + 4095) & 0xFFFFFFFFFFFFF000L;
 
   // Allocate the write buffer2 in HBM for the sequencer
-  if (utils::hbm_addr_alloc(kHbmRWBufSize, &write_hbm_buf2) < 0) {
+  if (utils::hbm_addr_alloc_page_aligned(kHbmRWBufSize, &write_hbm_buf2) < 0) {
     printf("Can't allocate Write HBM buffer \n");
     return -1;
   }
-  // Align it to a 4K page for PRP usage
-  write_hbm_buf2 = (write_hbm_buf2 + 4095) & 0xFFFFFFFFFFFFF000L;
 
   printf("HBM read_buf2 address %lx write_buf2 address %lx\n",
          read_hbm_buf2, write_hbm_buf2);
@@ -2591,7 +2584,7 @@ int test_setup_cp_seq_ent(cp_seq_params_t *params) {
   utils::write_bit_fields(seq_comp_desc, 64, 64, params->seq_ent.next_doorbell_data);
   utils::write_bit_fields(seq_comp_desc, 128, 64, params->seq_ent.status_hbm_pa);
   utils::write_bit_fields(seq_comp_desc, 192, 64, params->seq_ent.src_hbm_pa);
-  utils::write_bit_fields(seq_comp_desc, 256, 64, params->seq_ent.sgl_hbm_pa);
+  utils::write_bit_fields(seq_comp_desc, 256, 64, params->seq_ent.sgl_pa);
   utils::write_bit_fields(seq_comp_desc, 320, 64, params->seq_ent.intr_pa);
   utils::write_bit_fields(seq_comp_desc, 384, 32, params->seq_ent.intr_data);
   utils::write_bit_fields(seq_comp_desc, 416, 16, params->seq_ent.status_len);

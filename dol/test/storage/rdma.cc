@@ -680,14 +680,11 @@ void SendSmallUspaceBuf() {
 
 int GetR2NHbmBuf(uint64_t *pa, uint32_t *size) {
   *size = kR2NBufSize;
-  // size + 4096 is done to get extra room for page alignment
-  if (utils::hbm_addr_alloc((*size) + 4096, pa) < 0) {
+  // Buffer has to be page aligned
+  if (utils::hbm_addr_alloc_page_aligned((*size), pa) < 0) {
     printf("Can't alloc R2N buffer in HBM \n");
     return -1;
   }
-  // Align it to a 4K page
-  *pa = (*pa + 4095) & 0xFFFFFFFFFFFFF000L;
-
   return 0;
 }
 

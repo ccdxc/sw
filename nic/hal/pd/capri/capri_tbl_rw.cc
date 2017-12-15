@@ -681,6 +681,25 @@ capri_timer_init(void)
     HAL_TRACE_DEBUG("Done initializing timer wheel");
 }
 
+/* This function initializes the stage id register for p4 plus pipelines such that:
+         val0  : 4
+         val1  : 5
+         val2  : 6
+         val3  : 7
+         val4  : 0
+         val5  : 1
+         val6  : 2
+         val7  : 3
+*/
+static void
+capri_p4p_stage_id_init() {
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap0.rpc.pics.cfg_stage_id.all(0x688FAC);
+    cap0.rpc.pics.cfg_stage_id.write();
+    cap0.tpc.pics.cfg_stage_id.all(0x688FAC);
+    cap0.tpc.pics.cfg_stage_id.write();
+}
+
 static void
 capri_deparser_init() {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -749,6 +768,9 @@ int capri_table_rw_init()
     cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
+
+    /* Initialize stage id registers for p4p */
+    capri_p4p_stage_id_init();
 
     /* Initialize the deparsers */
     capri_deparser_init();

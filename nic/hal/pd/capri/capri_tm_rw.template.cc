@@ -270,8 +270,8 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 //::    #endif
         case ${pinfo["enum"]}:
         {
-            hbm_csr.cfg_hbm${p}_parser.read();
-            dscp_map_val = hbm_csr.cfg_hbm${p}_parser.dscp_map();
+            hbm_csr.hbm_port_${p}.cfg_hbm_parser.read();
+            dscp_map_val = hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map();
 
             pbc_csr.cfg_parser${p}.read();
             oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
@@ -306,10 +306,10 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 //::    #endif
         case ${pinfo["enum"]}:
         {
-            hbm_csr.cfg_hbm${p}_parser.use_dot1q(1);
-            hbm_csr.cfg_hbm${p}_parser.use_ip(use_ip);
-            hbm_csr.cfg_hbm${p}_parser.dscp_map(dscp_map_val);
-            hbm_csr.cfg_hbm${p}_parser.write();
+            hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(1);
+            hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(use_ip);
+            hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(dscp_map_val);
+            hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
 
             pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
             pbc_csr.cfg_parser${p}.write();

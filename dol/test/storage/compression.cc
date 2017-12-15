@@ -91,30 +91,30 @@ static bool status_poll(bool in_hbm) {
 void
 compression_init()
 {
-  queue_mem = alloc_host_mem(kQueueMemSize);
+  queue_mem = alloc_page_aligned_host_mem(kQueueMemSize);
   assert(queue_mem != nullptr);
   queue_mem_pa = host_mem_v2p(queue_mem);
 
-  status_buf = alloc_host_mem(kStatusBufSize);
+  status_buf = alloc_page_aligned_host_mem(kStatusBufSize);
   assert(status_buf != nullptr);
   status_buf_pa = host_mem_v2p(status_buf);
 
-  datain_buf = alloc_host_mem(kDatainBufSize);
+  datain_buf = alloc_page_aligned_host_mem(kDatainBufSize);
   assert(datain_buf != nullptr);
   datain_buf_pa = host_mem_v2p(datain_buf);
 
-  dataout_buf = alloc_host_mem(kDataoutBufSize);
+  dataout_buf = alloc_page_aligned_host_mem(kDataoutBufSize);
   assert(dataout_buf != nullptr);
   dataout_buf_pa = host_mem_v2p(dataout_buf);
 
-  sgl_buf = (uint8_t *)alloc_host_mem(kSGLBufSize);
+  sgl_buf = (uint8_t *)alloc_page_aligned_host_mem(kSGLBufSize);
   assert(sgl_buf != nullptr);
   sgl_buf_pa = host_mem_v2p(sgl_buf);
 
-  assert(utils::hbm_addr_alloc(kDatainBufSize, &hbm_datain_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc(kDataoutBufSize, &hbm_dataout_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc(kStatusBufSize, &hbm_status_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc(kSGLBufSize, &hbm_sgl_buf_pa) == 0);
+  assert(utils::hbm_addr_alloc_page_aligned(kDatainBufSize, &hbm_datain_buf_pa) == 0);
+  assert(utils::hbm_addr_alloc_page_aligned(kDataoutBufSize, &hbm_dataout_buf_pa) == 0);
+  assert(utils::hbm_addr_alloc_page_aligned(kStatusBufSize, &hbm_status_buf_pa) == 0);
+  assert(utils::hbm_addr_alloc_page_aligned(kSGLBufSize, &hbm_sgl_buf_pa) == 0);
 
   // Pre-fill input buffers.
   bcopy(uncompressed_data, datain_buf, kDatainBufSize);
@@ -235,7 +235,7 @@ static int run_cp_test(comp_test_t *params) {
   const uint64_t kDBData = 0x11223344556677ull;
   const uint32_t kTagData = 0x8899aabbu;
   d.input_len = params->datain_len;
-  d.expected_len = params->dataout_len;
+  d.expected_len = params->dataout_len - 8;
   d.status_addr = params->status_is_hbm ? hbm_status_buf_pa : status_buf_pa;
   d.doorbell_addr = d.status_addr + 1024;
   d.doorbell_data = kDBData;
@@ -278,9 +278,9 @@ static int run_cp_test(comp_test_t *params) {
   uint8_t *data_start = (uint8_t *)dataout_buf;
   if (params->cmd_bits.insert_header) {
     // HACK, temporary fix until model/RTL is fixed.
-    printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
-    uint64_t *h = (uint64_t *)dataout_buf;
-    *h = bswap_64(*h);
+    //printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
+    //uint64_t *h = (uint64_t *)dataout_buf;
+    //*h = bswap_64(*h);
     cp_hdr_t *hdr = (cp_hdr_t *)dataout_buf;
     if (params->cmd_bits.cksum_en) {
       uint32_t expected_cksum =
