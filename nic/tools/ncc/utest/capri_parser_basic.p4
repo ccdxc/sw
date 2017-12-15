@@ -123,7 +123,7 @@ parser parse_ethernet {
 parser parse_ipv4 {
     set_metadata(ohi.c_offset, current + 20);
     extract(ipv4);
-    return select(latest.fragOffset, latest.protocol) {
+    return select(latest.version, latest.ihl, latest.fragOffset, latest.protocol) {
         IP_PROTOCOLS_TCP : parse_tcp;
         IP_PROTOCOLS_UDP : parse_udp;
         default: ingress;

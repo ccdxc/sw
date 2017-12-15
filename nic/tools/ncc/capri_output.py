@@ -995,9 +995,10 @@ def capri_asm_output_table(be, ctable):
             for s_name,flist in self.ustreams.items():
                 strm_off = 0
                 findent = indent2
-                if len(flist) > 1:
-                    pstr += indent2 + 'struct {\n'
-                    findent = indent + indent2
+                #if len(flist) > 1:
+                pstr += indent2 + 'struct {\n'
+                findent = indent + indent2
+
                 for (cf, fs, fw, full_fld) in flist:
                     fname = _get_output_name(cf.hfname)
                     if not full_fld:
@@ -1010,8 +1011,13 @@ def capri_asm_output_table(be, ctable):
                          511-(self.km_off+strm_off),
                          511-(self.km_off+strm_off+fw)+1)
                     strm_off += fw
-                if len(flist) > 1:
-                    pstr += indent2 + '};\n'
+                if self.km_off+strm_off < self.union_end:
+                    pstr += findent + '_%s_end_pad_%d : %d; // k[%d:%d]\n' % \
+                                    (s_name, self.km_off+strm_off,
+                                     self.union_end-strm_off-self.km_off, 
+                                     511-strm_off-self.km_off, 511-self.union_end+1)
+                #if len(flist) > 1:
+                pstr += indent2 + '};\n'
             pstr += indent + '};\n'
             return pstr
 
@@ -1034,7 +1040,13 @@ def capri_asm_output_table(be, ctable):
     fld_map = OrderedDict() # {km_offset : (cf, f_start, f_size, complete_fld_flag)}
     # fields that are partial, keep collecting them from consecutive bytes/bits
     active_cfs = OrderedDict()
-    for km in ctable.key_makers:    #{
+    key_makers = []
+    if ctable.is_wide_key:
+        key_makers.append(ctable.key_makers[-2])
+        key_makers.append(ctable.key_makers[-1])
+    else:
+        key_makers += ctable.key_makers
+    for km in key_makers:    #{
         km_prof = km.shared_km.combined_profile if km.shared_km else km.combined_profile
         i = -1
         if not km_prof:
@@ -1152,7 +1164,7 @@ def capri_asm_output_table(be, ctable):
     if active_union:
         ki_flds.append(copy.copy(active_union))
         active_union = None
-    pstr = 'struct %s_k {\n' % ctable.p4_table.name
+    pstr = 'struct %s_k_ {\n' % ctable.p4_table.name
     indent = '    '
     km_off = 0
     fld_names = {}
@@ -1166,7 +1178,7 @@ def capri_asm_output_table(be, ctable):
             else:
                 fname = _get_output_name(ki_f[0].hfname)
             if not ki_f[3]:
-                fname += 's%d_e%d' % (ki_f[1], ki_f[1]+ki_f[2]-1)
+                fname += '_s%d_e%d' % (ki_f[1], ki_f[1]+ki_f[2]-1)
             if fname in fld_names:
                 fname += '_%d' % km_off
             fld_names[fname] = 1
