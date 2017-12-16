@@ -193,6 +193,98 @@ func (m *AllocHbmAddressResponseMsg) GetResps() []*HbmAddressResp {
 	return nil
 }
 
+type LifBdfReq struct {
+	Lif uint32 `protobuf:"varint,1,opt,name=lif,proto3" json:"lif,omitempty"`
+	Bdf uint32 `protobuf:"varint,2,opt,name=bdf,proto3" json:"bdf,omitempty"`
+}
+
+func (m *LifBdfReq) Reset()                    { *m = LifBdfReq{} }
+func (m *LifBdfReq) String() string            { return proto.CompactTextString(m) }
+func (*LifBdfReq) ProtoMessage()               {}
+func (*LifBdfReq) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{8} }
+
+func (m *LifBdfReq) GetLif() uint32 {
+	if m != nil {
+		return m.Lif
+	}
+	return 0
+}
+
+func (m *LifBdfReq) GetBdf() uint32 {
+	if m != nil {
+		return m.Bdf
+	}
+	return 0
+}
+
+type LifBdfResp struct {
+	Lif    uint32 `protobuf:"varint,1,opt,name=lif,proto3" json:"lif,omitempty"`
+	Bdf    uint32 `protobuf:"varint,2,opt,name=bdf,proto3" json:"bdf,omitempty"`
+	Status int32  `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
+}
+
+func (m *LifBdfResp) Reset()                    { *m = LifBdfResp{} }
+func (m *LifBdfResp) String() string            { return proto.CompactTextString(m) }
+func (*LifBdfResp) ProtoMessage()               {}
+func (*LifBdfResp) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{9} }
+
+func (m *LifBdfResp) GetLif() uint32 {
+	if m != nil {
+		return m.Lif
+	}
+	return 0
+}
+
+func (m *LifBdfResp) GetBdf() uint32 {
+	if m != nil {
+		return m.Bdf
+	}
+	return 0
+}
+
+func (m *LifBdfResp) GetStatus() int32 {
+	if m != nil {
+		return m.Status
+	}
+	return 0
+}
+
+type ConfigureLifBdfRequestMsg struct {
+	Reqs []*LifBdfReq `protobuf:"bytes,1,rep,name=reqs" json:"reqs,omitempty"`
+}
+
+func (m *ConfigureLifBdfRequestMsg) Reset()         { *m = ConfigureLifBdfRequestMsg{} }
+func (m *ConfigureLifBdfRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*ConfigureLifBdfRequestMsg) ProtoMessage()    {}
+func (*ConfigureLifBdfRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorInternal, []int{10}
+}
+
+func (m *ConfigureLifBdfRequestMsg) GetReqs() []*LifBdfReq {
+	if m != nil {
+		return m.Reqs
+	}
+	return nil
+}
+
+type ConfigureLifBdfResponseMsg struct {
+	Resps []*LifBdfResp `protobuf:"bytes,1,rep,name=resps" json:"resps,omitempty"`
+}
+
+func (m *ConfigureLifBdfResponseMsg) Reset()         { *m = ConfigureLifBdfResponseMsg{} }
+func (m *ConfigureLifBdfResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*ConfigureLifBdfResponseMsg) ProtoMessage()    {}
+func (*ConfigureLifBdfResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorInternal, []int{11}
+}
+
+func (m *ConfigureLifBdfResponseMsg) GetResps() []*LifBdfResp {
+	if m != nil {
+		return m.Resps
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ProgramAddressReq)(nil), "internal.ProgramAddressReq")
 	proto.RegisterType((*ProgramAddressResp)(nil), "internal.ProgramAddressResp")
@@ -202,6 +294,10 @@ func init() {
 	proto.RegisterType((*HbmAddressResp)(nil), "internal.HbmAddressResp")
 	proto.RegisterType((*AllocHbmAddressRequestMsg)(nil), "internal.AllocHbmAddressRequestMsg")
 	proto.RegisterType((*AllocHbmAddressResponseMsg)(nil), "internal.AllocHbmAddressResponseMsg")
+	proto.RegisterType((*LifBdfReq)(nil), "internal.LifBdfReq")
+	proto.RegisterType((*LifBdfResp)(nil), "internal.LifBdfResp")
+	proto.RegisterType((*ConfigureLifBdfRequestMsg)(nil), "internal.ConfigureLifBdfRequestMsg")
+	proto.RegisterType((*ConfigureLifBdfResponseMsg)(nil), "internal.ConfigureLifBdfResponseMsg")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -219,6 +315,8 @@ type InternalClient interface {
 	GetProgramAddress(ctx context.Context, in *GetProgramAddressRequestMsg, opts ...grpc.CallOption) (*ProgramAddressResponseMsg, error)
 	// Program resolution related APIs
 	AllocHbmAddress(ctx context.Context, in *AllocHbmAddressRequestMsg, opts ...grpc.CallOption) (*AllocHbmAddressResponseMsg, error)
+	// LIF BDF association APIs
+	ConfigureLifBdf(ctx context.Context, in *ConfigureLifBdfRequestMsg, opts ...grpc.CallOption) (*ConfigureLifBdfResponseMsg, error)
 }
 
 type internalClient struct {
@@ -247,6 +345,15 @@ func (c *internalClient) AllocHbmAddress(ctx context.Context, in *AllocHbmAddres
 	return out, nil
 }
 
+func (c *internalClient) ConfigureLifBdf(ctx context.Context, in *ConfigureLifBdfRequestMsg, opts ...grpc.CallOption) (*ConfigureLifBdfResponseMsg, error) {
+	out := new(ConfigureLifBdfResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/ConfigureLifBdf", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Internal service
 
 type InternalServer interface {
@@ -254,6 +361,8 @@ type InternalServer interface {
 	GetProgramAddress(context.Context, *GetProgramAddressRequestMsg) (*ProgramAddressResponseMsg, error)
 	// Program resolution related APIs
 	AllocHbmAddress(context.Context, *AllocHbmAddressRequestMsg) (*AllocHbmAddressResponseMsg, error)
+	// LIF BDF association APIs
+	ConfigureLifBdf(context.Context, *ConfigureLifBdfRequestMsg) (*ConfigureLifBdfResponseMsg, error)
 }
 
 func RegisterInternalServer(s *grpc.Server, srv InternalServer) {
@@ -296,6 +405,24 @@ func _Internal_AllocHbmAddress_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Internal_ConfigureLifBdf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigureLifBdfRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).ConfigureLifBdf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/ConfigureLifBdf",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).ConfigureLifBdf(ctx, req.(*ConfigureLifBdfRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Internal_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "internal.Internal",
 	HandlerType: (*InternalServer)(nil),
@@ -307,6 +434,10 @@ var _Internal_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllocHbmAddress",
 			Handler:    _Internal_AllocHbmAddress_Handler,
+		},
+		{
+			MethodName: "ConfigureLifBdf",
+			Handler:    _Internal_ConfigureLifBdf_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -554,6 +685,127 @@ func (m *AllocHbmAddressResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *LifBdfReq) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LifBdfReq) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Lif != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Lif))
+	}
+	if m.Bdf != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Bdf))
+	}
+	return i, nil
+}
+
+func (m *LifBdfResp) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LifBdfResp) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Lif != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Lif))
+	}
+	if m.Bdf != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Bdf))
+	}
+	if m.Status != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Status))
+	}
+	return i, nil
+}
+
+func (m *ConfigureLifBdfRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ConfigureLifBdfRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Reqs) > 0 {
+		for _, msg := range m.Reqs {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *ConfigureLifBdfResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ConfigureLifBdfResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Resps) > 0 {
+		for _, msg := range m.Resps {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeFixed64Internal(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -670,6 +922,57 @@ func (m *AllocHbmAddressRequestMsg) Size() (n int) {
 }
 
 func (m *AllocHbmAddressResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Resps) > 0 {
+		for _, e := range m.Resps {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *LifBdfReq) Size() (n int) {
+	var l int
+	_ = l
+	if m.Lif != 0 {
+		n += 1 + sovInternal(uint64(m.Lif))
+	}
+	if m.Bdf != 0 {
+		n += 1 + sovInternal(uint64(m.Bdf))
+	}
+	return n
+}
+
+func (m *LifBdfResp) Size() (n int) {
+	var l int
+	_ = l
+	if m.Lif != 0 {
+		n += 1 + sovInternal(uint64(m.Lif))
+	}
+	if m.Bdf != 0 {
+		n += 1 + sovInternal(uint64(m.Bdf))
+	}
+	if m.Status != 0 {
+		n += 1 + sovInternal(uint64(m.Status))
+	}
+	return n
+}
+
+func (m *ConfigureLifBdfRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Reqs) > 0 {
+		for _, e := range m.Reqs {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ConfigureLifBdfResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Resps) > 0 {
@@ -1411,6 +1714,363 @@ func (m *AllocHbmAddressResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *LifBdfReq) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LifBdfReq: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LifBdfReq: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Lif", wireType)
+			}
+			m.Lif = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Lif |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bdf", wireType)
+			}
+			m.Bdf = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Bdf |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LifBdfResp) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LifBdfResp: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LifBdfResp: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Lif", wireType)
+			}
+			m.Lif = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Lif |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bdf", wireType)
+			}
+			m.Bdf = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Bdf |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ConfigureLifBdfRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConfigureLifBdfRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConfigureLifBdfRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reqs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reqs = append(m.Reqs, &LifBdfReq{})
+			if err := m.Reqs[len(m.Reqs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ConfigureLifBdfResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConfigureLifBdfResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConfigureLifBdfResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Resps", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Resps = append(m.Resps, &LifBdfResp{})
+			if err := m.Resps[len(m.Resps)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipInternal(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1519,30 +2179,36 @@ var (
 func init() { proto.RegisterFile("internal.proto", fileDescriptorInternal) }
 
 var fileDescriptorInternal = []byte{
-	// 385 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xcd, 0x4e, 0xf2, 0x40,
-	0x14, 0x65, 0x3e, 0x7e, 0x52, 0xee, 0xf7, 0xc1, 0x17, 0x26, 0x46, 0x4b, 0x31, 0x0d, 0x19, 0x34,
-	0x36, 0x31, 0xc1, 0x04, 0x37, 0x6e, 0x71, 0x23, 0x26, 0x88, 0xa6, 0x4b, 0x17, 0x92, 0xc1, 0x4e,
-	0x80, 0x64, 0x68, 0xcb, 0x4c, 0x75, 0xe1, 0xd6, 0x97, 0xf0, 0x91, 0xdc, 0x98, 0xf8, 0x08, 0x06,
-	0x5f, 0xc4, 0x74, 0x5a, 0x7e, 0x4a, 0x81, 0xb8, 0xea, 0xdc, 0x3b, 0xe7, 0x9e, 0x39, 0xe7, 0xdc,
-	0x14, 0xca, 0x63, 0x37, 0x60, 0xc2, 0xa5, 0xbc, 0xe9, 0x0b, 0x2f, 0xf0, 0xb0, 0x36, 0xaf, 0xc9,
-	0x2b, 0x82, 0xca, 0x9d, 0xf0, 0x86, 0x82, 0x4e, 0xda, 0x8e, 0x23, 0x98, 0x94, 0x36, 0x9b, 0xe2,
-	0x7d, 0x28, 0x8c, 0xa8, 0xeb, 0x70, 0xa6, 0xa3, 0x3a, 0xb2, 0x8a, 0x76, 0x5c, 0xe1, 0x1a, 0x14,
-	0x7d, 0xe1, 0x0d, 0xfb, 0x2e, 0x9d, 0x30, 0xfd, 0x8f, 0xba, 0xd2, 0xc2, 0x46, 0x8f, 0x4e, 0x18,
-	0x6e, 0x40, 0x49, 0x30, 0xe9, 0xf1, 0x67, 0xd6, 0xe7, 0x74, 0xc0, 0xb8, 0x9e, 0xad, 0x23, 0x4b,
-	0xb3, 0xff, 0xc5, 0xcd, 0x6e, 0xd8, 0xc3, 0x7b, 0x90, 0x8f, 0x2e, 0x73, 0x6a, 0x3a, 0x2a, 0x88,
-	0x05, 0x78, 0x5d, 0x84, 0xf4, 0x31, 0x86, 0x1c, 0x75, 0x1c, 0xa1, 0x34, 0x64, 0x6d, 0x75, 0x26,
-	0x3d, 0xa8, 0x5d, 0xb1, 0x20, 0xa5, 0xf8, 0x89, 0xc9, 0xe0, 0x46, 0x0e, 0xf1, 0x19, 0xe4, 0x04,
-	0x9b, 0x4a, 0x1d, 0xd5, 0xb3, 0xd6, 0xdf, 0x56, 0xad, 0xb9, 0xf0, 0x9d, 0x9a, 0xb0, 0x15, 0x90,
-	0xdc, 0x42, 0x35, 0xfd, 0xb2, 0xe7, 0x4a, 0x16, 0xb2, 0xb5, 0x20, 0x2f, 0x98, 0xf4, 0xe7, 0x74,
-	0x87, 0xdb, 0xe9, 0xa4, 0x6f, 0x47, 0x50, 0x72, 0x02, 0xa5, 0xce, 0xe0, 0x17, 0x59, 0x92, 0x0b,
-	0x28, 0xaf, 0x02, 0x37, 0xfb, 0x0d, 0x7b, 0x72, 0xfc, 0x12, 0x85, 0x5d, 0xb2, 0xd5, 0x99, 0x74,
-	0xa0, 0xda, 0xe6, 0xdc, 0x7b, 0x4c, 0xbc, 0x33, 0x4f, 0xe0, 0x34, 0x91, 0xc0, 0xc1, 0x52, 0x72,
-	0x02, 0x1d, 0xbb, 0xef, 0x82, 0x91, 0x62, 0x5a, 0xda, 0x6f, 0x26, 0xed, 0xeb, 0x9b, 0xb9, 0x16,
-	0xd6, 0x5b, 0x1f, 0x08, 0xb4, 0xeb, 0x18, 0x82, 0x29, 0x54, 0x52, 0x8b, 0xc2, 0xc7, 0x4b, 0x8a,
-	0x1d, 0x5b, 0x34, 0x1a, 0xbb, 0x82, 0x8e, 0xd5, 0x91, 0x0c, 0x7e, 0x80, 0xff, 0x6b, 0xea, 0xf1,
-	0xca, 0xe4, 0xd6, 0x88, 0x8c, 0xa3, 0x1d, 0xa0, 0x15, 0xfe, 0x4b, 0xe3, 0x7d, 0x66, 0xa2, 0xcf,
-	0x99, 0x89, 0xbe, 0x66, 0x26, 0x7a, 0xfb, 0x36, 0x33, 0xf7, 0xda, 0x88, 0x72, 0xf5, 0x07, 0x0d,
-	0x0a, 0xea, 0x73, 0xfe, 0x13, 0x00, 0x00, 0xff, 0xff, 0x7c, 0x7a, 0x5e, 0xe4, 0x5a, 0x03, 0x00,
-	0x00,
+	// 490 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x94, 0x41, 0x6f, 0xd3, 0x30,
+	0x14, 0xc7, 0x9b, 0xb5, 0x9d, 0xd2, 0x07, 0x1d, 0xcc, 0x4c, 0x90, 0xa6, 0xa8, 0xaa, 0x3c, 0xd0,
+	0x2a, 0x90, 0x3a, 0xa9, 0x5c, 0xb8, 0x6e, 0x20, 0x51, 0xa4, 0x32, 0x90, 0x8f, 0x1c, 0x98, 0x5c,
+	0xe2, 0x74, 0x91, 0xdc, 0x38, 0xb3, 0x53, 0x0e, 0x5c, 0xf9, 0x12, 0x7c, 0x09, 0xbe, 0x07, 0x47,
+	0x3e, 0x02, 0x2a, 0x5f, 0x04, 0xd9, 0x75, 0x9a, 0xa6, 0x59, 0xaa, 0x9e, 0xea, 0xf7, 0xfc, 0xde,
+	0xdf, 0xef, 0xff, 0xeb, 0x53, 0xe0, 0x28, 0x8a, 0x53, 0x26, 0x63, 0xca, 0x87, 0x89, 0x14, 0xa9,
+	0x40, 0x6e, 0x16, 0xe3, 0x1f, 0x0e, 0x1c, 0x7f, 0x92, 0x62, 0x26, 0xe9, 0xfc, 0x22, 0x08, 0x24,
+	0x53, 0x8a, 0xb0, 0x5b, 0xf4, 0x18, 0x0e, 0x6f, 0x68, 0x1c, 0x70, 0xe6, 0x39, 0x7d, 0x67, 0xd0,
+	0x22, 0x36, 0x42, 0x5d, 0x68, 0x25, 0x52, 0xcc, 0xae, 0x63, 0x3a, 0x67, 0xde, 0x81, 0xb9, 0x72,
+	0x75, 0xe2, 0x8a, 0xce, 0x19, 0x3a, 0x85, 0xb6, 0x64, 0x4a, 0xf0, 0x6f, 0xec, 0x9a, 0xd3, 0x29,
+	0xe3, 0x5e, 0xbd, 0xef, 0x0c, 0x5c, 0x72, 0xdf, 0x26, 0x27, 0x3a, 0x87, 0x4e, 0xa0, 0xb9, 0xba,
+	0x6c, 0x98, 0xee, 0x55, 0x80, 0x07, 0x80, 0xb6, 0x87, 0x50, 0x09, 0x42, 0xd0, 0xa0, 0x41, 0x20,
+	0xcd, 0x0c, 0x75, 0x62, 0xce, 0xf8, 0x0a, 0xba, 0xef, 0x58, 0x5a, 0x9a, 0x78, 0xc1, 0x54, 0xfa,
+	0x41, 0xcd, 0xd0, 0x39, 0x34, 0x24, 0xbb, 0x55, 0x9e, 0xd3, 0xaf, 0x0f, 0xee, 0x8d, 0xba, 0xc3,
+	0xb5, 0xef, 0x52, 0x07, 0x31, 0x85, 0xf8, 0x23, 0x74, 0xca, 0x2f, 0x8b, 0x58, 0x31, 0xad, 0x36,
+	0x82, 0xa6, 0x64, 0x2a, 0xc9, 0xe4, 0x9e, 0x56, 0xcb, 0xa9, 0x84, 0xac, 0x4a, 0xf1, 0x19, 0xb4,
+	0xc7, 0xd3, 0x3d, 0x58, 0xe2, 0xd7, 0x70, 0xb4, 0x59, 0x78, 0xb7, 0x5f, 0x9d, 0x53, 0xd1, 0xf7,
+	0x15, 0xec, 0x36, 0x31, 0x67, 0x3c, 0x86, 0xce, 0x05, 0xe7, 0xe2, 0x6b, 0xe1, 0x9d, 0x8c, 0xc0,
+	0xcb, 0x02, 0x81, 0x27, 0xf9, 0xc8, 0x85, 0x6a, 0xeb, 0x7e, 0x02, 0x7e, 0x49, 0x29, 0xb7, 0x3f,
+	0x2c, 0xda, 0xf7, 0xee, 0xd6, 0xca, 0xad, 0x9f, 0x43, 0x6b, 0x12, 0x85, 0x97, 0x41, 0xa8, 0x6d,
+	0x3f, 0x84, 0x3a, 0x8f, 0x42, 0xe3, 0xa5, 0x4d, 0xf4, 0x51, 0x67, 0xa6, 0x41, 0x68, 0x9d, 0xe8,
+	0x23, 0x1e, 0x03, 0x64, 0x0d, 0x2a, 0xd9, 0xa7, 0x43, 0xc3, 0x54, 0x29, 0x4d, 0x17, 0xca, 0x2c,
+	0x57, 0x93, 0xd8, 0x08, 0xbf, 0x85, 0xce, 0x1b, 0x11, 0x87, 0xd1, 0x6c, 0x21, 0xd9, 0x7a, 0x86,
+	0x0c, 0xc9, 0x59, 0x01, 0xc9, 0xa3, 0xdc, 0xc6, 0xba, 0xd2, 0xe2, 0x18, 0x83, 0x5f, 0x52, 0xc9,
+	0x71, 0xbc, 0x28, 0xe2, 0x38, 0x29, 0xeb, 0xac, 0x51, 0x8c, 0x7e, 0x1d, 0x80, 0xfb, 0xde, 0x5e,
+	0x23, 0x0a, 0xc7, 0xa5, 0x9d, 0x45, 0xcf, 0xf3, 0xf6, 0x1d, 0x0b, 0xed, 0x9f, 0xee, 0xda, 0x39,
+	0x3b, 0x19, 0xae, 0xa1, 0x2f, 0xf0, 0x60, 0xeb, 0x8f, 0x44, 0x1b, 0x9d, 0x95, 0xdb, 0xe2, 0x3f,
+	0xdb, 0x51, 0xb4, 0xa5, 0xbf, 0x45, 0x66, 0x53, 0xbf, 0x12, 0xfd, 0xa6, 0x7e, 0x35, 0x59, 0x5c,
+	0xbb, 0xf4, 0x7f, 0x2f, 0x7b, 0xce, 0x9f, 0x65, 0xcf, 0xf9, 0xbb, 0xec, 0x39, 0x3f, 0xff, 0xf5,
+	0x6a, 0x9f, 0xdd, 0x1b, 0xca, 0xcd, 0xc7, 0x6a, 0x7a, 0x68, 0x7e, 0x5e, 0xfd, 0x0f, 0x00, 0x00,
+	0xff, 0xff, 0x4d, 0x87, 0xb9, 0xe1, 0xc5, 0x04, 0x00, 0x00,
 }

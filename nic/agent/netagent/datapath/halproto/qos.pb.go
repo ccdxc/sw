@@ -19,1450 +19,106 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// Pre-defined trees for the hierarchical scheduler.
-type QueueSchedulerPolicy int32
+// QosGroup identifier
+type QosGroup int32
 
 const (
-	QueueSchedulerPolicy_TM_QUEUE_SCHEDULER_2_4 QueueSchedulerPolicy = 0
-	// 4 L1 nodes per L2 node
-	QueueSchedulerPolicy_TM_QUEUE_SCHEDULER_4_2 QueueSchedulerPolicy = 1
-	// 2 L1 nodes per L2 node
-	QueueSchedulerPolicy_TM_QUEUE_SCHEDULER_8_1 QueueSchedulerPolicy = 2
+	QosGroup_DEFAULT                   QosGroup = 0
+	QosGroup_USER_DEFINED_1            QosGroup = 1
+	QosGroup_USER_DEFINED_2            QosGroup = 2
+	QosGroup_USER_DEFINED_3            QosGroup = 3
+	QosGroup_USER_DEFINED_4            QosGroup = 4
+	QosGroup_USER_DEFINED_5            QosGroup = 5
+	QosGroup_USER_DEFINED_6            QosGroup = 6
+	QosGroup_CONTROL                   QosGroup = 7
+	QosGroup_SPAN                      QosGroup = 8
+	QosGroup_INTERNAL_ADMIN            QosGroup = 9
+	QosGroup_INTERNAL_RX_PROXY_NO_DROP QosGroup = 10
+	QosGroup_INTERNAL_RX_PROXY_DROP    QosGroup = 11
+	QosGroup_INTERNAL_TX_PROXY_NO_DROP QosGroup = 12
+	QosGroup_INTERNAL_TX_PROXY_DROP    QosGroup = 13
+	QosGroup_INTERNAL_CPU_COPY         QosGroup = 14
 )
 
-var QueueSchedulerPolicy_name = map[int32]string{
-	0: "TM_QUEUE_SCHEDULER_2_4",
-	1: "TM_QUEUE_SCHEDULER_4_2",
-	2: "TM_QUEUE_SCHEDULER_8_1",
+var QosGroup_name = map[int32]string{
+	0:  "DEFAULT",
+	1:  "USER_DEFINED_1",
+	2:  "USER_DEFINED_2",
+	3:  "USER_DEFINED_3",
+	4:  "USER_DEFINED_4",
+	5:  "USER_DEFINED_5",
+	6:  "USER_DEFINED_6",
+	7:  "CONTROL",
+	8:  "SPAN",
+	9:  "INTERNAL_ADMIN",
+	10: "INTERNAL_RX_PROXY_NO_DROP",
+	11: "INTERNAL_RX_PROXY_DROP",
+	12: "INTERNAL_TX_PROXY_NO_DROP",
+	13: "INTERNAL_TX_PROXY_DROP",
+	14: "INTERNAL_CPU_COPY",
 }
-var QueueSchedulerPolicy_value = map[string]int32{
-	"TM_QUEUE_SCHEDULER_2_4": 0,
-	"TM_QUEUE_SCHEDULER_4_2": 1,
-	"TM_QUEUE_SCHEDULER_8_1": 2,
+var QosGroup_value = map[string]int32{
+	"DEFAULT":                   0,
+	"USER_DEFINED_1":            1,
+	"USER_DEFINED_2":            2,
+	"USER_DEFINED_3":            3,
+	"USER_DEFINED_4":            4,
+	"USER_DEFINED_5":            5,
+	"USER_DEFINED_6":            6,
+	"CONTROL":                   7,
+	"SPAN":                      8,
+	"INTERNAL_ADMIN":            9,
+	"INTERNAL_RX_PROXY_NO_DROP": 10,
+	"INTERNAL_RX_PROXY_DROP":    11,
+	"INTERNAL_TX_PROXY_NO_DROP": 12,
+	"INTERNAL_TX_PROXY_DROP":    13,
+	"INTERNAL_CPU_COPY":         14,
 }
 
-func (x QueueSchedulerPolicy) String() string {
-	return proto.EnumName(QueueSchedulerPolicy_name, int32(x))
+func (x QosGroup) String() string {
+	return proto.EnumName(QosGroup_name, int32(x))
 }
-func (QueueSchedulerPolicy) EnumDescriptor() ([]byte, []int) { return fileDescriptorQos, []int{0} }
+func (QosGroup) EnumDescriptor() ([]byte, []int) { return fileDescriptorQos, []int{0} }
 
-type PolicerDirection int32
+// CoppType identifies the type of traffic for the copp policy
+type CoppType int32
 
 const (
-	PolicerDirection_INGRESS_POLICER PolicerDirection = 0
-	PolicerDirection_EGRESS_POLICER  PolicerDirection = 1
+	CoppType_COPP_TYPE_FLOW_MISS CoppType = 0
+	CoppType_COPP_TYPE_ARP       CoppType = 1
+	CoppType_COPP_TYPE_DHCP      CoppType = 2
 )
 
-var PolicerDirection_name = map[int32]string{
-	0: "INGRESS_POLICER",
-	1: "EGRESS_POLICER",
+var CoppType_name = map[int32]string{
+	0: "COPP_TYPE_FLOW_MISS",
+	1: "COPP_TYPE_ARP",
+	2: "COPP_TYPE_DHCP",
 }
-var PolicerDirection_value = map[string]int32{
-	"INGRESS_POLICER": 0,
-	"EGRESS_POLICER":  1,
+var CoppType_value = map[string]int32{
+	"COPP_TYPE_FLOW_MISS": 0,
+	"COPP_TYPE_ARP":       1,
+	"COPP_TYPE_DHCP":      2,
 }
 
-func (x PolicerDirection) String() string {
-	return proto.EnumName(PolicerDirection_name, int32(x))
+func (x CoppType) String() string {
+	return proto.EnumName(CoppType_name, int32(x))
 }
-func (PolicerDirection) EnumDescriptor() ([]byte, []int) { return fileDescriptorQos, []int{1} }
-
-// Marking action object
-type MarkingActionSpec struct {
-	PcpRewriteEn  bool   `protobuf:"varint,1,opt,name=pcp_rewrite_en,json=pcpRewriteEn,proto3" json:"pcp_rewrite_en,omitempty"`
-	Pcp           uint32 `protobuf:"varint,2,opt,name=pcp,proto3" json:"pcp,omitempty"`
-	DscpRewriteEn bool   `protobuf:"varint,3,opt,name=dscp_rewrite_en,json=dscpRewriteEn,proto3" json:"dscp_rewrite_en,omitempty"`
-	Dscp          uint32 `protobuf:"varint,4,opt,name=dscp,proto3" json:"dscp,omitempty"`
-}
-
-func (m *MarkingActionSpec) Reset()                    { *m = MarkingActionSpec{} }
-func (m *MarkingActionSpec) String() string            { return proto.CompactTextString(m) }
-func (*MarkingActionSpec) ProtoMessage()               {}
-func (*MarkingActionSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{0} }
-
-func (m *MarkingActionSpec) GetPcpRewriteEn() bool {
-	if m != nil {
-		return m.PcpRewriteEn
-	}
-	return false
-}
-
-func (m *MarkingActionSpec) GetPcp() uint32 {
-	if m != nil {
-		return m.Pcp
-	}
-	return 0
-}
-
-func (m *MarkingActionSpec) GetDscpRewriteEn() bool {
-	if m != nil {
-		return m.DscpRewriteEn
-	}
-	return false
-}
-
-func (m *MarkingActionSpec) GetDscp() uint32 {
-	if m != nil {
-		return m.Dscp
-	}
-	return 0
-}
-
-// QOS actions used by other proto files to attach the QOS actions
-// at respective attachment points
-type QOSActions struct {
-	QueueKeyOrHandle   *QueueKeyHandle    `protobuf:"bytes,1,opt,name=queue_key_or_handle,json=queueKeyOrHandle" json:"queue_key_or_handle,omitempty"`
-	PolicerKeyOrHandle *PolicerKeyHandle  `protobuf:"bytes,2,opt,name=policer_key_or_handle,json=policerKeyOrHandle" json:"policer_key_or_handle,omitempty"`
-	MarkingSpec        *MarkingActionSpec `protobuf:"bytes,3,opt,name=marking_spec,json=markingSpec" json:"marking_spec,omitempty"`
-}
-
-func (m *QOSActions) Reset()                    { *m = QOSActions{} }
-func (m *QOSActions) String() string            { return proto.CompactTextString(m) }
-func (*QOSActions) ProtoMessage()               {}
-func (*QOSActions) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{1} }
-
-func (m *QOSActions) GetQueueKeyOrHandle() *QueueKeyHandle {
-	if m != nil {
-		return m.QueueKeyOrHandle
-	}
-	return nil
-}
-
-func (m *QOSActions) GetPolicerKeyOrHandle() *PolicerKeyHandle {
-	if m != nil {
-		return m.PolicerKeyOrHandle
-	}
-	return nil
-}
-
-func (m *QOSActions) GetMarkingSpec() *MarkingActionSpec {
-	if m != nil {
-		return m.MarkingSpec
-	}
-	return nil
-}
-
-// Traffic class identifier
-type TrafficClass struct {
-	Cos uint32 `protobuf:"varint,1,opt,name=cos,proto3" json:"cos,omitempty"`
-}
-
-func (m *TrafficClass) Reset()                    { *m = TrafficClass{} }
-func (m *TrafficClass) String() string            { return proto.CompactTextString(m) }
-func (*TrafficClass) ProtoMessage()               {}
-func (*TrafficClass) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{2} }
-
-func (m *TrafficClass) GetCos() uint32 {
-	if m != nil {
-		return m.Cos
-	}
-	return 0
-}
-
-// Mapping from the Traffic Class to Queues.
-type TrafficClassQueueMap struct {
-	TrafficClass   *TrafficClass   `protobuf:"bytes,1,opt,name=traffic_class,json=trafficClass" json:"traffic_class,omitempty"`
-	QueueKeyHandle *QueueKeyHandle `protobuf:"bytes,2,opt,name=queue_key_handle,json=queueKeyHandle" json:"queue_key_handle,omitempty"`
-}
-
-func (m *TrafficClassQueueMap) Reset()                    { *m = TrafficClassQueueMap{} }
-func (m *TrafficClassQueueMap) String() string            { return proto.CompactTextString(m) }
-func (*TrafficClassQueueMap) ProtoMessage()               {}
-func (*TrafficClassQueueMap) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{3} }
-
-func (m *TrafficClassQueueMap) GetTrafficClass() *TrafficClass {
-	if m != nil {
-		return m.TrafficClass
-	}
-	return nil
-}
-
-func (m *TrafficClassQueueMap) GetQueueKeyHandle() *QueueKeyHandle {
-	if m != nil {
-		return m.QueueKeyHandle
-	}
-	return nil
-}
-
-// Buffer Pool handle - uniquely identifies a buffer pool
-type BufPoolHandle struct {
-	Handle uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
-}
-
-func (m *BufPoolHandle) Reset()                    { *m = BufPoolHandle{} }
-func (m *BufPoolHandle) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolHandle) ProtoMessage()               {}
-func (*BufPoolHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{4} }
-
-func (m *BufPoolHandle) GetHandle() uint64 {
-	if m != nil {
-		return m.Handle
-	}
-	return 0
-}
-
-// BufPoolKeyHandle uniquely identifies a Buffer Pool
-type BufPoolKeyHandle struct {
-	// Types that are valid to be assigned to KeyOrHandle:
-	//	*BufPoolKeyHandle_BufPoolId
-	//	*BufPoolKeyHandle_BufPoolHandle
-	KeyOrHandle isBufPoolKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
-}
-
-func (m *BufPoolKeyHandle) Reset()                    { *m = BufPoolKeyHandle{} }
-func (m *BufPoolKeyHandle) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolKeyHandle) ProtoMessage()               {}
-func (*BufPoolKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{5} }
-
-type isBufPoolKeyHandle_KeyOrHandle interface {
-	isBufPoolKeyHandle_KeyOrHandle()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type BufPoolKeyHandle_BufPoolId struct {
-	BufPoolId uint32 `protobuf:"fixed32,1,opt,name=buf_pool_id,json=bufPoolId,proto3,oneof"`
-}
-type BufPoolKeyHandle_BufPoolHandle struct {
-	BufPoolHandle *BufPoolHandle `protobuf:"bytes,2,opt,name=buf_pool_handle,json=bufPoolHandle,oneof"`
-}
-
-func (*BufPoolKeyHandle_BufPoolId) isBufPoolKeyHandle_KeyOrHandle()     {}
-func (*BufPoolKeyHandle_BufPoolHandle) isBufPoolKeyHandle_KeyOrHandle() {}
-
-func (m *BufPoolKeyHandle) GetKeyOrHandle() isBufPoolKeyHandle_KeyOrHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-func (m *BufPoolKeyHandle) GetBufPoolId() uint32 {
-	if x, ok := m.GetKeyOrHandle().(*BufPoolKeyHandle_BufPoolId); ok {
-		return x.BufPoolId
-	}
-	return 0
-}
-
-func (m *BufPoolKeyHandle) GetBufPoolHandle() *BufPoolHandle {
-	if x, ok := m.GetKeyOrHandle().(*BufPoolKeyHandle_BufPoolHandle); ok {
-		return x.BufPoolHandle
-	}
-	return nil
-}
-
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*BufPoolKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _BufPoolKeyHandle_OneofMarshaler, _BufPoolKeyHandle_OneofUnmarshaler, _BufPoolKeyHandle_OneofSizer, []interface{}{
-		(*BufPoolKeyHandle_BufPoolId)(nil),
-		(*BufPoolKeyHandle_BufPoolHandle)(nil),
-	}
-}
-
-func _BufPoolKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*BufPoolKeyHandle)
-	// key_or_handle
-	switch x := m.KeyOrHandle.(type) {
-	case *BufPoolKeyHandle_BufPoolId:
-		_ = b.EncodeVarint(1<<3 | proto.WireFixed32)
-		_ = b.EncodeFixed32(uint64(x.BufPoolId))
-	case *BufPoolKeyHandle_BufPoolHandle:
-		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.BufPoolHandle); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("BufPoolKeyHandle.KeyOrHandle has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _BufPoolKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*BufPoolKeyHandle)
-	switch tag {
-	case 1: // key_or_handle.buf_pool_id
-		if wire != proto.WireFixed32 {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeFixed32()
-		m.KeyOrHandle = &BufPoolKeyHandle_BufPoolId{uint32(x)}
-		return true, err
-	case 2: // key_or_handle.buf_pool_handle
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(BufPoolHandle)
-		err := b.DecodeMessage(msg)
-		m.KeyOrHandle = &BufPoolKeyHandle_BufPoolHandle{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _BufPoolKeyHandle_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*BufPoolKeyHandle)
-	// key_or_handle
-	switch x := m.KeyOrHandle.(type) {
-	case *BufPoolKeyHandle_BufPoolId:
-		n += proto.SizeVarint(1<<3 | proto.WireFixed32)
-		n += 4
-	case *BufPoolKeyHandle_BufPoolHandle:
-		s := proto.Size(x.BufPoolHandle)
-		n += proto.SizeVarint(2<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
-
-// Buffer Pool specification
-type BufPoolSpec struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is Buffer pool's key or handle
-	KeyOrHandle   *BufPoolKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-	PortNum       uint32            `protobuf:"varint,3,opt,name=port_num,json=portNum,proto3" json:"port_num,omitempty"`
-	ReservedBytes uint32            `protobuf:"varint,4,opt,name=reserved_bytes,json=reservedBytes,proto3" json:"reserved_bytes,omitempty"`
-	// this pool
-	HeadroomBytes uint32 `protobuf:"varint,5,opt,name=headroom_bytes,json=headroomBytes,proto3" json:"headroom_bytes,omitempty"`
-	// reserved for this pool
-	// Before this is used, xoff will be asserted
-	SharingFactor uint32 `protobuf:"varint,6,opt,name=sharing_factor,json=sharingFactor,proto3" json:"sharing_factor,omitempty"`
-	// buffers from shared pool
-	XonThreshold uint32 `protobuf:"varint,7,opt,name=xon_threshold,json=xonThreshold,proto3" json:"xon_threshold,omitempty"`
-	// max occupancy at which xoff will be cleared
-	XoffClearLimit uint32 `protobuf:"varint,8,opt,name=xoff_clear_limit,json=xoffClearLimit,proto3" json:"xoff_clear_limit,omitempty"`
-	// below this limit, xoff will be cleared
-	Mtu uint32          `protobuf:"varint,9,opt,name=mtu,proto3" json:"mtu,omitempty"`
-	Tcs []*TrafficClass `protobuf:"bytes,10,rep,name=tcs" json:"tcs,omitempty"`
-}
-
-func (m *BufPoolSpec) Reset()                    { *m = BufPoolSpec{} }
-func (m *BufPoolSpec) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolSpec) ProtoMessage()               {}
-func (*BufPoolSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{6} }
-
-func (m *BufPoolSpec) GetMeta() *ObjectMeta {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *BufPoolSpec) GetKeyOrHandle() *BufPoolKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-func (m *BufPoolSpec) GetPortNum() uint32 {
-	if m != nil {
-		return m.PortNum
-	}
-	return 0
-}
-
-func (m *BufPoolSpec) GetReservedBytes() uint32 {
-	if m != nil {
-		return m.ReservedBytes
-	}
-	return 0
-}
-
-func (m *BufPoolSpec) GetHeadroomBytes() uint32 {
-	if m != nil {
-		return m.HeadroomBytes
-	}
-	return 0
-}
-
-func (m *BufPoolSpec) GetSharingFactor() uint32 {
-	if m != nil {
-		return m.SharingFactor
-	}
-	return 0
-}
-
-func (m *BufPoolSpec) GetXonThreshold() uint32 {
-	if m != nil {
-		return m.XonThreshold
-	}
-	return 0
-}
-
-func (m *BufPoolSpec) GetXoffClearLimit() uint32 {
-	if m != nil {
-		return m.XoffClearLimit
-	}
-	return 0
-}
-
-func (m *BufPoolSpec) GetMtu() uint32 {
-	if m != nil {
-		return m.Mtu
-	}
-	return 0
-}
-
-func (m *BufPoolSpec) GetTcs() []*TrafficClass {
-	if m != nil {
-		return m.Tcs
-	}
-	return nil
-}
-
-// BufPoolRequestMsg is batched request to create/update the buffer pools
-type BufPoolRequestMsg struct {
-	Request []*BufPoolSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *BufPoolRequestMsg) Reset()                    { *m = BufPoolRequestMsg{} }
-func (m *BufPoolRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolRequestMsg) ProtoMessage()               {}
-func (*BufPoolRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{7} }
-
-func (m *BufPoolRequestMsg) GetRequest() []*BufPoolSpec {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-// BufPoolStatus represents the operational status of Buffer Pool
-type BufPoolStatus struct {
-	BufPoolHandle *BufPoolHandle `protobuf:"bytes,1,opt,name=buf_pool_handle,json=bufPoolHandle" json:"buf_pool_handle,omitempty"`
-}
-
-func (m *BufPoolStatus) Reset()                    { *m = BufPoolStatus{} }
-func (m *BufPoolStatus) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolStatus) ProtoMessage()               {}
-func (*BufPoolStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{8} }
-
-func (m *BufPoolStatus) GetBufPoolHandle() *BufPoolHandle {
-	if m != nil {
-		return m.BufPoolHandle
-	}
-	return nil
-}
-
-// BufPoolResponse is response to one BufPoolSpec
-type BufPoolResponse struct {
-	ApiStatus ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
-	Status    *BufPoolStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
-}
-
-func (m *BufPoolResponse) Reset()                    { *m = BufPoolResponse{} }
-func (m *BufPoolResponse) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolResponse) ProtoMessage()               {}
-func (*BufPoolResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{9} }
-
-func (m *BufPoolResponse) GetApiStatus() ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return ApiStatus_API_STATUS_OK
-}
-
-func (m *BufPoolResponse) GetStatus() *BufPoolStatus {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
-// BufPoolResponseMsg is response to BufPoolRequestMsg
-type BufPoolResponseMsg struct {
-	Response []*BufPoolResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
-}
-
-func (m *BufPoolResponseMsg) Reset()                    { *m = BufPoolResponseMsg{} }
-func (m *BufPoolResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolResponseMsg) ProtoMessage()               {}
-func (*BufPoolResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{10} }
-
-func (m *BufPoolResponseMsg) GetResponse() []*BufPoolResponse {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
-// BufPoolDeleteRequest  is used to delete a Buffer Pool object
-type BufPoolDeleteRequest struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is to identify Buffer pool being deleted
-	KeyOrHandle *BufPoolKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-}
-
-func (m *BufPoolDeleteRequest) Reset()                    { *m = BufPoolDeleteRequest{} }
-func (m *BufPoolDeleteRequest) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolDeleteRequest) ProtoMessage()               {}
-func (*BufPoolDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{11} }
-
-func (m *BufPoolDeleteRequest) GetMeta() *ObjectMeta {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *BufPoolDeleteRequest) GetKeyOrHandle() *BufPoolKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-// BufPoolDeleteRequestMsg is used to delete a batch of Buffer pools
-type BufPoolDeleteRequestMsg struct {
-	Request []*BufPoolDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *BufPoolDeleteRequestMsg) Reset()                    { *m = BufPoolDeleteRequestMsg{} }
-func (m *BufPoolDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolDeleteRequestMsg) ProtoMessage()               {}
-func (*BufPoolDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{12} }
-
-func (m *BufPoolDeleteRequestMsg) GetRequest() []*BufPoolDeleteRequest {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-// BufPoolDeleteResponseMsg is batched response to BufPoolDeleteRequestMsg
-type BufPoolDeleteResponseMsg struct {
-	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
-}
-
-func (m *BufPoolDeleteResponseMsg) Reset()                    { *m = BufPoolDeleteResponseMsg{} }
-func (m *BufPoolDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolDeleteResponseMsg) ProtoMessage()               {}
-func (*BufPoolDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{13} }
-
-func (m *BufPoolDeleteResponseMsg) GetApiStatus() []ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return nil
-}
-
-// BufPoolStats captures all the statistics of given Buffer Pool
-type BufPoolStats struct {
-	Occupancy uint32 `protobuf:"varint,1,opt,name=occupancy,proto3" json:"occupancy,omitempty"`
-}
-
-func (m *BufPoolStats) Reset()                    { *m = BufPoolStats{} }
-func (m *BufPoolStats) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolStats) ProtoMessage()               {}
-func (*BufPoolStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{14} }
-
-func (m *BufPoolStats) GetOccupancy() uint32 {
-	if m != nil {
-		return m.Occupancy
-	}
-	return 0
-}
-
-// BufPoolGetRequest is used to get information about a Buffer Pool
-type BufPoolGetRequest struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is to identify Buffer pool being deleted
-	KeyOrHandle *BufPoolKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-}
-
-func (m *BufPoolGetRequest) Reset()                    { *m = BufPoolGetRequest{} }
-func (m *BufPoolGetRequest) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolGetRequest) ProtoMessage()               {}
-func (*BufPoolGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{15} }
-
-func (m *BufPoolGetRequest) GetMeta() *ObjectMeta {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *BufPoolGetRequest) GetKeyOrHandle() *BufPoolKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-// Batched request message to get the stats about a batch of Buffer pools
-type BufPoolGetRequestMsg struct {
-	Request []*BufPoolGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *BufPoolGetRequestMsg) Reset()                    { *m = BufPoolGetRequestMsg{} }
-func (m *BufPoolGetRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolGetRequestMsg) ProtoMessage()               {}
-func (*BufPoolGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{16} }
-
-func (m *BufPoolGetRequestMsg) GetRequest() []*BufPoolGetRequest {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-// BufPoolGetResponse captures all the information about a Buffer Pool
-type BufPoolGetResponse struct {
-	Spec   *BufPoolSpec   `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
-	Status *BufPoolStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
-	Stats  *BufPoolStats  `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
-}
-
-func (m *BufPoolGetResponse) Reset()                    { *m = BufPoolGetResponse{} }
-func (m *BufPoolGetResponse) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolGetResponse) ProtoMessage()               {}
-func (*BufPoolGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{17} }
-
-func (m *BufPoolGetResponse) GetSpec() *BufPoolSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *BufPoolGetResponse) GetStatus() *BufPoolStatus {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
-func (m *BufPoolGetResponse) GetStats() *BufPoolStats {
-	if m != nil {
-		return m.Stats
-	}
-	return nil
-}
-
-// BufPoolGetResponseMsg is response to BufPoolGetRequestMsg
-type BufPoolGetResponseMsg struct {
-	Response []*BufPoolGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
-}
-
-func (m *BufPoolGetResponseMsg) Reset()                    { *m = BufPoolGetResponseMsg{} }
-func (m *BufPoolGetResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*BufPoolGetResponseMsg) ProtoMessage()               {}
-func (*BufPoolGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{18} }
-
-func (m *BufPoolGetResponseMsg) GetResponse() []*BufPoolGetResponse {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
-// Queue handle - uniquely identifies a queue
-type QueueHandle struct {
-	Handle uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
-}
-
-func (m *QueueHandle) Reset()                    { *m = QueueHandle{} }
-func (m *QueueHandle) String() string            { return proto.CompactTextString(m) }
-func (*QueueHandle) ProtoMessage()               {}
-func (*QueueHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{19} }
-
-func (m *QueueHandle) GetHandle() uint64 {
-	if m != nil {
-		return m.Handle
-	}
-	return 0
-}
-
-// QueueKeyHandle uniquely identifies a queue
-type QueueKeyHandle struct {
-	// Types that are valid to be assigned to KeyOrHandle:
-	//	*QueueKeyHandle_QueueId
-	//	*QueueKeyHandle_QueueHandle
-	KeyOrHandle isQueueKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
-}
-
-func (m *QueueKeyHandle) Reset()                    { *m = QueueKeyHandle{} }
-func (m *QueueKeyHandle) String() string            { return proto.CompactTextString(m) }
-func (*QueueKeyHandle) ProtoMessage()               {}
-func (*QueueKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{20} }
-
-type isQueueKeyHandle_KeyOrHandle interface {
-	isQueueKeyHandle_KeyOrHandle()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type QueueKeyHandle_QueueId struct {
-	QueueId uint32 `protobuf:"fixed32,1,opt,name=queue_id,json=queueId,proto3,oneof"`
-}
-type QueueKeyHandle_QueueHandle struct {
-	QueueHandle *QueueHandle `protobuf:"bytes,2,opt,name=queue_handle,json=queueHandle,oneof"`
-}
-
-func (*QueueKeyHandle_QueueId) isQueueKeyHandle_KeyOrHandle()     {}
-func (*QueueKeyHandle_QueueHandle) isQueueKeyHandle_KeyOrHandle() {}
-
-func (m *QueueKeyHandle) GetKeyOrHandle() isQueueKeyHandle_KeyOrHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-func (m *QueueKeyHandle) GetQueueId() uint32 {
-	if x, ok := m.GetKeyOrHandle().(*QueueKeyHandle_QueueId); ok {
-		return x.QueueId
-	}
-	return 0
-}
-
-func (m *QueueKeyHandle) GetQueueHandle() *QueueHandle {
-	if x, ok := m.GetKeyOrHandle().(*QueueKeyHandle_QueueHandle); ok {
-		return x.QueueHandle
-	}
-	return nil
-}
-
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*QueueKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _QueueKeyHandle_OneofMarshaler, _QueueKeyHandle_OneofUnmarshaler, _QueueKeyHandle_OneofSizer, []interface{}{
-		(*QueueKeyHandle_QueueId)(nil),
-		(*QueueKeyHandle_QueueHandle)(nil),
-	}
-}
-
-func _QueueKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*QueueKeyHandle)
-	// key_or_handle
-	switch x := m.KeyOrHandle.(type) {
-	case *QueueKeyHandle_QueueId:
-		_ = b.EncodeVarint(1<<3 | proto.WireFixed32)
-		_ = b.EncodeFixed32(uint64(x.QueueId))
-	case *QueueKeyHandle_QueueHandle:
-		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.QueueHandle); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("QueueKeyHandle.KeyOrHandle has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _QueueKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*QueueKeyHandle)
-	switch tag {
-	case 1: // key_or_handle.queue_id
-		if wire != proto.WireFixed32 {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeFixed32()
-		m.KeyOrHandle = &QueueKeyHandle_QueueId{uint32(x)}
-		return true, err
-	case 2: // key_or_handle.queue_handle
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(QueueHandle)
-		err := b.DecodeMessage(msg)
-		m.KeyOrHandle = &QueueKeyHandle_QueueHandle{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _QueueKeyHandle_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*QueueKeyHandle)
-	// key_or_handle
-	switch x := m.KeyOrHandle.(type) {
-	case *QueueKeyHandle_QueueId:
-		n += proto.SizeVarint(1<<3 | proto.WireFixed32)
-		n += 4
-	case *QueueKeyHandle_QueueHandle:
-		s := proto.Size(x.QueueHandle)
-		n += proto.SizeVarint(2<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
-
-// DWRR specific information
-type DWRRInfo struct {
-	Weight uint32 `protobuf:"varint,1,opt,name=weight,proto3" json:"weight,omitempty"`
-}
-
-func (m *DWRRInfo) Reset()                    { *m = DWRRInfo{} }
-func (m *DWRRInfo) String() string            { return proto.CompactTextString(m) }
-func (*DWRRInfo) ProtoMessage()               {}
-func (*DWRRInfo) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{21} }
-
-func (m *DWRRInfo) GetWeight() uint32 {
-	if m != nil {
-		return m.Weight
-	}
-	return 0
-}
-
-// Strict Priority specific information for the queue
-type StrictPriorityInfo struct {
-	Rate uint32 `protobuf:"varint,1,opt,name=rate,proto3" json:"rate,omitempty"`
-}
-
-func (m *StrictPriorityInfo) Reset()                    { *m = StrictPriorityInfo{} }
-func (m *StrictPriorityInfo) String() string            { return proto.CompactTextString(m) }
-func (*StrictPriorityInfo) ProtoMessage()               {}
-func (*StrictPriorityInfo) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{22} }
-
-func (m *StrictPriorityInfo) GetRate() uint32 {
-	if m != nil {
-		return m.Rate
-	}
-	return 0
-}
-
-// Info about a node in Queue schedule tree
-type QueueSchedulerNode struct {
-	Priority uint32 `protobuf:"varint,1,opt,name=priority,proto3" json:"priority,omitempty"`
-	// Types that are valid to be assigned to QueueType:
-	//	*QueueSchedulerNode_Dwrr
-	//	*QueueSchedulerNode_Strict
-	QueueType isQueueSchedulerNode_QueueType `protobuf_oneof:"QueueType"`
-}
-
-func (m *QueueSchedulerNode) Reset()                    { *m = QueueSchedulerNode{} }
-func (m *QueueSchedulerNode) String() string            { return proto.CompactTextString(m) }
-func (*QueueSchedulerNode) ProtoMessage()               {}
-func (*QueueSchedulerNode) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{23} }
-
-type isQueueSchedulerNode_QueueType interface {
-	isQueueSchedulerNode_QueueType()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type QueueSchedulerNode_Dwrr struct {
-	Dwrr *DWRRInfo `protobuf:"bytes,2,opt,name=dwrr,oneof"`
-}
-type QueueSchedulerNode_Strict struct {
-	Strict *StrictPriorityInfo `protobuf:"bytes,3,opt,name=strict,oneof"`
-}
-
-func (*QueueSchedulerNode_Dwrr) isQueueSchedulerNode_QueueType()   {}
-func (*QueueSchedulerNode_Strict) isQueueSchedulerNode_QueueType() {}
-
-func (m *QueueSchedulerNode) GetQueueType() isQueueSchedulerNode_QueueType {
-	if m != nil {
-		return m.QueueType
-	}
-	return nil
-}
-
-func (m *QueueSchedulerNode) GetPriority() uint32 {
-	if m != nil {
-		return m.Priority
-	}
-	return 0
-}
-
-func (m *QueueSchedulerNode) GetDwrr() *DWRRInfo {
-	if x, ok := m.GetQueueType().(*QueueSchedulerNode_Dwrr); ok {
-		return x.Dwrr
-	}
-	return nil
-}
-
-func (m *QueueSchedulerNode) GetStrict() *StrictPriorityInfo {
-	if x, ok := m.GetQueueType().(*QueueSchedulerNode_Strict); ok {
-		return x.Strict
-	}
-	return nil
-}
-
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*QueueSchedulerNode) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _QueueSchedulerNode_OneofMarshaler, _QueueSchedulerNode_OneofUnmarshaler, _QueueSchedulerNode_OneofSizer, []interface{}{
-		(*QueueSchedulerNode_Dwrr)(nil),
-		(*QueueSchedulerNode_Strict)(nil),
-	}
-}
-
-func _QueueSchedulerNode_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*QueueSchedulerNode)
-	// QueueType
-	switch x := m.QueueType.(type) {
-	case *QueueSchedulerNode_Dwrr:
-		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Dwrr); err != nil {
-			return err
-		}
-	case *QueueSchedulerNode_Strict:
-		_ = b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Strict); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("QueueSchedulerNode.QueueType has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _QueueSchedulerNode_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*QueueSchedulerNode)
-	switch tag {
-	case 2: // QueueType.dwrr
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(DWRRInfo)
-		err := b.DecodeMessage(msg)
-		m.QueueType = &QueueSchedulerNode_Dwrr{msg}
-		return true, err
-	case 3: // QueueType.strict
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(StrictPriorityInfo)
-		err := b.DecodeMessage(msg)
-		m.QueueType = &QueueSchedulerNode_Strict{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _QueueSchedulerNode_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*QueueSchedulerNode)
-	// QueueType
-	switch x := m.QueueType.(type) {
-	case *QueueSchedulerNode_Dwrr:
-		s := proto.Size(x.Dwrr)
-		n += proto.SizeVarint(2<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *QueueSchedulerNode_Strict:
-		s := proto.Size(x.Strict)
-		n += proto.SizeVarint(3<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
-
-type QueueInfo struct {
-	// key_or_handle is Queue's key or handle
-	KeyOrHandle *QueueKeyHandle     `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-	QueueInfo   *QueueSchedulerNode `protobuf:"bytes,2,opt,name=queue_info,json=queueInfo" json:"queue_info,omitempty"`
-}
-
-func (m *QueueInfo) Reset()                    { *m = QueueInfo{} }
-func (m *QueueInfo) String() string            { return proto.CompactTextString(m) }
-func (*QueueInfo) ProtoMessage()               {}
-func (*QueueInfo) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{24} }
-
-func (m *QueueInfo) GetKeyOrHandle() *QueueKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-func (m *QueueInfo) GetQueueInfo() *QueueSchedulerNode {
-	if m != nil {
-		return m.QueueInfo
-	}
-	return nil
-}
-
-// Output queue specification
-// Output queues are created in a batch. Multiple queues are created at a
-// TM Port at one time and the scheduling policy is picked from a
-// predefined template.
-// A QueueHandle will be returned for each of the queues created which
-// can be used to specify the queue a particular flow should take
-type QueueSpec struct {
-	Meta            *ObjectMeta           `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	PortNum         uint32                `protobuf:"varint,2,opt,name=port_num,json=portNum,proto3" json:"port_num,omitempty"`
-	SchedulerPolicy QueueSchedulerPolicy  `protobuf:"varint,3,opt,name=scheduler_policy,json=schedulerPolicy,proto3,enum=qos.QueueSchedulerPolicy" json:"scheduler_policy,omitempty"`
-	Queues          []*QueueInfo          `protobuf:"bytes,4,rep,name=queues" json:"queues,omitempty"`
-	L1Nodes         []*QueueSchedulerNode `protobuf:"bytes,5,rep,name=l1_nodes,json=l1Nodes" json:"l1_nodes,omitempty"`
-}
-
-func (m *QueueSpec) Reset()                    { *m = QueueSpec{} }
-func (m *QueueSpec) String() string            { return proto.CompactTextString(m) }
-func (*QueueSpec) ProtoMessage()               {}
-func (*QueueSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{25} }
-
-func (m *QueueSpec) GetMeta() *ObjectMeta {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *QueueSpec) GetPortNum() uint32 {
-	if m != nil {
-		return m.PortNum
-	}
-	return 0
-}
-
-func (m *QueueSpec) GetSchedulerPolicy() QueueSchedulerPolicy {
-	if m != nil {
-		return m.SchedulerPolicy
-	}
-	return QueueSchedulerPolicy_TM_QUEUE_SCHEDULER_2_4
-}
-
-func (m *QueueSpec) GetQueues() []*QueueInfo {
-	if m != nil {
-		return m.Queues
-	}
-	return nil
-}
-
-func (m *QueueSpec) GetL1Nodes() []*QueueSchedulerNode {
-	if m != nil {
-		return m.L1Nodes
-	}
-	return nil
-}
-
-// QueueRequestMsg is batched request used to create/update Queues
-type QueueRequestMsg struct {
-	Request []*QueueSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *QueueRequestMsg) Reset()                    { *m = QueueRequestMsg{} }
-func (m *QueueRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*QueueRequestMsg) ProtoMessage()               {}
-func (*QueueRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{26} }
-
-func (m *QueueRequestMsg) GetRequest() []*QueueSpec {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-type QueueStatus struct {
-	QueueHandle *QueueHandle `protobuf:"bytes,1,opt,name=queue_handle,json=queueHandle" json:"queue_handle,omitempty"`
-}
-
-func (m *QueueStatus) Reset()                    { *m = QueueStatus{} }
-func (m *QueueStatus) String() string            { return proto.CompactTextString(m) }
-func (*QueueStatus) ProtoMessage()               {}
-func (*QueueStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{27} }
-
-func (m *QueueStatus) GetQueueHandle() *QueueHandle {
-	if m != nil {
-		return m.QueueHandle
-	}
-	return nil
-}
-
-// Response message for creating queues
-type QueueResponse struct {
-	ApiStatus ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
-	Status    []*QueueStatus `protobuf:"bytes,2,rep,name=status" json:"status,omitempty"`
-}
-
-func (m *QueueResponse) Reset()                    { *m = QueueResponse{} }
-func (m *QueueResponse) String() string            { return proto.CompactTextString(m) }
-func (*QueueResponse) ProtoMessage()               {}
-func (*QueueResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{28} }
-
-func (m *QueueResponse) GetApiStatus() ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return ApiStatus_API_STATUS_OK
-}
-
-func (m *QueueResponse) GetStatus() []*QueueStatus {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
-// QueueResponseMsg is response to QueueRequestMsg
-type QueueResponseMsg struct {
-	Response []*QueueResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
-}
-
-func (m *QueueResponseMsg) Reset()                    { *m = QueueResponseMsg{} }
-func (m *QueueResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*QueueResponseMsg) ProtoMessage()               {}
-func (*QueueResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{29} }
-
-func (m *QueueResponseMsg) GetResponse() []*QueueResponse {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
-// QueueDeleteRequest  is used to delete a Queue object
-type QueueDeleteRequest struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is Queue's key or handle
-	KeyOrHandle *QueueKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-}
-
-func (m *QueueDeleteRequest) Reset()                    { *m = QueueDeleteRequest{} }
-func (m *QueueDeleteRequest) String() string            { return proto.CompactTextString(m) }
-func (*QueueDeleteRequest) ProtoMessage()               {}
-func (*QueueDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{30} }
-
-func (m *QueueDeleteRequest) GetMeta() *ObjectMeta {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *QueueDeleteRequest) GetKeyOrHandle() *QueueKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-// QueueDeleteRequestMsg is used to delete a batch of Queues
-type QueueDeleteRequestMsg struct {
-	Request []*QueueDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *QueueDeleteRequestMsg) Reset()                    { *m = QueueDeleteRequestMsg{} }
-func (m *QueueDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*QueueDeleteRequestMsg) ProtoMessage()               {}
-func (*QueueDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{31} }
-
-func (m *QueueDeleteRequestMsg) GetRequest() []*QueueDeleteRequest {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-// QueueDeleteResponseMsg is batched response to QueueDeleteRequestMsg
-type QueueDeleteResponseMsg struct {
-	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
-}
-
-func (m *QueueDeleteResponseMsg) Reset()                    { *m = QueueDeleteResponseMsg{} }
-func (m *QueueDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*QueueDeleteResponseMsg) ProtoMessage()               {}
-func (*QueueDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{32} }
-
-func (m *QueueDeleteResponseMsg) GetApiStatus() []ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return nil
-}
-
-// QueueStats captures all the statistics of given Queue
-type QueueStats struct {
-	QueueDepth uint32 `protobuf:"varint,1,opt,name=queue_depth,json=queueDepth,proto3" json:"queue_depth,omitempty"`
-}
-
-func (m *QueueStats) Reset()                    { *m = QueueStats{} }
-func (m *QueueStats) String() string            { return proto.CompactTextString(m) }
-func (*QueueStats) ProtoMessage()               {}
-func (*QueueStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{33} }
-
-func (m *QueueStats) GetQueueDepth() uint32 {
-	if m != nil {
-		return m.QueueDepth
-	}
-	return 0
-}
-
-// QueueGetRequest is used to get information about a Queue
-type QueueGetRequest struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is Queue's key or handle
-	KeyOrHandle *QueueKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-}
-
-func (m *QueueGetRequest) Reset()                    { *m = QueueGetRequest{} }
-func (m *QueueGetRequest) String() string            { return proto.CompactTextString(m) }
-func (*QueueGetRequest) ProtoMessage()               {}
-func (*QueueGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{34} }
-
-func (m *QueueGetRequest) GetMeta() *ObjectMeta {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *QueueGetRequest) GetKeyOrHandle() *QueueKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-type QueueGetRequestMsg struct {
-	Request []*QueueGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *QueueGetRequestMsg) Reset()                    { *m = QueueGetRequestMsg{} }
-func (m *QueueGetRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*QueueGetRequestMsg) ProtoMessage()               {}
-func (*QueueGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{35} }
-
-func (m *QueueGetRequestMsg) GetRequest() []*QueueGetRequest {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-// QueueGetResponse captures all the information about a Queue
-type QueueGetResponse struct {
-	Spec   *QueueSpec   `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
-	Status *QueueStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
-	Stats  *QueueStats  `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
-}
-
-func (m *QueueGetResponse) Reset()                    { *m = QueueGetResponse{} }
-func (m *QueueGetResponse) String() string            { return proto.CompactTextString(m) }
-func (*QueueGetResponse) ProtoMessage()               {}
-func (*QueueGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{36} }
-
-func (m *QueueGetResponse) GetSpec() *QueueSpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *QueueGetResponse) GetStatus() *QueueStatus {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
-func (m *QueueGetResponse) GetStats() *QueueStats {
-	if m != nil {
-		return m.Stats
-	}
-	return nil
-}
-
-// QueueGetResponseMsg is response to QueueGetRequestMsg
-type QueueGetResponseMsg struct {
-	Response []*QueueGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
-}
-
-func (m *QueueGetResponseMsg) Reset()                    { *m = QueueGetResponseMsg{} }
-func (m *QueueGetResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*QueueGetResponseMsg) ProtoMessage()               {}
-func (*QueueGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{37} }
-
-func (m *QueueGetResponseMsg) GetResponse() []*QueueGetResponse {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
-// Handle of the policer
-type PolicerHandle struct {
-	Handle uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
-}
-
-func (m *PolicerHandle) Reset()                    { *m = PolicerHandle{} }
-func (m *PolicerHandle) String() string            { return proto.CompactTextString(m) }
-func (*PolicerHandle) ProtoMessage()               {}
-func (*PolicerHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{38} }
-
-func (m *PolicerHandle) GetHandle() uint64 {
-	if m != nil {
-		return m.Handle
-	}
-	return 0
-}
-
-// PolicerKeyHandle uniquely identifies a Policer
-type PolicerKeyHandle struct {
-	// Types that are valid to be assigned to KeyOrHandle:
-	//	*PolicerKeyHandle_PolicerId
-	//	*PolicerKeyHandle_PolicerHandle
-	KeyOrHandle isPolicerKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
-}
-
-func (m *PolicerKeyHandle) Reset()                    { *m = PolicerKeyHandle{} }
-func (m *PolicerKeyHandle) String() string            { return proto.CompactTextString(m) }
-func (*PolicerKeyHandle) ProtoMessage()               {}
-func (*PolicerKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{39} }
-
-type isPolicerKeyHandle_KeyOrHandle interface {
-	isPolicerKeyHandle_KeyOrHandle()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type PolicerKeyHandle_PolicerId struct {
-	PolicerId uint32 `protobuf:"fixed32,1,opt,name=policer_id,json=policerId,proto3,oneof"`
-}
-type PolicerKeyHandle_PolicerHandle struct {
-	PolicerHandle *PolicerHandle `protobuf:"bytes,2,opt,name=policer_handle,json=policerHandle,oneof"`
-}
-
-func (*PolicerKeyHandle_PolicerId) isPolicerKeyHandle_KeyOrHandle()     {}
-func (*PolicerKeyHandle_PolicerHandle) isPolicerKeyHandle_KeyOrHandle() {}
-
-func (m *PolicerKeyHandle) GetKeyOrHandle() isPolicerKeyHandle_KeyOrHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-func (m *PolicerKeyHandle) GetPolicerId() uint32 {
-	if x, ok := m.GetKeyOrHandle().(*PolicerKeyHandle_PolicerId); ok {
-		return x.PolicerId
-	}
-	return 0
-}
-
-func (m *PolicerKeyHandle) GetPolicerHandle() *PolicerHandle {
-	if x, ok := m.GetKeyOrHandle().(*PolicerKeyHandle_PolicerHandle); ok {
-		return x.PolicerHandle
-	}
-	return nil
-}
-
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*PolicerKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _PolicerKeyHandle_OneofMarshaler, _PolicerKeyHandle_OneofUnmarshaler, _PolicerKeyHandle_OneofSizer, []interface{}{
-		(*PolicerKeyHandle_PolicerId)(nil),
-		(*PolicerKeyHandle_PolicerHandle)(nil),
-	}
-}
-
-func _PolicerKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*PolicerKeyHandle)
-	// key_or_handle
-	switch x := m.KeyOrHandle.(type) {
-	case *PolicerKeyHandle_PolicerId:
-		_ = b.EncodeVarint(1<<3 | proto.WireFixed32)
-		_ = b.EncodeFixed32(uint64(x.PolicerId))
-	case *PolicerKeyHandle_PolicerHandle:
-		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.PolicerHandle); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("PolicerKeyHandle.KeyOrHandle has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _PolicerKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*PolicerKeyHandle)
-	switch tag {
-	case 1: // key_or_handle.policer_id
-		if wire != proto.WireFixed32 {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeFixed32()
-		m.KeyOrHandle = &PolicerKeyHandle_PolicerId{uint32(x)}
-		return true, err
-	case 2: // key_or_handle.policer_handle
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(PolicerHandle)
-		err := b.DecodeMessage(msg)
-		m.KeyOrHandle = &PolicerKeyHandle_PolicerHandle{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _PolicerKeyHandle_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*PolicerKeyHandle)
-	// key_or_handle
-	switch x := m.KeyOrHandle.(type) {
-	case *PolicerKeyHandle_PolicerId:
-		n += proto.SizeVarint(1<<3 | proto.WireFixed32)
-		n += 4
-	case *PolicerKeyHandle_PolicerHandle:
-		s := proto.Size(x.PolicerHandle)
-		n += proto.SizeVarint(2<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
+func (CoppType) EnumDescriptor() ([]byte, []int) { return fileDescriptorQos, []int{1} }
 
 // Specifications of a policer
 type PolicerSpec struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is policer's unique identifier
-	KeyOrHandle *PolicerKeyHandle  `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-	Direction   PolicerDirection   `protobuf:"varint,3,opt,name=direction,proto3,enum=qos.PolicerDirection" json:"direction,omitempty"`
-	Bandwidth   uint32             `protobuf:"varint,4,opt,name=bandwidth,proto3" json:"bandwidth,omitempty"`
-	BurstSize   uint32             `protobuf:"varint,5,opt,name=burst_size,json=burstSize,proto3" json:"burst_size,omitempty"`
-	MarkingSpec *MarkingActionSpec `protobuf:"bytes,6,opt,name=marking_spec,json=markingSpec" json:"marking_spec,omitempty"`
+	BpsRate   uint32 `protobuf:"varint,1,opt,name=bps_rate,json=bpsRate,proto3" json:"bps_rate,omitempty"`
+	BurstSize uint32 `protobuf:"varint,2,opt,name=burst_size,json=burstSize,proto3" json:"burst_size,omitempty"`
 }
 
 func (m *PolicerSpec) Reset()                    { *m = PolicerSpec{} }
 func (m *PolicerSpec) String() string            { return proto.CompactTextString(m) }
 func (*PolicerSpec) ProtoMessage()               {}
-func (*PolicerSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{40} }
+func (*PolicerSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{0} }
 
-func (m *PolicerSpec) GetMeta() *ObjectMeta {
+func (m *PolicerSpec) GetBpsRate() uint32 {
 	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *PolicerSpec) GetKeyOrHandle() *PolicerKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-func (m *PolicerSpec) GetDirection() PolicerDirection {
-	if m != nil {
-		return m.Direction
-	}
-	return PolicerDirection_INGRESS_POLICER
-}
-
-func (m *PolicerSpec) GetBandwidth() uint32 {
-	if m != nil {
-		return m.Bandwidth
+		return m.BpsRate
 	}
 	return 0
 }
@@ -1472,189 +128,6 @@ func (m *PolicerSpec) GetBurstSize() uint32 {
 		return m.BurstSize
 	}
 	return 0
-}
-
-func (m *PolicerSpec) GetMarkingSpec() *MarkingActionSpec {
-	if m != nil {
-		return m.MarkingSpec
-	}
-	return nil
-}
-
-// Batched requests to create/update policers
-type PolicerRequestMsg struct {
-	Request []*PolicerSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *PolicerRequestMsg) Reset()                    { *m = PolicerRequestMsg{} }
-func (m *PolicerRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*PolicerRequestMsg) ProtoMessage()               {}
-func (*PolicerRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{41} }
-
-func (m *PolicerRequestMsg) GetRequest() []*PolicerSpec {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-type PolicerStatus struct {
-	PolicerHandle *PolicerHandle `protobuf:"bytes,1,opt,name=policer_handle,json=policerHandle" json:"policer_handle,omitempty"`
-}
-
-func (m *PolicerStatus) Reset()                    { *m = PolicerStatus{} }
-func (m *PolicerStatus) String() string            { return proto.CompactTextString(m) }
-func (*PolicerStatus) ProtoMessage()               {}
-func (*PolicerStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{42} }
-
-func (m *PolicerStatus) GetPolicerHandle() *PolicerHandle {
-	if m != nil {
-		return m.PolicerHandle
-	}
-	return nil
-}
-
-// PolicerResponse is response to one Policer
-type PolicerResponse struct {
-	ApiStatus ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
-	Status    *PolicerStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
-}
-
-func (m *PolicerResponse) Reset()                    { *m = PolicerResponse{} }
-func (m *PolicerResponse) String() string            { return proto.CompactTextString(m) }
-func (*PolicerResponse) ProtoMessage()               {}
-func (*PolicerResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{43} }
-
-func (m *PolicerResponse) GetApiStatus() ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return ApiStatus_API_STATUS_OK
-}
-
-func (m *PolicerResponse) GetStatus() *PolicerStatus {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
-// Batched responses to create/update policers
-type PolicerResponseMsg struct {
-	Response []*PolicerResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
-}
-
-func (m *PolicerResponseMsg) Reset()                    { *m = PolicerResponseMsg{} }
-func (m *PolicerResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*PolicerResponseMsg) ProtoMessage()               {}
-func (*PolicerResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{44} }
-
-func (m *PolicerResponseMsg) GetResponse() []*PolicerResponse {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
-type PolicerDeleteRequest struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is policer's unique identifier
-	KeyOrHandle *PolicerKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-}
-
-func (m *PolicerDeleteRequest) Reset()                    { *m = PolicerDeleteRequest{} }
-func (m *PolicerDeleteRequest) String() string            { return proto.CompactTextString(m) }
-func (*PolicerDeleteRequest) ProtoMessage()               {}
-func (*PolicerDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{45} }
-
-func (m *PolicerDeleteRequest) GetMeta() *ObjectMeta {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *PolicerDeleteRequest) GetKeyOrHandle() *PolicerKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-// Batched requests to delete policers
-type PolicerDeleteRequestMsg struct {
-	Request []*PolicerDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *PolicerDeleteRequestMsg) Reset()                    { *m = PolicerDeleteRequestMsg{} }
-func (m *PolicerDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*PolicerDeleteRequestMsg) ProtoMessage()               {}
-func (*PolicerDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{46} }
-
-func (m *PolicerDeleteRequestMsg) GetRequest() []*PolicerDeleteRequest {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-// PolicerDeleteResponseMsg is batched response to PolicerDeleteRequestMsg
-type PolicerDeleteResponseMsg struct {
-	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
-}
-
-func (m *PolicerDeleteResponseMsg) Reset()                    { *m = PolicerDeleteResponseMsg{} }
-func (m *PolicerDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*PolicerDeleteResponseMsg) ProtoMessage()               {}
-func (*PolicerDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{47} }
-
-func (m *PolicerDeleteResponseMsg) GetApiStatus() []ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return nil
-}
-
-// PolicerGetRequest is used to get information about a policer
-type PolicerGetRequest struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is policer's unique identifier
-	KeyOrHandle *PolicerKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-}
-
-func (m *PolicerGetRequest) Reset()                    { *m = PolicerGetRequest{} }
-func (m *PolicerGetRequest) String() string            { return proto.CompactTextString(m) }
-func (*PolicerGetRequest) ProtoMessage()               {}
-func (*PolicerGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{48} }
-
-func (m *PolicerGetRequest) GetMeta() *ObjectMeta {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *PolicerGetRequest) GetKeyOrHandle() *PolicerKeyHandle {
-	if m != nil {
-		return m.KeyOrHandle
-	}
-	return nil
-}
-
-type PolicerGetRequestMsg struct {
-	Request []*PolicerGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
-}
-
-func (m *PolicerGetRequestMsg) Reset()                    { *m = PolicerGetRequestMsg{} }
-func (m *PolicerGetRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*PolicerGetRequestMsg) ProtoMessage()               {}
-func (*PolicerGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{49} }
-
-func (m *PolicerGetRequestMsg) GetRequest() []*PolicerGetRequest {
-	if m != nil {
-		return m.Request
-	}
-	return nil
 }
 
 // PolicerStats captures all the statistics of a policer
@@ -1668,7 +141,7 @@ type PolicerStats struct {
 func (m *PolicerStats) Reset()                    { *m = PolicerStats{} }
 func (m *PolicerStats) String() string            { return proto.CompactTextString(m) }
 func (*PolicerStats) ProtoMessage()               {}
-func (*PolicerStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{50} }
+func (*PolicerStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{1} }
 
 func (m *PolicerStats) GetPermittedPackets() uint64 {
 	if m != nil {
@@ -1698,50 +171,1028 @@ func (m *PolicerStats) GetDroppedBytes() uint64 {
 	return 0
 }
 
-// PolicerGetResponse captures all the information about a policer
-type PolicerGetResponse struct {
-	Spec   *PolicerSpec   `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
-	Status *PolicerStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
-	Stats  *PolicerStats  `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+// QosClassKeyHandle uniquely identifies a QosClass
+type QosClassKeyHandle struct {
+	// Types that are valid to be assigned to KeyOrHandle:
+	//	*QosClassKeyHandle_QosGroup
+	//	*QosClassKeyHandle_QosClassHandle
+	KeyOrHandle isQosClassKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
 }
 
-func (m *PolicerGetResponse) Reset()                    { *m = PolicerGetResponse{} }
-func (m *PolicerGetResponse) String() string            { return proto.CompactTextString(m) }
-func (*PolicerGetResponse) ProtoMessage()               {}
-func (*PolicerGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{51} }
+func (m *QosClassKeyHandle) Reset()                    { *m = QosClassKeyHandle{} }
+func (m *QosClassKeyHandle) String() string            { return proto.CompactTextString(m) }
+func (*QosClassKeyHandle) ProtoMessage()               {}
+func (*QosClassKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{2} }
 
-func (m *PolicerGetResponse) GetSpec() *PolicerSpec {
+type isQosClassKeyHandle_KeyOrHandle interface {
+	isQosClassKeyHandle_KeyOrHandle()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type QosClassKeyHandle_QosGroup struct {
+	QosGroup QosGroup `protobuf:"varint,1,opt,name=qos_group,json=qosGroup,proto3,enum=qos.QosGroup,oneof"`
+}
+type QosClassKeyHandle_QosClassHandle struct {
+	QosClassHandle uint64 `protobuf:"fixed64,2,opt,name=qos_class_handle,json=qosClassHandle,proto3,oneof"`
+}
+
+func (*QosClassKeyHandle_QosGroup) isQosClassKeyHandle_KeyOrHandle()       {}
+func (*QosClassKeyHandle_QosClassHandle) isQosClassKeyHandle_KeyOrHandle() {}
+
+func (m *QosClassKeyHandle) GetKeyOrHandle() isQosClassKeyHandle_KeyOrHandle {
 	if m != nil {
-		return m.Spec
+		return m.KeyOrHandle
 	}
 	return nil
 }
 
-func (m *PolicerGetResponse) GetStatus() *PolicerStatus {
+func (m *QosClassKeyHandle) GetQosGroup() QosGroup {
+	if x, ok := m.GetKeyOrHandle().(*QosClassKeyHandle_QosGroup); ok {
+		return x.QosGroup
+	}
+	return QosGroup_DEFAULT
+}
+
+func (m *QosClassKeyHandle) GetQosClassHandle() uint64 {
+	if x, ok := m.GetKeyOrHandle().(*QosClassKeyHandle_QosClassHandle); ok {
+		return x.QosClassHandle
+	}
+	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*QosClassKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _QosClassKeyHandle_OneofMarshaler, _QosClassKeyHandle_OneofUnmarshaler, _QosClassKeyHandle_OneofSizer, []interface{}{
+		(*QosClassKeyHandle_QosGroup)(nil),
+		(*QosClassKeyHandle_QosClassHandle)(nil),
+	}
+}
+
+func _QosClassKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*QosClassKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *QosClassKeyHandle_QosGroup:
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.QosGroup))
+	case *QosClassKeyHandle_QosClassHandle:
+		_ = b.EncodeVarint(2<<3 | proto.WireFixed64)
+		_ = b.EncodeFixed64(uint64(x.QosClassHandle))
+	case nil:
+	default:
+		return fmt.Errorf("QosClassKeyHandle.KeyOrHandle has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _QosClassKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*QosClassKeyHandle)
+	switch tag {
+	case 1: // key_or_handle.qos_group
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.KeyOrHandle = &QosClassKeyHandle_QosGroup{QosGroup(x)}
+		return true, err
+	case 2: // key_or_handle.qos_class_handle
+		if wire != proto.WireFixed64 {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeFixed64()
+		m.KeyOrHandle = &QosClassKeyHandle_QosClassHandle{x}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _QosClassKeyHandle_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*QosClassKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *QosClassKeyHandle_QosGroup:
+		n += proto.SizeVarint(1<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.QosGroup))
+	case *QosClassKeyHandle_QosClassHandle:
+		n += proto.SizeVarint(2<<3 | proto.WireFixed64)
+		n += 8
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// QosBuffer specifies the buffer parameters
+type QosBuffer struct {
+	ReservedMtus uint32 `protobuf:"varint,1,opt,name=reserved_mtus,json=reservedMtus,proto3" json:"reserved_mtus,omitempty"`
+	HeadroomMtus uint32 `protobuf:"varint,2,opt,name=headroom_mtus,json=headroomMtus,proto3" json:"headroom_mtus,omitempty"`
+	// pkts for no-drop classes in #mtus
+	XonThreshold uint32 `protobuf:"varint,3,opt,name=xon_threshold,json=xonThreshold,proto3" json:"xon_threshold,omitempty"`
+	// max occupancy at which to clear the xoff
+	XoffClearLimit uint32 `protobuf:"varint,4,opt,name=xoff_clear_limit,json=xoffClearLimit,proto3" json:"xoff_clear_limit,omitempty"`
+}
+
+func (m *QosBuffer) Reset()                    { *m = QosBuffer{} }
+func (m *QosBuffer) String() string            { return proto.CompactTextString(m) }
+func (*QosBuffer) ProtoMessage()               {}
+func (*QosBuffer) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{3} }
+
+func (m *QosBuffer) GetReservedMtus() uint32 {
+	if m != nil {
+		return m.ReservedMtus
+	}
+	return 0
+}
+
+func (m *QosBuffer) GetHeadroomMtus() uint32 {
+	if m != nil {
+		return m.HeadroomMtus
+	}
+	return 0
+}
+
+func (m *QosBuffer) GetXonThreshold() uint32 {
+	if m != nil {
+		return m.XonThreshold
+	}
+	return 0
+}
+
+func (m *QosBuffer) GetXoffClearLimit() uint32 {
+	if m != nil {
+		return m.XoffClearLimit
+	}
+	return 0
+}
+
+// QosPFC specifies the pfc cos-es
+type QosPFC struct {
+	PfcCos []uint32 `protobuf:"varint,1,rep,packed,name=pfc_cos,json=pfcCos" json:"pfc_cos,omitempty"`
+}
+
+func (m *QosPFC) Reset()                    { *m = QosPFC{} }
+func (m *QosPFC) String() string            { return proto.CompactTextString(m) }
+func (*QosPFC) ProtoMessage()               {}
+func (*QosPFC) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{4} }
+
+func (m *QosPFC) GetPfcCos() []uint32 {
+	if m != nil {
+		return m.PfcCos
+	}
+	return nil
+}
+
+// QosSched specifies the QosClass scheduling configuration
+type QosSched struct {
+	// Types that are valid to be assigned to SchedType:
+	//	*QosSched_Dwrr
+	//	*QosSched_Strict
+	SchedType isQosSched_SchedType `protobuf_oneof:"SchedType"`
+}
+
+func (m *QosSched) Reset()                    { *m = QosSched{} }
+func (m *QosSched) String() string            { return proto.CompactTextString(m) }
+func (*QosSched) ProtoMessage()               {}
+func (*QosSched) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{5} }
+
+type isQosSched_SchedType interface {
+	isQosSched_SchedType()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type QosSched_Dwrr struct {
+	Dwrr *QosSched_DWRRInfo `protobuf:"bytes,1,opt,name=dwrr,oneof"`
+}
+type QosSched_Strict struct {
+	Strict *QosSched_StrictPriorityInfo `protobuf:"bytes,2,opt,name=strict,oneof"`
+}
+
+func (*QosSched_Dwrr) isQosSched_SchedType()   {}
+func (*QosSched_Strict) isQosSched_SchedType() {}
+
+func (m *QosSched) GetSchedType() isQosSched_SchedType {
+	if m != nil {
+		return m.SchedType
+	}
+	return nil
+}
+
+func (m *QosSched) GetDwrr() *QosSched_DWRRInfo {
+	if x, ok := m.GetSchedType().(*QosSched_Dwrr); ok {
+		return x.Dwrr
+	}
+	return nil
+}
+
+func (m *QosSched) GetStrict() *QosSched_StrictPriorityInfo {
+	if x, ok := m.GetSchedType().(*QosSched_Strict); ok {
+		return x.Strict
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*QosSched) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _QosSched_OneofMarshaler, _QosSched_OneofUnmarshaler, _QosSched_OneofSizer, []interface{}{
+		(*QosSched_Dwrr)(nil),
+		(*QosSched_Strict)(nil),
+	}
+}
+
+func _QosSched_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*QosSched)
+	// SchedType
+	switch x := m.SchedType.(type) {
+	case *QosSched_Dwrr:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Dwrr); err != nil {
+			return err
+		}
+	case *QosSched_Strict:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Strict); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("QosSched.SchedType has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _QosSched_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*QosSched)
+	switch tag {
+	case 1: // SchedType.dwrr
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(QosSched_DWRRInfo)
+		err := b.DecodeMessage(msg)
+		m.SchedType = &QosSched_Dwrr{msg}
+		return true, err
+	case 2: // SchedType.strict
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(QosSched_StrictPriorityInfo)
+		err := b.DecodeMessage(msg)
+		m.SchedType = &QosSched_Strict{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _QosSched_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*QosSched)
+	// SchedType
+	switch x := m.SchedType.(type) {
+	case *QosSched_Dwrr:
+		s := proto.Size(x.Dwrr)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *QosSched_Strict:
+		s := proto.Size(x.Strict)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// DWRR specific information
+type QosSched_DWRRInfo struct {
+	BwPercentage uint32 `protobuf:"varint,1,opt,name=bw_percentage,json=bwPercentage,proto3" json:"bw_percentage,omitempty"`
+}
+
+func (m *QosSched_DWRRInfo) Reset()                    { *m = QosSched_DWRRInfo{} }
+func (m *QosSched_DWRRInfo) String() string            { return proto.CompactTextString(m) }
+func (*QosSched_DWRRInfo) ProtoMessage()               {}
+func (*QosSched_DWRRInfo) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{5, 0} }
+
+func (m *QosSched_DWRRInfo) GetBwPercentage() uint32 {
+	if m != nil {
+		return m.BwPercentage
+	}
+	return 0
+}
+
+// Strict Priority specific information for the class
+type QosSched_StrictPriorityInfo struct {
+	Bps uint32 `protobuf:"varint,1,opt,name=bps,proto3" json:"bps,omitempty"`
+}
+
+func (m *QosSched_StrictPriorityInfo) Reset()         { *m = QosSched_StrictPriorityInfo{} }
+func (m *QosSched_StrictPriorityInfo) String() string { return proto.CompactTextString(m) }
+func (*QosSched_StrictPriorityInfo) ProtoMessage()    {}
+func (*QosSched_StrictPriorityInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptorQos, []int{5, 1}
+}
+
+func (m *QosSched_StrictPriorityInfo) GetBps() uint32 {
+	if m != nil {
+		return m.Bps
+	}
+	return 0
+}
+
+// QosUplinkClassMap specifies the policy with which traffic from network
+// is classified
+type QosUplinkClassMap struct {
+	Dot1QPcp uint32   `protobuf:"varint,1,opt,name=dot1q_pcp,json=dot1qPcp,proto3" json:"dot1q_pcp,omitempty"`
+	IpDscp   []uint32 `protobuf:"varint,2,rep,packed,name=ip_dscp,json=ipDscp" json:"ip_dscp,omitempty"`
+}
+
+func (m *QosUplinkClassMap) Reset()                    { *m = QosUplinkClassMap{} }
+func (m *QosUplinkClassMap) String() string            { return proto.CompactTextString(m) }
+func (*QosUplinkClassMap) ProtoMessage()               {}
+func (*QosUplinkClassMap) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{6} }
+
+func (m *QosUplinkClassMap) GetDot1QPcp() uint32 {
+	if m != nil {
+		return m.Dot1QPcp
+	}
+	return 0
+}
+
+func (m *QosUplinkClassMap) GetIpDscp() []uint32 {
+	if m != nil {
+		return m.IpDscp
+	}
+	return nil
+}
+
+// QosMarking specifies the policy to mark the host-to-network traffic
+type QosMarking struct {
+	Dot1QPcpRewriteEn bool   `protobuf:"varint,1,opt,name=dot1q_pcp_rewrite_en,json=dot1qPcpRewriteEn,proto3" json:"dot1q_pcp_rewrite_en,omitempty"`
+	Dot1QPcp          uint32 `protobuf:"varint,2,opt,name=dot1q_pcp,json=dot1qPcp,proto3" json:"dot1q_pcp,omitempty"`
+	IpDscpRewriteEn   bool   `protobuf:"varint,3,opt,name=ip_dscp_rewrite_en,json=ipDscpRewriteEn,proto3" json:"ip_dscp_rewrite_en,omitempty"`
+	IpDscp            uint32 `protobuf:"varint,4,opt,name=ip_dscp,json=ipDscp,proto3" json:"ip_dscp,omitempty"`
+}
+
+func (m *QosMarking) Reset()                    { *m = QosMarking{} }
+func (m *QosMarking) String() string            { return proto.CompactTextString(m) }
+func (*QosMarking) ProtoMessage()               {}
+func (*QosMarking) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{7} }
+
+func (m *QosMarking) GetDot1QPcpRewriteEn() bool {
+	if m != nil {
+		return m.Dot1QPcpRewriteEn
+	}
+	return false
+}
+
+func (m *QosMarking) GetDot1QPcp() uint32 {
+	if m != nil {
+		return m.Dot1QPcp
+	}
+	return 0
+}
+
+func (m *QosMarking) GetIpDscpRewriteEn() bool {
+	if m != nil {
+		return m.IpDscpRewriteEn
+	}
+	return false
+}
+
+func (m *QosMarking) GetIpDscp() uint32 {
+	if m != nil {
+		return m.IpDscp
+	}
+	return 0
+}
+
+// QosClass specification
+type QosClassSpec struct {
+	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	// key_or_handle is QosClass's key or handle
+	KeyOrHandle    *QosClassKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	Mtu            uint32             `protobuf:"varint,3,opt,name=mtu,proto3" json:"mtu,omitempty"`
+	Buffer         *QosBuffer         `protobuf:"bytes,4,opt,name=buffer" json:"buffer,omitempty"`
+	Pfc            *QosPFC            `protobuf:"bytes,5,opt,name=pfc" json:"pfc,omitempty"`
+	Sched          *QosSched          `protobuf:"bytes,6,opt,name=sched" json:"sched,omitempty"`
+	UplinkClassMap *QosUplinkClassMap `protobuf:"bytes,7,opt,name=uplink_class_map,json=uplinkClassMap" json:"uplink_class_map,omitempty"`
+	Marking        *QosMarking        `protobuf:"bytes,8,opt,name=marking" json:"marking,omitempty"`
+}
+
+func (m *QosClassSpec) Reset()                    { *m = QosClassSpec{} }
+func (m *QosClassSpec) String() string            { return proto.CompactTextString(m) }
+func (*QosClassSpec) ProtoMessage()               {}
+func (*QosClassSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{8} }
+
+func (m *QosClassSpec) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *QosClassSpec) GetKeyOrHandle() *QosClassKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *QosClassSpec) GetMtu() uint32 {
+	if m != nil {
+		return m.Mtu
+	}
+	return 0
+}
+
+func (m *QosClassSpec) GetBuffer() *QosBuffer {
+	if m != nil {
+		return m.Buffer
+	}
+	return nil
+}
+
+func (m *QosClassSpec) GetPfc() *QosPFC {
+	if m != nil {
+		return m.Pfc
+	}
+	return nil
+}
+
+func (m *QosClassSpec) GetSched() *QosSched {
+	if m != nil {
+		return m.Sched
+	}
+	return nil
+}
+
+func (m *QosClassSpec) GetUplinkClassMap() *QosUplinkClassMap {
+	if m != nil {
+		return m.UplinkClassMap
+	}
+	return nil
+}
+
+func (m *QosClassSpec) GetMarking() *QosMarking {
+	if m != nil {
+		return m.Marking
+	}
+	return nil
+}
+
+// QosClassRequestMsg is batched request to create/update the QosClasss
+type QosClassRequestMsg struct {
+	Request []*QosClassSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *QosClassRequestMsg) Reset()                    { *m = QosClassRequestMsg{} }
+func (m *QosClassRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*QosClassRequestMsg) ProtoMessage()               {}
+func (*QosClassRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{9} }
+
+func (m *QosClassRequestMsg) GetRequest() []*QosClassSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// QosClassStatus represents the operational status of QosClass
+type QosClassStatus struct {
+	QosClassHandle uint64 `protobuf:"fixed64,1,opt,name=qos_class_handle,json=qosClassHandle,proto3" json:"qos_class_handle,omitempty"`
+}
+
+func (m *QosClassStatus) Reset()                    { *m = QosClassStatus{} }
+func (m *QosClassStatus) String() string            { return proto.CompactTextString(m) }
+func (*QosClassStatus) ProtoMessage()               {}
+func (*QosClassStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{10} }
+
+func (m *QosClassStatus) GetQosClassHandle() uint64 {
+	if m != nil {
+		return m.QosClassHandle
+	}
+	return 0
+}
+
+// QosClassResponse is response to one QosClassSpec
+type QosClassResponse struct {
+	ApiStatus ApiStatus       `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	Status    *QosClassStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+}
+
+func (m *QosClassResponse) Reset()                    { *m = QosClassResponse{} }
+func (m *QosClassResponse) String() string            { return proto.CompactTextString(m) }
+func (*QosClassResponse) ProtoMessage()               {}
+func (*QosClassResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{11} }
+
+func (m *QosClassResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *QosClassResponse) GetStatus() *QosClassStatus {
 	if m != nil {
 		return m.Status
 	}
 	return nil
 }
 
-func (m *PolicerGetResponse) GetStats() *PolicerStats {
+// QosClassResponseMsg is response to QosClassRequestMsg
+type QosClassResponseMsg struct {
+	Response []*QosClassResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *QosClassResponseMsg) Reset()                    { *m = QosClassResponseMsg{} }
+func (m *QosClassResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*QosClassResponseMsg) ProtoMessage()               {}
+func (*QosClassResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{12} }
+
+func (m *QosClassResponseMsg) GetResponse() []*QosClassResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// QosClassDeleteRequest  is used to delete a QosClass object
+type QosClassDeleteRequest struct {
+	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	// key_or_handle is to identify QosClass being deleted
+	KeyOrHandle *QosClassKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *QosClassDeleteRequest) Reset()                    { *m = QosClassDeleteRequest{} }
+func (m *QosClassDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*QosClassDeleteRequest) ProtoMessage()               {}
+func (*QosClassDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{13} }
+
+func (m *QosClassDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *QosClassDeleteRequest) GetKeyOrHandle() *QosClassKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// QosClassDeleteRequestMsg is used to delete a batch of QosClasss
+type QosClassDeleteRequestMsg struct {
+	Request []*QosClassDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *QosClassDeleteRequestMsg) Reset()                    { *m = QosClassDeleteRequestMsg{} }
+func (m *QosClassDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*QosClassDeleteRequestMsg) ProtoMessage()               {}
+func (*QosClassDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{14} }
+
+func (m *QosClassDeleteRequestMsg) GetRequest() []*QosClassDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// QosClassDeleteResponseMsg is batched response to QosClassDeleteRequestMsg
+type QosClassDeleteResponseMsg struct {
+	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
+}
+
+func (m *QosClassDeleteResponseMsg) Reset()                    { *m = QosClassDeleteResponseMsg{} }
+func (m *QosClassDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*QosClassDeleteResponseMsg) ProtoMessage()               {}
+func (*QosClassDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{15} }
+
+func (m *QosClassDeleteResponseMsg) GetApiStatus() []ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return nil
+}
+
+// QosClassStats captures all the statistics of given QosClass
+type QosClassStats struct {
+}
+
+func (m *QosClassStats) Reset()                    { *m = QosClassStats{} }
+func (m *QosClassStats) String() string            { return proto.CompactTextString(m) }
+func (*QosClassStats) ProtoMessage()               {}
+func (*QosClassStats) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{16} }
+
+// QosClassGetRequest is used to get information about a QosClass
+type QosClassGetRequest struct {
+	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	// key_or_handle is to identify QosClass being deleted
+	KeyOrHandle *QosClassKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *QosClassGetRequest) Reset()                    { *m = QosClassGetRequest{} }
+func (m *QosClassGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*QosClassGetRequest) ProtoMessage()               {}
+func (*QosClassGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{17} }
+
+func (m *QosClassGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *QosClassGetRequest) GetKeyOrHandle() *QosClassKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// Batched request message to get the stats about a batch of QosClasss
+type QosClassGetRequestMsg struct {
+	Request []*QosClassGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *QosClassGetRequestMsg) Reset()                    { *m = QosClassGetRequestMsg{} }
+func (m *QosClassGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*QosClassGetRequestMsg) ProtoMessage()               {}
+func (*QosClassGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{18} }
+
+func (m *QosClassGetRequestMsg) GetRequest() []*QosClassGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// QosClassGetResponse captures all the information about a QosClass
+type QosClassGetResponse struct {
+	Spec   *QosClassSpec   `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
+	Status *QosClassStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+	Stats  *QosClassStats  `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *QosClassGetResponse) Reset()                    { *m = QosClassGetResponse{} }
+func (m *QosClassGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*QosClassGetResponse) ProtoMessage()               {}
+func (*QosClassGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{19} }
+
+func (m *QosClassGetResponse) GetSpec() *QosClassSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *QosClassGetResponse) GetStatus() *QosClassStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *QosClassGetResponse) GetStats() *QosClassStats {
 	if m != nil {
 		return m.Stats
 	}
 	return nil
 }
 
-// PolicerGetResponseMsg is response to PolicerGetRequestMsg
-type PolicerGetResponseMsg struct {
-	Response []*PolicerGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+// QosClassGetResponseMsg is response to QosClassGetRequestMsg
+type QosClassGetResponseMsg struct {
+	Response []*QosClassGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
-func (m *PolicerGetResponseMsg) Reset()                    { *m = PolicerGetResponseMsg{} }
-func (m *PolicerGetResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*PolicerGetResponseMsg) ProtoMessage()               {}
-func (*PolicerGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{52} }
+func (m *QosClassGetResponseMsg) Reset()                    { *m = QosClassGetResponseMsg{} }
+func (m *QosClassGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*QosClassGetResponseMsg) ProtoMessage()               {}
+func (*QosClassGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{20} }
 
-func (m *PolicerGetResponseMsg) GetResponse() []*PolicerGetResponse {
+func (m *QosClassGetResponseMsg) GetResponse() []*QosClassGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// CoppPolicerKeyHandle uniquely identifies a CoppPolicer
+type CoppPolicerKeyHandle struct {
+	// Types that are valid to be assigned to KeyOrHandle:
+	//	*CoppPolicerKeyHandle_CoppType
+	//	*CoppPolicerKeyHandle_CoppPolicerHandle
+	KeyOrHandle isCoppPolicerKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
+}
+
+func (m *CoppPolicerKeyHandle) Reset()                    { *m = CoppPolicerKeyHandle{} }
+func (m *CoppPolicerKeyHandle) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerKeyHandle) ProtoMessage()               {}
+func (*CoppPolicerKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{21} }
+
+type isCoppPolicerKeyHandle_KeyOrHandle interface {
+	isCoppPolicerKeyHandle_KeyOrHandle()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type CoppPolicerKeyHandle_CoppType struct {
+	CoppType CoppType `protobuf:"varint,1,opt,name=copp_type,json=coppType,proto3,enum=qos.CoppType,oneof"`
+}
+type CoppPolicerKeyHandle_CoppPolicerHandle struct {
+	CoppPolicerHandle uint64 `protobuf:"fixed64,2,opt,name=copp_policer_handle,json=coppPolicerHandle,proto3,oneof"`
+}
+
+func (*CoppPolicerKeyHandle_CoppType) isCoppPolicerKeyHandle_KeyOrHandle()          {}
+func (*CoppPolicerKeyHandle_CoppPolicerHandle) isCoppPolicerKeyHandle_KeyOrHandle() {}
+
+func (m *CoppPolicerKeyHandle) GetKeyOrHandle() isCoppPolicerKeyHandle_KeyOrHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *CoppPolicerKeyHandle) GetCoppType() CoppType {
+	if x, ok := m.GetKeyOrHandle().(*CoppPolicerKeyHandle_CoppType); ok {
+		return x.CoppType
+	}
+	return CoppType_COPP_TYPE_FLOW_MISS
+}
+
+func (m *CoppPolicerKeyHandle) GetCoppPolicerHandle() uint64 {
+	if x, ok := m.GetKeyOrHandle().(*CoppPolicerKeyHandle_CoppPolicerHandle); ok {
+		return x.CoppPolicerHandle
+	}
+	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*CoppPolicerKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _CoppPolicerKeyHandle_OneofMarshaler, _CoppPolicerKeyHandle_OneofUnmarshaler, _CoppPolicerKeyHandle_OneofSizer, []interface{}{
+		(*CoppPolicerKeyHandle_CoppType)(nil),
+		(*CoppPolicerKeyHandle_CoppPolicerHandle)(nil),
+	}
+}
+
+func _CoppPolicerKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*CoppPolicerKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *CoppPolicerKeyHandle_CoppType:
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.CoppType))
+	case *CoppPolicerKeyHandle_CoppPolicerHandle:
+		_ = b.EncodeVarint(2<<3 | proto.WireFixed64)
+		_ = b.EncodeFixed64(uint64(x.CoppPolicerHandle))
+	case nil:
+	default:
+		return fmt.Errorf("CoppPolicerKeyHandle.KeyOrHandle has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _CoppPolicerKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*CoppPolicerKeyHandle)
+	switch tag {
+	case 1: // key_or_handle.copp_type
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.KeyOrHandle = &CoppPolicerKeyHandle_CoppType{CoppType(x)}
+		return true, err
+	case 2: // key_or_handle.copp_policer_handle
+		if wire != proto.WireFixed64 {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeFixed64()
+		m.KeyOrHandle = &CoppPolicerKeyHandle_CoppPolicerHandle{x}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _CoppPolicerKeyHandle_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*CoppPolicerKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *CoppPolicerKeyHandle_CoppType:
+		n += proto.SizeVarint(1<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.CoppType))
+	case *CoppPolicerKeyHandle_CoppPolicerHandle:
+		n += proto.SizeVarint(2<<3 | proto.WireFixed64)
+		n += 8
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Specifications of a CoppPolicer
+type CoppPolicerSpec struct {
+	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	// key_or_handle is CoppPolicer's unique identifier
+	KeyOrHandle *CoppPolicerKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	Policer     *PolicerSpec          `protobuf:"bytes,3,opt,name=policer" json:"policer,omitempty"`
+}
+
+func (m *CoppPolicerSpec) Reset()                    { *m = CoppPolicerSpec{} }
+func (m *CoppPolicerSpec) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerSpec) ProtoMessage()               {}
+func (*CoppPolicerSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{22} }
+
+func (m *CoppPolicerSpec) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *CoppPolicerSpec) GetKeyOrHandle() *CoppPolicerKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *CoppPolicerSpec) GetPolicer() *PolicerSpec {
+	if m != nil {
+		return m.Policer
+	}
+	return nil
+}
+
+// Batched requests to create/update CoppPolicers
+type CoppPolicerRequestMsg struct {
+	Request []*CoppPolicerSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *CoppPolicerRequestMsg) Reset()                    { *m = CoppPolicerRequestMsg{} }
+func (m *CoppPolicerRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerRequestMsg) ProtoMessage()               {}
+func (*CoppPolicerRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{23} }
+
+func (m *CoppPolicerRequestMsg) GetRequest() []*CoppPolicerSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type CoppPolicerStatus struct {
+	CoppPolicerHandle uint64 `protobuf:"fixed64,1,opt,name=copp_policer_handle,json=coppPolicerHandle,proto3" json:"copp_policer_handle,omitempty"`
+}
+
+func (m *CoppPolicerStatus) Reset()                    { *m = CoppPolicerStatus{} }
+func (m *CoppPolicerStatus) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerStatus) ProtoMessage()               {}
+func (*CoppPolicerStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{24} }
+
+func (m *CoppPolicerStatus) GetCoppPolicerHandle() uint64 {
+	if m != nil {
+		return m.CoppPolicerHandle
+	}
+	return 0
+}
+
+// CoppPolicerResponse is response to one CoppPolicer
+type CoppPolicerResponse struct {
+	ApiStatus ApiStatus          `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	Status    *CoppPolicerStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+}
+
+func (m *CoppPolicerResponse) Reset()                    { *m = CoppPolicerResponse{} }
+func (m *CoppPolicerResponse) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerResponse) ProtoMessage()               {}
+func (*CoppPolicerResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{25} }
+
+func (m *CoppPolicerResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *CoppPolicerResponse) GetStatus() *CoppPolicerStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+// Batched responses to create/update CoppPolicers
+type CoppPolicerResponseMsg struct {
+	Response []*CoppPolicerResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *CoppPolicerResponseMsg) Reset()                    { *m = CoppPolicerResponseMsg{} }
+func (m *CoppPolicerResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerResponseMsg) ProtoMessage()               {}
+func (*CoppPolicerResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{26} }
+
+func (m *CoppPolicerResponseMsg) GetResponse() []*CoppPolicerResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// CoppPolicerGetRequest is used to get information about a CoppPolicer
+type CoppPolicerGetRequest struct {
+	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	// key_or_handle is CoppPolicer's unique identifier
+	KeyOrHandle *CoppPolicerKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *CoppPolicerGetRequest) Reset()                    { *m = CoppPolicerGetRequest{} }
+func (m *CoppPolicerGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerGetRequest) ProtoMessage()               {}
+func (*CoppPolicerGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{27} }
+
+func (m *CoppPolicerGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *CoppPolicerGetRequest) GetKeyOrHandle() *CoppPolicerKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+type CoppPolicerGetRequestMsg struct {
+	Request []*CoppPolicerGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *CoppPolicerGetRequestMsg) Reset()                    { *m = CoppPolicerGetRequestMsg{} }
+func (m *CoppPolicerGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerGetRequestMsg) ProtoMessage()               {}
+func (*CoppPolicerGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{28} }
+
+func (m *CoppPolicerGetRequestMsg) GetRequest() []*CoppPolicerGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// CoppPolicerGetResponse captures all the information about a CoppPolicer
+type CoppPolicerGetResponse struct {
+	Spec   *CoppPolicerSpec   `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
+	Status *CoppPolicerStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+	Stats  *PolicerStats      `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *CoppPolicerGetResponse) Reset()                    { *m = CoppPolicerGetResponse{} }
+func (m *CoppPolicerGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerGetResponse) ProtoMessage()               {}
+func (*CoppPolicerGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{29} }
+
+func (m *CoppPolicerGetResponse) GetSpec() *CoppPolicerSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *CoppPolicerGetResponse) GetStatus() *CoppPolicerStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *CoppPolicerGetResponse) GetStats() *PolicerStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// CoppPolicerGetResponseMsg is response to CoppPolicerGetRequestMsg
+type CoppPolicerGetResponseMsg struct {
+	Response []*CoppPolicerGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *CoppPolicerGetResponseMsg) Reset()                    { *m = CoppPolicerGetResponseMsg{} }
+func (m *CoppPolicerGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*CoppPolicerGetResponseMsg) ProtoMessage()               {}
+func (*CoppPolicerGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{30} }
+
+func (m *CoppPolicerGetResponseMsg) GetResponse() []*CoppPolicerGetResponse {
 	if m != nil {
 		return m.Response
 	}
@@ -1749,61 +1200,41 @@ func (m *PolicerGetResponseMsg) GetResponse() []*PolicerGetResponse {
 }
 
 func init() {
-	proto.RegisterType((*MarkingActionSpec)(nil), "qos.MarkingActionSpec")
-	proto.RegisterType((*QOSActions)(nil), "qos.QOSActions")
-	proto.RegisterType((*TrafficClass)(nil), "qos.TrafficClass")
-	proto.RegisterType((*TrafficClassQueueMap)(nil), "qos.TrafficClassQueueMap")
-	proto.RegisterType((*BufPoolHandle)(nil), "qos.BufPoolHandle")
-	proto.RegisterType((*BufPoolKeyHandle)(nil), "qos.BufPoolKeyHandle")
-	proto.RegisterType((*BufPoolSpec)(nil), "qos.BufPoolSpec")
-	proto.RegisterType((*BufPoolRequestMsg)(nil), "qos.BufPoolRequestMsg")
-	proto.RegisterType((*BufPoolStatus)(nil), "qos.BufPoolStatus")
-	proto.RegisterType((*BufPoolResponse)(nil), "qos.BufPoolResponse")
-	proto.RegisterType((*BufPoolResponseMsg)(nil), "qos.BufPoolResponseMsg")
-	proto.RegisterType((*BufPoolDeleteRequest)(nil), "qos.BufPoolDeleteRequest")
-	proto.RegisterType((*BufPoolDeleteRequestMsg)(nil), "qos.BufPoolDeleteRequestMsg")
-	proto.RegisterType((*BufPoolDeleteResponseMsg)(nil), "qos.BufPoolDeleteResponseMsg")
-	proto.RegisterType((*BufPoolStats)(nil), "qos.BufPoolStats")
-	proto.RegisterType((*BufPoolGetRequest)(nil), "qos.BufPoolGetRequest")
-	proto.RegisterType((*BufPoolGetRequestMsg)(nil), "qos.BufPoolGetRequestMsg")
-	proto.RegisterType((*BufPoolGetResponse)(nil), "qos.BufPoolGetResponse")
-	proto.RegisterType((*BufPoolGetResponseMsg)(nil), "qos.BufPoolGetResponseMsg")
-	proto.RegisterType((*QueueHandle)(nil), "qos.QueueHandle")
-	proto.RegisterType((*QueueKeyHandle)(nil), "qos.QueueKeyHandle")
-	proto.RegisterType((*DWRRInfo)(nil), "qos.DWRRInfo")
-	proto.RegisterType((*StrictPriorityInfo)(nil), "qos.StrictPriorityInfo")
-	proto.RegisterType((*QueueSchedulerNode)(nil), "qos.QueueSchedulerNode")
-	proto.RegisterType((*QueueInfo)(nil), "qos.QueueInfo")
-	proto.RegisterType((*QueueSpec)(nil), "qos.QueueSpec")
-	proto.RegisterType((*QueueRequestMsg)(nil), "qos.QueueRequestMsg")
-	proto.RegisterType((*QueueStatus)(nil), "qos.QueueStatus")
-	proto.RegisterType((*QueueResponse)(nil), "qos.QueueResponse")
-	proto.RegisterType((*QueueResponseMsg)(nil), "qos.QueueResponseMsg")
-	proto.RegisterType((*QueueDeleteRequest)(nil), "qos.QueueDeleteRequest")
-	proto.RegisterType((*QueueDeleteRequestMsg)(nil), "qos.QueueDeleteRequestMsg")
-	proto.RegisterType((*QueueDeleteResponseMsg)(nil), "qos.QueueDeleteResponseMsg")
-	proto.RegisterType((*QueueStats)(nil), "qos.QueueStats")
-	proto.RegisterType((*QueueGetRequest)(nil), "qos.QueueGetRequest")
-	proto.RegisterType((*QueueGetRequestMsg)(nil), "qos.QueueGetRequestMsg")
-	proto.RegisterType((*QueueGetResponse)(nil), "qos.QueueGetResponse")
-	proto.RegisterType((*QueueGetResponseMsg)(nil), "qos.QueueGetResponseMsg")
-	proto.RegisterType((*PolicerHandle)(nil), "qos.PolicerHandle")
-	proto.RegisterType((*PolicerKeyHandle)(nil), "qos.PolicerKeyHandle")
 	proto.RegisterType((*PolicerSpec)(nil), "qos.PolicerSpec")
-	proto.RegisterType((*PolicerRequestMsg)(nil), "qos.PolicerRequestMsg")
-	proto.RegisterType((*PolicerStatus)(nil), "qos.PolicerStatus")
-	proto.RegisterType((*PolicerResponse)(nil), "qos.PolicerResponse")
-	proto.RegisterType((*PolicerResponseMsg)(nil), "qos.PolicerResponseMsg")
-	proto.RegisterType((*PolicerDeleteRequest)(nil), "qos.PolicerDeleteRequest")
-	proto.RegisterType((*PolicerDeleteRequestMsg)(nil), "qos.PolicerDeleteRequestMsg")
-	proto.RegisterType((*PolicerDeleteResponseMsg)(nil), "qos.PolicerDeleteResponseMsg")
-	proto.RegisterType((*PolicerGetRequest)(nil), "qos.PolicerGetRequest")
-	proto.RegisterType((*PolicerGetRequestMsg)(nil), "qos.PolicerGetRequestMsg")
 	proto.RegisterType((*PolicerStats)(nil), "qos.PolicerStats")
-	proto.RegisterType((*PolicerGetResponse)(nil), "qos.PolicerGetResponse")
-	proto.RegisterType((*PolicerGetResponseMsg)(nil), "qos.PolicerGetResponseMsg")
-	proto.RegisterEnum("qos.QueueSchedulerPolicy", QueueSchedulerPolicy_name, QueueSchedulerPolicy_value)
-	proto.RegisterEnum("qos.PolicerDirection", PolicerDirection_name, PolicerDirection_value)
+	proto.RegisterType((*QosClassKeyHandle)(nil), "qos.QosClassKeyHandle")
+	proto.RegisterType((*QosBuffer)(nil), "qos.QosBuffer")
+	proto.RegisterType((*QosPFC)(nil), "qos.QosPFC")
+	proto.RegisterType((*QosSched)(nil), "qos.QosSched")
+	proto.RegisterType((*QosSched_DWRRInfo)(nil), "qos.QosSched.DWRRInfo")
+	proto.RegisterType((*QosSched_StrictPriorityInfo)(nil), "qos.QosSched.StrictPriorityInfo")
+	proto.RegisterType((*QosUplinkClassMap)(nil), "qos.QosUplinkClassMap")
+	proto.RegisterType((*QosMarking)(nil), "qos.QosMarking")
+	proto.RegisterType((*QosClassSpec)(nil), "qos.QosClassSpec")
+	proto.RegisterType((*QosClassRequestMsg)(nil), "qos.QosClassRequestMsg")
+	proto.RegisterType((*QosClassStatus)(nil), "qos.QosClassStatus")
+	proto.RegisterType((*QosClassResponse)(nil), "qos.QosClassResponse")
+	proto.RegisterType((*QosClassResponseMsg)(nil), "qos.QosClassResponseMsg")
+	proto.RegisterType((*QosClassDeleteRequest)(nil), "qos.QosClassDeleteRequest")
+	proto.RegisterType((*QosClassDeleteRequestMsg)(nil), "qos.QosClassDeleteRequestMsg")
+	proto.RegisterType((*QosClassDeleteResponseMsg)(nil), "qos.QosClassDeleteResponseMsg")
+	proto.RegisterType((*QosClassStats)(nil), "qos.QosClassStats")
+	proto.RegisterType((*QosClassGetRequest)(nil), "qos.QosClassGetRequest")
+	proto.RegisterType((*QosClassGetRequestMsg)(nil), "qos.QosClassGetRequestMsg")
+	proto.RegisterType((*QosClassGetResponse)(nil), "qos.QosClassGetResponse")
+	proto.RegisterType((*QosClassGetResponseMsg)(nil), "qos.QosClassGetResponseMsg")
+	proto.RegisterType((*CoppPolicerKeyHandle)(nil), "qos.CoppPolicerKeyHandle")
+	proto.RegisterType((*CoppPolicerSpec)(nil), "qos.CoppPolicerSpec")
+	proto.RegisterType((*CoppPolicerRequestMsg)(nil), "qos.CoppPolicerRequestMsg")
+	proto.RegisterType((*CoppPolicerStatus)(nil), "qos.CoppPolicerStatus")
+	proto.RegisterType((*CoppPolicerResponse)(nil), "qos.CoppPolicerResponse")
+	proto.RegisterType((*CoppPolicerResponseMsg)(nil), "qos.CoppPolicerResponseMsg")
+	proto.RegisterType((*CoppPolicerGetRequest)(nil), "qos.CoppPolicerGetRequest")
+	proto.RegisterType((*CoppPolicerGetRequestMsg)(nil), "qos.CoppPolicerGetRequestMsg")
+	proto.RegisterType((*CoppPolicerGetResponse)(nil), "qos.CoppPolicerGetResponse")
+	proto.RegisterType((*CoppPolicerGetResponseMsg)(nil), "qos.CoppPolicerGetResponseMsg")
+	proto.RegisterEnum("qos.QosGroup", QosGroup_name, QosGroup_value)
+	proto.RegisterEnum("qos.CoppType", CoppType_name, CoppType_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1817,22 +1248,14 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for QOS service
 
 type QOSClient interface {
-	// Buffer Pool Group related APIs
-	// Create a Buffer pool on a port given the buffer requirements
-	BufPoolCreate(ctx context.Context, in *BufPoolRequestMsg, opts ...grpc.CallOption) (*BufPoolResponseMsg, error)
-	BufPoolUpdate(ctx context.Context, in *BufPoolRequestMsg, opts ...grpc.CallOption) (*BufPoolResponseMsg, error)
-	BufPoolDelete(ctx context.Context, in *BufPoolDeleteRequestMsg, opts ...grpc.CallOption) (*BufPoolDeleteResponseMsg, error)
-	BufPoolGet(ctx context.Context, in *BufPoolGetRequestMsg, opts ...grpc.CallOption) (*BufPoolGetResponseMsg, error)
-	// Output Queue related APIs
-	QueueCreate(ctx context.Context, in *QueueRequestMsg, opts ...grpc.CallOption) (*QueueResponseMsg, error)
-	QueueUpdate(ctx context.Context, in *QueueRequestMsg, opts ...grpc.CallOption) (*QueueResponseMsg, error)
-	QueueDelete(ctx context.Context, in *QueueDeleteRequestMsg, opts ...grpc.CallOption) (*QueueDeleteResponseMsg, error)
-	QueueGet(ctx context.Context, in *QueueGetRequestMsg, opts ...grpc.CallOption) (*QueueGetResponseMsg, error)
-	// Policers
-	PolicerCreate(ctx context.Context, in *PolicerRequestMsg, opts ...grpc.CallOption) (*PolicerResponseMsg, error)
-	PolicerUpdate(ctx context.Context, in *PolicerRequestMsg, opts ...grpc.CallOption) (*PolicerResponseMsg, error)
-	PolicerDelete(ctx context.Context, in *PolicerDeleteRequestMsg, opts ...grpc.CallOption) (*PolicerDeleteResponseMsg, error)
-	PolicerGet(ctx context.Context, in *PolicerGetRequestMsg, opts ...grpc.CallOption) (*PolicerGetResponseMsg, error)
+	// QOS class related APIs
+	QosClassCreate(ctx context.Context, in *QosClassRequestMsg, opts ...grpc.CallOption) (*QosClassResponseMsg, error)
+	QosClassUpdate(ctx context.Context, in *QosClassRequestMsg, opts ...grpc.CallOption) (*QosClassResponseMsg, error)
+	QosClassDelete(ctx context.Context, in *QosClassDeleteRequestMsg, opts ...grpc.CallOption) (*QosClassDeleteResponseMsg, error)
+	QosClassGet(ctx context.Context, in *QosClassGetRequestMsg, opts ...grpc.CallOption) (*QosClassGetResponseMsg, error)
+	// Copp related APIs
+	CoppPolicerUpdate(ctx context.Context, in *CoppPolicerRequestMsg, opts ...grpc.CallOption) (*CoppPolicerResponseMsg, error)
+	CoppPolicerGet(ctx context.Context, in *CoppPolicerGetRequestMsg, opts ...grpc.CallOption) (*CoppPolicerGetResponseMsg, error)
 }
 
 type qOSClient struct {
@@ -1843,108 +1266,54 @@ func NewQOSClient(cc *grpc.ClientConn) QOSClient {
 	return &qOSClient{cc}
 }
 
-func (c *qOSClient) BufPoolCreate(ctx context.Context, in *BufPoolRequestMsg, opts ...grpc.CallOption) (*BufPoolResponseMsg, error) {
-	out := new(BufPoolResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/BufPoolCreate", in, out, c.cc, opts...)
+func (c *qOSClient) QosClassCreate(ctx context.Context, in *QosClassRequestMsg, opts ...grpc.CallOption) (*QosClassResponseMsg, error) {
+	out := new(QosClassResponseMsg)
+	err := grpc.Invoke(ctx, "/qos.QOS/QosClassCreate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *qOSClient) BufPoolUpdate(ctx context.Context, in *BufPoolRequestMsg, opts ...grpc.CallOption) (*BufPoolResponseMsg, error) {
-	out := new(BufPoolResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/BufPoolUpdate", in, out, c.cc, opts...)
+func (c *qOSClient) QosClassUpdate(ctx context.Context, in *QosClassRequestMsg, opts ...grpc.CallOption) (*QosClassResponseMsg, error) {
+	out := new(QosClassResponseMsg)
+	err := grpc.Invoke(ctx, "/qos.QOS/QosClassUpdate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *qOSClient) BufPoolDelete(ctx context.Context, in *BufPoolDeleteRequestMsg, opts ...grpc.CallOption) (*BufPoolDeleteResponseMsg, error) {
-	out := new(BufPoolDeleteResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/BufPoolDelete", in, out, c.cc, opts...)
+func (c *qOSClient) QosClassDelete(ctx context.Context, in *QosClassDeleteRequestMsg, opts ...grpc.CallOption) (*QosClassDeleteResponseMsg, error) {
+	out := new(QosClassDeleteResponseMsg)
+	err := grpc.Invoke(ctx, "/qos.QOS/QosClassDelete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *qOSClient) BufPoolGet(ctx context.Context, in *BufPoolGetRequestMsg, opts ...grpc.CallOption) (*BufPoolGetResponseMsg, error) {
-	out := new(BufPoolGetResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/BufPoolGet", in, out, c.cc, opts...)
+func (c *qOSClient) QosClassGet(ctx context.Context, in *QosClassGetRequestMsg, opts ...grpc.CallOption) (*QosClassGetResponseMsg, error) {
+	out := new(QosClassGetResponseMsg)
+	err := grpc.Invoke(ctx, "/qos.QOS/QosClassGet", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *qOSClient) QueueCreate(ctx context.Context, in *QueueRequestMsg, opts ...grpc.CallOption) (*QueueResponseMsg, error) {
-	out := new(QueueResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/QueueCreate", in, out, c.cc, opts...)
+func (c *qOSClient) CoppPolicerUpdate(ctx context.Context, in *CoppPolicerRequestMsg, opts ...grpc.CallOption) (*CoppPolicerResponseMsg, error) {
+	out := new(CoppPolicerResponseMsg)
+	err := grpc.Invoke(ctx, "/qos.QOS/CoppPolicerUpdate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *qOSClient) QueueUpdate(ctx context.Context, in *QueueRequestMsg, opts ...grpc.CallOption) (*QueueResponseMsg, error) {
-	out := new(QueueResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/QueueUpdate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *qOSClient) QueueDelete(ctx context.Context, in *QueueDeleteRequestMsg, opts ...grpc.CallOption) (*QueueDeleteResponseMsg, error) {
-	out := new(QueueDeleteResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/QueueDelete", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *qOSClient) QueueGet(ctx context.Context, in *QueueGetRequestMsg, opts ...grpc.CallOption) (*QueueGetResponseMsg, error) {
-	out := new(QueueGetResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/QueueGet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *qOSClient) PolicerCreate(ctx context.Context, in *PolicerRequestMsg, opts ...grpc.CallOption) (*PolicerResponseMsg, error) {
-	out := new(PolicerResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/PolicerCreate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *qOSClient) PolicerUpdate(ctx context.Context, in *PolicerRequestMsg, opts ...grpc.CallOption) (*PolicerResponseMsg, error) {
-	out := new(PolicerResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/PolicerUpdate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *qOSClient) PolicerDelete(ctx context.Context, in *PolicerDeleteRequestMsg, opts ...grpc.CallOption) (*PolicerDeleteResponseMsg, error) {
-	out := new(PolicerDeleteResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/PolicerDelete", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *qOSClient) PolicerGet(ctx context.Context, in *PolicerGetRequestMsg, opts ...grpc.CallOption) (*PolicerGetResponseMsg, error) {
-	out := new(PolicerGetResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/PolicerGet", in, out, c.cc, opts...)
+func (c *qOSClient) CoppPolicerGet(ctx context.Context, in *CoppPolicerGetRequestMsg, opts ...grpc.CallOption) (*CoppPolicerGetResponseMsg, error) {
+	out := new(CoppPolicerGetResponseMsg)
+	err := grpc.Invoke(ctx, "/qos.QOS/CoppPolicerGet", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1954,240 +1323,124 @@ func (c *qOSClient) PolicerGet(ctx context.Context, in *PolicerGetRequestMsg, op
 // Server API for QOS service
 
 type QOSServer interface {
-	// Buffer Pool Group related APIs
-	// Create a Buffer pool on a port given the buffer requirements
-	BufPoolCreate(context.Context, *BufPoolRequestMsg) (*BufPoolResponseMsg, error)
-	BufPoolUpdate(context.Context, *BufPoolRequestMsg) (*BufPoolResponseMsg, error)
-	BufPoolDelete(context.Context, *BufPoolDeleteRequestMsg) (*BufPoolDeleteResponseMsg, error)
-	BufPoolGet(context.Context, *BufPoolGetRequestMsg) (*BufPoolGetResponseMsg, error)
-	// Output Queue related APIs
-	QueueCreate(context.Context, *QueueRequestMsg) (*QueueResponseMsg, error)
-	QueueUpdate(context.Context, *QueueRequestMsg) (*QueueResponseMsg, error)
-	QueueDelete(context.Context, *QueueDeleteRequestMsg) (*QueueDeleteResponseMsg, error)
-	QueueGet(context.Context, *QueueGetRequestMsg) (*QueueGetResponseMsg, error)
-	// Policers
-	PolicerCreate(context.Context, *PolicerRequestMsg) (*PolicerResponseMsg, error)
-	PolicerUpdate(context.Context, *PolicerRequestMsg) (*PolicerResponseMsg, error)
-	PolicerDelete(context.Context, *PolicerDeleteRequestMsg) (*PolicerDeleteResponseMsg, error)
-	PolicerGet(context.Context, *PolicerGetRequestMsg) (*PolicerGetResponseMsg, error)
+	// QOS class related APIs
+	QosClassCreate(context.Context, *QosClassRequestMsg) (*QosClassResponseMsg, error)
+	QosClassUpdate(context.Context, *QosClassRequestMsg) (*QosClassResponseMsg, error)
+	QosClassDelete(context.Context, *QosClassDeleteRequestMsg) (*QosClassDeleteResponseMsg, error)
+	QosClassGet(context.Context, *QosClassGetRequestMsg) (*QosClassGetResponseMsg, error)
+	// Copp related APIs
+	CoppPolicerUpdate(context.Context, *CoppPolicerRequestMsg) (*CoppPolicerResponseMsg, error)
+	CoppPolicerGet(context.Context, *CoppPolicerGetRequestMsg) (*CoppPolicerGetResponseMsg, error)
 }
 
 func RegisterQOSServer(s *grpc.Server, srv QOSServer) {
 	s.RegisterService(&_QOS_serviceDesc, srv)
 }
 
-func _QOS_BufPoolCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BufPoolRequestMsg)
+func _QOS_QosClassCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QosClassRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QOSServer).BufPoolCreate(ctx, in)
+		return srv.(QOSServer).QosClassCreate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/qos.QOS/BufPoolCreate",
+		FullMethod: "/qos.QOS/QosClassCreate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).BufPoolCreate(ctx, req.(*BufPoolRequestMsg))
+		return srv.(QOSServer).QosClassCreate(ctx, req.(*QosClassRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QOS_BufPoolUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BufPoolRequestMsg)
+func _QOS_QosClassUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QosClassRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QOSServer).BufPoolUpdate(ctx, in)
+		return srv.(QOSServer).QosClassUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/qos.QOS/BufPoolUpdate",
+		FullMethod: "/qos.QOS/QosClassUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).BufPoolUpdate(ctx, req.(*BufPoolRequestMsg))
+		return srv.(QOSServer).QosClassUpdate(ctx, req.(*QosClassRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QOS_BufPoolDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BufPoolDeleteRequestMsg)
+func _QOS_QosClassDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QosClassDeleteRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QOSServer).BufPoolDelete(ctx, in)
+		return srv.(QOSServer).QosClassDelete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/qos.QOS/BufPoolDelete",
+		FullMethod: "/qos.QOS/QosClassDelete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).BufPoolDelete(ctx, req.(*BufPoolDeleteRequestMsg))
+		return srv.(QOSServer).QosClassDelete(ctx, req.(*QosClassDeleteRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QOS_BufPoolGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BufPoolGetRequestMsg)
+func _QOS_QosClassGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QosClassGetRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QOSServer).BufPoolGet(ctx, in)
+		return srv.(QOSServer).QosClassGet(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/qos.QOS/BufPoolGet",
+		FullMethod: "/qos.QOS/QosClassGet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).BufPoolGet(ctx, req.(*BufPoolGetRequestMsg))
+		return srv.(QOSServer).QosClassGet(ctx, req.(*QosClassGetRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QOS_QueueCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueueRequestMsg)
+func _QOS_CoppPolicerUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CoppPolicerRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QOSServer).QueueCreate(ctx, in)
+		return srv.(QOSServer).CoppPolicerUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/qos.QOS/QueueCreate",
+		FullMethod: "/qos.QOS/CoppPolicerUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).QueueCreate(ctx, req.(*QueueRequestMsg))
+		return srv.(QOSServer).CoppPolicerUpdate(ctx, req.(*CoppPolicerRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QOS_QueueUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueueRequestMsg)
+func _QOS_CoppPolicerGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CoppPolicerGetRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QOSServer).QueueUpdate(ctx, in)
+		return srv.(QOSServer).CoppPolicerGet(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/qos.QOS/QueueUpdate",
+		FullMethod: "/qos.QOS/CoppPolicerGet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).QueueUpdate(ctx, req.(*QueueRequestMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _QOS_QueueDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueueDeleteRequestMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QOSServer).QueueDelete(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/qos.QOS/QueueDelete",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).QueueDelete(ctx, req.(*QueueDeleteRequestMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _QOS_QueueGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueueGetRequestMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QOSServer).QueueGet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/qos.QOS/QueueGet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).QueueGet(ctx, req.(*QueueGetRequestMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _QOS_PolicerCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PolicerRequestMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QOSServer).PolicerCreate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/qos.QOS/PolicerCreate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).PolicerCreate(ctx, req.(*PolicerRequestMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _QOS_PolicerUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PolicerRequestMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QOSServer).PolicerUpdate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/qos.QOS/PolicerUpdate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).PolicerUpdate(ctx, req.(*PolicerRequestMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _QOS_PolicerDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PolicerDeleteRequestMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QOSServer).PolicerDelete(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/qos.QOS/PolicerDelete",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).PolicerDelete(ctx, req.(*PolicerDeleteRequestMsg))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _QOS_PolicerGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PolicerGetRequestMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QOSServer).PolicerGet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/qos.QOS/PolicerGet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).PolicerGet(ctx, req.(*PolicerGetRequestMsg))
+		return srv.(QOSServer).CoppPolicerGet(ctx, req.(*CoppPolicerGetRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2197,1499 +1450,34 @@ var _QOS_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QOSServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "BufPoolCreate",
-			Handler:    _QOS_BufPoolCreate_Handler,
+			MethodName: "QosClassCreate",
+			Handler:    _QOS_QosClassCreate_Handler,
 		},
 		{
-			MethodName: "BufPoolUpdate",
-			Handler:    _QOS_BufPoolUpdate_Handler,
+			MethodName: "QosClassUpdate",
+			Handler:    _QOS_QosClassUpdate_Handler,
 		},
 		{
-			MethodName: "BufPoolDelete",
-			Handler:    _QOS_BufPoolDelete_Handler,
+			MethodName: "QosClassDelete",
+			Handler:    _QOS_QosClassDelete_Handler,
 		},
 		{
-			MethodName: "BufPoolGet",
-			Handler:    _QOS_BufPoolGet_Handler,
+			MethodName: "QosClassGet",
+			Handler:    _QOS_QosClassGet_Handler,
 		},
 		{
-			MethodName: "QueueCreate",
-			Handler:    _QOS_QueueCreate_Handler,
+			MethodName: "CoppPolicerUpdate",
+			Handler:    _QOS_CoppPolicerUpdate_Handler,
 		},
 		{
-			MethodName: "QueueUpdate",
-			Handler:    _QOS_QueueUpdate_Handler,
-		},
-		{
-			MethodName: "QueueDelete",
-			Handler:    _QOS_QueueDelete_Handler,
-		},
-		{
-			MethodName: "QueueGet",
-			Handler:    _QOS_QueueGet_Handler,
-		},
-		{
-			MethodName: "PolicerCreate",
-			Handler:    _QOS_PolicerCreate_Handler,
-		},
-		{
-			MethodName: "PolicerUpdate",
-			Handler:    _QOS_PolicerUpdate_Handler,
-		},
-		{
-			MethodName: "PolicerDelete",
-			Handler:    _QOS_PolicerDelete_Handler,
-		},
-		{
-			MethodName: "PolicerGet",
-			Handler:    _QOS_PolicerGet_Handler,
+			MethodName: "CoppPolicerGet",
+			Handler:    _QOS_CoppPolicerGet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "qos.proto",
 }
 
-func (m *MarkingActionSpec) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MarkingActionSpec) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.PcpRewriteEn {
-		dAtA[i] = 0x8
-		i++
-		if m.PcpRewriteEn {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
-	if m.Pcp != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Pcp))
-	}
-	if m.DscpRewriteEn {
-		dAtA[i] = 0x18
-		i++
-		if m.DscpRewriteEn {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i++
-	}
-	if m.Dscp != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Dscp))
-	}
-	return i, nil
-}
-
-func (m *QOSActions) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QOSActions) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.QueueKeyOrHandle != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.QueueKeyOrHandle.Size()))
-		n1, err := m.QueueKeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
-	}
-	if m.PolicerKeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.PolicerKeyOrHandle.Size()))
-		n2, err := m.PolicerKeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n2
-	}
-	if m.MarkingSpec != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.MarkingSpec.Size()))
-		n3, err := m.MarkingSpec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n3
-	}
-	return i, nil
-}
-
-func (m *TrafficClass) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *TrafficClass) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Cos != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Cos))
-	}
-	return i, nil
-}
-
-func (m *TrafficClassQueueMap) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *TrafficClassQueueMap) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.TrafficClass != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.TrafficClass.Size()))
-		n4, err := m.TrafficClass.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n4
-	}
-	if m.QueueKeyHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.QueueKeyHandle.Size()))
-		n5, err := m.QueueKeyHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n5
-	}
-	return i, nil
-}
-
-func (m *BufPoolHandle) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolHandle) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Handle != 0 {
-		dAtA[i] = 0x9
-		i++
-		i = encodeFixed64Qos(dAtA, i, uint64(m.Handle))
-	}
-	return i, nil
-}
-
-func (m *BufPoolKeyHandle) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolKeyHandle) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		nn6, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += nn6
-	}
-	return i, nil
-}
-
-func (m *BufPoolKeyHandle_BufPoolId) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0xd
-	i++
-	i = encodeFixed32Qos(dAtA, i, uint32(m.BufPoolId))
-	return i, nil
-}
-func (m *BufPoolKeyHandle_BufPoolHandle) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	if m.BufPoolHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.BufPoolHandle.Size()))
-		n7, err := m.BufPoolHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n7
-	}
-	return i, nil
-}
-func (m *BufPoolSpec) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolSpec) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n8, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n8
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n9, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n9
-	}
-	if m.PortNum != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.PortNum))
-	}
-	if m.ReservedBytes != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.ReservedBytes))
-	}
-	if m.HeadroomBytes != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.HeadroomBytes))
-	}
-	if m.SharingFactor != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.SharingFactor))
-	}
-	if m.XonThreshold != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.XonThreshold))
-	}
-	if m.XoffClearLimit != 0 {
-		dAtA[i] = 0x40
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.XoffClearLimit))
-	}
-	if m.Mtu != 0 {
-		dAtA[i] = 0x48
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Mtu))
-	}
-	if len(m.Tcs) > 0 {
-		for _, msg := range m.Tcs {
-			dAtA[i] = 0x52
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *BufPoolRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *BufPoolStatus) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolStatus) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.BufPoolHandle != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.BufPoolHandle.Size()))
-		n10, err := m.BufPoolHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n10
-	}
-	return i, nil
-}
-
-func (m *BufPoolResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.ApiStatus))
-	}
-	if m.Status != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n11, err := m.Status.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n11
-	}
-	return i, nil
-}
-
-func (m *BufPoolResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, msg := range m.Response {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *BufPoolDeleteRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n12, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n12
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n13, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n13
-	}
-	return i, nil
-}
-
-func (m *BufPoolDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *BufPoolDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.ApiStatus) > 0 {
-		dAtA15 := make([]byte, len(m.ApiStatus)*10)
-		var j14 int
-		for _, num := range m.ApiStatus {
-			for num >= 1<<7 {
-				dAtA15[j14] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j14++
-			}
-			dAtA15[j14] = uint8(num)
-			j14++
-		}
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(j14))
-		i += copy(dAtA[i:], dAtA15[:j14])
-	}
-	return i, nil
-}
-
-func (m *BufPoolStats) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolStats) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Occupancy != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Occupancy))
-	}
-	return i, nil
-}
-
-func (m *BufPoolGetRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolGetRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n16, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n16
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n17, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n17
-	}
-	return i, nil
-}
-
-func (m *BufPoolGetRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *BufPoolGetResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolGetResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Spec != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Spec.Size()))
-		n18, err := m.Spec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n18
-	}
-	if m.Status != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n19, err := m.Status.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n19
-	}
-	if m.Stats != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Stats.Size()))
-		n20, err := m.Stats.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n20
-	}
-	return i, nil
-}
-
-func (m *BufPoolGetResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BufPoolGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, msg := range m.Response {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *QueueHandle) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueHandle) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Handle != 0 {
-		dAtA[i] = 0x9
-		i++
-		i = encodeFixed64Qos(dAtA, i, uint64(m.Handle))
-	}
-	return i, nil
-}
-
-func (m *QueueKeyHandle) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueKeyHandle) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		nn21, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += nn21
-	}
-	return i, nil
-}
-
-func (m *QueueKeyHandle_QueueId) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0xd
-	i++
-	i = encodeFixed32Qos(dAtA, i, uint32(m.QueueId))
-	return i, nil
-}
-func (m *QueueKeyHandle_QueueHandle) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	if m.QueueHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.QueueHandle.Size()))
-		n22, err := m.QueueHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n22
-	}
-	return i, nil
-}
-func (m *DWRRInfo) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DWRRInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Weight != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Weight))
-	}
-	return i, nil
-}
-
-func (m *StrictPriorityInfo) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *StrictPriorityInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Rate != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Rate))
-	}
-	return i, nil
-}
-
-func (m *QueueSchedulerNode) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueSchedulerNode) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Priority != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Priority))
-	}
-	if m.QueueType != nil {
-		nn23, err := m.QueueType.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += nn23
-	}
-	return i, nil
-}
-
-func (m *QueueSchedulerNode_Dwrr) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	if m.Dwrr != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Dwrr.Size()))
-		n24, err := m.Dwrr.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n24
-	}
-	return i, nil
-}
-func (m *QueueSchedulerNode_Strict) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	if m.Strict != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Strict.Size()))
-		n25, err := m.Strict.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n25
-	}
-	return i, nil
-}
-func (m *QueueInfo) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueInfo) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n26, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n26
-	}
-	if m.QueueInfo != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.QueueInfo.Size()))
-		n27, err := m.QueueInfo.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n27
-	}
-	return i, nil
-}
-
-func (m *QueueSpec) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueSpec) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n28, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n28
-	}
-	if m.PortNum != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.PortNum))
-	}
-	if m.SchedulerPolicy != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.SchedulerPolicy))
-	}
-	if len(m.Queues) > 0 {
-		for _, msg := range m.Queues {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	if len(m.L1Nodes) > 0 {
-		for _, msg := range m.L1Nodes {
-			dAtA[i] = 0x2a
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *QueueRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *QueueStatus) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueStatus) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.QueueHandle != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.QueueHandle.Size()))
-		n29, err := m.QueueHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n29
-	}
-	return i, nil
-}
-
-func (m *QueueResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.ApiStatus))
-	}
-	if len(m.Status) > 0 {
-		for _, msg := range m.Status {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *QueueResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, msg := range m.Response {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *QueueDeleteRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n30, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n30
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n31, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n31
-	}
-	return i, nil
-}
-
-func (m *QueueDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *QueueDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.ApiStatus) > 0 {
-		dAtA33 := make([]byte, len(m.ApiStatus)*10)
-		var j32 int
-		for _, num := range m.ApiStatus {
-			for num >= 1<<7 {
-				dAtA33[j32] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j32++
-			}
-			dAtA33[j32] = uint8(num)
-			j32++
-		}
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(j32))
-		i += copy(dAtA[i:], dAtA33[:j32])
-	}
-	return i, nil
-}
-
-func (m *QueueStats) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueStats) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.QueueDepth != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.QueueDepth))
-	}
-	return i, nil
-}
-
-func (m *QueueGetRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueGetRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n34, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n34
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n35, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n35
-	}
-	return i, nil
-}
-
-func (m *QueueGetRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *QueueGetResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueGetResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Spec != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Spec.Size()))
-		n36, err := m.Spec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n36
-	}
-	if m.Status != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n37, err := m.Status.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n37
-	}
-	if m.Stats != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Stats.Size()))
-		n38, err := m.Stats.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n38
-	}
-	return i, nil
-}
-
-func (m *QueueGetResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueueGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, msg := range m.Response {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *PolicerHandle) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerHandle) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Handle != 0 {
-		dAtA[i] = 0x9
-		i++
-		i = encodeFixed64Qos(dAtA, i, uint64(m.Handle))
-	}
-	return i, nil
-}
-
-func (m *PolicerKeyHandle) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerKeyHandle) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		nn39, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += nn39
-	}
-	return i, nil
-}
-
-func (m *PolicerKeyHandle_PolicerId) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0xd
-	i++
-	i = encodeFixed32Qos(dAtA, i, uint32(m.PolicerId))
-	return i, nil
-}
-func (m *PolicerKeyHandle_PolicerHandle) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	if m.PolicerHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.PolicerHandle.Size()))
-		n40, err := m.PolicerHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n40
-	}
-	return i, nil
-}
 func (m *PolicerSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -3705,342 +1493,15 @@ func (m *PolicerSpec) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n41, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n41
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n42, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n42
-	}
-	if m.Direction != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Direction))
-	}
-	if m.Bandwidth != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Bandwidth))
-	}
-	if m.BurstSize != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.BurstSize))
-	}
-	if m.MarkingSpec != nil {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.MarkingSpec.Size()))
-		n43, err := m.MarkingSpec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n43
-	}
-	return i, nil
-}
-
-func (m *PolicerRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *PolicerStatus) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerStatus) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.PolicerHandle != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.PolicerHandle.Size()))
-		n44, err := m.PolicerHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n44
-	}
-	return i, nil
-}
-
-func (m *PolicerResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
+	if m.BpsRate != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.ApiStatus))
+		i = encodeVarintQos(dAtA, i, uint64(m.BpsRate))
 	}
-	if m.Status != nil {
-		dAtA[i] = 0x12
+	if m.BurstSize != 0 {
+		dAtA[i] = 0x10
 		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n45, err := m.Status.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n45
-	}
-	return i, nil
-}
-
-func (m *PolicerResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, msg := range m.Response {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *PolicerDeleteRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n46, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n46
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n47, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n47
-	}
-	return i, nil
-}
-
-func (m *PolicerDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *PolicerDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.ApiStatus) > 0 {
-		dAtA49 := make([]byte, len(m.ApiStatus)*10)
-		var j48 int
-		for _, num := range m.ApiStatus {
-			for num >= 1<<7 {
-				dAtA49[j48] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j48++
-			}
-			dAtA49[j48] = uint8(num)
-			j48++
-		}
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(j48))
-		i += copy(dAtA[i:], dAtA49[:j48])
-	}
-	return i, nil
-}
-
-func (m *PolicerGetRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerGetRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Meta != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
-		n50, err := m.Meta.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n50
-	}
-	if m.KeyOrHandle != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n51, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n51
-	}
-	return i, nil
-}
-
-func (m *PolicerGetRequestMsg) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *PolicerGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
+		i = encodeVarintQos(dAtA, i, uint64(m.BurstSize))
 	}
 	return i, nil
 }
@@ -4083,7 +1544,7 @@ func (m *PolicerStats) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *PolicerGetResponse) Marshal() (dAtA []byte, err error) {
+func (m *QosClassKeyHandle) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -4093,7 +1554,704 @@ func (m *PolicerGetResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PolicerGetResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QosClassKeyHandle) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		nn1, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn1
+	}
+	return i, nil
+}
+
+func (m *QosClassKeyHandle_QosGroup) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintQos(dAtA, i, uint64(m.QosGroup))
+	return i, nil
+}
+func (m *QosClassKeyHandle_QosClassHandle) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x11
+	i++
+	i = encodeFixed64Qos(dAtA, i, uint64(m.QosClassHandle))
+	return i, nil
+}
+func (m *QosBuffer) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosBuffer) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ReservedMtus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.ReservedMtus))
+	}
+	if m.HeadroomMtus != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.HeadroomMtus))
+	}
+	if m.XonThreshold != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.XonThreshold))
+	}
+	if m.XoffClearLimit != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.XoffClearLimit))
+	}
+	return i, nil
+}
+
+func (m *QosPFC) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosPFC) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.PfcCos) > 0 {
+		dAtA3 := make([]byte, len(m.PfcCos)*10)
+		var j2 int
+		for _, num := range m.PfcCos {
+			for num >= 1<<7 {
+				dAtA3[j2] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j2++
+			}
+			dAtA3[j2] = uint8(num)
+			j2++
+		}
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(j2))
+		i += copy(dAtA[i:], dAtA3[:j2])
+	}
+	return i, nil
+}
+
+func (m *QosSched) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosSched) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.SchedType != nil {
+		nn4, err := m.SchedType.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn4
+	}
+	return i, nil
+}
+
+func (m *QosSched_Dwrr) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.Dwrr != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Dwrr.Size()))
+		n5, err := m.Dwrr.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	return i, nil
+}
+func (m *QosSched_Strict) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.Strict != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Strict.Size()))
+		n6, err := m.Strict.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	return i, nil
+}
+func (m *QosSched_DWRRInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosSched_DWRRInfo) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.BwPercentage != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.BwPercentage))
+	}
+	return i, nil
+}
+
+func (m *QosSched_StrictPriorityInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosSched_StrictPriorityInfo) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Bps != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Bps))
+	}
+	return i, nil
+}
+
+func (m *QosUplinkClassMap) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosUplinkClassMap) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Dot1QPcp != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Dot1QPcp))
+	}
+	if len(m.IpDscp) > 0 {
+		dAtA8 := make([]byte, len(m.IpDscp)*10)
+		var j7 int
+		for _, num := range m.IpDscp {
+			for num >= 1<<7 {
+				dAtA8[j7] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j7++
+			}
+			dAtA8[j7] = uint8(num)
+			j7++
+		}
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(j7))
+		i += copy(dAtA[i:], dAtA8[:j7])
+	}
+	return i, nil
+}
+
+func (m *QosMarking) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosMarking) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Dot1QPcpRewriteEn {
+		dAtA[i] = 0x8
+		i++
+		if m.Dot1QPcpRewriteEn {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Dot1QPcp != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Dot1QPcp))
+	}
+	if m.IpDscpRewriteEn {
+		dAtA[i] = 0x18
+		i++
+		if m.IpDscpRewriteEn {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IpDscp != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.IpDscp))
+	}
+	return i, nil
+}
+
+func (m *QosClassSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
+		n9, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n10, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	if m.Mtu != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Mtu))
+	}
+	if m.Buffer != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Buffer.Size()))
+		n11, err := m.Buffer.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	if m.Pfc != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Pfc.Size()))
+		n12, err := m.Pfc.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	if m.Sched != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Sched.Size()))
+		n13, err := m.Sched.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n13
+	}
+	if m.UplinkClassMap != nil {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.UplinkClassMap.Size()))
+		n14, err := m.UplinkClassMap.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	if m.Marking != nil {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Marking.Size()))
+		n15, err := m.Marking.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n15
+	}
+	return i, nil
+}
+
+func (m *QosClassRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *QosClassStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.QosClassHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		i = encodeFixed64Qos(dAtA, i, uint64(m.QosClassHandle))
+	}
+	return i, nil
+}
+
+func (m *QosClassResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
+		n16, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n16
+	}
+	return i, nil
+}
+
+func (m *QosClassResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *QosClassDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
+		n17, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n17
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n18, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n18
+	}
+	return i, nil
+}
+
+func (m *QosClassDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *QosClassDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		dAtA20 := make([]byte, len(m.ApiStatus)*10)
+		var j19 int
+		for _, num := range m.ApiStatus {
+			for num >= 1<<7 {
+				dAtA20[j19] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j19++
+			}
+			dAtA20[j19] = uint8(num)
+			j19++
+		}
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(j19))
+		i += copy(dAtA[i:], dAtA20[:j19])
+	}
+	return i, nil
+}
+
+func (m *QosClassStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *QosClassGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
+		n21, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n21
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n22, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	return i, nil
+}
+
+func (m *QosClassGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *QosClassGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosClassGetResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -4102,36 +2260,36 @@ func (m *PolicerGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Spec.Size()))
-		n52, err := m.Spec.MarshalTo(dAtA[i:])
+		n23, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n52
+		i += n23
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
-		n53, err := m.Status.MarshalTo(dAtA[i:])
+		n24, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n53
+		i += n24
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintQos(dAtA, i, uint64(m.Stats.Size()))
-		n54, err := m.Stats.MarshalTo(dAtA[i:])
+		n25, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n54
+		i += n25
 	}
 	return i, nil
 }
 
-func (m *PolicerGetResponseMsg) Marshal() (dAtA []byte, err error) {
+func (m *QosClassGetResponseMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -4141,7 +2299,356 @@ func (m *PolicerGetResponseMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PolicerGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *QosClassGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerKeyHandle) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerKeyHandle) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		nn26, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn26
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerKeyHandle_CoppType) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintQos(dAtA, i, uint64(m.CoppType))
+	return i, nil
+}
+func (m *CoppPolicerKeyHandle_CoppPolicerHandle) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x11
+	i++
+	i = encodeFixed64Qos(dAtA, i, uint64(m.CoppPolicerHandle))
+	return i, nil
+}
+func (m *CoppPolicerSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
+		n27, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n27
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n28, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n28
+	}
+	if m.Policer != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Policer.Size()))
+		n29, err := m.Policer.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n29
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.CoppPolicerHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		i = encodeFixed64Qos(dAtA, i, uint64(m.CoppPolicerHandle))
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
+		n30, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n30
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Meta.Size()))
+		n31, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n31
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n32, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n32
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintQos(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Spec != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Spec.Size()))
+		n33, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n33
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Status.Size()))
+		n34, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n34
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintQos(dAtA, i, uint64(m.Stats.Size()))
+		n35, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n35
+	}
+	return i, nil
+}
+
+func (m *CoppPolicerGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CoppPolicerGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -4188,734 +2695,14 @@ func encodeVarintQos(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *MarkingActionSpec) Size() (n int) {
-	var l int
-	_ = l
-	if m.PcpRewriteEn {
-		n += 2
-	}
-	if m.Pcp != 0 {
-		n += 1 + sovQos(uint64(m.Pcp))
-	}
-	if m.DscpRewriteEn {
-		n += 2
-	}
-	if m.Dscp != 0 {
-		n += 1 + sovQos(uint64(m.Dscp))
-	}
-	return n
-}
-
-func (m *QOSActions) Size() (n int) {
-	var l int
-	_ = l
-	if m.QueueKeyOrHandle != nil {
-		l = m.QueueKeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.PolicerKeyOrHandle != nil {
-		l = m.PolicerKeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.MarkingSpec != nil {
-		l = m.MarkingSpec.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *TrafficClass) Size() (n int) {
-	var l int
-	_ = l
-	if m.Cos != 0 {
-		n += 1 + sovQos(uint64(m.Cos))
-	}
-	return n
-}
-
-func (m *TrafficClassQueueMap) Size() (n int) {
-	var l int
-	_ = l
-	if m.TrafficClass != nil {
-		l = m.TrafficClass.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.QueueKeyHandle != nil {
-		l = m.QueueKeyHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *BufPoolHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.Handle != 0 {
-		n += 9
-	}
-	return n
-}
-
-func (m *BufPoolKeyHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		n += m.KeyOrHandle.Size()
-	}
-	return n
-}
-
-func (m *BufPoolKeyHandle_BufPoolId) Size() (n int) {
-	var l int
-	_ = l
-	n += 5
-	return n
-}
-func (m *BufPoolKeyHandle_BufPoolHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.BufPoolHandle != nil {
-		l = m.BufPoolHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-func (m *BufPoolSpec) Size() (n int) {
-	var l int
-	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.PortNum != 0 {
-		n += 1 + sovQos(uint64(m.PortNum))
-	}
-	if m.ReservedBytes != 0 {
-		n += 1 + sovQos(uint64(m.ReservedBytes))
-	}
-	if m.HeadroomBytes != 0 {
-		n += 1 + sovQos(uint64(m.HeadroomBytes))
-	}
-	if m.SharingFactor != 0 {
-		n += 1 + sovQos(uint64(m.SharingFactor))
-	}
-	if m.XonThreshold != 0 {
-		n += 1 + sovQos(uint64(m.XonThreshold))
-	}
-	if m.XoffClearLimit != 0 {
-		n += 1 + sovQos(uint64(m.XoffClearLimit))
-	}
-	if m.Mtu != 0 {
-		n += 1 + sovQos(uint64(m.Mtu))
-	}
-	if len(m.Tcs) > 0 {
-		for _, e := range m.Tcs {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BufPoolRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BufPoolStatus) Size() (n int) {
-	var l int
-	_ = l
-	if m.BufPoolHandle != nil {
-		l = m.BufPoolHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *BufPoolResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		n += 1 + sovQos(uint64(m.ApiStatus))
-	}
-	if m.Status != nil {
-		l = m.Status.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *BufPoolResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, e := range m.Response {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BufPoolDeleteRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *BufPoolDeleteRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BufPoolDeleteResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.ApiStatus) > 0 {
-		l = 0
-		for _, e := range m.ApiStatus {
-			l += sovQos(uint64(e))
-		}
-		n += 1 + sovQos(uint64(l)) + l
-	}
-	return n
-}
-
-func (m *BufPoolStats) Size() (n int) {
-	var l int
-	_ = l
-	if m.Occupancy != 0 {
-		n += 1 + sovQos(uint64(m.Occupancy))
-	}
-	return n
-}
-
-func (m *BufPoolGetRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *BufPoolGetRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BufPoolGetResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.Status != nil {
-		l = m.Status.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.Stats != nil {
-		l = m.Stats.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *BufPoolGetResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, e := range m.Response {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueueHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.Handle != 0 {
-		n += 9
-	}
-	return n
-}
-
-func (m *QueueKeyHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		n += m.KeyOrHandle.Size()
-	}
-	return n
-}
-
-func (m *QueueKeyHandle_QueueId) Size() (n int) {
-	var l int
-	_ = l
-	n += 5
-	return n
-}
-func (m *QueueKeyHandle_QueueHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.QueueHandle != nil {
-		l = m.QueueHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-func (m *DWRRInfo) Size() (n int) {
-	var l int
-	_ = l
-	if m.Weight != 0 {
-		n += 1 + sovQos(uint64(m.Weight))
-	}
-	return n
-}
-
-func (m *StrictPriorityInfo) Size() (n int) {
-	var l int
-	_ = l
-	if m.Rate != 0 {
-		n += 1 + sovQos(uint64(m.Rate))
-	}
-	return n
-}
-
-func (m *QueueSchedulerNode) Size() (n int) {
-	var l int
-	_ = l
-	if m.Priority != 0 {
-		n += 1 + sovQos(uint64(m.Priority))
-	}
-	if m.QueueType != nil {
-		n += m.QueueType.Size()
-	}
-	return n
-}
-
-func (m *QueueSchedulerNode_Dwrr) Size() (n int) {
-	var l int
-	_ = l
-	if m.Dwrr != nil {
-		l = m.Dwrr.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-func (m *QueueSchedulerNode_Strict) Size() (n int) {
-	var l int
-	_ = l
-	if m.Strict != nil {
-		l = m.Strict.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-func (m *QueueInfo) Size() (n int) {
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.QueueInfo != nil {
-		l = m.QueueInfo.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *QueueSpec) Size() (n int) {
-	var l int
-	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.PortNum != 0 {
-		n += 1 + sovQos(uint64(m.PortNum))
-	}
-	if m.SchedulerPolicy != 0 {
-		n += 1 + sovQos(uint64(m.SchedulerPolicy))
-	}
-	if len(m.Queues) > 0 {
-		for _, e := range m.Queues {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	if len(m.L1Nodes) > 0 {
-		for _, e := range m.L1Nodes {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueueRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueueStatus) Size() (n int) {
-	var l int
-	_ = l
-	if m.QueueHandle != nil {
-		l = m.QueueHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *QueueResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		n += 1 + sovQos(uint64(m.ApiStatus))
-	}
-	if len(m.Status) > 0 {
-		for _, e := range m.Status {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueueResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, e := range m.Response {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueueDeleteRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *QueueDeleteRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueueDeleteResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.ApiStatus) > 0 {
-		l = 0
-		for _, e := range m.ApiStatus {
-			l += sovQos(uint64(e))
-		}
-		n += 1 + sovQos(uint64(l)) + l
-	}
-	return n
-}
-
-func (m *QueueStats) Size() (n int) {
-	var l int
-	_ = l
-	if m.QueueDepth != 0 {
-		n += 1 + sovQos(uint64(m.QueueDepth))
-	}
-	return n
-}
-
-func (m *QueueGetRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *QueueGetRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *QueueGetResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.Status != nil {
-		l = m.Status.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.Stats != nil {
-		l = m.Stats.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *QueueGetResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, e := range m.Response {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *PolicerHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.Handle != 0 {
-		n += 9
-	}
-	return n
-}
-
-func (m *PolicerKeyHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.KeyOrHandle != nil {
-		n += m.KeyOrHandle.Size()
-	}
-	return n
-}
-
-func (m *PolicerKeyHandle_PolicerId) Size() (n int) {
-	var l int
-	_ = l
-	n += 5
-	return n
-}
-func (m *PolicerKeyHandle_PolicerHandle) Size() (n int) {
-	var l int
-	_ = l
-	if m.PolicerHandle != nil {
-		l = m.PolicerHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
 func (m *PolicerSpec) Size() (n int) {
 	var l int
 	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.Direction != 0 {
-		n += 1 + sovQos(uint64(m.Direction))
-	}
-	if m.Bandwidth != 0 {
-		n += 1 + sovQos(uint64(m.Bandwidth))
+	if m.BpsRate != 0 {
+		n += 1 + sovQos(uint64(m.BpsRate))
 	}
 	if m.BurstSize != 0 {
 		n += 1 + sovQos(uint64(m.BurstSize))
-	}
-	if m.MarkingSpec != nil {
-		l = m.MarkingSpec.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *PolicerRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *PolicerStatus) Size() (n int) {
-	var l int
-	_ = l
-	if m.PolicerHandle != nil {
-		l = m.PolicerHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *PolicerResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		n += 1 + sovQos(uint64(m.ApiStatus))
-	}
-	if m.Status != nil {
-		l = m.Status.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *PolicerResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Response) > 0 {
-		for _, e := range m.Response {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *PolicerDeleteRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *PolicerDeleteRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *PolicerDeleteResponseMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.ApiStatus) > 0 {
-		l = 0
-		for _, e := range m.ApiStatus {
-			l += sovQos(uint64(e))
-		}
-		n += 1 + sovQos(uint64(l)) + l
-	}
-	return n
-}
-
-func (m *PolicerGetRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.Meta != nil {
-		l = m.Meta.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	if m.KeyOrHandle != nil {
-		l = m.KeyOrHandle.Size()
-		n += 1 + l + sovQos(uint64(l))
-	}
-	return n
-}
-
-func (m *PolicerGetRequestMsg) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovQos(uint64(l))
-		}
 	}
 	return n
 }
@@ -4938,7 +2725,292 @@ func (m *PolicerStats) Size() (n int) {
 	return n
 }
 
-func (m *PolicerGetResponse) Size() (n int) {
+func (m *QosClassKeyHandle) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		n += m.KeyOrHandle.Size()
+	}
+	return n
+}
+
+func (m *QosClassKeyHandle_QosGroup) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovQos(uint64(m.QosGroup))
+	return n
+}
+func (m *QosClassKeyHandle_QosClassHandle) Size() (n int) {
+	var l int
+	_ = l
+	n += 9
+	return n
+}
+func (m *QosBuffer) Size() (n int) {
+	var l int
+	_ = l
+	if m.ReservedMtus != 0 {
+		n += 1 + sovQos(uint64(m.ReservedMtus))
+	}
+	if m.HeadroomMtus != 0 {
+		n += 1 + sovQos(uint64(m.HeadroomMtus))
+	}
+	if m.XonThreshold != 0 {
+		n += 1 + sovQos(uint64(m.XonThreshold))
+	}
+	if m.XoffClearLimit != 0 {
+		n += 1 + sovQos(uint64(m.XoffClearLimit))
+	}
+	return n
+}
+
+func (m *QosPFC) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.PfcCos) > 0 {
+		l = 0
+		for _, e := range m.PfcCos {
+			l += sovQos(uint64(e))
+		}
+		n += 1 + sovQos(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *QosSched) Size() (n int) {
+	var l int
+	_ = l
+	if m.SchedType != nil {
+		n += m.SchedType.Size()
+	}
+	return n
+}
+
+func (m *QosSched_Dwrr) Size() (n int) {
+	var l int
+	_ = l
+	if m.Dwrr != nil {
+		l = m.Dwrr.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+func (m *QosSched_Strict) Size() (n int) {
+	var l int
+	_ = l
+	if m.Strict != nil {
+		l = m.Strict.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+func (m *QosSched_DWRRInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.BwPercentage != 0 {
+		n += 1 + sovQos(uint64(m.BwPercentage))
+	}
+	return n
+}
+
+func (m *QosSched_StrictPriorityInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.Bps != 0 {
+		n += 1 + sovQos(uint64(m.Bps))
+	}
+	return n
+}
+
+func (m *QosUplinkClassMap) Size() (n int) {
+	var l int
+	_ = l
+	if m.Dot1QPcp != 0 {
+		n += 1 + sovQos(uint64(m.Dot1QPcp))
+	}
+	if len(m.IpDscp) > 0 {
+		l = 0
+		for _, e := range m.IpDscp {
+			l += sovQos(uint64(e))
+		}
+		n += 1 + sovQos(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *QosMarking) Size() (n int) {
+	var l int
+	_ = l
+	if m.Dot1QPcpRewriteEn {
+		n += 2
+	}
+	if m.Dot1QPcp != 0 {
+		n += 1 + sovQos(uint64(m.Dot1QPcp))
+	}
+	if m.IpDscpRewriteEn {
+		n += 2
+	}
+	if m.IpDscp != 0 {
+		n += 1 + sovQos(uint64(m.IpDscp))
+	}
+	return n
+}
+
+func (m *QosClassSpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.Mtu != 0 {
+		n += 1 + sovQos(uint64(m.Mtu))
+	}
+	if m.Buffer != nil {
+		l = m.Buffer.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.Pfc != nil {
+		l = m.Pfc.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.Sched != nil {
+		l = m.Sched.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.UplinkClassMap != nil {
+		l = m.UplinkClassMap.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.Marking != nil {
+		l = m.Marking.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+
+func (m *QosClassRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QosClassStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.QosClassHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *QosClassResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovQos(uint64(m.ApiStatus))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+
+func (m *QosClassResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QosClassDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+
+func (m *QosClassDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QosClassDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		l = 0
+		for _, e := range m.ApiStatus {
+			l += sovQos(uint64(e))
+		}
+		n += 1 + sovQos(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *QosClassStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QosClassGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+
+func (m *QosClassGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QosClassGetResponse) Size() (n int) {
 	var l int
 	_ = l
 	if m.Spec != nil {
@@ -4956,7 +3028,148 @@ func (m *PolicerGetResponse) Size() (n int) {
 	return n
 }
 
-func (m *PolicerGetResponseMsg) Size() (n int) {
+func (m *QosClassGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CoppPolicerKeyHandle) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		n += m.KeyOrHandle.Size()
+	}
+	return n
+}
+
+func (m *CoppPolicerKeyHandle_CoppType) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovQos(uint64(m.CoppType))
+	return n
+}
+func (m *CoppPolicerKeyHandle_CoppPolicerHandle) Size() (n int) {
+	var l int
+	_ = l
+	n += 9
+	return n
+}
+func (m *CoppPolicerSpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.Policer != nil {
+		l = m.Policer.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+
+func (m *CoppPolicerRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CoppPolicerStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.CoppPolicerHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *CoppPolicerResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovQos(uint64(m.ApiStatus))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+
+func (m *CoppPolicerResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CoppPolicerGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+
+func (m *CoppPolicerGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovQos(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CoppPolicerGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovQos(uint64(l))
+	}
+	return n
+}
+
+func (m *CoppPolicerGetResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -4980,4109 +3193,6 @@ func sovQos(x uint64) (n int) {
 }
 func sozQos(x uint64) (n int) {
 	return sovQos(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *MarkingActionSpec) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MarkingActionSpec: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MarkingActionSpec: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PcpRewriteEn", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.PcpRewriteEn = bool(v != 0)
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pcp", wireType)
-			}
-			m.Pcp = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Pcp |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DscpRewriteEn", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.DscpRewriteEn = bool(v != 0)
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Dscp", wireType)
-			}
-			m.Dscp = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Dscp |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QOSActions) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QOSActions: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QOSActions: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueueKeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.QueueKeyOrHandle == nil {
-				m.QueueKeyOrHandle = &QueueKeyHandle{}
-			}
-			if err := m.QueueKeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PolicerKeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.PolicerKeyOrHandle == nil {
-				m.PolicerKeyOrHandle = &PolicerKeyHandle{}
-			}
-			if err := m.PolicerKeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MarkingSpec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.MarkingSpec == nil {
-				m.MarkingSpec = &MarkingActionSpec{}
-			}
-			if err := m.MarkingSpec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *TrafficClass) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: TrafficClass: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TrafficClass: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Cos", wireType)
-			}
-			m.Cos = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Cos |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *TrafficClassQueueMap) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: TrafficClassQueueMap: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TrafficClassQueueMap: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TrafficClass", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.TrafficClass == nil {
-				m.TrafficClass = &TrafficClass{}
-			}
-			if err := m.TrafficClass.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueueKeyHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.QueueKeyHandle == nil {
-				m.QueueKeyHandle = &QueueKeyHandle{}
-			}
-			if err := m.QueueKeyHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolHandle) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolHandle: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolHandle: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
-			}
-			m.Handle = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += 8
-			m.Handle = uint64(dAtA[iNdEx-8])
-			m.Handle |= uint64(dAtA[iNdEx-7]) << 8
-			m.Handle |= uint64(dAtA[iNdEx-6]) << 16
-			m.Handle |= uint64(dAtA[iNdEx-5]) << 24
-			m.Handle |= uint64(dAtA[iNdEx-4]) << 32
-			m.Handle |= uint64(dAtA[iNdEx-3]) << 40
-			m.Handle |= uint64(dAtA[iNdEx-2]) << 48
-			m.Handle |= uint64(dAtA[iNdEx-1]) << 56
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolKeyHandle) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolKeyHandle: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BufPoolId", wireType)
-			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += 4
-			v = uint32(dAtA[iNdEx-4])
-			v |= uint32(dAtA[iNdEx-3]) << 8
-			v |= uint32(dAtA[iNdEx-2]) << 16
-			v |= uint32(dAtA[iNdEx-1]) << 24
-			m.KeyOrHandle = &BufPoolKeyHandle_BufPoolId{v}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BufPoolHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &BufPoolHandle{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.KeyOrHandle = &BufPoolKeyHandle_BufPoolHandle{v}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolSpec) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolSpec: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolSpec: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &BufPoolKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PortNum", wireType)
-			}
-			m.PortNum = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PortNum |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReservedBytes", wireType)
-			}
-			m.ReservedBytes = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ReservedBytes |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HeadroomBytes", wireType)
-			}
-			m.HeadroomBytes = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.HeadroomBytes |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SharingFactor", wireType)
-			}
-			m.SharingFactor = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.SharingFactor |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field XonThreshold", wireType)
-			}
-			m.XonThreshold = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.XonThreshold |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field XoffClearLimit", wireType)
-			}
-			m.XoffClearLimit = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.XoffClearLimit |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 9:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Mtu", wireType)
-			}
-			m.Mtu = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Mtu |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 10:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tcs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Tcs = append(m.Tcs, &TrafficClass{})
-			if err := m.Tcs[len(m.Tcs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &BufPoolSpec{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolStatus) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolStatus: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolStatus: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BufPoolHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.BufPoolHandle == nil {
-				m.BufPoolHandle = &BufPoolHandle{}
-			}
-			if err := m.BufPoolHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-			m.ApiStatus = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Status == nil {
-				m.Status = &BufPoolStatus{}
-			}
-			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Response = append(m.Response, &BufPoolResponse{})
-			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolDeleteRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolDeleteRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &BufPoolKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolDeleteRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolDeleteRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &BufPoolDeleteRequest{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolDeleteResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolDeleteResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType == 0 {
-				var v ApiStatus
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowQos
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= (ApiStatus(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.ApiStatus = append(m.ApiStatus, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowQos
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthQos
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				for iNdEx < postIndex {
-					var v ApiStatus
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowQos
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= (ApiStatus(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.ApiStatus = append(m.ApiStatus, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolStats) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolStats: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolStats: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Occupancy", wireType)
-			}
-			m.Occupancy = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Occupancy |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolGetRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolGetRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &BufPoolKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolGetRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolGetRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &BufPoolGetRequest{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolGetResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolGetResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Spec == nil {
-				m.Spec = &BufPoolSpec{}
-			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Status == nil {
-				m.Status = &BufPoolStatus{}
-			}
-			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Stats == nil {
-				m.Stats = &BufPoolStats{}
-			}
-			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BufPoolGetResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BufPoolGetResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BufPoolGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Response = append(m.Response, &BufPoolGetResponse{})
-			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueHandle) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueHandle: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueHandle: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
-			}
-			m.Handle = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += 8
-			m.Handle = uint64(dAtA[iNdEx-8])
-			m.Handle |= uint64(dAtA[iNdEx-7]) << 8
-			m.Handle |= uint64(dAtA[iNdEx-6]) << 16
-			m.Handle |= uint64(dAtA[iNdEx-5]) << 24
-			m.Handle |= uint64(dAtA[iNdEx-4]) << 32
-			m.Handle |= uint64(dAtA[iNdEx-3]) << 40
-			m.Handle |= uint64(dAtA[iNdEx-2]) << 48
-			m.Handle |= uint64(dAtA[iNdEx-1]) << 56
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueKeyHandle) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueKeyHandle: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueueId", wireType)
-			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += 4
-			v = uint32(dAtA[iNdEx-4])
-			v |= uint32(dAtA[iNdEx-3]) << 8
-			v |= uint32(dAtA[iNdEx-2]) << 16
-			v |= uint32(dAtA[iNdEx-1]) << 24
-			m.KeyOrHandle = &QueueKeyHandle_QueueId{v}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueueHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &QueueHandle{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.KeyOrHandle = &QueueKeyHandle_QueueHandle{v}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DWRRInfo) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DWRRInfo: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DWRRInfo: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Weight", wireType)
-			}
-			m.Weight = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Weight |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *StrictPriorityInfo) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: StrictPriorityInfo: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: StrictPriorityInfo: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Rate", wireType)
-			}
-			m.Rate = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Rate |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueSchedulerNode) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueSchedulerNode: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueSchedulerNode: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Priority", wireType)
-			}
-			m.Priority = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Priority |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Dwrr", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &DWRRInfo{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.QueueType = &QueueSchedulerNode_Dwrr{v}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Strict", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &StrictPriorityInfo{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.QueueType = &QueueSchedulerNode_Strict{v}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueInfo) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueInfo: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueInfo: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &QueueKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueueInfo", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.QueueInfo == nil {
-				m.QueueInfo = &QueueSchedulerNode{}
-			}
-			if err := m.QueueInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueSpec) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueSpec: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueSpec: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PortNum", wireType)
-			}
-			m.PortNum = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PortNum |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SchedulerPolicy", wireType)
-			}
-			m.SchedulerPolicy = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.SchedulerPolicy |= (QueueSchedulerPolicy(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Queues", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Queues = append(m.Queues, &QueueInfo{})
-			if err := m.Queues[len(m.Queues)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field L1Nodes", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.L1Nodes = append(m.L1Nodes, &QueueSchedulerNode{})
-			if err := m.L1Nodes[len(m.L1Nodes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &QueueSpec{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueStatus) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueStatus: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueStatus: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueueHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.QueueHandle == nil {
-				m.QueueHandle = &QueueHandle{}
-			}
-			if err := m.QueueHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-			m.ApiStatus = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Status = append(m.Status, &QueueStatus{})
-			if err := m.Status[len(m.Status)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Response = append(m.Response, &QueueResponse{})
-			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueDeleteRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueDeleteRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &QueueKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueDeleteRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueDeleteRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &QueueDeleteRequest{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueDeleteResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueDeleteResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType == 0 {
-				var v ApiStatus
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowQos
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= (ApiStatus(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.ApiStatus = append(m.ApiStatus, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowQos
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthQos
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				for iNdEx < postIndex {
-					var v ApiStatus
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowQos
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= (ApiStatus(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.ApiStatus = append(m.ApiStatus, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueStats) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueStats: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueStats: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueueDepth", wireType)
-			}
-			m.QueueDepth = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.QueueDepth |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueGetRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueGetRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &QueueKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueGetRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueGetRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &QueueGetRequest{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueGetResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueGetResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Spec == nil {
-				m.Spec = &QueueSpec{}
-			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Status == nil {
-				m.Status = &QueueStatus{}
-			}
-			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Stats == nil {
-				m.Stats = &QueueStats{}
-			}
-			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueueGetResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueueGetResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueueGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Response = append(m.Response, &QueueGetResponse{})
-			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerHandle) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerHandle: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerHandle: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
-			}
-			m.Handle = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += 8
-			m.Handle = uint64(dAtA[iNdEx-8])
-			m.Handle |= uint64(dAtA[iNdEx-7]) << 8
-			m.Handle |= uint64(dAtA[iNdEx-6]) << 16
-			m.Handle |= uint64(dAtA[iNdEx-5]) << 24
-			m.Handle |= uint64(dAtA[iNdEx-4]) << 32
-			m.Handle |= uint64(dAtA[iNdEx-3]) << 40
-			m.Handle |= uint64(dAtA[iNdEx-2]) << 48
-			m.Handle |= uint64(dAtA[iNdEx-1]) << 56
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerKeyHandle) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerKeyHandle: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PolicerId", wireType)
-			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += 4
-			v = uint32(dAtA[iNdEx-4])
-			v |= uint32(dAtA[iNdEx-3]) << 8
-			v |= uint32(dAtA[iNdEx-2]) << 16
-			v |= uint32(dAtA[iNdEx-1]) << 24
-			m.KeyOrHandle = &PolicerKeyHandle_PolicerId{v}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PolicerHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &PolicerHandle{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.KeyOrHandle = &PolicerKeyHandle_PolicerHandle{v}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *PolicerSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -9114,10 +3224,10 @@ func (m *PolicerSpec) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BpsRate", wireType)
 			}
-			var msglen int
+			m.BpsRate = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQos
@@ -9127,97 +3237,12 @@ func (m *PolicerSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				m.BpsRate |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &PolicerKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Direction", wireType)
-			}
-			m.Direction = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Direction |= (PolicerDirection(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bandwidth", wireType)
-			}
-			m.Bandwidth = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Bandwidth |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BurstSize", wireType)
 			}
@@ -9236,892 +3261,6 @@ func (m *PolicerSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MarkingSpec", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.MarkingSpec == nil {
-				m.MarkingSpec = &MarkingActionSpec{}
-			}
-			if err := m.MarkingSpec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &PolicerSpec{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerStatus) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerStatus: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerStatus: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PolicerHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.PolicerHandle == nil {
-				m.PolicerHandle = &PolicerHandle{}
-			}
-			if err := m.PolicerHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-			m.ApiStatus = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Status == nil {
-				m.Status = &PolicerStatus{}
-			}
-			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Response = append(m.Response, &PolicerResponse{})
-			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerDeleteRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerDeleteRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &PolicerKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerDeleteRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerDeleteRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &PolicerDeleteRequest{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerDeleteResponseMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerDeleteResponseMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType == 0 {
-				var v ApiStatus
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowQos
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= (ApiStatus(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.ApiStatus = append(m.ApiStatus, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowQos
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthQos
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				for iNdEx < postIndex {
-					var v ApiStatus
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowQos
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= (ApiStatus(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.ApiStatus = append(m.ApiStatus, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerGetRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerGetRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Meta == nil {
-				m.Meta = &ObjectMeta{}
-			}
-			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &PolicerKeyHandle{}
-			}
-			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQos(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthQos
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *PolicerGetRequestMsg) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQos
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerGetRequestMsg: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQos
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQos
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &PolicerGetRequest{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQos(dAtA[iNdEx:])
@@ -10269,7 +3408,7 @@ func (m *PolicerStats) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PolicerGetResponse) Unmarshal(dAtA []byte) error {
+func (m *QosClassKeyHandle) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -10292,10 +3431,2034 @@ func (m *PolicerGetResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerGetResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QosClassKeyHandle: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QosClassKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QosGroup", wireType)
+			}
+			var v QosGroup
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (QosGroup(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.KeyOrHandle = &QosClassKeyHandle_QosGroup{v}
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QosClassHandle", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			v = uint64(dAtA[iNdEx-8])
+			v |= uint64(dAtA[iNdEx-7]) << 8
+			v |= uint64(dAtA[iNdEx-6]) << 16
+			v |= uint64(dAtA[iNdEx-5]) << 24
+			v |= uint64(dAtA[iNdEx-4]) << 32
+			v |= uint64(dAtA[iNdEx-3]) << 40
+			v |= uint64(dAtA[iNdEx-2]) << 48
+			v |= uint64(dAtA[iNdEx-1]) << 56
+			m.KeyOrHandle = &QosClassKeyHandle_QosClassHandle{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosBuffer) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosBuffer: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosBuffer: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReservedMtus", wireType)
+			}
+			m.ReservedMtus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ReservedMtus |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeadroomMtus", wireType)
+			}
+			m.HeadroomMtus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HeadroomMtus |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field XonThreshold", wireType)
+			}
+			m.XonThreshold = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.XonThreshold |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field XoffClearLimit", wireType)
+			}
+			m.XoffClearLimit = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.XoffClearLimit |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosPFC) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosPFC: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosPFC: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQos
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.PfcCos = append(m.PfcCos, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQos
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthQos
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowQos
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.PfcCos = append(m.PfcCos, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field PfcCos", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosSched) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosSched: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosSched: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dwrr", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &QosSched_DWRRInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.SchedType = &QosSched_Dwrr{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Strict", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &QosSched_StrictPriorityInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.SchedType = &QosSched_Strict{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosSched_DWRRInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DWRRInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DWRRInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BwPercentage", wireType)
+			}
+			m.BwPercentage = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BwPercentage |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosSched_StrictPriorityInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StrictPriorityInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StrictPriorityInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bps", wireType)
+			}
+			m.Bps = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Bps |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosUplinkClassMap) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosUplinkClassMap: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosUplinkClassMap: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dot1QPcp", wireType)
+			}
+			m.Dot1QPcp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Dot1QPcp |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQos
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.IpDscp = append(m.IpDscp, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQos
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthQos
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowQos
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.IpDscp = append(m.IpDscp, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpDscp", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosMarking) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosMarking: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosMarking: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dot1QPcpRewriteEn", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Dot1QPcpRewriteEn = bool(v != 0)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dot1QPcp", wireType)
+			}
+			m.Dot1QPcp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Dot1QPcp |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpDscpRewriteEn", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IpDscpRewriteEn = bool(v != 0)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpDscp", wireType)
+			}
+			m.IpDscp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IpDscp |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &QosClassKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mtu", wireType)
+			}
+			m.Mtu = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Mtu |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Buffer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Buffer == nil {
+				m.Buffer = &QosBuffer{}
+			}
+			if err := m.Buffer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pfc", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pfc == nil {
+				m.Pfc = &QosPFC{}
+			}
+			if err := m.Pfc.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sched", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Sched == nil {
+				m.Sched = &QosSched{}
+			}
+			if err := m.Sched.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UplinkClassMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.UplinkClassMap == nil {
+				m.UplinkClassMap = &QosUplinkClassMap{}
+			}
+			if err := m.UplinkClassMap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Marking", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Marking == nil {
+				m.Marking = &QosMarking{}
+			}
+			if err := m.Marking.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &QosClassSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QosClassHandle", wireType)
+			}
+			m.QosClassHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.QosClassHandle = uint64(dAtA[iNdEx-8])
+			m.QosClassHandle |= uint64(dAtA[iNdEx-7]) << 8
+			m.QosClassHandle |= uint64(dAtA[iNdEx-6]) << 16
+			m.QosClassHandle |= uint64(dAtA[iNdEx-5]) << 24
+			m.QosClassHandle |= uint64(dAtA[iNdEx-4]) << 32
+			m.QosClassHandle |= uint64(dAtA[iNdEx-3]) << 40
+			m.QosClassHandle |= uint64(dAtA[iNdEx-2]) << 48
+			m.QosClassHandle |= uint64(dAtA[iNdEx-1]) << 56
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &QosClassStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &QosClassResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &QosClassKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &QosClassDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v ApiStatus
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQos
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (ApiStatus(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.ApiStatus = append(m.ApiStatus, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQos
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthQos
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v ApiStatus
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowQos
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (ApiStatus(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ApiStatus = append(m.ApiStatus, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &QosClassKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &QosClassGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -10325,7 +5488,7 @@ func (m *PolicerGetResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Spec == nil {
-				m.Spec = &PolicerSpec{}
+				m.Spec = &QosClassSpec{}
 			}
 			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -10358,7 +5521,1002 @@ func (m *PolicerGetResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Status == nil {
-				m.Status = &PolicerStatus{}
+				m.Status = &QosClassStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &QosClassStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosClassGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosClassGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosClassGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &QosClassGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerKeyHandle) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerKeyHandle: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CoppType", wireType)
+			}
+			var v CoppType
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (CoppType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.KeyOrHandle = &CoppPolicerKeyHandle_CoppType{v}
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CoppPolicerHandle", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			v = uint64(dAtA[iNdEx-8])
+			v |= uint64(dAtA[iNdEx-7]) << 8
+			v |= uint64(dAtA[iNdEx-6]) << 16
+			v |= uint64(dAtA[iNdEx-5]) << 24
+			v |= uint64(dAtA[iNdEx-4]) << 32
+			v |= uint64(dAtA[iNdEx-3]) << 40
+			v |= uint64(dAtA[iNdEx-2]) << 48
+			v |= uint64(dAtA[iNdEx-1]) << 56
+			m.KeyOrHandle = &CoppPolicerKeyHandle_CoppPolicerHandle{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &CoppPolicerKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Policer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Policer == nil {
+				m.Policer = &PolicerSpec{}
+			}
+			if err := m.Policer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &CoppPolicerSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CoppPolicerHandle", wireType)
+			}
+			m.CoppPolicerHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += 8
+			m.CoppPolicerHandle = uint64(dAtA[iNdEx-8])
+			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-7]) << 8
+			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-6]) << 16
+			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-5]) << 24
+			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-4]) << 32
+			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-3]) << 40
+			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-2]) << 48
+			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-1]) << 56
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &CoppPolicerStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &CoppPolicerResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &CoppPolicerKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &CoppPolicerGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQos(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQos
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CoppPolicerGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQos
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CoppPolicerGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CoppPolicerGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &CoppPolicerSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQos
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQos
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &CoppPolicerStatus{}
 			}
 			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -10418,7 +6576,7 @@ func (m *PolicerGetResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PolicerGetResponseMsg) Unmarshal(dAtA []byte) error {
+func (m *CoppPolicerGetResponseMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -10441,10 +6599,10 @@ func (m *PolicerGetResponseMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PolicerGetResponseMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppPolicerGetResponseMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicerGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppPolicerGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -10473,7 +6631,7 @@ func (m *PolicerGetResponseMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response, &PolicerGetResponse{})
+			m.Response = append(m.Response, &CoppPolicerGetResponse{})
 			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -10607,128 +6765,106 @@ var (
 func init() { proto.RegisterFile("qos.proto", fileDescriptorQos) }
 
 var fileDescriptorQos = []byte{
-	// 1954 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x59, 0xdd, 0x6e, 0xdb, 0xc8,
-	0x15, 0x16, 0x2d, 0xaf, 0x2d, 0x1d, 0xfd, 0xd1, 0x13, 0xff, 0x28, 0xde, 0xdd, 0xc4, 0x60, 0x36,
-	0x6b, 0x23, 0x6d, 0xd3, 0xda, 0xd9, 0x2e, 0xba, 0x9b, 0x2d, 0x82, 0x95, 0xad, 0x5d, 0x69, 0x13,
-	0xff, 0x84, 0x4a, 0x50, 0xa0, 0x37, 0x04, 0x4d, 0x8e, 0x22, 0xc6, 0x92, 0x48, 0x91, 0xa3, 0x4d,
-	0xb4, 0x77, 0x45, 0x81, 0x2e, 0x50, 0xa0, 0xed, 0x55, 0xd1, 0x3e, 0x45, 0x2f, 0xfa, 0x14, 0x45,
-	0xaf, 0x7a, 0xd3, 0xdb, 0xa2, 0x48, 0x1f, 0xa0, 0x40, 0x9f, 0xa0, 0x98, 0xe1, 0x90, 0x9c, 0x21,
-	0x29, 0x7b, 0xed, 0x35, 0x90, 0x2b, 0x6b, 0xce, 0x9c, 0x39, 0x73, 0x7e, 0xbe, 0x99, 0x6f, 0x0e,
-	0x0d, 0xe5, 0x89, 0x1b, 0xdc, 0xf7, 0x7c, 0x97, 0xb8, 0xa8, 0x38, 0x71, 0x83, 0xcd, 0x0a, 0x99,
-	0x79, 0x98, 0x4b, 0xb4, 0x6f, 0x15, 0x58, 0x39, 0x34, 0xfd, 0x33, 0x67, 0xfc, 0xe2, 0x73, 0x8b,
-	0x38, 0xee, 0xb8, 0xe7, 0x61, 0x0b, 0x7d, 0x00, 0x75, 0xcf, 0xf2, 0x0c, 0x1f, 0xbf, 0xf2, 0x1d,
-	0x82, 0x0d, 0x3c, 0x6e, 0x2a, 0x5b, 0xca, 0x4e, 0x49, 0xaf, 0x7a, 0x96, 0xa7, 0x87, 0xc2, 0xf6,
-	0x18, 0xa9, 0x50, 0xf4, 0x2c, 0xaf, 0xb9, 0xb0, 0xa5, 0xec, 0xd4, 0x74, 0xfa, 0x13, 0x7d, 0x08,
-	0x0d, 0x3b, 0x90, 0x17, 0x16, 0xd9, 0xc2, 0x1a, 0x15, 0x27, 0x2b, 0x11, 0x2c, 0x52, 0x41, 0x73,
-	0x91, 0x2d, 0x65, 0xbf, 0xb5, 0x7f, 0x2a, 0x00, 0x4f, 0x8f, 0x7b, 0xa1, 0x17, 0x01, 0x6a, 0xc1,
-	0x8d, 0xc9, 0x14, 0x4f, 0xb1, 0x71, 0x86, 0x67, 0x86, 0xeb, 0x1b, 0x03, 0x73, 0x6c, 0x0f, 0x31,
-	0xf3, 0xa3, 0xb2, 0x77, 0xe3, 0x3e, 0x8d, 0xe9, 0x29, 0x9d, 0x7f, 0x8c, 0x67, 0x1d, 0x36, 0xa5,
-	0xab, 0x13, 0x3e, 0x3e, 0xf6, 0x43, 0x09, 0xea, 0xc0, 0x9a, 0xe7, 0x0e, 0x1d, 0x0b, 0xfb, 0x29,
-	0x2b, 0x0b, 0xcc, 0xca, 0x1a, 0xb3, 0x72, 0x12, 0x6a, 0x24, 0x76, 0x90, 0x17, 0x4b, 0x62, 0x4b,
-	0x9f, 0x40, 0x75, 0x14, 0x66, 0xc9, 0x08, 0x3c, 0x6c, 0xb1, 0xa8, 0x2a, 0x7b, 0xeb, 0xcc, 0x40,
-	0x26, 0x7d, 0x7a, 0x85, 0xeb, 0xd2, 0x81, 0xb6, 0x05, 0xd5, 0x67, 0xbe, 0xd9, 0xef, 0x3b, 0xd6,
-	0xfe, 0xd0, 0x0c, 0x02, 0x9a, 0x35, 0xcb, 0x0d, 0x58, 0x20, 0x35, 0x9d, 0xfe, 0xd4, 0x7e, 0xa7,
-	0xc0, 0xaa, 0xa8, 0xc2, 0xe2, 0x3a, 0x34, 0x3d, 0xf4, 0x31, 0xd4, 0x48, 0x28, 0x37, 0x2c, 0x3a,
-	0xc1, 0xa3, 0x5f, 0x61, 0xdb, 0x8a, 0x2b, 0xf4, 0x2a, 0x11, 0xb7, 0xf8, 0x39, 0xa8, 0x49, 0xee,
-	0xa4, 0x90, 0x73, 0x13, 0x57, 0x9f, 0x48, 0x63, 0x6d, 0x1b, 0x6a, 0xad, 0x69, 0xff, 0xc4, 0x75,
-	0x87, 0x3c, 0xfa, 0x75, 0x58, 0x12, 0xd2, 0xbf, 0xa4, 0xf3, 0x91, 0xf6, 0x6b, 0x05, 0x54, 0xae,
-	0x19, 0xaf, 0x46, 0x5b, 0x50, 0x39, 0x9d, 0xf6, 0x0d, 0xcf, 0x75, 0x87, 0x86, 0x63, 0xb3, 0x15,
-	0xcb, 0x9d, 0x82, 0x5e, 0x3e, 0x0d, 0x15, 0xbb, 0x36, 0xfa, 0x0c, 0x1a, 0xb1, 0x86, 0xe4, 0x1d,
-	0x62, 0xde, 0x49, 0x7b, 0x77, 0x0a, 0x7a, 0xed, 0x54, 0x14, 0xb4, 0x1a, 0x50, 0x93, 0x8a, 0xa9,
-	0xfd, 0xa9, 0x08, 0x15, 0xbe, 0x86, 0x81, 0xf7, 0x2e, 0x2c, 0x8e, 0x30, 0x31, 0xe3, 0x64, 0x85,
-	0x70, 0x3f, 0x3e, 0x7d, 0x89, 0x2d, 0x72, 0x88, 0x89, 0xa9, 0xb3, 0x69, 0xf4, 0x38, 0x65, 0x47,
-	0x02, 0x45, 0x3a, 0xaa, 0x96, 0xfa, 0xbf, 0x7f, 0xdd, 0xae, 0x7e, 0x8d, 0xc7, 0x8e, 0x85, 0x3f,
-	0xd5, 0xce, 0xf0, 0x4c, 0xd3, 0x2b, 0x67, 0x02, 0x3e, 0x6e, 0x42, 0xc9, 0x73, 0x7d, 0x62, 0x8c,
-	0xa7, 0x23, 0x86, 0x8d, 0x9a, 0xbe, 0x4c, 0xc7, 0x47, 0xd3, 0x11, 0xba, 0x0b, 0x75, 0x1f, 0x07,
-	0xd8, 0xff, 0x1a, 0xdb, 0xc6, 0xe9, 0x8c, 0xe0, 0x80, 0xa3, 0xbe, 0x16, 0x49, 0x5b, 0x54, 0x48,
-	0xd5, 0x06, 0xd8, 0xb4, 0x7d, 0xd7, 0x1d, 0x71, 0xb5, 0x77, 0x42, 0xb5, 0x48, 0x1a, 0xab, 0x05,
-	0x03, 0xd3, 0xa7, 0x40, 0xec, 0x9b, 0x16, 0x71, 0xfd, 0xe6, 0x52, 0xa8, 0xc6, 0xa5, 0x5f, 0x30,
-	0x21, 0xba, 0x03, 0xb5, 0xd7, 0xee, 0xd8, 0x20, 0x03, 0x1f, 0x07, 0x03, 0x77, 0x68, 0x37, 0x97,
-	0x99, 0x56, 0xf5, 0xb5, 0x3b, 0x7e, 0x16, 0xc9, 0xd0, 0x0e, 0xa8, 0xaf, 0xdd, 0x7e, 0xdf, 0xb0,
-	0x86, 0xd8, 0xf4, 0x8d, 0xa1, 0x33, 0x72, 0x48, 0xb3, 0xc4, 0xf4, 0xea, 0x54, 0xbe, 0x4f, 0xc5,
-	0x4f, 0xa8, 0x94, 0x62, 0x76, 0x44, 0xa6, 0xcd, 0x72, 0x88, 0xd9, 0x11, 0x99, 0xa2, 0x3b, 0x50,
-	0x24, 0x56, 0xd0, 0x84, 0xad, 0x62, 0x3e, 0x20, 0xe9, 0xac, 0xf6, 0x08, 0x56, 0x78, 0x22, 0x75,
-	0x3c, 0x99, 0xe2, 0x80, 0x1c, 0x06, 0x2f, 0xd0, 0x3d, 0x58, 0xf6, 0xc3, 0x51, 0x53, 0x61, 0xab,
-	0x55, 0x31, 0xe3, 0xec, 0xfc, 0x44, 0x0a, 0xda, 0xe3, 0x18, 0x89, 0x3d, 0x62, 0x92, 0x69, 0x80,
-	0x3e, 0xcd, 0x42, 0x47, 0x99, 0x07, 0x9d, 0x14, 0x70, 0xb4, 0x31, 0x34, 0x62, 0x6f, 0x02, 0xcf,
-	0x1d, 0x07, 0x18, 0xfd, 0x18, 0xc0, 0xf4, 0x1c, 0x23, 0x60, 0xc6, 0x99, 0xa5, 0xfa, 0x9e, 0xca,
-	0x01, 0xf3, 0xb9, 0xe7, 0x84, 0x9b, 0xea, 0x65, 0x33, 0xfa, 0x89, 0xee, 0xc1, 0x12, 0x57, 0xce,
-	0x41, 0x2c, 0x57, 0xe7, 0x1a, 0xda, 0x17, 0x80, 0x52, 0xfb, 0xd1, 0xf0, 0x7f, 0x02, 0x25, 0x9f,
-	0x0f, 0x79, 0xfc, 0xab, 0xa2, 0x8d, 0x48, 0x55, 0x8f, 0xb5, 0xb4, 0xdf, 0x2a, 0xb0, 0xca, 0x67,
-	0x0f, 0xf0, 0x10, 0x13, 0xcc, 0x93, 0xf9, 0x36, 0x80, 0xae, 0x1d, 0xc1, 0x46, 0x9e, 0x2f, 0x34,
-	0xb2, 0x07, 0xe9, 0xc2, 0xde, 0x14, 0x77, 0x90, 0xd4, 0xc5, 0x0a, 0x37, 0x53, 0x0a, 0x49, 0xaa,
-	0xd2, 0xd5, 0x29, 0x5e, 0x50, 0x1d, 0xed, 0x87, 0x50, 0x15, 0x4a, 0x11, 0xa0, 0xf7, 0xa0, 0xec,
-	0x5a, 0xd6, 0xd4, 0x33, 0xc7, 0xd6, 0x8c, 0x5f, 0xb8, 0x89, 0x80, 0x51, 0x1f, 0x57, 0xff, 0x12,
-	0x93, 0xb7, 0x99, 0xd4, 0x4e, 0x5c, 0xe0, 0xc4, 0x91, 0x10, 0x2b, 0xa9, 0x8c, 0xae, 0x8b, 0xe6,
-	0x13, 0xdd, 0x24, 0x9d, 0x7f, 0x50, 0x62, 0xd0, 0xb1, 0x69, 0x8e, 0xf3, 0x0f, 0x60, 0x91, 0xd1,
-	0x56, 0x18, 0x54, 0xf6, 0xc0, 0xb1, 0xd9, 0xcb, 0x80, 0x1b, 0x6d, 0xc3, 0x3b, 0xf4, 0x57, 0xc0,
-	0x99, 0x70, 0x25, 0xad, 0x1a, 0xe8, 0xe1, 0xbc, 0xf6, 0x04, 0xd6, 0xb2, 0x0e, 0x85, 0x70, 0x49,
-	0x1f, 0x84, 0x8d, 0x4c, 0x74, 0x99, 0xb3, 0x70, 0x17, 0x2a, 0x8c, 0xbc, 0x2e, 0x20, 0xa6, 0x29,
-	0xd4, 0x65, 0x8e, 0x43, 0xef, 0x42, 0x29, 0xa4, 0x44, 0x81, 0x92, 0x96, 0x99, 0xa4, 0x6b, 0xa3,
-	0x9f, 0x42, 0x35, 0x9c, 0x94, 0x6a, 0xa9, 0x26, 0x5c, 0x19, 0x73, 0x51, 0x65, 0x92, 0x0c, 0xb3,
-	0x4c, 0xa4, 0x41, 0xe9, 0xe0, 0x17, 0xba, 0xde, 0x1d, 0xf7, 0x5d, 0xea, 0xda, 0x2b, 0xec, 0xbc,
-	0x18, 0x10, 0x0e, 0x3c, 0x3e, 0xd2, 0x76, 0x00, 0xf5, 0x88, 0xef, 0x58, 0xe4, 0xc4, 0x77, 0x5c,
-	0xdf, 0x21, 0x33, 0xa6, 0x8d, 0x60, 0xd1, 0x37, 0x09, 0xe6, 0xba, 0xec, 0xb7, 0xf6, 0x47, 0x05,
-	0x10, 0xdb, 0xbd, 0x67, 0x0d, 0xb0, 0x3d, 0x1d, 0x62, 0xff, 0xc8, 0xb5, 0x31, 0xda, 0x84, 0x92,
-	0xc7, 0x97, 0x72, 0xf5, 0x78, 0x8c, 0xee, 0xc0, 0xa2, 0xfd, 0xca, 0xf7, 0x79, 0x00, 0x35, 0x16,
-	0x40, 0xe4, 0x51, 0xa7, 0xa0, 0xb3, 0x49, 0xb4, 0x4b, 0xcb, 0x4c, 0x3d, 0xe0, 0xb5, 0x0b, 0xd3,
-	0x9e, 0x75, 0xaa, 0x53, 0xd0, 0xb9, 0x62, 0xab, 0x02, 0x65, 0xe6, 0xc9, 0xb3, 0x99, 0x87, 0xb5,
-	0xdf, 0x2b, 0x7c, 0xc4, 0x3c, 0xef, 0xa6, 0x0f, 0xc2, 0xfc, 0x17, 0xda, 0x45, 0x24, 0xfa, 0x31,
-	0x00, 0xaf, 0xd1, 0xb8, 0xef, 0xf2, 0x18, 0x36, 0x12, 0x3b, 0x52, 0x1a, 0xf4, 0xf2, 0x24, 0x72,
-	0x41, 0xfb, 0x6f, 0xe4, 0xd0, 0x65, 0xe8, 0x5f, 0x64, 0xec, 0x05, 0x99, 0xb1, 0x0f, 0x40, 0x0d,
-	0xa2, 0xbd, 0x0c, 0xf6, 0x18, 0x9c, 0xb1, 0x54, 0xd5, 0xf9, 0x8d, 0x26, 0x7b, 0xc3, 0xde, 0x8f,
-	0x33, 0xbd, 0x11, 0xc8, 0x02, 0xf4, 0x21, 0x2c, 0x31, 0x17, 0x29, 0xdf, 0x53, 0x74, 0xd7, 0x93,
-	0xb5, 0xd4, 0x6b, 0x9d, 0xcf, 0xa2, 0x3d, 0x28, 0x0d, 0x77, 0x8d, 0xb1, 0x6b, 0x33, 0xca, 0x2f,
-	0x9e, 0x17, 0xf3, 0xf2, 0x70, 0x97, 0xfe, 0x0d, 0xb4, 0x87, 0xd0, 0x60, 0xd3, 0xc2, 0x5d, 0xb1,
-	0x93, 0xbe, 0x2b, 0x84, 0xfd, 0x64, 0x52, 0x6d, 0xf1, 0x33, 0xc4, 0x29, 0xed, 0x41, 0x0a, 0xfc,
-	0x4a, 0x3e, 0xf8, 0x25, 0xe8, 0x6b, 0x2f, 0xa1, 0xc6, 0x1d, 0xb8, 0x2a, 0x93, 0xee, 0x08, 0x97,
-	0x4d, 0x51, 0xde, 0x30, 0xc5, 0xa3, 0x2d, 0x50, 0xa5, 0xbd, 0x68, 0xb4, 0xf7, 0x33, 0x97, 0x07,
-	0x4a, 0xd6, 0xe7, 0xdc, 0x1b, 0xbf, 0x89, 0xce, 0xd2, 0x95, 0x18, 0xb4, 0x9b, 0x7f, 0xd9, 0x5f,
-	0x01, 0xe3, 0xda, 0x57, 0xb0, 0x96, 0xf5, 0x83, 0x46, 0xb4, 0x9b, 0xae, 0x9f, 0x80, 0x82, 0x39,
-	0xdc, 0xd9, 0x85, 0x75, 0x69, 0xfa, 0x7b, 0x30, 0xe7, 0x8f, 0x00, 0xe2, 0xd4, 0x07, 0xe8, 0x36,
-	0x84, 0xc5, 0x36, 0x6c, 0xec, 0x91, 0x01, 0xbf, 0x65, 0xc2, 0xb3, 0x79, 0x40, 0x25, 0xf4, 0xe1,
-	0x1f, 0x02, 0xf0, 0xf2, 0xc4, 0x79, 0x8d, 0xb9, 0x3c, 0xe0, 0x35, 0x95, 0x49, 0xf3, 0x7e, 0x3a,
-	0x91, 0xab, 0x89, 0xe9, 0x3c, 0xca, 0xfc, 0x56, 0xe1, 0xf8, 0x12, 0x09, 0x53, 0x93, 0x08, 0x33,
-	0x7d, 0x94, 0x42, 0xba, 0xdc, 0x49, 0xd1, 0xe5, 0x5c, 0x04, 0xa3, 0xbb, 0x32, 0x59, 0x36, 0x64,
-	0xc5, 0x98, 0x2a, 0x3b, 0x70, 0x23, 0xed, 0x48, 0x88, 0x8c, 0x34, 0xd6, 0xd7, 0x52, 0x11, 0x65,
-	0xe0, 0xbe, 0x0d, 0x35, 0xde, 0xd6, 0x5e, 0x40, 0x94, 0xbf, 0x52, 0x40, 0x4d, 0x37, 0xc0, 0xe8,
-	0x36, 0x40, 0xd4, 0x36, 0x8b, 0x0d, 0x1c, 0x97, 0x75, 0x6d, 0xf4, 0x10, 0xea, 0x91, 0x42, 0x4e,
-	0xff, 0x26, 0xed, 0x4c, 0xfb, 0x37, 0x4f, 0x14, 0x64, 0x59, 0xf3, 0x2f, 0x0b, 0x50, 0xe1, 0x6b,
-	0xae, 0xad, 0x7f, 0x4b, 0xc7, 0x74, 0x11, 0xf5, 0x3c, 0x80, 0xb2, 0xed, 0xf8, 0x98, 0xb5, 0xf0,
-	0xfc, 0xae, 0x97, 0x0c, 0x1d, 0x44, 0x93, 0x7a, 0xa2, 0x47, 0x9f, 0x97, 0xa7, 0xe6, 0xd8, 0x7e,
-	0xe5, 0xd8, 0x64, 0xc0, 0x9b, 0xba, 0x44, 0x80, 0xde, 0x07, 0x38, 0x9d, 0xfa, 0x01, 0x31, 0x02,
-	0xe7, 0x1b, 0xcc, 0x9b, 0xb9, 0x32, 0x93, 0xf4, 0x9c, 0x6f, 0xb2, 0x5f, 0x14, 0x96, 0xbe, 0xfb,
-	0x17, 0x85, 0x47, 0xb0, 0xc2, 0xdd, 0xba, 0xb8, 0xad, 0x12, 0x12, 0x9b, 0x40, 0xfe, 0xab, 0x18,
-	0x1e, 0xfc, 0x32, 0xfe, 0x24, 0x53, 0x50, 0x65, 0x5e, 0x41, 0x53, 0xe5, 0xa4, 0x5d, 0x55, 0xec,
-	0xcc, 0xf5, 0x76, 0x55, 0x92, 0x8b, 0x62, 0x57, 0x95, 0xda, 0xef, 0xbc, 0xae, 0x2a, 0xa5, 0x9a,
-	0xea, 0xaa, 0xa2, 0xe2, 0x5e, 0x7b, 0x57, 0x75, 0x49, 0xf8, 0xd1, 0xae, 0x2a, 0xcf, 0x97, 0x73,
-	0xba, 0xaa, 0x3c, 0x75, 0xa9, 0xab, 0x4a, 0x29, 0x7c, 0x0f, 0x6e, 0xa0, 0x7d, 0x12, 0xb7, 0x76,
-	0xcd, 0x7d, 0xd2, 0x65, 0xd3, 0xd4, 0x89, 0x4b, 0xf6, 0x9d, 0xfa, 0xa4, 0x8c, 0x6e, 0x92, 0xa0,
-	0xbf, 0x2a, 0x50, 0x15, 0xf0, 0x15, 0xa0, 0x1f, 0xc0, 0x8a, 0x87, 0xfd, 0x91, 0x43, 0x08, 0xb6,
-	0x0d, 0xcf, 0xb4, 0xce, 0x30, 0x09, 0xa1, 0xbb, 0xa8, 0xab, 0xf1, 0xc4, 0x49, 0x28, 0x47, 0xdb,
-	0xd0, 0x48, 0x94, 0xc3, 0x8f, 0x35, 0x0b, 0x4c, 0xb5, 0x1e, 0x8b, 0xc3, 0xaf, 0x35, 0xdb, 0xd0,
-	0xb0, 0x7d, 0xd7, 0xf3, 0x04, 0x9b, 0xc5, 0x50, 0x91, 0x8b, 0x23, 0x8b, 0x77, 0xa0, 0x16, 0x29,
-	0x26, 0xdf, 0x88, 0x16, 0xf5, 0x2a, 0x17, 0x32, 0x6b, 0xac, 0xb9, 0x13, 0x63, 0x3a, 0xa7, 0xb9,
-	0x13, 0x8f, 0xfd, 0x79, 0xcd, 0x5d, 0xee, 0x19, 0xcb, 0x6f, 0xee, 0xc4, 0x74, 0x09, 0xcd, 0x5d,
-	0xd6, 0xa1, 0xf3, 0x9a, 0xbb, 0xac, 0x76, 0x72, 0x24, 0xef, 0xbd, 0x84, 0xd5, 0xbc, 0xa7, 0x35,
-	0xda, 0x84, 0xf5, 0x67, 0x87, 0xc6, 0xd3, 0xe7, 0xed, 0xe7, 0x6d, 0xa3, 0xb7, 0xdf, 0x69, 0x1f,
-	0x3c, 0x7f, 0xd2, 0xd6, 0x8d, 0x3d, 0xe3, 0x23, 0xb5, 0x30, 0x67, 0xee, 0x23, 0x63, 0x4f, 0x55,
-	0xe6, 0xcc, 0xfd, 0xcc, 0xd8, 0x55, 0x17, 0xee, 0x3d, 0x8c, 0x79, 0x2f, 0xbe, 0xda, 0xd1, 0x0d,
-	0x68, 0x74, 0x8f, 0xbe, 0xd4, 0xdb, 0xbd, 0x9e, 0x71, 0x72, 0xfc, 0xa4, 0xbb, 0xdf, 0xd6, 0xd5,
-	0x02, 0x42, 0x50, 0x6f, 0xcb, 0x32, 0x65, 0xef, 0xef, 0x4b, 0x50, 0x7c, 0x7a, 0xdc, 0x43, 0xad,
-	0xf8, 0xf3, 0xd4, 0xbe, 0x8f, 0x4d, 0x82, 0xd1, 0xba, 0xfc, 0x29, 0x27, 0x02, 0xe8, 0xe6, 0x46,
-	0xde, 0x27, 0x9e, 0xc3, 0xe0, 0x85, 0x56, 0x10, 0x6c, 0x3c, 0xf7, 0xec, 0x2b, 0xda, 0x38, 0x8a,
-	0x6d, 0x84, 0xc7, 0x1d, 0xbd, 0x37, 0xf7, 0xcb, 0x0b, 0xb5, 0xf4, 0x7e, 0xde, 0xac, 0x68, 0xaf,
-	0x0d, 0x90, 0x74, 0xe1, 0xe8, 0x66, 0xfe, 0x47, 0x07, 0x6a, 0x69, 0x73, 0x4e, 0xc7, 0x1e, 0x9a,
-	0xf9, 0x8c, 0x37, 0x1a, 0x3c, 0x39, 0xab, 0xe2, 0x0b, 0x3d, 0x36, 0xb1, 0x96, 0x7d, 0xb7, 0xcb,
-	0xab, 0x79, 0x5a, 0x2e, 0xb9, 0xba, 0xc3, 0x57, 0xf3, 0x84, 0x6c, 0xce, 0x79, 0x4c, 0x53, 0x1b,
-	0xef, 0x66, 0xe7, 0x44, 0x4b, 0x8f, 0xa0, 0x14, 0xbd, 0xb4, 0xd0, 0x46, 0xde, 0x53, 0x92, 0xda,
-	0x68, 0xe6, 0xbe, 0xc8, 0xe2, 0x0a, 0x73, 0xa8, 0x49, 0x28, 0xc9, 0x50, 0xf8, 0xe6, 0x46, 0x1e,
-	0x65, 0xa5, 0x6d, 0x48, 0x28, 0xb9, 0x94, 0x8d, 0xa3, 0xd8, 0x86, 0x84, 0x92, 0x39, 0xc4, 0xc3,
-	0x51, 0x32, 0x8f, 0x46, 0x42, 0x94, 0x24, 0xc7, 0x19, 0xdd, 0xcc, 0xbf, 0x72, 0x13, 0x94, 0xe4,
-	0x5e, 0x14, 0x5a, 0xa1, 0xb5, 0xf9, 0xb7, 0x37, 0xb7, 0x94, 0x7f, 0xbc, 0xb9, 0xa5, 0xfc, 0xfb,
-	0xcd, 0x2d, 0xe5, 0xcf, 0xff, 0xb9, 0x55, 0xf8, 0x65, 0x69, 0x60, 0x0e, 0xd9, 0x7f, 0xa7, 0x4e,
-	0x97, 0xd8, 0x9f, 0x07, 0xff, 0x0f, 0x00, 0x00, 0xff, 0xff, 0x49, 0xec, 0x4c, 0xf7, 0xc3, 0x1a,
-	0x00, 0x00,
+	// 1615 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0x4d, 0x6f, 0x23, 0x49,
+	0x19, 0x76, 0xc7, 0x1e, 0xdb, 0x79, 0xfd, 0x91, 0x76, 0x65, 0x26, 0xe3, 0x78, 0x34, 0x61, 0xe9,
+	0xd5, 0xee, 0x86, 0x99, 0x55, 0x86, 0xf1, 0x2e, 0x20, 0xcd, 0x89, 0xc4, 0x76, 0x3e, 0x96, 0xd8,
+	0x6e, 0x97, 0x1d, 0xed, 0x0e, 0x97, 0x56, 0xbb, 0x5d, 0x4e, 0x9a, 0xd8, 0xee, 0x4a, 0x57, 0x7b,
+	0x32, 0xde, 0x03, 0x57, 0x84, 0x84, 0xc4, 0x81, 0x0b, 0x12, 0x17, 0x0e, 0xfc, 0x02, 0x24, 0x7e,
+	0x03, 0x1c, 0x91, 0xb8, 0x71, 0x40, 0x68, 0xb8, 0x73, 0xe0, 0x17, 0xa0, 0xaa, 0xae, 0x76, 0x7f,
+	0xd8, 0xd9, 0x55, 0x56, 0x2b, 0xed, 0x69, 0x2a, 0xef, 0xfb, 0xd4, 0x53, 0xef, 0xc7, 0x53, 0x6f,
+	0x97, 0x07, 0x36, 0x6f, 0x1c, 0x76, 0x40, 0x5d, 0xc7, 0x73, 0x50, 0xfa, 0xc6, 0x61, 0xb5, 0x82,
+	0xb7, 0xa0, 0x44, 0x5a, 0xb4, 0x13, 0x28, 0xe8, 0xce, 0xc4, 0xb6, 0x88, 0xdb, 0xa7, 0xc4, 0x42,
+	0xbb, 0x90, 0x1f, 0x52, 0x66, 0xb8, 0xa6, 0x47, 0xaa, 0xca, 0x7b, 0xca, 0x7e, 0x09, 0xe7, 0x86,
+	0x94, 0x61, 0xd3, 0x23, 0xe8, 0x29, 0xc0, 0x70, 0xee, 0x32, 0xcf, 0x60, 0xf6, 0x97, 0xa4, 0xba,
+	0x21, 0x9c, 0x9b, 0xc2, 0xd2, 0xb7, 0xbf, 0x24, 0xda, 0x9f, 0x15, 0x28, 0x06, 0x4c, 0x9e, 0xe9,
+	0x31, 0xf4, 0x1c, 0x2a, 0x94, 0xb8, 0x53, 0xdb, 0xf3, 0xc8, 0xc8, 0xa0, 0xa6, 0x75, 0x4d, 0x3c,
+	0x26, 0x38, 0x33, 0x58, 0x5d, 0x3a, 0x74, 0xdf, 0x8e, 0x3e, 0x82, 0xad, 0x10, 0x3c, 0x5c, 0x78,
+	0x84, 0x89, 0x13, 0x32, 0xb8, 0xbc, 0x34, 0x1f, 0x71, 0x2b, 0x07, 0x8e, 0x5c, 0x87, 0xd2, 0x08,
+	0x67, 0xda, 0x07, 0x4a, 0x73, 0xc0, 0xf8, 0x3e, 0x94, 0x02, 0xa0, 0xcf, 0x97, 0x11, 0xb0, 0xa2,
+	0x34, 0x0a, 0x36, 0xed, 0x97, 0x50, 0xe9, 0x39, 0xac, 0x31, 0x31, 0x19, 0xfb, 0x19, 0x59, 0x9c,
+	0x9a, 0xb3, 0xd1, 0x84, 0xa0, 0x8f, 0x45, 0xc5, 0x8c, 0x4b, 0xd7, 0x99, 0x53, 0x11, 0x70, 0xb9,
+	0x5e, 0x3a, 0xe0, 0x35, 0xec, 0x39, 0xec, 0x84, 0x1b, 0x4f, 0x53, 0x38, 0x7f, 0x23, 0xd7, 0xe8,
+	0x19, 0xa8, 0x1c, 0x6d, 0x71, 0x0e, 0xe3, 0x4a, 0x30, 0x88, 0xd0, 0xb3, 0xa7, 0x29, 0x5c, 0xbe,
+	0x91, 0xe4, 0x3e, 0xf3, 0xd1, 0x16, 0x94, 0xae, 0xc9, 0xc2, 0x70, 0x5c, 0x09, 0xd4, 0xfe, 0xa4,
+	0xc0, 0x66, 0xcf, 0x61, 0x47, 0xf3, 0xf1, 0x98, 0xb8, 0x3c, 0x64, 0x97, 0x30, 0xe2, 0xbe, 0x21,
+	0x23, 0x63, 0xea, 0xcd, 0x99, 0xec, 0x40, 0x31, 0x30, 0xb6, 0xbd, 0xb9, 0xc8, 0xeb, 0x8a, 0x98,
+	0x23, 0xd7, 0x71, 0xa6, 0x3e, 0xc8, 0xef, 0x44, 0x31, 0x30, 0x06, 0xa0, 0xb7, 0xce, 0xcc, 0xf0,
+	0xae, 0x5c, 0xc2, 0xae, 0x9c, 0xc9, 0x48, 0xd4, 0xa8, 0x84, 0x8b, 0x6f, 0x9d, 0xd9, 0x20, 0xb0,
+	0xa1, 0x7d, 0x50, 0xdf, 0x3a, 0xe3, 0xb1, 0x61, 0x4d, 0x88, 0xe9, 0x1a, 0x13, 0x7b, 0x6a, 0x7b,
+	0xa2, 0x48, 0x25, 0x5c, 0xe6, 0xf6, 0x06, 0x37, 0x9f, 0x73, 0xab, 0xf6, 0x7d, 0xc8, 0xf6, 0x1c,
+	0xa6, 0x1f, 0x37, 0xd0, 0x63, 0xc8, 0xd1, 0xb1, 0x65, 0x58, 0x0e, 0x0f, 0x2e, 0xbd, 0x5f, 0xc2,
+	0x59, 0x3a, 0xb6, 0x1a, 0x0e, 0xd3, 0xfe, 0xa9, 0x40, 0xbe, 0xe7, 0xb0, 0xbe, 0x75, 0x45, 0x46,
+	0xe8, 0x63, 0xc8, 0x8c, 0x6e, 0x5d, 0x57, 0xc4, 0x5f, 0xa8, 0xef, 0x04, 0xc5, 0x13, 0xce, 0x83,
+	0xe6, 0xe7, 0x18, 0x9f, 0xcd, 0xc6, 0xce, 0x69, 0x0a, 0x0b, 0x14, 0x7a, 0x05, 0x59, 0xe6, 0xb9,
+	0xb6, 0xe5, 0x89, 0x54, 0x0a, 0xf5, 0xf7, 0xe2, 0xf8, 0xbe, 0xf0, 0xe9, 0xae, 0xed, 0xb8, 0xb6,
+	0xb7, 0x90, 0x3b, 0xe5, 0x8e, 0xda, 0x0b, 0xc8, 0x07, 0x7c, 0x3c, 0xe9, 0xe1, 0xad, 0x41, 0x89,
+	0x6b, 0x91, 0x99, 0x67, 0x5e, 0x06, 0x02, 0x2e, 0x0e, 0x6f, 0xf5, 0xa5, 0xad, 0xf6, 0x21, 0xa0,
+	0x55, 0x42, 0xa4, 0x42, 0x7a, 0x48, 0x83, 0x7a, 0xf3, 0xe5, 0x51, 0x01, 0x36, 0xc5, 0xf1, 0x83,
+	0x05, 0x25, 0xda, 0x99, 0x90, 0xc9, 0x05, 0x9d, 0xd8, 0xb3, 0x6b, 0xd1, 0xcf, 0xb6, 0x49, 0xd1,
+	0x13, 0xd8, 0x1c, 0x39, 0xde, 0xcb, 0x1b, 0x83, 0x5a, 0x54, 0xee, 0xcc, 0x0b, 0x83, 0x6e, 0x51,
+	0x5e, 0x27, 0x9b, 0x1a, 0x23, 0x66, 0xd1, 0xea, 0x86, 0x5f, 0x27, 0x9b, 0x36, 0x99, 0x45, 0xb5,
+	0x3f, 0x2a, 0x00, 0x3d, 0x87, 0xb5, 0x4d, 0xf7, 0xda, 0x9e, 0x5d, 0xa2, 0x17, 0xf0, 0x70, 0x49,
+	0x62, 0xb8, 0xe4, 0xd6, 0xb5, 0x3d, 0x62, 0x90, 0x99, 0xe0, 0xcb, 0xe3, 0x4a, 0xc0, 0x87, 0x7d,
+	0x4f, 0x6b, 0x16, 0x3f, 0x75, 0x23, 0x71, 0xea, 0x73, 0x40, 0xf2, 0xd4, 0x28, 0x57, 0x5a, 0x70,
+	0x6d, 0xf9, 0x01, 0x84, 0x4c, 0x91, 0x10, 0xfd, 0xae, 0x07, 0x21, 0xfe, 0x77, 0x03, 0x8a, 0xc1,
+	0xad, 0x10, 0x43, 0xe1, 0x03, 0xc8, 0x4c, 0x89, 0x67, 0xca, 0x76, 0x56, 0x0e, 0xfc, 0xf9, 0xd1,
+	0x1d, 0xfe, 0x82, 0x58, 0x5e, 0x9b, 0x78, 0x26, 0x16, 0x6e, 0x74, 0x9e, 0x50, 0xb7, 0x6c, 0xe7,
+	0xb2, 0xfd, 0xf1, 0x6b, 0x76, 0xa4, 0xfe, 0xef, 0x5f, 0xdf, 0x2b, 0xbe, 0x21, 0x33, 0xdb, 0x22,
+	0xaf, 0xb4, 0x6b, 0xb2, 0xd0, 0x70, 0xe1, 0x9a, 0x2c, 0xba, 0xae, 0xbc, 0x85, 0x2a, 0xa4, 0xa7,
+	0xde, 0x5c, 0x0a, 0x97, 0x2f, 0xd1, 0x87, 0x90, 0x1d, 0x8a, 0x8b, 0x22, 0xe2, 0x2d, 0xd4, 0xcb,
+	0x01, 0xb1, 0x7f, 0x7d, 0xb0, 0xf4, 0xa2, 0xa7, 0x90, 0xa6, 0x63, 0xab, 0xfa, 0x40, 0x80, 0x0a,
+	0x01, 0x48, 0x3f, 0x6e, 0x60, 0x6e, 0x47, 0xef, 0xc3, 0x03, 0xc6, 0x3b, 0x5b, 0xcd, 0x0a, 0x40,
+	0x29, 0xa6, 0x36, 0xec, 0xfb, 0xd0, 0x4f, 0x41, 0x9d, 0x8b, 0x76, 0xcb, 0x8b, 0x3d, 0x35, 0x69,
+	0x35, 0x17, 0x4f, 0x27, 0x2e, 0x07, 0x5c, 0x9e, 0xc7, 0xe5, 0xf1, 0x03, 0xc8, 0x4d, 0xfd, 0x26,
+	0x57, 0xf3, 0x62, 0xe3, 0x56, 0xb0, 0x51, 0xf6, 0x1e, 0x07, 0x7e, 0xed, 0x10, 0x50, 0x50, 0x1e,
+	0x4c, 0x6e, 0xe6, 0x84, 0x79, 0x6d, 0x76, 0x89, 0x9e, 0x43, 0xce, 0xf5, 0xff, 0x12, 0x57, 0x8d,
+	0x17, 0x3e, 0x5a, 0x48, 0xde, 0x19, 0x1c, 0x20, 0xb4, 0x57, 0x50, 0x5e, 0x3a, 0x3c, 0x93, 0x8f,
+	0x80, 0xfd, 0x35, 0x73, 0x89, 0x37, 0x30, 0x9b, 0x9c, 0x4a, 0x1a, 0x05, 0x35, 0x3c, 0x9e, 0x51,
+	0x67, 0xc6, 0x08, 0x7a, 0x01, 0x60, 0x52, 0xdb, 0x60, 0x82, 0x4b, 0x0e, 0x41, 0x55, 0x36, 0xfe,
+	0x90, 0xda, 0xfe, 0x19, 0x78, 0xd3, 0x0c, 0x96, 0xe8, 0x39, 0xbf, 0xc4, 0x66, 0x30, 0x8f, 0x0a,
+	0xf5, 0xed, 0x78, 0xb0, 0x3e, 0x5e, 0x42, 0xb4, 0x53, 0xd8, 0x4e, 0x9e, 0xc8, 0x33, 0x7e, 0x09,
+	0x79, 0x57, 0xfe, 0x29, 0x53, 0x7e, 0x14, 0x63, 0x09, 0xb0, 0x78, 0x09, 0xd3, 0x7e, 0xa3, 0xc0,
+	0xa3, 0xc0, 0xdd, 0x24, 0x13, 0xe2, 0x11, 0x59, 0xc1, 0xef, 0x44, 0xb4, 0x9a, 0x0e, 0xd5, 0xb5,
+	0xd1, 0xf0, 0xec, 0x3e, 0x4d, 0xf6, 0xb3, 0x16, 0x3b, 0x23, 0x86, 0x0f, 0x1b, 0x7b, 0x0e, 0xbb,
+	0x49, 0x44, 0x58, 0xb0, 0x64, 0x97, 0xd2, 0x5f, 0xd3, 0x25, 0x6d, 0x0b, 0x4a, 0xd1, 0x96, 0x30,
+	0xed, 0xd7, 0x4a, 0xa8, 0xbd, 0x13, 0xe2, 0x7d, 0xa7, 0xc5, 0xfb, 0x2c, 0x6c, 0x65, 0x18, 0x8a,
+	0xaf, 0x8b, 0x44, 0xe5, 0x1e, 0xc7, 0x0e, 0x08, 0xc1, 0x61, 0xd9, 0x7e, 0xa7, 0x84, 0x12, 0x13,
+	0x7e, 0xa9, 0xeb, 0x0f, 0x20, 0xc3, 0x28, 0xb1, 0x96, 0x89, 0xad, 0xdc, 0x28, 0xe1, 0xbe, 0x97,
+	0x9a, 0xd1, 0x3e, 0x3c, 0xe0, 0x2b, 0xff, 0x21, 0x52, 0xa8, 0xa3, 0x15, 0x2c, 0xc3, 0x3e, 0x40,
+	0xeb, 0xc0, 0xce, 0x9a, 0xa0, 0x7c, 0x71, 0x24, 0xa5, 0x5f, 0x5d, 0xcd, 0x71, 0x45, 0xfd, 0xbf,
+	0x52, 0xe0, 0x61, 0xc3, 0xa1, 0x54, 0xbe, 0xbb, 0x62, 0x4f, 0x18, 0xcb, 0xa1, 0xd4, 0xe0, 0x7d,
+	0x8b, 0x3d, 0x61, 0x38, 0x9a, 0x7f, 0xd2, 0xf8, 0x13, 0xc6, 0x92, 0x6b, 0xf4, 0x43, 0xd8, 0x16,
+	0x68, 0xea, 0xd3, 0x24, 0x5f, 0x31, 0x15, 0x2b, 0x3c, 0xe2, 0xae, 0x87, 0xcc, 0x5f, 0x14, 0xd8,
+	0x8a, 0x44, 0x72, 0x9f, 0xcf, 0x46, 0x77, 0xbd, 0x88, 0x76, 0x97, 0xf1, 0x26, 0xb3, 0xfb, 0xba,
+	0x2f, 0xc7, 0x33, 0xc8, 0xc9, 0x4c, 0x64, 0x47, 0x54, 0x41, 0x15, 0x09, 0x0d, 0x07, 0x00, 0xed,
+	0x04, 0x1e, 0x45, 0x8e, 0x88, 0x68, 0xee, 0x20, 0xa9, 0xb9, 0x87, 0xc9, 0x78, 0xe2, 0x03, 0xb8,
+	0x01, 0x95, 0xa8, 0xcf, 0x57, 0xc6, 0xc1, 0xfa, 0xc2, 0xfa, 0x63, 0x78, 0xb5, 0xac, 0xda, 0x1b,
+	0xd8, 0x8e, 0x45, 0xf3, 0x4d, 0x87, 0xf1, 0x41, 0x42, 0xbe, 0x3b, 0x2b, 0xb1, 0xc7, 0xe7, 0x71,
+	0x07, 0x76, 0xd6, 0x9c, 0xfb, 0x55, 0xba, 0x5c, 0x03, 0x8f, 0xe8, 0xf2, 0xb7, 0x4a, 0xac, 0xac,
+	0xf7, 0x1f, 0x2c, 0xdf, 0xb6, 0x26, 0xf8, 0x60, 0x5e, 0x1b, 0xd0, 0x57, 0x0c, 0xe6, 0xb5, 0xf8,
+	0xb0, 0xe1, 0x7f, 0x50, 0x62, 0x45, 0x8b, 0x0e, 0x99, 0xfd, 0xd8, 0x90, 0x59, 0x2f, 0x1c, 0x7f,
+	0xce, 0xdc, 0xb3, 0x51, 0xe8, 0xa3, 0xf8, 0xa8, 0xa9, 0xc4, 0x84, 0x1d, 0x9d, 0x34, 0x03, 0xd8,
+	0x5d, 0x1f, 0x1c, 0x4f, 0xf8, 0x27, 0x2b, 0x4d, 0x7d, 0xb2, 0x36, 0xe3, 0x64, 0x5f, 0x9f, 0xfd,
+	0x75, 0x43, 0x3c, 0xf2, 0xfd, 0x1f, 0x3e, 0x05, 0xc8, 0x35, 0x5b, 0xc7, 0x87, 0x17, 0xe7, 0x03,
+	0x35, 0x85, 0x10, 0x94, 0x2f, 0xfa, 0x2d, 0x6c, 0x34, 0x5b, 0xc7, 0x67, 0x9d, 0x56, 0xd3, 0x78,
+	0xa9, 0x2a, 0x2b, 0xb6, 0xba, 0xba, 0xb1, 0x62, 0xfb, 0x44, 0x4d, 0xaf, 0xd8, 0x3e, 0x55, 0x33,
+	0x2b, 0xb6, 0x1f, 0xa9, 0x0f, 0x56, 0x6c, 0x3f, 0x56, 0xb3, 0x3c, 0x88, 0x46, 0xb7, 0x33, 0xc0,
+	0xdd, 0x73, 0x35, 0x87, 0xf2, 0x90, 0xe9, 0xeb, 0x87, 0x1d, 0x35, 0xcf, 0xa1, 0x67, 0x9d, 0x41,
+	0x0b, 0x77, 0x0e, 0xcf, 0x8d, 0xc3, 0x66, 0xfb, 0xac, 0xa3, 0x6e, 0xa2, 0xa7, 0xb0, 0xbb, 0xb4,
+	0xe1, 0x2f, 0x0c, 0x1d, 0x77, 0xbf, 0x78, 0x6d, 0x74, 0xba, 0x46, 0x13, 0x77, 0x75, 0x15, 0x50,
+	0x0d, 0x76, 0x56, 0xdd, 0xc2, 0x57, 0x88, 0x6d, 0x1d, 0x24, 0xb7, 0x16, 0x63, 0x5b, 0x07, 0xb1,
+	0xad, 0x25, 0xf4, 0x08, 0x2a, 0x4b, 0x5f, 0x43, 0xbf, 0x30, 0x1a, 0x5d, 0xfd, 0xb5, 0x5a, 0x7e,
+	0xf6, 0x19, 0xe4, 0x83, 0x51, 0x8c, 0x1e, 0xc3, 0x76, 0xa3, 0xab, 0xeb, 0xc6, 0xe0, 0xb5, 0xde,
+	0x32, 0x8e, 0xcf, 0xbb, 0x9f, 0x1b, 0xed, 0xb3, 0x7e, 0x5f, 0x4d, 0xa1, 0x0a, 0x94, 0x42, 0xc7,
+	0x21, 0xd6, 0xfd, 0x9a, 0x86, 0xa6, 0xe6, 0x69, 0x43, 0x57, 0x37, 0xea, 0xff, 0x48, 0x43, 0xba,
+	0xd7, 0xed, 0xa3, 0x56, 0xf8, 0x06, 0x6c, 0xb8, 0x84, 0xff, 0x64, 0x7f, 0x9c, 0x78, 0x3e, 0x05,
+	0x92, 0xaf, 0x55, 0xd7, 0xbe, 0xab, 0xda, 0xec, 0x52, 0x4b, 0x45, 0x69, 0x2e, 0xe8, 0xe8, 0x1b,
+	0xd3, 0xf4, 0x42, 0x1a, 0xff, 0xe1, 0x82, 0x9e, 0xde, 0xfd, 0xde, 0xe1, 0x64, 0x7b, 0x6b, 0xdd,
+	0x51, 0xca, 0x53, 0x28, 0x44, 0xbe, 0x87, 0xa8, 0x76, 0xc7, 0x2b, 0x80, 0x93, 0x3d, 0xb9, 0xeb,
+	0xeb, 0xe9, 0x33, 0x75, 0x62, 0xd3, 0x5a, 0xa6, 0x59, 0x5b, 0x9d, 0x6c, 0x09, 0xbe, 0xf5, 0x43,
+	0xd2, 0x4f, 0x36, 0x7e, 0x79, 0x64, 0xb2, 0x77, 0xcd, 0x1c, 0x99, 0xec, 0x9d, 0x57, 0x54, 0x4b,
+	0x1d, 0xd5, 0xfe, 0xf6, 0x6e, 0x4f, 0xf9, 0xfb, 0xbb, 0x3d, 0xe5, 0xdf, 0xef, 0xf6, 0x94, 0xdf,
+	0xff, 0x67, 0x2f, 0xf5, 0xf3, 0xfc, 0x95, 0x39, 0x11, 0xff, 0x69, 0x33, 0xcc, 0x8a, 0x7f, 0x3e,
+	0xf9, 0x7f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xbb, 0x86, 0x3d, 0x12, 0xda, 0x11, 0x00, 0x00,
 }

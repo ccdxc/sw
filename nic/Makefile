@@ -84,7 +84,7 @@ bazel-build: sdk
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
 	$(MAKE) capmodel
-	#$(MAKE) go-proto
+	$(MAKE) go-proto
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/proxy-e2etest:all 
 
 bazel-gtests:
