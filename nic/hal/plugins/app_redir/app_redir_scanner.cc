@@ -306,6 +306,11 @@ hal_ret_t scanner_run(hal::appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_
         return HAL_RET_ERR;
     }
 
+    if (pkt == nullptr || pkt_len == 0) {
+        HAL_TRACE_WARN("scanner_run: failed to scan zero length pkt");
+        return HAL_RET_ERR;
+    }
+
     tid -= hal::HAL_THREAD_ID_FTE_MIN;
 
     if (!hal::periodic::periodic_thread_is_running()) {

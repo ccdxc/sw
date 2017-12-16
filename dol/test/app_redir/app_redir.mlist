@@ -43,6 +43,35 @@ modules:
             num_pkts : 4
         iterate :
             - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_DNS
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_dns.testspec
+        args    :
+            num_pkts : 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_HTTP
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_http.testspec
+        args    :
+            num_pkts : 5
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_MONGO
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_mongo.testspec
+        enable  : False
+        args    :
+            num_pkts : 5
+        iterate :
+            - flow: filter://type=IPV4
+
     - module:
         name    : APP_REDIR_PROXY_TCP_TLS_ENCRYPT
         module  : app_redir_proxy_tcp_tls_encrypt
@@ -53,8 +82,6 @@ modules:
             key_size : 16
             num_pkts : 1
             proxyr_meta_pages : 1
-        iterate :
-            - flow: filter://type=IPV4
 
     - module:
         name    : APP_REDIR_PROXY_TCP_TLS_DECRYPT
@@ -68,3 +95,4 @@ modules:
             proxyr_meta_pages : 1
         iterate :
             - flow: filter://type=IPV4
+

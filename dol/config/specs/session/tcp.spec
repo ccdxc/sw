@@ -117,6 +117,26 @@ entries:
             port : const/46624
 
     - entry:
+        label: raw-redir-known-appid
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/8080 # alternate http port
+        initiator:
+            port : const/46624
+
+    - entry:
+        label: raw-redir-known-appid
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/27017 # mongodb port
+        initiator:
+            port : const/46624
+
+    - entry:
         label: proxy-redir-dec
         tracking: False
         timestamp: False
