@@ -3,7 +3,7 @@
 #ifndef __LINKMGR_SRC_HPP__
 #define __LINKMGR_SRC_HPP__
 
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 
 #include "nic/include/base.h"
 #include "nic/include/list.hpp"

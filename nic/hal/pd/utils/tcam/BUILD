@@ -20,7 +20,8 @@ cc_library(
     ],
     copts = sdk_copts,
     deps = [
-        "//nic:sdk_indexer",
+        #"//nic:sdk_indexer",
+        "@sdk//obj:sdk_indexer",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/pd/utils/acl_tcam:acl_tcam_includes",
         "//nic/include:base_includes",

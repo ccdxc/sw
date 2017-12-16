@@ -2,7 +2,7 @@
 #define __HAL_PD_RDMA_HPP__
 
 #include "nic/include/base.h"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"

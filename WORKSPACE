@@ -43,3 +43,9 @@ cc_library(
 )
     """
 )
+
+# SDK repo
+local_repository(
+    name = "sdk",
+    path = "nic/sdk",
+)

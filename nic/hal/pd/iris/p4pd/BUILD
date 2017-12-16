@@ -20,8 +20,10 @@ cc_library(
     copts = sdk_copts,
     deps = [
         "//nic:gen_includes",
-        "//nic:sdk_ht",
-        "//nic:sdk_slab",
+        #"//nic:sdk_ht",
+        #"//nic:sdk_slab",
+        "@sdk//obj:sdk_ht",
+        "@sdk//obj:sdk_slab",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/iris:iris_includes",

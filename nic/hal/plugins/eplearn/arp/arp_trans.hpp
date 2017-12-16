@@ -6,7 +6,7 @@
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/fte/fte.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/include/twheel.hpp"
 #include "nic/include/periodic.hpp"
 #include "../common/trans.hpp"

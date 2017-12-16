@@ -6,7 +6,7 @@
 
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
-#include "nic/sdk/include/slab.hpp"
+#include "sdk/slab.hpp"
 #include "nic/include/hal_lock.hpp"
 
 using sdk::lib::slab;

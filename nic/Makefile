@@ -72,7 +72,8 @@ sdk:
 	$(MAKE) -C sdk lib
 
 DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
-SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
+#SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
+SDK_OPTS = --copt=-Wno-unused-function 
 bazel-build: sdk
 	$(MAKE) -C p4
 	$(MAKE) -C asm

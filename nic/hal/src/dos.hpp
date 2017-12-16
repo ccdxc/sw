@@ -5,7 +5,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/include/pd.hpp"
 

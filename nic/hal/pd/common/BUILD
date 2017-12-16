@@ -20,7 +20,8 @@ cc_library(
     ],
     copts = sdk_copts,
     deps = [
-        "//nic:sdk_ht",
+        #"//nic:sdk_ht",
+        "@sdk//obj:sdk_ht",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",

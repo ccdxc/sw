@@ -5,7 +5,7 @@
 #include "nic/include/list.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/ip.h"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/l4lb.pb.h"
 #include <netinet/ether.h>
 #include "nic/hal/src/vrf.hpp"

@@ -2,7 +2,7 @@
 
 
 #include "nic/include/base.h"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 
 namespace fte {
 

@@ -17,7 +17,8 @@ cc_test(
     deps = [
         ":list_includes",
         "//nic/utils/trace",
-        "//nic:sdk_logger",
+        #"//nic:sdk_logger",
+        "@sdk//obj:sdk_logger",
         # External
         "//:gtest",
     ],

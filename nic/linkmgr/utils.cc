@@ -8,7 +8,7 @@
 
 #include "nic/include/hal_lock.hpp"
 
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/utils/list/list.hpp"
 
 #include "linkmgr_src.hpp"

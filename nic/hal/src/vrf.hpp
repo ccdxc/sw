@@ -3,7 +3,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/list.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"

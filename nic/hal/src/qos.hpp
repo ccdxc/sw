@@ -3,7 +3,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "../../gen/proto/hal/qos.pb.h"
 #include "nic/include/pd.hpp"

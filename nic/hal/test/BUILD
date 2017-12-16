@@ -15,7 +15,7 @@ cc_library(
         "//nic/utils/thread:thread",
     ],
     alwayslink = 1,
-    copts = sdk_copts,
+    #copts = sdk_copts,
 )
 
 cc_binary(
@@ -30,7 +30,7 @@ cc_binary(
         "//nic:gen_proto_includes",
         "//nic:halproto",
         "//nic:grpc",
-        "//nic:sdk_logger",
+        "@sdk//obj:sdk_logger",
     ],
     linkopts = [
         "-lzmq",

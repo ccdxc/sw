@@ -32,7 +32,8 @@ cc_library(
         #"//nic/hal/pd/control",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic:sdk_indexer",
+        #"//nic:sdk_indexer",
+        "@sdk//obj:sdk_indexer",
         "//nic/utils/thread",  # May not be needed
     ],
 )

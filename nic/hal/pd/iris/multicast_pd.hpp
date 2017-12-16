@@ -4,7 +4,7 @@
 #define __HAL_PD_MULTICAST_HPP__
 
 #include "nic/include/base.h"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/common/pd_api.hpp"

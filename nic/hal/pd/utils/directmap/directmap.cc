@@ -2,7 +2,7 @@
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/include/hal_lock.hpp"
 // #include "nic/utils/thread/thread.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 
 using hal::pd::utils::DirectMap;
 

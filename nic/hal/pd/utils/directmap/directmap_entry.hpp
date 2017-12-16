@@ -10,7 +10,7 @@
 #define __DIRECTMAP_ENTRY_HPP__
 
 #include "nic/include/base.h"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 
 using sdk::lib::ht_ctxt_t;
 

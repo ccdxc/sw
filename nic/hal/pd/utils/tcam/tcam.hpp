@@ -20,7 +20,7 @@
 #include <string>
 #include <map>
 #include "nic/include/hal_mem.hpp"
-#include "nic/sdk/include/indexer.hpp"
+#include "sdk/indexer.hpp"
 
 using sdk::lib::indexer;
 

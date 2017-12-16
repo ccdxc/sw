@@ -1,6 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/include/ip.h"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/fte/fte.hpp"
 #include <netinet/if_ether.h>
 #include <arpa/inet.h>

@@ -1,9 +1,9 @@
 #ifndef __HAL_STATE_PD_HPP__
 #define __HAL_STATE_PD_HPP__
 
-#include "nic/sdk/include/indexer.hpp"
-#include "nic/sdk/include/slab.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/indexer.hpp"
+#include "sdk/slab.hpp"
+#include "sdk/ht.hpp"
 #include "nic/hal/pd/utils/directmap/directmap.hpp"
 #include "nic/hal/pd/utils/hash/hash.hpp"
 #include "nic/hal/pd/utils/tcam/tcam.hpp"

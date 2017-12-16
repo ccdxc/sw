@@ -5,7 +5,7 @@ gl_deps_list = [
         "//nic/hal/periodic",
         "//nic/hal/svc:hal_svc",
         "//nic/utils/trace",
-        "//nic:sdk_logger",
+        "@sdk//obj:sdk_logger",
         "//nic/utils/print",
         "//nic/hal/plugins:plugins",
         "//nic/hal/plugins/proxy:proxyplugin",

@@ -2,13 +2,13 @@
 #define _LKLSHIM_HPP_
 
 #include "nic/include/base.h"
-#include "nic/sdk/include/slab.hpp"
+#include "sdk/slab.hpp"
 #include "nic/include/list.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 //#include "nic/hal/src/tcpcb.hpp"
 //#include "nic/hal/src/tlscb.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/src/session.hpp"
 

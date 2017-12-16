@@ -1,9 +1,9 @@
 #ifndef __PROXY_HPP__
 #define __PROXY_HPP__
 
-#include "nic/sdk/include/indexer.hpp"
+#include "sdk/indexer.hpp"
 #include "nic/include/base.h"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/proxy.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"

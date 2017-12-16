@@ -4,7 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
 #include "nic/include/list.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/rawccb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"

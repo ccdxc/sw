@@ -13,9 +13,9 @@
 
 #include <string>
 #include "nic/include/base.h"
-#include "nic/sdk/include/indexer.hpp"
+#include "sdk/indexer.hpp"
 #include "nic/include/hal_lock.hpp"
-//#include "nic/sdk/include/ht.hpp"
+//#include "sdk/ht.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 

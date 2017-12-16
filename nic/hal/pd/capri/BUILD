@@ -22,8 +22,10 @@ cc_library(
 
 capri_util_deps = [
     "//nic/utils/bm_allocator:bm_allocator",
-    "//nic:sdk_slab",
-    "//nic:sdk_indexer",
+    #"//nic:sdk_slab",
+    #"//nic:sdk_indexer",
+    "@sdk//obj:sdk_indexer",
+    "@sdk//obj:sdk_slab",
     "//nic/utils/catalog:catalog",
 ]
 

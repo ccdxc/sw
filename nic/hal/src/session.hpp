@@ -3,7 +3,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/list.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/include/ip.h"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/l2segment.hpp"

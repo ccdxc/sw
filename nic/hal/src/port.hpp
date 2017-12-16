@@ -5,7 +5,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/list.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/port.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"

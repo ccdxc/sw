@@ -5,7 +5,7 @@
 #include "nic/include/encap.hpp"
 #include "nic/include/list.hpp"
 #include "nic/hal/src/vrf.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/utils.hpp"

@@ -19,10 +19,11 @@ cc_test(
         "//nic/hal/test:hal_mock",
         "//nic/utils/trace:trace",
         "//nic/hal/periodic",
-        "//nic:sdk_logger",
+        #"//nic:sdk_logger",
+        "@sdk//obj:sdk_logger",
 
         # External
         "//:gtest",
      ],
-    copts = sdk_copts,
+    #copts = sdk_copts,
 )

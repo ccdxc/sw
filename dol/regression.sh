@@ -15,7 +15,7 @@ function ErrorCheckNExit() {
 #cd ../nic/utils/host_mem && make && cd -
 cd /sw && make pull-assets && cd -
 cd ../nic/proto/ && make && cd -
-bazel build --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj //nic/utils/host_mem:host_mem
+bazel build //nic/utils/host_mem:host_mem
 #bazel build //nic/proto:all
 #bazel build //nic/proto/hal:all
 #bazel build //nic/proto/agents:all

@@ -410,49 +410,49 @@ cc_inc_library(
     ],
 )
 
-cc_library(
-    name = "sdk_base_include",
-    hdrs = [
-        "sdk/include/base.hpp",
-        "sdk/include/logger.hpp"
-    ],
-)
-
-cc_library(
-    name = "sdk_include",
-    hdrs = glob(["sdk/include/*.hpp"]),
-)
-
-cc_library(
-    name = "sdk_logger",
-    srcs = [
-        "sdk/obj/liblogger.so",
-    ],
-    deps = ["//nic:sdk_include"],
-)
-
-cc_library(
-    name = "sdk_slab",
-    srcs = [
-        "sdk/bazel-bin/lib/slab/libslab.so",
-    ],
-    deps = ["//nic:sdk_include"],
-)
-
-cc_library(
-    name = "sdk_ht",
-    srcs = [
-        "sdk/bazel-bin/lib/ht/libht.so",
-    ],
-    deps = ["//nic:sdk_include"],
-)
-
-cc_library(
-    name = "sdk_indexer",
-    srcs = [
-        "sdk/bazel-bin/lib/indexer/libindexer.so",
-    ],
-    deps = ["//nic:sdk_include"],
-)
+#cc_library(
+#    name = "sdk_base_include",
+#    hdrs = [
+#        "sdk/include/base.hpp",
+#        "sdk/include/logger.hpp"
+#    ],
+#)
+#
+#cc_library(
+#    name = "sdk_include",
+#    hdrs = glob(["sdk/include/*.hpp"]),
+#)
+#
+#cc_library(
+#    name = "sdk_logger",
+#    srcs = [
+#        "sdk/obj/liblogger.so",
+#    ],
+#    deps = ["//nic:sdk_include"],
+#)
+#
+#cc_library(
+#    name = "sdk_slab",
+#    srcs = [
+#        "sdk/bazel-bin/lib/slab/libslab.so",
+#    ],
+#    deps = ["//nic:sdk_include"],
+#)
+#
+#cc_library(
+#    name = "sdk_ht",
+#    srcs = [
+#        "sdk/bazel-bin/lib/ht/libht.so",
+#    ],
+#    deps = ["//nic:sdk_include"],
+#)
+#
+#cc_library(
+#    name = "sdk_indexer",
+#    srcs = [
+#        "sdk/bazel-bin/lib/indexer/libindexer.so",
+#    ],
+#    deps = ["//nic:sdk_include"],
+#)
 
 exports_files(["tools/ncc/tenjin_wrapper.py"])

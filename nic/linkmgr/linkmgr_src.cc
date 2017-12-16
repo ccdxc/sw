@@ -13,7 +13,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
 
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/utils/list/list.hpp"
 
 #include "nic/hal/periodic/periodic.hpp"

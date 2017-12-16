@@ -14,7 +14,8 @@ cc_library(
     deps = [
         "//nic:asic_includes",
         "//nic:gen_proto_includes",
-        "//nic:sdk_indexer",
+        #"//nic:sdk_indexer",
+        "@sdk//obj:sdk_indexer",
         "//nic/hal:hal_includes",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",

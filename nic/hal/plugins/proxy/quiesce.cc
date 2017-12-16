@@ -14,7 +14,7 @@
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
 #include "nic/include/list.hpp"
-#include "nic/sdk/include/ht.hpp"
+#include "sdk/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/pd/common/cpupkt_headers.hpp"
