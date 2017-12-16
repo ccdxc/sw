@@ -60,17 +60,6 @@ ptseg_loop:
     // page_offset = 0
     add        r2, r0, r0 // Branch Delay Slot
 
-    // set cmdeop in the last mem2pkt dma cmd 
-    seq        c1, k.args.dma_cmd_eop, 1
-    DMA_SET_END_OF_PKT_C(DMA_CMD_MEM2PKT_T, r7, c1)
-
-    add        r1, k.global.flags, r0  
-    // if cmdeop is set and UD service is not set, then set end of cmd
-    // This is acheived by using c1 as predicate as well as result
-    // in UD service check
-    IS_FLAG_NOT_SET_C(c1, r1, REQ_TX_FLAG_UD_SERVICE, c1)
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_MEM2PKT_T, r7, c1)
-
     add          r1, k.args.sge_index, r0
     CAPRI_SET_TABLE_I_VALID(r1, 0)
 

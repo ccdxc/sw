@@ -26,8 +26,14 @@ req_tx_dcqcn_cnp_process:
     // Update partition key in CNP packet
     phvwr       p.bth.pkey, d.partition_key
 
+    // For PAD and ICRC
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_PAD_ICRC)
+    // dma_cmd[0] : addr1 - pad/icrc
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(DMA_CMD_BASE, immeth, immeth, 1)
+
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+
 exit:
     CAPRI_SET_TABLE_0_VALID(0)
     nop.e

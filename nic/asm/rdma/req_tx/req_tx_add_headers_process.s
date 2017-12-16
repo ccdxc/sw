@@ -150,7 +150,6 @@ req_tx_add_headers_process:
         // dma_cmd[2] - RETH hdr, num addrs 2 (bth, reth)
         DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
         DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
-        DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index * sizeof(rrqwqe_t)
         add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
@@ -251,7 +250,6 @@ req_tx_add_headers_process:
         // dma_cmd[2] - ATOMICETH hdr, num addrs 2 (bth, atomiceth)
         DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
         DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, atomiceth, atomiceth, 1)
-        DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index & sizeof(rrqwqe_t)
         add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
@@ -274,7 +272,6 @@ req_tx_add_headers_process:
         // dma_cmd[2] - ATOMICETH hdr, num addrs 2 (bth, atomiceth)
         DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
         DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, atomiceth, atomiceth, 1)
-        DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index & sizeof(rrqwqe_t)
         add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
@@ -347,7 +344,6 @@ rrq_p_index_chk:
     // dma_cmd[4] - incr rrq_p_index for read/atomic
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQ_PINDEX)
     DMA_HBM_PHV2MEM_SETUP(r6, rrq_p_index, rrq_p_index, r3)
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
 cb1_byte_update:
     // on top of it, set need_credits flag is conditionally

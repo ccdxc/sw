@@ -76,8 +76,7 @@ set_arg:
      //CAPRI_SET_FIELD(r7, INFO_OUT_T, pt_bytes, k.args.sge_bytes)
      //CAPRI_SET_FIELD(r7, INFO_OUT_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
      //CAPRI_SET_FIELD(r7, INFO_OUT_T, sge_index, k.args.sge_index)
-     //CAPRI_SET_FIELD(r7, INFO_OUT_T, dma_cmd_eop, k.args.dma_cmd_eop)
-     CAPRI_SET_FIELD_RANGE(r7, INFO_OUT_T, pt_bytes, dma_cmd_eop, k.{args.sge_bytes...args.dma_cmd_eop})
+     CAPRI_SET_FIELD_RANGE(r7, INFO_OUT_T, pt_bytes, sge_index, k.{args.sge_bytes...args.sge_index})
 
      CAPRI_GET_TABLE_0_OR_1_K(req_tx_phv_t, r7, c1)
      CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqptseg_process)

@@ -76,9 +76,5 @@ transfer_loop:
     add                 TBL_ID, r0, k.args.tbl_id
     CAPRI_SET_TABLE_I_VALID(TBL_ID, 0)
 
-    seq                 c1, k.args.dma_cmdeop, 1
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_MEM2PKT_T, DMA_CMD_BASE, c1)
-    DMA_SET_END_OF_PKT_C(DMA_CMD_MEM2PKT_T, DMA_CMD_BASE, c1)
-    
     nop.e
     nop

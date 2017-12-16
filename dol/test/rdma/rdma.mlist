@@ -1005,3 +1005,11 @@ modules:
         spec    : resp_rx_send_first_mid_last_inv_4sges.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_RESP_RX_SEND_ONLY_ICRC_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_icrc_err
+        spec    : resp_rx_send_only_icrc_err.testspec
+        ignore  : False
+

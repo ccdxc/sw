@@ -44,8 +44,8 @@ decode_roce_opcode:
   phvwr.c1    p.{p4_to_p4plus_roce_ip_valid, p4_to_p4plus_roce_eth_valid}, 3
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, r1
 
-  // subtract udp header length 8
-  sub         r1, k.udp_len, 8
+  // subtract udp header length 8 and icrc length 4
+  sub         r1, k.udp_len, 12
   // add conditionally 40B for ip header length for UD RDMA
   // For IPv6, store 40B of IPv6 header
   // For IPv4, save 20B of hdr into first 20Bytes and rest 20Bytes are zero

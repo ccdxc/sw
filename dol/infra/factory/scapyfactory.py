@@ -257,7 +257,12 @@ class IcrcHeaderBuilder:
     def __init__(self, packet):
         spkt = packet.GetScapyPacket()
         self.spkt = spkt.copy()
-        self.spkt = self.spkt[penscapy.IP]
+        if penscapy.IPv6 in self.spkt:
+            self.spkt = self.spkt[penscapy.IPv6]
+        elif penscapy.IP in self.spkt:
+            self.spkt = self.spkt[penscapy.IP]
+        else:
+            assert(0)
         return
 
     def __get_icrc(self):
@@ -272,7 +277,7 @@ class IcrcHeaderBuilder:
         return
 
     def __add_for_ipv6(self):
-        self.spkt[penscapy.IPv6].nh = 0xFF
+        self.spkt[penscapy.IPv6].hlim = 0xFF
         self.spkt[penscapy.IPv6].tc = 0xFF
         self.spkt[penscapy.IPv6].fl = 0xFFFFF
         self.spkt[penscapy.UDP].chksum = 0xFFFF
@@ -351,7 +356,6 @@ class ScapyPacketObject:
         icrc = builder.GetIcrc()                                                                                
         hdr.fields.icrc = (((icrc << 24) & 0xFF000000) | ((icrc <<  8) & 0x00FF0000) | ((icrc >>  8) & 0x0000FF00) | ((icrc >> 24) & 0x000000FF))
         #logger.info("ICRC after byte swap: 0x%x" % hdr.fields.icrc) 
-        
         self.__add_header(hdr)
         return
         

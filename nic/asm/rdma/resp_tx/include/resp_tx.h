@@ -157,8 +157,7 @@ struct resp_tx_rkey_to_ptseg_info_t {
     dma_cmd_start_index: 8;
     log_page_size: 5;
     tbl_id: 2;
-    dma_cmdeop: 1;
-    pad: 80;
+    pad: 81;
 };
 
 struct resp_tx_rsqptseg_process_k_t {

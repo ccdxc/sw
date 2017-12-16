@@ -61,16 +61,12 @@ sge_loop:
     add            r5, r5, k.args.dma_cmd_start_index
     CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, dma_cmd_start_index, r5)
 
-    // To start with, set dma_cmd_eop to 0
-    //CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, dma_cmd_eop, 0)
-
     // current_sge_offset += transfer_bytes
     add            r2, r2, r4
 
     // remaining_payload_bytes -= transfer_bytes
     sub            r3, r3, r4
 
-    // if end of loop, set k[].dma_cmd_eop = TRUE;
     sle            c2, r3, r0
     slt            c3, 1, k.args.num_valid_sges
    
@@ -143,8 +139,6 @@ sge_loop:
 
     // Get Table 0/1 arg base pointer as it was modified to 0/1 K base
     CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(req_tx_phv_t, r7, c7)
-    // set dma_cmd_eop in last dma cmd for pkt, if no more sges to read
-    CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, dma_cmd_eop, 1)
 
     // if (index == num_valid_sges) last = TRUE else last = FALSE;
     cmov           r3, c1, 1, 0

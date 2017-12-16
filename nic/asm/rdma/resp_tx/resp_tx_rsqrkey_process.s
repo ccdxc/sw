@@ -120,7 +120,6 @@ invoke_pt:
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, dma_cmd_start_index, RESP_TX_DMA_CMD_PYLD_BASE)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, log_page_size, d.log_page_size)
     //CAPRI_SET_FIELD(r7, PTSEG_INFO_T, tbl_id, TABLE_0)
-    CAPRI_SET_FIELD(r7, PTSEG_INFO_T, dma_cmdeop, 1)
 
 add_headers:
 
@@ -128,6 +127,13 @@ add_headers:
     DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, k.args.header_template_size, k.args.header_template_addr)
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_BTH)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, bth, bth)
+
+    // For PAD and ICRC
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PAD_ICRC)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, icrc, icrc)
+
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
 
     seq         c1, k.args.send_aeth, 1
     bcf         [!c1], invoke_dcqcn

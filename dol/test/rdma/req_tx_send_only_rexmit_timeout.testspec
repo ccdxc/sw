@@ -32,6 +32,7 @@ packets:
         id          : EXP_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -64,6 +65,7 @@ packets:
         id          : IN_PKT # Base packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :

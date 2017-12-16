@@ -906,7 +906,7 @@ class Icrc:
         #64 1bits are added to icrc computation.
         prof_obj.IcrcProfileStartAdjSet(0, 8)
         prof_obj.IcrcProfileShiftLeftSet(0, 0)
-        prof_obj.IcrcProfileEndAdjSet(0, 4)
+        prof_obj.IcrcProfileEndAdjSet(0, 0)
         prof_obj.IcrcProfileMaskAdjSet(0, 0)
         #Icrc calculation till end of packet.
         prof_obj.IcrcProfileEndEopSet(1)
@@ -1403,34 +1403,37 @@ class Icrc:
         mask_field['end']   = 1  #End is inclusive in HW
         mask_field['fill']  = 1
         mask_field['skip_first_nibble']  = 0
-        #TODO : Enable following lines once dprsr fix is released
-        #mask_field['start_sub']  = 1
-        #mask_field['end_sub']  = 1
+        mask_field['start_sub']  = 1
+        mask_field['end_sub']  = 1
         prof_obj.IcrcMaskProfileMaskFieldAdd(fld_inst, mask_field)
 
         leading_64b_byte_len = 0
 
         l3hdr_iflds = calfldobj.L3HdrInvariantFieldsGet()
         fld_inst = 1
+        span_into_next_byte = 0
         for l3hdr_ifld in l3hdr_iflds:
             mask_field              = {}
             mask_field['en']        = 1
-            mask_field['start']     = l3hdr_ifld.offset / 8
+            mask_field['start']     = (l3hdr_ifld.offset / 8) + span_into_next_byte
             mask_field['end']       = (l3hdr_ifld.offset + l3hdr_ifld.width) / 8  - 1 #End is inclusive in HW
             mask_field['fill']      = 1
             mask_field['skip_first_nibble']  = 0
-            if l3hdr_ifld.offset % 8 == 4:
+            if not span_into_next_byte and l3hdr_ifld.offset % 8 == 4:
                 #field starts on nibble
                 mask_field['skip_first_nibble']  = 1
                 if not l3hdr_ifld.width % 8:
                     #start in middle of byte and ends in middle of byte
                     #hence move end_adj by one more byte
                     mask_field['end'] += 1
+                    span_into_next_byte = 1
                 #NB:
                 # TC in ipv6 hdr starts  @bit 4 and ends @bit 11. Since there is no way
                 # to skip end nibble, bit12 to bit15 are also marked invariant. This
                 # works because FLow-Label starts at bit12 and ends @bit31 and is also
                 # invariant field.
+            elif span_into_next_byte:
+                span_into_next_byte = 0
             mask_field['start'] += leading_64b_byte_len
             mask_field['end']   += leading_64b_byte_len
             prof_obj.IcrcMaskProfileMaskFieldAdd(fld_inst, mask_field)

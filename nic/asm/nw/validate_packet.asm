@@ -96,8 +96,6 @@ f_check_parser_errors:
 check_parser_errors_uplink:
   phvwr       p.control_metadata_checksum_results, k.capri_intrinsic_csum_err
   seq         c3, k.capri_p4_intrinsic_crc_err, 0
-  // TBD : remove the following line to enable iCRC error handling
-  seq         c3, r0, r0
   jrcf        [c2 & c3], r7
   phvwr.!c2   p.control_metadata_drop_reason[DROP_PARSER_LEN_ERR], 1
   phvwr.!c3   p.control_metadata_drop_reason[DROP_PARSER_ICRC_ERR], 1

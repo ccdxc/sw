@@ -13,9 +13,9 @@
 #define REQ_TX_DMA_CMD_RRQ_PINDEX 6
 #define REQ_TX_DMA_CMD_PYLD_BASE 5
 #define REQ_TX_DMA_CMD_PYLD_BASE_END 16
-#define REQ_TX_DMA_CMD_RDMA_FEEDBACK 17
-#define REQ_TX_DMA_CMD_RDMA_ICRC_PAD 18
-#define REQ_TX_DMA_CMD_RDMA_UDP_OPTS 19
+#define REQ_TX_DMA_CMD_RDMA_PAD_ICRC 17
+#define REQ_TX_DMA_CMD_RDMA_UDP_OPTS 18
+#define REQ_TX_DMA_CMD_RDMA_FEEDBACK 19   // This should be at the end
 #define REQ_TX_DMA_CMD_START_FLIT_ID 7
 #define REQ_TX_DMA_CMD_START_FLIT_CMD_ID 2
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
@@ -92,10 +92,11 @@ struct req_tx_phv_t {
     dma_cmd3 : 128;
 
     /* flit 6 */
-    rsvd: 64;                                       //  8B  free
+    rsvd: 40;                                       //  5B  free
     rrq_p_index: 16;                                //  2B
-    struct p4plus_to_p4_header_t p4plus_to_p4;      // 10B
+    pad:  24;                                       //  3B  free
     struct rdma_immeth_t immeth;                    //  4B
+    struct p4plus_to_p4_header_t p4plus_to_p4;      // 10B
 
     union {                                         // 28B
         struct rdma_reth_t reth;                        // 16B

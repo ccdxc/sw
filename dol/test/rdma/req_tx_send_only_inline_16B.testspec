@@ -30,6 +30,7 @@ packets:
         id          : EXP_PKT # Base packet
         payloadsize : 16  # 16 bytes of inline data
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :

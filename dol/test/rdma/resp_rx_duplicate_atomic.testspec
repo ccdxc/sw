@@ -70,6 +70,7 @@ packets:
         id          : ATOMIC_REQ_PKT    # Input packet 
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMICETH,v6=ETH_IPV6_UDP_BTH_ATOMICETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -107,6 +108,7 @@ packets:
         id          : SEND_REQ_PKT 
         payloadsize : ref://testcase/packets/id=BASE_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -139,6 +141,7 @@ packets:
         id          : ATOMIC_RSP_PKT    # Expected AtomicAck Packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -174,6 +177,7 @@ packets:
         id          : ACK_PKT 
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -207,6 +211,7 @@ packets:
         id          : DUP_ATOMIC_RSP_PKT    # Duplicate AtomicAck Packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :

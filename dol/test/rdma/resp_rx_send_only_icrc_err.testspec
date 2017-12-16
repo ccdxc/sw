@@ -15,23 +15,15 @@ selectors:
         lqp         : filter://svc=0
         rqp         : filter://svc=0
 #    maxflows    : 1 
-#   maxrdmasessions     : 1 
+#    maxrdmasessions     : 4 
 
 packets:
    - packet:
-        id          : BASE_FIRST_PKT # Base packet
-        #ideally this should be pmtu sized, but send a smaller value for this test
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=PAYLOAD
-        headers     :
-            payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
-
-   - packet:
-        id          : IN_FIRST_PKT    # Input packet 
+        id          : IN_PKT    # Input packet 
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
-        icrc        : True
+        # Disable ICRC calculation, so input pkt will be dropped to test ICRC error condition
+        #icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -54,45 +46,10 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 0 
+                opcode  : 4 
                 destqp  : ref://testcase/config/rdmasession/lqp/id
-                psn     : ref://testcase/pvtdata/send_first_psn
-            payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
-
-   - packet:
-        id          : EXP_PKT    # Expected Nak packet
-        payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
-        icrc        : True
-        encaps      :   
-            - ref://factory/packets/id=ENCAP_QTAG
-        headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
-            eth:
-                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
-                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
-            qtag:
-                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
-            ipv4:
-                src     : ref://testcase/config/rdmasession/session/initiator/addr
-                dst     : ref://testcase/config/rdmasession/session/responder/addr
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/rdmasession/session/initiator/addr
-                dst     : ref://testcase/config/rdmasession/session/responder/addr
-                hlim    : 64
-            udp:
-                sport   : ref://testcase/config/rdmasession/session/iflow/sport
-                dport   : ref://testcase/config/rdmasession/session/iflow/dport
-            bth:
-                opcode  : 17 # ACK
-                destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
-            aeth:
-                syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=1 #NAK_CODE_INV_REQ
-                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
+                psn     : callback://rdma/rdma/GetRqPreEpsn
+                a       : 1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -104,7 +61,7 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=IN_FIRST_PKT/size
+               - size    : ref://testcase/packets/id=IN_PKT/size
                  data    : None
 
 descriptors:
@@ -133,11 +90,10 @@ trigger:
 
     packets:
         - packet:
-            object  : ref://testcase/packets/id=IN_FIRST_PKT
+            object  : ref://testcase/packets/id=IN_PKT
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT
-            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+    # ICRC drop, No Pkts or Descs expected
+    # TODO: Add ICRC drop stats check after HAL team committs the drop stats code and 
+    # logic to check drop stats from HAL/DOL

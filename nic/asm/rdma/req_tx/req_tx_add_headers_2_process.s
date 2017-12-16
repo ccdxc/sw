@@ -42,6 +42,15 @@ req_tx_add_headers_2_process:
     // dma_cmd[2] : addr2 - deth only if it is UD service (bth setup in add_headers_process)
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, deth, deth, 1, c3)
 
+    // For PAD and ICRC
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_PAD_ICRC)
+    // dma_cmd[0] : addr1 - pad/icrc
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, immeth, immeth, 1)
+    // For ICRC, can point to any 4 bytes of PHV so point to immeth to create 4B hdr
+    //  space for ICRC Deparser in P4 calculate and fills ICRC here
+
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
+
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
     phvwr.!c3      BTH_DST_QP, d.dst_qp
 
@@ -67,10 +76,12 @@ req_tx_add_headers_2_process:
     phvwr          p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
 
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
 
 exit:
+    // This gets executed in both UD and non-UD cases
+    // In case of UD, EOC set for Feedback command, otherwise set for ICRC_PAD command
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
     nop.e
     nop
 

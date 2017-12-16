@@ -38,6 +38,7 @@ packets:
         id          : SEND_ONLY_1 # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -70,6 +71,7 @@ packets:
         id          : SEND_ONLY_2 # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -102,6 +104,7 @@ packets:
         id          : ATOMIC_REQ # Transmit packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMICETH,v6=ETH_IPV6_UDP_BTH_ATOMICETH
+        icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -139,6 +142,7 @@ packets:
          id          : ATOMIC_RESP       # Receive packet 
          payloadsize : 0
          template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
+         icrc        : True
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
          headers     :

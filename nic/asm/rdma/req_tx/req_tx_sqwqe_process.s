@@ -208,8 +208,6 @@ inline_data:
     phvwr          p.inline_data, d.inline_data
     DMA_CMD_STATIC_BASE_GET(r4, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_PYLD_BASE)
     DMA_PHV2PKT_START_LEN_SETUP(r4, r5, inline_data, d.send.length)
-    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r4)
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r4)  //BD Slot
     // NOTE: it should be noted that invoke_add_headers will directly invoke
     // add_headers phase without any sge process as the data is inline.
     // The length of data is populated in length argument. All the 'length'

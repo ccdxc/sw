@@ -130,3 +130,23 @@ def ValidateEQChecks(tc):
         return False
 
     return True
+
+
+def ValidateNoEQChanges(tc):
+    rs = tc.config.rdmasession
+    rs.lqp.eq.qstate.Read()
+    tc.pvtdata.eq_post_qstate = rs.lqp.eq.qstate.data
+    log_num_eq_wqes = getattr(tc.pvtdata.eq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_eq_wqes) - 1
+
+    # verify that no change to p_index
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.eq_pre_qstate, tc.pvtdata.eq_post_qstate, 'p_index0', ring0_mask, 0):
+        return False
+
+    # verify that no change to c_index
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.eq_pre_qstate, tc.pvtdata.eq_post_qstate, 'c_index0', ring0_mask, 0):
+        return False
+
+    return True
+
+

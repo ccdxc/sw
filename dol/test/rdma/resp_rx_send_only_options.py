@@ -13,7 +13,7 @@ def TestCaseSetup(tc):
     tc.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
 
-    tc.pvtdata.num_total_bytes = 0x3f
+    tc.pvtdata.num_total_bytes = 0x3b
     tc.pvtdata.roce_opt_ts_list = [0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]
     tc.pvtdata.roce_opt_ts_value = 0x11223344
     tc.pvtdata.roce_opt_ts_echo = 0x55667788

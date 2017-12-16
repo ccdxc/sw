@@ -46,6 +46,7 @@ packets:
         id          : IN_WR_FIRST_PKT    # Input packet - first
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=2700,pkt_num=0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -82,6 +83,7 @@ packets:
         id          : IN_WR_MID_PKT    # Input packet - middle
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=2700,pkt_num=1
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -115,6 +117,7 @@ packets:
         id          : IN_WR_LAST_PKT    # Input packet - last
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=2700,pkt_num=2
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -147,6 +150,7 @@ packets:
         id          : IN_RD_PKT    # First packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -183,6 +187,7 @@ packets:
         id          : EXP_ACK_PKT    # Expected Ack packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -219,6 +224,7 @@ packets:
         id          : EXP_RD_PKT1    # Output packet, Reverse all fields from the IN_RD_PKT
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=2700,pkt_num=0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -254,6 +260,7 @@ packets:
         id          : EXP_RD_PKT2    # Output packet, Reverse all fields from the IN_RD_PKT
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=2700,pkt_num=1
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -287,6 +294,7 @@ packets:
         id          : EXP_RD_PKT3    # Output packet, Reverse all fields from the IN_RD_PKT
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=2700,pkt_num=2
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
