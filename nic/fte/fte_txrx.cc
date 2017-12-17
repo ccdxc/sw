@@ -28,9 +28,9 @@ public:
     void start(void);
     hal_ret_t asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
                        hal::pd::p4plus_to_p4_header_t* p4plus_header,
-                       uint8_t* pkt, size_t pkt_len, uint16_t dest_lif,
-                       uint8_t  qtype, uint32_t qid, uint8_t ring_number);
+                       uint8_t* pkt, size_t pkt_len);
     hal_ret_t softq_enqueue(softq_fn_t fn, void *data);
+    uint8_t get_id() const {return id_;};
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -80,13 +80,23 @@ fte_start(uint8_t fte_id)
 hal_ret_t
 fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
              hal::pd::p4plus_to_p4_header_t* p4plus_header,
-             uint8_t* pkt, size_t pkt_len, uint16_t dest_lif,
-             uint8_t  qtype, uint32_t qid, uint8_t  ring_number)
+             uint8_t* pkt, size_t pkt_len)
 {
     HAL_ASSERT_RETURN(g_inst, HAL_RET_INVALID_ARG);
-    return g_inst->asq_send(cpu_header, p4plus_header, pkt, pkt_len,
-                            dest_lif, qtype, qid, ring_number);
+    return g_inst->asq_send(cpu_header, p4plus_header, pkt, pkt_len);
 }
+
+//------------------------------------------------------------------------------
+// Get fte_id
+// ***Should be called from FTE thread***
+//------------------------------------------------------------------------------
+uint8_t
+fte_id()
+{
+    HAL_ASSERT_RETURN(g_inst, HAL_RET_INVALID_ARG);
+    return g_inst->get_id();
+}
+
 
 //------------------------------------------------------------------------------
 // Asynchronouly executes the fn in the specified fte thread,
@@ -145,7 +155,7 @@ inst_t::inst_t(uint8_t fte_id) :
     ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQTX, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 
-    ret = cpupkt_register_tx_queue(arm_ctx_, types::WRING_TYPE_ASQ);
+    ret = cpupkt_register_tx_queue(arm_ctx_, types::WRING_TYPE_ASQ, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 }
 
@@ -205,12 +215,13 @@ void inst_t::start()
 hal_ret_t
 inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
                  hal::pd::p4plus_to_p4_header_t* p4plus_header,
-                 uint8_t* pkt, size_t pkt_len, uint16_t dest_lif,
-                 uint8_t  qtype, uint32_t qid, uint8_t  ring_number)
+                 uint8_t* pkt, size_t pkt_len)
 {
-    return hal::pd::cpupkt_send(arm_ctx_, types::WRING_TYPE_ASQ, 0,
+    HAL_TRACE_DEBUG("fte: sending pkt to id: {}", id_);
+    return hal::pd::cpupkt_send(arm_ctx_, types::WRING_TYPE_ASQ, id_,
                                 cpu_header, p4plus_header, pkt, pkt_len,
-                                dest_lif, qtype, qid, ring_number);
+                                hal::SERVICE_LIF_CPU, CPU_ASQ_QTYPE,
+                                id_, CPU_SCHED_RING_ASQ);
 }
 
 //------------------------------------------------------------------------------

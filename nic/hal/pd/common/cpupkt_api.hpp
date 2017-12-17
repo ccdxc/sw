@@ -63,6 +63,7 @@ typedef struct cpupkt_qinst_info_s {
 typedef struct cpupkt_queue_info_s {
     types::WRingType        type;
     pd_wring_meta_t*        wring_meta;
+    uint32_t                num_qinst;
     cpupkt_qinst_info_t*    qinst_info[HAL_MAX_PROXY_FLOWS];
 } cpupkt_queue_info_t;
 

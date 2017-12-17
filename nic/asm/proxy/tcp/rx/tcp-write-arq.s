@@ -95,7 +95,7 @@ dma_cmd_descr:
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_LEAVE_IN_ARQ, TCP_DDOL_LEAVE_IN_ARQ
 dma_cmd_arq_slot:
-    CPU_ARQ_PIDX_READ_INC(r6, 0, struct s5_t1_tcp_rx_write_arq_d, pi_0)
+    CPU_ARQ_PIDX_READ_INC(r6, 0, struct s5_t1_tcp_rx_write_arq_d, pi_0, r4, r5)
     CPU_RX_ENQUEUE(r5,
                    k.to_s5_descr,
                    r6,

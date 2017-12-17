@@ -168,7 +168,6 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
                              get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
         data.u.start_d.chain_rxq_ring_size_shift = ring_size_shift;
         data.u.start_d.chain_rxq_entry_size_shift = entry_size_shift;
-        data.u.start_d.chain_rxq_ring_index_select = 0;
         HAL_TRACE_DEBUG("PROXYRCB chain_rxq_ring_indices_addr: {:#x} "
                         "chain_rxq_ring_size_shift: {} "
                         "chain_rxq_entry_size_shift: {} "

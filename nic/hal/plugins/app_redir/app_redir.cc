@@ -112,6 +112,7 @@ app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
          * For rawccb, PD will supply the correct defaults when my_txq_base is
          * left at zero.
          */
+        rawrcb.chain_rxq_ring_index_select = fte::fte_id();
         ret = app_redir_rawccb_create(rawccb);
         if (ret == HAL_RET_OK) {
             ret = app_redir_rawrcb_create(rawrcb);
@@ -152,6 +153,7 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
          * is left at zero, but for chain_txq info, appropriate value will be
          * constructed by app_redir_proxyccb_chain_txq_build().
          */
+        proxyrcb.chain_rxq_ring_index_select = fte::fte_id();
         ret = app_redir_proxyccb_chain_txq_build(flow_key, proxyccb);
         if (ret == HAL_RET_OK) {
             ret = app_redir_proxyrcb_flow_key_build(flow_key, proxyrcb);

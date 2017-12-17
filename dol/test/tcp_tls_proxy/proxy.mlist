@@ -547,12 +547,13 @@ modules:
         spec    : pkt_to_arq.testspec
         iterate :
             - flow: filter://type=IPV4
-    
+ 
     - module:
         name    : PKT_TO_ARQ_TO_UPLINK
         package : test.tcp_tls_proxy
         module  : pkt_to_arq_to_uplink
         spec    : pkt_to_arq_to_uplink.testspec
+        enable  : False
         iterate :
             - flow: filter://type=IPV4
     
@@ -563,6 +564,14 @@ modules:
         spec    : pkt_to_arq_to_uplink_v6.testspec
         iterate :
             - flow: filter://type=IPV6
+
+    - module:
+        name    : FLOWS_TO_ARQ_TO_UPLINK
+        package : test.tcp_tls_proxy
+        module  : pkt_to_arq_to_uplink
+        spec    : flows_to_arq_to_uplink.testspec
+        iterate :
+            - flow: filter://type=IPV4
 
     - module:
         name    : SYN_ACK_TO_ARQ

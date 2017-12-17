@@ -47,7 +47,7 @@ rawr_s5_chain_pindex_pre_alloc:
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN,
                           rawr_s6_chain_qidxr_pindex_post_read,
                           r_ring_indices_addr,
-                          TABLE_SIZE_256_BITS)
+                          TABLE_SIZE_512_BITS)
     nop.e
     nop
 

@@ -715,7 +715,6 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
         HAL_TRACE_ERR("fte: failed to init ctx, err={}", ret);
         return ret;
     }
-
     cpu_rxhdr_ = cpu_rxhdr;
     pkt_ = pkt;
     pkt_len_ = pkt_len;
@@ -979,15 +978,16 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         ret = hal::pd::cpupkt_send(arm_ctx,
                                    pkt_info->wring_type,
                                    pkt_info->wring_type == types::WRING_TYPE_ASQ ?
-                                   0 : pkt_info->lifq.qid,
+                                   fte_id() : pkt_info->lifq.qid,
                                    &pkt_info->cpu_header,
                                    &pkt_info->p4plus_header,
                                    pkt_info->pkt, pkt_info->pkt_len,
                                    pkt_info->lifq.lif, pkt_info->lifq.qtype,
-                                   pkt_info->lifq.qid,  pkt_info->ring_number);
+                                   pkt_info->wring_type == types::WRING_TYPE_ASQ ?
+                                   fte_id() : pkt_info->lifq.qid,  pkt_info->ring_number);
 
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte: failied to transmit pkt, ret={}", ret);
+            HAL_TRACE_ERR("fte: failed to transmit pkt, ret={}", ret);
         }
     }
 

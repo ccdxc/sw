@@ -57,14 +57,16 @@ dma_cmd_descr:
 
 dma_cmd_arqrx_slot:
     smeqb   c1, k.common_phv_debug_dol, CPU_DDOL_PKT_TO_ARQ, CPU_DDOL_PKT_TO_ARQ
-    // TODO: CPU-id should be calculated based on hash rather than 0 
-    CPU_ARQ_PIDX_READ_INC(r4, 0, d, u.write_arqrx_d.pi_0)
-    
+    // CPU-id
+    CPU_ARQ_PIDX_READ_INC(r4, k.t0_s2s_arqrx_id, d, u.write_arqrx_d.pi_0, r2, r3)
+   
+    CPU_RX_ARQ_BASE_FOR_ID(r2, k.t0_s2s_arqrx_base, k.t0_s2s_arqrx_id)
+
     // pindex will be in r4
     CPU_RX_ENQUEUE(r5,
                    k.t0_s2s_descr,
                    r4,
-                   k.t0_s2s_arqrx_base,
+                   r2,
                    ring_entry_descr_addr,
                    dma_cmd3_dma_cmd, 
                    1, 

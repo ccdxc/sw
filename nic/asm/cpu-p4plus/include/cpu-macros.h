@@ -7,7 +7,10 @@
 #include "capri-macros.h"
 
 #define CPU_PIDX_SIZE                       16
-#define CPU_PIDX_SHIFT                      3
+#define CPU_PIDX_SHIFT                      4
+
+#define CPU_ARQRX_TABLE_SIZE                (1024 * 8)
+#define CPU_ARQRX_TABLE_SHIFT               13
 
 #define NIC_ARQRX_ENTRY_SIZE                8
 #define NIC_ARQRX_ENTRY_SIZE_SHIFT          3          /* for 8B */
@@ -19,6 +22,14 @@
 
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_START CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_END CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
+
+# define CPU_RX_ARQ_BASE_FOR_ID(_dest_r, \
+                                _arqrx_base, \
+                                _k_cpu_id) \
+    add    _dest_r, r0, _k_cpu_id; \
+    sll    _dest_r, _dest_r, CPU_ARQRX_TABLE_SHIFT; \
+    add    _dest_r, _dest_r, _arqrx_base
+
 
 #define CPU_RX_ENQUEUE(_dest_r, \
                        _descr_addr, \
@@ -45,11 +56,12 @@
     phvwri  p.##_dma_cmd_prefix##_wr_fence, _wr_fence_ 
    
 
-#define CPU_ARQ_PIDX_READ_INC(_dest_r, _k_cpu_id, _d_struct, _pi0_field_name) \
-    addi    _dest_r, r0, _k_cpu_id; \
-    sll     _dest_r, _dest_r, CPU_PIDX_SHIFT; \
-    tblrdp  _dest_r, _dest_r, offsetof(_d_struct, _pi0_field_name), CPU_PIDX_SIZE; \
-    tbladd  d._pi0_field_name, 1 
+#define CPU_ARQ_PIDX_READ_INC(_dest_r, _k_cpu_id, _d_struct, _pi0_field_name, _temp1_r, _temp2_r) \
+    add     _temp1_r, r0, _k_cpu_id; \
+    sll     _temp1_r, _temp1_r, CPU_PIDX_SHIFT; \
+    tblrdp  _dest_r, _temp1_r, offsetof(_d_struct, _pi0_field_name), CPU_PIDX_SIZE; \
+    addi    _temp2_r, _dest_r, 1; \
+    tblwrp  _temp1_r, offsetof(_d_struct, _pi0_field_name), CPU_PIDX_SIZE, _temp2_r 
 
 #define CPU_ARQRX_QIDX_ADDR(_dir, _dest_r, _arqrx_qidxr_base) \
     addi   _dest_r, r0, _dir; \

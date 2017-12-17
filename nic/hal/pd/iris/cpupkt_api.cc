@@ -150,8 +150,9 @@ cpupkt_ctxt_alloc_init(void)
 }
 
 hal_ret_t
-cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, types::WRingType type, uint32_t queue_id)
+cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, int qinst_index, types::WRingType type, uint32_t queue_id)
 {
+    HAL_TRACE_DEBUG("cpupkt: creating qinst for type: {}, id: {}", type, queue_id);
     hal_ret_t           ret = HAL_RET_OK;
     if(!ctxt_qinfo || !ctxt_qinfo->wring_meta) {
         HAL_TRACE_ERR("cpupkt: Invalid ARGs to register_qinst");
@@ -166,14 +167,14 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, types::WRingType type, ui
 
     cpupkt_qinst_info_t* qinst_info = cpupkt_ctxt_qinst_info_alloc();
     if(!qinst_info) {
-        HAL_TRACE_ERR("Failed to allocate qinst_info");
+        HAL_TRACE_ERR("cpupkt: Failed to allocate qinst_info");
         return HAL_RET_NO_RESOURCE;
     }
 
     // Initialize Queue 
     ret = wring_pd_table_init(type, queue_id);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to initialize queue: {}, id: {}, ret: {}",
+        HAL_TRACE_ERR("cpupkt: Failed to initialize queue: {}, id: {}, ret: {}",
                     type, queue_id, ret);
         return ret;
     }
@@ -182,7 +183,7 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, types::WRingType type, ui
     wring_hw_id_t base_addr = 0;
     ret = wring_pd_get_base_addr(type, queue_id, &base_addr);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get base addr for queue: {}: ret: {}", type, ret);
+        HAL_TRACE_ERR("cpupkt: Failed to get base addr for queue: {}: ret: {}", type, ret);
         return ret;
     }
 
@@ -191,7 +192,8 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, types::WRingType type, ui
     qinst_info->pc_index = 0;
     qinst_info->queue_info = ctxt_qinfo;
     cpupkt_update_slot_addr(qinst_info);
-    ctxt_qinfo->qinst_info[queue_id] = qinst_info;
+    ctxt_qinfo->qinst_info[qinst_index] = qinst_info;
+    ctxt_qinfo->num_qinst++;
 
     return HAL_RET_OK;
 }
@@ -199,6 +201,7 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, types::WRingType type, ui
 hal_ret_t 
 cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
 {
+    HAL_TRACE_DEBUG("cpupkt: register Tx Queue: type:{} id:{}", type, queue_id);
     if(!ctxt) {
         HAL_TRACE_ERR("Ctxt is null");
         return HAL_RET_INVALID_ARG;    
@@ -219,7 +222,7 @@ cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
     int index = type;
     ctxt->tx.queue[index].type = type;
     ctxt->tx.queue[index].wring_meta = meta;
-    cpupkt_register_qinst(&(ctxt->tx.queue[index]), type, queue_id);
+    cpupkt_register_qinst(&(ctxt->tx.queue[index]), queue_id, type, queue_id);
     return HAL_RET_OK;
 }
 
@@ -227,26 +230,28 @@ cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
 hal_ret_t 
 cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
 {
+    HAL_TRACE_DEBUG("cpupkt: register Rx Queue: type:{} id:{}", type, queue_id);
+
     if(!ctxt) {
-        HAL_TRACE_ERR("Ctxt is null");
+        HAL_TRACE_ERR("cpupkt:Ctxt is null");
         return HAL_RET_INVALID_ARG;    
     }
     
     if(!is_cpu_rx_queue(type)) {
-        HAL_TRACE_ERR("Queue is not a valid cpu queue: {}", type);
+        HAL_TRACE_ERR("cpupkt: Queue is not a valid cpu queue: {}", type);
         return HAL_RET_INVALID_ARG;    
     }
 
     // Verify if the queeue is already registered
     for(uint32_t i = 0; i< ctxt->rx.num_queues; i++) {
         if(ctxt->rx.queue[i].type == type) {
-            HAL_TRACE_DEBUG("Queue is already added: {}", type);
+            HAL_TRACE_DEBUG("cpupkt:Queue is already added: {}", type);
             return HAL_RET_OK;
         }
     }
     
     if(ctxt->rx.num_queues == MAX_CPU_PKT_QUEUES) {
-        HAL_TRACE_ERR("Max queues registered");
+        HAL_TRACE_ERR("cpupkt:Max queues registered");
         return HAL_RET_NO_RESOURCE;
     }
 
@@ -259,7 +264,7 @@ cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
     int index = ctxt->rx.num_queues;
     ctxt->rx.queue[index].type = type;
     ctxt->rx.queue[index].wring_meta = meta;
-    cpupkt_register_qinst(&(ctxt->rx.queue[index]), type, queue_id);
+    cpupkt_register_qinst(&(ctxt->rx.queue[index]), ctxt->rx.queue[index].num_qinst, type, queue_id);
     ctxt->rx.num_queues++;
     return HAL_RET_OK;
 }
@@ -267,12 +272,13 @@ cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
 hal_ret_t 
 cpupkt_unregister_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
 {
+    HAL_TRACE_DEBUG("cpupkt: unregister Tx Queue: type:{} id:{}", type, queue_id);
+    
     if(!ctxt) {
         HAL_TRACE_ERR("Ctxt is null");
         return HAL_RET_INVALID_ARG;
     }
 
-    HAL_TRACE_DEBUG("cpupkt: Unregister TX queue type: {} inst: {}", type, queue_id);
     // in Tx case, queue info is indexed based on type for faster lookup.
     int index = type;
     ctxt->tx.queue[index].type = types::WRING_TYPE_NONE;
@@ -319,8 +325,8 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
             continue;
         }
         
-        HAL_TRACE_DEBUG("cpupkt: Received valid data: queue: {}, pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
-                        ctxt->rx.queue[i].type, qinst_info->pc_index, qinst_info->pc_index_addr, value, descr_addr);
+        HAL_TRACE_DEBUG("cpupkt: Received valid data: queue: {}, qid: {} pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
+                        ctxt->rx.queue[i].type, qinst_info->queue_id, qinst_info->pc_index, qinst_info->pc_index_addr, value, descr_addr);
         // get the descriptor
         pd_descr_aol_t  descr = {0};
         if(!p4plus_hbm_read(descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
@@ -438,7 +444,7 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t q
     }
     cpupkt_qinst_info_t* qinst_info = ctxt->tx.queue[type].qinst_info[queue_id];
     if(!qinst_info) {
-        HAL_TRACE_ERR("cpupkt: qinst is not registered");
+        HAL_TRACE_ERR("cpupkt: qinst for type: {} qid: {} is not registered", type, queue_id);
         return HAL_RET_QUEUE_NOT_FOUND;
     }
     HAL_TRACE_DEBUG("Programming send queue: addr: {:#x} value: {:#x}",

@@ -64,11 +64,11 @@ void fte_start(uint8_t fte_id);
 // ***Should be called from FTE thread***
 hal_ret_t fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
                        hal::pd::p4plus_to_p4_header_t* p4plus_header,
-                       uint8_t* pkt, size_t pkt_len,
-                       uint16_t dest_lif = hal::SERVICE_LIF_CPU,
-                       uint8_t  qtype = CPU_ASQ_QTYPE,
-                       uint32_t qid = CPU_ASQ_QID,
-                       uint8_t  ring_number = CPU_SCHED_RING_ASQ);
+                       uint8_t* pkt, size_t pkt_len);
+                       
+// Get fte_id
+// ***Should be called from FTE thread***
+uint8_t fte_id();
 
 // Asynchronouly executes the fn in the specified fte thread,
 // If the softq is full, it blocks until a slot is empty.

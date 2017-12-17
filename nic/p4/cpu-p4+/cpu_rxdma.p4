@@ -130,7 +130,8 @@ header_type common_t0_s2s_phv_t {
 	    arqrx_base              : 32;
         arqrx_pindex            : 16;
         payload_len             : 16;
-        hash                    : 32;
+        hash                    : 24;
+        arqrx_id                : 8;
     }
 }
 
@@ -331,6 +332,7 @@ action write_arqrx(pi_0, pi_1, pi_2) {
     modify_field(t0_s2s_scratch.arqrx_base, t0_s2s.arqrx_base);
     modify_field(t0_s2s_scratch.payload_len, t0_s2s.payload_len);
     modify_field(t0_s2s_scratch.hash, t0_s2s.hash);
+    modify_field(t0_s2s_scratch.arqrx_id, t0_s2s.arqrx_id);
 
     // from ki global
     GENERATE_GLOBAL_K

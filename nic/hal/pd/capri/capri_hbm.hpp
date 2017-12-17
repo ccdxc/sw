@@ -80,6 +80,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_CPU_DESCR          "cpu-descriptor"
 #define CAPRI_HBM_REG_CPU_PAGE           "cpu-page"
 #define CAPRI_HBM_REG_ARQRX_QIDXR        "arqrx-qidxr"
+#define CAPRI_CPU_HASH_MASK              "cpu_hash_mask"
+#define CAPRI_CPU_MAX_ARQID             "cpu_max_arqid"
 #define CAPRI_HBM_REG_TXS_SCHEDULER      "tx-scheduler"
 #define CAPRI_HBM_REG_APP_REDIR_RAWC     "app-redir-rawc"
 #define CAPRI_HBM_REG_APP_REDIR_PROXYR   "app-redir-proxyr"
