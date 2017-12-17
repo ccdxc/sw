@@ -2031,7 +2031,8 @@ class capri_parser:
         #deparser constructs packet. Case: GSO)
         for name, hdr in self.be.h.p4_header_instances.items():
             if hdr.metadata:
-                if 'gso_csum_header' in hdr._parsed_pragmas and self.d == xgress.INGRESS:
+                if 'gso_csum_header' in hdr._parsed_pragmas and \
+                    self.be.checksum.IsHdrInGsoCsumCompute(name, self.d):
                     hf_name = hdr.name + '.gso'
                     cf = self.be.pa.get_field(hf_name, self.d)
                     assert cf and cf.is_hv, pdb.set_trace()

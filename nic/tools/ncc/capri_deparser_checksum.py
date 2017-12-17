@@ -550,7 +550,7 @@ class DeParserGsoCalField:
         self.dstField              = dstField
         self.hdr_valid             = -1
         self.hdrfld_slot           = -1
-        self.csum_field_name       = '' # p4 Csum field name.
+        self.csum_hfield_name      = '' # p4 Csum header.field name.
         self.csum_field_ohi_slot   = -1 # Csum field location inside packet.
         self.gso_csum_result_fld_name = '' # Csum result variable name located in PHV
         self.gso_csum_result_phv   = -1 # phv_bit# of parser computed csum result
@@ -578,18 +578,15 @@ class DeParserGsoCalField:
         else:
             assert(0), pdb.set_trace()
 
-        #Check all headers and header with pragma 'gso_checksum_offset' will indicate
-        #p4 field name that specifies csum field location inside packet.
-
-        for hdr_name, hdr in self.be.h.p4_header_instances.items():
-            if 'gso_checksum_offset' in hdr._parsed_pragmas:
-                self.csum_field_name = hdr._parsed_pragmas['gso_checksum_offset'].keys()[0]
-                break
+        if 'gso_checksum_offset' in \
+            self.P4FieldListCalculation._parsed_pragmas['checksum']:
+            self.csum_hfield_name = self.P4FieldListCalculation._parsed_pragmas\
+                                                 ['checksum']['gso_checksum_offset'].keys()[0]
 
         assert(self.P4FieldListCalculation != None)
         assert(self.P4FieldListCalculation.algorithm == 'gso')
         assert(self.P4FieldListCalculation.output_width == 16)
-        assert(self.csum_field_name != '')
+        assert(self.csum_hfield_name != '')
         assert(self.payload_checksum)
 
 
@@ -623,7 +620,7 @@ class DeParserGsoCalField:
         log_str += '    HvBit %d\n' % self.hdr_valid
         log_str += '    HdrFld %d\n' % self.hdrfld_slot
         log_str += '    Gso Offset ( %s ) Loaded into Ohi %d\n' % \
-                        (self.csum_field_name, self.csum_field_ohi_slot)
+                        (self.csum_hfield_name, self.csum_field_ohi_slot)
         log_str += '    Gso Csum result ( %s ) captured @ phv %d\n' % \
                         (self.gso_csum_result_fld_name, self.gso_csum_result_phv)
         return log_str
@@ -640,6 +637,7 @@ class DeParserGsoCalField:
         dpr_rstr['source_oft']['value'] = str(self.csum_field_ohi_slot)
         dpp_rstr['_modified'] = True
         dpr_rstr['_modified'] = True
+
         dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_ingress_rw_phv_info[%d]' % (self.hdr_valid)
         dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
         dpr_rstr['enable']['value'] = str(1)

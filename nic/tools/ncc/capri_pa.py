@@ -519,7 +519,7 @@ class capri_flit:
         # a best fit (for now)
         #pdb.set_trace()
         if location >= 0:
-            assert location >= self.base_phv_bit and location < (self.base_phv_bit+self.fsize)
+            assert location >= self.base_phv_bit and location < (self.base_phv_bit+self.fsize), pdb.set_trace()
             assert (location+csize) < (self.base_phv_bit+self.fsize)
             floc = location - self.base_phv_bit
         else:
@@ -1659,7 +1659,8 @@ class capri_gress_pa:
             # GSO Final Csum computed value (using partially computed csum) captured in this header.
             # capri_parser expects this 16b csum to be first 16b in any 512b PHV flit.
             gso_phv_start_bit = self.pa.be.hw_model['phv']['gso_csum_phv_start']
-            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_gso_csum_hdr) * 8),\
+            gso_flit = self.flits[gso_phv_start_bit / self.pa.be.hw_model['parser']['flit_size']]
+            phv_bit = gso_flit.flit_chunk_alloc((get_header_size(self.capri_gso_csum_hdr) * 8),\
                                              gso_phv_start_bit, 0, 0, 1, False)
             assert phv_bit == gso_phv_start_bit, pdb.set_trace()
             self.assign_phv_to_hdr_flds(flit, self.capri_gso_csum_hdr, phv_bit)
@@ -2572,7 +2573,8 @@ class capri_pa:
         self.hdr_unions = OrderedDict() # {hdr: (direction, [hdrs_in_union], destination)}
         self.gress_pa = [capri_gress_pa(self, d) for d in xgress]
         self.dprsr_len_hdr = None
-        self.gso_csum_hdr = None
+        self.ig_gso_csum_hdr = None
+        self.eg_gso_csum_hdr = None
 
     def initialize(self):
         for gress_pa in self.gress_pa:
@@ -2615,11 +2617,13 @@ class capri_pa:
                 #For GSO checksum, allocate HV to enable/disable GSO
                 #csum result into packet.
                 if 'gso_csum_header' in hdr._parsed_pragmas:
-                    self.gso_csum_hdr = hdr
                     for d in xgress:
-                        if d == xgress.INGRESS:
-                            if self.be.checksum.IsHdrInGsoCsumCompute(name):
-                                self.allocate_gso_csum_hv_field(name, d)
+                        if self.be.checksum.IsHdrInGsoCsumCompute(name, d):
+                            self.allocate_gso_csum_hv_field(name, d)
+                            if d == xgress.INGRESS:
+                                self.ig_gso_csum_hdr = hdr
+                            if d == xgress.EGRESS:
+                                self.eg_gso_csum_hdr = hdr
 
         #Allocate field for payload len.
         for d in xgress:
@@ -2682,8 +2686,8 @@ class capri_pa:
             self.gress_pa[xgress.INGRESS].capri_deparser_len_hdr = self.dprsr_len_hdr
             self.gress_pa[xgress.EGRESS].capri_deparser_len_hdr = self.dprsr_len_hdr
 
-        if self.gso_csum_hdr != None:
-            for p4f in self.gso_csum_hdr.fields:
+        if self.ig_gso_csum_hdr != None:
+            for p4f in self.ig_gso_csum_hdr.fields:
                 cf = self.get_field(get_hfname(p4f), xgress.INGRESS)
                 if not cf:
                     cf = self.allocate_field(p4f, xgress.INGRESS)
@@ -2694,8 +2698,21 @@ class capri_pa:
                     ecf = self.allocate_field(p4f, xgress.EGRESS)
                 ecf.is_ohi = False
                 ecf.is_intrinsic = False
-            self.gress_pa[xgress.INGRESS].capri_gso_csum_hdr = self.gso_csum_hdr
-            self.gress_pa[xgress.EGRESS].capri_gso_csum_hdr = self.gso_csum_hdr
+            self.gress_pa[xgress.INGRESS].capri_gso_csum_hdr = self.ig_gso_csum_hdr
+
+        if self.eg_gso_csum_hdr != None:
+            for p4f in self.eg_gso_csum_hdr.fields:
+                cf = self.get_field(get_hfname(p4f), xgress.INGRESS)
+                if not cf:
+                    cf = self.allocate_field(p4f, xgress.INGRESS)
+                cf.is_ohi = False
+                cf.is_intrinsic = False
+                ecf = self.get_field(get_hfname(p4f), xgress.EGRESS)
+                if not ecf:
+                    ecf = self.allocate_field(p4f, xgress.EGRESS)
+                ecf.is_ohi = False
+                ecf.is_intrinsic = False
+            self.gress_pa[xgress.EGRESS].capri_gso_csum_hdr = self.eg_gso_csum_hdr
 
         # Add all the p4 fields to respective phv allocators based on direction
         egress_i2e_fields = []
@@ -2715,7 +2732,9 @@ class capri_pa:
                     continue
             if self.dprsr_len_hdr and f.instance.name == self.dprsr_len_hdr.name:
                 continue
-            if self.gso_csum_hdr and f.instance.name == self.gso_csum_hdr.name:
+            if self.ig_gso_csum_hdr and f.instance.name == self.ig_gso_csum_hdr.name:
+                continue
+            if self.eg_gso_csum_hdr and f.instance.name == self.eg_gso_csum_hdr.name:
                 continue
             if f.instance.name == 'capri_p4_intrinsic':
                 continue

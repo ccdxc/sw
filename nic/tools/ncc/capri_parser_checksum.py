@@ -249,6 +249,12 @@ class ParserCsumProfile:
     def CsumProfileCsumPhvFlitGet(self):
         return self.phv_csum_flit_num
 
+    def CsumProfileCsum8bSet(self, csum_8b):
+        self.csum_8b = csum_8b
+
+    def CsumProfileCsum8bGet(self):
+        return self.csum_8b
+
     def ConfigGenerate(self, profile):
         profile['len_mask']['value']       = str(self.len_mask)
         profile['len_shift_left']['value'] = str(self.len_shift_left)
@@ -264,6 +270,7 @@ class ParserCsumProfile:
         profile['align']['value']          = str(self.align)
         profile['phv_csum_flit_num']['value']   = str(self.phv_csum_flit_num)
         profile['end_eop']['value']             = str(self.end_eop)
+        profile['csum_8b']['value']             = str(self.csum_8b)
         profile['_modified']               = True
 
         log_str = ''
@@ -283,6 +290,7 @@ class ParserCsumProfile:
         log_str += '        align           = %d\n' % (self.align)
         log_str += '        phv_flit_num    = %d\n' % (self.phv_csum_flit_num)
         log_str += '        end_eop         = %d\n' % (self.end_eop)
+        log_str += '        csum_8b         = %d\n' % (self.csum_8b)
         log_str += '\n'
 
         return log_str
@@ -767,9 +775,15 @@ class ParserGsoCalField:
         else:
             assert(0), pdb.set_trace()
 
+        if 'gso_checksum_offset' in \
+            self.P4FieldListCalculation._parsed_pragmas['checksum']:
+            self.csum_hfield_name = self.P4FieldListCalculation._parsed_pragmas\
+                                                 ['checksum']['gso_checksum_offset'].keys()[0]
+
         assert(self.P4FieldListCalculation != None)
         assert(self.P4FieldListCalculation.algorithm == 'gso')
         assert(self.P4FieldListCalculation.output_width == 16)
+        assert(self.csum_hfield_name != '')
         assert(self.payload_checksum)
 
     def CalculatedFieldHdrGet(self):
@@ -797,23 +811,23 @@ class ParserGsoCalField:
 
     @staticmethod
     def _build_csum_instr(sram, calfldobj, csum_instr, enable, csum_unit,\
-                          csum_profile, start_ohi_id):
+                          csum_profile, start_ohi_id, enable_csum_zero_error):
         sram['csum_inst'][csum_instr]['en']['value']        = str(enable)
         sram['csum_inst'][csum_instr]['unit_sel']['value']  = str(csum_unit)
         sram['csum_inst'][csum_instr]['prof_sel']['value']  = str(csum_profile)
         sram['csum_inst'][csum_instr]['ohi_start_sel']['value'] = str(start_ohi_id)
         phdr_en = 0 #No phdr in case of GSO
         sram['csum_inst'][csum_instr]['phdr_en']['value'] = str(phdr_en)
-        sram['csum_inst'][csum_instr]['dis_zero']['value'] = str(0)
+        sram['csum_inst'][csum_instr]['dis_zero']['value'] = str(enable_csum_zero_error)
 
         log_str = ''
         log_str += 'Csum Instruction\n'
-        log_str += '    Instruction#  %d \n'         % (csum_instr)
-        log_str += '        enable          = %d \n' % (enable)
-        log_str += '        unit_sel        = %d \n' % (csum_unit)
-        log_str += '        prof_sel        = %d \n' % (csum_profile)
-        log_str += '        ohiID_start_sel = %d \n' % (start_ohi_id)
-        log_str += '        phdr_en         = %d \n' % (phdr_en)
+        log_str += '    Instruction#  %d\n'         % (csum_instr)
+        log_str += '        enable          = %d\n' % (enable)
+        log_str += '        unit_sel        = %d\n' % (csum_unit)
+        log_str += '        prof_sel        = %d\n' % (csum_profile)
+        log_str += '        ohiID_start_sel = %d\n' % (start_ohi_id)
+        log_str += '        phdr_en         = %d\n' % (phdr_en)
         log_str += '\n'
 
         return log_str

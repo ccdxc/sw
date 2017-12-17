@@ -12,7 +12,7 @@ capri_model = {
         'flit_size' : 512, # max_size/num_flits
         'containers': {8: 640}, # {size:num} all 8 bit containers
         'wide_key_start_flit' : 2,
-        'gso_csum_phv_start' : 512, # Has to first 16b in a phv slot. 
+        'gso_csum_phv_start' : 2048, # Has to first 16b in a phv slot.
         'parser_end_off_flit_loc' : 16,  # bits 16:31 in any phv flit
     },
     'match_action': {
@@ -104,8 +104,7 @@ capri_model = {
         'dpa_src_phv' : 1,
         'dpa_src_ohi' : 2,
         'dpa_src_pkt' : 3,
-        'len_phv_start' : 512,  #Has to be first bit in 2 PHV slot (Deparser use_phv
-                                #is from this bit onwards
+        'len_phv_start' : 528,  #Has to be 16b slots in first flit phv
         'max_csum_engines' : 5,
         'dpa_start_hvb_in_phv' : 511,
         'hdrfld_info_start' : 4 #First four hdr fld can be used for special

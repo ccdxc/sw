@@ -47,15 +47,17 @@ header_type parser_csum_t {
         inner_ipv4___hdr_len               : 16;
         l4_len                             : 16;
         inner_l4_len                       : 16;
-        gso_start                          : 16;
-        gso_offset                         : 16;
+        gso_start                          : 16; // TxDMA specified start of csum-ing byte
+        gso_offset                         : 16; // TxDMA specified location of csum in packet
+        kind                               : 16; //udp options ocs header's first field
+        chksum                             : 16; //udp options ocs header's checksum field
     }
 }
 
 header_type parser_ohi_t {
     // These are write-only variables
     // Each header can have upto two variables - <hdrname>___start_off and <hdr>___hdr_len
-    // In most cases start_offset and len is computed internally whenever header is extracted 
+    // In most cases start_offset and len is computed internally whenever header is extracted
     // via OHI slots. User should define fields here only if they are written outside of header
     // extraction
     // In addition, some of the checksum  related variables can use this feature to store checksum
@@ -77,6 +79,8 @@ header_type parser_ohi_t {
         inner_l4_len                : 16;
         gso_start                   : 16;
         gso_offset                  : 16;
+        kind                        : 16; //udp options ocs header's first field
+        chksum                      : 16; //udp options ocs header's checksum field
     }
 }
 @pragma pa_parser_local
@@ -287,8 +291,6 @@ header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 
 header p4_to_p4plus_p4pt_header_t p4_to_p4plus_p4pt;
 
-@pragma gso_checksum_offset gso_offset  // Specifies which field in the p4plus_to_p4
-                                        // captures gso_offset.
 header p4plus_to_p4_header_t p4plus_to_p4;
 
 parser start {
@@ -1289,9 +1291,12 @@ parser parse_udp_option_nop {
 }
 
 @pragma xgress egress
+@pragma generic_checksum_start capri_udp_option_csum.udp_option_checksum
 parser parse_udp_option_ocs {
     extract(udp_opt_ocs);
     set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 2);
+    set_metadata(parser_csum.kind, udp_opt_ocs.kind + 0);
+    set_metadata(parser_csum.chksum, udp_opt_ocs.chksum + 0);
     return select(parser_metadata.l4_trailer) {
         0 : ingress;
         default : parse_udp_options;
@@ -1728,7 +1733,9 @@ field_list gso_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_gso_csum.gso_checksum
+@pragma checksum update_len capri_gso_csum.gso_checksum // Specifies csum result location
+@pragma checksum gso_checksum_offset p4plus_to_p4.gso_offset // Specifies csum location in packet
+@pragma checksum gress ingress
 field_list_calculation gso_checksum {
     input {
         gso_checksum_list;
@@ -1741,6 +1748,27 @@ calculated_field capri_gso_csum.gso_checksum {
 }
 
 #endif
+
+field_list udp_option_checksum_list {
+    udp_opt_ocs.kind; // Field from where csum computation starts. Should be
+                      // first field in the input list.
+                      // This field should also be included in write only ohi list.
+    payload;
+}
+
+@pragma checksum update_len capri_udp_option_csum.udp_option_checksum // Specifies csum result location
+@pragma checksum gso_checksum_offset udp_opt_ocs.chksum // Specifies csum location in packet.
+@pragma checksum gress egress
+field_list_calculation udp_option_checksum {
+    input {
+        udp_option_checksum_list;
+    }
+    algorithm : gso; //Using gso mode of computing checksum. Provide algorithm as gso
+    output_width : 16;
+}
+calculated_field capri_udp_option_csum.udp_option_checksum {
+    update udp_option_checksum;
+}
 
 parser parse_inner_udp {
     extract(inner_udp);

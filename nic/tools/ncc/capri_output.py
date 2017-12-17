@@ -1393,10 +1393,7 @@ def capri_deparser_cfg_output(deparser):
                 hf_name = hdr.name + '.trunc_pkt_len'
                 cf = deparser.be.pa.get_field(hf_name, deparser.d)
                 assert cf, pdb.set_trace()
-                len_phv_start = deparser.be.hw_model['deparser']['len_phv_start']
-                assert cf.phv_bit >= len_phv_start and \
-                       (cf.phv_bit < (len_phv_start + deparser.be.hw_model['phv']['flit_size']))
-                dpr_slot = cf.phv_bit - len_phv_start
+                dpr_slot = cf.phv_bit - deparser.be.hw_model['phv']['flit_size']
                 dpr_slot = dpr_slot / 16
                 dpp_rstr['size_val']['value'] = str(dpr_slot)
                 payload_offset_len_ohi_id = deparser.be.hw_model['parser']['ohi_threshold']
@@ -1541,10 +1538,9 @@ def capri_deparser_cfg_output(deparser):
                 csum_hv_fld_slots[csum_allocated_hv] = \
                     (start_fld, end_fld - 1, h.name)
 
-    if deparser.d == xgress.INGRESS:
-        deparser.be.checksum.GsoCsumDeParserConfigGenerate(deparser, \
-                                                           dpp_json, \
-                                                           dpr_json)
+    deparser.be.checksum.GsoCsumDeParserConfigGenerate(deparser, \
+                                                       dpp_json, \
+                                                       dpr_json)
     if deparser.d == xgress.EGRESS:
         deparser.be.checksum.CsumDeParserConfigGenerate(deparser, \
                                             csum_hv_fld_slots, dpp_json)
@@ -2706,7 +2702,7 @@ def capri_parser_output_decoders(parser):
         ['state_lkp_catchall_entry']['value'] = str(idx)
     # gso csum will be written by a separate checksum instruction, enabling it here is ok
     # even if checksum inst is not executed
-    # ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['gso_csum_en'] = True
+    ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['gso_csum_en']['value'] = str(1)
     '''
     Enable it once model is avaialble
     if parser.be.pa.gress_pa[parser.d].parser_end_off_cf:

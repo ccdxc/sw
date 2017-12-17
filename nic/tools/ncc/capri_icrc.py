@@ -1367,7 +1367,7 @@ class Icrc:
     def DeParserIcrcPayLoadLenSlotGet(self, calfldobj, eg_parser):
         assert calfldobj.icrc_update_len_field != '', pdb.set_trace()
         cf_icrc_update_len = self.be.pa.get_field(calfldobj.icrc_update_len_field, eg_parser.d)
-        dpr_variable_len_phv_start = self.be.hw_model['deparser']['len_phv_start']
+        dpr_variable_len_phv_start = self.be.hw_model['phv']['flit_size']
         pl_slot = (cf_icrc_update_len.phv_bit - dpr_variable_len_phv_start) / 16
 
         return pl_slot
