@@ -250,7 +250,7 @@ var k8sModules = map[string]types.Module{
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
 					Name:  globals.Influx,
-					Image: "$REGISTRY_URL/influxdb",
+					Image: "$REGISTRY_URL/influxdb:1.4.2",
 					Services: []*types.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Influx,
