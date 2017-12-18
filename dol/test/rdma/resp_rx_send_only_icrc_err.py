@@ -91,5 +91,11 @@ def TestCaseVerify(tc):
     return True
 
 def TestCaseTeardown(tc):
+    if (GlobalOptions.dryrun): return True
     tc.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession
+    tc.info("Setting proxy_cindex/spec_cindex equal to p_index0\n")
+    rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
+    rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
+    rs.lqp.rq.qstate.Write();
     return
