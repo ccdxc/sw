@@ -1,4 +1,4 @@
-LIBDIRS = \
+SUBDIRS = \
           nw \
           common-p4+ \
           proxy \
@@ -16,10 +16,9 @@ LIBDIRS = \
           p4pt \
           $(NULL)
 
-PGMDIRS = $(NULL)
+.PHONY: subdirs $(SUBDIRS)
 
-SUBDIRS = $(LIBDIRS) $(PGMDIRS)
+subdirs: $(SUBDIRS)
 
-TOPDIR = ..
-
-include $(TOPDIR)/make/Makefile.inc
+$(SUBDIRS):
+	$(MAKE) -C $@
