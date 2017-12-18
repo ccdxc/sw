@@ -786,10 +786,13 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, uint8_t **nvme_cm
 
   // Register the memory if LIF override is setup
   if (pdma_dst_lif_override != 0) {
+    // Add the BDF to bits 62:52 of the read_data_buf's PA to form the match address
     uint64_t match_addr = host_mem_v2p(read_data_buf) | (((uint64_t) (bdf & 0xFF)) << 52);
+    // Clear bit 63 as model sets only the BDF and not bit 63
+    match_addr &= 0x7FFFFFFFFFFFFFFFULL;
+    // Register the address to match fully
     printf("Registering address %lx \n", match_addr);
-    // TODO: Enable this call after model supports BDF in the address passed to burst_write
-    //register_mem_addr(match_addr);
+    register_mem_addr(match_addr);
   }
 
   // Get the HBM buffer for the write back data for the read command
