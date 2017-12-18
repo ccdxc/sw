@@ -878,6 +878,7 @@ static int ionic_tx_skb_sop(struct queue *q, struct sk_buff *skb)
 
 static int ionic_tx_skb_frags(struct queue *q, struct sk_buff *skb)
 {
+	struct tx_stats *stats = q_to_tx_stats(q);
 	unsigned int len_left = skb->len - skb_headlen(skb);
 	struct txq_sg_desc *sg_desc = q->head->sg_desc;
 	struct txq_sg_elem *elem = sg_desc->elems;
@@ -893,6 +894,7 @@ static int ionic_tx_skb_frags(struct queue *q, struct sk_buff *skb)
 			return -ENOMEM;
 		elem->addr = dma_addr;
 		len_left -= elem->len;
+		stats->frags++;
 	}
 
 	return 0;
@@ -1410,8 +1412,9 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 //	netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
 //	netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
 //	netdev->hw_features |= NETIF_F_RXHASH;
-//	netdev->hw_features |= NETIF_F_SG;
+	netdev->hw_features |= NETIF_F_SG;
 
+	netdev->hw_enc_features |= NETIF_F_HW_CSUM;
 //	netdev->hw_enc_features |= NETIF_F_RXCSUM | NETIF_F_HW_CSUM;
 //	netdev->hw_enc_features |= NETIF_F_TSO | NETIF_F_TSO6;
 //	netdev->hw_enc_features |= NETIF_F_TSO_ECN;

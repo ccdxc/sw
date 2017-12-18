@@ -445,6 +445,8 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 				   &qcq->stats.tx.crc32_csum);
 		debugfs_create_u64("tso", S_IRUSR, stats_dentry,
 				   &qcq->stats.tx.tso);
+		debugfs_create_u64("frags", S_IRUSR, stats_dentry,
+				   &qcq->stats.tx.frags);
 	}
 
 	if (qcq->flags & QCQ_F_RX_STATS) {

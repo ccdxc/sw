@@ -57,6 +57,7 @@ struct tx_stats {
 	u64 csum;
 	u64 crc32_csum;
 	u64 tso;
+	u64 frags;
 };
 
 struct rx_stats {
