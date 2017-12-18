@@ -563,6 +563,7 @@ class ParserCalField:
             sram['csum_inst'][csum_instr]['phdr_en']['value']   = str(phdr_en)
             sram['csum_inst'][csum_instr]['phdr_sel']['value']  = str(phdr_profile)
             sram['csum_inst'][csum_instr]['phdr_ohi_sel']['value'] = str(phdr_ohi_id)
+            sram['csum_inst'][csum_instr]['load_phdr_prof_en']['value'] = str(1)
         else:
             sram['csum_inst'][csum_instr]['phdr_en']['value'] = str(phdr_en)
 

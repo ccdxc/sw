@@ -126,7 +126,8 @@ cc_library(
         "asic/capri/design/common/gen/cap_axi_decoders.h",
         #"asic/capri/design/common/gen/cap_axi_decoders.h",
     ]  + glob(["asic/capri/model/cap_dpa/*csr.cc", "asic/capri/model/cap_dpa/*csr.h"])
-       + glob(["asic/capri/verif/apis/*.h"]),
+       + glob(["asic/capri/verif/apis/*.h"])
+       + glob(["asic/capri/model/cap_pb/*port*csr.cc", "asic/capri/model/cap_pb/*port*csr.h"]),
     includes = [
         "asic/capri/model/cap_top",
         "asic/capri/model/utils",

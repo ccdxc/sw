@@ -136,22 +136,22 @@ capri_tm_pg_params_update(uint32_t port,
 //::    for pg in range(port_info[p]["pgs"]):
                 case ${pg}:
                 {
-                    pbc_csr.cfg_account_${p}_pg_${pg}.read();
-                    pbc_csr.cfg_account_${p}_mtu_table.read();
+                    pbc_csr.port_${p}.cfg_account_pg_${pg}.read();
+                    pbc_csr.port_${p}.cfg_account_mtu_table.read();
 
                     /* Update the PG parameters */
-                    pbc_csr.cfg_account_${p}_pg_${pg}.reserved_min(pg_params->reserved_min);
-                    pbc_csr.cfg_account_${p}_pg_${pg}.xon_threshold(pg_params->xon_threshold);
-                    pbc_csr.cfg_account_${p}_pg_${pg}.headroom(pg_params->headroom);
-                    pbc_csr.cfg_account_${p}_pg_${pg}.low_limit(pg_params->low_limit);
-                    pbc_csr.cfg_account_${p}_pg_${pg}.alpha(pg_params->alpha);
+                    pbc_csr.port_${p}.cfg_account_pg_${pg}.reserved_min(pg_params->reserved_min);
+                    pbc_csr.port_${p}.cfg_account_pg_${pg}.xon_threshold(pg_params->xon_threshold);
+                    pbc_csr.port_${p}.cfg_account_pg_${pg}.headroom(pg_params->headroom);
+                    pbc_csr.port_${p}.cfg_account_pg_${pg}.low_limit(pg_params->low_limit);
+                    pbc_csr.port_${p}.cfg_account_pg_${pg}.alpha(pg_params->alpha);
 
                     /* Update the MTU in the MTU register */
-                    pbc_csr.cfg_account_${p}_mtu_table.pg${pg}(pg_params->mtu);
+                    pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(pg_params->mtu);
 
                     /* Write both registers */
-                    pbc_csr.cfg_account_${p}_pg_${pg}.write();
-                    pbc_csr.cfg_account_${p}_mtu_table.write();
+                    pbc_csr.port_${p}.cfg_account_pg_${pg}.write();
+                    pbc_csr.port_${p}.cfg_account_mtu_table.write();
                     break;
                 }
 //::    #endfor
@@ -198,8 +198,8 @@ capri_tm_tc_map_update(uint32_t port,
         case ${pinfo["enum"]}:
         {
             npgs = ${pinfo["pgs"]};
-            pbc_csr.cfg_account_${p}_tc_to_pg.read();
-            tc_map_reg_val = pbc_csr.cfg_account_${p}_tc_to_pg.table();
+            pbc_csr.port_${p}.cfg_account_tc_to_pg.read();
+            tc_map_reg_val = pbc_csr.port_${p}.cfg_account_tc_to_pg.table();
             break;
         }
 //:: #endfor
@@ -231,8 +231,8 @@ capri_tm_tc_map_update(uint32_t port,
         case ${pinfo["enum"]}:
         {
             /* Update and write the tc to PG mapping */
-            pbc_csr.cfg_account_${p}_tc_to_pg.table(tc_map_reg_val);
-            pbc_csr.cfg_account_${p}_tc_to_pg.write();
+            pbc_csr.port_${p}.cfg_account_tc_to_pg.table(tc_map_reg_val);
+            pbc_csr.port_${p}.cfg_account_tc_to_pg.write();
             break;
         }
 //:: #endfor
@@ -350,10 +350,10 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
 //::    if pinfo["l"+str(parent_level)]:
         case ${pinfo["enum"]}:
         {
-            pbc_csr.cfg_oq_${p}_arb_l${parent_level}_selection.read();
-            pbc_csr.cfg_oq_${p}_arb_l${parent_level}_strict.read();
+            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.read();
+            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.read();
 
-            strict_val = pbc_csr.cfg_oq_${p}_arb_l${parent_level}_strict.priority();
+            strict_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority();
             if (node_params->sched_type == TM_SCHED_TYPE_STRICT) {
                 strict_val |= 1<<node;
             } else {
@@ -364,20 +364,20 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
             // nodes
 //::        for parent_node in range(pinfo["l"+str(parent_level)]):
             // ${parent_node}
-            node_val = pbc_csr.cfg_oq_${p}_arb_l${parent_level}_selection.node_${parent_node}();
+            node_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}();
             if (node_params->parent_node == ${parent_node}) {
                 // Associate the current node with the parent node
                 node_val |= 1<<node;
             } else {
                 node_val &= ~(1<<node);
             }
-            pbc_csr.cfg_oq_${p}_arb_l${parent_level}_selection.node_${parent_node}(node_val);
+            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}(node_val);
 //::        #endfor
-            pbc_csr.cfg_oq_${p}_arb_l${parent_level}_strict.priority(strict_val);
+            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority(strict_val);
 
             /* Write the registers */
-            pbc_csr.cfg_oq_${p}_arb_l${parent_level}_selection.write();
-            pbc_csr.cfg_oq_${p}_arb_l${parent_level}_strict.write();
+            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.write();
+            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.write();
             break;
         }
 //::    #endif
@@ -494,10 +494,10 @@ capri_tm_init (void)
 //::    pinfo = port_info[p]
 //::    if pinfo["type"] == "uplink":
     // ${pinfo["enum"]}
-    pbc_csr.cfg_oq_${p}.read();
-    pbc_csr.cfg_oq_${p}.num_hdr_bytes(
+    pbc_csr.port_${p}.cfg_oq.read();
+    pbc_csr.port_${p}.cfg_oq.num_hdr_bytes(
         CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
-    pbc_csr.cfg_oq_${p}.write();
+    pbc_csr.port_${p}.cfg_oq.write();
 
 //::    #endif
 //:: #endfor

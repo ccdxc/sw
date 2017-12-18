@@ -493,6 +493,9 @@ class IcrcDeParserProfile:
         icrc_profile['end_adj_sub']   ['value']=str(self.end_adj_sub)
         icrc_profile['loc_adj']       ['value']=str(self.icrc_loc_adj)
         icrc_profile['loc_adj_sub']   ['value']=str(self.icrc_loc_adj_sub)
+        #Deparser now provides one bit knob to add 64 1'b transparently before
+        #start of L3 header. Set this knob for all iCRC cases.
+        icrc_profile['add_fix_mask']  ['value']=str(1)
         icrc_profile['_modified']              = True
 
     def LogGenerate(self):
@@ -914,6 +917,8 @@ class Icrc:
         #Build mask profile for invariant fields.
 
         #Fill 64bit 1's before L3 hdr.
+        #Parser has no knob to add 64 1's. Use mask field.
+        #The total mask_field count is now 6 in parser.
         fld_inst                = 0
         mask_field              = {}
         mask_field['mask_en']   = 1
@@ -1388,13 +1393,16 @@ class Icrc:
         prof_obj.IcrcProfilePhvLenSelSet(1, phv_len_slot)
         #Subtract 8 bytes from the start of L3 hdr so that
         #64 1bits are added to icrc computation.
-        prof_obj.IcrcProfileStartAdjSet(8, 1)
         prof_obj.IcrcProfileShiftLeftSet(0, 0)
         prof_obj.IcrcProfileEndAdjSet(4, 1)
         prof_obj.IcrcProfileLocAdjSet(4, 1)
+        prof_obj.IcrcProfileStartAdjSet(8, 1)
 
         #Build mask profile for invariant fields.
 
+        '''
+
+        #Deparser provides knob to add 64 1's. There is no need to use mask_field
         #Fill 64bit 1's before L3 hdr.
         fld_inst = 0
         mask_field              = {}
@@ -1406,11 +1414,12 @@ class Icrc:
         mask_field['start_sub']  = 1
         mask_field['end_sub']  = 1
         prof_obj.IcrcMaskProfileMaskFieldAdd(fld_inst, mask_field)
+        '''
 
         leading_64b_byte_len = 0
 
         l3hdr_iflds = calfldobj.L3HdrInvariantFieldsGet()
-        fld_inst = 1
+        fld_inst = 0
         span_into_next_byte = 0
         for l3hdr_ifld in l3hdr_iflds:
             mask_field              = {}

@@ -1761,7 +1761,7 @@ class Checksum:
                                        == None, pdb.set_trace()
                                 pl_calfldobj.DeParserPhdrProfileObjSet(\
                                               DeParserPhdrProfile(phdr_profile,\
-                                               pl_calfldobj.CsumPhdrTypeGet(), add_len))
+                                               pl_calfldobj.CsumPhdrTypeGet(), 0))
                             else:
                                 assert(0), pdb.set_trace()
 
