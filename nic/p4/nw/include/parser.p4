@@ -849,8 +849,8 @@ header ipv6_options_blob_t ipv6_options_blob;
 
 @pragma dont_advance_packet
 parser parse_ipv6_option_blob {
-    // ipv6_option_blob header uses ipv6_option_len as variable header len
-    // setup the ipv6_option_len = 0 and keep updating the len as options are
+    // ipv6_option_blob header uses ipv6_options_len as variable header len
+    // setup the ipv6_options_len = 0 and keep updating the len as options are
     // parsed.
     // Note1: that options are parsed using 'no_extract' state i.e. they are not
     // individually extracted to phv/ohi (but hv bits will be set)
@@ -1799,8 +1799,8 @@ header ipv6_options_blob_t inner_ipv6_options_blob;
 
 @pragma dont_advance_packet
 parser parse_inner_ipv6_option_blob {
-    // inner_ipv6_option_blob header uses inner_ipv6_option_len as variable header len
-    // setup the inner_ipv6_option_len = 0 and keep updating the len as options are
+    // inner_ipv6_option_blob header uses inner_ipv6_options_len as variable header len
+    // setup the inner_ipv6_options_len = 0 and keep updating the len as options are
     // parsed.
     // Note1: that options are parsed using 'no_extract' state i.e. they are not
     // individually extracted to phv/ohi (but hv bits will be set)

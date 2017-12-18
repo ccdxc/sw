@@ -1231,6 +1231,16 @@ action ip_normalization_checks() {
     // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
     // ip_normalize_ttl
     //
+    if (control_metadata.uplink == FALSE and l4_metadata.ip_normalize_ttl != 0 and
+        flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
+        tunnel_metadata.tunnel_terminate == FALSE) {
+        modify_field(ipv4.ttl, l4_metadata.ip_normalize_ttl);
+    }
+    if (control_metadata.uplink == FALSE and l4_metadata.ip_normalize_ttl != 0 and
+        flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
+        tunnel_metadata.tunnel_terminate == TRUE) {
+        modify_field(inner_ipv4.ttl, l4_metadata.ip_normalize_ttl);
+    }
 
     }
     if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6)
@@ -1289,6 +1299,20 @@ action ip_normalization_checks() {
             subtract(ipv4.totalLen, ipv4.totalLen, l3_metadata.inner_ipv6_options_len);
         }
 
+        // IP Normalize TTL: If the configured value is non-zero then every
+        // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
+        // ip_normalize_ttl
+        //
+        if (control_metadata.uplink == FALSE and l4_metadata.ip_normalize_ttl != 0 and
+            flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
+            tunnel_metadata.tunnel_terminate == FALSE) {
+            modify_field(ipv6.hopLimit, l4_metadata.ip_normalize_ttl);
+        }
+        if (control_metadata.uplink == FALSE and l4_metadata.ip_normalize_ttl != 0 and
+            flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
+            tunnel_metadata.tunnel_terminate == TRUE) {
+            modify_field(inner_ipv6.hopLimit, l4_metadata.ip_normalize_ttl);
+        }
     }
 
 }

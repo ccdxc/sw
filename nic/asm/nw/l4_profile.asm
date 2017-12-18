@@ -94,19 +94,25 @@ f_ip_normalization_optimal:
 lb_ipv4_normalizaiton_optimal:
   smneb       c1, k.flow_lkp_metadata_ipv4_flags, (IP_FLAGS_RSVD_MASK | IP_FLAGS_DF_MASK), 0
   slt.!c1     c1, 5, k.flow_lkp_metadata_ipv4_hlen
-  sne.!c1     c1, d.u.l4_profile_d.ip_normalize_ttl, 0
   add.c2      r1, k.ipv4_totalLen, 18 // c2 has vlan_tag_valid to TRUE
   add.!c2     r1, k.ipv4_totalLen, 14
   sle.!c1     c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  jr.!c1      r7  // IPv4 Good Packet
-  b.c1        lb_ipv4_normalizaiton // bad packet
+  seq         c3, k.control_metadata_uplink, FALSE
+  sne.c3      c3, d.u.l4_profile_d.ip_normalize_ttl, r0
+  sne.c3      c3, k.flow_lkp_metadata_ip_ttl, d.u.l4_profile_d.ip_normalize_ttl
+  jrcf        ![c1 | c3], r7
+  bcf         [c1 | c3], lb_ipv4_normalizaiton // bad packet
   nop
 
 // c1 has ipv6_options_blob_valid == TRUE
 lb_ipv6_normalization_optimal:
+  seq         c3, k.control_metadata_uplink, FALSE
+  sne.c3      c3, d.u.l4_profile_d.ip_normalize_ttl, r0
+  sne.c3      c3, k.flow_lkp_metadata_ip_ttl, d.u.l4_profile_d.ip_normalize_ttl
+  jrcf        ![c1 | c3], r7
   jr.!c1      r7
-  b.c1        lb_ipv6_normalization
+  bcf         [c1 | c3], lb_ipv6_normalization // bad packet
   nop
   // Good packet end
 
@@ -242,7 +248,17 @@ lb_ipv4_norm_invalid_length_tunnel_terminate:
   nop
 
 lb_ipv4_norm_ttl:
-  jr r7
+  jr.c4       r7
+  seq         c1, k.control_metadata_uplink, FALSE
+  sne.c1      c1, k.flow_lkp_metadata_ip_ttl, d.u.l4_profile_d.ip_normalize_ttl
+  jr.!c1      r7
+  nop
+  // We are here means we have to edit the packet based on tunnel termination
+  // There is no DROP option for ttl normalization.
+  phvwr.c7    p.inner_ipv4_ttl, d.u.l4_profile_d.ip_normalize_ttl
+  phvwr.!c7   p.ipv4_ttl, d.u.l4_profile_d.ip_normalize_ttl
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
+  jr          r7
   nop
 
 
@@ -289,7 +305,17 @@ lb_ipv6_norm_options_tunnel_terminate:
   
   
 lb_ipv6_norm_hop_limit:
-  jr r7
+  jr.c4       r7
+  seq         c1, k.control_metadata_uplink, FALSE
+  sne.c1      c1, k.flow_lkp_metadata_ip_ttl, d.u.l4_profile_d.ip_normalize_ttl
+  jr.!c1      r7
+  nop
+  // We are here means we have to edit the packet based on tunnel termination
+  // There is no DROP option for ttl normalization.
+  phvwr.c7    p.inner_ipv6_hopLimit, d.u.l4_profile_d.ip_normalize_ttl
+  phvwr.!c7   p.ipv6_hopLimit, d.u.l4_profile_d.ip_normalize_ttl
+  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
+  jr          r7
   nop
 
 .align
