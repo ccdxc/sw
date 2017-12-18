@@ -1,6 +1,7 @@
 // Compression DOLs.
 #include "dol/test/storage/compression.hpp"
 #include "dol/test/storage/compression_test.hpp"
+#include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/utils.hpp"
 #include "nic/asic/capri/design/common/cap_addr_define.h"
 #include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
@@ -559,6 +560,106 @@ int compress_max_features() {
   spec.status_is_hbm = 1;
 
   return run_cp_test(&spec);
+}
+
+// Run the compression output through sequencer.
+int compress_output_through_sequencer() {
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+
+  printf("Starting testcase compress_output_through_sequencer\n");
+  d.cmd = 5;
+  d.src = datain_buf_pa;
+  d.dst = hbm_dataout_buf_pa;
+  write_mem(hbm_dataout_buf_pa, all_zeros, kDataoutBufSize);
+  bzero(status_buf, kStatusBufSize);
+  write_mem(hbm_status_buf_pa, all_zeros, kStatusBufSize);
+  d.input_len = 4096;
+  d.expected_len = 4096 - 8;
+  d.status_addr = hbm_status_buf_pa;
+
+  // Lets divide the output into 4 buffers of variable size.
+  // 199, 537, 1123, 2237
+  cp_sq_ent_sgl_t seq_sgl;
+  bzero(&seq_sgl, sizeof(seq_sgl));
+  seq_sgl.status_host_pa = status_buf_pa;
+  seq_sgl.addr[0] = dataout_buf_pa;
+  seq_sgl.len[0] = 199;
+  seq_sgl.addr[1] = dataout_buf_pa + 199;
+  seq_sgl.len[1] = 537;
+  seq_sgl.addr[2] = dataout_buf_pa + 199 + 537;
+  seq_sgl.len[2] = 1123;
+  seq_sgl.addr[3] = dataout_buf_pa + 199 + 537 + 1123;
+  seq_sgl.len[3] = 2237;
+  write_mem(hbm_sgl_buf_pa, (uint8_t *)&seq_sgl, sizeof(seq_sgl));
+
+  cp_seq_params_t seq_params;
+  bzero(&seq_params, sizeof(seq_params));
+  seq_params.seq_ent.status_hbm_pa = hbm_status_buf_pa;
+  seq_params.seq_ent.src_hbm_pa = hbm_dataout_buf_pa;
+  seq_params.seq_ent.sgl_pa = hbm_sgl_buf_pa;
+  seq_params.seq_ent.intr_pa = status_buf_pa + 1024;
+  seq_params.seq_ent.intr_data = 0x11223344;
+  seq_params.seq_ent.status_len = sizeof(cp_status_sha512_t);
+  seq_params.seq_ent.status_dma_en = 1;
+  seq_params.seq_ent.intr_en = 1;
+  seq_params.seq_index = 0;
+  if (test_setup_cp_seq_ent(&seq_params) != 0) {
+    printf("cp_seq_ent failed\n");
+    return -1;
+  }
+
+  d.doorbell_addr = seq_params.ret_doorbell_addr;
+  d.doorbell_data = seq_params.ret_doorbell_data;
+  d.cmd_bits.doorbell_on = 1;
+  d.cmd_bits.sha_en = 1;
+  d.cmd_bits.cksum_en = 1;
+  cp_desc_t *dst_d = (cp_desc_t *)queue_mem;
+  bcopy(&d, &dst_d[queue_index], sizeof(d));
+  queue_index++;
+  if (queue_index == 4096)
+    queue_index = 0;
+  write_reg(cfg_q_pd_idx, queue_index);
+  step_doorbell(seq_params.ret_doorbell_addr, seq_params.ret_doorbell_data);
+
+  if (!status_poll(false)) {
+    printf("ERROR: Compression status never came\n");
+    return -1;
+  }
+  cp_status_sha512_t *st = (cp_status_sha512_t *)status_buf;
+  if (!st->valid) {
+    printf("ERROR: Compression valid bit not set\n");
+    return -1;
+  }
+  if (st->err) {
+    printf("ERROR: Compression generated err = 0x%x\n", st->err);
+    return -1;
+  }
+  uint16_t expected_data_len = kCompressedDataSize + 8;
+  if (st->output_data_len != expected_data_len) {
+    printf("ERROR: output data len mismatch, expected %u, received %u\n",
+           expected_data_len, st->output_data_len);
+    return -1;
+  }
+  uint8_t *data_start = ((uint8_t *)dataout_buf) + 8;
+  if (bcmp(data_start, compressed_data, kCompressedDataSize) != 0) {
+    printf("ERROR: compressed data does not match with expected output.\n");
+    return -1;
+  }
+
+  int sha_len = 64;
+  uint8_t *expected_sha = sha512_post;
+  if (bcmp(st->sha512, expected_sha, sha_len) != 0) {
+    printf("ERROR: SHA mismatch.\nExpected:\n");
+    utils::dump(expected_sha, sha_len);
+    printf("Received:\n");
+    utils::dump(st->sha512, sha_len);
+    return -1;
+  }
+  
+  printf("testcase compress_output_through_sequencer passed\n");
+
+  return 0;
 }
 
 }  // namespace tests

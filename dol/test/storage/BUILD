@@ -72,6 +72,7 @@ cc_library(
         "compression_test.hpp",
         "compression_data.cc",
         "utils.hpp",
+        "tests.hpp",
     ],
     hdrs = ["compression.hpp"],
     copts = [ "-g" ],

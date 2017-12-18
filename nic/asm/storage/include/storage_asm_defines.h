@@ -577,15 +577,15 @@
    add		r4, r0, _len;						\
    seq		c1, _len, 0;						\
    addi.c1	r4, r0, 65536;						\
-   sle		c2, r4, r6;						\
+   sle		c2, r6, r4;						\
    add.c2	r4, r0, r6;						\
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r7, r4, 0, 0, 		\
                      _dma_cmd_ptr_src)					\
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, _addr, r4, 0, 0,		\
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, _addr, r4, 0, 0,		\
                      _dma_cmd_ptr_dst)					\
    add		r7, r7, r4;						\
    sub		r6, r6, r4;						\
-   bcf		![c2], _branch_instr;					\
+   bcf		[c2], _branch_instr;					\
    nop;									\
 
 #endif     // STORAGE_ASM_DEFINES_H

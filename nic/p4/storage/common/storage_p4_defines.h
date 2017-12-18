@@ -1019,9 +1019,9 @@ header_type seq_comp_sgl_t {
 // Compression status metadata
 header_type seq_comp_status_t {
   fields {
-    rsvd2		: 1;	// Reserved
-    err			: 3;	// Error status (0: success: >0: failure)
     rsvd1		: 12;	// Reserved
+    err			: 3;	// Error status (0: success: >0: failure)
+    rsvd2		: 1;	// Reserved
     data_len		: 16;	// Output bits
     rsvd3		: 32;	// Reserved
   }

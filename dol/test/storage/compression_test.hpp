@@ -63,6 +63,7 @@ int compress_adler_sha256();
 int compress_crc_sha512();
 int compress_doorbell_odata();
 int compress_max_features();
+int compress_output_through_sequencer();
 
 int decompress_host_flat();
 int decompress_hbm_flat();

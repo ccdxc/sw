@@ -57,7 +57,7 @@ check_intr:
    nop
 
    // Raise interrupt based on addr/data provided in descriptor
-   PCI_RAISE_INTERRUPT(dma_p2m_3)
+   PCI_RAISE_INTERRUPT(dma_p2m_11)
 
 tbl_load:
    // Setup the start and end DMA pointers

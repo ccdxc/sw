@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <functional>
+#include <vector>
 
 namespace tests {
 
@@ -32,7 +33,8 @@ typedef struct cq_sq_ent_sgl {
   uint64_t status_host_pa;	// Status address in host. Destination for the PDMA of status.
   uint64_t addr[4];		// Destination Address in the SGL for compression data PDMA
   uint16_t len[4];		// Length of the SGL element for compression data PDMA
-} cp_esq_ent_sgl_t;
+  uint64_t pad[2];
+} cp_sq_ent_sgl_t;
 
 typedef struct cp_seq_params {
   cp_seq_entry_t seq_ent;	// Compression sequencer descriptor

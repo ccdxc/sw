@@ -2028,7 +2028,7 @@ action pvm_roce_sq_wqe_process(wrid, op_type, complete_notify, fence,
  *                         and save the other fields into I vector.
  *****************************************************************************/
 
-@pragma little_endian next_db_addr next_db_data status_addr data_addr sgl_addr intr_addr intr_data status_len data_len
+//@pragma little_endian next_db_addr next_db_data status_addr data_addr sgl_addr intr_addr intr_data status_len data_len
 action seq_comp_desc_handler(next_db_addr, next_db_data, status_addr, data_addr, 
                              sgl_addr, intr_addr, intr_data, status_len, data_len,
                              data_len_from_desc, status_dma_en, next_db_en, intr_en) {

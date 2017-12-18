@@ -17,7 +17,7 @@ struct phv_ p;
 storage_tx_seq_comp_sgl_handler_start:
 
    // Check if status needs to be DMAed
-   seq		c1, STORAGE_KIVEC5_STATUS_DMA_EN, 0
+   seq		c1, STORAGE_KIVEC5_STATUS_DMA_EN, 1
    bcf		![c1], process_data
    nop
 
@@ -26,7 +26,7 @@ storage_tx_seq_comp_sgl_handler_start:
    // Destination is specified in the SGL in the D Vector
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, STORAGE_KIVEC5_STATUS_ADDR, 
                      STORAGE_KIVEC5_STATUS_LEN, 0, 0, dma_m2m_1)
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.status_addr, 
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_addr, 
                      STORAGE_KIVEC5_STATUS_LEN, 0, 0, dma_m2m_2)
 
 process_data:
@@ -48,7 +48,7 @@ process_data:
    COMP_SGL_DMA(dma_m2m_3, dma_m2m_4, d.addr0, d.len0, complete_dma)
    COMP_SGL_DMA(dma_m2m_5, dma_m2m_6, d.addr1, d.len1, complete_dma)
    COMP_SGL_DMA(dma_m2m_7, dma_m2m_8, d.addr2, d.len2, complete_dma)
-   COMP_SGL_DMA(dma_m2m_9, dma_m2m_10, d.addr0, d.len0, complete_dma)
+   COMP_SGL_DMA(dma_m2m_9, dma_m2m_10, d.addr3, d.len3, complete_dma)
 
 complete_dma:
    // Setup the start and end DMA pointers

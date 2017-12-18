@@ -101,6 +101,7 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_crc_sha512, "Compress with CRC32 and SHA512", false},
   {&tests::compress_doorbell_odata, "Compress with DMA end writes", false},
   {&tests::compress_max_features, "Compress with multiple features", false},
+  {&tests::compress_output_through_sequencer, "Compress with out through seq", false},
   {&tests::decompress_host_flat, "Decompress Host->Host flat buf", false},
   {&tests::decompress_hbm_flat, "Decompress HBM->HBM flat buf", false},
   {&tests::decompress_host_to_hbm_flat, "Decompress Host->HBM flat buf", false},
@@ -179,6 +180,7 @@ int main(int argc, char**argv) {
   printf("Going to init compression\n");
   tests::compression_init();
   printf("Compression configuration completed \n");
+
   printf("Going to init decompression\n");
   tests::decompression_init();
   printf("Decompression configuration completed \n");
