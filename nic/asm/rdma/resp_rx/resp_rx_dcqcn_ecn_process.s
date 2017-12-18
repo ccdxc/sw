@@ -1,7 +1,8 @@
 #include "capri.h"
 #include "resp_rx.h"
-#include "rqcb.h"
+#include "sqcb.h"
 #include "common_phv.h"
+#include "common_defines.h"
 
 struct resp_rx_phv_t p;
 struct dcqcn_cb_t d;
@@ -29,7 +30,7 @@ resp_rx_dcqcn_ecn_process:
     tblwr  d.last_cnp_timestamp, CUR_TIMESTAMP
     tblwr  d.partition_key, k.args.p_key  
     // Trigger local doorbell to TXDMA CNP ring.
-    DOORBELL_INC_PINDEX(k.global.lif, k.global.qtype, k.global.qid, CNP_RING_ID, DB_ADDR, DB_DATA)
+    DOORBELL_INC_PINDEX(k.global.lif,  Q_TYPE_RDMA_SQ, k.global.qid, CNP_RING_ID, DB_ADDR, DB_DATA)
 
 exit:
     CAPRI_SET_TABLE_3_VALID(0)

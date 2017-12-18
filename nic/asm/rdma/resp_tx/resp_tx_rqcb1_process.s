@@ -15,7 +15,6 @@ struct resp_tx_rqcb1_process_k_t k;
 
 %%
     .param      resp_tx_rsqwqe_process
-    .param      resp_tx_dcqcn_enforce_process
 
 resp_tx_rqcb1_process:
 

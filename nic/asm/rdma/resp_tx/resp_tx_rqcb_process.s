@@ -10,7 +10,6 @@ struct rqcb0_t d;
 struct rdma_stage0_table_k k;
 
 #define RQCB_TO_RQCB1_T struct resp_tx_rqcb_to_rqcb1_info_t
-#define RQCB_TO_RQCB1_CNP_T struct resp_tx_rqcb_to_cnp_info_t
 #define ACK_INFO_T struct resp_tx_rqcb_to_ack_info_t
 #define BT_ADJUST_INFO_T struct resp_tx_rsq_backtrack_adjust_info_t 
 #define TO_STAGE_T struct resp_tx_to_stage_t
@@ -50,19 +49,6 @@ resp_tx_rqcb_process:
 
     CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r4)
     //TODO: migrate to efficient way of demuxing work (based on r7)
-
-    // Process CNP packet ring first as its the highest priority.
-    seq            c1, CNP_C_INDEX, CNP_P_INDEX
-    bcf            [c1], check_backtrack_q
-
-    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_CNP_T, new_c_index, CNP_P_INDEX)
-    add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES  #RQCB1 address
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rqcb1_cnp_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_P)
-    
-    nop.e
-    nop
 
 check_backtrack_q:
     seq         c1, RSQ_BT_C_INDEX, RSQ_BT_P_INDEX
@@ -141,6 +127,10 @@ check_ack_nak:
     nop
 
 ack_nak:
+    // Pass congestion_mgmt flag to stage 3 dcqcn-mpu-only. This is used to decide whether to load dcqcn_cb in stage 4 or mpu-only-dcqcn.
+    CAPRI_GET_STAGE_3_ARG(resp_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.dcqcn.congestion_mgmt_enable, d.congestion_mgmt_enable)
+
     // send new_c_index,serv_type and ack processing flag to stage 5 (writeback)
     CAPRI_GET_STAGE_5_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.new_c_index, ACK_NAK_P_INDEX)

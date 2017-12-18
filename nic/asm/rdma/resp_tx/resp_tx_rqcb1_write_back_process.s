@@ -104,7 +104,9 @@ add_ack_header:
     nop
     
 dcqcn_rl_failure:
-    // release read_rsp_lock.
+    bbeq           k.to_stage.s5.rqcb1_wb.ack_nak_process, 1, exit
+    nop
+    // release read_rsp_lock only in rsq path.
     tblwr       d.read_rsp_lock, 0
 
 exit:

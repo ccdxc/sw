@@ -90,6 +90,7 @@ load_write_back:
 
 bubble_to_next_stage:
     seq           c1, r1[6:2], STAGE_3
+    seq           c2, k.to_stage.s3.dcqcn.congestion_mgmt_enable, 0
     bcf           [!c1 | c2], exit
     nop           // Branch Delay Slot
 
