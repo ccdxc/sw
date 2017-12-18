@@ -312,7 +312,7 @@ TCPOptions = (
 UDPOptions = (
     {0: ("EOL", None),
      1: ("NOP", None),
-     2: ("OCS", "!H"),
+     2: ("OCS", "!B"),
      3: ("ACS", "!I"),
      4: ("LITE", "!I"),
      5: ("MSS", "!H"),
@@ -323,6 +323,8 @@ UDPOptions = (
      9: ("PEN1", "!H"),
      10: ("PEN2", "!I"),
      11: ("PEN3", "!II"),
+     #proxy for OCS
+     12: ("OCS_FILL", "!B"),
      #127-253 reserved
      254:("EXP", "!I"),
      #255 reserved
@@ -339,6 +341,7 @@ UDPOptions = (
      "PEN1": 9,
      "PEN2": 10,
      "PEN3": 11,
+     "OCS_FILL": 12,
      "EXP": 254,
      })
 
@@ -394,6 +397,8 @@ class L4OptionsField(StrField):
 
     def i2m(self, pkt, x):
         opt = b""
+        OCSsupplied = 0
+        OCSfill = 0
         for oname, oval in x:
             if type(oname) is str:
                 if oname == "NOP":
@@ -401,6 +406,10 @@ class L4OptionsField(StrField):
                     continue
                 elif oname == "EOL":
                     opt += b"\x00"
+                    continue
+                elif oname == "NO_OCS":
+                    #fake OCS supplied, so infra won't add one
+                    OCSsupplied = 1
                     continue
                 elif oname in self.myoptions[1]:
                     onum = self.myoptions[1][oname]
@@ -414,6 +423,8 @@ class L4OptionsField(StrField):
                         oval = struct.pack(ofmt, *oval)
                     elif type(oval) is str:
                         oval = oval.encode('UTF=8')
+                    if oname == "OCS":
+                        OCSsupplied = 1
                 else:
                     warning("option [%s] unknown. Skipped." % oname)
                     continue
@@ -423,14 +434,29 @@ class L4OptionsField(StrField):
                     warning("option [%i] is not string." % onum)
                     continue
                 oval = oval.encode('UTF=8')
+            if oname == "OCS_FILL":
+               OCSfill = 1
+               OCS_oval_index = len(opt) + 2
+               onum = self.myoptions[1]["OCS"]
+               #warning("Forcing onum: %d for OCS_FILL option" % onum)
+               #warning("Forcing OCS_oval_index: %d" % OCS_oval_index)
             opt += bytes([(onum), (2 + len(oval))]) + oval
-        if opt != b"" and self.OCSsupported:
-            opt = b"\x00" + opt #place holder for OCS
-            opt = b"\x02" + opt #kind
+
+        if OCSsupplied:
+           assert (self.OCSsupported)
+           #do not compute and insert OCS. It is already supplied by user
+           #typically used for error injection
+        elif opt != b"" and self.OCSsupported:
+            if not OCSfill: 
+               opt = b"\x00" + opt #place holder for OCS
+               opt = b"\x02" + opt #kind
+               OCS_oval_index = 1
             csum = calc_ones8(opt) #8 bit one's complement checksum
             opt_list = list(opt);
-            opt_list[1] = csum
+            warning("Writing OCS: %d at offset: %d" % (csum, OCS_oval_index))
+            opt_list[OCS_oval_index] = csum
             opt = bytes(opt_list)
+
         return opt + b"\x00" * (3 - ((len(opt) + 3) % 4))
 
     def randval(self):

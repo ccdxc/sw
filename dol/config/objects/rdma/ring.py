@@ -62,6 +62,12 @@ class RdmaRingObject(ring.RingObject):
         #    self.doorbell.Ring({})  # HACK
 
     def Consume(self, descriptor):
+        self.queue.qstate.Read()
+        cfglogger.info("Consuming descriptor on Queue(%s) Ring at cindex: %d" % (self.queue.queue_type.purpose.upper(), self.queue.qstate.get_cindex(0)))
+        if self.queue.qstate.get_cindex(0) == self.queue.qstate.get_pindex(0):
+           #items not produced
+           cfglogger.info("queue(%s) is empty(cindex: %d, pindex: %d). returning" % (self.queue.queue_type.purpose.upper(), self.queue.qstate.get_cindex(0), self.queue.qstate.get_pindex(0)))
+           return
         if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
             descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_proxy_cindex()))
         elif self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_SEND":

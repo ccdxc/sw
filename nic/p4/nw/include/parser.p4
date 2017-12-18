@@ -193,10 +193,15 @@ header tcp_option_four_sack_t tcp_option_four_sack;
 header tcp_option_timestamp_t tcp_option_timestamp;
 
 // UDP options
+@pragma no_ohi xgress
 header udp_opt_eol_t udp_opt_eol;
+@pragma no_ohi xgress
 header udp_opt_nop_t udp_opt_nop;
+@pragma no_ohi xgress
 header udp_opt_ocs_t udp_opt_ocs;
+@pragma no_ohi xgress
 header udp_opt_mss_t udp_opt_mss;
+@pragma no_ohi xgress
 header udp_opt_timestamp_t udp_opt_timestamp;
 header udp_opt_unknown_t udp_opt_unknown;
 

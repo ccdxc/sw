@@ -20,11 +20,11 @@ selectors:
 packets:
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_PKT    # Input packet 
@@ -59,7 +59,7 @@ packets:
                 psn     : callback://rdma/rdma/GetRqPreEpsn
                 a       : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
             udp_options :
                 options :
                     - kind   : NOP
@@ -69,7 +69,7 @@ packets:
                     - kind   : TIME
                       #data   : ref://testcase/pvtdata/roce_opt_ts_list
                       data   : 0x11223344 0x55667788
-                    - kind   : EOP
+                    - kind   : EOL
                       data   : 0x00
 
    - packet:
@@ -106,7 +106,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 
 buffers:
