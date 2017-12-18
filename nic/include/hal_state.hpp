@@ -104,10 +104,7 @@ public:
     bitmap *qos_cmap_pcp_bmp(void) const { return qos_cmap_pcp_bmp_; }
     bitmap *qos_cmap_dscp_bmp(void) const { return qos_cmap_dscp_bmp_; }
 
-    ht *ingress_policer_id_ht(void) const { return ingress_policer_id_ht_; }
-    ht *ingress_policer_hal_handle_ht(void) const { return ingress_policer_hal_handle_ht_; }
-    ht *egress_policer_id_ht(void) const { return egress_policer_id_ht_; }
-    ht *egress_policer_hal_handle_ht(void) const { return egress_policer_hal_handle_ht_; }
+    ht *copp_ht(void) const { return copp_ht_; }
 
     ht *acl_id_ht(void) const { return acl_id_ht_; }
     ht *acl_hal_handle_ht(void) const { return acl_hal_handle_ht_; }
@@ -249,12 +246,9 @@ private:
         bitmap     *qos_cmap_dscp_bmp_;
     } __PACK__;
 
-    // policer related config
+    // copp related config
     struct {
-        ht         *ingress_policer_id_ht_;
-        ht         *ingress_policer_hal_handle_ht_;
-        ht         *egress_policer_id_ht_;
-        ht         *egress_policer_hal_handle_ht_;
+        ht         *copp_ht_;
     } __PACK__;
 
     // WRing related config
@@ -391,7 +385,7 @@ public:
     slab *tlscb_slab(void) const { return tlscb_slab_; }
     slab *tcpcb_slab(void) const { return tcpcb_slab_; }
     slab *qos_class_slab(void) const { return qos_class_slab_; }
-    slab *policer_slab(void) const { return policer_slab_; }
+    slab *copp_slab(void) const { return copp_slab_; }
     slab *acl_slab(void) const { return acl_slab_; }
     slab *wring_slab(void) const { return wring_slab_; }
     slab *ipseccb_slab(void) const { return ipseccb_slab_; }
@@ -436,7 +430,7 @@ private:
     slab    *tlscb_slab_;
     slab    *tcpcb_slab_;
     slab    *qos_class_slab_;
-    slab    *policer_slab_;
+    slab    *copp_slab_;
     slab    *wring_slab_;
     slab    *acl_slab_;
     slab    *ipseccb_slab_;
@@ -564,12 +558,9 @@ public:
     bitmap *qos_cmap_pcp_bmp(void) const { return cfg_db_->qos_cmap_pcp_bmp(); }
     bitmap *qos_cmap_dscp_bmp(void) const { return cfg_db_->qos_cmap_dscp_bmp(); }
 
-    // get APIs for policer state
-    slab *policer_slab(void) const { return mem_db_->policer_slab(); }
-    ht *ingress_policer_id_ht(void) const { return cfg_db_->ingress_policer_id_ht(); }
-    ht *ingress_policer_hal_handle_ht(void) const { return cfg_db_->ingress_policer_hal_handle_ht(); }
-    ht *egress_policer_id_ht(void) const { return cfg_db_->egress_policer_id_ht(); }
-    ht *egress_policer_hal_handle_ht(void) const { return cfg_db_->egress_policer_hal_handle_ht(); }
+    // get APIs for copp state
+    slab *copp_slab(void) const { return mem_db_->copp_slab(); }
+    ht *copp_ht(void) const { return cfg_db_->copp_ht(); }
 
     // get APIs for acl state
     slab *acl_slab(void) const { return mem_db_->acl_slab(); }

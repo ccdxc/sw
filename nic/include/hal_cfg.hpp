@@ -104,6 +104,7 @@ typedef enum hal_obj_id_e {
     HAL_OBJ_ID_PORT,
     HAL_OBJ_ID_MC_ENTRY,
     HAL_OBJ_ID_QOS_CLASS,
+    HAL_OBJ_ID_COPP,
 
     HAL_OBJ_ID_MAX
 } hal_obj_id_t;

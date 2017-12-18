@@ -179,6 +179,13 @@ hal_cfg_db::init(void)
     qos_cmap_dscp_bmp_ = bitmap::factory(HAL_MAX_IP_DSCP_VALS, true);
     HAL_ASSERT_RETURN((qos_cmap_dscp_bmp_ != NULL), false);
 
+    // initialize Copp related data structures
+    copp_ht_ = ht::factory(HAL_MAX_COPPS,
+                           hal::copp_get_key_func,
+                           hal::copp_compute_hash_func,
+                           hal::copp_compare_key_func);
+    HAL_ASSERT_RETURN((copp_ht_ != NULL), false);
+
     // initialize Acl related data structures
     acl_id_ht_ = ht::factory(HAL_MAX_ACLS,
                              hal::acl_get_key_func,
@@ -361,6 +368,8 @@ hal_cfg_db::hal_cfg_db()
     qos_cmap_pcp_bmp_ = NULL;
     qos_cmap_dscp_bmp_ = NULL;
 
+    copp_ht_ = NULL;
+
     acl_id_ht_ = NULL;
     acl_hal_handle_ht_ = NULL;
  
@@ -462,6 +471,8 @@ hal_cfg_db::~hal_cfg_db()
     qos_class_ht_ ? ht::destroy(qos_class_ht_) : HAL_NOP;
     qos_cmap_pcp_bmp_ ? bitmap::destroy(qos_cmap_pcp_bmp_) : HAL_NOP;
     qos_cmap_dscp_bmp_ ? bitmap::destroy(qos_cmap_dscp_bmp_) : HAL_NOP;
+
+    copp_ht_ ? ht::destroy(copp_ht_) : HAL_NOP;
 
     wring_id_ht_ ? ht::destroy(wring_id_ht_) : HAL_NOP;
     wring_hal_handle_ht_ ? ht::destroy(wring_hal_handle_ht_) : HAL_NOP;
@@ -823,6 +834,12 @@ hal_mem_db::init(void)
                                 false, true, true);
     HAL_ASSERT_RETURN((qos_class_slab_ != NULL), false);
 
+    // initialize Copp related data structures
+    copp_slab_ = slab::factory("Copp", HAL_SLAB_COPP,
+                                sizeof(hal::copp_t), 8,
+                                false, true, true);
+    HAL_ASSERT_RETURN((copp_slab_ != NULL), false);
+
     // initialize WRing related data structures
     wring_slab_ = slab::factory("wring", HAL_SLAB_WRING,
                                 sizeof(hal::wring_t), 16,
@@ -935,6 +952,7 @@ hal_mem_db::hal_mem_db()
     tlscb_slab_ = NULL;
     tcpcb_slab_ = NULL;
     qos_class_slab_ = NULL;
+    copp_slab_ = NULL;
     wring_slab_ = NULL;
     acl_slab_ = NULL;
     ipseccb_slab_ = NULL;
@@ -1001,6 +1019,7 @@ hal_mem_db::~hal_mem_db()
     tlscb_slab_ ? slab::destroy(tlscb_slab_) : HAL_NOP;
     tcpcb_slab_ ? slab::destroy(tcpcb_slab_) : HAL_NOP;
     qos_class_slab_ ? slab::destroy(qos_class_slab_) : HAL_NOP;
+    copp_slab_ ? slab::destroy(copp_slab_) : HAL_NOP;
     wring_slab_ ? slab::destroy(wring_slab_) : HAL_NOP;
     acl_slab_ ? slab::destroy(acl_slab_) : HAL_NOP;
     ipseccb_slab_ ? slab::destroy(ipseccb_slab_) : HAL_NOP;
@@ -1054,6 +1073,7 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(tlscb_slab_);
     GET_SLAB(tcpcb_slab_);
     GET_SLAB(qos_class_slab_);
+    GET_SLAB(copp_slab_);
     GET_SLAB(wring_slab_);
     GET_SLAB(acl_slab_);
     GET_SLAB(ipseccb_slab_);
@@ -1342,6 +1362,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_EVENT_LISTENER:
         g_hal_state->event_mgr()->listener_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_COPP:
+        g_hal_state->copp_slab()->free(elem);
         break;
 
     default:

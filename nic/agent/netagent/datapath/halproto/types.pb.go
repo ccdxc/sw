@@ -516,16 +516,16 @@
 		QosClassGetRequestMsg
 		QosClassGetResponse
 		QosClassGetResponseMsg
-		CoppPolicerKeyHandle
-		CoppPolicerSpec
-		CoppPolicerRequestMsg
-		CoppPolicerStatus
-		CoppPolicerResponse
-		CoppPolicerResponseMsg
-		CoppPolicerGetRequest
-		CoppPolicerGetRequestMsg
-		CoppPolicerGetResponse
-		CoppPolicerGetResponseMsg
+		CoppKeyHandle
+		CoppSpec
+		CoppRequestMsg
+		CoppStatus
+		CoppResponse
+		CoppResponseMsg
+		CoppGetRequest
+		CoppGetRequestMsg
+		CoppGetResponse
+		CoppGetResponseMsg
 		RawcCbKeyHandle
 		RawcCbSpec
 		RawcCbRequestMsg

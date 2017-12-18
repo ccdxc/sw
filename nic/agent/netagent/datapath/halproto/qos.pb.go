@@ -884,111 +884,111 @@ func (m *QosClassGetResponseMsg) GetResponse() []*QosClassGetResponse {
 	return nil
 }
 
-// CoppPolicerKeyHandle uniquely identifies a CoppPolicer
-type CoppPolicerKeyHandle struct {
+// CoppKeyHandle uniquely identifies a Copp
+type CoppKeyHandle struct {
 	// Types that are valid to be assigned to KeyOrHandle:
-	//	*CoppPolicerKeyHandle_CoppType
-	//	*CoppPolicerKeyHandle_CoppPolicerHandle
-	KeyOrHandle isCoppPolicerKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
+	//	*CoppKeyHandle_CoppType
+	//	*CoppKeyHandle_CoppHandle
+	KeyOrHandle isCoppKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
 }
 
-func (m *CoppPolicerKeyHandle) Reset()                    { *m = CoppPolicerKeyHandle{} }
-func (m *CoppPolicerKeyHandle) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerKeyHandle) ProtoMessage()               {}
-func (*CoppPolicerKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{21} }
+func (m *CoppKeyHandle) Reset()                    { *m = CoppKeyHandle{} }
+func (m *CoppKeyHandle) String() string            { return proto.CompactTextString(m) }
+func (*CoppKeyHandle) ProtoMessage()               {}
+func (*CoppKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{21} }
 
-type isCoppPolicerKeyHandle_KeyOrHandle interface {
-	isCoppPolicerKeyHandle_KeyOrHandle()
+type isCoppKeyHandle_KeyOrHandle interface {
+	isCoppKeyHandle_KeyOrHandle()
 	MarshalTo([]byte) (int, error)
 	Size() int
 }
 
-type CoppPolicerKeyHandle_CoppType struct {
+type CoppKeyHandle_CoppType struct {
 	CoppType CoppType `protobuf:"varint,1,opt,name=copp_type,json=coppType,proto3,enum=qos.CoppType,oneof"`
 }
-type CoppPolicerKeyHandle_CoppPolicerHandle struct {
-	CoppPolicerHandle uint64 `protobuf:"fixed64,2,opt,name=copp_policer_handle,json=coppPolicerHandle,proto3,oneof"`
+type CoppKeyHandle_CoppHandle struct {
+	CoppHandle uint64 `protobuf:"fixed64,2,opt,name=copp_handle,json=coppHandle,proto3,oneof"`
 }
 
-func (*CoppPolicerKeyHandle_CoppType) isCoppPolicerKeyHandle_KeyOrHandle()          {}
-func (*CoppPolicerKeyHandle_CoppPolicerHandle) isCoppPolicerKeyHandle_KeyOrHandle() {}
+func (*CoppKeyHandle_CoppType) isCoppKeyHandle_KeyOrHandle()   {}
+func (*CoppKeyHandle_CoppHandle) isCoppKeyHandle_KeyOrHandle() {}
 
-func (m *CoppPolicerKeyHandle) GetKeyOrHandle() isCoppPolicerKeyHandle_KeyOrHandle {
+func (m *CoppKeyHandle) GetKeyOrHandle() isCoppKeyHandle_KeyOrHandle {
 	if m != nil {
 		return m.KeyOrHandle
 	}
 	return nil
 }
 
-func (m *CoppPolicerKeyHandle) GetCoppType() CoppType {
-	if x, ok := m.GetKeyOrHandle().(*CoppPolicerKeyHandle_CoppType); ok {
+func (m *CoppKeyHandle) GetCoppType() CoppType {
+	if x, ok := m.GetKeyOrHandle().(*CoppKeyHandle_CoppType); ok {
 		return x.CoppType
 	}
 	return CoppType_COPP_TYPE_FLOW_MISS
 }
 
-func (m *CoppPolicerKeyHandle) GetCoppPolicerHandle() uint64 {
-	if x, ok := m.GetKeyOrHandle().(*CoppPolicerKeyHandle_CoppPolicerHandle); ok {
-		return x.CoppPolicerHandle
+func (m *CoppKeyHandle) GetCoppHandle() uint64 {
+	if x, ok := m.GetKeyOrHandle().(*CoppKeyHandle_CoppHandle); ok {
+		return x.CoppHandle
 	}
 	return 0
 }
 
 // XXX_OneofFuncs is for the internal use of the proto package.
-func (*CoppPolicerKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _CoppPolicerKeyHandle_OneofMarshaler, _CoppPolicerKeyHandle_OneofUnmarshaler, _CoppPolicerKeyHandle_OneofSizer, []interface{}{
-		(*CoppPolicerKeyHandle_CoppType)(nil),
-		(*CoppPolicerKeyHandle_CoppPolicerHandle)(nil),
+func (*CoppKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _CoppKeyHandle_OneofMarshaler, _CoppKeyHandle_OneofUnmarshaler, _CoppKeyHandle_OneofSizer, []interface{}{
+		(*CoppKeyHandle_CoppType)(nil),
+		(*CoppKeyHandle_CoppHandle)(nil),
 	}
 }
 
-func _CoppPolicerKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*CoppPolicerKeyHandle)
+func _CoppKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*CoppKeyHandle)
 	// key_or_handle
 	switch x := m.KeyOrHandle.(type) {
-	case *CoppPolicerKeyHandle_CoppType:
+	case *CoppKeyHandle_CoppType:
 		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
 		_ = b.EncodeVarint(uint64(x.CoppType))
-	case *CoppPolicerKeyHandle_CoppPolicerHandle:
+	case *CoppKeyHandle_CoppHandle:
 		_ = b.EncodeVarint(2<<3 | proto.WireFixed64)
-		_ = b.EncodeFixed64(uint64(x.CoppPolicerHandle))
+		_ = b.EncodeFixed64(uint64(x.CoppHandle))
 	case nil:
 	default:
-		return fmt.Errorf("CoppPolicerKeyHandle.KeyOrHandle has unexpected type %T", x)
+		return fmt.Errorf("CoppKeyHandle.KeyOrHandle has unexpected type %T", x)
 	}
 	return nil
 }
 
-func _CoppPolicerKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*CoppPolicerKeyHandle)
+func _CoppKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*CoppKeyHandle)
 	switch tag {
 	case 1: // key_or_handle.copp_type
 		if wire != proto.WireVarint {
 			return true, proto.ErrInternalBadWireType
 		}
 		x, err := b.DecodeVarint()
-		m.KeyOrHandle = &CoppPolicerKeyHandle_CoppType{CoppType(x)}
+		m.KeyOrHandle = &CoppKeyHandle_CoppType{CoppType(x)}
 		return true, err
-	case 2: // key_or_handle.copp_policer_handle
+	case 2: // key_or_handle.copp_handle
 		if wire != proto.WireFixed64 {
 			return true, proto.ErrInternalBadWireType
 		}
 		x, err := b.DecodeFixed64()
-		m.KeyOrHandle = &CoppPolicerKeyHandle_CoppPolicerHandle{x}
+		m.KeyOrHandle = &CoppKeyHandle_CoppHandle{x}
 		return true, err
 	default:
 		return false, nil
 	}
 }
 
-func _CoppPolicerKeyHandle_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*CoppPolicerKeyHandle)
+func _CoppKeyHandle_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*CoppKeyHandle)
 	// key_or_handle
 	switch x := m.KeyOrHandle.(type) {
-	case *CoppPolicerKeyHandle_CoppType:
+	case *CoppKeyHandle_CoppType:
 		n += proto.SizeVarint(1<<3 | proto.WireVarint)
 		n += proto.SizeVarint(uint64(x.CoppType))
-	case *CoppPolicerKeyHandle_CoppPolicerHandle:
+	case *CoppKeyHandle_CoppHandle:
 		n += proto.SizeVarint(2<<3 | proto.WireFixed64)
 		n += 8
 	case nil:
@@ -998,201 +998,201 @@ func _CoppPolicerKeyHandle_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-// Specifications of a CoppPolicer
-type CoppPolicerSpec struct {
+// Specifications of a Copp
+type CoppSpec struct {
 	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is CoppPolicer's unique identifier
-	KeyOrHandle *CoppPolicerKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
-	Policer     *PolicerSpec          `protobuf:"bytes,3,opt,name=policer" json:"policer,omitempty"`
+	// key_or_handle is Copp's unique identifier
+	KeyOrHandle *CoppKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	Policer     *PolicerSpec   `protobuf:"bytes,3,opt,name=policer" json:"policer,omitempty"`
 }
 
-func (m *CoppPolicerSpec) Reset()                    { *m = CoppPolicerSpec{} }
-func (m *CoppPolicerSpec) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerSpec) ProtoMessage()               {}
-func (*CoppPolicerSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{22} }
+func (m *CoppSpec) Reset()                    { *m = CoppSpec{} }
+func (m *CoppSpec) String() string            { return proto.CompactTextString(m) }
+func (*CoppSpec) ProtoMessage()               {}
+func (*CoppSpec) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{22} }
 
-func (m *CoppPolicerSpec) GetMeta() *ObjectMeta {
+func (m *CoppSpec) GetMeta() *ObjectMeta {
 	if m != nil {
 		return m.Meta
 	}
 	return nil
 }
 
-func (m *CoppPolicerSpec) GetKeyOrHandle() *CoppPolicerKeyHandle {
+func (m *CoppSpec) GetKeyOrHandle() *CoppKeyHandle {
 	if m != nil {
 		return m.KeyOrHandle
 	}
 	return nil
 }
 
-func (m *CoppPolicerSpec) GetPolicer() *PolicerSpec {
+func (m *CoppSpec) GetPolicer() *PolicerSpec {
 	if m != nil {
 		return m.Policer
 	}
 	return nil
 }
 
-// Batched requests to create/update CoppPolicers
-type CoppPolicerRequestMsg struct {
-	Request []*CoppPolicerSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+// Batched requests to create/update Copps
+type CoppRequestMsg struct {
+	Request []*CoppSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
 }
 
-func (m *CoppPolicerRequestMsg) Reset()                    { *m = CoppPolicerRequestMsg{} }
-func (m *CoppPolicerRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerRequestMsg) ProtoMessage()               {}
-func (*CoppPolicerRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{23} }
+func (m *CoppRequestMsg) Reset()                    { *m = CoppRequestMsg{} }
+func (m *CoppRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*CoppRequestMsg) ProtoMessage()               {}
+func (*CoppRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{23} }
 
-func (m *CoppPolicerRequestMsg) GetRequest() []*CoppPolicerSpec {
+func (m *CoppRequestMsg) GetRequest() []*CoppSpec {
 	if m != nil {
 		return m.Request
 	}
 	return nil
 }
 
-type CoppPolicerStatus struct {
-	CoppPolicerHandle uint64 `protobuf:"fixed64,1,opt,name=copp_policer_handle,json=coppPolicerHandle,proto3" json:"copp_policer_handle,omitempty"`
+type CoppStatus struct {
+	CoppHandle uint64 `protobuf:"fixed64,1,opt,name=copp_handle,json=coppHandle,proto3" json:"copp_handle,omitempty"`
 }
 
-func (m *CoppPolicerStatus) Reset()                    { *m = CoppPolicerStatus{} }
-func (m *CoppPolicerStatus) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerStatus) ProtoMessage()               {}
-func (*CoppPolicerStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{24} }
+func (m *CoppStatus) Reset()                    { *m = CoppStatus{} }
+func (m *CoppStatus) String() string            { return proto.CompactTextString(m) }
+func (*CoppStatus) ProtoMessage()               {}
+func (*CoppStatus) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{24} }
 
-func (m *CoppPolicerStatus) GetCoppPolicerHandle() uint64 {
+func (m *CoppStatus) GetCoppHandle() uint64 {
 	if m != nil {
-		return m.CoppPolicerHandle
+		return m.CoppHandle
 	}
 	return 0
 }
 
-// CoppPolicerResponse is response to one CoppPolicer
-type CoppPolicerResponse struct {
-	ApiStatus ApiStatus          `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
-	Status    *CoppPolicerStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+// CoppResponse is response to one Copp
+type CoppResponse struct {
+	ApiStatus ApiStatus   `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	Status    *CoppStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
 }
 
-func (m *CoppPolicerResponse) Reset()                    { *m = CoppPolicerResponse{} }
-func (m *CoppPolicerResponse) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerResponse) ProtoMessage()               {}
-func (*CoppPolicerResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{25} }
+func (m *CoppResponse) Reset()                    { *m = CoppResponse{} }
+func (m *CoppResponse) String() string            { return proto.CompactTextString(m) }
+func (*CoppResponse) ProtoMessage()               {}
+func (*CoppResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{25} }
 
-func (m *CoppPolicerResponse) GetApiStatus() ApiStatus {
+func (m *CoppResponse) GetApiStatus() ApiStatus {
 	if m != nil {
 		return m.ApiStatus
 	}
 	return ApiStatus_API_STATUS_OK
 }
 
-func (m *CoppPolicerResponse) GetStatus() *CoppPolicerStatus {
+func (m *CoppResponse) GetStatus() *CoppStatus {
 	if m != nil {
 		return m.Status
 	}
 	return nil
 }
 
-// Batched responses to create/update CoppPolicers
-type CoppPolicerResponseMsg struct {
-	Response []*CoppPolicerResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+// Batched responses to create/update Copps
+type CoppResponseMsg struct {
+	Response []*CoppResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
-func (m *CoppPolicerResponseMsg) Reset()                    { *m = CoppPolicerResponseMsg{} }
-func (m *CoppPolicerResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerResponseMsg) ProtoMessage()               {}
-func (*CoppPolicerResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{26} }
+func (m *CoppResponseMsg) Reset()                    { *m = CoppResponseMsg{} }
+func (m *CoppResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*CoppResponseMsg) ProtoMessage()               {}
+func (*CoppResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{26} }
 
-func (m *CoppPolicerResponseMsg) GetResponse() []*CoppPolicerResponse {
+func (m *CoppResponseMsg) GetResponse() []*CoppResponse {
 	if m != nil {
 		return m.Response
 	}
 	return nil
 }
 
-// CoppPolicerGetRequest is used to get information about a CoppPolicer
-type CoppPolicerGetRequest struct {
+// CoppGetRequest is used to get information about a Copp
+type CoppGetRequest struct {
 	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is CoppPolicer's unique identifier
-	KeyOrHandle *CoppPolicerKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+	// key_or_handle is Copp's unique identifier
+	KeyOrHandle *CoppKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 }
 
-func (m *CoppPolicerGetRequest) Reset()                    { *m = CoppPolicerGetRequest{} }
-func (m *CoppPolicerGetRequest) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerGetRequest) ProtoMessage()               {}
-func (*CoppPolicerGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{27} }
+func (m *CoppGetRequest) Reset()                    { *m = CoppGetRequest{} }
+func (m *CoppGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*CoppGetRequest) ProtoMessage()               {}
+func (*CoppGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{27} }
 
-func (m *CoppPolicerGetRequest) GetMeta() *ObjectMeta {
+func (m *CoppGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
 		return m.Meta
 	}
 	return nil
 }
 
-func (m *CoppPolicerGetRequest) GetKeyOrHandle() *CoppPolicerKeyHandle {
+func (m *CoppGetRequest) GetKeyOrHandle() *CoppKeyHandle {
 	if m != nil {
 		return m.KeyOrHandle
 	}
 	return nil
 }
 
-type CoppPolicerGetRequestMsg struct {
-	Request []*CoppPolicerGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+type CoppGetRequestMsg struct {
+	Request []*CoppGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
 }
 
-func (m *CoppPolicerGetRequestMsg) Reset()                    { *m = CoppPolicerGetRequestMsg{} }
-func (m *CoppPolicerGetRequestMsg) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerGetRequestMsg) ProtoMessage()               {}
-func (*CoppPolicerGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{28} }
+func (m *CoppGetRequestMsg) Reset()                    { *m = CoppGetRequestMsg{} }
+func (m *CoppGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*CoppGetRequestMsg) ProtoMessage()               {}
+func (*CoppGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{28} }
 
-func (m *CoppPolicerGetRequestMsg) GetRequest() []*CoppPolicerGetRequest {
+func (m *CoppGetRequestMsg) GetRequest() []*CoppGetRequest {
 	if m != nil {
 		return m.Request
 	}
 	return nil
 }
 
-// CoppPolicerGetResponse captures all the information about a CoppPolicer
-type CoppPolicerGetResponse struct {
-	Spec   *CoppPolicerSpec   `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
-	Status *CoppPolicerStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
-	Stats  *PolicerStats      `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
+// CoppGetResponse captures all the information about a Copp
+type CoppGetResponse struct {
+	Spec   *CoppSpec     `protobuf:"bytes,1,opt,name=spec" json:"spec,omitempty"`
+	Status *CoppStatus   `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+	Stats  *PolicerStats `protobuf:"bytes,3,opt,name=stats" json:"stats,omitempty"`
 }
 
-func (m *CoppPolicerGetResponse) Reset()                    { *m = CoppPolicerGetResponse{} }
-func (m *CoppPolicerGetResponse) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerGetResponse) ProtoMessage()               {}
-func (*CoppPolicerGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{29} }
+func (m *CoppGetResponse) Reset()                    { *m = CoppGetResponse{} }
+func (m *CoppGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*CoppGetResponse) ProtoMessage()               {}
+func (*CoppGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{29} }
 
-func (m *CoppPolicerGetResponse) GetSpec() *CoppPolicerSpec {
+func (m *CoppGetResponse) GetSpec() *CoppSpec {
 	if m != nil {
 		return m.Spec
 	}
 	return nil
 }
 
-func (m *CoppPolicerGetResponse) GetStatus() *CoppPolicerStatus {
+func (m *CoppGetResponse) GetStatus() *CoppStatus {
 	if m != nil {
 		return m.Status
 	}
 	return nil
 }
 
-func (m *CoppPolicerGetResponse) GetStats() *PolicerStats {
+func (m *CoppGetResponse) GetStats() *PolicerStats {
 	if m != nil {
 		return m.Stats
 	}
 	return nil
 }
 
-// CoppPolicerGetResponseMsg is response to CoppPolicerGetRequestMsg
-type CoppPolicerGetResponseMsg struct {
-	Response []*CoppPolicerGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+// CoppGetResponseMsg is response to CoppGetRequestMsg
+type CoppGetResponseMsg struct {
+	Response []*CoppGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
-func (m *CoppPolicerGetResponseMsg) Reset()                    { *m = CoppPolicerGetResponseMsg{} }
-func (m *CoppPolicerGetResponseMsg) String() string            { return proto.CompactTextString(m) }
-func (*CoppPolicerGetResponseMsg) ProtoMessage()               {}
-func (*CoppPolicerGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{30} }
+func (m *CoppGetResponseMsg) Reset()                    { *m = CoppGetResponseMsg{} }
+func (m *CoppGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*CoppGetResponseMsg) ProtoMessage()               {}
+func (*CoppGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorQos, []int{30} }
 
-func (m *CoppPolicerGetResponseMsg) GetResponse() []*CoppPolicerGetResponse {
+func (m *CoppGetResponseMsg) GetResponse() []*CoppGetResponse {
 	if m != nil {
 		return m.Response
 	}
@@ -1223,16 +1223,16 @@ func init() {
 	proto.RegisterType((*QosClassGetRequestMsg)(nil), "qos.QosClassGetRequestMsg")
 	proto.RegisterType((*QosClassGetResponse)(nil), "qos.QosClassGetResponse")
 	proto.RegisterType((*QosClassGetResponseMsg)(nil), "qos.QosClassGetResponseMsg")
-	proto.RegisterType((*CoppPolicerKeyHandle)(nil), "qos.CoppPolicerKeyHandle")
-	proto.RegisterType((*CoppPolicerSpec)(nil), "qos.CoppPolicerSpec")
-	proto.RegisterType((*CoppPolicerRequestMsg)(nil), "qos.CoppPolicerRequestMsg")
-	proto.RegisterType((*CoppPolicerStatus)(nil), "qos.CoppPolicerStatus")
-	proto.RegisterType((*CoppPolicerResponse)(nil), "qos.CoppPolicerResponse")
-	proto.RegisterType((*CoppPolicerResponseMsg)(nil), "qos.CoppPolicerResponseMsg")
-	proto.RegisterType((*CoppPolicerGetRequest)(nil), "qos.CoppPolicerGetRequest")
-	proto.RegisterType((*CoppPolicerGetRequestMsg)(nil), "qos.CoppPolicerGetRequestMsg")
-	proto.RegisterType((*CoppPolicerGetResponse)(nil), "qos.CoppPolicerGetResponse")
-	proto.RegisterType((*CoppPolicerGetResponseMsg)(nil), "qos.CoppPolicerGetResponseMsg")
+	proto.RegisterType((*CoppKeyHandle)(nil), "qos.CoppKeyHandle")
+	proto.RegisterType((*CoppSpec)(nil), "qos.CoppSpec")
+	proto.RegisterType((*CoppRequestMsg)(nil), "qos.CoppRequestMsg")
+	proto.RegisterType((*CoppStatus)(nil), "qos.CoppStatus")
+	proto.RegisterType((*CoppResponse)(nil), "qos.CoppResponse")
+	proto.RegisterType((*CoppResponseMsg)(nil), "qos.CoppResponseMsg")
+	proto.RegisterType((*CoppGetRequest)(nil), "qos.CoppGetRequest")
+	proto.RegisterType((*CoppGetRequestMsg)(nil), "qos.CoppGetRequestMsg")
+	proto.RegisterType((*CoppGetResponse)(nil), "qos.CoppGetResponse")
+	proto.RegisterType((*CoppGetResponseMsg)(nil), "qos.CoppGetResponseMsg")
 	proto.RegisterEnum("qos.QosGroup", QosGroup_name, QosGroup_value)
 	proto.RegisterEnum("qos.CoppType", CoppType_name, CoppType_value)
 }
@@ -1254,8 +1254,8 @@ type QOSClient interface {
 	QosClassDelete(ctx context.Context, in *QosClassDeleteRequestMsg, opts ...grpc.CallOption) (*QosClassDeleteResponseMsg, error)
 	QosClassGet(ctx context.Context, in *QosClassGetRequestMsg, opts ...grpc.CallOption) (*QosClassGetResponseMsg, error)
 	// Copp related APIs
-	CoppPolicerUpdate(ctx context.Context, in *CoppPolicerRequestMsg, opts ...grpc.CallOption) (*CoppPolicerResponseMsg, error)
-	CoppPolicerGet(ctx context.Context, in *CoppPolicerGetRequestMsg, opts ...grpc.CallOption) (*CoppPolicerGetResponseMsg, error)
+	CoppUpdate(ctx context.Context, in *CoppRequestMsg, opts ...grpc.CallOption) (*CoppResponseMsg, error)
+	CoppGet(ctx context.Context, in *CoppGetRequestMsg, opts ...grpc.CallOption) (*CoppGetResponseMsg, error)
 }
 
 type qOSClient struct {
@@ -1302,18 +1302,18 @@ func (c *qOSClient) QosClassGet(ctx context.Context, in *QosClassGetRequestMsg, 
 	return out, nil
 }
 
-func (c *qOSClient) CoppPolicerUpdate(ctx context.Context, in *CoppPolicerRequestMsg, opts ...grpc.CallOption) (*CoppPolicerResponseMsg, error) {
-	out := new(CoppPolicerResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/CoppPolicerUpdate", in, out, c.cc, opts...)
+func (c *qOSClient) CoppUpdate(ctx context.Context, in *CoppRequestMsg, opts ...grpc.CallOption) (*CoppResponseMsg, error) {
+	out := new(CoppResponseMsg)
+	err := grpc.Invoke(ctx, "/qos.QOS/CoppUpdate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *qOSClient) CoppPolicerGet(ctx context.Context, in *CoppPolicerGetRequestMsg, opts ...grpc.CallOption) (*CoppPolicerGetResponseMsg, error) {
-	out := new(CoppPolicerGetResponseMsg)
-	err := grpc.Invoke(ctx, "/qos.QOS/CoppPolicerGet", in, out, c.cc, opts...)
+func (c *qOSClient) CoppGet(ctx context.Context, in *CoppGetRequestMsg, opts ...grpc.CallOption) (*CoppGetResponseMsg, error) {
+	out := new(CoppGetResponseMsg)
+	err := grpc.Invoke(ctx, "/qos.QOS/CoppGet", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1329,8 +1329,8 @@ type QOSServer interface {
 	QosClassDelete(context.Context, *QosClassDeleteRequestMsg) (*QosClassDeleteResponseMsg, error)
 	QosClassGet(context.Context, *QosClassGetRequestMsg) (*QosClassGetResponseMsg, error)
 	// Copp related APIs
-	CoppPolicerUpdate(context.Context, *CoppPolicerRequestMsg) (*CoppPolicerResponseMsg, error)
-	CoppPolicerGet(context.Context, *CoppPolicerGetRequestMsg) (*CoppPolicerGetResponseMsg, error)
+	CoppUpdate(context.Context, *CoppRequestMsg) (*CoppResponseMsg, error)
+	CoppGet(context.Context, *CoppGetRequestMsg) (*CoppGetResponseMsg, error)
 }
 
 func RegisterQOSServer(s *grpc.Server, srv QOSServer) {
@@ -1409,38 +1409,38 @@ func _QOS_QosClassGet_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QOS_CoppPolicerUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CoppPolicerRequestMsg)
+func _QOS_CoppUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CoppRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QOSServer).CoppPolicerUpdate(ctx, in)
+		return srv.(QOSServer).CoppUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/qos.QOS/CoppPolicerUpdate",
+		FullMethod: "/qos.QOS/CoppUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).CoppPolicerUpdate(ctx, req.(*CoppPolicerRequestMsg))
+		return srv.(QOSServer).CoppUpdate(ctx, req.(*CoppRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QOS_CoppPolicerGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CoppPolicerGetRequestMsg)
+func _QOS_CoppGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CoppGetRequestMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QOSServer).CoppPolicerGet(ctx, in)
+		return srv.(QOSServer).CoppGet(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/qos.QOS/CoppPolicerGet",
+		FullMethod: "/qos.QOS/CoppGet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QOSServer).CoppPolicerGet(ctx, req.(*CoppPolicerGetRequestMsg))
+		return srv.(QOSServer).CoppGet(ctx, req.(*CoppGetRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1466,12 +1466,12 @@ var _QOS_serviceDesc = grpc.ServiceDesc{
 			Handler:    _QOS_QosClassGet_Handler,
 		},
 		{
-			MethodName: "CoppPolicerUpdate",
-			Handler:    _QOS_CoppPolicerUpdate_Handler,
+			MethodName: "CoppUpdate",
+			Handler:    _QOS_CoppUpdate_Handler,
 		},
 		{
-			MethodName: "CoppPolicerGet",
-			Handler:    _QOS_CoppPolicerGet_Handler,
+			MethodName: "CoppGet",
+			Handler:    _QOS_CoppGet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2319,7 +2319,7 @@ func (m *QosClassGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerKeyHandle) Marshal() (dAtA []byte, err error) {
+func (m *CoppKeyHandle) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2329,7 +2329,7 @@ func (m *CoppPolicerKeyHandle) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerKeyHandle) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppKeyHandle) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2344,21 +2344,21 @@ func (m *CoppPolicerKeyHandle) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerKeyHandle_CoppType) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppKeyHandle_CoppType) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x8
 	i++
 	i = encodeVarintQos(dAtA, i, uint64(m.CoppType))
 	return i, nil
 }
-func (m *CoppPolicerKeyHandle_CoppPolicerHandle) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppKeyHandle_CoppHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Qos(dAtA, i, uint64(m.CoppPolicerHandle))
+	i = encodeFixed64Qos(dAtA, i, uint64(m.CoppHandle))
 	return i, nil
 }
-func (m *CoppPolicerSpec) Marshal() (dAtA []byte, err error) {
+func (m *CoppSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2368,7 +2368,7 @@ func (m *CoppPolicerSpec) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerSpec) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppSpec) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2406,7 +2406,7 @@ func (m *CoppPolicerSpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerRequestMsg) Marshal() (dAtA []byte, err error) {
+func (m *CoppRequestMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2416,7 +2416,7 @@ func (m *CoppPolicerRequestMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2436,7 +2436,7 @@ func (m *CoppPolicerRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerStatus) Marshal() (dAtA []byte, err error) {
+func (m *CoppStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2446,20 +2446,20 @@ func (m *CoppPolicerStatus) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerStatus) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppStatus) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.CoppPolicerHandle != 0 {
+	if m.CoppHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Qos(dAtA, i, uint64(m.CoppPolicerHandle))
+		i = encodeFixed64Qos(dAtA, i, uint64(m.CoppHandle))
 	}
 	return i, nil
 }
 
-func (m *CoppPolicerResponse) Marshal() (dAtA []byte, err error) {
+func (m *CoppResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2469,7 +2469,7 @@ func (m *CoppPolicerResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2492,7 +2492,7 @@ func (m *CoppPolicerResponse) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerResponseMsg) Marshal() (dAtA []byte, err error) {
+func (m *CoppResponseMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2502,7 +2502,7 @@ func (m *CoppPolicerResponseMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2522,7 +2522,7 @@ func (m *CoppPolicerResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerGetRequest) Marshal() (dAtA []byte, err error) {
+func (m *CoppGetRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2532,7 +2532,7 @@ func (m *CoppPolicerGetRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerGetRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppGetRequest) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2560,7 +2560,7 @@ func (m *CoppPolicerGetRequest) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerGetRequestMsg) Marshal() (dAtA []byte, err error) {
+func (m *CoppGetRequestMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2570,7 +2570,7 @@ func (m *CoppPolicerGetRequestMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2590,7 +2590,7 @@ func (m *CoppPolicerGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerGetResponse) Marshal() (dAtA []byte, err error) {
+func (m *CoppGetResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2600,7 +2600,7 @@ func (m *CoppPolicerGetResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerGetResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppGetResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2638,7 +2638,7 @@ func (m *CoppPolicerGetResponse) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CoppPolicerGetResponseMsg) Marshal() (dAtA []byte, err error) {
+func (m *CoppGetResponseMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2648,7 +2648,7 @@ func (m *CoppPolicerGetResponseMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CoppPolicerGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *CoppGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -3040,7 +3040,7 @@ func (m *QosClassGetResponseMsg) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerKeyHandle) Size() (n int) {
+func (m *CoppKeyHandle) Size() (n int) {
 	var l int
 	_ = l
 	if m.KeyOrHandle != nil {
@@ -3049,19 +3049,19 @@ func (m *CoppPolicerKeyHandle) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerKeyHandle_CoppType) Size() (n int) {
+func (m *CoppKeyHandle_CoppType) Size() (n int) {
 	var l int
 	_ = l
 	n += 1 + sovQos(uint64(m.CoppType))
 	return n
 }
-func (m *CoppPolicerKeyHandle_CoppPolicerHandle) Size() (n int) {
+func (m *CoppKeyHandle_CoppHandle) Size() (n int) {
 	var l int
 	_ = l
 	n += 9
 	return n
 }
-func (m *CoppPolicerSpec) Size() (n int) {
+func (m *CoppSpec) Size() (n int) {
 	var l int
 	_ = l
 	if m.Meta != nil {
@@ -3079,7 +3079,7 @@ func (m *CoppPolicerSpec) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerRequestMsg) Size() (n int) {
+func (m *CoppRequestMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Request) > 0 {
@@ -3091,16 +3091,16 @@ func (m *CoppPolicerRequestMsg) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerStatus) Size() (n int) {
+func (m *CoppStatus) Size() (n int) {
 	var l int
 	_ = l
-	if m.CoppPolicerHandle != 0 {
+	if m.CoppHandle != 0 {
 		n += 9
 	}
 	return n
 }
 
-func (m *CoppPolicerResponse) Size() (n int) {
+func (m *CoppResponse) Size() (n int) {
 	var l int
 	_ = l
 	if m.ApiStatus != 0 {
@@ -3113,7 +3113,7 @@ func (m *CoppPolicerResponse) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerResponseMsg) Size() (n int) {
+func (m *CoppResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -3125,7 +3125,7 @@ func (m *CoppPolicerResponseMsg) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerGetRequest) Size() (n int) {
+func (m *CoppGetRequest) Size() (n int) {
 	var l int
 	_ = l
 	if m.Meta != nil {
@@ -3139,7 +3139,7 @@ func (m *CoppPolicerGetRequest) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerGetRequestMsg) Size() (n int) {
+func (m *CoppGetRequestMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Request) > 0 {
@@ -3151,7 +3151,7 @@ func (m *CoppPolicerGetRequestMsg) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerGetResponse) Size() (n int) {
+func (m *CoppGetResponse) Size() (n int) {
 	var l int
 	_ = l
 	if m.Spec != nil {
@@ -3169,7 +3169,7 @@ func (m *CoppPolicerGetResponse) Size() (n int) {
 	return n
 }
 
-func (m *CoppPolicerGetResponseMsg) Size() (n int) {
+func (m *CoppGetResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -5662,7 +5662,7 @@ func (m *QosClassGetResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerKeyHandle) Unmarshal(dAtA []byte) error {
+func (m *CoppKeyHandle) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5685,10 +5685,10 @@ func (m *CoppPolicerKeyHandle) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerKeyHandle: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppKeyHandle: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5710,10 +5710,10 @@ func (m *CoppPolicerKeyHandle) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.KeyOrHandle = &CoppPolicerKeyHandle_CoppType{v}
+			m.KeyOrHandle = &CoppKeyHandle_CoppType{v}
 		case 2:
 			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CoppPolicerHandle", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CoppHandle", wireType)
 			}
 			var v uint64
 			if (iNdEx + 8) > l {
@@ -5728,7 +5728,7 @@ func (m *CoppPolicerKeyHandle) Unmarshal(dAtA []byte) error {
 			v |= uint64(dAtA[iNdEx-3]) << 40
 			v |= uint64(dAtA[iNdEx-2]) << 48
 			v |= uint64(dAtA[iNdEx-1]) << 56
-			m.KeyOrHandle = &CoppPolicerKeyHandle_CoppPolicerHandle{v}
+			m.KeyOrHandle = &CoppKeyHandle_CoppHandle{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQos(dAtA[iNdEx:])
@@ -5750,7 +5750,7 @@ func (m *CoppPolicerKeyHandle) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerSpec) Unmarshal(dAtA []byte) error {
+func (m *CoppSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5773,10 +5773,10 @@ func (m *CoppPolicerSpec) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerSpec: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppSpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppSpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5839,7 +5839,7 @@ func (m *CoppPolicerSpec) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &CoppPolicerKeyHandle{}
+				m.KeyOrHandle = &CoppKeyHandle{}
 			}
 			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5899,7 +5899,7 @@ func (m *CoppPolicerSpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerRequestMsg) Unmarshal(dAtA []byte) error {
+func (m *CoppRequestMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5922,10 +5922,10 @@ func (m *CoppPolicerRequestMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerRequestMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppRequestMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5954,7 +5954,7 @@ func (m *CoppPolicerRequestMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Request = append(m.Request, &CoppPolicerSpec{})
+			m.Request = append(m.Request, &CoppSpec{})
 			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -5980,7 +5980,7 @@ func (m *CoppPolicerRequestMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerStatus) Unmarshal(dAtA []byte) error {
+func (m *CoppStatus) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6003,29 +6003,29 @@ func (m *CoppPolicerStatus) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerStatus: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppStatus: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CoppPolicerHandle", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CoppHandle", wireType)
 			}
-			m.CoppPolicerHandle = 0
+			m.CoppHandle = 0
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
 			iNdEx += 8
-			m.CoppPolicerHandle = uint64(dAtA[iNdEx-8])
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-1]) << 56
+			m.CoppHandle = uint64(dAtA[iNdEx-8])
+			m.CoppHandle |= uint64(dAtA[iNdEx-7]) << 8
+			m.CoppHandle |= uint64(dAtA[iNdEx-6]) << 16
+			m.CoppHandle |= uint64(dAtA[iNdEx-5]) << 24
+			m.CoppHandle |= uint64(dAtA[iNdEx-4]) << 32
+			m.CoppHandle |= uint64(dAtA[iNdEx-3]) << 40
+			m.CoppHandle |= uint64(dAtA[iNdEx-2]) << 48
+			m.CoppHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQos(dAtA[iNdEx:])
@@ -6047,7 +6047,7 @@ func (m *CoppPolicerStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerResponse) Unmarshal(dAtA []byte) error {
+func (m *CoppResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6070,10 +6070,10 @@ func (m *CoppPolicerResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6122,7 +6122,7 @@ func (m *CoppPolicerResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Status == nil {
-				m.Status = &CoppPolicerStatus{}
+				m.Status = &CoppStatus{}
 			}
 			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6149,7 +6149,7 @@ func (m *CoppPolicerResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerResponseMsg) Unmarshal(dAtA []byte) error {
+func (m *CoppResponseMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6172,10 +6172,10 @@ func (m *CoppPolicerResponseMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerResponseMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppResponseMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6204,7 +6204,7 @@ func (m *CoppPolicerResponseMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response, &CoppPolicerResponse{})
+			m.Response = append(m.Response, &CoppResponse{})
 			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -6230,7 +6230,7 @@ func (m *CoppPolicerResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerGetRequest) Unmarshal(dAtA []byte) error {
+func (m *CoppGetRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6253,10 +6253,10 @@ func (m *CoppPolicerGetRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerGetRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppGetRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6319,7 +6319,7 @@ func (m *CoppPolicerGetRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.KeyOrHandle == nil {
-				m.KeyOrHandle = &CoppPolicerKeyHandle{}
+				m.KeyOrHandle = &CoppKeyHandle{}
 			}
 			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6346,7 +6346,7 @@ func (m *CoppPolicerGetRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerGetRequestMsg) Unmarshal(dAtA []byte) error {
+func (m *CoppGetRequestMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6369,10 +6369,10 @@ func (m *CoppPolicerGetRequestMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerGetRequestMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppGetRequestMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6401,7 +6401,7 @@ func (m *CoppPolicerGetRequestMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Request = append(m.Request, &CoppPolicerGetRequest{})
+			m.Request = append(m.Request, &CoppGetRequest{})
 			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -6427,7 +6427,7 @@ func (m *CoppPolicerGetRequestMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerGetResponse) Unmarshal(dAtA []byte) error {
+func (m *CoppGetResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6450,10 +6450,10 @@ func (m *CoppPolicerGetResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerGetResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppGetResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6483,7 +6483,7 @@ func (m *CoppPolicerGetResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Spec == nil {
-				m.Spec = &CoppPolicerSpec{}
+				m.Spec = &CoppSpec{}
 			}
 			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6516,7 +6516,7 @@ func (m *CoppPolicerGetResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Status == nil {
-				m.Status = &CoppPolicerStatus{}
+				m.Status = &CoppStatus{}
 			}
 			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6576,7 +6576,7 @@ func (m *CoppPolicerGetResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CoppPolicerGetResponseMsg) Unmarshal(dAtA []byte) error {
+func (m *CoppGetResponseMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6599,10 +6599,10 @@ func (m *CoppPolicerGetResponseMsg) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CoppPolicerGetResponseMsg: wiretype end group for non-group")
+			return fmt.Errorf("proto: CoppGetResponseMsg: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CoppPolicerGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CoppGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6631,7 +6631,7 @@ func (m *CoppPolicerGetResponseMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Response = append(m.Response, &CoppPolicerGetResponse{})
+			m.Response = append(m.Response, &CoppGetResponse{})
 			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -6765,106 +6765,106 @@ var (
 func init() { proto.RegisterFile("qos.proto", fileDescriptorQos) }
 
 var fileDescriptorQos = []byte{
-	// 1615 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0x4d, 0x6f, 0x23, 0x49,
-	0x19, 0x76, 0xc7, 0x1e, 0xdb, 0x79, 0xfd, 0x91, 0x76, 0x65, 0x26, 0xe3, 0x78, 0x34, 0x61, 0xe9,
-	0xd5, 0xee, 0x86, 0x99, 0x55, 0x86, 0xf1, 0x2e, 0x20, 0xcd, 0x89, 0xc4, 0x76, 0x3e, 0x96, 0xd8,
-	0x6e, 0x97, 0x1d, 0xed, 0x0e, 0x97, 0x56, 0xbb, 0x5d, 0x4e, 0x9a, 0xd8, 0xee, 0x4a, 0x57, 0x7b,
-	0x32, 0xde, 0x03, 0x57, 0x84, 0x84, 0xc4, 0x81, 0x0b, 0x12, 0x17, 0x0e, 0xfc, 0x02, 0x24, 0x7e,
-	0x03, 0x1c, 0x91, 0xb8, 0x71, 0x40, 0x68, 0xb8, 0x73, 0xe0, 0x17, 0xa0, 0xaa, 0xae, 0x76, 0x7f,
-	0xd8, 0xd9, 0x55, 0x56, 0x2b, 0xed, 0x69, 0x2a, 0xef, 0xfb, 0xd4, 0x53, 0xef, 0xc7, 0x53, 0x6f,
-	0x97, 0x07, 0x36, 0x6f, 0x1c, 0x76, 0x40, 0x5d, 0xc7, 0x73, 0x50, 0xfa, 0xc6, 0x61, 0xb5, 0x82,
-	0xb7, 0xa0, 0x44, 0x5a, 0xb4, 0x13, 0x28, 0xe8, 0xce, 0xc4, 0xb6, 0x88, 0xdb, 0xa7, 0xc4, 0x42,
-	0xbb, 0x90, 0x1f, 0x52, 0x66, 0xb8, 0xa6, 0x47, 0xaa, 0xca, 0x7b, 0xca, 0x7e, 0x09, 0xe7, 0x86,
-	0x94, 0x61, 0xd3, 0x23, 0xe8, 0x29, 0xc0, 0x70, 0xee, 0x32, 0xcf, 0x60, 0xf6, 0x97, 0xa4, 0xba,
-	0x21, 0x9c, 0x9b, 0xc2, 0xd2, 0xb7, 0xbf, 0x24, 0xda, 0x9f, 0x15, 0x28, 0x06, 0x4c, 0x9e, 0xe9,
-	0x31, 0xf4, 0x1c, 0x2a, 0x94, 0xb8, 0x53, 0xdb, 0xf3, 0xc8, 0xc8, 0xa0, 0xa6, 0x75, 0x4d, 0x3c,
-	0x26, 0x38, 0x33, 0x58, 0x5d, 0x3a, 0x74, 0xdf, 0x8e, 0x3e, 0x82, 0xad, 0x10, 0x3c, 0x5c, 0x78,
-	0x84, 0x89, 0x13, 0x32, 0xb8, 0xbc, 0x34, 0x1f, 0x71, 0x2b, 0x07, 0x8e, 0x5c, 0x87, 0xd2, 0x08,
-	0x67, 0xda, 0x07, 0x4a, 0x73, 0xc0, 0xf8, 0x3e, 0x94, 0x02, 0xa0, 0xcf, 0x97, 0x11, 0xb0, 0xa2,
-	0x34, 0x0a, 0x36, 0xed, 0x97, 0x50, 0xe9, 0x39, 0xac, 0x31, 0x31, 0x19, 0xfb, 0x19, 0x59, 0x9c,
-	0x9a, 0xb3, 0xd1, 0x84, 0xa0, 0x8f, 0x45, 0xc5, 0x8c, 0x4b, 0xd7, 0x99, 0x53, 0x11, 0x70, 0xb9,
-	0x5e, 0x3a, 0xe0, 0x35, 0xec, 0x39, 0xec, 0x84, 0x1b, 0x4f, 0x53, 0x38, 0x7f, 0x23, 0xd7, 0xe8,
-	0x19, 0xa8, 0x1c, 0x6d, 0x71, 0x0e, 0xe3, 0x4a, 0x30, 0x88, 0xd0, 0xb3, 0xa7, 0x29, 0x5c, 0xbe,
-	0x91, 0xe4, 0x3e, 0xf3, 0xd1, 0x16, 0x94, 0xae, 0xc9, 0xc2, 0x70, 0x5c, 0x09, 0xd4, 0xfe, 0xa4,
-	0xc0, 0x66, 0xcf, 0x61, 0x47, 0xf3, 0xf1, 0x98, 0xb8, 0x3c, 0x64, 0x97, 0x30, 0xe2, 0xbe, 0x21,
-	0x23, 0x63, 0xea, 0xcd, 0x99, 0xec, 0x40, 0x31, 0x30, 0xb6, 0xbd, 0xb9, 0xc8, 0xeb, 0x8a, 0x98,
-	0x23, 0xd7, 0x71, 0xa6, 0x3e, 0xc8, 0xef, 0x44, 0x31, 0x30, 0x06, 0xa0, 0xb7, 0xce, 0xcc, 0xf0,
-	0xae, 0x5c, 0xc2, 0xae, 0x9c, 0xc9, 0x48, 0xd4, 0xa8, 0x84, 0x8b, 0x6f, 0x9d, 0xd9, 0x20, 0xb0,
-	0xa1, 0x7d, 0x50, 0xdf, 0x3a, 0xe3, 0xb1, 0x61, 0x4d, 0x88, 0xe9, 0x1a, 0x13, 0x7b, 0x6a, 0x7b,
-	0xa2, 0x48, 0x25, 0x5c, 0xe6, 0xf6, 0x06, 0x37, 0x9f, 0x73, 0xab, 0xf6, 0x7d, 0xc8, 0xf6, 0x1c,
-	0xa6, 0x1f, 0x37, 0xd0, 0x63, 0xc8, 0xd1, 0xb1, 0x65, 0x58, 0x0e, 0x0f, 0x2e, 0xbd, 0x5f, 0xc2,
-	0x59, 0x3a, 0xb6, 0x1a, 0x0e, 0xd3, 0xfe, 0xa9, 0x40, 0xbe, 0xe7, 0xb0, 0xbe, 0x75, 0x45, 0x46,
-	0xe8, 0x63, 0xc8, 0x8c, 0x6e, 0x5d, 0x57, 0xc4, 0x5f, 0xa8, 0xef, 0x04, 0xc5, 0x13, 0xce, 0x83,
-	0xe6, 0xe7, 0x18, 0x9f, 0xcd, 0xc6, 0xce, 0x69, 0x0a, 0x0b, 0x14, 0x7a, 0x05, 0x59, 0xe6, 0xb9,
-	0xb6, 0xe5, 0x89, 0x54, 0x0a, 0xf5, 0xf7, 0xe2, 0xf8, 0xbe, 0xf0, 0xe9, 0xae, 0xed, 0xb8, 0xb6,
-	0xb7, 0x90, 0x3b, 0xe5, 0x8e, 0xda, 0x0b, 0xc8, 0x07, 0x7c, 0x3c, 0xe9, 0xe1, 0xad, 0x41, 0x89,
-	0x6b, 0x91, 0x99, 0x67, 0x5e, 0x06, 0x02, 0x2e, 0x0e, 0x6f, 0xf5, 0xa5, 0xad, 0xf6, 0x21, 0xa0,
-	0x55, 0x42, 0xa4, 0x42, 0x7a, 0x48, 0x83, 0x7a, 0xf3, 0xe5, 0x51, 0x01, 0x36, 0xc5, 0xf1, 0x83,
-	0x05, 0x25, 0xda, 0x99, 0x90, 0xc9, 0x05, 0x9d, 0xd8, 0xb3, 0x6b, 0xd1, 0xcf, 0xb6, 0x49, 0xd1,
-	0x13, 0xd8, 0x1c, 0x39, 0xde, 0xcb, 0x1b, 0x83, 0x5a, 0x54, 0xee, 0xcc, 0x0b, 0x83, 0x6e, 0x51,
-	0x5e, 0x27, 0x9b, 0x1a, 0x23, 0x66, 0xd1, 0xea, 0x86, 0x5f, 0x27, 0x9b, 0x36, 0x99, 0x45, 0xb5,
-	0x3f, 0x2a, 0x00, 0x3d, 0x87, 0xb5, 0x4d, 0xf7, 0xda, 0x9e, 0x5d, 0xa2, 0x17, 0xf0, 0x70, 0x49,
-	0x62, 0xb8, 0xe4, 0xd6, 0xb5, 0x3d, 0x62, 0x90, 0x99, 0xe0, 0xcb, 0xe3, 0x4a, 0xc0, 0x87, 0x7d,
-	0x4f, 0x6b, 0x16, 0x3f, 0x75, 0x23, 0x71, 0xea, 0x73, 0x40, 0xf2, 0xd4, 0x28, 0x57, 0x5a, 0x70,
-	0x6d, 0xf9, 0x01, 0x84, 0x4c, 0x91, 0x10, 0xfd, 0xae, 0x07, 0x21, 0xfe, 0x77, 0x03, 0x8a, 0xc1,
-	0xad, 0x10, 0x43, 0xe1, 0x03, 0xc8, 0x4c, 0x89, 0x67, 0xca, 0x76, 0x56, 0x0e, 0xfc, 0xf9, 0xd1,
-	0x1d, 0xfe, 0x82, 0x58, 0x5e, 0x9b, 0x78, 0x26, 0x16, 0x6e, 0x74, 0x9e, 0x50, 0xb7, 0x6c, 0xe7,
-	0xb2, 0xfd, 0xf1, 0x6b, 0x76, 0xa4, 0xfe, 0xef, 0x5f, 0xdf, 0x2b, 0xbe, 0x21, 0x33, 0xdb, 0x22,
-	0xaf, 0xb4, 0x6b, 0xb2, 0xd0, 0x70, 0xe1, 0x9a, 0x2c, 0xba, 0xae, 0xbc, 0x85, 0x2a, 0xa4, 0xa7,
-	0xde, 0x5c, 0x0a, 0x97, 0x2f, 0xd1, 0x87, 0x90, 0x1d, 0x8a, 0x8b, 0x22, 0xe2, 0x2d, 0xd4, 0xcb,
-	0x01, 0xb1, 0x7f, 0x7d, 0xb0, 0xf4, 0xa2, 0xa7, 0x90, 0xa6, 0x63, 0xab, 0xfa, 0x40, 0x80, 0x0a,
-	0x01, 0x48, 0x3f, 0x6e, 0x60, 0x6e, 0x47, 0xef, 0xc3, 0x03, 0xc6, 0x3b, 0x5b, 0xcd, 0x0a, 0x40,
-	0x29, 0xa6, 0x36, 0xec, 0xfb, 0xd0, 0x4f, 0x41, 0x9d, 0x8b, 0x76, 0xcb, 0x8b, 0x3d, 0x35, 0x69,
-	0x35, 0x17, 0x4f, 0x27, 0x2e, 0x07, 0x5c, 0x9e, 0xc7, 0xe5, 0xf1, 0x03, 0xc8, 0x4d, 0xfd, 0x26,
-	0x57, 0xf3, 0x62, 0xe3, 0x56, 0xb0, 0x51, 0xf6, 0x1e, 0x07, 0x7e, 0xed, 0x10, 0x50, 0x50, 0x1e,
-	0x4c, 0x6e, 0xe6, 0x84, 0x79, 0x6d, 0x76, 0x89, 0x9e, 0x43, 0xce, 0xf5, 0xff, 0x12, 0x57, 0x8d,
-	0x17, 0x3e, 0x5a, 0x48, 0xde, 0x19, 0x1c, 0x20, 0xb4, 0x57, 0x50, 0x5e, 0x3a, 0x3c, 0x93, 0x8f,
-	0x80, 0xfd, 0x35, 0x73, 0x89, 0x37, 0x30, 0x9b, 0x9c, 0x4a, 0x1a, 0x05, 0x35, 0x3c, 0x9e, 0x51,
-	0x67, 0xc6, 0x08, 0x7a, 0x01, 0x60, 0x52, 0xdb, 0x60, 0x82, 0x4b, 0x0e, 0x41, 0x55, 0x36, 0xfe,
-	0x90, 0xda, 0xfe, 0x19, 0x78, 0xd3, 0x0c, 0x96, 0xe8, 0x39, 0xbf, 0xc4, 0x66, 0x30, 0x8f, 0x0a,
-	0xf5, 0xed, 0x78, 0xb0, 0x3e, 0x5e, 0x42, 0xb4, 0x53, 0xd8, 0x4e, 0x9e, 0xc8, 0x33, 0x7e, 0x09,
-	0x79, 0x57, 0xfe, 0x29, 0x53, 0x7e, 0x14, 0x63, 0x09, 0xb0, 0x78, 0x09, 0xd3, 0x7e, 0xa3, 0xc0,
-	0xa3, 0xc0, 0xdd, 0x24, 0x13, 0xe2, 0x11, 0x59, 0xc1, 0xef, 0x44, 0xb4, 0x9a, 0x0e, 0xd5, 0xb5,
-	0xd1, 0xf0, 0xec, 0x3e, 0x4d, 0xf6, 0xb3, 0x16, 0x3b, 0x23, 0x86, 0x0f, 0x1b, 0x7b, 0x0e, 0xbb,
-	0x49, 0x44, 0x58, 0xb0, 0x64, 0x97, 0xd2, 0x5f, 0xd3, 0x25, 0x6d, 0x0b, 0x4a, 0xd1, 0x96, 0x30,
-	0xed, 0xd7, 0x4a, 0xa8, 0xbd, 0x13, 0xe2, 0x7d, 0xa7, 0xc5, 0xfb, 0x2c, 0x6c, 0x65, 0x18, 0x8a,
-	0xaf, 0x8b, 0x44, 0xe5, 0x1e, 0xc7, 0x0e, 0x08, 0xc1, 0x61, 0xd9, 0x7e, 0xa7, 0x84, 0x12, 0x13,
-	0x7e, 0xa9, 0xeb, 0x0f, 0x20, 0xc3, 0x28, 0xb1, 0x96, 0x89, 0xad, 0xdc, 0x28, 0xe1, 0xbe, 0x97,
-	0x9a, 0xd1, 0x3e, 0x3c, 0xe0, 0x2b, 0xff, 0x21, 0x52, 0xa8, 0xa3, 0x15, 0x2c, 0xc3, 0x3e, 0x40,
-	0xeb, 0xc0, 0xce, 0x9a, 0xa0, 0x7c, 0x71, 0x24, 0xa5, 0x5f, 0x5d, 0xcd, 0x71, 0x45, 0xfd, 0xbf,
-	0x52, 0xe0, 0x61, 0xc3, 0xa1, 0x54, 0xbe, 0xbb, 0x62, 0x4f, 0x18, 0xcb, 0xa1, 0xd4, 0xe0, 0x7d,
-	0x8b, 0x3d, 0x61, 0x38, 0x9a, 0x7f, 0xd2, 0xf8, 0x13, 0xc6, 0x92, 0x6b, 0xf4, 0x43, 0xd8, 0x16,
-	0x68, 0xea, 0xd3, 0x24, 0x5f, 0x31, 0x15, 0x2b, 0x3c, 0xe2, 0xae, 0x87, 0xcc, 0x5f, 0x14, 0xd8,
-	0x8a, 0x44, 0x72, 0x9f, 0xcf, 0x46, 0x77, 0xbd, 0x88, 0x76, 0x97, 0xf1, 0x26, 0xb3, 0xfb, 0xba,
-	0x2f, 0xc7, 0x33, 0xc8, 0xc9, 0x4c, 0x64, 0x47, 0x54, 0x41, 0x15, 0x09, 0x0d, 0x07, 0x00, 0xed,
-	0x04, 0x1e, 0x45, 0x8e, 0x88, 0x68, 0xee, 0x20, 0xa9, 0xb9, 0x87, 0xc9, 0x78, 0xe2, 0x03, 0xb8,
-	0x01, 0x95, 0xa8, 0xcf, 0x57, 0xc6, 0xc1, 0xfa, 0xc2, 0xfa, 0x63, 0x78, 0xb5, 0xac, 0xda, 0x1b,
-	0xd8, 0x8e, 0x45, 0xf3, 0x4d, 0x87, 0xf1, 0x41, 0x42, 0xbe, 0x3b, 0x2b, 0xb1, 0xc7, 0xe7, 0x71,
-	0x07, 0x76, 0xd6, 0x9c, 0xfb, 0x55, 0xba, 0x5c, 0x03, 0x8f, 0xe8, 0xf2, 0xb7, 0x4a, 0xac, 0xac,
-	0xf7, 0x1f, 0x2c, 0xdf, 0xb6, 0x26, 0xf8, 0x60, 0x5e, 0x1b, 0xd0, 0x57, 0x0c, 0xe6, 0xb5, 0xf8,
-	0xb0, 0xe1, 0x7f, 0x50, 0x62, 0x45, 0x8b, 0x0e, 0x99, 0xfd, 0xd8, 0x90, 0x59, 0x2f, 0x1c, 0x7f,
-	0xce, 0xdc, 0xb3, 0x51, 0xe8, 0xa3, 0xf8, 0xa8, 0xa9, 0xc4, 0x84, 0x1d, 0x9d, 0x34, 0x03, 0xd8,
-	0x5d, 0x1f, 0x1c, 0x4f, 0xf8, 0x27, 0x2b, 0x4d, 0x7d, 0xb2, 0x36, 0xe3, 0x64, 0x5f, 0x9f, 0xfd,
-	0x75, 0x43, 0x3c, 0xf2, 0xfd, 0x1f, 0x3e, 0x05, 0xc8, 0x35, 0x5b, 0xc7, 0x87, 0x17, 0xe7, 0x03,
-	0x35, 0x85, 0x10, 0x94, 0x2f, 0xfa, 0x2d, 0x6c, 0x34, 0x5b, 0xc7, 0x67, 0x9d, 0x56, 0xd3, 0x78,
-	0xa9, 0x2a, 0x2b, 0xb6, 0xba, 0xba, 0xb1, 0x62, 0xfb, 0x44, 0x4d, 0xaf, 0xd8, 0x3e, 0x55, 0x33,
-	0x2b, 0xb6, 0x1f, 0xa9, 0x0f, 0x56, 0x6c, 0x3f, 0x56, 0xb3, 0x3c, 0x88, 0x46, 0xb7, 0x33, 0xc0,
-	0xdd, 0x73, 0x35, 0x87, 0xf2, 0x90, 0xe9, 0xeb, 0x87, 0x1d, 0x35, 0xcf, 0xa1, 0x67, 0x9d, 0x41,
-	0x0b, 0x77, 0x0e, 0xcf, 0x8d, 0xc3, 0x66, 0xfb, 0xac, 0xa3, 0x6e, 0xa2, 0xa7, 0xb0, 0xbb, 0xb4,
-	0xe1, 0x2f, 0x0c, 0x1d, 0x77, 0xbf, 0x78, 0x6d, 0x74, 0xba, 0x46, 0x13, 0x77, 0x75, 0x15, 0x50,
-	0x0d, 0x76, 0x56, 0xdd, 0xc2, 0x57, 0x88, 0x6d, 0x1d, 0x24, 0xb7, 0x16, 0x63, 0x5b, 0x07, 0xb1,
-	0xad, 0x25, 0xf4, 0x08, 0x2a, 0x4b, 0x5f, 0x43, 0xbf, 0x30, 0x1a, 0x5d, 0xfd, 0xb5, 0x5a, 0x7e,
-	0xf6, 0x19, 0xe4, 0x83, 0x51, 0x8c, 0x1e, 0xc3, 0x76, 0xa3, 0xab, 0xeb, 0xc6, 0xe0, 0xb5, 0xde,
-	0x32, 0x8e, 0xcf, 0xbb, 0x9f, 0x1b, 0xed, 0xb3, 0x7e, 0x5f, 0x4d, 0xa1, 0x0a, 0x94, 0x42, 0xc7,
-	0x21, 0xd6, 0xfd, 0x9a, 0x86, 0xa6, 0xe6, 0x69, 0x43, 0x57, 0x37, 0xea, 0xff, 0x48, 0x43, 0xba,
-	0xd7, 0xed, 0xa3, 0x56, 0xf8, 0x06, 0x6c, 0xb8, 0x84, 0xff, 0x64, 0x7f, 0x9c, 0x78, 0x3e, 0x05,
-	0x92, 0xaf, 0x55, 0xd7, 0xbe, 0xab, 0xda, 0xec, 0x52, 0x4b, 0x45, 0x69, 0x2e, 0xe8, 0xe8, 0x1b,
-	0xd3, 0xf4, 0x42, 0x1a, 0xff, 0xe1, 0x82, 0x9e, 0xde, 0xfd, 0xde, 0xe1, 0x64, 0x7b, 0x6b, 0xdd,
-	0x51, 0xca, 0x53, 0x28, 0x44, 0xbe, 0x87, 0xa8, 0x76, 0xc7, 0x2b, 0x80, 0x93, 0x3d, 0xb9, 0xeb,
-	0xeb, 0xe9, 0x33, 0x75, 0x62, 0xd3, 0x5a, 0xa6, 0x59, 0x5b, 0x9d, 0x6c, 0x09, 0xbe, 0xf5, 0x43,
-	0xd2, 0x4f, 0x36, 0x7e, 0x79, 0x64, 0xb2, 0x77, 0xcd, 0x1c, 0x99, 0xec, 0x9d, 0x57, 0x54, 0x4b,
-	0x1d, 0xd5, 0xfe, 0xf6, 0x6e, 0x4f, 0xf9, 0xfb, 0xbb, 0x3d, 0xe5, 0xdf, 0xef, 0xf6, 0x94, 0xdf,
-	0xff, 0x67, 0x2f, 0xf5, 0xf3, 0xfc, 0x95, 0x39, 0x11, 0xff, 0x69, 0x33, 0xcc, 0x8a, 0x7f, 0x3e,
-	0xf9, 0x7f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xbb, 0x86, 0x3d, 0x12, 0xda, 0x11, 0x00, 0x00,
+	// 1609 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x58, 0x4f, 0x6f, 0xe3, 0xc6,
+	0x15, 0x37, 0x2d, 0x59, 0x92, 0x9f, 0xfe, 0x98, 0x1a, 0xef, 0xda, 0x5a, 0x05, 0x76, 0xb2, 0x0c,
+	0x12, 0xbb, 0x76, 0xe2, 0xed, 0x2a, 0x69, 0x81, 0x2c, 0x7a, 0x88, 0x2d, 0xc9, 0x2b, 0xa7, 0x96,
+	0x44, 0x8d, 0x64, 0x24, 0xdb, 0x0b, 0x41, 0x51, 0x23, 0x9b, 0xb5, 0x24, 0x8e, 0x39, 0x54, 0xbc,
+	0xca, 0xa1, 0x40, 0x2f, 0x05, 0x0a, 0xf4, 0xd6, 0x4b, 0x8f, 0x3d, 0x14, 0x28, 0x7a, 0xed, 0x97,
+	0x68, 0x8f, 0x3d, 0xf7, 0x50, 0x14, 0xdb, 0x7b, 0x0f, 0xfd, 0x04, 0xc5, 0xcc, 0x90, 0xa2, 0x48,
+	0xc9, 0x68, 0x36, 0x28, 0x90, 0xd3, 0xd2, 0xef, 0xfd, 0xe6, 0x37, 0xef, 0xff, 0x3c, 0x2d, 0x6c,
+	0xde, 0x39, 0xec, 0x84, 0xba, 0x8e, 0xe7, 0xa0, 0xc4, 0x9d, 0xc3, 0xca, 0x59, 0x6f, 0x46, 0x89,
+	0x2f, 0xd1, 0x5e, 0x42, 0x56, 0x77, 0x46, 0xb6, 0x45, 0xdc, 0x2e, 0x25, 0x16, 0x7a, 0x02, 0x99,
+	0x3e, 0x65, 0x86, 0x6b, 0x7a, 0xa4, 0xa4, 0xbc, 0xa7, 0x1c, 0xe6, 0x71, 0xba, 0x4f, 0x19, 0x36,
+	0x3d, 0x82, 0xf6, 0x00, 0xfa, 0x53, 0x97, 0x79, 0x06, 0xb3, 0xbf, 0x21, 0xa5, 0x75, 0xa1, 0xdc,
+	0x14, 0x92, 0xae, 0xfd, 0x0d, 0xd1, 0xfe, 0xac, 0x40, 0x2e, 0x60, 0xf2, 0x4c, 0x8f, 0xa1, 0x63,
+	0x28, 0x52, 0xe2, 0x8e, 0x6d, 0xcf, 0x23, 0x03, 0x83, 0x9a, 0xd6, 0x2d, 0xf1, 0x98, 0xe0, 0x4c,
+	0x62, 0x75, 0xae, 0xd0, 0xa5, 0x1c, 0x1d, 0xc0, 0x56, 0x08, 0xee, 0xcf, 0x3c, 0xc2, 0xc4, 0x0d,
+	0x49, 0x5c, 0x98, 0x8b, 0xcf, 0xb8, 0x94, 0x03, 0x07, 0xae, 0x43, 0xe9, 0x02, 0x67, 0x42, 0x02,
+	0x7d, 0x71, 0xc0, 0xf8, 0x3e, 0xe4, 0x03, 0xa0, 0xe4, 0x4b, 0x0a, 0x58, 0xce, 0x17, 0x0a, 0x36,
+	0xed, 0x17, 0x50, 0xec, 0x38, 0xac, 0x3a, 0x32, 0x19, 0xfb, 0x29, 0x99, 0x35, 0xcc, 0xc9, 0x60,
+	0x44, 0xd0, 0x47, 0x22, 0x62, 0xc6, 0xb5, 0xeb, 0x4c, 0xa9, 0x30, 0xb8, 0x50, 0xc9, 0x9f, 0xf0,
+	0x18, 0x76, 0x1c, 0xf6, 0x92, 0x0b, 0x1b, 0x6b, 0x38, 0x73, 0xe7, 0x7f, 0xa3, 0x23, 0x50, 0x39,
+	0xda, 0xe2, 0x1c, 0xc6, 0x8d, 0x60, 0x10, 0xa6, 0xa7, 0x1a, 0x6b, 0xb8, 0x70, 0xe7, 0x93, 0x4b,
+	0xe6, 0xb3, 0x2d, 0xc8, 0xdf, 0x92, 0x99, 0xe1, 0xb8, 0x3e, 0x50, 0xfb, 0x83, 0x02, 0x9b, 0x1d,
+	0x87, 0x9d, 0x4d, 0x87, 0x43, 0xe2, 0x72, 0x93, 0x5d, 0xc2, 0x88, 0xfb, 0x35, 0x19, 0x18, 0x63,
+	0x6f, 0xca, 0xfc, 0x0c, 0xe4, 0x02, 0x61, 0xd3, 0x9b, 0x0a, 0xbf, 0x6e, 0x88, 0x39, 0x70, 0x1d,
+	0x67, 0x2c, 0x41, 0x32, 0x13, 0xb9, 0x40, 0x18, 0x80, 0x5e, 0x3b, 0x13, 0xc3, 0xbb, 0x71, 0x09,
+	0xbb, 0x71, 0x46, 0x03, 0x11, 0xa3, 0x3c, 0xce, 0xbd, 0x76, 0x26, 0xbd, 0x40, 0x86, 0x0e, 0x41,
+	0x7d, 0xed, 0x0c, 0x87, 0x86, 0x35, 0x22, 0xa6, 0x6b, 0x8c, 0xec, 0xb1, 0xed, 0x89, 0x20, 0xe5,
+	0x71, 0x81, 0xcb, 0xab, 0x5c, 0x7c, 0xc9, 0xa5, 0xda, 0x53, 0x48, 0x75, 0x1c, 0xa6, 0x9f, 0x57,
+	0xd1, 0x2e, 0xa4, 0xe9, 0xd0, 0x32, 0x2c, 0x87, 0x1b, 0x97, 0x38, 0xcc, 0xe3, 0x14, 0x1d, 0x5a,
+	0x55, 0x87, 0x69, 0x7f, 0x57, 0x20, 0xd3, 0x71, 0x58, 0xd7, 0xba, 0x21, 0x03, 0xf4, 0x11, 0x24,
+	0x07, 0xf7, 0xae, 0x2b, 0xec, 0xcf, 0x56, 0x76, 0x82, 0xe0, 0x09, 0xe5, 0x49, 0xed, 0x4b, 0x8c,
+	0x2f, 0x26, 0x43, 0xa7, 0xb1, 0x86, 0x05, 0x0a, 0xbd, 0x80, 0x14, 0xf3, 0x5c, 0xdb, 0xf2, 0x84,
+	0x2b, 0xd9, 0xca, 0x7b, 0x51, 0x7c, 0x57, 0xe8, 0x74, 0xd7, 0x76, 0x5c, 0xdb, 0x9b, 0xf9, 0x27,
+	0xfd, 0x13, 0xe5, 0x67, 0x90, 0x09, 0xf8, 0xb8, 0xd3, 0xfd, 0x7b, 0x83, 0x12, 0xd7, 0x22, 0x13,
+	0xcf, 0xbc, 0x0e, 0x0a, 0x38, 0xd7, 0xbf, 0xd7, 0xe7, 0xb2, 0xf2, 0x87, 0x80, 0x96, 0x09, 0x91,
+	0x0a, 0x89, 0x3e, 0x0d, 0xe2, 0xcd, 0x3f, 0xcf, 0xb2, 0xb0, 0x29, 0xae, 0xef, 0xcd, 0x28, 0xd1,
+	0x2e, 0x44, 0x99, 0x5c, 0xd1, 0x91, 0x3d, 0xb9, 0x15, 0xf9, 0x6c, 0x9a, 0x14, 0xbd, 0x03, 0x9b,
+	0x03, 0xc7, 0x7b, 0x7e, 0x67, 0x50, 0x8b, 0xfa, 0x27, 0x33, 0x42, 0xa0, 0x5b, 0x94, 0xc7, 0xc9,
+	0xa6, 0xc6, 0x80, 0x59, 0xb4, 0xb4, 0x2e, 0xe3, 0x64, 0xd3, 0x1a, 0xb3, 0xa8, 0xf6, 0x7b, 0x05,
+	0xa0, 0xe3, 0xb0, 0xa6, 0xe9, 0xde, 0xda, 0x93, 0x6b, 0xf4, 0x0c, 0x1e, 0xcd, 0x49, 0x0c, 0x97,
+	0xdc, 0xbb, 0xb6, 0x47, 0x0c, 0x32, 0x11, 0x7c, 0x19, 0x5c, 0x0c, 0xf8, 0xb0, 0xd4, 0xd4, 0x27,
+	0xd1, 0x5b, 0xd7, 0x63, 0xb7, 0x1e, 0x03, 0xf2, 0x6f, 0x5d, 0xe4, 0x4a, 0x08, 0xae, 0x2d, 0x69,
+	0x40, 0xc8, 0xb4, 0x60, 0xa2, 0xcc, 0x7a, 0x60, 0xe2, 0xbf, 0xd7, 0x21, 0x17, 0x74, 0x85, 0x18,
+	0x0a, 0x1f, 0x40, 0x72, 0x4c, 0x3c, 0xd3, 0x4f, 0x67, 0xf1, 0x44, 0xce, 0x8f, 0x76, 0xff, 0xe7,
+	0xc4, 0xf2, 0x9a, 0xc4, 0x33, 0xb1, 0x50, 0xa3, 0xcb, 0x58, 0x75, 0xfb, 0xe9, 0x9c, 0xa7, 0x3f,
+	0xda, 0x66, 0x67, 0xea, 0x7f, 0xfe, 0xf1, 0x6e, 0xee, 0x6b, 0x32, 0xb1, 0x2d, 0xf2, 0x42, 0xbb,
+	0x25, 0x33, 0x0d, 0x67, 0x6f, 0xc9, 0xac, 0xed, 0xfa, 0x5d, 0xa8, 0x42, 0x62, 0xec, 0x4d, 0xfd,
+	0xc2, 0xe5, 0x9f, 0xe8, 0x43, 0x48, 0xf5, 0x45, 0xa3, 0x08, 0x7b, 0xb3, 0x95, 0x42, 0x40, 0x2c,
+	0xdb, 0x07, 0xfb, 0x5a, 0xb4, 0x07, 0x09, 0x3a, 0xb4, 0x4a, 0x1b, 0x02, 0x94, 0x0d, 0x40, 0xfa,
+	0x79, 0x15, 0x73, 0x39, 0x7a, 0x1f, 0x36, 0x18, 0xcf, 0x6c, 0x29, 0x25, 0x00, 0xf9, 0x48, 0xb5,
+	0x61, 0xa9, 0x43, 0x9f, 0x83, 0x3a, 0x15, 0xe9, 0xf6, 0x1b, 0x7b, 0x6c, 0xd2, 0x52, 0x3a, 0xea,
+	0x4e, 0xb4, 0x1c, 0x70, 0x61, 0x1a, 0x2d, 0x8f, 0x1f, 0x40, 0x7a, 0x2c, 0x93, 0x5c, 0xca, 0x88,
+	0x83, 0x5b, 0xc1, 0x41, 0x3f, 0xf7, 0x38, 0xd0, 0x6b, 0xa7, 0x80, 0x82, 0xf0, 0x60, 0x72, 0x37,
+	0x25, 0xcc, 0x6b, 0xb2, 0x6b, 0x74, 0x0c, 0x69, 0x57, 0xfe, 0x25, 0x5a, 0x8d, 0x07, 0x7e, 0x31,
+	0x90, 0x3c, 0x33, 0x38, 0x40, 0x68, 0x2f, 0xa0, 0x30, 0x57, 0x78, 0x26, 0x1f, 0x01, 0x87, 0x2b,
+	0xe6, 0x12, 0x4f, 0x60, 0x2a, 0x3e, 0x95, 0x34, 0x0a, 0x6a, 0x78, 0x3d, 0xa3, 0xce, 0x84, 0x11,
+	0xf4, 0x0c, 0xc0, 0xa4, 0xb6, 0xc1, 0x04, 0x97, 0x3f, 0x04, 0x55, 0x3f, 0xf1, 0xa7, 0xd4, 0x96,
+	0x77, 0xe0, 0x4d, 0x33, 0xf8, 0x44, 0xc7, 0xbc, 0x89, 0xcd, 0x60, 0x1e, 0x65, 0x2b, 0xdb, 0x51,
+	0x63, 0x25, 0xde, 0x87, 0x68, 0x0d, 0xd8, 0x8e, 0xdf, 0xc8, 0x3d, 0x7e, 0x0e, 0x19, 0xd7, 0xff,
+	0xd3, 0x77, 0xf9, 0x71, 0x84, 0x25, 0xc0, 0xe2, 0x39, 0x4c, 0xfb, 0x8d, 0x02, 0x8f, 0x03, 0x75,
+	0x8d, 0x8c, 0x88, 0x47, 0xfc, 0x08, 0x7e, 0x2f, 0x45, 0xab, 0xe9, 0x50, 0x5a, 0x69, 0x0d, 0xf7,
+	0xee, 0xd3, 0x78, 0x3e, 0xcb, 0x91, 0x3b, 0x22, 0xf8, 0x30, 0xb1, 0x97, 0xf0, 0x24, 0x8e, 0x08,
+	0x03, 0x16, 0xcf, 0x52, 0xe2, 0x7f, 0x64, 0x49, 0xdb, 0x82, 0xfc, 0x62, 0x4a, 0x98, 0xf6, 0x6b,
+	0x25, 0xac, 0xbd, 0x97, 0xc4, 0xfb, 0x5e, 0x83, 0xf7, 0x45, 0x98, 0xca, 0xd0, 0x14, 0x59, 0x17,
+	0xb1, 0xc8, 0xed, 0x46, 0x2e, 0x08, 0xc1, 0x61, 0xd8, 0x7e, 0xab, 0x84, 0x25, 0x26, 0xf4, 0x7e,
+	0x5d, 0x7f, 0x00, 0x49, 0x46, 0x89, 0x35, 0x77, 0x6c, 0xa9, 0xa3, 0x84, 0xfa, 0xad, 0xaa, 0x19,
+	0x1d, 0xc2, 0x06, 0xff, 0x92, 0x8b, 0x48, 0xb6, 0x82, 0x96, 0xb0, 0x0c, 0x4b, 0x80, 0xd6, 0x82,
+	0x9d, 0x15, 0x46, 0xc9, 0xe2, 0x88, 0x97, 0x7e, 0x69, 0xd9, 0xc7, 0xa5, 0xea, 0xbf, 0x83, 0x7c,
+	0xd5, 0xa1, 0x34, 0xb2, 0xba, 0x58, 0x0e, 0xa5, 0x06, 0xcf, 0x57, 0x64, 0x75, 0xe1, 0x30, 0xfe,
+	0x94, 0xf1, 0xd5, 0xc5, 0xf2, 0xbf, 0xd1, 0x53, 0xc8, 0x0a, 0x74, 0x6c, 0x6b, 0x01, 0x2e, 0x7c,
+	0x68, 0x63, 0xf9, 0xa3, 0x02, 0x19, 0x4e, 0xf6, 0x36, 0x0f, 0x43, 0x63, 0x75, 0x99, 0xa0, 0xb9,
+	0x65, 0xdf, 0xfa, 0x51, 0x38, 0x82, 0x34, 0x95, 0x3b, 0xa6, 0x1f, 0x6c, 0x55, 0x70, 0x2c, 0x6c,
+	0xb0, 0x38, 0x00, 0x68, 0x9f, 0x41, 0x81, 0x73, 0x2f, 0xd4, 0xd1, 0x41, 0xbc, 0x8e, 0xc2, 0xd8,
+	0x44, 0xa7, 0xe9, 0xc7, 0x00, 0x42, 0x28, 0xf3, 0xfb, 0x6e, 0x34, 0x4c, 0x72, 0x88, 0x2e, 0x04,
+	0x49, 0xbb, 0x81, 0x9c, 0xbc, 0xe9, 0xbb, 0x0e, 0xcf, 0x83, 0x58, 0xb9, 0x6d, 0x85, 0x76, 0x45,
+	0x07, 0xe7, 0xe7, 0xb0, 0xb5, 0x78, 0x13, 0x77, 0xea, 0xe3, 0xa5, 0xca, 0x29, 0xce, 0x4f, 0xaf,
+	0x28, 0x99, 0x5f, 0x2a, 0x32, 0x2c, 0x6f, 0xdf, 0xec, 0xff, 0xb7, 0x2c, 0x6a, 0x67, 0x50, 0x8c,
+	0x9a, 0x20, 0xfd, 0x88, 0x25, 0x67, 0x7b, 0x4e, 0xbc, 0xaa, 0xc1, 0x7f, 0xa5, 0xc8, 0x50, 0x2c,
+	0x36, 0xf7, 0xd3, 0x48, 0x73, 0xc7, 0x92, 0x2b, 0x1b, 0xfb, 0xdb, 0x46, 0x1a, 0x1d, 0x44, 0x9b,
+	0xba, 0x18, 0xa9, 0xb3, 0xc5, 0x9e, 0x3e, 0x07, 0x14, 0xb3, 0x83, 0x7b, 0xf3, 0xc3, 0xa5, 0xac,
+	0x3c, 0x8a, 0xba, 0x13, 0x4f, 0xcc, 0xd1, 0x5f, 0xd6, 0xc5, 0x02, 0x2d, 0x7f, 0x54, 0x64, 0x21,
+	0x5d, 0xab, 0x9f, 0x9f, 0x5e, 0x5d, 0xf6, 0xd4, 0x35, 0x84, 0xa0, 0x70, 0xd5, 0xad, 0x63, 0xa3,
+	0x56, 0x3f, 0xbf, 0x68, 0xd5, 0x6b, 0xc6, 0x73, 0x55, 0x59, 0x92, 0x55, 0xd4, 0xf5, 0x25, 0xd9,
+	0x27, 0x6a, 0x62, 0x49, 0xf6, 0xa9, 0x9a, 0x5c, 0x92, 0xfd, 0x48, 0xdd, 0x58, 0x92, 0xfd, 0x58,
+	0x4d, 0x71, 0x23, 0xaa, 0xed, 0x56, 0x0f, 0xb7, 0x2f, 0xd5, 0x34, 0xca, 0x40, 0xb2, 0xab, 0x9f,
+	0xb6, 0xd4, 0x0c, 0x87, 0x5e, 0xb4, 0x7a, 0x75, 0xdc, 0x3a, 0xbd, 0x34, 0x4e, 0x6b, 0xcd, 0x8b,
+	0x96, 0xba, 0x89, 0xf6, 0xe0, 0xc9, 0x5c, 0x86, 0xbf, 0x32, 0x74, 0xdc, 0xfe, 0xea, 0x95, 0xd1,
+	0x6a, 0x1b, 0x35, 0xdc, 0xd6, 0x55, 0x40, 0x65, 0xd8, 0x59, 0x56, 0x0b, 0x5d, 0x36, 0x72, 0xb4,
+	0x17, 0x3f, 0x9a, 0x8b, 0x1c, 0xed, 0x45, 0x8e, 0xe6, 0xd1, 0x63, 0x28, 0xce, 0x75, 0x55, 0xfd,
+	0xca, 0xa8, 0xb6, 0xf5, 0x57, 0x6a, 0xe1, 0xe8, 0x0b, 0x39, 0xa1, 0xc4, 0x88, 0xdb, 0x85, 0xed,
+	0x6a, 0x5b, 0xd7, 0x8d, 0xde, 0x2b, 0xbd, 0x6e, 0x9c, 0x5f, 0xb6, 0xbf, 0x34, 0x9a, 0x17, 0xdd,
+	0xae, 0xba, 0x86, 0x8a, 0x90, 0x0f, 0x15, 0xa7, 0x58, 0x97, 0x31, 0x0d, 0x45, 0xb5, 0x46, 0x55,
+	0x57, 0xd7, 0x2b, 0x7f, 0x4a, 0x40, 0xa2, 0xd3, 0xee, 0xa2, 0x7a, 0xb8, 0x5f, 0x55, 0x5d, 0xc2,
+	0x7f, 0x0e, 0xef, 0xc6, 0x56, 0x93, 0xa0, 0x90, 0xcb, 0xa5, 0x95, 0x3b, 0x4b, 0x93, 0x5d, 0x6b,
+	0x6b, 0x8b, 0x34, 0x57, 0x74, 0xf0, 0x9d, 0x69, 0x3a, 0x21, 0x8d, 0x5c, 0x0a, 0xd0, 0xde, 0xc3,
+	0xbb, 0x04, 0x27, 0xdb, 0x5f, 0xa9, 0x5e, 0xa4, 0x6c, 0x40, 0x76, 0xe1, 0xad, 0x41, 0xe5, 0x07,
+	0x5e, 0x58, 0x4e, 0xf6, 0xce, 0x43, 0x2f, 0x93, 0x64, 0xfa, 0x4c, 0x0e, 0x4f, 0xdf, 0xbf, 0xed,
+	0x85, 0x61, 0x34, 0x67, 0x78, 0xb4, 0x34, 0xa1, 0xe4, 0xd1, 0x9f, 0x40, 0xda, 0x6f, 0x10, 0xb4,
+	0xb3, 0xa2, 0xfb, 0xf9, 0xd1, 0xdd, 0x55, 0x6d, 0x24, 0x4e, 0x9f, 0x95, 0xff, 0xfa, 0x66, 0x5f,
+	0xf9, 0xdb, 0x9b, 0x7d, 0xe5, 0x9f, 0x6f, 0xf6, 0x95, 0xdf, 0xfd, 0x6b, 0x7f, 0xed, 0x67, 0x99,
+	0x1b, 0x73, 0x24, 0xfe, 0x9b, 0xa3, 0x9f, 0x12, 0xff, 0x7c, 0xf2, 0xdf, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x95, 0xbd, 0x40, 0x0e, 0x0c, 0x11, 0x00, 0x00,
 }

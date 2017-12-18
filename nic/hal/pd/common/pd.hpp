@@ -24,7 +24,6 @@ typedef struct pd_tlscb_s pd_tlscb_t;
 typedef struct pd_tcpcb_s pd_tcpcb_t;
 typedef struct pd_buf_pool_s pd_buf_pool_t;
 typedef struct pd_qos_class_s pd_qos_class_t;
-typedef struct pd_policer_s pd_policer_t;
 typedef struct pd_acl_s pd_acl_t;
 typedef struct pd_wring_s pd_wring_t;
 typedef struct pd_wring_meta_s pd_wring_meta_t; 
@@ -37,6 +36,7 @@ typedef struct pd_rawccb_s pd_rawccb_t;
 typedef struct pd_proxyrcb_s pd_proxyrcb_t;
 typedef struct pd_proxyccb_s pd_proxyccb_t;
 typedef struct pd_mc_entry_s pd_mc_entry_t;
+typedef struct pd_copp_s pd_copp_t;
 
 }    // namespace pd
 }    // namespace hal

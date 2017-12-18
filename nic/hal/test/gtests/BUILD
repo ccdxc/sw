@@ -188,3 +188,10 @@ cc_test(
     copts = sdk_copts,
 )
 
+cc_test(
+    name = "copp_test",
+    srcs = ["copp_test.cc"],
+    deps = [] + gl_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)

@@ -19,6 +19,13 @@ using qos::QosClassDeleteRequestMsg;
 using qos::QosClassDeleteResponseMsg;
 using qos::QosClassGetRequestMsg;
 using qos::QosClassGetResponseMsg;
+using qos::CoppSpec;
+using qos::CoppKeyHandle;
+using qos::CoppRequestMsg;
+using qos::CoppResponse;
+using qos::CoppResponseMsg;
+using qos::CoppGetRequestMsg;
+using qos::CoppGetResponseMsg;
 
 class QOSServiceImpl final : public QOS::Service {
 public:
@@ -38,6 +45,17 @@ public:
                     const QosClassGetRequestMsg *req,
                     QosClassGetResponseMsg *rsp) override;
 
+ Status CoppCreate(ServerContext *context,
+                   const CoppRequestMsg *req,
+                   CoppResponseMsg *rsp);
+
+ Status CoppUpdate(ServerContext *context,
+                   const CoppRequestMsg *req,
+                   CoppResponseMsg *rsp) override;
+
+ Status CoppGet(ServerContext *context,
+                const CoppGetRequestMsg *req,
+                CoppGetResponseMsg *rsp) override;
 };
 
 #endif // __QOS_SVC_HPP__

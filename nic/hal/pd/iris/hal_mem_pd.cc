@@ -13,6 +13,7 @@
 #include "nic/hal/pd/iris/tunnelif_pd.hpp"
 #include "nic/hal/pd/iris/session_pd.hpp"
 #include "nic/hal/pd/iris/qos_pd.hpp"
+#include "nic/hal/pd/iris/copp_pd.hpp"
 #include "nic/hal/pd/iris/acl_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
@@ -206,6 +207,12 @@ hal_state_pd::init(void)
 
     qos_rxdma_oq_idxr_ = sdk::lib::indexer::factory(HAL_MAX_RXDMA_ONLY_OQS);
     HAL_ASSERT_RETURN((qos_rxdma_oq_idxr_ != NULL), false);
+
+    // initialize Copp PD related data structures
+    copp_pd_slab_ = slab::factory("COPP_PD", HAL_SLAB_COPP_PD,
+                                  sizeof(hal::pd::pd_copp_t), 8,
+                                  false, true, true);
+    HAL_ASSERT_RETURN((copp_pd_slab_ != NULL), false);
 
     // initialize TLSCB related data structures
     tlscb_slab_ = slab::factory("TLSCB PD", HAL_SLAB_TLSCB_PD,
@@ -473,6 +480,8 @@ hal_state_pd::hal_state_pd()
     qos_common_oq_idxr_ = NULL;
     qos_rxdma_oq_idxr_ = NULL;
    
+    copp_pd_slab_ = NULL;
+
     acl_pd_slab_ = NULL;
     
     tlscb_slab_ = NULL;
@@ -568,6 +577,8 @@ hal_state_pd::~hal_state_pd()
     }
     qos_common_oq_idxr_ ? indexer::destroy(qos_common_oq_idxr_) : HAL_NOP;
     qos_rxdma_oq_idxr_ ? indexer::destroy(qos_rxdma_oq_idxr_) : HAL_NOP;
+
+    copp_pd_slab_ ? slab::destroy(copp_pd_slab_) : HAL_NOP;
 
     acl_pd_slab_ ? slab::destroy(acl_pd_slab_) : HAL_NOP;
 
@@ -722,6 +733,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(tlscb_slab_);
     GET_SLAB(tcpcb_slab_);
     GET_SLAB(qos_class_pd_slab_);
+    GET_SLAB(copp_pd_slab_);
     GET_SLAB(acl_pd_slab_);
     GET_SLAB(wring_slab_);
     GET_SLAB(ipseccb_slab_);
@@ -1349,6 +1361,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_CPUPKT_QINST_INFO_PD:
         g_hal_state_pd->cpupkt_qinst_info_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_COPP_PD:
+        g_hal_state_pd->copp_pd_slab()->free(elem);
         break;
 
     default:

@@ -22,5 +22,7 @@ pd::pd_qos_class_t* qos_class_get_pd_qos_class(qos_class_t *pi_qos_class);
 qos_group_t qos_class_get_qos_group(qos_class_t *pi_qos_class);
 bool qos_class_is_no_drop(qos_class_t *pi_qos_class);
 
+// Copp APIs
+void copp_set_pd_copp(copp_t *pi_copp, pd::pd_copp_t *pd_copp);
 } // namespace hal
 #endif // __QOS_API_HPP__

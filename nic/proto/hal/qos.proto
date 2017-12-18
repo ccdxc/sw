@@ -18,8 +18,8 @@ service QOS {
   rpc QosClassGet(QosClassGetRequestMsg) returns (QosClassGetResponseMsg) {}
 
   // Copp related APIs
-  rpc CoppPolicerUpdate(CoppPolicerRequestMsg) returns (CoppPolicerResponseMsg) {}
-  rpc CoppPolicerGet(CoppPolicerGetRequestMsg) returns (CoppPolicerGetResponseMsg) {}
+  rpc CoppUpdate(CoppRequestMsg) returns (CoppResponseMsg) {}
+  rpc CoppGet(CoppGetRequestMsg) returns (CoppGetResponseMsg) {}
 
 }
 
@@ -48,7 +48,7 @@ enum QosGroup {
   USER_DEFINED_6            = 6;     // User defined qos group 6
   CONTROL                   = 7;     // Control traffic
   SPAN                      = 8;     // Span traffic
-  INTERNAL_ADMIN            = 9;     // TODO: REMOVE DOL only - Internal group for admin 
+  INTERNAL_ADMIN            = 9;     // TODO: REMOVE DOL only - Internal group for admin
   INTERNAL_RX_PROXY_NO_DROP = 10;    // TODO: REMOVE DOL only - Internal group for Rx Proxy no drop traffic
   INTERNAL_RX_PROXY_DROP    = 11;    // TODO: REMOVE DOL only - Internal group for Rx Proxy drop traffic
   INTERNAL_TX_PROXY_NO_DROP = 12;    // TODO: REMOVE DOL only - Internal group for Tx Proxy no drop traffic
@@ -199,61 +199,61 @@ enum CoppType {
   COPP_TYPE_DHCP      = 2;    // DHCP
 }
 
-// CoppPolicerKeyHandle uniquely identifies a CoppPolicer
-message CoppPolicerKeyHandle {
+// CoppKeyHandle uniquely identifies a Copp
+message CoppKeyHandle {
   oneof key_or_handle {
-    CoppType copp_type           = 1;    // Copp type
-    fixed64  copp_policer_handle = 2;    // id of CoppPolicer returned by HAL
+    CoppType copp_type   = 1;    // Copp type
+    fixed64  copp_handle = 2;    // id of Copp returned by HAL
   }
 }
 
-// Specifications of a CoppPolicer
-message CoppPolicerSpec {
-  types.ObjectMeta     meta          = 1;    // object meta
-  // key_or_handle is CoppPolicer's unique identifier
-  CoppPolicerKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  PolicerSpec          policer       = 3;    // Policer specification
+// Specifications of a Copp
+message CoppSpec {
+  types.ObjectMeta meta          = 1;    // object meta
+  // key_or_handle is Copp's unique identifier
+  CoppKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  PolicerSpec      policer       = 3;    // Policer specification
 }
 
-// Batched requests to create/update CoppPolicers
-message CoppPolicerRequestMsg {
-  repeated CoppPolicerSpec request = 1;    // batched CoppPolicers
+// Batched requests to create/update Copps
+message CoppRequestMsg {
+  repeated CoppSpec request = 1;    // batched Copps
 }
 
-message CoppPolicerStatus {
-  fixed64 copp_policer_handle = 1;    // id of the CoppPolicer returned by HAL
+message CoppStatus {
+  fixed64 copp_handle = 1;    // id of the Copp returned by HAL
 }
 
-// CoppPolicerResponse is response to one CoppPolicer
-message CoppPolicerResponse {
-  types.ApiStatus   api_status = 1;    // API status code
-  CoppPolicerStatus status     = 2;    // CoppPolicer operational state
+// CoppResponse is response to one Copp
+message CoppResponse {
+  types.ApiStatus api_status = 1;    // API status code
+  CoppStatus      status     = 2;    // Copp operational state
 }
 
-// Batched responses to create/update CoppPolicers
-message CoppPolicerResponseMsg {
-  repeated CoppPolicerResponse response = 1;    // batched responses
+// Batched responses to create/update Copps
+message CoppResponseMsg {
+  repeated CoppResponse response = 1;    // batched responses
 }
 
-// CoppPolicerGetRequest is used to get information about a CoppPolicer
-message CoppPolicerGetRequest {
-  types.ObjectMeta     meta          = 1;    // object meta
-  // key_or_handle is CoppPolicer's unique identifier
-  CoppPolicerKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+// CoppGetRequest is used to get information about a Copp
+message CoppGetRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+                                         // key_or_handle is Copp's unique identifier
+  CoppKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
-message CoppPolicerGetRequestMsg {
-  repeated CoppPolicerGetRequest request = 1;    // batched get request
+message CoppGetRequestMsg {
+  repeated CoppGetRequest request = 1;    // batched get request
 }
 
-// CoppPolicerGetResponse captures all the information about a CoppPolicer
-message CoppPolicerGetResponse {
-  CoppPolicerSpec   spec   = 1;    // CoppPolicer configuration
-  CoppPolicerStatus status = 2;    // CoppPolicer operational status
-  PolicerStats      stats  = 3;    // CoppPolicer statistics
+// CoppGetResponse captures all the information about a Copp
+message CoppGetResponse {
+  CoppSpec     spec   = 1;    // Copp configuration
+  CoppStatus   status = 2;    // Copp operational status
+  PolicerStats stats  = 3;    // Copp statistics
 }
 
-// CoppPolicerGetResponseMsg is response to CoppPolicerGetRequestMsg
-message CoppPolicerGetResponseMsg {
-  repeated CoppPolicerGetResponse response = 1;    // batched get response
+// CoppGetResponseMsg is response to CoppGetRequestMsg
+message CoppGetResponseMsg {
+  repeated CoppGetResponse response = 1;    // batched get response
 }

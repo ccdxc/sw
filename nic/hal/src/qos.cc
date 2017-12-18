@@ -639,4 +639,429 @@ end:
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
+
+// Copp
+// ----------------------------------------------------------------------------
+// hash table copp_type => ht_entry
+//  - Get key from entry
+// ----------------------------------------------------------------------------
+void *
+copp_get_key_func (void *entry)
+{
+    hal_handle_id_ht_entry_t *ht_entry;
+    copp_t                   *copp = NULL;
+
+    HAL_ASSERT(entry != NULL);
+    ht_entry = (hal_handle_id_ht_entry_t *)entry;
+    if (ht_entry == NULL) {
+        return NULL;
+    }
+    copp = find_copp_by_handle(ht_entry->handle_id);
+    return (void *)&(copp->key);
+}
+
+// ----------------------------------------------------------------------------
+// hash table copp_type => entry - compute hash
+// ----------------------------------------------------------------------------
+uint32_t
+copp_compute_hash_func (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(copp_key_t)) % ht_size;
+}
+
+// ----------------------------------------------------------------------------
+// hash table copp_type => entry - compare function
+// ----------------------------------------------------------------------------
+bool
+copp_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+
+    if (!memcmp(key1, key2, sizeof(copp_key_t))) {
+        return true;
+    }
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// insert a copp to db
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+copp_add_to_db (copp_t *copp, hal_handle_t handle)
+{
+    hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
+    hal_handle_id_ht_entry_t    *entry;
+
+    HAL_TRACE_DEBUG("pi-copp:{}:adding to copp hash table", 
+                    __func__);
+    // allocate an entry to establish mapping from copp_type to its handle
+    entry =
+        (hal_handle_id_ht_entry_t *)g_hal_state->
+        hal_handle_id_ht_entry_slab()->alloc();
+    if (entry == NULL) {
+        return HAL_RET_OOM;
+    }
+
+    entry->handle_id = handle;
+    sdk_ret = g_hal_state->copp_ht()->insert_with_key(&copp->key,
+                                                   entry, &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        HAL_TRACE_ERR("pi-copp:{}:failed to add key to handle mapping, "
+                      "err : {}", __func__, ret);
+        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
+    // TODO: Check if this is the right place
+    copp->hal_handle = handle;
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// delete a copp from the config database
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+copp_del_from_db (copp_t *copp)
+{
+    hal_handle_id_ht_entry_t    *entry;
+
+    HAL_TRACE_DEBUG("pi-copp:{}:removing from hash table", __func__);
+
+    // remove from hash table
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->copp_ht()->
+            remove(&copp->key);
+
+    if (entry) {
+        // free up
+        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// validate an incoming copp create request
+//------------------------------------------------------------------------------
+static hal_ret_t
+validate_copp_create (CoppSpec& spec, CoppResponse *rsp)
+{
+    // key-handle field must be set
+    if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("pi-qos:{}:copp-type not set in request", __func__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    auto kh = spec.key_or_handle();
+    if (kh.key_or_handle_case() != CoppKeyHandle::kCoppType) {
+        // key-handle field set, but copp-type not provided
+        HAL_TRACE_ERR("pi-qos:{}:copp-type not set in request", __func__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (find_copp_by_key_handle(kh)) {
+        HAL_TRACE_ERR("pi-qos:{}:copp already exists", __func__);
+        return HAL_RET_ENTRY_EXISTS;
+    }
+
+    // Copp policer rate cannot be zero
+    if (!spec.has_policer() || !spec.policer().bps_rate()) {
+        HAL_TRACE_ERR("pi-qos:{}:policer spec not set in request", __func__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// PD Call to allocate PD resources and HW programming
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    pd::pd_copp_args_t pd_copp_args = { 0 };
+    dllist_ctxt_t      *lnode = NULL;
+    dhl_entry_t        *dhl_entry = NULL;
+    copp_t             *copp = NULL;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("pi-copp:{}: invalid cfg_ctxt", __func__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    copp = (copp_t *)dhl_entry->obj;
+
+    HAL_TRACE_DEBUG("pi-copp:{}:create add CB {}",
+                    __func__, copp->key);
+
+    // PD Call to allocate PD resources and HW programming
+    pd::pd_copp_args_init(&pd_copp_args);
+    pd_copp_args.copp = copp;
+    ret = pd::pd_copp_create(&pd_copp_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-copp:{}:failed to create copp pd, err : {}", 
+                      __func__, ret);
+    }
+
+end:
+    return ret;
+}
+
+
+//------------------------------------------------------------------------------
+// 1. Update PI DBs as copp_create_add_cb() was a success
+//      a. Add to copp id hash table
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t     ret = HAL_RET_OK;
+    dllist_ctxt_t *lnode = NULL;
+    dhl_entry_t   *dhl_entry = NULL;
+    copp_t        *copp = NULL;
+    hal_handle_t  hal_handle = 0;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("pi-copp:{}:invalid cfg_ctxt", __func__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // assumption is there is only one element in the list
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    copp = (copp_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("pi-copp:{}:create commit CB {}",
+                    __func__, copp->key);
+
+    // Add to DB
+    ret = copp_add_to_db (copp, hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-copp:{}:unable to add copp:{} to DB", 
+                      __func__, copp->key);
+        goto end;
+    }
+
+    HAL_TRACE_ERR("pi-copp:{}:added copp:{} to DB", 
+                  __func__, copp->key);
+
+    // TODO: Increment the ref counts of dependent objects
+
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Copp Cleanup.
+//  - PI Cleanup
+//  - Removes the existence of this copp in HAL
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_cleanup(copp_t *copp)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    // Remove from DB
+    ret = copp_del_from_db(copp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-copp:{}:unable to delete copp from DB", __func__);
+        goto end;
+    }
+    HAL_TRACE_ERR("pi-copp:{}:deleted copp:{} from DB", 
+                  __func__, copp->key);
+
+    // Free copp 
+    ret = copp_free(copp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-copp:{}:unable to free copp", __func__);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+
+//------------------------------------------------------------------------------
+// copp_create_add_cb was a failure
+// 1. call delete to PD
+//      a. Deprogram HW
+//      b. Clean up resources
+//      c. Free PD object
+// 2. Remove object from hal_handle id based hash table in infra
+// 3. Free PI copp 
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    pd::pd_copp_args_t pd_copp_args = { 0 };
+    dllist_ctxt_t      *lnode = NULL;
+    dhl_entry_t        *dhl_entry = NULL;
+    copp_t             *copp = NULL;
+    hal_handle_t       hal_handle = 0;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("pi-copp:{}:invalid cfg_ctxt", __func__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    copp = (copp_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("pi-copp:{}:create abort CB {}", __func__);
+
+    // 1. delete call to PD
+    if (copp->pd) {
+        pd::pd_copp_args_init(&pd_copp_args);
+        pd_copp_args.copp = copp;
+        ret = pd::pd_copp_delete(&pd_copp_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pi-copp:{}:failed to delete copp pd, err : {}", 
+                          __func__, ret);
+        }
+    }
+
+    // 2. remove object from hal_handle id based hash table in infra
+    hal_handle_free(hal_handle);
+
+    // 3. Free PI copp
+    copp_cleanup(copp);
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Dummy create cleanup callback
+// ----------------------------------------------------------------------------
+hal_ret_t
+copp_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Converts hal_ret_t to API status
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_prepare_rsp (CoppResponse *rsp, hal_ret_t ret, 
+                       hal_handle_t hal_handle)
+{
+    if (ret == HAL_RET_OK) {
+        rsp->mutable_status()->set_copp_handle(hal_handle);
+    }
+
+    rsp->set_api_status(hal_prepare_rsp(ret));
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+copp_populate_from_spec (copp_t *copp, CoppSpec& spec)
+{
+    copp->key.copp_type = 
+        copp_spec_copp_type_to_copp_type(spec.key_or_handle().copp_type());
+    qos_policer_update_from_spec(spec.policer(), &copp->policer);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// process a copp create request
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_create (CoppSpec& spec, CoppResponse *rsp)
+{
+    hal_ret_t     ret = HAL_RET_OK;
+    copp_t        *copp = NULL;
+    dhl_entry_t   dhl_entry = { 0 };
+    cfg_op_ctxt_t cfg_ctxt = { 0 };
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("pi-copp:{}: copp create ", __func__);
+
+    ret = validate_copp_create(spec, rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-copp:{}: Validation failed ret {}", __func__, ret);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("pi-copp:{}: copp create for copp-type {} ", 
+                    __func__, 
+                    copp_spec_copp_type_to_copp_type(spec.key_or_handle().copp_type()));
+
+    // instantiate copp 
+    copp = copp_alloc_init();
+    if (copp == NULL) {
+        HAL_TRACE_ERR("pi-copp:{}:unable to allocate handle/memory ret: {}",
+                      __func__, ret);
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // initialize the copp record
+    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // populate from the spec
+    ret = copp_populate_from_spec(copp, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-copp:{}: error in populating copp from spec",
+                      __func__);
+        goto end;
+    }
+
+    // allocate hal handle id
+    copp->hal_handle = hal_handle_alloc(HAL_OBJ_ID_COPP);
+    if (copp->hal_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("pi-copp:{}: failed to alloc handle", 
+                      __func__);
+        ret = HAL_RET_HANDLE_INVALID;
+        goto end;
+    }
+
+    // form ctxt and call infra add
+    // app_ctxt.tenant = tenant;
+
+    dhl_entry.handle = copp->hal_handle;
+    dhl_entry.obj = copp;
+    utils::dllist_reset(&cfg_ctxt.dhl);
+    utils::dllist_reset(&dhl_entry.dllist_ctxt);
+    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_add_obj(copp->hal_handle, &cfg_ctxt, 
+                             copp_create_add_cb,
+                             copp_create_commit_cb,
+                             copp_create_abort_cb, 
+                             copp_create_cleanup_cb);
+
+    if (ret != HAL_RET_OK) {
+        // copp was freed during abort, pointer not valid anymore
+        copp = NULL;
+    }
+end:
+    if (ret != HAL_RET_OK) {
+        if (copp) {
+            copp_free(copp);
+            copp = NULL;
+        }
+    }
+
+    copp_prepare_rsp(rsp, ret, copp ? copp->hal_handle : HAL_HANDLE_INVALID);
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
+}
 }    // namespace hal

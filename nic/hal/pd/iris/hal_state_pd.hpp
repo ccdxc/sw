@@ -128,16 +128,14 @@ public:
     slab *tcpcb_slab(void) const { return tcpcb_slab_; }
     ht *tcpcb_hwid_ht(void) const { return tcpcb_hwid_ht_; }
 
-    // get APIs for Queue related state
+    // get APIs for Qos-class related state
     slab *qos_class_pd_slab(void) const { return qos_class_pd_slab_; }
     indexer *qos_iq_idxr(tm_port_type_e port_type) { return qos_iq_idxr_[port_type]; }
     indexer *qos_common_oq_idxr() { return qos_common_oq_idxr_; }
     indexer *qos_rxdma_oq_idxr() { return qos_rxdma_oq_idxr_; }
 
-    // get APIs for Policer related state
-    slab *policer_pd_slab(void) const { return policer_pd_slab_; }
-    indexer *ingress_policer_hwid_idxr(void) const { return ingress_policer_hwid_idxr_; }
-    indexer *egress_policer_hwid_idxr(void) const { return egress_policer_hwid_idxr_; }
+    // get APIs for Copp related state
+    slab *copp_pd_slab(void) const { return copp_pd_slab_; }
 
     // get APIs for Acl related state
     slab *acl_pd_slab(void) const { return acl_pd_slab_; }
@@ -373,11 +371,9 @@ private:
         // Buffer island configuration
     } __PACK__;
 
-    // Policer related state
+    // Copp related state
     struct {
-        slab       *policer_pd_slab_;
-        indexer    *ingress_policer_hwid_idxr_;
-        indexer    *egress_policer_hwid_idxr_;
+        slab       *copp_pd_slab_;
     } __PACK__;
 
     // Acl related state

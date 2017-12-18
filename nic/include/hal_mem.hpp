@@ -64,6 +64,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_FTP_ALG_APPSESS,
     HAL_SLAB_FTP_ALG_L4SESS,
     HAL_SLAB_FTP_ALG_FTPINFO,
+    HAL_SLAB_COPP,
     HAL_SLAB_PI_MAX,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
@@ -102,6 +103,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_DIRECTMAP_ENTRY,
     HAL_SLAB_DIRECTMAP_DATA,
     HAL_SLAB_PORT_PD,
+    HAL_SLAB_COPP_PD,
     HAL_SLAB_PD_MAX,                 // NOTE: MUST be last PD slab id
 
     HAL_SLAB_RSVD,  // all non-delay delete slabs can use this
@@ -128,7 +130,6 @@ enum {
     HAL_MEM_ALLOC_L4LB,
     HAL_MEM_ALLOC_FLOW,
     HAL_MEM_ALLOC_PD,
-    HAL_MEM_ALLOC_QOS,
     HAL_MEM_ALLOC_LIB_ACL_TCAM,
     HAL_MEM_ALLOC_DLLIST,
     HAL_MEM_ALLOC_EVENT_MGR,

@@ -20,6 +20,13 @@ using qos::QosClassDeleteRequestMsg;
 using qos::QosClassDeleteResponseMsg;
 using qos::QosClassGetRequestMsg;
 using qos::QosClassGetResponseMsg;
+using qos::CoppSpec;
+using qos::CoppKeyHandle;
+using qos::CoppRequestMsg;
+using qos::CoppResponse;
+using qos::CoppResponseMsg;
+using qos::CoppGetRequestMsg;
+using qos::CoppGetResponseMsg;
 
 namespace hal {
 
@@ -115,7 +122,7 @@ typedef struct qos_class_s {
     qos_uplink_cmap_t    uplink_cmap;                      // Uplink class map
     qos_marking_action_t marking;
 
-                                                           // operational state of qos-class
+    // operational state of qos-class
     hal_handle_t         hal_handle;                       // HAL allocated handle
 
     pd::pd_qos_class_t   *pd;
@@ -297,6 +304,150 @@ qos_policer_spec_same (policer_t *p1, policer_t *p2)
 {
     return !memcmp(p1, p2, sizeof(policer_t));
 }
+
+#define COPP_TYPES(ENTRY) \
+    ENTRY(COPP_TYPE_FLOW_MISS,                  0, "flow-miss") \
+    ENTRY(COPP_TYPE_ARP,                        1, "arp") \
+    ENTRY(COPP_TYPE_DHCP,                       2, "dhcp") \
+    ENTRY(NUM_COPP_TYPES,                       3, "num-copp-types")
+
+DEFINE_ENUM(copp_type_t, COPP_TYPES)
+#undef COPP_TYPES
+
+#define HAL_MAX_COPPS NUM_COPP_TYPES
+
+typedef struct copp_key_s {
+    copp_type_t copp_type;
+} __PACK__ copp_key_t;
+
+inline std::ostream& operator<<(std::ostream& os, const copp_key_t& s)
+{
+   return os << fmt::format("{{copp_type={}}}", s.copp_type);
+}
+
+typedef struct copp_s {
+    hal_spinlock_t slock;         // lock to protect this structure
+    copp_key_t     key;           // copp key information
+    policer_t      policer;       // policer values
+    // operational state of copp
+    hal_handle_t   hal_handle;    // HAL allocated handle
+
+    pd::pd_copp_t  *pd;
+} __PACK__ copp_t;
+
+// CB data structures
+typedef struct copp_create_app_ctxt_s {
+} __PACK__ copp_create_app_ctxt_t;
+
+typedef struct copp_update_app_ctxt_s {
+} __PACK__ copp_update_app_ctxt_t;
+
+// allocate a Copp instance
+static inline copp_t *
+copp_alloc (void)
+{
+    copp_t    *copp;
+
+    copp = (copp_t *)g_hal_state->copp_slab()->alloc();
+    if (copp == NULL) {
+        return NULL;
+    }
+    return copp;
+}
+
+// initialize a Copp instance
+static inline copp_t *
+copp_init (copp_t *copp)
+{
+    if (!copp) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_PRIVATE);
+
+    return copp;
+}
+
+// allocate and initialize a copp instance
+static inline copp_t *
+copp_alloc_init (void)
+{
+    return copp_init(copp_alloc());
+}
+
+static inline hal_ret_t
+copp_free (copp_t *copp)
+{
+    HAL_SPINLOCK_DESTROY(&copp->slock);
+    g_hal_state->copp_slab()->free(copp);
+    return HAL_RET_OK;
+}
+
+static inline copp_type_t
+copp_spec_copp_type_to_copp_type (qos::CoppType copp_type)
+{
+    switch(copp_type) {
+        case qos::COPP_TYPE_FLOW_MISS:
+            return COPP_TYPE_FLOW_MISS;
+        case qos::COPP_TYPE_ARP:
+            return COPP_TYPE_ARP;
+        case COPP_TYPE_DHCP:
+            return COPP_TYPE_DHCP;
+        default:
+            HAL_ASSERT(0);
+            return COPP_TYPE_FLOW_MISS;
+    }
+}
+
+static inline copp_t *
+find_copp_by_copp_type (copp_type_t copp_type)
+{
+    hal_handle_id_ht_entry_t *entry;
+    copp_key_t       copp_key;
+    copp_t           *copp;
+
+    copp_key.copp_type = copp_type;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        copp_ht()->lookup(&copp_key);
+    if (entry) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_COPP);
+        copp = (copp_t *)hal_handle_get_obj(entry->handle_id);
+        return copp;
+    }
+    return NULL;
+}
+
+static inline copp_t *
+find_copp_by_handle (hal_handle_t handle)
+{
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
+               HAL_OBJ_ID_COPP);
+    return (copp_t *)hal_handle_get_obj(handle);
+}
+
+static inline copp_t *
+find_copp_by_key_handle (const CoppKeyHandle& kh)
+{
+    if (kh.key_or_handle_case() == CoppKeyHandle::kCoppType) {
+        return find_copp_by_copp_type(copp_spec_copp_type_to_copp_type(kh.copp_type()));
+    } else if (kh.key_or_handle_case() == CoppKeyHandle::kCoppHandle) {
+        return find_copp_by_handle(kh.copp_handle());
+    }
+    return NULL;
+}
+
+extern void *copp_get_key_func(void *entry);
+extern uint32_t copp_compute_hash_func(void *key, uint32_t ht_size);
+extern bool copp_compare_key_func(void *key1, void *key2);
+
+// SVC CRUD APIs
+hal_ret_t copp_create(qos::CoppSpec& spec,
+                              qos::CoppResponse *rsp);
+hal_ret_t copp_update(qos::CoppSpec& spec,
+                              qos::CoppResponse *rsp);
+
 
 }    // namespace hal
 

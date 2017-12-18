@@ -58,6 +58,7 @@ using hal::rawrcb_t;
 using hal::rawccb_t;
 using hal::proxyrcb_t;
 using hal::proxyccb_t;
+using hal::copp_t;
 
 typedef uint32_t    mc_entry_hw_id_t;
 typedef uint32_t    l2seg_hw_id_t;
@@ -626,6 +627,24 @@ hal_ret_t pd_qos_class_delete(pd_qos_class_args_t *qos_class);
 hal_ret_t qos_class_get_qos_class_id(qos_class_t *qos_class, 
                                      if_t *dest_if, 
                                      uint32_t *qos_class_id);
+
+hal_ret_t qos_class_get_qos_class_id(qos_class_t *qos_class, 
+                                     if_t *dest_if, 
+                                     uint32_t *qos_class_id);
+
+typedef struct pd_copp_args_s {
+    copp_t    *copp;
+} __PACK__ pd_copp_args_t;
+
+static inline void
+pd_copp_args_init (pd_copp_args_t *args)
+{
+    args->copp = NULL;
+    return;
+}
+
+hal_ret_t pd_copp_create(pd_copp_args_t *copp);
+hal_ret_t pd_copp_delete(pd_copp_args_t *copp);
 
 typedef struct pd_acl_args_s {
     acl_t    *acl;
