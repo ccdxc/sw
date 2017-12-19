@@ -61,6 +61,7 @@ int compress_nested_sgl_in_hbm();
 int compress_return_through_hbm();
 int compress_adler_sha256();
 int compress_crc_sha512();
+int compress_only_sha512();
 int compress_doorbell_odata();
 int compress_max_features();
 int compress_output_through_sequencer();

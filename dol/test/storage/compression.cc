@@ -214,19 +214,23 @@ static int run_cp_test(comp_test_t *params) {
   if (params->dst_is_hbm) {
     write_mem(hbm_dataout_buf_pa, all_zeros, kDataoutBufSize);
   }
-  if (params->num_dst_sgls == 1) {
-    d.dst = bufout_pa;
-  } else {
-    if (params->dst_sgl_is_hbm) {
-      populate_sgls(params->dataout_len, params->num_dst_sgls, nullptr,
-                    hbm_sgl_buf_pa + 2048, bufout_pa);
-      d.dst = hbm_sgl_buf_pa + 2048;
+  if (params->cmd_bits.compression_en) {
+    if (params->num_dst_sgls == 1) {
+      d.dst = bufout_pa;
     } else {
-      populate_sgls(params->dataout_len, params->num_dst_sgls, sgl_buf + 2048,
-                    sgl_buf_pa + 2048, bufout_pa);
-      d.dst = sgl_buf_pa + 2048;
+      if (params->dst_sgl_is_hbm) {
+        populate_sgls(params->dataout_len, params->num_dst_sgls, nullptr,
+                      hbm_sgl_buf_pa + 2048, bufout_pa);
+        d.dst = hbm_sgl_buf_pa + 2048;
+      } else {
+        populate_sgls(params->dataout_len, params->num_dst_sgls, sgl_buf + 2048,
+                      sgl_buf_pa + 2048, bufout_pa);
+        d.dst = sgl_buf_pa + 2048;
+      }
+      d.cmd_bits.dst_is_list = 1;
     }
-    d.cmd_bits.dst_is_list = 1;
+  } else {
+    d.dst = (uint64_t)-1;
   }
 
   bzero(status_buf, kStatusBufSize);
@@ -236,7 +240,9 @@ static int run_cp_test(comp_test_t *params) {
   const uint64_t kDBData = 0x11223344556677ull;
   const uint32_t kTagData = 0x8899aabbu;
   d.input_len = params->datain_len;
-  d.expected_len = params->dataout_len - 8;
+  if (params->cmd_bits.compression_en) {
+    d.expected_len = params->dataout_len - 8;
+  }
   d.status_addr = params->status_is_hbm ? hbm_status_buf_pa : status_buf_pa;
   d.doorbell_addr = d.status_addr + 1024;
   d.doorbell_data = kDBData;
@@ -264,50 +270,56 @@ static int run_cp_test(comp_test_t *params) {
     printf("ERROR: Compression generated err = 0x%x\n", st->err);
     return -1;
   }
-  uint16_t expected_data_len = kCompressedDataSize;
-  if (params->cmd_bits.insert_header) {
-    expected_data_len += 8;
-  }
-  if (st->output_data_len != expected_data_len) {
-    printf("ERROR: output data len mismatch, expected %u, received %u\n",
-           expected_data_len, st->output_data_len);
-    return -1;
-  }
-  if (params->dst_is_hbm) {
-    read_mem(hbm_dataout_buf_pa, (uint8_t *)dataout_buf, expected_data_len);
-  }
-  uint8_t *data_start = (uint8_t *)dataout_buf;
-  if (params->cmd_bits.insert_header) {
-    // HACK, temporary fix until model/RTL is fixed.
-    //printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
-    //uint64_t *h = (uint64_t *)dataout_buf;
-    //*h = bswap_64(*h);
-    cp_hdr_t *hdr = (cp_hdr_t *)dataout_buf;
-    if (params->cmd_bits.cksum_en) {
-      uint32_t expected_cksum =
-          params->cmd_bits.cksum_adler ? kADLER32Sum : kCRC32Sum;
-      if (hdr->cksum != expected_cksum) {
-        printf("ERROR: CKSUM mismatch. Expected 0x%x, Got 0x%x\n",
-               expected_cksum, hdr->cksum);
+  if (params->cmd_bits.compression_en) {
+    uint16_t expected_data_len = kCompressedDataSize;
+    if (params->cmd_bits.insert_header) {
+      expected_data_len += 8;
+    }
+    if (st->output_data_len != expected_data_len) {
+      printf("ERROR: output data len mismatch, expected %u, received %u\n",
+             expected_data_len, st->output_data_len);
+      return -1;
+    }
+    if (params->dst_is_hbm) {
+      read_mem(hbm_dataout_buf_pa, (uint8_t *)dataout_buf, expected_data_len);
+    }
+    uint8_t *data_start = (uint8_t *)dataout_buf;
+    if (params->cmd_bits.insert_header) {
+      // HACK, temporary fix until model/RTL is fixed.
+      //printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
+      //uint64_t *h = (uint64_t *)dataout_buf;
+      //*h = bswap_64(*h);
+      cp_hdr_t *hdr = (cp_hdr_t *)dataout_buf;
+      if (params->cmd_bits.cksum_en) {
+        uint32_t expected_cksum =
+            params->cmd_bits.cksum_adler ? kADLER32Sum : kCRC32Sum;
+        if (hdr->cksum != expected_cksum) {
+          printf("ERROR: CKSUM mismatch. Expected 0x%x, Got 0x%x\n",
+                 expected_cksum, hdr->cksum);
+          return -1;
+        }
+      }
+      if (hdr->data_len != kCompressedDataSize) {
+        printf("ERROR: wrong data len in the compression header. "
+               "Expected %d, got %d\n", kCompressedDataSize, hdr->data_len);
         return -1;
       }
+      if (hdr->version != kCPVersion) {
+        printf("ERROR: wrong version in the compression header. "
+               "Expected 0x%x, got 0x%x\n", kCPVersion, hdr->version);
+        return -1;
+      }
+      data_start += 8;
     }
-    if (hdr->data_len != kCompressedDataSize) {
-      printf("ERROR: wrong data len in the compression header. "
-             "Expected %d, got %d\n", kCompressedDataSize, hdr->data_len);
+    if (st->partial_data != counter) {
+      printf("ERROR: partial data in status does not match the expected value\n");
       return -1;
     }
-    if (hdr->version != kCPVersion) {
-      printf("ERROR: wrong version in the compression header. "
-             "Expected 0x%x, got 0x%x\n", kCPVersion, hdr->version);
+    if (bcmp(data_start, compressed_data, kCompressedDataSize) != 0) {
+      printf("ERROR: compressed data does not match with expected output.\n");
       return -1;
     }
-    data_start += 8;
-  }
-  if (st->partial_data != counter) {
-    printf("ERROR: partial data in status does not match the expected value\n");
-    return -1;
-  }
+  }  // If compression is enabled
   if (params->cmd_bits.sha_en) {
     int sha_len = params->cmd_bits.sha256 ? 32 : 64;
     uint8_t *expected_sha = params->cmd_bits.sha256 ? sha256_post : sha512_post;
@@ -318,10 +330,6 @@ static int run_cp_test(comp_test_t *params) {
       utils::dump(st->sha512, sha_len);
       return -1;
     }
-  }
-  if (bcmp(data_start, compressed_data, kCompressedDataSize) != 0) {
-    printf("ERROR: compressed data does not match with expected output.\n");
-    return -1;
   }
   uint64_t *db_data = (uint64_t *)(((uint8_t *)status_buf) + 1024);
   if (params->cmd_bits.doorbell_on) {
@@ -527,6 +535,20 @@ int compress_crc_sha512() {
   spec.num_dst_sgls = 1;
   spec.datain_len   = 4096;
   spec.dataout_len  = 4096;
+
+  return run_cp_test(&spec);
+}
+
+int compress_only_sha512() {
+  comp_test_t spec;
+  bzero(&spec, sizeof(spec));
+  spec.test_name    = __func__;
+  spec.cmd          = 4;
+  spec.cmd_bits.sha_en = 1;
+  spec.cmd_bits.sha256 = 0;
+  spec.num_src_sgls = 1;
+  spec.num_dst_sgls = 1;
+  spec.datain_len   = 4096;
 
   return run_cp_test(&spec);
 }
