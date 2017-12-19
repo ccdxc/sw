@@ -69,6 +69,10 @@ acl_tcam::init(std::string table_name, uint32_t table_id, uint32_t table_size,
                     table_name.c_str(), table_id, swkey_len,
                     hwkey_len_, hwkeymask_len_, hwdata_len_);
 
+    // Initialize for Stats
+    // stats_ = new uint64_t[STATS_MAX]();
+    stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_ACL_TCAM_STATS, 
+                                    sizeof(uint64_t) * STATS_MAX);
     return HAL_RET_OK;
 }
 
@@ -100,6 +104,7 @@ acl_tcam::~acl_tcam()
     bitmap::destroy(inuse_bmp_);
     delete tcam_prio_map_;
     if (tcam_entries_) { HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, tcam_entries_); }
+    if (stats_) { HAL_FREE(HAL_MEM_ALLOC_ACL_TCAM_STATS, stats_); }
 }
 
 hal_ret_t
@@ -197,6 +202,7 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
             // There is no space at all
             HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} insert failed due to no space",
                           __func__, __LINE__, table_name_.c_str());
+            ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
     }
@@ -241,6 +247,7 @@ acl_tcam::insert(void *key, void *key_mask, void *data,
     *handle_p = handle;
 
 end:
+    stats_update(INSERT, ret);
     if (move_chain) {
         HAL_FREE(HAL_MEM_ALLOC_LIB_ACL_TCAM, move_chain);
     }
@@ -270,7 +277,8 @@ acl_tcam::update(acl_tcam_entry_handle_t handle, void *data)
     if (itr == tcam_entry_map_.end()) {
         HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} entry {} not found",
                       __func__, __LINE__, table_name_.c_str(), handle);
-        return HAL_RET_ENTRY_NOT_FOUND;
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
     }
 
     tentry = itr->second;
@@ -280,12 +288,14 @@ acl_tcam::update(acl_tcam_entry_handle_t handle, void *data)
         HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Error in programming Table {} entry {} "
                       "Err: {}",
                       __func__, __LINE__, table_name_.c_str(), handle, ret);
-        return ret;
+        goto end;
     }
 
     // update the entry
     tentry->update_data(data);
 
+end:
+    stats_update(UPDATE, ret);
     return ret;
 }
 
@@ -309,7 +319,8 @@ acl_tcam::remove(acl_tcam_entry_handle_t handle)
     if (itr == tcam_entry_map_.end()) {
         HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} entry {} not found",
                       __func__, __LINE__, table_name_.c_str(), handle);
-        return HAL_RET_ENTRY_NOT_FOUND;
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
     }
 
     tentry = itr->second;
@@ -319,7 +330,7 @@ acl_tcam::remove(acl_tcam_entry_handle_t handle)
         HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Error in programming Table {} entry {} "
                       "Err: {}",
                       __func__, __LINE__, table_name_.c_str(), handle, ret);
-        return ret;
+        goto end;
     }
 
     // Clean up the software data structures
@@ -328,6 +339,8 @@ acl_tcam::remove(acl_tcam_entry_handle_t handle)
     // delete itr->second;
     tcam_entry_map_.erase(itr);
 
+end:
+    stats_update(REMOVE, ret);
     return ret;
 }
 
@@ -347,7 +360,8 @@ acl_tcam::retrieve(acl_tcam_entry_handle_t handle, void *key, void *key_mask,
     if (itr == tcam_entry_map_.end()) {
         HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} entry {} not found",
                       __func__, __LINE__, table_name_.c_str(), handle);
-        return HAL_RET_ENTRY_NOT_FOUND;
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
     }
 
     tentry = itr->second;
@@ -362,6 +376,43 @@ acl_tcam::retrieve(acl_tcam_entry_handle_t handle, void *key, void *key_mask,
         memcpy(data, tentry->get_data(), tentry->get_data_len());
     }
 
+end:
+    stats_update(RETRIEVE, ret);
+    return ret;
+}
+
+// ---------------------------------------------------------------------------
+// Tcam Retrieve from HW
+// ---------------------------------------------------------------------------
+hal_ret_t
+acl_tcam::retrieve_from_hw(acl_tcam_entry_handle_t handle, void *key, void *key_mask,
+                           void *data)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    p4pd_error_t pd_err = P4PD_SUCCESS;
+    TcamEntry *tentry = NULL;
+    tcam_entry_map::iterator itr;
+
+    // check if entry exists
+    itr = tcam_entry_map_.find(handle);
+    if (itr == tcam_entry_map_.end()) {
+        HAL_TRACE_ERR("ACL-TCAM:{}:{}:: Table {} entry {} not found",
+                      __func__, __LINE__, table_name_.c_str(), handle);
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    tentry = itr->second;
+
+    pd_err = p4pd_entry_read(table_id_, tentry->get_index(),
+                             key, key_mask, data);
+    HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
+    if (pd_err != P4PD_SUCCESS) {
+        ret = HAL_RET_HW_FAIL;
+    }
+
+end:
+    stats_update(RETRIEVE_FROM_HW, ret);
     return ret;
 }
 
@@ -805,6 +856,134 @@ acl_tcam::get_prio_range_(TcamEntry *tentry)
         return itr->second;
     }
     return NULL;
+}
+
+// ----------------------------------------------------------------------------
+// Return Stats Pointer
+// ----------------------------------------------------------------------------
+hal_ret_t
+acl_tcam::fetch_stats(const uint64_t **stats)
+{
+    hal_ret_t   rs = HAL_RET_OK;
+
+    *stats = stats_;
+
+    return rs;
+}
+
+// ----------------------------------------------------------------------------
+// Increment Stats
+// ----------------------------------------------------------------------------
+void
+acl_tcam::stats_incr(stats stat)
+{
+    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    stats_[stat]++;
+}
+
+// ----------------------------------------------------------------------------
+// Decrement Stats
+// ----------------------------------------------------------------------------
+void
+acl_tcam::stats_decr(stats stat)
+{
+    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    stats_[stat]--;
+}
+
+// ----------------------------------------------------------------------------
+// Update stats
+// ----------------------------------------------------------------------------
+void
+acl_tcam::stats_update(acl_tcam::api ap, hal_ret_t rs)
+{
+    switch (ap) {
+        case INSERT:
+            if(rs == HAL_RET_OK) stats_incr(STATS_INS_SUCCESS);
+            else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_INS_FAIL_INVALID_ARG);
+            else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
+            else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
+            else HAL_ASSERT(0);
+            break;
+        case UPDATE:
+            if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
+            else if(rs == HAL_RET_ENTRY_NOT_FOUND) 
+                stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
+            else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_UPD_FAIL_HW);
+            else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INVALID_ARG);
+            else HAL_ASSERT(0);
+            break;
+        case REMOVE:
+            if (rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+                stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
+            else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
+            else HAL_ASSERT(0);
+            break;
+        case RETRIEVE:
+            if (rs == HAL_RET_OK) stats_incr(STATS_RETR_SUCCESS);
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+                stats_incr(STATS_RETR_FAIL_ENTRY_NOT_FOUND);
+            else HAL_ASSERT(0);
+            break;
+        case RETRIEVE_FROM_HW:
+            if (rs == HAL_RET_OK) stats_incr(STATS_RETR_FROM_HW_SUCCESS);
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+                stats_incr(STATS_RETR_FROM_HW_FAIL_ENTRY_NOT_FOUND);
+            else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_RETR_FROM_HW_FAIL_HW);
+            else HAL_ASSERT(0);
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Number of entries in use.
+// ----------------------------------------------------------------------------
+uint32_t
+acl_tcam::table_num_entries_in_use(void)
+{
+    return inuse_bmp_->num_set();
+}
+
+// ----------------------------------------------------------------------------
+// Number of insert operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+acl_tcam::table_num_inserts(void)
+{
+    return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_INVALID_ARG] +
+        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed insert operations
+// ----------------------------------------------------------------------------
+uint32_t 
+acl_tcam::table_num_insert_errors(void)
+{
+    return stats_[STATS_INS_FAIL_INVALID_ARG] +
+        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of delete operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+acl_tcam::table_num_deletes(void)
+{
+    return stats_[STATS_REM_SUCCESS] +
+        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed delete operations
+// ----------------------------------------------------------------------------
+uint32_t 
+acl_tcam::table_num_delete_errors(void)
+{
+    return stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
 }
 
 // ----------------------------------------------------------------------------
