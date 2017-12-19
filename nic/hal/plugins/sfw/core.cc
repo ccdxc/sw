@@ -259,6 +259,7 @@ sfw_exec(fte::ctx_t& ctx)
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction
     HAL_TRACE_DEBUG("Firewall lookup {}", (sfw_info->skip_sfw)?"skipped":"begin");
+    HAL_TRACE_DEBUG("Firewall lookup {}", (sfw_info->sfw_done)?"skipped":"begin");
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !sfw_info->skip_sfw && !sfw_info->sfw_done) {
         ret = net_sfw_pol_check_sg_policy(ctx, &match_rslt);
         if (ret == HAL_RET_OK) {
@@ -267,6 +268,7 @@ sfw_exec(fte::ctx_t& ctx)
                 sfw_info->alg_proto = match_rslt.alg;
                 sfw_info->sfw_done = true;
                 //ctx.log         = match_rslt.log;
+                HAL_TRACE_DEBUG("Matching rule: {}", sfw_info->alg_proto);
             } else {
                 // ToDo ret value was ok but match_rslt.valid is 0
                 // to handle the case if it happens

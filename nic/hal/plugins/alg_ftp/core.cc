@@ -284,29 +284,6 @@ ftp_search_t ftp_rsp[FTP_MAX_RSP] = {
 };
 
 /*
- * Helper to get the expeced flow from L4 session.
- * When expected flow is hit for mcast copied ctrl session
- * packets, we have L4 session derived by FTE after we set the
- * exp_flow in the exp_flow callback. Hence, we need to rederive
- * this here
- */
-l4_alg_status_t *get_expflow_from_l4sess(l4_alg_status_t *l4_sess) {
-    hal::utils::dllist_ctxt_t   *lentry, *next;
-    HAL_ASSERT(l4_sess->app_session != NULL);
-  
-    dllist_for_each_safe(lentry, next, &l4_sess->app_session->exp_flow_lhead)
-    {
-        l4_alg_status_t *exp_flow = dllist_entry(lentry,
-                                  l4_alg_status_t, exp_flow_lentry);
-        HAL_ASSERT(exp_flow != NULL);
-        if (exp_flow->isCtrl == TRUE) 
-            return exp_flow;
-    }
-
-    return NULL;
-}
-
-/*
  * Expected flow callback. FTE issues this callback with the expected flow data
  */
 hal_ret_t expected_flow_handler(fte::ctx_t &ctx, fte::expected_flow_t *wentry) {
@@ -330,7 +307,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, fte::expected_flow_t *wentry) {
  * adds exp_flow for new data sessions to aid opening of pinholes.
  */
 void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
-    l4_alg_status_t *l4_sess = (l4_alg_status_t *)ctx.feature_session_state();
+    l4_alg_status_t *l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
     hal_ret_t        ret = HAL_RET_OK;
     l4_alg_status_t *exp_flow = NULL;
     uint32_t         payload_offset = ctx.cpu_rxhdr()->payload_offset;
@@ -392,7 +369,7 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
          key.vrf_id    = ctx.key().vrf_id;
          memcpy(&key.dip, &info->ip, sizeof(ipvx_addr_t));
          memcpy(&key.dport, &info->port, sizeof(info->port)); 
-         g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, exp_flow);
+         g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow);
          exp_flow->entry.handler = expected_flow_handler;
          HAL_ASSERT(ret != HAL_RET_OOM);
          exp_flow->isCtrl = FALSE;
@@ -406,7 +383,7 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
  * any parse errors found, we update the counters.
  */
 void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
-    l4_alg_status_t *l4_sess = (l4_alg_status_t *)ctx.feature_session_state();
+    l4_alg_status_t *l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
     uint32_t         payload_offset = ctx.cpu_rxhdr()->payload_offset;
     uint32_t         i, data_len = 0;
     uint32_t         matchlen, offset;
@@ -449,7 +426,8 @@ void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
  * FTP ALG completion handler - invoked when the session creation is done.
  */
 static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
-    l4_alg_status_t *l4_sess = (l4_alg_status_t *)ctx.feature_session_state();
+    l4_alg_status_t *l4_sess = (l4_alg_status_t *)alg_status(\
+                               ctx.feature_session_state(FTE_FEATURE_ALG_FTP));
     ftp_info_t      *exp_flow_info = NULL;
     l4_alg_status_t *exp_flow = NULL;
     hal_ret_t        ret;
@@ -465,9 +443,10 @@ static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
              * Add an expected flow here for control session
              */
             ret = g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, 
-                                                   ctx.key(), exp_flow);
+                                                   ctx.key(), &exp_flow);
             HAL_ASSERT(ret != HAL_RET_OOM);
             exp_flow->entry.handler = expected_flow_handler;
+            exp_flow->alg = nwsec::APP_SVC_FTP;
             exp_flow->isCtrl = TRUE;
             exp_flow_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
             HAL_ASSERT(exp_flow_info != NULL);
@@ -500,7 +479,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         (hal::plugins::sfw::sfw_info_t*)ctx.feature_state(\
                        hal::plugins::sfw::FTE_FEATURE_SFW);
 
-    l4_sess = (l4_alg_status_t *)ctx.feature_session_state();
+    l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
     if (l4_sess != NULL) 
         ftp_info = (ftp_info_t *)l4_sess->info;
     
@@ -509,14 +488,15 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             /*
              * Alloc APP session, L4 Session and FTP info
              */
-            ret = g_ftp_state->alloc_and_init_app_sess(app_sess);
+            ret = g_ftp_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
             HAL_ASSERT_RETURN((ret != HAL_RET_OOM), fte::PIPELINE_CONTINUE);
-            ret = g_ftp_state->alloc_and_insert_l4_sess(app_sess, l4_sess);
+            ret = g_ftp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
             HAL_ASSERT_RETURN((ret != HAL_RET_OOM), fte::PIPELINE_CONTINUE);
             l4_sess->alg = nwsec::APP_SVC_FTP;
             ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
             HAL_ASSERT_RETURN((ftp_info != NULL), fte::PIPELINE_CONTINUE);
             l4_sess->isCtrl = TRUE;
+            l4_sess->info = ftp_info;
 
             /*
              * Register Feature session state & completion handler
@@ -529,7 +509,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         flowupd.mcast_info.mcast_en = 1;
         flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
         ret = ctx.update_flow(flowupd);
-    } else if (l4_sess != NULL) {
+    } else if (l4_sess != NULL && l4_sess->alg == nwsec::APP_SVC_FTP) {
         /*
          * Process only when we are expecting something.
          */
@@ -543,7 +523,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
              * Derive the ftp info from the expected flow
              * for parsing
              */
-            exp_flow = get_expflow_from_l4sess(l4_sess);
+            exp_flow = g_ftp_state->get_ctrl_expflow(l4_sess->app_session);
             if (!exp_flow)
                 return fte::PIPELINE_CONTINUE;
 

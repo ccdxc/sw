@@ -47,6 +47,26 @@
             "features"  : ["alg_sip"]
         },
         {
+            "name"      : "alg_tftp",
+            "provider"  : "pensando.io",
+            "lib"       : "alg_tftp/libalg_tftp.so",
+            "init_func" : "alg_tftp_init",
+            "exit_func" : "alg_tftp_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/sfw", "pensando.io/alg_utils"],
+            "features"  : ["alg_tftp"]
+        },
+        {
+            "name"      : "alg_rpc",
+            "provider"  : "pensando.io",
+            "lib"       : "alg_rpc/libalg_rpc.so",
+            "init_func" : "alg_rpc_init",
+            "exit_func" : "alg_rpc_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/sfw", "pensando.io/alg_utils"],
+            "features"  : ["alg_rpc"]
+        },
+        {
             "name"      : "alg",
             "provider"  : "pensando.io",
             "lib"       : "network/alg/libalg.so",
@@ -141,6 +161,8 @@
                 "pensando.io/network:ingress-checks",
                 "pensando.io/eplearn:eplearn",
                 "pensando.io/sfw:sfw",
+                "pensando.io/alg_ftp:alg_ftp",
+                "pensando.io/alg_tftp:alg_tftp",
                 "pensando.io/alg:alg",
                 "pensando.io/proxy:tcp",
                 "pensando.io/proxy:ipsec",
@@ -168,6 +190,8 @@
                 "pensando.io/app-redir:app-redir-appid",
                 "pensando.io/network:stage-marker",
                 "pensando.io/sfw:sfw",
+                "pensando.io/alg_ftp:alg_ftp",
+                "pensando.io/alg_tftp:alg_tftp",
                 "pensando.io/alg:alg",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding",
@@ -210,6 +234,8 @@
             "name": "alg-cflow",
             "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_RELIABLE_COPY" },
             "outbound_features": [
+                "pensando.io/alg_ftp:alg_ftp",
+                "pensando.io/alg_tftp:alg_tftp",
                 "pensando.io/alg:alg"
             ]
         },

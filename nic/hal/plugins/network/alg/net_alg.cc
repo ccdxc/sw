@@ -1,5 +1,4 @@
 #include "nic/hal/plugins/network/net_plugin.hpp"
-#include "nic/hal/plugins/network/alg/alg_tftp.hpp"
 #include "nic/hal/plugins/network/alg/alg_rpc.hpp"
 #include "nic/hal/plugins/network/alg/alg_utils.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
@@ -37,10 +36,6 @@ alg_exec(fte::ctx_t& ctx)
             alg_entry = alloc_and_init_alg_entry(ctx);
 
         switch(sfw_info->alg_proto) {
-            case nwsec::APP_SVC_TFTP:
-                ret = process_tftp_first_packet(ctx);
-                break;
-
             case nwsec::APP_SVC_SUN_RPC:
                 if (alg_entry->alg_proto_state == fte::ALG_PROTO_STATE_SUNRPC_DATA) {
                     ret = process_sunrpc_data_flow(ctx);
@@ -70,11 +65,6 @@ alg_exec(fte::ctx_t& ctx)
         // Todo -- move this to callbacks from the alg_entry 
         // avoid switch-case
         switch(alg_entry->alg_proto_state) {
-            case fte::ALG_PROTO_STATE_TFTP_RRQ:
-            case fte::ALG_PROTO_STATE_TFTP_WRQ:
-                ret = process_tftp(ctx);
-                break;
-
             case fte::ALG_PROTO_STATE_SUNRPC_INIT:
             case fte::ALG_PROTO_STATE_RPC_GETPORT:
             case fte::ALG_PROTO_STATE_RPC_DUMP:

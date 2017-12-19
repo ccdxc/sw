@@ -21,11 +21,134 @@ namespace alg_utils {
 #define IN6PTON_UNKNOWN     0x40000000
 #define ALG_UTILS_MAX_APP_SESS 65535
 
+/*
+ * Function Declarations
+ */
+
 int in4_pton(const char *src, int srclen, uint8_t *dst,
                  int delim, const char **end);
 
 int in6_pton(const char *src, int srclen, uint8_t *dst,
                  int delim, const char **end);
+
+/*
+ * Inlines
+ */
+// Big-Endian util
+inline uint64_t
+__be_pack_uint64(const uint8_t *buf, uint32_t *idx)
+{
+    int shift = 56;
+    uint64_t val = 0;
+
+    do {
+       val = val | (buf[(*idx)++]<<shift);
+       shift -= 8;
+    } while (shift >= 0);
+
+    return val;
+}
+
+inline uint32_t
+__be_pack_uint32(const uint8_t *buf, uint32_t *idx)
+{
+    int shift = 24;
+    uint32_t val = 0;
+
+    do {
+       val = val | (buf[(*idx)++]<<shift);
+       shift -= 8;
+    } while (shift >= 0);
+
+    return val;
+}
+
+inline uint16_t
+__be_pack_uint16(const uint8_t *buf, uint32_t *idx)
+{
+    int shift = 8;
+    uint32_t val = 0;
+
+    do {
+       val = val | (buf[(*idx)++]<<shift);
+       shift -= 8;
+    } while (shift >= 0);
+
+    return val;
+}
+
+//Little Endian util
+inline uint64_t
+__le_pack_uint64(const uint8_t *buf, uint32_t *idx)
+{
+    int shift = 0;
+    uint64_t val = 0;
+
+    do {
+       val = val | (buf[(*idx)++]<<shift);
+       shift += 8;
+    } while (shift <= 56);
+
+    return val;
+}
+
+inline uint32_t
+__le_pack_uint32(const uint8_t *buf, uint32_t *idx)
+{
+    int shift = 0;
+    uint32_t val = 0;
+
+    do {
+       val = val | (buf[(*idx)++]<<shift);
+       shift += 8;
+    } while (shift <= 24);
+
+    return val;
+}
+
+inline uint32_t
+__pack_uint32(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
+{
+    if (format == 1) {
+        return (__le_pack_uint32(buf, idx));
+    } else {
+        return (__be_pack_uint32(buf, idx));
+    }
+}
+
+inline uint16_t
+__le_pack_uint16(const uint8_t *buf, uint32_t *idx)
+{
+    int shift = 0;
+    uint32_t val = 0;
+
+    do {
+       val = val | (buf[(*idx)++]<<shift);
+       shift += 8;
+    } while (shift <= 8);
+
+    return val;
+}
+
+inline uint16_t
+__pack_uint16(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
+{
+    if (format == 1) {
+        return (__le_pack_uint16(buf, idx));
+    } else {
+        return (__be_pack_uint16(buf, idx));
+    }
+}
+
+inline uint64_t
+__pack_uint64(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
+{
+    if (format == 1) {
+        return (__le_pack_uint64(buf, idx));
+    } else {
+        return (__be_pack_uint64(buf, idx));
+    }
+}
 
 //------------------------------------------------------------------------------
 // app sessions are the L7 session placeholder that consists of bunch of L4
@@ -48,15 +171,19 @@ typedef struct app_session_s {
 //-----------------------------------------------------------------------------
 typedef struct l4_alg_status {
     fte::expected_flow_t            entry;                     // Flow key and handler 
-    fte::feature_session_state_t    fte_feature_state;         // Feature session state to link this to actual L4 sess
     nwsec::ALGName                  alg;                       // ALG applied on this L4-session
     bool                            isCtrl;                    // Is this a control session
     session_t                      *session;                   // Back pointer to L4-session
     void                           *info;                      // Per-ALG L4 session oper_status/info
     app_session_t                  *app_session;               // Back pointer to app session this L4 session is part of
+    fte::feature_session_state_t    fte_feature_state;         // Feature session state to link this to actual L4 sess
     dllist_ctxt_t                   l4_sess_lentry;            // L4 Session list context
     dllist_ctxt_t                   exp_flow_lentry;           // Expected flow list context
 } l4_alg_status_t;
+
+#define alg_status(feature_state_ptr)                        \
+       ((l4_alg_status_t *)((char *)feature_state_ptr -      \
+        offsetof(l4_alg_status_t, fte_feature_state)))
 
 typedef void (*l4_sess_cleanup_hdlr_t) (l4_alg_status_t *exp_flow);
 typedef void (*app_sess_cleanup_hdlr_t) (app_session_t *app);
@@ -79,7 +206,7 @@ public:
     void init(const char* feature_name, slab *app_sess_slab,
               slab *l4_sess_slab, slab *alg_state_slab,
               app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
-              l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr);
+              l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr);
 
     ~alg_state();
 
@@ -96,12 +223,15 @@ public:
     void cleanup_app_session(app_session_t *app);
     hal_ret_t alloc_and_insert_exp_flow(app_session_t *app_sess, 
                                         hal::flow_key_t key,
-                                        l4_alg_status_t *alg_status);
+                                        l4_alg_status_t **alg_status);
     hal_ret_t alloc_and_insert_l4_sess(app_session_t *app_sess,
-                                       l4_alg_status_t *alg_status); 
-    hal_ret_t alloc_and_init_app_sess(app_session_t *app_sess);
+                                       l4_alg_status_t **alg_status); 
+    hal_ret_t alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_sess);
+    hal_ret_t lookup_app_sess(hal::flow_key_t key, app_session_t *app_sess);
     void move_expflow_to_l4sess(app_session_t *app_sess, 
                                 l4_alg_status_t *alg_status);
+    l4_alg_status_t *get_ctrl_expflow(app_session_t *app_sess);
+    l4_alg_status_t *get_ctrl_l4sess(app_session_t *app_sess);
 
 private:
     wp_rwlock                      rwlock_;                   // Read-write lock to alg_state

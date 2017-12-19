@@ -229,13 +229,13 @@ static bool app_sess_compare_key_func (void *key1, void *key2)
 void alg_state::init(const char* feature_name, slab *app_sess_slab,
                    slab *l4_sess_slab, slab *alg_info_slab,
                    app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
-                   l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr) {
+                   l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr) {
      feature_ = feature_name;
      app_sess_slab_ = app_sess_slab;
      l4_sess_slab_ = l4_sess_slab;
      alg_info_slab_ = alg_info_slab;
      app_sess_cleanup_hdlr_ = app_sess_clnup_hdlr;
-     l4_sess_cleanup_hdlr_ = exp_flow_clnup_hdlr;
+     l4_sess_cleanup_hdlr_ = l4_sess_clnup_hdlr;
 
      app_sess_ht_ = sdk::lib::ht::factory(ALG_UTILS_MAX_APP_SESS,
                                            app_sess_get_key_func,
@@ -248,7 +248,7 @@ void alg_state::init(const char* feature_name, slab *app_sess_slab,
 alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
                               slab *l4_sess_slab, slab *alg_info_slab,
                               app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
-                              l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr) {
+                              l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr) {
     void         *mem = NULL;
     alg_state    *state = NULL;
 
@@ -258,7 +258,7 @@ alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
     state = new (mem) alg_state();
     
     state->init(feature_name, app_sess_slab, l4_sess_slab, 
-               alg_info_slab, app_sess_clnup_hdlr, exp_flow_clnup_hdlr);
+               alg_info_slab, app_sess_clnup_hdlr, l4_sess_clnup_hdlr);
 
     return state;
 }
@@ -274,41 +274,78 @@ alg_state::~alg_state() {
 
 hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
                                                hal::flow_key_t key, 
-                                               l4_alg_status_t *exp_flow) {
+                                               l4_alg_status_t **expected_flow) {
+    l4_alg_status_t  *exp_flow = NULL;
+
     exp_flow = (l4_alg_status_t *)l4_sess_slab()->alloc();
     if (exp_flow == NULL) {
         return HAL_RET_OOM;
     }
 
+    HAL_SPINLOCK_LOCK(&app_sess->slock);
     exp_flow->app_session = app_sess;
     memcpy(&exp_flow->entry.key, &key, sizeof(hal::flow_key_t));
     fte::insert_expected_flow(&exp_flow->entry);
     dllist_reset(&exp_flow->exp_flow_lentry);
     dllist_add(&app_sess->exp_flow_lhead, &exp_flow->exp_flow_lentry);
+    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+
+    *expected_flow = exp_flow;
 
     return HAL_RET_OK; 
 }
 
 hal_ret_t alg_state::alloc_and_insert_l4_sess(app_session_t *app_sess,
-                                              l4_alg_status_t *alg_status) {
+                                              l4_alg_status_t **l4_sess) {
+    l4_alg_status_t *alg_status = NULL;
+
     alg_status = (l4_alg_status_t *)l4_sess_slab()->alloc();
     if (alg_status == NULL) {
         return HAL_RET_OOM;
     }
 
+    HAL_SPINLOCK_LOCK(&app_sess->slock); 
     alg_status->app_session = app_sess; 
     dllist_reset(&alg_status->l4_sess_lentry);
     dllist_add(&app_sess->l4_sess_lhead, &alg_status->l4_sess_lentry);
+    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+
+    *l4_sess = alg_status;
 
     return HAL_RET_OK;
 }
 
-hal_ret_t alg_state::alloc_and_init_app_sess(app_session_t *app_sess) {
+hal_ret_t alg_state::lookup_app_sess(hal::flow_key_t key, app_session_t *app_sess) {
+    app_sess = (app_session_t *)app_sess_ht()->lookup((void *)&key);
+    if (app_sess) {
+        return HAL_RET_OK;
+    }
+
+    return HAL_RET_ENTRY_NOT_FOUND;
+}
+
+hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_session) {
+    hal_ret_t       ret = HAL_RET_OK;
+    app_session_t  *app_sess = NULL;
+
+    // Lookup if app session already exists
+    ret = lookup_app_sess(key, app_sess);
+    if (ret != HAL_RET_ENTRY_NOT_FOUND) {
+        return HAL_RET_ENTRY_EXISTS;
+    }   
+
     app_sess = (app_session_t *)app_sess_slab()->alloc();
     if (app_sess == NULL) {
         return HAL_RET_OOM;
     }
+
+    HAL_SPINLOCK_INIT(&app_sess->slock, PTHREAD_PROCESS_PRIVATE);
+    memcpy(&(app_sess)->key, &key, sizeof(hal::flow_key_t));
     app_sess_ht()->insert(app_sess, &app_sess->app_sess_ht_ctxt);
+
+    HAL_TRACE_DEBUG("App sess: {}", (app_sess != NULL)?"Not Null":"Null");
+
+    *app_session = app_sess;
 
     return HAL_RET_OK;
 }
@@ -316,14 +353,60 @@ hal_ret_t alg_state::alloc_and_init_app_sess(app_session_t *app_sess) {
 void alg_state::move_expflow_to_l4sess(app_session_t *app_sess, 
                                             l4_alg_status_t *exp_flow) {
     fte::remove_expected_flow(exp_flow->entry.key);
+ 
+    HAL_SPINLOCK_LOCK(&app_sess->slock);
     dllist_del(&exp_flow->exp_flow_lentry);
     dllist_reset(&exp_flow->exp_flow_lentry);
     dllist_reset(&exp_flow->l4_sess_lentry);
-    dllist_add(&app_sess->l4_sess_lhead, &exp_flow->l4_sess_lentry);   
+    dllist_add(&app_sess->l4_sess_lhead, &exp_flow->l4_sess_lentry);
+    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+}
+
+/*
+ * Helper to get the control session expected flow.
+ */
+l4_alg_status_t *alg_state::get_ctrl_expflow(app_session_t *app_sess) {
+    hal::utils::dllist_ctxt_t   *lentry, *next;
+
+    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    dllist_for_each_safe(lentry, next, &app_sess->exp_flow_lhead)
+    {
+        l4_alg_status_t *exp_flow = dllist_entry(lentry,
+                                  l4_alg_status_t, exp_flow_lentry);
+        HAL_ASSERT(exp_flow != NULL);
+        if (exp_flow->isCtrl == TRUE)
+            return exp_flow;
+    }
+    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+
+    return NULL;
+}
+
+/*
+ * Helper to get the control L4 alg session.
+ */
+l4_alg_status_t *alg_state::get_ctrl_l4sess(app_session_t *app_sess) {
+    hal::utils::dllist_ctxt_t   *lentry, *next;
+
+    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    dllist_for_each_safe(lentry, next, &app_sess->l4_sess_lhead)
+    {
+        l4_alg_status_t *l4_sess = dllist_entry(lentry,
+                                  l4_alg_status_t, l4_sess_lentry);
+        HAL_ASSERT(l4_sess != NULL);
+        if (l4_sess->isCtrl == TRUE)
+            return l4_sess;
+    }
+    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+
+    return NULL;
 }
 
 void alg_state::cleanup_app_session(app_session_t *app_sess) {
     dllist_ctxt_t   *lentry, *next;
+
+    // Take the lock 
+    HAL_SPINLOCK_LOCK(&app_sess->slock);
 
     // Cleanup any ALG specific info
     app_sess_cleanup_hdlr_(app_sess); 
@@ -356,6 +439,9 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     if (app_sess_cleanup_hdlr_)
         app_sess_cleanup_hdlr_(app_sess);
 
+    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+
+    HAL_SPINLOCK_DESTROY(&app_sess->slock);
     app_sess_slab()->free(app_sess); 
 }
 
