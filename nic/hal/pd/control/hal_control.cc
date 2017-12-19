@@ -12,8 +12,6 @@
 
 namespace hal {
 
-extern hal::utils::thread* current_thread();
-
 namespace pd {
 
 // per producer request queues
@@ -83,7 +81,7 @@ hal_ret_t
 hal_control_notify (uint8_t operation, void *ctxt)
 {
     uint16_t           pindx;
-    hal::utils::thread *curr_thread = hal::current_thread();
+    hal::utils::thread *curr_thread = hal::hal_get_current_thread();
     uint32_t           curr_tid = curr_thread->thread_id();
     hal_ctrl_entry_t   *rw_entry;
 
@@ -128,7 +126,8 @@ hal_control_start (void *ctxt)
     HAL_THREAD_INIT(ctxt);
 
     hal_cfg_t *hal_cfg =
-                (hal_cfg_t *)hal::current_thread()->data();
+                (hal_cfg_t *)hal::hal_get_current_thread()->data();
+                
     if (hal_cfg == NULL) {
         return NULL;
     }

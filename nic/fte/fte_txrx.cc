@@ -8,10 +8,8 @@
 #include "nic/p4/nw/include/defines.h"
 #include "nic/include/cpupkt_api.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
-
-namespace hal {
-extern hal::utils::thread* current_thread();
-}
+#include "nic/include/hal.hpp"
+#include "nic/include/hal_cfg.hpp"
 
 namespace fte {
 
@@ -201,8 +199,15 @@ void inst_t::ctx_mem_init()
 //------------------------------------------------------------------------------
 void inst_t::start()
 {
+    hal::hal_cfg_t *hal_cfg =
+                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    HAL_ASSERT(hal_cfg);
     while(true) {
-        usleep(1000000/3);
+        if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
+            usleep(1000000/3);
+        } else if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL) {
+            usleep(1000000 * 3);
+        }
         ctx_mem_init();
         process_arq();
         process_softq();
@@ -230,7 +235,7 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
 hal_ret_t
 inst_t::softq_enqueue(softq_fn_t fn, void *data)
 {
-    hal::utils::thread *curr_thread = hal::current_thread();
+    hal::utils::thread *curr_thread = hal::hal_get_current_thread();
 
     HAL_TRACE_DEBUG("fte: softq enqueue fte.{} fn={:p} data={:p}",
                     id_, (void*)fn, data);

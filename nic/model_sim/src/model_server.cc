@@ -33,6 +33,10 @@ class HostMem : public pen_mem_base {
  public:
   HostMem() {
     shmid_ = shmget(HostMemHandle(), kShmSize, IPC_CREAT | 0666);
+    if (shmid_ < 0) {
+        perror("shmget");
+        printf("shmget failed for %lu size\n", kShmSize);
+    }
     assert(shmid_ >= 0);
     shmaddr_ = shmat(shmid_, nullptr, 0);
     assert(shmaddr_ != (void*)-1);

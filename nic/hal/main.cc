@@ -168,7 +168,9 @@ main (int argc, char **argv)
     int              oc;
     char             *cfg_file = NULL, *cfg_path;
     std::string      full_path, ini_full_path, ini_file = "hal.ini";
-    hal::hal_cfg_t    hal_cfg = { 0 };
+    hal::hal_cfg_t    hal_cfg;
+
+    bzero(&hal_cfg, sizeof(hal_cfg));
 	struct option longopts[] = {
 	   { "config",  required_argument, NULL, 'c' },
 	   { "help",    no_argument,       NULL, 'h' },

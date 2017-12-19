@@ -11,7 +11,9 @@ hal_initialize()
     char 			cfg_file[] = "hal.json";
 	char 			*cfg_path;
     std::string     full_path, ini_full_path, ini_file = "hal.ini";
-    hal::hal_cfg_t  hal_cfg = { 0 };
+    hal::hal_cfg_t  hal_cfg;
+
+    bzero(&hal_cfg, sizeof(hal_cfg));
 
     cfg_path = std::getenv("HAL_CONFIG_PATH");
     if (cfg_path) {

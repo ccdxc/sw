@@ -11,8 +11,16 @@ using hal::utils::dllist_ctxt_t;
 namespace hal {
 
 #define HAL_MAX_NAME_STR         16
+typedef enum hal_platform_mode_s {
+    HAL_PLATFORM_MODE_NONE,
+    HAL_PLATFORM_MODE_SIM,
+    HAL_PLATFORM_MODE_HW,
+    HAL_PLATFORM_MODE_HAPS,
+    HAL_PLATFORM_MODE_RTL,
+} hal_platform_mode_t;
+
 typedef struct hal_cfg_s {
-    bool                    sim;
+    hal_platform_mode_t     platform_mode;
     char                    asic_name[HAL_MAX_NAME_STR];
     std::string             grpc_port;
     std::string             loader_info_file;

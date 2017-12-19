@@ -13,6 +13,8 @@
 #include <cmath>
 
 #include "nic/include/base.h"
+#include "nic/include/hal_cfg.hpp"
+#include "nic/include/hal.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -38,19 +40,25 @@ capri_txs_scheduler_init ()
     uint64_t      txs_sched_hbm_base_addr;
     uint16_t      dtdm_lo_map, dtdm_hi_map;
 
+    hal::hal_cfg_t *hal_cfg =
+                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    HAL_ASSERT(hal_cfg);
+
     txs_sched_hbm_base_addr = (uint64_t) get_start_offset(CAPRI_HBM_REG_TXS_SCHEDULER);
 
     // Update HBM base addr.  
     txs_csr.cfw_scheduler_static.read();
     txs_csr.cfw_scheduler_static.hbm_base(txs_sched_hbm_base_addr);
 
-    // Init txs hbm/sram.
-    txs_csr.cfw_scheduler_glb.read();
-    txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
-    txs_csr.cfw_scheduler_glb.sram_hw_init(1);
+    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
+        // Init txs hbm/sram.
+        txs_csr.cfw_scheduler_glb.read();
+        txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
+        txs_csr.cfw_scheduler_glb.sram_hw_init(1);
 
-    txs_csr.cfw_scheduler_static.write();
-    txs_csr.cfw_scheduler_glb.write();
+        txs_csr.cfw_scheduler_static.write();
+        txs_csr.cfw_scheduler_glb.write();
+    }
 
     // Init scheduler calendar with equal weights for all cos.
     for (int i = 0; i < DTDM_CALENDAR_SIZE ; i++) {

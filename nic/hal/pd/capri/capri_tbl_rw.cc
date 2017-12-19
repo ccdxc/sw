@@ -18,6 +18,8 @@
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/include/hal.hpp"
+#include "nic/include/hal_cfg.hpp"
 
 #ifndef P4PD_CLI
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -467,6 +469,10 @@ static int capri_table_p4plus_init()
     uint64_t capri_action_p4plus_asm_base;
     p4pd_table_properties_t tbl_ctx;
 
+    hal::hal_cfg_t *hal_cfg =
+                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    HAL_ASSERT(hal_cfg);
+
     // Resolve the p4plus rxdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_PROG,
@@ -519,6 +525,13 @@ static int capri_table_p4plus_init()
     capri_program_p4plus_table_mpu_pc(
             tbl_ctx.stage_tableid, te_csr,
             (uint32_t) capri_action_p4plus_asm_base, 0);
+
+    if (tbl_ctx.stage == 0 &&
+        hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
+        // TODO: This should 16 as we can process 16 packets per doorbell.
+        te_csr->cfg_table_property[tbl_ctx.stage_tableid].max_bypass_cnt(0x10); 
+        te_csr->cfg_table_property[tbl_ctx.stage_tableid].write();
+    }
 
     return CAPRI_OK ;
 }

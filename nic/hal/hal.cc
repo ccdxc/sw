@@ -58,8 +58,8 @@ thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
 using boost::property_tree::ptree;
 
-thread*
-current_thread()
+static thread*
+current_thread(void)
 {
     return hal::utils::thread::current_thread() ?
            hal::utils::thread::current_thread() :
@@ -167,7 +167,7 @@ hal_sig_init (void)
 //  spawn and setup all the HAL threads - both config and packet loop threads
 //------------------------------------------------------------------------------
 static hal_ret_t
-hal_thread_init (void)
+hal_thread_init (hal_cfg_t *hal_cfg)
 {
     uint32_t              tid, core_id;
     int                   rv, thread_prio;
@@ -188,6 +188,7 @@ hal_thread_init (void)
             thread::factory(static_cast<const char *>(thread_name), tid,
                             core_id, fte_pkt_loop_start,
                             thread_prio, SCHED_FIFO, false);
+        g_hal_threads[tid]->set_data(hal_cfg);
         HAL_ABORT(g_hal_threads[tid] != NULL);
     }
 
@@ -330,9 +331,13 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
     try {
 		std::string mode = pt.get<std::string>("mode");
         if (mode == "sim") {
-            hal_cfg->sim = true;
-        } else {
-            hal_cfg->sim = false;
+            hal_cfg->platform_mode = HAL_PLATFORM_MODE_SIM;
+        } else if (mode == "hw") {
+            hal_cfg->platform_mode = HAL_PLATFORM_MODE_SIM;
+        } else if (mode == "rtl") {
+            hal_cfg->platform_mode = HAL_PLATFORM_MODE_RTL;
+        } else if (mode == "haps") {
+            hal_cfg->platform_mode = HAL_PLATFORM_MODE_HAPS;
         }
 
         sparam = pt.get<std::string>("asic.name");
@@ -478,7 +483,7 @@ hal_init (hal_cfg_t *hal_cfg)
     hal::init_plugins(hal_cfg->forwarding_mode == "classic");
 
     // spawn all necessary PI threads
-    HAL_ABORT(hal_thread_init() == HAL_RET_OK);
+    HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
     // do platform dependent init
