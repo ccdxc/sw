@@ -1,0 +1,72 @@
+# Test Spec
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#    maxflows    : 1 
+#    maxrdmasessions     : 4 
+
+packets:
+   - packet:
+        id          : IN_PKT    # Input packet 
+        payloadsize : ref://factory/payloads/id=RDMA_UD_SEND_ONLY_MLNX/size
+        template    : ref://factory/packets/id=RAW
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=RDMA_UD_SEND_ONLY_MLNX/data
+
+buffers:
+    - buffer:
+        id      : RQ_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=IN_PKT/size
+                 data    : None
+
+descriptors:
+    - descriptor:
+        id      : RQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            wrid: 5
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF/address
+                  len : ref://testcase/buffers/id=RQ_BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+
+    doorbell:
+        object: ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ/doorbell
+        fields:
+            upd : 0x3 # DB_SCHED_WR(1)
+
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+expect:
+    # ICRC drop, No Pkts or Descs expected
+    # TODO: Add ICRC drop stats check after HAL team committs the drop stats code and 
+    # logic to check drop stats from HAL/DOL

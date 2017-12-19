@@ -1037,3 +1037,11 @@ modules:
         spec    : resp_rx_send_only_icrc_err.testspec
         ignore  : False
 
+#    - module:
+#        name    : RDMA_RESP_RX_UD_SEND_ONLY_MLNX
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_icrc_err
+#        spec    : resp_rx_ud_send_only_mlnx.testspec
+#        ignore  : False
+
