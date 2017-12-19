@@ -70,7 +70,8 @@ l4_profile:
   bal         r7, f_ip_normalization_optimal
   phvwr       p.l4_metadata_tcp_split_handshake_detect_en, d.u.l4_profile_d.tcp_split_handshake_detect_en
   phvwr       p.l4_metadata_tcp_non_syn_first_pkt_drop, d.u.l4_profile_d.tcp_non_syn_first_pkt_drop
-  phvwr.e     p.l4_metadata_tcp_split_handshake_drop, d.u.l4_profile_d.tcp_split_handshake_drop
+  phvwr       p.l4_metadata_tcp_split_handshake_drop, d.u.l4_profile_d.tcp_split_handshake_drop
+  b           f_p4plus_to_p4_1
   phvwr       p.l4_metadata_ip_ttl_change_detect_en, d.u.l4_profile_d.ip_ttl_change_detect_en
 
 
@@ -302,8 +303,8 @@ lb_ipv6_norm_options_tunnel_terminate:
   phvwr       p.udp_len, r1
   sub         r1, k.ipv4_totalLen, k.l3_metadata_inner_ipv6_options_len
   phvwr       p.ipv4_totalLen, r1
-  
-  
+
+
 lb_ipv6_norm_hop_limit:
   jr.c4       r7
   seq         c1, k.control_metadata_uplink, FALSE
@@ -323,3 +324,5 @@ lb_ipv6_norm_hop_limit:
 nop:
   nop.e
   nop
+
+#include "p4plus_to_p4_1.asm"

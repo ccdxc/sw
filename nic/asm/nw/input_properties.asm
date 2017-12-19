@@ -21,7 +21,7 @@ input_properties:
                     d.{input_properties_d.flow_miss_action,input_properties_d.flow_miss_qos_class_id}, \
                     p.control_metadata_flow_miss_idx, d.input_properties_d.flow_miss_idx
   phvwrpair     p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable, \
-                    p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
+                    p.control_metadata_allow_flood, d.input_properties_d.allow_flood
   phvwr         p.flow_miss_metadata_tunnel_vnid, d.input_properties_d.bounce_vnid
-  phvwr.e       p.control_metadata_allow_flood, d.input_properties_d.allow_flood
+  phvwr.e       p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
   phvwr         p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx

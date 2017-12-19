@@ -664,7 +664,7 @@ table p4plus_to_p4_1 {
     default_action : f_p4plus_to_p4_1;
 }
 
-@pragma stage 5
+@pragma stage 3
 table p4plus_to_p4_2 {
     actions {
         f_p4plus_to_p4_2;
@@ -674,7 +674,6 @@ table p4plus_to_p4_2 {
 
 control process_p4plus_to_p4 {
     if (p4plus_to_p4.valid == TRUE) {
-        apply(p4plus_to_p4_1);
         apply(p4plus_to_p4_2);
     }
 }

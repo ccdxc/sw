@@ -328,7 +328,7 @@ control ingress {
         process_p4plus_to_p4();
         process_l4_profile();
         process_ipsg();
-        process_normalization();
+        process_validation();
         process_flow_table();
         process_registered_macs();
         process_nacl();

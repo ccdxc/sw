@@ -702,18 +702,15 @@ lb_tss_r_exit:
 // R4 - Copy the tcp_mss values, was not copied in good packet path
 // R6 - tcp_rcvr_win_sz - already copied
 // R2 - tcp_data_len - already copied
-lb_tcp_session_initator_normalization: 
+lb_tcp_session_initator_normalization:
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_mss, r0
-  b            lb_tcp_data_len_gt_mss_size 
-  seq          c2, k.{l4_metadata_tcp_data_len_gt_mss_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_mss_action_sbit1_ebit1}, \
-                      NORMALIZATION_ACTION_ALLOW
-  
+  b            lb_tcp_data_len_gt_mss_size
+  seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, NORMALIZATION_ACTION_ALLOW
 
-lb_tcp_session_responder_normalization: 
+lb_tcp_session_responder_normalization:
   add          r4, d.u.tcp_session_state_info_d.iflow_tcp_mss, r0
-  b            lb_tcp_data_len_gt_mss_size 
-  seq          c2, k.{l4_metadata_tcp_data_len_gt_mss_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_mss_action_sbit1_ebit1}, \
-                      NORMALIZATION_ACTION_ALLOW
+  b            lb_tcp_data_len_gt_mss_size
+  seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, NORMALIZATION_ACTION_ALLOW
 
 
 lb_tcp_data_len_gt_mss_size:
@@ -721,8 +718,7 @@ lb_tcp_data_len_gt_mss_size:
   seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_ALLOW
   slt          c3, r4, r2
   b.!c3        lb_tcp_data_len_gt_win_size
-  seq          c4, k.{l4_metadata_tcp_data_len_gt_mss_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_mss_action_sbit1_ebit1}, \
-                      NORMALIZATION_ACTION_DROP
+  seq          c4, k.l4_metadata_tcp_data_len_gt_mss_action, NORMALIZATION_ACTION_DROP
   phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4     p.capri_intrinsic_drop, 1
   sub          r1, r2, r4 // r1 = tcp_data_len - mss
@@ -748,7 +744,8 @@ lb_tcp_data_len_gt_mss_size:
 
 lb_tcp_data_len_gt_win_size:
   b.c2         lb_tcp_unexpected_sack_option
-  seq          c2, k.l4_metadata_tcp_unexpected_sack_option_action, \
+  seq          c2, k.{l4_metadata_tcp_unexpected_sack_option_action_sbit0_ebit0, \
+                      l4_metadata_tcp_unexpected_sack_option_action_sbit1_ebit1}, \
                       NORMALIZATION_ACTION_ALLOW
   slt          c3, r6, r2
   b.!c3        lb_tcp_unexpected_sack_option
@@ -787,7 +784,8 @@ lb_tcp_unexpected_sack_option:
   seq          c3, d.u.tcp_session_state_info_d.tcp_sack_perm_option_negotiated, FALSE
   sne          c4, k.{tcp_option_four_sack_valid...tcp_option_one_sack_valid}, r0
   bcf          ![c3 & c4], lb_tcp_unexpected_ts_option
-  seq          c4, k.l4_metadata_tcp_unexpected_sack_option_action, \
+  seq          c4, k.{l4_metadata_tcp_unexpected_sack_option_action_sbit0_ebit0, \
+                      l4_metadata_tcp_unexpected_sack_option_action_sbit1_ebit1}, \
                       NORMALIZATION_ACTION_DROP
   phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4     p.capri_intrinsic_drop, 1

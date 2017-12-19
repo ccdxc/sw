@@ -1,13 +1,7 @@
-#include "ingress.h"
-#include "INGRESS_p.h"
-#include "../../p4/nw/include/defines.h"
-
-struct p4plus_to_p4_1_k k;
-struct phv_             p;
-
-%%
-
 f_p4plus_to_p4_1:
+  seq         c1, k.p4plus_to_p4_valid, TRUE
+  nop.!c1.e
+
   // update IP id
   smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID, \
                   P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID

@@ -30,15 +30,10 @@ SRC_FILES := \
     $(SRC_DIR)/ddos_src_vf_policer_action.asm \
     $(SRC_DIR)/decode_roce_opcode.asm \
     $(SRC_DIR)/drop_stats.asm \
-    $(SRC_DIR)/rx_policer_action.asm \
-    $(SRC_DIR)/rx_policer.asm \
     $(SRC_DIR)/flow_hash.asm \
     $(SRC_DIR)/flow_hash_overflow.asm \
     $(SRC_DIR)/flow_info.asm \
-    $(SRC_DIR)/registered_macs.asm \
-    $(SRC_DIR)/session_state.asm \
     $(SRC_DIR)/flow_stats.asm \
-    $(SRC_DIR)/icmp_normalization.asm \
     $(SRC_DIR)/ingress_tx_stats.asm \
     $(SRC_DIR)/input_mapping_native.asm \
     $(SRC_DIR)/input_mapping_tunneled.asm \
@@ -48,15 +43,17 @@ SRC_FILES := \
     $(SRC_DIR)/l4_profile.asm \
     $(SRC_DIR)/mirror.asm \
     $(SRC_DIR)/nacl.asm \
-    $(SRC_DIR)/qos.asm \
     $(SRC_DIR)/output_mapping.asm \
     $(SRC_DIR)/p4plus_app.asm \
     $(SRC_DIR)/p4plus_app_prep.asm \
-    $(SRC_DIR)/p4plus_to_p4_1.asm \
     $(SRC_DIR)/p4plus_to_p4_2.asm \
+    $(SRC_DIR)/qos.asm \
+    $(SRC_DIR)/registered_macs.asm \
     $(SRC_DIR)/replica.asm \
     $(SRC_DIR)/rewrite.asm \
-    $(SRC_DIR)/tcp_stateless_normalization.asm \
+    $(SRC_DIR)/rx_policer.asm \
+    $(SRC_DIR)/rx_policer_action.asm \
+    $(SRC_DIR)/session_state.asm \
     $(SRC_DIR)/tunnel_decap.asm \
     $(SRC_DIR)/tunnel_decap_copy_inner.asm \
     $(SRC_DIR)/tunnel_encap_update_inner.asm \
@@ -64,7 +61,6 @@ SRC_FILES := \
     $(SRC_DIR)/twice_nat.asm \
     $(SRC_DIR)/tx_stats.asm \
     $(SRC_DIR)/validate_packet.asm \
-    $(SRC_DIR)/tcp_options_fixup.asm \
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))
 

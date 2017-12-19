@@ -21,9 +21,9 @@ header_type l4_metadata_t {
         //      edit - Can be modifying or trimming the packet
 
         // High level Normalizaiton knobs.
-        ip_normalization_en                      : 1;
         icmp_normalization_en                    : 1;
         tcp_normalization_en                     : 1;
+        ip_normalization_en                      : 1;
 
         // IP Normalization
         // ip_options_action: Clear all IP options seen. This is for the inner packet in case of tunneled..
@@ -101,7 +101,9 @@ header_type l4_metadata_t {
 
 metadata l4_metadata_t l4_metadata;
 
-action l4_profile(ip_normalization_en,
+action l4_profile(icmp_normalization_en,
+                  tcp_normalization_en,
+                  ip_normalization_en,
                   ip_rsvd_flags_action,
                   ip_df_action,
                   ip_options_action,
@@ -130,9 +132,7 @@ action l4_profile(ip_normalization_en,
                   tcp_invalid_flags_drop,
                   tcp_non_syn_first_pkt_drop,
                   tcp_split_handshake_detect_en,
-                  tcp_split_handshake_drop,
-                  icmp_normalization_en,
-                  tcp_normalization_en) {
+                  tcp_split_handshake_drop) {
 
     modify_field(l4_metadata.ip_normalization_en, ip_normalization_en);
     modify_field(l4_metadata.ip_rsvd_flags_action, ip_rsvd_flags_action);
@@ -170,6 +170,10 @@ action l4_profile(ip_normalization_en,
     }
     if (tcp.valid == TRUE) {
         modify_field(l4_metadata.tcp_normalization_en, tcp_normalization_en);
+    }
+
+    if (p4plus_to_p4.valid == TRUE) {
+        f_p4plus_to_p4_1();
     }
 
     ip_normalization_checks();
@@ -1778,6 +1782,7 @@ control process_session_state {
     }
 }
 
+#if 0
 @pragma stage 2
 table tcp_stateless_normalization {
     actions {
@@ -1809,7 +1814,10 @@ control process_normalization {
     if (l4_metadata.icmp_normalization_en == TRUE) {
         apply(icmp_normalization);
     }
-    apply(validate_packet);
-
     apply(tcp_options_fixup);
+}
+#endif
+
+control process_validation {
+    apply(validate_packet);
 }

@@ -1,12 +1,3 @@
-#include "ingress.h"
-#include "INGRESS_p.h"
-#include "../../p4/nw/include/defines.h"
-
-struct tcp_stateless_normalization_k k;
-struct phv_ p;
-
-%%
-
 // c2 - C2 is only used to check the next configuration knob in the delay
 //      slot. So don't use anywhere in the other logic.
 // General order of execution is
@@ -53,7 +44,7 @@ tcp_stateless_normalization:
 
   setcf.!c1   c1, [c2 & !c4] // rst flag set and data len is not zero
 
-#if 0  
+#if 0
   smeqb       c2, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_RST, TCP_FLAG_SYN|TCP_FLAG_RST
   smeqb       c3, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_FIN, TCP_FLAG_SYN|TCP_FLAG_FIN
   setcf.!c1   c1, [c2 | c3]  // invalid flags syn+rst or syn+fin
@@ -64,18 +55,18 @@ tcp_stateless_normalization:
 #endif /* 0 */
 
   smeqb       c2, k.tcp_flags, TCP_FLAG_ACK, 0x0
- 
-  setcf.!c1   c1, [c2 & c6]   // ACK is not set and SYN is not set 
+
+  setcf.!c1   c1, [c2 & c6]   // ACK is not set and SYN is not set
 
   seq.c2      c2, k.tcp_option_timestamp_valid, TRUE // ACK not set and timestamp valid
   sne.c2      c2, k.tcp_option_timestamp_prev_echo_ts, r0 // ACK not set and timestamp valid and echo_ts non-zero
 
-  setcf.!c1   c1, [c2] 
+  setcf.!c1   c1, [c2]
 
-  nop.!c1.e   
+  nop.!c1.e
   b.c1        lb_tcp_rsvd_flags    // We hit a bad packet.
- 
-#if 0 
+
+#if 0
   sne         c1, k.tcp_res, r0  // Reserved Flag set
 
   // unexpected mss
@@ -122,16 +113,15 @@ tcp_stateless_normalization:
 #endif /* 0 */
 
 lb_tcp_rsvd_flags:
-  seq         c2, k.l4_metadata_tcp_rsvd_flags_action, \
-                     NORMALIZATION_ACTION_ALLOW
+  or          r1, k.l4_metadata_tcp_rsvd_flags_action_sbit1_ebit1, \
+                  k.l4_metadata_tcp_rsvd_flags_action_sbit0_ebit0, 1
+  seq         c2, r1, NORMALIZATION_ACTION_ALLOW
   b.c2        lb_tcp_unexpected_mss
-  seq         c2, k.{l4_metadata_tcp_unexpected_mss_action_sbit0_ebit0, \
-                     l4_metadata_tcp_unexpected_mss_action_sbit1_ebit1}, \
+  seq         c2, k.l4_metadata_tcp_unexpected_mss_action, \
                      NORMALIZATION_ACTION_ALLOW
   sne         c3, k.tcp_res, r0
   b.!c3       lb_tcp_unexpected_mss
-  seq         c4, k.l4_metadata_tcp_rsvd_flags_action, \
-                     NORMALIZATION_ACTION_DROP
+  seq         c4, r1, NORMALIZATION_ACTION_DROP
   phvwr.c4.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
@@ -147,8 +137,7 @@ lb_tcp_unexpected_mss:
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c4, k.tcp_option_mss_valid, TRUE
   bcf         ![c3 & c4], lb_tcp_unexpected_win_scale
-  seq         c3, k.{l4_metadata_tcp_unexpected_mss_action_sbit0_ebit0, \
-                     l4_metadata_tcp_unexpected_mss_action_sbit1_ebit1}, \
+  seq         c3, k.l4_metadata_tcp_unexpected_mss_action, \
                      NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
@@ -174,7 +163,7 @@ lb_tcp_unexpected_win_scale:
 
 lb_tcp_unexpected_sack_perm:
   b.c2        lb_tcp_urg_flag_not_set
-  seq         c2, k.{l4_metadata_tcp_urg_flag_not_set_action_sbit0_ebit0, l4_metadata_tcp_urg_flag_not_set_action_sbit1_ebit1}, \
+  seq         c2, k.l4_metadata_tcp_urg_flag_not_set_action, \
                      NORMALIZATION_ACTION_ALLOW
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c4, k.tcp_option_sack_perm_valid, TRUE
@@ -195,7 +184,7 @@ lb_tcp_urg_flag_not_set:
   smneb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
   sne         c4, k.tcp_urgentPtr, r0
   bcf         ![c3 & c4], lb_tcp_urg_payload_missing
-  seq         c3, k.{l4_metadata_tcp_urg_flag_not_set_action_sbit0_ebit0, l4_metadata_tcp_urg_flag_not_set_action_sbit1_ebit1}, \
+  seq         c3, k.l4_metadata_tcp_urg_flag_not_set_action, \
                      NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
@@ -205,7 +194,8 @@ lb_tcp_urg_flag_not_set:
 
 lb_tcp_urg_payload_missing:
   b.c2        lb_tcp_urg_ptr_not_set
-  seq         c2, k.l4_metadata_tcp_urg_ptr_not_set_action, \
+  seq         c2, k.{l4_metadata_tcp_urg_ptr_not_set_action_sbit0_ebit0, \
+                     l4_metadata_tcp_urg_ptr_not_set_action_sbit1_ebit1}, \
                      NORMALIZATION_ACTION_ALLOW
   smeqb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
   sne         c4, k.tcp_urgentPtr, r0
@@ -223,12 +213,14 @@ lb_tcp_urg_payload_missing:
 
 lb_tcp_urg_ptr_not_set:
   b.c2        lb_tcp_rst_with_data
-  seq         c2, k.l4_metadata_tcp_rst_with_data_action, \
+  seq         c2, k.{l4_metadata_tcp_rst_with_data_action_sbit0_ebit0, \
+                     l4_metadata_tcp_rst_with_data_action_sbit1_ebit1}, \
                     NORMALIZATION_ACTION_ALLOW
   smeqb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
   seq         c4, k.tcp_urgentPtr, r0
   bcf         ![c3 & c4], lb_tcp_rst_with_data
-  seq         c3, k.l4_metadata_tcp_urg_ptr_not_set_action, \
+  seq         c3, k.{l4_metadata_tcp_urg_ptr_not_set_action_sbit0_ebit0, \
+                     l4_metadata_tcp_urg_ptr_not_set_action_sbit1_ebit1}, \
                      NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
@@ -243,11 +235,12 @@ lb_tcp_rst_with_data:
   smeqb       c3, k.tcp_flags, TCP_FLAG_RST, TCP_FLAG_RST
   sne         c4, k.l4_metadata_tcp_data_len, r0
   bcf         ![c3 & c4], lb_tcp_invalid_flags
-  seq         c3, k.l4_metadata_tcp_rst_with_data_action, \
+  seq         c3, k.{l4_metadata_tcp_rst_with_data_action_sbit0_ebit0, \
+                     l4_metadata_tcp_rst_with_data_action_sbit1_ebit1}, \
                     NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
-  // Edit option - We will strip the packet so that the tcp_data_len is zero 
+  // Edit option - We will strip the packet so that the tcp_data_len is zero
   add          r1, k.l4_metadata_tcp_data_len, r0 // we need to subtract tcp_data_len
   sub          r5, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
   phvwr        p.capri_p4_intrinsic_packet_len, r5

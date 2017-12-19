@@ -1,12 +1,3 @@
-#include "ingress.h"
-#include "INGRESS_p.h"
-#include "../../p4/nw/include/defines.h"
-
-struct icmp_normalization_k k;
-struct phv_                 p;
-
-%%
-
 icmp_normalization:
 lb_icmp_deprecated_msgs:
   add         r1, k.icmp_typeCode[15:8], r0

@@ -1,12 +1,3 @@
-#include "ingress.h"
-#include "INGRESS_p.h"
-#include "../../p4/nw/include/defines.h"
-
-struct tcp_options_fixup_k k;
-struct phv_              p;
-
-%%
-
 tcp_options_fixup:
   seq         c1, k.tcp_valid, TRUE
   nop.!c1.e

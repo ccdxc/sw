@@ -2,6 +2,7 @@
 /* Ingress drops per LIF                                                     */
 /*****************************************************************************/
 action ingress_tx_stats(tx_ingress_drops) {
+    tcp_options_fixup();
     add_header(capri_p4_intrinsic);
     if (capri_intrinsic.drop == TRUE) {
         modify_field(scratch_metadata.tx_drop_count, tx_ingress_drops);
