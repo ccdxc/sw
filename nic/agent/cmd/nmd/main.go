@@ -7,8 +7,8 @@ import (
 	"flag"
 	"strings"
 
-	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/nmd"
+	"github.com/pensando/sw/nic/agent/nmd/platform"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -16,23 +16,22 @@ import (
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
-// Main function
+// Main function for Naples Management Daemon (NMD)
 func main() {
 	// command line flags
 	var (
-		hostIf       = flag.String("hostif", "ntrunk0", "Host facing interface")
-		uplinkIf     = flag.String("uplink", "eth2", "Uplink interface")
-		agentDbPath  = flag.String("agentdb", "/tmp/n4sagent.db", "Agent Database file")
-		npmURL       = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
-		debugflag    = flag.Bool("debug", false, "Enable debug mode")
-		logToFile    = flag.String("logtofile", "/var/log/pensando/n4sagent.log", "Redirect logs to file")
-		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
+		hostIf    = flag.String("hostif", "ntrunk0", "Host facing interface")
+		nmdDbPath = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
+		cmd       = flag.String("cmd", ":"+globals.CMDGRPCPort, "CMD RPC server URL(s)")
+		mode      = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
+		debugflag = flag.Bool("debug", false, "Enable debug mode")
+		logToFile = flag.String("logtofile", "/tmp/nmd.log", "Redirect logs to file")
 	)
 	flag.Parse()
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "N4sAgent",
+		Module:      "NMD",
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
@@ -58,8 +57,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
 	}
-	resolverClient := resolver.New(&resolver.Config{Name: "netagent", Servers: strings.Split(*resolverURLs, ",")})
 
+	// init resolver client
+	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: strings.Split(*cmd, ",")})
+
+	/// init tsdb
 	opt := tsdb.Options{
 		ClientName:     "netagent_" + macAddr.String(),
 		ResolverClient: resolverClient,
@@ -69,18 +71,19 @@ func main() {
 		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
 	}
 
-	// create a network datapath
-	dp, err := datapath.NewNaplesDatapath(*hostIf, *uplinkIf)
+	// create a platform agent
+	pa, err := platform.NewNaplesPlatformAgent()
 	if err != nil {
-		log.Fatalf("Error creating fake datapath. Err: %v", err)
+		log.Fatalf("Error creating platform agent. Err: %v", err)
 	}
 
-	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, ":"+globals.AgentRESTPort, resolverClient)
+	// create the new NMD
+	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmd, ":"+globals.NmdRESTPort, *mode, resolverClient)
 	if err != nil {
-		log.Fatalf("Error creating NetAgent. Err: %v", err)
+		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
-	log.Printf("NetAgent {%+v} is running", ag)
+
+	log.Printf("NMD {%+v} is running", nm)
 
 	// wait forever
 	<-waitCh

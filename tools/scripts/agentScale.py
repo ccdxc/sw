@@ -31,6 +31,13 @@ if args.stop:
     fi
     """
 
+    print """
+    if [ "$(docker ps -aq -f ancestor=pen-nmd)" != "" ]
+    then
+        docker stop $(docker ps -aq -f ancestor=pen-nmd) && docker rm $(docker ps -q -f status=exited)
+    fi
+    """
+
     # generally the following step is not needed. But in failure cases we need to cleanup
     for i in range(base,base+num_agents):
         print """ip del link s{} 2>/dev/null""".format(i)

@@ -77,10 +77,18 @@ class Node:
         # npThread.setDaemon(True)
         self.npThread.start()
 
-    # Start Naples agent process on vagrant node
+    # Start Naples netagent process on vagrant node
     def startN4sAgent(self, hostif, uplink):
         ssh_object = self.sshConnect(self.username, self.password)
         command = "sudo " + self.gopath + "/bin/n4sagent -hostif " + hostif + " -uplink " + uplink + " > /tmp/pensando-n4sagent.log 2>&1"
+        self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
+        # npThread.setDaemon(True)
+        self.npThread.start()
+
+    # Start NMD process on vagrant node
+    def startNMD(self, hostif):
+        ssh_object = self.sshConnect(self.username, self.password)
+        command = "sudo " + self.gopath + "/bin/nmd -hostif " + hostif + " > /tmp/pensando-nmd.log 2>&1"
         self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
         # npThread.setDaemon(True)
         self.npThread.start()
@@ -160,6 +168,7 @@ for addr in addrList:
     # cleanup any old agent instances still running
     node.runCmd("sudo pkill n4sagent")
     node.runCmd("sudo pkill k8sagent")
+    node.runCmd("sudo pkill nmd")
     node.runCmd("sudo pkill npm")
     node.runCmd("sudo pkill apigw")
     node.runCmd("sudo pkill apiserver")
@@ -207,6 +216,7 @@ for node in nodes:
         node.startK8sAgent()
     else:
         node.startN4sAgent(args.hostif, args.uplink)
+        node.startNMD(args.hostif)
 
     # start hostsim
     node.startHostsim(args.simif)

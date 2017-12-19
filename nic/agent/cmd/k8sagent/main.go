@@ -9,8 +9,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/nic/agent/nmd"
-	"github.com/pensando/sw/nic/agent/nmd/platform"
 	"github.com/pensando/sw/nic/agent/plugins/k8s/cni"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -24,10 +22,7 @@ func main() {
 	var (
 		uplinkIf     = flag.String("uplink", "eth2", "Uplink interface")
 		agentDbPath  = flag.String("agentdb", "/tmp/n4sagent.db", "Agent Database file")
-		nmdDbPath    = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
 		npmURL       = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
-		cmdURL       = flag.String("cmd", "master.local:"+globals.CMDGRPCPort, "CMD RPC server URL")
-		mode         = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
 		logToFile    = flag.String("logtofile", "/var/log/pensando/k8sagent.log", "Redirect logs to file")
 		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
@@ -79,25 +74,12 @@ func main() {
 		log.Fatalf("Error creating fake datapath. Err: %v", err)
 	}
 
-	// create a platform agent
-	pa, err := platform.NewNaplesPlatformAgent()
-	if err != nil {
-		log.Fatalf("Error creating platform agent. Err: %v", err)
-	}
-
 	// create the new NetAgent
 	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, ":"+globals.AgentRESTPort, resolverClient)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}
-
 	log.Printf("NetAgent {%+v} is running", ag)
-
-	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmdURL, ":"+globals.NmdRESTPort, *mode, resolverClient)
-	if err != nil {
-		log.Fatalf("Error creating network agent. Err: %v", err)
-	}
-	log.Printf("NMD {%+v} is running", nm)
 
 	// create a CNI server
 	cniServer, err := cni.NewCniServer(cni.CniServerListenURL, ag.NetworkAgent)

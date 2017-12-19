@@ -20,6 +20,10 @@ function createN4sContainer() {
     docker build --rm --no-cache -t pen-n4sagent:latest -f tools/docker-files/n4sagent/Dockerfile tools/docker-files/n4sagent
 }
 
+function createNmdContainer() {
+    docker build --rm --no-cache -t pen-nmd:latest -f tools/docker-files/nmd/Dockerfile tools/docker-files/nmd
+}
+
 function createNPMContainer() {
     docker build --rm --no-cache -t pen-npm:latest -f tools/docker-files/npm/Dockerfile tools/docker-files/npm
 }
@@ -48,7 +52,7 @@ function createBinContainerTarBall() {
     done
     mkdir -p bin/tars
     dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest \
-        pen-vcsim:latest pen-n4sagent:latest pen-collector:latest"
+        pen-vcsim:latest pen-n4sagent:latest pen-nmd:latest pen-collector:latest"
     for i in $staticimages $dynamicimages
     do
         # i is registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -73,6 +77,7 @@ case $1 in
     npm) createNPMContainer;;
     vcsim) createVCSimContainer;;
     n4sagent) createN4sContainer;;
+    nmd) createNmdContainer;;
     collector) createCollectorContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;

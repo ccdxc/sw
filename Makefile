@@ -12,7 +12,7 @@ TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/.
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/ ./api/hooks/... \
 ./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... ./venice/collector/... \
 ./venice/cli/...
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
 GOVET_CMD := go vet
