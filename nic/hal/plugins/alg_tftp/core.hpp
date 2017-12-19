@@ -15,7 +15,7 @@ using namespace hal::plugins::alg_utils;
 /*
  * Externs
  */
-extern hal::plugins::alg_utils::alg_state_t *g_tftp_state;
+extern alg_state_t *g_tftp_state;
 
 /*
  * Constants
@@ -46,10 +46,10 @@ typedef hal_ret_t (*tftp_cb_t)(fte::ctx_t& ctx);
 typedef union tftp_info_ {
     struct {  /* Expected flow info */
         uint8_t   tftpop;
+        bool      skip_sfw;
         tftp_cb_t callback;
     } __PACK__;
     struct {  /* Session info */
-        bool      skip_sfw;
         uint32_t  unknown_opcode;
         uint32_t  parse_errors;
     } __PACK__;
