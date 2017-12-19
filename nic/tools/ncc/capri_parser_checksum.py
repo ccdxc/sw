@@ -275,7 +275,7 @@ class ParserCsumProfile:
 
         log_str = ''
         log_str += 'Csum Profile\n'
-        log_str += '    Profile#  %d \n'             % (self.csum_profile)
+        log_str += '    Profile#  %d\n'             % (self.csum_profile)
         log_str += '        len_mask        = 0x%x\n'% (self.len_mask)
         log_str += '        len_shift_left  = %d\n' % (self.len_shift_left)
         log_str += '        len_shift_val   = %d\n' % (self.len_shift_val)
@@ -393,6 +393,14 @@ class ParserCalField:
                                                   p4.p4_header_keywords)\
                                              else\
                                           False
+
+        if 'checksum' in self.P4FieldListCalculation._parsed_pragmas.keys() and \
+           'udp_option' in self.P4FieldListCalculation._parsed_pragmas['checksum']:
+            self.payload_checksum = False
+            self.option_checksum = True
+        else:
+            self.option_checksum = False
+
         #Find pseudo header associated with payload checksum
         if self.payload_checksum and 'checksum' in \
             self.P4FieldListCalculation._parsed_pragmas.keys():
@@ -416,7 +424,7 @@ class ParserCalField:
                 self.P4FieldListCalculation._parsed_pragmas['checksum']:
                 self.l4_verify_len_field = self.P4FieldListCalculation._parsed_pragmas\
                                    ['checksum']['verify_len'].keys()[0]
-            assert self.hdrlen_verify_field != '', pdb.set_trace()
+            #assert self.hdrlen_verify_field != '', pdb.set_trace()
             assert self.l4_verify_len_field  != '', pdb.set_trace()
 
         assert(self.P4FieldListCalculation != None)
@@ -509,7 +517,7 @@ class ParserCalField:
 
         log_str = ''
         log_str += 'Instruction: mux_Instr\n'
-        log_str += '    Instruction#  %d \n' % (mux_instr_sel)
+        log_str += '    Instruction#  %d\n' % (mux_instr_sel)
         log_str += '        sel         = %d\n' % (sel)
         log_str += '        muxsel      = %d\n' % (mux_sel)
         log_str += '        mask_val    = 0x%x\n'% (mask)
@@ -536,7 +544,7 @@ class ParserCalField:
 
             log_str = ''
             log_str += 'Instruction: Ohi_Instr\n'
-            log_str += '    Instruction#  %d \n'     % (ohi_instr_inst)
+            log_str += '    Instruction#  %d\n'     % (ohi_instr_inst)
             log_str += '        sel         = %d\n' % (select)
             log_str += '        muxsel      = %d\n' % (mux_instr_sel)
             log_str += '        idx_value   = %d\n' % (index)
@@ -571,7 +579,7 @@ class ParserCalField:
 
         log_str = ''
         log_str += 'Csum Instruction\n'
-        log_str += '    Instruction#  %d \n'         % (csum_instr)
+        log_str += '    Instruction#  %d\n'         % (csum_instr)
         log_str += '        enable          = %d\n' % (enable)
         log_str += '        unit_sel        = %d\n' % (csum_unit)
         log_str += '        prof_sel        = %d\n' % (csum_profile)
@@ -677,25 +685,25 @@ class ParserCalField:
         start_adj   = 0
         addsub_phdr = 0
         phdr_adj    = 0
-        if parse_state.phdr_type == 'v4':
+        addsub_end  = 0
+        end_adj     = 0
+        if parse_state and parse_state.phdr_type == 'v4':
             log_str     += '    PseudoHdr Type V4\n'
             addsub_end  = 1
-            end_adj     = 0
             csum_profile_obj.CsumProfileShiftLeftSet(shift_left, shift_val)
             csum_profile_obj.CsumProfileStartAdjSet(addsub_start, start_adj)
             csum_profile_obj.CsumProfileEndAdjSet(addsub_end, end_adj)
             # Phdr start offset is same as IP hdr start offset
             csum_profile_obj.CsumProfilePhdrSet(addsub_phdr, phdr_adj)
-        elif parse_state.phdr_type == 'v6':
+        elif parse_state and parse_state.phdr_type == 'v6':
             log_str     += '    PseudoHdr Type V6\n'
             addsub_end  = 0
-            end_adj     = 0
             csum_profile_obj.CsumProfileShiftLeftSet(shift_left, shift_val)
             csum_profile_obj.CsumProfileStartAdjSet(addsub_start, start_adj)
             csum_profile_obj.CsumProfileEndAdjSet(addsub_end, end_adj)
             # Phdr start offset is same as IP hdr start offset
             csum_profile_obj.CsumProfilePhdrSet(addsub_phdr, phdr_adj)
-        else:
+        elif parse_state:
             assert(0), pdb.set_trace()
 
         log_str += '        Shift Left = %d\n' % shift_left

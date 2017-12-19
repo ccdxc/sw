@@ -226,8 +226,7 @@ def main():
     #Create logical output of configuration pushed to parser and deparser
     #for checksum verification, computation.
     capri_be.checksum.CsumLogicalOutputCreate()
-    capri_be.checksum.\
-        ParserCsumUnitAllocationCodeGenerate(capri_be.parsers[xgress.INGRESS])
+    capri_be.checksum.ParserCsumUnitAllocationCodeGenerate()
 
     #Create logical output of configuration pushed to parser and deparser
     #for icrc verification, computation.

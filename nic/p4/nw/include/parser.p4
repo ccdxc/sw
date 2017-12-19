@@ -49,8 +49,9 @@ header_type parser_csum_t {
         inner_l4_len                       : 16;
         gso_start                          : 16; // TxDMA specified start of csum-ing byte
         gso_offset                         : 16; // TxDMA specified location of csum in packet
-        kind                               : 16; //udp options ocs header's first field
-        chksum                             : 16; //udp options ocs header's checksum field
+        kind                               : 16; //UDP option chksum needs start in OHI (GSO engine is used)
+        chksum                             : 16; //UDP option chksum needs location in OHI (GSO engine is used)
+        udp_opt_len                        : 16; // Parser local variable to compute len of all udp option bytes
     }
 }
 
@@ -72,6 +73,7 @@ header_type parser_ohi_t {
         udp___start_off             : 16;
         inner_udp___start_off       : 16;
         tcp___start_off             : 16;
+        udp_opt_ocs___start_off     : 16;
         // Write only variable to capture length value from pkt for csum puporses into OHI.
         ipv4___hdr_len              : 16;
         inner_ipv4___hdr_len        : 16;
@@ -79,8 +81,9 @@ header_type parser_ohi_t {
         inner_l4_len                : 16;
         gso_start                   : 16;
         gso_offset                  : 16;
-        kind                        : 16; //udp options ocs header's first field
-        chksum                      : 16; //udp options ocs header's checksum field
+        kind                        : 16; //UDP option chksum needs start in OHI (GSO engine is used)
+        chksum                      : 16; //UDP option chksum needs location in OHI (GSO engine is used)
+        udp_opt_len                 : 16; //ohi variable that captures option len
     }
 }
 @pragma pa_parser_local
@@ -1269,6 +1272,7 @@ parser parse_udp_payload {
 @pragma xgress egress
 @pragma header_ordering udp_opt_ocs udp_opt_mss udp_opt_timestamp udp_opt_nop udp_opt_unknown
 parser parse_udp_options {
+    set_metadata(parser_csum.udp_opt_len, parser_metadata.l4_trailer + 0);
     return select (current(0,8)) {
        UDP_KIND_EOL : parse_udp_option_eol;
        UDP_KIND_NOP : parse_udp_option_nop;
@@ -1728,6 +1732,27 @@ calculated_field inner_udp.checksum {
     verify inner_ipv6_udp_checksum;
     update inner_ipv4_udp_checksum if (valid(inner_ipv4));
     update inner_ipv6_udp_checksum if (valid(inner_ipv6));
+}
+
+
+field_list udp_opt_checksum_list {
+    udp_opt_ocs.kind; // First field in UDP options related to csum
+    payload; // specify payload keyword as list of options
+}
+
+@pragma checksum verify_len parser_csum.udp_opt_len
+@pragma checksum gress egress
+@pragma checksum udp_option
+field_list_calculation udp_opt_checksum {
+    input {
+        udp_opt_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_opt_ocs.chksum {
+    verify udp_opt_checksum;
 }
 
 #ifdef GSO_CSUM
