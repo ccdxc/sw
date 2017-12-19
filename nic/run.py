@@ -69,9 +69,34 @@ def build():
 
 # ASIC model
 
+def run_rtl(args):
+    log = open(model_log, "w")
+    os.environ["ASIC_SRC"] = os.getcwd() + "/asic"
+    os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:" + os.getcwd() + "/asic/capri/model/capsim-gen/lib:/home/asic/bin/tools/lib64"
+    os.environ["ZMQ_SOC_DIR"] = os.getcwd()
+    os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]  
+    model_test = "core_basic_dol"
+    if args.model_test:
+        model_test = args.model_test
+     
+    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-ucli', 'ucli_core', '-run_args', ' +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=0 +top_sb/initial_timeout_ns=60000 ' ]
+    if args.noverilog:
+        model_cmd = model_cmd + ['-ro', '-nbc']
+    if args.test_suf:
+        model_cmd = model_cmd + ['-test_suf', args.test_suf ]
+    print os.getcwd() + "/asic/capri/verif/top/env"
+    p = Popen(model_cmd, stdout=log, stderr=log, cwd = os.getcwd() + "/asic/capri/verif/top/env")
+    print "* Starting ASIC rtl: pid (" + str(p.pid) + ")"
+    print "- Log file: " + model_log + "\n"
+
+    global model_process
+    model_process = p
+    lock = open(lock_file, "a+")
+    lock.write(str(p.pid) + "\n")
+    lock.close()
 
 def run_model(args):
-    os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64"
+    os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:/home/asic/bin/tools/lib64"
 
     #model_dir = nic_dir + "/model_sim/build"
     model_dir = nic_dir + "/../bazel-bin/nic/model_sim"
@@ -121,6 +146,7 @@ def run_model(args):
 def run_hal(args):
     snort_dir = nic_dir + "/third-party/snort3/export"
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    os.environ["LD_LIBRARY_PATH"] = "/home/asic/bin/tools/lib64:" + os.environ["LD_LIBRARY_PATH"]
     os.environ["HAL_PLUGIN_PATH"] = nic_dir + "/../bazel-bin/nic/hal/plugins/"
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + snort_dir + "/bin/"
     os.environ["SNORT_LUA_PATH"] = snort_dir + "/lua/"
@@ -389,6 +415,14 @@ def main():
                         help='Run tests in Classic NIC mode.')
     parser.add_argument('--storage', dest='storage', action="store_true",
                         help='Run storage dol as well.')
+    parser.add_argument('--rtl', dest='rtl', action="store_true",
+                        help='Run RTL sim as well.')
+    parser.add_argument('--noverilog', dest='noverilog', action="store_true",
+                        help='Skip verilog compile dol as well.')
+    parser.add_argument('--model_test', dest='model_test', default=None,
+                        help='Model test name')
+    parser.add_argument('--test_suf', dest='test_suf', default=None,
+                        help='Model test suffix.')
     parser.add_argument("--asmcov", action="store_true",
                         help="Generate ASM coverage for this run")
     parser.add_argument('--regression', dest='regression',
@@ -432,7 +466,10 @@ def main():
         os.environ["HAL_GRPC_PORT"] = str(port)
 
         if args.dryrun is False:
-            run_model(args)
+            if args.rtl:
+                run_rtl(args)
+            else:
+                run_model(args)
             if args.gft is False:
                 run_hal(args)
 
