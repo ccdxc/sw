@@ -112,6 +112,8 @@ enum nat_type_t {
 typedef struct flow_key_s {
     uint8_t              flow_type:4;    // one of the flow types defined above
     uint8_t              dir:1;
+    vrf_id_t             vrf_id;    // vrf id
+
 
     union {
         // L2 flow key information
@@ -124,7 +126,6 @@ typedef struct flow_key_s {
 
         // IPv4/IPv6 flow key information
         struct {
-            vrf_id_t            vrf_id;    // vrf id
             ipvx_addr_t            sip;          // source IP address
             ipvx_addr_t            dip;          // destination IP address
             IPProtocol             proto;        // IP protocol

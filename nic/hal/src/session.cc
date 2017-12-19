@@ -155,12 +155,12 @@ flowkey2str (const flow_key_t& key)
 
     switch (key.flow_type) {
     case FLOW_TYPE_L2:
-        out.write("l2seg={}, smac={}, dmac={} etype={}", key.l2seg_id, macaddr2str(key.smac),
+        out.write("vrf={}, l2seg={}, smac={}, dmac={} etype={}", key.vrf_id, key.l2seg_id, macaddr2str(key.smac),
                   macaddr2str(key.dmac), key.ether_type);
         break;
     case FLOW_TYPE_V4:
     case FLOW_TYPE_V6:
-        out.write("tid={}, ", key.vrf_id);
+        out.write("vrf={}, ", key.vrf_id);
         if (key.flow_type == FLOW_TYPE_V4) {
             out.write("sip={}, dip={}, ", ipv4addr2str(key.sip.v4_addr), ipv4addr2str(key.dip.v4_addr));
         } else {
@@ -250,7 +250,9 @@ extract_flow_key_from_spec(vrf_id_t tid,
                            flow_key_t *key,
                            const FlowKey& flow_spec_key)
 {
-     if (flow_spec_key.has_l2_key()) {
+    key->vrf_id = tid;
+
+    if (flow_spec_key.has_l2_key()) {
         key->flow_type = hal::FLOW_TYPE_L2;
         key->l2seg_id = flow_spec_key.l2_key().l2_segment_id();
         key->ether_type = flow_spec_key.l2_key().ether_type();
@@ -258,8 +260,7 @@ extract_flow_key_from_spec(vrf_id_t tid,
         MAC_UINT64_TO_ADDR(key->dmac, flow_spec_key.l2_key().dmac());
     } else if (flow_spec_key.has_v4_key()) {
         key->flow_type = hal::FLOW_TYPE_V4;
-        key->vrf_id = tid;
-        key->sip.v4_addr = flow_spec_key.v4_key().sip();
+            key->sip.v4_addr = flow_spec_key.v4_key().sip();
         key->dip.v4_addr = flow_spec_key.v4_key().dip();
         key->proto = flow_spec_key.v4_key().ip_proto();
         if ((key->proto == IP_PROTO_TCP) ||
@@ -282,7 +283,6 @@ extract_flow_key_from_spec(vrf_id_t tid,
         }
     } else if (flow_spec_key.has_v6_key()) {
         key->flow_type = hal::FLOW_TYPE_V6;
-        key->vrf_id = tid;
         memcpy(key->sip.v6_addr.addr8,
                flow_spec_key.v6_key().sip().v6_addr().c_str(),
                IP6_ADDR8_LEN);

@@ -57,6 +57,8 @@ ctx_t::extract_flow_key()
         return HAL_RET_L2SEG_NOT_FOUND;
     }
 
+    key_.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id; 
+
     // extract src/dst/proto
     switch (cpu_rxhdr_->lkp_type) {
     case FLOW_KEY_LOOKUP_TYPE_MAC:
@@ -72,7 +74,6 @@ ctx_t::extract_flow_key()
     case FLOW_KEY_LOOKUP_TYPE_IPV4: 
         iphdr = (ipv4_header_t*)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V4;
-        key_.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id; 
         key_.sip.v4_addr = ntohl(iphdr->saddr);
         key_.dip.v4_addr = ntohl(iphdr->daddr);
         key_.proto = (types::IPProtocol) iphdr->protocol;
@@ -81,7 +82,6 @@ ctx_t::extract_flow_key()
     case FLOW_KEY_LOOKUP_TYPE_IPV6: 
         iphdr6 = (ipv6_header_t *)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V6;
-        key_.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
         memcpy(key_.sip.v6_addr.addr8, iphdr6->saddr, sizeof(key_.sip.v6_addr.addr8));
         memcpy(key_.dip.v6_addr.addr8, iphdr6->daddr, sizeof(key_.dip.v6_addr.addr8));
         key_.proto = (types::IPProtocol) iphdr6->nexthdr;
@@ -134,23 +134,11 @@ ctx_t::extract_flow_key()
 hal_ret_t
 ctx_t::lookup_flow_objs()
 {
-    vrf_id_t tid;
     ether_header_t *ethhdr;
 
-    if (key_.flow_type == hal::FLOW_TYPE_L2) {
-        hal::l2seg_t *l2seg = hal::find_l2seg_by_id(key_.l2seg_id);
-        if (l2seg == NULL) {
-            HAL_TRACE_ERR("fte: l2seg not found, key={}", key_);
-            return HAL_RET_L2SEG_NOT_FOUND;
-        }
-        tid = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
-    } else {
-        tid = key_.vrf_id;
-    }
-
-    vrf_ = hal::vrf_lookup_by_id(tid);
+    vrf_ = hal::vrf_lookup_by_id(key_.vrf_id);
     if (vrf_ == NULL) {
-        HAL_TRACE_ERR("fte: vrf {} not found, key={}", tid, key_);
+        HAL_TRACE_ERR("fte: vrf not found, key {}", key_);
         return HAL_RET_VRF_NOT_FOUND;
     }
 
