@@ -31,6 +31,7 @@
 
 struct ionic {
 	struct pci_dev *pdev;
+	struct device *dev;
 	struct ionic_dev idev;
 	struct dentry *dentry;
 	bool using_dac;

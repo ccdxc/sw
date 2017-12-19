@@ -199,8 +199,7 @@ static int ionic_setup(struct ionic *ionic)
 
 static int ionic_identify(struct ionic *ionic)
 {
-	struct pci_dev *pdev = ionic->pdev;
-	struct device *dev = &pdev->dev;
+	struct device *dev = ionic->dev;
 	struct ionic_dev *idev = &ionic->idev;
 	union identity *ident;
 	dma_addr_t ident_pa;
@@ -209,9 +208,8 @@ static int ionic_identify(struct ionic *ionic)
 	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL | GFP_DMA);
 	if (!ident)
 		return -ENOMEM;
-	ident_pa = pci_map_single(pdev, ident, sizeof(*ident),
-				  PCI_DMA_FROMDEVICE);
-	if (pci_dma_mapping_error(pdev, ident_pa))
+	ident_pa = dma_map_single(dev, ident, sizeof(*ident), DMA_FROM_DEVICE);
+	if (dma_mapping_error(dev, ident_pa))
 		return -EIO;
 
 	ionic_dev_cmd_identify(idev, ident_pa);
@@ -230,15 +228,14 @@ static int ionic_identify(struct ionic *ionic)
 	return 0;
 
 err_out_unmap:
-	pci_unmap_single(pdev, ident_pa, sizeof(*ident),
-			 PCI_DMA_FROMDEVICE);
+	dma_unmap_single(dev, ident_pa, sizeof(*ident), DMA_FROM_DEVICE);
 	return err;
 }
 
 static void ionic_forget_identity(struct ionic *ionic)
 {
-	pci_unmap_single(ionic->pdev, ionic->ident_pa, sizeof(*ionic->ident),
-			 PCI_DMA_FROMDEVICE);
+	dma_unmap_single(ionic->dev, ionic->ident_pa,
+			 sizeof(*ionic->ident), DMA_FROM_DEVICE);
 }
 
 static int ionic_reset(struct ionic *ionic)
@@ -432,7 +429,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 			   struct cq_info *cq_info, void *cb_arg)
 {
 	struct net_device *netdev = q->lif->netdev;
-	struct pci_dev *pdev = q->lif->ionic->pdev;
+	struct device *dev = q->lif->ionic->dev;
 	struct rxq_desc *desc = desc_info->desc;
 	struct rxq_comp *comp = cq_info->cq_desc;
 	struct sk_buff *skb = cb_arg;
@@ -452,7 +449,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	// TODO add copybreak to avoid allocating a new skb for small receive
 
 	dma_addr = (dma_addr_t)desc->addr;
-	pci_unmap_single(pdev, dma_addr, desc->len, PCI_DMA_FROMDEVICE);
+	dma_unmap_single(dev, dma_addr, desc->len, DMA_FROM_DEVICE);
 
 	//prefetch(skb->data - NET_IP_ALIGN);
 	skb_put(skb, comp->len);
@@ -515,7 +512,7 @@ static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
 {
 	struct lif *lif = q->lif;
 	struct net_device *netdev = lif->netdev;
-	struct pci_dev *pdev = lif->ionic->pdev;
+	struct device *dev = lif->ionic->dev;
 	struct rx_stats *stats = q_to_rx_stats(q);
 	struct sk_buff *skb;
 
@@ -528,8 +525,8 @@ static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
 		return NULL;
 	}
 
-	*dma_addr = pci_map_single(pdev, skb->data, len, PCI_DMA_FROMDEVICE);
-	if (pci_dma_mapping_error(pdev, *dma_addr)) {
+	*dma_addr = dma_map_single(dev, skb->data, len, DMA_FROM_DEVICE);
+	if (dma_mapping_error(dev, *dma_addr)) {
 		dev_kfree_skb(skb);
 		net_warn_ratelimited("%s: DMA single map failed on %s!\n",
 				     netdev->name, q->name);
@@ -543,10 +540,10 @@ static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
 static void ionic_rx_skb_free(struct queue *q, struct sk_buff *skb,
 			      unsigned int len, dma_addr_t dma_addr)
 {
-	struct pci_dev *pdev = q->lif->ionic->pdev;
+	struct device *dev = q->lif->ionic->dev;
 
 	//printk(KERN_ERR "%s ionic_rx_skb_free len %d\n", q->name, len);
-	pci_unmap_single(pdev, dma_addr, len, PCI_DMA_FROMDEVICE);
+	dma_unmap_single(dev, dma_addr, len, DMA_FROM_DEVICE);
 	dev_kfree_skb(skb);
 }
 
@@ -632,12 +629,12 @@ static int ionic_rx_napi(struct napi_struct *napi, int budget)
 
 static dma_addr_t ionic_tx_map_single(struct queue *q, void *data, size_t len)
 {
-	struct pci_dev *pdev = q->lif->ionic->pdev;
+	struct device *dev = q->lif->ionic->dev;
 	struct tx_stats *stats = q_to_tx_stats(q);
 	dma_addr_t dma_addr;
 
-	dma_addr = pci_map_single(pdev, data, len, PCI_DMA_TODEVICE);
-	if (pci_dma_mapping_error(pdev, dma_addr)) {
+	dma_addr = dma_map_single(dev, data, len, DMA_TO_DEVICE);
+	if (dma_mapping_error(dev, dma_addr)) {
 		net_warn_ratelimited("%s: DMA single map failed on %s!\n",
 				     q->lif->netdev->name, q->name);
 		stats->dma_map_err++;
@@ -649,13 +646,12 @@ static dma_addr_t ionic_tx_map_single(struct queue *q, void *data, size_t len)
 static dma_addr_t ionic_tx_map_frag(struct queue *q, const skb_frag_t *frag,
 				    size_t offset, size_t len)
 {
-	struct pci_dev *pdev = q->lif->ionic->pdev;
+	struct device *dev = q->lif->ionic->dev;
 	struct tx_stats *stats = q_to_tx_stats(q);
 	dma_addr_t dma_addr;
 
-	dma_addr = skb_frag_dma_map(&pdev->dev, frag, offset, len,
-				    DMA_TO_DEVICE);
-	if (pci_dma_mapping_error(pdev, dma_addr)) {
+	dma_addr = skb_frag_dma_map(dev, frag, offset, len, DMA_TO_DEVICE);
+	if (dma_mapping_error(dev, dma_addr)) {
 		net_warn_ratelimited("%s: DMA frag map failed on %s!\n",
 				     q->lif->netdev->name, q->name);
 		stats->dma_map_err++;
@@ -664,7 +660,7 @@ static dma_addr_t ionic_tx_map_frag(struct queue *q, const skb_frag_t *frag,
 	return dma_addr;
 }
 
-static void ionic_tx_clean_sop(struct pci_dev *pdev, struct txq_desc *desc)
+static void ionic_tx_clean_sop(struct device *dev, struct txq_desc *desc)
 {
 	dma_addr_t dma_addr;
 
@@ -675,12 +671,12 @@ static void ionic_tx_clean_sop(struct pci_dev *pdev, struct txq_desc *desc)
 	case TXQ_DESC_OPCODE_CALC_CSUM:
 	case TXQ_DESC_OPCODE_TSO:
 		dma_addr = (dma_addr_t)desc->addr;
-		pci_unmap_single(pdev, dma_addr, desc->len, PCI_DMA_TODEVICE);
+		dma_unmap_single(dev, dma_addr, desc->len, DMA_TO_DEVICE);
 		break;
 	}
 }
 
-static void ionic_tx_clean_frags(struct pci_dev *pdev, unsigned int elems,
+static void ionic_tx_clean_frags(struct device *dev, unsigned int elems,
 				 struct txq_sg_desc *sg_desc)
 {
 	struct txq_sg_elem *elem = sg_desc->elems;
@@ -688,19 +684,19 @@ static void ionic_tx_clean_frags(struct pci_dev *pdev, unsigned int elems,
 
 	for (; elems; elems--, elem++) {
 		dma_addr = (dma_addr_t)elem->addr;
-		pci_unmap_page(pdev, dma_addr, elem->len, PCI_DMA_TODEVICE);
+		dma_unmap_page(dev, dma_addr, elem->len, DMA_TO_DEVICE);
 	}
 }
 
 static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 			   struct cq_info *cq_info, void *cb_arg)
 {
-	struct pci_dev *pdev = q->lif->ionic->pdev;
+	struct device *dev = q->lif->ionic->dev;
 	struct tx_stats *stats = q_to_tx_stats(q);
 	struct sk_buff *skb = cb_arg;
 
-	ionic_tx_clean_sop(pdev, desc_info->desc);
-	ionic_tx_clean_frags(pdev, skb_shinfo(skb)->nr_frags,
+	ionic_tx_clean_sop(dev, desc_info->desc);
+	ionic_tx_clean_frags(dev, skb_shinfo(skb)->nr_frags,
 			     desc_info->sg_desc);
 	dev_kfree_skb_any(skb);
 
@@ -1253,8 +1249,8 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 	if (err)
 		goto err_out_free_intr;
 
-	new->base = pci_alloc_consistent(pdev, total_size,
-					 &new->base_pa);
+	new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
+				       GFP_ATOMIC);
 	if (!new->base) {
 		err = -ENOMEM;
 		goto err_out_free_intr;
@@ -1294,8 +1290,8 @@ static void ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 	if (!qcq)
 		return;
 
-	pci_free_consistent(lif->ionic->pdev, qcq->total_size,
-			    qcq->base, qcq->base_pa);
+	dma_free_coherent(lif->ionic->dev, qcq->total_size, qcq->base,
+			  qcq->base_pa);
 	ionic_intr_free(lif, &qcq->intr);
 }
 
@@ -1310,7 +1306,7 @@ static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
 
 static int ionic_qcqs_alloc(struct lif *lif)
 {
-	struct device *dev = &lif->ionic->pdev->dev;
+	struct device *dev = lif->ionic->dev;
 	unsigned int flags;
 	unsigned int pid;
 	unsigned int i;
@@ -1384,7 +1380,7 @@ static void ionic_qcqs_free(struct lif *lif)
 
 static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 {
-	struct device *dev = &ionic->pdev->dev;
+	struct device *dev = ionic->dev;
 	struct net_device *netdev;
 	struct lif *lif;
 	int err;
@@ -1780,7 +1776,7 @@ static int ionic_lifs_init(struct ionic *ionic)
 
 static int ionic_lif_register(struct lif *lif)
 {
-	struct device *dev = &lif->ionic->pdev->dev;
+	struct device *dev = lif->ionic->dev;
 	int err;
 
 	err = ionic_debugfs_add_lif(lif);
@@ -1880,6 +1876,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	ionic->pdev = pdev;
 	pci_set_drvdata(pdev, ionic);
+	ionic->dev = &pdev->dev;
 
 	err = ionic_debugfs_add_dev(ionic);
 	if (err) {
