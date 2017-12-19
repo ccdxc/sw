@@ -3,8 +3,6 @@
 #include "app_redir.hpp"
 #include "app_redir_scanner.hpp"
 
-using hal::appid_state_t;
-
 namespace hal {
 namespace app_redir {
 
@@ -12,7 +10,7 @@ hal_ret_t
 appid_scan(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
-    hal::appid_info_t appid_info;
+    appid_info_t appid_info;
     app_redir_ctx_t *app_ctx = app_redir_ctx(ctx);
 
     app_ctx->appid_info_init(appid_info);
@@ -23,7 +21,7 @@ appid_scan(fte::ctx_t& ctx)
         goto error;
     }
 
-    if (appid_info.state_ == hal::APPID_STATE_INIT) {
+    if (appid_info.state_ == APPID_STATE_INIT) {
         // scanner_run didn't return flow info, try using flow key
         HAL_TRACE_DEBUG("scanner_run failed to set appid state, try retrieving flow info anyway");
         ret = scanner_get_appid_info(ctx.key(), appid_info);
@@ -34,13 +32,13 @@ appid_scan(fte::ctx_t& ctx)
     app_ctx->set_appid_info(appid_info);
 
     // Cleanup Snort flow if we're done scanning
-    if (app_ctx->appid_info().cleanup_handle_ != nullptr) {
+    if (app_ctx->appid_info()->cleanup_handle_ != nullptr) {
         if (app_ctx->appid_state() == APPID_STATE_FOUND ||
             app_ctx->appid_state() == APPID_STATE_NOT_NEEDED ||
             app_ctx->appid_state() == APPID_STATE_ABORT) {
             // Done.  Now cleanup scanner flow resources.
-            scanner_cleanup_flow(app_ctx->appid_info().cleanup_handle_);
-            app_ctx->appid_info().cleanup_handle_ = nullptr;
+            scanner_cleanup_flow(app_ctx->appid_info()->cleanup_handle_);
+            app_ctx->appid_info()->cleanup_handle_ = nullptr;
         }
     }
 
@@ -52,7 +50,7 @@ error:
 }
 
 hal_ret_t
-appid_cleanup_flow(hal::appid_info_t& appid_info)
+appid_cleanup_flow(appid_info_t& appid_info)
 {
     if (appid_info.cleanup_handle_) {
         scanner_cleanup_flow(appid_info.cleanup_handle_);
@@ -92,13 +90,27 @@ appid_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
     app_redir_ctx_t *app_ctx = app_redir_ctx(ctx);
-    hal::appid_info_t orig_appid_info = app_ctx->appid_info();
+    appid_info_t* session_state = app_ctx->appid_info();
+
+    if(!session_state) {
+      session_state = (appid_info_t*)ctx.feature_session_state();
+        if(!session_state) {
+          HAL_TRACE_DEBUG("appid state not initialized, skipping appid scanning");
+          if(ctx.flow_miss()) {
+              ctx.set_feature_status(ret);
+              return fte::PIPELINE_CONTINUE;
+          } else {
+              app_ctx->set_pipeline_end(true);
+              return app_redir_exec_fini(ctx);
+          }
+        }
+    }
+
+    appid_info_t orig_appid_info = *session_state;
+    app_ctx->set_appid_info(session_state);
 
     // Assume appid state will not change, until it does
     app_redir_ctx(ctx)->set_appid_updated(false);
-
-    // appid state should have been initialized by DFW
-//    assert(app_ctx.appid_state() != APPID_STATE_INIT);
 
     switch (app_ctx->appid_state()) {
     case APPID_STATE_INIT:
@@ -113,6 +125,7 @@ appid_exec(fte::ctx_t& ctx)
         break;
     case APPID_STATE_NEEDED:
         // appid not previously started
+        ctx.register_feature_session_state((fte::feature_session_state_t*)app_ctx->appid_info());
         HAL_TRACE_DEBUG("appid state needed, begin scanning pkt");
         ret = exec_appid_start(ctx);
         HAL_TRACE_DEBUG("appid state needed, end scanning pkt, status={}", ret);
@@ -129,10 +142,10 @@ appid_exec(fte::ctx_t& ctx)
     }
 
     // Update flow if appid state has changed
-    if (0 != memcmp((uint8_t*)&orig_appid_info, (uint8_t*)&app_ctx->appid_info(),
-                    sizeof(hal::appid_info_t))) {
+    if (0 != memcmp((uint8_t*)&orig_appid_info, (uint8_t*)app_ctx->appid_info(),
+                    sizeof(appid_info_t))) {
         // app state and/or app id
-        HAL_TRACE_INFO("appid_info changing from {} to {}", orig_appid_info, app_ctx->appid_info());
+        HAL_TRACE_INFO("appid_info changing from {} to {}", orig_appid_info, *app_ctx->appid_info());
         app_ctx->set_appid_updated(true);
     }
 

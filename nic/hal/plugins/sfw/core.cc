@@ -71,9 +71,9 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
                     }
 
                     // Phase II invocation of dfw in flow miss pipeline or phase I invocation of dfw in l7 flow-hit pipeline
-                    hal::appid_info_t appid_info = app_ctx->appid_info();
-                    for(int i = 0; i < appid_info.id_count_; i++) {
-                        if(appid_policy->appid == appid_info.ids_[i]) {
+                    appid_info_t* appid_info = app_ctx->appid_info();
+                    for(int i = 0; i < appid_info->id_count_; i++) {
+                        if(appid_policy->appid == appid_info->ids_[i]) {
                             match_rslt->valid  = 1;
                             if(matched_svc) match_rslt->alg = matched_svc->alg;
                             match_rslt->action = (session::FlowAction)nwsec_plcy_rules->action;
@@ -85,7 +85,6 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
                 }
             }
         } else if (matched_svc) {
-            if(!app_ctx->appid_started()) app_ctx->set_appid_not_needed();
             match_rslt->valid  = 1;
             match_rslt->alg = matched_svc->alg;
             match_rslt->action = (session::FlowAction)nwsec_plcy_rules->action;
@@ -178,10 +177,6 @@ net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
         }
     }
 
-    if(ctx.flow_miss()) {
-        if(!app_redir_ctx(ctx, false)->appid_started())
-            app_redir_ctx(ctx, false)->set_appid_not_needed();
-    }
     // ToDo (lseshan) Handle SP miss condition
     // For now hardcoding to ALLOW but we have read default action and act
     // accordingly

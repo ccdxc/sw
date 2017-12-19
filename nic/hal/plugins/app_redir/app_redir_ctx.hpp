@@ -20,6 +20,48 @@ typedef enum {
     APP_REDIR_VERDICT_BLOCK,    // block the packet
 } app_redir_verdict_t;
 
+// appID state
+#define APPID_STATE(ENTRY)                                          \
+    ENTRY(APPID_STATE_INIT,        0,  "APPID_STATE_INIT")         \
+    ENTRY(APPID_STATE_NEEDED,      1,  "APPID_STATE_NEEDED")       \
+    ENTRY(APPID_STATE_NOT_NEEDED,  2,  "APPID_STATE_NOT_NEEDED")   \
+    ENTRY(APPID_STATE_IN_PROGRESS, 3,  "APPID_STATE_IN_PROGRESS")  \
+    ENTRY(APPID_STATE_FOUND,       4,  "APPID_STATE_FOUND")        \
+    ENTRY(APPID_STATE_NOT_FOUND,   5,  "APPID_STATE_NOT_FOUND")    \
+    ENTRY(APPID_STATE_ABORT,       6,  "APPID_STATE_ABORT")        \
+    ENTRY(APPID_STATE_STOPPED,     7,  "APPID_STATE_STOPPED")        \
+
+DEFINE_ENUM(appid_state_t, APPID_STATE)
+#undef APPID_STATE
+
+const size_t APPID_MAX_DEPTH = 4;
+typedef struct appid_info_s {
+    // NOTE - Session state should remain as first entry in the struct
+    fte::feature_session_state_t session_state_;         // Feature session state
+    appid_state_t state_;
+    appid_id_t ids_[APPID_MAX_DEPTH];
+    void* cleanup_handle_;
+    uint8_t id_count_;
+} __PACK__ appid_info_t;
+
+inline appid_id_t appid_info_id(const appid_info_t& info) {
+    return info.id_count_ ? info.ids_[info.id_count_ - 1] : 0;
+}
+inline appid_id_t appid_info_id(const appid_info_t& info, uint8_t idx) {
+    assert(idx < APPID_MAX_DEPTH);
+    return (idx < info.id_count_) ? info.ids_[idx] : 0;
+}
+inline std::ostream& operator<<(std::ostream& os, const appid_info_t& val)
+{
+    os << "{state=" << val.state_;
+    if (val.id_count_) {
+        for (uint8_t i = 0; i < val.id_count_; i++) {
+            os << ",id=" << appid_info_id(val, i);
+        }
+    }
+    return os << "}";
+}
+
 class app_redir_ctx_t {
 public:
     static void init(void *state)
@@ -41,7 +83,7 @@ public:
         app_ctx->proxy_flow_info_        = nullptr;
         app_ctx->arm_ctx_                = nullptr;
         app_ctx->appid_updated_          = false;
-        app_ctx->appid_info_             = { };
+        app_ctx->appid_info_             = nullptr;
     };
 
     uint16_t redir_flags() const { return redir_flags_; }
@@ -102,67 +144,92 @@ public:
     pen_app_redir_header_v1_full_t& redir_miss_hdr() { return redir_miss_hdr_; }
     size_t redir_miss_hdr_size() { return sizeof(redir_miss_hdr_); }
 
-    bool appid_updated() const { return (appid_updated_ && appid_info_.id_count_ != 0); }
+    bool appid_updated() const {
+      if(!appid_info_)
+          return false;
+      else
+          return (appid_updated_ && appid_info_->id_count_ != 0);
+    }
     void set_appid_updated(bool updated) { appid_updated_ = updated; }
 
-    hal::appid_info_t &appid_info() { return appid_info_; };
-    void set_appid_info(hal::appid_info_t &info) { appid_info_ = info; };
+    appid_info_t* appid_info() { return appid_info_; };
+    void set_appid_info(appid_info_t& info) { *appid_info_ = info; };
+    void set_appid_info(appid_info_t* info) { appid_info_ = info; };
 
-    hal::appid_state_t appid_state() const { return appid_info_.state_; }
-    void set_appid_state(hal::appid_state_t state) {appid_info_.state_ = state; }
+    appid_state_t appid_state() const { return appid_info_->state_; }
+    void set_appid_state(appid_state_t state) {
+      if(state == APPID_STATE_NEEDED)
+          set_appid_needed();
+      else if(appid_info_)
+        appid_info_->state_ = state;
+    }
 
     bool appid_completed() {
-        if(appid_info_.state_ == hal::APPID_STATE_FOUND ||
-           appid_info_.state_ == hal::APPID_STATE_NOT_FOUND ||
-           appid_info_.state_ == hal::APPID_STATE_STOPPED ||
-           appid_info_.state_ == hal::APPID_STATE_ABORT) {
+      if(!appid_info_)
+          return false;
+      else if(appid_info_->state_ == APPID_STATE_FOUND ||
+           appid_info_->state_ == APPID_STATE_NOT_FOUND ||
+           appid_info_->state_ == APPID_STATE_STOPPED ||
+           appid_info_->state_ == APPID_STATE_ABORT) {
           return true;
-        }
-        return false;
+      }
+      return false;
     }
 
     void set_appid_needed() {
-        if(!appid_started())
-            appid_info_.state_ = hal::APPID_STATE_NEEDED;
-        else
+        if(appid_info_) {
             HAL_ASSERT(0);
+        } else {
+            appid_info_ = (appid_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_APPID_INFO,
+                                            sizeof(appid_info_t));
+        }
+        appid_info_->state_ = APPID_STATE_NEEDED;
     }
     void set_appid_not_needed() {
         if(!appid_started())
-            appid_info_.state_ = hal::APPID_STATE_NOT_NEEDED;
+            appid_info_->state_ = APPID_STATE_NOT_NEEDED;
         else
             HAL_ASSERT(0);
     }
     bool appid_in_progress() {
-        return (appid_info_.state_ == hal::APPID_STATE_NEEDED) ||
-               (appid_info_.state_ == hal::APPID_STATE_IN_PROGRESS) ;
+      if(!appid_info_)
+          return false;
+      else
+          return (appid_info_->state_ == APPID_STATE_NEEDED) ||
+                 (appid_info_->state_ == APPID_STATE_IN_PROGRESS) ;
     }
     bool appid_started() {
-        return (appid_in_progress() || appid_completed()) ;
+        if(!appid_info_)
+            return false;
+        else
+            return (appid_in_progress() || appid_completed()) ;
     }
     bool appid_needed() {
-        return appid_info_.state_ == hal::APPID_STATE_NEEDED;
+      if(!appid_info_)
+          return false;
+      else
+          return appid_info_->state_ == APPID_STATE_NEEDED;
     }
 
-    static inline void appid_info_clear_ids(hal::appid_info_t& info) { info.id_count_ = 0; }
+    static inline void appid_info_clear_ids(appid_info_t& info) { info.id_count_ = 0; }
 
-    static inline void appid_info_init(hal::appid_info_t& info) {
-        info.state_ = hal::APPID_STATE_INIT;
+    static inline void appid_info_init(appid_info_t& info) {
+        info.state_ = APPID_STATE_INIT;
         info.cleanup_handle_ = nullptr;
         appid_info_clear_ids(info);
     }
 
-    static inline appid_id_t appid_info_id(const hal::appid_info_t& info) {
+    static inline appid_id_t appid_info_id(const appid_info_t& info) {
         return info.id_count_ ? info.ids_[info.id_count_ - 1] : 0;
     }
-    static inline appid_id_t appid_info_id(const hal::appid_info_t& info, uint8_t idx) {
-        assert(idx < hal::APPID_MAX_DEPTH);
+    static inline appid_id_t appid_info_id(const appid_info_t& info, uint8_t idx) {
+        assert(idx < APPID_MAX_DEPTH);
         return (idx < info.id_count_) ? info.ids_[idx] : 0;
     }
-    static inline void appid_info_set_id(hal::appid_info_t& info, appid_id_t id,
-                           uint8_t idx = hal::APPID_MAX_DEPTH) {
-        assert(info.id_count_ < hal::APPID_MAX_DEPTH);
-        if (idx >= hal::APPID_MAX_DEPTH) idx = info.id_count_;
+    static inline void appid_info_set_id(appid_info_t& info, appid_id_t id,
+                           uint8_t idx = APPID_MAX_DEPTH) {
+        assert(info.id_count_ < APPID_MAX_DEPTH);
+        if (idx >= APPID_MAX_DEPTH) idx = info.id_count_;
         info.ids_[idx] = id;
         info.id_count_++;
     }
@@ -184,25 +251,22 @@ private:
     hal::flow_role_t                chain_rev_role_;    // rflow role
     uint8_t                         chain_qtype_;
     uint8_t                         chain_ring_;
-    hal::appid_info_t               appid_info_;
+    appid_info_t                    *appid_info_;
     bool                            appid_updated_;
 };
 
 
 inline app_redir_ctx_t* app_redir_ctx(fte::ctx_t& ctx,
-                                      bool from_appid_feature = false) {
+                                      bool from_appid_feature = true) {
     if(from_appid_feature)
         return (app_redir_ctx_t*)ctx.feature_state();
     else
-        return (app_redir_ctx_t*)ctx.feature_state(FTE_FEATURE_APP_REDIR);
+        return (app_redir_ctx_t*)ctx.feature_state(FTE_FEATURE_APP_REDIR_APPID);
 }
 
 inline app_redir_ctx_t& app_redir_ctxref(fte::ctx_t& ctx,
                                          bool from_appid_feature = false) {
-    if(from_appid_feature)
-        return *(app_redir_ctx_t*)ctx.feature_state();
-    else
-        return *(app_redir_ctx_t*)ctx.feature_state(FTE_FEATURE_APP_REDIR);
+    return *app_redir_ctx(ctx, from_appid_feature);
 }
 
 inline hal_ret_t

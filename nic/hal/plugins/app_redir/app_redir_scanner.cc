@@ -255,22 +255,22 @@ static appid_id_t scanner_appid_to_local_id(int appid)
 }
 
 #define MAX_SCANNER_APPID_STATE 4
-static hal::appid_state_t appid_state_map[MAX_SCANNER_APPID_STATE] = {
-    hal::APPID_STATE_NOT_NEEDED, // APPID_DISCO_STATE_NONE
-    hal::APPID_STATE_IN_PROGRESS, // APPID_DISCO_STATE_DIRECT, used for client discovery only
-    hal::APPID_STATE_IN_PROGRESS, // APPID_DISCO_STATE_STATEFUL
-    hal::APPID_STATE_FOUND, // APPID_DISCO_STATE_FINISHED
+static appid_state_t appid_state_map[MAX_SCANNER_APPID_STATE] = {
+    APPID_STATE_NOT_NEEDED, // APPID_DISCO_STATE_NONE
+    APPID_STATE_IN_PROGRESS, // APPID_DISCO_STATE_DIRECT, used for client discovery only
+    APPID_STATE_IN_PROGRESS, // APPID_DISCO_STATE_STATEFUL
+    APPID_STATE_FOUND, // APPID_DISCO_STATE_FINISHED
 };
 
-static hal::appid_state_t scanner_appid_state_to_local_state(int state)
+static appid_state_t scanner_appid_state_to_local_state(int state)
 {
     if (state < MAX_SCANNER_APPID_STATE) {
         return appid_state_map[state];
     }
-    return hal::APPID_STATE_ABORT;
+    return APPID_STATE_ABORT;
 }
 
-static void scanner_flow_info_to_appid_info(SnortFlowInfo& flow_info, hal::appid_info_t& appid_info)
+static void scanner_flow_info_to_appid_info(SnortFlowInfo& flow_info, appid_info_t& appid_info)
 {
     app_redir_ctx_t::appid_info_init(appid_info);
     for (int i = 0; i < NUM_APP_IDS; i++) {
@@ -297,7 +297,7 @@ hal_ret_t scanner_run() {
 }
 
 /* submit a packet to scanner and run it */
-hal_ret_t scanner_run(hal::appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_len, void* ctx) {
+hal_ret_t scanner_run(appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_len, void* ctx) {
     void *snort_flow_handle = nullptr;
     hal::utils::thread* t = hal::utils::thread::current_thread();
     uint32_t tid = t ? t->thread_id() : hal::HAL_THREAD_ID_FTE_MIN;
@@ -338,7 +338,7 @@ hal_ret_t scanner_run(hal::appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_
     return HAL_RET_OK;
 }
 
-hal_ret_t scanner_get_appid_info(const hal::flow_key_t& key, hal::appid_info_t& appid_info) {
+hal_ret_t scanner_get_appid_info(const hal::flow_key_t& key, appid_info_t& appid_info) {
     struct SnortFlowInfo flow_info;
 
     if (key.flow_type == hal::FLOW_TYPE_L2) {
