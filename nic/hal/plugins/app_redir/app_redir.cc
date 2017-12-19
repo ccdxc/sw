@@ -11,6 +11,15 @@ namespace hal {
 namespace app_redir {
 
 /*
+ * Consideration for TCP/TLS during proxy flow creation
+ */
+typedef enum {
+    PROXY_FLOW_IGNORE_TCP_TLS,
+    PROXY_FLOW_CONSIDER_TCP_TLS
+} proxy_flow_tcp_tls_consider_t;
+
+
+/*
  * TODO: determine whether the operational flow key should
  * be pre or post rewrite.
  */
@@ -245,6 +254,7 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
 {
     app_redir_ctx_t&                redir_ctx = app_redir_ctxref(ctx);
     pen_app_redir_header_v1_full_t& redir_miss_hdr = redir_ctx.redir_miss_hdr();
+    const flow_key_t&               flow_key = app_redir_oper_flow_key_get(ctx);
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     size_t                          hdr_len = 0;
     hal_ret_t                       ret = HAL_RET_OK;
@@ -255,11 +265,10 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
     switch (format) {
 
     case PEN_RAW_REDIR_V1_FORMAT:
-    {
         hdr_len = PEN_APP_REDIR_VERSION_HEADER_SIZE +
                   PEN_RAW_REDIR_HEADER_V1_SIZE;
         redir_miss_hdr.ver.hdr_len = htons(hdr_len);
-        redir_miss_hdr.raw.vrf = htons(cpu_rxhdr->lkp_vrf);
+        redir_miss_hdr.raw.vrf = htons(flow_key.vrf_id);
         redir_miss_hdr.raw.flags = htons(PEN_APP_REDIR_L3_CSUM_CHECKED |
                                          PEN_APP_REDIR_L4_CSUM_CHECKED);
         redir_miss_hdr.raw.flow_id = htonl(redir_ctx.chain_flow_id());
@@ -269,16 +278,12 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
         HAL_TRACE_DEBUG("{} hdr_len {} format {}", __FUNCTION__,
                         hdr_len + PEN_APP_REDIR_HEADER_SIZE, format);
         break;
-    }
 
     case PEN_PROXY_REDIR_V1_FORMAT:
-    {
-        const flow_key_t&   flow_key = app_redir_oper_flow_key_get(ctx);
-
         hdr_len = PEN_APP_REDIR_VERSION_HEADER_SIZE +
                   PEN_PROXY_REDIR_HEADER_V1_SIZE;
         redir_miss_hdr.ver.hdr_len = htons(hdr_len);
-        redir_miss_hdr.proxy.vrf = htons(cpu_rxhdr->lkp_vrf);
+        redir_miss_hdr.proxy.vrf = htons(flow_key.vrf_id);
         redir_miss_hdr.proxy.flags = htons(PEN_APP_REDIR_L3_CSUM_CHECKED |
                                            PEN_APP_REDIR_L4_CSUM_CHECKED);
         redir_miss_hdr.proxy.flow_id = htonl(redir_ctx.chain_flow_id());
@@ -309,7 +314,6 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
         HAL_TRACE_DEBUG("{} hdr_len {} format {}", __FUNCTION__,
                         hdr_len + PEN_APP_REDIR_HEADER_SIZE, format);
         break;
-    }
 
     default:
         HAL_TRACE_ERR("{} unknown format {}", __FUNCTION__, format);
@@ -330,7 +334,6 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
     app_redir_ctx_t&                redir_ctx = app_redir_ctxref(ctx);
     pen_app_redir_header_v1_full_t  *app_hdr;
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
-    hal::l2seg_t                    *l2seg;
     flow_key_t                      flow_key = {0};
     size_t                          pkt_len;
     size_t                          hdr_len;
@@ -411,14 +414,6 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
          */
         if (!ctx.flow_miss()) {
             flow_key.vrf_id = ntohs(app_hdr->proxy.vrf);
-            l2seg =  hal::pd::find_l2seg_by_hwid(flow_key.vrf_id);
-            if (l2seg) {
-                flow_key.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id; 
-            } else {
-                HAL_TRACE_ERR("{} l2seg not found, hwid={}", __FUNCTION__,
-                              flow_key.vrf_id);
-            }
-
             if (app_hdr->proxy.af == AF_INET) {
                 flow_key.flow_type = hal::FLOW_TYPE_V4;
                 flow_key.sip.v4_addr = ntohl(app_hdr->proxy.ip_sa[0]);
@@ -521,7 +516,7 @@ app_redir_pkt_process(fte::ctx_t& ctx)
 static proxy_flow_info_t *
 app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
                                flow_key_t& flow_key,
-                               bool include_tcp_tls_flows)
+                               proxy_flow_tcp_tls_consider_t tcp_tls_consider)
 {
     app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     proxy_flow_info_t       *pfi;
@@ -530,7 +525,8 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
           redir_ctx.proxy_flow_info() :
           proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
 
-    if (!pfi && include_tcp_tls_flows) {
+    if (!pfi && (tcp_tls_consider == PROXY_FLOW_CONSIDER_TCP_TLS)) {
+
         /*
          * See if flow was configured as TCP/TLS proxy flow
          */
@@ -554,7 +550,7 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
 static proxy_flow_info_t *
 app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
                               flow_key_t& flow_key,
-                              bool include_tcp_tls_flows)
+                              proxy_flow_tcp_tls_consider_t tcp_tls_consider)
 {
     app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     proxy_flow_info_t       *pfi;
@@ -562,7 +558,7 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
     flow_key_t              rev_flow_key;
     hal_ret_t               ret = HAL_RET_OK;
 
-    pfi = app_redir_proxy_flow_info_find(ctx, flow_key, include_tcp_tls_flows);
+    pfi = app_redir_proxy_flow_info_find(ctx, flow_key, tcp_tls_consider);
     if (!pfi) {
 
         /*
@@ -580,7 +576,7 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
             rev_flow_key = ctx.get_key(redir_ctx.chain_rev_role());
             rev_flow_key.dir = 0;
             rpfi = app_redir_proxy_flow_info_find(ctx, rev_flow_key,
-                                                  include_tcp_tls_flows);
+                                                  tcp_tls_consider);
             if (!rpfi) {
                 HAL_TRACE_DEBUG("app_redir existing_session for rev_role {} "
                                 "not found", redir_ctx.chain_rev_role());
@@ -657,7 +653,7 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
  */
 static hal_ret_t
 app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
-                                 bool include_tcp_tls_flows)
+                                 proxy_flow_tcp_tls_consider_t tcp_tls_consider)
 {
     flow_key_t              flow_key;
     proxy_flow_info_t       *pfi;
@@ -668,7 +664,7 @@ app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
      */
     flow_key = ctx.key();
     flow_key.dir = 0;
-    pfi = app_redir_proxy_flow_info_get(ctx, flow_key, include_tcp_tls_flows);
+    pfi = app_redir_proxy_flow_info_get(ctx, flow_key, tcp_tls_consider);
     if (pfi) {
         ret = app_redir_flow_fwding_update(ctx, pfi, flow_key);
     }
@@ -709,7 +705,7 @@ app_redir_policy_applic_set(fte::ctx_t& ctx)
      */
     if (ctx.pkt() && ctx.flow_miss()) {
 
-        app_redir_proxy_flow_info_update(ctx, true);
+        app_redir_proxy_flow_info_update(ctx, PROXY_FLOW_CONSIDER_TCP_TLS);
         if (!redir_ctx.redir_miss_pkt_p()) {
 
             /*
@@ -739,7 +735,7 @@ app_redir_miss_exec(fte::ctx_t& ctx)
      * Evaluate initial flow ID
      */
     app_redir_rev_role_set(ctx);
-    app_redir_proxy_flow_info_update(ctx, false);
+    app_redir_proxy_flow_info_update(ctx, PROXY_FLOW_IGNORE_TCP_TLS);
 
     return app_redir_pipeline_action(ctx);
 }

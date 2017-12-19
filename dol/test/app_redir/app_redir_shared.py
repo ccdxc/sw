@@ -32,6 +32,7 @@ app_redir_dol_sim_page_alloc_full   = 0x0020
 app_redir_dol_sim_chain_rxq_full    = 0x0040
 app_redir_dol_sim_chain_txq_full    = 0x0080
 app_redir_chain_desc_add_aol_offset = 0x0100
+app_redir_dol_skip_chain_doorbell   = 0x0200
 
 rawrcb_num_entries_max  = 4096
 rawccb_num_entries_max  = 4096

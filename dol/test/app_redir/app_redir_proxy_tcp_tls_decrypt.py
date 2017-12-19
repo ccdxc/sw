@@ -87,7 +87,8 @@ def TestCaseSetup(tc):
     proxyccb.chain_txq_qtype = 0
     proxyccb.chain_txq_qid = id
     proxyccb.chain_txq_ring = 0
-    proxyccb.proxyccb_flags = app_redir_shared.app_redir_chain_desc_add_aol_offset
+    proxyccb.proxyccb_flags = app_redir_shared.app_redir_chain_desc_add_aol_offset | \
+                              app_redir_shared.app_redir_dol_skip_chain_doorbell
     proxyccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification

@@ -27,15 +27,6 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : APP_REDIR_RAW_MYSQL
-        module  : app_redir_raw_appid
-        spec    : app_redir_raw_mysql.testspec
-        args    :
-            num_pkts : 4
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
         name    : APP_REDIR_RAW_MYSQL_APPID
         module  : app_redir_raw_appid
         spec    : app_redir_raw_mysql_appid.testspec
@@ -93,6 +84,15 @@ modules:
             key_size : 16
             num_pkts : 1
             proxyr_meta_pages : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_MYSQL
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_mysql.testspec
+        args    :
+            num_pkts : 4
         iterate :
             - flow: filter://type=IPV4
 
