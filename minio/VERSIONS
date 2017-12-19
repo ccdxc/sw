@@ -1,4 +1,4 @@
 # format: <name> <version>
-asic_libs f10c13b
-ncc_tools f10c13b
+asic_libs b5322d0
+ncc_tools b5322d0
 third_party_libs 1.1.23
