@@ -970,6 +970,7 @@ table rx_table_s0_t1 {
 
 @pragma stage 0
 @pragma raw_table common_te0_phv.table_pc
+@pragma table_write
 table rx_table_s0_t0 {
     reads {
        common_te0_phv.table_addr : exact;
@@ -1089,6 +1090,7 @@ table common_p4plus_stage0_app_header_table {
 
 @pragma stage 0
 @pragma raw_index_table
+@pragma table_write
 table common_p4plus_stage0_app_header_table_offset_64 {
     reads { 
         COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY
