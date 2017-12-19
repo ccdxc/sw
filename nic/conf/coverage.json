@@ -103,7 +103,7 @@
             "modules": [
                 "model"
             ]
-        }
+        },
         "dol": {
             "cmd_cfg": "./coverage/dol_cov_runs.json",
             "modules": [
