@@ -169,7 +169,8 @@ def run_hal(args):
 
 def dump_coverage_data():
     model_process.send_signal(signal.SIGINT)
-    hal_process.send_signal(signal.SIGUSR1)
+    if hal_process:
+        hal_process.send_signal(signal.SIGUSR1)
     time.sleep(5)
 
 
