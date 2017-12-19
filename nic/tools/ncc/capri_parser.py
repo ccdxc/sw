@@ -1945,15 +1945,23 @@ class capri_parser:
             #header valid bit.
             if self.d == xgress.EGRESS and \
                (self.be.checksum.IsHdrInCsumCompute(h.name) or
-                self.be.checksum.IsHdrInCsumComputePhdr(h.name)):
+                self.be.checksum.IsHdrInCsumComputePhdr(h.name) or
+                self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name)):
                 csum_hv_names = []
                 if self.be.checksum.IsHdrInCsumCompute(h.name):
                     hfname = h.name + '.csum'
                     csum_hv_names.append(hfname)
-                if not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name):
+                if not self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name) and \
+                   not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name):
                     hfname = h.name + '.tcp_csum'
                     csum_hv_names.append(hfname)
                     hfname = h.name + '.udp_csum'
+                    csum_hv_names.append(hfname)
+                if self.be.checksum.IsL3HdrInL2CompleteCsumCompute(h.name) \
+                   or self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name):
+                    #allocates hv bit for ipv4/6.l2_csum
+                    # or allocates p4_2_p4plus.l2_csum
+                    hfname = h.name + '.l2csum'
                     csum_hv_names.append(hfname)
                 #CSUM: Build csum hv bit dict
                 csum_hv_bit_and_hf = []

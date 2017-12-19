@@ -1894,3 +1894,39 @@ parser parse_inner_ethernet {
         default: ingress;
     }
 }
+
+
+field_list l2_complete_ipv4_checksum_list {
+   ipv4.srcAddr;
+   payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l2_checksum_len
+field_list_calculation ipv4_l2_complete_checksum {
+   input {
+       l2_complete_ipv4_checksum_list;
+   }
+   algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
+   output_width : 16;
+}
+
+field_list l2_complete_ipv6_checksum_list {
+   ipv6.srcAddr;
+   payload;
+}
+
+@pragma checksum l2_complete_checksum
+@pragma checksum update_len capri_deparser_len.l2_checksum_len
+field_list_calculation ipv6_l2_complete_checksum {
+   input {
+       l2_complete_ipv6_checksum_list;
+   }
+   algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
+   output_width : 16;
+}
+
+calculated_field p4_to_p4plus_classic_nic.csum {
+   update ipv4_l2_complete_checksum if (valid(ipv4));
+   update ipv6_l2_complete_checksum if (valid(ipv6));
+}
+

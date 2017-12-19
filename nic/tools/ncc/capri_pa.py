@@ -1224,10 +1224,15 @@ class capri_gress_pa:
         if self.pa.be.checksum.IsHdrInCsumCompute(hdr_name):
             hfname = hdr_name + '.csum'
             csum_hv_names.append(hfname)
-        if not self.pa.be.checksum.IsHdrInPayLoadCsumCompute(hdr_name):
+        if not self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name) and \
+           not self.pa.be.checksum.IsHdrInPayLoadCsumCompute(hdr_name):
             hfname = hdr_name + '.tcp_csum'
             csum_hv_names.append(hfname)
             hfname = hdr_name + '.udp_csum'
+            csum_hv_names.append(hfname)
+        if self.pa.be.checksum.IsL3HdrInL2CompleteCsumCompute(hdr_name) \
+           or self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name):
+            hfname = hdr_name + '.l2csum'
             csum_hv_names.append(hfname)
 
         for hfname in csum_hv_names:
@@ -2594,10 +2599,11 @@ class capri_pa:
                         cf = self.allocate_hv_field(name, d)
                         cf.is_hv = True
                         if d == xgress.EGRESS:
-                            #If header is part of hdr-checksum or payload checksum
-                            #allocate csum_hv bit capri-field -- Only in egress pipe.
+                            # If header is part of hdr-checksum or payload checksum
+                            # or l2 complete csum, allocate csum_hv bit
                             if self.be.checksum.IsHdrInCsumCompute(name) or \
-                                self.be.checksum.IsHdrInCsumComputePhdr(name):
+                                self.be.checksum.IsHdrInCsumComputePhdr(name) or \
+                                self.be.checksum.IsHdrInL2CompleteCsumCompute(name):
                                 self.allocate_csum_hv_field(name, d)
 
                             if self.be.icrc.IsHdrInIcrcCompute(name):

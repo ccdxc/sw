@@ -18,8 +18,8 @@ p4plus_app_default:
 .align
 p4plus_app_classic_nic:
   // r7 : packet_len
-  add         r7, r0, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                         capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  or          r7, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
   seq         c1, k.control_metadata_vlan_strip, TRUE
   seq.c1      c1, k.vlan_tag_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_no_vlan_strip
@@ -117,9 +117,9 @@ p4plus_app_cpu_l4_udp:
   phvwr       p.p4_to_p4plus_cpu_l4_dport, k.udp_dstPort
 
 p4plus_app_cpu_common:
-  add         r2, P4PLUS_CPU_PKT_SZ, \
-                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  or          r2, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r2, P4PLUS_CPU_PKT_SZ, r2
   phvwr       p.p4_to_p4plus_cpu_packet_len, r2
 
   bal         r7, f_p4plus_cpu_pkt

@@ -117,7 +117,7 @@ class DeParserPhdrProfile:
             self.fld1_start    = 16 # DA offset from the start of phdr
             self.fld1_end      = 19 # end offset IPDA 
             self.fld1_align    = 0
-            
+
             self.fld2_en       = 1
             self.fld2_start    = 9 # start of zeros/protocol
             self.fld2_end      = 9
@@ -139,7 +139,7 @@ class DeParserPhdrProfile:
             self.fld1_end      = 39 # end offset IPDA 
             self.fld1_add_len  = 0 
             self.fld1_align    = 0
-            
+
             self.fld2_en       = 1
             self.fld2_start    = 6 # start of next_header
             self.fld2_end      = 6 # 
@@ -198,9 +198,9 @@ class DeParserCsumProfile:
         Deparser Csum profile values.
     '''
     def __init__(self):
-        self.csum_profile       = -1 
+        self.csum_profile       = -1
         self.use_phv_len        = 0
-        self.phv_len_sel        = -1 
+        self.phv_len_sel        = -1
         self.len_mask           = 0xFFFF
         self.add_len            = 0
         self.csum_unit_include_bm = 0
@@ -209,7 +209,8 @@ class DeParserCsumProfile:
         self.start_adj          = 0
         self.end_adj            = 0
         self.csum_loc_adj       = 0
-        
+        self.no_csum_rw         = 0
+
     def CsumProfileNumSet(self, profile):
         self.csum_profile = profile
 
@@ -245,6 +246,14 @@ class DeParserCsumProfile:
     def CsumProfileCsumLocSet(self, csum_loc_adj):
         self.csum_loc_adj = csum_loc_adj
 
+    def CsumProfileNoCsumRewriteSet(self, no_csum_rw):
+        #when csum result should not be inserted into packet
+        #this bit should be set.
+        self.no_csum_rw = no_csum_rw
+
+    def CsumProfileNoCsumRewriteGet(self):
+        return self.no_csum_rw
+
     def ConfigGenerate(self, csum_profile):
         csum_profile['use_phv_len']   ['value']=str(self.use_phv_len)
         csum_profile['phv_len_sel']   ['value']=str(self.phv_len_sel)
@@ -255,13 +264,14 @@ class DeParserCsumProfile:
         csum_profile['end_adj']       ['value']=str(self.end_adj)
         csum_profile['loc_adj']       ['value']=str(self.csum_loc_adj)
         csum_profile['add_len']       ['value']=str(self.add_len)
+        csum_profile['no_csum_rw']    ['value']=str(self.no_csum_rw)
         #csum_profile['csum_unit_include_bm']['value'] = \
         #                        str(self.csum_unit_include_bm)
         csum_profile['_modified']           = True
     def LogGenerate(self):
         log_str = ''
-        log_str += 'DeParser Csum Profile:\n'
-        log_str += '_________________________\n\n'
+        log_str += '    DeParser Csum Profile:\n'
+        log_str += '    _________________________\n\n'
         log_str += '    use_phv_len     = %d\n' % self.use_phv_len
         log_str += '    phv_len_sel     = %d\n' % self.phv_len_sel
         log_str += '    len_mask        = 0x%x\n' % self.len_mask
@@ -271,7 +281,9 @@ class DeParserCsumProfile:
         log_str += '    end_adj         = %d\n' % self.end_adj
         log_str += '    loc_adj         = %d\n' % self.csum_loc_adj
         log_str += '    add_len         = %d\n' % self.add_len
+        log_str += '    no_csum_rw      = %d\n' % self.no_csum_rw
         log_str += '    csum_unit_include_bm 0x%x\n' % self.csum_unit_include_bm
+        log_str += '\n\n'
         return log_str
 
 
@@ -279,7 +291,8 @@ class DeParserCsumObj:
     def __init__(self):
         self.unit                   = -1
         self.hv                     = -1
-        self.csum_hv                = -1 
+        self.csum_hv                = -1
+        self.csum_hv_str            = ''
         self.profile                = -1
         self.phdr_vld               = 0
         self.phdr_unit              = -1
@@ -288,6 +301,7 @@ class DeParserCsumObj:
         self.crc_include_bm         = 0
         self.hdrfld_start           = -1
         self.hdrfld_end             = -1
+        self.csum_copy_vld          = 0
 
         self.phdr_only              = False # Set to True in case of
                                             # ipv6/ipv4 w/o hdr-checksum
@@ -303,6 +317,9 @@ class DeParserCsumObj:
 
     def CsumIncludeInnerCsumsGet(self):
         return self.csum_unit_include_bm
+
+    def CsumHvBitStrSet(self, csum_hv_str):
+        self.csum_hv_str = csum_hv_str
 
     def CsumHvBitNumSet(self, csum_hv):
         self.csum_hv = csum_hv
@@ -360,6 +377,14 @@ class DeParserCsumObj:
     def HdrFldStartGet(self):
         return self.hdrfld_start
 
+    def CsumCopyVldSet(self, csum_copy_vld):
+        #when csum engine result should be copied into phv
+        #this bit should be set.
+        self.csum_copy_vld = csum_copy_vld
+
+    def CsumCopyVldGet(self):
+        return self.csum_copy_vld
+
     def ConfigGenerate(self, csum_hdr_cfg):
         #max_hv_bit_idx = self.be.hw_model['parser']['max_hv_bits'] - 1
         max_hv_bit_idx = 127 #Add code to get BE reference in this obj
@@ -382,6 +407,7 @@ class DeParserCsumObj:
         csum_hdr_cfg['crc_include_bm']['value']=str(self.crc_include_bm)
         csum_hdr_cfg['csum_unit_include_bm']['value'] = \
                                       str(self.csum_unit_include_bm)
+        csum_hdr_cfg['csum_copy_vld']['value'] = str(self.csum_copy_vld)
         csum_hdr_cfg['_modified']            = True
 
     def LogGenerate(self, csum_hdr):
@@ -400,6 +426,8 @@ class DeParserCsumObj:
         log_str += '    crc include BM 0x%x\n' % self.crc_include_bm
         log_str += '    csum unit include BM 0x%x\n' % self.csum_unit_include_bm
         log_str += '    Phdr only %s\n' % ("True" if self.phdr_only else "False")
+        log_str += '    csum copy valid %d\n' % self.csum_copy_vld
+        log_str += '\n'
 
         return log_str
 
@@ -441,7 +469,7 @@ class DeParserCalField:
             self.P4FieldListCalculation._parsed_pragmas.keys():
             if 'update_len' in \
                 self.P4FieldListCalculation._parsed_pragmas['checksum']:
-                self.l4_update_len_field = self.P4FieldListCalculation._parsed_pragmas\
+                self.payload_update_len_field = self.P4FieldListCalculation._parsed_pragmas\
                                    ['checksum']['update_len'].keys()[0]
 
             self.phdr_name, self.phdr_type, self.payload_hdr_type, self.phdr_fields = \
@@ -449,15 +477,19 @@ class DeParserCalField:
                                             self.P4FieldListCalculation,\
                                             self.dstField)
 
+            if self.P4FieldListCalculation.algorithm == 'l2_complete_csum':
+                #This is not regular payload checksum. Hence clear payload checksum
+                self.payload_checksum = False
         else:
             self.phdr_name = ''
             self.phdr_type = ''
             self.payload_hdr_type = ''
             self.phdr_fields = None
-            self.l4_update_len_field = ''
+            self.payload_update_len_field = ''
 
         assert(self.P4FieldListCalculation != None)
-        assert(self.P4FieldListCalculation.algorithm == 'csum16')
+        assert(self.P4FieldListCalculation.algorithm == 'csum16' or \
+               self.P4FieldListCalculation.algorithm == 'l2_complete_csum')
         assert(self.P4FieldListCalculation.output_width == 16)
 
 
@@ -506,8 +538,8 @@ class DeParserCalField:
 
     def DeparserCsumConfigMatrixRowLog(self, is_phdr):
         if not is_phdr:
-            pstr = '{:12s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}{:5d}'\
-                   '{:5d}{:5d}{:5d}\n'.format(self.dstField.split(".")[0],
+            pstr = '{:32s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}{:5d}'\
+                   '{:5d}{:5d}{:5d}\n'.format(self.csum_hdr_obj.csum_hv_str,
                                        self.csum_hdr_obj.CsumUnitNumGet(),
                                        self.csum_hdr_obj.CsumHvBitNumGet(),
                                        384 + (127 - self.csum_hdr_obj.CsumHvBitNumGet()),
@@ -524,8 +556,8 @@ class DeParserCalField:
                                        self.csum_profile_obj.csum_loc_adj,
                                        self.csum_profile_obj.add_len)
         if is_phdr:
-            pstr = '{:12s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}'\
-                    '\n'.format(self.phdr_name,
+            pstr = '{:32s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}'\
+                    '\n'.format(self.phdr_csum_hdr_obj.csum_hv_str,
                                 self.phdr_csum_hdr_obj.CsumUnitNumGet(),
                                 self.phdr_csum_hdr_obj.CsumHvBitNumGet(),
                                 384 + (127 - self.phdr_csum_hdr_obj.CsumHvBitNumGet()),

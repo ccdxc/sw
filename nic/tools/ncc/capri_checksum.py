@@ -226,6 +226,15 @@ class DeParserCsumEngine:
                 self.csum_units_in_use += 1
         self.allocated_csum_units[csumUnit] = True
 
+    def CsumUnitAllocationFinalize(self):
+        self.csum_units_in_use = 0
+        for i in range(self.max_csum_units):
+            self.allocated_csum_units[i] = False
+        for csumField, csum_unit in self.csum_units.items():
+            if self.allocated_csum_units[csum_unit] == False:
+                self.allocated_csum_units[csum_unit] = True
+                self.csum_units_in_use += 1
+
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
             return self.csum_profile[csumField]
@@ -332,6 +341,7 @@ class Checksum:
         self.AllocateDeParserGsoCsumResources(self.be.parsers[d])
         if d == xgress.EGRESS:
             self.AllocateDeParserCsumResources(self.be.parsers[d])
+            self.AllocateL2CompleteCsumDeParserResources(self.be.parsers[d])
 
     def ProcessCalFields(self, field_list_calculation, csum_hfield):
         '''
@@ -1493,10 +1503,22 @@ class Checksum:
                 return True
         return False
 
+    def IsHdrInL2CompleteCsumCompute(self, hdrname):
+        for calfldobj in self.l2_csum_cal_fieldlist_update:
+            if calfldobj.CalculatedFieldHdrGet() == hdrname:
+                return True
+        return False
+
+    def IsL3HdrInL2CompleteCsumCompute(self, hdrname):
+        for calfldobj in self.l2_csum_cal_fieldlist_update:
+            if calfldobj.phdr_name == hdrname:
+                return True
+        return False
+
     def DeParserPayLoadLenSlotGet(self, calfldobj, eg_parser):
-        assert calfldobj.l4_update_len_field != '', pdb.set_trace()
-        cf_l4_update_len = self.be.pa.get_field(calfldobj.l4_update_len_field, eg_parser.d)
-        pl_slot = (cf_l4_update_len.phv_bit - 
+        assert calfldobj.payload_update_len_field != '', pdb.set_trace()
+        cf_pl_update_len = self.be.pa.get_field(calfldobj.payload_update_len_field, eg_parser.d)
+        pl_slot = (cf_pl_update_len.phv_bit - 
                    self.be.hw_model['phv']['flit_size']) / 16
 
         return pl_slot
@@ -1526,9 +1548,7 @@ class Checksum:
          and creates checksum objects
         '''
         for calfldobj in self.update_cal_fieldlist:
-            #Allocate checksum and checksum profile to
-            #verify calcu field the first time header
-            #is encountered in parse path.
+            #Allocate checksum and checksum profile
             if calfldobj.DeParserCsumObjGet() == None:
                 calfldobj.DeParserCsumObjSet(DeParserCsumObj())
                 calfldobj.DeParserCsumProfileObjSet(DeParserCsumProfile())
@@ -1553,6 +1573,21 @@ class Checksum:
                 csum_phdrs.add(csum_phdr)
                 self.DeParserPhdrCsumObjSet(csum_phdr, DeParserCsumObj(), -1, '')
 
+        #L2 complete csum objects. Each object in l2_csum_cal_fieldlist_udpate
+        #represents L3 hdr encapped in outer L2.
+        for calfldobj in self.l2_csum_cal_fieldlist_update:
+            #Allocate checksum and checksum profile
+            if calfldobj.DeParserCsumObjGet() == None:
+                calfldobj.DeParserCsumObjSet(DeParserCsumObj())
+                calfldobj.DeParserCsumProfileObjSet(DeParserCsumProfile())
+        if len(self.l2_csum_cal_fieldlist_update):
+            #Inorder to copy L2 csum into internal header, lets also
+            #create an calfld object for internal header.
+            calfldobj = copy.copy(self.l2_csum_cal_fieldlist_update[0])
+            calfldobj.phdr_name = '' #This identifies as internal hdr
+            calfldobj.DeParserCsumObjSet(DeParserCsumObj())
+            calfldobj.DeParserCsumProfileObjSet(DeParserCsumProfile())
+            self.l2_csum_cal_fieldlist_update.append(calfldobj)
 
     def AllocateDeParserCsumResources(self, eg_parser):
         '''
@@ -1636,6 +1671,7 @@ class Checksum:
                         _csum_obj = calfldobj.DeParserCsumObjGet()
                         _csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
                         _csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[hdr][0][0])
+                        _csum_obj.CsumHvBitStrSet(eg_parser.csum_hdr_hv_bit[hdr][0][2])
                         calfldhdr = calfldobj.CalculatedFieldHdrGet()
                         _csum_obj.CsumUnitNumSet(self.EgDeParserCsumEngineObj.\
                                                  AllocateCsumUnit(calfldhdr, True))
@@ -1713,7 +1749,15 @@ class Checksum:
                                         payload_csum_obj_list, hdr.name, _csum_obj, parse_path)
                             payload_csum_obj_list.append((_csum_obj, hdr.name))
                             _csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
-                            _csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[hdr][0][0])
+                            csumhv = -1
+                            l3hf_name = calfldhdr + '.csum'
+                            for elem in eg_parser.csum_hdr_hv_bit[hdr]:
+                                if elem[2] == l3hf_name:
+                                    csumhv = elem[0]
+                                    break
+                            assert csumhv != -1, pdb.set_trace()
+                            _csum_obj.CsumHvBitNumSet(csumhv)
+                            _csum_obj.CsumHvBitStrSet(l3hf_name)
                             _csum_obj.CsumProfileNumSet(csum_profile)
                             _csum_obj.PhdrValidSet(0)
                             _csum_profile_obj = pl_calfldobj.\
@@ -1745,9 +1789,25 @@ class Checksum:
                                 phdr_inst = self.be.h.p4_header_instances[phdr]
                                 _phdr_csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[phdr_inst])
                                 if pl_calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
-                                    _phdr_csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[phdr_inst][-2][0])
+                                    csumhv = -1
+                                    l3hf_name = pl_calfldobj.phdr_name + '.tcp_csum'
+                                    for elem in eg_parser.csum_hdr_hv_bit[phdr_inst]:
+                                        if elem[2] == l3hf_name:
+                                            csumhv = elem[0]
+                                            break
+                                    assert csumhv != -1, pdb.set_trace()
+                                    _phdr_csum_obj.CsumHvBitNumSet(csumhv)
+                                    _phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
                                 elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
-                                    _phdr_csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[phdr_inst][-1][0])
+                                    csumhv = -1
+                                    l3hf_name = pl_calfldobj.phdr_name + '.udp_csum'
+                                    for elem in eg_parser.csum_hdr_hv_bit[phdr_inst]:
+                                        if elem[2] == l3hf_name:
+                                            csumhv = elem[0]
+                                            break
+                                    assert csumhv != -1, pdb.set_trace()
+                                    _phdr_csum_obj.CsumHvBitNumSet(csumhv)
+                                    _phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
                                 else:
                                     pdb.set_trace()
 
@@ -1786,12 +1846,10 @@ class Checksum:
                     break
 
         assert(len(csum_objects) == 0), pdb.set_trace()
+        self.EgDeParserCsumEngineObj.CsumUnitAllocationFinalize()
 
 
-    def CsumDeParserConfigGenerate(self, deparser, hv_fld_slots, dpp_json):
-        '''
-            Configure HdrFldStart,End and also generate JSON config output.
-        '''
+    def CsumDeParserHwConfigObjs(self, deparser, hv_fld_slots):
         self.csum_compute_logger.debug('%s' % ("HVB, StartFld, EndFld  HdrName:"))
         self.csum_compute_logger.debug('%s' % ("-------------------------------"))
         for hvb, hv_info in hv_fld_slots.items():
@@ -1814,8 +1872,8 @@ class Checksum:
             fldstart, fldend, _ = hv_fld_slots[_csum_obj.csum_hv]
             _csum_obj.HdrFldStartEndSet(fldstart,fldend)
             if calfldobj.payload_checksum:
-                _phdr_csum_obj = calfldobj.DeParserPhdrCsumObjGet() 
-                _phdr_profile_obj = calfldobj.DeParserPhdrProfileObjGet() 
+                _phdr_csum_obj = calfldobj.DeParserPhdrCsumObjGet()
+                _phdr_profile_obj = calfldobj.DeParserPhdrProfileObjGet()
                 assert _phdr_csum_obj != None, pdb.set_trace()
                 assert _phdr_profile_obj != None, pdb.set_trace()
                 assert _phdr_csum_obj.csum_hv != None, pdb.set_trace()
@@ -1836,6 +1894,15 @@ class Checksum:
             #hw_csum_obj.append((_csum_obj, False, calfldobj))
             if calfldobj.payload_checksum:
                 hw_csum_obj.append((_phdr_csum_obj, True, calfldobj))
+
+        return  hw_csum_obj
+
+    def CsumDeParserConfigGenerate(self, deparser, hv_fld_slots, dpp_json):
+        '''
+            Configure HdrFldStart,End and also generate JSON config output.
+        '''
+        hw_csum_obj = self.CsumDeParserHwConfigObjs(deparser, hv_fld_slots)
+        hw_csum_obj += self.L2CompleteCsumDeParserHwConfigObjs(deparser, hv_fld_slots)
 
         #Before generating HW config, sort based on StartFld Value.
         self.dpr_hw_csum_obj = sorted(hw_csum_obj, key=lambda obj: obj[0].HdrFldStartGet())
@@ -1906,6 +1973,86 @@ class Checksum:
         for calfldobj in gso_cal_fieldlist_update:
             calfldobj.GsoConfigGenerate(dpp_json, dpr_json)
 
+    def AllocateL2CompleteCsumDeParserResources(self, eg_parser):
+        '''
+            Assign csum unit, profiles for L2 complete csum calculation
+        '''
+        for calfldobj in self.l2_csum_cal_fieldlist_update:
+            calfldhdr = calfldobj.CalculatedFieldHdrGet()
+            _csum_obj = calfldobj.DeParserCsumObjGet()
+            l3hdr_name  = calfldobj.CsumPhdrNameGet()
+
+            if l3hdr_name == '':
+                hf_name = calfldhdr + '.l2csum'
+                hdr_inst = self.be.h.p4_header_instances[calfldhdr]
+            else:
+                hf_name = l3hdr_name + '.l2csum'
+                hdr_inst = self.be.h.p4_header_instances[l3hdr_name]
+
+            _csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr_inst])
+            csumhv = -1
+            for elem in eg_parser.csum_hdr_hv_bit[hdr_inst]:
+                if elem[2] == hf_name:
+                    csumhv = elem[0]
+                    break
+            assert csumhv != -1, pdb.set_trace()
+            _csum_obj.CsumHvBitNumSet(csumhv)
+            _csum_obj.CsumHvBitStrSet(hf_name)
+            _csum_obj.CsumUnitNumSet(self.EgDeParserCsumEngineObj.\
+                                     AllocateCsumUnit(calfldhdr, False))
+            _csum_obj.PhdrValidSet(0)
+            csum_profile = self.EgDeParserCsumEngineObj.\
+                                     AllocateCsumProfile(hf_name)
+            #Config Csum Profile
+            _csum_obj.CsumProfileNumSet(csum_profile)
+            _csum_profile_obj = calfldobj.DeParserCsumProfileObjGet()
+            _csum_profile_obj.CsumProfileNumSet(csum_profile)
+
+            if l3hdr_name == '':
+                #case : Header/Container of l2 csum result field
+                _csum_obj.CsumCopyVldSet(1)
+                locadj = -1
+                for p4f in hdr_inst.fields:
+                    if p4f.name == calfldobj.dstField.split(".")[1]:
+                        locadj = p4f.offset / 8
+                        break
+                assert locadj != -1, pdb.set_trace()
+                _csum_profile_obj.CsumProfileCsumLocSet(locadj)
+                _csum_profile_obj.CsumProfilePhvLenSelSet(0, 0)
+            else:
+                #case: L3 Header or L2Payload Header
+                dprsr_payload_len_slot = \
+                            self.DeParserPayLoadLenSlotGet(calfldobj, eg_parser)
+                _csum_profile_obj.CsumProfilePhvLenSelSet(1, dprsr_payload_len_slot)
+                #l2 csum result goes in internal header not in packet.Set no-rewrite
+                _csum_profile_obj.CsumProfileNoCsumRewriteSet(1)
+                _csum_profile_obj.CsumProfileCsumLocSet(0)
+
+        self.EgDeParserCsumEngineObj.CsumUnitAllocationFinalize()
+
+    def L2CompleteCsumDeParserHwConfigObjs(self, deparser, hv_fld_slots):
+        hw_csum_obj = [] # list of csumobj that need to be programmed in HW
+                         # without repeatation and maintaining Banyan contrainst.
+        for calfldobj in self.l2_csum_cal_fieldlist_update:
+            csum_hdr = calfldobj.CalculatedFieldHdrGet()
+            phdr_name = calfldobj.phdr_name
+            _csum_obj = calfldobj.DeParserCsumObjGet()
+            _csum_profile_obj = calfldobj.DeParserCsumProfileObjGet()
+            assert _csum_obj != None, pdb.set_trace()
+            assert _csum_profile_obj != None, pdb.set_trace()
+            assert _csum_obj.hv != -1, pdb.set_trace()
+            assert _csum_obj.csum_hv != -1, pdb.set_trace()
+            fldstart, fldend, _ = hv_fld_slots[_csum_obj.csum_hv]
+            _csum_obj.HdrFldStartEndSet(fldstart,fldend)
+
+            #Generate Logical Output
+            calfldobj.DeParserCsumObjAddLog(_csum_obj.LogGenerate(csum_hdr + " , " + phdr_name))
+            calfldobj.DeParserCsumObjAddLog(_csum_profile_obj.LogGenerate())
+            hw_csum_obj.append((_csum_obj, False, calfldobj))
+
+        return  hw_csum_obj
+
+
     def CsumLogicalOutputCreate(self):
         '''
             Generates csum.out file containing configuration pushed to HW.
@@ -1921,12 +2068,14 @@ class Checksum:
                 gso_cal_fieldlist_update    = self.gso_cal_fieldlist_update
                 update_cal_fieldlist        = None
                 dpr_hw_csum_obj             = None
+                l2_csum_cal_fieldlist_update= None
             else:
                 verify_cal_fieldlist        = self.eg_verify_cal_fieldlist
                 gso_cal_fieldlist_compute   = self.eg_gso_cal_fieldlist_compute
                 update_cal_fieldlist        = self.update_cal_fieldlist
                 dpr_hw_csum_obj             = self.dpr_hw_csum_obj
                 gso_cal_fieldlist_update    = self.eg_gso_cal_fieldlist_update
+                l2_csum_cal_fieldlist_update= self.l2_csum_cal_fieldlist_update
 
             ofile = open('%s/csum_%s.out' % (out_dir, d.name), "w")
             ofile.write("Checksum Verification Config in parser\n")
@@ -1944,9 +2093,27 @@ class Checksum:
                 for log_str in calfldobj.GsoCsumObjLogStrTableGet():
                     ofile.write(log_str)
 
+            ofile.write("Checksum Config in Deparser\n")
+            ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
+
+            ofile.write("       Gso Config \n")
+            ofile.write("       ~~~~~~~~~~\n\n")
+            for calfldobj in gso_cal_fieldlist_update:
+                for log_str in calfldobj.DeParserGsoCsumObjLogStrTableGet():
+                    ofile.write(log_str)
+            ofile.write("\n\n")
+
+            if l2_csum_cal_fieldlist_update:
+                ofile.write("       L2 Complete Csum Config \n")
+                ofile.write("       ~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
+                for calfldobj in l2_csum_cal_fieldlist_update:
+                    for log_str in calfldobj.DeParserCsumObjLogStrTableGet():
+                        ofile.write(log_str)
+            ofile.write("\n\n")
+
             if update_cal_fieldlist !=  None:
-                ofile.write("Checksum Compute Config in Deparser\n")
-                ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
+                ofile.write("  Checksum Compute Config in Deparser\n")
+                ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
                 for calfldobj in update_cal_fieldlist:
                     for log_str in calfldobj.DeParserCsumObjLogStrTableGet():
                         ofile.write(log_str)
@@ -1955,22 +2122,22 @@ class Checksum:
                 ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
 
 
-                pstr = '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+                pstr = '{:32s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
                        '{:5s}{:5s}{:5s}\n'.format("Hdr", "csum#", "  csum", "  csum", "  HV", \
                                                        "Csum", "Phdr", "Phdr", "Phdr",\
                                                        "HdrFld", "HdrFld", "Csum", "use",\
                                                        "phv", "loc", "add")
-                pstr += '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+                pstr += '{:32s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
                        '{:5s}{:5s}{:5s}\n'.format("   ", "    ", "  Hv", "Flit", "   ", \
                                                        "Profile", "Valid", "Unit", "Profile",\
                                                        "Start", "End", "incl", "phv",\
                                                        "len", "adj", "len")
-                pstr += '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+                pstr += '{:32s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
                        '{:5s}{:5s}{:5s}\n'.format("   ", "    ", " ", "bit", " ", \
                                                        "       ", "     ", "    ", "       ",\
                                                        "     ", "   ", "BM", "len",\
                                                        "sel", "   ", "   ")
-                pstr += '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+                pstr += '{:32s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
                        '{:5s}{:5s}{:5s}\n'.format("   ", "    ", " ", " ", " ", \
                                                        "       ", "     ", "    ", "       ",\
                                                        "     ", "   ", "  ", "   ",\
@@ -1980,9 +2147,5 @@ class Checksum:
                     ofile.write(_calfldobj.DeparserCsumConfigMatrixRowLog(is_phdr))
                 ofile.write("\n\n")
 
-            for calfldobj in gso_cal_fieldlist_update:
-                for log_str in calfldobj.DeParserGsoCsumObjLogStrTableGet():
-                    ofile.write(log_str)
 
             ofile.close()
-
