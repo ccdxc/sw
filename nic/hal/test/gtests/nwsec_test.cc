@@ -18,6 +18,7 @@
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/hal/src/nwsec_group.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
+#include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -40,6 +41,8 @@ using nw::NetworkSpec;
 using nw::NetworkResponse;
 using types::IPProtocol;
 using namespace hal;
+using namespace hal::app_redir;
+using namespace fte;
 
 
 class nwsec_test : public hal_base_test {
@@ -367,11 +370,18 @@ net_sfw_check_policy_pair(fte::ctx_t                    &ctx,
 }
 }
 }
+
+// test ctx with access to protected members
+class test_ctx_t :  public ctx_t {
+public:
+    using ctx_t::init;
+
+};
 // Test to validate the appid logic in firewall.cc
 TEST_F(nwsec_test, test5)
 {
     hal_ret_t ret;
-    fte::ctx_t ctx = {};
+    test_ctx_t ctx = {};
     hal::nwsec_policy_rules_t rules;
     hal::plugins::sfw::net_sfw_match_result_t rslt;
 
@@ -381,15 +391,28 @@ TEST_F(nwsec_test, test5)
 
     nwsec_plcy_appid->appid = 747;
 
+    fte::feature_info_t info = {};
+
+    info.state_size = sizeof(app_redir_ctx_t);
+    auto fn1 = [](fte::ctx_t& ctx) {
+        return fte::PIPELINE_CONTINUE;
+    };
+    fte::add_feature(FTE_FEATURE_APP_REDIR);
+    fte::register_feature(FTE_FEATURE_APP_REDIR, fn1, info);
+    uint16_t num_features = 1;
+    size_t sz = fte::feature_state_size(&num_features);
+    fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
+    ctx.init({2,1,1}, st, num_features);
+
     //To Do: Check to Get lock on nwsec_plcy_rules ??
     dllist_add_tail(&rules.appid_list_head,
                     &nwsec_plcy_appid->lentry);
 
     ret = hal::plugins::sfw::net_sfw_match_rules(ctx, &rules, &rslt);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(ctx.appid_needed());
+    ASSERT_TRUE(app_redir_ctx(ctx, false)->appid_needed());
 
-    ctx = {};
+    app_redir_ctx_t::appid_info_init(app_redir_ctx(ctx, false)->appid_info());
     nwsec_policy_svc_t* nwsec_plcy_svc = nwsec_policy_svc_alloc_and_init();
     if (nwsec_plcy_svc == NULL) ASSERT_TRUE(0);
     nwsec_plcy_svc->ipproto = types::IPPROTO_NONE;
@@ -400,7 +423,7 @@ TEST_F(nwsec_test, test5)
 
     ret = hal::plugins::sfw::net_sfw_match_rules(ctx, &rules, &rslt);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(ctx.appid_needed());
+    ASSERT_TRUE(app_redir_ctx(ctx, false)->appid_needed());
 }
 
 TEST_F(nwsec_test, test6)
@@ -408,7 +431,7 @@ TEST_F(nwsec_test, test6)
     hal_ret_t ret;
     SecurityGroupPolicySpec sp_spec;
     SecurityGroupPolicyResponse sp_rsp;
-    fte::ctx_t ctx = {};
+    test_ctx_t ctx = {};
     hal::nwsec_policy_rules_t rules;
     hal::plugins::sfw::net_sfw_match_result_t rslt;
 
@@ -427,9 +450,23 @@ TEST_F(nwsec_test, test6)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    ctx = {};
+    fte::feature_info_t info = {};
+
+    info.state_size = sizeof(app_redir_ctx_t);
+    auto fn1 = [](fte::ctx_t& ctx) {
+        return fte::PIPELINE_CONTINUE;
+    };
+    fte::add_feature(FTE_FEATURE_APP_REDIR);
+    fte::register_feature(FTE_FEATURE_APP_REDIR, fn1, info);
+    uint16_t num_features = 1;
+    size_t sz = fte::feature_state_size(&num_features);
+    fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
+    ctx.init({2,1,1}, st, num_features);
+
     ret = net_sfw_check_policy_pair(ctx, 100, 102, &rslt);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(ctx.appid_needed());
+    ASSERT_TRUE(app_redir_ctx(ctx, false)->appid_needed());
 }
 
 int main(int argc, char **argv) {

@@ -10,6 +10,7 @@
 using namespace std;
 using namespace hal::app_redir;
 using hal::appid_state_t;
+using namespace fte;
 
 #define APPID_DNS_TEST1 1
 #define APPID_HTTP_TEST1 1
@@ -789,11 +790,21 @@ TEST_F(appid_test, execute_flow_complete) {
 
 #endif
 
+// test ctx with access to protected members
+class test_ctx_t :  public ctx_t {
+public:
+    using ctx_t::init;
+    void set_pkt_info(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len) {
+        cpu_rxhdr_ = cpu_rxhdr;
+        pkt_ = pkt;
+        pkt_len_ = pkt_len;
+    }
+};
 // execute full flow pipeline
 void appid_test_transaction(appid_test_transaction_t& trans)
 {
     hal_ret_t rc;
-    fte::ctx_t ctx;
+    test_ctx_t ctx = {};
     fte::cpu_rxhdr_t rxhdr;
     hal::flow_key_t flow_key;
     unsigned char pkt[2000];
@@ -803,24 +814,37 @@ void appid_test_transaction(appid_test_transaction_t& trans)
     for (uint32_t i = 0; i < trans.pkt_count; i++) {
         uint32_t pkt_len = flow_key_and_pkt_init(&flow_key, pkt, trans.pkts[i],
 						 trans.sport, trans.dport);
-        ctx.init(&rxhdr, pkt, pkt_len,
-                 nullptr, nullptr, nullptr, 0);
+        fte::feature_info_t info = {};
+
+        info.state_size = sizeof(app_redir_ctx_t);
+        auto fn1 = [](fte::ctx_t& ctx) {
+            return fte::PIPELINE_CONTINUE;
+        };
+        fte::add_feature(FTE_FEATURE_APP_REDIR);
+        fte::register_feature(FTE_FEATURE_APP_REDIR, fn1, info);
+        uint16_t num_features = 1;
+        size_t sz = fte::feature_state_size(&num_features);
+        fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
+        ctx.init({2,1,1}, st, num_features);
+        ctx.set_pkt_info(&rxhdr, pkt, pkt_len);
         ctx.set_key(flow_key);
+        app_redir_ctx_t* app_ctx = app_redir_ctx(ctx, false);
 
         if (i == 0) {
             // First packet
-            ctx.appid_info().state_ = hal::APPID_STATE_NEEDED;
+            app_ctx->appid_info().state_ = hal::APPID_STATE_NEEDED;
             rc = hal::app_redir::exec_appid_start(ctx);
         } else {
             rc = hal::app_redir::exec_appid_continue(ctx);
         }
+
         EXPECT_EQ(rc, HAL_RET_OK);
-        EXPECT_NE(ctx.appid_info().state_, hal::APPID_STATE_ABORT);
-        EXPECT_EQ(fte::appid_info_id(ctx.appid_info()), trans.pkts[i].expect_app_id);
+        EXPECT_NE(app_ctx->appid_info().state_, hal::APPID_STATE_ABORT);
+        EXPECT_EQ(app_redir_ctx_t::appid_info_id(app_ctx->appid_info()), trans.pkts[i].expect_app_id);
         if (trans.pkts[i].expect_app_id == 0) {
-            EXPECT_EQ(ctx.appid_info().id_count_, 0);
+            EXPECT_EQ(app_ctx->appid_info().id_count_, 0);
         } else {
-            EXPECT_GT(ctx.appid_info().id_count_, 0);
+            EXPECT_GT(app_ctx->appid_info().id_count_, 0);
         }
     }
 

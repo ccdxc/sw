@@ -4,6 +4,9 @@
 #include "nic/hal/src/nwsec_group.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "core.hpp"
+#include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
+
+using namespace hal::app_redir;
 
 namespace hal {
 namespace plugins {
@@ -57,17 +60,18 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
     if(!nwsec_plcy_svc || matched_svc) { // svc is wildcard or matched a specific service
         dllist_ctxt_t *lnode2 = NULL;
         nwsec_policy_appid_t *appid_policy = NULL;
+        app_redir_ctx_t *app_ctx = app_redir_ctx(ctx, false);
         if(!dllist_empty(&nwsec_plcy_rules->appid_list_head)) {
             dllist_for_each(lnode2, &nwsec_plcy_rules->appid_list_head) {
                 appid_policy = dllist_entry(lnode2, nwsec_policy_appid_t, lentry);
                 if(appid_policy) {
-                    if(!ctx.appid_started()) {
-                        ctx.set_appid_needed();
+                    if(!app_ctx->appid_started()) {
+                        app_ctx->set_appid_needed();
                         return HAL_RET_OK;
                     }
 
                     // Phase II invocation of dfw in flow miss pipeline or phase I invocation of dfw in l7 flow-hit pipeline
-                    hal::appid_info_t appid_info = ctx.appid_info();
+                    hal::appid_info_t appid_info = app_ctx->appid_info();
                     for(int i = 0; i < appid_info.id_count_; i++) {
                         if(appid_policy->appid == appid_info.ids_[i]) {
                             match_rslt->valid  = 1;
@@ -81,7 +85,7 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
                 }
             }
         } else if (matched_svc) {
-            if(!ctx.appid_started()) ctx.set_appid_not_needed();
+            if(!app_ctx->appid_started()) app_ctx->set_appid_not_needed();
             match_rslt->valid  = 1;
             match_rslt->alg = matched_svc->alg;
             match_rslt->action = (session::FlowAction)nwsec_plcy_rules->action;
@@ -175,8 +179,8 @@ net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
     }
 
     if(ctx.flow_miss()) {
-        if(!ctx.appid_started())
-            ctx.set_appid_not_needed();
+        if(!app_redir_ctx(ctx, false)->appid_started())
+            app_redir_ctx(ctx, false)->set_appid_not_needed();
     }
     // ToDo (lseshan) Handle SP miss condition
     // For now hardcoding to ALLOW but we have read default action and act
@@ -246,8 +250,9 @@ sfw_exec(fte::ctx_t& ctx)
 
     // If appid_needed is set, we are in phase2 invocation of dfw
     // We need to proceed further only if appid feature has some new data or it has reached a terminal state
-    if(ctx.appid_started() && 
-       (!ctx.appid_updated() && !ctx.appid_completed())) {
+    app_redir_ctx_t *app_ctx = app_redir_ctx(ctx, false);
+    if(app_ctx->appid_started() &&
+       (!app_ctx->appid_updated() && !app_ctx->appid_completed())) {
         return fte::PIPELINE_CONTINUE;
     }
 

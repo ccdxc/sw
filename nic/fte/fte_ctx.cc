@@ -10,6 +10,9 @@
 #include "nic/hal/pd/common/cpupkt_headers.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
+#include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
+
+using namespace hal::app_redir;
 
 std::ostream& operator<<(std::ostream& os, const ether_addr& val)
 {
@@ -247,7 +250,8 @@ ctx_t::lookup_session()
     HAL_TRACE_DEBUG("fte: found existing session");
     // Copy appid_info from session to context
     if(session_->appid_info) {
-        appid_info_ = *session_->appid_info;
+        app_redir_ctx_t* app_ctx = app_redir_ctx(*this, false);
+        if(app_ctx) app_ctx->set_appid_info(*session_->appid_info);
     }
 
     hflow = session_->iflow;
@@ -411,7 +415,9 @@ ctx_t::update_flow_table()
         return HAL_RET_OK;
     }
 
-    if (!(flow_miss() || (app_redir_pipeline() && appid_completed()))) {
+    app_redir_ctx_t* app_ctx = app_redir_ctx(*this, false);
+    if (!(flow_miss() ||
+        (app_redir_pipeline() && app_ctx && app_ctx->appid_completed()))) {
         return HAL_RET_OK;
     }
 
@@ -533,8 +539,8 @@ ctx_t::update_flow_table()
     } else if (session_) { 
         // Update session if it already exists
         ret = hal::session_update(&session_args, session_);
-        if(session_->appid_info)
-            *(session_->appid_info) = appid_info_;
+        if(session_->appid_info && app_ctx)
+            *(session_->appid_info) = app_ctx->appid_info();
     } else {
         // Create a new HAL session
         ret = hal::session_create(&session_args, &session_handle, &session);
@@ -548,9 +554,11 @@ ctx_t::update_flow_table()
                                            &state->session_feature_lentry);
                 }
             }
-            session_->appid_info = (hal::appid_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_APPID_INFO,
+            if(app_ctx && app_ctx->appid_started()) {
+                session_->appid_info = (hal::appid_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_APPID_INFO,
                                                       sizeof(hal::appid_info_t));
-            *(session_->appid_info) = appid_info_;
+                *(session_->appid_info) = app_ctx->appid_info();
+            }
         }
     }
 
@@ -678,9 +686,6 @@ hal_ret_t
 ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_features)
 {
     *this = {};
-
-    // TODO(goli)move this to plugin
-    app_redir().init();
 
     arm_lifq_ = lifq;
 
@@ -951,7 +956,10 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     hal_ret_t ret;
 
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
-    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() && !app_redir().redir_policy_applic()) {
+    app_redir_ctx_t* app_ctx = app_redir_ctx(*this, false);
+    bool app_redir = app_ctx? app_ctx->redir_policy_applic() : false;
+    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() &&
+       !app_redir) {
         queue_txpkt(pkt_, pkt_len_);
     }
 

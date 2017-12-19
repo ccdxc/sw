@@ -31,7 +31,7 @@ app_redir_oper_flow_key_get(fte::ctx_t& ctx)
 static inline void
 app_redir_rev_role_set(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&   redir_ctx = app_redir_ctxref(ctx);
 
     redir_ctx.set_chain_rev_role(ctx.role() == hal::FLOW_ROLE_INITIATOR ?
                                  hal::FLOW_ROLE_RESPONDER :
@@ -48,7 +48,7 @@ static inline void
 app_redir_pipeline_action_set(fte::ctx_t& ctx,
                               fte::pipeline_action_t action)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&   redir_ctx = app_redir_ctxref(ctx);
 
     redir_ctx.set_pipeline_end(action == fte::PIPELINE_END);
 }
@@ -60,7 +60,7 @@ app_redir_pipeline_action_set(fte::ctx_t& ctx,
 static inline fte::pipeline_action_t
 app_redir_pipeline_action(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&   redir_ctx = app_redir_ctxref(ctx);
 
     return redir_ctx.pipeline_end() ?
            fte::PIPELINE_END : fte::PIPELINE_CONTINUE;
@@ -93,7 +93,7 @@ app_redir_feature_status_set(fte::ctx_t& ctx,
 static hal_ret_t
 app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     rawrcb_t                rawrcb;
     rawccb_t                rawccb;
     hal_ret_t               ret = HAL_RET_OK;
@@ -129,7 +129,7 @@ app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
 /*static*/ hal_ret_t
 app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     proxyrcb_t              proxyrcb;
     proxyccb_t              proxyccb;
     const flow_key_t&       flow_key = app_redir_oper_flow_key_get(ctx);
@@ -175,7 +175,7 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
 static hal_ret_t
 app_redir_pkt_tx_enqueue(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&           redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&                redir_ctx = app_redir_ctxref(ctx);
     uint8_t                         *pkt;
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     size_t                          pkt_len;
@@ -241,7 +241,7 @@ static hal_ret_t
 app_redir_miss_hdr_insert(fte::ctx_t& ctx,
                           uint8_t format)
 {
-    fte::app_redir_ctx_t&           redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&                redir_ctx = app_redir_ctxref(ctx);
     pen_app_redir_header_v1_full_t& redir_miss_hdr = redir_ctx.redir_miss_hdr();
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     size_t                          hdr_len = 0;
@@ -325,7 +325,7 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
 static hal_ret_t
 app_redir_app_hdr_validate(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&           redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&                redir_ctx = app_redir_ctxref(ctx);
     pen_app_redir_header_v1_full_t  *app_hdr;
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     hal::l2seg_t                    *l2seg;
@@ -469,7 +469,7 @@ done:
 uint8_t *
 app_redir_pkt(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&   redir_ctx = app_redir_ctxref(ctx);
 
     return redir_ctx.redir_miss_pkt_p() ?
            (uint8_t *)&redir_ctx.redir_miss_hdr() : ctx.pkt();
@@ -483,7 +483,7 @@ app_redir_pkt(fte::ctx_t& ctx)
 size_t
 app_redir_pkt_len(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     const fte::cpu_rxhdr_t  *cpu_rxhdr;
     size_t                  pkt_len;
 
@@ -509,7 +509,7 @@ app_redir_pkt_len(fte::ctx_t& ctx)
 static hal_ret_t
 app_redir_pkt_process(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     hal_ret_t               ret;
 
     ret = app_redir_app_hdr_validate(ctx);
@@ -519,7 +519,7 @@ app_redir_pkt_process(fte::ctx_t& ctx)
          * DOL can force the packet not to go thru appid
          */
         if (redir_ctx.redir_flags() & PEN_APP_REDIR_PIPELINE_LOOPBK_EN) {
-            ctx.set_appid_state(APPID_STATE_NOT_NEEDED);
+            redir_ctx.set_appid_state(APPID_STATE_NOT_NEEDED);
         }
     }
 
@@ -535,7 +535,7 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
                                flow_key_t& flow_key,
                                bool include_tcp_tls_flows)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     proxy_flow_info_t       *pfi;
 
     pfi = redir_ctx.proxy_flow_info() ?
@@ -568,7 +568,7 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
                               flow_key_t& flow_key,
                               bool include_tcp_tls_flows)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     proxy_flow_info_t       *pfi;
     proxy_flow_info_t       *rpfi = NULL;
     flow_key_t              rev_flow_key;
@@ -622,8 +622,8 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
     if (pfi) {
         redir_ctx.set_proxy_flow_info(pfi);
         redir_ctx.set_redir_policy_applic(true);
-        if (!ctx.appid_started()) {
-            ctx.set_appid_state(APPID_STATE_NEEDED);
+        if (!redir_ctx.appid_started()) {
+            redir_ctx.set_appid_state(APPID_STATE_NEEDED);
         }
     }
 
@@ -641,7 +641,7 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
                              proxy_flow_info_t *pfi,
                              flow_key_t& flow_key)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     fte::flow_update_t      flowupd = {type: fte::FLOWUPD_FWDING_INFO};
     hal_ret_t               ret = HAL_RET_OK;
 
@@ -698,9 +698,9 @@ app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
  */
 void
 app_redir_pkt_verdict_set(fte::ctx_t& ctx,
-                          fte::app_redir_verdict_t verdict)
+                          app_redir_verdict_t verdict)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&   redir_ctx = app_redir_ctxref(ctx);
 
     HAL_TRACE_DEBUG("{} verdict {}", __FUNCTION__, verdict);
     redir_ctx.set_chain_pkt_verdict(verdict);
@@ -714,7 +714,7 @@ app_redir_pkt_verdict_set(fte::ctx_t& ctx,
 hal_ret_t
 app_redir_policy_applic_set(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     hal_ret_t               ret = HAL_RET_OK;
 
     redir_ctx.set_redir_policy_applic(true);
@@ -766,7 +766,7 @@ app_redir_miss_exec(fte::ctx_t& ctx)
 fte::pipeline_action_t
 app_redir_exec(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&   redir_ctx = app_redir_ctxref(ctx);
 
     assert(ctx.pkt());
 
@@ -790,7 +790,7 @@ app_redir_exec(fte::ctx_t& ctx)
 fte::pipeline_action_t
 app_redir_exec_fini(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     hal_ret_t               ret = HAL_RET_OK;
 
     if (!ctx.drop()) {

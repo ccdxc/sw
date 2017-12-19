@@ -13,6 +13,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
         "//nic/third-party/spdlog",
+        "//nic/hal/plugins/app_redir:app_redir_includes",
     ],
     copts = sdk_copts,
     alwayslink = 1,

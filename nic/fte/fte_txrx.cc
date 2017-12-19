@@ -7,6 +7,7 @@
 #include <iomanip>
 #include "nic/p4/nw/include/defines.h"
 #include "nic/include/cpupkt_api.hpp"
+#include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 
 namespace hal {
 extern hal::utils::thread* current_thread();
@@ -293,7 +294,7 @@ void inst_t::process_arq()
         }
             
         // process the packet and update flow table
-        ctx_->app_redir().set_arm_ctx(arm_ctx_);
+        hal::app_redir::app_redir_ctx(*ctx_, false)->set_arm_ctx(arm_ctx_);
         ret = ctx_->process();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failied to process, ret={}", ret);

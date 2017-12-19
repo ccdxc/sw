@@ -5,16 +5,15 @@
 namespace hal {
 namespace app_redir {
 
-const std::string FTE_FEATURE_APP_REDIR_MISS("pensando.io/app-redir:app-redir-miss");
-const std::string FTE_FEATURE_APP_REDIR("pensando.io/app-redir:app-redir");
-const std::string FTE_FEATURE_APP_REDIR_APPID("pensando.io/app-redir:app-redir-appid");
-const std::string FTE_FEATURE_APP_REDIR_FINI("pensando.io/app-redir:app-redir-fini");
-
 extern "C" {
 
 void app_redir_init() {
+    fte::feature_info_t info = {
+        state_size: sizeof(app_redir_ctx_t),
+        app_redir_ctx_t::init,
+    };
     fte::register_feature(FTE_FEATURE_APP_REDIR_MISS, app_redir_miss_exec);
-    fte::register_feature(FTE_FEATURE_APP_REDIR, app_redir_exec);
+    fte::register_feature(FTE_FEATURE_APP_REDIR, app_redir_exec, info);
     fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, appid_exec);
     fte::register_feature(FTE_FEATURE_APP_REDIR_FINI, app_redir_exec_fini);
 

@@ -7,7 +7,7 @@
 #include "nic/hal/src/nwsec_group.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
-#include "nic/hal/plugins/app_redir/app_redir.hpp"
+#include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 
 
 namespace hal {

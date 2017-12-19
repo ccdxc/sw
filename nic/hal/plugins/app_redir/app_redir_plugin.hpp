@@ -4,6 +4,7 @@
 #define __APP_REDIR_PLUGIN_H__
 
 #include "nic/include/fte.hpp"
+#include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 
 namespace hal {
 namespace app_redir {

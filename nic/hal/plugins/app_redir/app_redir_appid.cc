@@ -13,10 +13,11 @@ appid_scan(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
     hal::appid_info_t appid_info;
+    app_redir_ctx_t *app_ctx = app_redir_ctx(ctx);
 
-    fte::appid_info_init(appid_info);
+    app_ctx->appid_info_init(appid_info);
     ret = scanner_run(appid_info, app_redir_pkt(ctx), app_redir_pkt_len(ctx),
-                      &ctx.app_redir());
+              app_ctx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("scanner_run failed to parse packet");
         goto error;
@@ -30,23 +31,23 @@ appid_scan(fte::ctx_t& ctx)
             goto error;
         }
     }
-    ctx.set_appid_info(appid_info);
+    app_ctx->set_appid_info(appid_info);
 
     // Cleanup Snort flow if we're done scanning
-    if (ctx.appid_info().cleanup_handle_ != nullptr) {
-        if (ctx.appid_state() == APPID_STATE_FOUND ||
-            ctx.appid_state() == APPID_STATE_NOT_NEEDED ||
-            ctx.appid_state() == APPID_STATE_ABORT) {
+    if (app_ctx->appid_info().cleanup_handle_ != nullptr) {
+        if (app_ctx->appid_state() == APPID_STATE_FOUND ||
+            app_ctx->appid_state() == APPID_STATE_NOT_NEEDED ||
+            app_ctx->appid_state() == APPID_STATE_ABORT) {
             // Done.  Now cleanup scanner flow resources.
-            scanner_cleanup_flow(ctx.appid_info().cleanup_handle_);
-            ctx.appid_info().cleanup_handle_ = nullptr;
+            scanner_cleanup_flow(app_ctx->appid_info().cleanup_handle_);
+            app_ctx->appid_info().cleanup_handle_ = nullptr;
         }
     }
 
     return ret;
 
 error:
-    ctx.set_appid_state(APPID_STATE_ABORT);
+    app_ctx->set_appid_state(APPID_STATE_ABORT);
     return ret;
 }
 
@@ -67,7 +68,7 @@ exec_appid_start(fte::ctx_t& ctx)
 
     // TODO: skip scanning for flow_miss rflow
 
-    ctx.set_appid_state(APPID_STATE_IN_PROGRESS);
+    app_redir_ctx(ctx)->set_appid_state(APPID_STATE_IN_PROGRESS);
     ret = appid_scan(ctx);
 
     return ret;
@@ -90,15 +91,16 @@ fte::pipeline_action_t
 appid_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
-    hal::appid_info_t orig_appid_info = ctx.appid_info();
+    app_redir_ctx_t *app_ctx = app_redir_ctx(ctx);
+    hal::appid_info_t orig_appid_info = app_ctx->appid_info();
 
     // Assume appid state will not change, until it does
-    ctx.set_appid_updated(false);
+    app_redir_ctx(ctx)->set_appid_updated(false);
 
     // appid state should have been initialized by DFW
-//    assert(ctx.appid_state() != APPID_STATE_INIT);
+//    assert(app_ctx.appid_state() != APPID_STATE_INIT);
 
-    switch (ctx.appid_state()) {
+    switch (app_ctx->appid_state()) {
     case APPID_STATE_INIT:
         HAL_TRACE_DEBUG("appid state not initialized, skipping appid scanning");
         ret = HAL_RET_OK; // TODO: HAL_RET_ERR
@@ -106,7 +108,7 @@ appid_exec(fte::ctx_t& ctx)
     case APPID_STATE_NOT_NEEDED:
     case APPID_STATE_NOT_FOUND:
     case APPID_STATE_FOUND:
-        HAL_TRACE_DEBUG("appid state not needed, state {}", ctx.appid_state());
+        HAL_TRACE_DEBUG("appid state not needed, state {}", app_ctx->appid_state());
         ret = HAL_RET_OK;
         break;
     case APPID_STATE_NEEDED:
@@ -121,25 +123,24 @@ appid_exec(fte::ctx_t& ctx)
         HAL_TRACE_DEBUG("appid state in progress, end scanning pkt, status={}", ret);
         break;
     default:
-        HAL_TRACE_ERR("Unknown appid state {}", ctx.appid_state());
+        HAL_TRACE_ERR("Unknown appid state {}", app_ctx->appid_state());
         ret = HAL_RET_ERR;
         break;
     }
 
     // Update flow if appid state has changed
-    if (0 != memcmp((uint8_t*)&orig_appid_info, (uint8_t*)&ctx.appid_info(),
+    if (0 != memcmp((uint8_t*)&orig_appid_info, (uint8_t*)&app_ctx->appid_info(),
                     sizeof(hal::appid_info_t))) {
         // app state and/or app id
-        HAL_TRACE_INFO("appid_info changing from {} to {}", orig_appid_info, ctx.appid_info());
-        ctx.set_appid_updated(true);
+        HAL_TRACE_INFO("appid_info changing from {} to {}", orig_appid_info, app_ctx->appid_info());
+        app_ctx->set_appid_updated(true);
     }
 
     if(ctx.flow_miss()) {
-        if (ctx.appid_in_progress())
+        if (app_ctx->appid_in_progress())
             app_redir_policy_applic_set(ctx);
-    } else if(!ctx.appid_updated() && !ctx.appid_completed()) {
-        fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
-        redir_ctx.set_pipeline_end(true);
+    } else if(!app_ctx->appid_updated() && !app_ctx->appid_completed()) {
+        app_ctx->set_pipeline_end(true);
         return app_redir_exec_fini(ctx);
     }
 

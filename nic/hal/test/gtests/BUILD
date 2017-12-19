@@ -25,6 +25,7 @@ cc_test(
     srcs = ["nwsec_test.cc"],
     deps = [
         "//nic/hal/plugins/sfw:sfw",
+        "//nic/hal/plugins/app_redir:app_redir_includes",
     ] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,

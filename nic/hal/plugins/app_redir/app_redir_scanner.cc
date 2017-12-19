@@ -3,6 +3,7 @@
 #include "nic/hal/periodic/periodic.hpp"
 #include "nic/third-party/snort3/export/include/snort_api.h"
 #include "app_redir_scanner.hpp"
+#include "app_redir_ctx.hpp"
 #include <dlfcn.h>
 
 namespace hal {
@@ -271,10 +272,11 @@ static hal::appid_state_t scanner_appid_state_to_local_state(int state)
 
 static void scanner_flow_info_to_appid_info(SnortFlowInfo& flow_info, hal::appid_info_t& appid_info)
 {
-    fte::appid_info_init(appid_info);
+    app_redir_ctx_t::appid_info_init(appid_info);
     for (int i = 0; i < NUM_APP_IDS; i++) {
         if (flow_info.appids[i]) {
-            fte::appid_info_set_id(appid_info, scanner_appid_to_local_id(flow_info.appids[i]));
+          app_redir_ctx_t::appid_info_set_id(appid_info,
+                  scanner_appid_to_local_id(flow_info.appids[i]));
         }
     }
     appid_info.state_ = scanner_appid_state_to_local_state(flow_info.app_detection_status);

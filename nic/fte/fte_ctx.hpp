@@ -258,31 +258,6 @@ typedef struct ingress_info_s {
 
 std::ostream& operator<<(std::ostream& os, const ingress_info_t& val);
 
-
-inline void appid_info_clear_ids(hal::appid_info_t& info) { info.id_count_ = 0; }
-
-inline void appid_info_init(hal::appid_info_t& info) {
-    info.state_ = hal::APPID_STATE_INIT;
-    info.cleanup_handle_ = nullptr;
-    appid_info_clear_ids(info);
-}
-
-inline appid_id_t appid_info_id(const hal::appid_info_t& info) {
-    return info.id_count_ ? info.ids_[info.id_count_ - 1] : 0;
-}
-inline appid_id_t appid_info_id(const hal::appid_info_t& info, uint8_t idx) {
-    assert(idx < hal::APPID_MAX_DEPTH);
-    return (idx < info.id_count_) ? info.ids_[idx] : 0;
-}
-inline void appid_info_set_id(hal::appid_info_t& info, appid_id_t id,
-                       uint8_t idx = hal::APPID_MAX_DEPTH) {
-    assert(info.id_count_ < hal::APPID_MAX_DEPTH);
-    if (idx >= hal::APPID_MAX_DEPTH) idx = info.id_count_;
-    info.ids_[idx] = id;
-    info.id_count_++;
-}
-
-
 typedef struct flow_update_s {
     flow_update_type_t type;
     union {
@@ -361,111 +336,6 @@ struct feature_state_t {
 uint16_t feature_id(const std::string &name);
 size_t feature_state_size(uint16_t *num_features);
 void feature_state_init(feature_state_t *feature_state, uint16_t num_features);
-
-
-// Application redirect context
-typedef enum {
-    APP_REDIR_VERDICT_PASS,     // pass the packet
-    APP_REDIR_VERDICT_BLOCK,    // block the packet
-} app_redir_verdict_t;
-
-class app_redir_ctx_t {
-public:
-    void init()
-    {
-        redir_flags_            = 0;
-        hdr_len_total_          = 0;
-        chain_flow_id_          = 0;
-        chain_rev_role_         = hal::FLOW_ROLE_NONE;
-        chain_ring_             = 0;
-        chain_qtype_            = APP_REDIR_RAWC_QTYPE;
-        chain_wring_type_       = types::WRING_TYPE_APP_REDIR_RAWC;
-        chain_pkt_verdict_      = APP_REDIR_VERDICT_PASS;
-        pipeline_end_           = false;
-        chain_pkt_enqueued_     = false;
-        redir_policy_applic_    = false;
-        tcp_tls_proxy_flow_     = false;
-        redir_miss_pkt_p_       = nullptr;
-        proxy_flow_info_        = nullptr;
-        arm_ctx_                = nullptr;
-    };
-
-    uint16_t redir_flags() const { return redir_flags_; }
-    void set_redir_flags(uint16_t flags) { redir_flags_ = flags; }
-
-    uint16_t hdr_len_total() const { return hdr_len_total_; }
-    void set_hdr_len_total(uint16_t hdr_len_total) { hdr_len_total_ = hdr_len_total; }
-
-    bool chain_pkt_enqueued() const { return chain_pkt_enqueued_; }
-    void set_chain_pkt_enqueued(bool yesno) { chain_pkt_enqueued_ = yesno; }
-
-    app_redir_verdict_t chain_pkt_verdict() const { return chain_pkt_verdict_; }
-    void set_chain_pkt_verdict(app_redir_verdict_t verdict) { chain_pkt_verdict_ = verdict; }
-
-    bool chain_pkt_verdict_pass(void)
-    {
-        return (chain_pkt_verdict_ != APP_REDIR_VERDICT_BLOCK);
-    }
-
-    bool chain_pkt_span_instance(void)
-    {
-        return !!(redir_flags_ & PEN_APP_REDIR_SPAN_INSTANCE);
-    }
-
-    bool pipeline_end() const { return pipeline_end_; }
-    void set_pipeline_end(bool yesno) { pipeline_end_ = yesno; }
-
-    bool redir_policy_applic() const { return redir_policy_applic_; }
-    void set_redir_policy_applic(bool yesno) { redir_policy_applic_ = yesno; }
-
-    bool tcp_tls_proxy_flow() const { return tcp_tls_proxy_flow_; }
-    void set_tcp_tls_proxy_flow(bool yesno) { tcp_tls_proxy_flow_ = yesno; }
-
-    uint8_t chain_qtype() const { return chain_qtype_; }
-    void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
-
-    uint8_t chain_ring() const { return chain_ring_; }
-    void set_chain_ring(uint8_t chain_ring) { chain_ring_ = chain_ring; }
-
-    uint32_t chain_flow_id() const { return chain_flow_id_; }
-    void set_chain_flow_id(uint32_t chain_flow_id) { chain_flow_id_ = chain_flow_id; }
-
-    hal::flow_role_t chain_rev_role() const { return chain_rev_role_; }
-    void set_chain_rev_role(hal::flow_role_t chain_rev_role) { chain_rev_role_ = chain_rev_role; }
-
-    uint8_t *redir_miss_pkt_p() const { return redir_miss_pkt_p_; }
-    void set_redir_miss_pkt_p(uint8_t *redir_miss_pkt_p) { redir_miss_pkt_p_ = redir_miss_pkt_p; }
-
-    hal::proxy_flow_info_t *proxy_flow_info() { return proxy_flow_info_; }
-    void set_proxy_flow_info(hal::proxy_flow_info_t *proxy_flow_info) { proxy_flow_info_ = proxy_flow_info; }
-
-    types::WRingType chain_wring_type() const { return chain_wring_type_; }
-    void set_chain_wring_type(types::WRingType chain_wring_type) { chain_wring_type_ = chain_wring_type; }
-
-    hal::pd::cpupkt_ctxt_t* arm_ctx() const { return arm_ctx_; }
-    void set_arm_ctx(hal::pd::cpupkt_ctxt_t* arm_ctx) {arm_ctx_= arm_ctx;}
-
-    pen_app_redir_header_v1_full_t& redir_miss_hdr() { return redir_miss_hdr_; }
-    size_t redir_miss_hdr_size() { return sizeof(redir_miss_hdr_); }
-
-private:
-    uint16_t                        redir_flags_;
-    uint16_t                        hdr_len_total_;
-    types::WRingType                chain_wring_type_;
-    bool                            chain_pkt_enqueued_ : 1,
-                                    pipeline_end_       : 1,
-                                    redir_policy_applic_: 1,
-                                    tcp_tls_proxy_flow_ : 1;
-    app_redir_verdict_t             chain_pkt_verdict_;
-    pen_app_redir_header_v1_full_t  redir_miss_hdr_;
-    uint8_t                         *redir_miss_pkt_p_;
-    hal::proxy_flow_info_t          *proxy_flow_info_;
-    hal::pd::cpupkt_ctxt_t          *arm_ctx_;
-    uint32_t                        chain_flow_id_;
-    hal::flow_role_t                chain_rev_role_;    // rflow role
-    uint8_t                         chain_qtype_;
-    uint8_t                         chain_ring_;
-};
 
 // pkt info for queued tx packets
 typedef struct txpkt_info_s txpkt_info_t;
@@ -612,18 +482,6 @@ public:
     void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
     void swap_flow_objs();
 
-    app_redir_ctx_t& app_redir() { return app_redir_; }
-
-    bool appid_updated() const { return (appid_updated_ && appid_info_.id_count_ != 0); }
-    void set_appid_updated(bool updated) { appid_updated_ = updated; }
-
-    hal::appid_info_t &appid_info() { return appid_info_; };
-    void set_appid_info(hal::appid_info_t &info) { appid_info_ = info; };
-
-    hal::appid_state_t appid_state() const { return appid_info_.state_; }
-    void set_appid_state(hal::appid_state_t state) {appid_info_.state_ = state; }
-
-
     void *feature_state(const std::string &name = "") {
         uint16_t id = name.length() ? feature_id(name) : feature_id_;
         return (id < num_features_) ? feature_state_[id].ctx_state : nullptr;
@@ -637,7 +495,7 @@ public:
 
     hal_ret_t register_feature_session_state(feature_session_state_t *state) {
         if (session_) {
-            HAL_TRACE_ERR("fte: feature={} inserting session state for an exisiting session", 
+            HAL_TRACE_ERR("fte: feature={} inserting session state for an existing session",
                           feature_name_);
             return HAL_RET_INVALID_OP;
         }
@@ -651,52 +509,19 @@ public:
         return HAL_RET_OK;
     }
 
-    bool appid_completed() {
-        if(appid_info_.state_ == hal::APPID_STATE_FOUND ||
-           appid_info_.state_ == hal::APPID_STATE_NOT_FOUND ||
-           appid_info_.state_ == hal::APPID_STATE_STOPPED ||
-           appid_info_.state_ == hal::APPID_STATE_ABORT) {
-          return true;
-        }
-        return false;
-    }
-
-    void set_appid_needed() {
-        if(!appid_started())
-            appid_info_.state_ = hal::APPID_STATE_NEEDED;
-        else
-            HAL_ASSERT(0);
-    }
-    void set_appid_not_needed() {
-        if(!appid_started())
-            appid_info_.state_ = hal::APPID_STATE_NOT_NEEDED;
-        else
-            HAL_ASSERT(0);
-    }
-    bool appid_in_progress() {
-        return (appid_info_.state_ == hal::APPID_STATE_NEEDED) ||
-               (appid_info_.state_ == hal::APPID_STATE_IN_PROGRESS) ;
-    }
-    bool appid_started() {
-        return (appid_in_progress() || appid_completed()) ;
-    }
-    bool appid_needed() {
-        return appid_info_.state_ == hal::APPID_STATE_NEEDED;
-    }
-
     // protected methods accessed by gtest
 protected:
     hal_ret_t init(const lifqid_t &lifq, feature_state_t feature_state[],
                    uint16_t num_features);
 
+    cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
+    uint8_t               *pkt_;
+    size_t                pkt_len_;
+
 private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
     bool                  vlan_tag_valid_;
-
-    cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
-    uint8_t               *pkt_;
-    size_t                pkt_len_;
 
     // pkts queued for tx
     uint8_t               txpkt_cnt_;
@@ -737,11 +562,6 @@ private:
     hal::ep_t             *sep_;
     hal::ep_t             *dep_;
     void*                 alg_entry_;         // ALG entry in the wildcard table
-    app_redir_ctx_t       app_redir_;
-
-    /* appID state */
-    hal::appid_info_t     appid_info_;
-    bool                  appid_updated_;
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();

@@ -51,9 +51,6 @@ cc_library(
 cc_library(
     name = "app_redir_includes",
     hdrs = [
-        "app_redir_plugin.hpp",
-        "app_redir_headers.hpp",
-        "app_redir.hpp",
-        "app_redir_cb_ops.hpp",
+        "app_redir_ctx.hpp"
     ],
 )
