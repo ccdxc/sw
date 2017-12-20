@@ -35,6 +35,7 @@ sessions:
         ipv6:
             - ref://store/specs/id=SESSION_TCP
             - ref://store/specs/id=SESSION_UDP
+            - ref://store/specs/id=SESSION_UDP_SERVICES
             - ref://store/specs/id=SESSION_ICMPV6
         mac:
             - ref://store/specs/id=SESSION_MAC

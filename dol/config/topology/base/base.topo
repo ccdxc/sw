@@ -77,3 +77,13 @@ cpu:
     - entry:
         id      : Cpu1 
         lif_id  : 1003
+
+timers:
+    - entry:
+        id          : SLOW_TIMER
+        slowfast    : 0
+        ctime       : 0
+    - entry:
+        id          : FAST_TIMER
+        slowfast    : 1
+        ctime       : 0

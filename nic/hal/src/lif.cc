@@ -645,6 +645,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     // Return LIF RDMA data for RDMA enabled lifs
     if (lif->enable_rdma) {
+        rsp->set_rdma_data_valid(true);
         rsp->mutable_rdma_data()->set_pt_base_addr(rdma_lif_pt_base_addr(hw_lif_id));
         rsp->mutable_rdma_data()->set_kt_base_addr(rdma_lif_kt_base_addr(hw_lif_id));
     }

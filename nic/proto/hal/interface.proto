@@ -175,7 +175,8 @@ message LifResponse {
   LifStatus           status       = 2;    // operational status
   uint64              hw_lif_id    = 3;    // Hardware Lif Id
   repeated LifQState  qstate       = 4;    // Qstate Address info
-  LifRdmaData         rdma_data    = 5;    // RDMA data - valid only when rdma is enabled
+  bool                rdma_data_valid = 5; // RDMA data valid only this bit is set
+  LifRdmaData         rdma_data    = 6;    // RDMA data - valid only when rdma is enabled
 }
 
 // LifResponseMsg is response to LifRequestMsg

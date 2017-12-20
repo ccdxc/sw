@@ -151,6 +151,24 @@ def __get_lif_qp_at_idx(tc, idx):
         return None
     return udqpslist[idx]
 
+def GetCQColorForMulticastCopy(tc, desc, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    qp.rq_cq.qstate.Read()
+    rq_cq_pre_qstate = qp.rq_cq.qstate.data
+
+    log_num_cq_wqes = getattr(rq_cq_pre_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_cq_wqes) - 1
+
+    if (rq_cq_pre_qstate.p_index0 == 0) or \
+       ((rq_cq_pre_qstate.p_index0 + args.cq_wqe_num) & ring0_mask) < \
+                                              rq_cq_pre_qstate.p_index0:
+       color = not rq_cq_pre_qstate.color
+    else:
+       color = rq_cq_pre_qstate.color
+     
+    tc.info("GetCQColorForMulticastCopy: Lif %s CQid: %d Color: %d" % (lif.GID(), qp.rq_cq.id, color))
+    return color
+
 def GetCQRingForMulticastCopy(tc, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
     ring = __get_ring_from_lif(lif, 'RDMA_CQ', qp.rq_cq.id, 'CQ')

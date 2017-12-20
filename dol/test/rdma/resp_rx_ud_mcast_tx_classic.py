@@ -22,9 +22,9 @@ def TestCaseSetup(tc):
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
 
     #Showing the UDQPs
-    tc.info("Build Pruned UD QPs list for this Segement");
     tc.pvtdata.udqps_pruned_list = []
     segment = rs.session.responder.ep.segment
+    tc.info("Build Pruned UD QPs list for this Segement %s" % segment.GID());
     # testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Enic7/lif
     #transmit_lif = rs.session.responder.ep.segment.floodlist.oifs.Get('Enic8').lif
     transmit_lif = rs.lqp.pd.ep.intf.lif

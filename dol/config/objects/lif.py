@@ -227,9 +227,10 @@ class LifObject(base.ConfigObjectBase):
             cfglogger.info("- QUEUE_TYPE = %d QSTATE_ADDR = 0x%x" % (qstate.type_num, qstate.addr))
             self.qstate_base[qstate.type_num] = qstate.addr
         if self.enable_rdma:
-           self.rdma_pt_base_addr = resp_spec.rdma_data.pt_base_addr
-           self.rdma_kt_base_addr = resp_spec.rdma_data.kt_base_addr
-           cfglogger.info("- LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x)" %
+           if resp_spec.rdma_data_valid:
+               self.rdma_pt_base_addr = resp_spec.rdma_data.pt_base_addr
+               self.rdma_kt_base_addr = resp_spec.rdma_data.kt_base_addr
+           cfglogger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x)" %
                           (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr))
 
 

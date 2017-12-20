@@ -60,7 +60,7 @@ packets:
        clone       : ref://testcase/packets/id=BASE_PKT
        headers     :
            qtag    :
-               vlan: ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Enic8/encap_vlan_id
+               #vlan: ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Enic8/encap_vlan_id
                #vlan: ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
                vlan: ref://testcase/config/rdmasession/session/initiator/ep/intf/encap_vlan_id
    - packet:
@@ -167,9 +167,9 @@ descriptors:
             #qp: ref://testcase/config/rdmasession/lqp/id
             qp: callback://rdma/rdma/GetQpIdForMulticastCopy/idx=0
             src_qp: ref://testcase/config/rdmasession/rqp/id
+            color: callback://rdma/rdma/GetCQColorForMulticastCopy/idx=0,cq_wqe_num=0
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetCQExpColor
             ipv4: 1
             smac: callback://rdma/rdma/GetUDInitiatorSMAC
 
@@ -205,9 +205,9 @@ descriptors:
             wrid: ref://testcase/descriptors/id=RQ_DESC_2/wrid
             qp: callback://rdma/rdma/GetQpIdForMulticastCopy/idx=1
             src_qp: ref://testcase/config/rdmasession/rqp/id
+            color: callback://rdma/rdma/GetCQColorForMulticastCopy/idx=1,cq_wqe_num=0
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetCQExpColor
             ipv4: 1
             smac: callback://rdma/rdma/GetUDInitiatorSMAC
 
@@ -256,6 +256,14 @@ session:
                 - packet:
                     object  : ref://testcase/packets/id=EXP_PKT_UPLINK
                     port    : ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Uplink2/ports
+
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT_UPLINK
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=UplinkPc1/ports
+
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT_UPLINK
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=UplinkPc2/ports
 
             descriptors:
                 - descriptor:

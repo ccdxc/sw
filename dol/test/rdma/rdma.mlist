@@ -6,8 +6,8 @@ feature:
     module      : rdma
     enable      : True
     ignore      : False
-#   selectors:
-#       maxrdmasessions: 8
+    selectors:
+        maxrdmasessions: 8
 
 modules:
     - module:
@@ -25,6 +25,8 @@ modules:
         module  : req_tx_send_only_rexmit_timeout
         spec    : req_tx_send_only_rexmit_timeout.testspec
         ignore  : False
+        selectors:
+            maxrdmasessions: 1
  
     - module:
         name    : RDMA_TX_SEND_ONLY_2SGES

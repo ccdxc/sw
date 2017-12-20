@@ -35,7 +35,8 @@ targets:
   p4pt:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo proxy --feature p4pt" ]
   app_redir:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo proxy --feature app_redir" ]
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft-build && ./run.py  --gft" ]
-  base:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo base --feature eth,networking" ]
+  base-ethnw:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo base --feature eth,networking" ]
+  base-rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo base --feature rdma" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
