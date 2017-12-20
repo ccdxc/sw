@@ -158,6 +158,8 @@ def run_hal(args):
 
     log = open(hal_log, "w")
     jsonfile = 'hal.json'
+    if args.rtl:
+        jsonfile = 'hal_rtl.json'
     os.system("cp " + nic_dir + "/conf/hal_switch.ini " + nic_dir + "/conf/hal.ini")
     if args.hostpin:
         #jsonfile = 'hal_hostpin.json'
