@@ -56,7 +56,8 @@ struct resp_tx_phv_t {
     //***NOTE: Keep 4 bytes after pad with in this flit, so that can be copied as ICRC data into phv
     //ICRC data does not need to be given as zero as Capri overtites icrc after computation
     icrc     :  32;                              //  4B
-    rsvd2    : 456;                              // 57B
+    rsvd2    : 344;                              // 43B
+    struct p4plus_to_p4_header_t p4plus_to_p4;   // 14B
 
     /* flit 6 */
     rsvd1   : 16;                                //  2B
@@ -68,7 +69,7 @@ struct resp_tx_phv_t {
         struct rdma_aeth_t aeth;                         //  4B
     }; // CNP packets do not have aeth header.
     struct rdma_bth_t bth;                       // 12B
-    struct p4plus_to_p4_header_t p4plus_to_p4;   // 10B
+    rsvd3   : 80;                                // 10B
 
     // common tx (flit 0 - 5)
     struct phv_ common;

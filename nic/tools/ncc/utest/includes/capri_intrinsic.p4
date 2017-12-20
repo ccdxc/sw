@@ -209,6 +209,8 @@ header_type p4plus_to_p4_header_t {
     fields {
         p4plus_app_id    : 4;
         flags            : 8;
+        udp_opt_bytes    : 8;  // exclude these bytes from udp payload_len
+        rsvd             : 24;
         ip_id            : 16;
         ip_len           : 16;
         udp_len          : 16;

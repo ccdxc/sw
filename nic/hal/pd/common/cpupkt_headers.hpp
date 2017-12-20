@@ -70,6 +70,8 @@ typedef struct p4plus_to_p4_header_s {
 #endif
 
     uint8_t     flags;
+    uint8_t     udp_opt_bytes;
+    uint8_t     rsvd[3];
     uint16_t    ip_id_delta;
     uint32_t    tcp_seq_delta;
     uint16_t    vlan_tag;

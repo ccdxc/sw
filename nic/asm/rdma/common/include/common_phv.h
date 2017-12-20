@@ -7,11 +7,13 @@
 #define GLOBAL_DATA_WIDTH 128
 #define TO_STAGE_DATA_WIDTH 128
 
-//10B
+//14B
 struct p4plus_to_p4_header_t {
     p4plus_app_id      : 4;
     pad                : 4;
     flags              : 8;
+    udp_opt_bytes      : 8;  // exclude these bytes from udp payload_len
+    rsvd               : 24;
     ip_id_delta        : 16;
     tcp_seq_delta      : 32;
     vlan_tag           : 16;
