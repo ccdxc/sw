@@ -40,7 +40,7 @@ def TestCaseSetup(tc):
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcp_proxy.init_tcb_inorder(tc, tcb)
-    tcb.debug_dol_tx = tcp_proxy.tcp_tx_debug_dol_dont_send_ack 
+    tcb.debug_dol_tx |= tcp_proxy.tcp_tx_debug_dol_dont_send_ack 
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
     tcb.SetObjValPd()

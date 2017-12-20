@@ -232,15 +232,19 @@
 #else
 #define TCP_DELACK_MIN  4
 #define TCP_ATO_MIN     4
+#define TCP_RTO_MAX     ((120*HZ)) /* 120s */
+#define TCP_RTO_MIN     ((HZ/5))   /* 200ms */
+
 #endif
 #else
 #define TCP_DELACK_MAX  (200) /* 200ms */
 #define TCP_DELACK_MIN  (40)  /* 40ms */
 #define TCP_ATO_MIN     (40)  /* 40ms */
-#endif
 
-#define TCP_RTO_MAX     ((120*HZ)) /* 120s */
-#define TCP_RTO_MIN     ((HZ/5))   /* 200ms */
+#define TCP_RTO_MAX     (100)
+#define TCP_RTO_MIN     (100)
+
+#endif
 
 #define TCP_KTO_MIN     ((75*HZ)) /* 75s */
 

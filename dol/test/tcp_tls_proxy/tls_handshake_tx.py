@@ -37,7 +37,7 @@ def TestCaseSetup(tc):
     tcp_proxy.init_tcb_inorder(tc, tcb)
     # set tcb state to ESTABLISHED(1)
     tcb.state = tcp_proxy.tcp_state_ESTABLISHED
-    tcb.debug_dol_tx = tcp_proxy.tcp_tx_debug_dol_dont_tx
+    tcb.debug_dol_tx |= tcp_proxy.tcp_tx_debug_dol_dont_tx
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
