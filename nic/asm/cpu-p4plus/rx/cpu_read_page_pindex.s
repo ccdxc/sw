@@ -21,13 +21,21 @@ cpu_rx_read_page_pindex_start:
 
 table_read_page_alloc:
     addui   r3, r0, hiword(RNMPR_TABLE_BASE)
-    addi    r3, r0, loword(RNMPR_TABLE_BASE)
- 	CAPRI_NEXT_TABLE_READ_INDEX(2, 
-                                r4, 
-                                TABLE_LOCK_DIS,
-                                cpu_rx_page_alloc_start,
-	                            r3, 
-                                RNMPR_TABLE_ENTRY_SIZE_SHFT,
-                                TABLE_SIZE_64_BITS)
+    addi    r3, r3, loword(RNMPR_TABLE_BASE)
+
+    sll     r1, r4, RNMPR_TABLE_ENTRY_SIZE_SHFT 
+    add     r1, r1, r3
+
+    phvwri  p.common_te2_phv_table_lock_en, 0
+
+    // Read 512 bits if the pindex is byte aligned
+    smeqb   c1, r4, 0x7, 0x0
+    phvwri.c1  p.common_te2_phv_table_raw_table_size, TABLE_SIZE_512_BITS 
+    phvwri.!c1 p.common_te2_phv_table_raw_table_size, TABLE_SIZE_64_BITS 
+    
+    phvwri  p.common_te2_phv_table_pc, cpu_rx_page_alloc_start[33:6]
+    phvwr   p.common_te2_phv_table_addr, r1 
+    phvwri  p.app_header_table2_valid, 1
 	nop.e
-	nop   
+	nop 
+
