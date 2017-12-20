@@ -1,5 +1,6 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "CSUM_EGRESS.h"
 #include "../../p4/nw/include/defines.h"
 
 struct p4plus_app_k k;
@@ -10,7 +11,7 @@ struct phv_         p;
 .align
 p4plus_app_default:
   seq         c1, k.tcp_valid, TRUE
-  sle         c2, k.tcp_dataOffset, 5 
+  sle         c2, k.tcp_dataOffset, 5
   setcf.e     c1, [c1 & !c2]
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr.c1    p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
@@ -25,10 +26,10 @@ p4plus_app_classic_nic:
   bcf         [!c1], p4plus_app_classic_nic_no_vlan_strip
   phvwr.c1    p.p4_to_p4plus_classic_nic_vlan_valid, TRUE
   phvwr       p.ethernet_etherType, k.vlan_tag_etherType
-  phvwr       p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_dei}, \
-                 k.{vlan_tag_pcp...vlan_tag_dei}
   add         r1, k.vlan_tag_vid_sbit4_ebit11, k.vlan_tag_vid_sbit0_ebit3, 8
-  phvwr       p.p4_to_p4plus_classic_nic_vlan_vid, r1
+  phvwrpair   p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_dei}, \
+                 k.{vlan_tag_pcp...vlan_tag_dei}, \
+                 p.p4_to_p4plus_classic_nic_vlan_vid, r1
   phvwr       p.vlan_tag_valid, FALSE
   sub         r7, r7, 4
 
@@ -179,20 +180,22 @@ p4plus_app_raw_redir:
 
 .align
 p4plus_app_rdma:
-  sne         c1, k.control_metadata_checksum_results, r0
-  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
-  seq         c1, k.ipv4_valid, TRUE
-  phvwr.c1    p.p4_to_p4plus_roce_ecn, k.ipv4_diffserv[7:6]
-  seq         c1, k.ipv6_valid, TRUE
-  phvwr.c1    p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit0_ebit3[3:2]
-  phvwr       p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
-  phvwrpair   p.p4_to_p4plus_roce_roce_opt_ts_valid, k.udp_opt_timestamp_valid, \
-                p.p4_to_p4plus_roce_roce_opt_mss_valid, k.udp_opt_mss_valid
-  phvwr       p.ethernet_valid, FALSE
-  phvwr       p.vlan_tag_valid, FALSE
-  phvwr       p.ipv4_valid, FALSE
-  phvwr.e     p.ipv6_valid, FALSE
-  phvwr       p.udp_valid, FALSE
+  sne           c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e    p.capri_intrinsic_drop, TRUE
+  seq           c1, k.ipv4_valid, TRUE
+  phvwr.c1      p.p4_to_p4plus_roce_ecn, k.ipv4_diffserv[7:6]
+  seq           c1, k.ipv6_valid, TRUE
+  phvwr.c1      p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit0_ebit3[3:2]
+  phvwr         p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
+  seq           c1, k.udp_opt_ocs_valid, TRUE
+  seq.c1        c1, k.capri_intrinsic_csum_err[csum_hdr_udp_opt_ocs], 0
+  // TBD: remove once OCS handling is fixed
+  seq           c1, r0, r0
+  phvwrpair.c1  p.p4_to_p4plus_roce_roce_opt_ts_valid, k.udp_opt_timestamp_valid, \
+                    p.p4_to_p4plus_roce_roce_opt_mss_valid, k.udp_opt_mss_valid
+  phvwrpair     p.vlan_tag_valid, FALSE, p.ethernet_valid, FALSE
+  phvwrpair.e   p.ipv4_valid, FALSE, p.ipv6_valid, FALSE
+  phvwr         p.udp_valid, FALSE
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

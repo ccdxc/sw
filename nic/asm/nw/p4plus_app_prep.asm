@@ -15,6 +15,10 @@ p4plus_app_prep:
   seq         c1, k.inner_ipv4_valid, TRUE
   seq         c2, k.inner_ipv6_valid, TRUE
 
+  // l2 checksum (CHECKSUM_COMPLETE)
+  phvwrpair   p.ipv4_l2csum, k.ipv4_valid, p.ipv6_l2csum, k.ipv6_valid
+  phvwr       p.p4_to_p4plus_classic_nic_l2csum, TRUE
+
   // checksum level
   setcf       c3, [c1|c2]
   seq         c4, k.control_metadata_checksum_results[csum_hdr_udp], TRUE

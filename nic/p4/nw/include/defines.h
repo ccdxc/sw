@@ -373,6 +373,7 @@
 /*****************************************************************************/
 #define CSUM_HDR_UDP                   1
 #define CSUM_HDR_TCP                   2
+#define CSUM_HDR_UDP_OPT_OCS           0
 
 // IPSEC
 #define IPSEC_HEADER_AH                1

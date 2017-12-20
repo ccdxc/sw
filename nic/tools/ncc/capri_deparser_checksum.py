@@ -389,7 +389,7 @@ class DeParserCsumObj:
         #max_hv_bit_idx = self.be.hw_model['parser']['max_hv_bits'] - 1
         max_hv_bit_idx = 127 #Add code to get BE reference in this obj
         csum_hdr_cfg['hdr_num']['value'] = str(max_hv_bit_idx - self.csum_hv)
-        if self.phdr_only:
+        if self.phdr_only or self.csum_copy_vld:
             csum_hdr_cfg['csum_vld']['value']=str(0)
         else:
             csum_hdr_cfg['csum_vld']['value']=str(1)

@@ -154,6 +154,8 @@ action f_p4plus_app_classic_nic_prep() {
             modify_field(p4_to_p4plus_classic_nic.csum_level, 1);
         }
     }
+
+    // l2 checksum (CHECKSUM_COMPLETE) : code in ASM only
 }
 
 action p4plus_app_classic_nic() {
@@ -255,11 +257,14 @@ action p4plus_app_rdma() {
         }
     }
 
-    if (udp_opt_timestamp.valid == TRUE) {
-        modify_field(p4_to_p4plus_roce.roce_opt_ts_valid, TRUE);
-    }
-    if (udp_opt_mss.valid == TRUE) {
-        modify_field(p4_to_p4plus_roce.roce_opt_mss_valid, TRUE);
+    if ((udp_opt_ocs.valid == TRUE) and ((capri_intrinsic.csum_err &
+                                          (1 << CSUM_HDR_UDP_OPT_OCS)) == 0)) {
+        if (udp_opt_timestamp.valid == TRUE) {
+            modify_field(p4_to_p4plus_roce.roce_opt_ts_valid, TRUE);
+        }
+        if (udp_opt_mss.valid == TRUE) {
+            modify_field(p4_to_p4plus_roce.roce_opt_mss_valid, TRUE);
+        }
     }
 
     remove_header(ethernet);
