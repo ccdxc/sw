@@ -23,4 +23,4 @@ cc_library(
 cc_library(
     name = "alg_ftp_includes",
     hdrs = ["core.hpp"],
-)    
+)

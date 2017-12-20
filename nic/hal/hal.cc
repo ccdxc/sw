@@ -58,12 +58,12 @@ thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
 using boost::property_tree::ptree;
 
-static thread*
-current_thread(void)
+static thread *
+current_thread (void)
 {
     return hal::utils::thread::current_thread() ?
-           hal::utils::thread::current_thread() :
-           g_hal_threads[HAL_THREAD_ID_CFG];
+               hal::utils::thread::current_thread() :
+               g_hal_threads[HAL_THREAD_ID_CFG];
 }
 
 static void *
@@ -352,17 +352,6 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         }
         sparam = pt.get<std::string>("sw.feature_set");
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
-
-#if 0
-        hal_cfg->forwarding_mode = pt.get<std::string>("sw.forwarding_mode");
-        HAL_TRACE_INFO("HAL Forwarding Mode: {}", hal_cfg->forwarding_mode);
-        if (hal_cfg->forwarding_mode != "default" &&
-            hal_cfg->forwarding_mode != "host-pinned" &&
-            hal_cfg->forwarding_mode != "classic") {
-            HAL_TRACE_ERR("Invalid Forwarding Mode: aborting...");
-            HAL_ABORT(0);
-        }
-#endif
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
         return HAL_RET_INVALID_ARG;
@@ -470,9 +459,6 @@ hal_init (hal_cfg_t *hal_cfg)
         gl_super_user = true;
     }
 
-    // install signal handlers
-    hal_sig_init();
-
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
 
@@ -509,6 +495,10 @@ hal_init (hal_cfg_t *hal_cfg)
     }
 
     hal_proxy_svc_init();
+
+    // install signal handlers
+    hal_sig_init();
+
     return HAL_RET_OK;
 }
 
@@ -523,38 +513,37 @@ hal_destroy (void)
     HAL_TRACE_DEBUG("Cancelled  all HAL threads");
 
     return HAL_RET_OK;
-
 }
 
-slab*
-hal_handle_slab()
+slab *
+hal_handle_slab (void)
 {
     return g_hal_state->hal_handle_slab();
 }
 
-slab*
-hal_handle_ht_entry_slab()
+slab *
+hal_handle_ht_entry_slab (void)
 {
     return g_hal_state->hal_handle_ht_entry_slab();
 }
 
-ht*
-hal_handle_id_ht()
+ht *
+hal_handle_id_ht (void)
 {
     return g_hal_state->hal_handle_id_ht();
 }
 
 void
-hal_handle_cfg_db_lock(bool readlock, bool lock)
+hal_handle_cfg_db_lock (bool readlock, bool lock)
 {
     if (readlock == true) {
-        if(lock == true) {
+        if (lock == true) {
             g_hal_state->cfg_db()->rlock();
         } else {
             g_hal_state->cfg_db()->runlock();
         }
     } else {
-        if(lock == true) {
+        if (lock == true) {
             g_hal_state->cfg_db()->wlock();
         } else {
             g_hal_state->cfg_db()->wunlock();

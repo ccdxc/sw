@@ -155,20 +155,11 @@ extern hal_handle_t hal_alloc_handle(void);
 // HAL internal api to free handle of an object back
 //------------------------------------------------------------------------------
 extern void hal_free_handle(hal_handle_t handle);
-
 extern hal_handle *hal_handle_get_from_handle_id(hal_handle_t handle_id);
-
-slab*
-hal_handle_slab();
-
-slab*
-hal_handle_ht_entry_slab();
-
-ht*
-hal_handle_id_ht();
-
-void
-hal_handle_cfg_db_lock(bool readlock, bool lock);
+slab *hal_handle_slab(void);
+slab *hal_handle_ht_entry_slab(void);
+ht *hal_handle_id_ht(void);
+void hal_handle_cfg_db_lock(bool readlock, bool lock);
 
 }   /* namespace hal */
 

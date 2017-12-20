@@ -86,7 +86,7 @@ is_hal_ctrl_thread()
 // Returns true if:
 //    this thread's id matches with asic-rw thread's id
 bool
-is_asic_rw_thread()
+is_asic_rw_thread (void)
 {
     hal::utils::thread *curr_thread    = NULL;
     hal::utils::thread *asic_rw_thread = NULL;
@@ -370,10 +370,10 @@ asic_ring_doorbell (uint64_t addr, uint64_t data, bool blocking)
 }
 
 //------------------------------------------------------------------------------
-// public API for saving cpu packet.
+// public API for saving cpu packet
 //------------------------------------------------------------------------------
 hal_ret_t
-asic_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len)
+asic_step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
 {
     pal_ret_t prc = pal_step_cpu_pkt(pkt, pkt_len);
     return IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;

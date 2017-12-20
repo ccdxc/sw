@@ -26,7 +26,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         goto cleanup;
     }
 
-    /* start HAL control thread */
+    // start HAL control thread
     HAL_TRACE_DEBUG("Starting hal-control thread ...");
     g_hal_threads[thread_id] =
         thread::factory(std::string("hal-control").c_str(),
