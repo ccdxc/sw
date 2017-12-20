@@ -327,6 +327,7 @@ func TestRPCTlsConnections(t *testing.T) {
 		"tlsproviders/testcerts/testServer.key",
 		"tlsproviders/testcerts/testCA.crt")
 	AssertOk(t, err, "Failed to instantiate TLS provider")
+	defer tlsProvider.Close()
 
 	// create tls & non-tls RPC server
 	rpcServer, err := NewRPCServer("testNonTLSServer", "localhost:0")
@@ -382,6 +383,7 @@ func TestRPCTlsConnections(t *testing.T) {
 		"tlsproviders/testcerts/test2Server.key",
 		"tlsproviders/testcerts/test2CA.crt")
 	AssertOk(t, err, "Failed to instantiate TLS provider")
+	defer tlsProvider2.Close()
 
 	t.Logf("TLS client with incorrect certificate trying to connect to TLS server")
 	_, err = NewRPCClient("testServer", tlsURL, WithTLSProvider(tlsProvider2))
@@ -393,6 +395,7 @@ func TestRPCTlsConnections(t *testing.T) {
 		"tlsproviders/testcerts/testClient.key",
 		"tlsproviders/testcerts/test2CA.crt")
 	AssertOk(t, err, "Failed to instantiate TLS provider")
+	defer tlsProvider3.Close()
 
 	t.Logf("TLS client with incorrect certificate trying to connect to TLS server")
 	_, err = NewRPCClient("testServer", tlsURL, WithTLSProvider(tlsProvider3))

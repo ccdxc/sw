@@ -238,6 +238,12 @@ func (srv *RPCServer) Stop() error {
 		srv.GrpcServer = nil
 	}
 
+	// release resources held by TLS provider, if any
+	if srv.tlsProvider != nil {
+		srv.tlsProvider.Close()
+		srv.tlsProvider = nil
+	}
+
 	// close the socket listener
 	return srv.listener.Close()
 }
@@ -398,9 +404,17 @@ func (c *RPCClient) Reconnect() error {
 
 // Close closes client connection
 func (c *RPCClient) Close() error {
+	// close the connection
 	if c.ClientConn != nil {
 		c.ClientConn.Close()
 		c.ClientConn = nil
 	}
+
+	// release resources held by TLS provider, if any
+	if c.tlsProvider != nil {
+		c.tlsProvider.Close()
+		c.tlsProvider = nil
+	}
+
 	return nil
 }

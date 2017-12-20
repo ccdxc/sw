@@ -20,4 +20,5 @@ type Middleware interface {
 type TLSProvider interface {
 	GetServerOptions(serverName string) (grpc.ServerOption, error)
 	GetDialOptions(serverName string) (grpc.DialOption, error)
+	Close()
 }

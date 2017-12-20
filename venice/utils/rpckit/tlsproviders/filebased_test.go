@@ -27,6 +27,7 @@ func TestFileBasedProviderInit(t *testing.T) {
 	// this one is expected to succeed
 	okProvider, err := NewFileBasedProvider("testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	AssertOk(t, err, "LocalFS TLS provider initialization failed")
+	defer okProvider.Close()
 	_, err = okProvider.GetServerOptions("testServer")
 	AssertOk(t, err, "Error getting server options")
 	_, err = okProvider.GetDialOptions("testServer")

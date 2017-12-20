@@ -73,3 +73,7 @@ func (p *FileBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, 
 	tlsConfig := getTLSClientConfig(serverName, &p.certificate, &p.trustRoots)
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }
+
+// Close is no-op for this provider
+func (p *FileBasedProvider) Close() {
+}
