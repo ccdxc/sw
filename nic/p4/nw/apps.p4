@@ -257,8 +257,9 @@ action p4plus_app_rdma() {
         }
     }
 
-    if ((udp_opt_ocs.valid == TRUE) and ((capri_intrinsic.csum_err &
-                                          (1 << CSUM_HDR_UDP_OPT_OCS)) == 0)) {
+    if ((udp_opt_ocs.valid == FALSE) or
+        ((udp_opt_ocs.valid == TRUE) and ((capri_intrinsic.csum_err &
+                                           (1 << CSUM_HDR_UDP_OPT_OCS)) == 0))) {
         if (udp_opt_timestamp.valid == TRUE) {
             modify_field(p4_to_p4plus_roce.roce_opt_ts_valid, TRUE);
         }

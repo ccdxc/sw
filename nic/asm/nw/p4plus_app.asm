@@ -187,10 +187,9 @@ p4plus_app_rdma:
   seq           c1, k.ipv6_valid, TRUE
   phvwr.c1      p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit0_ebit3[3:2]
   phvwr         p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
-  seq           c1, k.udp_opt_ocs_valid, TRUE
-  seq.c1        c1, k.capri_intrinsic_csum_err[csum_hdr_udp_opt_ocs], 0
-  // TBD: remove once OCS handling is fixed
-  seq           c1, r0, r0
+  seq           c1, k.udp_opt_ocs_valid, FALSE
+  seq           c2, k.capri_intrinsic_csum_err[csum_hdr_udp_opt_ocs], 0
+  orcf          c1, [!c1 & c2]
   phvwrpair.c1  p.p4_to_p4plus_roce_roce_opt_ts_valid, k.udp_opt_timestamp_valid, \
                     p.p4_to_p4plus_roce_roce_opt_mss_valid, k.udp_opt_mss_valid
   phvwrpair     p.vlan_tag_valid, FALSE, p.ethernet_valid, FALSE
