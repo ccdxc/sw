@@ -1988,6 +1988,19 @@ class capri_parser:
                     hidx += 1
                     self.icrc_hdr_hv_bit[h] = icrc_hv_bit_and_hf
 
+            #Allocate icrc HV bit for icrc rocehdr as well.
+            if self.d == xgress.EGRESS and self.be.icrc.IsHdrRoceV2(h.name):
+                    icrc_hv_bit_and_hf = []
+                    hf_name = h.name + '.icrc'
+                    icrc_cf = self.be.pa.get_field(hf_name, self.d)
+                    icrc_cf.phv_bit = hv_bit
+                    self.be.pa.replace_hv_field(hv_bit, icrc_cf, self.d)
+                    icrc_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
+                    self.hv_bit_header[max_hv_bits - hidx - 1] = h
+                    hv_bit -= 1
+                    hidx += 1
+                    self.icrc_hdr_hv_bit[h] = icrc_hv_bit_and_hf
+
             #Allocate HV for header.valid
             hf_name = h.name + '.valid'
             cf = self.be.pa.get_field(hf_name, self.d)

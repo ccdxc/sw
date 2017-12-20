@@ -26,6 +26,7 @@
         the way dont affect the calculated ICRC value.
     (d) UDP Checksum field is replaced with 1s for the purpose of the ICRC
         calculation/check
+    (e) Fields (BTH.fr, BTH.br, BTH.reserved1) which is a byte is replaced with 1s
 
     For RoCEv2 over IPv4 the fields replaced with 1s for the purpose of ICRC
     calculation are:
@@ -147,6 +148,8 @@ class IcrcParserProfile:
         self.mask_profile       = 0
         #Mask profile fields.
         self.mask_fields        = {} #Key is one of 5 mask fld instances
+        self.l4_mask_fields     = {} #Key is one of 5 mask fld instances
+        self.l5_mask_fields     = {} #Key is one of 5 mask fld instances
 
     def IcrcProfileNumGet(self):
         return self.icrc_profile
@@ -182,8 +185,20 @@ class IcrcParserProfile:
     def IcrcMaskProfileMaskFieldAdd(self, fld_inst, masked_field):
         self.mask_fields[fld_inst] = masked_field
 
+    def IcrcL4MaskProfileMaskFieldAdd(self, fld_inst, masked_field):
+        self.l4_mask_fields[fld_inst] = masked_field
+
+    def IcrcL5MaskProfileMaskFieldAdd(self, fld_inst, masked_field):
+        self.l5_mask_fields[fld_inst] = masked_field
+
     def IcrcMaskProfileMaskFieldLenGet(self):
         return len(self.mask_fields)
+
+    def IcrcL4MaskProfileMaskFieldLenGet(self):
+        return len(self.l4_mask_fields)
+
+    def IcrcL5MaskProfileMaskFieldLenGet(self):
+        return len(self.l5_mask_fields)
 
     def ConfigGenerate(self, profile):
         profile['len_mask']['value']       = str(self.len_mask)
@@ -222,12 +237,32 @@ class IcrcParserProfile:
             prefix = 'fld%d_' % fld_inst
             for k, v in fld_mask_cfg.items():
                 mask_profile[prefix+k]['value'] = str(v)
+        for fld_inst, fld_mask_cfg in self.l4_mask_fields.items():
+            prefix = 'fld%d_' % fld_inst
+            for k, v in fld_mask_cfg.items():
+                mask_profile[prefix+k]['value'] = str(v)
+        for fld_inst, fld_mask_cfg in self.l5_mask_fields.items():
+            prefix = 'fld%d_' % fld_inst
+            for k, v in fld_mask_cfg.items():
+                mask_profile[prefix+k]['value'] = str(v)
 
     def MaskProfileLogGenerate(self):
         log_str = ''
         log_str += 'Parser Icrc Mask Profile:\n'
         log_str += '____________________________\n\n'
         for fld_inst, fld_mask_cfg in self.mask_fields.items():
+            prefix = 'fld%d_' % fld_inst
+            for k, v in fld_mask_cfg.items():
+                pstr = '{:20s}'.format(prefix+k)
+                _log_str = '        ' + pstr + '         = 0x%x\n'% (v)
+                log_str += _log_str
+        for fld_inst, fld_mask_cfg in self.l4_mask_fields.items():
+            prefix = 'fld%d_' % fld_inst
+            for k, v in fld_mask_cfg.items():
+                pstr = '{:20s}'.format(prefix+k)
+                _log_str = '        ' + pstr + '         = 0x%x\n'% (v)
+                log_str += _log_str
+        for fld_inst, fld_mask_cfg in self.l5_mask_fields.items():
             prefix = 'fld%d_' % fld_inst
             for k, v in fld_mask_cfg.items():
                 pstr = '{:20s}'.format(prefix+k)
@@ -263,7 +298,7 @@ class IcrcParserCalField:
         assert(self.P4FieldListCalculation.output_width == 32)
 
         self.l3hdr_name, self.l3hdr_invariant_fields, self.l4_hdr_name, \
-        self.l4_hdr_invariant_fields = \
+        self.l4_hdr_invariant_fields, self.l5_hdr_name, self.l5_hdr_invariant_fields = \
             self.ProcessIcrcCalFields(self.P4FieldListCalculation, dstField)
 
     def ProcessIcrcCalFields(self, field_list_calculation, icrc_field):
@@ -273,7 +308,7 @@ class IcrcParserCalField:
         icrc_hdr = icrc_field.split(".")[0]
         icrc_field = icrc_field.split(".")[1]
         l3hdr_ifields = []
-        for idx, field in enumerate(field_list_calculation.input[0].fields[0:-1]):
+        for idx, field in enumerate(field_list_calculation.input[0].fields[0:-2]):
             if idx == 0:
                 assert field.instance.name != icrc_hdr, pdb.set_trace()
                 l3hdr_name = field.instance.name
@@ -281,12 +316,17 @@ class IcrcParserCalField:
         #Last invariant field in the list is udp.checksum field.
         l4_hdr_ifields = []
         l4_hdr_name = ''
-        field = field_list_calculation.input[0].fields[-1]
+        field = field_list_calculation.input[0].fields[-2]
         l4_hdr_name = field.instance.name
         l4_hdr_ifields.append(field)
+        l5_hdr_ifields = []
+        l5_hdr_name = ''
+        field = field_list_calculation.input[0].fields[-1]
+        l5_hdr_name = field.instance.name
+        l5_hdr_ifields.append(field)
 
-        return l3hdr_name, l3hdr_ifields, l4_hdr_name, l4_hdr_ifields
-
+        return l3hdr_name, l3hdr_ifields, l4_hdr_name, l4_hdr_ifields,\
+               l5_hdr_name, l5_hdr_ifields
 
     def CalculatedFieldHdrGet(self):
         hdrinst = self.dstField.split(".")[0]
@@ -297,6 +337,9 @@ class IcrcParserCalField:
 
     def L4HdrInvariantFieldsGet(self):
         return self.l4_hdr_invariant_fields
+
+    def L5HdrInvariantFieldsGet(self):
+        return self.l5_hdr_invariant_fields
 
     def IcrcParserProfileObjSet(self, IcrcParserProfileObj):
         self.icrc_prsr_profile_obj = IcrcParserProfileObj
@@ -309,6 +352,9 @@ class IcrcParserCalField:
 
     def IcrcL4HdrNameGet(self):
         return self.l4_hdr_name
+
+    def IcrcL5HdrNameGet(self):
+        return self.l5_hdr_name
 
     def IcrcL3hdrParseStateSet(self, l3hdr_parse_states):
         self.l3hdr_parse_states = l3hdr_parse_states
@@ -421,11 +467,13 @@ class IcrcDeParserProfile:
         self.icrc_loc_adj       = 0
         self.icrc_loc_adj_sub   = 0
 
-        self.mask_profile       = 0
-        self.l4_mask_profile   = 0
         #Mask profile fields.
-        self.mask_fields        = {} #Key is one of 5 mask fld instances
-        self.l4_mask_fields        = {} #Key is one of 5 mask fld instances
+        self.mask_profile       = 0
+        self.l4_mask_profile    = 0
+        self.mask_fields        = {} #Key is one of 6 mask fld instances
+        self.l4_mask_fields     = {} #Key is one of 6 mask fld instances
+        self.l5_mask_profile    = 0
+        self.l5_mask_fields     = {} #Key is one of 6 mask fld instances
 
     def IcrcProfileNumSet(self, profile):
         self.icrc_profile = profile
@@ -444,6 +492,12 @@ class IcrcDeParserProfile:
 
     def IcrcL4MaskProfileNumGet(self):
         return self.l4_mask_profile
+
+    def IcrcL5MaskProfileNumSet(self, mask_profile):
+        self.l5_mask_profile = mask_profile
+
+    def IcrcL5MaskProfileNumGet(self):
+        return self.l5_mask_profile
 
     def IcrcProfilePhvLenSelSet(self, use_phv_len, phv_len_sel):
         self.use_phv_len = use_phv_len
@@ -477,8 +531,17 @@ class IcrcDeParserProfile:
     def IcrcL4MaskProfileMaskFieldAdd(self, fld_inst, masked_field):
         self.l4_mask_fields[fld_inst] = masked_field
 
+    def IcrcL5MaskProfileMaskFieldAdd(self, fld_inst, masked_field):
+        self.l5_mask_fields[fld_inst] = masked_field
+
     def IcrcMaskProfileMaskFieldLenGet(self):
         return len(self.mask_fields)
+
+    def IcrcL4MaskProfileMaskFieldLenGet(self):
+        return len(self.l4_mask_fields)
+
+    def IcrcL5MaskProfileMaskFieldLenGet(self):
+        return len(self.l5_mask_fields)
 
     def ConfigGenerate(self, icrc_profile):
         icrc_profile['use_phv_len']   ['value']=str(self.use_phv_len)
@@ -541,6 +604,19 @@ class IcrcDeParserProfile:
                     mask_profile[prefix+k+suffix]['value'] = str(v)
         mask_profile['_modified'] = True
 
+    def L5MaskProfileConfigGenerate(self, mask_profile):
+        prefix = 'fld_'
+        for fld_inst, fld_mask_cfg in self.l5_mask_fields.items():
+            suffix = '_%d' % fld_inst
+            for k, v in fld_mask_cfg.items():
+                if 'skip_first_nibble' in k:
+                    mask_profile[k+suffix]['value'] = str(v)
+                elif 'fill' in k:
+                    mask_profile[k]['value'] = str(v)
+                else:
+                    mask_profile[prefix+k+suffix]['value'] = str(v)
+        mask_profile['_modified'] = True
+
     def MaskProfileLogGenerate(self):
         prefix = 'fld_'
         log_str = ''
@@ -566,6 +642,25 @@ class IcrcDeParserProfile:
         log_str += 'DeParser L4 Icrc Mask Profile:\n'
         log_str += '____________________________\n\n'
         for fld_inst, fld_mask_cfg in self.l4_mask_fields.items():
+            suffix = '_%d' % fld_inst
+            for k, v in fld_mask_cfg.items():
+                if 'skip_first_nibble' in k:
+                    pstr = '{:20s}'.format(k+suffix)
+                elif 'fill' in k:
+                    pstr = '{:20s}'.format(k)
+                else:
+                    pstr = '{:20s}'.format(prefix+k+suffix)
+                _log_str = '        ' + pstr + '         = 0x%x\n'% (v)
+                log_str += _log_str
+        log_str += '\n'
+        return log_str
+
+    def L5MaskProfileLogGenerate(self):
+        prefix = 'fld_'
+        log_str = ''
+        log_str += 'DeParser L5 Icrc Mask Profile:\n'
+        log_str += '____________________________\n\n'
+        for fld_inst, fld_mask_cfg in self.l5_mask_fields.items():
             suffix = '_%d' % fld_inst
             for k, v in fld_mask_cfg.items():
                 if 'skip_first_nibble' in k:
@@ -616,7 +711,7 @@ class IcrcDeParserCalField:
         assert(self.P4FieldListCalculation.algorithm == 'icrc')
         assert(self.P4FieldListCalculation.output_width == 32)
         self.l3hdr_name, self.l3hdr_invariant_fields, self.l4_hdr_name, \
-        self.l4_hdr_invariant_fields = \
+        self.l4_hdr_invariant_fields, self.l5_hdr_name, self.l5_hdr_invariant_fields  = \
             self.ProcessIcrcCalFields(self.P4FieldListCalculation, dstField)
 
     def __getitem__(self, index):
@@ -629,19 +724,24 @@ class IcrcDeParserCalField:
         icrc_hdr = icrc_field.split(".")[0]
         icrc_field = icrc_field.split(".")[1]
         l3hdr_ifields = []
-        for idx, field in enumerate(field_list_calculation.input[0].fields[0:-1]):
+        for idx, field in enumerate(field_list_calculation.input[0].fields[0:-2]):
             if idx == 0:
                 assert field.instance.name != icrc_hdr, pdb.set_trace()
                 l3hdr_name = field.instance.name
             l3hdr_ifields.append(field)
-        #Last invariant field in the list is udp.checksum field.
         l4_hdr_ifields = []
         l4_hdr_name = ''
-        field = field_list_calculation.input[0].fields[-1]
+        field = field_list_calculation.input[0].fields[-2]
         l4_hdr_name = field.instance.name
         l4_hdr_ifields.append(field)
+        l5_hdr_ifields = []
+        l5_hdr_name = ''
+        field = field_list_calculation.input[0].fields[-1]
+        l5_hdr_name = field.instance.name
+        l5_hdr_ifields.append(field)
 
-        return l3hdr_name, l3hdr_ifields, l4_hdr_name, l4_hdr_ifields
+        return l3hdr_name, l3hdr_ifields, l4_hdr_name, l4_hdr_ifields,\
+               l5_hdr_name, l5_hdr_ifields
 
     def L3HdrInvariantFieldsGet(self):
         return self.l3hdr_invariant_fields
@@ -649,11 +749,17 @@ class IcrcDeParserCalField:
     def L4HdrInvariantFieldsGet(self):
         return self.l4_hdr_invariant_fields
 
+    def L5HdrInvariantFieldsGet(self):
+        return self.l5_hdr_invariant_fields
+
     def IcrcL3HdrNameGet(self):
         return self.l3hdr_name
 
     def IcrcL4HdrNameGet(self):
         return self.l4_hdr_name
+
+    def IcrcL5HdrNameGet(self):
+        return self.l5_hdr_name
 
     def CalculatedFieldHdrGet(self):
         hdrinst = self.dstField.split(".")[0]
@@ -677,6 +783,12 @@ class IcrcDeParserCalField:
     def IcrcL4HvBitNumGet(self):
         return self.icrc_l4_hv
 
+    def IcrcL5HvBitNumSet(self, icrc_l5_hv):
+        self.icrc_l5_hv = icrc_l5_hv
+
+    def IcrcL5HvBitNumGet(self):
+        return self.icrc_l5_hv
+
     def HvBitNumSet(self, hv):
         self.hv = hv
 
@@ -696,9 +808,9 @@ class IcrcDeParserCalField:
     def IcrcDeParserProfileObjGet(self):
         return self.icrc_profile_obj
 
-    def ConfigGenerate(self, icrc_hdr_cfg, l3hdr):
+    def ConfigGenerate(self, icrc_hdr_cfg, hdr):
         max_hv_bit_idx = self.be.hw_model['parser']['max_hv_bits'] - 1
-        if l3hdr:
+        if hdr == 'l3hdr':
             icrc_hdr_cfg['hdr_num']     ['value']   = str(max_hv_bit_idx - self.icrc_hv)
             icrc_hdr_cfg['crc_vld']     ['value']   = str(1)
             icrc_hdr_cfg['crc_unit']    ['value']   = str(self.unit)\
@@ -711,9 +823,16 @@ class IcrcDeParserCalField:
                                                                 IcrcMaskProfileNumGet())
             icrc_hdr_cfg['mask_vld']    ['value']   = str(1)
             icrc_hdr_cfg['mask_unit']   ['value']   = str(0) #Mask unit ????
-        else:
-            #Config to add udp.checksum as invariant
-            icrc_hdr_cfg['hdr_num']     ['value']   = str(max_hv_bit_idx - self.icrc_l4_hv)
+        if hdr == 'l4hdr' or hdr == 'l5hdr':
+            if hdr == 'l4hdr':
+                #Config to add udp.checksum as invariant/ bth.reserved1 as invariant
+                icrc_hdr_cfg['hdr_num']     ['value']   = str(max_hv_bit_idx - self.icrc_l4_hv)
+                icrc_hdr_cfg['mask_profile']['value']   = str(self.IcrcDeParserProfileObjGet().\
+                                                                IcrcL4MaskProfileNumGet())
+            if hdr == 'l5hdr':
+                icrc_hdr_cfg['hdr_num']     ['value']   = str(max_hv_bit_idx - self.icrc_l5_hv)
+                icrc_hdr_cfg['mask_profile']['value']   = str(self.IcrcDeParserProfileObjGet().\
+                                                                IcrcL5MaskProfileNumGet())
             icrc_hdr_cfg['crc_vld']     ['value']   = str(0)
             icrc_hdr_cfg['crc_unit']    ['value']   = str(self.unit)\
                                                   if self.unit != -1 else str(0)
@@ -721,8 +840,6 @@ class IcrcDeParserCalField:
             icrc_hdr_cfg['hdrfld_end']  ['value']   = str(self.hdrfld_end)
             icrc_hdr_cfg['crc_profile'] ['value']   = str(self.IcrcDeParserProfileObjGet().\
                                                                 IcrcProfileNumGet())
-            icrc_hdr_cfg['mask_profile']['value']   = str(self.IcrcDeParserProfileObjGet().\
-                                                                IcrcL4MaskProfileNumGet())
             icrc_hdr_cfg['mask_vld']    ['value']   = str(1)
             icrc_hdr_cfg['mask_unit']   ['value']   = str(0) #Mask unit ????
 
@@ -759,6 +876,25 @@ class IcrcDeParserCalField:
         log_str += '    Icrc HvBit %d\n' % (max_hv_bit_idx - self.icrc_hv)
         log_str += '    Icrc profile# %d\n' % self.IcrcDeParserProfileObjGet().IcrcProfileNumGet()
         log_str += '    Icrc Mask profile# %d\n' % self.IcrcDeParserProfileObjGet().IcrcL4MaskProfileNumGet()
+        log_str += '    mask vld %d\n' % 1
+        log_str += '    mask unit %d\n' % 0 # ???
+        log_str += '    HdrFld Start %d\n' % self.hdrfld_start
+        log_str += '    HdrFld End %d\n' % self.hdrfld_end
+
+        return log_str
+
+    def L5LogGenerate(self, icrc_hdr):
+        max_hv_bit_idx = self.be.hw_model['parser']['max_hv_bits'] - 1
+        log_str = ''
+        log_str += 'DeParser IcrcConfig: Hdr %s\n' % icrc_hdr
+        log_str += '_____________________________________\n\n'
+        log_str += '    Icrc Unit %d\n' % self.unit
+        log_str += '    crc vld %d\n' % 1
+        log_str += '    crc unit %d\n' % self.unit
+        log_str += '    HvBit %d\n' % self.hv
+        log_str += '    Icrc HvBit %d\n' % (max_hv_bit_idx - self.icrc_hv)
+        log_str += '    Icrc profile# %d\n' % self.IcrcDeParserProfileObjGet().IcrcProfileNumGet()
+        log_str += '    Icrc Mask profile# %d\n' % self.IcrcDeParserProfileObjGet().IcrcL5MaskProfileNumGet()
         log_str += '    mask vld %d\n' % 1
         log_str += '    mask unit %d\n' % 0 # ???
         log_str += '    HdrFld Start %d\n' % self.hdrfld_start
@@ -806,6 +942,18 @@ class IcrcDeParserCalField:
 
         return pstr
 
+    def IcrcDeParserL5ConfigMatrixRowLog(self):
+        pstr = '{:<12s}{:<5d}{:<7d}{:<7d}{:<8s}{:<8d}{:<8d}{:<d}\n'.format(self.l5_hdr_name,
+                                       self.unit,
+                                       self.icrc_l5_hv,
+                                       384 + (127 - self.icrc_l5_hv),
+                                       'UnUsed',
+                                       self.icrc_profile_obj.l5_mask_profile,
+                                       self.hdrfld_start,
+                                       self.hdrfld_end)
+
+        return pstr
+
 
 
 class Icrc:
@@ -833,7 +981,8 @@ class Icrc:
         self.icrc_dp_mask_profiles_allocated= 0
         self.l3hdr_to_profile_map           = {}
         self.l3hdr_to_profile_map_dp        = {}
-        self.l4_hdr_to_profile_map_dp      = {}
+        self.l4_hdr_to_profile_map_dp       = {}
+        self.l5_hdr_to_profile_map_dp       = {}
         self.roce_hdr                       = None
         self.dpr_hw_icrc_obj                = [] #Sorted list of calfldobj; sorted by fldstart
 
@@ -875,17 +1024,18 @@ class Icrc:
             self.AllocateDeParserIcrcResources(self.be.parsers[d])
 
     def IsHdrRoceV2(self, hdr_name):
-        return True if self.roce_hdr == hdr_name else False
+        return True if self.roce_hdr and self.roce_hdr.name == hdr_name else False
 
 
     #   --------  iCRC verification related Code --------
 
 
     def VerifyIcrcCalFieldObjGet(self, hdr):
-        # Given l3hdr or l4 hdr return Calculated Field Obj that is verified
+        # Given l3hdr or l4/l5 hdr return Calculated Field Obj that is verified
         for calflistobj in self.verify_cal_fieldlist:
             if hdr != '' and (calflistobj.IcrcL3HdrNameGet() == hdr or \
-                                calflistobj.IcrcL4HdrNameGet() == hdr):
+                                calflistobj.IcrcL4HdrNameGet() == hdr or \
+                                calflistobj.IcrcL5HdrNameGet() == hdr):
                 return calflistobj
         return None
 
@@ -980,7 +1130,31 @@ class Icrc:
                     #start in middle of byte and ends in middle of byte
                     #hence move end_adj by one more byte
                     mask_field['end_adj']   += 1
-            prof_obj.IcrcMaskProfileMaskFieldAdd(fld_inst, mask_field)
+            prof_obj.IcrcL4MaskProfileMaskFieldAdd(fld_inst, mask_field)
+
+    def IcrcParserL5HdrIFldProfileBuild(self, calfldobj):
+        l5_hdr_iflds = calfldobj.L5HdrInvariantFieldsGet()
+        prof_obj = calfldobj.IcrcParserProfileObjGet()
+        fld_inst = prof_obj.IcrcMaskProfileMaskFieldLenGet() + \
+                   prof_obj.IcrcL4MaskProfileMaskFieldLenGet()
+        for hdr_ifld in l5_hdr_iflds:
+            mask_field              = {}
+            mask_field['mask_en']   = 1
+            #For L3 Iflds, use crc-start-offset to program mask profile.
+            #Use mask-ohi for udp.csum field / bth.reserved1.
+            mask_field['use_ohi']   = 1
+            mask_field['start_adj'] = (hdr_ifld.offset / 8) + 8 #TODO: Get size of UDP header 
+            mask_field['end_adj']   = ((hdr_ifld.offset + hdr_ifld.width) / 8) - 1  + 8 #End is inclusive in HW
+            mask_field['fill']      = 1
+            mask_field['skip_first_nibble']  = 0
+            if hdr_ifld.offset % 8 == 4:
+                #field starts on nibble
+                mask_field['skip_first_nibble']  = 1
+                if not hdr_ifld.width % 8:
+                    #start in middle of byte and ends in middle of byte
+                    #hence move end_adj by one more byte
+                    mask_field['end_adj']   += 1
+            prof_obj.IcrcL5MaskProfileMaskFieldAdd(fld_inst, mask_field)
 
     def ProcessIcrcVerificationCalFldList(self, parser):
         '''
@@ -1010,6 +1184,7 @@ class Icrc:
             #L4HdrIFldProfileBuild should be invoked after calling L3hdrProfileBuild
             self.IcrcParserL3HdrIFldProfileBuild(calfldobj)
             self.IcrcParserL4HdrIFldProfileBuild(calfldobj)
+            self.IcrcParserL5HdrIFldProfileBuild(calfldobj)
 
     def InsertIcrcObjReferenceInParseState(self, parser):
         '''
@@ -1019,14 +1194,18 @@ class Icrc:
         '''
         icrc_l3hdrs = set()
         icrc_l4_hdrs = set()
+        icrc_l5_hdrs = set()
         icrc_calfldobjs = set(calfldobj for calfldobj in self.verify_cal_fieldlist)
         for calfldobj in self.verify_cal_fieldlist:
             icrc_l3hdr = calfldobj.IcrcL3HdrNameGet()
             icrc_l4_hdr = calfldobj.IcrcL4HdrNameGet()
+            icrc_l5_hdr = calfldobj.IcrcL5HdrNameGet()
             if icrc_l3hdr != '' and icrc_l3hdr not in icrc_l3hdrs:
                 icrc_l3hdrs.add(icrc_l3hdr)
             if icrc_l4_hdr != '' and icrc_l4_hdr not in icrc_l4_hdrs:
                 icrc_l4_hdrs.add(icrc_l4_hdr)
+            if icrc_l5_hdr != '' and icrc_l5_hdr not in icrc_l5_hdrs:
+                icrc_l5_hdrs.add(icrc_l5_hdr)
         #Find parse states where reference to icrc calfldobj should be added.
         l3_calfldlist = []
         for parsepath in parser.paths:
@@ -1049,7 +1228,15 @@ class Icrc:
                             parsestate.icrc_verify_cal_field_objs.\
                                             append(("L4_IFLD", calfldobj))
                     icrc_l4_hdrs.remove(hdr.name)
-        assert(len(icrc_l4_hdrs) == 0 and len(icrc_l3hdrs) == 0), pdb.set_trace()
+                if hdr.name in icrc_l5_hdrs:
+                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name)
+                    for parsestate in parser.get_ext_cstates(hdr):
+                        if calfldobj not in parsestate.icrc_verify_cal_field_objs:
+                            parsestate.icrc_verify_cal_field_objs.\
+                                            append(("L5_IFLD", calfldobj))
+                    icrc_l5_hdrs.remove(hdr.name)
+        assert(len(icrc_l5_hdrs) == 0 and len(icrc_l4_hdrs) == 0 and \
+               len(icrc_l3hdrs) == 0), pdb.set_trace()
 
         #Insert all calfldobj in roce_bth parse state. Depending on parse path
         #one of the calfldobj will be used to program parser when extracting
@@ -1136,17 +1323,14 @@ class Icrc:
                                 #in future Len is needed.
                                 icrc_calfldobj.IcrcOhiLenSelSet(0)
                             else:
-                                #TODO : using allocated OHI, parser instructions
-                                # need to be generated in respective parse states.
-                                #Until this case is handled, compiler should assert
-                                #when compiling P4 that has icrc but no csum constructs.
-                                assert(0), pdb.set_trace()
-                                '''
-                                icrc_calfldobj.IcrcOhiStartSelSet(parser.\
-                                                assign_ohi_slots_for_icrc(l3hdr))
-                                icrc_calfldobj.IcrcOhiLenSelSet(parser.\
-                                                assign_ohi_slots_for_icrc(l3hdr))
-                                '''
+                                ohi_start_id = parser.get_ohi_hdr_start_off(\
+                                            self.be.h.p4_header_instances[l3_hdr_name])
+                                assert(ohi_start_id != None), pdb.set_trace()
+                                icrc_calfldobj.IcrcOhiMaskSelSet(ohi_start_id)
+
+                                ohi_len_id = parser.get_ohi_slot_wr_only_field_name(\
+                                            self.be.h.p4_header_instances[l3_hdr_name])
+                                assert(ohi_len_id != None), pdb.set_trace()
 
                             self.icrc_verify_logger.debug(\
                              'Icrc Assignment along path %s' % (str(parse_path)))
@@ -1175,15 +1359,10 @@ class Icrc:
                                 #slot# that is used for capturing UDP hdr start.
                                 icrc_calfldobj.IcrcOhiMaskSelSet(ohi_start_id)
                             else:
-                                #TODO : using allocated OHI, parser instructions
-                                # need to be generated in respective parse states.
-                                #Until this case is handled, compiler should assert
-                                #when compiling P4 that has icrc but no csum constructs.
-                                assert(0), pdb.set_trace()
-                                '''
-                                icrc_calfldobj.IcrcOhiMaskSelSet(parser.\
-                                               assign_ohi_slots_for_icrc(l3hdr))
-                                '''
+                                ohi_start_id = parser.get_ohi_hdr_start_off(\
+                                            self.be.h.p4_header_instances[l4_hdr_name])
+                                assert(ohi_start_id != None), pdb.set_trace()
+                                icrc_calfldobj.IcrcOhiMaskSelSet(ohi_start_id)
 
                             self.icrc_verify_logger.debug(\
                              'Icrc Assignment along path %s' % (str(parse_path)))
@@ -1197,6 +1376,7 @@ class Icrc:
                               icrc_calfldobj.IcrcOhiLenSelGet(),
                               icrc_calfldobj.IcrcOhiMaskSelGet()))
                             self.icrc_verify_logger.debug('\n')
+                        # add bth.reserved1 as invariant is added related to UDP ohi.
 
                         icrc_objects.remove(icrc_calfldobj)
                     break
@@ -1207,7 +1387,7 @@ class Icrc:
         #Assert if all calfld objects are allocated resources
         assert(len(icrc_objects) == 0), pdb.set_trace()
 
-        #In parse states where L3 hdrs are extracted, and where roce_bth
+        #In parse states where L3,L4 hdrs are extracted, and where roce_bth
         #is extracted, insert reference to calculated fld objects so that
         #Parser block can be programmed to trigger icrc verification.
         self.InsertIcrcObjReferenceInParseState(parser)
@@ -1278,7 +1458,7 @@ class Icrc:
         if self.roce_hdr in extracted_hdrs:
             icrc_enable = True
             use_latched_profile_from_l3_state = True
-        elif hdr_type == 'L4_IFLD':
+        elif hdr_type == 'L4_IFLD' or hdr_type == 'L5_IFLD':
             icrc_enable = False
             use_latched_profile_from_l3_state = True
         else:
@@ -1359,10 +1539,11 @@ class Icrc:
     #   --------  iCRC computation related Code --------
 
     def UpdateIcrcCalFieldObjGet(self, hdr):
-        # Given l3 hdr or l4 header name, return icrc Calculated Field Obj that is updated
+        # Given l3 hdr or l4 or l5 header name, return icrc Calculated Field Obj that is updated
         for calflistobj in self.update_cal_fieldlist:
-            if hdr != '' and (calflistobj.IcrcL3HdrNameGet() == hdr
-                                or calflistobj.IcrcL4HdrNameGet() == hdr):
+            if hdr != '' and (calflistobj.IcrcL3HdrNameGet() == hdr        \
+                                or calflistobj.IcrcL4HdrNameGet() == hdr   \
+                                or calflistobj.IcrcL5HdrNameGet() == hdr):
                 return calflistobj
         return None
 
@@ -1399,25 +1580,7 @@ class Icrc:
         prof_obj.IcrcProfileStartAdjSet(8, 1)
 
         #Build mask profile for invariant fields.
-
-        '''
-
-        #Deparser provides knob to add 64 1's. There is no need to use mask_field
-        #Fill 64bit 1's before L3 hdr.
-        fld_inst = 0
-        mask_field              = {}
-        mask_field['en']   = 1
-        mask_field['start'] = 8
-        mask_field['end']   = 1  #End is inclusive in HW
-        mask_field['fill']  = 1
-        mask_field['skip_first_nibble']  = 0
-        mask_field['start_sub']  = 1
-        mask_field['end_sub']  = 1
-        prof_obj.IcrcMaskProfileMaskFieldAdd(fld_inst, mask_field)
-        '''
-
         leading_64b_byte_len = 0
-
         l3hdr_iflds = calfldobj.L3HdrInvariantFieldsGet()
         fld_inst = 0
         span_into_next_byte = 0
@@ -1476,6 +1639,35 @@ class Icrc:
             prof_obj.IcrcL4MaskProfileMaskFieldAdd(fld_inst, mask_field)
             fld_inst += 1
 
+    def IcrcDeParserL5HdrIFldProfileBuild(self, calfldobj):
+        if calfldobj.l5_hdr_name not in self.l5_hdr_to_profile_map_dp.keys():
+            self.l5_hdr_to_profile_map_dp[calfldobj.l5_hdr_name] = \
+                                    self.icrc_dp_mask_profiles_allocated
+            self.icrc_dp_mask_profiles_allocated += 1
+
+        mask_profile_num = self.l5_hdr_to_profile_map_dp[calfldobj.l5_hdr_name]
+        l5_hdr_iflds = calfldobj.L5HdrInvariantFieldsGet()
+        prof_obj = calfldobj.IcrcDeParserProfileObjGet()
+        prof_obj.IcrcL5MaskProfileNumSet(mask_profile_num)
+        fld_inst = prof_obj.IcrcMaskProfileMaskFieldLenGet() + \
+                   prof_obj.IcrcL4MaskProfileMaskFieldLenGet()
+        for hdr_ifld in l5_hdr_iflds:
+            mask_field              = {}
+            mask_field['en']        = 1
+            mask_field['start']     = hdr_ifld.offset / 8
+            mask_field['end']       = (hdr_ifld.offset + hdr_ifld.width) / 8  - 1 #End is inclusive in HW
+            mask_field['fill']      = 1
+            mask_field['skip_first_nibble']  = 0
+            if hdr_ifld.offset % 8 == 4:
+                #field starts on nibble
+                mask_field['skip_first_nibble']  = 1
+                if not hdr_ifld.width % 8:
+                    #start in middle of byte and ends in middle of byte
+                    #hence move end_adj by one more byte
+                    mask_field['end'] += 1
+            prof_obj.IcrcL5MaskProfileMaskFieldAdd(fld_inst, mask_field)
+            fld_inst += 1
+
 
     def ProcessIcrcUpdateCalFldList(self, egress_parser):
         '''
@@ -1505,6 +1697,7 @@ class Icrc:
             #L4HdrIFldProfileBuild should be invoked after calling L3hdrProfileBuild
             self.IcrcDeParserProfileBuild(calfldobj, egress_parser)
             self.IcrcDeParserL4HdrIFldProfileBuild(calfldobj)
+            self.IcrcDeParserL5HdrIFldProfileBuild(calfldobj)
 
     def AllocateDeParserIcrcResources(self, eg_parser):
         for calfldobj in self.update_cal_fieldlist:
@@ -1522,6 +1715,12 @@ class Icrc:
                                                        p4_header_instances[icrc_l4_hdr]]
             icrc_l4_hv, phv_bit, hfname = icrc_hv_and_hf[0]
             calfldobj.IcrcL4HvBitNumSet(icrc_l4_hv)
+
+            icrc_l5_hdr = calfldobj.IcrcL5HdrNameGet()
+            icrc_hv_and_hf = eg_parser.icrc_hdr_hv_bit[self.be.h.\
+                                                       p4_header_instances[icrc_l5_hdr]]
+            icrc_l5_hv, phv_bit, hfname = icrc_hv_and_hf[0]
+            calfldobj.IcrcL5HvBitNumSet(icrc_l5_hv)
 
     def IcrcDeParserConfigGenerate(self, deparser, hv_fld_slots, dpp_json):
         '''
@@ -1572,6 +1771,27 @@ class Icrc:
                 hw_icrcobj.append(new_calfldobj)
                 self.l4_calfldobjs.append(new_calfldobj)
 
+        l5_hdrs = []
+        self.l5_calfldobjs = []
+        for calfldobj in self.update_cal_fieldlist:
+            l5_hdr = calfldobj.IcrcL5HdrNameGet()
+            if l5_hdr not in l5_hdrs:
+                l5_hdrs.append(l5_hdr)
+                fldstart, fldend, _ = hv_fld_slots[calfldobj.icrc_l5_hv]
+                new_calfldobj = copy.copy(calfldobj) #deep copy not needed as
+                                                     #only fldstart and fldend
+                                                     #are updated in copied
+                                                     #instance which are object
+                                                     #variables.
+                new_calfldobj.HdrFldStartEndSet(fldstart,fldend)
+                new_calfldobj.logstr_tbl = []
+                new_calfldobj.IcrcAddLog(new_calfldobj.L5LogGenerate(l5_hdr))
+                icrc_profile_obj = new_calfldobj.IcrcDeParserProfileObjGet()
+                new_calfldobj.IcrcAddLog(icrc_profile_obj.L5MaskProfileLogGenerate())
+                hw_icrcobj.append(new_calfldobj)
+                self.l5_calfldobjs.append(new_calfldobj)
+
+
         #Before generating HW config, sort based on StartFld Value.
         self.dpr_hw_icrc_obj = sorted(hw_icrcobj, key=lambda obj: obj[0].HdrFldStartGet())
         #Generate ASIC Config
@@ -1579,11 +1799,12 @@ class Icrc:
 
         for _calfldobj in self.dpr_hw_icrc_obj:
             _icrc_profile_obj = _calfldobj.IcrcDeParserProfileObjGet()
-            if _calfldobj not in self.l4_calfldobjs:
+            if _calfldobj not in self.l4_calfldobjs and \
+               _calfldobj not in self.l5_calfldobjs:
                 icrc_hdr_cfg_name = 'cap_dppcsum_csr_cfg_crc_hdrs[%d]' %\
                                     (icrc_hdr_index)
                 _calfldobj.ConfigGenerate(dpp_json['cap_dpp']\
-                                    ['registers'][icrc_hdr_cfg_name], True)
+                                    ['registers'][icrc_hdr_cfg_name], 'l3hdr')
                 icrc_profile_cfg_name = 'cap_dppcsum_csr_cfg_crc_profile[%d]' %\
                                        _icrc_profile_obj.IcrcProfileNumGet()
                 _icrc_profile_obj.ConfigGenerate(dpp_json['cap_dpp']\
@@ -1592,14 +1813,23 @@ class Icrc:
                                        _icrc_profile_obj.IcrcMaskProfileNumGet()
                 _icrc_profile_obj.MaskProfileConfigGenerate(dpp_json['cap_dpp']\
                                        ['registers'][icrc_profile_cfg_name])
-            else:
+            elif _calfldobj in self.l4_calfldobjs:
                 icrc_hdr_cfg_name = 'cap_dppcsum_csr_cfg_crc_hdrs[%d]' %\
                                     (icrc_hdr_index)
                 _calfldobj.ConfigGenerate(dpp_json['cap_dpp']\
-                                    ['registers'][icrc_hdr_cfg_name], False)
+                                    ['registers'][icrc_hdr_cfg_name], 'l4hdr')
                 icrc_profile_cfg_name = 'cap_dppcsum_csr_cfg_crc_mask_profile[%d]' %\
                                        _icrc_profile_obj.IcrcL4MaskProfileNumGet()
                 _icrc_profile_obj.L4MaskProfileConfigGenerate(dpp_json['cap_dpp']\
+                                       ['registers'][icrc_profile_cfg_name])
+            elif _calfldobj in self.l5_calfldobjs:
+                icrc_hdr_cfg_name = 'cap_dppcsum_csr_cfg_crc_hdrs[%d]' %\
+                                    (icrc_hdr_index)
+                _calfldobj.ConfigGenerate(dpp_json['cap_dpp']\
+                                    ['registers'][icrc_hdr_cfg_name], 'l5hdr')
+                icrc_profile_cfg_name = 'cap_dppcsum_csr_cfg_crc_mask_profile[%d]' %\
+                                       _icrc_profile_obj.IcrcL5MaskProfileNumGet()
+                _icrc_profile_obj.L5MaskProfileConfigGenerate(dpp_json['cap_dpp']\
                                        ['registers'][icrc_profile_cfg_name])
 
             icrc_hdr_index += 1
@@ -1622,11 +1852,17 @@ class Icrc:
         ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
         #for calfldobj in self.update_cal_fieldlist:
         for calfldobj in self.dpr_hw_icrc_obj:
-            if calfldobj not in self.l4_calfldobjs:
+            if calfldobj not in self.l4_calfldobjs and \
+               calfldobj not in self.l5_calfldobjs:
                 for log_str in calfldobj.IcrcLogStrTableGet():
                     ofile.write(log_str)
-            else:
+            elif calfldobj in self.l4_calfldobjs:
                 ofile.write("L4 Instance Config\n")
+                ofile.write("-----------------\n")
+                for log_str in calfldobj.IcrcLogStrTableGet():
+                    ofile.write(log_str)
+            elif calfldobj in self.l5_calfldobjs:
+                ofile.write("L5 Instance Config\n")
                 ofile.write("-----------------\n")
                 for log_str in calfldobj.IcrcLogStrTableGet():
                     ofile.write(log_str)
@@ -1635,7 +1871,7 @@ class Icrc:
         ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
 
         pstr = '{:<12s}{:<5s}{:<7s}{:<7s}{:<8s}{:<8s}{:<8s}{:<5s}{:<8s}{:<7s}{:<7s}'\
-               '{:<10s}{:<5s}{:<s}{:<5s}{:<5s}\n'.format("L3 ", "icrc ", "icrc ",
+               '{:<10s}{:<5s}{:<s}{:<5s}{:<5s}\n'.format("L3/L4/L5 ", "icrc ", "icrc ",
                                                          "PHV ", "Icrc   ", "Mask   ",
                                                          "HdrFld ", "HdrFld ", "use ",
                                                          "phv ", "start ", "startsub ",
@@ -1652,10 +1888,13 @@ class Icrc:
         ofile.write("\n")
 
         for calfldobj in self.dpr_hw_icrc_obj:
-            if calfldobj not in self.l4_calfldobjs:
+            if calfldobj not in self.l4_calfldobjs and \
+               calfldobj not in self.l5_calfldobjs:
                 ofile.write(calfldobj.IcrcDeParserConfigMatrixRowLog())
-            else:
+            elif calfldobj in self.l4_calfldobjs:
                 ofile.write(calfldobj.IcrcDeParserL4ConfigMatrixRowLog())
+            elif calfldobj in self.l5_calfldobjs:
+                ofile.write(calfldobj.IcrcDeParserL5ConfigMatrixRowLog())
 
         ofile.write("\n\n")
         ofile.close()

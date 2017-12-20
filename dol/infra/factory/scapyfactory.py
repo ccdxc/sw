@@ -281,6 +281,9 @@ class IcrcHeaderBuilder:
         self.spkt[penscapy.IPv6].tc = 0xFF
         self.spkt[penscapy.IPv6].fl = 0xFFFFF
         self.spkt[penscapy.UDP].chksum = 0xFFFF
+        self.spkt[penscapy.BTH].f_r = 0x1
+        self.spkt[penscapy.BTH].b_r = 0x1
+        self.spkt[penscapy.BTH].rsvd = 0x3F
         self.__get_icrc()
         return
 
@@ -289,6 +292,9 @@ class IcrcHeaderBuilder:
         self.spkt[penscapy.IP].ttl = 0xFF
         self.spkt[penscapy.IP].chksum = 0xFFFF
         self.spkt[penscapy.UDP].chksum = 0xFFFF
+        self.spkt[penscapy.BTH].f_r = 0x1
+        self.spkt[penscapy.BTH].b_r = 0x1
+        self.spkt[penscapy.BTH].rsvd = 0x3F
         self.__get_icrc()
         return
 

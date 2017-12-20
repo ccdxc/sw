@@ -47,6 +47,7 @@ header_type parser_csum_t {
         inner_ipv4___hdr_len               : 16;
         l4_len                             : 16;
         inner_l4_len                       : 16;
+        roce_bth___start_off               : 16; // intr generted to capture hdr offset
         gso_start                          : 16; // TxDMA specified start of csum-ing byte
         gso_offset                         : 16; // TxDMA specified location of csum in packet
         kind                               : 16; //UDP option chksum needs start in OHI (GSO engine is used)
@@ -74,6 +75,7 @@ header_type parser_ohi_t {
         inner_udp___start_off       : 16;
         tcp___start_off             : 16;
         udp_opt_ocs___start_off     : 16;
+        roce_bth___start_off        : 16; // ohi allocated to store hdr offset
         // Write only variable to capture length value from pkt for csum puporses into OHI.
         ipv4___hdr_len              : 16;
         inner_ipv4___hdr_len        : 16;
@@ -566,6 +568,7 @@ field_list ipv4_icrc_list {
     ipv4.diffserv;
     ipv4.hdrChecksum;
     udp.checksum;
+    roce_bth.reserved1;
 }
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
 field_list_calculation ipv4_roce_icrc {
@@ -582,6 +585,7 @@ field_list ipv6_icrc_list {
     ipv6.flowLabel;
     ipv6.hopLimit;
     udp.checksum;
+    roce_bth.reserved1;
 }
 
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
@@ -598,6 +602,7 @@ field_list inner_ipv4_icrc_list {
     inner_ipv4.diffserv;
     inner_ipv4.hdrChecksum;
     inner_udp.checksum;
+    roce_bth.reserved1;
 }
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
 field_list_calculation inner_ipv4_roce_icrc {
@@ -614,6 +619,7 @@ field_list inner_ipv6_icrc_list {
     inner_ipv6.flowLabel;
     inner_ipv6.hopLimit;
     inner_udp.checksum;
+    roce_bth.reserved1;
 }
 
 @pragma icrc update_len capri_deparser_len.icrc_payload_len

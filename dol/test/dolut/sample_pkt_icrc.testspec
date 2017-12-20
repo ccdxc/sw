@@ -15,7 +15,7 @@ packets:
     - packet:
         id          : PKT1     # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH
         icrc        : True
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
@@ -36,6 +36,9 @@ packets:
             udp:
                 sport   : 1234
                 dport   : 5678
+            bth:
+                opcode  : 4
+                a       : 1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
                     
