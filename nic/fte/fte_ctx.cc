@@ -236,11 +236,6 @@ ctx_t::lookup_session()
     }
 
     HAL_TRACE_DEBUG("fte: found existing session");
-    // Copy appid_info from session to context
-    if(session_->appid_info) {
-        app_redir_ctx_t* app_ctx = app_redir_ctx(*this, false);
-        if(app_ctx) app_ctx->set_appid_info(*session_->appid_info);
-    }
 
     hflow = session_->iflow;
     if(role_ != hal::FLOW_ROLE_INITIATOR) {
@@ -520,15 +515,11 @@ ctx_t::update_flow_table()
     if (hal_cleanup() == true) {
         // Cleanup session if hal_cleanup is set
         if (session_) {
-            if(session_->appid_info)
-                HAL_FREE(hal::HAL_MEM_ALLOC_APPID_INFO, session_->appid_info);
             ret = hal::session_delete(&session_args, session_);
         }
     } else if (session_) { 
         // Update session if it already exists
         ret = hal::session_update(&session_args, session_);
-        if(session_->appid_info && app_ctx)
-            *(session_->appid_info) = app_ctx->appid_info();
     } else {
         // Create a new HAL session
         ret = hal::session_create(&session_args, &session_handle, &session);
@@ -541,11 +532,6 @@ ctx_t::update_flow_table()
                     hal::utils::dllist_add(&session_->feature_list_head,
                                            &state->session_feature_lentry);
                 }
-            }
-            if(app_ctx && app_ctx->appid_started()) {
-                session_->appid_info = (hal::appid_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_APPID_INFO,
-                                                      sizeof(hal::appid_info_t));
-                *(session_->appid_info) = app_ctx->appid_info();
             }
         }
     }

@@ -9,7 +9,6 @@
 
 using namespace std;
 using namespace hal::app_redir;
-using hal::appid_state_t;
 using namespace fte;
 
 #define APPID_DNS_TEST1 1
@@ -34,7 +33,7 @@ namespace app_redir {
       { nullptr, 0, 0 }
   };
 
-  hal::appid_state_t
+  appid_state_t
   scan_wrapper(uint8_t *data, size_t data_len, hal::appid_id_t *app_id)
   {
     if (data && data_len) {
@@ -706,15 +705,15 @@ TEST_F(appid_test, execute_flow_miss) {
              nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
-//    ctx.set_appid_state(hal::APPID_STATE_NOT_NEEDED);
+//    ctx.set_appid_state(APPID_STATE_NOT_NEEDED);
 //    rc = hal::app_redir::exec_flow_miss(ctx);
 //    EXPECT_EQ(rc, HAL_RET_OK);
-//    EXPECT_EQ(ctx.appid_state(), hal::APPID_STATE_NOT_NEEDED);
+//    EXPECT_EQ(ctx.appid_state(), APPID_STATE_NOT_NEEDED);
 
-    ctx.appid_info().state_ = hal::APPID_STATE_NEEDED;
+    ctx.appid_info()->state_ = APPID_STATE_NEEDED;
     rc = hal::app_redir::exec_appid_start(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
-    EXPECT_EQ(ctx.appid_info().state_, hal::APPID_STATE_IN_PROGRESS);
+    EXPECT_EQ(ctx.appid_info()->state_, APPID_STATE_IN_PROGRESS);
 }
 
 // execute L7 redirect pipeline
@@ -735,12 +734,12 @@ TEST_F(appid_test, execute_flow_hit) {
              nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
-    ctx.appid_info().state_ = hal::APPID_STATE_IN_PROGRESS;
+    ctx.appid_info()->state_ = APPID_STATE_IN_PROGRESS;
     rc = hal::app_redir::exec_appid_start(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
-    EXPECT_EQ(ctx.appid_info().state_, hal::APPID_STATE_FOUND);
+    EXPECT_EQ(ctx.appid_info()->state_, APPID_STATE_FOUND);
     EXPECT_EQ(fte::appid_info_id(ctx.appid_info()), 80);
-    EXPECT_EQ(ctx.appid_info().id_count_, 1);
+    EXPECT_EQ(ctx.appid_info()->id_count_, 1);
 }
 
 // execute full flow pipeline
@@ -762,12 +761,12 @@ TEST_F(appid_test, execute_flow_complete) {
              nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
-    ctx.appid_info().state_ = hal::APPID_STATE_NEEDED;
+    ctx.appid_info()->state_ = APPID_STATE_NEEDED;
     rc = hal::app_redir::exec_appid_start(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
-    EXPECT_EQ(ctx.appid_info().state_, hal::APPID_STATE_IN_PROGRESS);
+    EXPECT_EQ(ctx.appid_info()->state_, APPID_STATE_IN_PROGRESS);
     EXPECT_EQ(fte::appid_info_id(ctx.appid_info()), 0);
-    EXPECT_EQ(ctx.appid_info().id_count_, 0);
+    EXPECT_EQ(ctx.appid_info()->id_count_, 0);
 
 
     // Request packet
@@ -781,9 +780,9 @@ TEST_F(appid_test, execute_flow_complete) {
 
     rc = hal::app_redir::exec_appid_continue(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
-    EXPECT_NE(ctx.appid_info().state_, hal::APPID_STATE_ABORT);
+    EXPECT_NE(ctx.appid_info()->state_, APPID_STATE_ABORT);
     EXPECT_EQ(fte::appid_info_id(ctx.appid_info()), 676); // HTTP
-    EXPECT_GT(ctx.appid_info().id_count_, 0);
+    EXPECT_GT(ctx.appid_info()->id_count_, 0);
 
     // TODO: test PARTIAL app ids, and nested app ids
 }
@@ -809,42 +808,43 @@ void appid_test_transaction(appid_test_transaction_t& trans)
     hal::flow_key_t flow_key;
     unsigned char pkt[2000];
 
+    fte::feature_info_t info = {};
+
+    info.state_size = sizeof(app_redir_ctx_t);
+    auto fn1 = [](fte::ctx_t& ctx) {
+        return fte::PIPELINE_CONTINUE;
+    };
+    fte::add_feature(FTE_FEATURE_APP_REDIR_APPID);
+    fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, fn1, info);
+    uint16_t num_features = 1;
+    size_t sz = fte::feature_state_size(&num_features);
+    fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
+    ctx.init({2,1,1}, st, num_features);
     rxhdr.lif = hal::SERVICE_LIF_END; //hal::SERVICE_LIF_APP_REDIR;
 
     for (uint32_t i = 0; i < trans.pkt_count; i++) {
         uint32_t pkt_len = flow_key_and_pkt_init(&flow_key, pkt, trans.pkts[i],
 						 trans.sport, trans.dport);
-        fte::feature_info_t info = {};
 
-        info.state_size = sizeof(app_redir_ctx_t);
-        auto fn1 = [](fte::ctx_t& ctx) {
-            return fte::PIPELINE_CONTINUE;
-        };
-        fte::add_feature(FTE_FEATURE_APP_REDIR);
-        fte::register_feature(FTE_FEATURE_APP_REDIR, fn1, info);
-        uint16_t num_features = 1;
-        size_t sz = fte::feature_state_size(&num_features);
-        fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
-        ctx.init({2,1,1}, st, num_features);
         ctx.set_pkt_info(&rxhdr, pkt, pkt_len);
         ctx.set_key(flow_key);
         app_redir_ctx_t* app_ctx = app_redir_ctx(ctx, false);
 
         if (i == 0) {
             // First packet
-            app_ctx->appid_info().state_ = hal::APPID_STATE_NEEDED;
+            app_ctx->set_appid_needed();
             rc = hal::app_redir::exec_appid_start(ctx);
         } else {
             rc = hal::app_redir::exec_appid_continue(ctx);
         }
 
         EXPECT_EQ(rc, HAL_RET_OK);
-        EXPECT_NE(app_ctx->appid_info().state_, hal::APPID_STATE_ABORT);
-        EXPECT_EQ(app_redir_ctx_t::appid_info_id(app_ctx->appid_info()), trans.pkts[i].expect_app_id);
+        EXPECT_NE(app_ctx->appid_info()->state_, APPID_STATE_ABORT);
+        EXPECT_EQ(app_redir_ctx_t::appid_info_id(*app_ctx->appid_info()), trans.pkts[i].expect_app_id);
         if (trans.pkts[i].expect_app_id == 0) {
-            EXPECT_EQ(app_ctx->appid_info().id_count_, 0);
+            EXPECT_EQ(app_ctx->appid_info()->id_count_, 0);
         } else {
-            EXPECT_GT(app_ctx->appid_info().id_count_, 0);
+            EXPECT_GT(app_ctx->appid_info()->id_count_, 0);
         }
     }
 
@@ -880,12 +880,12 @@ TEST_F(appid_test, execute_dns_flow) {
              nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
-    ctx.appid_info().state_ = hal::APPID_STATE_NEEDED;
+    ctx.appid_info()->state_ = APPID_STATE_NEEDED;
     rc = hal::app_redir::exec_appid_start(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
-    EXPECT_EQ(ctx.appid_info().state_, hal::APPID_STATE_IN_PROGRESS);
+    EXPECT_EQ(ctx.appid_info()->state_, APPID_STATE_IN_PROGRESS);
     EXPECT_EQ(fte::appid_info_id(ctx.appid_info()), 617); // DNS
-    EXPECT_EQ(ctx.appid_info().id_count_, 1);
+    EXPECT_EQ(ctx.appid_info()->id_count_, 1);
 
     // DNS resp packet
     flow_key_init(&flow_key, dns_resp1+PEN_RAW_REDIR_HEADER_V1_FULL_SIZE, true);
@@ -897,15 +897,15 @@ TEST_F(appid_test, execute_dns_flow) {
              nullptr, nullptr, nullptr, 0);
     ctx.set_key(flow_key);
 
-    ctx.appid_info().state_ = hal::APPID_STATE_IN_PROGRESS;
+    ctx.appid_info()->state_ = APPID_STATE_IN_PROGRESS;
     rc = hal::app_redir::exec_appid_continue(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
-    EXPECT_NE(ctx.appid_info().state_, hal::APPID_STATE_ABORT);
+    EXPECT_NE(ctx.appid_info()->state_, APPID_STATE_ABORT);
     EXPECT_EQ(fte::appid_info_id(ctx.appid_info()), 617); // DNS
-    EXPECT_GT(ctx.appid_info().id_count_, 0);
+    EXPECT_GT(ctx.appid_info()->id_count_, 0);
 
-    if (ctx.appid_info().cleanup_handle_) {
-        scanner_cleanup_flow(ctx.appid_info().cleanup_handle_);
+    if (ctx.appid_info()->cleanup_handle_) {
+        scanner_cleanup_flow(ctx.appid_info()->cleanup_handle_);
     }
 }
 #endif

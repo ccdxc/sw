@@ -40,7 +40,7 @@ modules:
         module  : app_redir_raw_appid
         spec    : app_redir_raw_mysql_appid.testspec
         args    :
-            num_pkts : 4
+            num_pkts : 5
         iterate :
             - flow: filter://type=IPV4
 

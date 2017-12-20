@@ -381,7 +381,7 @@ public:
 TEST_F(nwsec_test, test5)
 {
     hal_ret_t ret;
-    test_ctx_t ctx = {};
+    test_ctx_t ctx1 = {}, ctx2 = {};
     hal::nwsec_policy_rules_t rules;
     hal::plugins::sfw::net_sfw_match_result_t rslt;
 
@@ -397,22 +397,23 @@ TEST_F(nwsec_test, test5)
     auto fn1 = [](fte::ctx_t& ctx) {
         return fte::PIPELINE_CONTINUE;
     };
-    fte::add_feature(FTE_FEATURE_APP_REDIR);
-    fte::register_feature(FTE_FEATURE_APP_REDIR, fn1, info);
+    fte::add_feature(FTE_FEATURE_APP_REDIR_APPID);
+    fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, fn1, info);
     uint16_t num_features = 1;
     size_t sz = fte::feature_state_size(&num_features);
     fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
-    ctx.init({2,1,1}, st, num_features);
+    ctx1.init({2,1,1}, st, num_features);
 
     //To Do: Check to Get lock on nwsec_plcy_rules ??
     dllist_add_tail(&rules.appid_list_head,
                     &nwsec_plcy_appid->lentry);
 
-    ret = hal::plugins::sfw::net_sfw_match_rules(ctx, &rules, &rslt);
+    ret = hal::plugins::sfw::net_sfw_match_rules(ctx1, &rules, &rslt);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(app_redir_ctx(ctx, false)->appid_needed());
+    ASSERT_TRUE(app_redir_ctx(ctx1, false)->appid_needed());
+    app_redir_ctx(ctx1, false)->set_appid_info(NULL);
 
-    app_redir_ctx_t::appid_info_init(app_redir_ctx(ctx, false)->appid_info());
+    ctx2.init({2,1,1}, st, num_features);
     nwsec_policy_svc_t* nwsec_plcy_svc = nwsec_policy_svc_alloc_and_init();
     if (nwsec_plcy_svc == NULL) ASSERT_TRUE(0);
     nwsec_plcy_svc->ipproto = types::IPPROTO_NONE;
@@ -421,9 +422,9 @@ TEST_F(nwsec_test, test5)
     dllist_add_tail(&rules.fw_svc_list_head,
                     &nwsec_plcy_svc->lentry);
 
-    ret = hal::plugins::sfw::net_sfw_match_rules(ctx, &rules, &rslt);
+    ret = hal::plugins::sfw::net_sfw_match_rules(ctx2, &rules, &rslt);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(app_redir_ctx(ctx, false)->appid_needed());
+    ASSERT_TRUE(app_redir_ctx(ctx2, false)->appid_needed());
 }
 
 TEST_F(nwsec_test, test6)
@@ -457,8 +458,8 @@ TEST_F(nwsec_test, test6)
     auto fn1 = [](fte::ctx_t& ctx) {
         return fte::PIPELINE_CONTINUE;
     };
-    fte::add_feature(FTE_FEATURE_APP_REDIR);
-    fte::register_feature(FTE_FEATURE_APP_REDIR, fn1, info);
+    fte::add_feature(FTE_FEATURE_APP_REDIR_APPID);
+    fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, fn1, info);
     uint16_t num_features = 1;
     size_t sz = fte::feature_state_size(&num_features);
     fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);

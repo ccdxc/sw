@@ -13,8 +13,8 @@ void app_redir_init() {
         app_redir_ctx_t::init,
     };
     fte::register_feature(FTE_FEATURE_APP_REDIR_MISS, app_redir_miss_exec);
-    fte::register_feature(FTE_FEATURE_APP_REDIR, app_redir_exec, info);
-    fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, appid_exec);
+    fte::register_feature(FTE_FEATURE_APP_REDIR, app_redir_exec);
+    fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, appid_exec, info);
     fte::register_feature(FTE_FEATURE_APP_REDIR_FINI, app_redir_exec_fini);
 
     scanner_init(hal::HAL_THREAD_ID_CFG);

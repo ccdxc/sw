@@ -43,7 +43,6 @@ namespace hal {
 typedef struct flow_s flow_t;
 typedef struct session_s session_t;
 typedef struct app_session_s app_session_t;
-typedef struct appid_info_s appid_info_t;
 
 // flow type depends on the type of packets flow is for
 enum flow_type_t {
@@ -80,20 +79,6 @@ DEFINE_ENUM(flow_end_type_t, FLOW_END_TYPES)
 
 DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
 #undef SESSION_DIRECTIONS
-
-// appID state
-#define APPID_STATE(ENTRY)                                          \
-    ENTRY(APPID_STATE_INIT,        0,  "APPID_STATE_INIT")         \
-    ENTRY(APPID_STATE_NEEDED,      1,  "APPID_STATE_NEEDED")       \
-    ENTRY(APPID_STATE_NOT_NEEDED,  2,  "APPID_STATE_NOT_NEEDED")   \
-    ENTRY(APPID_STATE_IN_PROGRESS, 3,  "APPID_STATE_IN_PROGRESS")  \
-    ENTRY(APPID_STATE_FOUND,       4,  "APPID_STATE_FOUND")        \
-    ENTRY(APPID_STATE_NOT_FOUND,   5,  "APPID_STATE_NOT_FOUND")    \
-    ENTRY(APPID_STATE_ABORT,       6,  "APPID_STATE_ABORT")        \
-    ENTRY(APPID_STATE_STOPPED,     7,  "APPID_STATE_STOPPED")        \
-
-DEFINE_ENUM(appid_state_t, APPID_STATE)
-#undef APPID_STATE
 
 // NAT types
 enum nat_type_t {
@@ -298,7 +283,6 @@ struct session_s {
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
     app_session_t       *app_session;             // app session this L4 session is part of, if any
-    appid_info_t        *appid_info;              // appid context
     vrf_t               *vrf;                     // vrf
 
     // PD state
@@ -352,14 +336,6 @@ struct app_session_s {
     dllist_ctxt_t       l4_session_list_head;      // all L4 sessions in this session
     ht_ctxt_t           app_session_id_ht_ctxt;    // session id based hash table context
 } __PACK__;
-
-const size_t APPID_MAX_DEPTH = 4;
-typedef struct appid_info_s {
-    hal::appid_state_t state_;
-    appid_id_t ids_[APPID_MAX_DEPTH];
-    void* cleanup_handle_;
-    uint8_t id_count_;
-} __PACK__ appid_info_t;
 
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_SESSIONS                             524288
@@ -416,24 +392,6 @@ hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
 
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);
-
-inline appid_id_t appid_info_id(const hal::appid_info_t& info) {
-    return info.id_count_ ? info.ids_[info.id_count_ - 1] : 0;
-}
-inline appid_id_t appid_info_id(const hal::appid_info_t& info, uint8_t idx) {
-    assert(idx < hal::APPID_MAX_DEPTH);
-    return (idx < info.id_count_) ? info.ids_[idx] : 0;
-}
-inline std::ostream& operator<<(std::ostream& os, const hal::appid_info_t& val)
-{
-    os << "{state=" << val.state_;
-    if (val.id_count_) {
-        for (uint8_t i = 0; i < val.id_count_; i++) {
-            os << ",id=" << appid_info_id(val, i);
-        }
-    }
-    return os << "}";
-}
 
 }    // namespace hal
 

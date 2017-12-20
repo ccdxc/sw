@@ -16,7 +16,7 @@ void app_redir_pkt_verdict_set(fte::ctx_t& ctx,
 hal_ret_t app_redir_policy_applic_set(fte::ctx_t& ctx);
 uint8_t *app_redir_pkt(fte::ctx_t& ctx);
 size_t app_redir_pkt_len(fte::ctx_t& ctx);
-hal_ret_t appid_cleanup_flow(hal::appid_info_t& appid_info);
+hal_ret_t appid_cleanup_flow(appid_info_t& appid_info);
 
 /* 
  * From network, packet will go to TCP, TLS (for decryption),
