@@ -20,8 +20,6 @@ import (
 
 const (
 	colURL = "localhost:10777"
-	portA  = "localhost:8086"
-	portB  = "localhost:18086"
 	testDB = "t-e-s-t-D-B"
 )
 
@@ -38,16 +36,18 @@ type suite struct {
 func (ts *suite) Setup(t *testing.T) {
 	// setup a collector with two backends
 	ts.dbA = &mockdb.MockTSDB{}
-	ts.dbA.Setup(portA)
+	dbServerA, err := ts.dbA.Setup()
+	tu.AssertOk(t, err, "failed to setup mockdb")
 	ts.dbB = &mockdb.MockTSDB{}
-	ts.dbB.Setup(portB)
+	dbServerB, err := ts.dbB.Setup()
+	tu.AssertOk(t, err, "failed to setup mockdb")
 
 	ts.c = tec.NewCollector(context.Background()).WithPeriod(100 * time.Millisecond)
-	err := ts.c.AddBackEnd("http://" + portA)
+	err = ts.c.AddBackEnd("http://" + *dbServerA)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	err = ts.c.AddBackEnd("http://" + portB)
+	err = ts.c.AddBackEnd("http://" + *dbServerB)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

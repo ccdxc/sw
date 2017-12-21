@@ -2,6 +2,7 @@ package collector
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sync"
 	"testing"
@@ -16,8 +17,6 @@ import (
 )
 
 const (
-	portA    = "localhost:8086"
-	portB    = "localhost:18086"
 	testDB   = "t-e-s-t-D-B"
 	testMeas = "testStats"
 )
@@ -37,14 +36,13 @@ func getPoints(ss *statssim.StatsSim, count int) []models.Point {
 
 func TestCollectorBasic(t *testing.T) {
 	s := &mockdb.MockTSDB{}
-	s.Setup(portA)
+	dbServer, err := s.Setup()
+	tu.AssertOk(t, err, "failed to setup mockdb")
 	defer s.Teardown()
 
 	c := NewCollector(context.Background()).WithPeriod(100 * time.Millisecond)
-	err := c.AddBackEnd("http://" + portA)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
+	err = c.AddBackEnd("http://" + *dbServer)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", *dbServer))
 
 	ss := statssim.NewStatsSim()
 	ss.Init()
@@ -67,24 +65,22 @@ func TestCollectorBasic(t *testing.T) {
 func TestCollectorDual(t *testing.T) {
 	// start two servers
 	s1 := &mockdb.MockTSDB{}
-	s1.Setup(portA)
+	dbServerA, err := s1.Setup()
+	tu.AssertOk(t, err, "failed to setup mockdb")
 
 	s2 := &mockdb.MockTSDB{}
-	s2.Setup(portB)
+	dbServerB, err := s2.Setup()
+	tu.AssertOk(t, err, "failed to setup mockdb")
 	defer s2.Teardown()
 
 	c := NewCollector(context.Background()).WithPeriod(100 * time.Millisecond).WithSize(12)
 
 	// Add both backends
-	err := c.AddBackEnd("http://" + portA)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
+	err = c.AddBackEnd("http://" + *dbServerA)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", *dbServerA))
 
-	err = c.AddBackEnd("http://" + portB)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
+	err = c.AddBackEnd("http://" + *dbServerB)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", *dbServerB))
 
 	ss := statssim.NewStatsSim()
 	ss.Init()
