@@ -26,7 +26,7 @@ table_launch_cc_and_fra:
                         tcp_cc_and_fra_process_start, k.common_phv_qstate_addr,
                         TCP_TCB_CC_AND_FRA_OFFSET, TABLE_SIZE_512_BITS)
 
-    seq             c1, k.common_phv_pending_snd_una_update, 1
+    smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
     bcf             [c1], tcp_retx_snd_una_update
 
     seq             c1, k.common_phv_pending_rto, 1

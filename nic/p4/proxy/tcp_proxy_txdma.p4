@@ -69,12 +69,12 @@
     modify_field(common_global_scratch.fid, common_phv.fid); \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
-    modify_field(common_global_scratch.process_ack_flag, common_phv.process_ack_flag); \
+    modify_field(common_global_scratch.rx_flag, common_phv.rx_flag); \
     modify_field(common_global_scratch.fin, common_phv.fin); \
     modify_field(common_global_scratch.pending_rx2tx, common_phv.pending_rx2tx); \
     modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
     modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
-    modify_field(common_global_scratch.pending_snd_una_update, common_phv.pending_snd_una_update); \
+    modify_field(common_global_scratch.pending_rx_tcp_ack, common_phv.pending_rx_tcp_ack); \
     modify_field(common_global_scratch.pending_rto, common_phv.pending_rto); \
     modify_field(common_global_scratch.debug_dol_dont_send_ack, common_phv.debug_dol_dont_send_ack);\
     modify_field(common_global_scratch.pending_asesq, common_phv.pending_asesq); \
@@ -186,12 +186,12 @@ header_type common_global_phv_t {
         fid                     : 24;
         qstate_addr             : HBM_ADDRESS_WIDTH;
         snd_una                 : SEQ_NUMBER_WIDTH;
-        process_ack_flag        : 16;
+        rx_flag                 : 8;
         fin                     : 1;
         pending_rx2tx           : 1;
         pending_sesq            : 1;
         pending_ack_send        : 1;
-        pending_snd_una_update  : 1;
+        pending_rx_tcp_ack      : 1;
         pending_rto             : 1;
         debug_dol_dont_send_ack : 1;
         pending_asesq           : 1;
@@ -438,8 +438,9 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
 
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
-pi_4, ci_4, pi_5, ci_5, debug_dol_tx, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd, ft_pi, __unused_cwnd, \
-rto, state, pending_ft_clear, pending_ft_reset, pending_ack_send, pending_snd_una_update
+pi_4, ci_4, pi_5, ci_5, debug_dol_tx, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd,\
+ft_pi, __unused_cwnd, rto, rx_flag, state, pending_ack_send, pending_rx_tcp_ack\
+
 
 
 #define GENERATE_RX2TX_D                                                                               \
@@ -472,11 +473,10 @@ rto, state, pending_ft_clear, pending_ft_reset, pending_ack_send, pending_snd_un
     modify_field(rx2tx_d.ft_pi, ft_pi);                                                                \
     modify_field(rx2tx_d.__unused_cwnd, __unused_cwnd);                                                \
     modify_field(rx2tx_d.rto, rto);                                                                    \
+    modify_field(rx2tx_d.rx_flag, rx_flag);                                                            \
     modify_field(rx2tx_d.state, state);                                                                \
-    modify_field(rx2tx_d.pending_ft_clear, pending_ft_clear);                                          \
-    modify_field(rx2tx_d.pending_ft_reset, pending_ft_reset);                                          \
     modify_field(rx2tx_d.pending_ack_send, pending_ack_send);                                          \
-    modify_field(rx2tx_d.pending_snd_una_update, pending_snd_una_update);
+    modify_field(rx2tx_d.pending_rx_tcp_ack, pending_rx_tcp_ack);                                      \
 
 
 

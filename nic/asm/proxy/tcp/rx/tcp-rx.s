@@ -37,6 +37,7 @@ tcp_rx_process_stage1_start:
 
     tblwr           d.u.tcp_rx_d.alloc_descr, 1
     phvwri          p.common_phv_write_serq, 1
+    tblwr           d.u.tcp_rx_d.flag, 0
 
     /*
      * Adjust quick based on acks sent in tx pipeline
@@ -48,7 +49,7 @@ tcp_rx_process_stage1_start:
     seq.!c1         c1, k.s1_s2s_fin_sent, 1
     sne             c2, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
     slt             c3, k.To_s1_snd_nxt, k.To_s1_ack_seq
-    slt             c4, d.u.tcp_rx_d.rcv_tsval, d.u.tcp_rx_d.ts_recent
+    slt             c4, r4, d.u.tcp_rx_d.ts_recent
     seq             c5, k.s1_s2s_payload_len, r0
     sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
     bcf             [c1 | c2 | c3 | c4 | c5 | c6], tcp_rx_slow_path
@@ -61,11 +62,9 @@ tcp_rx_process_stage1_start:
 
 tcp_rx_fast_path:
     /* tcp_store_ts_recent(tp)
-     * TODO: VS - rcv_tsval should come from k
      * r4 is loaded at the beginning of the stage with current timestamp value
      */
-    tblwr           d.u.tcp_rx_d.ts_recent, d.u.tcp_rx_d.rcv_tsval
-//  tblwr           d.ts_recent_tstamp, r4
+    tblwr           d.u.tcp_rx_d.ts_recent, r4
 
 tcp_rcv_nxt_update:
     tbladd          d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_payload_len
@@ -250,50 +249,31 @@ tcp_rx_end:
 
 
 tcp_ack:
-    phvwr           p.common_phv_process_ack_flag, r0
-
     slt             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
     slt             c2, k.To_s1_snd_nxt, k.To_s1_ack_seq
-    seq             c3, d.u.tcp_rx_d.pending, ICSK_TIME_EARLY_RETRANS
-    seq             c4, d.u.tcp_rx_d.pending, ICSK_TIME_LOSS_PROBE
-    sne             c5, d.u.tcp_rx_d.state, TCP_ESTABLISHED
-    bcf             [c1 | c2 | c3 | c4 | c5], slow_tcp_ack
+    sne             c3, d.u.tcp_rx_d.state, TCP_ESTABLISHED
+    bcf             [c1 | c2 | c3], slow_tcp_ack
 
-    // TODO: process_ack_flag is 1 bit, check how these flags are to be used
-    // and fix code
-fast_no_rearm_rto:
-    add             r5, k.common_phv_process_ack_flag, r0
-    ori.c1          r5, r5, FLAG_SND_UNA_ADVANCED
-
-    /*
-     * if (md->process_ack_flag & FLAG_UPDATE_TS_RECENT)
-     *   tcp_replace_ts_recent(tp, cp->seq);
-     *
-     */
-    add             r5, k.common_phv_process_ack_flag, r0
-    smeqh           c1, r5 , FLAG_UPDATE_TS_RECENT, FLAG_UPDATE_TS_RECENT
-    add.c1          r0, r0, r0 // TODO do fast_tcp_replace_ts_recent
+fast_tcp_ack:
+    tblor           d.u.tcp_rx_d.flag, FLAG_SND_UNA_ADVANCED
+    phvwr           p.rx2tx_pending_rx_tcp_ack, 1
 
 fast_tcp_update_wl:
     tblwr           d.u.tcp_rx_d.snd_wl1, k.To_s1_ack_seq
 fast_tcp_snd_una_update:
     sub             r1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
-    /*
-     * c1 = 1: we are advancing snd_una (i.e ack_seq > snd_una)
-     */
-    sne             c1, r1, r0
-    tbladd.c1       d.u.tcp_rx_d.bytes_acked, r1
+    tbladd          d.u.tcp_rx_d.bytes_acked, r1
     /* Update snd_una */
-    tblwr.c1        d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
-    phvwr.c1        p.rx2tx_snd_una, k.To_s1_ack_seq
+    tblwr           d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
+    phvwr           p.rx2tx_snd_una, k.To_s1_ack_seq
 
-    phvwr           p.common_phv_process_ack_flag, r5
-    phvwr.c1        p.common_phv_pending_txdma, 1
-    phvwr.c1        p.rx2tx_pending_snd_una_update, 1
+    phvwr           p.common_phv_pending_txdma, 1
+
+    tblor           d.u.tcp_rx_d.flag, FLAG_WIN_UPDATE
 fast_tcp_in_ack_event:
-     tblwr          d.u.tcp_rx_d.rcv_tstamp, r4
-     jr             r7
-     nop
+    tblwr           d.u.tcp_rx_d.rcv_tstamp, r4
+    jr              r7
+    phvwr           p.rx2tx_rx_flag, d.u.tcp_rx_d.flag
 
 slow_tcp_ack:
     seq             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
@@ -320,18 +300,18 @@ slow_tcp_ack:
 slow_tcp_ack_established:
     /* If the ack is older than previous acks
      * then we can probably ignore it.
-         *
-    if (before(ack, prior_snd_una)) {
-        /* RFC 5961 5.2 .Blind Data Injection Attack..Mitigation *
-        if (before(ack, prior_snd_una - tp->rx.max_window)) {
-            tp->pending.challenge_ack_send = 1;
-            return -1;
-        }
-        goto old_ack;
-    }
-    *
-    */
-    slt             c1,k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+     *
+     *  if (before(ack, prior_snd_una)) {
+     *          // RFC 5961 5.2 [Blind Data Injection Attack].[Mitigation]
+     *          if (before(ack, prior_snd_una - tp->max_window)) {
+     *                  tcp_send_challenge_ack(sk, skb);
+     *                  return -1;
+     *          }
+     *          goto old_ack;
+     *  }
+     *
+     */
+    slt             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
     sub.c1          r1, d.u.tcp_rx_d.snd_una, d.u.tcp_rx_d.max_window
     slt.c1          c2, k.To_s1_ack_seq, r1
     phvwr.c2        p.rx2tx_extra_pending_challenge_ack_send, 1
@@ -343,14 +323,16 @@ slow_tcp_ack_established:
     /* If the ack includes data we haven't sent yet, discard
      * this segment (RFC793 Section 3.9).
      *
-    if (after(ack, tp->tx.snd_nxt))
-        goto invalid_ack;
+     *  if (after(ack, tp->snd_nxt))
+     *          goto invalid_ack;
      *
      */
     slt             c1, k.To_s1_snd_nxt, k.To_s1_ack_seq
-    bcf             [c1],invalid_ack
+    bcf             [c1], invalid_ack
     nop
 
+#if 0
+    // TODO : this needs to move to tx pipeline
     /*
      *
     if (tp->pending.pending == ICSK_TIME_EARLY_RETRANS ||
@@ -367,110 +349,87 @@ slow_tcp_ack_established:
     b               no_rearm_rto
     nop
 no_rearm_rto:
+#endif
+
+    phvwr           p.rx2tx_pending_rx_tcp_ack, 1
     /*
      *
-    if (after(ack, prior_snd_una)) {
-       md->process_ack_flag |= FLAG_SND_UNA_ADVANCED;
-        }
+     * if (after(ack, prior_snd_una)) {
+     *     md->process_ack_flag |= FLAG_SND_UNA_ADVANCED;
+     *  }
      *
      */
     slt             c1, d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
-    add             r5, k.common_phv_process_ack_flag, r0
-    ori.c1          r5, r5, FLAG_SND_UNA_ADVANCED
-    phvwr.c1        p.common_phv_process_ack_flag, r5
+    tblor.c1        d.u.tcp_rx_d.flag, FLAG_SND_UNA_ADVANCED
 
     /* ts_recent update must be made after we are sure that the packet
      * is in window.
      *
-    if (md->process_ack_flag & FLAG_UPDATE_TS_RECENT)
-        tcp_replace_ts_recent(tp, cp->seq);
+     *  if (flag & FLAG_UPDATE_TS_RECENT)
+     *          tcp_replace_ts_recent(tp, TCP_SKB_CB(skb)->seq);
      *
      */
-    add             r5, k.common_phv_process_ack_flag, r0
-    smeqh           c2, r5 , FLAG_UPDATE_TS_RECENT, FLAG_UPDATE_TS_RECENT
-    bal.c2          r7, tcp_replace_ts_recent
-    nop
+    smeqb           c2, d.u.tcp_rx_d.flag, FLAG_UPDATE_TS_RECENT, FLAG_UPDATE_TS_RECENT
+    b.!c2           tcp_replace_ts_recent_end
+tcp_replace_ts_recent:
+    // TODO : implement this
+    sne             c4, r7, r0
+    add             r7, r0, r0
+tcp_replace_ts_recent_end:
     /*
      *
-      if (!(md->process_ack_flag & FLAG_SLOWPATH) && after(ack, prior_snd_una)) {
-        /* Window is constant, pure forward advance.
-         * No more checks are required.
-         * Note, we use the fact that SND.UNA>=SND.WL2.
-         *
-        tcp_update_wl(tp, ack_seq);
-        tcp_snd_una_update(tp);
-        md->process_ack_flag |= FLAG_WIN_UPDATE;
-
-        tcp_in_ack_event(tp, CA_ACK_WIN_UPDATE);
-      }
+     *  if (!(flag & FLAG_SLOWPATH) && after(ack, prior_snd_una)) {
+     *          // Window is constant, pure forward advance.
+     *          // No more checks are required.
+     *          // Note, we use the fact that SND.UNA>=SND.WL2.
+     *
+     *          tcp_update_wl(tp, ack_seq);
+     *          tcp_snd_una_update(tp, ack);
+     *          flag |= FLAG_WIN_UPDATE;
+     *
+     *          tcp_in_ack_event(sk, CA_ACK_WIN_UPDATE);
+     *
+     *          NET_INC_STATS(sock_net(sk), LINUX_MIB_TCPHPACKS);
+     * } else {
+     *         u32 ack_ev_flags = CA_ACK_SLOWPATH;
+     *
+     *         if (ack_seq != TCP_SKB_CB(skb)->end_seq)
+     *                 flag |= FLAG_DATA;
+     *         else
+     *                 NET_INC_STATS(sock_net(sk), LINUX_MIB_TCPPUREACKS);
+     *
+     *         flag |= tcp_ack_update_window(sk, skb, ack, ack_seq);
+     *
+     *         if (TCP_SKB_CB(skb)->sacked)
+     *                 flag |= tcp_sacktag_write_queue(sk, skb, prior_snd_una,
+     *                                                 &sack_state);
+     *
+     *         if (tcp_ecn_rcv_ecn_echo(tp, tcp_hdr(skb))) {
+     *                 flag |= FLAG_ECE;
+     *                 ack_ev_flags |= CA_ACK_ECE;
+     *         }
+     *
+     *         if (flag & FLAG_WIN_UPDATE)
+     *                 ack_ev_flags |= CA_ACK_WIN_UPDATE;
+     *
+     *         tcp_in_ack_event(sk, ack_ev_flags);
+     * }
      *
      */
-    add             r5, k.common_phv_process_ack_flag, r0
-    smneh           c2, r5, FLAG_SLOWPATH, FLAG_SLOWPATH
-tcp_update_wl:
-    tblwr.c2        d.u.tcp_rx_d.snd_wl1, k.To_s1_ack_seq
-tcp_snd_una_update:
-    /* Increment bytes acked by the delta between ack_seq and snd_una */
-    sub.c2          r1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
-    tbladd.c2       d.u.tcp_rx_d.bytes_acked, r1
-    /* Update snd_una */
-    tblwr.c2        d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
-    phvwr.c2        p.rx2tx_snd_una, k.To_s1_ack_seq
 
-    add.c2          r5, k.common_phv_process_ack_flag, r0
-    ori.c2          r5, r5, FLAG_WIN_UPDATE
-    phvwr.c2        p.common_phv_process_ack_flag, r5
-    /* ack_ev_flags = CA_ACK_SLOWPATH */
-    ori.c2          r1, r0, CA_ACK_SLOWPATH
-    bcf             [c2], tcp_in_ack_event
-    nop
-    /* else {
-        u32 ack_ev_flags = CA_ACK_SLOWPATH;
+     /*
+      * We are already in slow path here, so no need to check that
+      */
+    sne             c2, k.s1_s2s_payload_len, 0
+    tblor.c2        d.u.tcp_rx_d.flag, FLAG_DATA
 
-        if (ack_seq != cp->end_seq)
-        md->process_ack_flag |= FLAG_DATA;
-
-        md->process_ack_flag |= tcp_ack_update_window(tp, cp, ack, ack_seq);
-
-        if (tcp_ecn_rcv_ecn_echo(tp, cp)) {
-        md->process_ack_flag |= FLAG_ECE;
-        ack_ev_flags |= CA_ACK_ECE;
-        }
-
-        if (md->process_ack_flag & FLAG_WIN_UPDATE)
-        ack_ev_flags |= CA_ACK_WIN_UPDATE;
-
-        tcp_in_ack_event(tp, ack_ev_flags);
-
-     */
-    /* r1 is ack_ev_flags */
-    /* u32 ack_ev_flags = CA_ACK_SLOWPATH; */
-    ori             r1, r0, CA_ACK_SLOWPATH
-    /* if (ack_seq != cp->end_seq) */
-    // TODO : this doesn't seem right, we need to compare ack_seq and end_seq,
-    // but seem to be comparing seq and end_seq. 
-    setcf           c3, [!c0] // TODO
-    //sne             c3, k.To_s1_seq, k.To_s1_end_seq
-    /*     md->process_ack_flag |= FLAG_DATA; */
-    add             r5, k.common_phv_process_ack_flag, r0
-    ori             r5, r5, FLAG_DATA
-    phvwr.c3        p.common_phv_process_ack_flag, r5
-    /* Update our send window.
-     *
-     * Window update algorithm, described in RFC793/RFC1122 (used in linux-2.2
-     * and in FreeBSD. NetBSD's one is even worse.) is wrong.
-     */
-    phvwr           p.common_phv_pending_txdma, 1
-    phvwr           p.rx2tx_pending_snd_una_update, 1
 tcp_ack_update_window:
     /* r2 contains nwin */
-    /* nwin = cp->window */
-    add             r2, k.s1_s2s_window,0
-    /* if (!cp->syn) */
-    seq             c1, k.common_phv_syn, r0
-    /*     nwin <<= tp->rx_opt.snd_wscale; */
-    add.c1          r5, d.u.tcp_rx_d.snd_wscale, r0
-    sllv.c1         r2, r2, r5
+    /*
+     * nwin = cp->window
+     * nwin <<= tp->rx_opt.snd_wscale;
+     */
+    sll             r2, k.s1_s2s_window, d.u.tcp_rx_d.snd_wscale
 tcp_may_update_window:
     /* after(ack, snd_una) */
     slt             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
@@ -487,9 +446,7 @@ tcp_may_update_window:
 
 tcp_update_window:
     /* flag |= FLAG_WIN_UPDATE */
-    add             r5, k.common_phv_process_ack_flag, r0
-    ori             r5, r5, FLAG_WIN_UPDATE
-    phvwr           p.common_phv_process_ack_flag, r5
+    tblor           d.u.tcp_rx_d.flag, FLAG_WIN_UPDATE
     /* ack_ev_flags |= CA_ACK_WIN_UPDATE */
     ori             r1, r1, CA_ACK_WIN_UPDATE
     /* tcp_update_wl */
@@ -529,13 +486,14 @@ tcp_update_window:
 
 
 tcp_update_window_bypass:
+slow_tcp_snd_una_update:
     /* tcp_snd_una_update */
     /* Increment bytes acked by the delta between ack_seq and snd_una */
     sub             r3, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
     tbladd          d.u.tcp_rx_d.bytes_acked, r3
     /* Update snd_una */
     tblwr           d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
-    phvwr.c2        p.rx2tx_snd_una, k.To_s1_ack_seq
+    phvwr           p.rx2tx_snd_una, k.To_s1_ack_seq
 
 tcp_ecn_rcv_ecn_echo:
     /* ecn_flags & TCP_ECN_OK */
@@ -547,9 +505,7 @@ tcp_ecn_rcv_ecn_echo:
     bcf             [c4 | !c5 | !c3], tcp_ece_flag_set_bypass
     nop
     /* md->process_ack_flag |= FLAG_ECE */
-    add             r5, k.common_phv_process_ack_flag, r0
-    ori             r5, r5, FLAG_ECE
-    phvwr           p.common_phv_process_ack_flag, r5
+    tblor           d.u.tcp_rx_d.flag, FLAG_ECE
     /* ack_ev_flags |= CA_ACK_ECE */
     ori             r1, r1, CA_ACK_ECE
     /* Fall thru to tcp_in_ack_event with ack_ev_flags in r1 */
@@ -568,10 +524,10 @@ tcp_in_ack_event:
      bcf            [!c3], no_queue
      nop
 
-     // TODO : we bal into tcp_ack and this runs, however below code
-     // further does a bal. Forcibly return for now and see how to make
-     // that code run
-     jr             r7
+tcp_in_ack_event_end:
+    phvwr           p.common_phv_pending_txdma, 1
+    phvwr           p.rx2tx_rx_flag, d.u.tcp_rx_d.flag
+    jr              r7
 
 tcp_ecn_check_ce:
     sne             c4, r7, r0
@@ -661,6 +617,8 @@ tcp_incr_quickack:
     jr              r7
     phvwr           p.s5_s2s_ato, TCP_ATO_MIN
 
+#if 0
+    // TODO : this needs to move to tx pipeline
 /* Restart timer after forward progress on connection.
  * RFC2988 recommends to restart timer to now+rto.
  */
@@ -710,12 +668,8 @@ early_retx_or_tlp:
 tcp_rearm_rto_done:
     jr.c4           r7
     add             r7, r0, r0
+#endif
 
-
-tcp_replace_ts_recent:
-    sne             c4, r7, r0
-    jr.c4           r7
-    add             r7, r0, r0
 
 tcp_enter_quickack_mode:
     bal             r7, tcp_incr_quickack
@@ -831,15 +785,13 @@ tcp_rx_slow_path_post_fin_handling:
             goto slow_path  ;
     }
     */
-    // XXX: VS - rcv_tsval should come from k
-    sub             r1, d.u.tcp_rx_d.rcv_tsval, d.u.tcp_rx_d.ts_recent
+    sub             r1, r4, d.u.tcp_rx_d.ts_recent
     slt             c1, r1, r0
     bcf             [c1],slow_path
     nop
 
-    seq             c1, k.s1_s2s_payload_len, r0
-    phvwr.c1        p.common_phv_process_ack_flag, r0
-    bal.c1          r7, tcp_ack
+    seq             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    bal.!c1         r7, tcp_ack
     nop
     seq             c1, k.s1_s2s_payload_len, r0
     b.c1            flow_rx_process_done

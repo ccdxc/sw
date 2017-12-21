@@ -134,7 +134,6 @@ header_type tcp_rx_d_t {
     fields {
         ooo_rcv_bitmap          : TCP_OOO_NUM_CELLS;
         rcv_nxt                 : 32;
-        rcv_tsval               : 32;
         rcv_tstamp              : 32;
         ts_recent               : 32;
         lrcv_time               : 32;
@@ -148,6 +147,7 @@ header_type tcp_rx_d_t {
         snd_wnd                 : 16;
         rcv_mss                 : 16;
         ato                     : 16;
+        flag                    : 8;
         rto                     : 8;
         pred_flags              : 8;
         ecn_flags               : 8;
@@ -738,10 +738,10 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
 /*
  * Stage 1 table 0 action
  */
-action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time,
+action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
         snd_una, snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
         bytes_acked, snd_wnd, rcv_mss, rto, pred_flags, ecn_flags, state,
-        parsed_state, ato, quick, snd_wscale, pending, ca_flags, write_serq,
+        parsed_state, flag, ato, quick, snd_wscale, pending, ca_flags, write_serq,
         pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q, alloc_descr) {
     // k + i for stage 1
 
@@ -790,7 +790,6 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_ti
     // d for stage 1 tcp-rx
     modify_field(tcp_rx_d.ooo_rcv_bitmap, ooo_rcv_bitmap);
     modify_field(tcp_rx_d.rcv_nxt, rcv_nxt);
-    modify_field(tcp_rx_d.rcv_tsval, rcv_tsval);
     modify_field(tcp_rx_d.rcv_tstamp, rcv_tstamp);
     modify_field(tcp_rx_d.ts_recent, ts_recent);
     modify_field(tcp_rx_d.lrcv_time, lrcv_time);
@@ -808,6 +807,7 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_ti
     modify_field(tcp_rx_d.ecn_flags, ecn_flags);
     modify_field(tcp_rx_d.state, state);
     modify_field(tcp_rx_d.parsed_state, parsed_state);
+    modify_field(tcp_rx_d.flag, flag);
     modify_field(tcp_rx_d.ato, ato);
     modify_field(tcp_rx_d.quick, quick);
     modify_field(tcp_rx_d.snd_wscale, snd_wscale);

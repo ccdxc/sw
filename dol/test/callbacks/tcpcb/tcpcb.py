@@ -17,7 +17,7 @@ def GetSeqNum (tc, pkt):
     return tc.pvtdata.flow1_rcv_nxt
 
 def GetAckNum (tc, pkt):
-    return tc.pvtdata.flow1_snd_una
+    return tc.pvtdata.flow1_snd_una + tc.pvtdata.flow1_bytes_txed
 
 def GetReverseFlowSeqNum (tc, pkt):
     fin = 0
@@ -75,7 +75,11 @@ def GetReverseFlowPktOutAckNum (tc, pkt):
     return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
 
 def GetAckPktSeqNum (tc, pkt):
-    return tc.pvtdata.flow1_snd_nxt
+    fin = 0
+    if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
+        fin += 1
+    tc.pvtdata.flow1_bytes_txed += pkt.payloadsize + fin
+    return tc.pvtdata.flow1_snd_nxt + tc.pvtdata.flow1_bytes_txed
 
 def GetAckPktAckNum (tc, pkt):
     fin = 0

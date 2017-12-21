@@ -24,7 +24,7 @@ struct s5_t0_tcp_tx_xmit_d d;
      */
 
 tcp_xmit_process_start:
-    seq             c1, k.common_phv_pending_snd_una_update, 1
+    smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
     bcf             [c1], tcp_tx_xmit_snd_una_update
 
     seq             c1, k.common_phv_pending_rto, 1
@@ -210,6 +210,8 @@ tcp_init_xmit:
 
 tcp_tx_handle_fin:
     seq             c1, k.to_s5_state, TCP_ESTABLISHED
+    seq             c2, k.to_s5_state, TCP_CLOSE_WAIT
+    setcf           c1, [c1 | c2]
     tbladd.c1       d.snd_nxt, 1
     phvwr           p.tx2rx_fin_sent, 1
     jr              r7

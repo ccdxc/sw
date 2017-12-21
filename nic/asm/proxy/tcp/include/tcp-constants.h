@@ -166,7 +166,8 @@
 #define TCPHDR_SYN_ECN  (TCPHDR_SYN | TCPHDR_ECE | TCPHDR_CWR)
 
 
-
+#if 0
+// These are Linux defines
 #define FLAG_DATA               0x01 /* Incoming frame contained data.          */
 #define FLAG_WIN_UPDATE         0x02 /* Incoming ACK was a window update.       */
 #define FLAG_DATA_ACKED         0x04 /* This ACK acknowledged new data.         */
@@ -181,6 +182,18 @@
 #define FLAG_DSACKING_ACK       0x800 /* SACK blocks contained D-SACK info */
 #define FLAG_SACK_RENEGING      0x2000 /* snd_una advanced to a sacked seq */
 #define FLAG_UPDATE_TS_RECENT   0x4000 /* tcp_replace_ts_recent() */
+#else
+// These are Linux defines redefined here to fit within 8 bits
+// Other flags will be split into flag2
+#define FLAG_DATA               0x01 /* Incoming frame contained data.          */
+#define FLAG_WIN_UPDATE         0x02 /* Incoming ACK was a window update.       */
+#define FLAG_ECE                0x04 /* ECE in this ACK                         */
+#define FLAG_SLOWPATH           0x08 /* Do not skip RFC checks for window update.*/
+#define FLAG_SND_UNA_ADVANCED   0x10 /* Snd_una was changed (!= FLAG_DATA_ACKED) */
+#define FLAG_UPDATE_TS_RECENT   0x20 /* tcp_replace_ts_recent() */
+#define FLAG_RETRANS_DATA_ACKED 0x40 /* This ACK acknowledged new data.         */
+#define FLAG_LOST_RETRANS       0x80 /* This ACK acknowledged new data.         */
+#endif
 
 #define FLAG_ACKED              (FLAG_DATA_ACKED|FLAG_SYN_ACKED)
 #define FLAG_NOT_DUP            (FLAG_DATA|FLAG_WIN_UPDATE|FLAG_ACKED)

@@ -97,7 +97,7 @@ tcp_tx_launch_asesq:
 
 tcp_tx_pending_rx2tx:
     phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
-    phvwr           p.common_phv_pending_snd_una_update, d.pending_snd_una_update
+    phvwr           p.common_phv_rx_flag, d.rx_flag
 
     // TODO check pi against ci
     phvwr           p.to_s1_pending_cidx, d.{ci_1}.hx
@@ -118,7 +118,7 @@ tcp_tx_pending_rx2tx:
      * only used in retx cleanup, so don't launch the stage if this
      * is not a snd_una_update
      */
-    seq             c1, d.pending_snd_una_update, 1
+    smeqb           c1, d.rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
     b.!c1           tcp_tx_pending_rx2tx_end
 
     CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
@@ -131,6 +131,7 @@ tcp_tx_pending_rx2tx:
                         k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33},
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 tcp_tx_pending_rx2tx_end:
+    tblwr           d.rx_flag, 0
     nop.e
     nop
 

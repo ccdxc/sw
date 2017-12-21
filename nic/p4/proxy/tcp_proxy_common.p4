@@ -36,12 +36,11 @@
         ft_pi                           : 16                    ;\
         __unused_cwnd                   : WINDOW_WIDTH          ;\
         rto                             : 16                    ;\
+        rx_flag                         : 8                     ;\
         state                           : 8                     ;\
-        pending_ft_clear                : 1                     ;\
-        pending_ft_reset                : 1                     ;\
         pending_ack_send                : 1                     ;\
-        pending_snd_una_update          : 1                     ;\
-        pad1_rx2tx                      : 20                    ;
+        pending_rx_tcp_ack              : 1                     ;\
+        pad1_rx2tx                      : 14                    ;
 
 
 #define RX2TX_SHARED_EXTRA_STATE \

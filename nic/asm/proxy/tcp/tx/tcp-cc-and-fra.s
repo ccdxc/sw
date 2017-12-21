@@ -21,7 +21,7 @@ struct s4_t0_tcp_tx_cc_and_fra_d d;
     .param          bictcp_cong_avoid
 
 tcp_cc_and_fra_process_start:
-    seq             c1, k.common_phv_pending_snd_una_update, 1
+    smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
     bcf             [c1], tcp_cong_control
 
     phvwr           p.to_s5_snd_cwnd, d.snd_cwnd
@@ -127,9 +127,8 @@ tcp_cwnd_reduction:
     b               update_sndcnt
 
 packets_in_flight_less_than_ssthresh:
-    add             r1, r0, k.common_phv_process_ack_flag
-    smeqh           c1, r1, FLAG_RETRANS_DATA_ACKED, FLAG_RETRANS_DATA_ACKED
-    smeqh           c2, r1, FLAG_LOST_RETRANS, FLAG_LOST_RETRANS
+    smeqb           c1, k.common_phv_rx_flag, FLAG_RETRANS_DATA_ACKED, FLAG_RETRANS_DATA_ACKED
+    smeqb           c2, k.common_phv_rx_flag, FLAG_LOST_RETRANS, FLAG_LOST_RETRANS
     bcf             [c1 & !c2], sndcnt_retx_data_acked_not_lost_retrans
 
     // else {
