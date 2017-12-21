@@ -160,8 +160,7 @@ print_usage (char **argv)
 
 // TODO: need to figure a clean way for HAL to exit
 // 1. hook on to D-Bus esp. system bus
-// 2. handle signals
-// 3. need to release all memory/resources and kill the FTE threads etc.
+// 2. need to release all memory/resources and kill the FTE threads etc.
 int
 main (int argc, char **argv)
 {
@@ -179,36 +178,36 @@ main (int argc, char **argv)
 
     // parse CLI options
     while ((oc = getopt_long(argc, argv, ":hc:W;", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 'c':
-            cfg_file = optarg;
-            if (!cfg_file) {
-                fprintf(stderr, "config file is not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        case 'h':
-            print_usage(argv);
-            exit(0);
-            break;
-
-        case ':':
-            fprintf(stderr, "%s: option -%c requires an argument\n",
-                    argv[0], optopt);
+    switch (oc) {
+    case 'c':
+        cfg_file = optarg;
+        if (!cfg_file) {
+            fprintf(stderr, "config file is not specified\n");
             print_usage(argv);
             exit(1);
-            break;
-
-        case '?':
-        default:
-            fprintf(stderr, "%s: option -%c is invalid, quitting ...\n",
-                    argv[0], optopt);
-            print_usage(argv);
-            exit(1);
-            break;
         }
+        break;
+
+    case 'h':
+        print_usage(argv);
+        exit(0);
+        break;
+
+    case ':':
+        fprintf(stderr, "%s: option -%c requires an argument\n",
+                argv[0], optopt);
+        print_usage(argv);
+        exit(1);
+        break;
+
+    case '?':
+    default:
+        fprintf(stderr, "%s: option -%c is invalid, quitting ...\n",
+                argv[0], optopt);
+        print_usage(argv);
+        exit(1);
+        break;
+    }
     }
 
     // makeup the full file path

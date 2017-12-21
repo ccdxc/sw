@@ -22,6 +22,7 @@
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/plugins/plugins.hpp"
+#include "sdk/logger.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -442,16 +443,59 @@ hal_catalog_init(std::string catalog_file)
 
     return hal::utils::catalog::factory(catalog_file);
 }
+
+int
+hal_sdk_error_logger (const char *format, ...)
+{
+    char       logbuf[128];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    HAL_TRACE_ERR(logbuf);
+    va_end(args);
+
+    return 0;
+}
+
+int
+hal_sdk_debug_logger (const char *format, ...)
+{
+    char       logbuf[128];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    HAL_TRACE_DEBUG(logbuf);
+    va_end(args);
+
+    return 0;
+}
+
+//------------------------------------------------------------------------------
+// SDK initiaization
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+hal_sdk_init (void)
+{
+    sdk::lib::logger::init(hal_sdk_error_logger, hal_sdk_debug_logger);
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // init function for HAL
 //------------------------------------------------------------------------------
 hal_ret_t
 hal_init (hal_cfg_t *hal_cfg)
 {
+    int          tid;
     char         *user = NULL;
     std::string  catalog_file = "catalog.json";
 
     HAL_TRACE_DEBUG("Initializing HAL ...");
+
+    // do SDK initialization, if any
+    hal_sdk_init();
 
     // check to see if HAL is running with root permissions
     user = getenv("USER");
@@ -487,9 +531,9 @@ hal_init (hal_cfg_t *hal_cfg)
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
 
-    if(!getenv("CAPRI_MOCK_MODE")) {
+    if (!getenv("CAPRI_MOCK_MODE")) {
         // start fte threads
-        for (int tid = HAL_THREAD_ID_FTE_MIN; tid <= HAL_THREAD_ID_FTE_MAX; tid++) {
+        for (tid = HAL_THREAD_ID_FTE_MIN; tid <= HAL_THREAD_ID_FTE_MAX; tid++) {
             g_hal_threads[tid]->start(g_hal_threads[tid]);
         }
     }
