@@ -511,21 +511,7 @@ app_redir_pkt_len(fte::ctx_t& ctx)
 static hal_ret_t
 app_redir_pkt_process(fte::ctx_t& ctx)
 {
-    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
-    hal_ret_t               ret;
-
-    ret = app_redir_app_hdr_validate(ctx);
-    if (ret == HAL_RET_OK) {
-
-        /*
-         * DOL can force the packet not to go thru appid
-         */
-        if (redir_ctx.redir_flags() & PEN_APP_REDIR_PIPELINE_LOOPBK_EN) {
-            redir_ctx.set_appid_state(APPID_STATE_NOT_NEEDED);
-        }
-    }
-
-    return ret;
+    return app_redir_app_hdr_validate(ctx);
 }
 
 

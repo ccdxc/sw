@@ -29,12 +29,11 @@ appid_scan(fte::ctx_t& ctx)
             goto error;
         }
     }
-    app_ctx->set_appid_info(appid_info);
+    app_ctx->update_appid_info(appid_info);
 
     // Cleanup Snort flow if we're done scanning
     if (app_ctx->appid_info()->cleanup_handle_ != nullptr) {
         if (app_ctx->appid_state() == APPID_STATE_FOUND ||
-            app_ctx->appid_state() == APPID_STATE_NOT_NEEDED ||
             app_ctx->appid_state() == APPID_STATE_ABORT) {
             // Done.  Now cleanup scanner flow resources.
             scanner_cleanup_flow(app_ctx->appid_info()->cleanup_handle_);
@@ -117,7 +116,6 @@ appid_exec(fte::ctx_t& ctx)
         HAL_TRACE_DEBUG("appid state not initialized, skipping appid scanning");
         ret = HAL_RET_OK; // TODO: HAL_RET_ERR
         break;
-    case APPID_STATE_NOT_NEEDED:
     case APPID_STATE_NOT_FOUND:
     case APPID_STATE_FOUND:
         HAL_TRACE_DEBUG("appid state not needed, state {}", app_ctx->appid_state());

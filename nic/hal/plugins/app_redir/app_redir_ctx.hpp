@@ -24,12 +24,11 @@ typedef enum {
 #define APPID_STATE(ENTRY)                                          \
     ENTRY(APPID_STATE_INIT,        0,  "APPID_STATE_INIT")         \
     ENTRY(APPID_STATE_NEEDED,      1,  "APPID_STATE_NEEDED")       \
-    ENTRY(APPID_STATE_NOT_NEEDED,  2,  "APPID_STATE_NOT_NEEDED")   \
-    ENTRY(APPID_STATE_IN_PROGRESS, 3,  "APPID_STATE_IN_PROGRESS")  \
-    ENTRY(APPID_STATE_FOUND,       4,  "APPID_STATE_FOUND")        \
-    ENTRY(APPID_STATE_NOT_FOUND,   5,  "APPID_STATE_NOT_FOUND")    \
-    ENTRY(APPID_STATE_ABORT,       6,  "APPID_STATE_ABORT")        \
-    ENTRY(APPID_STATE_STOPPED,     7,  "APPID_STATE_STOPPED")        \
+    ENTRY(APPID_STATE_IN_PROGRESS, 2,  "APPID_STATE_IN_PROGRESS")  \
+    ENTRY(APPID_STATE_FOUND,       3,  "APPID_STATE_FOUND")        \
+    ENTRY(APPID_STATE_NOT_FOUND,   4,  "APPID_STATE_NOT_FOUND")    \
+    ENTRY(APPID_STATE_ABORT,       5,  "APPID_STATE_ABORT")        \
+    ENTRY(APPID_STATE_STOPPED,     6,  "APPID_STATE_STOPPED")        \
 
 DEFINE_ENUM(appid_state_t, APPID_STATE)
 #undef APPID_STATE
@@ -153,7 +152,11 @@ public:
     void set_appid_updated(bool updated) { appid_updated_ = updated; }
 
     appid_info_t* appid_info() { return appid_info_; };
-    void set_appid_info(appid_info_t& info) { *appid_info_ = info; };
+    void update_appid_info(appid_info_t& info) {
+        uint32_t off = sizeof(appid_info_->session_state_);
+        uint32_t len = sizeof(info) - off;
+        memcpy((uint8_t*)appid_info_+off, (uint8_t*)&info+off, len);
+    };
     void set_appid_info(appid_info_t* info) { appid_info_ = info; };
 
     appid_state_t appid_state() const { return appid_info_->state_; }
@@ -185,12 +188,6 @@ public:
         }
         appid_info_->state_ = APPID_STATE_NEEDED;
     }
-    void set_appid_not_needed() {
-        if(!appid_started())
-            appid_info_->state_ = APPID_STATE_NOT_NEEDED;
-        else
-            HAL_ASSERT(0);
-    }
     bool appid_in_progress() {
       if(!appid_info_)
           return false;
@@ -199,10 +196,7 @@ public:
                  (appid_info_->state_ == APPID_STATE_IN_PROGRESS) ;
     }
     bool appid_started() {
-        if(!appid_info_)
-            return false;
-        else
-            return (appid_in_progress() || appid_completed()) ;
+      return (appid_in_progress() || appid_completed()) ;
     }
     bool appid_needed() {
       if(!appid_info_)

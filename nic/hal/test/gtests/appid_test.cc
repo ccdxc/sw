@@ -821,6 +821,7 @@ void appid_test_transaction(appid_test_transaction_t& trans)
     fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
     ctx.init({2,1,1}, st, num_features);
     rxhdr.lif = hal::SERVICE_LIF_END; //hal::SERVICE_LIF_APP_REDIR;
+    fte::feature_session_state_t state;
 
     for (uint32_t i = 0; i < trans.pkt_count; i++) {
         uint32_t pkt_len = flow_key_and_pkt_init(&flow_key, pkt, trans.pkts[i],
@@ -833,6 +834,10 @@ void appid_test_transaction(appid_test_transaction_t& trans)
         if (i == 0) {
             // First packet
             app_ctx->set_appid_needed();
+            strncpy(app_ctx->appid_info()->session_state_.feature_name,
+                FTE_FEATURE_APP_REDIR_APPID.c_str(),
+                sizeof(state.feature_name));
+            state = app_ctx->appid_info()->session_state_;
             rc = hal::app_redir::exec_appid_start(ctx);
         } else {
             rc = hal::app_redir::exec_appid_continue(ctx);
@@ -840,6 +845,8 @@ void appid_test_transaction(appid_test_transaction_t& trans)
 
         EXPECT_EQ(rc, HAL_RET_OK);
         EXPECT_NE(app_ctx->appid_info()->state_, APPID_STATE_ABORT);
+        //Ensure that we dont modify anything in feature state
+        EXPECT_EQ(0, memcmp(&state, &app_ctx->appid_info()->session_state_, sizeof(state)));
         EXPECT_EQ(app_redir_ctx_t::appid_info_id(*app_ctx->appid_info()), trans.pkts[i].expect_app_id);
         if (trans.pkts[i].expect_app_id == 0) {
             EXPECT_EQ(app_ctx->appid_info()->id_count_, 0);
