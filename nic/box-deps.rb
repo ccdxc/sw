@@ -137,6 +137,25 @@ inside "#{BASE_BUILD_DIR}/grpc" do
   run "ldconfig"
 end
 
+# prep valgrind
+inside BASE_BUILD_DIR do
+  run "mkdir valgrind"
+end
+
+# prep valgrind
+inside "#{BASE_BUILD_DIR}/valgrind" do
+  run "wget ftp://sourceware.org/pub/valgrind/valgrind-3.11.0.tar.bz2"
+  run "tar xvjf valgrind-3.11.0.tar.bz2"
+end
+
+# install valgrind
+inside "#{BASE_BUILD_DIR}/valgrind/valgrind-3.11.0" do
+  run "./autogen.sh"
+  run "./configure"
+  run "make"
+  run "make install"
+end
+
 # prep zeromq
 inside BASE_BUILD_DIR do
   run "wget https://github.com/zeromq/zeromq3-x/releases/download/v3.2.5/zeromq-3.2.5.tar.gz"
@@ -232,7 +251,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.3"
+tag "pensando/nic:1.6"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

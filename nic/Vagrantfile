@@ -191,6 +191,18 @@ mkdir -p /home/ubuntu/.ssh/ && touch $f
 grep -q 'StrictHostKeyChecking' $f
 echo 'StrictHostKeyChecking no' >> $f
 
+# install valgrind
+cd /tmp
+mkdir valgrind
+cd valgrind
+wget ftp://sourceware.org/pub/valgrind/valgrind-3.11.0.tar.bz2
+tar xvjf valgrind-3.11.0.tar.bz2
+cd valgrind-3.11.0
+./autogen.sh
+./configure --prefix=...
+make
+make install
+
 SCRIPT
 
 # copy your environment

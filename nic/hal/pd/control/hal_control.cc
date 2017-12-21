@@ -5,7 +5,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <atomic>
-#include "nic/hal/hal.hpp"
 #include "hal_control.hpp"
 #include "port.hpp"
 #include "nic/include/asic_pd.hpp"
