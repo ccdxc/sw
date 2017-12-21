@@ -538,7 +538,9 @@ asic_rw_init(hal_cfg_t *hal_cfg)
     pal_ret_t   palrv;
 
     // Initialize PAL
-    palrv = sdk::lib::pal_init(hal_cfg->platform_mode == HAL_PLATFORM_MODE_SIM);
+    palrv = sdk::lib::pal_init(
+                    hal_cfg->platform_mode == HAL_PLATFORM_MODE_SIM ||
+                    hal_cfg->platform_mode == HAL_PLATFORM_MODE_RTL);
     HAL_ABORT(IS_PAL_API_SUCCESS(palrv));
 
     // do asic initialization
