@@ -98,12 +98,6 @@
                 "hal"
             ]
         },
-        "gft": {
-            "cmd": "./run.py --gft",
-            "modules": [
-                "model"
-            ]
-        },
         "dol": {
             "cmd_cfg": "./coverage/dol_cov_runs.json",
             "modules": [
