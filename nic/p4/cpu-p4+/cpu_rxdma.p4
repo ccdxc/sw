@@ -109,7 +109,7 @@ header_type p4_to_p4plus_cpu_header_ext_t {
 header_type common_global_phv_t {
     fields {
         // global k (max 128)
-        qstate_addr             : 32;
+        qstate_addr             : CPU_HBM_ADDRESS_WIDTH;
         flags                   : 8;
         debug_dol               : 8;
     }
@@ -125,12 +125,10 @@ header_type dma_phv_pad_t {
  *****************************************************************************/
 header_type common_t0_s2s_phv_t {
     fields {
-        page                    : 32;
-        descr                   : 32;
-	    arqrx_base              : 32;
+        page                    : CPU_HBM_ADDRESS_WIDTH;
+        descr                   : CPU_HBM_ADDRESS_WIDTH;
         arqrx_pindex            : 16;
         payload_len             : 16;
-        hash                    : 24;
         arqrx_id                : 8;
     }
 }
@@ -329,9 +327,7 @@ action write_arqrx(pi_0, pi_1, pi_2) {
     modify_field(t0_s2s_scratch.page, t0_s2s.page);
     modify_field(t0_s2s_scratch.descr, t0_s2s.descr);
     modify_field(t0_s2s_scratch.arqrx_pindex, t0_s2s.arqrx_pindex);
-    modify_field(t0_s2s_scratch.arqrx_base, t0_s2s.arqrx_base);
     modify_field(t0_s2s_scratch.payload_len, t0_s2s.payload_len);
-    modify_field(t0_s2s_scratch.hash, t0_s2s.hash);
     modify_field(t0_s2s_scratch.arqrx_id, t0_s2s.arqrx_id);
 
     // from ki global

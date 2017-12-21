@@ -2,6 +2,7 @@
  * cpu_rxtx_common.p4
  * This file contains headers common to CPU TXDMA and RXDMA programs
  *******************************************************************/
+#define CPU_HBM_ADDRESS_WIDTH   40
 
 header_type quiesce_pkt_trlr_t {
     fields {

@@ -54,25 +54,15 @@ header_type cpu_txdma_initial_action_t {
         
         CAPRI_QSTATE_HEADER_RING(0)
 
-        CAPRI_QSTATE_HEADER_RING(1)
-
-        CAPRI_QSTATE_HEADER_RING(2)
-
-        CAPRI_QSTATE_HEADER_RING(3)
-
-        CAPRI_QSTATE_HEADER_RING(4)
-
-        CAPRI_QSTATE_HEADER_RING(5) // Total 32 bytes
-        
-        asq_base    : HBM_ADDRESS_WIDTH; 
-        flags                       : 8;
+        asq_base                : 64; 
+        flags                   : 8;
     }    
 }
 
 // d for stage1
 header_type read_asq_ci_d_t {
     fields {
-        desc_addr      : ADDRESS_WIDTH;     
+        desc_addr      : 64;     
     }    
 }
 
@@ -86,7 +76,7 @@ header_type read_asq_ci_d_t {
 header_type common_global_phv_t {
     fields {
         // global k (max 128)
-        qstate_addr             : HBM_ADDRESS_WIDTH;
+        qstate_addr             : CPU_HBM_ADDRESS_WIDTH;
         qid                     : 24;
         write_vlan_tag          : 1;
         flags                   : 8;
@@ -95,7 +85,7 @@ header_type common_global_phv_t {
 
 header_type to_stage_1_phv_t {
     fields {
-        asq_ci_addr             : HBM_ADDRESS_WIDTH; 
+        asq_ci_addr             : CPU_HBM_ADDRESS_WIDTH; 
     }    
 }
 
@@ -108,9 +98,8 @@ header_type to_stage_2_phv_t {
 header_type to_stage_5_phv_t {
     fields {
         src_lif                 : 16;
-        asq_desc_addr           : HBM_ADDRESS_WIDTH;    
-        page_addr               : HBM_ADDRESS_WIDTH;
-        offset                  : 16;
+        asq_desc_addr           : CPU_HBM_ADDRESS_WIDTH;    
+        page_addr               : CPU_HBM_ADDRESS_WIDTH;
         len                     : 16;
         vlan_tag_exists         : 1;
         tm_oq                   : 5;
@@ -217,7 +206,6 @@ action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, 
     // from intrinsic
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
-    modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
     modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
@@ -317,7 +305,6 @@ action write_pkt() {
     modify_field(to_s5_scratch.src_lif, to_s5.src_lif);
     modify_field(to_s5_scratch.asq_desc_addr, to_s5.asq_desc_addr);
     modify_field(to_s5_scratch.page_addr, to_s5.page_addr);
-    modify_field(to_s5_scratch.offset, to_s5.offset);
     modify_field(to_s5_scratch.len, to_s5.len);
     modify_field(to_s5_scratch.vlan_tag_exists, to_s5.vlan_tag_exists);
     modify_field(to_s5_scratch.tm_oq, to_s5.tm_oq);

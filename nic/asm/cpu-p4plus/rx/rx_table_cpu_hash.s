@@ -19,7 +19,6 @@ rx_table_cpu_hash:
     nop
 
     CAPRI_OPERAND_DEBUG(r1.wx)
-    phvwr   p.t0_s2s_hash, r1.wx
 
 cpu_hash_calculate_id:
     /*

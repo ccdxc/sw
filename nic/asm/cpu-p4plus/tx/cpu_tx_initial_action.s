@@ -21,7 +21,7 @@ cpu_tx_stage0_start:
 
 table_read_asq_cindex:
     phvwr   p.to_s2_asq_cidx, d.{u.cpu_tx_initial_action_d.ci_0}.hx
-    add     r3, d.{u.cpu_tx_initial_action_d.asq_base}.wx, d.{u.cpu_tx_initial_action_d.ci_0}.hx, NIC_ASQ_ENTRY_SIZE_SHIFT 
+    add     r3, d.{u.cpu_tx_initial_action_d.asq_base}.dx, d.{u.cpu_tx_initial_action_d.ci_0}.hx, NIC_ASQ_ENTRY_SIZE_SHIFT 
     phvwr   p.to_s1_asq_ci_addr, r3
 
 cpu_tx_initial_action_done:

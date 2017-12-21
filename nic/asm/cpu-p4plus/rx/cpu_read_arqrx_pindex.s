@@ -8,13 +8,10 @@ struct phv_ p;
 %%
     .param cpu_rx_write_arq_start
     .param ARQRX_QIDXR_BASE
-    .param ARQRX_BASE
     .align
 cpu_rx_read_arqrx_pindex_start:
 
 CAPRI_CLEAR_TABLE0_VALID
-    
-    phvwri  p.t0_s2s_arqrx_base, ARQRX_BASE
     
     CPU_ARQRX_QIDX_ADDR(0, r3, ARQRX_QIDXR_BASE)
     CAPRI_NEXT_TABLE_READ(0, 
