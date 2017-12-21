@@ -21,8 +21,6 @@ l4_profile:
   phvwr.c1    p.l4_metadata_tcp_normalization_en, d.u.l4_profile_d.tcp_normalization_en
   seq         c1, k.icmp_valid, TRUE
   phvwr.c1    p.l4_metadata_icmp_normalization_en, d.u.l4_profile_d.icmp_normalization_en
-  phvwr       p.l4_metadata_ip_normalize_ttl, d.u.l4_profile_d.ip_normalize_ttl
-  phvwr       p.l4_metadata_ip_fragment_drop, d.u.l4_profile_d.ip_fragment_drop
 
   ASSERT_PHVWR(p, l4_metadata_icmp_deprecated_msgs_drop, l4_metadata_icmp_invalid_code_action,
                d, u.l4_profile_d.icmp_deprecated_msgs_drop, u.l4_profile_d.icmp_invalid_code_action)
@@ -66,13 +64,22 @@ l4_profile:
                  u.l4_profile_d.tcp_ts_not_present_drop, \
                  u.l4_profile_d.tcp_flags_nonsyn_noack_drop}
 
-  phvwr       p.l4_metadata_tcp_invalid_flags_drop, d.u.l4_profile_d.tcp_invalid_flags_drop
   bal         r7, f_ip_normalization_optimal
-  phvwr       p.l4_metadata_tcp_split_handshake_detect_en, d.u.l4_profile_d.tcp_split_handshake_detect_en
-  phvwr       p.l4_metadata_tcp_non_syn_first_pkt_drop, d.u.l4_profile_d.tcp_non_syn_first_pkt_drop
-  phvwr       p.l4_metadata_tcp_split_handshake_drop, d.u.l4_profile_d.tcp_split_handshake_drop
+  phvwrpair   p.l4_metadata_ip_fragment_drop, \
+                d.u.l4_profile_d.ip_fragment_drop, \
+                p.l4_metadata_tcp_split_handshake_detect_en, \
+                d.u.l4_profile_d.tcp_split_handshake_detect_en
+  phvwrpair   p.l4_metadata_ip_normalize_ttl, \
+                d.u.l4_profile_d.ip_normalize_ttl, \
+                p.{l4_metadata_tcp_invalid_flags_drop, \
+                   l4_metadata_tcp_non_syn_first_pkt_drop}, \
+                d.{u.l4_profile_d.tcp_invalid_flags_drop, \
+                   u.l4_profile_d.tcp_non_syn_first_pkt_drop}
   b           f_p4plus_to_p4_1
-  phvwr       p.l4_metadata_ip_ttl_change_detect_en, d.u.l4_profile_d.ip_ttl_change_detect_en
+  phvwrpair   p.l4_metadata_tcp_split_handshake_drop, \
+                d.u.l4_profile_d.tcp_split_handshake_drop, \
+                p.l4_metadata_ip_ttl_change_detect_en, \
+                d.u.l4_profile_d.ip_ttl_change_detect_en
 
 
 // c7 will retain the tunnel_terminate state throughout this function
@@ -80,7 +87,7 @@ l4_profile:
 // c5 - IPv4
 f_ip_normalization_optimal:
   seq         c1, d.u.l4_profile_d.ip_normalization_en, 1
-  // First do all IP normalizaiton checks here optimally before we 
+  // First do all IP normalizaiton checks here optimally before we
   // proceed to checking each knob.
   // Good Packet start
   seq         c5, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4

@@ -164,6 +164,7 @@ header_type scratch_metadata_t {
         num_labels                 : 2;
         drop_count                 : 8;
         flow_agg_index             : 16;
+        ttl                        : 8;
 
         src_lif_check_en           : 1;
         vlan_strip                 : 1;

@@ -36,8 +36,8 @@ flow_hash_info:
   seq         c1, d.flow_hash_info_d.more_hashs, 1
   bcf         [c1&c2], flow_hash_more_hashs
   phvwr       p.recirc_header_valid, 0
-  phvwr       p.control_metadata_flow_miss, 1
-  phvwr.e     p.control_metadata_flow_miss_ingress, 1
+  phvwrpair.e p.control_metadata_flow_miss_ingress, 1, \
+                p.control_metadata_flow_miss[0], 1
   phvwr       p.flow_info_metadata_flow_index, 0
 
 flow_hash_hit:
@@ -74,13 +74,14 @@ flow_hash_more_hashs:
   add         r2, r0, d.flow_hash_info_d.more_hints
 
 flow_hash_recirc:
-  phvwr       p.control_metadata_ingress_bypass, 1
-  phvwr       p.capri_i2e_metadata_valid, 0
-  phvwr       p.capri_p4_intrinsic_valid, TRUE 
-  phvwr       p.recirc_header_valid, 1
-  phvwr       p.recirc_header_src_tm_iport, k.control_metadata_tm_iport
-  phvwr       p.recirc_header_reason, RECIRC_FLOW_HASH_OVERFLOW
-  ori         r2, r2, 0x80000000
-  phvwr.e     p.recirc_header_overflow_entry_index, r2
-  phvwr       p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
-
+  // recirc_header_valid (TRUE), capri_i2e_metadata_valid (FALSE),
+  // capri_p4_intrinsic_valid, (TRUE)
+  phvwr         p.{recirc_header_valid, \
+                    capri_i2e_metadata_valid, \
+                    capri_p4_intrinsic_valid}, 0x5
+  phvwrpair     p.recirc_header_src_tm_iport, k.control_metadata_tm_iport[3:0], \
+                    p.recirc_header_reason, RECIRC_FLOW_HASH_OVERFLOW
+  ori           r2, r2, 0x80000000
+  phvwrpair.e   p.control_metadata_ingress_bypass, 1, \
+                    p.recirc_header_overflow_entry_index, r2
+  phvwr         p.capri_intrinsic_tm_oport, TM_PORT_INGRESS

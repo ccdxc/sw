@@ -122,7 +122,7 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // Is p4+ expecting a flow_index per flow or per session ?
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
-action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
+action flow_info(dst_lport, multicast_ptr, multicast_en, qtype,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
                  tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
@@ -168,7 +168,6 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
 
     /* flow info */
     modify_field(flow_info_metadata.session_state_index, session_state_index);
-    modify_field(flow_info_metadata.flow_ttl, flow_ttl);
     modify_field(flow_info_metadata.flow_role, flow_role);
 
     // ttl change detected
@@ -200,6 +199,7 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
     modify_field(scratch_metadata.log_en, log_en);
     modify_field(scratch_metadata.flag, expected_src_lif_check_en);
     modify_field(scratch_metadata.src_lif, expected_src_lif);
+    modify_field(scratch_metadata.ttl, flow_ttl);
     modify_field(scratch_metadata.export_id, export_id1);
     modify_field(scratch_metadata.export_id, export_id2);
     modify_field(scratch_metadata.export_id, export_id3);

@@ -34,16 +34,16 @@ native_ipv4_packet_common:
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
   phvwrpair     p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl, \
                     p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags
-  phvwr         p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
 
-  phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
-  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+  phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
+                    p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
 
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwr.e       p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
+  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
+                    p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
                     p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
@@ -73,11 +73,11 @@ native_ipv6_packet_common:
                                                 ipv6_srcAddr_sbit32_ebit127}
   phvwr         p.flow_lkp_metadata_lkp_dst, k.{ipv6_dstAddr_sbit0_ebit31, \
                                                ipv6_dstAddr_sbit32_ebit127}
-  phvwr         p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
 
   phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
-  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+  phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
+                    p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

@@ -45,7 +45,7 @@ p4plus_to_p4_1_upd_tcp_seq:
   add         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, 4
   phvwr       p.vlan_tag_valid, TRUE
-  phvwr       p.{vlan_tag_pcp...vlan_tag_vid}, k.p4plus_to_p4_vlan_tag
-  phvwr       p.vlan_tag_etherType, k.ethernet_etherType
+  phvwrpair   p.{vlan_tag_pcp...vlan_tag_vid}, k.p4plus_to_p4_vlan_tag, \
+                p.vlan_tag_etherType, k.ethernet_etherType
   phvwr.e     p.ethernet_etherType, ETHERTYPE_VLAN
   phvwr       p.capri_p4_intrinsic_packet_len, r1
