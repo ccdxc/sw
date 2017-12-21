@@ -28,6 +28,7 @@ tls_pre_crypto_process:
      * MAC-then-encrypt case, in which case we need to do 2-pass with Barco
      * with 1st pass for HMAC request, and 2nd pass for AES-CBC encryption.
      * (endian-swapped) */
+    CAPRI_OPERAND_DEBUG(d.u.read_tls_stg0_d.barco_command)
     add         r3, d.u.read_tls_stg0_d.barco_command[7:0], r0
     indexb      r2, r3, [0x73, 0x74], 0
     bnei.s      r2, -1, tls_pre_crypto_mac

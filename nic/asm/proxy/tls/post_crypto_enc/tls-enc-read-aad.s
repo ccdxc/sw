@@ -33,6 +33,6 @@ tls_enc_read_aad_process:
 tls_enc_read_aad_process_done:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_queue_sesq_process,
                            k.tls_global_phv_qstate_addr,
-                       	   TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+                           TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
     nop

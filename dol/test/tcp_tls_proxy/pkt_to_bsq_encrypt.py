@@ -263,16 +263,19 @@ def TestCaseVerify(tc):
     # 14. Verify header size, this is the AAD size and is 13 bytes 
     #     In case of AES-CBC-HMAC-SHA2 (MAC-then-encrypt) ciphers, there is no header with
     #     software-chaining in the 2nd pass of barco (AES-CBC encrypt).
+    #     In case of AES-CCM, TLS uses a fixed header size of 2 16-byte blocks including AAD.
     if tc.module.args.cipher_suite == "CBC":
        hdr_size = 0x0
+    elif tc.module.args.cipher_suite == "CCM":
+       hdr_size = 0x20
     else:
        hdr_size = 0xd
     if brq_cur.ring_entries[brq_cur.pi-1].header_size != hdr_size:
-        print("Header Size Check Failed: Got 0x%x, Expected: 0xd" %
-                                (brq_cur.ring_entries[brq_cur.pi-1].header_size))
+        print("Header Size Check Failed: Got 0x%x, Expected: 0x%x" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].header_size, hdr_size))
         return False
     else:
-        print("Header Size Check Success: Got 0x%x, Expected: %x" %
+        print("Header Size Check Success: Got 0x%x, Expected: 0x%x" %
                                 (brq_cur.ring_entries[brq_cur.pi-1].header_size, hdr_size))
 
     # 15. Barco Status check

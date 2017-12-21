@@ -274,7 +274,7 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ_AES256_CCM_ENCRYPT_USE_RANDOM_IV
-        enable  : False
+        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
@@ -289,7 +289,7 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ_AES256_CCM_ENCRYPT
-        enable  : False
+        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec

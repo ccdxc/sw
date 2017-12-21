@@ -54,7 +54,7 @@ def tls_aes128_decrypt_setup(tc, tlscb):
 
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":
-        tlscb.command = 0x05100c10
+        tlscb.command = 0x05100010
     elif tc.module.args.cipher_suite == "CBC":
         tlscb.command = 0x73300000
     else:
@@ -95,7 +95,7 @@ def tls_aes128_encrypt_setup(tc, tlscb):
 
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":
-        tlscb.command = 0x05000c10
+        tlscb.command = 0x05000010
     elif tc.module.args.cipher_suite == "CBC":
         tlscb.command = 0x73200000
     else:
@@ -135,7 +135,7 @@ def tls_aes256_decrypt_setup(tc, tlscb):
 
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":
-        tlscb.command = 0x05100c10
+        tlscb.command = 0x05100010
     elif tc.module.args.cipher_suite == "CBC":
         tlscb.command = 0x73300000
     else:
@@ -180,7 +180,7 @@ def tls_aes256_encrypt_setup(tc, tlscb):
 
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":
-        tlscb.command = 0x05000c10
+        tlscb.command = 0x05000010
     elif tc.module.args.cipher_suite == "CBC":
         tlscb.command = 0x73200000
     else:

@@ -79,6 +79,7 @@ header_type to_stage_3_phv_t {
 header_type to_stage_4_phv_t {
     fields {
         do_post_cbc_enc                 : 1;
+        do_post_ccm_enc                 : 1;
     }
 }
 header_type to_stage_6_phv_t {
@@ -271,6 +272,7 @@ action tls_read_odesc(PKT_DESCR_AOL_ACTION_PARAMS) {
     GENERATE_GLOBAL_K
 
     modify_field(to_s4_scratch.do_post_cbc_enc, to_s4.do_post_cbc_enc);
+    modify_field(to_s4_scratch.do_post_ccm_enc, to_s4.do_post_ccm_enc);
 
     GENERATE_PKT_DESCR_AOL_D
 }

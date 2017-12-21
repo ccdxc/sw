@@ -384,6 +384,33 @@
 #define TLS_AES_CBC_BLOCK_SIZE                16
 #define TLS_AES_CBC_HMAC_SHA256_AUTH_TAG_SIZE 32
 
+/*
+ * For TLS CCM ciphers, we use 2 16-byte blocks B_0 and B_1 to specify Header to Barco:
+ *
+ * CCM header block B_0 encoding, based on RFC 3610, Sec. 2.2
+ *   M = 16 (TLS_AES_CCM_AUTH_TAG_SIZE), Flags encoding (M-2/2)
+ *   L = 3  (24-bit field for specifying length of plaintext), Flags encoding (L-1)
+ *   Nonce-size = 12 ((15 - L), with 4 byte Salt + 8 byte explicit-IV)
+ * B_0 (16-byte block): 1-byte Flags + 12-byte Nonce + 3-byte Length-field
+ *
+ * B_1 (16-byte block): 2-byte AAD-size (value 13) + 13-byte AAD (8-byte seq-num + 5-byte TLS header) + 1-byte zero-pad
+ *
+ */
+#define TLS_AES_CCM_AUTH_TAG_SIZE             16
+#define TLS_AES_CCM_LENGTH_FIELD_SIZE          3
+#define TLS_AES_CCM_AAD_PRESENT                1
+#define TLS_AES_CCM_NONCE_SIZE                12
+#define TLS_AES_CCM_NONCE_SALT_SIZE            4
+#define TLS_AES_CCM_NONCE_EXPLICIT_SIZE        8
+#define TLS_AES_CCM_HEADER_BLOCK_SIZE         TLS_AES_CBC_BLOCK_SIZE
+#define TLS_AES_CCM_HEADER_SIZE               (TLS_AES_CCM_HEADER_BLOCK_SIZE * 2)
+#define TLS_AES_CCM_HEADER_AAD_OFFSET         18 // 3rd byte of B_1
+
+#define TLS_AES_CCM_HDR_B0_FLAGS  \
+    (TLS_AES_CCM_AAD_PRESENT << 6 | \
+    (((TLS_AES_CCM_AUTH_TAG_SIZE - 2)/2) << 3) | \
+    (TLS_AES_CCM_LENGTH_FIELD_SIZE -1))
+
 /* nonce explicit offset in a record */
 #define NTLS_TLS_NONCE_OFFSET           NTLS_TLS_HEADER_SIZE
 

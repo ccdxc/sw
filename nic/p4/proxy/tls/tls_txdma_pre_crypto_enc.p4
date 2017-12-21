@@ -141,6 +141,7 @@ header_type to_stage_2_phv_t {
     fields {
         serq_ci                         : 16;
         idesc                           : HBM_ADDRESS_WIDTH;
+        do_pre_ccm_enc                  : 1;
     }
 }
 
@@ -158,6 +159,7 @@ header_type to_stage_4_phv_t {
         idesc                           : HBM_ADDRESS_WIDTH;
         odesc                           : HBM_ADDRESS_WIDTH;
         debug_dol                       : 8;
+        do_pre_ccm_enc                  : 1;
     }
 }
 
@@ -217,10 +219,25 @@ header_type s3_t2_s2s_phv_t {
 
 header_type barco_desc_pad_t {
     fields {
-        pad                     : 64;
+        pad                     : 32;
     }
 }
 
+header_type ccm_header_t {
+    fields {
+        B_0_flags                   : 8;
+        B_0_nonce_salt              : 32;
+        B_0_nonce_explicit_iv       : 64;
+        B_0_length                  : 24;
+        B_1_aad_size                : 16;
+        B_1_aad_seq_num             : 64;
+        B_1_aad_type                : 8;
+        B_1_aad_version_major       : 8;
+        B_1_aad_version_minor       : 8;
+        B_1_aad_length              : 16;
+        B_1_zero_pad                : 8;
+    }
+}
 
 @pragma scratch_metadata
 metadata tlscb_0_t tlscb_0_d;
@@ -283,10 +300,14 @@ metadata barco_desc_t barco_desc;
 metadata barco_desc_pad_t   barco_desc_pad;
 @pragma dont_trim
 metadata barco_dbell_t barco_dbell;
+
 @pragma dont_trim
 metadata crypto_iv_t crypto_iv;
 @pragma dont_trim
+@pragma pa_header_union ingress crypto_iv
+metadata ccm_header_t ccm_header_with_aad;
 
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd0;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd1;
@@ -382,6 +403,9 @@ action read_tnmpr(tnmpr_pidx) {
  * Stage 2 table 3 action
  */
 action tls_read_pkt_descr_aol(PKT_DESCR_AOL_ACTION_PARAMS) {
+
+    modify_field(to_s2_scratch.do_pre_ccm_enc, to_s2.do_pre_ccm_enc);
+
     // d for stage 2 table 3
     GENERATE_PKT_DESCR_AOL_D
 }
@@ -461,7 +485,7 @@ action tls_bld_brq4(TLSCB_0_PARAMS_NON_STG0) {
     modify_field(to_s4_scratch.idesc, to_s4.idesc);
     modify_field(to_s4_scratch.odesc, to_s4.odesc);
     modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
-
+    modify_field(to_s4_scratch.do_pre_ccm_enc, to_s4.do_pre_ccm_enc);
 
     /* D vector */
     GENERATE_TLSCB_0_D_NON_STG0
@@ -474,6 +498,7 @@ action tls_read_random_iv(TLSCB_0_PARAMS_NON_STG0) {
 
     /* To Stage 4 table 1 fields */
     modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
+    modify_field(to_s4_scratch.do_pre_ccm_enc, to_s4.do_pre_ccm_enc);
 
     /* D vector */
     GENERATE_TLSCB_0_D_NON_STG0

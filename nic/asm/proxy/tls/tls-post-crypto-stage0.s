@@ -35,11 +35,12 @@ tls_post_crypto_process:
      * to barco per TLSCB, which needs to be removed -- We'll use a different BSQ ring-id eventually
      * for barco to ring response doorbell on, to distinguish this case.
      */
+    CAPRI_OPERAND_DEBUG(d.u.read_tls_stg0_d.barco_command)
     add         r3, d.u.read_tls_stg0_d.barco_command[7:0], r0
     indexb      r2, r3, [0x73, 0x74], 0
-    seq.s       c2, r2, -1
-    seq.!c2     c3, d.u.read_tls_stg0_d.barco_command[31:24], 1
-    bcf         [c3], tls_post_crypto_mac
+    sne.s       c2, r2, -1
+    seq         c3, d.u.read_tls_stg0_d.barco_command[31:24], 1
+    bcf         [c2 & c3], tls_post_crypto_mac
     nop
     j           tls_enc_post_crypto_process
     nop
