@@ -16,6 +16,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwri p.p4_intr_global_tm_iport, TM_OPORT_DMA
     phvwri p.p4_intr_global_lif, ARM_CPU_LIF 
 
+    phvwr p.ipsec_int_header_spi, k.{p42p4plus_hdr_spi_sbit0_ebit15...p42p4plus_hdr_spi_sbit16_ebit31}
     //payload_start sent by p4 as outer-IP+base-esp(8 bytes)
     phvwr p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
     // p4 sends payload_end as end of the packet including 2+icv

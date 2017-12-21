@@ -59,12 +59,12 @@ def TestCaseSetup(tc):
     ipseccb.seq_no_bmp                = 0
     ipseccb.vrf_vlan                  = 0x0005
     ipseccb.is_nat_t                  = 0
-    ipseccb.SetObjValPd()
-    
     key2 = b'\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc\xcc'
     ipseccb.new_crypto_key.Update(key_type, key_size, key2)
     ipseccb.new_key_index                 = ipseccb.new_crypto_key.keyindex
-
+    print("key_index: %d  new_key_index: %d" % (ipseccb.key_index, ipseccb.new_key_index)) 
+    ipseccb.SetObjValPd()
+    
     # 2. Clone objects that are needed for verification
     expected_seq_no = ipseccb.expected_seq_no
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])

@@ -10,5 +10,7 @@ struct phv_ p;
     .align
 esp_v4_tunnel_n2h_load_part2:
     phvwr p.ipsec_to_stage2_spi, d.spi
-    phvwr.e p.ipsec_to_stage2_new_spi, d.new_spi
+    phvwr p.ipsec_to_stage2_new_spi, d.new_spi
+    phvwri p.app_header_table2_valid, 0
+    nop.e
     nop 

@@ -435,6 +435,7 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(ipsec_int_header.headroom, p42p4plus_hdr.ip_hdr_size);
    
     modify_field(p42p4plus_hdr_scratch.seq_no,  p42p4plus_hdr.seq_no);
+    modify_field(p42p4plus_hdr_scratch.spi, p42p4plus_hdr.spi);
 
     //Sequence number checking logic
 

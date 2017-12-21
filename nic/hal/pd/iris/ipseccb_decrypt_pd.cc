@@ -71,6 +71,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
     uint32_t                                    ipsec_cb_ring_addr;
     uint32_t                                    ipsec_barco_ring_base;
     uint32_t                                    ipsec_barco_ring_addr;
+    uint16_t                                    key_index;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -97,8 +98,13 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         // for now aes-decrypt-encoding hard-coded.
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = 0x30100000;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no = ipseccb_pd->ipseccb->esn_lo;
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index = ipseccb_pd->ipseccb->key_index;
-  
+        key_index = ipseccb_pd->ipseccb->key_index;
+        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index = htons(key_index);
+        key_index = ipseccb_pd->ipseccb->new_key_index;
+        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.new_key_index = htons(key_index);
+ 
+        HAL_TRACE_DEBUG("HW- key_index {}, new_key_index {}", data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index, data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.new_key_index); 
+        HAL_TRACE_DEBUG("key_index {}, new_key_index {}", ipseccb_pd->ipseccb->key_index, ipseccb_pd->ipseccb->new_key_index); 
         // the below may have to use a different range for the reverse direction 
         ipsec_cb_ring_base = (uint32_t)get_start_offset(CAPRI_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = (uint32_t) (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE));
@@ -137,8 +143,8 @@ p4pd_add_or_del_ipsec_decrypt_part2(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_PART2);
 
-    decrypt_part2.spi = ipseccb_pd->ipseccb->spi;
-    decrypt_part2.new_spi = ipseccb_pd->ipseccb->new_spi;
+    decrypt_part2.spi = htonl(ipseccb_pd->ipseccb->spi);
+    decrypt_part2.new_spi = htonl(ipseccb_pd->ipseccb->new_spi);
 
     HAL_TRACE_DEBUG("Programming Decrypt part2 at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2))){
@@ -194,7 +200,8 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
     ipseccb_pd->ipseccb->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
     ipseccb_pd->ipseccb->icv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size;
     ipseccb_pd->ipseccb->barco_enc_cmd = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd;
-    ipseccb_pd->ipseccb->key_index = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index;
+    ipseccb_pd->ipseccb->key_index = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index);
+    ipseccb_pd->ipseccb->new_key_index = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.new_key_index);
    
     ipsec_cb_ring_addr = ntohll(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr);
     cb_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex;

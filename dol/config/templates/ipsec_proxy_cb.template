@@ -15,6 +15,7 @@ iv_size          : 0
 icv_size         : 0
 block_size       : 0
 key_index        : 0
+new_key_index    : 0
 barco_enc_cmd    : 0
 iv               : 0
 iv_salt          : 0
