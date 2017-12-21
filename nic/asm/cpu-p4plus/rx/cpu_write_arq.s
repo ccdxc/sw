@@ -11,6 +11,8 @@ struct cpu_rx_write_arqrx_d d;
     .param ARQRX_BASE
     .align
 cpu_rx_write_arq_start:
+    // Read and increment ARQ PI first in order to release table lock
+    CPU_ARQ_PIDX_READ_INC(r6, k.t0_s2s_arqrx_id, d, u.write_arqrx_d.pi_0, r2, r3)
 
     CAPRI_CLEAR_TABLE0_VALID
     smeqb   c5, k.common_phv_flags, CPUCB_FLAG_ADD_QS_PKT_TRLR, CPUCB_FLAG_ADD_QS_PKT_TRLR
@@ -58,17 +60,15 @@ dma_cmd_descr:
 
 dma_cmd_arqrx_slot:
     smeqb   c1, k.common_phv_debug_dol, CPU_DDOL_PKT_TO_ARQ, CPU_DDOL_PKT_TO_ARQ
-    // CPU-id
-    CPU_ARQ_PIDX_READ_INC(r4, k.t0_s2s_arqrx_id, d, u.write_arqrx_d.pi_0, r2, r3)
     
     addui      r5, r0, hiword(ARQRX_BASE)
     addi       r5, r5, loword(ARQRX_BASE)
     CPU_RX_ARQ_BASE_FOR_ID(r2, r5, k.t0_s2s_arqrx_id)
 
-    // pindex will be in r4
+    // pindex will be in r6
     CPU_RX_ENQUEUE(r5,
                    k.t0_s2s_descr,
-                   r4,
+                   r6,
                    r2,
                    ring_entry_descr_addr,
                    dma_cmd3_dma_cmd, 
