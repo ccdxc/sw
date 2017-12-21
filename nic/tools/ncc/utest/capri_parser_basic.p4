@@ -75,8 +75,11 @@ header_type parser_metadata_t {
 }
 header_type mau_metadata_t {
     fields {
+        ipv4___start_off : 16;
+        ipv6___start_off : 16;
         c_offset : 16;
         end_offset : 16;
+        l3_len : 16;
     }
 }
 
@@ -120,18 +123,26 @@ parser parse_ethernet {
 #define IP_PROTOCOLS_TCP               6
 #define IP_PROTOCOLS_UDP               17
 
+@pragma packet_len_check ipv4 len gt ohi.l3_len
+@pragma packet_len_check ipv4 start ohi.ipv4___start_off
 parser parse_ipv4 {
-    set_metadata(ohi.c_offset, current + 20);
     extract(ipv4);
-    return select(latest.version, latest.ihl, latest.fragOffset, latest.protocol) {
+    set_metadata(ohi.c_offset, current + 20);
+    set_metadata(ohi.l3_len, ipv4.totalLen + 0);
+    //set_metadata(ohi.ipv4___start_off, current + 0);
+    return select(latest.fragOffset, latest.protocol) {
         IP_PROTOCOLS_TCP : parse_tcp;
         IP_PROTOCOLS_UDP : parse_udp;
         default: ingress;
     }
 }
 
+@pragma packet_len_check ipv6 len gt ohi.l3_len
+@pragma packet_len_check ipv6 start ohi.ipv6___start_off
 parser parse_ipv6 {
     extract(ipv6);
+    set_metadata(ohi.l3_len, ipv6.payloadLen + 40);
+    //set_metadata(ohi.ipv6___start_off, current + 0);
     return select(latest.nextHdr) {
         IP_PROTOCOLS_TCP : parse_tcp;
         IP_PROTOCOLS_UDP : parse_udp;

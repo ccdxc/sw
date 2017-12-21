@@ -12,8 +12,8 @@ capri_model = {
         'flit_size' : 512, # max_size/num_flits
         'containers': {8: 640}, # {size:num} all 8 bit containers
         'wide_key_start_flit' : 2,
-        'gso_csum_phv_start' : 2048, # Has to first 16b in a phv slot.
-        'parser_end_off_flit_loc' : 16,  # bits 16:31 in any phv flit
+        'gso_csum_phv_start' : 496, # bits 496:511 i.e. byte 62:63 in flit
+        'parser_end_off_flit_loc' : 480,  # bits 480:495 i.e. byte 60:61 in flit
     },
     'match_action': {
         'num_stages' : 6,
@@ -85,6 +85,8 @@ capri_model = {
         # XXX remove this logic from add_cfield()
         'flit_hv_bits' : [32, 32, 32, 24, 4, 4], # total must be 128
         'flit_size' : 1024,
+        'num_len_chk_profiles' : 4,
+        'num_len_chk_inst' : 2,     # per parser state
         'parser_consts' : {
             'meta_ops' : {
                 'nop' : '0',

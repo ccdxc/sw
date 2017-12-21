@@ -520,7 +520,7 @@ class capri_flit:
         #pdb.set_trace()
         if location >= 0:
             assert location >= self.base_phv_bit and location < (self.base_phv_bit+self.fsize), pdb.set_trace()
-            assert (location+csize) < (self.base_phv_bit+self.fsize)
+            assert (location+csize) <= (self.base_phv_bit+self.fsize), pdb.set_trace()
             floc = location - self.base_phv_bit
         else:
             if location == -2:
@@ -801,6 +801,8 @@ class capri_gress_pa:
                 continue
             # find last key field that comes from a header, insert meta key fields after
             # all the header fields
+            # if table key is madeup of metadata flds only, this logic does not handle that case
+            # XXX in that case we need to find co-located meta flds etc.. - TBD
             kidx = -1
             insert_cf = None
             for cf,_,_ in tbl.keys:
@@ -1652,24 +1654,6 @@ class capri_gress_pa:
             bits_used += (get_header_size(self.capri_p4_intr_hdr) * 8)
             self.allocated_hf[self.capri_p4_intr_hdr] = phv_bit
 
-        if self.capri_deparser_len_hdr:
-            # Variable len slots for deparser to use can only come from PHV flit-1
-            # allocate PHV in that region.
-            dpa_variable_len_phv_start_bit = self.pa.be.hw_model['deparser']['len_phv_start']
-            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_len_hdr) * 8),\
-                                             dpa_variable_len_phv_start_bit, 0, 0, 1, False)
-            assert phv_bit == dpa_variable_len_phv_start_bit, pdb.set_trace()
-            self.assign_phv_to_hdr_flds(flit, self.capri_deparser_len_hdr, phv_bit)
-        if self.capri_gso_csum_hdr:
-            # GSO Final Csum computed value (using partially computed csum) captured in this header.
-            # capri_parser expects this 16b csum to be first 16b in any 512b PHV flit.
-            gso_phv_start_bit = self.pa.be.hw_model['phv']['gso_csum_phv_start']
-            gso_flit = self.flits[gso_phv_start_bit / self.pa.be.hw_model['parser']['flit_size']]
-            phv_bit = gso_flit.flit_chunk_alloc((get_header_size(self.capri_gso_csum_hdr) * 8),\
-                                             gso_phv_start_bit, 0, 0, 1, False)
-            assert phv_bit == gso_phv_start_bit, pdb.set_trace()
-            self.assign_phv_to_hdr_flds(flit, self.capri_gso_csum_hdr, phv_bit)
-
         # add cfields used for predication
         pred_cfs = {}
         for c_pred in self.pa.be.tables.gress_tm[self.d].table_predicates.values():
@@ -1709,6 +1693,35 @@ class capri_gress_pa:
                 assert cf
                 if cf not in self.field_order:
                     self.field_order.insert(0,cf)
+
+        if self.capri_deparser_len_hdr:
+            # Variable len slots for deparser to use can only come from PHV flit-1
+            # allocate PHV in that region.
+            dpa_variable_len_phv_start_bit = self.pa.be.hw_model['deparser']['len_phv_start']
+            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_len_hdr) * 8),\
+                                             dpa_variable_len_phv_start_bit, 0, 0, 1, False)
+            assert phv_bit == dpa_variable_len_phv_start_bit, pdb.set_trace()
+            self.assign_phv_to_hdr_flds(flit, self.capri_deparser_len_hdr, phv_bit)
+
+        '''
+        if self.capri_gso_csum_hdr:
+            # GSO Final Csum computed value (using partially computed csum) captured in this header.
+            # capri_parser expects this 16b csum to be first 16b in any 512b PHV flit.
+            phv_flit_sz = self.pa.be.hw_model['phv']['flit_size']
+            gso_phv_start_bit = self.pa.be.hw_model['phv']['gso_csum_phv_start'] + phv_flit_sz
+            #gso_flit = self.flits[gso_phv_start_bit / self.pa.be.hw_model['parser']['flit_size']]
+            phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_gso_csum_hdr) * 8),\
+                                             flit.base_phv_bit+gso_phv_start_bit, 0, 0, 1, False)
+            assert phv_bit >= 0, pdb.set_trace()
+            self.assign_phv_to_hdr_flds(flit, self.capri_gso_csum_hdr, phv_bit)
+            self.allocated_hf[self.capri_gso_csum_hdr] = phv_bit
+        '''
+        # allocate parser_end offset in parser flit 0 (as early as possible)
+        # on egress pipeline delay the allocation for end_offset as i2e metadata will ensure
+        # min flit
+        if self.parser_end_off_cf and self.d == xgress.INGRESS:
+            self.allocate_parser_end_off_phv(flit)
+            self.allocated_hf[self.parser_end_off_cf] = self.parser_end_off_cf.phv_bit
 
     def create_flit_hv_flds(self, flit, name, start_bit, num_bits):
         hv_flds = []
@@ -1834,13 +1847,30 @@ class capri_gress_pa:
                 hfid += 1
                 if hfid == len(self.hdr_fld_order):
                     break
+            # allocate special phvs at the end of a flit if possible
+            if self.parser_end_off_cf and self.parser_end_off_cf.phv_bit == -1:
+                self.allocate_parser_end_off_phv(flit)
+                self.allocated_hf[self.parser_end_off_cf] = self.parser_end_off_cf.phv_bit
+
+            if self.capri_gso_csum_hdr and self.capri_gso_csum_hdr not in self.allocated_hf:
+                # GSO Final Csum computed value (using partially computed csum) captured in this header.
+                # capri_parser expects this 16b csum to be first 16b in any 512b PHV flit.
+                phv_flit_sz = self.pa.be.hw_model['phv']['flit_size']
+                gso_phv_start_bit = self.pa.be.hw_model['phv']['gso_csum_phv_start'] + phv_flit_sz
+                #gso_flit = self.flits[gso_phv_start_bit / self.pa.be.hw_model['parser']['flit_size']]
+                phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_gso_csum_hdr) * 8),\
+                                                 flit.base_phv_bit+gso_phv_start_bit, 0, 0, 1, False)
+                if phv_bit >= 0:
+                    self.assign_phv_to_hdr_flds(flit, self.capri_gso_csum_hdr, phv_bit)
+                    self.allocated_hf[self.capri_gso_csum_hdr] = phv_bit
             # move to next flit
 
         if hfid < len(self.hdr_fld_order):
             # not enough phvs
             self.pa.logger.critical("Not enough space in phv")
             self.print_field_order_info("PHV order(PHV FAILURE)")
-            self.pa.logger.debug("%s:Field Allocation %s" % (self.d.name, self.field_order))
+            self.pa.logger.debug("%s:Field Allocation %s" % (self.d.name,
+                                sorted(self.field_order, key=lambda cf: cf.phv_bit)))
             pdb.set_trace()
             assert 0
 
@@ -1948,7 +1978,7 @@ class capri_gress_pa:
         return True
 
     def allocate_parser_end_off_phv(self, start_flit):
-        # there are two places in a flit this can go, 16:31 or 528:543
+        # there are two places in a parser flit this can go, 480:495 or 992:1007
         # try both. If both the slots are used, use the next flit (can try previous
         # flit as well) To make sure we do not find a place for this, last flit has a reserved
         # slot for this (XXX)
@@ -1956,14 +1986,15 @@ class capri_gress_pa:
         loc = self.pa.be.hw_model['phv']['parser_end_off_flit_loc']
         phv_flit_size = self.pa.be.hw_model['phv']['flit_size']
         for f in range(start_flit.id, len(self.flits)):
+            # try end of the flit first (mostly padded)
             flit = self.flits[f] 
-            phv_bit = flit.flit_chunk_alloc(cf.width, flit.base_phv_bit+loc,
+            phv_bit = flit.flit_chunk_alloc(cf.width, flit.base_phv_bit+loc+phv_flit_size,
                                         align=0, justify=0, fixed_loc=1, cross_512b=False)
             if phv_bit >= 0:
                 cf.phv_bit = phv_bit
                 return
-            # try next phv flit location
-            phv_bit = flit.flit_chunk_alloc(cf.width, flit.base_phv_bit+loc+phv_flit_size,
+            # try next (earlier) phv flit location
+            phv_bit = flit.flit_chunk_alloc(cf.width, flit.base_phv_bit+loc,
                                         align=0, justify=0, fixed_loc=1, cross_512b=False)
             if phv_bit >= 0:
                 cf.phv_bit = phv_bit
@@ -2054,7 +2085,6 @@ class capri_gress_pa:
         new_hfs = []
         bits_needed = 0
         hdr_size = 0
-        alloc_parser_end_off = False
         for n_hf in hf_list:
             # remove all the hfs already allocated
             if n_hf in self.allocated_hf:
@@ -2066,9 +2096,6 @@ class capri_gress_pa:
                 if n_hf.phv_bit >= 0:
                     # already assigned a phv
                     continue
-                if n_hf.is_parser_end_offset:
-                    alloc_parser_end_off = True
-                    continue
                 new_hfs.append(n_hf)
                 bits_needed += n_hf.storage_size()
             else:
@@ -2078,10 +2105,6 @@ class capri_gress_pa:
                     continue
                 hdr_size += hsize
                 new_hfs.append(n_hf)
-
-        # special case to allocate parser_end_offset
-        if alloc_parser_end_off:
-            self.allocate_parser_end_off_phv(flit)
 
         total_bits_needed = bits_needed + (hdr_size * 8)
         parser_flit_size = self.pa.be.hw_model['parser']['flit_size']

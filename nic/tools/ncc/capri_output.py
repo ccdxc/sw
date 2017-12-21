@@ -200,6 +200,15 @@ def _parser_sram_print(parser, se):
     if used:
         pstr += 'Total mux_inst %s\n' % used
 
+    for e,len_chk_inst in enumerate(se['len_chk_inst']):
+        if len_chk_inst['en']['value'] == '0':
+            continue
+        pstr += 'len_chk_inst[%d] en=%s ' % (e, len_chk_inst['en']['value'])
+        pstr += 'unit_sel=%s ' % (len_chk_inst['unit_sel']['value'])
+        pstr += 'prof_sel= %s ' % (len_chk_inst['prof_sel']['value'])
+        pstr += 'start_ohi= %s ' % (len_chk_inst['ohi_start_sel']['value'])
+        pstr += 'len_ohi= %s ' % (len_chk_inst['ohi_len_sel']['value'])
+        pstr += 'exact= %s\n' % (len_chk_inst['exact']['value'])
     return pstr
 
 def _parser_init_profile_print(parser, cfg_init_profile):
@@ -2434,7 +2443,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         sram['meta_inst'][m]['phv_idx']['value'] = str(0)
         sram['meta_inst'][m]['val']['value'] = str(0)
     
-
     for m,used in enumerate(mux_idx_allocator):
         if used != None:
             continue
@@ -2445,6 +2453,31 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         sram['phv_idx_upr']['value'] = str(current_flit)
     else:
         parser.logger.debug("%s:%s:No PHV writes in this state" % (parser.d.name, nxt_cs.name))
+
+    # program len_chk instructions if specified
+    len_chk_inst_id = 0
+    max_len_chk_inst = parser.be.hw_model['parser']['num_len_chk_inst']
+    assert len(nxt_cs.len_chk_profiles) <= max_len_chk_inst, pdb.set_trace()
+    for len_chk_prof in nxt_cs.len_chk_profiles:
+        assert len_chk_prof.start_hfname, pdb.set_trace()
+        assert len_chk_prof.len_hfname, pdb.set_trace()
+        start_cfname = len_chk_prof.start_hfname.split('.')[1]
+        len_cfname = len_chk_prof.len_hfname.split('.')[1]
+        assert start_cfname in parser.wr_only_ohi, pdb.set_trace()
+        assert len_cfname in parser.wr_only_ohi, pdb.set_trace()
+        start_ohi_slot = parser.wr_only_ohi[start_cfname]
+        len_ohi_slot = parser.wr_only_ohi[len_cfname]
+        sram['len_chk_inst'][len_chk_inst_id]['en']['value'] = str(1)
+        # use same prof and unit ids - TBD if we need more profiles and share units
+        sram['len_chk_inst'][len_chk_inst_id]['unit_sel']['value'] = str(len_chk_prof.prof_id)
+        sram['len_chk_inst'][len_chk_inst_id]['prof_sel']['value'] = str(len_chk_prof.prof_id)
+        sram['len_chk_inst'][len_chk_inst_id]['ohi_start_sel']['value'] = str(start_ohi_slot)
+        sram['len_chk_inst'][len_chk_inst_id]['ohi_len_sel']['value'] = str(len_ohi_slot)
+        if len_chk_prof.cmp_op == 'eq':
+            sram['len_chk_inst'][len_chk_inst_id]['exact']['value'] = str(1)
+        else:
+            sram['len_chk_inst'][len_chk_inst_id]['exact']['value'] = str(0)
+        len_chk_inst_id += 1
 
     return sram
 
@@ -2694,28 +2727,47 @@ def capri_parser_output_decoders(parser):
     se['entry_idx'] = str(idx)  # debug aid
     te['_modified'] = True
     se['_modified'] = True
+
+    idx += 1
+    parser.logger.info('%s:Tcam states used %d' % (parser.d.name, idx))
+
     # program catch all entry register
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['pe_enable']['value'] = str(0x3ff)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['parse_loop_cnt']['value'] = str(64)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['num_phv_flit']['value'] = str(6)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']\
         ['state_lkp_catchall_entry']['value'] = str(idx)
+
     # gso csum will be written by a separate checksum instruction, enabling it here is ok
     # even if checksum inst is not executed
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['gso_csum_en']['value'] = str(1)
-    '''
-    Enable it once model is avaialble
     if parser.be.pa.gress_pa[parser.d].parser_end_off_cf:
         phv_flit_sz = parser.be.hw_model['phv']['flit_size']
         end_offset_flit = parser.be.pa.gress_pa[parser.d].parser_end_off_cf.phv_bit / phv_flit_sz
-        ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['end_offset_en'] = True
-        ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['end_offset_flit_num'] = \
+        ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['end_offset_en']['value'] = str(1)
+        ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['end_offset_flit_num']['value'] = \
             str(end_offset_flit)
-    '''
 
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['_modified'] = True
-    idx += 1
-    parser.logger.info('%s:Tcam states used %d' % (parser.d.name, idx))
+
+    # program len_chk profiles
+    for e,len_chk_profile in enumerate(parser.len_chk_profiles):
+        if len_chk_profile == None:
+            continue
+        cap_ppa_csr_cfg_len_chk_profile = \
+            ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_len_chk_profile[%d]'%e]
+        cap_ppa_csr_cfg_len_chk_profile['len_mask']['value'] = "0x%x" % int(0x3FFF)
+        cap_ppa_csr_cfg_len_chk_profile['len_shift_left']['value'] = str(0)
+        cap_ppa_csr_cfg_len_chk_profile['len_shift_val']['value'] = str(0)
+        if len_chk_profile.offset_op == '+':
+            cap_ppa_csr_cfg_len_chk_profile['addsub_start']['value'] = str(1)
+        else:
+            cap_ppa_csr_cfg_len_chk_profile['addsub_start']['value'] = str(0)
+
+        cap_ppa_csr_cfg_len_chk_profile['start_adj']['value'] = "0x%x" % \
+            int(len_chk_profile.start_offset)
+        cap_ppa_csr_cfg_len_chk_profile['_modified'] = True
+
     ppa_json['cap_ppa']['memories']['cap_ppa_csr_dhs_bndl0_state_lkp_tcam']['entries'] = tcam0
     ppa_json['cap_ppa']['memories']['cap_ppa_csr_dhs_bndl1_state_lkp_tcam']['entries'] = tcam0
     if tcam_dname:

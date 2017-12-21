@@ -440,6 +440,7 @@ class capri_parse_state:
         self.branches = []              # processed branch information - maintain the order
 
         self.active_lkp_lfs = [None for _ in self.parser.be.hw_model['parser']['lkp_regs']]
+        self.len_chk_profiles = []
 
         # hardware information
         self.lkp_regs = [capri_lkp_reg(v) for v in self.parser.be.hw_model['parser']['lkp_regs']]
@@ -843,6 +844,17 @@ class capri_parser_expr:
         #            (self.pkt_offset, self.mask if self.mask != None else 0, self.lkp_sel)
         return pstr
 
+class capri_parser_len_chk_profile:
+    def __init__(self, parser, name):
+        self.parser = parser
+        self.name = name
+        self.start_hfname = None
+        self.len_hfname = None
+        self.start_offset = 0
+        self.offset_op = '+'
+        self.cmp_op = 'gt'
+        self.prof_id = None
+
 class capri_parser:
     # one per direction
     def __init__(self, capri_be, d):
@@ -888,8 +900,12 @@ class capri_parser:
                 range(self.be.hw_model['parser']['ohi_threshold']\
                 + self.be.hw_model['parser']['max_csum_engines'] * 2, \
                 self.be.hw_model['parser']['num_ohi'])]
+
         self.free_ohi_slots = [True for i in \
                 range(self.be.hw_model['parser']['ohi_threshold'])]
+
+        self.len_chk_profiles = \
+            [None for _ in range(self.be.hw_model['parser']['num_len_chk_profiles'])]
 
     def get_header_size(self, hdr):
         # return fixed len or P4field/expression that represents len
@@ -900,7 +916,6 @@ class capri_parser:
             return self.var_len_headers[hdr.name]
 
     def initialize(self):
-
         #Collect write_only ohi fields
         for hdr_name, hdr in self.be.h.p4_header_instances.items():
             if 'parser_write_only' in hdr._parsed_pragmas:
@@ -1220,6 +1235,31 @@ class capri_parser:
                     p4_hdr_group.append(p4h)
                 if len(p4_hdr_group) != 0:
                     self.hdr_order_groups.append(p4_hdr_group)
+
+            if 'packet_len_check' in cs.p4_state._parsed_pragmas:
+                len_chk_pragma = cs.p4_state._parsed_pragmas['packet_len_check']
+                for _name in len_chk_pragma.keys():
+                    _name = len_chk_pragma.keys()[0]
+                    len_chk_profile = self.len_chk_profile_get(_name)
+                    if not len_chk_profile:
+                        len_chk_profile = capri_parser_len_chk_profile(self, _name)
+                        if self.len_chk_profile_alloc(len_chk_profile) == None:
+                            assert 0, "No len check profile avaialble for %s" % _name
+                    if 'start' in len_chk_pragma[_name].keys():
+                        assert len_chk_profile.start_hfname == None, pdb.set_trace()
+                        len_chk_profile.start_hfname = len_chk_pragma[_name]['start'].keys()[0]
+                    if 'len' in len_chk_pragma[_name].keys():
+                        len_params = get_pragma_param_list(len_chk_pragma[_name]['len'])
+                        assert len(len_params) > 1, pdb.set_trace()
+                        assert len_params[0] == 'eq' or len_params[0] == 'gt', pdb.set_trace()
+                        len_chk_profile.cmp_op = len_params[0]
+                        assert len_chk_profile.len_hfname == None, pdb.set_trace()
+                        len_chk_profile.len_hfname = len_params[1]
+                        if len(len_params) > 3:
+                            assert len_params[2] == '+' or len_params[2] == '-', pdb.set_trace()
+                            len_chk_profile.offset_op = len_params[2]
+                            len_chk_profile.start_offset = int(len_params[3])
+                    cs.len_chk_profiles.append(len_chk_profile)
 
             if not cs.p4_state or cs.is_virtual:
                 continue
@@ -1724,7 +1764,7 @@ class capri_parser:
         # on that path (same ohi slot can be used by different headers on different mutually
         # exclusive paths), but that cannot be checked for wr_only variable as it does not appear
         # on a path.. since wr_only variables are not visible on path-headers
-        # for not do a global allocation for wr_only variables
+        # for now do a global allocation for wr_only variables
         for k,v in self.wr_only_ohi.items():
             # reset
             self.wr_only_ohi[k] = None
@@ -3126,6 +3166,23 @@ class capri_parser:
         insts = self.create_extract_instructions(extractions)
         return insts
 
+    def len_chk_profile_get(self, name):
+        for p in self.len_chk_profiles:
+            if p and p.name == name:
+                return p
+        return None
+
+    def len_chk_profile_alloc(self, len_chk_profile):
+        for p in self.len_chk_profiles:
+            if p and p == len_chk_profile:
+                assert 0, pdb.set_trace() # duplicate allocation
+        for i,p in enumerate(self.len_chk_profiles):
+            if p == None:
+                self.len_chk_profiles[i] = len_chk_profile
+                len_chk_profile.prof_id = i
+                return i
+        return None
+
     def print_path_histogram(self, bin_size):
         num_bins = (self.longest_path_size + bin_size) / bin_size
         bin_count = {b : 0 for b in range(num_bins)}
@@ -3220,8 +3277,8 @@ class capri_parser:
                     cs_flit = hdr_phv_bit/flit_sz
                     if cs_flit < last_flit:
                         self.logger.critical( \
-                        "%s:Flit violation at %s phv %d, last_cs %s last_flit %d on path:\n %s" % \
-                            (self.d.name, hdr.name, hdr_phv_bit, last_cs.name, last_flit, path))
+                        "%s:Flit violation at %s phv %d, cs %s last_cs %s last_flit %d on path:\n %s" % \
+                            (self.d.name, hdr.name, hdr_phv_bit, cs.name, last_cs.name, last_flit, path))
                         assert 0, pdb.set_trace()
                         return True
 
@@ -3229,8 +3286,8 @@ class capri_parser:
                     cs_flit = cf.phv_bit / flit_sz
                     if cs_flit < last_flit:
                         self.logger.critical( \
-                        "%s:Flit violation at %s phv %d, last_cs %s last_flit %d on path:\n %s" % \
-                            (self.d.name, hdr.name, hdr_phv_bit, last_cs.name, last_flit, path))
+                        "%s:Flit violation at %s phv %d, cs %s last_cs %s last_flit %d on path:\n %s" % \
+                            (self.d.name, hdr.name, hdr_phv_bit, cs.name, last_cs.name, last_flit, path))
                         assert 0, pdb.set_trace()
                         return True
 
