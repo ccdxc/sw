@@ -47,7 +47,6 @@ cc_binary(
         "//nic/hal/pd/iris",
         "//nic:capricsr_int",
         "//nic/hal/pd/capri",
-        "//nic/hal/pd/pal",
         "//nic/hal/pd/control",
         "//nic:p4pd",
         "//nic:gft_p4pd",

@@ -1,5 +1,5 @@
 #include "nic/hal/pd/utils/met/met.hpp"
-#include "nic/include/pal.hpp"
+#include "sdk/pal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 
@@ -47,7 +47,7 @@ TEST_F(met_test, test1) {
     uint32_t repl_list_idx = 0;
     std::string table_name = "Test_Table";
 	hal_pd_replication_tbl_mbr_entry_t entry;
-    pal_init(true);
+    sdk::lib::pal_init(true);
     Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6, 
                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
 

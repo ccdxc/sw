@@ -28,12 +28,10 @@ cc_library(
     deps = [
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/pd/capri",
-        "//nic/hal/pd/pal",
-        #"//nic/hal/pd/control",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        #"//nic:sdk_indexer",
         "@sdk//obj:sdk_indexer",
+        "@sdk//obj:sdk_pal",
         "//nic/utils/thread",  # May not be needed
     ],
 )

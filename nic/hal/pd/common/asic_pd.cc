@@ -4,11 +4,12 @@
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
-#include "nic/include/pal.hpp"
+#include "sdk/pal.hpp"
 
 namespace hal {
-
 namespace pd {
+
+using sdk::lib::pal_ret_t;
 
 // asic model's cfg port socket descriptor
 static std::atomic<bool> g_asic_rw_ready_;
@@ -187,7 +188,7 @@ asic_reg_read_impl (uint64_t addr, uint32_t *data)
         rc = asic_do_read(HAL_ASIC_RW_OPERATION_REG_READ,
                           addr, (uint8_t *)data, 0);
     } else {
-        pal_reg_read(addr, data);
+        sdk::lib::pal_reg_read(addr, data);
     }
 
     if (rc != HAL_RET_OK) {
@@ -225,7 +226,7 @@ asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len)
     if (is_asic_rw_thread() == false) {
         rc = asic_do_read(HAL_ASIC_RW_OPERATION_MEM_READ, addr, data, len);
     } else {
-        pal_ret_t prc = pal_mem_read(addr, data, len);
+        pal_ret_t prc = sdk::lib::pal_mem_read(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
     }
 
@@ -308,7 +309,7 @@ asic_reg_write (uint64_t addr, uint32_t data, bool blocking)
         rc = asic_do_write(HAL_ASIC_RW_OPERATION_REG_WRITE,
                            addr, (uint8_t *)&data, 0, blocking);
     } else {
-        pal_ret_t prc = pal_reg_write(addr, data);
+        pal_ret_t prc = sdk::lib::pal_reg_write(addr, data);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
     }
     if (rc != HAL_RET_OK) {
@@ -333,7 +334,7 @@ asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len, bool blocking)
         rc = asic_do_write(HAL_ASIC_RW_OPERATION_MEM_WRITE,
                            addr, data, len, blocking);
     } else {
-        pal_ret_t prc = pal_mem_write(addr, data, len);
+        pal_ret_t prc = sdk::lib::pal_mem_write(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
     }
 
@@ -357,7 +358,7 @@ asic_ring_doorbell (uint64_t addr, uint64_t data, bool blocking)
         rc = asic_do_write(HAL_ASIC_RW_OPERATION_RING_DOORBELL,
                            addr, (uint8_t *)&data, sizeof(data), blocking);
     } else {
-        pal_ret_t prc = pal_ring_doorbell(addr, data);
+        pal_ret_t prc = sdk::lib::pal_ring_doorbell(addr, data);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
     }
 
@@ -375,7 +376,7 @@ asic_ring_doorbell (uint64_t addr, uint64_t data, bool blocking)
 hal_ret_t
 asic_step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
 {
-    pal_ret_t prc = pal_step_cpu_pkt(pkt, pkt_len);
+    pal_ret_t prc = sdk::lib::pal_step_cpu_pkt(pkt, pkt_len);
     return IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
 }
 
@@ -462,15 +463,17 @@ asic_rw_loop (void)
             rw_entry = &g_asic_rw_workq[qid].entries[cindx];
             switch (rw_entry->opn) {
             case HAL_ASIC_RW_OPERATION_MEM_READ:
-                rv = pal_mem_read(rw_entry->addr, rw_entry->data, rw_entry->len);
+                rv = sdk::lib::pal_mem_read(rw_entry->addr, rw_entry->data,
+                                            rw_entry->len);
                 break;
 
             case HAL_ASIC_RW_OPERATION_MEM_WRITE:
-                rv = pal_mem_write(rw_entry->addr, rw_entry->data, rw_entry->len);
+                rv = sdk::lib::pal_mem_write(rw_entry->addr, rw_entry->data,
+                                             rw_entry->len);
                 break;
 
             case HAL_ASIC_RW_OPERATION_REG_READ:
-                rv = pal_reg_read(rw_entry->addr, &regval);
+                rv = sdk::lib::pal_reg_read(rw_entry->addr, &regval);
                 if (IS_PAL_API_SUCCESS(rv)) {
                     *(uint32_t *)rw_entry->data = regval;
                 }
@@ -478,7 +481,7 @@ asic_rw_loop (void)
 
             case HAL_ASIC_RW_OPERATION_REG_WRITE:
                 regval = rw_entry->reg_data;
-                rv = pal_reg_write(rw_entry->addr, regval);
+                rv = sdk::lib::pal_reg_write(rw_entry->addr, regval);
                 break;
 
             case HAL_ASIC_RW_OPERATION_PORT:
@@ -494,8 +497,8 @@ asic_rw_loop (void)
                 break;
 
             case HAL_ASIC_RW_OPERATION_RING_DOORBELL:
-                rv = pal_ring_doorbell(rw_entry->addr,
-                                       *(uint64_t *)rw_entry->data);
+                rv = sdk::lib::pal_ring_doorbell(rw_entry->addr,
+                                                 *(uint64_t *)rw_entry->data);
                 break;
 
             default:
@@ -535,7 +538,7 @@ asic_rw_init(hal_cfg_t *hal_cfg)
     pal_ret_t   palrv;
 
     // Initialize PAL
-    palrv = pal_init(hal_cfg->platform_mode == HAL_PLATFORM_MODE_SIM);
+    palrv = sdk::lib::pal_init(hal_cfg->platform_mode == HAL_PLATFORM_MODE_SIM);
     HAL_ABORT(IS_PAL_API_SUCCESS(palrv));
 
     // do asic initialization
