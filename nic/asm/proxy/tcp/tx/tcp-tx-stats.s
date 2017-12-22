@@ -9,9 +9,10 @@
 #include "tcp-constants.h"	
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_s7_t0_tcp_tx_k.h"
 	
 struct phv_ p;
-struct s7_t0_tcp_tx_k k;
+struct s7_t0_tcp_tx_k_ k;
 	
 %%
 	.align	

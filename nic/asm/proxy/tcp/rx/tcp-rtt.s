@@ -8,9 +8,10 @@
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_s2_t0_tcp_rx_k.h"
     
 struct phv_ p;
-struct s2_t0_tcp_rx_k k;
+struct s2_t0_tcp_rx_k_ k;
 struct s2_t0_tcp_rx_tcp_rtt_d d;
 
     
@@ -166,7 +167,7 @@ m_ge_0_done:
     srl.c2      r4, r4,2
     sub.c2      r5, d.rttvar_us, r4
     tblwr       d.rttvar_us, r5
-    tblwr.c1    d.rtt_seq, k.{to_s2_snd_nxt_sbit0_ebit7...to_s2_snd_nxt_sbit24_ebit31}
+    tblwr.c1    d.rtt_seq, k.to_s2_snd_nxt
     addi.c1     r4, r0, TCP_RTO_MIN
     tblwr.c1    d.mdev_max_us, r4
     
@@ -190,7 +191,7 @@ first_rtt_measure:
     tblwr       d.mdev_max_us, d.rttvar_us
     
     /* tp->rtt.rtt_seq = tp->tx.snd_nxt; */
-    tblwr       d.rtt_seq, k.{to_s2_snd_nxt_sbit0_ebit7...to_s2_snd_nxt_sbit24_ebit31}
+    tblwr       d.rtt_seq, k.to_s2_snd_nxt
 first_rtt_measure_done:
     /* tp->rtt.srtt_us = max(1U, srtt) */
     addi        r5,r0,1

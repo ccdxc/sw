@@ -9,9 +9,10 @@
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_s5_t1_tcp_rx_k.h"
     
 struct phv_ p;
-struct s5_t1_tcp_rx_k k;
+struct s5_t1_tcp_rx_k_ k;
 struct s5_t1_tcp_rx_write_arq_d d;
 
 %%

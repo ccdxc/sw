@@ -10,14 +10,12 @@
 #include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_s1_t0_tcp_rx_k.h"
 
 struct phv_ p;
-struct s1_t0_tcp_rx_k k;
+struct s1_t0_tcp_rx_k_ k;
 struct s1_t0_tcp_rx_d d;
 
-#define To_s1_seq {to_s1_seq_sbit0_ebit7...to_s1_seq_sbit8_ebit31}
-#define To_s1_ack_seq {to_s1_ack_seq_sbit0_ebit7...to_s1_ack_seq_sbit24_ebit31}
-#define To_s1_snd_nxt {to_s1_snd_nxt_sbit0_ebit7...to_s1_snd_nxt_sbit24_ebit31}
 %%
     .param          tcp_rx_rtt_stage2_start
     .param          tcp_rx_read_rnmdr_stage2_start
@@ -47,8 +45,8 @@ tcp_rx_process_stage1_start:
     sne             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
     seq.!c1         c1, k.common_phv_fin, 1
     seq.!c1         c1, k.s1_s2s_fin_sent, 1
-    sne             c2, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
-    slt             c3, k.To_s1_snd_nxt, k.To_s1_ack_seq
+    sne             c2, d.u.tcp_rx_d.rcv_nxt, k.to_s1_seq
+    slt             c3, k.to_s1_snd_nxt, k.to_s1_ack_seq
     slt             c4, r4, d.u.tcp_rx_d.ts_recent
     seq             c5, k.s1_s2s_payload_len, r0
     sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
@@ -161,7 +159,7 @@ tcp_event_data_rcv_done:
     bcf             [c1], tcp_ecn_check_ce
 
     /* c1 = (ack_seq == snd_una) */
-    seq             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    seq             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
 
     /*
      * clear process_ack_flag if ack_seq != snd_una
@@ -249,8 +247,8 @@ tcp_rx_end:
 
 
 tcp_ack:
-    slt             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
-    slt             c2, k.To_s1_snd_nxt, k.To_s1_ack_seq
+    slt             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c2, k.to_s1_snd_nxt, k.to_s1_ack_seq
     sne             c3, d.u.tcp_rx_d.state, TCP_ESTABLISHED
     bcf             [c1 | c2 | c3], slow_tcp_ack
 
@@ -259,13 +257,13 @@ fast_tcp_ack:
     phvwr           p.rx2tx_pending_rx_tcp_ack, 1
 
 fast_tcp_update_wl:
-    tblwr           d.u.tcp_rx_d.snd_wl1, k.To_s1_ack_seq
+    tblwr           d.u.tcp_rx_d.snd_wl1, k.to_s1_ack_seq
 fast_tcp_snd_una_update:
-    sub             r1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    sub             r1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
     tbladd          d.u.tcp_rx_d.bytes_acked, r1
     /* Update snd_una */
-    tblwr           d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
-    phvwr           p.rx2tx_snd_una, k.To_s1_ack_seq
+    tblwr           d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
+    phvwr           p.rx2tx_snd_una, k.to_s1_ack_seq
 
     phvwr           p.common_phv_pending_txdma, 1
 
@@ -277,7 +275,7 @@ fast_tcp_in_ack_event:
 
 slow_tcp_ack:
     seq             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
-    sne             c2, k.To_s1_snd_nxt, k.To_s1_ack_seq
+    sne             c2, k.to_s1_snd_nxt, k.to_s1_ack_seq
     bcf             [c1 | c2], slow_tcp_ack_established
 
     /*
@@ -311,9 +309,9 @@ slow_tcp_ack_established:
      *  }
      *
      */
-    slt             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
     sub.c1          r1, d.u.tcp_rx_d.snd_una, d.u.tcp_rx_d.max_window
-    slt.c1          c2, k.To_s1_ack_seq, r1
+    slt.c1          c2, k.to_s1_ack_seq, r1
     phvwr.c2        p.rx2tx_extra_pending_challenge_ack_send, 1
     bcf             [c2], flow_rx_process_done
     nop
@@ -327,7 +325,7 @@ slow_tcp_ack_established:
      *          goto invalid_ack;
      *
      */
-    slt             c1, k.To_s1_snd_nxt, k.To_s1_ack_seq
+    slt             c1, k.to_s1_snd_nxt, k.to_s1_ack_seq
     bcf             [c1], invalid_ack
     nop
 
@@ -359,7 +357,7 @@ no_rearm_rto:
      *  }
      *
      */
-    slt             c1, d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
+    slt             c1, d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
     tblor.c1        d.u.tcp_rx_d.flag, FLAG_SND_UNA_ADVANCED
 
     /* ts_recent update must be made after we are sure that the packet
@@ -432,11 +430,11 @@ tcp_ack_update_window:
     sll             r2, k.s1_s2s_window, d.u.tcp_rx_d.snd_wscale
 tcp_may_update_window:
     /* after(ack, snd_una) */
-    slt             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
     /* after(ack_seq, snd_wl1) */
-    slt             c2, k.To_s1_seq, d.u.tcp_rx_d.snd_wl1
+    slt             c2, k.to_s1_seq, d.u.tcp_rx_d.snd_wl1
     /* ack_seq == snd_wl1 */
-    slt             c3, k.To_s1_seq, d.u.tcp_rx_d.snd_wl1
+    slt             c3, k.to_s1_seq, d.u.tcp_rx_d.snd_wl1
     /* nwin > snd_wnd */
     slt             c4, d.u.tcp_rx_d.snd_wnd, r2
     setcf           c5, [!c3 | !c4]
@@ -450,7 +448,7 @@ tcp_update_window:
     /* ack_ev_flags |= CA_ACK_WIN_UPDATE */
     ori             r1, r1, CA_ACK_WIN_UPDATE
     /* tcp_update_wl */
-    tblwr           d.u.tcp_rx_d.snd_wl1, k.To_s1_seq
+    tblwr           d.u.tcp_rx_d.snd_wl1, k.to_s1_seq
     /*
         if (tp->tx.snd_wnd != nwin) {
         tp->tx.snd_wnd = nwin;
@@ -489,11 +487,11 @@ tcp_update_window_bypass:
 slow_tcp_snd_una_update:
     /* tcp_snd_una_update */
     /* Increment bytes acked by the delta between ack_seq and snd_una */
-    sub             r3, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    sub             r3, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
     tbladd          d.u.tcp_rx_d.bytes_acked, r3
     /* Update snd_una */
-    tblwr           d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
-    phvwr           p.rx2tx_snd_una, k.To_s1_ack_seq
+    tblwr           d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
+    phvwr           p.rx2tx_snd_una, k.to_s1_ack_seq
 
 tcp_ecn_rcv_ecn_echo:
     /* ecn_flags & TCP_ECN_OK */
@@ -698,8 +696,8 @@ tcp_rx_slow_path:
 
     seq             c2, d.u.tcp_rx_d.state, TCP_LISTEN
     phvwri.c2       p.common_phv_write_tcp_app_hdr,1
-    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.To_s1_seq.wx
-    phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.To_s1_ack_seq.wx
+    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.{to_s1_seq}.wx
+    phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.{to_s1_ack_seq}.wx
     phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s1_flags
 
     bcf             [c1], flow_rx_process_done
@@ -709,15 +707,15 @@ tcp_rx_slow_path:
 
     /* if (cp->seq != tp->rx.rcv_nxt) { */
     /* if pkt->seq > rcv_nxt, do ooo (SACK) processing */
-    slt             c7, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
+    slt             c7, d.u.tcp_rx_d.rcv_nxt, k.to_s1_seq
     bcf             [c7], ooo_received
     /* if rcv_nxt > pkt->seq, retransmission, drop the packet */
-    slt             c7, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
+    slt             c7, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
     phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done
 
     /*   if (!(before(cp->ack_seq, tp->tx.snd_nxt))) { */
-    sle             c1, k.To_s1_ack_seq, k.To_s1_snd_nxt
+    sle             c1, k.to_s1_ack_seq, k.to_s1_snd_nxt
     bcf             [!c1], slow_path
     nop
 
@@ -790,7 +788,7 @@ tcp_rx_slow_path_post_fin_handling:
     bcf             [c1],slow_path
     nop
 
-    seq             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    seq             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
     bal.!c1         r7, tcp_ack
     nop
     seq             c1, k.s1_s2s_payload_len, r0
@@ -811,7 +809,7 @@ tcp_queue_rcv:
      * r0 (0) is the rightmost (lowest) bit set
      * r2 is the leftmost (highest) bit set
      */
-    add             r1, k.To_s1_seq, k.s1_s2s_payload_len
+    add             r1, k.to_s1_seq, k.s1_s2s_payload_len
     sub             r1, r1, d.u.tcp_rx_d.rcv_nxt
     srl             r2, r1, TCP_OOO_CELL_SIZE_SHIFT
     and             r3, r1, TCP_OOO_CELL_SIZE_MASK
@@ -885,10 +883,10 @@ ooo_received:
      *
      * c7 = drop packet
      */
-    sub             r1, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
+    sub             r1, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
     add             r2, r1, k.s1_s2s_payload_len
     add             r3, d.u.tcp_rx_d.rcv_nxt, TCP_OOO_NUM_CELLS * TCP_OOO_CELL_SIZE
-    add             r4, k.To_s1_seq, k.s1_s2s_payload_len
+    add             r4, k.to_s1_seq, k.s1_s2s_payload_len
     slt             c7, r3, r4
     phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done

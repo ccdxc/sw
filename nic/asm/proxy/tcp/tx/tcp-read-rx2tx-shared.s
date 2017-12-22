@@ -9,9 +9,10 @@
 #include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_s0_t0_tcp_tx_k.h"
 	
 struct phv_ p;
-struct s0_t0_tcp_tx_k k;
+struct s0_t0_tcp_tx_k_ k;
 struct s0_t0_tcp_tx_read_rx2tx_d d;
 	
 %%
@@ -23,7 +24,7 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
 
 tcp_tx_read_rx2tx_shared_process:
     phvwr           p.common_phv_fid, k.p4_txdma_intr_qid
-    phvwr           p.common_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    phvwr           p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
     phvwr           p.common_phv_snd_una, d.snd_una
     phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
     phvwr           p.to_s5_state, d.state
@@ -35,7 +36,7 @@ tcp_tx_read_rx2tx_shared_process:
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
-                        k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33},
+                        k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
 
 	.brbegin
@@ -123,12 +124,12 @@ tcp_tx_pending_rx2tx:
 
     CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
                         tcp_tx_process_pending_start,
-                        k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33},
+                        k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
 
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS,
                         tcp_tx_process_read_xmit_start,
-                        k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33},
+                        k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 tcp_tx_pending_rx2tx_end:
     tblwr           d.rx_flag, 0

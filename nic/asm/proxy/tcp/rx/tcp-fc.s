@@ -9,10 +9,11 @@
 #include "tcp-constants.h"  
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_s4_t0_tcp_rx_k.h"
     
 struct phv_ p;
-struct s4_t0_tcp_rx_k k;              // TODO : define own k for s5
-struct s4_t0_tcp_rx_tcp_fc_d d;       // TODO : define own k for s5
+struct s4_t0_tcp_rx_k_ k;
+struct s4_t0_tcp_rx_tcp_fc_d d;
     
 %%
     .param          tcp_rx_write_serq_stage_start

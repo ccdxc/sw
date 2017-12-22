@@ -10,9 +10,10 @@
 #include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_s2_t2_tcp_tx_k.h"
 
 struct phv_ p;
-struct s2_t2_tcp_tx_k k;
+struct s2_t2_tcp_tx_k_ k;
 struct s2_t2_tcp_tx_read_tcp_flags_d d;
 
 %%
