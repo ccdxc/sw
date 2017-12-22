@@ -894,17 +894,31 @@ struct p4_to_p4plus_roce_header_t {
 
 //Common DCQCN CB for both req and resp paths.
 struct dcqcn_cb_t {
+    // CNP generation params.
     last_cnp_timestamp: 48;
-    partition_key: 16;
-    rate_enforced: 32; // DCQCN enforced rate in Mbps.
-    last_sched_timestamp: 48;
+    partition_key:      16;
+
+    // DCQCN algorithm params
+    rate_enforced:          32; // Enforced rate in Mbps. (Rc)
+    target_rate:            32; // Target rate in Mbps. (Rt)
+    byte_counter_thr:       32; // byte-counter-threshold in Bytes. (Bc)
+    cur_byte_counter:       32; // cur-byte-counter value in Bytes.
+    byte_counter_exp_cnt:   16; // Num of times byte-counter expired.
+    timer_exp_cnt:          16; // Num of times timer T expired.(T)
+    alpha_value:            16; // rate-reduction-factor alpha val in int.
+    timer_exp_thr:          16; // Timer T threshold in terms of alpha-timer.
+    num_alpha_exp_cnt:      16; // Num times alpha-timer expired since timer T expired.
+
+    // Rate-limiter token-bucket related params.
+    last_sched_timestamp:   48;
     delta_ticks_last_sched: 16;
-    cur_avail_tokens: 64;
-    token_bucket_size: 64; // DCQCN enforced BC (committed-burst) in bits.
-    // For model testing only. Number of times packet was scheduled and dropped due to insufficient tokens.
-    num_sched_drop: 8;
-    cur_timestamp: 48; // For debugging on Model since model doesnt have timestamps
-    pad : 168;
+    cur_avail_tokens:       64;
+    token_bucket_size:      64; // DCQCN enforced BC (committed-burst) in bits.
+
+    // For model testing only.
+    num_sched_drop: 8; // Number of times packet was scheduled and dropped due to insufficient tokens.
+    cur_timestamp:  32; // For debugging on Model since model doesnt have timestamps
+    pad :           8;
 };
 
 

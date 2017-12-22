@@ -2,11 +2,13 @@
 #define __RQCB_H
 #include "capri.h"
 
-#define MAX_RQ_RINGS	6
-#define RQ_RING_ID 	0
-#define RSQ_RING_ID 	1
-#define ACK_NAK_RING_ID 2
-#define RSQ_BT_RING_ID 	3
+#define MAX_RQ_RINGS                6
+#define RQ_RING_ID                  0
+#define RSQ_RING_ID                 1
+#define ACK_NAK_RING_ID             2
+#define RSQ_BT_RING_ID              3
+#define DCQCN_RING_ID               4
+#define DCQCN_TIMER_RING_ID         5
 
 #define RQ_P_INDEX d.{ring0.pindex}.hx
 #define RQ_C_INDEX d.{ring0.cindex}.hx
@@ -19,6 +21,12 @@
 
 #define RSQ_BT_P_INDEX d.{ring3.pindex}.hx
 #define RSQ_BT_C_INDEX d.{ring3.cindex}.hx
+
+#define DCQCN_P_INDEX d.{ring4.pindex}.hx
+#define DCQCN_C_INDEX d.{ring4.cindex}.hx
+
+#define DCQCN_TIMER_P_INDEX d.{ring5.pindex}.hx
+#define DCQCN_TIMER_C_INDEX d.{ring5.cindex}.hx
 
 #define PROXY_RQ_C_INDEX   d.{proxy_cindex}.hx
 

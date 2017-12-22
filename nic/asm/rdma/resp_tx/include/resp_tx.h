@@ -86,7 +86,8 @@ struct resp_tx_rqcb_to_rqcb1_info_t {
     rsqwqe_addr: 64;
     log_pmtu: 5;
     serv_type: 3;
-    pad: 88;
+    timer_event_process: 1;
+    pad: 87;
 };
 
 struct resp_tx_rqcb1_process_k_t {

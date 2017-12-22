@@ -1,5 +1,5 @@
 #include "resp_tx.h"
-#include "sqcb.h"
+#include "rqcb.h"
 
 struct resp_tx_phv_t p;
 struct dcqcn_cb_t d;
@@ -78,8 +78,21 @@ rate_enforce:
     sub           r2, d.cur_avail_tokens, NUM_TOKENS_REQUIRED 
     tblwr         d.cur_avail_tokens, r2
 
+    // Increment DCQCN byte-counter by pkt-len and trigger algorithm if byte-counter threshold is reached.
+    add           r2, k.to_stage.s4.dcqcn.packet_len, d.cur_byte_counter
+    tblwr         d.cur_byte_counter, r2 
+    slt           c2, d.cur_byte_counter, d.byte_counter_thr
+    bcf           [c2], load_write_back
+    nop
+
+ring_dcqcn_doorbell:
+    // Reset cur-byte-counter, incr byte counter expiry count and ring dcqcn doorbell to update rate.
+    tblwr         d.cur_byte_counter, 0
+    tblmincri     d.byte_counter_exp_cnt, 0x10, 1 // byte_counter_exp_cnt is 16-bit value. 
+    DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RING_ID, r5, r6)
+    
 load_write_back:            
-    // DCQCN rate-enforcement passed. Load stage 5 for write-back
+    // DCQCN rate-enforcement passed. Load stage 5 for write-back.
     CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rqcb1_write_back_process)
     RQCB1_ADDR_GET(r2)

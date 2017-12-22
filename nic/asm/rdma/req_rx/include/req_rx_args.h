@@ -116,7 +116,7 @@ struct req_rx_cqcb_to_eq_info_t {
 
 struct req_rx_ecn_info_t { 
     p_key: 16;              
-    pad : 144;              
+    pad : 144; 
 };
 
 #endif //__REQ_RX_ARGS_H

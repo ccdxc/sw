@@ -42,6 +42,7 @@ struct rdma_stage0_table_k k;
     .param    resp_rx_rqcb1_recirc_sge_process
     .param    resp_rx_stats_process
     .param    resp_rx_rqcb1_ecn_process
+    .param    resp_rx_rqcb1_cnp_process
     .param    rdma_atomic_resource_addr
     .param    resp_rx_read_mpu_only_process
     .param    resp_rx_atomic_resource_process
@@ -98,11 +99,24 @@ skip_roce_opt_parsing:
     CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, ECN_INFO_T, p_key, CAPRI_APP_DATA_BTH_P_KEY)
     CAPRI_GET_TABLE_3_K(resp_rx_phv_t, r4)        
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_ecn_process)                                  
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_ecn_process) 
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES                         
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)    
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5) 
 
 skip_cnp_send:
+    // Check if its CNP packet.
+    sne     c7, CAPRI_APP_DATA_BTH_OPCODE, 0x81
+    bcf     [c7 | c2], skip_cnp_receive
+
+    // Load rqcb1-->dcqcn_cb to cut rate based on dcqcn algorithm.
+    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_cnp_process) 
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES                         
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5) 
+    nop.e
+    nop
+
+skip_cnp_receive:
     // TODO: Migrate ACK_REQ flag to P4 table
     seq     c7, CAPRI_APP_DATA_BTH_ACK_REQ, 1
     or.c7   r7, r7, RESP_RX_FLAG_ACK_REQ
