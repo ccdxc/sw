@@ -38,14 +38,12 @@ nop:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 tcp_session_state_info:
   // New Instruction TBD
-  seq          c1, k.flow_info_metadata_flow_role, TCP_FLOW_INITIATOR
-  b.!c1        lb_tcp_session_state_responder
+  bbeq         k.flow_info_metadata_flow_role, TCP_FLOW_RESPONDER, lb_tcp_session_state_responder
   seq          c1, k.l4_metadata_tcp_normalization_en, 1
 
 lb_tcp_session_state_initiator:
   // New Instruction TBD,
-  add          r1, d.u.tcp_session_state_info_d.rflow_tcp_win_scale, r0
-  sllv         r6, d.u.tcp_session_state_info_d.rflow_tcp_win_sz, r1   // r6 = rcvr_win_sz
+  sll          r6, d.u.tcp_session_state_info_d.rflow_tcp_win_sz, d.u.tcp_session_state_info_d.rflow_tcp_win_scale // r6 = rcvr_win_sz
   add          r2, k.l4_metadata_tcp_data_len, r0 // r2 can  be modified by lb_tcp_session_initator_normalization
   seq          c2, d.{u.tcp_session_state_info_d.iflow_tcp_state,u.tcp_session_state_info_d.rflow_tcp_state}, (FLOW_STATE_ESTABLISHED << 4 | FLOW_STATE_ESTABLISHED)
   // Normalization checks
@@ -321,7 +319,7 @@ f_tcp_session_initiator_rtt_calculate:
 lb_tcp_session_state_responder:
   // New Instruction TBD,
   add          r1, d.u.tcp_session_state_info_d.iflow_tcp_win_scale, r0
-  sllv         r6, d.u.tcp_session_state_info_d.iflow_tcp_win_sz, r1   // r6 = rcvr_win_sz
+  sll          r6, d.u.tcp_session_state_info_d.iflow_tcp_win_sz, d.u.tcp_session_state_info_d.iflow_tcp_win_scale // r6 = rcvr_win_sz
   add          r2, k.l4_metadata_tcp_data_len, r0 // r2 can  be modified by tcp_session_normalization
   seq          c2, d.{u.tcp_session_state_info_d.iflow_tcp_state,u.tcp_session_state_info_d.rflow_tcp_state}, (FLOW_STATE_ESTABLISHED << 4 | FLOW_STATE_ESTABLISHED)
   //bal.c1       r3, f_tcp_session_normalization
