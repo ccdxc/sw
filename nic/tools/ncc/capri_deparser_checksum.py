@@ -104,90 +104,81 @@ class DeParserPhdrProfile:
     '''
     Csum Pseudo header field profile. 
     '''
-    def __init__(self, phdr_profile, phdr_type, add_len):
+    def __init__(self, phdr_profile, phdr_type, phdr_fields, add_len):
         self.phdr_profile   = phdr_profile
         self.phdr_type      = phdr_type
-        if phdr_type == 'v4':
+        if not isinstance(phdr_fields[0], int):
+            phdr_field         = phdr_fields[0]
             self.fld0_en       = 1
-            self.fld0_start    = 12 # SA offset from the start of phdr
-            self.fld0_end      = 15 # Size of IPSA 
-            self.fld0_align    = 0
-
+            self.fld0_start    = (phdr_field.offset + 7) / 8
+            self.fld0_end      = ((phdr_field.offset + phdr_field.width + 7) / 8) - 1
+            self.fld0_add_len  = add_len  # Adds 16b len field
+                                          # to phdr only in case of TCP
+                                          # (TCP hdr no payload len field)
+            self.fld0_align    = 0 if (phdr_field.offset % 16 == 0 and \
+                                       (phdr_field.offset + phdr_field.width) % 16 == 0) else 1
+        if not isinstance(phdr_fields[1], int):
+            phdr_field         = phdr_fields[1]
             self.fld1_en       = 1
-            self.fld1_start    = 16 # DA offset from the start of phdr
-            self.fld1_end      = 19 # end offset IPDA 
-            self.fld1_align    = 0
+            self.fld1_start    = (phdr_field.offset + 7) / 8
+            self.fld1_end      = ((phdr_field.offset + phdr_field.width + 7) / 8) - 1
+            self.fld1_add_len  = 0
+            self.fld1_align    = 0 if (phdr_field.offset % 16 == 0 and \
+                                       (phdr_field.offset + phdr_field.width) % 16 == 0) else 1
 
+        if not isinstance(phdr_fields[2], int):
+            phdr_field         = phdr_fields[2]
             self.fld2_en       = 1
-            self.fld2_start    = 9 # start of zeros/protocol
-            self.fld2_end      = 9
-            self.fld2_align    = 1 # Aligns protocol 8b value as bottom
-            self.add_len       = add_len# Add 16b payload len to computed checksum
-                                        # only in case of TCP payload csum (TCP hdr
-                                        # has no payload len field)
-        elif phdr_type == 'v6':
-            self.fld0_en       = 1
-            self.fld0_start    = 8  # SA offset from the start of phdr
-            self.fld0_end      = 23 # Size of IPSA 
-            self.fld0_add_len  = add_len# Add 16b payload len to computed checksum
-                                        # only in case of TCP payload csum (TCP hdr
-                                        # has no payload len field)
-            self.fld0_align    = 0
-
-            self.fld1_en       = 1
-            self.fld1_start    = 24 # DA offset from the start of phdr
-            self.fld1_end      = 39 # end offset IPDA 
-            self.fld1_add_len  = 0 
-            self.fld1_align    = 0
-
-            self.fld2_en       = 1
-            self.fld2_start    = 6 # start of next_header
-            self.fld2_end      = 6 # 
-            self.fld2_add_len  = 0 
-            self.fld2_align    = 1 # Aligns next_header
-                                   # 8b value as bottom
-                                   # 8b in 16b value
-            self.add_len       = add_len
-        else:
-            assert(0), pdb.set_trace()
+            self.fld2_start    = (phdr_field.offset  + 7) / 8
+            self.fld2_end      = ((phdr_field.offset + phdr_field.width + 7) / 8) - 1
+            self.fld2_add_len  = 0
+            self.fld2_align    = 0 if (phdr_field.offset % 16 == 0 and \
+                                       (phdr_field.offset + phdr_field.width) % 16 == 0) else 1
+        self.add_len       = add_len
 
     def CsumPhdrProfileUnitNumGet(self):
         return self.phdr_profile
 
-    def ConfigGenerate(self, phdr_profile):
-        phdr_profile['fld_en_0']   ['value']=str(self.fld0_en)
-        phdr_profile['fld_align_0']['value']=str(self.fld0_align)
-        phdr_profile['fld_start_0']['value']=str(self.fld0_start)
-        phdr_profile['fld_end_0']  ['value']=str(self.fld0_end)
-        phdr_profile['fld_en_1']   ['value']=str(self.fld1_en)
-        phdr_profile['fld_align_1']['value']=str(self.fld1_align)
-        phdr_profile['fld_start_1']['value']=str(self.fld1_start)
-        phdr_profile['fld_end_1']  ['value']=str(self.fld1_end)
-        phdr_profile['fld_en_2']   ['value']=str(self.fld2_en)
-        phdr_profile['fld_align_2']['value']=str(self.fld2_align)
-        phdr_profile['fld_start_2']['value']=str(self.fld2_start)
-        phdr_profile['fld_end_2']  ['value']=str(self.fld2_end)
+    def ConfigGenerate(self, phdr_profile, phdr_fields):
+        if not isinstance(phdr_fields[0], int):
+            phdr_profile['fld_en_0']   ['value']=str(self.fld0_en)
+            phdr_profile['fld_align_0']['value']=str(self.fld0_align)
+            phdr_profile['fld_start_0']['value']=str(self.fld0_start)
+            phdr_profile['fld_end_0']  ['value']=str(self.fld0_end)
+        if not isinstance(phdr_fields[1], int):
+            phdr_profile['fld_en_1']   ['value']=str(self.fld1_en)
+            phdr_profile['fld_align_1']['value']=str(self.fld1_align)
+            phdr_profile['fld_start_1']['value']=str(self.fld1_start)
+            phdr_profile['fld_end_1']  ['value']=str(self.fld1_end)
+        if not isinstance(phdr_fields[2], int):
+            phdr_profile['fld_en_2']   ['value']=str(self.fld2_en)
+            phdr_profile['fld_align_2']['value']=str(self.fld2_align)
+            phdr_profile['fld_start_2']['value']=str(self.fld2_start)
+            phdr_profile['fld_end_2']  ['value']=str(self.fld2_end)
         phdr_profile['add_len']    ['value']=str(self.add_len)
         phdr_profile['_modified']           = True
 
-    def LogGenerate(self):
+    def LogGenerate(self, phdr_fields):
         log_str = ''
         log_str += ' Deparser Checksum Phdr Profile\n'
         log_str += '-------------------------------\n\n'
         log_str += '        Phdr Type    %s\n' % self.phdr_type
         log_str += '        Profile#     %d\n' % self.phdr_profile
-        log_str += '        fld0_en    = %d\n' % self.fld0_en
-        log_str += '        fld0_start = %d\n' % self.fld0_start
-        log_str += '        fld0_end   = %d\n' % self.fld0_end
-        log_str += '        fld0_align = %d\n' % self.fld0_align
-        log_str += '        fld1_en    = %d\n' % self.fld1_en
-        log_str += '        fld1_start = %d\n' % self.fld1_start
-        log_str += '        fld1_end   = %d\n' % self.fld1_end
-        log_str += '        fld1_align = %d\n' % self.fld1_align
-        log_str += '        fld2_en    = %d\n' % self.fld2_en
-        log_str += '        fld2_start = %d\n' % self.fld2_start
-        log_str += '        fld2_end   = %d\n' % self.fld2_end
-        log_str += '        fld2_align = %d\n' % self.fld2_align
+        if not isinstance(phdr_fields[0], int):
+            log_str += '        fld0_en    = %d\n' % self.fld0_en
+            log_str += '        fld0_start = %d\n' % self.fld0_start
+            log_str += '        fld0_end   = %d\n' % self.fld0_end
+            log_str += '        fld0_align = %d\n' % self.fld0_align
+        if not isinstance(phdr_fields[1], int):
+            log_str += '        fld1_en    = %d\n' % self.fld1_en
+            log_str += '        fld1_start = %d\n' % self.fld1_start
+            log_str += '        fld1_end   = %d\n' % self.fld1_end
+            log_str += '        fld1_align = %d\n' % self.fld1_align
+        if not isinstance(phdr_fields[2], int):
+            log_str += '        fld2_en    = %d\n' % self.fld2_en
+            log_str += '        fld2_start = %d\n' % self.fld2_start
+            log_str += '        fld2_end   = %d\n' % self.fld2_end
+            log_str += '        fld2_align = %d\n' % self.fld2_align
         log_str += '        add_len    = %d\n' % self.add_len
         log_str += '\n'
         return log_str
@@ -210,6 +201,7 @@ class DeParserCsumProfile:
         self.end_adj            = 0
         self.csum_loc_adj       = 0
         self.no_csum_rw         = 0
+        self.phdr_next_hdr      = 0
 
     def CsumProfileNumSet(self, profile):
         self.csum_profile = profile
@@ -254,6 +246,12 @@ class DeParserCsumProfile:
     def CsumProfileNoCsumRewriteGet(self):
         return self.no_csum_rw
 
+    def CsumProfilePhdrNextHdrSet(self, phdr_next_hdr):
+        self.phdr_next_hdr = phdr_next_hdr
+
+    def CsumProfilePhdrNextHdrGet(self):
+        return self.phdr_next_hdr
+
     def ConfigGenerate(self, csum_profile):
         csum_profile['use_phv_len']   ['value']=str(self.use_phv_len)
         csum_profile['phv_len_sel']   ['value']=str(self.phv_len_sel)
@@ -265,6 +263,7 @@ class DeParserCsumProfile:
         csum_profile['loc_adj']       ['value']=str(self.csum_loc_adj)
         csum_profile['add_len']       ['value']=str(self.add_len)
         csum_profile['no_csum_rw']    ['value']=str(self.no_csum_rw)
+        csum_profile['phdr_next_hdr'] ['value']=str(self.phdr_next_hdr)
         #csum_profile['csum_unit_include_bm']['value'] = \
         #                        str(self.csum_unit_include_bm)
         csum_profile['_modified']           = True
@@ -282,6 +281,7 @@ class DeParserCsumProfile:
         log_str += '    loc_adj         = %d\n' % self.csum_loc_adj
         log_str += '    add_len         = %d\n' % self.add_len
         log_str += '    no_csum_rw      = %d\n' % self.no_csum_rw
+        log_str += '    phdr_next_hdr   = %d\n' % self.phdr_next_hdr
         log_str += '    csum_unit_include_bm 0x%x\n' % self.csum_unit_include_bm
         log_str += '\n\n'
         return log_str
@@ -665,6 +665,7 @@ class DeParserGsoCalField:
         dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
         dpp_rstr['size_sel']['value'] = str(self.be.hw_model['deparser']['dpa_src_ohi'])
         dpp_rstr['size_val']['value'] = str(self.csum_field_ohi_slot)
+        dpp_rstr['allow_size0']['value'] = str(1)
         dpr_rstr['source_sel']['value'] = str(self.be.hw_model['deparser']['dpa_src_ohi'])
         dpr_rstr['source_oft']['value'] = str(self.csum_field_ohi_slot)
         dpp_rstr['_modified'] = True

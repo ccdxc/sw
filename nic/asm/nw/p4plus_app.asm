@@ -60,7 +60,7 @@ p4plus_app_tcp_proxy:
   phvwr.!c1   p.vlan_tag_valid, FALSE
   phvwr.!c1   p.ipv4_valid, FALSE
   phvwr.!c1   p.ipv6_valid, FALSE
-  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_valid) == 13)
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_valid) == 15)
   phvwr.!c1   p.{tcp_option_eol_valid...tcp_valid}, r0
 
   phvwr       p.p4_to_p4plus_tcp_proxy_valid, TRUE
@@ -218,7 +218,7 @@ p4plus_app_p4pt:
   phvwr       p.ipv4_valid, FALSE
   phvwr       p.ipv6_valid, FALSE
   phvwr       p.udp_valid, FALSE
-  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_valid) == 13)
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_valid) == 15)
   phvwr       p.{tcp_option_eol_valid...tcp_valid}, r0
 
   phvwr       p.p4_to_p4plus_p4pt_payload_len, r1

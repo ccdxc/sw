@@ -660,7 +660,7 @@ parser parse_base_ipv4 {
     set_metadata(ohi.l4_len, ipv4.totalLen + 0);
     return select(ipv4.flags, ipv4.fragOffset, ipv4.protocol) {
         IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
-        IP_PROTO_TCP mask 0x3fffff : parse_tcp;
+        IP_PROTO_TCP mask 0x3fffff : parse_ipv4_tcp;
         IP_PROTO_UDP mask 0x3fffff : parse_udp;
         IP_PROTO_GRE mask 0x3fffff : parse_gre;
         IP_PROTO_IPV4 mask 0x3fffff : parse_ipv4_in_ip;
@@ -758,7 +758,7 @@ parser parse_ipv4_options_blob {
     set_metadata(l3_metadata.ip_option_seen, 1);
     return select(ipv4.flags, ipv4.fragOffset, ipv4.protocol) {
         IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
-        IP_PROTO_TCP mask 0x3fffff : parse_tcp;
+        IP_PROTO_TCP mask 0x3fffff : parse_ipv4_tcp;
         IP_PROTO_UDP mask 0x3fffff : parse_udp;
         IP_PROTO_GRE mask 0x3fffff : parse_gre;
         IP_PROTO_IPV4 mask 0x3fffff : parse_ipv4_in_ip;
@@ -873,7 +873,7 @@ parser parse_ipv6_ulp {
     set_metadata(l3_metadata.ipv6_ulp, parser_metadata.ipv6_nextHdr);
     return select(parser_metadata.ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
-        IP_PROTO_TCP : parse_tcp;
+        IP_PROTO_TCP : parse_ipv6_tcp;
         IP_PROTO_UDP : parse_udp;
         IP_PROTO_GRE : parse_gre;
         IP_PROTO_IPV4 : parse_ipv4_in_ip;
@@ -886,8 +886,22 @@ parser parse_ipv6_ulp {
 
 parser parse_ipv6_tcp {
     set_metadata(ohi.l4_len, parser_metadata.l4_trailer + 0);
+    return parse_tcp_ipv6;
+}
+
+parser parse_ipv4_tcp {
+    set_metadata(ohi.l4_len, parser_metadata.l4_trailer + 0);
+    return parse_tcp_ipv4;
+}
+
+parser parse_inner_ipv6_tcp {
     set_metadata(ohi.inner_l4_len, parser_metadata.l4_trailer + 0);
-    return parse_tcp;
+    return parse_tcp_ipv6;
+}
+
+parser parse_inner_ipv4_tcp {
+    set_metadata(ohi.inner_l4_len, parser_metadata.l4_trailer + 0);
+    return parse_tcp_ipv4;
 }
 
 @pragma header_ordering v6_generic 
@@ -921,7 +935,7 @@ parser parse_ipv6 {
     return select(parser_metadata.ipv6_nextHdr) {
         // go to ulp if no extention headers to avoid a state transition
         IP_PROTO_ICMPV6 : parse_icmpv6;
-        IP_PROTO_TCP : parse_tcp;
+        IP_PROTO_TCP : parse_ipv6_tcp;
         IP_PROTO_UDP : parse_udp;
         IP_PROTO_GRE : parse_gre;
         IP_PROTO_IPV4 : parse_ipv4_in_ip;
@@ -1053,7 +1067,20 @@ calculated_field tcp.checksum {
 
 @pragma hdr_len parser_metadata.parse_tcp_counter
 header tcp_options_blob_t tcp_options_blob;
-parser parse_tcp {
+parser parse_tcp_ipv6 {
+    extract(tcp);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.dstPort);
+    set_metadata(parser_metadata.parse_tcp_counter, (tcp.dataOffset << 2) - 20);
+    return select(parser_metadata.parse_tcp_counter) {
+        0 : ingress;
+        0x80 mask 0x80: parse_tcp_option_error;
+        default : parse_tcp_options_blob;
+    }
+}
+
+@pragma hdr_len parser_metadata.parse_tcp_counter
+parser parse_tcp_ipv4 {
     extract(tcp);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.dstPort);
@@ -1518,7 +1545,7 @@ parser parse_base_inner_ipv4 {
     set_metadata(ohi.inner_l4_len, inner_ipv4.totalLen + 0);
     return select(inner_ipv4.flags, inner_ipv4.fragOffset, inner_ipv4.protocol) {
         IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
-        IP_PROTO_TCP mask 0x3fffff : parse_tcp;
+        IP_PROTO_TCP mask 0x3fffff : parse_inner_ipv4_tcp;
         IP_PROTO_UDP mask 0x3fffff : parse_inner_udp;
         0x000000 mask 0x3fff00 : ingress;
         default: parse_inner_ipv4_frag;
@@ -1607,7 +1634,7 @@ parser parse_inner_ipv4_options_blob {
 
     return select(inner_ipv4.fragOffset, inner_ipv4.protocol) {
         IP_PROTO_ICMP mask 0x3fffff : parse_icmp;
-        IP_PROTO_TCP mask 0x3fffff : parse_tcp;
+        IP_PROTO_TCP mask 0x3fffff : parse_inner_ipv4_tcp;
         IP_PROTO_UDP mask 0x3fffff : parse_inner_udp;
         0x000000 mask 0x3fff00 : ingress;
         default: parse_inner_ipv4_frag;
@@ -1823,8 +1850,9 @@ parser parse_dummy {
         0x2 mask 0x0000 : parse_ipsec_ah;
         0x3 mask 0x0000 : parse_ipsec_esp;
         0x4 mask 0x0000 : parse_icmp;
-        0x5 mask 0x0000 : parse_tcp;
-        0x6 mask 0x0000 : parse_v6_ipsec_ah_hdr;
+        0x5 mask 0x0000 : parse_tcp_ipv6;
+        0x6 mask 0x0000 : parse_tcp_ipv4;
+        0x7 mask 0x0000 : parse_v6_ipsec_ah_hdr;
     }
 }
 
@@ -1852,7 +1880,7 @@ parser parse_inner_ipv6_ulp {
     set_metadata(l3_metadata.inner_ipv6_ulp, parser_metadata.inner_ipv6_nextHdr);
     return select(parser_metadata.inner_ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
-        IP_PROTO_TCP : parse_ipv6_tcp;
+        IP_PROTO_TCP : parse_inner_ipv6_tcp;
         IP_PROTO_UDP : parse_inner_udp;
         default: ingress;
     }
@@ -1906,7 +1934,7 @@ parser parse_inner_ipv6 {
     set_metadata(parser_metadata.l4_trailer, inner_ipv6.payloadLen);
     return select(parser_metadata.inner_ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
-        IP_PROTO_TCP : parse_tcp;
+        IP_PROTO_TCP : parse_inner_ipv6_tcp;
         IP_PROTO_UDP : parse_inner_udp;
         0x0:  parse_inner_ipv6_option_blob;   // Hop by Hop Hdr
         0x2b: parse_inner_ipv6_option_blob;   // Routing Hdro

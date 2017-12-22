@@ -1182,8 +1182,9 @@ class Checksum:
                 assert(0), pdb.set_trace()
             log_str += calfldobj.PhdrProfileBuild(phdr_parse_state,\
                                               phdr_profile_obj, addlen)
-            log_str += calfldobj.PayloadCsumProfileBuild(phdr_parse_state,\
-                                                         csum_profile_obj)
+            log_str += calfldobj.PayloadCsumProfileBuild(phdr_parse_state,                  \
+                                                         csum_profile_obj,                  \
+                                                         calfldobj.CsumPayloadHdrTypeGet())
             csum_profile_obj.CsumProfileCsumLocSet(addsub_csum_loc,\
                                                    csum_loc_adj)
         if calfldobj.option_checksum:
@@ -1192,8 +1193,8 @@ class Checksum:
             #Udp option checksum is 8b value.
             csum_profile_obj.CsumProfileCsum8bSet(1)
             csum_loc_adj = 1 #TODO:
-            log_str += calfldobj.PayloadCsumProfileBuild(None,\
-                                                         csum_profile_obj)
+            log_str += calfldobj.PayloadCsumProfileBuild(None,                  \
+                                                         csum_profile_obj, None)
             csum_profile_obj.CsumProfileCsumLocSet(addsub_csum_loc,\
                                                    csum_loc_adj)
 
@@ -1768,9 +1769,11 @@ class Checksum:
                             #TODO use p4field hlir-offset to set checksum location
                             if pl_calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
                                 _csum_profile_obj.CsumProfileCsumLocSet(16)
+                                _csum_profile_obj.CsumProfilePhdrNextHdrSet(6)
                                 add_len = 1
                             elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
                                 _csum_profile_obj.CsumProfileCsumLocSet(6)
+                                _csum_profile_obj.CsumProfilePhdrNextHdrSet(17)
                                 add_len = 1
                             _csum_profile_obj.CsumProfileAddLenSet(add_len)
 
@@ -1817,8 +1820,9 @@ class Checksum:
                                 assert pl_calfldobj.DeParserPhdrProfileObjGet()\
                                        == None, pdb.set_trace()
                                 pl_calfldobj.DeParserPhdrProfileObjSet(\
-                                              DeParserPhdrProfile(phdr_profile,\
-                                               pl_calfldobj.CsumPhdrTypeGet(), 0))
+                                              DeParserPhdrProfile(phdr_profile,  \
+                                                                  pl_calfldobj.CsumPhdrTypeGet(), \
+                                                                  pl_calfldobj.phdr_fields, 0))
                             else:
                                 assert(0), pdb.set_trace()
 
@@ -1884,7 +1888,7 @@ class Checksum:
                 calfldobj.DeParserCsumObjAddLog(_phdr_csum_obj.\
                                             LogGenerate(calfldobj.phdr_name))
                 calfldobj.DeParserCsumObjAddLog(_phdr_profile_obj.\
-                                            LogGenerate())
+                                            LogGenerate(calfldobj.phdr_fields))
             if csum_hdr not in csum_hdrs:
                 csum_hdrs.append(csum_hdr)
                 hw_csum_obj.append((_csum_obj, False, calfldobj))
@@ -1930,7 +1934,7 @@ class Checksum:
                 phdr_cfg_name = 'cap_dppcsum_csr_cfg_csum_phdr_profile[%d]' %\
                                      _phdr_csum_obj.PhdrProfileNumGet()
                 _phdr_profile_obj.ConfigGenerate(dpp_json['cap_dpp']\
-                                             ['registers'][phdr_cfg_name])
+                                             ['registers'][phdr_cfg_name], _calfldobj.phdr_fields)
 
         #Json is dumped in the caller to cfg-file.
 

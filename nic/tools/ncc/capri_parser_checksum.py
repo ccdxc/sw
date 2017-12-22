@@ -209,6 +209,7 @@ class ParserCsumProfile:
         self.end_adj            = 0
         self.addsub_phdr        = 0
         self.phdr_adj           = 0
+        self.phdr_constant      = 0
         self.addsub_csum_loc    = 0
         self.csum_loc_adj       = 0
         self.align              = 0
@@ -237,6 +238,17 @@ class ParserCsumProfile:
     def CsumProfilePhdrSet(self, addsub_phdr, phdr_adj):
         self.addsub_phdr = addsub_phdr
         self.phdr_adj = phdr_adj
+
+    def CsumProfileConstantSet(self, l4hdr_type):
+        if l4hdr_type == 'tcp':
+            self.phdr_constant = 6  # Tcp proto value
+        elif l4hdr_type == 'udp':
+            self.phdr_constant = 17 # udp proto value
+        else:
+            self.phdr_constant = 0    #In all other case make sure its zero.
+
+    def CsumProfileConstantGet(self):
+        return self.phdr_constant
 
     def CsumProfileCsumLocSet(self, addsub_csum_loc, csum_loc_adj):
         self.addsub_csum_loc = addsub_csum_loc
@@ -271,6 +283,7 @@ class ParserCsumProfile:
         profile['phv_csum_flit_num']['value']   = str(self.phv_csum_flit_num)
         profile['end_eop']['value']             = str(self.end_eop)
         profile['csum_8b']['value']             = str(self.csum_8b)
+        profile['add_val']['value']             = str(self.phdr_constant)
         profile['_modified']               = True
 
         log_str = ''
@@ -291,6 +304,7 @@ class ParserCsumProfile:
         log_str += '        phv_flit_num    = %d\n' % (self.phv_csum_flit_num)
         log_str += '        end_eop         = %d\n' % (self.end_eop)
         log_str += '        csum_8b         = %d\n' % (self.csum_8b)
+        log_str += '        add_val         = %d\n' % (self.phdr_constant)
         log_str += '\n'
 
         return log_str
@@ -600,60 +614,35 @@ class ParserCalField:
         '''
         log_str = ''
         log_str += 'Pseudo Header Profile Values\n'
-        #TODO : Cleanup constant values and use hlir-offset variable
-        if parse_state.phdr_type == 'v4':
-            log_str += '    Csum Pseudo Hdr Type V4, '
+        assert(len(self.phdr_fields) >= 3), pdb.set_trace()
+
+        if not isinstance(self.phdr_fields[0], int):
+            phdr_field                     = self.phdr_fields[0]
             phdr_profile_obj.fld0_en       = 1
-            phdr_profile_obj.fld0_start    = 12 # SA offset from
-                                                # the start of phdr
-            phdr_profile_obj.fld0_end      = 15 # Size of IPSA 
+            phdr_profile_obj.fld0_start    = (phdr_field.offset + 7) / 8
+            phdr_profile_obj.fld0_end      = ((phdr_field.offset + phdr_field.width + 7) / 8) - 1
             phdr_profile_obj.fld0_add_len  = add_len  # Adds 16b len field
                                                       # to phdr only in case of TCP
                                                       # (TCP hdr no payload len field)
-            phdr_profile_obj.fld0_align    = 0
-
+            phdr_profile_obj.fld0_align    = 0 if (phdr_field.offset % 16 == 0 and \
+                                                   (phdr_field.offset + phdr_field.width) % 16 == 0) else 1
+        if not isinstance(self.phdr_fields[1], int):
+            phdr_field                     = self.phdr_fields[1]
             phdr_profile_obj.fld1_en       = 1
-            phdr_profile_obj.fld1_start    = 16 # DA offset from
-                                                # the start of phdr
-            phdr_profile_obj.fld1_end      = 19 # end offset IPDA 
-            phdr_profile_obj.fld1_add_len  = 0 
-            phdr_profile_obj.fld1_align    = 0
-            
-            phdr_profile_obj.fld2_en       = 1
-            phdr_profile_obj.fld2_start    = 9 # start of
-                                               # zeros/protocol
-            phdr_profile_obj.fld2_end      = 9# 
-            phdr_profile_obj.fld2_add_len  = 0 
-            phdr_profile_obj.fld2_align    = 1 # Aligns protocol
-                                               # 8b value as bottom
-        elif parse_state.phdr_type == 'v6':
-            log_str += '    Csum Pseudo Hdr Type V6, '
-            phdr_profile_obj.fld0_en       = 1
-            phdr_profile_obj.fld0_start    = 8  # SA offset from
-                                                # the start of phdr
-            phdr_profile_obj.fld0_end      = 23 # Size of IPSA 
-            phdr_profile_obj.fld0_add_len  = add_len  # Adds 16b len field
-                                                      # to phdr only in case of TCP
-                                                      # (TCP hdr no payload len field)
-            phdr_profile_obj.fld0_align    = 0
+            phdr_profile_obj.fld1_start    = (phdr_field.offset + 7) / 8
+            phdr_profile_obj.fld1_end      = ((phdr_field.offset + phdr_field.width + 7) / 8) - 1
+            phdr_profile_obj.fld1_add_len  = 0
+            phdr_profile_obj.fld1_align    = 0 if (phdr_field.offset % 16 == 0 and \
+                                                   (phdr_field.offset + phdr_field.width) % 16 == 0) else 1
 
-            phdr_profile_obj.fld1_en       = 1
-            phdr_profile_obj.fld1_start    = 24 # DA offset from
-                                                # the start of phdr
-            phdr_profile_obj.fld1_end      = 39 # end offset IPDA 
-            phdr_profile_obj.fld1_add_len  = 0 
-            phdr_profile_obj.fld1_align    = 0
-            
+        if not isinstance(self.phdr_fields[2], int):
+            phdr_field                     = self.phdr_fields[2]
             phdr_profile_obj.fld2_en       = 1
-            phdr_profile_obj.fld2_start    = 6 # start of
-                                               # next_header
-            phdr_profile_obj.fld2_end      = 6 # 
-            phdr_profile_obj.fld2_add_len  = 0 
-            phdr_profile_obj.fld2_align    = 1 # Aligns next_header
-                                               # 8b value as bottom
-                                               # 8b in 16b value
-        else:
-            assert(0), pdb.set_trace()
+            phdr_profile_obj.fld2_start    = (phdr_field.offset  + 7) / 8
+            phdr_profile_obj.fld2_end      = ((phdr_field.offset + phdr_field.width + 7) / 8) - 1
+            phdr_profile_obj.fld2_add_len  = 0
+            phdr_profile_obj.fld2_align    = 0 if (phdr_field.offset % 16 == 0 and \
+                                                       (phdr_field.offset + phdr_field.width) % 16 == 0) else 1
 
         log_str += '        Profile#     %d\n' % phdr_profile_obj.phdr_profile
         log_str += '        fld0_en    = %d\n' % phdr_profile_obj.fld0_en
@@ -676,7 +665,7 @@ class ParserCalField:
         return log_str
 
 
-    def PayloadCsumProfileBuild(self, parse_state, csum_profile_obj):
+    def PayloadCsumProfileBuild(self, parse_state, csum_profile_obj, L4HdrType):
         log_str     = ''
         log_str     += 'Csum Profile Values\n'
         shift_left  = 0
@@ -706,6 +695,13 @@ class ParserCalField:
         elif parse_state:
             assert(0), pdb.set_trace()
 
+        #One of the phdr fields (ipv4.protocol / ipv6.nextHdr) are programmed as constants.
+        #The reason being when ipv6 options are present, protocol value ipv6.nextHdr is 
+        #in the last option's header. Since such phdr field is at variable length from
+        #the start of IP header, this field is added as constant value depending on
+        #L4 header is UDP/TCP.
+        csum_profile_obj.CsumProfileConstantSet(L4HdrType)
+
         log_str += '        Shift Left = %d\n' % shift_left
         log_str += '        Shift Val  = %d\n' % shift_val
         log_str += '        AddSubStart= %d\n' % addsub_start
@@ -714,6 +710,7 @@ class ParserCalField:
         log_str += '        EndAdj     = %d\n' % end_adj
         log_str += '        AddSubPhdr = %d\n' % addsub_phdr
         log_str += '        PhdrAdj    = %d\n' % phdr_adj
+        log_str += '        Addvalue   = 0x%x\n' % csum_profile_obj.CsumProfileConstantGet()
         log_str += '\n'
 
         return log_str
