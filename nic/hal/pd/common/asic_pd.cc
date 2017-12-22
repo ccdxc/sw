@@ -445,7 +445,7 @@ asic_rw_loop (void)
 {
     uint32_t            qid;
     uint16_t            cindx;
-    bool                work_done;
+    bool                work_done = false;
     pal_ret_t           rv;
     asic_rw_entry_t     *rw_entry;
     uint32_t            regval;

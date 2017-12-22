@@ -299,19 +299,37 @@ cc_library(
 
 cc_library(
     name = "grpc",
-    srcs = [
-        "third-party/grpc/libgrpc++.a",
-        "third-party/grpc/libgrpc++_reflection.a",
-        "third-party/grpc/libgrpc++_unsecure.a",
-        "third-party/grpc/libgrpc_unsecure.a",
-    ],
-    linkopts = [
-        "-Lthird-party/grpc",
-    ],
+
+    srcs = select({
+        "//conditions:default": [
+            "third-party/grpc/x86_64/libgrpc++_reflection.a",
+            "third-party/grpc/x86_64/libgrpc++.a",
+            "third-party/grpc/x86_64/libgrpc_unsecure.a",
+            "third-party/grpc/x86_64/libgrpc++_unsecure.a",
+        ],
+
+        ":aarch64_mode" : [
+            "third-party/grpc/aarch64/libgrpc++_reflection.a",
+            "third-party/grpc/aarch64/libgrpc++.a",
+            "third-party/grpc/aarch64/libgrpc_unsecure.a",
+            "third-party/grpc/aarch64/libgrpc++_unsecure.a",
+        ],
+    }),
+
+    linkopts = select ({
+        "//conditions:default" : [
+            "-Lthird-party/grpc/x86_64",
+        ],
+
+        ":aarch64_mode" : [
+            "-Lthird-party/grpc/aarch64",
+        ],
+    })
 )
 
 cc_library(
     name = "lkl_includes",
+
     srcs = [
         "third-party/lkl/export/include/lkl.h",
         "third-party/lkl/export/include/lkl_host.h",
@@ -330,54 +348,86 @@ cc_library(
         #"third-party/lkl/export/include/lkl/asm-generic/types.h",
         #"third-party/lkl/export/include/lkl/asm-generic/posix_types.h",
         #"third-party/lkl/export/include/lkl/asm-generic/int-ll64.h",
-    ] + glob([
-        "third-party/lkl/export/include/lkl/linux/*.h",
-        "third-party/lkl/export/include/lkl/asm/*.h",
-        "third-party/lkl/export/include/lkl/asm-generic/*.h",
-        "third-party/lkl/export/include/lkl/linux/hdlc/*.h",
-        "third-party/lkl/export/include/lkl/linux/byteorder/*.h",
-    ]),
+    ] + glob(["third-party/lkl/export/include/lkl/linux/*.h",
+              "third-party/lkl/export/include/lkl/asm/*.h",
+              "third-party/lkl/export/include/lkl/asm-generic/*.h",
+              "third-party/lkl/export/include/lkl/linux/hdlc/*.h",
+              "third-party/lkl/export/include/lkl/linux/byteorder/*.h"]),
+
     includes = [
         "third-party/lkl/export/include",
     ],
+
     deps = [],
 )
 
 cc_library(
     name = "lkl",
-    srcs = [
-        "third-party/lkl/export/bin/liblkl.so",
-    ],
-    linkopts = [
-        "-Lthird-party/lkl/export/bin",
-    ],
+
+    srcs = select ({
+        "//conditions:default" : [
+            "third-party/lkl/export/x86_64/bin/liblkl.so",
+        ],
+
+        ":aarch64_mode" : [
+            "third-party/lkl/export/aarch64/bin/liblkl.so",
+        ],
+    }),
+
+    linkopts = select ({
+        "//conditions:default" : [
+            "-Lthird-party/lkl/export/x86_64/bin"
+        ],
+
+        ":aarch64_mode" : [
+            "-Lthird-party/lkl/export/aarch64/bin"
+        ],
+    }),
 )
 
 cc_library(
     name = "openssl",
-    srcs = [
-        "third-party/openssl/lib/libssl.a",
-        "third-party/openssl/lib/libcrypto.a",
-    ],
+
     hdrs = glob(["third-party/openssl/include/openssl/*.h"]),
+
+    srcs = select ({
+        "//conditions:default" : [
+            "third-party/openssl/x86_64/lib/libssl.a",
+            "third-party/openssl/x86_64/lib/libcrypto.a",
+        ],
+        ":aarch64_mode" : [
+            "third-party/openssl/aarch64/lib/libssl.a",
+            "third-party/openssl/aarch64/lib/libcrypto.a",
+        ],
+    }),
+
     includes = [
         "third-party/openssl/include",
     ],
-    linkopts = [
-        "-Lthird-party/openssl/lib -ldl",
-    ],
+
+    linkopts = select ({
+        "//conditions:default" : [
+            "-Lthird-party/openssl/x86_64/lib -ldl",
+        ],
+        ":aarch64_mode" : [
+            "-Lthird-party/openssl/aarch64/lib -ldl",
+        ],
+    }),
 )
 
 cc_library(
     name = "openssl-native",
+    hdrs = glob(["third-party/openssl-native/include/openssl/*.h"]),
+
     srcs = [
         "third-party/openssl-native/lib/libssl.a",
         "third-party/openssl-native/lib/libcrypto.a",
     ],
-    hdrs = glob(["third-party/openssl-native/include/openssl/*.h"]),
+
     includes = [
         "third-party/openssl-native/include",
     ],
+
     linkopts = [
         "-Lthird-party/openssl-native/lib -ldl",
     ],
@@ -397,9 +447,15 @@ cc_library(
 cc_library(
     name = "libtirpc",
     hdrs = glob(["third-party/libtirpc/export/*.h"]),
+
     includes = [
-        "third-party/libtirpc/export",
+        "third-party/libtirpc/export"
     ],
+)
+
+config_setting(
+    name = "aarch64_mode",
+    values = { "cpu": "aarch64-linux" }
 )
 
 # Used by dol/test/storage/BUILD

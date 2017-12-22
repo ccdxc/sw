@@ -599,7 +599,7 @@ dos_policy_update (nwsec::DoSPolicySpec& spec,
                    nwsec::DoSPolicyResponse *rsp)
 {
     hal_ret_t                   ret;
-    dos_policy_t                *dosp;
+    dos_policy_t                *dosp = NULL;
     // dos_policy_t             local_dosp;
     cfg_op_ctxt_t               cfg_ctx = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };

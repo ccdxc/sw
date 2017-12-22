@@ -7,9 +7,9 @@
 #
 # ${pddict['cli-name']} DEBUG CLI
 #
-import    grpc
-import    debug_pb2
-import    debug_pb2_grpc
+# import    grpc
+# import    debug_pb2
+# import    debug_pb2_grpc
 
 grpc_server = 'localhost:50054'
 
@@ -578,11 +578,11 @@ class ${table}():
         self.populate_table(ctx)
 
         #create the grpc DEBUG Request
-        debug_request_msg = debug_pb2.DebugRequestMsg()
+        # debug_request_msg = debug_pb2.DebugRequestMsg()
 
-        debug_request = debug_request_msg.request.add()
-        debug_request.opn_type = debug_pb2.DebugOperationType.Value('DEBUG_OP_TYPE_' + ctx['opn'].upper())
-        debug_request.key_or_handle.table_id = ctx['table_id']
+        # debug_request = debug_request_msg.request.add()
+        # debug_request.opn_type = debug_pb2.DebugOperationType.Value('DEBUG_OP_TYPE_' + ctx['opn'].upper())
+        # debug_request.key_or_handle.table_id = ctx['table_id']
         index = ctx['index']
 
         #debug_request.swkey = iris.get_data_void(self.swkey_p)

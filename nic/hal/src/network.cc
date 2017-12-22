@@ -919,7 +919,7 @@ hal_ret_t
 network_update (NetworkSpec& spec, NetworkResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    network_t                       *nw;
+    network_t                       *nw = NULL;
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     dhl_entry_t                     dhl_entry = { 0 };
     network_update_app_ctxt_t       app_ctxt = { 0 };

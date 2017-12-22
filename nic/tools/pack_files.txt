@@ -1,6 +1,0 @@
-nic/tools/pack_files.txt
-nic/tools/package.sh                                  
-nic/obj/libhalproto.so                          /tmp/libs/
-nic/third-party/lkl/export/bin/liblkl.so        /tmp/libs/
-nic/conf                                        /tmp/conf/
-bazel-bin/nic/hal/hal                           /tmp/bin/

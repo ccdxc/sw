@@ -369,13 +369,15 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
     wring_hw_id_t slot_addr = wring_base + (slot_index * meta->slot_size_in_bytes);
 
     uint8_t value[meta->slot_size_in_bytes];
+    uint64_t *value64 = (uint64_t*)value;
+
     if(!p4plus_hbm_read(slot_addr, 
                         value, 
                         meta->slot_size_in_bytes)) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");    
     }
     if(meta->slot_size_in_bytes == sizeof(uint64_t)) {
-        wring->slot_value = ntohll(*(uint64_t *)value);
+        wring->slot_value = ntohll(*value64);
     } else {
         if (meta->slot_parser) {
             meta->slot_parser(meta, wring, value);

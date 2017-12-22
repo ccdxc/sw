@@ -1,0 +1,7 @@
+nic/tools/start-hal-haps.sh                     /nic/tools/
+nic/obj/libhalproto.so                          /nic/lib/
+nic/third-party/lkl/export/bin/liblkl.so        /nic/lib/
+nic/sdk/obj/*.so                                /nic/lib/
+nic/conf                                        /nic/conf/
+bazel-bin/nic/hal/hal                           /nic/bin/
+bazel-bin/nic/linkmgr/linkmgr                   /nic/bin/

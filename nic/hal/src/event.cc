@@ -46,7 +46,7 @@ handle_event_request (EventRequest *req,
                       grpc::ServerReaderWriter<EventResponse,
                                                EventRequest> *stream)
 {
-    hal_ret_t    ret;
+    hal_ret_t    ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("Handling event operation, event id {}, operation {}, stream {}",
                     req->event_id(), req->event_operation(), (void *)stream);

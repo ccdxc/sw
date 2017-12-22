@@ -224,11 +224,15 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     // MAC rewrite
     if (rewrite.valid_flds.smac) {
         attrs.mac_sa_rewrite = true;
-        *(struct ether_addr *)rw_key.mac_sa = rewrite.ether.smac;
+        uint8_t *mac_a = rw_key.mac_sa;
+        struct ether_addr *eth_addr = (struct ether_addr *)mac_a;
+        *eth_addr = rewrite.ether.smac;
     }
     if (rewrite.valid_flds.dmac) {
         attrs.mac_da_rewrite = true;
-        *(struct ether_addr *)rw_key.mac_da = rewrite.ether.dmac;
+        uint8_t *mac_a = rw_key.mac_da;
+        struct ether_addr *eth_addr = (struct ether_addr *)mac_a;
+        *eth_addr = rewrite.ether.dmac;
     }
 
     //VLAN rewrite

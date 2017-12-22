@@ -283,7 +283,7 @@ security_group_policy_create(nwsec::SecurityGroupPolicySpec& spec,
                              nwsec::SecurityGroupPolicyResponse *rsp)
 {
     hal_ret_t                           ret;
-    nwsec_policy_cfg_t                  *nwsec_plcy_cfg;
+    nwsec_policy_cfg_t                  *nwsec_plcy_cfg = NULL;
     nwsec_policy_cfg_create_app_ctxt_t  *app_ctxt  = NULL;
    
     dhl_entry_t             dhl_entry = { 0 };
@@ -551,7 +551,7 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
                       nwsec::SecurityGroupResponse *res)
 {
     hal_ret_t                     ret;
-    nwsec_group_t                 *nwsec_grp;
+    nwsec_group_t                 *nwsec_grp = NULL;
     nwsec_group_create_app_ctxt_t *app_ctxt  = NULL;
     
     dhl_entry_t                   dhl_entry = { 0 };

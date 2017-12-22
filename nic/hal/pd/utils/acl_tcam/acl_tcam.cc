@@ -743,7 +743,7 @@ acl_tcam::find_allowed_range_(priority_t priority,
 {
     tcam_prio_map::iterator itr;
     bool prev_exists = false, next_exists = false;
-    uint32_t prev_end, next_start;
+    uint32_t prev_end = 0, next_start = 0;
 
     // Find the next higher priorities start
     itr = tcam_prio_map_->upper_bound(priority);

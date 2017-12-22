@@ -25,6 +25,7 @@ cc_binary(
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_logger",
+        "@sdk//obj:sdk_pal",
         "//nic/model_sim/include:modelsim_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/thread",
@@ -48,6 +49,8 @@ cc_binary(
         "-lz",
         "-lprotobuf",
         "-rdynamic",
+        "-ldl",
+        "-lm",
     ],
     copts = sdk_copts,
 )

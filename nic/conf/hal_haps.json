@@ -1,0 +1,11 @@
+{
+  "mode": "hw",
+  "asic": {
+    "name": "capri",
+    "loader_info_file" : "capri_loader.conf"
+  },
+  "sw" : {
+    "grpc_port": "50054",
+    "feature_set": "iris"
+  }
+}

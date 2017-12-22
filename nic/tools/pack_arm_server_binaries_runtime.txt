@@ -1,0 +1,12 @@
+/usr/lib/libzmq.so.3
+/usr/lib/libz.so.1
+/usr/lib/aarch64-linux-gnu/libJudy.so.1
+/usr/lib/libprotobuf.so.14
+/usr/local/lib/libgrpc.so.4
+/usr/local/lib/libgrpc_unsecure.so
+/usr/local/lib/libgrpc_cronet.so
+/usr/local/lib/libgrpc++.so.1
+/usr/local/lib/libgrpc++_unsecure.so
+/usr/local/lib/libgrpc++_cronet.so
+/usr/local/lib/libgrpc++_error_details.so
+/usr/local/lib/libgrpc++_reflection.so

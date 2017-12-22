@@ -14,6 +14,17 @@ cc_library(
 )
 
 cc_library(
+    name = "hal_pknobs",
+    hdrs = [
+        "hal_pknobs.hpp"
+    ],
+    srcs = [
+        "hal_pknobs.cc",
+    ],
+    includes = ["."],
+)
+
+cc_library(
     name = "capricsr",
     srcs = [
         "cpu_hal_if.cc",

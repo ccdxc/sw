@@ -29,7 +29,10 @@ else
   JOBS = --jobs=$(j)
 endif
 
-BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE)
+ifeq ($(ARCH), aarch64)
+    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) --crosstool_top=//nic/tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
+else
+    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE)
+endif
 
 #BZL_OPT = --bazelrc=bazel.rc
-

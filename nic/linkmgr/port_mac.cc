@@ -105,6 +105,8 @@ int mac_temac_mdio_wr_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
            linkmgr::hw_access_mock_mode() == false) {
         mac_temac_regrd_haps (chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
+        HAL_TRACE_DEBUG("{0:s} reg_data {1:x} mdio_ready {2:d}",
+                        __FUNCTION__, reg_data, mdio_ready);
     }
 
     return 0;
@@ -221,8 +223,13 @@ int mac_soft_reset_haps (uint32_t port_num, uint32_t speed,
         mac_datapath_reset_haps (chip, port_num, reset);
 
         // TODO what does this do?
-        data = 0x1140;
-        mac_sgmii_regwr_haps (chip, port_num, 0x0, data);
+        if (port_num == 3 || port_num == 7) {
+            data = 0x1140;
+            uint32_t port = 0;
+            for (port = port_num - 3; port < port_num + 1; ++port) {
+                mac_sgmii_regwr_haps (chip, port, 0x0, data);
+            }
+        }
     }
 
     return 0;

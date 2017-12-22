@@ -192,7 +192,7 @@ if_get_hw_lif_id(if_t *pi_if)
 ep_t *
 if_get_tunnelif_remote_tep_ep(if_t *pi_if, bool *v4_valid)
 {
-    ep_t *remote_tep_ep;
+    ep_t *remote_tep_ep = NULL;
 
     if (pi_if->encap_type == 
             intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {

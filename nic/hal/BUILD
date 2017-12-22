@@ -17,6 +17,7 @@ cc_binary(
         "-lz",
         "-lprotobuf",
         "-rdynamic",
+        "-lm",
     ],
     deps = [
         ":hal_src",

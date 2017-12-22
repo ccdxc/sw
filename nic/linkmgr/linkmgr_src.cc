@@ -12,6 +12,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
+#include "sdk/pal.hpp"
 
 #include "sdk/ht.hpp"
 #include "nic/utils/list/list.hpp"
@@ -316,6 +317,11 @@ linkmgr_init()
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{} thread init failed", __FUNCTION__);
         return ret;
+    }
+
+    if(sdk::lib::pal_init(hw_access_mock_mode()) != sdk::lib::PAL_RET_OK) {
+        HAL_TRACE_ERR("{} pal init failed", __FUNCTION__);
+        return HAL_RET_ERR;
     }
 
     // must be done after pd init
