@@ -456,6 +456,7 @@ parser parse_tm_replication_data {
 }
 
 parser parse_ethernet {
+    set_metadata(control_metadata.parser_outer_eth_offset, current+0);
     extract(ethernet);
     return select(latest.etherType) {
         0 mask 0xfe00 : parse_llc_header;
@@ -1917,6 +1918,7 @@ parser parse_inner_ipv6 {
 }
 
 parser parse_inner_ethernet {
+    set_metadata(control_metadata.parser_inner_eth_offset, current+0);
     extract(inner_ethernet);
     return select(latest.etherType) {
         ETHERTYPE_IPV4 : parse_inner_ipv4;

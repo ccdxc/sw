@@ -103,6 +103,9 @@ header_type control_metadata_t {
         allow_flood                    : 1;
         checksum_ctl                   : 8;
         checksum_results               : 8;
+        parser_outer_eth_offset        : 8;
+        parser_inner_eth_offset        : 8;
+        parser_payload_offset          : 16;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;
@@ -302,6 +305,7 @@ metadata capri_gso_csum_phv_loc_t   capri_gso_csum;
 metadata capri_gso_udp_opt_csum_phv_loc_t   capri_udp_option_csum;
 
 metadata l3_metadata_t l3_metadata;
+@pragma parser_end_offset parser_payload_offset
 metadata control_metadata_t control_metadata;
 metadata entry_inactive_t entry_inactive;
 // scratch_metadata : no phvs will be allocated for this. These fields

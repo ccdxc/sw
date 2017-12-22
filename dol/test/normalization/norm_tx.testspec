@@ -1,15 +1,17 @@
 # Test Spec
 selectors:
     src:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://native=False
-        endpoint: filter://remote=True
+        tenant      : filter://overlay=VLAN,type=TENANT 
+        segment     : filter://any
+        endpoint    : filter://remote=False
+        interface   : filter://any
     dst:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://native=False
-        endpoint: filter://remote=True
-    flow        : filter://fwtype=L2
-    maxflows    : 1
+        tenant      : filter://overlay=VLAN,type=TENANT 
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : 1
 
 packets:
     - packet:
@@ -26,7 +28,7 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : ref://testcase/config/src/endpoint/intf/encap_vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -65,6 +67,7 @@ packets:
                 ttl     : callback://normalization/callbacks/GetInputIpv4Ttl
             ipv6    :
                 extns   : callback://normalization/callbacks/GetInputIpv6Options
+                hlim    : callback://normalization/callbacks/GetInputIpv6Hlim
             icmp:
                 code    : callback://normalization/callbacks/GetInputIcmpCode
                 type    : callback://normalization/callbacks/GetInputIcmpType
@@ -86,6 +89,8 @@ packets:
         headers     :
             #qtag    :
             #    prio    : ref://testcase/config/flow/txqos/cos
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4    :
                 flags   : callback://normalization/callbacks/GetExpectedIpv4Flags
                 options : callback://normalization/callbacks/GetExpectedIpv4Options
@@ -93,6 +98,7 @@ packets:
                 ttl     : callback://normalization/callbacks/GetExpectedIpv4Ttl
             ipv6    :
                 extns   : callback://normalization/callbacks/GetExpectedIpv6Options
+                hlim    : callback://normalization/callbacks/GetExpectedIpv6Hlim
             icmp:
                 code    : callback://normalization/callbacks/GetExpectedIcmpCode
                 type    : callback://normalization/callbacks/GetExpectedIcmpType
@@ -106,20 +112,51 @@ packets:
                 window   : ref://testcase/config/flow/tracking/tcp_win_sz
                 seq      : ref://testcase/config/flow/tracking/tcp_seq_num
 
-session:
-    - step:
-        trigger:
-            packets:
-                - packet:
-                    object  : callback://normalization/callbacks/GetTriggerPacket
-                    port    : ref://testcase/config/src/endpoint/intf/ports
+buffers:
+    - buffer:
+        id      : BUF1 # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=PKT1/size
+           data : ref://testcase/packets/id=PKT1/rawbytes
 
-        expect:
-            delay   : callback://networking/packets/GetExpectDelay
-            packets:
-                - packet:
-                    object  : callback://normalization/callbacks/GetExpectedPacket
-                    port    : ref://testcase/config/dst/endpoint/intf/ports
-                - packet:
-                    object  : callback://normalization/callbacks/GetExpectedCpuPacket/pktid=PKT1
-                    port    : 128
+descriptors:
+    - descriptor:
+        id      : DESC1 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            err_code : 0x0
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    packets:
+        # Uplink Expect
+        - packet:
+            object  : callback://networking/packets/GetL2UcExpectedPacket/expktid=PKT2
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        # CPU Expect: Since FTE is not enable this is NO-OP
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
+            port    : 128
+
+    # CQ Expect. P4+ removes from TX and puts in CQ
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+

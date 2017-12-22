@@ -1168,6 +1168,10 @@ action ip_normalization_checks() {
     // trim - truncate packets with excess payload to the datagram length specified in the IP
     // header + the layer 2 header (e.g. ethernet), but don’t truncate below minimum frame length.
     // Non-tunneled packet or tunnel is not terminated
+
+    modify_field(scratch_metadata.size8, control_metadata.parser_outer_eth_offset);
+    modify_field(scratch_metadata.size8, control_metadata.parser_inner_eth_offset);
+    modify_field(scratch_metadata.size16, control_metadata.parser_payload_offset);
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
         (tunnel_metadata.tunnel_terminate == FALSE) and
         (((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18))) or

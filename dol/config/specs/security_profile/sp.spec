@@ -419,6 +419,14 @@ profiles:
       fields:
          tcp_unexpected_mss_action: EDIT
 
+    - id: SEC_PROF_IP_TTL_NORMALIZE_32
+      fields:
+         ip_normalize_ttl: 32
+
+    - id: SEC_PROF_IPV6_HOP_LIMIT_NORMALIZE_32
+      fields:
+         ip_normalize_ttl: 32
+
     - id: SEC_PROF_FIREWALL
       fields:
         cnxn_tracking_en: True

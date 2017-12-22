@@ -26,8 +26,8 @@
 		nw.proto
 		nwsec.proto
 		port.proto
-		proxyccb.proto
 		proxy.proto
+		proxyccb.proto
 		proxyrcb.proto
 		qos.proto
 		quiesce.proto
@@ -443,20 +443,6 @@
 		PortGetRequestMsg
 		PortGetResponse
 		PortGetResponseMsg
-		ProxycCbKeyHandle
-		ProxycCbSpec
-		ProxycCbRequestMsg
-		ProxycCbStatus
-		ProxycCbResponse
-		ProxycCbResponseMsg
-		ProxycCbDeleteRequest
-		ProxycCbDeleteRequestMsg
-		ProxycCbDeleteResponseMsg
-		ProxycCbGetRequest
-		ProxycCbGetRequestMsg
-		ProxycCbStats
-		ProxycCbGetResponse
-		ProxycCbGetResponseMsg
 		ProxyKeyHandle
 		ProxySpec
 		ProxyRequestMsg
@@ -481,6 +467,20 @@
 		ProxyGlobalCfgRequest
 		ProxyGlobalCfgRequestMsg
 		ProxyGlobalCfgResponseMsg
+		ProxycCbKeyHandle
+		ProxycCbSpec
+		ProxycCbRequestMsg
+		ProxycCbStatus
+		ProxycCbResponse
+		ProxycCbResponseMsg
+		ProxycCbDeleteRequest
+		ProxycCbDeleteRequestMsg
+		ProxycCbDeleteResponseMsg
+		ProxycCbGetRequest
+		ProxycCbGetRequestMsg
+		ProxycCbStats
+		ProxycCbGetResponse
+		ProxycCbGetResponseMsg
 		ProxyrCbKeyHandle
 		ProxyrCbSpec
 		ProxyrCbRequestMsg

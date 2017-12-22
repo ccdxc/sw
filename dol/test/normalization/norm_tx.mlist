@@ -1,0 +1,20 @@
+# For Usage details: Refer <ws>/dol/examples/sample.mlist.example
+feature:
+    id      : norm
+    sub     : norm_tx
+    package : test.normalization
+    module  : normalization
+    spec    : norm_tx.testspec
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : IP
+        iterate :
+            - profile    : SEC_PROF_IP_TTL_NORMALIZE_32
+              flow: filter://type=IPV4
+        iterate :
+            - profile    : SEC_PROF_IPV6_HOP_LIMIT_NORMALIZE_32
+              flow: filter://type=IPV6
+

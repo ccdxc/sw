@@ -61,6 +61,20 @@ def GetExpectedIpv4Flags(testcase, packet):
         return 0x0
     return 0
 
+def GetInputIpv4Ttl(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'IP_TTL_NORMALIZE_32' in profile_name:
+        return 64
+    return 64
+
+def GetExpectedIpv4Ttl(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'IP_TTL_NORMALIZE_32' in profile_name:
+        return 32
+    return 64
+
 def __get_ipv4_option():
     return penscapy.IPOption(bytes([0x83, 0x03, 0x10]))
 
@@ -105,6 +119,20 @@ def GetExpectedIpv6Options(testcase, packet):
     elif 'IPV6_OPTIONS_ACTION_EDIT' in profile_name:
         return None
     return None
+
+def GetInputIpv6Hlim(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'IPV6_HOP_LIMIT_NORMALIZE_32' in profile_name:
+        return 64
+    return 64
+
+def GetExpectedIpv6Hlim(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'IPV6_HOP_LIMIT_NORMALIZE_32' in profile_name:
+        return 32
+    return 64
 
 def GetTriggerPacket(testcase):
     iterelem = testcase.module.iterator.Get()
