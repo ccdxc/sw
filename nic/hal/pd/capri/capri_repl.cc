@@ -11,17 +11,18 @@
 #include "nic/p4/nw/include/defines.h"
 
 /* HBM base address in System memory map; Cached once at the init time */
-static uint32_t repl_table_base_addr;
+static uint64_t capri_hbm_base;
+static uint64_t hbm_repl_table_offset;
 
 hal_ret_t
 capri_repl_entry_read(uint32_t index, capri_repl_table_entry* entry)
 {
-    uint32_t entry_offset = index * CAPRI_REPL_ENTRY_WIDTH;
-    uint32_t base_in_entry_units = repl_table_base_addr / CAPRI_REPL_ENTRY_WIDTH;
+    uint64_t entry_offset = index * CAPRI_REPL_ENTRY_WIDTH;
+    uint64_t base_in_entry_units = hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH;
 
     HAL_ASSERT(index < CAPRI_REPL_TABLE_DEPTH);
 
-    hal::pd::asic_mem_read(repl_table_base_addr + entry_offset,
+    hal::pd::asic_mem_read(capri_hbm_base + hbm_repl_table_offset + entry_offset,
                            (uint8_t *)entry,
                            CAPRI_REPL_ENTRY_WIDTH);
 
@@ -35,8 +36,8 @@ capri_repl_entry_read(uint32_t index, capri_repl_table_entry* entry)
 hal_ret_t
 capri_repl_entry_write(uint32_t index, capri_repl_table_entry* entry)
 {
-    uint32_t entry_offset = index * CAPRI_REPL_ENTRY_WIDTH;
-    uint32_t base_in_entry_units = repl_table_base_addr / CAPRI_REPL_ENTRY_WIDTH;
+    uint64_t entry_offset = index * CAPRI_REPL_ENTRY_WIDTH;
+    uint64_t base_in_entry_units = hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH;
 
     HAL_ASSERT(index < CAPRI_REPL_TABLE_DEPTH);
 
@@ -44,7 +45,7 @@ capri_repl_entry_write(uint32_t index, capri_repl_table_entry* entry)
         entry->set_next_ptr(entry->get_next_ptr() + base_in_entry_units);
     }
 
-    hal::pd::asic_mem_write(repl_table_base_addr + entry_offset,
+    hal::pd::asic_mem_write(capri_hbm_base + hbm_repl_table_offset + entry_offset,
                             (uint8_t *)entry,
                             CAPRI_REPL_ENTRY_WIDTH);
 
@@ -62,8 +63,9 @@ capri_repl_entry_write(uint32_t index, capri_repl_table_entry* entry)
 hal_ret_t
 capri_repl_init (void)
 {
-    repl_table_base_addr = get_start_offset(JP4_REPL);
-    capri_tm_repl_table_base_addr_set(repl_table_base_addr / CAPRI_REPL_ENTRY_WIDTH);
+    capri_hbm_base = get_hbm_base();
+    hbm_repl_table_offset = get_hbm_offset(JP4_REPL);
+    capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
     capri_tm_repl_table_token_size_set(P4_REPL_ENTRY_WIDTH * 8);
     return HAL_RET_OK;
 }

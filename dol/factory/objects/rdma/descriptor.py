@@ -226,6 +226,8 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            dst_qp = self.spec.fields.ud_send.dst_qp if hasattr(self.spec.fields.ud_send, 'dst_qp') else 0
            q_key = self.spec.fields.ud_send.q_key if hasattr(self.spec.fields.ud_send, 'q_key') else 0
            ah_handle = self.spec.fields.ud_send.ah_handle if hasattr(self.spec.fields.ud_send, 'ah_handle') else 0
+           #right shift ah_handle by 3 bits to keep it within 32 bits
+           ah_handle >>= 3
            ah_size = self.spec.fields.ud_send.ah_size if hasattr(self.spec.fields.ud_send, 'ah_size') else 0
            imm_data = self.spec.fields.ud_send.imm_data if hasattr(self.spec.fields.ud_send, 'imm_data') else 0
            send = RdmaSqDescriptorUDSend(imm_data=imm_data, q_key=q_key, dst_qp=dst_qp, ah_size=ah_size, ah_handle=ah_handle)

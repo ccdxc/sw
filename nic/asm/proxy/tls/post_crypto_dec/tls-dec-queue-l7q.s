@@ -50,7 +50,7 @@ dma_cmd_l7q_slot:
     // Set DMA command to do L7Q write
     CAPRI_OPERAND_DEBUG(d.{u.tls_queue_l7q_d.sw_l7q_pi}.hx)
 	sll		    r5, d.{u.tls_queue_l7q_d.sw_l7q_pi}.hx, NIC_L7Q_ENTRY_SIZE_SHIFT
-	add		    r1, r5, d.{u.tls_queue_l7q_d.l7q_base}.wx
+	add		    r1, r5, d.{u.tls_queue_l7q_d.l7q_base}.dx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r1, l7_ring_entry_descr_addr,l7_ring_entry_descr_addr)
 

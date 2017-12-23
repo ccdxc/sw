@@ -35,6 +35,5 @@ rawr_s6_chain_qidxr_pindex_post_read:
     add         r_ring_select, r0, k.common_phv_chain_ring_index_select
     CPU_ARQ_PIDX_READ_INC(r_chain_pindex, r_ring_select, d, pi_0, r3, r4)
     j           rawr_s6_chain_xfer
-    mincr       r_chain_pindex, k.{common_phv_chain_ring_size_shift_sbit0_ebit1...\
-                                   common_phv_chain_ring_size_shift_sbit2_ebit4}, r0 // delay slot
+    mincr       r_chain_pindex, k.common_phv_chain_ring_size_shift, r0 // delay slot
 

@@ -107,13 +107,13 @@ header_type proxyccb_t {
         proxyccb_deactivate             : 8;  // must be first in CB after header rings
         pad                             : 8;
         proxyccb_flags                  : 16; // DOL flags and others
-        my_txq_base                     : HBM_ADDRESS_WIDTH;
+        my_txq_base                     : 64;
         
         /*
          * Next service chain TxQ info.
          */     
-        chain_txq_base                  : HBM_ADDRESS_WIDTH;
-        chain_txq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
+        chain_txq_base                  : 64;
+        chain_txq_ring_indices_addr     : 64;
         chain_txq_ring_size_shift       : 8;
         chain_txq_entry_size_shift      : 8;
         
@@ -185,10 +185,10 @@ header_type sem_page_d_t {
 header_type common_global_phv_t {
     fields {
         // p4plus_common_global_t (max is GLOBAL_WIDTH or 128)
-        chain_txq_base                  : HBM_ADDRESS_WIDTH;
         chain_txq_ring_size_shift       : 8;
         chain_txq_entry_size_shift      : 8;
         proxyccb_flags                  : 16;
+        chain_txq_base                  : 34;
         
         chain_txq_lif                   : 11;
         chain_txq_qtype                 : 3;
@@ -224,7 +224,7 @@ header_type to_stage_1_phv_t {
 header_type to_stage_2_phv_t {
     fields {
         // (max 128 bits)
-        chain_txq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
+        chain_txq_ring_indices_addr     : 34;
     }
 }
 

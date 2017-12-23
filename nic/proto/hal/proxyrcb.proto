@@ -31,11 +31,11 @@ message ProxyrCbSpec {
   uint32                pi                         = 3;
   uint32                ci                         = 4;
   uint32                proxyrcb_flags             = 5;
-  uint32                my_txq_base                = 6;
+  uint64                my_txq_base                = 6;
   uint32                my_txq_ring_size_shift     = 7;
   uint32                my_txq_entry_size_shift    = 8;
-  uint32                chain_rxq_base             = 9;    // next service chain RxQ base
-  uint32                chain_rxq_ring_indices_addr= 10;
+  uint64                chain_rxq_base             = 9;    // next service chain RxQ base
+  uint64                chain_rxq_ring_indices_addr= 10;
   uint32                chain_rxq_ring_size_shift  = 11;
   uint32                chain_rxq_entry_size_shift = 12;
   uint32                chain_rxq_ring_index_select= 13;

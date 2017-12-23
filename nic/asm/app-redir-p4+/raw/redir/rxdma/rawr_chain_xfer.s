@@ -141,9 +141,11 @@ rawr_s6_chain_xfer:
      * Set up DMA to enqueue descriptor to next service chain
      */
     add         r_chain_entry, r0, r_chain_pindex      // chain pindex from caller
-    add         r_scratch, r0, k.common_phv_chain_entry_size_shift
+    add         r_scratch, r0, k.{common_phv_chain_entry_size_shift_sbit0_ebit2...\
+                                  common_phv_chain_entry_size_shift_sbit3_ebit4}
     sllv        r_chain_entry, r_chain_entry, r_scratch
-    add         r_chain_entry, r_chain_entry, k.common_phv_chain_ring_base
+    add         r_chain_entry, r_chain_entry, k.{common_phv_chain_ring_base_sbit0_ebit31...\
+                                                 common_phv_chain_ring_base_sbit32_ebit33}
     phvwr       p.dma_chain_dma_cmd_addr, r_chain_entry
 
     /*
@@ -191,12 +193,11 @@ rawr_s6_chain_xfer:
     APP_REDIR_SETUP_DB_ADDR(DB_ADDR_BASE,
                             DB_INC_PINDEX,
                             r_txq_db_sched,
-                            k.{common_phv_chain_lif_sbit0_ebit7...\
-                               common_phv_chain_lif_sbit8_ebit10},
+                            k.{common_phv_chain_lif_sbit0_ebit5...\
+                               common_phv_chain_lif_sbit6_ebit10},
                             k.common_phv_chain_qtype,
                             r_txq_db_addr)
-    APP_REDIR_SETUP_DB_DATA(k.{common_phv_chain_qid_sbit0_ebit1...\
-                               common_phv_chain_qid_sbit18_ebit23},
+    APP_REDIR_SETUP_DB_DATA(k.common_phv_chain_qid,
                             k.common_phv_chain_ring_index_select,
                             r0, // curr PI is dontcare for DB_INC_PINDEX
                             r_txq_db_data)

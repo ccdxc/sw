@@ -482,6 +482,9 @@ header_type semaphore_pi_t {
 
 header_type rdma_scratch_metadata_t {
     fields {
+        // All the page-ids are encoded as 22-bit, assuming HBM page
+        // size is 4K, with appropriate shift it would form 22+12=34-bit
+        // hbm address.
         //QTYPEs on LIF can be allocated differently on different LIFs
         //This mask will have the respective bit set for all qtype values
         //where RDMA is enabled (if enabled)
@@ -493,7 +496,7 @@ header_type rdma_scratch_metadata_t {
         //This is the base page_id of that allocation.
         //Assumption is that it is 4K Byte(page) aligned and
         //number of PT entries are in power of 2s.
-        pt_base_addr_page_id: 20;
+        pt_base_addr_page_id: 22;
         log_num_pt_entries: 7;
 
         //Per LIF CQCB and EQCB tables
@@ -501,15 +504,17 @@ header_type rdma_scratch_metadata_t {
         //This is the base page_id of that allocation.
         //Assumption is that it is 4K Byte(page) aligned and
         //number of PT entries are in power of 2s.
-        cqcb_base_addr_page_id: 20;
+        cqcb_base_addr_page_id: 22;
         log_num_cq_entries: 5;
 
         //RQCB prefetch uses per LIF global ring
         //This is the base address of that ring
-        prefetch_pool_base_addr_page_id: 20;
+        prefetch_pool_base_addr_page_id: 22;
         log_num_prefetch_pool_entries:5;
+        sq_qtype: 3;
+        rq_qtype: 3;
 
-        reserved: 115;
+        reserved: 103;
 
     }
 }

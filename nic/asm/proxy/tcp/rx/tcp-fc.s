@@ -61,9 +61,13 @@ flow_fc_process_done:
 
 tcp_cpu_rx:
 
-    phvwri      p.to_s5_xrq_base, ARQRX_BASE
+    addui       r5, r0, hiword(ARQRX_BASE)
+    addi        r5, r5, loword(ARQRX_BASE)
+    phvwr       p.to_s5_xrq_base, r5
 
-    CPU_ARQRX_QIDX_ADDR(0, r3, ARQRX_QIDXR_BASE)
+    addui       r5, r0, hiword(ARQRX_QIDXR_BASE)
+    addi        r5, r5, loword(ARQRX_QIDXR_BASE)
+    CPU_ARQRX_QIDX_ADDR(0, r3, r5)
 
     CAPRI_NEXT_TABLE_READ_OFFSET(1,
                                  TABLE_LOCK_EN,

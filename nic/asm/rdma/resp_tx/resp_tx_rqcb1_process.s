@@ -42,7 +42,7 @@ resp_tx_rqcb1_process:
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, read_rsp_in_progress, d.read_rsp_in_progress)
 
     // Pass dcqcn_cb_addr to stage 3.
-    add         r2, d.header_template_addr, HDR_TEMPLATE_T_SIZE_BYTES
+    add         r2, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
     CAPRI_GET_STAGE_3_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.rsq_rkey.dcqcn_cb_addr, r2)
 

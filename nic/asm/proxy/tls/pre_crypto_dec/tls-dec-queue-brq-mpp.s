@@ -84,7 +84,8 @@ dma_cmd_dec_brq_slot:
 	add		    r7, r0, d.{u.tls_queue_brq6_d.pi}.wx
     sll		    r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for BRQ slot */
-	addi		r1, r0, BRQ_BASE
+	addui		r1, r0, hiword(BRQ_BASE)
+	addi		r1, r1, loword(BRQ_BASE)
 	add		    r1, r1, r5
 
    	/* Fill the barco request */

@@ -39,14 +39,14 @@ typedef struct rawrcb_s {
      * see hal/pd/iris/rawrcb_pd.cc)
      */
     uint16_t              rawrcb_flags;
-    uint32_t              chain_rxq_base;           // next service chain RxQ base
-    uint32_t              chain_rxq_ring_indices_addr;
+    uint64_t              chain_rxq_base;           // next service chain RxQ base
+    uint64_t              chain_rxq_ring_indices_addr;
     uint8_t               chain_rxq_ring_size_shift;
     uint8_t               chain_rxq_entry_size_shift;
     uint8_t               chain_rxq_ring_index_select;
 
-    uint32_t              chain_txq_base;           // next service chain TxQ base, if any
-    uint32_t              chain_txq_ring_indices_addr;
+    uint64_t              chain_txq_base;           // next service chain TxQ base, if any
+    uint64_t              chain_txq_ring_indices_addr;
     uint32_t              chain_txq_qid;
     uint16_t              chain_txq_lif;
     uint8_t               chain_txq_qtype;

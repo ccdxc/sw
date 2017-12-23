@@ -80,7 +80,8 @@ add_ack_header:
 
     // header_template
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
-    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, d.header_template_size, d.header_template_addr)
+    sll         r5, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
+    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, d.header_template_size, r5)
 
     // BTH
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_BTH)

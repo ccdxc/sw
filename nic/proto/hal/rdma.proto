@@ -73,9 +73,9 @@ message RdmaQpRequestMsg {
 message RdmaQpResponse {
   types.ApiStatus     api_status       = 1;    // API status code
   //RdmaQpStatus        status           = 2;    // operational status
-  uint32              rsq_base_addr    = 3;    // RSQ base addr
-  uint32              rrq_base_addr    = 4;    // RRQ base addr
-  uint32              header_temp_addr = 5;    // Header template addr
+  uint64              rsq_base_addr    = 3;    // RSQ base addr
+  uint64              rrq_base_addr    = 4;    // RRQ base addr
+  uint64              header_temp_addr = 5;    // Header template addr
 }
 
 // RdmaQpResponseMsg is response to RdmaQpRequestMsg
@@ -148,7 +148,7 @@ message RdmaAhRequestMsg {
 // RdmaAhResponse to one RdmaAhSpec
 message RdmaAhResponse {
   types.ApiStatus     api_status       = 1;    // API status code
-  uint32              ah_handle        = 2;    // Header template addr
+  uint64              ah_handle        = 2;    // Header template addr
   uint32              ah_size          = 3;    // Header template size
 }
 

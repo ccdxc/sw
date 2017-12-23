@@ -42,7 +42,7 @@ proxyc_s0_tx_start:
     phvwr       p.to_s1_my_txq_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE
     phvwr       p.to_s1_my_txq_qid, CAPRI_TXDMA_INTRINSIC_QID
 
-    phvwr       p.common_phv_chain_txq_base, d.{chain_txq_base}.wx
+    phvwr       p.common_phv_chain_txq_base, d.{chain_txq_base}.dx
     phvwr       p.common_phv_chain_txq_ring_size_shift, d.chain_txq_ring_size_shift
     phvwr       p.common_phv_chain_txq_entry_size_shift, d.chain_txq_entry_size_shift
     phvwr       p.common_phv_chain_txq_lif, d.{chain_txq_lif}.hx
@@ -50,7 +50,7 @@ proxyc_s0_tx_start:
     phvwr       p.common_phv_chain_txq_qid, d.{chain_txq_qid}.wx
     phvwr       p.common_phv_chain_txq_ring, d.chain_txq_ring
     
-    phvwr       p.to_s2_chain_txq_ring_indices_addr, d.{chain_txq_ring_indices_addr}.wx
+    phvwr       p.to_s2_chain_txq_ring_indices_addr, d.{chain_txq_ring_indices_addr}.dx
     phvwr       p.to_s1_my_txq_ring_size_shift, d.my_txq_ring_size_shift
     
     /*
@@ -84,7 +84,7 @@ proxyc_s0_tx_start:
      */    
     add         r_scratch, r0, d.my_txq_entry_size_shift
     sllv        r_ci, r_ci, r_scratch
-    add         r_ci, r_ci, d.{my_txq_base}.wx
+    add         r_ci, r_ci, d.{my_txq_base}.dx
     CAPRI_NEXT_TABLE_READ(0,
                           TABLE_LOCK_DIS,
                           proxyc_s1_my_txq_entry_consume,

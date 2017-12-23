@@ -101,7 +101,7 @@ header_type tlscb_1_t {
         next_tls_hdr_offset             : 16;
         cur_tls_data_len                : 16;
         other_fid                       : 16;
-        l7q_base                        : HBM_ADDRESS_WIDTH;
+        l7q_base                        : 64;
         sw_l7q_pi                       : 16;
         barco_hmac_key_desc_index       : 32;
         // Total used   : 464 bits, pending: 48

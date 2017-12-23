@@ -80,8 +80,8 @@ hal_ret_t
 p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     uint32_t hw_lif_id, uint8_t index, uint8_t enable, uint8_t qid)
 {
-    uint32_t tbl_base;
-    uint32_t tbl_index;
+    uint64_t tbl_base;
+    uint64_t tbl_index;
     uint64_t addr;
     eth_rx_rss_indir_actiondata data = { 0 };
 
@@ -112,8 +112,8 @@ hal_ret_t
 p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
     uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata *data)
 {
-    uint32_t tbl_base;
-    uint32_t tbl_index;
+    uint64_t tbl_base;
+    uint64_t tbl_index;
     uint64_t addr;
 
     HAL_ASSERT(hw_lif_id < MAX_LIFS);

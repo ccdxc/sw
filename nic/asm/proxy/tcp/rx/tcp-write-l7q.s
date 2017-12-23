@@ -54,7 +54,7 @@ dma_cmd_l7q_slot:
     CAPRI_OPERAND_DEBUG(d.{l7q_pidx}.hx)
     sll         r5, d.{l7q_pidx}.hx, NIC_L7Q_ENTRY_SIZE_SHIFT
     /* Set the DMA_WRITE CMD for L7 Queue slot */
-    add         r1, r5, d.{l7q_base}.wx
+    add         r1, r5, d.{l7q_base}.dx
 
     // increment pi as a part of ringing dorrbell
     phvwr       p.l7_ring_entry_descr_addr, k.{s5_t2_s2s_l7_descr_sbit0_ebit15...s5_t2_s2s_l7_descr_sbit16_ebit31}

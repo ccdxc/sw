@@ -162,7 +162,7 @@ sge_loop:
 
     seq           c2, k.to_stage.sq.congestion_mgmt_enable, 1  
     bcf           [c1 & c2], write_back
-    add            r1, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr // Branch Delay Slot
+    add            r1, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
 
 write_back_mpu_only:
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r1)

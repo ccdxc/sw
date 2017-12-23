@@ -56,7 +56,7 @@ class lkp_fld_type(IntEnum):
     FLD_LOCAL       = 3
 
 class memory_base_addr(IntEnum):
-    HBM             = 0x80000000
+    HBM             = 0x0C0000000
 
 class ohi_write_only_type(IntEnum):
     OHI_WR_ONLY_TYPE_HDR_OFFSET     = 0

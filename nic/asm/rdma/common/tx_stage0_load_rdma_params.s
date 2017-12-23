@@ -20,8 +20,9 @@ tx_stage0_load_rdma_params:
     add r1, r0, offsetof(struct phv_, common_global_global_data) //BD slot
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.pt_base_addr_page_id)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_pt_entries)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cqcb_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.cqcb_base_addr_page_id)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_cq_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_cq_entries)
+    #We do not need cqcb base addr in Tx direction, hence commenting for now
+    #CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cqcb_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.cqcb_base_addr_page_id)
+    #CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_cq_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_cq_entries)
     #CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, prefetch_pool_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.prefetch_pool_base_addr_page_id)
     #CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_prefetch_pool_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_prefetch_pool_entries)
 done:

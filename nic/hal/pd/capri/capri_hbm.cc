@@ -15,7 +15,7 @@ namespace pt = boost::property_tree;
 static capri_hbm_region_t *hbm_regions_;
 static int num_hbm_regions_;
 
-#define HBM_OFFSET(x)       (0x80000000 + (x))
+#define HBM_OFFSET(x)       (0x0C0000000ull + (x))
 
 hal_ret_t
 capri_hbm_parse()
@@ -78,8 +78,8 @@ capri_hbm_parse()
         // reg->start_offset = p4_tbl.second.get<int>(JKEY_START_OFF);
         reg->start_offset = offset;
 
-        HAL_TRACE_DEBUG("Region: {}, Size_KB: {}, Start_Off: {}", 
-                reg->mem_reg_name, reg->size_kb, reg->start_offset);
+        HAL_TRACE_DEBUG("Region: {0:}, Size_KB: {1:}, Start_Off: 0x{2:x}", 
+                reg->mem_reg_name, reg->size_kb, HBM_OFFSET(reg->start_offset));
 
         offset += reg->size_kb * 1024;
         idx++;
@@ -88,7 +88,28 @@ capri_hbm_parse()
     return HAL_RET_OK;
 }
 
-uint32_t
+uint64_t
+get_hbm_base(void)
+{
+    return HBM_OFFSET(0);
+}
+
+uint64_t
+get_hbm_offset(const char *reg_name)
+{
+    capri_hbm_region_t *reg;
+
+    for (int i = 0; i < num_hbm_regions_; i++) {
+        reg = &hbm_regions_[i];
+        if (!strcmp(reg->mem_reg_name, reg_name)) {
+            return (reg->start_offset);
+        }
+    }
+
+    return 0;
+}
+
+uint64_t
 get_start_offset(const char *reg_name)
 {
     capri_hbm_region_t      *reg;

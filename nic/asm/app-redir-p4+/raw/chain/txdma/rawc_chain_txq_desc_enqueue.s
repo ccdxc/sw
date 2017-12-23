@@ -55,7 +55,8 @@ rawc_s2_chain_txq_desc_enqueue:
      */
     add         r_qentry_size_shift, r0, k.common_phv_chain_txq_entry_size_shift
     sllv        r_qentry_addr, r_qentry_addr, r_qentry_size_shift
-    add         r_qentry_addr, r_qentry_addr, k.common_phv_chain_txq_base
+    add         r_qentry_addr, r_qentry_addr, k.{common_phv_chain_txq_base_sbit0_ebit31...\
+                                                 common_phv_chain_txq_base_sbit32_ebit33}
     phvwr       p.dma_chain_dma_cmd_addr, r_qentry_addr
 
     /*
@@ -80,14 +81,12 @@ rawc_s2_chain_txq_desc_enqueue:
     APP_REDIR_SETUP_DB_ADDR(DB_ADDR_BASE,
                             DB_INC_PINDEX,
                             DB_SCHED_WR_EVAL_RING,
-                            k.{common_phv_chain_txq_lif_sbit0_ebit7...\
-                               common_phv_chain_txq_lif_sbit8_ebit10},
+                            k.{common_phv_chain_txq_lif_sbit0_ebit5...\
+                               common_phv_chain_txq_lif_sbit6_ebit10},
                             k.common_phv_chain_txq_qtype,
                             r_db_addr_scratch);
-    APP_REDIR_SETUP_DB_DATA(k.{common_phv_chain_txq_qid_sbit0_ebit1...\
-                               common_phv_chain_txq_qid_sbit18_ebit23},
-                            k.{common_phv_chain_txq_ring_sbit0_ebit1...\
-                               common_phv_chain_txq_ring_sbit2_ebit2},
+    APP_REDIR_SETUP_DB_DATA(k.common_phv_chain_txq_qid,
+                            k.common_phv_chain_txq_ring,
                             r0, // current PI is actually dontcare for DB_INC_PINDEX
                             r_db_data_scratch)
                         

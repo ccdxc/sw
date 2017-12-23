@@ -33,7 +33,8 @@ proxyr_s5_chain_pindex_pre_alloc:
     bcf         [c1], _cleanup_discard_launch
     sne         c1, k.common_phv_mpage_sem_pindex_full, r0
     bcf         [c1], _mpage_sem_pindex_full
-    add         r_ring_indices_addr, r0, k.to_s5_chain_ring_indices_addr // delay slot
+    add         r_ring_indices_addr, r0, k.{to_s5_chain_ring_indices_addr_sbit0_ebit31...\
+                                            to_s5_chain_ring_indices_addr_sbit32_ebit33} // delay slot
     beq         r_ring_indices_addr, r0, _null_ring_indices_addr
     nop
 

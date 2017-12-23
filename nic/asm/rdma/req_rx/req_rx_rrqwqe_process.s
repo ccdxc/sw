@@ -219,8 +219,8 @@ set_cqcb_arg:
 
     CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_cqcb_process)
-    CQCB_ADDR_GET(r1, k.args.cq_id)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    REQ_RX_CQCB_ADDR_GET(r1, k.args.cq_id)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, r6, r1)
 
 end:
     nop.e

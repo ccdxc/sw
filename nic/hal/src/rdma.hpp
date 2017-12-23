@@ -54,17 +54,17 @@ extern  hal_ret_t rdma_ah_create(RdmaAhSpec& spec, RdmaAhResponse *rsp);
 class RDMAManager {
  public:
   RDMAManager();
-  int32_t HbmAlloc(uint32_t size);
+  uint64_t HbmAlloc(uint32_t size);
 
  protected:
 
  private:
-  uint32_t hbm_base_;
+  uint64_t hbm_base_;
   std::unique_ptr<BMAllocator> hbm_allocator_;
 
   // Track allocation size which are needed when we
   // free memory.
-  std::map<uint32_t, uint32_t> allocation_sizes_;
+  std::map<uint64_t, uint64_t> allocation_sizes_;
 };
 
 #define HOSTMEM_PAGE_SIZE  (1 << 12)  //4096 Bytes
@@ -97,16 +97,29 @@ class RDMAManager {
 #define HBM_PAGE_SIZE 4096
 #define HBM_PAGE_SIZE_SHIFT 12
 
+//pt_base_addr is 8-byte aligned as each entry in page table stores 64-bit address.
+//hence when pt_base_addr is encoded in various data structures, bottom 3 bits are not
+//stored. At the runtime pt_base_addr field is shifted left by 3 bits to get the 
+//actual pt_base_addr.
+#define PT_BASE_ADDR_SHIFT 3
+#define HDR_TEMP_ADDR_SHIFT 3
+#define RRQ_BASE_ADDR_SHIFT 3
+#define RSQ_BASE_ADDR_SHIFT 3
+
+// all the page_ids are encoded as 22-bits, assuming 4K page size (12-bits)
+// appropriate shift will make 34-bit (22+12) hbm address.
 typedef struct sram_lif_entry_s {
     uint32_t rdma_en_qtype_mask:8;
-    uint32_t pt_base_addr_page_id:20;
+    uint32_t pt_base_addr_page_id:22;
     uint32_t log_num_pt_entries:7;
 
-    uint32_t cqcb_base_addr_page_id:20;
+    uint32_t cqcb_base_addr_page_id:22;
     uint32_t log_num_cq_entries:5;
 
-    uint32_t prefetch_pool_base_addr_page_id:20;
+    uint32_t prefetch_pool_base_addr_page_id:22;
     uint32_t log_num_prefetch_pool_entries:5;
+    uint32_t sq_qtype: 3;
+    uint32_t rq_qtype: 3;
 } PACKED sram_lif_entry_t;
 
 typedef struct lif_init_attr_s {

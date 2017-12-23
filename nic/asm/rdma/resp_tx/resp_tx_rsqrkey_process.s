@@ -124,7 +124,8 @@ invoke_pt:
 add_headers:
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
-    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, k.args.header_template_size, k.args.header_template_addr)
+    sll r4, k.args.header_template_addr, HDR_TEMP_ADDR_SHIFT
+    DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, k.args.header_template_size, r4)
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_BTH)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, bth, bth)
 

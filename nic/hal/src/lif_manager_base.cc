@@ -133,7 +133,7 @@ int64_t LIFManagerBase::GetLIFQStateAddr(
     (qid * qstate->type[type].qsize));
 }
 
-int32_t LIFManagerBase::GetLIFQStateBaseAddr(
+int64_t LIFManagerBase::GetLIFQStateBaseAddr(
     uint32_t lif_id, uint32_t type) {
   if ((lif_id >= kNumMaxLIFs) || (type >= kNumQTypes))
     return -EINVAL;

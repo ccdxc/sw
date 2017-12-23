@@ -109,7 +109,7 @@ header_type rawccb_t {
         rawccb_deactivate               : 8;  // must be first in CB after header rings
         pad                             : 8;
         rawccb_flags                    : 16; // DOL flags and others
-        my_txq_base                     : HBM_ADDRESS_WIDTH;
+        my_txq_base                     : 64;
         
         /*
          * Next service chain TxQ info which, if chain_txq_base is NULL,
@@ -117,8 +117,8 @@ header_type rawccb_t {
          * the packet descriptor should be enqueued to the given TxQ
          * and the corresponding doorbell rung.
          */     
-        chain_txq_base                  : HBM_ADDRESS_WIDTH;
-        chain_txq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
+        chain_txq_base                  : 64;
+        chain_txq_ring_indices_addr     : 64;
         chain_txq_ring_size_shift       : 8;
         chain_txq_entry_size_shift      : 8;
         chain_txq_qtype                 : 8;
@@ -188,10 +188,10 @@ header_type sem_page_d_t {
 header_type common_global_phv_t {
     fields {
         // p4plus_common_global_t (max is GLOBAL_WIDTH or 128)
-        chain_txq_base                  : HBM_ADDRESS_WIDTH;
         chain_txq_ring_size_shift       : 8;
         chain_txq_entry_size_shift      : 8;
         rawccb_flags                    : 16;
+        chain_txq_base                  : 34;
         
         chain_txq_lif                   : 11;
         chain_txq_qtype                 : 3;
@@ -228,9 +228,9 @@ header_type dma_phv_pad_128_t {
 header_type to_stage_1_phv_t {
     fields {
         // (max 128 bits)
-        chain_txq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
         my_txq_ci_curr                  : 16;
         my_txq_ring_size_shift          : 8;
+        chain_txq_ring_indices_addr     : 34;
         my_txq_qid                      : 24;
         my_txq_lif                      : 11;
         my_txq_qtype                    : 3;

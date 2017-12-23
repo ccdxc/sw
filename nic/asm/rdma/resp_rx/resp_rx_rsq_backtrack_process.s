@@ -143,8 +143,9 @@ eval_middle:
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, walk, RSQ_WALK_BACKWARD)
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, index, NEW_INDEX)
 
+    sll     RSQWQE_P, k.args.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
     b       backtrack_setup
-    add     RSQWQE_P, k.args.rsq_base_addr, NEW_INDEX, LOG_SIZEOF_RSQWQE_T //BD Slot
+    add     RSQWQE_P, RSQWQE_P, NEW_INDEX, LOG_SIZEOF_RSQWQE_T //BD Slot
     
 eval_curr_or_fwd:
     // is cmp_result < no_match
@@ -166,8 +167,9 @@ eval_curr_or_fwd:
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, walk, RSQ_WALK_FORWARD)
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, index, NEW_INDEX)
 
+    sll     RSQWQE_P, k.args.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
     b       backtrack_setup
-    add     RSQWQE_P, k.args.rsq_base_addr, NEW_INDEX, LOG_SIZEOF_RSQWQE_T //BD Slot
+    add     RSQWQE_P, RSQWQE_P, NEW_INDEX, LOG_SIZEOF_RSQWQE_T //BD Slot
     
 check_fwd_bwd:
     seq     c1, k.args.walk, RSQ_WALK_FORWARD
@@ -193,8 +195,9 @@ walk_backward:
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, walk, RSQ_WALK_FORWARD)
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, index, NEW_INDEX)
 
+    sll     RSQWQE_P, k.args.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
     b       backtrack_setup
-    add     RSQWQE_P, k.args.rsq_base_addr, NEW_INDEX, LOG_SIZEOF_RSQWQE_T //BD Slot
+    add     RSQWQE_P, RSQWQE_P, NEW_INDEX, LOG_SIZEOF_RSQWQE_T //BD Slot
     
 walk_forward:
     // if we are walking forward from mid point,
@@ -216,8 +219,9 @@ walk_forward:
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, walk, RSQ_WALK_FORWARD)
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, index, NEW_INDEX)
 
+    sll     RSQWQE_P, k.args.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
     b       backtrack_setup
-    add     RSQWQE_P, k.args.rsq_base_addr, NEW_INDEX, LOG_SIZEOF_RSQWQE_T //BD Slot
+    add     RSQWQE_P, RSQWQE_P, NEW_INDEX, LOG_SIZEOF_RSQWQE_T //BD Slot
     
 adjust_table_setup:
     CAPRI_SET_FIELD_C(r4, ADJUST_INFO_T, adjust_c_index, 1, ADJUST_C_INDEX_F)

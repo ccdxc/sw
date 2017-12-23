@@ -60,8 +60,8 @@ rawr_s0_rx_start:
      *   1) Redirect to ARM CPU RxQ, or
      *   2) Redirect to a P4+ TxQ
      */
-    add         r_chain_rxq_base, r0, d.{u.rawr_rx_start_d.chain_rxq_base}.wx
-    add         r_chain_txq_base, r0, d.{u.rawr_rx_start_d.chain_txq_base}.wx
+    add         r_chain_rxq_base, r0, d.{u.rawr_rx_start_d.chain_rxq_base}.dx
+    add         r_chain_txq_base, r0, d.{u.rawr_rx_start_d.chain_txq_base}.dx
     sne         c1, r_chain_rxq_base, r0
     sne         c2, r_chain_txq_base, r0
     bcf         [c1 & c2], _qstate_cfg_err_discard
@@ -82,7 +82,7 @@ rawr_s0_rx_start:
     phvwr       p.common_phv_chain_qid, d.{u.rawr_rx_start_d.chain_txq_qid}.wx
     phvwr       p.common_phv_chain_ring_index_select, d.u.rawr_rx_start_d.chain_txq_ring_index_select
     b           _r_ring_indices_addr_check
-    add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_txq_ring_indices_addr}.wx // delay slot
+    add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_txq_ring_indices_addr}.dx // delay slot
 
 _chain_rxq_set:
     phvwr       p.common_phv_chain_ring_base, r_chain_rxq_base
@@ -90,7 +90,7 @@ _chain_rxq_set:
     phvwr       p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_rxq_ring_size_shift
     phvwr       p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_rxq_entry_size_shift
     phvwr       p.common_phv_chain_ring_index_select, d.u.rawr_rx_start_d.chain_rxq_ring_index_select
-    add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_rxq_ring_indices_addr}.wx
+    add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_rxq_ring_indices_addr}.dx
 
 _r_ring_indices_addr_check:
     beq         r_ring_indices_addr, r0, _qstate_cfg_err_discard

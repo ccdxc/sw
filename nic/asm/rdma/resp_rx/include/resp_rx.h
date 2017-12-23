@@ -8,6 +8,12 @@
 
 #define RESP_RX_MAX_DMA_CMDS        16
 
+#define RESP_RX_CQCB_ADDR_GET(_r, _cqid) \
+    CQCB_ADDR_GET(_r, _cqid, k.to_stage.s4.wb1.cqcb_base_addr_page_id);
+
+#define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.to_stage.s6.cqpt.cqcb_base_addr_page_id, k.to_stage.s6.cqpt.log_num_cq_entries);
+
 // currently PYLD_BASE starts at 2, each PTSEG can generate upto 3
 // dma instructions. so, (2,3,4),(5,6,7),(8,9,10),(11,12,13) will
 // accommodate a packet spaning upto 4 SGEs where each SGE can generate
@@ -147,123 +153,6 @@ struct resp_rx_phv_global_t {
     struct phv_global_common_t common;
 };
 
-struct resp_rx_to_stage_backtrack_info_t {
-    va: 64;
-    r_key: 32;
-    len: 32;
-};
-
-struct resp_rx_to_stage_wb0_info_t {
-    my_token_id: 8;
-    bytes: 16;
-    pad: 104;
-};
-
-struct resp_rx_to_stage_stats_info_t {
-    bytes: 16;
-    pad: 112;
-};
-
-struct resp_rx_to_stage_wb1_info_t {
-    update_wqe_ptr: 1;
-    update_num_sges: 1;
-    rsvd: 6;
-    curr_wqe_ptr: 64;
-    num_sges: 8;
-    inv_r_key: 32;
-    pad: 16;
-};
-
-struct resp_rx_to_stage_recirc_info_t {
-    curr_wqe_ptr: 64;
-    current_sge_id: 6;
-    num_sges: 6;
-    dma_cmd_index: 4;
-    remaining_payload_bytes: 16;
-    current_sge_offset: 32;
-};
-
-struct resp_rx_to_stage_atomic_info_t {
-    rsqwqe_ptr: 64;
-    pad: 64; 
-};
-
-//Right now, worst case RDMA headers are overflowing by 64bits at maximum
-//from stage0 app_data table to rdma_params_table.
-//That data is passed blindly by rdma_params_table in stage0 to stage2 of
-//regular program
-struct resp_rx_to_stage_ext_hdr_info_t {
-    ext_hdr_data: 96;
-    pad: 32;
-};
-
-struct resp_rx_s0_info_t {
-    union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-    };
-};
-
-struct resp_rx_s1_info_t {
-    union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_recirc_info_t recirc;
-        struct resp_rx_to_stage_atomic_info_t atomic;
-    };
-};
-
-struct resp_rx_s2_info_t {
-    union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_ext_hdr_info_t ext_hdr;
-    };
-};
-
-struct resp_rx_s3_info_t {
-    union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_wb0_info_t wb0;
-    };
-};
-
-struct resp_rx_s4_info_t {
-    union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_wb1_info_t wb1;
-    };
-};
-
-struct resp_rx_s5_info_t {
-    union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_stats_info_t stats;
-    };
-};
-
-struct resp_rx_s6_info_t {
-    union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-    };
-};
-
-struct resp_rx_s7_info_t {
-    union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-    };
-};
-
-struct resp_rx_to_stage_t {
-    union {
-        struct resp_rx_s0_info_t s0;
-        struct resp_rx_s1_info_t s1;
-        struct resp_rx_s2_info_t s2;
-        struct resp_rx_s3_info_t s3;
-        struct resp_rx_s4_info_t s4;
-        struct resp_rx_s5_info_t s5;
-        struct resp_rx_s6_info_t s6;
-        struct resp_rx_s7_info_t s7;
-    };
-};
-
 // stage to stage argument structures
 
 // 20
@@ -346,12 +235,11 @@ struct resp_rx_rqcb0_write_back_info_t {
     // wb1 info
     current_sge_offset: 32;
     current_sge_id: 8;
-
-    //curr_wqe_ptr: 64;
+    curr_wqe_ptr: 64;
     //update_num_sges: 1;
     //update_wqe_ptr: 1;
     //num_sges: 8;
-    pad: 112;
+    pad: 48;
 };
 
 struct resp_rx_rqcb0_write_back_process_k_t {
@@ -365,11 +253,11 @@ struct resp_rx_rqcb0_write_back_process_k_t {
 struct resp_rx_rqcb1_write_back_info_t {
     current_sge_offset: 32;
     current_sge_id: 8;
-    //curr_wqe_ptr: 64;
+    curr_wqe_ptr: 64;
     //update_num_sges: 1;
     //update_wqe_ptr: 1;
     //num_sges: 8;
-    pad: 120;
+    pad: 56;
 };
 
 struct resp_rx_rqcb1_write_back_process_k_t {

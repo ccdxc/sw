@@ -6,11 +6,11 @@
 
 
 struct resp_tx_to_stage_dcqcn_info_t {
-    dcqcn_cb_addr: 32; // used by dcqcn-mpu-only in stage3.
+    dcqcn_cb_addr: 34; // used by dcqcn-mpu-only in stage3.
     congestion_mgmt_enable: 1;
     packet_len: 14;
     new_cindex: 16; // Used by DCQCN algorithm and DCQCN timer.
-    rsvd: 65;
+    rsvd: 63;
 };
 
 struct resp_tx_to_stage_rqcb1_wb_info_t {
@@ -21,14 +21,14 @@ struct resp_tx_to_stage_rqcb1_wb_info_t {
 };
 
 struct resp_tx_to_stage_rsq_rkey_info_t {
-    dcqcn_cb_addr: 32;
+    dcqcn_cb_addr: 34;
     congestion_mgmt_enable: 1;
-    rsvd: 95;
+    rsvd: 93;
 };
 
 struct resp_tx_to_stage_wqe_info_t {
-    dcqcn_cb_addr: 32;
-    rsvd: 96;
+    dcqcn_cb_addr: 34;
+    rsvd: 94;
 };
 
 

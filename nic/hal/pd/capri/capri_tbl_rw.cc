@@ -285,7 +285,7 @@ capri_program_hbm_table_base_addr(void)
         // For each HBM table, program HBM table start address
         assert(tbl_ctx.stage_tableid < 16);
         HAL_TRACE_DEBUG("===HBM Tbl id,Name: {}, {}, Stage {}, "
-                        "StageID {} HBM Tbl startadd: {:#x}===",
+                        "StageID {} HBM Tbl startadd: {:#llx}===",
                         i, tbl_ctx.tablename, tbl_ctx.stage,
                         tbl_ctx.stage_tableid,
                         get_start_offset(tbl_ctx.tablename));
@@ -356,7 +356,7 @@ static int capri_stats_region_init()
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64           64
 
 static void capri_program_p4plus_table_mpu_pc(int tbl_id, cap_te_csr_t *te_csr, 
-                                              uint32_t pc, uint32_t offset)
+                                              uint64_t pc, uint32_t offset)
 {
     te_csr->cfg_table_property[tbl_id].read();
     te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
@@ -370,7 +370,7 @@ static void capri_program_p4plus_table_mpu_pc(int tbl_id, cap_te_csr_t *te_csr,
 #define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
 
 static void capri_program_p4plus_sram_table_mpu_pc(int tbl_id, cap_te_csr_t *te_csr, 
-                                                   uint32_t pc)
+                                                   uint64_t pc)
 {
     te_csr->cfg_table_property[tbl_id].read();
     te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
@@ -402,7 +402,7 @@ static int capri_toeplitz_init()
 {
     int tbl_id;
     uint64_t pc;
-    uint32_t tbl_base;
+    uint64_t tbl_base;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
     p4pd_table_properties_t tbl_ctx;
@@ -436,7 +436,7 @@ static int capri_toeplitz_init()
     HAL_TRACE_DEBUG("rss_indir_table id {} table_base {}\n", tbl_id, tbl_base);
 
     te_csr->cfg_table_property[tbl_id].read();
-    te_csr->cfg_table_property[tbl_id].mpu_pc((uint32_t) pc >> 6);
+    te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
     te_csr->cfg_table_property[tbl_id].mpu_pc_dyn(0);
     // HBM Table
     te_csr->cfg_table_property[tbl_id].axi(0); //1==table in SRAM, 0== table in HBM
@@ -493,7 +493,7 @@ static int capri_table_p4plus_init()
     te_csr = &cap0.pcr.te[tbl_ctx.stage];
     capri_program_p4plus_table_mpu_pc(
             tbl_ctx.stage_tableid, te_csr,
-            (uint32_t) capri_action_p4plus_asm_base,
+            capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
 
     // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
@@ -501,7 +501,7 @@ static int capri_table_p4plus_init()
                                      &tbl_ctx);
     capri_program_p4plus_table_mpu_pc(
             tbl_ctx.stage_tableid, te_csr,
-            (uint32_t) capri_action_p4plus_asm_base,
+            capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
 
     // Resolve the p4plus txdma stage 0 program to its action pc
@@ -524,7 +524,7 @@ static int capri_table_p4plus_init()
     te_csr = &cap0.pct.te[tbl_ctx.stage];
     capri_program_p4plus_table_mpu_pc(
             tbl_ctx.stage_tableid, te_csr,
-            (uint32_t) capri_action_p4plus_asm_base, 0);
+            capri_action_p4plus_asm_base, 0);
 
     if (tbl_ctx.stage == 0 &&
         hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {

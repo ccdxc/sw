@@ -39,7 +39,7 @@ req_rx_sqcb1_process:
 
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_dcqcn_ecn_process)
-    add     r1, d.header_template_addr, HDR_TEMPLATE_T_SIZE_BYTES //dcqcn_cb addr
+    add     r1, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
 process_rx_pkt:
@@ -131,7 +131,8 @@ set_arg:
     mincr          r2, d.log_rrq_size, 1
     CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, rrq_cindex, r2)
 
-    add            r5, d.rrq_base_addr, k.args.rrq_cindex, LOG_RRQ_WQE_SIZE
+    sll            r5, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
+    add            r5, r5, k.args.rrq_cindex, LOG_RRQ_WQE_SIZE
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqwqe_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
@@ -172,8 +173,8 @@ process_feedback:
 
     CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_cqcb_process)
-    CQCB_ADDR_GET(r1, d.cq_id)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    REQ_RX_CQCB_ADDR_GET(r1, d.cq_id)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, r6, r1)
 
     nop.e
     nop

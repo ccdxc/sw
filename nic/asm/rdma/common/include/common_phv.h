@@ -35,20 +35,20 @@ struct phv_to_stage_t {
     sllv   _tmp_r, 1, _tmp_r; \
     add    _r, _tmp_r, k.global.pt_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
 
-#define CQCB_BASE_ADDR_GET(_r) \
-    sll     _r, k.global.cqcb_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
+#define CQCB_BASE_ADDR_GET(_r, _cqcb_page_id) \
+    sll     _r, _cqcb_page_id, HBM_PAGE_SIZE_SHIFT;
 
-#define CQCB_ADDR_GET(_r, _cqid) \
-    CQCB_BASE_ADDR_GET(_r);\
+#define CQCB_ADDR_GET(_r, _cqid, _cqcb_page_id) \
+    CQCB_BASE_ADDR_GET(_r, _cqcb_page_id);\
     add _r, _r, _cqid, LOG_SIZEOF_CQCB_T
 
-#define EQCB_BASE_ADDR_GET(_r, _tmp_r) \
-    add    _tmp_r, k.global.log_num_cq_entries, LOG_SIZEOF_CQCB_T; \
+#define EQCB_BASE_ADDR_GET(_r, _tmp_r, _cqcb_page_id, _log_cq_entries) \
+    add    _tmp_r, _log_cq_entries, LOG_SIZEOF_CQCB_T; \
     sllv   _tmp_r, 1, _tmp_r; \
-    add   _r, _tmp_r, k.global.cqcb_base_addr_page_id, HBM_PAGE_SIZE_SHIFT; 
+    add   _r, _tmp_r, _cqcb_page_id, HBM_PAGE_SIZE_SHIFT; 
 
-#define EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
-    EQCB_BASE_ADDR_GET(_r, _tmp_r); \
+#define EQCB_ADDR_GET(_r, _tmp_r, _eqid, _cqcb_page_id, _log_cq_entries) \
+    EQCB_BASE_ADDR_GET(_r, _tmp_r, _cqcb_page_id, _log_cq_entries); \
     add _r, _r, _eqid, LOG_SIZEOF_EQCB_T
 
 #define PHV_GLOBAL_COMMON_T struct phv_global_common_t
@@ -57,10 +57,9 @@ struct phv_global_common_t {
     qid: 24;
     qtype: 3;
     cb_addr: 25;
-    pt_base_addr_page_id: 20;
+    pt_base_addr_page_id: 22;
     log_num_pt_entries: 5;
-    cqcb_base_addr_page_id: 20;
-    log_num_cq_entries: 4;
+    pad: 22;
     union roce_opcode_flags_t flags;
     //prefetch_pool_base_addr_page_id: 20;
     //log_num_prefetch_pool_entries: 5;

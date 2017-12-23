@@ -183,7 +183,6 @@ exit:
     // rqcb1. middle/last packets will simply use these fields from cb
     CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_num_sges, 1, c2)    
     CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, num_sges, NUM_VALID_SGES, c2)
-    CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr, c2)
     CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_wqe_ptr, 1, c2)
 
 non_first_or_recirc_pkt:
@@ -223,6 +222,7 @@ non_first_or_recirc_pkt:
 
 cb0_cb1_wb_exit:
     
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
     // Current program is going to spawn 4 parallel lookups for next stage.
     // They are: T0-Lkey0, T1-Lkey1, T2-WB0, T3-WB1. 
     // T2 and T3 programs would reset their table valid bits upon completing

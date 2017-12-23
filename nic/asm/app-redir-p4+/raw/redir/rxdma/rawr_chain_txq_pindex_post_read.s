@@ -34,17 +34,14 @@ rawr_s6_chain_txq_pindex_post_read:
     add         r_pi, r0, d.{pi_curr}.hx
     add         r_chain_pindex, r0, r_pi
     add         r_ci, r0, d.{ci_curr}.hx
-    mincr       r_pi, k.{common_phv_chain_ring_size_shift_sbit0_ebit1...\
-                         common_phv_chain_ring_size_shift_sbit2_ebit4}, 1
-    mincr       r_ci, k.{common_phv_chain_ring_size_shift_sbit0_ebit1...\
-                         common_phv_chain_ring_size_shift_sbit2_ebit4}, r0
+    mincr       r_pi, k.common_phv_chain_ring_size_shift, 1
+    mincr       r_ci, k.common_phv_chain_ring_size_shift, r0
     beq         r_pi, r_ci, _txq_ring_full_discard
 
     /*
      * Pass the obtained pindex to a common DMA transfer function via r1
      */
-    mincr       r_chain_pindex, k.{common_phv_chain_ring_size_shift_sbit0_ebit1...\
-                                   common_phv_chain_ring_size_shift_sbit2_ebit4}, r0 // delay slot
+    mincr       r_chain_pindex, k.common_phv_chain_ring_size_shift, r0 // delay slot
     j           rawr_s6_chain_xfer
     nop
 

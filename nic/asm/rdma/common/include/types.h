@@ -11,6 +11,15 @@
 #define LOG_HBM_CACHE_LINE_SIZE 6 // 2^6 = 64 Bytes
 #define LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE 3 // 2^3 = 8 entries
 
+//pt_base_addr is 8-byte aligned as each entry in page table stores 64-bit address.
+//hence when pt_base_addr is encoded in various data structures, bottom 3 bits are not
+//stored. At the runtime pt_base_addr field is shifted left by 3 bits to get the 
+//actual pt_base_addr.
+#define PT_BASE_ADDR_SHIFT 3
+#define HDR_TEMP_ADDR_SHIFT 3
+#define RRQ_BASE_ADDR_SHIFT 3
+#define RSQ_BASE_ADDR_SHIFT 3
+
 #define MAX_SGES_PER_PASS   2
 #define HBM_NUM_SGES_PER_CACHELINE 4
 #define SQCB_ADDR_SHIFT    9

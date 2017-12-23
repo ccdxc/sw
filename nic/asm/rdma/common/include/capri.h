@@ -190,10 +190,12 @@ struct capri_intrinsic_ring_t {
     addi _addr_r, _addr_r, _state_offset;
 
 #define CAPRI_SET_RAW_TABLE_PC(_r, _pc) \
-    addi _r, r0, _pc; \
+    addui _r, r0, hiword(_pc); \
+    addi  _r, _r, loword(_pc); \
 
 #define CAPRI_SET_RAW_TABLE_PC_C(_c, _r, _pc) \
-    addi._c    _r, r0, _pc; \
+    addui._c _r, r0, hiword(_pc); \
+    addi._c  _r, _r, loword(_pc); \
 
 #define CAPRI_NEXT_TABLE_I_READ(_base_r, _lock_en, _table_read_size, _table_pc_r, _table_addr_r) \
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \

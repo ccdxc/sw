@@ -23,7 +23,7 @@
 #define CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(_num, _stage_entry) \
         phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
                     (0 << 3 | TABLE_SIZE_0_BITS); \
-        phvwri  p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
+        phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
         phvwr   p.common_te##_num##_phv_table_addr, r0; \
         phvwri  p.app_header_table##_num##_valid, 1;
 

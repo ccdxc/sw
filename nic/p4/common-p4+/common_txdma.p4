@@ -1017,6 +1017,8 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
                                  log_num_cq_entries,
                                  prefetch_pool_base_addr_page_id,
                                  log_num_prefetch_pool_entries,
+                                 sq_qtype,
+                                 rq_qtype,
                                  reserved) {
     if (((1 << p4_txdma_intr.qtype) & rdma_en_qtype_mask)  != 0) {
         modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
@@ -1028,6 +1030,8 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
                      prefetch_pool_base_addr_page_id);
         modify_field(scratch_rdma.log_num_prefetch_pool_entries,
                      log_num_prefetch_pool_entries);
+        modify_field(scratch_rdma.sq_qtype, sq_qtype);
+        modify_field(scratch_rdma.rq_qtype, rq_qtype);
         modify_field(scratch_rdma.reserved, reserved);
     }
 }

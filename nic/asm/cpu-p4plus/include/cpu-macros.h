@@ -63,10 +63,10 @@
     addi    _temp2_r, _dest_r, 1; \
     tblwrp.f _temp1_r, offsetof(_d_struct, _pi0_field_name), CPU_PIDX_SIZE, _temp2_r 
 
-#define CPU_ARQRX_QIDX_ADDR(_dir, _dest_r, _arqrx_qidxr_base) \
+#define CPU_ARQRX_QIDX_ADDR(_dir, _dest_r, _arqrx_qidxr_base_reg) \
     addi   _dest_r, r0, _dir; \
     sll    _dest_r, _dest_r, ARQRX_QIDXR_DIR_ENTRY_SIZE_SHIFT; \
-    addi   _dest_r, _dest_r, _arqrx_qidxr_base
+    add    _dest_r, _dest_r, _arqrx_qidxr_base_reg
 
 
 #endif

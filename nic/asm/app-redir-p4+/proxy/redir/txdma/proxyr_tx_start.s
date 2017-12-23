@@ -58,11 +58,11 @@ proxyr_s0_tx_start:
     phvwr       p.p4plus_cpu_pkt_qid, r_my_txq_qid.wx
     phvwr       p.pen_proxyr_hdr_v1_flow_id, r_my_txq_qid
 
-    phvwr       p.common_phv_chain_ring_base, d.{u.start_d.chain_rxq_base}.wx
+    phvwr       p.common_phv_chain_ring_base, d.{u.start_d.chain_rxq_base}.dx
     phvwr       p.common_phv_chain_ring_size_shift, d.u.start_d.chain_rxq_ring_size_shift
     phvwr       p.common_phv_chain_entry_size_shift, d.u.start_d.chain_rxq_entry_size_shift
     phvwr       p.common_phv_chain_ring_index_select, d.u.start_d.chain_rxq_ring_index_select
-    phvwr       p.to_s5_chain_ring_indices_addr, d.{u.start_d.chain_rxq_ring_indices_addr}.wx
+    phvwr       p.to_s5_chain_ring_indices_addr, d.{u.start_d.chain_rxq_ring_indices_addr}.dx
     
     /*
      * Two sentinels surround the programming of CB byte sequence:
@@ -102,7 +102,7 @@ proxyr_s0_tx_start:
      */    
     add         r_scratch, r0, d.u.start_d.my_txq_entry_size_shift
     sllv        r_ci, r_ci, r_scratch
-    add         r_ci, r_ci, d.{u.start_d.my_txq_base}.wx
+    add         r_ci, r_ci, d.{u.start_d.my_txq_base}.dx
     CAPRI_NEXT_TABLE_READ(0,
                           TABLE_LOCK_DIS,
                           proxyr_s1_my_txq_entry_consume,

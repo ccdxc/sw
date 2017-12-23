@@ -12,8 +12,9 @@ struct phv_ p;
 cpu_rx_read_arqrx_pindex_start:
 
 CAPRI_CLEAR_TABLE0_VALID
-    
-    CPU_ARQRX_QIDX_ADDR(0, r3, ARQRX_QIDXR_BASE)
+    addui   r5, r0, hiword(ARQRX_QIDXR_BASE)   
+    addi    r5, r5, loword(ARQRX_QIDXR_BASE)   
+    CPU_ARQRX_QIDX_ADDR(0, r3, r5)
     CAPRI_NEXT_TABLE_READ(0, 
                           TABLE_LOCK_EN,
                           cpu_rx_write_arq_start,

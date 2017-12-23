@@ -53,7 +53,7 @@ resp_rx_cqcb_process:
     // page_index = page_index * sizeof(u64)
     sll     PAGE_INDEX, PAGE_INDEX, CAPRI_LOG_SIZEOF_U64
     // page_index += cqcb_p->pt_base_addr
-    add     PAGE_INDEX, PAGE_INDEX, d.pt_base_addr
+    add     PAGE_INDEX, PAGE_INDEX, d.pt_base_addr, PT_BASE_ADDR_SHIFT
     // now r3 has page_p to load
     
     CAPRI_GET_TABLE_I_K_AND_ARG(resp_rx_phv_t, TBL_ID, KEY_P, ARG_P)

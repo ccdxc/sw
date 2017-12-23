@@ -99,11 +99,15 @@ tls_dec_bld_barco_req_process_done_2:
 
 tls_cpu_rx:
 
-    phvwri      p.s5_s6_t1_s2s_arq_base, ARQTX_BASE
+    addui       r5, r0, hiword(ARQTX_BASE)
+    addi        r5, r5, loword(ARQTX_BASE)
+    phvwr       p.s5_s6_t1_s2s_arq_base, r5
     phvwr       p.s5_s6_t1_s2s_debug_dol, k.to_s5_debug_dol
 
     /* Use RxDMA pi (first arg = 1 for TxDMA) */
-    CPU_ARQRX_QIDX_ADDR(1, r3, ARQRX_QIDXR_BASE)
+    addui       r5, r0, hiword(ARQRX_QIDXR_BASE)
+    addi        r5, r5, loword(ARQRX_QIDXR_BASE)
+    CPU_ARQRX_QIDX_ADDR(1, r3, r5)
 
     CAPRI_NEXT_TABLE_READ_OFFSET(1,
                                  TABLE_LOCK_EN,

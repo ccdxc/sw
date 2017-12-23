@@ -38,7 +38,7 @@ resp_rx_rqcb1_write_back_process:
     tblwr       d.current_sge_id, k.args.current_sge_id;
     tblwr       d.current_sge_offset, k.args.current_sge_offset;
     seq         c1, k.to_stage.s4.wb1.update_wqe_ptr, 1
-    tblwr.c1    d.curr_wqe_ptr, k.to_stage.s4.wb1.curr_wqe_ptr;
+    tblwr.c1    d.curr_wqe_ptr, k.args.curr_wqe_ptr;
     seq         c1, k.to_stage.s4.wb1.update_num_sges, 1
     tblwr.c1    d.num_sges, k.to_stage.s4.wb1.num_sges
 
@@ -90,7 +90,7 @@ completion:
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
     CAPRI_SET_FIELD(ARG_P, CQ_INFO_T, tbl_id, TABLE_2)
     CAPRI_SET_FIELD(ARG_P, CQ_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
-    CQCB_ADDR_GET(CQCB_ADDR, d.cq_id)
+    RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_cqcb_process)
     CAPRI_NEXT_TABLE_I_READ(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, CQCB_ADDR)
 

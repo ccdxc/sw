@@ -305,7 +305,7 @@ header_type write_serq_d_t {
 // d for stage 5 table 2
 header_type write_l7q_d_t {
     fields {
-        l7q_base                : 32; 
+        l7q_base                : 64; 
         l7q_pidx                : 16;    
     }   
 } 

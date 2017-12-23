@@ -18,7 +18,7 @@ struct resp_tx_rqcb1_process_k_t k;
 
 resp_tx_rqcb1_dcqcn_rate_process:
 
-    add     DCQCN_CB_ADDR, d.header_template_addr, HDR_TEMPLATE_T_SIZE_BYTES
+    add     DCQCN_CB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT 
     bbeq    k.args.timer_event_process, 1 , timer_event
 
     CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r2) // BD-slot

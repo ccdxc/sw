@@ -73,7 +73,8 @@ proxyr_s6_chain_xfer:
      */
     sne         c1, k.common_phv_redir_span_instance, r0
     ori.c1      r_proxyr_hdr_flags, r_proxyr_hdr_flags, PEN_APP_REDIR_SPAN_INSTANCE
-    add         r_proxyrcb_flags, r0, k.common_phv_proxyrcb_flags
+    add         r_proxyrcb_flags, r0, k.{common_phv_proxyrcb_flags_sbit0_ebit5...\
+                                         common_phv_proxyrcb_flags_sbit14_ebit15}
     smeqh       c1,  r_proxyrcb_flags, APP_REDIR_DOL_PIPELINE_LOOPBK_EN, \
                                        APP_REDIR_DOL_PIPELINE_LOOPBK_EN
     ori.c1      r_proxyr_hdr_flags, r_proxyr_hdr_flags, PEN_APP_REDIR_PIPELINE_LOOPBK_EN
@@ -139,10 +140,11 @@ proxyr_s6_chain_xfer:
      * Set up DMA to enqueue descriptor to next service chain
      */
     add         r_chain_entry, r0, r_chain_pindex
-    add         r_scratch, r0, k.{common_phv_chain_entry_size_shift_sbit0_ebit2...\
-                                  common_phv_chain_entry_size_shift_sbit3_ebit4}
+    add         r_scratch, r0, k.{common_phv_chain_entry_size_shift_sbit0_ebit0...\
+                                  common_phv_chain_entry_size_shift_sbit1_ebit4}
     sllv        r_chain_entry, r_chain_entry, r_scratch
-    add         r_chain_entry, r_chain_entry, k.common_phv_chain_ring_base
+    add         r_chain_entry, r_chain_entry, k.{common_phv_chain_ring_base_sbit0_ebit31...\
+                                                 common_phv_chain_ring_base_sbit32_ebit33}
     phvwr       p.dma_chain_dma_cmd_addr, r_chain_entry
 
     /*

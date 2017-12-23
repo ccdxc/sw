@@ -437,7 +437,8 @@ process_read_atomic:
     seq         c1, d.rsq_quiesce, 1
     // if rsq_quiesce is on, use rsq_p_index_prime, else use rsq_p_index
     cmov        NEW_RSQ_P_INDEX, c1, RSQ_P_INDEX_PRIME, RSQ_P_INDEX
-    add         RSQWQE_P, d.rsq_base_addr, NEW_RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
+    sll         RSQWQE_P, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
+    add         RSQWQE_P, RSQWQE_P, NEW_RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
     // p_index/c_index are in little endian
     mincr       NEW_RSQ_P_INDEX, d.log_rsq_size, 1
    
@@ -593,7 +594,8 @@ duplicate_rd_atomic:
     CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, read_or_atomic, r5)
     
     //load entry at cindex first
-    add         r3, d.rsq_base_addr, r6, LOG_SIZEOF_RSQWQE_T
+    sll         r3, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
+    add         r3, r3, r6, LOG_SIZEOF_RSQWQE_T
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rsq_backtrack_process)
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
@@ -693,7 +695,8 @@ rc_checkout:
     sub         r3, r3, r5
     // page_index = page_index * sizeof(u64)
     // page_index += rqcb_p->pt_base_addr
-    add         r3, d.pt_base_addr, r3, CAPRI_LOG_SIZEOF_U64
+    sll         r4, d.pt_base_addr, PT_BASE_ADDR_SHIFT
+    add         r3, r4, r3, CAPRI_LOG_SIZEOF_U64
     // now r3 has page_p to load
     
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) 

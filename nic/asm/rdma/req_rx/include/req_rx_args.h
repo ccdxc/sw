@@ -8,7 +8,9 @@ struct req_rx_to_stage_t {
     msn                     : 24;
     bth_psn                 : 24; 
     syndrome                :  8;
-    pad                     : 72;
+    cqcb_base_addr_page_id  : 22;
+    log_num_cq_entries      : 4;
+    pad                     : 46;
 };
 
 struct req_rx_sqcb0_to_sqcb1_info_t {

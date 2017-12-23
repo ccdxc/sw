@@ -37,10 +37,11 @@ rawc_s1_my_txq_entry_consume:
     add         r_ci, r0, k.to_s1_my_txq_ci_curr
     mincr       r_ci, k.to_s1_my_txq_ring_size_shift, 1
 
-    DOORBELL_WRITE_CINDEX(k.{to_s1_my_txq_lif_sbit0_ebit7...\
-                             to_s1_my_txq_lif_sbit8_ebit10},
+    DOORBELL_WRITE_CINDEX(k.{to_s1_my_txq_lif_sbit0_ebit5...\
+                             to_s1_my_txq_lif_sbit6_ebit10},
                           k.to_s1_my_txq_qtype,
-                          k.to_s1_my_txq_qid,
+                          k.{to_s1_my_txq_qid_sbit0_ebit5...\
+                             to_s1_my_txq_qid_sbit22_ebit23},
                           RAWC_MY_TXQ_RING_DEFAULT,
                           r_ci,
                           r_db_addr_scratch,
@@ -62,7 +63,8 @@ rawc_s1_my_txq_entry_consume:
      * to that queue. Otherwise, the pages contained in the descriptor should be 
      * DMA'ed to P4.
      */
-    sne         c1, k.common_phv_chain_txq_base, r0
+    sne         c1, k.{common_phv_chain_txq_base_sbit0_ebit31...\
+                       common_phv_chain_txq_base_sbit32_ebit33}, r0
     phvwri.c1   p.common_phv_next_service_chain_action, TRUE
     nop.!c1.e
 
@@ -79,7 +81,8 @@ rawc_s1_my_txq_entry_consume:
      * for the corresponding TxQ ring.
      */
     add         r_chain_indices_addr, r0, \
-                k.to_s1_chain_txq_ring_indices_addr     // delay slot
+                k.{to_s1_chain_txq_ring_indices_addr_sbit0_ebit31...\
+                   to_s1_chain_txq_ring_indices_addr_sbit32_ebit33}  // delay slot
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           rawc_s2_chain_txq_desc_enqueue,
                           r_chain_indices_addr,

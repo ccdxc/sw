@@ -152,7 +152,7 @@ read:
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)
-    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr
+    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
@@ -197,7 +197,7 @@ atomic:
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)
-    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr
+    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
@@ -242,7 +242,7 @@ inline_data:
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)
-    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr
+    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 

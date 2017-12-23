@@ -184,4 +184,17 @@ struct resp_tx_rsq_backtrack_adjust_process_k_t {
     struct phv_global_common_t global;
 };
 
+struct resp_tx_rqcb_to_cnp_info_t {
+    new_c_index: 16;
+    pad: 144;   
+};  
+    
+struct resp_tx_cnp_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_tx_rqcb_to_cnp_info_t args;
+    struct resp_tx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};  
+
+
 #endif //__RESP_TX_H

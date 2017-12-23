@@ -17,6 +17,7 @@
 
 #include "nic/include/base.h"
 #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 
 #ifndef HAL_GTEST
@@ -501,6 +502,11 @@ capri_tm_init (void)
 
 //::    #endif
 //:: #endfor
+    // AXI Base Address
+    pbc_csr.cfg_axi.read();
+    pbc_csr.cfg_axi.base_addr(get_hbm_base());
+    pbc_csr.cfg_axi.write();
+
 #endif
     HAL_TRACE_DEBUG("CAPRI-TM::{}: Init completed",
                     __func__);
@@ -510,7 +516,7 @@ capri_tm_init (void)
 
 /* Programs the base address in HBM for the replication table */
 hal_ret_t
-capri_tm_repl_table_base_addr_set(uint32_t addr)
+capri_tm_repl_table_base_addr_set(uint64_t addr)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;

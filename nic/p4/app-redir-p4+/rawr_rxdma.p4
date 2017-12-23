@@ -143,17 +143,17 @@ header_type rawrcb_t {
          * the same stage. For the ARM ARQ, that is stage 6.
          */     
         
-        chain_rxq_base                  : HBM_ADDRESS_WIDTH;
-        chain_rxq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
+        chain_rxq_base                  : 64;
+        chain_rxq_ring_indices_addr     : 64;
         
         /*
          * Next service chain TxQ info, if any, for redirection type (b):
          * packet descriptors should be enqueued to the given TxQ
          * and the corresponding doorbell rung.
          */     
-        chain_txq_base                  : HBM_ADDRESS_WIDTH;
-        chain_txq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
+        chain_txq_ring_indices_addr     : 64;
         
+        chain_txq_base                  : 64;
         chain_txq_qid                   : 32;
         chain_txq_lif                   : 16;
         chain_txq_qtype                 : 8;
@@ -242,7 +242,6 @@ header_type chain_txq_ring_indices_d_t {
 header_type common_global_phv_t {
     fields {
         // p4plus_common_global_t (max is GLOBAL_WIDTH or 128)
-        chain_ring_base                 : HBM_ADDRESS_WIDTH;
         chain_to_rxq                    : 1;
         redir_span_instance             : 1;
         desc_sem_pindex_full            : 1;
@@ -251,6 +250,7 @@ header_type common_global_phv_t {
         chain_ring_index_select         : 3;
         rawrcb_flags                    : 16;
         packet_len                      : 16;
+        chain_ring_base                 : 34;
         chain_lif                       : 11;
         chain_qtype                     : 3;
         chain_qid                       : 24;
@@ -284,7 +284,7 @@ header_type dma_phv_pad_256_t {
 header_type to_stage_5_phv_t {
     fields {
         // (max 128 bits)
-        chain_ring_indices_addr         : HBM_ADDRESS_WIDTH;
+        chain_ring_indices_addr         : 34;
     }
 }
 

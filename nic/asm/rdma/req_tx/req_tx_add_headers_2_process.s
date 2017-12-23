@@ -34,6 +34,7 @@ req_tx_add_headers_2_process:
     //For UD, ah_handle comes in send req.
     cmov           r3, c3, k.args.op.send_wr.ah_handle, d.header_template_addr
     cmov           r4, c3, k.args.ah_size, d.header_template_size
+    sll            r3, r3, HDR_TEMP_ADDR_SHIFT
     // dma_cmd[1] - header_template
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_HEADER_TEMPLATE)
     DMA_HBM_MEM2PKT_SETUP(r6, r4, r3)

@@ -152,7 +152,8 @@ req_tx_add_headers_process:
         DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index * sizeof(rrqwqe_t)
-        add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
+        sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
+        add            r3, r3, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_PSN, d.tx_psn           
         phvwr          RRQWQE_MSN, d.ssn
@@ -252,7 +253,8 @@ req_tx_add_headers_process:
         DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, atomiceth, atomiceth, 1)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index & sizeof(rrqwqe_t)
-        add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
+        sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
+        add            r3, r3, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_PSN, d.tx_psn
         phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
@@ -274,7 +276,8 @@ req_tx_add_headers_process:
         DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, atomiceth, atomiceth, 1)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index & sizeof(rrqwqe_t)
-        add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
+        sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
+        add            r3, r3, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_PSN, d.tx_psn
         phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type

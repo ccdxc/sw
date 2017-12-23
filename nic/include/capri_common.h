@@ -5,7 +5,7 @@
  * #defines shared by ASM and C code
  */
 
-#define CAPRI_HBM_OFFSET(x)     (0x80000000 + (x))
+#define CAPRI_HBM_OFFSET(x)     (0x0C0000000ull + (x))
 
 // Memory regions
 #define CAPRI_MEM_SECURE_RAM_START          0

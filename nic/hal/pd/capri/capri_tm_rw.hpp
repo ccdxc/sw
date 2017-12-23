@@ -213,7 +213,7 @@ capri_tm_init(void);
  * @return hal_ret_t: Status of the operation
  */
 hal_ret_t
-capri_tm_repl_table_base_addr_set(uint32_t addr);
+capri_tm_repl_table_base_addr_set(uint64_t addr);
 
 /** capri_tm_repl_table_token_size_set
  * API to program the size of the replication token

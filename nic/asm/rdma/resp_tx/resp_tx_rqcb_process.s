@@ -140,7 +140,8 @@ check_rsq:
     add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES //BD Slot
 
 rsq:
-    add         RSQWQE_P, d.rsq_base_addr, RSQ_C_INDEX, LOG_SIZEOF_RSQWQE_T
+    sll         RSQWQE_P, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
+    add         RSQWQE_P, RSQWQE_P, RSQ_C_INDEX, LOG_SIZEOF_RSQWQE_T
 
     add         NEW_RSQ_C_INDEX, r0, RSQ_C_INDEX
     mincr       NEW_RSQ_C_INDEX, d.log_rsq_size, 1

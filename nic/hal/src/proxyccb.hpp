@@ -42,10 +42,10 @@ typedef struct proxyccb_s {
     uint16_t              proxyccb_flags;
     uint8_t               my_txq_ring_size_shift;
     uint8_t               my_txq_entry_size_shift;
-    uint32_t              my_txq_base;
+    uint64_t              my_txq_base;
 
-    uint32_t              chain_txq_base;           // next service chain TxQ base
-    uint32_t              chain_txq_ring_indices_addr;
+    uint64_t              chain_txq_base;           // next service chain TxQ base
+    uint64_t              chain_txq_ring_indices_addr;
     uint32_t              chain_txq_qid;
     uint16_t              chain_txq_lif;
     uint8_t               chain_txq_qtype;

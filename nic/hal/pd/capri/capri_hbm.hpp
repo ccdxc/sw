@@ -21,11 +21,13 @@
 typedef struct capri_hbm_region_s {
     char        mem_reg_name[CAPRI_HBM_MEM_REG_NAME_MAX_LEN];
     uint32_t    size_kb;
-    uint32_t    start_offset;
+    uint64_t    start_offset;
 } capri_hbm_region_t;
 
 hal_ret_t capri_hbm_parse();
-uint32_t get_start_offset(const char *reg_name);
+uint64_t get_hbm_base(void);
+uint64_t get_hbm_offset(const char *reg_name);
+uint64_t get_start_offset(const char *reg_name);
 uint32_t get_size_kb(const char *reg_name);
 int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);

@@ -29,7 +29,8 @@ tls_enc_alloc_tnmpr_process:
 	    phvwr		p.s3_t2_s2s_tnmpr_pidx, d.{tnmpr_pidx}.wx
 
 table_read_TNMDR_PAGE:
-	    addi		r3, r0, TNMPR_TABLE_BASE
+	    addui		r3, r0, hiword(TNMPR_TABLE_BASE)
+	    addi		r3, r3, loword(TNMPR_TABLE_BASE)
 	    CAPRI_NEXT_TABLE_READ_INDEX(2, d.{tnmpr_pidx}.wx, TABLE_LOCK_EN,
                         tls_enc_tpage_alloc_process,
 	                    r3, TNMPR_TABLE_ENTRY_SIZE_SHFT,

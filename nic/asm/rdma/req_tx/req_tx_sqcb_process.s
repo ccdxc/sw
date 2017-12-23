@@ -209,7 +209,8 @@ process_send:
     // page_index = page_index & ~0x7
     // page_p = sqcb_p->pt_base_addr + (page_index * sizoef(u64))
     sub            r3, r3, r2
-    add            r3, d.pt_base_addr, r3, CAPRI_LOG_SIZEOF_U64
+    sll            r5, d.pt_base_addr, PT_BASE_ADDR_SHIFT
+    add            r3, r5, r3, CAPRI_LOG_SIZEOF_U64
 
     // remaining_payload_bytes = (1 << sqcb0_p->log_pmtu), to start with
     add            r4, r0, d.log_pmtu

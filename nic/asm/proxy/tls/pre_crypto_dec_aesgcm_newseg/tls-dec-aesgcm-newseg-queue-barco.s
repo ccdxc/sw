@@ -202,7 +202,8 @@ tls_dec_aesgcm_equeue_barco:
         K(s6_t0_to_s7_t0_producer_idx_sbit0_ebit7...s6_t0_to_s7_t0_producer_idx_sbit8_ebit31)
     sll             r2, r2, NIC_BRQ_ENTRY_SIZE_SHIFT
 
-    addi            r1, r0, BRQ_BASE
+    addui           r1, r0, hiword(BRQ_BASE)
+    addi            r1, r1, loword(BRQ_BASE)
     add             r1, r1, r2
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_barco_desc_dma_cmd, r1,\
                 barco_desc_input_list_address, barco_desc_second_key_desc_index)

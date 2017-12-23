@@ -18,7 +18,7 @@ namespace pd {
 
 #define SERQ_WRING_SLOT_SIZE                    (32)
 
-typedef uint32_t    wring_hw_id_t;
+typedef uint64_t    wring_hw_id_t;
 
 // wring pd state
 struct pd_wring_s {

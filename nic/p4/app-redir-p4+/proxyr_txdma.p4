@@ -115,7 +115,7 @@ header_type proxyrcb_t {
         proxyrcb_deactivate             : 8;  // must be first in CB after header rings
         pad                             : 8;
         proxyrcb_flags                  : 16; // DOL flags and others
-        my_txq_base                     : HBM_ADDRESS_WIDTH;
+        my_txq_base                     : 64;
 
         /*
          * For a given flow, one of 2 types of redirection can apply:
@@ -131,8 +131,8 @@ header_type proxyrcb_t {
          * programs must coordinate so that they lock a given table in
          * the same stage. For the ARM ARQ, that is stage 6.
          */     
-        chain_rxq_base                  : HBM_ADDRESS_WIDTH;
-        chain_rxq_ring_indices_addr     : HBM_ADDRESS_WIDTH;
+        chain_rxq_base                  : 64;
+        chain_rxq_ring_indices_addr     : 64;
         chain_rxq_ring_size_shift       : 8;
         chain_rxq_entry_size_shift      : 8;
         chain_rxq_ring_index_select     : 8;
@@ -227,7 +227,7 @@ header_type sem_ppage_d_t {
 header_type common_global_phv_t {
     fields {
         // p4plus_common_global_t (max is GLOBAL_WIDTH or 128)
-        chain_ring_base                 : HBM_ADDRESS_WIDTH;
+        chain_ring_base                 : 34;
         chain_ring_size_shift           : 5;
         chain_entry_size_shift          : 5;
         chain_ring_index_select         : 3;
@@ -244,9 +244,9 @@ header_type header_phv_pad_64_t {
     }    
 }
 
-header_type header_phv_pad_80_t {
+header_type header_phv_pad_72_t {
     fields {
-        hdr_pad                         : 80;
+        hdr_pad                         : 72;
     }    
 }
 
@@ -277,7 +277,7 @@ header_type to_stage_1_phv_t {
 header_type to_stage_5_phv_t {
     fields {
         // (max 128 bits)
-        chain_ring_indices_addr         : HBM_ADDRESS_WIDTH;
+        chain_ring_indices_addr         : 34;
     }
 }
 
@@ -395,7 +395,7 @@ metadata pen_app_redir_header_t         pen_app_redir_hdr;
 metadata pen_app_redir_version_header_t pen_app_redir_version_hdr;
 
 @pragma dont_trim
-metadata header_phv_pad_80_t            header_phv_pad_80;
+metadata header_phv_pad_72_t            header_phv_pad_72;
 
 @pragma dont_trim
 metadata pen_proxy_redir_header_v1_t    pen_proxyr_hdr_v1;

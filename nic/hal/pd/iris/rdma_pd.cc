@@ -18,7 +18,9 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint32_t cqcb_base_addr_page_id,
                                                       uint8_t log_num_cq_entries,
                                                       uint32_t prefetch_pool_base_addr_page_id,
-                                                      uint8_t log_num_prefetch_pool_entries)
+                                                      uint8_t log_num_prefetch_pool_entries,
+                                                      uint8_t sq_qtype,
+                                                      uint8_t rq_qtype)
 {
     hal_ret_t                    ret;
     DirectMap                    *dm;
@@ -37,6 +39,8 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (uint32_t idx,
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_cq_entries = log_num_cq_entries;
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sq_qtype = sq_qtype;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rq_qtype = rq_qtype;
 
     ret = dm->insert_withid(&data, idx);
     if (ret != HAL_RET_OK) {
@@ -82,7 +86,9 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint32_t cqcb_base_addr_page_id,
                                                       uint8_t log_num_cq_entries,
                                                       uint32_t prefetch_pool_base_addr_page_id,
-                                                      uint8_t log_num_prefetch_pool_entries)
+                                                      uint8_t log_num_prefetch_pool_entries,
+                                                      uint8_t sq_qtype,
+                                                      uint8_t rq_qtype)
 {
     hal_ret_t                    ret;
     DirectMap                    *dm;
@@ -101,6 +107,8 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_cq_entries = log_num_cq_entries;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sq_qtype = sq_qtype;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rq_qtype = rq_qtype;
 
     ret = dm->insert_withid(&data, idx);
     if (ret != HAL_RET_OK) {

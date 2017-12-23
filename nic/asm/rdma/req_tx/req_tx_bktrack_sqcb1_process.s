@@ -70,7 +70,8 @@ bktrack_sqpt:
     // pt_seg_addr = (pt_base_addr + ((page_index & ~0x7) * sizeof(u64)))
     and            r2, r1, CAPRI_SEG_PAGE_MASK
     sub            r3, r1, r2
-    add            r3, k.args.pt_base_addr, r3, CAPRI_LOG_SIZEOF_U64
+    sll            r5, k.args.pt_base_addr, PT_BASE_ADDR_SHIFT
+    add            r3, r5, r3, CAPRI_LOG_SIZEOF_U64
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_sqpt_process)
