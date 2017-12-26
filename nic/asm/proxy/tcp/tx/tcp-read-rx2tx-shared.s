@@ -64,7 +64,9 @@ tcp_tx_read_rx2tx_shared_process:
 
 
 tcp_tx_launch_sesq:
-    // TODO check pi != ci
+    seq             c1, d.{ci_0}.hx, d.{pi_0}.hx
+    b.c1            tcp_tx_rx2tx_abort
+
     phvwr           p.to_s2_sesq_cidx, d.{ci_0}.hx
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
@@ -83,7 +85,9 @@ tcp_tx_launch_sesq:
     nop.e
     nop
 tcp_tx_launch_asesq:
-    // TODO check pi != ci
+    seq             c1, d.{ci_4}.hx, d.{pi_4}.hx
+    b.c1            tcp_tx_rx2tx_abort
+
     phvwri          p.common_phv_pending_asesq, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
@@ -97,10 +101,12 @@ tcp_tx_launch_asesq:
     nop
 
 tcp_tx_pending_rx2tx:
+    seq             c1, d.{ci_1}.hx, d.{pi_1}.hx
+    b.c1            tcp_tx_rx2tx_abort
+
     phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
     phvwr           p.common_phv_rx_flag, d.rx_flag
 
-    // TODO check pi against ci
     phvwr           p.to_s1_pending_cidx, d.{ci_1}.hx
     phvwri          p.common_phv_pending_rx2tx, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
@@ -137,6 +143,9 @@ tcp_tx_pending_rx2tx_end:
     nop
 
 tcp_tx_st_expired:
+    seq             c1, d.{ci_3}.hx, d.{pi_3}.hx
+    b.c1            tcp_tx_rx2tx_abort
+
     phvwr           p.common_phv_pending_rto, 1
     phvwr           p.t0_s2s_rto_pi, d.{pi_3}.hx
     tbladd          d.{ci_3}.hx, 1
@@ -151,7 +160,9 @@ tcp_tx_st_expired:
     nop
 
 tcp_tx_ft_expired:
-    // TODO check pi against ci
+    seq             c1, d.{ci_2}.hx, d.{pi_2}.hx
+    b.c1            tcp_tx_rx2tx_abort
+
     phvwri          p.common_phv_pending_rx2tx, 1
     phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
     /* Check if SW PI (ft_pi) == timer pi
@@ -183,3 +194,7 @@ tcp_tx_cancel_fast_timer:
 tcp_tx_rx2tx_end:
     nop.e
     nop
+
+tcp_tx_rx2tx_abort:
+    nop.e
+    CAPRI_CLEAR_TABLE_VALID(0)

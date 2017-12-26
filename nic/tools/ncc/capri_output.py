@@ -3315,7 +3315,7 @@ def capri_te_cfg_output(stage):
             k -= 1
 
         if ct.is_writeback:
-            if ct.is_raw or ct.is_raw_index:
+            if ct.is_raw:
                 json_tbl_['lock_en_raw']['value'] = str(1)
             else:
                 json_tbl_['lock_en']['value'] = str(1)
