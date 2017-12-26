@@ -30,8 +30,6 @@
 
 #define PROXY_RQ_C_INDEX   d.{proxy_cindex}.hx
 
-#define RSQ_P_INDEX_PRIME d.{rsq_pindex_prime}.hx
-
 #define SPEC_RQ_C_INDEX d.{spec_cindex}.hx
 
 struct rqcb0_t {

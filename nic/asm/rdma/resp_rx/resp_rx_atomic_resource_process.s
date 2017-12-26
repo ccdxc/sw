@@ -85,6 +85,9 @@ next:
     
 loop_exit:
     
+    // skip ring rsq dbell ?
+    seq    c2, k.args.skip_rsq_dbell, 1
+
     //r1 has the offset where byte value is 0, claim the resource
     tblwrp      r1, 0, 8, FILL_PATTERN_B
     
@@ -148,8 +151,10 @@ loop_exit:
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, KEY_ADDR)
 
-    // ring rsq dbell if reqd
-    bbeq    k.args.skip_rsq_dbell, 1, exit
+    // skip ring rsq dbell if reqd
+    bcf    [c2], exit
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_MEM2MEM_T, DMA_CMD_BASE, c2) //BD Slot
+
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, k.global.lif, k.global.qtype, DB_ADDR)
     CAPRI_SETUP_DB_DATA(k.global.qid, RSQ_RING_ID, k.args.rsq_p_index, DB_DATA)
     // store db_data in LE format

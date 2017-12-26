@@ -436,7 +436,7 @@ process_read_atomic:
     //                      (sizeof(rsqwqe_t) * p_index));
     seq         c1, d.rsq_quiesce, 1
     // if rsq_quiesce is on, use rsq_p_index_prime, else use rsq_p_index
-    cmov        NEW_RSQ_P_INDEX, c1, RSQ_P_INDEX_PRIME, RSQ_P_INDEX
+    cmov        NEW_RSQ_P_INDEX, c1, d.rsq_pindex_prime, RSQ_P_INDEX
     sll         RSQWQE_P, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
     add         RSQWQE_P, RSQWQE_P, NEW_RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
     // p_index/c_index are in little endian
@@ -452,8 +452,7 @@ process_read_atomic:
     // requests while duplicate requests are being handled. If needed, we can
     // stop dropping new requests if quiesce mode is on.
     // 
-    tblwr.c1    RSQ_P_INDEX_PRIME, NEW_RSQ_P_INDEX
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, c1)
+    tblwr.c1    d.rsq_pindex_prime, NEW_RSQ_P_INDEX
 
     // common params for both read/atomic
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
@@ -468,6 +467,10 @@ process_read_atomic:
     phvwr       p.rsqwqe.psn, d.e_psn   //BD Slot
 
 process_read:
+    // for read, set the end of commands right here if quiesce is on.
+    // for atomic, we have to execute the atomic request and hence
+    // end of commands is set in atomic_resource_process function.
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, c1)
     phvwr       p.rsqwqe.read.len, CAPRI_RXDMA_RETH_DMA_LEN
     CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, len, CAPRI_RXDMA_RETH_DMA_LEN)
     // do a MPU-only lookup
@@ -571,7 +574,7 @@ duplicate_rd_atomic:
     seq         c3, d.rsq_quiesce, 1
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, search_psn, CAPRI_APP_DATA_BTH_PSN)
-    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, RSQ_P_INDEX_PRIME, c3)
+    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, d.rsq_pindex_prime, c3)
     CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, RSQ_P_INDEX, !c3)
     add         r5, r0, RSQ_P_INDEX
     mincr       r5, d.log_rsq_size, -1

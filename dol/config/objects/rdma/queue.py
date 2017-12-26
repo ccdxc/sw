@@ -53,7 +53,7 @@ class RdmaRQstate(Packet):
         BitField("log_rsq_size", 0, 5),
         ByteField("token_id", 0),
         ByteField("nxt_to_go_token_id", 0),
-        LEShortField("rsq_pindex_prime", 0),                                            
+        ShortField("rsq_pindex_prime", 0),                                            
 
         BitField("log_pmtu", 0xa, 5),
         BitField("log_rq_page_size", 0xc, 5),

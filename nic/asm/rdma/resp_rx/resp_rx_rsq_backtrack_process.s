@@ -192,7 +192,7 @@ walk_backward:
     mincr   NEW_INDEX, k.args.log_rsq_size, -1
     
     // walk, index
-    CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, walk, RSQ_WALK_FORWARD)
+    CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, walk, RSQ_WALK_BACKWARD)
     CAPRI_SET_FIELD(r4, RSQ_BT_INFO_T, index, NEW_INDEX)
 
     sll     RSQWQE_P, k.args.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
