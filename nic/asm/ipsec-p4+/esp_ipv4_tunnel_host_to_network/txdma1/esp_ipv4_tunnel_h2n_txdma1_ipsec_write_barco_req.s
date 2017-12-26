@@ -25,7 +25,8 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_ring_barco_doorbell:
     phvwri p.dma_cmd_incr_pindex_dma_cmd_wr_fence, 1
 
 esp_ipv4_tunnel_h2n_post_to_barco_ring:
-    add r2, r0, d.barco_ring_base_addr
+    add r2, r0, d.barco_ring_base_addr_hi, 32
+    add r2, r2, d.barco_ring_base_addr
     add r3, r0, d.barco_pindex
     andi r3, r3, IPSEC_BARCO_RING_INDEX_MASK
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE

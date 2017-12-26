@@ -26,6 +26,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwri p.common_te0_phv_table_raw_table_size, 3
     add r1, r0, d.cb_cindex
     sll r2, r1, 3
+    add r2, r2, d.cb_ring_base_addr_hi, 32
     add r2, r2, d.cb_ring_base_addr
     phvwr p.common_te0_phv_table_addr, r2
     addi r1, r1, 1

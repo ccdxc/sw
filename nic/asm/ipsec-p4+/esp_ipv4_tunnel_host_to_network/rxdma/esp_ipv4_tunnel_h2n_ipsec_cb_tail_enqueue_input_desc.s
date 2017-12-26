@@ -56,7 +56,8 @@ esp_ipv4_tunnel_h2n_dma_cmd_to_write_output_desc_aol:
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
 
 esp_ipv4_tunnel_h2n_post_to_cb_ring:
-    add r2, r0, d.cb_ring_base_addr 
+    add r2, r0, d.cb_ring_base_addr_hi, 32
+    add r2, r2, d.cb_ring_base_addr 
     add r3, r0, d.cb_pindex
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     andi r3, r3, IPSEC_CB_RING_INDEX_MASK

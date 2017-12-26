@@ -303,7 +303,8 @@ action ipsec_encap_txdma2_initial_table(rsvd, cosA, cosB, cos_sel,
                                        esn_lo, iv, esn_hi, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
                                        cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
-                                       cb_ring_base_addr, barco_ring_base_addr,  
+                                       cb_ring_base_addr_hi, cb_ring_base_addr, 
+                                       barco_ring_base_addr_hi, barco_ring_base_addr,  
                                        iv_salt, flags)
 {
     IPSEC_CB_SCRATCH

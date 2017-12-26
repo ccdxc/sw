@@ -248,10 +248,11 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
                                        rxdma_ring_pindex, rxdma_ring_cindex,
                                        barco_ring_pindex, barco_ring_cindex,
                                        key_index, iv_size, icv_size, spi,
-                                       esn_lo, iv, esn_hi, barco_enc_cmd,
+                                       esn_lo, iv, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
                                        cb_pindex, cb_cindex, barco_pindex, barco_cindex,
-                                       cb_ring_base_addr, barco_ring_base_addr, 
+                                       cb_ring_base_addr_hi, cb_ring_base_addr,
+                                       barco_ring_base_addr_hi, barco_ring_base_addr, 
                                        iv_salt, flags)
 {
     IPSEC_CB_SCRATCH_WITH_PC
@@ -442,11 +443,11 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        rxdma_ring_pindex, rxdma_ring_cindex, 
                                        barco_ring_pindex, barco_ring_cindex,
                                        key_index, iv_size, icv_size, spi,
-                                       esn_lo, iv, esn_hi, barco_enc_cmd,
+                                       esn_lo, iv, barco_enc_cmd,
                                        ipsec_cb_index, block_size, 
                                        cb_pindex, cb_cindex, barco_pindex, 
-                                       barco_cindex, cb_ring_base_addr, 
-                                       barco_ring_base_addr, iv_salt, flags)
+                                       barco_cindex, cb_ring_base_addr_hi, cb_ring_base_addr, 
+                                       barco_ring_base_addr_hi, barco_ring_base_addr, iv_salt, flags)
 {
     IPSEC_CB_SCRATCH
 
