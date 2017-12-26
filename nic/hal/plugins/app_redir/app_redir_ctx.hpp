@@ -205,12 +205,13 @@ public:
           return appid_info_->state_ == APPID_STATE_NEEDED;
     }
 
-    static inline void appid_info_clear_ids(appid_info_t& info) { info.id_count_ = 0; }
+    static inline void appid_info_clear_ids(appid_info_t& info) {
+        info.id_count_ = 0;
+        memset(info.ids_, 0, sizeof(info.ids_));
+    }
 
     static inline void appid_info_init(appid_info_t& info) {
-        info.state_ = APPID_STATE_INIT;
-        info.cleanup_handle_ = nullptr;
-        appid_info_clear_ids(info);
+        memset(&info, 0, sizeof(appid_info_t));
     }
 
     static inline appid_id_t appid_info_id(const appid_info_t& info) {

@@ -111,16 +111,23 @@ appid_exec(fte::ctx_t& ctx)
     // Assume appid state will not change, until it does
     app_redir_ctx(ctx)->set_appid_updated(false);
 
+    if (app_redir_pkt(ctx) == nullptr || app_redir_pkt_len(ctx) == 0) {
+        HAL_TRACE_DEBUG("appid skip scanning of zero length pkt");
+        ret = HAL_RET_OK;
+        goto done;
+    }
+
     switch (app_ctx->appid_state()) {
     case APPID_STATE_INIT:
         HAL_TRACE_DEBUG("appid state not initialized, skipping appid scanning");
         ret = HAL_RET_OK; // TODO: HAL_RET_ERR
-        break;
+        goto done;
     case APPID_STATE_NOT_FOUND:
     case APPID_STATE_FOUND:
+    case APPID_STATE_ABORT:
         HAL_TRACE_DEBUG("appid state not needed, state {}", app_ctx->appid_state());
         ret = HAL_RET_OK;
-        break;
+        goto done;
     case APPID_STATE_NEEDED:
         // appid not previously started
         ctx.register_feature_session_state((fte::feature_session_state_t*)app_ctx->appid_info());
@@ -136,7 +143,7 @@ appid_exec(fte::ctx_t& ctx)
     default:
         HAL_TRACE_ERR("Unknown appid state {}", app_ctx->appid_state());
         ret = HAL_RET_ERR;
-        break;
+        goto done;
     }
 
     // Update flow if appid state has changed
@@ -147,6 +154,7 @@ appid_exec(fte::ctx_t& ctx)
         app_ctx->set_appid_updated(true);
     }
 
+done:
     if(ctx.flow_miss()) {
         if (app_ctx->appid_in_progress())
             app_redir_policy_applic_set(ctx);

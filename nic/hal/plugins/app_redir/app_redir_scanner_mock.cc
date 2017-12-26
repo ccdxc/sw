@@ -1,7 +1,8 @@
 #include "app_redir_ctx.hpp"
 #include "app_redir_scanner.hpp"
 
-using namespace hal::app_redir;
+namespace hal {
+namespace app_redir {
 
 hal_ret_t scanner_init(int thread_num)
 {
@@ -34,3 +35,6 @@ hal_ret_t scanner_get_appid_info(const hal::flow_key_t& key, appid_info_t& appid
 hal_ret_t scanner_cleanup_flow(void* flow_handle) {
     return HAL_RET_OK;
 }
+
+} // namespace app_redir
+} // namespace hal

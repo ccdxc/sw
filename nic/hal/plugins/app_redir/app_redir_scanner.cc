@@ -262,10 +262,16 @@ static appid_state_t appid_state_map[MAX_SCANNER_APPID_STATE] = {
     APPID_STATE_FOUND, // APPID_DISCO_STATE_FINISHED
 };
 
-static appid_state_t scanner_appid_state_to_local_state(int state)
+static appid_state_t scanner_appid_state_to_local_state(int state, uint8_t id_count)
 {
     if (state < MAX_SCANNER_APPID_STATE) {
-        return appid_state_map[state];
+        if (appid_state_map[state] == APPID_STATE_FOUND) {
+            // Snort only tells us whether discovery is FINISHED, so                                               
+            //     use id_count for FOUND vs. NOT_FOUND
+            return id_count > 0 ? APPID_STATE_FOUND : APPID_STATE_NOT_FOUND;
+        } else {
+            return appid_state_map[state];
+        }
     }
     return APPID_STATE_ABORT;
 }
@@ -279,7 +285,8 @@ static void scanner_flow_info_to_appid_info(SnortFlowInfo& flow_info, appid_info
                   scanner_appid_to_local_id(flow_info.appids[i]));
         }
     }
-    appid_info.state_ = scanner_appid_state_to_local_state(flow_info.app_detection_status);
+    appid_info.state_ = scanner_appid_state_to_local_state(flow_info.app_detection_status,
+                                                           appid_info.id_count_);
     appid_info.cleanup_handle_ = flow_info.flow_handle;
 }
 
@@ -305,11 +312,6 @@ hal_ret_t scanner_run(appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_len, 
 
     if (!scanner_thread_initialized[tid]) {
         HAL_TRACE_ERR("scanner_run: pkt scanner thread {} not initialized", tid);
-        return HAL_RET_ERR;
-    }
-
-    if (pkt == nullptr || pkt_len == 0) {
-        HAL_TRACE_WARN("scanner_run: failed to scan zero length pkt");
         return HAL_RET_ERR;
     }
 

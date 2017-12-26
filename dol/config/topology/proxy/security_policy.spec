@@ -14,13 +14,17 @@ policies:
                         proto    : 6
                         dst_port : 3307
                     - svc:
+                        proto    : 17
+                        dst_port : 53
+                    - svc:
                         proto    : 6
-                        dst_port : 8080
+                        dst_port : 12380
                     - svc:
                         proto    : 6
                         dst_port : 27017
                 apps:
                     - app : "MYSQL"
+                    - app : "DNS"
                     - app : "HTTP"
                     - app : "MONGO"
 
@@ -36,46 +40,22 @@ policies:
                         proto    : 6
                         dst_port : 3307
                     - svc:
+                        proto    : 17
+                        dst_port : 53
+                    - svc:
                         proto    : 6
-                        dst_port : 8080
+                        dst_port : 12380
                     - svc:
                         proto    : 6
                         dst_port : 27017
                 apps:
                     - app : "MYSQL"
+                    - app : "DNS"
                     - app : "HTTP"
                     - app : "MONGO"
 
     - policy:
         id         : SEC_POLICY_ALLOW13
-        default    : True
-        in_rules:
-            - rule:
-                action :  ALLOW
-                log    :  True
-                svcs:
-                    - svc:
-                        proto    : 17
-                        dst_port : 53
-                apps:
-                    - app : "DNS"
-
-    - policy:
-        id         : SEC_POLICY_ALLOW14
-        default    : False
-        in_rules:
-            - rule:
-                action :  ALLOW
-                log    :  True
-                svcs:
-                    - svc:
-                        proto    : 17
-                        dst_port : 53
-                apps:
-                    - app : "DNS"
-
-    - policy:
-        id         : SEC_POLICY_ALLOW15
         default    : False
         in_rules:
             - rule:
