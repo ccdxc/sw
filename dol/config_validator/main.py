@@ -28,6 +28,7 @@ from infra.common.logging import logger
 import infra.common.objects as objects
 import grpc_proxy
 import threading
+from infra.common.glopts import GlobalOptions
 
 objects.CallbackField.SetPackagePath("config_validator.cfg.callbacks")
 
@@ -44,14 +45,15 @@ def start_zmq_server():
         socket.send_string ("Proceed")
 
 # Create a thread for zmq signaling with DOL
-threading.Thread(target=start_zmq_server).start()
+if GlobalOptions.configtoggle:
+    threading.Thread(target=start_zmq_server).start()
 
 def get_hal_channel():
     if 'HAL_GRPC_PORT' in os.environ:
         port = os.environ['HAL_GRPC_PORT']
     else:
         port = '50054'
-    logger.info("Creating GRPC channel to HAL")
+    logger.info("Creating GRPC channel to HAL on port %s" %(port))
     server = 'localhost:' + port
     hal_channel = grpc.insecure_channel(server)
     logger.info("Waiting for HAL to be ready ...")
@@ -78,20 +80,18 @@ for config_spec in config_specs:
 logger.logfile = "./logfile"
 logger.info("Building Config dependency information")
 
-config_mgr.BuildConfigDeps()
-
-config_mgr.SortConfigExternalDeps()
-
 # In the intermediate stage now, add just the pass-through server.
 # Will change this in the next commit TODO
-grpc_proxy.initClient()
-grpc_proxy.serve()
+#grpc_proxy.initClient()
+if GlobalOptions.configtoggle:
+    # This is blocking.
+    grpc_proxy.serve()
 
 test_specs = parser.ParseDirectory("config_validator/test/specs", "*.spec")
 for test_spec in test_specs:
     if not test_spec.Enabled:
         continue
-    config_mgr.ResetConfigs()
+    # config_mgr.ResetConfigs()
     for step in test_spec.Steps:
         logger.info("Executing Step : ", step.step.op)
         op_name = op_map[step.step.op]
@@ -112,6 +112,6 @@ for test_spec in test_specs:
 
 logger.info("All Config test passed!")
 
-logger.info("Config Dependency graph is shown below")
-config_mgr.PrintOrderedConfigSpecs()
+# logger.info("Config Dependency graph is shown below")
+# config_mgr.PrintOrderedConfigSpecs()
     

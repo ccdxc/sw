@@ -417,7 +417,7 @@ TEST_F(enicif_test, test3)
 
     // Create a lif
     lif_spec.mutable_key_or_handle()->set_lif_id(31);
-    lif_spec.set_pinned_uplink_if_handle(up_hdl);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     hal::hal_cfg_db_close();

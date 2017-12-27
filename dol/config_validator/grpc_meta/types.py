@@ -1,4 +1,5 @@
 import json
+import re
 import string
 import random
 import pdb
@@ -45,6 +46,16 @@ def is_range_field(field):
 def is_unique_field(field):
     return _tag_checker_helper(field, _tag_checker_map["unique_field"])
 
+def get_constraints(field):
+    options = field.GetOptions().__str__()
+    if 'constraint' in options:
+        constraints = re.search(r'(?<=constraints=\{).*?(?=\})', options).group(0)
+        if '==' in options:
+            return constraints.split('==')
+        else:
+            return constraints.split('=')
+    return None
+
 class GrpcMetaField:
     _meta_fields_ = {}
     def __init__(self, grpc_field = None):
@@ -56,6 +67,8 @@ class GrpcMetaField:
         self._ext_ref = None
         self.oneOf = False
         self.containingOneof = None
+        self.constraints = None
+        self.full_name = None
     
     def __repr__(self):
         return json.dumps({"type" : str(self.type), "label" : self.label})
@@ -78,11 +91,11 @@ class GrpcMetaField:
     def process_data(self, message):
         return self.type.process_data(message)
     
-    def generate_data(self, key=None, ext_refs=None, is_key_field=False):
-        if self._ext_ref:
-            #if There is an external Reference,
-            return config_mgr.GetRandomConfigObjectByKeyType(self._ext_ref)
-        return self.type.generate_data(key, ext_refs, self.is_key_field())
+    def generate_data(self, key=None, ext_refs=None, is_key_field=False, constraints=None):
+        # if self._ext_ref:
+        #     #if There is an external Reference,
+        #     return config_mgr.GetRandomConfigObjectByKeyType(self._ext_ref)
+        return self.type.generate_data(key, ext_refs, self.is_key_field(), constraints=constraints)
     
     def is_field_handle(self):
         return is_handle_field(self._grpc_field)
@@ -120,7 +133,7 @@ class GrpcMetaFieldUint32(GrpcMetaField):
     def process_data(self, message):
         return message
         
-    def generate_data(self, key, ext_refs, is_key_field=False):
+    def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         return  random.randint(self._range[0], self._range[1])
 
 @GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_UINT64)
@@ -133,7 +146,7 @@ class GrpcMetaFieldUint64(GrpcMetaField):
     def process_data(self, message):
         return message
     
-    def generate_data(self, key, ext_refs, is_key_field=False):
+    def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         return  random.randint(0, 99999)
 
 @GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_STRING)
@@ -144,11 +157,9 @@ class GrpcMetaFieldString(GrpcMetaField):
         self.type = descriptor.FieldDescriptor.CPPTYPE_STRING
 
     def process_data(self, message):
-        if message.__class__.__name__ == 'bytes':
-            return message.decode("utf-8")
         return message
     
-    def generate_data(self, key, ext_refs, is_key_field=False):
+    def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for _ in range(16))
         
@@ -162,7 +173,7 @@ class GrpcMetaFieldBool(GrpcMetaField):
     def process_data(self, message):
         return message
     
-    def generate_data(self, key, ext_refs, is_key_field=False):
+    def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         return random.choice([True, False])
 
 @GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_ENUM)
@@ -175,6 +186,6 @@ class GrpcMetaFieldEnum(GrpcMetaField):
     def process_data(self, message):
         return message
     
-    def generate_data(self, key, ext_refs, is_key_field=False):
+    def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         enum_value = random.randint(0, len(self._grpc_field.enum_type.values) - 1)
         return self._grpc_field.enum_type.values[enum_value].name

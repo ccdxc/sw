@@ -55,8 +55,8 @@ class SegmentObject(base.ConfigObjectBase):
         self.pinnedif = None
         self.__pin_interface()
 
-        self.vrf_id     = None
-        self.nw_hal_handles = []
+        self.vrf_id = None
+        self.nw_ids  = []
 
         if self.blackhole:
             self.vlan_id    = resmgr.BlackHoleSegVlanAllocator.get()
@@ -179,7 +179,7 @@ class SegmentObject(base.ConfigObjectBase):
         seg.vxlan_id = self.vxlan_id
         seg.multicast_policy = self.multicast_policy
         seg.broadcast_policy = self.broadcast_policy
-        seg.nw_hal_handles = self.nw_hal_handles[:]
+        seg.nw_ids = self.nw_ids[:]
         return seg
 
 
@@ -191,9 +191,9 @@ class SegmentObject(base.ConfigObjectBase):
         if not self.CompareObjectFields(other, fields, lgh):
             return False
 
-        if set(self.nw_hal_handles) != set(other.nw_hal_handles):
-            lgh.error("Network handles don't match Expected : %s, actual : %s"
-                      %(set(self.nw_hal_handles), set(other.nw_hal_handles)))
+        if set(self.nw_ids) != set(other.nw_ids):
+            lgh.error("Network ids don't match Expected : %s, actual : %s"
+                      %(set(self.nw_ids), set(other.nw_ids)))
             return False
 
         return True
@@ -317,10 +317,10 @@ class SegmentObject(base.ConfigObjectBase):
             req_spec.pinned_uplink = self.pinnedif.hal_handle
 
         for nw in self.obj_helper_nw.nws:
-            if nw.hal_handle:
+            if nw.ip_prefix:
                 nkh = req_spec.network_key_handle.add()
-                nkh.nw_handle = nw.hal_handle
-                self.nw_hal_handles.append(nw.hal_handle)
+                nkh.ip_prefix.CopyFrom(nw.ip_prefix)
+                self.nw_ids.append(nw.ip_prefix)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -361,9 +361,9 @@ class SegmentObject(base.ConfigObjectBase):
             self.multicast_policy = get_resp_spec.spec.mcast_fwd_policy
             self.broadcast_policy = get_resp_spec.spec.bcast_fwd_policy
 
-            self.nw_hal_handles = []
-            for nw_handle in get_resp_spec.spec.network_handle:
-                self.nw_hal_handles.append(nw_handle)
+            self.nw_ids = []
+            for nw_id in get_req_spec.spec.network_key_handle.ip_prefix:
+                self.nw_ids.append(nw_id)
 
         else:
             cfglogger.error("- Segment %s = %s is missing." %\

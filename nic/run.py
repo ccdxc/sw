@@ -266,6 +266,8 @@ def run_dol(args):
     if args.shuffle is not None:
         cmd.append('--shuffle')
         cmd.append(args.shuffle)
+    if args.configtoggle is True:
+        cmd.append('--configtoggle')
 
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
@@ -282,12 +284,14 @@ def run_dol(args):
 
 #    log.close()
 
-def run_config_validation(args):
+def run_config_toggler(args):
     dol_dir = nic_dir + "/../dol"
     os.chdir(dol_dir)
 
-    log = open(config_log, "w")
+    log = open(config_log, "a+")
     cmd = ['./config_validator/main.py']
+    if args.configtoggle is True:
+        cmd.append('--configtoggle')
     p = Popen(cmd)
     print "* Starting Config validator with  pid (" + str(p.pid) + ")"
     print "- Log file: " + config_log + "\n"
@@ -295,11 +299,7 @@ def run_config_validation(args):
     lock = open(lock_file, "a+")
     lock.write(str(p.pid) + "\n")
     lock.close()
-    p.communicate()
-    log.close()
-
-    print "* Validator exit code " + str(p.returncode)
-    return p.returncode
+    return
 
 # Sample Client
 '''
@@ -447,6 +447,9 @@ def main():
                         default=False, help="GFT tests")
     parser.add_argument('--shuffle', dest='shuffle', default=None,
                         help='Shuffle tests and loop for X times.')
+    parser.add_argument('--configtoggle', dest='configtoggle', default=None,
+                        action='store_true',
+                         help='Modify DOL config before starting packet tests')
     args = parser.parse_args()
 
     if args.cleanup:
@@ -483,11 +486,13 @@ def main():
             status = run_gft_test()
             if status != 0:
                 print "- GFT test failed, status=", status
-        elif args.configtest:
-            status = run_config_validation(args)
-            if status != 0:
-                print "- Config validaton failed, status=", status
         else:
+          if args.configtoggle:
+             cv_port = find_port()
+             print "* Using port (" + str(cv_port) + ") for ConfigToggler\n"
+             os.environ["CV_GRPC_PORT"] = str(cv_port)
+             run_config_toggler(args)
+
           status = run_dol(args)
           if status == 0:
              if (args.e2etls):

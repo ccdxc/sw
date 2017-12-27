@@ -72,8 +72,8 @@ class HalInterfaceSegmentAssociation:
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.if_key_handle.if_handle = self.intf.hal_handle
-        req_spec.l2segment_key_or_handle.l2segment_handle = self.seg.hal_handle
+        req_spec.if_key_handle.interface_id = self.intf.id
+        req_spec.l2segment_key_or_handle.segment_id = self.seg.id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -139,11 +139,14 @@ def init():
     global HalChannel
     if IsHalDisabled(): return
 
-    if 'HAL_GRPC_PORT' in os.environ:
+    if 'CV_GRPC_PORT' in os.environ: # If config toggle mode is enabled
+        assert GlobalOptions.configtoggle
+        port = os.environ['CV_GRPC_PORT']
+    elif 'HAL_GRPC_PORT' in os.environ:
         port = os.environ['HAL_GRPC_PORT']
     else:
         port = '50054'
-    cfglogger.info("Creating GRPC channel to HAL")
+    cfglogger.info("Creating GRPC channel to HAL on port %s" %(port))
     server = 'localhost:' + port
     HalChannel = grpc.insecure_channel(server)
     cfglogger.info("Waiting for HAL to be ready ...")
@@ -161,7 +164,11 @@ def ConfigureLifs(objlist, update = False):
     if IsHalDisabled(): return
     stub = interface_pb2.InterfaceStub(HalChannel)
     api = stub.LifUpdate if update else stub.LifCreate
-    __config(objlist, interface_pb2.LifRequestMsg, api)
+    msg = interface_pb2.LifRequestMsg
+    __config(objlist, msg, api)
+    if not update and GlobalOptions.configtoggle:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def GetLifs(objlist):
@@ -175,8 +182,12 @@ def GetLifs(objlist):
 def ConfigureInterfaces(objlist, update = False):
     if IsHalDisabled(): return
     stub = interface_pb2.InterfaceStub(HalChannel)
+    msg = interface_pb2.InterfaceRequestMsg
     api = stub.InterfaceUpdate if update else stub.InterfaceCreate
-    __config(objlist, interface_pb2.InterfaceRequestMsg, api)
+    __config(objlist, msg, api)
+    if not update and GlobalOptions.configtoggle:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def GetInterfaces(objlist):
@@ -204,8 +215,12 @@ def ConfigureInterfaceSegmentAssociations(intfs, segs):
 def ConfigureTenants(objlist):
     if IsHalDisabled(): return
     stub = vrf_pb2.VrfStub(HalChannel)
-    __config(objlist, vrf_pb2.VrfRequestMsg,
+    msg = vrf_pb2.VrfRequestMsg
+    __config(objlist, msg,
              stub.VrfCreate)
+    if GlobalOptions.configtoggle:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def GetTenants(objlist):
@@ -394,8 +409,12 @@ def ConfigureTlsCbs(objlist):
 def ConfigureSegments(objlist):
     if IsHalDisabled(): return
     stub = l2segment_pb2.L2SegmentStub(HalChannel)
-    __config(objlist, l2segment_pb2.L2SegmentRequestMsg,
+    msg = l2segment_pb2.L2SegmentRequestMsg
+    __config(objlist, msg,
              stub.L2SegmentCreate)
+    if GlobalOptions.configtoggle:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def GetSegments(objlist):
@@ -468,8 +487,12 @@ def ConfigureSecurityGroups(objlist, update = False):
     if IsHalDisabled(): return
     stub = nwsec_pb2.NwSecurityStub(HalChannel)
     api = stub.SecurityGroupCreate
+    msg = nwsec_pb2.SecurityGroupRequestMsg
     if update: api = stub.SecurityGroupUpdate
-    __config(objlist, nwsec_pb2.SecurityGroupRequestMsg, api)
+    __config(objlist, msg, api)
+    if not update and GlobalOptions.configtoggle:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def ConfigureDosPolicies(objlist, update = False):
@@ -491,8 +514,12 @@ def ConfigureSecurityGroupPolicies(objlist, update = False):
     if IsHalDisabled(): return
     stub = nwsec_pb2.NwSecurityStub(HalChannel)
     api = stub.SecurityGroupPolicyCreate
+    msg = nwsec_pb2.SecurityGroupPolicyRequestMsg
     if update: api = stub.SecurityGroupPolicyUpdate
-    __config(objlist, nwsec_pb2.SecurityGroupPolicyRequestMsg, api)
+    __config(objlist, msg, api)
+    if not update and GlobalOptions.configtoggle:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def GetSecurityGroupPolicies(objlist):
@@ -528,8 +555,11 @@ def ConfigureCollectors(objlist):
 def ConfigureNetworks(objlist):
     if IsHalDisabled(): return
     stub = nw_pb2.NetworkStub(HalChannel)
-    __config(objlist, nw_pb2.NetworkRequestMsg,
-             stub.NetworkCreate)
+    msg = nw_pb2.NetworkRequestMsg
+    __config(objlist, msg, stub.NetworkCreate)
+    if GlobalOptions.configtoggle:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def GetNetworks(objlist):

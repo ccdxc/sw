@@ -9,7 +9,8 @@ import time
 paths = [
     '/nic/gen/proto/',
     '/nic/gen/proto/hal/',
-    '/nic/cli/' # To get tenjin_wrapper.
+    '/nic/cli/', # To get tenjin_wrapper.
+    '/dol/config_validator/'
 ]
 
 ws_top = os.path.dirname(sys.argv[0]) + '/../..'
@@ -20,14 +21,15 @@ for path in paths:
     print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
+from infra.common.logging import logger
 from tenjin import *
 from tenjin_wrapper import *
 
 def genProxyServerMethods():
     tenjin_prefix = "//::"
     
-    template = './hal_proto_gen_template.py'
-    out_file = './hal_proto_gen.py'
+    template = ws_top + '/dol/config_validator/hal_proto_gen_template.py'
+    out_file = ws_top + '/dol/config_validator/hal_proto_gen.py'
     
     dic = {}
     with open(out_file, "w") as of:
@@ -38,14 +40,18 @@ genProxyServerMethods()
 import hal_proto_gen
 
 def initClient():
-    # Hardcode the port for now. Will redo this when integrating with DOL.
-    HalChannel = grpc.insecure_channel('localhost:50054')
+    HalChannel = grpc.insecure_channel('localhost:%s'%(port))
     grpc.channel_ready_future(HalChannel).result()
     print( "Connected to HAL" )
 
 def serve():
+    if 'CV_GRPC_PORT' in os.environ:
+        port = os.environ['CV_GRPC_PORT']
+    else:
+        port = '50051'
+    logger.info("Starting ConfigValidator GRPC Server on port %s" %(port))
     server = hal_proto_gen.proxyServer
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port('[::]:%s' %(port))
     server.start()
     try:
         while True:

@@ -128,22 +128,22 @@ message PktFilter {
 
 // LIF object
 message LifSpec {
-  types.ObjectMeta           meta                    = 1;     // object meta
+  types.ObjectMeta           meta                        = 1;    // object meta
   // key_or_handle is LIF's key or handle
-  kh.LifKeyHandle            key_or_handle           = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  uint64                     pinned_uplink_if_handle = 3;
-  IfStatus                   admin_status            = 4;    // admin status of the interface
-  repeated LifQStateMapEntry lif_qstate_map          = 5;    // LIF -> Qstate map.
-  bool                       vlan_strip_en           = 6;    // LIF vlan strip enable
-  bool                       vlan_insert_en          = 7;    // Ingress vlan tag in p4plus_to_p4 hdr
-  bool                       enable_rdma             = 8;    // RDMA: enable RDMA on LIF
-  PktFilter                  packet_filter           = 9;    // Packet filters
-  uint32                     rdma_max_keys           = 10;   // RDMA: max key entries
-  uint32                     rdma_max_pt_entries     = 11;   // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate              = 12;   // Initialize Qstate
-  LifRssSpec                 rss                     = 13;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer              = 14;    // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer              = 15;    // QOS Policer for rx traffic
+  kh.LifKeyHandle            key_or_handle               = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.InterfaceKeyHandle      pinned_uplink_if_key_handle = 3 [(gogoproto.jsontag) = "ref", (gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}" ];
+  IfStatus                   admin_status                = 4;    // admin status of the interface
+  repeated LifQStateMapEntry lif_qstate_map              = 5;    // LIF -> Qstate map.
+  bool                       vlan_strip_en               = 6;    // LIF vlan strip enable
+  bool                       vlan_insert_en              = 7;    // Ingress vlan tag in p4plus_to_p4 hdr
+  bool                       enable_rdma                 = 8;    // RDMA: enable RDMA on LIF
+  PktFilter                  packet_filter               = 9;    // Packet filters
+  uint32                     rdma_max_keys               = 10;   // RDMA: max key entries
+  uint32                     rdma_max_pt_entries         = 11;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate                  = 12;   // Initialize Qstate
+  LifRssSpec                 rss                         = 13;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer                  = 14;    // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 15;    // QOS Policer for rx traffic
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -413,10 +413,10 @@ message IfUplinkInfo {
   uint64           native_l2segment_id   = 2;    // L2 segment to map the packets to, if they are untagged
 }
 
-// mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
 message IfUplinkPCInfo {
-  uint64            native_l2segment_id         = 1;    // L2 segment to map the packets to, if they are untagged
-  repeated uint64   member_if_handle            = 2;    // uplink member ports
+// mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
+  uint64                         native_l2segment_id   = 1;    // L2 segment to map the packets to, if they are untagged
+  repeated kh.InterfaceKeyHandle member_if_key_handle  = 2 [(gogoproto.jsontag)="ref"];
 }
 
 //------------------------------------------------------------------------------
@@ -461,11 +461,11 @@ message InterfaceSpec {
   IfType             type              = 4;     // type of interface
   IfStatus           admin_status      = 5;     // admin status of the interface
   oneof if_info {
-    IfEnicInfo       if_enic_info      = 6;     // enic data if interface type is IF_TYPE_ENIC
-    IfUplinkInfo     if_uplink_info    = 7;     // uplink port number if interface type is IF_TYPE_UPLINK
-    IfUplinkPCInfo   if_uplink_pc_info = 8;     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
-    IfTunnelInfo     if_tunnel_info    = 9;     // tunnel interface information
-    IfCPUInfo        if_cpu_info       = 10;     // cpu interface informaton 
+    IfEnicInfo       if_enic_info      = 6 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
+    IfUplinkInfo     if_uplink_info    = 7 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
+    IfUplinkPCInfo   if_uplink_pc_info = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINKPC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+    IfTunnelInfo     if_tunnel_info    = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
+    IfCPUInfo        if_cpu_info       = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton 
   }
 }
 
@@ -550,7 +550,7 @@ message InterfaceGetResponseMsg {
 // on an uplink interface or uplink PC
 message InterfaceL2SegmentSpec {
   types.ObjectMeta                meta             = 1;    // object meta
-  kh.L2SegmentKeyHandle    l2segment_key_or_handle = 2;    // L2 segment Id corresponding to the vlan
+  kh.L2SegmentKeyHandle    l2segment_key_or_handle = 2 [(gogoproto.jsontag) = "ref"];    // L2 segment Id corresponding to the vlan
   kh.InterfaceKeyHandle              if_key_handle = 3 [(gogoproto.jsontag) = "interface_ref"];    // Uplink/Uplink PC key or handle
 }
 
@@ -562,7 +562,7 @@ message InterfaceL2SegmentRequestMsg {
 
 // InterfaceL2SegmentResponse is response to InterfaceL2SegmentSpec
 message InterfaceL2SegmentResponse {
-  types.ApiStatus       api_status        = 1;    // API status code
+  types.ApiStatus       api_status        = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
 
 // InterfaceL2SegmentResponseMsg is batched response to InterfaceL2SegmentResponse

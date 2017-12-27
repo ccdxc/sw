@@ -1,12 +1,15 @@
 Name: Create_Update
-MaxObjects: 10
+MaxObjects: 1
 Enabled: True
 Steps :
     - step:
         op     : Create
         status : API_STATUS_OK
     - step:
-        op     : Get
+        op     : Delete
+        status : API_STATUS_OK
+    - step:
+        op     : ReCreate
         status : API_STATUS_OK
     - step:
         op     : Update

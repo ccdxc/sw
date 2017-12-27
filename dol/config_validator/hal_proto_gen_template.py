@@ -7,9 +7,14 @@ import sys
 from concurrent import futures
 import pdb
 import config_mgr
+from infra.common.logging import logger
 
 proxyServer = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
-channel = grpc.insecure_channel('localhost:50054')
+if 'HAL_GRPC_PORT' in os.environ:
+    port = os.environ['HAL_GRPC_PORT']
+else:
+    port = '50054'
+channel = grpc.insecure_channel('localhost:%s' %(port))
 
 //:: ws_top = os.path.dirname(sys.argv[0]) + '/../..'
 //:: ws_top = os.path.abspath(ws_top)
@@ -50,7 +55,9 @@ class ${service[0]}(${fileGrpcName}.${servicerName}):
     def ${table[0]}(self, request, context):
          stub = ${fileGrpcName}.${stubName}(channel)
          config_mgr.CreateConfigFromDol(request)
+         logger.info("Sending DOL message for message type %s\n%s\n"%(type(request), request))
          response = stub.${table[0]}(request)
+         logger.info("Received HAL response \n%s\n" %(response))
          return response
 
 //::         #endfor

@@ -1594,7 +1594,8 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
             HAL_TRACE_ERR("pi-uplinkpc:{}:READ ..unable to add non-uplinkif. "
                           "Skipping if id: {}", __FUNCTION__, entry->handle_id);
-            uplink_pc_info->add_member_if_handle(entry->handle_id);
+            auto mif_key_handle = uplink_pc_info->add_member_if_key_handle();
+            mif_key_handle->set_interface_id(entry->handle_id);
         }
 #if 0
         dllist_for_each_safe(curr, next, &hal_if->l2seg_list_head) {
@@ -2225,7 +2226,7 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
                   if_t *hal_if)
 {
     hal_ret_t    ret = HAL_RET_OK;
-    uint64_t     mbr_if_handle = 0;
+    InterfaceKeyHandle mbr_if_key_handle;
     // uint64_t     l2seg_id = 0;
     if_t         *mbr_if = NULL;
     // l2seg_t      *l2seg = NULL;
@@ -2244,12 +2245,12 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     hal_if->native_l2seg = spec.if_uplink_pc_info().native_l2segment_id();
 
     HAL_TRACE_DEBUG("pi-uplinkpc:{}:adding {} no. of members", __FUNCTION__,
-                    spec.if_uplink_pc_info().member_if_handle_size());
+                    spec.if_uplink_pc_info().member_if_key_handle_size());
     // Walk through member uplinks
     utils::dllist_reset(&hal_if->mbr_if_list_head);
-    for (int i = 0; i < spec.if_uplink_pc_info().member_if_handle_size(); i++) {
-        mbr_if_handle = spec.if_uplink_pc_info().member_if_handle(i);
-        mbr_if = find_if_by_handle(mbr_if_handle);
+    for (int i = 0; i < spec.if_uplink_pc_info().member_if_key_handle_size(); i++) {
+        mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
+        mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
         HAL_ASSERT_RETURN(mbr_if != NULL, HAL_RET_INVALID_ARG);
         if (mbr_if->if_type != intf::IF_TYPE_UPLINK) {
             HAL_TRACE_ERR("pi-uplinkpc:{}:unable to add non-uplinkif. "
@@ -2962,7 +2963,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
     dllist_ctxt_t                   *lnode = NULL;
     // ep_ip_entry_t                   *pi_ip_entry = NULL;
     bool                            mbr_exists = false;
-    uint64_t                        mbr_if_handle = 0;
+    InterfaceKeyHandle              mbr_if_key_handle;
     if_t                            *mbr_if = NULL;
     hal_handle_id_list_entry_t      *entry = NULL, *lentry = NULL;
 
@@ -2982,30 +2983,30 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
     utils::dllist_reset(*del_mbrlist);
     utils::dllist_reset(*aggr_mbrlist);
 
-    num_mbrs = spec.if_uplink_pc_info().member_if_handle_size();
+    num_mbrs = spec.if_uplink_pc_info().member_if_key_handle_size();
     HAL_TRACE_DEBUG("pi-if:{}:pc mbrs:{}", 
                     __FUNCTION__, num_mbrs);
     for (i = 0; i < num_mbrs; i++) {
-        mbr_if_handle = spec.if_uplink_pc_info().member_if_handle(i);
-        mbr_if = find_if_by_handle(mbr_if_handle);
+        mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
+        mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
         HAL_ASSERT_RETURN(mbr_if != NULL, HAL_RET_INVALID_ARG);
 
         // Add to aggregated list
-        hal_add_to_handle_list(*aggr_mbrlist, mbr_if_handle);
+        hal_add_to_handle_list(*aggr_mbrlist, mbr_if->hal_handle);
 
         if (mbr_if->if_type != intf::IF_TYPE_UPLINK) {
             HAL_TRACE_ERR("pi-uplinkpc:{}:unable to add non-uplinkif. "
                           "Skipping if id: {}", __FUNCTION__, mbr_if->if_id);
             continue;
         }
-        if (mbrif_in_pc(hal_if, mbr_if_handle, NULL)) {
+        if (mbrif_in_pc(hal_if, mbr_if->hal_handle, NULL)) {
             continue;
         } else {
             // Add to added list
-            hal_add_to_handle_list(*add_mbrlist, mbr_if_handle);
+            hal_add_to_handle_list(*add_mbrlist, mbr_if->hal_handle);
             *mbrlist_change = true;
             HAL_TRACE_DEBUG("pi-uplinkpc:{}: added to add list hdl: {}", 
-                    __FUNCTION__, mbr_if_handle);
+                    __FUNCTION__, mbr_if->hal_handle);
         }
     }
 
@@ -3021,9 +3022,10 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
         HAL_TRACE_DEBUG("pi-uplinkpc:{}: Checking for mbr: {}", 
                 __FUNCTION__, entry->handle_id);
         for (i = 0; i < num_mbrs; i++) {
-            mbr_if_handle = spec.if_uplink_pc_info().member_if_handle(i);
-            HAL_TRACE_DEBUG("{}:grpc mbr handle: {}", __FUNCTION__, mbr_if_handle);
-            if (entry->handle_id == mbr_if_handle) {
+            mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
+            mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
+            HAL_TRACE_DEBUG("{}:grpc mbr handle: {}", __FUNCTION__, mbr_if->hal_handle);
+            if (entry->handle_id == mbr_if->hal_handle) {
                 mbr_exists = true;
                 break;
             } else {
@@ -3031,7 +3033,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
             }
         }
         if (!mbr_exists) {
-            // Have to delet the mbr
+            // Have to delete the mbr
             lentry = (hal_handle_id_list_entry_t *)g_hal_state->
                 hal_handle_id_list_entry_slab()->alloc();
             if (lentry == NULL) {

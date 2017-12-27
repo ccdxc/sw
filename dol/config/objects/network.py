@@ -32,6 +32,7 @@ class NetworkObject(base.ConfigObjectBase):
         self.rmac = segment.macaddr
         self.hal_handle = None
         self.security_groups = []
+        self.ip_prefix = None
 
         self.Show()
         return
@@ -57,6 +58,7 @@ class NetworkObject(base.ConfigObjectBase):
         nw.af = self.af
         nw.id = self.id
         nw.security_groups = self.security_groups[:]
+        nw.ip_prefix = self.ip_prefix
         return nw
 
 
@@ -91,8 +93,11 @@ class NetworkObject(base.ConfigObjectBase):
             req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET6
             req_spec.key_or_handle.ip_prefix.address.v6_addr = self.prefix.getnum().to_bytes(16, 'big')
             req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
+        # Store the key generated.
+        self.ip_prefix = req_spec.key_or_handle.ip_prefix
         for sg in self.security_groups:
-            req_spec.sg_handle.append(sg.hal_handle)
+            key_handle = req_spec.sg_key_handle.add()
+            key_handle.security_group_id = sg.id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

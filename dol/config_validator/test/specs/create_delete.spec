@@ -1,6 +1,6 @@
 Name: Create_Delete_Create_Delete
-MaxObjects: 10
-Enabled: True
+MaxObjects: 1
+Enabled: False
 Steps :
     - step:
         op     : Create

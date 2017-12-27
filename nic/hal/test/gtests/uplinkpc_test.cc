@@ -61,6 +61,7 @@ TEST_F(uplinkpc_test, test1)
     InterfaceResponse   rsp;
     InterfaceSpec       pc_spec;
     InterfaceResponse   pc_rsp;
+    InterfaceKeyHandle  *ifkh = NULL;
 
     // Uplink create
     spec.set_type(intf::IF_TYPE_UPLINK);
@@ -76,7 +77,8 @@ TEST_F(uplinkpc_test, test1)
     // Uplink PC Create
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(2);
-    pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(up_hdl);
+    ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+    ifkh->set_if_handle(up_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(pc_spec, &pc_rsp);
     hal::hal_cfg_db_close();
@@ -102,6 +104,7 @@ TEST_F(uplinkpc_test, test2)
     InterfaceResponse   rsp;
     InterfaceSpec       pc_spec;
     InterfaceResponse   pc_rsp;
+    InterfaceKeyHandle  *ifkh = NULL;
 
     for (int i = 1; i <= 8; i++) {
         spec.set_type(intf::IF_TYPE_UPLINK);
@@ -117,7 +120,8 @@ TEST_F(uplinkpc_test, test2)
 
         pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
         pc_spec.mutable_key_or_handle()->set_interface_id(i+150);
-        pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(up_hdl);
+        ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+        ifkh->set_if_handle(up_hdl);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_create(pc_spec, &pc_rsp);
         hal::hal_cfg_db_close();
@@ -147,6 +151,7 @@ TEST_F(uplinkpc_test, test3)
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
     NetworkKeyHandle                *nkh = NULL;
+    InterfaceKeyHandle              *ifkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -205,7 +210,8 @@ TEST_F(uplinkpc_test, test3)
     // Create Uplink PC
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(32);
-    pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(up_hdl);
+    ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+    ifkh->set_if_handle(up_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(pc_spec, &pc_rsp);
     hal::hal_cfg_db_close();
@@ -297,6 +303,7 @@ TEST_F(uplinkpc_test, test5)
     bool                            is_leak = false;
     int                             num_uplinkifs = 8;
     hal_handle_t                    upif_handles[8];
+    InterfaceKeyHandle              *ifkh = NULL;
 
     pre = hal_test_utils_collect_slab_stats();
 
@@ -326,7 +333,8 @@ TEST_F(uplinkpc_test, test5)
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(500 + num_uplinkifs + 1);
     for (int i = 1; i <= num_uplinkifs; i++) {
-        pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(upif_handles[i-1]);
+        ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+        ifkh->set_if_handle(upif_handles[i-1]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_update(pc_spec, &pc_rsp);
         hal::hal_cfg_db_close();
@@ -337,7 +345,7 @@ TEST_F(uplinkpc_test, test5)
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(500 + num_uplinkifs + 1);
     for (int i = 1; i <= num_uplinkifs; i++) {
-        pc_spec.mutable_if_uplink_pc_info()->clear_member_if_handle();
+        pc_spec.mutable_if_uplink_pc_info()->clear_member_if_key_handle();
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_update(pc_spec, &pc_rsp);
         hal::hal_cfg_db_close();
@@ -348,7 +356,8 @@ TEST_F(uplinkpc_test, test5)
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(500 + num_uplinkifs + 1);
     for (int i = 1; i <= 4; i++) {
-        pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(upif_handles[i-1]);
+        ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+        ifkh->set_if_handle(upif_handles[i-1]);
     }
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(pc_spec, &pc_rsp);
@@ -356,11 +365,12 @@ TEST_F(uplinkpc_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Add other 4 uplinks to PC
-    pc_spec.mutable_if_uplink_pc_info()->clear_member_if_handle();
+    pc_spec.mutable_if_uplink_pc_info()->clear_member_if_key_handle();
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(500 + num_uplinkifs + 1);
     for (int i = 5; i <= 8; i++) {
-        pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(upif_handles[i-1]);
+        ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+        ifkh->set_if_handle(upif_handles[i-1]);
     }
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(pc_spec, &pc_rsp);
@@ -368,18 +378,19 @@ TEST_F(uplinkpc_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete all mbrs
-    pc_spec.mutable_if_uplink_pc_info()->clear_member_if_handle();
+    pc_spec.mutable_if_uplink_pc_info()->clear_member_if_key_handle();
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(pc_spec, &pc_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Add other 4 uplinks to PC
-    pc_spec.mutable_if_uplink_pc_info()->clear_member_if_handle();
+    pc_spec.mutable_if_uplink_pc_info()->clear_member_if_key_handle();
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(500 + num_uplinkifs + 1);
     for (int i = 5; i <= 8; i++) {
-        pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(upif_handles[i-1]);
+        ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+        ifkh->set_if_handle(upif_handles[i-1]);
     }
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(pc_spec, &pc_rsp);
@@ -455,6 +466,7 @@ TEST_F(uplinkpc_test, test6)
     bool                            is_leak = false;
     hal_handle_t                    upif_handles[8];
     NetworkKeyHandle                *nkh = NULL;
+    InterfaceKeyHandle              *ifkh = NULL;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(6);
@@ -520,7 +532,8 @@ TEST_F(uplinkpc_test, test6)
     // Uplink PC Create with 1 mbr
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(600 + num_uplinks + 1);
-    pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(upif_handles[0]);
+    ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+    ifkh->set_if_handle(upif_handles[0]);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(pc_spec, &pc_rsp);
     hal::hal_cfg_db_close();
@@ -530,7 +543,8 @@ TEST_F(uplinkpc_test, test6)
     pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
     pc_spec.mutable_key_or_handle()->set_interface_id(600 + num_uplinks + 1);
     for (int i = 2; i <= num_uplinks; i++) {
-        pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(upif_handles[i-1]);
+        ifkh = pc_spec.mutable_if_uplink_pc_info()->add_member_if_key_handle();
+        ifkh->set_if_handle(upif_handles[i-1]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_update(pc_spec, &pc_rsp);
         hal::hal_cfg_db_close();

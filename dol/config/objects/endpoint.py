@@ -39,7 +39,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.tenant             = segment.tenant
         self.segment            = segment
         self.remote             = False
-        self.segment_hal_handle = segment.hal_handle
+        self.segment_id         = segment.id
         self.tenant_id          = segment.tenant.id
 
         self.is_l4lb_backend = backend
@@ -156,8 +156,8 @@ class EndpointObject(base.ConfigObjectBase):
         endpoint.id = self.id
         endpoint.hal_handle = self.hal_handle
         endpoint.tenant_id = self.tenant_id
-        endpoint.segment_hal_handle = self.segment_hal_handle
-        endpoint.intf_hal_handle = self.intf_hal_handle
+        endpoint.segment_id = self.segment_id
+        endpoint.intf_id = self.intf_id
         endpoint.macaddr = self.macaddr
         endpoint.ipaddrs = self.ipaddrs[:]
         endpoint.ipv6addrs = self.ipv6addrs[:]
@@ -168,7 +168,7 @@ class EndpointObject(base.ConfigObjectBase):
         if not isinstance(other, self.__class__):
             return False
 
-        fields = ["tenant_id", "hal_handle", "segment_hal_handle", "intf_hal_handle",
+        fields = ["tenant_id", "hal_handle", "segment_id", "intf_id",
                   "macaddr", "ipaddrs", "ipv6addrs"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
@@ -201,12 +201,12 @@ class EndpointObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.vrf_key_handle.vrf_id     = self.tenant.id
-        req_spec.key_or_handle.endpoint_key.l2_key.l2segment_key_handle.l2segment_handle = self.segment.hal_handle
-        req_spec.endpoint_attrs.interface_key_handle.if_handle   = self.intf.hal_handle
+        req_spec.key_or_handle.endpoint_key.l2_key.l2segment_key_handle.segment_id = self.segment.id
+        req_spec.endpoint_attrs.interface_key_handle.interface_id   = self.intf.id
         req_spec.key_or_handle.endpoint_key.l2_key.mac_address = self.macaddr.getnum()
         #Interface should be created by now.
-        self.segment_hal_handle     = self.segment.hal_handle
-        self.intf_hal_handle        = self.intf.hal_handle
+        self.segment_id     = self.segment.id
+        self.intf_id        = self.intf.id
 
         if GlobalOptions.classic is False:
             if not self.segment.IsIPV4EpLearnEnabled():
@@ -241,8 +241,8 @@ class EndpointObject(base.ConfigObjectBase):
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):
         self.tenant_id = get_resp.spec.vrf_key_handle.vrf_id
-        self.segment_hal_handle = get_resp.spec.key_or_handle.endpoint_key.l2_key.l2segment_key_handle.l2segment_handle
-        self.intf_hal_handle = get_resp.spec.endpoint_attrs.interface_key_handle.if_handle
+        self.segment_id = get_resp.spec.key_or_handle.endpoint_key.l2_key.l2segment_key_handle.segment_id
+        self.intf_id = get_resp.spec.endpoint_attrs.interface_key_handle.interface_id
         self.macaddr = objects.MacAddressBase(integer=get_resp.spec.key_or_handle.endpoint_key.l2_key.mac_address)
 
         self.ipaddrs = []

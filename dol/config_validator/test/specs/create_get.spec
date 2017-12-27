@@ -1,6 +1,6 @@
 Name: Create_Get
 MaxObjects: 10
-Enabled: True
+Enabled: False
 Steps :
     - step:
         op     : Create

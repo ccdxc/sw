@@ -287,13 +287,13 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
     nwsec_group_t           *sg        = NULL;
     hal_handle_t             sg_handle = 0;
 
-    num_sgs = spec.sg_handle_size();
+    num_sgs = spec.sg_key_handle_size();
 
     HAL_TRACE_DEBUG("pi-network:{}:adding {} no. of sgs", __FUNCTION__,
                     num_sgs);
 
     for (i = 0; i < num_sgs; i++) {
-        sg = nwsec_group_lookup_by_handle(spec.sg_handle(i));
+        sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
         HAL_ASSERT_RETURN(sg != NULL, HAL_RET_INVALID_ARG);
         // Add to aggregated list
         sg_handle = sg->hal_handle;
@@ -803,11 +803,11 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
     utils::dllist_reset(*del_sglist);
     utils::dllist_reset(*aggr_sglist);
 
-    num_sgs = spec.sg_handle_size();
+    num_sgs = spec.sg_key_handle_size();
     HAL_TRACE_DEBUG("pi-network:{}:num_sgs:{}", 
                     __FUNCTION__, num_sgs);
     for (i = 0; i < num_sgs; i++) {
-        sg = nwsec_group_lookup_by_handle(spec.sg_handle(i));
+        sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
         HAL_ASSERT_RETURN(sg != NULL, HAL_RET_INVALID_ARG);
         sg_id = sg->sg_id;
 
@@ -838,7 +838,8 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
         HAL_TRACE_DEBUG("pi-network:{}: Checking for sg: {}", 
                 __FUNCTION__, entry->handle_id);
         for (i = 0; i < num_sgs; i++) {
-            sg_handle = spec.sg_handle(i);
+            auto sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
+            sg_handle = sg->hal_handle;
             HAL_TRACE_DEBUG("{}:grpc sg hdl: {}", __FUNCTION__, sg_handle);
             if (entry->handle_id == sg_handle) {
                 sg_exists = true;

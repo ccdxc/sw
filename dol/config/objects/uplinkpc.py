@@ -33,7 +33,7 @@ class UplinkPcObject(base.ConfigObjectBase):
         self.members = []
         self.ports = []
         self.segment_ids = []
-        self.members_hdls = []
+        self.member_keys = []
 
         cfglogger.info("Creating UplinkPC = %s Port=%d" %\
                        (self.GID(), self.port))
@@ -76,7 +76,7 @@ class UplinkPcObject(base.ConfigObjectBase):
         uplink.native_segment_id = self.native_segment_id
         uplink.mode = self.mode
         uplink.members = self.members[:]
-        uplink.members_hdls = self.members_hdls[:]
+        uplink.member_keys = self.member_keys[:]
         uplink.segment_ids = self.segment_ids[:]
         return uplink
 
@@ -86,7 +86,7 @@ class UplinkPcObject(base.ConfigObjectBase):
             return False
         fields = ["id", "port", "type", "status", "ports", "native_segment",
                   "native_segment_id", "mode", "sriov", "members",
-                  "members_hdls", "segment_ids"]
+                  "member_keys", "segment_ids"]
 
         if not self.CompareObjectFields(other, fields, lgh):
             return False
@@ -136,8 +136,9 @@ class UplinkPcObject(base.ConfigObjectBase):
         if self.native_segment:
             req_spec.if_uplink_pc_info.native_l2segment_id = self.native_segment.id
         for mbr in self.members:
-            req_spec.if_uplink_pc_info.member_if_handle.append(mbr.hal_handle)
-            self.members_hdls.append(mbr.hal_handle)
+            key_handle = req_spec.if_uplink_pc_info.member_if_key_handle.add()
+            key_handle.interface_id = mbr.id
+            self.member_keys.append(mbr.id)
 
         #segments = Store.objects.GetAllByClass(segment.SegmentObject)
         #for seg in segments:
@@ -176,10 +177,9 @@ class UplinkPcObject(base.ConfigObjectBase):
             self.status = get_resp.spec.admin_status
             #self.port = get_resp.spec.if_uplink_pc_info.uplink_pc_num
             self.native_segment_id = get_resp.spec.if_uplink_pc_info.native_l2segment_id
-            get_resp.spec.if_uplink_pc_info.member_if_handle
-            self.members_hdls = []
-            for mbr in get_resp.spec.if_uplink_pc_info.member_if_handle:
-                self.members_hdls.append(mbr)
+            self.member_keys = []
+            for mbr in get_resp.spec.if_uplink_pc_info.member_if_key_handle:
+                self.member_keys.append(mbr)
             #self.segment_ids  = []
             #for segment_id in get_resp.spec.if_uplink_pc_info.l2segment_id:
             #    self.segment_ids.append(segment_id)
@@ -188,7 +188,7 @@ class UplinkPcObject(base.ConfigObjectBase):
             self.port = None
             self.native_segment_id = None
             self.members = []
-            self.members_hdls = []
+            self.member_keys = []
             self.segment_ids = []
 
     def Get(self):

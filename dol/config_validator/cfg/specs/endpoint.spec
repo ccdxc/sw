@@ -1,7 +1,7 @@
 ProtoObject: endpoint_pb2
 Service: Endpoint
-enabled : True
-graphEnabled : True
+enabled : False
+graphEnabled : False
 objects:
     - object :
         name : Endpoint

@@ -148,9 +148,8 @@ message EndpointGetRequestMsg {
 // EndpointGetByInterfaceRequestMsg is used to GET endpoints by interface
 message EndpointGetByInterfaceRequestMsg {
   types.ObjectMeta      meta                 = 1;    // object meta
-  fixed64               interface_handle     = 2;    // interface of interest
-  kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.jsontag) = "vrf_ref"];
-  kh.InterfaceKeyHandle interface_key_handle = 4 [(gogoproto.jsontag) = "interface_ref"];
+  kh.VrfKeyHandle       vrf_key_handle       = 2 [(gogoproto.jsontag) = "vrf_ref"];
+  kh.InterfaceKeyHandle interface_key_handle = 3 [(gogoproto.jsontag) = "interface_ref"];
 }
 
 // EndpointGetAllRequestMsg is used to GET all the endpoints

@@ -563,6 +563,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         return HAL_RET_OOM;
     }
+    auto uplink_if = if_lookup_key_or_handle(spec.pinned_uplink_if_key_handle());
 
     // consume the config
     lif->lif_id              = spec.key_or_handle().lif_id();
@@ -570,7 +571,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->hal_handle          = hal_alloc_handle();
     lif->vlan_strip_en       = spec.vlan_strip_en();
     lif->vlan_insert_en      = spec.vlan_insert_en();
-    lif->pinned_uplink       = spec.pinned_uplink_if_handle();
+    lif->pinned_uplink       = uplink_if ? uplink_if->hal_handle : HAL_HANDLE_INVALID;
     lif->packet_filters.receive_broadcast = spec.packet_filter().
                                             receive_broadcast();
     lif->packet_filters.receive_promiscuous = spec.packet_filter().
@@ -942,14 +943,15 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->vlan_strip_en_changed = true;
         app_ctxt->vlan_strip_en = spec->vlan_strip_en();
     }
+    auto uplink_if = if_lookup_key_or_handle(spec->pinned_uplink_if_key_handle());
+    auto uplink_if_handle = uplink_if ? uplink_if->hal_handle : HAL_HANDLE_INVALID;
 
     // Handle pinned uplink change
-    if (lif->pinned_uplink != spec->pinned_uplink_if_handle()) {
+    if (lif->pinned_uplink != uplink_if_handle) {
         HAL_TRACE_DEBUG("pi-lif:{}:pinned uplink hdl changed {} => {}",
-                        __FUNCTION__, lif->pinned_uplink, 
-                        spec->pinned_uplink_if_handle());
+                        __FUNCTION__, lif->pinned_uplink, uplink_if_handle);
         app_ctxt->pinned_uplink_changed = true;
-        app_ctxt->new_pinned_uplink     = spec->pinned_uplink_if_handle();
+        app_ctxt->new_pinned_uplink     = uplink_if_handle;
     }
 
     if (spec->lif_qstate_map_size() && !lif->qstate_init_done) {
