@@ -686,7 +686,7 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
 int
 pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
                  uint64_t base_addr, uint32_t num_entries, uint32_t entry_size,
-                 uint32_t xlate_addr) {
+                 uint64_t xlate_addr) {
 
     uint32_t i = pvm_last_cq;
     // Initialize the queue in the DOL enviroment
