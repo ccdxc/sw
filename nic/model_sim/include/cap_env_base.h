@@ -67,6 +67,15 @@ protected:
     {
       cap_mod->set_host_mem_cpy(cpy);
     }
+    virtual void save_axi_xn()
+    {
+        cap_mod->save_axi_xn();
+    }
+    virtual axi_info_t * get_next_axi_xn(uint32_t port)
+    {
+        return cap_mod->get_next_axi_xn(port);
+    }
+
 
     virtual ~cap_env_base();
 };

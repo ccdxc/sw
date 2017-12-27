@@ -7,7 +7,7 @@
 #define _CAP_MODEL_BASE_H_
 #include <stdint.h>
 #include <vector>
-
+struct axi_info_t;
 class cap_model_base {
 public:
     cap_model_base() {}
@@ -41,9 +41,10 @@ public:
     virtual void load_debug(void) = 0;
     virtual void step_tmr_wheel_update(unsigned slowfas, unsigned ctime) = 0;
     virtual void step_he(void) = 0;
- 
-    virtual void set_host_mem_cpy(bool cpy) = 0;
 
+    virtual void set_host_mem_cpy(bool cpy) = 0;
+    virtual void save_axi_xn() = 0;
+    virtual axi_info_t * get_next_axi_xn(uint32_t port) = 0;
     virtual ~cap_model_base() {}
 
 };
