@@ -183,7 +183,6 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
         tlscb->is_decrypt_flow = 0;
 
     tlscb->other_fid = spec.other_fid();
-    tlscb->l7_proxy_type = spec.l7_proxy_type();
 
     pd::pd_tlscb_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;

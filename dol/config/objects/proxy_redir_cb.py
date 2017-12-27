@@ -74,6 +74,10 @@ class ProxyrCbObject(base.ConfigObjectBase):
            req_spec.vrf                          = socket.htons(self.vrf)
            req_spec.ip_proto                     = self.ip_proto
 
+           req_spec.handshake_notify             = self.handshake_notify
+           req_spec.dir                          = self.dir
+           req_spec.role                         = self.role
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -106,6 +110,10 @@ class ProxyrCbObject(base.ConfigObjectBase):
             self.dport                        = socket.ntohs(resp_spec.spec.dport)
             self.vrf                          = socket.ntohs(resp_spec.spec.vrf)
             self.ip_proto                     = resp_spec.spec.ip_proto
+
+            self.handshake_notify             = resp_spec.spec.handshake_notify
+            self.dir                          = resp_spec.spec.dir
+            self.role                         = resp_spec.spec.role
 
         return
 

@@ -179,6 +179,9 @@ app_redir_proxyrcb_spec_build(const proxyrcb_t& proxyrcb,
     spec.set_chain_rxq_entry_size_shift(proxyrcb.chain_rxq_entry_size_shift);
     spec.set_chain_rxq_ring_index_select(proxyrcb.chain_rxq_ring_index_select);
     spec.set_proxyrcb_flags(proxyrcb.proxyrcb_flags);
+    spec.set_dir(proxyrcb.dir);
+    spec.set_role(proxyrcb.role);
+    spec.set_rev_cb_id(proxyrcb.rev_cb_id);
 
     if (proxyrcb.af == AF_INET) {
         spec.mutable_ip_sa()->set_v4_addr(proxyrcb.ip_sa.v4_addr);
@@ -201,7 +204,7 @@ app_redir_proxyrcb_spec_build(const proxyrcb_t& proxyrcb,
 /*
  * Incorporate flow_key to the argument proxy redirect control block.
  * The control block itself isn't programmed to HW until 
- * app_redir_proxyrcb_create() or app_redir_proxyrcb_create() is called.
+ * app_redir_proxyrcb_create() is called.
  */     
 hal_ret_t
 app_redir_proxyrcb_flow_key_build(const flow_key_t& flow_key,
@@ -216,6 +219,7 @@ app_redir_proxyrcb_flow_key_build(const flow_key_t& flow_key,
            ((flow_key.flow_type == hal::FLOW_TYPE_V4) ||
             (flow_key.flow_type == hal::FLOW_TYPE_V6)));
 
+    proxyrcb.dir = flow_key.dir;
     proxyrcb.vrf = htons(flow_key.vrf_id);
     proxyrcb.ip_proto = IPPROTO_TCP;
     proxyrcb.sport = htons(flow_key.sport);
@@ -311,15 +315,16 @@ app_redir_proxyccb_spec_build(const proxyccb_t& proxyccb,
 /*
  * Incorporate next service chain's TxQ info to the argument proxy chain
  * control block. The control block itself isn't programmed to HW until
- * app_redir_proxyccb_create() or app_redir_proxyccb_create() is called.
+ * app_redir_proxyccb_create() is called.
  */     
 hal_ret_t
-app_redir_proxyccb_chain_txq_build(const flow_key_t& flow_key,
-                                   proxyccb_t& proxyccb)
+app_redir_proxyccb_chain_txq_build(proxyccb_t& proxyccb,
+                                   uint16_t chain_txq_lif,
+                                   uint8_t chain_txq_qtype,
+                                   uint32_t chain_txq_qid,
+                                   uint8_t chain_txq_ring)
 {
     HAL_TRACE_DEBUG("{} for cb_id {}", __FUNCTION__, proxyccb.cb_id);
-
-    proxyccb.chain_txq_lif = app_redir_proxyc_chain_lif_eval(flow_key);
 
     /*
      * When chain_txq_base is left at zero, PD will automatically fill
@@ -328,15 +333,16 @@ app_redir_proxyccb_chain_txq_build(const flow_key_t& flow_key,
      * {chain_txq_lif, chain_txq_qtype, chain_txq_qid}
      */
     proxyccb.chain_txq_base  = 0;
-    proxyccb.chain_txq_qtype = 0;
-    proxyccb.chain_txq_ring  = 0;
-    proxyccb.chain_txq_qid   = proxyccb.cb_id & PROXYCCB_NUM_ENTRIES_MASK;
+    proxyccb.chain_txq_lif   = chain_txq_lif;
+    proxyccb.chain_txq_qtype = chain_txq_qtype;
+    proxyccb.chain_txq_qid   = chain_txq_qid;
+    proxyccb.chain_txq_ring  = chain_txq_ring;
 
     /*
      * TCP proxy (but not TLS proxy) expects to receive descriptor that has
      * already been adjusted to point to the beginning of the AOL area.
      */
-    if (proxyccb.chain_txq_lif == SERVICE_LIF_TCP_PROXY) {
+    if (chain_txq_lif == SERVICE_LIF_TCP_PROXY) {
         proxyccb.proxyccb_flags |= APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET;
     }
     return HAL_RET_OK;

@@ -27,7 +27,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         print("Configuring proxy for the flow with label: " + self.session.iflow.label)
         if self.session.iflow.label == 'TCP-PROXY' or self.session.iflow.label == 'TCP-PROXY-E2E' or \
-            self.session.iflow.label == 'PROXY-REDIR-DEC' or self.session.iflow.label == 'PROXY-REDIR-ENC':
+            self.session.iflow.label == 'PROXY-REDIR':
             req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 1
@@ -35,11 +35,19 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.proxy_en = True
                 req_spec.alloc_qid = True
             self.session.iflow.PrepareHALRequestSpec(req_spec)
-        elif self.session.iflow.label == 'RAW-REDIR' or self.session.iflow.label == 'RAW-REDIR-MULTI' or \
+        elif self.session.iflow.label == 'RAW-REDIR' or self.session.iflow.label == 'RAW-REDIR-FLOW-MISS' or \
              self.session.iflow.label == 'RAW-REDIR-KNOWN-APPID':
             req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 4
             req_spec.spec.proxy_type = 7
+            if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
+                req_spec.proxy_en = True
+                req_spec.alloc_qid = True
+            self.session.iflow.PrepareHALRequestSpec(req_spec)
+        elif self.session.iflow.label == 'PROXY-REDIR-E2E':
+            req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.key_or_handle.proxy_id = 5
+            req_spec.spec.proxy_type = 9
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
                 req_spec.proxy_en = True
                 req_spec.alloc_qid = True
@@ -84,9 +92,9 @@ class ProxyCbServiceObjectHelper:
     def Configure(self):
         for proxycb in self.proxy_service_list:
             if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY' or \
-                proxycb.session.iflow.label == 'RAW-REDIR' or proxycb.session.iflow.label == 'RAW-REDIR-MULTI' or \
+                proxycb.session.iflow.label == 'RAW-REDIR' or proxycb.session.iflow.label == 'RAW-REDIR-FLOW-MISS' or \
                 proxycb.session.iflow.label == 'RAW-REDIR-KNOWN-APPID' or \
-                proxycb.session.iflow.label == 'PROXY-REDIR-DEC' or proxycb.session.iflow.label == 'PROXY-REDIR-ENC' or \
+                proxycb.session.iflow.label == 'PROXY-REDIR' or proxycb.session.iflow.label == 'PROXY-REDIR-E2E' or \
                 proxycb.session.iflow.label == 'TCP-PROXY-E2E':
                 lst = []
                 lst.append(proxycb)

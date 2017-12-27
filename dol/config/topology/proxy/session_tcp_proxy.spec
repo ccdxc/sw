@@ -33,7 +33,7 @@ entries:
             port : const/23768
 
     - entry:
-        label: raw-redir-multi
+        label: raw-redir-flow-miss
         tracking: False
         timestamp: False
         fte: True
@@ -72,11 +72,12 @@ entries:
             port : const/23764
 
     - entry:
-        label: proxy-redir-enc
+        label: proxy-redir-e2e
         tracking: False
         timestamp: False
+        fte: True
         responder: 
-            port : const/23765
+            port : const/80
         initiator: 
             port : const/23766
 

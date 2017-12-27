@@ -30,8 +30,8 @@ app_redir_rawccb_init(uint32_t cb_id,
 
 hal_ret_t app_redir_proxyrcb_create(const proxyrcb_t& proxyrcb);
 hal_ret_t app_redir_proxyrcb_update(const proxyrcb_t& proxyrcb);
-hal_ret_t app_redir_proxyrcb_flow_key_build(const flow_key_t& flow_key,
-                                            proxyrcb_t& proxyrcb);
+hal_ret_t app_redir_proxyrcb_flow_key_build(proxyrcb_t& proxyrcb,
+                                            const flow_key_t& flow_key);
 static inline void
 app_redir_proxyrcb_init(uint32_t cb_id,
                         proxyrcb_t& proxyrcb)
@@ -42,8 +42,11 @@ app_redir_proxyrcb_init(uint32_t cb_id,
 
 hal_ret_t app_redir_proxyccb_create(const proxyccb_t& proxyccb);
 hal_ret_t app_redir_proxyccb_update(const proxyccb_t& proxyccb);
-hal_ret_t app_redir_proxyccb_chain_txq_build(const flow_key_t& flow_key,
-                                             proxyccb_t& proxyccb);
+hal_ret_t app_redir_proxyccb_chain_txq_build(proxyccb_t& proxyccb,
+                                             uint16_t chain_txq_lif,
+                                             uint8_t chain_txq_qtype,
+                                             uint32_t chain_txq_qid,
+                                             uint8_t chain_txq_ring);
 static inline void
 app_redir_proxyccb_init(uint32_t cb_id,
                         proxyccb_t& proxyccb)
@@ -51,6 +54,7 @@ app_redir_proxyccb_init(uint32_t cb_id,
     memset(&proxyccb, 0, sizeof(proxyccb));
     proxyccb.cb_id = cb_id;
 }
+
 
 } // namespace app_redir
 } // namespace hal

@@ -69,6 +69,7 @@ public:
         app_ctx->redir_flags_            = 0;
         app_ctx->hdr_len_total_          = 0;
         app_ctx->chain_flow_id_          = 0;
+        app_ctx->chain_rev_flow_id_      = 0;
         app_ctx->chain_rev_role_         = hal::FLOW_ROLE_NONE;
         app_ctx->chain_ring_             = 0;
         app_ctx->chain_qtype_            = APP_REDIR_RAWC_QTYPE;
@@ -95,7 +96,12 @@ public:
     void set_chain_pkt_enqueued(bool yesno) { chain_pkt_enqueued_ = yesno; }
 
     app_redir_verdict_t chain_pkt_verdict() const { return chain_pkt_verdict_; }
-    void set_chain_pkt_verdict(app_redir_verdict_t verdict) { chain_pkt_verdict_ = verdict; }
+    void set_chain_pkt_verdict(app_redir_verdict_t verdict) 
+    { 
+        if (chain_pkt_verdict_ != APP_REDIR_VERDICT_BLOCK) {
+            chain_pkt_verdict_ = verdict;
+        }
+    }
 
     bool chain_pkt_verdict_pass(void)
     {
@@ -124,6 +130,9 @@ public:
 
     uint32_t chain_flow_id() const { return chain_flow_id_; }
     void set_chain_flow_id(uint32_t chain_flow_id) { chain_flow_id_ = chain_flow_id; }
+
+    uint32_t chain_rev_flow_id() const { return chain_rev_flow_id_; }
+    void set_chain_rev_flow_id(uint32_t chain_rev_flow_id) { chain_rev_flow_id_ = chain_rev_flow_id; }
 
     hal::flow_role_t chain_rev_role() const { return chain_rev_role_; }
     void set_chain_rev_role(hal::flow_role_t chain_rev_role) { chain_rev_role_ = chain_rev_role; }
@@ -243,6 +252,7 @@ private:
     hal::proxy_flow_info_t          *proxy_flow_info_;
     hal::pd::cpupkt_ctxt_t          *arm_ctx_;
     uint32_t                        chain_flow_id_;
+    uint32_t                        chain_rev_flow_id_;
     hal::flow_role_t                chain_rev_role_;    // rflow role
     uint8_t                         chain_qtype_;
     uint8_t                         chain_ring_;

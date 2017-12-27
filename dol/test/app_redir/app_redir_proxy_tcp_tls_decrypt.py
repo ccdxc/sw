@@ -68,7 +68,7 @@ def TestCaseSetup(tc):
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
 
     tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy
-    tlscb.other_fid = app_redir_shared.proxyr_oper_cb_id(app_redir_shared.proxyr_tls_proxy_dir, id)
+    tlscb.other_fid = 0xffff
     tlscb.l7_proxy_type = tcp_proxy.l7_proxy_type_REDIR 
 
     if tc.module.args.key_size == 16:

@@ -73,8 +73,7 @@ validate_proxyrcb_create (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_PROXYR_CB_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
-    if (spec.key_or_handle().proxyrcb_id() >= 
-             (PROXYRCB_NUM_ENTRIES_MAX * PROXYRCB_NUM_ENTRIES_MAX_MULT)) {
+    if (spec.key_or_handle().proxyrcb_id() >= PROXYRCB_NUM_ENTRIES_MAX) {
         rsp->set_api_status(types::API_STATUS_PROXYR_CB_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -148,6 +147,9 @@ proxyrcb_create (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
     proxyrcb->ip_proto = spec.ip_proto();
 
     proxyrcb->hal_handle = hal_alloc_handle();
+    proxyrcb->dir = spec.dir();
+    proxyrcb->role = spec.role();
+    proxyrcb->rev_cb_id = spec.rev_cb_id();
 
     // allocate all PD resources and finish programming
     pd::pd_proxyrcb_args_init(&pd_proxyrcb_args);
@@ -302,6 +304,9 @@ proxyrcb_get (ProxyrCbGetRequest& req, ProxyrCbGetResponse *rsp)
 
     // fill operational state of this PROXYR CB
     rsp->mutable_status()->set_proxyrcb_handle(proxyrcb->hal_handle);
+    rsp->mutable_status()->set_dir(proxyrcb->dir);
+    rsp->mutable_status()->set_role(proxyrcb->role);
+    rsp->mutable_status()->set_rev_cb_id(proxyrcb->rev_cb_id);
 
     // fill stats of this PROXYR CB
     rsp->set_api_status(types::API_STATUS_OK);

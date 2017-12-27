@@ -282,11 +282,11 @@ tls_api_init(void)
 }
 
 hal_ret_t
-tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid,
-                 types::AppRedirType l7_proxy_type)
+tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    ret = tls_api_createcb(enc_qid, false, dec_qid, l7_proxy_type);
+    ret = tls_api_createcb(enc_qid, false, dec_qid,
+                           proxyccb_tlscb_l7_proxy_type_eval(enc_qid));
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: Failed to create enc flow tlscb, qid: {}, ret: {}", enc_qid, ret);
         return ret;
@@ -296,7 +296,8 @@ tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid,
      * If TLS bypass mode is set, we'll fake both flows as "encrypt", so the bypass barco
      * logic is triggered, as there is no TLS processing to be done anyway.
      */
-    ret = tls_api_createcb(dec_qid, !proxy_tls_bypass_mode, enc_qid, l7_proxy_type);
+    ret = tls_api_createcb(dec_qid, !proxy_tls_bypass_mode, enc_qid,
+                           proxyccb_tlscb_l7_proxy_type_eval(dec_qid));
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: Failed to create dec flow tlscb, qid: {}, ret: {}", dec_qid, ret);
         return ret;

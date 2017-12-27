@@ -59,9 +59,9 @@ proxy_meta_init() {
             {{APP_REDIR_RAWR_QTYPE, RAWRCB_TABLE_ENTRY_MULTIPLE, (uint8_t)log2(RAWRCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_RAWC_QTYPE, RAWCCB_TABLE_ENTRY_MULTIPLE, (uint8_t)log2(RAWCCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_PROXYR_QTYPE, PROXYRCB_TABLE_ENTRY_MULTIPLE, 
-                        (uint8_t)log2(PROXYRCB_NUM_ENTRIES_MAX * PROXYRCB_NUM_ENTRIES_MAX_MULT)},
+                        (uint8_t)log2(PROXYRCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_PROXYC_QTYPE, PROXYCCB_TABLE_ENTRY_MULTIPLE,
-                        (uint8_t)log2(PROXYCCB_NUM_ENTRIES_MAX * PROXYCCB_NUM_ENTRIES_MAX_MULT)}}}};
+                        (uint8_t)log2(PROXYCCB_NUM_ENTRIES_MAX)}}}};
 
     // 128 bytes of P4PT state per connection (e.g. dir) and a total of 2^12 connections
     g_meta[types::PROXY_TYPE_P4PT] =

@@ -27,7 +27,6 @@ using proxyrcb::ProxyrCbGetResponseMsg;
 
 namespace hal {
 
-
 typedef struct proxyrcb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     proxyrcb_id_t         cb_id;
@@ -69,6 +68,9 @@ typedef struct proxyrcb_s {
 
     ht_ctxt_t             ht_ctxt;                  // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;       // hal handle based hash table ctxt
+    proxyrcb_id_t         rev_cb_id;                // cb_id of reverse direction
+    uint8_t               dir;
+    uint8_t               role;
 } __PACK__ proxyrcb_t;
 
 #define HAL_MAX_PROXYRCB_HT_SIZE          1024      // hash table size

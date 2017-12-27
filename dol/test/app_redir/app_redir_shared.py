@@ -44,26 +44,6 @@ proxyccb_num_entries_max  = 4096
 proxyrcb_num_entries_mask = proxyrcb_num_entries_max - 1
 proxyccb_num_entries_mask = proxyccb_num_entries_max - 1
 
-proxyrcb_num_entries_max_mult = 2
-proxyccb_num_entries_max_mult = 2
-
-proxyr_tcp_proxy_dir = 0
-proxyr_tls_proxy_dir = 1
-proxyc_tcp_proxy_dir = proxyr_tcp_proxy_dir
-proxyc_tls_proxy_dir = proxyr_tls_proxy_dir
-
-def proxyr_oper_cb_offset(dir):
-    return (((dir) & 1) * proxyrcb_num_entries_max)
-
-def proxyr_oper_cb_id(dir, cb_id):
-    return proxyr_oper_cb_offset(dir) + cb_id
-
-def proxyc_oper_cb_offset(dir):
-    return (((dir) & 1) * proxyccb_num_entries_max)
-
-def proxyc_oper_cb_id(dir, cb_id):
-    return proxyc_oper_cb_offset(dir) + cb_id
-
 #
 # Build flow key for proxyrcb from tc configs
 #

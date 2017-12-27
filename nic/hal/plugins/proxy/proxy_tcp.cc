@@ -5,6 +5,7 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/proxyrcb.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/pd/common/pd_api.hpp"
@@ -508,7 +509,6 @@ tcp_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-
 void
 tcp_transmit_pkt(unsigned char* pkt, 
                  unsigned int len, 
@@ -516,7 +516,7 @@ tcp_transmit_pkt(unsigned char* pkt,
                  uint16_t dst_lif, 
                  uint16_t src_lif, 
                  hal::flow_direction_t dir, 
-                 uint16_t hw_vlan_id) 
+                 uint16_t hw_vlan_id)
 {
     if (gl_ctx) {
         HAL_TRACE_DEBUG("tcp-proxy: txpkt dir={} src_lif={} hw_vlan_id={}", dir, src_lif, hw_vlan_id);

@@ -32,4 +32,7 @@ dport                           : 0
 vrf                             : 0
 af                              : 0
 ip_proto                        : 0
+handshake_notify                : 0
+dir                             : 0
+role                            : 0
 

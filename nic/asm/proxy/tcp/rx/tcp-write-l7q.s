@@ -71,17 +71,6 @@ tcp_l7q_produce:
     nop
 ring_doorbell:
 
-#if PROXYR_TCP_PROXY_DIR
-    add         r5, k.common_phv_fid, PROXYR_OPER_CB_OFFSET(PROXYR_TCP_PROXY_DIR)
-    CAPRI_DMA_CMD_RING_DOORBELL2(l7_doorbell_dma_cmd, 
-                                 LIF_APP_REDIR,
-                                 APP_REDIR_PROXYR_QTYPE,
-                                 r5,
-                                 0,
-                                 d.{l7q_pidx}.hx, 
-                                 db_data_pid, 
-                                 db_data_index)
-#else
     CAPRI_DMA_CMD_RING_DOORBELL2(l7_doorbell_dma_cmd, 
                                  LIF_APP_REDIR,
                                  APP_REDIR_PROXYR_QTYPE,
@@ -90,7 +79,6 @@ ring_doorbell:
                                  d.{l7q_pidx}.hx, 
                                  db_data_pid, 
                                  db_data_index)
-#endif                                 
     tbladd      d.{l7q_pidx}.hx, 1
     CAPRI_DMA_CMD_STOP_FENCE(l7_doorbell_dma_cmd)
     addi        r7, r0, 1

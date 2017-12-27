@@ -213,15 +213,16 @@ enum WRingType {
 
 // Types of Proxy Service
 enum ProxyType {
-  PROXY_TYPE_NONE          = 0;    
-  PROXY_TYPE_TCP           = 1;    
-  PROXY_TYPE_TLS           = 2;    
-  PROXY_TYPE_IPSEC         = 3;    
-  PROXY_TYPE_GC            = 4;
-  PROXY_TYPE_CPU           = 5;
-  PROXY_TYPE_IPFIX         = 6;
-  PROXY_TYPE_APP_REDIR     = 7;
-  PROXY_TYPE_P4PT          = 8;
+  PROXY_TYPE_NONE               = 0;    
+  PROXY_TYPE_TCP                = 1;    
+  PROXY_TYPE_TLS                = 2;    
+  PROXY_TYPE_IPSEC              = 3;    
+  PROXY_TYPE_GC                 = 4;
+  PROXY_TYPE_CPU                = 5;
+  PROXY_TYPE_IPFIX              = 6;
+  PROXY_TYPE_APP_REDIR          = 7;
+  PROXY_TYPE_P4PT               = 8;
+  PROXY_TYPE_TCP_WITH_APP_REDIR = 9;
 }
 
 // Types of Cryptographic keys

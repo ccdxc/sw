@@ -94,7 +94,6 @@ enum nat_type_t {
 
 // alternate flow key structure
 typedef struct flow_key_s {
-    vrf_id_t             vrf_id;         // vrf id
     uint8_t              flow_type:4;    // one of the flow types defined above
     uint8_t              dir:1;
     vrf_id_t             vrf_id;    // vrf id

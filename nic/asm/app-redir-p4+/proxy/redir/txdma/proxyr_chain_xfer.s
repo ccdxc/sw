@@ -114,7 +114,7 @@ proxyr_s6_chain_xfer:
     phvwri      p.dma_proxyr_hdr_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(pen_proxyr_hdr_v1_flow_id)
     phvwri      p.dma_proxyr_hdr_dma_cmd_phv_end_addr, \
-                CAPRI_PHV_END_OFFSET(pen_proxyr_hdr_v1_redir_miss_pkt_p)
+                CAPRI_PHV_END_OFFSET(pen_proxyr_hdr_v1_end_pad)
     phvwri      p.dma_proxyr_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     
     addi        r_scratch, r0, P4PLUS_CPU_PKT_SZ + \

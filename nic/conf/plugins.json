@@ -247,6 +247,9 @@
             "selector": { "lif": "SERVICE_LIF_TCP_PROXY" },
             "outbound_features": [
                 "pensando.io/proxy:tcp"
+                "pensando.io/app-redir:app-redir",
+                "pensando.io/app-redir:app-redir-appid",
+                "pensando.io/app-redir:app-redir-fini"
             ]
         },
         {

@@ -149,5 +149,44 @@ hal_ret_t proxyccb_get(proxyccb::ProxycCbGetRequest& req,
                      proxyccb::ProxycCbGetResponse *rsp);
 }    // namespace hal
 
+/*
+ * A given tcpcb will be enabled for L7 redirect if there's a corresponding
+ * proxy chain CB which forwards to SERVICE_LIF_TLS_PROXY. In other words,
+ * the packet flow is intended to progress as follows:
+ *  TCP proxy -> app_redir (proxyrcb) -> ARM -> app_redir (proxyccb) -> TLS proxy
+ */
+static inline types::AppRedirType
+proxyccb_tcpcb_l7_proxy_type_eval(uint32_t flow_id)
+{
+    const proxyccb_t *proxyccb = find_proxyccb_by_id(flow_id);
+
+    if (proxyccb && (proxyccb->chain_txq_lif == SERVICE_LIF_TLS_PROXY)) {
+        HAL_TRACE_DEBUG("{} enable TCPCB {} for app_redir", __FUNCTION__, flow_id);
+        return types::APP_REDIR_TYPE_REDIRECT;
+    }
+
+    return types::APP_REDIR_TYPE_NONE;
+}
+
+
+/*
+ * A given tlscb will be enabled for L7 redirect if there's a corresponding
+ * proxy chain CB which forwards to SERVICE_LIF_TCP_PROXY. In other words,
+ * the packet flow is intended to progress as follows:
+ *  TLS proxy -> app_redir (proxyrcb) -> ARM -> app_redir (proxyccb) -> TCP proxy
+ */
+static inline types::AppRedirType
+proxyccb_tlscb_l7_proxy_type_eval(uint32_t flow_id)
+{
+    const proxyccb_t *proxyccb = find_proxyccb_by_id(flow_id);
+
+    if (proxyccb && (proxyccb->chain_txq_lif == SERVICE_LIF_TCP_PROXY)) {
+        HAL_TRACE_DEBUG("{} enable TLSCB {} for app_redir", __FUNCTION__, flow_id);
+        return types::APP_REDIR_TYPE_REDIRECT;
+    }
+
+    return types::APP_REDIR_TYPE_NONE;
+}
+
 #endif    // __PROXYCCB_HPP__
 

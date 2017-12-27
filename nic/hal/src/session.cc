@@ -255,7 +255,6 @@ extract_flow_key_from_spec(vrf_id_t tid,
     if (flow_spec_key.has_l2_key()) {
         key->flow_type = hal::FLOW_TYPE_L2;
         key->l2seg_id = flow_spec_key.l2_key().l2_segment_id();
-        key->vrf_id = tid;
         key->ether_type = flow_spec_key.l2_key().ether_type();
         MAC_UINT64_TO_ADDR(key->smac, flow_spec_key.l2_key().smac());
         MAC_UINT64_TO_ADDR(key->dmac, flow_spec_key.l2_key().dmac());
