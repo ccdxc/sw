@@ -5,6 +5,7 @@
 #include "nic/hal/src/tlscb.hpp"
 #include "nic/hal/lkl/lklshim_tls.hpp"
 #include "nic/hal/src/crypto_keys.hpp"
+#include "nic/hal/src/proxyccb.hpp"
 
 namespace hal {
 namespace tls {
@@ -144,6 +145,7 @@ tls_api_update_cb(uint32_t id,
     HAL_TRACE_DEBUG("tls: got serq ci {}", get_resp.spec().serq_ci());
     spec.set_serq_ci(get_resp.spec().serq_ci());
     spec.set_serq_pi(get_resp.spec().serq_pi());
+    spec.set_l7_proxy_type(get_resp.spec().l7_proxy_type());
 
     HAL_TRACE_DEBUG("tls: updating TCPCB: id: {}, key_index: {}, command: {}, salt: {}, iv: {}, is_decrypt: {}",
                      id, key_index, command, salt, explicit_iv, is_decrypt_flow);

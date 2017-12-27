@@ -95,7 +95,7 @@ appid_exec(fte::ctx_t& ctx)
       session_state = (appid_info_t*)ctx.feature_session_state();
         if(!session_state) {
           HAL_TRACE_DEBUG("appid state not initialized, skipping appid scanning");
-          if(ctx.flow_miss()) {
+          if(ctx.flow_miss() || ctx.tcp_proxy_pipeline()) {
               ctx.set_feature_status(ret);
               return fte::PIPELINE_CONTINUE;
           } else {

@@ -930,7 +930,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
     app_redir_ctx_t* app_ctx = app_redir_ctx(*this, false);
-    bool app_redir = app_ctx? app_ctx->redir_policy_applic() : false;
+    bool app_redir = app_ctx? app_ctx->redir_policy_applic() && !app_ctx->tcp_tls_proxy_flow(): false;
     if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() &&
        !app_redir) {
         queue_txpkt(pkt_, pkt_len_);

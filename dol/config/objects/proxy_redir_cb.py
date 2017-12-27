@@ -74,9 +74,9 @@ class ProxyrCbObject(base.ConfigObjectBase):
            req_spec.vrf                          = socket.htons(self.vrf)
            req_spec.ip_proto                     = self.ip_proto
 
-           req_spec.handshake_notify             = self.handshake_notify
            req_spec.dir                          = self.dir
            req_spec.role                         = self.role
+           req_spec.rev_cb_id                    = self.rev_cb_id
 
         return
 
@@ -111,9 +111,9 @@ class ProxyrCbObject(base.ConfigObjectBase):
             self.vrf                          = socket.ntohs(resp_spec.spec.vrf)
             self.ip_proto                     = resp_spec.spec.ip_proto
 
-            self.handshake_notify             = resp_spec.spec.handshake_notify
             self.dir                          = resp_spec.spec.dir
             self.role                         = resp_spec.spec.role
+            self.rev_cb_id                    = resp_spec.spec.rev_cb_id
 
         return
 

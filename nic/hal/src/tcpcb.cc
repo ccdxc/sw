@@ -199,6 +199,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->source_lif = spec.source_lif();
     tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->header_len = spec.header_len();
+    tcpcb->l7_proxy_type = spec.l7_proxy_type();
     tcpcb->rto = spec.rto();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));

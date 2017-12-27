@@ -9,6 +9,7 @@
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/tls/tls_api.hpp"
 #include "nic/hal/src/proxyrcb.hpp"
+#include "nic/hal/src/proxyccb.hpp"
 
 extern "C" {
 #include "nic/third-party/lkl/export/include/lkl.h"

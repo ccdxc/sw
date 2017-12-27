@@ -286,6 +286,8 @@ p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool de
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S1_T0_READ_TLS_ST1_7);
     
     if(!del) {
+        data.u.read_tls_stg1_7_d.other_fid = htons(tlscb_pd->tlscb->other_fid);
+        HAL_TRACE_DEBUG("other fid = 0x{0:x}", data.u.read_tls_stg1_7_d.other_fid);
         // Get L7Q address
         wring_hw_id_t  q_base;
         uint32_t proxyrcb_id = tlscb_pd->tlscb->cb_id;

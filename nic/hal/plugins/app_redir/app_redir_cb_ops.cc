@@ -207,8 +207,8 @@ app_redir_proxyrcb_spec_build(const proxyrcb_t& proxyrcb,
  * app_redir_proxyrcb_create() is called.
  */     
 hal_ret_t
-app_redir_proxyrcb_flow_key_build(const flow_key_t& flow_key,
-                                  proxyrcb_t& proxyrcb)
+app_redir_proxyrcb_flow_key_build(proxyrcb_t& proxyrcb,
+                                  const flow_key_t& flow_key)
 {
     /*
      * Currently the only type of proxy supported by app redir

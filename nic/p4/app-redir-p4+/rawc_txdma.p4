@@ -203,24 +203,6 @@ header_type common_global_phv_t {
     }
 }
 
-header_type dma_phv_pad_448_t {
-    fields {
-        dma_pad                         : 448;    
-    }    
-}
-
-header_type dma_phv_pad_384_t {
-    fields {
-        dma_pad                         : 384;
-    }    
-}
-
-header_type dma_phv_pad_128_t {
-    fields {
-        dma_pad                         : 128;
-    }    
-}
-
 /*
  * to_stage PHV definitions
  */
@@ -322,13 +304,11 @@ metadata ring_entry_t                   chain_txq_desc_addr;
 @pragma dont_trim
 metadata doorbell_data_raw_t            chain_txq_db_data; 
 
-@pragma dont_trim
-metadata dma_phv_pad_384_t              dma_phv_pad_384_t;
-
 /*
  * DMA descriptors for injecting packet data to P4
  */
 @pragma dont_trim
+@pragma pa_align 512
 metadata dma_cmd_phv2pkt_t              dma_intr_global;
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t              dma_intr_txdma;
@@ -346,9 +326,6 @@ metadata dma_cmd_mem2pkt_t              dma_pkt2;
 metadata dma_cmd_phv2mem_t              dma_chain;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t              dma_doorbell;
-
-@pragma dont_trim
-metadata dma_phv_pad_128_t              dma_pad_128;
 
 
 

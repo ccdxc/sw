@@ -117,23 +117,13 @@ entries:
             port : const/46624
 
     - entry:
-        label: proxy-redir-dec
+        label: proxy-redir
         tracking: False
         timestamp: False
         responder: 
             port : const/23763
         initiator: 
             port : const/23764
-
-    - entry:
-        label: proxy-redir-e2e
-        tracking: False
-        timestamp: False
-        fte: True
-        responder: 
-            port : const/80
-        initiator: 
-            port : const/23766
 
     - entry:
         label: networking

@@ -14,23 +14,10 @@ namespace app_redir {
  * Consideration for TCP/TLS during proxy flow creation
  */
 typedef enum {
-    PROXY_FLOW_IGNORE_TCP_TLS,
-    PROXY_FLOW_CONSIDER_TCP_TLS
-} proxy_flow_tcp_tls_consider_t;
+    PROXY_FLOW_TYPE_APP_REDIR,
+    PROXY_FLOW_TYPE_INCLUDE_TCP
+} proxy_flow_type_include_t;
 
-
-/*
- * TODO: determine whether the operational flow key should
- * be pre or post rewrite.
- */
-#define APP_REDIR_OPER_FLOW_KEY_PRE_REWRITE     1
-
-const flow_key_t&
-app_redir_oper_flow_key_get(fte::ctx_t& ctx)
-{
-    return APP_REDIR_OPER_FLOW_KEY_PRE_REWRITE ? ctx.key() :
-                                                 ctx.get_key(ctx.role());
-}
 
 
 /*
@@ -149,22 +136,20 @@ app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
      * Also, we will have created CBs for both initiator/responder roles
      * in the first invocation.
      */
-    if (!ctx.pkt() || (ctx.role() ==  hal::FLOW_ROLE_RESPONDER)) {
-        goto done;
+    if (ctx.pkt() && (ctx.role() ==  hal::FLOW_ROLE_INITIATOR)) {
+
+        ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_flow_id());
+        if (ret == HAL_RET_OK) {
+            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_flow_id());
+        }
+        if (ret == HAL_RET_OK) {
+            ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_rev_flow_id());
+        }
+        if (ret == HAL_RET_OK) {
+            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_rev_flow_id());
+        }
     }
 
-    ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_flow_id());
-    if (ret == HAL_RET_OK) {
-        ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_flow_id());
-    }
-    if (ret == HAL_RET_OK) {
-        ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_rev_flow_id());
-    }
-    if (ret == HAL_RET_OK) {
-        ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_rev_flow_id());
-    }
-
-done:
     return app_redir_feature_status_set(ctx, ret);
 }
 
@@ -178,7 +163,7 @@ _app_redir_proxyrcb_create(fte::ctx_t& ctx,
                            hal::flow_role_t role,
                            uint32_t rev_cb_id)
 {
-    const flow_key_t&   flow_key = app_redir_oper_flow_key_get(ctx, role);
+    const flow_key_t&   flow_key = ctx.get_key(role);
     proxyrcb_t          proxyrcb;
     hal_ret_t           ret;
 
@@ -191,7 +176,6 @@ _app_redir_proxyrcb_create(fte::ctx_t& ctx,
      */
     app_redir_proxyrcb_init(cb_id, proxyrcb);
     proxyrcb.chain_rxq_ring_index_select = fte::fte_id();
-    proxyrcb.handshake_notify = &tcp_handshake_notify;
     proxyrcb.role = role;
     proxyrcb.rev_cb_id = rev_cb_id;
     ret = app_redir_proxyrcb_flow_key_build(proxyrcb, flow_key);
@@ -246,86 +230,85 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
     /*
      * DOL infra creates CBs thru different means so no-op here in that case.
      * Also, we will have created CBs for both initiator/responder roles
-     * in the first invocation.
+     * in the first invocation (tcp_exec_trigger_connection() depends on
+     * our CBs for setting its redirect configurations).
      */
-    if (!ctx.pkt() || (ctx.role() ==  hal::FLOW_ROLE_RESPONDER)) {
-        goto done;
+    if (ctx.pkt() && (ctx.role() ==  hal::FLOW_ROLE_INITIATOR)) {
+        const flow_key_t& flow_key = ctx.key();
+
+        if (flow_key.dir == FLOW_DIR_FROM_ENIC) {
+
+            /*
+             * initiator host-to-network: SYN, ACK
+             *   TLS: chain_flow_id will be encrypt flow, 
+             *        chain_rev_flow_id will be decrypt flow
+             *   TCP: chain_flow_id will have reverse tuple (for sending
+             *           SYNACK to to host)
+             *        chain_rev_flow_id will have original tuple (for sending 
+             *           SYN to network)
+             *   tcpcb[chain_flow_id] -> proxyrcb[chain_flow_id] -> ARQ ->
+             *         proxyccb[chain_flow_id] -> tlscb[chain_flow_id] -> 
+             *        tcpcb[chain_rev_flow_id] -> network
+             * responder network-to-host: SYNACK
+             *   tcpcb[chain_rev_flow_id] -> tlscb[chain_rev_flow_id] -> 
+             *         proxyrcb[chain_rev_flow_id] -> ARQ -> 
+             *         proxyccb[chain_rev_flow_id] -> tcpcb[chain_flow_id] -> host
+             */
+            ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_flow_id(),
+                                             hal::FLOW_ROLE_INITIATOR,
+                                             redir_ctx.chain_rev_flow_id());
+            if (ret == HAL_RET_OK) {
+                ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_flow_id(),
+                           SERVICE_LIF_TLS_PROXY, 0, redir_ctx.chain_flow_id(), 0);
+            }
+            if (ret == HAL_RET_OK) {
+                ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_rev_flow_id(),
+                                                 hal::FLOW_ROLE_RESPONDER,
+                                                 redir_ctx.chain_flow_id());
+            }
+            if (ret == HAL_RET_OK) {
+                ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_rev_flow_id(),
+                           SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_flow_id(), 0);
+            }
+
+        } else {
+
+            /*
+             * initiator network-to-host: SYN, ACK 
+             *   TLS: chain_flow_id will be decrypt flow, 
+             *        chain_rev_flow_id will be encrypt flow
+             *   TCP: chain_flow_id will have reverse tuple (for sending
+             *           SYNACK to to network)
+             *        chain_rev_flow_id will have original tuple (for sending 
+             *           SYN to host)
+             *   tcpcb[chain_flow_id] -> tlscb[chain_flow_id] -> 
+             *         proxyrcb[chain_flow_id] -> ARQ -> 
+             *         proxyccb[chain_flow_id] -> tcpcb[chain_rev_flow_id] -> host
+             * responder host-to-network: SYNACK
+             *   tcpcb[chain_rev_flow_id] -> proxyrcb[chain_rev_flow_id] -> ARQ ->
+             *         proxyccb[chain_rev_flow_id] -> tlscb[chain_rev_flow_id] -> 
+             *        tcpcb[chain_flow_id] -> network
+             */
+            ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_flow_id(),
+                                             hal::FLOW_ROLE_INITIATOR,
+                                             redir_ctx.chain_rev_flow_id());
+            if (ret == HAL_RET_OK) {
+
+                ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_flow_id(), 
+                           SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_rev_flow_id(), 0);
+            }
+            if (ret == HAL_RET_OK) {
+                ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_rev_flow_id(),
+                                                 hal::FLOW_ROLE_RESPONDER,
+                                                 redir_ctx.chain_flow_id());
+            }
+            if (ret == HAL_RET_OK) {
+                ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_rev_flow_id(),
+                           SERVICE_LIF_TLS_PROXY, 0, redir_ctx.chain_rev_flow_id(), 0);
+            }
+        }
     }
 
-    const flow_key_t&   flow_key = app_redir_oper_flow_key_get(ctx, ctx.role());
-    if (flow_key.dir == FLOW_DIR_FROM_ENIC) {
-
-        /*
-         * initiator host-to-network: SYN, ACK
-         *   TLS: chain_flow_id will be encrypt flow, 
-         *        chain_rev_flow_id will be decrypt flow
-         *   TCP: chain_flow_id will have reverse tuple (for sending
-         *           SYNACK to to host)
-         *        chain_rev_flow_id will have original tuple (for sending 
-         *           SYN to network)
-         *   tcpcb[chain_flow_id] -> proxyrcb[chain_flow_id] -> ARQ ->
-         *         proxyccb[chain_flow_id] -> tlscb[chain_flow_id] -> 
-         *        tcpcb[chain_rev_flow_id] -> network
-         * responder network-to-host: SYNACK
-         *   tcpcb[chain_rev_flow_id] -> tlscb[chain_rev_flow_id] -> 
-         *         proxyrcb[chain_rev_flow_id] -> ARQ -> 
-         *         proxyccb[chain_rev_flow_id] -> tcpcb[chain_flow_id] -> host
-         */
-        ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_flow_id(),
-                                         hal::FLOW_ROLE_INITIATOR,
-                                         redir_ctx.chain_rev_flow_id());
-        if (ret == HAL_RET_OK) {
-            ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_flow_id(),
-                       SERVICE_LIF_TLS_PROXY, 0, redir_ctx.chain_flow_id(), 0);
-        }
-        if (ret == HAL_RET_OK) {
-            ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_rev_flow_id(),
-                                             hal::FLOW_ROLE_RESPONDER,
-                                             redir_ctx.chain_flow_id());
-        }
-        if (ret == HAL_RET_OK) {
-            ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_rev_flow_id(),
-                       SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_flow_id(), 0);
-        }
-
-    } else {
-
-        /*
-         * initiator network-to-host: SYN, ACK 
-         *   TLS: chain_flow_id will be decrypt flow, 
-         *        chain_rev_flow_id will be encrypt flow
-         *   TCP: chain_flow_id will have reverse tuple (for sending
-         *           SYNACK to to network)
-         *        chain_rev_flow_id will have original tuple (for sending 
-         *           SYN to host)
-         *   tcpcb[chain_flow_id] -> tlscb[chain_flow_id] -> 
-         *         proxyrcb[chain_flow_id] -> ARQ -> 
-         *         proxyccb[chain_flow_id] -> tcpcb[chain_rev_flow_id] -> host
-         * responder host-to-network: SYNACK
-         *   tcpcb[chain_rev_flow_id] -> proxyrcb[chain_rev_flow_id] -> ARQ ->
-         *         proxyccb[chain_rev_flow_id] -> tlscb[chain_rev_flow_id] -> 
-         *        tcpcb[chain_flow_id] -> network
-         */
-        ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_flow_id(),
-                                         hal::FLOW_ROLE_INITIATOR,
-                                         redir_ctx.chain_rev_flow_id());
-        if (ret == HAL_RET_OK) {
-
-            ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_flow_id(), 
-                       SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_rev_flow_id(), 0);
-        }
-        if (ret == HAL_RET_OK) {
-            ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_rev_flow_id(),
-                                             hal::FLOW_ROLE_RESPONDER,
-                                             redir_ctx.chain_flow_id());
-        }
-        if (ret == HAL_RET_OK) {
-            ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_rev_flow_id(),
-                       SERVICE_LIF_TLS_PROXY, 0, redir_ctx.chain_rev_flow_id(), 0);
-        }
-    }
-
-done:
     return app_redir_feature_status_set(ctx, ret);
 }
 
@@ -464,7 +447,7 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
 {
     app_redir_ctx_t&                redir_ctx = app_redir_ctxref(ctx);
     pen_app_redir_header_v1_full_t& redir_miss_hdr = redir_ctx.redir_miss_hdr();
-    const flow_key_t&               flow_key = app_redir_oper_flow_key_get(ctx);
+    const flow_key_t&               flow_key = ctx.key();
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     size_t                          hdr_len = 0;
     hal_ret_t                       ret = HAL_RET_OK;
@@ -549,7 +532,6 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
     app_redir_ctx_t&                redir_ctx = app_redir_ctxref(ctx);
     pen_app_redir_header_v1_full_t  *app_hdr;
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
-    flow_key_t                      flow_key = {0};
     size_t                          pkt_len;
     size_t                          hdr_len;
     uint16_t                        h_proto;
@@ -611,7 +593,8 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
     case PEN_PROXY_REDIR_V1_FORMAT:
         flags = ntohs(app_hdr->proxy.flags);
         HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
-                        ntohl(app_hdr->proxy.flow_id), flags, app_hdr->proxy.vrf);
+                        ntohl(app_hdr->proxy.flow_id), flags, 
+                        ntohs(app_hdr->proxy.vrf));
         if ((pkt_len < PEN_PROXY_REDIR_HEADER_V1_FULL_SIZE) ||
             ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
                         PEN_PROXY_REDIR_HEADER_V1_SIZE)) {
@@ -628,8 +611,8 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
          * flow key on FTE's behalf.
          */
         if (ctx.arm_lifq().lif == SERVICE_LIF_APP_REDIR) {
-            app_redir_flow_key_build_from_redir_hdr(ctx, cpu_rxhdr->lkp_dir,
-                                                    *app_hdr);
+            app_redir_flow_key_build_from_redir_hdr(ctx, 
+                           (hal::flow_direction_t)cpu_rxhdr->lkp_dir, *app_hdr);
         }
 
         redir_ctx.set_chain_qtype(APP_REDIR_PROXYC_QTYPE);
@@ -665,9 +648,7 @@ app_redir_pkt(fte::ctx_t& ctx)
      * Skip packet Rx in TCP proxy pipeline which was not
      * marked as applicable.
      */
-    if ((ctx.arm_lifq().lif == SERVICE_LIF_TCP_PROXY) &&
-        !redir_ctx.redir_policy_applic()) {
-
+    if (ctx.tcp_proxy_pipeline() && !redir_ctx.redir_policy_applic()) {
         return nullptr;
     }
 
@@ -684,16 +665,13 @@ size_t
 app_redir_pkt_len(fte::ctx_t& ctx)
 {
     app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
-    const fte::cpu_rxhdr_t  *cpu_rxhdr;
     size_t                  pkt_len;
 
     /*
      * Skip packet Rx in TCP proxy pipeline which was not
      * marked as applicable.
      */
-    if ((ctx.arm_lifq().lif == SERVICE_LIF_TCP_PROXY) &&
-        !redir_ctx.redir_policy_applic()) {
-
+    if (ctx.tcp_proxy_pipeline() && !redir_ctx.redir_policy_applic()) {
         return 0;
     }
 
@@ -709,29 +687,31 @@ app_redir_pkt_len(fte::ctx_t& ctx)
 
 
 /*
+ * TCP/TLS proxy handle their own nflow/hflow 3whs control packet Tx
+ * so we should not attempt any Tx of our own.
+ */
+static void
+app_redir_tcp_control_tx_block(fte::ctx_t& ctx)
+{
+    app_redir_ctx_t&    redir_ctx = app_redir_ctxref(ctx);
+
+    if ((ctx.flow_miss() && redir_ctx.tcp_tls_proxy_flow()) ||
+        ctx.tcp_proxy_pipeline()) {
+
+        app_redir_pkt_verdict_set(ctx, APP_REDIR_VERDICT_BLOCK);
+    }
+}
+
+
+/*
  * Forward redirected packet to application or simply loop it back (DOL case).
  */
 static hal_ret_t
 app_redir_pkt_process(fte::ctx_t& ctx)
 {
-    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
-    hal_ret_t               ret;
+    app_redir_tcp_control_tx_block(ctx);
 
-    ret = app_redir_app_hdr_validate(ctx);
-    if (ret == HAL_RET_OK) {
-
-        /*
-         * TCP/TLS proxy handle their own nflow/hflow 3whs packet Tx
-         * so we should not attempt any Tx of our own.
-         */
-        if ((ctx.flow_miss() && redir_ctx.tcp_tls_proxy_flow()) ||
-            (ctx.arm_lifq().lif == SERVICE_LIF_TCP_PROXY)) {
-
-            redir_ctx.set_chain_pkt_verdict(APP_REDIR_VERDICT_BLOCK);
-        }
-    }
-
-    return ret;
+    return app_redir_app_hdr_validate(ctx);
 }
 
 
@@ -741,27 +721,37 @@ app_redir_pkt_process(fte::ctx_t& ctx)
 static proxy_flow_info_t *
 app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
                                flow_key_t& flow_key,
-                               proxy_flow_tcp_tls_consider_t tcp_tls_consider)
+                               proxy_flow_type_include_t flow_type_include)
 {
     app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     proxy_flow_info_t       *pfi;
+    types::ProxyType        type;
 
     pfi = redir_ctx.proxy_flow_info() ?
           redir_ctx.proxy_flow_info() :
           proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
 
-    if (!pfi && (tcp_tls_consider == PROXY_FLOW_CONSIDER_TCP_TLS)) {
+    if (!pfi) {
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP,
+                                  &flow_key);
+    }
+
+    if (!pfi && (flow_type_include == PROXY_FLOW_TYPE_INCLUDE_TCP)) {
 
         /*
          * See if flow was configured as TCP/TLS proxy flow
          */
         pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, &flow_key);
-        if (pfi) {
-            redir_ctx.set_tcp_tls_proxy_flow(true);
-        }
     }
 
-    if (!pfi) {
+    if (pfi) {
+        type = pfi->proxy->type;
+        HAL_TRACE_DEBUG("app_redir proxy flow type {}", type);
+
+        redir_ctx.set_tcp_tls_proxy_flow((type == types::PROXY_TYPE_TCP) ||
+                                         (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP));
+
+    } else {
         HAL_TRACE_DEBUG("app_redir is not applicable for the flow");
     }
     return pfi;
@@ -775,7 +765,7 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
 static proxy_flow_info_t *
 app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
                               flow_key_t& flow_key,
-                              proxy_flow_tcp_tls_consider_t tcp_tls_consider)
+                              proxy_flow_type_include_t flow_type_include)
 {
     app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     proxy_flow_info_t       *pfi;
@@ -783,7 +773,7 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
     flow_key_t              rev_flow_key;
     hal_ret_t               ret = HAL_RET_OK;
 
-    pfi = app_redir_proxy_flow_info_find(ctx, flow_key, tcp_tls_consider);
+    pfi = app_redir_proxy_flow_info_find(ctx, flow_key, flow_type_include);
     if (!pfi) {
 
         /*
@@ -801,7 +791,7 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
             rev_flow_key = ctx.get_key(redir_ctx.chain_rev_role());
             rev_flow_key.dir = 0;
             rpfi = app_redir_proxy_flow_info_find(ctx, rev_flow_key,
-                                                  tcp_tls_consider);
+                                                  flow_type_include);
             if (!rpfi) {
                 HAL_TRACE_DEBUG("app_redir existing_session for rev_role {} "
                                 "not found", redir_ctx.chain_rev_role());
@@ -882,7 +872,7 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
  */
 static hal_ret_t
 app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
-                                 proxy_flow_tcp_tls_consider_t tcp_tls_consider)
+                                 proxy_flow_type_include_t flow_type_include)
 {
     flow_key_t              flow_key;
     proxy_flow_info_t       *pfi;
@@ -893,7 +883,7 @@ app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
      */
     flow_key = ctx.key();
     flow_key.dir = 0;
-    pfi = app_redir_proxy_flow_info_get(ctx, flow_key, tcp_tls_consider);
+    pfi = app_redir_proxy_flow_info_get(ctx, flow_key, flow_type_include);
     if (pfi) {
         ret = app_redir_flow_fwding_update(ctx, pfi, flow_key);
     }
@@ -934,7 +924,7 @@ app_redir_policy_applic_set(fte::ctx_t& ctx)
      */
     if (ctx.pkt() && ctx.flow_miss()) {
 
-        app_redir_proxy_flow_info_update(ctx, PROXY_FLOW_CONSIDER_TCP_TLS);
+        app_redir_proxy_flow_info_update(ctx, PROXY_FLOW_TYPE_INCLUDE_TCP);
 
         /*
          * Insert app redirect header for the flow miss case
@@ -958,17 +948,20 @@ app_redir_policy_applic_set(fte::ctx_t& ctx)
 static hal_ret_t
 app_redir_tcp_pipeline_process(fte::ctx_t& ctx)
 {
-    app_redir_ctx_t&    redir_ctx = app_redir_ctxref(ctx);
-    const cpu_rxhdr_t   *cpu_rxhdr = ctx.cpu_rxhdr();
-    const proxyrcb_t    *proxyrcb = find_proxyrcb_by_id(cpu_rxhdr->qid);
-    hal_ret_t           ret = HAL_RET_OK;
-    uint8_t             tcp_flags;
+    app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
+    const fte::cpu_rxhdr_t  *cpu_rxhdr = ctx.cpu_rxhdr();
+    const proxyrcb_t        *proxyrcb;
+    hal_ret_t               ret = HAL_RET_OK;
+    uint32_t                flow_id;
+    uint8_t                 tcp_flags;
 
     /*
      * When Rx from the TCP proxy LIF, we expect to see a SYNACK or an ACK.
      * The SYNACK should come from the responder flow (which is the hflow)
      * while the ACK is from the initiator flow (which is the nflow).
      */
+    flow_id = cpu_rxhdr->qid;
+    proxyrcb = find_proxyrcb_by_id(flow_id);
     if (proxyrcb) {
         tcp_flags = cpu_rxhdr->tcp_flags;
         HAL_TRACE_DEBUG("{} dir {} role {} cb_id {} rev_cb_id {} tcp_flags 0x{:x}",
@@ -978,6 +971,12 @@ app_redir_tcp_pipeline_process(fte::ctx_t& ctx)
 
         case hal::FLOW_ROLE_INITIATOR:
             if ((tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) == TCP_FLAG_ACK) {
+
+                /*
+                 * flow_id for storing into L7 header will consistently
+                 * be the hflow which is the responder flow_id.
+                 */
+                flow_id = proxyrcb->rev_cb_id;
                 redir_ctx.set_redir_policy_applic(true);
             }
             break;
@@ -996,11 +995,14 @@ app_redir_tcp_pipeline_process(fte::ctx_t& ctx)
 
 
         if (redir_ctx.redir_policy_applic()) {
-            redir_ctx.set_chain_flow_id(cpu_rxhdr->qid);
+            HAL_TRACE_DEBUG("{} redir_policy_applic flow_id {}",
+                            __FUNCTION__, flow_id);
+
+            redir_ctx.set_chain_flow_id(flow_id);
+            ctx.set_role((hal::flow_role_t)proxyrcb->role);
             app_redir_flow_key_build_from_proxyrcb(ctx, *proxyrcb);
             ret = app_redir_miss_hdr_insert(ctx, PEN_PROXY_REDIR_V1_FORMAT);
             if (ret == HAL_RET_OK) {
-                ctx.set_role(proxyrcb->role);
                 ret = app_redir_pkt_process(ctx);
             }
         }
@@ -1020,7 +1022,8 @@ app_redir_miss_exec(fte::ctx_t& ctx)
      * Evaluate initial flow ID
      */
     app_redir_rev_role_set(ctx);
-    app_redir_proxy_flow_info_update(ctx, PROXY_FLOW_IGNORE_TCP_TLS);
+    app_redir_proxy_flow_info_update(ctx, PROXY_FLOW_TYPE_APP_REDIR);
+    app_redir_tcp_control_tx_block(ctx);
 
     return app_redir_pipeline_action(ctx);
 }
@@ -1040,8 +1043,8 @@ app_redir_exec(fte::ctx_t& ctx)
     /*
      * Handle TCP/TLS proxy handshake
      */
-    if (ctx.arm_lifq().lif == SERVICE_LIF_TCP_PROXY) {
-        ret = app_redir_tcp_pipeline_process(ctx);
+    if (ctx.tcp_proxy_pipeline()) {
+        app_redir_tcp_pipeline_process(ctx);
 
     } else {
         redir_ctx.set_chain_flow_id(ctx.cpu_rxhdr()->qid);
@@ -1080,7 +1083,6 @@ app_redir_exec_fini(fte::ctx_t& ctx)
                 ret = redir_ctx.tcp_tls_proxy_flow() ?
                       app_redir_proxyrcb_proxyccb_create(ctx) :
                       app_redir_rawrcb_rawccb_create(ctx);
-                }
             }
         }
 

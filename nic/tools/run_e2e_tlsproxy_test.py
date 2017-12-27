@@ -260,6 +260,10 @@ def main():
     if status == 0:
         time.sleep(5)
         status = run_test(2, "TCP", str(81))
+    if status == 0:
+        # Run TCP proxy with app redirect E2E
+        time.sleep(5)
+        status = run_test(3, "TCP", str(89))
 
     cleanup(keep_logs=True)
 

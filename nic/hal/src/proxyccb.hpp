@@ -8,6 +8,7 @@
 #include "nic/gen/proto/hal/proxyccb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/hal/src/proxy.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
@@ -147,8 +148,6 @@ hal_ret_t proxyccb_delete(proxyccb::ProxycCbDeleteRequest& req,
 
 hal_ret_t proxyccb_get(proxyccb::ProxycCbGetRequest& req,
                      proxyccb::ProxycCbGetResponse *rsp);
-}    // namespace hal
-
 /*
  * A given tcpcb will be enabled for L7 redirect if there's a corresponding
  * proxy chain CB which forwards to SERVICE_LIF_TLS_PROXY. In other words,
@@ -187,6 +186,8 @@ proxyccb_tlscb_l7_proxy_type_eval(uint32_t flow_id)
 
     return types::APP_REDIR_TYPE_NONE;
 }
+
+}    // namespace hal
 
 #endif    // __PROXYCCB_HPP__
 

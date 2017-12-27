@@ -302,11 +302,12 @@ proxyrcb_get (ProxyrCbGetRequest& req, ProxyrCbGetResponse *rsp)
     rsp->mutable_spec()->set_pi(rproxyrcb.pi);
     rsp->mutable_spec()->set_ci(rproxyrcb.ci);
 
+    rsp->mutable_spec()->set_dir(proxyrcb->dir);
+    rsp->mutable_spec()->set_role(proxyrcb->role);
+    rsp->mutable_spec()->set_rev_cb_id(proxyrcb->rev_cb_id);
+
     // fill operational state of this PROXYR CB
     rsp->mutable_status()->set_proxyrcb_handle(proxyrcb->hal_handle);
-    rsp->mutable_status()->set_dir(proxyrcb->dir);
-    rsp->mutable_status()->set_role(proxyrcb->role);
-    rsp->mutable_status()->set_rev_cb_id(proxyrcb->rev_cb_id);
 
     // fill stats of this PROXYR CB
     rsp->set_api_status(types::API_STATUS_OK);

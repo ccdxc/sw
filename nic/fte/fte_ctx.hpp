@@ -455,6 +455,7 @@ public:
 
     bool flow_miss() const { return (arm_lifq_== FLOW_MISS_LIFQ); }
     bool app_redir_pipeline() const { return (arm_lifq_.lif == APP_REDIR_LIFQ.lif); }
+    bool tcp_proxy_pipeline() const { return (arm_lifq_.lif == TCP_PROXY_LIFQ.lif); }
 
     bool valid_iflow() const { return valid_iflow_; }
     void set_valid_iflow(bool val) { valid_iflow_ = val; }

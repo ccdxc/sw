@@ -199,12 +199,6 @@ header_type common_global_phv_t {
     }
 }
 
-header_type dma_phv_pad_128_t {
-    fields {
-        dma_pad                         : 128;
-    }    
-}
-
 
 /*
  * to_stage PHV definitions
@@ -335,13 +329,10 @@ metadata doorbell_data_raw_t            chain_txq_db_data;
  * DMA descriptors for enqueuing to next service TxQ
  */
 @pragma dont_trim
+@pragma pa_align 512
 metadata dma_cmd_phv2mem_t              dma_chain;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t              dma_doorbell;
-
-@pragma dont_trim
-metadata dma_phv_pad_128_t              dma_pad_128;
-
 
 
 /*
