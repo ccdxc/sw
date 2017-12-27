@@ -257,7 +257,8 @@ func OnStart() {
 	// if we are already part of a cluster we can start the CA
 	err = env.CertMgr.StartCa(false)
 	if err != nil {
-		log.Errorf("Node is part of cluster %+v but CA failed to start with err: %v", cluster, err)
+		log.Errorf("Node is part of cluster %+v but failed to start CA with err: %v", cluster, err)
+		return
 	}
 
 	if cluster.QuorumNodes == nil {

@@ -10,7 +10,7 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
-	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
+	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
@@ -45,7 +45,7 @@ type postProcessFn func(host string, obj interface{}) error
 
 // defaultClusterClientFn creates a default gRPC cluster client.
 func defaultClusterClientFn(host string) (grpc.ClusterClient, error) {
-	rpcClient, err := rpckit.NewRPCClient("cmd", fmt.Sprintf("%s:%s", host, globals.CMDGRPCPort))
+	rpcClient, err := rpckit.NewRPCClient("cmd", fmt.Sprintf("%s:%s", host, globals.CMDGRPCPort), rpckit.WithTLSProvider(nil))
 	if err != nil {
 		log.Errorf("RPC client creation for %v failed with error: %v", host, err)
 		return nil, errors.NewInternalError(err)
@@ -200,7 +200,7 @@ func sendJoins(cFn clusterClientFn, req *grpc.ClusterJoinReq, nodes []string, tr
 			} else {
 				destination = host
 			}
-			cmb, err := certificates.MakeCertMgrBundle(env.CertMgr, destination, transportKeys[host])
+			cmb, err := utils.MakeCertMgrBundle(env.CertMgr, destination, transportKeys[host])
 			if err != nil {
 				log.Errorf("Error making CertMgr bundle, host name: %v, err: %v", host, err)
 				return nil

@@ -91,8 +91,10 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	// This generates the signing key if it is not already available.
 	err = env.CertMgr.StartCa(true)
 	if err != nil {
-		log.Errorf("Failed to start CertificatesMgr CA")
-		return nil, errors.NewInternalError(err)
+		return nil, errors.NewInternalError(fmt.Errorf("Error starting CertificatesMgr CA: %v", err))
+	}
+	if !env.CertMgr.IsReady() {
+		return nil, errors.NewInternalError(fmt.Errorf("CertMgr not ready"))
 	}
 
 	// Send prejoin request to all nodes.

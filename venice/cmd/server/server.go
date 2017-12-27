@@ -20,5 +20,5 @@ func Run(options *options.ServerRunOptions) {
 	go func() {
 		s.RunOnAddr(":" + options.RESTPort)
 	}()
-	grpcserver.RunServer(":"+options.GRPCPort, "", "", "", nil)
+	grpcserver.RunServer(":"+options.GRPCPort, nil)
 }

@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/protos/cmd.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi/certificates.proto";
 
 // --------------------------------- C L U S T E R -------------------------------------------------
 service Cluster {
@@ -56,16 +57,11 @@ message QuorumConfig {
 	repeated QuorumMember quorum_members = 2;
 }
 
-// Certificate
-message Certificate {
-	bytes certificate = 1;
-}
-
 // CA Bundle
 message CertMgrBundle {
 	bytes wrappedCaKey = 1;
-	repeated Certificate caTrustChain = 2;
-	repeated Certificate trustRoots = 3;
+	repeated certapi.Certificate caTrustChain = 2;
+	repeated certapi.Certificate trustRoots = 3;
 }
 
 // Cluster Join request
@@ -151,3 +147,4 @@ message SmartNICEvent {
 	api.EventType EventType = 1 [(gogoproto.jsontag) = "eventType,omitempty"];
 	cmd.SmartNIC  Nic       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 }
+

@@ -127,9 +127,6 @@ func (p *CKMBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 	if err != nil {
 		return nil, errors.Wrap(err, "Error issuing sign request")
 	}
-	if csrResp.GetApproved() == false {
-		return nil, errors.Wrapf(err, "CKM Endpoint rejected sign request: %+v", csr)
-	}
 
 	// Parse certificate and create bundle
 	cert, err := x509.ParseCertificate(csrResp.GetCertificate().GetCertificate())

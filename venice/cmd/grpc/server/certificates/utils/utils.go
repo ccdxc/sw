@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package certificates
+package utils
 
 import (
 	"crypto"
@@ -10,23 +10,24 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/utils/certmgr"
 )
 
-// getCaTrustChain returns the trust chain from the CA certificate to the root of trust in wire format
-func getCaTrustChain(cm *certmgr.CertificateMgr) []*grpc.Certificate {
-	certs := make([]*grpc.Certificate, 0)
+// GetCaTrustChain returns the trust chain from the CA certificate to the root of trust in wire format
+func GetCaTrustChain(cm *certmgr.CertificateMgr) []*certapi.Certificate {
+	certs := make([]*certapi.Certificate, 0)
 	for _, c := range cm.Ca().TrustChain() {
-		certs = append(certs, &grpc.Certificate{Certificate: c.Raw})
+		certs = append(certs, &certapi.Certificate{Certificate: c.Raw})
 	}
 	return certs
 }
 
-// getTrustRoots returns the trust roots that should be used by client when verifying trust chains in wire format
-func getTrustRoots(cm *certmgr.CertificateMgr) []*grpc.Certificate {
-	certs := make([]*grpc.Certificate, 0)
+// GetTrustRoots returns the trust roots that should be used by client when verifying trust chains in wire format
+func GetTrustRoots(cm *certmgr.CertificateMgr) []*certapi.Certificate {
+	certs := make([]*certapi.Certificate, 0)
 	for _, c := range cm.Ca().TrustRoots() {
-		certs = append(certs, &grpc.Certificate{Certificate: c.Raw})
+		certs = append(certs, &certapi.Certificate{Certificate: c.Raw})
 	}
 	return certs
 }
@@ -46,8 +47,8 @@ func MakeCertMgrBundle(cm *certmgr.CertificateMgr, peerID string, peerTransportK
 	}
 	bundle := &grpc.CertMgrBundle{
 		WrappedCaKey: wrappedCaKey,
-		CaTrustChain: getCaTrustChain(cm),
-		TrustRoots:   getTrustRoots(cm),
+		CaTrustChain: GetCaTrustChain(cm),
+		TrustRoots:   GetTrustRoots(cm),
 	}
 	return bundle, nil
 }

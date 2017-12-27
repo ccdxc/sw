@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
-	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
+	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
@@ -106,7 +106,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 
 	if req.CertMgrBundle != nil && !env.CertMgr.IsReady() {
 		defer func() { c.peerTransportKey = nil }()
-		err := certificates.UnpackCertMgrBundle(env.CertMgr, req.CertMgrBundle, c.peerTransportKey)
+		err := certutils.UnpackCertMgrBundle(env.CertMgr, req.CertMgrBundle, c.peerTransportKey)
 		if err != nil {
 			return nil, fmt.Errorf("Error unpacking CertMgr bundle: %v", err)
 		}
