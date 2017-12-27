@@ -819,7 +819,6 @@ parser parse_v6_generic_ext_hdr {
 @pragma allow_set_meta ipsec_metadata.ipsec_type
 parser parse_v6_ipsec_esp_hdr {
     extract(esp);
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 8);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
     set_metadata(ipsec_metadata.seq_no, latest.seqNo);
@@ -831,8 +830,6 @@ parser parse_v6_ipsec_esp_hdr {
 @pragma allow_set_meta ipsec_metadata.ipsec_type
 parser parse_v6_ipsec_ah_hdr {
     extract(v6_ah_esp);
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 12);
-    set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
     set_metadata(ipsec_metadata.seq_no, latest.seqNo);
@@ -1644,8 +1641,8 @@ parser parse_inner_ipv4_options_blob {
 @pragma packet_len_check inner_ipv4 len gt ohi.inner_l3_len
 @pragma packet_len_check inner_ipv4 start ohi.inner_ipv4___start_off
 parser parse_inner_ipv4 {
-    set_metadata(parser_metadata.l4_trailer, current(16,16) - (current(4,4) << 2));
     set_metadata(ohi.inner_l3_len, current(16,16) + 0);
+    set_metadata(parser_metadata.l4_trailer, current(16,16) - (current(4,4) << 2));
     return select(current(0,8)) {
         0x45    : parse_base_inner_ipv4;
         0x44    : ingress;
@@ -1844,7 +1841,7 @@ parser parse_inner_udp {
 parser parse_dummy {
     // This state is added as a work-around until NCC has a fix for handling 
     // hdr unions and same set_metadata from multiple states while computing topo-graph
-    return select (inner_udp.srcPort) {
+    return select (current(0,16)) {
         default: ingress;
         0x1 mask 0x0000 : parse_v6_ipsec_esp_hdr;
         0x2 mask 0x0000 : parse_ipsec_ah;

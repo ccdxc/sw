@@ -1938,6 +1938,10 @@ class capri_gress_pa:
             if not isinstance(hf, capri_field):
                 if hf in self.hdr_unions and hf != self.hdr_unions[hf][2]:
                     continue
+
+                align = get_header_alignment(hf)
+                if align and phv_bit % align:
+                    phv_bit += (align - (phv_bit % align))
                 hdr_size = self.get_header_storage_size(hf) * 8
                 max_offset = phv_bit
                 if hf in self.hdr_unions:

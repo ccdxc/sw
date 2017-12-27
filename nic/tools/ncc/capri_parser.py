@@ -1366,8 +1366,9 @@ class capri_parser:
             sum([get_header_fixed_size(h) for h in self.headers]))
         self.logger.debug('Headers: %s' % self.headers)
 
+        self.logger.info("%s: Find parse paths.." % (self.d.name))
         self.paths, self.path_states = self._find_parser_paths(self.start_state)
-        self.logger.info("%s: Total parse paths %d" % (self.d.name, len(self.paths)))
+        self.logger.info("%s: Total parse_state paths %d" % (self.d.name, len(self.path_states)))
         state_count = 0
         lp = None
         for i, ps in enumerate(self.path_states):
@@ -1384,32 +1385,49 @@ class capri_parser:
                 hdrs_covered[hdr] = True
         for h in self.headers:
             assert h in hdrs_covered, "Missed header %s in path calculations" % h.name
-
         # Remove impossible branches - these are added to create deparser parse-graph
         # Removing them will reduce processing and resource requirements like saved registers
         # 'impossible' branch is the one where mask is set to mask off non-zero bits in case val
         # also remove all branches after 'default'
+        # XXXX remove the deparse-only branches as well
+        remove_branch = False
         for cs in self.states:
             found_default = False
             for bkey,bval in cs.branch_to.items():
                 if bkey == p4.P4_DEFAULT:
                     found_default = True
                     continue
-                if not isinstance(bkey, tuple):
-                    if found_default:
-                        del cs.brach_to[bkey]
+
+                if found_default:
+                    remove_branch = True
+                    del cs.branch_to[bkey]
                     continue
 
-                cval = int(bkey[0])
-                mask = int(bkey[1])
-                if cval and (cval & mask) == 0:
-                    # remove this branch
-                    self.logger.debug("%s:Removing impossible branch (0x%x & 0x%x)->%s from %s" %\
-                        (self.d.name, cval, mask, cs.branch_to[bkey], cs.name))
+                if isinstance(bval, capri_parse_state) and bval.deparse_only:
+                    pdb.set_trace()
+                    remove_branch = True
                     del cs.branch_to[bkey]
+                    continue
+
+                if isinstance(bkey, tuple):
+                    cval = int(bkey[0])
+                    mask = int(bkey[1])
+                    if cval and (cval & mask) == 0:
+                        # remove this branch
+                        self.logger.debug("%s:Removing impossible branch (0x%x & 0x%x)->%s from %s" %\
+                            (self.d.name, cval, mask, cs.branch_to[bkey], cs.name))
+                        del cs.branch_to[bkey]
+                        remove_branch = True
 
         # recompute the paths after removing the dummy(impossible) branches
-        self.paths, self.path_states = self._find_parser_paths(self.start_state)
+        if remove_branch:
+            self.logger.info("%s:Find parse paths (after removing dummy).." % (self.d.name))
+            #dbg_on = True if self.d == xgress.EGRESS else False
+            dbg_on = False
+            self.paths, self.path_states = self._find_parser_paths(self.start_state, dbg_on)
+            self.logger.info("%s: Total parse_state paths %d" % (self.d.name, len(self.path_states)))
+
+        self.path_states = sorted(self.path_states, key=lambda p: len(p), reverse=True)
 
     def init_ohi(self):
         # Do this after both ingress and egress inits are done
@@ -1837,12 +1855,12 @@ class capri_parser:
             return self.wr_only_ohi[ohi_field]
         return None
 
-    def _find_parser_paths(self, start_state):
+    def _find_parser_paths(self, start_state, dbg_on=False):
         paths=[]
         path_states=[]
         current_path=[]
         path_hdrs=[]
-        self._find_paths(start_state, paths, path_states, current_path, path_hdrs)
+        self._find_paths(start_state, paths, path_states, current_path, path_hdrs, dbg_on)
         return paths, path_states
 
     def _traverse_loops(self, pnode, loops):
@@ -1860,11 +1878,15 @@ class capri_parser:
             _traverse_node(pnode, cnode, traversed_states)
         return traversed_states
 
-    def _find_paths(self, node, paths, path_states, current_path, path_hdrs):
+    def _find_paths(self, node, paths, path_states, current_path, path_hdrs, dbg_on):
         if node in current_path:
             return True # loop
         #print "find path at node %s" % node.name
-        node_list = node.branch_to.values()[:]
+        node_list = []
+        for n in node.branch_to.values():
+            # multiple case statements can go to the same branch
+            if n not in node_list:
+                node_list.append(n)
         extracted_hdrs = []
         traversed_nodes = [node]
         if 'header_ordering' in node.p4_state._parsed_pragmas:
@@ -1878,7 +1900,11 @@ class capri_parser:
                     traversed_nodes.append(n)
 
         extracted_hdrs += node.headers
-
+        '''
+        if dbg_on and len(path_states) >= 36 and len(path_states) <= 45:
+            self.logger.debug("Path[%d]... %s" % (len(path_states), current_path+traversed_nodes))
+            pdb.set_trace()
+        '''
         for next_node in node_list:
             if not isinstance(next_node, capri_parse_state) or not next_node.p4_state:
                 # terminate
@@ -1896,7 +1922,7 @@ class capri_parser:
             if next_node == node:
                 continue; # loop to itself, ideally shoud use header stack.. but not mandatory
             if self._find_paths(next_node, paths, path_states, current_path+traversed_nodes, \
-                    path_hdrs+extracted_hdrs):
+                    path_hdrs+extracted_hdrs, dbg_on):
                 assert 0, "Unhandled parser loop at %s - Path %s??" % \
                     (next_node.name, current_path+traversed_nodes)
         return False
@@ -2133,6 +2159,8 @@ class capri_parser:
                     # saved lkp
                     if b_on not in self.saved_lkp_scope:
                         self.saved_lkp_scope[b_on] = _scope(None, cs)
+                elif hdr.metadata and b_on.hfname not in cs.local_flds:
+                    assert 0, pdb.set_trace()
 
         for cf in self.saved_lkp_scope.keys():
             hdr = cf.get_p4_hdr()
@@ -2158,7 +2186,8 @@ class capri_parser:
                                  self.states.index(self.saved_lkp_scope[cf].end_cs)))
 
     def setup_local_regs(self):
-        path_states = sorted(self.path_states, key=lambda p: len(p), reverse=True)
+        # path_states = sorted(self.path_states, key=lambda p: len(p), reverse=True)
+        path_states = self.path_states
         # start with longest path
         # do data flow ananlysis per path and create in(down) and out(up) variables for each state
         # do not share in, out objects between states (multiple down stream states can clobber each
@@ -2171,12 +2200,21 @@ class capri_parser:
         # un-allocated variables
         # This code does not create RIG (register interference graph).. need to see if that is
         # a better way to handle this.
+        # There is one case that is NOT covered as,
+        # Path1: A-B-C-D, Path2: P-Q-R-S, Path3: A-B-R-S. In this case it is possible that
+        # same varialble used on path1 and path2 will be assigned a different register and
+        # will result in conflicting assignments on path3 (which may be processed later)
+        # In this case program must be modified to create a common state between path1,2,3.
+
         cs_lfs = OrderedDict() # {cs: {in_lfs, out_lfs]}
+        cs_all_reg_allocated = OrderedDict() # XXXX optimization
         n_states = len([s for s in self.states if s.name != '__END__' and not s.deparse_only \
             and not s.is_virtual])
         cs_covered = 0
-        self.logger.debug("%s:Start local variable allocation" % (self.d.name))
-        for path in path_states:
+        self.logger.info("%s:Start local variable allocation" % (self.d.name))
+        pnum = -1
+        paths_traversed = 0
+        for pnum,path in enumerate(path_states):
             # once all state are covered.. we can stop the loop, # of paths is of the order of
             # 250k for iris.p4 program
             if cs_covered == n_states:
@@ -2186,16 +2224,26 @@ class capri_parser:
             # check if all states on this path are already covered
             path_cs_covered = 0
             for cs in path:
-                if cs in cs_lfs or cs.deparse_only:
+                if cs in cs_all_reg_allocated or cs.deparse_only or cs.name == '__END' or cs.is_virtual:
                     path_cs_covered += 1
+                else:
+                    self.logger.debug("%s:state %s not done on path[%d]" % \
+                        (self.d.name, cs.name, pnum))
+                    break
             if path_cs_covered == len(path):
                 continue
+            self.logger.debug("%s:Local variable allocation on path[%d]" % \
+                (self.d.name, pnum))
+            paths_traversed += 1
+            if self.d == xgress.EGRESS and cs.name == 'parse_udp':
+                self.logger.debug("%s:Local variable allocation on path[%d] - %s" % \
+                    (self.d.name, pnum, path))
+            path_lfs = OrderedDict()
             for cs in reversed(path):
-                # if cs.name == 'parse_trailer': pdb.set_trace()
+                if cs.deparse_only or cs.name == '__END' or cs.is_virtual:
+                    continue
                 if cs not in cs_lfs:
                     cs_lfs[cs] = [OrderedDict(), OrderedDict()]
-                    if not cs.deparse_only:
-                        cs_covered += 1
 
                 in_lfs = cs_lfs[cs][0]
                 # previous (downstream out_lf is now in_lf) copy it
@@ -2210,6 +2258,11 @@ class capri_parser:
                 out_lfs = cs_lfs[cs][1]
                 sol_lfs = []    # start of life for this variable
                 # Don't allocate new.. just collect previously allocated
+                for rid,lf in enumerate(cs.active_lkp_lfs):
+                    if lf != None:
+                        if lf not in path_lfs:
+                            path_lfs[lf] = rid
+
                 for (lf,rd,wr) in cs.local_flds.values():
                     if lf in cs.saved_lkp:
                         # saved_lkp and load_saved_lkp are handled separately
@@ -2221,8 +2274,12 @@ class capri_parser:
 
                     if wr and not rd:
                         sol_lfs.append(lf)
+                        if lf not in path_lfs and rid != None:
+                            path_lfs[lf] = rid
                     elif rd:
                         out_lfs[lf] = rid
+                        if lf not in path_lfs and rid != None:
+                            path_lfs[lf] = rid
                     else:
                         assert 0, pdb.set_trace # must be either wr or rd
 
@@ -2242,6 +2299,8 @@ class capri_parser:
             # allocate reg ids for new lfs
             upstream_lfs = OrderedDict() #out_lfs
             for cs in path:
+                if cs.deparse_only:
+                    continue
                 downstream_lfs = cs_lfs[cs][0]
                 # if cs.name == 'parse_trailer': pdb.set_trace()
                 # if cs.name == 'parse_roce_v2': pdb.set_trace()
@@ -2256,27 +2315,42 @@ class capri_parser:
                             cs.active_reg_alloc(lf, r)
                         else:
                             assert r_used == r, pdb.set_trace()
+                            pass
                         if lf in downstream_lfs:
                             downstream_lfs[lf] = r
 
                 for lf,rd,wr in cs.local_flds.values():
                     if lf in cs.saved_lkp:
                         continue
-                    # Rest of the code uses cs.reserved_lfs list.. update it
-                    if lf not in cs.reserved_lfs:
-                        cs.reserved_lfs.append(lf)
 
                     if lf in upstream_lfs:
                         # reg should come from top, if not ignore
                         rid = upstream_lfs[lf]
                         if rid == None:
                             continue
-                        _ = cs.active_reg_alloc(lf, rid)
+                        if not lf.no_register():    # ??? check, why no_reg lfs are reported up
+                            _ = cs.active_reg_alloc(lf, rid)
                     else:
                         rid = cs.active_reg_find(lf)
                         if rid == None:
-                            if not lf.no_register():
-                                rid = cs.active_reg_alloc(lf)
+                            # XXXX
+                            # allocate only if downstream needs it or locally used for lkp
+                            if not lf.no_register() and \
+                                (lf in downstream_lfs or lf in cs.branch_on or \
+                                 lf in cs.load_saved_lkp):
+                                if lf in path_lfs:
+                                    rid = path_lfs[lf]
+                                    if rid:
+                                        self.logger.debug("%s:%s Reuse rid %d for LF %s" % \
+                                            (self.d.name, cs.name, rid, lf.hfname))
+                                if rid == None:
+                                    rid = cs.active_reg_alloc(lf)
+                                else:
+                                    # reserve
+                                    _ = cs.active_reg_alloc(lf, rid)
+
+                    if rid != None and lf not in cs.reserved_lfs:
+                        cs.reserved_lfs.append(lf)
 
                     if lf in downstream_lfs:
                         downstream_lfs[lf] = rid
@@ -2291,10 +2365,28 @@ class capri_parser:
                         if lf not in cs.reserved_lfs:
                             cs.reserved_lfs.append(lf)
 
+                # see if registers for all local flds of this state are allocated
+                if cs not in cs_all_reg_allocated:
+                    reg_allocated = 0
+                    for lf,rd,wr in cs.local_flds.values():
+                        if cs.active_reg_find(lf) == None and not lf.no_register():
+                            continue
+                        reg_allocated += 1
+
+                    if reg_allocated == len(cs.local_flds.keys()):
+                        cs_all_reg_allocated[cs] = 1
+                        cs_covered += 1
+                        self.logger.debug("%s:%s LF allocation complete %d/%d" % \
+                            (self.d.name, cs.name, cs_covered, n_states))
+
                 upstream_lfs = OrderedDict()
                 upstream_lfs = copy.copy(downstream_lfs)
 
         #pdb.set_trace()
+        self.logger.info( \
+            "%s:Done local variable allocation (paths traversed %d) states covered %d/%d" % \
+            (self.d.name, paths_traversed, cs_covered, n_states))
+
         for cs in self.states:
             if cs not in cs_lfs:
                 continue
@@ -2441,25 +2533,31 @@ class capri_parser:
                 # find lkp_reg, set capri-expression
                 # allocation is done up-front
                 # create lkp_reg object for this state
-                rid = cs.active_reg_find(op.dst)
-                assert rid != None, pdb.set_trace()
-                # parser local variables can be updated (reloaded)
-                if cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_RETAIN:
-                    self.logger.debug("%s:%s:Reg %d changed from RETAIN to LOAD- %s" % \
-                        (self.d.name, cs.name, rid, op.capri_expr if op.capri_expr else op.src1))
+                if op.dst in cs.reserved_lfs:
+                    rid = cs.active_reg_find(op.dst)
+                    assert rid != None, pdb.set_trace()
+                    # parser local variables can be updated (reloaded)
+                    if cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_RETAIN:
+                        self.logger.debug("%s:%s:Reg %d changed from RETAIN to LOAD- %s" % \
+                            (self.d.name, cs.name, rid, 
+                             op.capri_expr if op.capri_expr else op.src1))
 
-                    cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_LOAD
+                        cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_LOAD
 
-                if op.capri_expr:
-                    cs.lkp_regs[rid].capri_expr = op.capri_expr
-                elif isinstance(op.src1, capri_field):
-                    cs.lkp_regs[rid].first_pkt_fld = op.src1
+                    if op.capri_expr:
+                        cs.lkp_regs[rid].capri_expr = op.capri_expr
+                    elif isinstance(op.src1, capri_field):
+                        cs.lkp_regs[rid].first_pkt_fld = op.src1
+                    else:
+                        cs.lkp_regs[rid].first_pkt_fld = None
                 else:
-                    cs.lkp_regs[rid].first_pkt_fld = None
+                    self.logger.warning("%s:%s:Removed unused field %s" % \
+                        (self.d.name, cs.name, op.dst.hfname))
 
             elif op.op_type == meta_op.UPDATE_REG:
                 # allocate/find lkp_reg, set capri-expression
                 # allocation is done up-front
+                # XXXX is it possible that reg is not allocated for op.dst ??
                 rid = cs.active_reg_find(op.dst)
                 assert rid != None, pdb.set_trace()
                 cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_UPDATE
@@ -3187,6 +3285,7 @@ class capri_parser:
         num_bins = (self.longest_path_size + bin_size) / bin_size
         bin_count = {b : 0 for b in range(num_bins)}
         #paths = sorted(self.path_states, key=lambda p: len(p), reverse=True)
+        paths = self.path_states
         exclude_names = ['parse_recirc', 'parse_mpls__0', 'parse_tcp_options', \
                          'parse_p4egress', 'parse_fake_intrinsic', 'parse_llc_header', \
                          'parse_ipv6_extn_hdrs', 'parse_ipv4_options', \
@@ -3262,7 +3361,7 @@ class capri_parser:
 
     def parser_check_flit_violation(self):
         flit_sz = self.be.hw_model['parser']['flit_size']
-        path_states = sorted(self.path_states, key=lambda p: len(p), reverse=True)
+        path_states = self.path_states
         for path in path_states:
             last_flit = 0
             last_cs = None
