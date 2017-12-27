@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : BASE_MID_PKT # Base Mid packet
@@ -32,7 +32,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : BASE_LAST_PKT # Base Last packet
@@ -40,7 +40,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_FIRST_PKT    # Input packet - first
@@ -77,7 +77,7 @@ packets:
                 dma_len : 2645
                 r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_MID_PKT    # Input packet - middle
@@ -110,7 +110,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 
    - packet:
@@ -146,7 +146,7 @@ packets:
             immdt:
                 imm_data: ref://testcase/pvtdata/imm_data
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : EXP_PKT    # Expected Nak packet
@@ -182,7 +182,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=2 #NAK_CODE_REM_ACC_ERR
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 buffers:
     - buffer:

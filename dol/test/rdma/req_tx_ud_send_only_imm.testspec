@@ -20,15 +20,15 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
     - packet:
         id          : EXP_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_DETH_IMMDT,v6=ETH_IPV6_UDP_BTH_DETH_IMMDT
         icrc        : True
         encaps      :
@@ -62,7 +62,7 @@ packets:
             immdt:
                 imm_data: ref://testcase/pvtdata/imm_data
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 buffers:
     - buffer:

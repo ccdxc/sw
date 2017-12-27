@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : BASE_MIDDLE_PKT # Base packet
@@ -32,7 +32,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : BASE_LAST_PKT # Base packet
@@ -40,7 +40,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_FIRST_PKT    # Input packet 
@@ -73,7 +73,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : ref://testcase/pvtdata/send_first_psn
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 
    - packet:
@@ -107,7 +107,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : ref://testcase/pvtdata/send_mid_psn
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 
    - packet:
@@ -144,7 +144,7 @@ packets:
                 imm_data: ref://testcase/pvtdata/imm_data
 
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : EXP_PKT    # Expected Ack packet
@@ -180,7 +180,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 
 buffers:

@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
     - packet:
         id          : BASE_PKT2 # Base packet
@@ -32,7 +32,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
     - packet:
         id          : BASE_PKT3 # Base packet
@@ -40,7 +40,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
     - packet:
         id          : EXP_PKT1 # Base packet
@@ -141,7 +141,7 @@ packets:
             ieth:
                 r_key   : ref://testcase/pvtdata/inv_r_key
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 
 buffers:

@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_PKT    # First packet
@@ -97,11 +97,11 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : EXP_PKT2    # Output packet, Reverse all fields from the IN_PKT
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :   
@@ -133,7 +133,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 buffers:
     - buffer:

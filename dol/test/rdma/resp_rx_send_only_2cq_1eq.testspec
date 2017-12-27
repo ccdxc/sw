@@ -20,15 +20,15 @@ selectors:
 packets:
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_PKT_1    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -58,11 +58,11 @@ packets:
                 psn     : callback://rdma/rdma/GetRqPreEpsnForTx/pkt_num=0
                 a       : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_PKT_2    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -92,7 +92,7 @@ packets:
                 psn     : callback://rdma/rdma/GetRqPreEpsnForTx/pkt_num=1
                 a       : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : EXP_PKT_1    # Expected Ack packet
@@ -128,7 +128,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : EXP_PKT_2    # Expected Ack packet
@@ -164,7 +164,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=2
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 buffers:
     - buffer:

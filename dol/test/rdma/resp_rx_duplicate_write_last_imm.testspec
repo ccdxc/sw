@@ -28,15 +28,15 @@ packets:
 
    - packet:
         id          : ORIG_PAYLOAD # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_IMMDT,v6=ETH_IPV6_UDP_BTH_IMMDT
         icrc        : True
         encaps      :   
@@ -104,7 +104,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetRqAethSyndrome
                 msn     : callback://rdma/rdma/GetRqAethMsn
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 
 buffers:

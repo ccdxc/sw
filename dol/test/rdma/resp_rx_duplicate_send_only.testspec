@@ -20,15 +20,15 @@ selectors:
 packets:
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         #icrc        : True
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
@@ -59,7 +59,7 @@ packets:
                 psn     : callback://rdma/rdma/GetRqDupPsn/pkt_num=10   #psn which is 10 pkts behind e_psn
                 a       : 0
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : EXP_PKT    # Expected Ack packet
@@ -95,7 +95,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetRqAethSyndrome
                 msn     : callback://rdma/rdma/GetRqAethMsn
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 
 buffers:

@@ -20,7 +20,7 @@ selectors:
 packets:
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         # Disable ICRC calculation, so input pkt will be dropped to test ICRC error condition
         #icrc        : True
@@ -51,7 +51,7 @@ packets:
                 psn     : callback://rdma/rdma/GetRqPreEpsn
                 a       : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 buffers:
     - buffer:

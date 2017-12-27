@@ -21,15 +21,15 @@ packets:
    - packet:
         id          : BASE_FIRST_PKT # Base packet
         #ideally this should be pmtu sized, but send a smaller value for this test
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : IN_FIRST_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -58,7 +58,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : ref://testcase/pvtdata/send_first_psn
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
    - packet:
         id          : EXP_PKT    # Expected Nak packet
@@ -94,7 +94,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=1 #NAK_CODE_INV_REQ
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
 buffers:
     - buffer:
