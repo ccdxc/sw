@@ -702,6 +702,7 @@ hal_ret_t pd_crypto_asym_read_key(int32_t key_idx, crypto_asym_key_t *key);
 hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
 
 hal_ret_t pd_drop_stats_get(pd_system_args_t *pd_sys_args);
+hal_ret_t pd_table_stats_get(pd_system_args_t *pd_sys_args);
 
 // OIF List related PD APIs
 hal_ret_t oif_list_create(oif_list_id_t *list);

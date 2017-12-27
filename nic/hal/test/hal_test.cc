@@ -6,6 +6,7 @@
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
 #include "nic/gen/proto/hal/port.grpc.pb.h"
 #include "nic/gen/proto/hal/event.grpc.pb.h"
+#include "nic/gen/proto/hal/system.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -42,17 +43,26 @@ using port::PortDeleteRequestMsg;
 using port::PortDeleteResponseMsg;
 using port::PortDeleteResponse;
 
+using sys::System;
+using sys::SystemResponse;
+using sys::Stats;
+using sys::DropStats;
+using sys::DropStatsEntry;
+using sys::TableStats;
+using sys::TableStatsEntry;
+using types::Empty;
+
 using event::Event;
 using event::EventRequest;
 using event::EventResponse;
 
-const std::string&    hal_svc_endpoint_("localhost:50053");
+const std::string&    hal_svc_endpoint_("localhost:50054");
 
 class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
     l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
-    event_stub_(Event::NewStub(channel)) {}
+	event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)) {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -226,6 +236,69 @@ public:
                   << std::endl;
         return -1;
     }
+
+    int system_get() {
+       	ClientContext       context;
+       	Empty               request;
+       	SystemResponse      response;
+        Status              status;
+       	Stats               stats;
+       	DropStats           drop_stats;
+       	DropStatsEntry      drop_entry;
+       	TableStats          table_stats;
+       	TableStatsEntry     table_entry;
+       	int                 count;
+
+       	std::cout << "System Get\n";
+       	status = system_stub_->SystemGet(&context, request, &response);
+       	if (status.ok() && (response.api_status() == types::API_STATUS_OK)) {
+           	// Get Statistics
+           	Stats stats = response.stats();
+
+           	// First print drop stats
+
+           	// Get DropStats
+           	DropStats drop_stats = stats.drop_stats();
+
+           	// Get count of DropEntries
+           	count = drop_stats.drop_entries_size();
+
+           	std::cout << "\nDrop Statistics:\n";
+
+           	for (int i = 0; i < count; i ++) {
+               	DropStatsEntry drop_entry = drop_stats.drop_entries(i);
+               	std::cout << "Stats " << i
+                    << ": " << drop_entry.drop_count() << "\n";
+           	}
+
+           	// Print table stats
+
+           	// Get TableStats
+           	TableStats table_stats = stats.table_stats();
+
+           	// Get count of TableStats
+           	count = table_stats.table_stats_size();
+
+           	std::cout << "\nTable Statistics:\n";
+
+           	for (int i = 0; i < count; i ++) {
+               	TableStatsEntry table_entry = table_stats.table_stats(i);
+               	std::cout << "Table ID: " << table_entry.table_id() << "\n"
+                    << "Table type: " << table_entry.table_type() << "\n"
+                    << "Table name: " << table_entry.table_name() << "\n"
+                    << "Table size: " << table_entry.table_size() << "\n"
+                    << "Overflow size: " << table_entry.overflow_table_size() << "\n"
+                    << "Entries in use: " << table_entry.entries_in_use() << "\n"
+                    << "Overflow entries in use: " << table_entry.overflow_entries_in_use() << "\n"
+                    << "Num inserts: " << table_entry.num_inserts() << "\n"
+                    << "Num insert errors: " << table_entry.num_insert_errors() << "\n"
+                    << "Num deletes: " << table_entry.num_deletes() << "\n"
+                    << "Num delete errors: " << table_entry.num_delete_errors() << "\n\n";
+           	}
+       	}
+
+       	return 0;
+   	}
 
     uint64_t vrf_create(uint32_t vrf_id) {
         VrfSpec           *spec;
@@ -406,6 +479,7 @@ private:
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
     std::unique_ptr<Port::Stub> port_stub_;
     std::unique_ptr<Event::Stub> event_stub_;
+	std::unique_ptr<System::Stub> system_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
@@ -579,11 +653,14 @@ int port_test(hal_client *hclient, int vrf_id)
 int
 main (int argc, char** argv)
 {
+#if 0
     uint64_t    hal_handle;
     int         vrf_id = 1;
+#endif
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
 
+#if 0
     //port_test(&hclient, vrf_id);
     //ports_enable(&hclient, vrf_id);
     ports_get(&hclient, vrf_id);
@@ -607,6 +684,10 @@ main (int argc, char** argv)
     // create L2 segment
     assert(hclient.l2segment_create(1, 1, 1) != 0);
     hclient.vrf_delete_by_id(1);
+#endif
+
+    // Get system statistics
+    hclient.system_get();
 
     // subscribe and listen to HAL events
     hclient.event_test();

@@ -33,6 +33,13 @@ system_get(SystemResponse *rsp)
         goto end;
     }
 
+    ret = pd::pd_table_stats_get(&pd_system_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        goto end;
+    }
+
     rsp->set_api_status(types::API_STATUS_OK);
 
 end:

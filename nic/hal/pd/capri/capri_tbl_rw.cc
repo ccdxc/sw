@@ -312,12 +312,12 @@ capri_program_hbm_table_base_addr(void)
 static int capri_stats_region_init()
 {
     p4pd_table_properties_t       tbl_ctx;
-    uint32_t                      stats_base_addr;
-    uint32_t                      stats_region_start;
-    uint32_t                      stats_region_size;
+    hbm_addr_t                    stats_base_addr;
+    uint64_t                      stats_region_start;
+    uint64_t                      stats_region_size;
 
     stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
-    stats_region_size = get_size_kb(JP4_ATOMIC_STATS) * 1024;
+    stats_region_size = (get_size_kb(JP4_ATOMIC_STATS) << 10);
 
     // reset bit 31 (saves one ASM instruction)
     stats_region_start &= 0x7FFFFFFF;
@@ -325,27 +325,27 @@ static int capri_stats_region_init()
 
     capri_table_constant_write(P4TBL_ID_FLOW_STATS, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
-    stats_base_addr += tbl_ctx.tabledepth * 32;
+    stats_base_addr += (tbl_ctx.tabledepth << 5);
 
     capri_table_constant_write(P4TBL_ID_RX_POLICER_ACTION, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
-    stats_base_addr += tbl_ctx.tabledepth * 32;
+    stats_base_addr += (tbl_ctx.tabledepth << 5);
 
     capri_table_constant_write(P4TBL_ID_COPP_ACTION, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
-    stats_base_addr += tbl_ctx.tabledepth * 32;
+    stats_base_addr += (tbl_ctx.tabledepth << 5);
 
     capri_table_constant_write(P4TBL_ID_DROP_STATS, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_DROP_STATS, &tbl_ctx);
-    stats_base_addr += tbl_ctx.tabledepth;
+    stats_base_addr += (tbl_ctx.tabledepth << 3);
 
     capri_table_constant_write(P4TBL_ID_TX_STATS, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
-    stats_base_addr += tbl_ctx.tabledepth * 56;
+    stats_base_addr += ((tbl_ctx.tabledepth << 5) + (tbl_ctx.tabledepth << 4) + (tbl_ctx.tabledepth << 3));
 
     capri_table_constant_write(P4TBL_ID_INGRESS_TX_STATS, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
-    stats_base_addr += tbl_ctx.tabledepth;
+    stats_base_addr += (tbl_ctx.tabledepth << 3);
 
     assert(stats_base_addr <  (stats_region_start +  stats_region_size));
     return CAPRI_OK;
