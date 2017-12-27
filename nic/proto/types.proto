@@ -164,6 +164,12 @@ message IPAddress {
   }
 }
 
+// IP Range 
+message IPRange {
+    IPAddress      low_ipaddr  = 1;    // start ip address 
+    IPAddress      high_ipaddr = 2;    // end ip address
+}
+
 // IP Prefix object
 message IPPrefix {
   IPAddress    address       = 1;      // IP address
