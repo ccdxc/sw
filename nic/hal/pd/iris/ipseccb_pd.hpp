@@ -91,6 +91,8 @@ typedef struct pd_ipseccb_udp_nat_t_hdr_s {
 typedef struct pd_ipseccb_decrypt_part2_s {
     uint32_t spi;
     uint32_t new_spi;
+    uint32_t last_replay_seq_no;
+    uint32_t iv_salt;
 } __PACK__ pd_ipseccb_decrypt_part2_t;
 
  

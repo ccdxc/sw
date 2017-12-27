@@ -22,7 +22,7 @@ header_type ipsec_cb_metadata_t {
         iv_size   : 8;
         icv_size  : 8;
         expected_seq_no   : 32;
-        last_replay_seq_no : 32;
+        //last_replay_seq_no : 32;
         replay_seq_no_bmp : 64;
         barco_enc_cmd  : 32;
         ipsec_cb_index : 16;
@@ -31,11 +31,20 @@ header_type ipsec_cb_metadata_t {
         cb_cindex      : 8;
         barco_pindex   : 8;
         barco_cindex   : 8;
-        cb_ring_base_addr : 32;
-        barco_ring_base_addr : 32;
-        iv_salt        : 32;
+        cb_ring_base_addr : 64;
+        barco_ring_base_addr : 64;
+        //iv_salt        : 32;
         vrf_vlan       : 16;
         is_v6          : 8;
+    }
+}
+
+header_type ipsec_decrypt_part2_t {
+    fields {
+        spi : 32;
+        new_spi : 32;
+        last_replay_seq_no : 32;
+        iv_salt : 32;
     }
 }
 
@@ -180,7 +189,6 @@ header_type barco_request_t {
     modify_field(ipsec_cb_scratch.new_key_index, new_key_index); \
     modify_field(ipsec_cb_scratch.iv_size, iv_size); \
     modify_field(ipsec_cb_scratch.icv_size, icv_size); \
-    modify_field(ipsec_cb_scratch.last_replay_seq_no, last_replay_seq_no); \
     modify_field(ipsec_cb_scratch.expected_seq_no, expected_seq_no); \
     modify_field(ipsec_cb_scratch.replay_seq_no_bmp, replay_seq_no_bmp); \
     modify_field(ipsec_cb_scratch.barco_enc_cmd,barco_enc_cmd); \
@@ -192,13 +200,18 @@ header_type barco_request_t {
     modify_field(ipsec_cb_scratch.barco_cindex, barco_cindex); \
     modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr); \
     modify_field(ipsec_cb_scratch.barco_ring_base_addr, barco_ring_base_addr); \
-    modify_field(ipsec_cb_scratch.iv_salt, iv_salt); \
     modify_field(ipsec_cb_scratch.vrf_vlan, vrf_vlan); \
     modify_field(ipsec_cb_scratch.is_v6, is_v6);               
 
 #define IPSEC_CB_SCRATCH_WITH_PC \
     modify_field(ipsec_cb_scratch.pc, pc); \
     IPSEC_CB_SCRATCH 
+
+#define IPSEC_CB_SCRATCH_PART2 \
+    modify_field(ipsec_cb_part2_scratch.spi, spi); \
+    modify_field(ipsec_cb_part2_scratch.new_spi, new_spi); \
+    modify_field(ipsec_cb_part2_scratch.last_replay_seq_no, last_replay_seq_no); \
+    modify_field(ipsec_cb_part2_scratch.iv_salt, iv_salt); \
 
 
 #define IPSEC_BARCO_DESC_SCRATH \

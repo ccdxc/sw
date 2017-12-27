@@ -15,12 +15,21 @@
 
 #define rx_table_s3_t0_action esp_v4_tunnel_n2h_update_input_desc_aol 
 #define rx_table_s3_t1_action esp_v4_tunnel_n2h_update_output_desc_aol 
+#define rx_table_s3_t2_action esp_v4_tunnel_n2h_load_part2
 
 #define rx_table_s4_t0_action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc 
 
 #include "../../common-p4+/common_rxdma.p4"
 #include "esp_v4_tunnel_n2h_headers.p4"
 #include "../ipsec_defines.h"
+
+header_type ipsec_to_stage2_t {
+    fields {
+        ipsec_cb_addr : ADDRESS_WIDTH;
+        stage2_pad : 64;
+    }
+}
+
 
 header_type ipsec_to_stage3_t {
     fields {
@@ -61,7 +70,7 @@ header_type ipsec_table2_s2s {
     fields {
         in_desc_addr : ADDRESS_WIDTH;
         in_page_addr : ADDRESS_WIDTH; 
-        s2s2_pad : 32;
+        last_replay_seq_no: 32;
     }
 }
 
@@ -126,6 +135,9 @@ metadata ipsec_rxdma_global_t ipsec_global;
 metadata ipsec_rxdma_global_t ipsec_global_scratch;
 
 //to_stage
+@pragma pa_header_union ingress to_stage_2
+metadata ipsec_to_stage2_t ipsec_to_stage2;
+
 @pragma pa_header_union ingress to_stage_3
 metadata ipsec_to_stage3_t ipsec_to_stage3;
 
@@ -170,12 +182,17 @@ metadata dma_cmd_phv2mem_t doorbell_cmd;
 
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
+@pragma scratch_metadata
+metadata ipsec_decrypt_part2_t ipsec_cb_part2_scratch;
 
 @pragma scratch_metadata
 metadata p4_to_p4plus_ipsec_header_t p42p4plus_hdr_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
+@pragma scratch_metadata
+metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
+ 
  
 
 #define IPSEC_SCRATCH_T0_S2S \
@@ -191,7 +208,7 @@ metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
 #define IPSEC_SCRATCH_T2_S2S \
     modify_field(scratch_t2_s2s.in_desc_addr, t2_s2s.in_desc_addr); \
     modify_field(scratch_t2_s2s.in_page_addr, t2_s2s.in_page_addr); \
-    modify_field(scratch_t2_s2s.s2s2_pad, t2_s2s.s2s2_pad);
+    modify_field(scratch_t2_s2s.last_replay_seq_no, t2_s2s.last_replay_seq_no);
 
 #define IPSEC_SCRATCH_T3_S2S \
     modify_field(scratch_t3_s2s.out_desc_addr, t3_s2s.out_desc_addr); \
@@ -213,6 +230,9 @@ metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
     modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr); \
     modify_field(ipsec_to_stage3_scratch.payload_size, ipsec_to_stage3.payload_size); \
 
+#define IPSEC_TO_STAGE2_SCRATCH \
+    modify_field(ipsec_to_stage2_scratch.ipsec_cb_addr, ipsec_to_stage2.ipsec_cb_addr); \
+
 // Enqueue the input-descriptor at the tail of ipsec-cb
 // 1. Read the tail descriptor table from tail_desc_addr+64 bytes.
 // 2. rsvd field should be zero there. 
@@ -224,13 +244,13 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
                                        rxdma_ring_pindex, rxdma_ring_cindex, 
                                        barco_ring_pindex, barco_ring_cindex,
                                        key_index, new_key_index, iv_size, icv_size,
-                                       expected_seq_no, last_replay_seq_no,
+                                       expected_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size, 
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, vrf_vlan, is_v6)
+                                       vrf_vlan, is_v6)
 {
     IPSEC_CB_SCRATCH_WITH_PC
     IPSEC_SCRATCH_GLOBAL
@@ -254,6 +274,14 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
     // Ring HW doorbell for pindex incr ??
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
     // Ring Barco-Doorbell for IPSec-CB (svc_lif, type, ipsec-cb-index(qid))
+}
+
+//stage 3
+action esp_v4_tunnel_n2h_load_part2(spi, new_spi, last_replay_seq_no, iv_salt)
+{
+    IPSEC_CB_SCRATCH_PART2
+    IPSEC_SCRATCH_T2_S2S
+    
 }
 
 //stage 3
@@ -323,6 +351,7 @@ action esp_v4_tunnel_n2h_allocate_input_page_index(in_page_index)
     modify_field(t0_s2s.in_page_addr, IN_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * in_page_index));
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T2_S2S
+    IPSEC_TO_STAGE2_SCRATCH
 }
 
 //stage 2 
@@ -407,20 +436,19 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
                                        rxdma_ring_pindex, rxdma_ring_cindex, 
                                        barco_ring_pindex, barco_ring_cindex,
                                        key_index,new_key_index, iv_size, icv_size,
-                                       expected_seq_no, last_replay_seq_no,
+                                       expected_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size, 
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, vrf_vlan, is_v6)
+                                       vrf_vlan, is_v6)
 {
 
     IPSEC_CB_SCRATCH
 
     modify_field(ipsec_cb_scratch.expected_seq_no, expected_seq_no);
     modify_field(ipsec_cb_scratch.replay_seq_no_bmp, replay_seq_no_bmp);
-    modify_field(ipsec_cb_scratch.last_replay_seq_no, last_replay_seq_no);
 
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
@@ -451,7 +479,6 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(p42p4plus_scratch_hdr.table2_valid, p42p4plus_hdr.table2_valid);
     modify_field(p42p4plus_scratch_hdr.table3_valid, p42p4plus_hdr.table3_valid);
 
-    modify_field(ipsec_to_stage3.iv_salt, iv_salt);
     modify_field(ipsec_to_stage3.iv_size, iv_size);
     modify_field(ipsec_to_stage3.iv_salt_off,  p42p4plus_hdr.ipsec_payload_start - iv_size - IPSEC_SALT_HEADROOM);
 

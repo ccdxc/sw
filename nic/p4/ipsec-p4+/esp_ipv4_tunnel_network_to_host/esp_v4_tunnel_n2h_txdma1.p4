@@ -92,13 +92,6 @@ header_type barco_dbell_t {
     }
 }
 
-header_type ipsec_decrypt_part2_t {
-    fields {
-        spi : 32;
-        new_spi : 32;
-    }
-}
-
 @pragma pa_header_union ingress app_header
 metadata p4plus_to_p4_ipsec_header_t p4plus2p4_hdr;
 

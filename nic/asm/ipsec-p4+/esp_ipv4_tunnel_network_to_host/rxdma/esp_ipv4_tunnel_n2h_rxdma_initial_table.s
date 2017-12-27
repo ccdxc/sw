@@ -54,8 +54,9 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     add r6, r6, k.p42p4plus_hdr_ip_hdr_size
     addi r6, r6, ESP_FIXED_HDR_SIZE 
     phvwr p.ipsec_to_stage3_iv_salt_off, r6
-    phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt 
+    //phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+    phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
     // seq-no logic
     seq c4, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, d.expected_seq_no
@@ -78,8 +79,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
 .align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no:
     add r1, r0, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}
-    tblwr d.last_replay_seq_no, r1
-    nop
+    phvwr p.t2_s2s_last_replay_seq_no, r1 
     addi r1, r1, 1
     tblwr d.expected_seq_no, r1 
     nop
@@ -96,8 +96,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
     add r4, r4, r3
     tblwr d.expected_seq_no, r4
     nop
-    tblwr d.last_replay_seq_no, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}
-    nop
+    phvwr p.t2_s2s_last_replay_seq_no,  k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31} 
     add r5, r0, d.replay_seq_no_bmp
     sllv r6, r5, r3
     sllv r7, 1, r3
