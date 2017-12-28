@@ -1,0 +1,8 @@
+bazel-bin*
+bazel-genfiles*
+bazel-out*
+bazel-src*
+bazel-testlogs*
+bazel-*
+obj/*.so
+cscope.*

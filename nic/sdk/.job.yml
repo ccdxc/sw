@@ -1,0 +1,11 @@
+---
+targets:
+  main: ["sh", "-c", "cd /sdk && make lib && make test" ]
+cache:
+  name: "sdk"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sdk"
+  work_dir: "/sdk"
+rebase: true
+logfiles:
