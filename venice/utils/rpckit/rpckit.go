@@ -42,15 +42,16 @@ func ClearStats() {
 
 // These are options that are common to both client and server
 type options struct {
-	stats        *statsMiddleware  // Stats middleware for the server instance
-	tracer       *tracerMiddleware // Tracer middleware for the server
-	middlewares  []Middleware      // list of middlewares
-	enableTracer bool              // option to enable tracer middleware
-	enableLogger bool              // option to enable logging middleware
-	enableStats  bool              // option to enable Stats middleware
-	maxMsgSize   int               // Max message size allowed on the connections
-	tlsProvider  TLSProvider       // provides TLS parameters for all RPC clients and servers
-	balancer     grpc.Balancer     // Load balance RPCs between available servers (client option)
+	stats             *statsMiddleware  // Stats middleware for the server instance
+	tracer            *tracerMiddleware // Tracer middleware for the server
+	middlewares       []Middleware      // list of middlewares
+	enableTracer      bool              // option to enable tracer middleware
+	enableLogger      bool              // option to enable logging middleware
+	enableStats       bool              // option to enable Stats middleware
+	maxMsgSize        int               // Max message size allowed on the connections
+	tlsProvider       TLSProvider       // provides TLS parameters for all RPC clients and servers
+	customTLSProvider bool              // a flag that indicates that user has explicitly passed in a TLS provider
+	balancer          grpc.Balancer     // Load balance RPCs between available servers (client option)
 }
 
 // RPCServer contains RPC server state
@@ -80,6 +81,7 @@ type Option func(opt *options)
 func WithTLSProvider(provider TLSProvider) Option {
 	return func(o *options) {
 		o.tlsProvider = provider
+		o.customTLSProvider = true
 	}
 }
 
@@ -202,6 +204,17 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 		grpc.StreamInterceptor(rpcServerStreamInterceptor(rpcServer)),
 	}
 
+	// Use default TLS provider unless user has passed in one
+	if rpcServer.options.customTLSProvider == false {
+		tlsProvider, err := GetDefaultTLSProvider(mysvcName)
+		if err != nil {
+			log.Errorf("Failed to instantiate TLS provider. Server name: %s, Err %v", mysvcName, err)
+			return nil, err
+		}
+		rpcServer.tlsProvider = tlsProvider
+	}
+	log.Infof("Creating new server, name: %v listenURL: %v, TLS: %v", mysvcName, listenURL, rpcServer.tlsProvider != nil)
+
 	// get TLS options
 	if rpcServer.tlsProvider != nil {
 		tlsOptions, err := rpcServer.tlsProvider.GetServerOptions(mysvcName)
@@ -320,6 +333,17 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 	if rpcClient.enableTracer {
 		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer) // tracing
 	}
+
+	// Use default TLS provider unless user has passed in one
+	if rpcClient.options.customTLSProvider == false {
+		tlsProvider, err := GetDefaultTLSProvider(mysvcName)
+		if err != nil {
+			log.Errorf("Failed to instantiate TLS provider. Server name: %s, Err %v", mysvcName, err)
+			return nil, err
+		}
+		rpcClient.tlsProvider = tlsProvider
+	}
+	log.Infof("Service %v connecting to remoteURL: %v, TLS: %v", mysvcName, remoteURL, rpcClient.tlsProvider != nil)
 
 	// Get credentials
 	if rpcClient.tlsProvider != nil {

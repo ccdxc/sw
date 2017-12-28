@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+
+	"github.com/pensando/sw/venice/utils/testenv"
 )
 
 // Evaluator prototype for eveluator function
@@ -224,4 +226,11 @@ func CheckEventually(eval Evaluator, intervals ...string) bool {
 			return true
 		}
 	}
+}
+
+func init() {
+	// Switch rpckit to test mode. This disables TLS by default.
+	// Tests can instantiate a custom TLS provider and set it using
+	// testenv.SetTestModeTLSProvider()
+	testenv.EnableRpckitTestMode()
 }

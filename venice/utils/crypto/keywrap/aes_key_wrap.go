@@ -1,6 +1,6 @@
 // Provides an RFC3394/RFC5649 implementation.
 
-package keymgr
+package keywrap
 
 import (
 	"bytes"

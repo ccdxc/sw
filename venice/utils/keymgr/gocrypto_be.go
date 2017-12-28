@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/venice/utils/certs"
+	kw "github.com/pensando/sw/venice/utils/crypto/keywrap"
 )
 
 // GoCryptoBackend is a KeyMgr backend based on Go crypto library
@@ -253,7 +254,7 @@ func (be *GoCryptoBackend) WrapKeyPair(keyPairID, kekID string) ([]byte, error) 
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error marshaling private key, ID: %v", keyPairID)
 	}
-	wrappedKey, err := AesKeyWrapWithPad(keyBytes, kek.(*SymmetricKey).Key.([]byte))
+	wrappedKey, err := kw.AesKeyWrapWithPad(keyBytes, kek.(*SymmetricKey).Key.([]byte))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error wrapping private key, ID: %v, with key: %v", keyPairID, kekID)
 	}
@@ -272,7 +273,7 @@ func (be *GoCryptoBackend) UnwrapKeyPair(unwrappedKeyPairID string, wrappedKey [
 	if kekObj == nil {
 		return nil, fmt.Errorf("Unwrapping key, ID: %v does not exist", kekID)
 	}
-	unwrappedKeyBytes, err := AesKeyUnwrapWithPad(wrappedKey, kekObj.(*SymmetricKey).Key.([]byte))
+	unwrappedKeyBytes, err := kw.AesKeyUnwrapWithPad(wrappedKey, kekObj.(*SymmetricKey).Key.([]byte))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error unwrapping private key ID: %v with key: %v", unwrappedKeyPairID, kekID)
 	}
