@@ -15,6 +15,10 @@ default:
 	# Run go imports on mock files
 	goimports -w -l *mock.go
 
-hal-proto:
+hal-proto: clean-proto
 	# Compile proto definitions
 	protoc --proto_path=../../../../../ -I../../../../../nic/proto -I../../../../../nic/proto/hal -I../../../../../vendor/github.com/gogo/protobuf/gogoproto --gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:. types.proto ${HAL_PROTO_FILES}
+
+clean-proto:
+	# Regenerate all .pb.go. This avoids conflicts due to file renames in nic/proto/hal
+	rm -f ${GEN_DIR}/*.pb.go
