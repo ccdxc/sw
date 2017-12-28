@@ -21,6 +21,7 @@ void queues_shutdown();
 
 DEFINE_uint64(hal_port, 50054, "TCP port of the HAL's gRPC server");
 DEFINE_string(test_group, "", "Test group to run");
+DEFINE_uint64(poll_interval, 60, "Polling interval in seconds");
 
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
@@ -141,7 +142,10 @@ int main(int argc, char**argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   signal(SIGSEGV, sig_handler);
 
-  std::cout << "Input - hal_port: " <<  FLAGS_hal_port << " test group: " << FLAGS_test_group << std::endl;
+  std::cout << "Input - hal_port: "   << FLAGS_hal_port 
+            << ", test group: "       << FLAGS_test_group
+            << ", polling interval: " << FLAGS_poll_interval 
+            << std::endl;
 
   // Set the test group based on flags. Default is to allow all.
   if (FLAGS_test_group == "") {
@@ -167,7 +171,8 @@ int main(int argc, char**argv) {
   } else if (FLAGS_test_group == "rdma") {
       run_rdma_tests = true;
   } else {
-    printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma] \n");
+    printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma] "
+           " [--poll_interval <yyy> \n");
     return -1;
   }
 
@@ -194,7 +199,7 @@ int main(int argc, char**argv) {
 
   printf("Forming test suite based on configuration\n");
   // Add unit tests
-  if (run_unit_tests) {
+  if (run_unit_tests || run_nvme_tests) {
     for (size_t i = 0; i < unit_tests.size(); i++) {
       test_suite.push_back(unit_tests[i]);
     }
