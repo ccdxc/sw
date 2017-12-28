@@ -26,11 +26,3 @@ cc_library(
     name = "alg_includes",
     hdrs = ["alg_tftp.hpp", "alg_rpc.hpp"],
 )
-
-cc_test(
-    name = "alg_test",
-    srcs = glob(["test/*.cc"]),
-    deps = [":alg"] + gl_deps_list,
-    linkopts = gl_linkopts_list,
-    copts = sdk_copts
-)

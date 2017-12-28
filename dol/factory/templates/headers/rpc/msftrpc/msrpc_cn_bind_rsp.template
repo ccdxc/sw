@@ -9,7 +9,8 @@ fields:
     assoc_grp_id   : const/0
     sec_addr_len   : const/0
     sec_addr       : None
-    num_rslt       : const/0
     rsvd           : const/0
     rsvd2          : const/0
+    num_rslt       : const/0
+    rsvd3          : const/0
     rslts          : None

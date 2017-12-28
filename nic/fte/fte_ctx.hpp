@@ -501,6 +501,7 @@ public:
         }
 
         strncpy(state->feature_name, feature_name_, sizeof(state->feature_name));
+
         dllist_reset(&state->session_feature_lentry);
 
         HAL_TRACE_DEBUG("fte: feature={} register session state {:p}",

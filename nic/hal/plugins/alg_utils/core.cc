@@ -343,8 +343,6 @@ hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t 
     memcpy(&(app_sess)->key, &key, sizeof(hal::flow_key_t));
     app_sess_ht()->insert(app_sess, &app_sess->app_sess_ht_ctxt);
 
-    HAL_TRACE_DEBUG("App sess: {}", (app_sess != NULL)?"Not Null":"Null");
-
     *app_session = app_sess;
 
     return HAL_RET_OK;

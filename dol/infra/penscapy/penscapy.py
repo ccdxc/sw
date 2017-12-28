@@ -729,9 +729,10 @@ class MSRPC_BIND_RSP(Packet):
         BitField("assoc_grp_id",   0,   32),
         BitField("sec_addr_len", 0, 16),
         BitField("sec_addr", 0, 32),
-        BitField("num_rslt",   0,  8),
         BitField("rsvd",   0,  8),
         BitField("rsvd2",  0,  8),
+        BitField("num_rslt",   0,  8),
+        BitField("rsvd3",  0,  24),
         PacketField("rslts", '', MSRPC_BIND_RSLT),
     ]
 

@@ -79,7 +79,7 @@
         {
             "name"      : "alg_ftp",
             "provider"  : "pensando.io",
-            "lib"       : "network/alg/libalg.so",
+            "lib"       : "alg_ftp/libalg_ftp.so",
             "init_func" : "alg_ftp_init",
             "exit_func" : "alg_ftp_exit",
             "auto_load" : "true",
@@ -163,6 +163,7 @@
                 "pensando.io/sfw:sfw",
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
+                "pensando.io/alg_rpc:alg_rpc",
                 "pensando.io/alg:alg",
                 "pensando.io/proxy:tcp",
                 "pensando.io/proxy:ipsec",
@@ -192,6 +193,7 @@
                 "pensando.io/sfw:sfw",
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
+                "pensando.io/alg_rpc:alg_rpc",
                 "pensando.io/alg:alg",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding",
@@ -236,6 +238,7 @@
             "outbound_features": [
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
+                "pensando.io/alg_rpc:alg_rpc",
                 "pensando.io/alg:alg"
             ]
         },

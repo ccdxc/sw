@@ -180,6 +180,8 @@ packets:
         headers     :
             base    :
                 refer_id   : 0x2000000
+                length1    : 0x4b000000
+                length2    : 0x4b000000
                 num_floors : 0x0500
                 floors     : 
                     - record: ref://testcase/packets/id=EPMREQFLOORUUID/rawbytes
@@ -194,6 +196,8 @@ packets:
         headers     :
             base    :
                 refer_id   : 0x3000000
+                length1    : 0x4b000000
+                length2    : 0x4b000000
                 num_floors : 0x0500 
                 floors     : 
                     - record: ref://testcase/packets/id=EPMREQFLOORUUID/rawbytes
@@ -283,6 +287,7 @@ packets:
                 num_ctxt_elem : 1
                 p_cont_elm    : ref://testcase/packets/id=BIND_CTXT/rawbytes
             msrpc_bind_rsp: 
+                assoc_grp_id  : 0x95B70000
                 sec_addr_len  : 0x0400
                 sec_addr      : 0x31333500
                 num_rslt      : 1

@@ -1,13 +1,17 @@
 #include <gtest/gtest.h>
 #include "nic/hal/src/session.hpp"
-#include "nic/hal/plugins/network/alg/alg_utils.hpp"
-#include "nic/hal/plugins/network/alg/alg_rpc.hpp"
+#include "nic/hal/plugins/alg_rpc/msrpc_proto_def.hpp"
+#include "nic/hal/plugins/alg_utils/core.hpp"
+#include "nic/hal/plugins/alg_rpc/core.hpp"
+#include "nic/hal/plugins/alg_rpc/alg_msrpc.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/fte/fte_flow.hpp"
 
 using namespace fte;
 using namespace hal;
-using namespace hal::net;
+using namespace hal::plugins::alg_utils;
+using namespace hal::plugins::alg_rpc;
+
 
 uint8_t MSRPC_BIND_REQ1[] = {0x00, 0x0c, 0x29, 0xbe, 0x2e, 0xe1, 0x00, 0x50, 
                                 0x56, 0xc0, 0x00, 0x09, 0x08, 0x00, 0x45, 0x00, 
@@ -248,56 +252,52 @@ TEST_F(msrpc_test, msrpc_parse_bind_req_rsp1) {
     fte::flow_t iflow[2], rflow[2];
     uint16_t num_features = 0;
     fte::feature_state_t feature_state;
-    fte::alg_entry_t alg_entry;
+    l4_alg_status_t  alg_state;
+    rpc_info_t       rpc_info;
     fte::cpu_rxhdr_t rxhdr;
     hal::flow_key_t  key;
 
     key.proto = (types::IPProtocol)IP_PROTO_TCP;
-    memset(&alg_entry, 0, sizeof(alg_entry_t));
+    memset(&alg_state, 0, sizeof(l4_alg_status_t));
+    memset(&rpc_info, 0, sizeof(rpc_info_t));
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
-    alg_entry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_INIT;
+    alg_state.info = &rpc_info;
+    rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ1_PAYLOAD_OFFSET;
     ctx1.init(&rxhdr, MSRPC_BIND_REQ1, MSRPC_BIND_REQ1_SZ, iflow, rflow, &feature_state, num_features);
-    ctx1.set_alg_entry(&alg_entry);
     ctx1.set_key(key);
 
-    ret = parse_msrpc_control_flow(ctx1);
+    ret = parse_msrpc_cn_control_flow(ctx1, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ASSERT_EQ(alg_entry.rpcinfo.num_msrpc_ctxt, 1);
-    ASSERT_EQ(alg_entry.alg_proto_state, ALG_PROTO_STATE_MSRPC_BIND);
+    ASSERT_EQ(rpc_info.num_msrpc_ctxt, 1);
+    ASSERT_EQ(rpc_info.pkt_type, PDU_BIND);
 
-    alg_entry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BIND;
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_BIND_RSP1_PAYLOAD_OFFSET;
     ctx2.init(&rxhdr, MSRPC_BIND_RSP1, MSRPC_BIND_RSP1_SZ, iflow, rflow, &feature_state, num_features);
-    ctx2.set_alg_entry(&alg_entry);
     ctx2.set_key(key);
     
-    ret = parse_msrpc_control_flow(ctx2);
+    ret = parse_msrpc_cn_control_flow(ctx2, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ASSERT_EQ(alg_entry.alg_proto_state, ALG_PROTO_STATE_MSRPC_BOUND);
+    ASSERT_EQ(rpc_info.pkt_type, PDU_BIND_ACK);
 
-    alg_entry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BOUND;
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_REQ1_PAYLOAD_OFFSET;
     ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, iflow, rflow, &feature_state, num_features);
-    ctx3.set_alg_entry(&alg_entry);
     ctx3.set_key(key);
 
-    ret = parse_msrpc_control_flow(ctx3);
+    ret = parse_msrpc_cn_control_flow(ctx3, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ASSERT_EQ(alg_entry.alg_proto_state, ALG_PROTO_STATE_MSRPC_EPM);
+    ASSERT_EQ(rpc_info.pkt_type, PDU_REQ);
 
-    alg_entry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_RSP1_PAYLOAD_OFFSET;
     ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, iflow, rflow, &feature_state, num_features);
-    ctx4.set_alg_entry(&alg_entry);
     ctx4.set_key(key);
 
-    ret = parse_msrpc_control_flow(ctx4);
+    ret = parse_msrpc_cn_control_flow(ctx4, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ASSERT_EQ(alg_entry.alg_proto_state, ALG_PROTO_STATE_MSRPC_INIT); 
+    ASSERT_EQ(rpc_info.pkt_type, PDU_NONE); 
 }
 
 TEST_F(msrpc_test, msrpc_parse_bind_req_rsp2) {
@@ -306,54 +306,50 @@ TEST_F(msrpc_test, msrpc_parse_bind_req_rsp2) {
     fte::flow_t iflow[2], rflow[2];
     uint16_t num_features = 0;
     fte::feature_state_t feature_state;
-    fte::alg_entry_t alg_entry;
+    l4_alg_status_t  alg_state;
+    rpc_info_t       rpc_info;
     fte::cpu_rxhdr_t rxhdr;
     hal::flow_key_t  key;
 
     key.proto = (types::IPProtocol)IP_PROTO_TCP;
-    memset(&alg_entry, 0, sizeof(alg_entry_t));
+    memset(&alg_state, 0, sizeof(l4_alg_status_t));
+    memset(&rpc_info, 0, sizeof(rpc_info_t));
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
-    alg_entry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_INIT;
+    alg_state.info = &rpc_info;
+    rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ2_PAYLOAD_OFFSET;
     ctx1.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, iflow, rflow, &feature_state, num_features);
-    ctx1.set_alg_entry(&alg_entry);
     ctx1.set_key(key);
 
-    ret = parse_msrpc_control_flow(ctx1);
+    ret = parse_msrpc_cn_control_flow(ctx1, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ASSERT_EQ(alg_entry.rpcinfo.num_msrpc_ctxt, 3);
-    ASSERT_EQ(alg_entry.alg_proto_state, ALG_PROTO_STATE_MSRPC_BIND);
+    ASSERT_EQ(rpc_info.num_msrpc_ctxt, 3);
+    ASSERT_EQ(rpc_info.pkt_type, PDU_BIND);
 
-    alg_entry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BIND;
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_BIND_RSP2_PAYLOAD_OFFSET;
     ctx2.init(&rxhdr, MSRPC_BIND_RSP2, MSRPC_BIND_RSP2_SZ, iflow, rflow, &feature_state, num_features);
-    ctx2.set_alg_entry(&alg_entry);
     ctx2.set_key(key);
 
-    ret = parse_msrpc_control_flow(ctx2);
+    ret = parse_msrpc_cn_control_flow(ctx2, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ASSERT_EQ(alg_entry.alg_proto_state, ALG_PROTO_STATE_MSRPC_BOUND);
+    ASSERT_EQ(rpc_info.pkt_type, PDU_BIND_ACK);
  
-    alg_entry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_BOUND;
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_REQ1_PAYLOAD_OFFSET;
     ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, iflow, rflow, &feature_state, num_features);
-    ctx3.set_alg_entry(&alg_entry);
     ctx3.set_key(key);
 
-    ret = parse_msrpc_control_flow(ctx3);
+    ret = parse_msrpc_cn_control_flow(ctx3, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ASSERT_EQ(alg_entry.alg_proto_state, ALG_PROTO_STATE_MSRPC_EPM);
+    ASSERT_EQ(rpc_info.pkt_type, PDU_REQ);
 
-    alg_entry.alg_proto_state = fte::ALG_PROTO_STATE_MSRPC_EPM;
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_RSP1_PAYLOAD_OFFSET;
     ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, iflow, rflow, &feature_state, num_features);
-    ctx4.set_alg_entry(&alg_entry);
     ctx4.set_key(key);
 
-    ret = parse_msrpc_control_flow(ctx4);
+    ret = parse_msrpc_cn_control_flow(ctx4, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ASSERT_EQ(alg_entry.alg_proto_state, ALG_PROTO_STATE_MSRPC_INIT);
+    ASSERT_EQ(rpc_info.pkt_type, PDU_NONE);
 }

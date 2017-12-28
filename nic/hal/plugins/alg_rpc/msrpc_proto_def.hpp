@@ -8,9 +8,10 @@
 #define PDU_BIND_NAK        13
 #define PDU_ALTER_CTXT      14
 #define PDU_ALTER_CTXT_ACK  15
+#define PDU_NONE            255
 
+#define PFC_FIRST_FRAG 0x01
 #define PFC_LAST_FRAG  0x02 /* Last fragment */
-#define PFC_DG_FRAG    0x04 /* Datagram fragment */
 
 #define EPM_PROTO_UUID 0x0d
 #define EPM_PROTO_CN   0x0b
@@ -23,9 +24,14 @@
 #define MAX_CONTEXT    255
 #define WORD_BYTES     4
 #define SHORT_BYTES    2
+#define UUID_PROTO_SZ    6 
+#define L4_PROTO_SZ      4
+#define L3_PROTO_SZ      6
+#define DEFAULT_PROTO_SZ 2 
 
 namespace hal {
-namespace net {
+namespace plugins {
+namespace alg_rpc {
 
 typedef struct uuid_s {
     uint32_t time_lo;
@@ -89,7 +95,6 @@ typedef struct p_cont_elem_ {
     uint8_t         num_xfer_syn;
     uint8_t         reserved;
     p_syntax_id_t   abs_syntax;
-    p_syntax_id_t   xfer_syn;
 } p_cont_elem_t;
 
 typedef struct p_cont_list_ {
@@ -181,5 +186,6 @@ typedef struct msrpc_epm_rsp_hdr_s {
     msrpc_map_twr_t  twr;
 } msrpc_epm_rsp_hdr_t;
 
-}
-}
+} // namespace alg_rpc
+} // namespace plugins
+} // namespace hal

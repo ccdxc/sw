@@ -68,6 +68,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_TFTP_ALG_APPSESS,
     HAL_SLAB_TFTP_ALG_L4SESS,
     HAL_SLAB_TFTP_ALG_TFTPINFO,
+    HAL_SLAB_RPC_ALG_APPSESS,
+    HAL_SLAB_RPC_ALG_L4SESS,
+    HAL_SLAB_RPC_ALG_RPCINFO,
     HAL_SLAB_PI_MAX,  // NOTE: MUST be last PI slab id
 
     // PD Slabs

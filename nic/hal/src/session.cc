@@ -487,44 +487,12 @@ flow_to_flow_spec(flow_t *flow, FlowSpec *spec)
 }
 
 static void
-session_to_session_get_alg_status(session_t *session, SessionGetResponse *response)
-{
-    response->mutable_status()->set_alg(session->app_session->alg_info.alg);
-    switch (session->app_session->alg_info.alg) {
-        case nwsec::APP_SVC_TFTP:
-            response->mutable_status()->mutable_tftp_info()->set_parse_error(\
-                                         session->app_session->alg_info.parse_errors);
-            response->mutable_status()->mutable_tftp_info()->set_unknown_opcode(\
-                                         session->app_session->alg_info.unknown_opcode);
-            break;
-
-        case nwsec::APP_SVC_SUN_RPC:
-        case nwsec::APP_SVC_MSFT_RPC:
-            response->mutable_status()->mutable_rpc_info()->set_parse_error(\
-                                            session->app_session->alg_info.parse_errors);
-            response->mutable_status()->mutable_rpc_info()->set_num_data_sess(\
-                                       session->app_session->alg_info.num_data_sess);
-            break;
-
-        case nwsec::APP_SVC_SIP:
-            response->mutable_status()->mutable_sip_info()->set_parse_error(\
-                                         session->app_session->alg_info.parse_errors);
-            break;
-        
-        default:
-            break;
-    };
-}
-
-static void
 session_to_session_get_response (session_t *session, SessionGetResponse *response)
 {
     response->mutable_spec()->mutable_meta()->set_vrf_id(session->vrf->vrf_id);
     response->mutable_spec()->set_session_id(session->config.session_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
-
-    session_to_session_get_alg_status(session, response);
 
     flow_to_flow_spec(session->iflow, response->mutable_spec()->mutable_initiator_flow());
     flow_to_flow_spec(session->rflow, response->mutable_spec()->mutable_responder_flow());

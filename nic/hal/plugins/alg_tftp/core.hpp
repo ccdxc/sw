@@ -38,7 +38,7 @@ typedef union tftp_info_ tftp_info_t;
 // plugin.cc
 fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx);
 void tftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess);
-typedef hal_ret_t (*tftp_cb_t)(fte::ctx_t& ctx);
+typedef hal_ret_t (*tftp_cb_t)(fte::ctx_t& ctx, l4_alg_status_t *exp_flow);
 
 /*
  * Data Structures
@@ -46,8 +46,8 @@ typedef hal_ret_t (*tftp_cb_t)(fte::ctx_t& ctx);
 typedef union tftp_info_ {
     struct {  /* Expected flow info */
         uint8_t   tftpop;
-        bool      skip_sfw;
         tftp_cb_t callback;
+        bool      skip_sfw;
     } __PACK__;
     struct {  /* Session info */
         uint32_t  unknown_opcode;

@@ -78,20 +78,10 @@ insert_alg_entry(fte::ctx_t& ctx)
 void
 alg_completion_hdlr (fte::ctx_t& ctx, bool status)
 {
-    hal::app_session_t    *app = NULL;
     HAL_TRACE_DEBUG("Invoked ALG Completion Handler status: {}", status);
-    hal::plugins::sfw::sfw_info_t *sfw_info =
-        (hal::plugins::sfw::sfw_info_t*)ctx.feature_state(hal::plugins::sfw::FTE_FEATURE_SFW);
 
     // Insert ALG entry on completion
     if (status) {
-        if (ctx.session() != NULL) {
-            // Todo (Pavithra) -- cleanup during session timeout callback
-            app = (hal::app_session_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, 
-                                                      sizeof(hal::app_session_t));
-            app->alg_info.alg = sfw_info->alg_proto;
-            ctx.session()->app_session = app;
-        }
         insert_alg_entry(ctx);
     }
 }

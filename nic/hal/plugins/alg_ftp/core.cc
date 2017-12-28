@@ -12,6 +12,7 @@ namespace plugins {
 namespace alg_ftp {
 
 using namespace hal::plugins::alg_utils;
+using namespace hal::plugins::sfw;
 
 /* 
  * Get port: number up to delimiter 
@@ -475,14 +476,16 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
     ftp_info_t                    *ftp_info = NULL;
     fte::flow_update_t             flowupd;
     uint32_t                       payload_offset;
-    hal::plugins::sfw::sfw_info_t *sfw_info =
-        (hal::plugins::sfw::sfw_info_t*)ctx.feature_state(\
-                       hal::plugins::sfw::FTE_FEATURE_SFW);
+    fte::feature_session_state_t  *alg_state = NULL;
+    sfw_info_t                    *sfw_info =
+                                   (sfw_info_t*)ctx.feature_state(\
+                                      FTE_FEATURE_SFW);
 
-    l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
-    if (l4_sess != NULL) 
-        ftp_info = (ftp_info_t *)l4_sess->info;
-    
+    if (ctx.protobuf_request()) {
+        return fte::PIPELINE_CONTINUE;
+    }
+
+    alg_state = ctx.feature_session_state();
     if (sfw_info->alg_proto == nwsec::APP_SVC_FTP) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
             /*
@@ -509,40 +512,43 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         flowupd.mcast_info.mcast_en = 1;
         flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
         ret = ctx.update_flow(flowupd);
-    } else if (l4_sess != NULL && l4_sess->alg == nwsec::APP_SVC_FTP) {
-        /*
-         * Process only when we are expecting something.
-         */
-        if (l4_sess->isCtrl == TRUE) {
+    } else if (alg_state != NULL) {
+        l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
+        if (l4_sess != NULL && l4_sess->alg == nwsec::APP_SVC_FTP) {
+            ftp_info = (ftp_info_t *)l4_sess->info;
             /*
-             * This will only be executed for control channel packets that
-             * would lead to opening up pinholes for FTP data sessions.
+             * Process only when we are expecting something.
              */
+            if (l4_sess->isCtrl == TRUE) {
+                /*
+                 * This will only be executed for control channel packets that
+                 * would lead to opening up pinholes for FTP data sessions.
+                 */
+                /*
+                 * Derive the ftp info from the expected flow
+                 * for parsing
+                 */
+                exp_flow = g_ftp_state->get_ctrl_expflow(l4_sess->app_session);
+                if (!exp_flow)
+                    return fte::PIPELINE_CONTINUE;
 
-            /*
-             * Derive the ftp info from the expected flow
-             * for parsing
-             */
-            exp_flow = g_ftp_state->get_ctrl_expflow(l4_sess->app_session);
-            if (!exp_flow)
-                return fte::PIPELINE_CONTINUE;
-
-            ftp_info = (ftp_info_t *)exp_flow->info;
-            payload_offset = ctx.cpu_rxhdr()->payload_offset;
-            if (ctx.pkt_len() <= payload_offset) {
-                // The first iflow packet that get mcast copied could be an
-                // ACK from the TCP handshake.
-                HAL_TRACE_DEBUG("Ignoring the packet -- may be a handshake packet");
-                return fte::PIPELINE_CONTINUE;
+                ftp_info = (ftp_info_t *)exp_flow->info;
+                payload_offset = ctx.cpu_rxhdr()->payload_offset;
+                if (ctx.pkt_len() <= payload_offset) {
+                    // The first iflow packet that get mcast copied could be an
+                    // ACK from the TCP handshake.
+                    HAL_TRACE_DEBUG("Ignoring the packet -- may be a handshake packet");
+                    return fte::PIPELINE_CONTINUE;
+                } else {
+                    ftp_info->callback(ctx, ftp_info);
+                }
             } else {
-                ftp_info->callback(ctx, ftp_info);
+                /*
+                 * We have received request for data session. Register completion
+                 * handler to cleanup the exp_flow and move it to l4_session list
+                 */  
+                ctx.register_completion_handler(ftp_completion_hdlr);
             }
-        } else {
-            /*
-             * We have received request for data session. Register completion
-             * handler to cleanup the exp_flow and move it to l4_session list
-             */  
-            ctx.register_completion_handler(ftp_completion_hdlr);
         }
     }
 

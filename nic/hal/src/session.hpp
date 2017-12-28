@@ -42,7 +42,6 @@ namespace hal {
 // forward declarations
 typedef struct flow_s flow_t;
 typedef struct session_s session_t;
-typedef struct app_session_s app_session_t;
 
 // flow type depends on the type of packets flow is for
 enum flow_type_t {
@@ -282,7 +281,6 @@ struct session_s {
     session_cfg_t       config;                   // session config
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
-    app_session_t       *app_session;             // app session this L4 session is part of, if any
     vrf_t               *vrf;                     // vrf
 
     // PD state
@@ -302,39 +300,6 @@ struct session_s {
     dllist_ctxt_t       dl2seg_session_lentry;    // destination L2 segment's session list context
     dllist_ctxt_t       vrf_session_lentry;       // vrf's session list context
     dllist_ctxt_t       feature_list_head;        // List of feature specific states
-} __PACK__;
-
-// Todo (Pavithra) - this is moved to ALG utils. Keeping it here until we 
-// have FTE call the plugins for session_get()
-//---------------------------------------------------------------------------------
-// ALG status per session
-//---------------------------------------------------------------------------------
-typedef struct alg_info_s {
-    nwsec::ALGName      alg;                       // ALG that this app session represents
-    uint32_t            parse_errors;              // Number of parse errors seen
-    union {
-        struct { /* TFTP Info */
-            uint32_t       unknown_opcode;         // Number of packets seen with unknown opcode
-        } __PACK__;
-        struct { /* RPC Info */
-            uint32_t       num_data_sess;          // Number of data session per control session
-        } __PACK__;
-    } __PACK__;
-} alg_info_t;
-
-//------------------------------------------------------------------------------
-// app session consists of bunch of L4 sessions, app sessions are used by
-// Application Layer Gateway(ALG)s. For example, ftp app session can consist of
-// one control L4 session and multiple data sessions.
-//------------------------------------------------------------------------------
-#define MAX_L4SESSIONS_PER_APP    8
-struct app_session_s {
-    hal_spinlock_t      slock;                     // lock to protect this structure
-    app_session_id_t    app_session_id;            // unique app session identifier
-    alg_info_t          alg_info;                  // Oper status, counters corresponding to this session
-    hal_handle_t        hal_handle;                // hal handle for this app session
-    dllist_ctxt_t       l4_session_list_head;      // all L4 sessions in this session
-    ht_ctxt_t           app_session_id_ht_ctxt;    // session id based hash table context
 } __PACK__;
 
 // max. number of session supported  (TODO: we can take this from cfg file)
