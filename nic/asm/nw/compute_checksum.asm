@@ -275,21 +275,30 @@ icrc_ipv4_udp:
   phvwr       p.ipv4_icrc, TRUE
   phvwr       p.udp_icrc, TRUE
   phvwr       p.roce_bth_icrc, TRUE
+  phvwr       p.udp_opt_ocs_csum, k.udp_opt_ocs_valid
+  sub         r6, k.ipv4_totalLen, k.control_metadata_udp_opt_bytes
+  phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, k.control_metadata_udp_opt_bytes
   jr          r7
-  phvwr       p.capri_deparser_len_icrc_payload_len, k.ipv4_totalLen
+  phvwr       p.capri_deparser_len_icrc_payload_len, r6
 
 icrc_inner_ipv4_inner_udp:
   phvwr       p.inner_ipv4_icrc, TRUE
   phvwr       p.inner_udp_icrc, TRUE
   phvwr       p.roce_bth_icrc, TRUE
+  phvwr       p.udp_opt_ocs_csum, k.udp_opt_ocs_valid
+  sub         r6, k.inner_ipv4_totalLen, k.control_metadata_udp_opt_bytes
+  phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, k.control_metadata_udp_opt_bytes
   jr          r7
-  phvwr       p.capri_deparser_len_icrc_payload_len, k.inner_ipv4_totalLen
+  phvwr       p.capri_deparser_len_icrc_payload_len, r6
 
 icrc_ipv6_udp:
   phvwr       p.ipv6_icrc, TRUE
   phvwr       p.udp_icrc, TRUE
   phvwr       p.roce_bth_icrc, TRUE
+  phvwr       p.udp_opt_ocs_csum, k.udp_opt_ocs_valid
   add         r6, k.ipv6_payloadLen, 40
+  sub         r6, r6, k.control_metadata_udp_opt_bytes
+  phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, k.control_metadata_udp_opt_bytes
   jr          r7
   phvwr       p.capri_deparser_len_icrc_payload_len, r6
 
@@ -297,6 +306,9 @@ icrc_inner_ipv6_inner_udp:
   phvwr       p.inner_ipv6_icrc, TRUE
   phvwr       p.inner_udp_icrc, TRUE
   phvwr       p.roce_bth_icrc, TRUE
+  phvwr       p.udp_opt_ocs_csum, k.udp_opt_ocs_valid
   add         r6, k.inner_ipv6_payloadLen, 40
+  sub         r6, r6, k.control_metadata_udp_opt_bytes
+  phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, k.control_metadata_udp_opt_bytes
   jr          r7
   phvwr       p.capri_deparser_len_icrc_payload_len, r6

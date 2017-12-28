@@ -202,6 +202,7 @@ class DeParserCsumProfile:
         self.csum_loc_adj       = 0
         self.no_csum_rw         = 0
         self.phdr_next_hdr      = 0
+        self.eight_bit          = 0
 
     def CsumProfileNumSet(self, profile):
         self.csum_profile = profile
@@ -252,6 +253,12 @@ class DeParserCsumProfile:
     def CsumProfilePhdrNextHdrGet(self):
         return self.phdr_next_hdr
 
+    def CsumEightBitSet(self, eight_bit):
+        self.eight_bit = eight_bit
+
+    def CsumEightBitGet(self):
+        return self.eight_bit
+
     def ConfigGenerate(self, csum_profile):
         csum_profile['use_phv_len']   ['value']=str(self.use_phv_len)
         csum_profile['phv_len_sel']   ['value']=str(self.phv_len_sel)
@@ -264,6 +271,7 @@ class DeParserCsumProfile:
         csum_profile['add_len']       ['value']=str(self.add_len)
         csum_profile['no_csum_rw']    ['value']=str(self.no_csum_rw)
         csum_profile['phdr_next_hdr'] ['value']=str(self.phdr_next_hdr)
+        csum_profile['eight_bit']     ['value']=str(self.eight_bit)
         #csum_profile['csum_unit_include_bm']['value'] = \
         #                        str(self.csum_unit_include_bm)
         csum_profile['_modified']           = True
@@ -282,6 +290,7 @@ class DeParserCsumProfile:
         log_str += '    add_len         = %d\n' % self.add_len
         log_str += '    no_csum_rw      = %d\n' % self.no_csum_rw
         log_str += '    phdr_next_hdr   = %d\n' % self.phdr_next_hdr
+        log_str += '    eight_bit       = %d\n' % self.eight_bit
         log_str += '    csum_unit_include_bm 0x%x\n' % self.csum_unit_include_bm
         log_str += '\n\n'
         return log_str
@@ -464,6 +473,7 @@ class DeParserCalField:
                                            p4.p4_header_keywords)\
                                        else\
                                            False
+
         #Find pseudo header associated with payload checksum
         if self.payload_checksum and 'checksum' in \
             self.P4FieldListCalculation._parsed_pragmas.keys():
@@ -487,8 +497,16 @@ class DeParserCalField:
             self.phdr_fields = None
             self.payload_update_len_field = ''
 
+        if 'checksum' in self.P4FieldListCalculation._parsed_pragmas.keys() and \
+           'udp_option' in self.P4FieldListCalculation._parsed_pragmas['checksum']:
+            self.payload_checksum = False
+            self.option_checksum = True
+        else:
+            self.option_checksum = False
+
         assert(self.P4FieldListCalculation != None)
         assert(self.P4FieldListCalculation.algorithm == 'csum16' or \
+               self.P4FieldListCalculation.algorithm == 'csum8' or \
                self.P4FieldListCalculation.algorithm == 'l2_complete_csum')
         assert(self.P4FieldListCalculation.output_width == 16)
 

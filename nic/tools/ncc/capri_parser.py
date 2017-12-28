@@ -2018,7 +2018,8 @@ class capri_parser:
                     hfname = h.name + '.csum'
                     csum_hv_names.append(hfname)
                 if not self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name) and \
-                   not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name):
+                   not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name) and \
+                   not self.be.checksum.IsHdrInOptionCsumCompute(h.name):
                     hfname = h.name + '.tcp_csum'
                     csum_hv_names.append(hfname)
                     hfname = h.name + '.udp_csum'

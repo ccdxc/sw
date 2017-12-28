@@ -6,10 +6,12 @@ action compute_checksum1() {
     modify_field(scratch_metadata.packet_len, udp.len);
     modify_field(scratch_metadata.packet_len, inner_udp.len);
     modify_field(scratch_metadata.size8, control_metadata.checksum_ctl);
+    modify_field(scratch_metadata.size8, control_metadata.udp_opt_bytes);
     modify_field(scratch_metadata.packet_len, ipv4.totalLen);
     modify_field(scratch_metadata.packet_len, inner_ipv4.totalLen);
     modify_field(scratch_metadata.packet_len, ipv6.payloadLen);
     modify_field(scratch_metadata.packet_len, inner_ipv6.payloadLen);
+    modify_field(scratch_metadata.udp_opt_ocs_valid, udp_opt_ocs.valid);
 }
 
 action compute_checksum2()  {}

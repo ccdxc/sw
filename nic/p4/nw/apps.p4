@@ -626,8 +626,10 @@ action f_p4plus_to_p4_2() {
             modify_field(scratch_metadata.packet_len, ipv6.payloadLen);
         }
     }
+    modify_field(control_metadata.udp_opt_bytes, p4plus_to_p4.udp_opt_bytes);
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN) != 0) {
-        modify_field(udp.len, scratch_metadata.packet_len);
+        subtract(udp.len, scratch_metadata.packet_len,
+                 p4plus_to_p4.udp_opt_bytes);
     }
 
     // update checksum/icrc compute flags

@@ -166,11 +166,11 @@ class DeParserCsumEngine:
     def __init__(self, direction, capri_be):
         self.be                     = capri_be
         self.direction              = direction
-        self.max_csum_units         = self.be.hw_model['deparser']['max_csum_engines']
-        self.max_cprofiles          = 8
-        self.max_phdr_profiles      = 8
-        self.allocated_csum_units   = [False, False, False, False, False]
-        self.allocated_csum_is_l3   = [False, False, False, False, False]
+        self.max_csum_units         = self.be.hw_model['deparser']['max_csum_engines'] - 1 #One unit is shared
+        self.max_cprofiles          = 16
+        self.max_phdr_profiles      = 16
+        self.allocated_csum_units   = [False, False, False, False]
+        self.allocated_csum_is_l3   = [False, False, False, False]
         self.allocated_cprofile     = 0
         self.allocated_phdr_profile = 0
         self.csum_units             = {} # k = checksumfield, v = csum-unit#
@@ -251,6 +251,14 @@ class DeParserCsumEngine:
         self.allocated_phdr_profile += 1
         return (self.allocated_phdr_profile - 1)
 
+    def SharedCsumUnitGet(self):
+        '''
+        One csum egine will be shared  for both L2 compplete csum and udp option csum.
+        They both are mutually exclusive; Hence can share csum.a L2Complete is in Rx dir
+        UDP option csum calcualtion is in TxDir.
+        '''
+        return 4
+
 
 # If P4 has calculated_fields, process and build objects
 # There can be 2 types of objects. One for verfication
@@ -295,7 +303,8 @@ class Checksum:
         for cal_fld in self.be.h.calculated_fields:
             field_dst, fld_ops, _, _  = cal_fld
             for ops in fld_ops:
-                if self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'csum16':
+                if self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'csum16' \
+                  or self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'csum8':
                     if ops[0] == 'verify':
                         d = self.csum_direction_get(ops[1])
                         if d == xgress.INGRESS:
@@ -622,7 +631,6 @@ class Checksum:
 
         csum_hdrs = set()
         csum_phdrs = set()
-        payload_calfld_hdr = []
         for calfldobj in verify_cal_fieldlist:
             csum_hdr = calfldobj.CalculatedFieldHdrGet()
             if csum_hdr not in csum_hdrs:
@@ -1513,6 +1521,13 @@ class Checksum:
                 return True
         return False
 
+    def IsHdrInOptionCsumCompute(self, hdrname):
+        for calfldobj in self.update_cal_fieldlist:
+            if calfldobj.CalculatedFieldHdrGet() == hdrname and \
+               calfldobj.option_checksum:
+                return True
+        return False
+
     def DeParserPayLoadLenSlotGet(self, calfldobj, eg_parser):
         assert calfldobj.payload_update_len_field != '', pdb.set_trace()
         cf_pl_update_len = self.be.pa.get_field(calfldobj.payload_update_len_field, eg_parser.d)
@@ -1637,7 +1652,8 @@ class Checksum:
                     if calfldobjlist == None:
                         continue
                     for calfldobj in calfldobjlist:
-                        if calfldobj not in csum_objects:
+                        if calfldobj not in csum_objects \
+                           and not calfldobj.option_checksum:
                             #This header was allocated Csum unit
                             #while processing parse path previously.
                             #Provide same csum unit.
@@ -1671,8 +1687,12 @@ class Checksum:
                         _csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[hdr][0][0])
                         _csum_obj.CsumHvBitStrSet(eg_parser.csum_hdr_hv_bit[hdr][0][2])
                         calfldhdr = calfldobj.CalculatedFieldHdrGet()
-                        _csum_obj.CsumUnitNumSet(self.EgDeParserCsumEngineObj.\
+                        if not calfldobj.option_checksum:
+                            _csum_obj.CsumUnitNumSet(self.EgDeParserCsumEngineObj.\
                                                  AllocateCsumUnit(calfldhdr, True))
+                        else:
+                            _csum_obj.CsumUnitNumSet(self.EgDeParserCsumEngineObj.\
+                                                                SharedCsumUnitGet())
                         _csum_obj.PhdrValidSet(0)
                         csum_profile = self.EgDeParserCsumEngineObj.\
                                                  AllocateCsumProfile(calfldhdr)
@@ -1683,7 +1703,13 @@ class Checksum:
                         _csum_profile_obj.CsumProfilePhvLenSelSet(0,0)
                         #TODO use p4field hlir-offset to set checksum location
                         # 10th byte in ipv4 header is checksum
-                        _csum_profile_obj.CsumProfileCsumLocSet(10) 
+                        _csum_profile_obj.CsumProfileCsumLocSet(10)
+                        if calfldobj.option_checksum:
+                            _csum_profile_obj.CsumProfileCsumLocSet(1)
+                            _csum_profile_obj.CsumEightBitSet(1)
+                            dprsr_payload_len_slot = \
+                                    self.DeParserPayLoadLenSlotGet(calfldobj, eg_parser)
+                            _csum_profile_obj.CsumProfilePhvLenSelSet(1,dprsr_payload_len_slot)
 
                         self.csum_compute_logger.debug(\
                         'Checksum Assignment along path %s' % (str(parse_path)))
@@ -2000,7 +2026,7 @@ class Checksum:
             _csum_obj.CsumHvBitNumSet(csumhv)
             _csum_obj.CsumHvBitStrSet(hf_name)
             _csum_obj.CsumUnitNumSet(self.EgDeParserCsumEngineObj.\
-                                     AllocateCsumUnit(calfldhdr, False))
+                                     SharedCsumUnitGet())
             _csum_obj.PhdrValidSet(0)
             csum_profile = self.EgDeParserCsumEngineObj.\
                                      AllocateCsumProfile(hf_name)

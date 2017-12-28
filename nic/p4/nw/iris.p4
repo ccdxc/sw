@@ -32,7 +32,8 @@ header_type capri_deparser_len_t {
         l4_payload_len          : 16;
         inner_l4_payload_len    : 16;
         icrc_payload_len        : 16;
-        l2_checksum_len         : 16;
+        udp_opt_l2_checksum_len : 16;  // This is overloaded.
+        //udp_opt_len             : 16;
     }
 }
 
@@ -106,6 +107,7 @@ header_type control_metadata_t {
         parser_outer_eth_offset        : 8;
         parser_inner_eth_offset        : 8;
         parser_payload_offset          : 16;
+        udp_opt_bytes                  : 8;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;
@@ -285,6 +287,8 @@ header_type scratch_metadata_t {
         policer_burst                 : 40;
         policer_rate                  : 40;
         policer_tbkt                  : 40;
+
+        udp_opt_ocs_valid             : 1;
 
         size16                        : 16;
         size8                         : 8;

@@ -1344,6 +1344,7 @@ parser parse_udp_trailer {
 parser parse_udp_payload {
     // dummy set_metadata to make ncc compiler reserve a register (wka)
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len + 0);
+    set_metadata(ohi.udp_opt_len, parser_metadata.l4_trailer + 0);
     extract(udp_payload);
     return parse_udp_options;
 }
@@ -1825,18 +1826,20 @@ field_list udp_opt_checksum_list {
 }
 
 @pragma checksum verify_len ohi.udp_opt_len
+@pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
 @pragma checksum gress egress
 @pragma checksum udp_option
 field_list_calculation udp_opt_checksum {
     input {
         udp_opt_checksum_list;
     }
-    algorithm : csum16;
+    algorithm : csum8;
     output_width : 16;
 }
 
 calculated_field udp_opt_ocs.chksum {
     verify udp_opt_checksum;
+    update udp_opt_checksum;
 }
 
 #ifdef GSO_CSUM
@@ -1863,26 +1866,6 @@ calculated_field capri_gso_csum.gso_checksum {
 
 #endif
 
-field_list udp_option_checksum_list {
-    udp_opt_ocs.kind; // Field from where csum computation starts. Should be
-                      // first field in the input list.
-                      // This field should also be included in write only ohi list.
-    payload;
-}
-
-@pragma checksum update_len capri_udp_option_csum.udp_option_checksum // Specifies csum result location
-@pragma checksum gso_checksum_offset udp_opt_ocs.chksum // Specifies csum location in packet.
-@pragma checksum gress egress
-field_list_calculation udp_option_checksum {
-    input {
-        udp_option_checksum_list;
-    }
-    algorithm : gso; //Using gso mode of computing checksum. Provide algorithm as gso
-    output_width : 16;
-}
-calculated_field capri_udp_option_csum.udp_option_checksum {
-    update udp_option_checksum;
-}
 
 parser parse_inner_udp {
     extract(inner_udp);
@@ -2014,7 +1997,7 @@ field_list l2_complete_ipv4_checksum_list {
    payload;
 }
 
-@pragma checksum update_len capri_deparser_len.l2_checksum_len
+@pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
 field_list_calculation ipv4_l2_complete_checksum {
    input {
        l2_complete_ipv4_checksum_list;
@@ -2029,7 +2012,7 @@ field_list l2_complete_ipv6_checksum_list {
 }
 
 @pragma checksum l2_complete_checksum
-@pragma checksum update_len capri_deparser_len.l2_checksum_len
+@pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
 field_list_calculation ipv6_l2_complete_checksum {
    input {
        l2_complete_ipv6_checksum_list;

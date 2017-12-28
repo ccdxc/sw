@@ -13,9 +13,11 @@ f_p4plus_to_p4_2:
   sub.c3        r2, k.ipv4_totalLen, k.ipv4_ihl, 2
   seq           c4, k.ipv6_valid, TRUE
   sub.c4        r2, k.ipv6_payloadLen, r0
+  sub           r2, r2, k.p4plus_to_p4_udp_opt_bytes
   smeqb         c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN, \
                     P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN
   phvwr.c2      p.udp_len, r2
+  phvwr         p.control_metadata_udp_opt_bytes, k.p4plus_to_p4_udp_opt_bytes
 
   // update compute checksum flags (classic nic)
   seq           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC

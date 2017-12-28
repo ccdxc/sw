@@ -1227,7 +1227,8 @@ class capri_gress_pa:
             hfname = hdr_name + '.csum'
             csum_hv_names.append(hfname)
         if not self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name) and \
-           not self.pa.be.checksum.IsHdrInPayLoadCsumCompute(hdr_name):
+           not self.pa.be.checksum.IsHdrInPayLoadCsumCompute(hdr_name) and \
+           not self.pa.be.checksum.IsHdrInOptionCsumCompute(hdr_name):
             hfname = hdr_name + '.tcp_csum'
             csum_hv_names.append(hfname)
             hfname = hdr_name + '.udp_csum'
