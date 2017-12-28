@@ -1,24 +1,13 @@
 #! /usr/bin/python3
-import pdb
-import math
-import ctypes
 
-import infra.common.defs        as defs
-import infra.common.objects     as objects
-import config.resmgr            as resmgr
-import config.objects.ring      as ring
-import config.objects.eth.ring  as ring
-import config.hal.api           as halapi
-import config.hal.defs          as haldefs
-
-from config.store               import Store
+from infra.common.defs          import status
 from infra.common.logging       import cfglogger
-from config.objects.queue       import QueueObject
 from infra.common.glopts        import GlobalOptions
-
+from config.objects.queue       import QueueObject
 import model_sim.src.model_wrap as model_wrap
 
 from scapy.all import *
+
 
 class EthQstate(Packet):
     fields_desc = [
@@ -105,47 +94,6 @@ class EthQstateObject(object):
         self.data[EthQstate].total = total
         model_wrap.write_mem(self.addr + 5, bytes(ctypes.c_uint8(host << 4 | total)), 1)
 
-    def incr_pindex(self, ring):
-        assert(isinstance(ring, int))
-        assert(ring < 7)
-        value = (self.get_pindex(ring) + 1) & (self.get_ring_size() - 1)
-        setattr(self.data[EthQstate], 'p_index%d' % ring, value)
-        model_wrap.write_mem(self.addr + 8 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
-
-    def incr_cindex(self, ring):
-        assert(isinstance(ring, int))
-        assert(ring < 7)
-        value = (self.get_cindex(ring) + 1) & (self.get_ring_size() - 1)
-        setattr(self.data[EthQstate], 'c_index%d' % ring, value)
-        model_wrap.write_mem(self.addr + 10 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
-
-    def get_pindex(self, ring):
-        assert(isinstance(ring, int))
-        assert(ring < 7)
-        return getattr(self.data[EthQstate], 'p_index%d' % ring)
-
-    def get_cindex(self, ring):
-        assert(isinstance(ring, int))
-        assert(ring < 7)
-        return getattr(self.data[EthQstate], 'c_index%d' % ring)
-
-    def get_ring_size(self):
-        return int(math.pow(2, self.data[EthQstate].ring_size))
-
-    def set_pindex(self, ring, value):
-        assert(isinstance(ring, int) and isinstance(value, int))
-        assert(ring < 7)
-        assert(value < self.get_ring_size())
-        setattr(self.data[EthQstate], 'p_index%d' % ring, value)
-        model_wrap.write_mem(self.addr + 8 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
-
-    def set_cindex(self, ring, value):
-        assert(isinstance(ring, int) and isinstance(value, int))
-        assert(ring < 7)
-        assert(value < self.get_ring_size())
-        setattr(self.data[EthQstate], 'c_index%d' % ring, value)
-        model_wrap.write_mem(self.addr + 10 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
-
     def set_enable(self, value):
         assert(isinstance(value, int))
         self.data[EthQstate].enable = value
@@ -197,26 +145,6 @@ class AdminQstateObject(object):
         self.data[AdminQstate].total = total
         model_wrap.write_mem(self.addr + 5, bytes(ctypes.c_uint8(host << 4 | total)), 1)
 
-    def incr_pindex(self, ring):
-        assert(ring < 7)
-        value = (self.get_pindex(ring) + 1) & (self.get_ring_size() - 1)
-        setattr(self.data[AdminQstate], 'p_index%d' % ring, value)
-        model_wrap.write_mem(self.addr + 8 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
-
-    def incr_cindex(self, ring):
-        assert(ring < 7)
-        value = (self.get_cindex(ring) + 1) & (self.get_ring_size() - 1)
-        setattr(self.data[AdminQstate], 'c_index%d' % ring, value)
-        model_wrap.write_mem(self.addr + 10 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
-
-    def get_pindex(self, ring):
-        assert(ring < 7)
-        return getattr(self.data[AdminQstate], 'p_index%d' % ring)
-
-    def get_cindex(self, ring):
-        assert(ring < 7)
-        return getattr(self.data[AdminQstate], 'c_index%d' % ring)
-
     def set_enable(self, value):
         self.data[AdminQstate].enable = value
         model_wrap.write_mem(self.addr + 16, bytes(ctypes.c_uint8(value)), 1)
@@ -247,13 +175,17 @@ class EthQueueObject(QueueObject):
     def __init__(self):
         super().__init__()
         self._qstate = None
+        self._mem = None
 
-    def Init(self, queue_type, spec, qid):
-        super().Init(queue_type, spec)
-        self.id = qid
-        self.GID("Q%d" % self.id)
-        self.queue_type = queue_type
-        self.spec = spec
+    def __str__(self):
+        return ("%s Lif:%s/QueueType:%s/Queue:%s/Size:%s/Qstate:%x/QstateSize:%s" %
+                (self.__class__.__name__,
+                self.queue_type.lif.id,
+                self.queue_type.type,
+                self.id,
+                self.size,
+                self.GetQstateAddr(),
+                self.queue_type.size))
 
     @property
     def qstate(self):
@@ -262,13 +194,12 @@ class EthQueueObject(QueueObject):
                 self._qstate = AdminQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
             else:
                 self._qstate = EthQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
-            cfglogger.info("Loading Qstate: Lif=%s QType=%s QID=%s Addr=0x%x Size=%s" %
-                           (self.queue_type.lif.id,
-                            self.queue_type.type,
-                            self.id,
-                            self.GetQstateAddr(),
-                            self.queue_type.size))
+            cfglogger.info(self)
+
         return self._qstate
+
+    def GetQstateAddr(self):
+        return self.queue_type.GetQstateAddr() + (self.id * self.queue_type.size)
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.lif_handle = 0  # HW LIF ID is not known in DOL. Assume it is filled in by hal::LifCreate.
@@ -291,11 +222,13 @@ class EthQueueObject(QueueObject):
             cfglogger.critical("Unable to set program information for Queue Type %s" % self.queue_type.purpose)
             raise NotImplementedError
 
-    def GetQstateAddr(self):
-        return self.queue_type.GetQstateAddr() + (self.id * self.queue_type.size)
-
     def ConfigureRings(self):
+        if GlobalOptions.dryrun:
+            return
+
         self.obj_helper_ring.Configure()
+        self.descriptors = [None] * self.size
+
         self.qstate.set_enable(1)
         self.qstate.set_ring_count(1, 1)
         for ring in self.obj_helper_ring.rings:
@@ -307,12 +240,22 @@ class EthQueueObject(QueueObject):
                 self.qstate.set_cq_base(ring._mem.pa)
             else:
                 raise NotImplementedError
+
         self.qstate.Read()
 
-    def Show(self):
-        cfglogger.info('Queue: %s' % self.GID())
-        cfglogger.info('- type   : %s' % self.queue_type.GID())
-        cfglogger.info('- id     : %s' % self.id)
+    def Post(self, descriptor):
+        if GlobalOptions.dryrun:
+            return status.SUCCESS
+
+        ring = self.obj_helper_ring.rings[0]
+        return ring.Post(descriptor)
+
+    def Consume(self, descriptor):
+        if GlobalOptions.dryrun:
+            return status.SUCCESS
+
+        ring = self.obj_helper_ring.rings[1]
+        return ring.Consume(descriptor)
 
 
 class EthQueueObjectHelper:
@@ -323,9 +266,9 @@ class EthQueueObjectHelper:
         if not hasattr(spec, 'queues'):
             return
         for espec in spec.queues:
-            for qid in range(espec.queue.count):
+            for qid in range(queue_type.count):
                 queue = EthQueueObject()
-                queue.Init(queue_type, espec.queue, qid)
+                queue.Init(queue_type, espec.queue)
                 self.queues.append(queue)
 
     def Configure(self):

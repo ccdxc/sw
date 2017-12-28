@@ -143,10 +143,10 @@ trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_ENIC24
-            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic24/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic24/lif/queue_types/id=RX
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_ENIC25
-            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic25/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic25/lif/queue_types/id=RX
 
     packets:
         - packet:
@@ -159,7 +159,7 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_ENIC24
-            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic24/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic24/lif/queue_types/id=RX
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_ENIC25
-            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic25/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic25/lif/queue_types/id=RX

@@ -13,67 +13,55 @@ queue_types:
         id          : TX
         type        : 1
         purpose     : LIF_QUEUE_PURPOSE_TX
-        size        : 64
-        count       : 1
+        upd         : 0xb
+        size        : 64    # Size of Qstate
+        count       : 1     # Number of queues of this type
         queues:
             - queue:
-                id          : Q0
-                count       : 1
+                size        : 128    # Number of descriptors in each ring
                 rings:
                     - ring:
                         id          : R0
-                        num         : 0
-                        size        : 1024
                         desc        : ref://factory/templates/id=DESCR_ETH_TX
 
                     - ring:
                         id          : R1
-                        num         : 1
-                        size        : 1024
                         desc        : ref://factory/templates/id=DESCR_ETH_TX_CQ
 
     - queue_type:
         id          : RX
         type        : 0
         purpose     : LIF_QUEUE_PURPOSE_RX
-        size        : 64
-        count       : 1
+        upd         : 0x8
+        size        : 64    # Size of Qstate
+        count       : 1     # Number of queues of this type
         queues:
             - queue:
-                id          : Q0
-                count       : 1
+                size        : 128    # Number of descriptors in each ring
                 rings:
                     - ring:
                         id          : R0
-                        num         : 0
-                        size        : 1024
                         desc        : ref://factory/templates/id=DESCR_ETH_RX
 
                     - ring:
                         id          : R1
-                        num         : 1
-                        size        : 1024
                         desc        : ref://factory/templates/id=DESCR_ETH_RX_CQ
 
     - queue_type:
         id          : ADMIN
         type        : 2
         purpose     : LIF_QUEUE_PURPOSE_ADMIN
-        size        : 64
-        count       : 1
+        upd         : 0xb
+        size        : 64    # Size of Qstate
+        count       : 1     # Number of queues of this type
         queues:
             - queue:
-                id          : Q0
-                count       : 1
+                size        : 128    # Number of descriptors in each ring
                 rings:
                     - ring:
                         id          : R0
-                        num         : 0
-                        size        : 1024
                         desc        : ref://factory/templates/id=DESCR_ADMIN
 
                     - ring:
                         id          : R1
-                        num         : 1
-                        size        : 1024
                         desc        : ref://factory/templates/id=DESCR_ADMIN_CQ

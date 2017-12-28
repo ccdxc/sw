@@ -372,22 +372,22 @@ trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=RXDESC
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
 
         - descriptor:
             object  : ref://testcase/descriptors/id=TXDESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=EX_TXDESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
         - descriptor:
             object  : ref://testcase/descriptors/id=EX_RXDESC
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
 
     packets:
         - packet:

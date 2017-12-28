@@ -123,11 +123,11 @@ trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_COPY1_ALLMC
-            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=0
+            ring    : callback://classic/callbacks/GetMulticastEnicRx/idx=0
 
         - descriptor:
             object  : ref://testcase/descriptors/id=TX_DESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay
@@ -140,4 +140,4 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_COPY1_ALLMC
-            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=0
+            ring    : callback://classic/callbacks/GetMulticastEnicRx/idx=0

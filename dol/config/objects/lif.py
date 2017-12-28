@@ -129,6 +129,9 @@ class LifObject(base.ConfigObjectBase):
     def GetMrKey(self):
         return self.mr_key_allocator.get()
 
+    def GetQt(self, type):
+        return self.queue_types.Get(type)
+
     def GetQ(self, type, qid):
         qt = self.queue_types.Get(type)
         if qt is not None:
@@ -180,7 +183,7 @@ class LifObject(base.ConfigObjectBase):
             return False
 
         for c_qtype, o_q_type in zip(self.queue_types_list, other.queue_types_list):
-            if not c_qtype.Equals(o_q_type, lgh):
+            if not c_qtype == o_q_type:
                 lgh.error("Queue Type mismatch")
                 return False
 
@@ -212,7 +215,6 @@ class LifObject(base.ConfigObjectBase):
                 queue.PrepareHALRequestSpec(qstate_spec)
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-
         self.hal_handle = resp_spec.status.lif_handle
         if (self.c_lib):
             self.CLibConfig(resp_spec)
@@ -233,10 +235,8 @@ class LifObject(base.ConfigObjectBase):
            cfglogger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x)" %
                           (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr))
 
-
     def PrepareHALGetRequestSpec(self, get_req_spec):
         get_req_spec.key_or_handle.lif_id = self.id
-        return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):
         if get_resp.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):

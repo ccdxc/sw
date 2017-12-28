@@ -8,28 +8,20 @@ import model_sim.src.model_wrap as model_wrap
 
 class Doorbell(doorbell.Doorbell):
 
-    def Ring(self, upd, lgh=cfglogger):
+    def Init(self, queue_type, spec):
         # Address
-        queue_type = self.ring.queue.queue_type.type
-        lif_id = self.ring.queue.queue_type.lif.hw_lif_id
+        self.queue_type = queue_type.type
+        self.lif_id = queue_type.lif.hw_lif_id
+        self.upd = queue_type.upd
 
-        # Data
-        ring_id = self.ring.num
-        queue_id = self.ring.queue.id
-
-        # Data
-        p_index = self.ring.pi
-        pid = 0
-
-        address = 0x400000 + (upd << 17) + (lif_id << 6) + (queue_type << 3)
+    def Ring(self, queue_id, ring_id, p_index, pid, lgh=cfglogger):
+        address = 0x400000 + (self.upd << 17) + (self.lif_id << 6) + (self.queue_type << 3)
         data = (pid << 48) | (queue_id << 24) | (ring_id << 16) | p_index
 
         lgh.info("Ringing Doorbell: %s" % self.GID())
         lgh.info("- Addr:0x%x (Qtype:%d/LIF:%d/Upd:%d)" %
-                 (address, queue_type, lif_id, upd))
+                 (address, self.queue_type, self.lif_id, self.upd))
         lgh.info("- Data:0x%x (Pindex:%d/RingID:%d/QID:%d/PID:%d)" %
                  (data, p_index, ring_id, queue_id, pid))
 
-        self.ring.queue.qstate.Read()
         model_wrap.step_doorbell(address, data)
-        self.ring.queue.qstate.Read()

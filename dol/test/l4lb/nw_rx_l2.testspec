@@ -160,7 +160,7 @@ trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1
@@ -169,7 +169,7 @@ trigger:
     #descriptors:
     #    - descriptor:
     #        object  : ref://testcase/descriptors/id=DESC1
-    #        ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+    #        ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay
@@ -184,4 +184,4 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX

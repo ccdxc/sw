@@ -144,11 +144,11 @@ trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=RX
 
         - descriptor:
             object  : ref://testcase/descriptors/id=TX_DESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
 expect:
     packets:
@@ -159,8 +159,8 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=TX_CMPL_DESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_CMPL_DESC
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=RX

@@ -18,9 +18,12 @@ class QueueObject(objects.FrameworkObject):
         super().__init__()
 
     def Init(self, queue_type, spec):
-        self.GID(spec.id)
+        self.spec       = spec
         self.queue_type = queue_type
         self.id         = queue_type.GetQid()
+        self.size       = getattr(spec, 'size', 0)
+
+        self.GID('Q%d' % self.id)
 
         self.rings      = objects.ObjectDatabase(cfglogger)
         self.obj_helper_ring = ring.EthRingObjectHelper()

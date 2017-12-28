@@ -71,12 +71,6 @@ class ConfigObjectBase(objects.FrameworkObject):
         return
 
     # Methods for RING objects.
-    def Post(self):
-        logger.error("Method %s not implemented by class: %s" %\
-                     (utils.GetFunctionName(), self.__class__))
-        assert(0)
-        return
-
     def Init(self):
         logger.error("Method %s not implemented by class: %s" %\
                      (utils.GetFunctionName(), self.__class__))
@@ -105,4 +99,3 @@ class ConfigObjectBase(objects.FrameworkObject):
     
     def CompareObjectFields(self, other, fields, lgh):
         return utils.CompareObjectFields(self, other, fields, lgh)
-        

@@ -76,8 +76,8 @@ class QpObject(base.ConfigObjectBase):
         
             #cfglogger.info('QP: %s PD: %s Remote: %s intf: %s lif: %s' %(self.GID(), self.pd.GID(), self.remote, pd.ep.intf.GID(), pd.ep.intf.lif.GID()))
 
-            self.tx = pd.ep.intf.lif.GetQ('TX', 'Q0')
-            self.rx = pd.ep.intf.lif.GetQ('RX', 'Q0')
+            self.tx = pd.ep.intf.lif.GetQt('TX')
+            self.rx = pd.ep.intf.lif.GetQt('RX')
             
             if (self.tx is None or self.rx is None):
                 assert(0)

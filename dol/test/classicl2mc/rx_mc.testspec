@@ -178,15 +178,15 @@ trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_COPY0
-            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=0
+            ring    : callback://classic/callbacks/GetMulticastEnicRx/idx=0
 
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_COPY1
-            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=1
+            ring    : callback://classic/callbacks/GetMulticastEnicRx/idx=1
 
         - descriptor:
             object  : ref://testcase/descriptors/id=RX_DESC_COPY2_ALLMC
-            ring    : callback://classic/callbacks/GetRxRingForMulticastCopy/idx=2
+            ring    : callback://classic/callbacks/GetMulticastEnicRx/idx=2
 
 
     packets:
@@ -200,11 +200,11 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_COPY0
-            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=0
+            ring    : callback://classic/callbacks/GetMulticastEnicRx/idx=0
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_COPY1
-            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=1
+            ring    : callback://classic/callbacks/GetMulticastEnicRx/idx=1
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC_COPY2_ALLMC
-            ring    : callback://classic/callbacks/GetRxCqRingForMulticastCopy/idx=2
+            ring    : callback://classic/callbacks/GetMulticastEnicRx/idx=2
 

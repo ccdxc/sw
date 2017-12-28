@@ -21,6 +21,7 @@ class RdmaRingObject(ring.RingObject):
 
     def Init(self, queue, spec):
         super().Init(queue, spec)
+        self.size = spec.size
         self.desc_size = self.descriptor_template.meta.size
         self.doorbell = doorbell.Doorbell()
         self.doorbell.Init(self, spec)

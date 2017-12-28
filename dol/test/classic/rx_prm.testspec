@@ -109,7 +109,7 @@ trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC1
-            ring    : callback://classic/callbacks/GetPromiscuousEnicRxRing
+            ring    : callback://classic/callbacks/GetPromiscuousEnicRx
 
     packets:
         - packet:
@@ -120,4 +120,4 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
-            ring    : callback://classic/callbacks/GetPromiscuousEnicRxCompRing
+            ring    : callback://classic/callbacks/GetPromiscuousEnicRx

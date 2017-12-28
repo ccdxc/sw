@@ -220,10 +220,10 @@ def GetTriggerRing(testcase, args):
         (sess, direc, spantype, pkt, pktlen, obj) = ret
         if spantype == "ERSPAN":
             testcase.info("returning Trigger ring for tnl dest ip %s lif %d" % (obj.GetDestIp().get(), obj.remote_ep.intf.lif.id))
-            return obj.remote_ep.intf.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R0"]
+            return obj.remote_ep.intf.lif.queue_types.db["RX"]
         else:
             testcase.info("returning Trigger ring for tnl dest ip %s lif %d" % (obj.GID(), obj.lif.id))
-            return obj.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R0"]
+            return obj.lif.queue_types.db["RX"]
     return None
 
 def GetExpectRing(testcase, args):
@@ -232,10 +232,10 @@ def GetExpectRing(testcase, args):
         (sess, direc, spantype, pkt, pktlen, obj) = ret
         if spantype == "ERSPAN":
             testcase.info("returning Expect ring for tnl dest ip %s lif %d" % (obj.GetDestIp().get(), obj.remote_ep.intf.lif.id))
-            return obj.remote_ep.intf.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R1"]
+            return obj.remote_ep.intf.lif.queue_types.db["RX"]
         else:
             testcase.info("returning Expect ring for tnl dest ip %s lif %d" % (obj.GID(), obj.lif.id))
-            return obj.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R1"]
+            return obj.lif.queue_types.db["RX"]
     return None
 
 def GetExpectBufSize(testcase, pkt, args):
@@ -291,7 +291,7 @@ def GetExpectRing1(testcase, args):
         ep = telemetry.data.getLocalEpDest(args.sessionid)
     if ep is not None:
         testcase.info("Returning EP %s Lif %s for session %d" % (ep.GID(), ep.intf.lif.id, args.sessionid))
-        return ep.intf.lif.queue_types.db["RX"].queues.db["Q0"].rings.db["R1"]
+        return ep.intf.lif.queue_types.db["RX"]
     return None
 
 def GetCollectorSrcMac(testcase, args):

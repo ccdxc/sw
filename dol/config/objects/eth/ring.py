@@ -1,13 +1,10 @@
 #! /usr/bin/python3
 
-import math
-
+from infra.common.defs          import status
 import config.resmgr            as resmgr
 import config.objects.ring      as ring
-from infra.common.logging   import cfglogger
-from infra.common.defs import status
-from infra.common.glopts import GlobalOptions
-import config.objects.eth.doorbell as doorbell
+from infra.common.logging       import cfglogger
+from infra.common.glopts        import GlobalOptions
 
 
 class EthRingObject(ring.RingObject):
@@ -18,25 +15,12 @@ class EthRingObject(ring.RingObject):
         self.ci = 0     # Local CI
         self.exp_color = 1  # Expect this color until ring wrap, then toggle
 
-    def __str__(self):
-        return ("%s Lif:%s/QueueType:%s/Queue:%s/Ring:%s/Mem:%s/Size:%d/DescSize:%d" %
-                (self.__class__.__name__,
-                 self.queue.queue_type.lif.hw_lif_id,
-                 self.queue.queue_type.type,
-                 self.queue.id,
-                 self.id,
-                 self._mem, self.size, self.desc_size))
-
     def Init(self, queue, spec):
         super().Init(queue, spec)
-        self.num = int(getattr(spec, 'num', 0))
-        assert isinstance(self.num, int) and self.num < 2
-        self.size = int(getattr(spec, 'size', 0))
+        self.size = self.queue.size
         assert isinstance(self.size, int) and (self.size != 0) and ((self.size & (self.size - 1)) == 0)
         self.desc_size = self.descriptor_template.meta.size
         assert isinstance(self.desc_size, int) and (self.desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
-        self.doorbell = doorbell.Doorbell()
-        self.doorbell.Init(self, spec)
 
     def Configure(self):
         if GlobalOptions.dryrun:
@@ -46,11 +30,10 @@ class EthRingObject(ring.RingObject):
         self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
         resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
         cfglogger.info("Creating Ring %s" % self)
-        self.queue.descriptors = [None] * self.size
 
     def Post(self, descriptor):
         if GlobalOptions.dryrun:
-            return status.SUCCESS
+            return
 
         # Check descriptor compatibility
         assert(descriptor is not None)
@@ -68,17 +51,11 @@ class EthRingObject(ring.RingObject):
         self.pi += 1
         self.pi %= self.size
 
-        # Ring the doorbell
-        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
-            self.doorbell.Ring(upd=0x8)
-        elif self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-            self.doorbell.Ring(upd=0xb)
-
         return status.SUCCESS
 
     def Consume(self, descriptor):
         if GlobalOptions.dryrun:
-            return status.SUCCESS
+            return
 
         # Check descriptor compatibility
         assert(descriptor is not None)
@@ -103,11 +80,20 @@ class EthRingObject(ring.RingObject):
         self.ci %= self.size
 
         # If we have reached the end of the ring then, toggle the expected color
-        if self.ci + 1 > self.size:
+        if self.ci == 0:
             self.exp_color = 0 if self.exp_color else 1
 
         return status.SUCCESS
 
+    def __str__(self):
+        return ("%s Lif:%s/QueueType:%s/Queue:%s/Ring:%s/Mem:%s/Size:%d/DescSize:%d/PI:%d/CI:%d" %
+                (self.__class__.__name__,
+                 self.queue.queue_type.lif.hw_lif_id,
+                 self.queue.queue_type.type,
+                 self.queue.id,
+                 self.id,
+                 self._mem, self.size, self.desc_size,
+                 self.pi, self.ci))
 
 class EthRingObjectHelper:
     def __init__(self):
