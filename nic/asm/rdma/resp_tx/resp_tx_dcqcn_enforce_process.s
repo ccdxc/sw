@@ -89,7 +89,7 @@ ring_dcqcn_doorbell:
     // Reset cur-byte-counter, incr byte counter expiry count and ring dcqcn doorbell to update rate.
     tblwr         d.cur_byte_counter, 0
     tblmincri     d.byte_counter_exp_cnt, 0x10, 1 // byte_counter_exp_cnt is 16-bit value. 
-    DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RING_ID, r5, r6)
+    DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
     
 load_write_back:            
     // DCQCN rate-enforcement passed. Load stage 5 for write-back.

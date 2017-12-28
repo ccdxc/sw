@@ -105,7 +105,7 @@ skip_roce_opt_parsing:
 
 skip_cnp_send:
     // Check if its CNP packet.
-    sne     c7, CAPRI_APP_DATA_BTH_OPCODE, 0x81
+    sne     c2, CAPRI_APP_DATA_BTH_OPCODE, RDMA_PKT_OPC_CNP
     bcf     [c7 | c2], skip_cnp_receive
 
     // Load rqcb1-->dcqcn_cb to cut rate based on dcqcn algorithm.

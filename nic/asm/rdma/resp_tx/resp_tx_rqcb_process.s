@@ -51,13 +51,13 @@ resp_tx_rqcb_process:
     //TODO: migrate to efficient way of demuxing work (based on r7)
 
     // Process DCQCN algo ring first as its the highest priority.
-    seq         c1, DCQCN_C_INDEX, DCQCN_P_INDEX
+    seq         c1, DCQCN_RATE_COMPUTE_C_INDEX, DCQCN_RATE_COMPUTE_P_INDEX
     bcf         [c1], check_dcqcn_timer_q
     nop
 
     // Increment c-index and pass to stage 4
-    add         r2, r0, DCQCN_C_INDEX
-    mincr       r2, 0x10, 1 // c_index is 16 bit
+    add         r2, r0, DCQCN_RATE_COMPUTE_C_INDEX
+    mincr       r2, 16, 1 // c_index is 16 bit
     CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.new_cindex, r2)
 
@@ -76,7 +76,7 @@ check_dcqcn_timer_q:
 
     // Increment c-index and pass to stage 4
     add         r2, r0, DCQCN_TIMER_C_INDEX
-    mincr       r2, 0x10, 1 // c_index is 16 bit field
+    mincr       r2, 16, 1 // c_index is 16 bit field
     CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.new_cindex, r2)
 

@@ -405,7 +405,7 @@ struct resp_tx_flags_t {
 #define RDMA_PKT_OPC_SEND_LAST_WITH_INV        22
 #define RDMA_PKT_OPC_SEND_ONLY_WITH_INV        23
 
-#define RDMA_PKT_OPC_CNP                       1
+#define RDMA_PKT_OPC_CNP                       129
 
 union roce_opcode_flags_t {
     flags: 16;
@@ -907,22 +907,29 @@ struct dcqcn_cb_t {
     last_cnp_timestamp: 48;
     partition_key:      16;
 
-    // DCQCN algorithm params
+    /* DCQCN algorithm params*/
+
+    // Configurable params.
+    byte_counter_thr:       32; // byte-counter-threshold in Bytes. (Bc)
+    timer_exp_thr:          16; // Timer T threshold in terms of alpha-timer.
+    g_val:                  16; // constant g.
+    // Algorithm computed params.
     rate_enforced:          32; // Enforced rate in Mbps. (Rc)
     target_rate:            32; // Target rate in Mbps. (Rt)
-    byte_counter_thr:       32; // byte-counter-threshold in Bytes. (Bc)
+    alpha_value:            16; // rate-reduction-factor alpha val in int.
+    // Helper counters.
     cur_byte_counter:       32; // cur-byte-counter value in Bytes.
     byte_counter_exp_cnt:   16; // Num of times byte-counter expired.
     timer_exp_cnt:          16; // Num of times timer T expired.(T)
-    alpha_value:            16; // rate-reduction-factor alpha val in int.
-    timer_exp_thr:          16; // Timer T threshold in terms of alpha-timer.
     num_alpha_exp_cnt:      16; // Num times alpha-timer expired since timer T expired.
+    num_cnp_rcvd:          8;  // Num of CNP received used by rate-compute-ring for processing CNPs.
+    num_cnp_processed:      8;  // Num of CNP processed used by rate-compute-ring.
 
     // Rate-limiter token-bucket related params.
     last_sched_timestamp:   48;
     delta_ticks_last_sched: 16;
-    cur_avail_tokens:       64;
-    token_bucket_size:      64; // DCQCN enforced BC (committed-burst) in bits.
+    cur_avail_tokens:       48;
+    token_bucket_size:      48; // DCQCN enforced BC (committed-burst) in bits.
 
     // For model testing only.
     num_sched_drop: 8; // Number of times packet was scheduled and dropped due to insufficient tokens.

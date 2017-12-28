@@ -21,8 +21,7 @@ req_tx_dcqcn_cnp_process:
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(DMA_CMD_BASE, cnp_rsvd, cnp_rsvd, 1)
 
     // Update BTH opcode
-    add         r5, RDMA_PKT_OPC_CNP, RDMA_SERV_TYPE_CNP, BTH_OPC_SVC_SHIFT
-    phvwr       p.bth.opcode, r5
+    phvwr       p.bth.opcode, RDMA_PKT_OPC_CNP
     // Update partition key in CNP packet
     phvwr       p.bth.pkey, d.partition_key
 

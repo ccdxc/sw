@@ -11,9 +11,8 @@ struct resp_tx_rqcb1_process_k_t k;
 
 // Note: Below values are constants related to g.
 // TODO: Hardcoding it for now. Check if they have to be fed from HAL.
-#define     g_max                   65536
-#define     log_g_max               16
-#define     g                       256
+#define     G_MAX                   65536
+#define     LOG_G_MAX               16
 #define     ALPHA_TIMER_INTERVAL    55
 
 %%
@@ -27,20 +26,20 @@ resp_tx_dcqcn_timer_process:
 
     // Update alpha value.
     // int_alpha =  (((g_max - int_g) * int_alpha) >> log_g_max)
-    sub         r1, g_max, g
+    sub         r1, G_MAX, d.g_val
     mul         r2, d.alpha_value, r1
-    srl         r2, r2, log_g_max
+    srl         r2, r2, LOG_G_MAX
     tblwr       d.alpha_value, r2
    
     // Check if timer T expired. 
     tblmincri   d.num_alpha_exp_cnt, 0x10, 1
-    slt         c1, d.timer_exp_thr, d.num_alpha_exp_cnt
+    slt         c1, d.num_alpha_exp_cnt, d.timer_exp_thr
     bcf         [c1], restart_timer
     nop 
     
     // Timer T expired. Ring doorbell to run dcqcn algo. 
     tblmincri   d.timer_exp_cnt, 0x10, 1
-    DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RING_ID, r5, r6)
+    DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
     tblwr       d.num_alpha_exp_cnt, 0
 
 restart_timer: 
