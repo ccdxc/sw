@@ -9,6 +9,8 @@
 #include <ctime>
 #include <netinet/in.h>
 
+#include "gflags/gflags.h"
+
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/hal_if.hpp"
 #include "dol/test/storage/qstate_if.hpp"
@@ -20,6 +22,8 @@
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "dol/test/storage/tests.hpp"
+
+DECLARE_uint64(poll_interval);
 
 const static uint32_t  kDefaultBufSize       = 4096;
 const static uint32_t  kDefaultNlb           = 0;
@@ -62,7 +66,7 @@ static uint64_t global_byte = 0xA0;
 
 class Poller {
 public:
-  Poller() : timeout(60) { }
+  Poller() : timeout(FLAGS_poll_interval) { }
   Poller(int timeout) : timeout(timeout) { }
   int operator()(std::function<int(void)> poll_func) {
     std::time_t start = std::time(nullptr);
@@ -198,7 +202,12 @@ int send_and_check(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size,
 
   test_ring_doorbell(lif, qtype, qid, ring, index);
 
-  rc = memcmp(send_cmd, recv_cmd, size);
+  // Poll for status
+  auto func1 = [send_cmd, recv_cmd, size] () {
+    return memcmp(send_cmd, recv_cmd, size);
+  };
+  Poller poll;
+  rc = poll(func1);
   printf("POST doorbell cmd comparison %d \n", rc);
 
   return rc;
@@ -217,7 +226,12 @@ int send_nvme_and_check(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size,
 
   test_ring_nvme_doorbell(lif, qtype, qid, ring, index);
 
-  rc = memcmp(send_cmd, recv_cmd, size);
+  // Poll for status
+  auto func1 = [send_cmd, recv_cmd, size] () {
+    return memcmp(send_cmd, recv_cmd, size);
+  };
+  Poller poll;
+  rc = poll(func1);
   printf("POST NVME doorbell cmd comparison %d \n", rc);
 
   return rc;
@@ -236,10 +250,15 @@ int send_and_check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd,
 
   test_ring_doorbell(lif, qtype, qid, ring, index);
 
-  struct NvmeCmd *send_nvme_cmd = (struct NvmeCmd *) send_cmd;
-  struct NvmeCmd *recv_nvme_cmd = (struct NvmeCmd *) recv_cmd;
-  recv_nvme_cmd->dw0.cid = send_nvme_cmd->dw0.cid;
-  rc = memcmp(send_cmd, recv_cmd, size);
+  // Poll for status
+  auto func1 = [send_cmd, recv_cmd, size] () {
+    struct NvmeCmd *send_nvme_cmd = (struct NvmeCmd *) send_cmd;
+    struct NvmeCmd *recv_nvme_cmd = (struct NvmeCmd *) recv_cmd;
+    recv_nvme_cmd->dw0.cid = send_nvme_cmd->dw0.cid;
+    return memcmp(send_cmd, recv_cmd, size);
+  };
+  Poller poll;
+  rc = poll(func1);
   printf("POST doorbell cmd comparison (ignoring cid) %d \n", rc);
 
   return rc;
@@ -248,10 +267,15 @@ int send_and_check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd,
 int check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size) {
   int rc;
 
-  struct NvmeCmd *send_nvme_cmd = (struct NvmeCmd *) send_cmd;
-  struct NvmeCmd *recv_nvme_cmd = (struct NvmeCmd *) recv_cmd;
-  recv_nvme_cmd->dw0.cid = send_nvme_cmd->dw0.cid;
-  rc = memcmp(send_cmd, recv_cmd, size);
+  // Poll for status
+  auto func1 = [send_cmd, recv_cmd, size] () {
+    struct NvmeCmd *send_nvme_cmd = (struct NvmeCmd *) send_cmd;
+    struct NvmeCmd *recv_nvme_cmd = (struct NvmeCmd *) recv_cmd;
+    recv_nvme_cmd->dw0.cid = send_nvme_cmd->dw0.cid;
+    return memcmp(send_cmd, recv_cmd, size);
+  };
+  Poller poll;
+  rc = poll(func1);
   printf("Colletive cmd comparison (ignoring cid) %d \n", rc);
 
   return rc;
