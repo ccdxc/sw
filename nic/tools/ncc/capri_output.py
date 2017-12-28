@@ -74,18 +74,6 @@ def _parser_sram_print(parser, se):
         pstr += '\nTotal lkp_val_inst %s\n' % used
 
     used = 0
-    for e, extract_inst in enumerate(se['extract_inst']):
-        if extract_inst['phv_idx']['value'] == 'Default':
-            continue
-        used += 1
-        pstr += 'extract_inst[%s] = pkt(%s,%s) -> phv(%s), ' % \
-                (e, extract_inst['pkt_idx']['value'],
-                    extract_inst['len']['value'],
-                    extract_inst['phv_idx']['value'])
-    if used:
-        pstr += '\nTotal extract_inst %s\n' % used
-
-    used = 0
     meta_ops = parser.be.hw_model['parser']['parser_consts']['meta_ops']
     for e, meta_inst in enumerate(se['meta_inst']):
         if meta_inst['phv_idx']['value'] == 'Default':
@@ -199,6 +187,18 @@ def _parser_sram_print(parser, se):
 
     if used:
         pstr += 'Total mux_inst %s\n' % used
+
+    used = 0
+    for e, extract_inst in enumerate(se['extract_inst']):
+        if extract_inst['phv_idx']['value'] == 'Default':
+            continue
+        used += 1
+        pstr += 'extract_inst[%s] = pkt(%s,%s) -> phv(%s), ' % \
+                (e, extract_inst['pkt_idx']['value'],
+                    extract_inst['len']['value'],
+                    extract_inst['phv_idx']['value'])
+    if used:
+        pstr += '\nTotal extract_inst %s\n' % used
 
     for e,len_chk_inst in enumerate(se['len_chk_inst']):
         if len_chk_inst['en']['value'] == '0':
@@ -2649,6 +2649,10 @@ def capri_parser_output_decoders(parser):
                                                 _parser_tcam_print(tcam0[idx])))
                 parser.logger.debug('SRAM-decoder[%d] - \n%s' % \
                     (idx, _parser_sram_print(parser,sram0[idx])))
+
+                for r,lf in enumerate(bi.nxt_state.active_lkp_lfs):
+                    if lf != None:
+                        parser.logger.debug('%s:lkp_reg[%d] = %s' % (parser.d.name, r, lf.hfname))
                 idx += 1
 
                 #Generate csum related profile config for parser block

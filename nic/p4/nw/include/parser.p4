@@ -982,7 +982,6 @@ parser parse_ipv6 {
 
 parser parse_ipv6_ulp_no_options {
     set_metadata(parser_metadata.ipv6_options_len, 20);
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer + 0);
     return select(parser_metadata.ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_ipv6_tcp;
@@ -1965,7 +1964,8 @@ parser parse_inner_ipv6 {
     set_metadata(parser_metadata.inner_ipv6_nextHdr, latest.nextHdr);
     set_metadata(flow_lkp_metadata.lkp_src, latest.srcAddr);
     set_metadata(flow_lkp_metadata.lkp_dst, latest.dstAddr);
-    set_metadata(ohi.inner_l4_len, inner_ipv6.payloadLen+0);
+    set_metadata(ohi.inner_l4_len, inner_ipv6.payloadLen + 0);
+    set_metadata(ohi.inner_l3_len, inner_ipv6.payloadLen + 0);
     set_metadata(l3_metadata.inner_ipv6_ulp, latest.nextHdr);
     set_metadata(parser_metadata.l4_trailer, inner_ipv6.payloadLen);
     return select(parser_metadata.inner_ipv6_nextHdr) {
