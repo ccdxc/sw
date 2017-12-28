@@ -2245,6 +2245,8 @@ class capri_parser:
                 if cs not in cs_lfs:
                     cs_lfs[cs] = [OrderedDict(), OrderedDict()]
 
+                #if cs.name == 'parse_udp': pdb.set_trace()
+                #if cs.name == 'parse_inner_ipv6': pdb.set_trace()
                 in_lfs = cs_lfs[cs][0]
                 # previous (downstream out_lf is now in_lf) copy it
                 for lf,r in out_lfs.items():
@@ -2305,6 +2307,7 @@ class capri_parser:
                 # if cs.name == 'parse_trailer': pdb.set_trace()
                 # if cs.name == 'parse_roce_v2': pdb.set_trace()
                 # take the reg assignments from upstream node for local and downstream lfs
+                #if cs.name == 'parse_inner_ipv6': pdb.set_trace()
                 for lf,r in upstream_lfs.items():
                     if r == None:
                         assert 0, pdb.set_trace()
@@ -2318,6 +2321,19 @@ class capri_parser:
                             pass
                         if lf in downstream_lfs:
                             downstream_lfs[lf] = r
+
+                # reuse the rids that are allocated upstream but not in immidiate upstream_lfs
+                for lf,rd,wr in cs.local_flds.values():
+                    if lf in cs.saved_lkp:
+                        continue
+                    if lf in upstream_lfs:
+                        continue
+                    if lf in path_lfs:
+                        rid = path_lfs[lf]
+                        assert rid != None, pdb.set_trace()
+                        self.logger.debug("%s:%s Reuse rid %d for LF %s" % \
+                                (self.d.name, cs.name, rid, lf.hfname))
+                        _ = cs.active_reg_alloc(lf, rid)
 
                 for lf,rd,wr in cs.local_flds.values():
                     if lf in cs.saved_lkp:
@@ -2345,6 +2361,8 @@ class capri_parser:
                                             (self.d.name, cs.name, rid, lf.hfname))
                                 if rid == None:
                                     rid = cs.active_reg_alloc(lf)
+                                    if lf not in path_lfs:
+                                        path_lfs[lf] = rid
                                 else:
                                     # reserve
                                     _ = cs.active_reg_alloc(lf, rid)

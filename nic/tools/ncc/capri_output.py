@@ -241,7 +241,8 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
     op1 = capri_expr.op1
     if capri_expr.op1:
         if rid2 != None:
-            mux_inst['muxsel']['value'] = str(rid2)
+            assert mux_id1 != None, pdb.set_trace()
+            mux_inst['muxsel']['value'] = str(mux_id1)
             if isinstance(capri_expr.src1, tuple):
                 mask = (1<<capri_expr.src1[1]) - 1
             else:
@@ -1722,6 +1723,11 @@ def _allocate_mux_inst_resoures(capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
                 assert capri_expr.src1.hfname in nxt_cs.lkp_flds, \
                     "%s is not availabe in state %s" % (capri_expr.src1.hfname, nxt_cs,name)
                 reg_id2 = nxt_cs.lkp_flds[capri_expr.src1.hfname].reg_id
+                mux_id1 = mux_idx_alloc(mux_idx_allocator, capri_expr.src1.hfname)
+                sram['mux_idx'][mux_id1]['sel']['value'] = str(1)
+                sram['mux_idx'][mux_id1]['lkpsel']['value'] = str(reg_id2)
+                sram['mux_idx'][mux_id1]['load_stored_lkp']['value'] = str(0)
+                sram['mux_idx'][mux_id1]['idx']['value'] = str(0)
         else:
             off = pkt_off1
             mux_id1 = mux_idx_alloc(mux_idx_allocator, off/8)

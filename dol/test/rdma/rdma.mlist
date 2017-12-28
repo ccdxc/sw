@@ -473,7 +473,7 @@ modules:
         package : test.rdma
         module  : resp_rx_send_only_options
         spec    : resp_rx_send_only_options.testspec
-        ignore  : False
+        ignore  : True
 
     - module:
         name    : RDMA_RX_SEND_ONLY_NO_OPTIONS
@@ -481,7 +481,7 @@ modules:
         package : test.rdma
         module  : resp_rx_send_only_no_options
         spec    : resp_rx_send_only_no_options.testspec
-        ignore  : False
+        ignore  : True
 
     - module:
         name    : RDMA_RX_SEND_ONLY_OPTIONS_NO_OCS
@@ -489,7 +489,7 @@ modules:
         package : test.rdma
         module  : resp_rx_send_only_options_no_OCS
         spec    : resp_rx_send_only_options_no_OCS.testspec
-        ignore  : False
+        ignore  : True
 
     - module:
         name    : RDMA_RX_SEND_ONLY_OPTIONS_OCS_ERROR

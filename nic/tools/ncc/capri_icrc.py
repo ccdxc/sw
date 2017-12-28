@@ -291,6 +291,14 @@ class IcrcParserCalField:
         self.P4FieldListCalculation     = self.be.h.\
                                             p4_field_list_calculations\
                                             [VerifyOrUpdateFunc]
+        if 'icrc' in \
+            self.P4FieldListCalculation._parsed_pragmas.keys():
+            if 'verify_len' in \
+                self.P4FieldListCalculation._parsed_pragmas['icrc']:
+                self.icrc_verify_len_field = self.P4FieldListCalculation._parsed_pragmas\
+                               ['icrc']['verify_len'].keys()[0]
+            else:
+                self.icrc_verify_len_field = ''
         #P4 code should have atleast one input field list.
         assert(self.P4FieldListCalculation.input[0].fields[0] != None)
         assert(self.P4FieldListCalculation != None)
@@ -1062,7 +1070,9 @@ class Icrc:
         prof_obj.IcrcProfileEndAdjSet(0, 0)
         prof_obj.IcrcProfileMaskAdjSet(0, 0)
         #Icrc calculation till end of packet.
-        prof_obj.IcrcProfileEndEopSet(1)
+        if calfldobj.icrc_verify_len_field == '':
+            #Icrc calculation till end of packet; verify_len option not used.
+            prof_obj.IcrcProfileEndEopSet(1)
 
         #Build mask profile for invariant fields.
 
@@ -1317,11 +1327,14 @@ class Icrc:
                                 #offset is already loaded. Reusing same OHI
                                 icrc_calfldobj.IcrcOhiStartSelSet(ohi_start_id)
 
-                                #Since icrc is from L3 to till end of packet, OhiLen
-                                #is not put to use for now. However keeping
-                                #a place holder code in the icrc obj incase
-                                #in future Len is needed.
-                                icrc_calfldobj.IcrcOhiLenSelSet(0)
+                                if icrc_calfldobj.icrc_verify_len_field != '':
+                                    ohi_id = parser.get_ohi_slot_wr_only_field_name(\
+                                      icrc_calfldobj.icrc_verify_len_field.split('.')[1])
+                                    icrc_calfldobj.IcrcOhiLenSelSet(ohi_id)
+                                else:
+                                    #when verify length is not computed in parser,
+                                    #icrc computation is from L3 to till end of packet
+                                    icrc_calfldobj.IcrcOhiLenSelSet(0)
                             else:
                                 ohi_start_id = parser.get_ohi_hdr_start_off(\
                                             self.be.h.p4_header_instances[l3_hdr_name])
