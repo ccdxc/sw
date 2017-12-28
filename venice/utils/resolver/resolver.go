@@ -11,6 +11,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 // Observer is an interface implemented by observers of resolver.
@@ -48,7 +49,7 @@ type Config struct {
 	Servers []string
 
 	// Options contain gRPC dial options.
-	Options []grpc.DialOption
+	Options []rpckit.Option
 }
 
 // resolverClient implements the resolver client functionality.
@@ -86,7 +87,6 @@ func New(c *Config) Interface {
 func (r *resolverClient) runUntilCancel() {
 	s := rand.NewSource(time.Now().UnixNano())
 	var conn *grpc.ClientConn
-	var err error
 	defer func() {
 		if conn != nil {
 			conn.Close()
@@ -103,21 +103,24 @@ func (r *resolverClient) runUntilCancel() {
 		// Pick one of the servers at random.
 		i := rand.New(s).Intn(len(r.config.Servers))
 
-		// grpc client setup
-		opts := r.config.Options
-		if len(opts) == 0 {
-			opts = append(opts, grpc.WithInsecure())
-		}
-
 		if conn != nil {
 			conn.Close()
 		}
 
-		conn, err = grpc.Dial(r.config.Servers[i], opts...)
+		// grpc client setup
+		// FIXME ENRICO -- right now resolver listens on CMDGRPCPort, which cannot do TLS
+		// because it is used to bootstrap the cluster.
+		// Move resolver to a different port and enable TLS
+		opts := r.config.Options
+		opts = append(opts, rpckit.WithTLSProvider(nil))
+
+		//conn, err = grpc.Dial(r.config.Servers[i], opts...)
+		rpcClient, err := rpckit.NewRPCClient(r.config.Name, r.config.Servers[i], opts...)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
 			continue
 		}
+		conn = rpcClient.ClientConn
 		client := types.NewServiceAPIClient(conn)
 
 		// watch for events in a loop.

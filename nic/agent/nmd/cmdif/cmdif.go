@@ -83,7 +83,9 @@ func (client *CmdClient) initRPC() error {
 	// initialize rpcClient
 	var err error
 	log.Infof("Initializing RPC client ")
-	client.rpcClient, err = rpckit.NewRPCClient("nmd", client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+	// FIXME ENRICO -- right now CMD uses only 1 gRPC port for cluster formation, watches, etc. This cannot be TLS.
+	// We should move this service to a different port and do TLS
+	client.rpcClient, err = rpckit.NewRPCClient("nmd", client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithTLSProvider(nil))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server, srvURL: %v Err: %v", client.srvURL, err)
 	}
@@ -165,6 +167,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 
 				if client.watchCtx.Err() == context.Canceled {
 					log.Info("Context Cancelled, exiting smartNIC watcher")
+					client.closeRPC()
 					return
 				}
 

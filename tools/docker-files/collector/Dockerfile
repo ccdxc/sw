@@ -1,3 +1,3 @@
-FROM alpine:3.6
+FROM registry.test.pensando.io:5000/pens-base-2:v0.1
 COPY collector /
 ENTRYPOINT ["/collector"]

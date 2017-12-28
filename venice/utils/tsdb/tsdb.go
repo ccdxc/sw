@@ -179,14 +179,14 @@ func NewTable(name string, config Config) (Table, error) {
 		return nil, fmt.Errorf("Uninitialized client")
 	}
 
+	gctx.Lock()
+	defer gctx.Unlock()
+
 	if _, ok := gctx.tables[name]; ok {
 		return nil, fmt.Errorf("table '%s' already exists", name)
 	}
 
 	tbl := &table{name: name, config: config}
-
-	gctx.Lock()
-	defer gctx.Unlock()
 
 	gctx.tables[name] = tbl
 

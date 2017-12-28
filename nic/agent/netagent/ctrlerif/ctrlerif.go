@@ -360,6 +360,7 @@ func (client *NpmClient) Stop() {
 	client.stopped = true
 	client.Unlock()
 	client.watchCancel()
+	client.waitGrp.Wait()
 	if client.netGrpcClient != nil {
 		client.netGrpcClient.Close()
 	}
@@ -369,7 +370,6 @@ func (client *NpmClient) Stop() {
 	if client.epGrpcClient != nil {
 		client.epGrpcClient.Close()
 	}
-	client.waitGrp.Wait()
 }
 
 // isStopped is NPM client stopped

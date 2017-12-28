@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 
 	tec "github.com/pensando/sw/venice/collector"
 	"github.com/pensando/sw/venice/collector/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 type cliOpts struct {
@@ -86,7 +86,7 @@ func getBackEnds(resolvers string) []string {
 	rList := strings.Split(resolvers, ",")
 	cfg := &resolver.Config{
 		Servers: rList,
-		Options: []grpc.DialOption{grpc.WithInsecure()}, // TODO remove
+		Options: []rpckit.Option{rpckit.WithTLSProvider(nil)}, // TODO remove
 	}
 
 	rc := resolver.New(cfg)
