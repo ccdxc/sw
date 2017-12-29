@@ -334,7 +334,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         if (mode == "sim") {
             hal_cfg->platform_mode = HAL_PLATFORM_MODE_SIM;
         } else if (mode == "hw") {
-            hal_cfg->platform_mode = HAL_PLATFORM_MODE_SIM;
+            hal_cfg->platform_mode = HAL_PLATFORM_MODE_HW;
         } else if (mode == "rtl") {
             hal_cfg->platform_mode = HAL_PLATFORM_MODE_RTL;
         } else if (mode == "haps") {

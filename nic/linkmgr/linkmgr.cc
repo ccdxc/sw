@@ -45,22 +45,22 @@ linkmgr_loop (void)
             cindx = g_linkmgr_workq[qid].cindx;
             rw_entry = &g_linkmgr_workq[qid].entries[cindx];
             switch (rw_entry->opn) {
-                case LINKMGR_OPERATION_PORT_TIMER:
-                    port_event_timer(rw_entry->data);
-                    break;
+            case LINKMGR_OPERATION_PORT_TIMER:
+                port_event_timer(rw_entry->data);
+                break;
 
-                case LINKMGR_OPERATION_PORT_ENABLE:
-                    port_event_enable(rw_entry->data);
-                    break;
+            case LINKMGR_OPERATION_PORT_ENABLE:
+                port_event_enable(rw_entry->data);
+                break;
 
-                case LINKMGR_OPERATION_PORT_DISABLE:
-                    port_event_disable(rw_entry->data);
-                    break;
+            case LINKMGR_OPERATION_PORT_DISABLE:
+                port_event_disable(rw_entry->data);
+                break;
 
-                default:
-                    HAL_TRACE_ERR("Invalid operation {}", rw_entry->opn);
-                    rv = false;
-                    break;
+            default:
+                HAL_TRACE_ERR("Invalid operation {}", rw_entry->opn);
+                rv = false;
+                break;
             }
 
             // populate the results
