@@ -34,3 +34,7 @@ headers:
         template: ref://store/headers/id=PAYLOAD
         fields:
 
+    - header:
+        id      : icrc
+        template: ref://store/headers/id=ICRC
+        fields:

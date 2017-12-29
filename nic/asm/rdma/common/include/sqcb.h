@@ -127,10 +127,15 @@ struct sqcb1_t {
     wqe_start_psn                  : 24;
     nak_retry_ctr                  : 3;
     err_retry_ctr                  : 3;
-    rsvd3                          : 2;
+    roce_opt_ts_enable             : 1;
+    roce_opt_mss_enable            : 1;
     p4plus_to_p4_flags             : 8;
     header_template_size           : 8;
-    rvsd4                          : 48;
+
+    //Temporary use for DOL - ROCE UDP options
+    timestamp                      : 16;
+    timestamp_echo                 : 16;
+    mss                            : 16;
 };
 
 struct sqcb_t {

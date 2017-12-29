@@ -351,7 +351,9 @@ def calc_ones8(s):
     for c in s:
         sum += c;
         sum = (sum & 0xFF) + (sum >> 8)
-    return (~sum & 0xFF)
+    #don't negate(as per the SPEC)
+    #return (~sum & 0xFF)
+    return sum & 0xFF
 
 
 class L4OptionsField(StrField):
@@ -457,7 +459,12 @@ class L4OptionsField(StrField):
             opt_list[OCS_oval_index] = csum
             opt = bytes(opt_list)
 
-        return opt + b"\x00" * (3 - ((len(opt) + 3) % 4))
+        warning("Adding %d bytes of UDP options\n" % len(opt))
+
+        if self.align:
+            return opt + b"\x00" * (3 - ((len(opt) + 3) % 4))
+        else:
+            return opt
 
     def randval(self):
         return []  # XXX
@@ -465,10 +472,12 @@ class L4OptionsField(StrField):
 class TCPOptionsField(L4OptionsField):
     myoptions = TCPOptions
     OCSsupported = False
+    align = True
 
 class UDPOptionsField(L4OptionsField):
     myoptions = UDPOptions 
     OCSsupported = True
+    align = False
 
 class ICMPTimeStampField(IntField):
     re_hmsm = re.compile("([0-2]?[0-9])[Hh:](([0-5]?[0-9])([Mm:]([0-5]?[0-9])([sS:.]([0-9]{0,3}))?)?)?$")

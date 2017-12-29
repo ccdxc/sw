@@ -890,7 +890,6 @@ parser parse_ipv6_option_blob {
     // individually extracted to phv/ohi (but hv bits will be set)
     // Note2: ipv6_options_len value used to setup ohi slot is previous value (before init)
     // make if common for v4 and v6 and save mux inst XXXX
-
     // For icrc len calculation, 48 bytes (40byte v6 header and 8 bytes of 1's) need to be added.
     /// However here add only 20bytes because in parse_udp another 28 bytes are added.
     set_metadata(parser_metadata.ipv6_options_len, 20);

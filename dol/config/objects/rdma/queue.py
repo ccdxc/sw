@@ -213,15 +213,13 @@ class RdmaSQstate(Packet):
         X3BytesField("wqe_start_psn", 0),
         BitField("nak_retry_ctr", 0, 3),
         BitField("err_retry_ctr", 0, 3),
-        BitField("rsvd3", 0, 2),
+        BitField("roce_opt_ts_enable", 0, 1),
+        BitField("roce_opt_mss_enable", 0, 1),
         ByteField("p4plus_to_p4_flags", 0),
         ByteField("header_template_size", 0),
-        ByteField("rsvd5", 0),
-        ByteField("rsvd6", 0),
-        ByteField("rsvd7", 0),
-        ByteField("rsvd8", 0),
-        ByteField("rsvd8", 0),
-        ByteField("rsvd9", 0),
+        ShortField("timestamp", 0),
+        ShortField("timestamp_echo", 0),
+        ShortField("mss", 0),
     ]
 
 class RdmaCQstate(Packet):

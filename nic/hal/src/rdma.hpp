@@ -929,10 +929,13 @@ typedef struct sqcb0_s {
 } PACKED sqcb0_t;
 
 typedef struct sqcb1_s {
-    uint8_t rsvd4[6];
+    uint16_t mss;
+    uint16_t timestamp_echo;
+    uint16_t timestamp;
     uint8_t header_template_size;
     uint8_t p4plus_to_p4_flags;
-    uint32_t rsvd3:2;
+    uint32_t roce_opt_mss_enable:1;
+    uint32_t roce_opt_ts_enable:1;
     uint32_t err_retry_ctr:3;
     uint32_t nak_retry_ctr:3;
     uint32_t wqe_start_psn:24;

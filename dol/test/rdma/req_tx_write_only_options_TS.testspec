@@ -1,0 +1,121 @@
+# Test Spec
+selectors:
+#    src:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=False
+#        interface   : filter://any
+#    dst:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=True
+#        interface   : filter://any
+#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#   maxflows    : 1 
+    maxrdmasessions     : 1
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+    - packet:
+        id          : EXP_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        icrc        : True
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                len     : callback://common/callbacks/GetUdpLength
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 10 # RDMA Write Only
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+            reth: 
+                va      : ref://testcase/pvtdata/va
+                dma_len : ref://testcase/packets/id=BASE_PKT/size
+                r_key   : ref://testcase/pvtdata/r_key
+            payload:
+               data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+            udp_options :
+               options :
+                    - kind   : MSS
+                      data   : ref://testcase/pvtdata/roce_opt_mss
+                    - kind   : TIME
+                      #data   : ref://testcase/pvtdata/roce_opt_ts_list
+                      data   : 0x00003344 0x55660000
+                    - kind   : EOL
+                      data   : 0x00
+
+buffers:
+    - buffer:
+        id      : BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=BASE_PKT/size
+                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            op_type : 4  # OP_TYPE_WRITE
+            wrid    : 20
+            num_sges: 1
+
+            write   :
+                  va     : ref://testcase/pvtdata/va
+                  len    : ref://testcase/packets/id=BASE_PKT/size
+                  r_key  : ref://testcase/pvtdata/r_key
+               
+            sges:
+                - va  : ref://testcase/buffers/id=BUF/address
+                  len : ref://testcase/buffers/id=BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC
+            ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+
+    doorbell:
+        object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+        fields:
+            upd : 0x3 # DB_SCHED_WR(1)
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports

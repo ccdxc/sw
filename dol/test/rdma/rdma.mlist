@@ -134,6 +134,14 @@ modules:
        ignore  : False
 
     - module:
+        name    : RDMA_TX_WRITE_ONLY_OPTIONS_TS
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_only_options_TS
+        spec    : req_tx_write_only_options_TS.testspec
+        ignore  : False
+ 
+    - module:
         name    : RDMA_TX_WRITE_ONLY
         enable  : True
         package : test.rdma

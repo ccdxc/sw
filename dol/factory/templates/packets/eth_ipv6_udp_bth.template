@@ -30,6 +30,11 @@ headers:
         fields:
 
     - header:
+        id      : icrc
+        template: ref://store/headers/id=ICRC
+        fields:
+
+    - header:
         id      : udp_options
         template: ref://store/headers/id=UDP_OPTIONS
         fields:

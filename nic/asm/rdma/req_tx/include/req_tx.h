@@ -55,6 +55,35 @@
 #define REQ_RX_RECIRC_REASON_NONE                0
 #define REQ_TX_RECIRC_REASON_SGE_WORK_PENDING    1
 
+//ROCE UDP options related definitions
+
+#define ROCE_OPT_KIND_EOL 0
+#define ROCE_OPT_KIND_NOP 1
+#define ROCE_OPT_KIND_OCS 2
+#define ROCE_OPT_KIND_MSS 5
+#define ROCE_OPT_KIND_TS  6
+
+#define ROCE_OPT_LEN_MSS  4
+#define ROCE_OPT_LEN_TS  10
+
+//17 Bytes
+struct roce_options_t {
+    //Option - OCS
+    OCS_kind:  8;
+    OCS_value: 8;
+    //Option - TimeStamp
+    TS_kind:   8;
+    TS_len:    8; //should be set to 10
+    TS_value:  32;
+    TS_echo:   32;
+    //Option - MSS
+    MSS_kind:  8;
+    MSS_len:   8; //should be set to 4
+    MSS_value: 16;
+    //Option - EOL
+    EOL_kind:  8;
+};
+
 // phv 
 struct req_tx_phv_t {
     // dma commands
@@ -124,7 +153,10 @@ struct req_tx_phv_t {
             struct phv_intr_global_t p4_intr_global;
             struct phv_intr_p4_t p4_intr;
             struct phv_intr_rxdma_t p4_intr_rxdma;
-            struct p4_to_p4plus_roce_header_t p4_to_p4plus;
+            union {
+                struct p4_to_p4plus_roce_header_t p4_to_p4plus;
+                struct roce_options_t roce_options;
+            };
             pad5: 96;
             pad4: 512;
             pad3: 512;
@@ -136,6 +168,8 @@ struct req_tx_phv_t {
         struct phv_ common;
     };
 };
+
+
 
 struct req_tx_phv_global_t {
     struct phv_global_common_t common;

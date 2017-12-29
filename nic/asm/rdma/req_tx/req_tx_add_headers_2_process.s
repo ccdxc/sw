@@ -50,12 +50,35 @@ req_tx_add_headers_2_process:
     // For ICRC, can point to any 4 bytes of PHV so point to immeth to create 4B hdr
     //  space for ICRC Deparser in P4 calculate and fills ICRC here
 
-    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
-
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
     phvwr.!c3      BTH_DST_QP, d.dst_qp
 
-    CAPRI_SET_TABLE_3_VALID(0)
+    crestore       [c6, c5], d.{roce_opt_ts_enable...roce_opt_mss_enable}, 0x3
+    #c5 - ts_enable
+    #c6 - mss_enable
+    bcf            [!c5 & !c6],  skip_roce_udp_options
+    CAPRI_SET_TABLE_3_VALID(0) //BD slot
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_UDP_OPTS)
+    phvwrpair      p.roce_options.OCS_kind, ROCE_OPT_KIND_OCS, p.roce_options.OCS_value, 0
+    phvwrpair      p.roce_options.TS_kind, ROCE_OPT_KIND_TS, p.roce_options.TS_len, ROCE_OPT_LEN_TS
+    //not enough bits on d[] vector to have 64 bit TS value
+    phvwr          p.{roce_options.TS_value[15:0]...roce_options.TS_echo[31:16]}, d.{timestamp...timestamp_echo}
+    phvwrpair      p.roce_options.MSS_kind, ROCE_OPT_KIND_MSS, p.roce_options.MSS_len, ROCE_OPT_LEN_MSS
+    phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 4)       #OCS kind, OCS value
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, roce_options.TS_kind, roce_options.TS_echo, 1, c5)    #TS kind, TS len, TS value
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, roce_options.MSS_kind, roce_options.MSS_value, 2, c6) #MSS kind, MSS len, MSS value
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 3)        #EOL kind
+
+#define ROCE_MAX_OPTION_BYTES (sizeof(p.roce_options)/8)
+
+    add            r5, r0, ROCE_MAX_OPTION_BYTES
+    sub.!c5        r5, r5, ROCE_OPT_LEN_TS
+    sub.!c6        r5, r5, ROCE_OPT_LEN_MSS
+    phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, r5
+
+skip_roce_udp_options:
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
 
     bcf            [!c3], exit
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_FEEDBACK) // Branch Delay Slot

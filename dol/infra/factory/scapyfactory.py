@@ -108,6 +108,15 @@ class ScapyHeaderBuilder_TCP(ScapyHeaderBuilder_BASE):
         return super().build(hdr)
 TCP_builder = ScapyHeaderBuilder_TCP()
 
+
+class ScapyHeaderBuilder_ICRC(ScapyHeaderBuilder_BASE):
+
+    def build(self, hdr):
+        logger.info("Updating ICRC header of size: %d" % hdr.meta.size)
+        return super().build(hdr)
+
+ICRC_builder = ScapyHeaderBuilder_ICRC()
+
 class ScapyHeaderBuilder_SUNRPC_4_PORTMAP_DUMP_REPLY(ScapyHeaderBuilder_BASE):
     def __translate_data(self, hdr):
         scapy_data = None 
@@ -268,11 +277,14 @@ class IcrcHeaderBuilder:
     def __get_icrc(self):
         self.rawbytes = bytes(self.spkt)
         # ICRC calculation starts with 64 bits of 1's followed
-        # packet (IP header to payload until before the ICRC)
+        # packet (IP header to payload until before the ICRC and excluding UDP options, if any
         self.rawbytes = bytes([0xFF] * 8) + bytes(self.spkt)
-        #logger.info("ICRC for packet - len: %d" % len(self.rawbytes))
+        #Skip optional variable UDP_OPTIONS hdr length and ICRC hdr 4B when calculating ICRC
+        #starting from ICRC header would do the trick
         #ScapyPacketObject.ShowRawPacket(self.rawbytes[:-4], logger)
-        self.icrc = binascii.crc32(self.rawbytes[:-4])  #Skip ICRC hdr 4B when calculating ICRC
+        skip_bytes = len(bytes(self.spkt[penscapy.ICRC]))
+        #logger.info("skip_bytes: %d\n" % (skip_bytes))
+        self.icrc = binascii.crc32(self.rawbytes[:-skip_bytes])
         #logger.info("Calculated ICRC: 0x%x" % self.icrc)
         return
 
@@ -299,7 +311,6 @@ class IcrcHeaderBuilder:
         return
 
     def GetIcrc(self):
-        self.spkt = self.spkt / penscapy.ICRC()
         if penscapy.IPv6 in self.spkt:
             self.__add_for_ipv6()
         elif penscapy.IP in self.spkt:
@@ -356,13 +367,12 @@ class ScapyPacketObject:
         self.rawbytes += penscapy.struct.pack("I", crc)
         return
 
-    def __add_icrc_header(self, packet):
-        hdr = FactoryStore.headers.Get('ICRC')
+    def __update_icrc(self, packet):
         builder = IcrcHeaderBuilder(packet)
         icrc = builder.GetIcrc()                                                                                
-        hdr.fields.icrc = (((icrc << 24) & 0xFF000000) | ((icrc <<  8) & 0x00FF0000) | ((icrc >>  8) & 0x0000FF00) | ((icrc >> 24) & 0x000000FF))
-        #logger.info("ICRC after byte swap: 0x%x" % hdr.fields.icrc) 
-        self.__add_header(hdr)
+        icrc = (((icrc << 24) & 0xFF000000) | ((icrc <<  8) & 0x00FF0000) | ((icrc >>  8) & 0x0000FF00) | ((icrc >> 24) & 0x000000FF))
+        logger.debug("ICRC after byte swap: 0x%x" % icrc) 
+        self.spkt[penscapy.ICRC].icrc = icrc
         return
         
     def __build_from_packet_meta(self, packet):
@@ -376,7 +386,7 @@ class ScapyPacketObject:
             self.__add_dol_header()
 
         if packet.IsIcrcEnabled():
-            self.__add_icrc_header(packet)
+            self.__update_icrc(packet)
 
         self.pktbytes = bytes(self.spkt)
         self.rawbytes = bytes(self.spkt)

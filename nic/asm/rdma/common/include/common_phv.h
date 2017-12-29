@@ -22,6 +22,7 @@ struct p4plus_to_p4_header_t {
 #define P4PLUS_TO_P4_APP_ID     p.p4plus_to_p4.p4plus_app_id
 #define P4PLUS_TO_P4_FLAGS      p.p4plus_to_p4.flags
 #define P4PLUS_TO_P4_VLAN_TAG   p.p4plus_to_p4.vlan_tag
+#define P4PLUS_TO_P4_UDP_OPT_BYTES p.p4plus_to_p4.udp_opt_bytes
 
 struct phv_to_stage_t {
     pad: TO_STAGE_DATA_WIDTH;
