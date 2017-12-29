@@ -1,34 +1,31 @@
+//----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
-
-// ----------------------------------------------------------------------------
+//
 // PI implementation for port service
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 #include "grpc++/grpc++.h"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-
 #include "nic/include/base.h"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "sdk/pal.hpp"
-
 #include "sdk/ht.hpp"
 #include "nic/utils/list/list.hpp"
-
 #include "nic/hal/periodic/periodic.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_state.hpp"
 #include "linkmgr_pd.hpp"
+#include "nic/linkmgr/utils.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 using boost::property_tree::ptree;
-
 using linkmgr::pd::port_args_pd_t;
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
@@ -41,7 +38,7 @@ hal::utils::thread  *g_linkmgr_threads[hal::HAL_THREAD_ID_MAX];
 class linkmgr_state *g_linkmgr_state;
 linkmgr_cfg_t       linkmgr_cfg;
 
-hal::utils::thread*
+hal::utils::thread *
 current_thread()
 {
     return hal::utils::thread::current_thread();
@@ -57,34 +54,27 @@ uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
     return g_linkmgr_state->catalog()->sbus_addr(asic_num, asic_port, lane);
 }
 
-hal::utils::platform_type_t platform_type()
+sdk::lib::platform_type_t platform_type()
 {
     return g_linkmgr_state->catalog()->platform_type();
 }
 
 hal_ret_t
 linkmgr_uplink_create(uint32_t uplink_port,
-                      hal::utils::catalog *catalog_p)
+                      sdk::lib::catalog *catalog_p)
 {
     hal_ret_t       ret = HAL_RET_OK;
     PortSpec        spec;
     PortResponse    response;
+    sdk::lib::catalog_uplink_port_t *catalog_uplink_port_p;
+    sdk::lib::catalog_asic_port_t *catalog_asic_port_p;
 
-    // TODO
-    int vrf_id = catalog_p->vrf_id();
-
-    hal::utils::catalog_uplink_port_t *catalog_uplink_port_p =
-                                      catalog_p->uplink_port(uplink_port);
-
+    catalog_uplink_port_p = catalog_p->uplink_port(uplink_port);
     spec.mutable_key_or_handle()->set_port_id(uplink_port);
-    spec.mutable_meta()->set_vrf_id(vrf_id);
-    spec.set_port_speed(catalog_uplink_port_p->speed);
+    spec.set_port_speed(hal::sdk_port_speed_to_port_speed_spec(catalog_uplink_port_p->speed));
     spec.set_num_lanes(catalog_uplink_port_p->num_lanes);
-    spec.set_port_type(catalog_uplink_port_p->type);
-
-    hal::utils::catalog_asic_port_t *catalog_asic_port_p =
-                                    catalog_p->asic_port(uplink_port);
-
+    spec.set_port_type(hal::sdk_port_type_to_port_type_spec(catalog_uplink_port_p->type));
+    catalog_asic_port_p = catalog_p->asic_port(uplink_port);
     spec.set_mac_id(catalog_asic_port_p->mac_id);
     spec.set_mac_ch(catalog_asic_port_p->mac_ch);
 
@@ -107,7 +97,7 @@ linkmgr_uplink_create(uint32_t uplink_port,
 // create uplink ports in the catalog file
 //------------------------------------------------------------------------------
 hal_ret_t
-linkmgr_uplinks_create(hal::utils::catalog *catalog_p)
+linkmgr_uplinks_create(sdk::lib::catalog *catalog_p)
 {
     uint32_t  uplink_port = 0;
     hal_ret_t ret = HAL_RET_OK;
@@ -132,7 +122,7 @@ linkmgr_uplinks_create(hal::utils::catalog *catalog_p)
 //------------------------------------------------------------------------------
 // parse the catalog file and populate catalog DB
 //------------------------------------------------------------------------------
-hal::utils::catalog*
+sdk::lib::catalog*
 linkmgr_catalog_init(std::string catalog_file)
 {
     char  *cfg_path = NULL;
@@ -143,7 +133,7 @@ linkmgr_catalog_init(std::string catalog_file)
         catalog_file = std::string(cfg_path) + "/" + catalog_file;
     }
 
-    return hal::utils::catalog::factory(catalog_file);
+    return sdk::lib::catalog::factory(catalog_file);
 }
 
 static void *
@@ -266,7 +256,7 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 		std::string platform_type = pt.get<std::string>("platform_type");
 
         linkmgr_cfg->platform_type =
-            hal::utils::catalog::catalog_platform_type_to_platform_type(platform_type);
+            sdk::lib::catalog::catalog_platform_type_to_platform_type(platform_type);
 
         linkmgr_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
 
@@ -301,7 +291,7 @@ linkmgr_init()
     g_linkmgr_state = linkmgr_state::factory();
     HAL_ASSERT_RETURN((g_linkmgr_state != NULL), HAL_RET_ERR);
 
-    hal::utils::catalog *catalog = linkmgr_catalog_init(catalog_file);
+    sdk::lib::catalog *catalog = linkmgr_catalog_init(catalog_file);
     HAL_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
 
     // store the catalog in global hal state

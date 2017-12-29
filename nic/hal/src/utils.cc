@@ -129,79 +129,79 @@ ip_addr_in_ip_pfx (ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
 }
 
 //------------------------------------------------------------------------------
-// Converts hal_ret_t to API status
+// converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 ApiStatus
 hal_prepare_rsp (hal_ret_t ret)
 {
     switch (ret) {
-        case HAL_RET_OK:
-            return types::API_STATUS_OK;
-            break;
-        case HAL_RET_HW_PROG_ERR:
-            return types::API_STATUS_HW_PROG_ERR;
-            break;
-        case HAL_RET_TABLE_FULL:
-        case HAL_RET_OTCAM_FULL:
-            return types::API_STATUS_OUT_OF_RESOURCE;
-            break;
-        case HAL_RET_OOM:
-            return types::API_STATUS_OUT_OF_MEM;
-            break;
-        case HAL_RET_INVALID_ARG:
-            return types::API_STATUS_INVALID_ARG;
-            break;
-        case HAL_RET_VRF_NOT_FOUND:
-            return types::API_STATUS_VRF_NOT_FOUND;
-            break;
-        case HAL_RET_L2SEG_NOT_FOUND:
-            return types::API_STATUS_L2_SEGMENT_NOT_FOUND;
-            break;
-        case HAL_RET_IF_NOT_FOUND:
-            return types::API_STATUS_INTERFACE_NOT_FOUND;
-            break;
-        case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
-            return types::API_STATUS_NWSEC_PROFILE_NOT_FOUND;
-            break;
-        case HAL_RET_QOS_CLASS_NOT_FOUND:
-            return types::API_STATUS_QOS_CLASS_NOT_FOUND;
-            break;
-        case HAL_RET_HANDLE_INVALID:
-            return types::API_STATUS_HANDLE_INVALID;
-            break;
-        case HAL_RET_IF_ENIC_TYPE_INVALID:
-            return types::API_STATUS_IF_ENIC_TYPE_INVALID;
-            break;
-        case HAL_RET_IF_ENIC_INFO_INVALID:
-            return types::API_STATUS_IF_ENIC_INFO_INVALID;
-            break;
-        case HAL_RET_IF_INFO_INVALID:
-            return types::API_STATUS_IF_INFO_INVALID;
-            break;
-        case HAL_RET_VRF_ID_INVALID:
-            return types::API_STATUS_VRF_ID_INVALID;
-            break;
-        case HAL_RET_L2SEG_ID_INVALID:
-            return types::API_STATUS_L2_SEGMENT_ID_INVALID;
-            break;
-        case HAL_RET_NWSEC_ID_INVALID:
-            return types::API_STATUS_NWSEC_PROFILE_ID_INVALID;
-            break;
-        case HAL_RET_ENTRY_EXISTS:
-            return types::API_STATUS_EXISTS_ALREADY;
-            break;
-        case HAL_RET_OBJECT_IN_USE:
-            return types::API_STATUS_OBJECT_IN_USE;
-            break;
-        default:
-            return types::API_STATUS_ERR;
-            break;
+    case HAL_RET_OK:
+        return types::API_STATUS_OK;
+        break;
+    case HAL_RET_HW_PROG_ERR:
+        return types::API_STATUS_HW_PROG_ERR;
+        break;
+    case HAL_RET_TABLE_FULL:
+    case HAL_RET_OTCAM_FULL:
+        return types::API_STATUS_OUT_OF_RESOURCE;
+        break;
+    case HAL_RET_OOM:
+        return types::API_STATUS_OUT_OF_MEM;
+        break;
+    case HAL_RET_INVALID_ARG:
+        return types::API_STATUS_INVALID_ARG;
+        break;
+    case HAL_RET_VRF_NOT_FOUND:
+        return types::API_STATUS_VRF_NOT_FOUND;
+        break;
+    case HAL_RET_L2SEG_NOT_FOUND:
+        return types::API_STATUS_L2_SEGMENT_NOT_FOUND;
+        break;
+    case HAL_RET_IF_NOT_FOUND:
+        return types::API_STATUS_INTERFACE_NOT_FOUND;
+        break;
+    case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
+        return types::API_STATUS_NWSEC_PROFILE_NOT_FOUND;
+        break;
+    case HAL_RET_QOS_CLASS_NOT_FOUND:
+        return types::API_STATUS_QOS_CLASS_NOT_FOUND;
+        break;
+    case HAL_RET_HANDLE_INVALID:
+        return types::API_STATUS_HANDLE_INVALID;
+        break;
+    case HAL_RET_IF_ENIC_TYPE_INVALID:
+        return types::API_STATUS_IF_ENIC_TYPE_INVALID;
+        break;
+    case HAL_RET_IF_ENIC_INFO_INVALID:
+        return types::API_STATUS_IF_ENIC_INFO_INVALID;
+        break;
+    case HAL_RET_IF_INFO_INVALID:
+        return types::API_STATUS_IF_INFO_INVALID;
+        break;
+    case HAL_RET_VRF_ID_INVALID:
+        return types::API_STATUS_VRF_ID_INVALID;
+        break;
+    case HAL_RET_L2SEG_ID_INVALID:
+        return types::API_STATUS_L2_SEGMENT_ID_INVALID;
+        break;
+    case HAL_RET_NWSEC_ID_INVALID:
+        return types::API_STATUS_NWSEC_PROFILE_ID_INVALID;
+        break;
+    case HAL_RET_ENTRY_EXISTS:
+        return types::API_STATUS_EXISTS_ALREADY;
+        break;
+    case HAL_RET_OBJECT_IN_USE:
+        return types::API_STATUS_OBJECT_IN_USE;
+        break;
+    default:
+        return types::API_STATUS_ERR;
+        break;
     }
 }
 
-// ----------------------------------------------------------------------------
-// Use this at the begin and end of a svc api
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// use this at the begin and end of a svc api
+//-----------------------------------------------------------------------------
 void
 hal_api_trace (const char *trace)
 {
@@ -219,11 +219,11 @@ hal_api_trace (const char *trace)
     HAL_TRACE_DEBUG(buf.c_str());
 }
 
-// ----------------------------------------------------------------------------
-// Prints handles from the list
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// prints handles from the list
+//-----------------------------------------------------------------------------
 void
-hal_print_handles_list(dllist_ctxt_t  *list)
+hal_print_handles_list (dllist_ctxt_t  *list)
 {
     dllist_ctxt_t                   *lnode = NULL;
     hal_handle_id_list_entry_t      *entry = NULL;
@@ -234,11 +234,11 @@ hal_print_handles_list(dllist_ctxt_t  *list)
     }
 }
 
-// ----------------------------------------------------------------------------
-// Prints handles from the block list
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// prints handles from the block list
+//-----------------------------------------------------------------------------
 void
-hal_print_handles_block_list(block_list *bl)
+hal_print_handles_block_list (block_list *bl)
 {
     hal_handle_t    *p_hdl_id = NULL;
 
@@ -248,11 +248,11 @@ hal_print_handles_block_list(block_list *bl)
     }
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // check if handle is present in handle list
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 bool
-hal_handle_in_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
+hal_handle_in_list (dllist_ctxt_t *handle_list, hal_handle_t handle)
 {
     dllist_ctxt_t                   *curr, *next;
     hal_handle_id_list_entry_t      *entry = NULL;
@@ -266,11 +266,11 @@ hal_handle_in_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
     return false;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // check if handle is present in handle block list
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 bool
-hal_handle_in_block_list(block_list *bl, hal_handle_t handle)
+hal_handle_in_block_list (block_list *bl, hal_handle_t handle)
 {
     bool            is_present = false;
 
@@ -283,19 +283,19 @@ hal_handle_in_block_list(block_list *bl, hal_handle_t handle)
     is_present = bl->is_present(&handle);
 
 end:
+
     return is_present;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // adds handle to the handles list
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
-hal_add_to_handle_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
+hal_add_to_handle_list (dllist_ctxt_t *handle_list, hal_handle_t handle)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     hal_handle_id_list_entry_t      *entry = NULL;
 
-    // Allocate the entry
     entry = (hal_handle_id_list_entry_t *)g_hal_state->
             hal_handle_id_list_entry_slab()->alloc();
     if (entry == NULL) {
@@ -303,18 +303,18 @@ hal_add_to_handle_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
         goto end;
     }
     entry->handle_id = handle;
-    // Insert into the list
     utils::dllist_add(handle_list, &entry->dllist_ctxt);
 
 end:
+
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // adds handle to the handles block list
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 hal_ret_t
-hal_add_to_handle_block_list(block_list *bl, hal_handle_t handle)
+hal_add_to_handle_block_list (block_list *bl, hal_handle_t handle)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -328,15 +328,16 @@ hal_add_to_handle_block_list(block_list *bl, hal_handle_t handle)
     ret = bl->insert(&handle);
 
 end:
+
     return ret;
 }
 
-// ----------------------------------------------------------------------------
-// Free handle entries in a list. 
-// - Please take locks if necessary outside this call.
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// free handle entries in a list. 
+// please take locks if necessary outside this call.
+//-----------------------------------------------------------------------------
 void
-hal_free_handles_list(dllist_ctxt_t *list)
+hal_free_handles_list (dllist_ctxt_t *list)
 {
     dllist_ctxt_t                   *curr, *next;
     hal_handle_id_list_entry_t      *entry = NULL;
@@ -344,18 +345,16 @@ hal_free_handles_list(dllist_ctxt_t *list)
     dllist_for_each_safe(curr, next, list) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         HAL_TRACE_DEBUG("{}: freeing list handle: {}", __FUNCTION__, entry->handle_id);
-        // Remove from list
         utils::dllist_del(&entry->dllist_ctxt);
-        // Free the entry
         g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
     }
 }
 
-// ----------------------------------------------------------------------------
-// Remove all elements from block list
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// remove all elements from block list
+//-----------------------------------------------------------------------------
 hal_ret_t
-hal_remove_all_handles_block_list(block_list *bl)
+hal_remove_all_handles_block_list (block_list *bl)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -369,14 +368,15 @@ hal_remove_all_handles_block_list(block_list *bl)
     bl->remove_all();
 
 end:
+
     return ret;
 }
 
-// ----------------------------------------------------------------------------
-// Clean up list
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// clean up list
+//-----------------------------------------------------------------------------
 hal_ret_t
-hal_cleanup_handle_list(dllist_ctxt_t **list)
+hal_cleanup_handle_list (dllist_ctxt_t **list)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -390,12 +390,12 @@ hal_cleanup_handle_list(dllist_ctxt_t **list)
     return ret;
 }
 
-// ----------------------------------------------------------------------------
-// Free handle entries in a block list. 
-// - Please take locks if necessary outside this call.
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// free handle entries in a block list. 
+// please take locks if necessary outside this call.
+//-----------------------------------------------------------------------------
 hal_ret_t
-hal_cleanup_handle_block_list(block_list **bl)
+hal_cleanup_handle_block_list (block_list **bl)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -411,18 +411,19 @@ hal_cleanup_handle_block_list(block_list **bl)
     *bl = NULL;
 
 end:
+
     return ret;
 }
 
-
-// ----------------------------------------------------------------------------
-// Demangling symbols for custom backtrace
-// ----------------------------------------------------------------------------
-std::string demangle( const char* const symbol )
+//-----------------------------------------------------------------------------
+// demangling symbols for custom backtrace
+//-----------------------------------------------------------------------------
+std::string
+demangle (const char* const symbol)
 {
     const std::unique_ptr< char, decltype( &std::free ) > demangled(
             abi::__cxa_demangle( symbol, 0, 0, 0 ), &std::free );
-    if( demangled ) {
+    if (demangled ) {
         return demangled.get();
     }
     else {
@@ -430,12 +431,13 @@ std::string demangle( const char* const symbol )
     }
 }
 
-// ----------------------------------------------------------------------------
-// Prints the 2nd frame in the BT.
-// - x -> y -> custom_backtrace
-//   - prints the x frame
-// ----------------------------------------------------------------------------
-void custom_backtrace()
+//-----------------------------------------------------------------------------
+// prints the 2nd frame in the BT
+//   x -> y -> custom_backtrace
+//   prints the x frame
+//-----------------------------------------------------------------------------
+void
+custom_backtrace (void)
 {
     // TODO: replace hardcoded limit?               
     void* addresses[ 256 ];
@@ -486,4 +488,5 @@ void custom_backtrace()
         std::cout << std::endl;
     }
 }
+
 }    // namespace hal

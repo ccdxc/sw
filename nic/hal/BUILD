@@ -101,7 +101,6 @@ cc_library(
         "//nic/third-party/spdlog",
         "//nic/utils/block_list",
         "//nic/utils/bm_allocator",
-        "//nic/utils/catalog",
         "//nic/utils/eventmgr",
         "//nic/utils/fsm",
         "//nic/utils/host_mem:host_mem_includes",

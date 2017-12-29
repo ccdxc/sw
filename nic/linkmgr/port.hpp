@@ -4,8 +4,7 @@
 #define __LINKMGR_PORT_HPP__
 
 #include "nic/include/base.h"
-#include "nic/utils/catalog/catalog.hpp"
-
+#include "sdk/catalog.hpp"
 #include "nic/gen/proto/hal/port.pb.h"
 
 extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
@@ -29,8 +28,8 @@ extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
 
 namespace linkmgr {
 
-extern bool hw_access_mock_mode();
-extern hal::utils::platform_type_t platform_type();
+extern bool hw_access_mock_mode(void);
+extern sdk::lib::platform_type_t platform_type(void);
 extern uint32_t sbus_addr(uint32_t asic, uint32_t asic_port, uint32_t lane);
 
 namespace pd {
@@ -150,7 +149,7 @@ public:
         this->link_sm_ = link_sm;
     }
 
-    void* link_bring_up_timer() {
+    void *link_bring_up_timer() {
         return this->link_bring_up_timer_;
     }
 

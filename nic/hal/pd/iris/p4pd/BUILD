@@ -35,7 +35,7 @@ cc_library(
         "//nic/p4/rdma/include:p4_rdma_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/bm_allocator",
-        "//nic/utils/catalog",
+        "//nic:gen_proto_includes",
     ],
     alwayslink = 1,
 )

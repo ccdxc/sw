@@ -97,9 +97,7 @@ hal_ret_t
 linkmgr::pd::port::port_serdes_fn_init()
 {
     linkmgr::pd::serdes_fn_t *serdes_fn = &linkmgr::pd::port::serdes_fn;
-
-    hal::utils::platform_type_t platform_type =
-                        linkmgr::platform_type();
+    sdk::lib::platform_type_t platform_type = linkmgr::platform_type();
 
     serdes_fn->serdes_cfg = &serdes_cfg_default;
     serdes_fn->serdes_signal_detect = &serdes_signal_detect_default;
@@ -109,17 +107,17 @@ linkmgr::pd::port::port_serdes_fn_init()
     serdes_fn->serdes_reset = &serdes_reset_default;
 
     switch (platform_type) {
-        case hal::utils::PLATFORM_TYPE_HAPS:
-            serdes_fn->serdes_cfg = &serdes_cfg_haps;
-            serdes_fn->serdes_signal_detect = &serdes_signal_detect_haps;
-            serdes_fn->serdes_rdy = &serdes_rdy_haps;
-            serdes_fn->serdes_output_enable = &serdes_output_enable_haps;
-            serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_haps;
-            serdes_fn->serdes_reset = &serdes_reset_haps;
-            break;
+    case sdk::lib::platform_type_t::PLATFORM_TYPE_HAPS:
+        serdes_fn->serdes_cfg = &serdes_cfg_haps;
+        serdes_fn->serdes_signal_detect = &serdes_signal_detect_haps;
+        serdes_fn->serdes_rdy = &serdes_rdy_haps;
+        serdes_fn->serdes_output_enable = &serdes_output_enable_haps;
+        serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_haps;
+        serdes_fn->serdes_reset = &serdes_reset_haps;
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 
     return HAL_RET_OK;

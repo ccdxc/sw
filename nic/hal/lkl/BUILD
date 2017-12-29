@@ -90,7 +90,6 @@ cc_library(
         "//nic/third-party/spdlog",
         "//nic/utils/block_list",
         "//nic/utils/bm_allocator",
-        "//nic/utils/catalog",
         "//nic/utils/host_mem:host_mem_includes",
         "//nic/utils/list:list_includes",
         "//nic/utils/print",

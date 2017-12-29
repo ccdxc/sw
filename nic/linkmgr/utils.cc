@@ -33,13 +33,13 @@ void
 hal_handle_cfg_db_lock(bool readlock, bool lock)
 {
     if (readlock == true) {
-        if(lock == true) {
+        if (lock == true) {
             linkmgr::g_linkmgr_state->cfg_db_rlock(true);
         } else {
             linkmgr::g_linkmgr_state->cfg_db_rlock(false);
         }
     } else {
-        if(lock == true) {
+        if (lock == true) {
             linkmgr::g_linkmgr_state->cfg_db_wlock(true);
         } else {
             linkmgr::g_linkmgr_state->cfg_db_wlock(false);
@@ -47,19 +47,19 @@ hal_handle_cfg_db_lock(bool readlock, bool lock)
     }
 }
 
-slab*
+slab *
 hal_handle_slab()
 {
     return linkmgr::g_linkmgr_state->hal_handle_slab();
 }
 
-slab*
+slab *
 hal_handle_ht_entry_slab()
 {
     return linkmgr::g_linkmgr_state->hal_handle_ht_entry_slab();
 }
 
-ht*
+ht *
 hal_handle_id_ht()
 {
     return linkmgr::g_linkmgr_state->hal_handle_id_ht();
@@ -242,67 +242,67 @@ ApiStatus
 hal_prepare_rsp (hal_ret_t ret)
 {
     switch (ret) {
-        case HAL_RET_OK:
-            return types::API_STATUS_OK;
-            break;
-        case HAL_RET_HW_PROG_ERR:
-            return types::API_STATUS_HW_PROG_ERR;
-            break;
-        case HAL_RET_TABLE_FULL:
-        case HAL_RET_OTCAM_FULL:
-            return types::API_STATUS_OUT_OF_RESOURCE;
-            break;
-        case HAL_RET_OOM:
-            return types::API_STATUS_OUT_OF_MEM;
-            break;
-        case HAL_RET_INVALID_ARG:
-            return types::API_STATUS_INVALID_ARG;
-            break;
-        case HAL_RET_VRF_NOT_FOUND:
-            return types::API_STATUS_VRF_NOT_FOUND;
-            break;
-        case HAL_RET_L2SEG_NOT_FOUND:
-            return types::API_STATUS_L2_SEGMENT_NOT_FOUND;
-            break;
-        case HAL_RET_IF_NOT_FOUND:
-            return types::API_STATUS_INTERFACE_NOT_FOUND;
-            break;
-        case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
-            return types::API_STATUS_NWSEC_PROFILE_NOT_FOUND;
-            break;
-        case HAL_RET_QOS_CLASS_NOT_FOUND:
-            return types::API_STATUS_QOS_CLASS_NOT_FOUND;
-            break;
-        case HAL_RET_HANDLE_INVALID:
-            return types::API_STATUS_HANDLE_INVALID;
-            break;
-        case HAL_RET_IF_ENIC_TYPE_INVALID:
-            return types::API_STATUS_IF_ENIC_TYPE_INVALID;
-            break;
-        case HAL_RET_IF_ENIC_INFO_INVALID:
-            return types::API_STATUS_IF_ENIC_INFO_INVALID;
-            break;
-        case HAL_RET_IF_INFO_INVALID:
-            return types::API_STATUS_IF_INFO_INVALID;
-            break;
-        case HAL_RET_VRF_ID_INVALID:
-            return types::API_STATUS_VRF_ID_INVALID;
-            break;
-        case HAL_RET_L2SEG_ID_INVALID:
-            return types::API_STATUS_L2_SEGMENT_ID_INVALID;
-            break;
-        case HAL_RET_NWSEC_ID_INVALID:
-            return types::API_STATUS_NWSEC_PROFILE_ID_INVALID;
-            break;
-        case HAL_RET_ENTRY_EXISTS:
-            return types::API_STATUS_EXISTS_ALREADY;
-            break;
-        case HAL_RET_OBJECT_IN_USE:
-            return types::API_STATUS_OBJECT_IN_USE;
-            break;
-        default:
-            return types::API_STATUS_ERR;
-            break;
+    case HAL_RET_OK:
+        return types::API_STATUS_OK;
+        break;
+    case HAL_RET_HW_PROG_ERR:
+        return types::API_STATUS_HW_PROG_ERR;
+        break;
+    case HAL_RET_TABLE_FULL:
+    case HAL_RET_OTCAM_FULL:
+        return types::API_STATUS_OUT_OF_RESOURCE;
+        break;
+    case HAL_RET_OOM:
+        return types::API_STATUS_OUT_OF_MEM;
+        break;
+    case HAL_RET_INVALID_ARG:
+        return types::API_STATUS_INVALID_ARG;
+        break;
+    case HAL_RET_VRF_NOT_FOUND:
+        return types::API_STATUS_VRF_NOT_FOUND;
+        break;
+    case HAL_RET_L2SEG_NOT_FOUND:
+        return types::API_STATUS_L2_SEGMENT_NOT_FOUND;
+        break;
+    case HAL_RET_IF_NOT_FOUND:
+        return types::API_STATUS_INTERFACE_NOT_FOUND;
+        break;
+    case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
+        return types::API_STATUS_NWSEC_PROFILE_NOT_FOUND;
+        break;
+    case HAL_RET_QOS_CLASS_NOT_FOUND:
+        return types::API_STATUS_QOS_CLASS_NOT_FOUND;
+        break;
+    case HAL_RET_HANDLE_INVALID:
+        return types::API_STATUS_HANDLE_INVALID;
+        break;
+    case HAL_RET_IF_ENIC_TYPE_INVALID:
+        return types::API_STATUS_IF_ENIC_TYPE_INVALID;
+        break;
+    case HAL_RET_IF_ENIC_INFO_INVALID:
+        return types::API_STATUS_IF_ENIC_INFO_INVALID;
+        break;
+    case HAL_RET_IF_INFO_INVALID:
+        return types::API_STATUS_IF_INFO_INVALID;
+        break;
+    case HAL_RET_VRF_ID_INVALID:
+        return types::API_STATUS_VRF_ID_INVALID;
+        break;
+    case HAL_RET_L2SEG_ID_INVALID:
+        return types::API_STATUS_L2_SEGMENT_ID_INVALID;
+        break;
+    case HAL_RET_NWSEC_ID_INVALID:
+        return types::API_STATUS_NWSEC_PROFILE_ID_INVALID;
+        break;
+    case HAL_RET_ENTRY_EXISTS:
+        return types::API_STATUS_EXISTS_ALREADY;
+        break;
+    case HAL_RET_OBJECT_IN_USE:
+        return types::API_STATUS_OBJECT_IN_USE;
+        break;
+    default:
+        return types::API_STATUS_ERR;
+        break;
     }
 }
 
@@ -326,76 +326,71 @@ hal_api_trace (const char *trace)
     HAL_TRACE_DEBUG(buf.c_str());
 }
 
-// ----------------------------------------------------------------------------
-// Demangling symbols for custom backtrace
-// ----------------------------------------------------------------------------
-std::string demangle( const char* const symbol )
+sdk::lib::port_speed_t
+port_speed_spec_to_sdk_port_speed (::port::PortSpeed speed)
 {
-    const std::unique_ptr< char, decltype( &std::free ) > demangled(
-            abi::__cxa_demangle( symbol, 0, 0, 0 ), &std::free );
-    if( demangled ) {
-        return demangled.get();
+    switch (speed) {
+    case ::port::PORT_SPEED_10G:
+        return sdk::lib::port_speed_t::PORT_SPEED_10G;
+        break;
+    case ::port::PORT_SPEED_25G:
+        return sdk::lib::port_speed_t::PORT_SPEED_25G;
+        break;
+    case ::port::PORT_SPEED_100G:
+        return sdk::lib::port_speed_t::PORT_SPEED_100G;
+        break;
+    default:
+        return sdk::lib::port_speed_t::PORT_SPEED_NONE;
     }
-    else {
-        return symbol;
-    }
+
+    return sdk::lib::port_speed_t::PORT_SPEED_NONE;
 }
 
-// ----------------------------------------------------------------------------
-// Prints the 2nd frame in the BT.
-// - x -> y -> custom_backtrace
-//   - prints the x frame
-// ----------------------------------------------------------------------------
-void custom_backtrace()
+::port::PortSpeed
+sdk_port_speed_to_port_speed_spec (sdk::lib::port_speed_t speed)
 {
-    // TODO: replace hardcoded limit?
-    void* addresses[ 256 ];
-    const int n = ::backtrace( addresses, std::extent< decltype( addresses ) >::value );
-    const std::unique_ptr< char*, decltype( &std::free ) > symbols(
-            ::backtrace_symbols( addresses, n ), &std::free );
-    for( int i = 0; i < n; ++i ) {
-        if (i != 2) {
-            continue;
-        }
-        // we parse the symbols retrieved from backtrace_symbols() to
-        // extract the "real" symbols that represent the mangled names.  
-        char* const symbol = symbols.get()[ i ];
-        char* end = symbol;
-        while( *end ) {
-            ++end;
-        }
-        // scanning is done backwards, since the module name
-        // might contain both '+' or '(' characters.
-        while( end != symbol && *end != '+' ) {
-            --end;
-        }
-        char* begin = end;
-        while( begin != symbol && *begin != '(' ) {
-            --begin;
-        }
-
-        if( begin != symbol ) {
-            // std::cout << std::string( symbol, ++begin - symbol );
-            *end++ = '\0';
-            std::cout << demangle( begin ) << '+' << end;
-        }
-        else {
-            std::cout << symbol;
-        }
-        // Revisit: Line number not working. 
-#if 0
-        // For line number
-        size_t p = 0;
-        while(symbol[p] != '(' && symbol[p] != ' '
-                && symbol[p] != 0)
-            ++p;
-        char syscom[256];
-        sprintf(syscom,"addr2line %p -e %.*s", addresses[i], (int)p, symbol);
-        //last parameter is the file name of the symbol
-        system(syscom);
-#endif
-        std::cout << std::endl;
+    switch (speed) {
+    case sdk::lib::port_speed_t::PORT_SPEED_10G:
+        return ::port::PORT_SPEED_10G;
+        break;
+    case sdk::lib::port_speed_t::PORT_SPEED_25G:
+        return ::port::PORT_SPEED_25G;
+        break;
+    case sdk::lib::port_speed_t::PORT_SPEED_100G:
+        return ::port::PORT_SPEED_100G;
+        break;
+    default:
+        return ::port::PORT_SPEED_NONE;
     }
+
+    return ::port::PORT_SPEED_NONE;
+}
+
+sdk::lib::port_type_t
+port_type_to_sdk_port_type_spec (::port::PortType type)
+{
+    switch (type) {
+    case ::port::PORT_TYPE_ETH:
+        return sdk::lib::port_type_t::PORT_TYPE_ETH;
+    default:
+        return sdk::lib::port_type_t::PORT_TYPE_NONE;
+    }
+
+    return sdk::lib::port_type_t::PORT_TYPE_NONE;
+}
+
+::port::PortType
+sdk_port_type_to_port_type_spec (sdk::lib::port_type_t type)
+{
+    switch (type) {
+    case sdk::lib::port_type_t::PORT_TYPE_ETH:
+        return ::port::PORT_TYPE_ETH;
+        break;
+    default:
+        return ::port::PORT_TYPE_NONE;
+    }
+
+    return ::port::PORT_TYPE_NONE;
 }
 
 }    // namespace hal

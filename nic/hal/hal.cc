@@ -22,7 +22,12 @@
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/plugins/plugins.hpp"
+#include "nic/hal/src/utils.hpp"
 #include "sdk/logger.hpp"
+#include "nic/hal/lib/hal_handle.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/proxy.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -31,15 +36,6 @@ extern "C" void __gcov_flush(void);
 #else
 #define HAL_GCOV_FLUSH()     { }
 #endif
-#include "nic/hal/src/interface.hpp"
-#include "nic/hal/src/tcpcb.hpp"
-#include "nic/hal/src/proxy.hpp"
-
-#include "nic/utils/catalog/catalog.hpp"
-#include "nic/hal/lib/hal_handle.hpp"
-
-using port::PortSpec;
-using port::PortResponse;
 
 namespace hal {
 
@@ -358,90 +354,6 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         return HAL_RET_INVALID_ARG;
     }
     return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_uplink_create(uint32_t uplink_port,
-                  hal::utils::catalog *catalog_p)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-    PortSpec        spec;
-    PortResponse    response;
-
-    // TODO
-    int vrf_id = catalog_p->vrf_id();
-
-    hal::utils::catalog_uplink_port_t *catalog_uplink_port_p =
-                                      catalog_p->uplink_port(uplink_port);
-
-    spec.mutable_key_or_handle()->set_port_id(uplink_port);
-    spec.mutable_meta()->set_vrf_id(vrf_id);
-    spec.set_port_speed(catalog_uplink_port_p->speed);
-    spec.set_num_lanes(catalog_uplink_port_p->num_lanes);
-    spec.set_port_type(catalog_uplink_port_p->type);
-
-    hal::utils::catalog_asic_port_t *catalog_asic_port_p =
-                                    catalog_p->asic_port(uplink_port);
-
-    spec.set_mac_id(catalog_asic_port_p->mac_id);
-    spec.set_mac_ch(catalog_asic_port_p->mac_ch);
-
-    if (catalog_uplink_port_p->enabled == true) {
-        spec.set_admin_state(::port::PORT_ADMIN_STATE_UP);
-    }
-
-    HAL_TRACE_DEBUG("{}. creating uplink port {}", __FUNCTION__, uplink_port);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-
-    ret = hal::port_create(spec, &response);
-
-    hal::hal_cfg_db_close();
-
-    return ret;
-}
-
-//------------------------------------------------------------------------------
-// create uplink ports in the catalog file
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_uplinks_create(hal::utils::catalog *catalog_p)
-{
-    uint32_t  uplink_port = 0;
-    hal_ret_t ret = HAL_RET_OK;
-
-    if (NULL == catalog_p) {
-        HAL_TRACE_ERR("{}: catalog db NULL", __FUNCTION__);
-        return HAL_RET_ERR;
-    }
-
-    for (uplink_port = 1; uplink_port <= catalog_p->num_uplink_ports();
-                                                      ++uplink_port) {
-        ret = hal_uplink_create(uplink_port, catalog_p);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}: Error creating uplink port {}",
-                          __FUNCTION__,  uplink_port);
-        }
-    }
-
-    return ret;
-}
-
-//------------------------------------------------------------------------------
-// parse the catalog file and populate catalog DB
-//------------------------------------------------------------------------------
-hal::utils::catalog*
-hal_catalog_init(std::string catalog_file)
-{
-    char  *cfg_path = NULL;
-
-    // makeup the full file path
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        catalog_file = std::string(cfg_path) + "/" + catalog_file;
-    }
-
-    return hal::utils::catalog::factory(catalog_file);
 }
 
 int

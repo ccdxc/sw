@@ -40,7 +40,6 @@
 #include "nic/hal/pd/iris/proxyccb_pd.hpp"
 #include "nic/hal/pd/iris/dos_pd.hpp"
 #include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
-#include "nic/hal/pd/control/port.hpp"
 
 namespace hal {
 namespace pd {
@@ -161,12 +160,6 @@ hal_state_pd::init(void)
                                  sizeof(hal::pd::pd_ep_ip_entry_t), 8,
                                  false, true, true);
     HAL_ASSERT_RETURN((ep_pd_ip_entry_slab_ != NULL), false);
-
-#if 0
-    // rw table indexer
-    rw_table_idxr_ = new sdk::lib::indexer(HAL_RW_TABLE_SIZE);
-    HAL_ASSERT_RETURN((rw_table_idxr_ != NULL), false);
-#endif
 
     // initialize dos-policy PD related data structures
     dos_pd_slab_ = slab::factory("NWSEC_PD", HAL_SLAB_DOS_POLICY_PD,
@@ -415,11 +408,6 @@ hal_state_pd::init(void)
                                           true, true, true);
     HAL_ASSERT_RETURN((directmap_entry_slab_ != NULL), false);
 
-    port_slab_ = slab::factory("port_pd", HAL_SLAB_PORT_PD,
-                               sizeof(hal::pd::port), 8,
-                               false, true,true);
-    HAL_ASSERT_RETURN((port_slab_ != NULL), false);
-
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
@@ -441,8 +429,6 @@ hal_state_pd::hal_state_pd()
 {
     vrf_slab_ = NULL;
     vrf_hwid_idxr_ = NULL;
-
-    port_slab_ = NULL;
 
     nwsec_profile_hwid_idxr_ = NULL;
 
@@ -535,8 +521,6 @@ hal_state_pd::~hal_state_pd()
 
     vrf_slab_ ? slab::destroy(vrf_slab_) : HAL_NOP;
     vrf_hwid_idxr_ ? indexer::destroy(vrf_hwid_idxr_) : HAL_NOP;
-
-    port_slab_ ? slab::destroy(port_slab_) : HAL_NOP;
 
     nwsec_profile_hwid_idxr_ ? indexer::destroy(nwsec_profile_hwid_idxr_) : HAL_NOP;
 
@@ -716,7 +700,6 @@ slab *
 hal_state_pd::get_slab(hal_slab_t slab_id) 
 {
     GET_SLAB(vrf_slab_);
-    GET_SLAB(port_slab_);
     GET_SLAB(l2seg_slab_);
     GET_SLAB(mc_entry_slab_);
     GET_SLAB(lif_pd_slab_);
@@ -1247,10 +1230,6 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     switch (slab_id) {
     case HAL_SLAB_VRF_PD:
         g_hal_state_pd->vrf_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_PORT_PD:
-        g_hal_state_pd->port_slab()->free(elem);
         break;
 
     case HAL_SLAB_L2SEG_PD:

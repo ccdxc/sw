@@ -7,7 +7,6 @@
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/multicast.hpp"
-#include "nic/hal/src/port.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/nwsec.hpp"
@@ -95,13 +94,6 @@ hal_cfg_db::init(void)
                             hal::if_id_compute_hash_func,
                             hal::if_id_compare_key_func);
     HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
-
-    // initialize port related data structures
-    port_id_ht_ = ht::factory(HAL_MAX_PORTS,
-                              hal::port_id_get_key_func,
-                              hal::port_id_compute_hash_func,
-                              hal::port_id_compare_key_func);
-    HAL_ASSERT_RETURN((port_id_ht_ != NULL), false);
 
     // initialize flow/session related data structures
     session_id_ht_ = ht::factory(HAL_MAX_SESSIONS,
@@ -347,7 +339,6 @@ hal_cfg_db::hal_cfg_db()
 
     lif_id_ht_ = NULL;
     if_id_ht_ = NULL;
-    port_id_ht_ = NULL;
 
     ep_hal_handle_ht_ = NULL;
 
@@ -450,7 +441,6 @@ hal_cfg_db::~hal_cfg_db()
 
     lif_id_ht_ ? ht::destroy(lif_id_ht_) : HAL_NOP;
     if_id_ht_ ? ht::destroy(if_id_ht_) : HAL_NOP;
-    port_id_ht_ ? ht::destroy(port_id_ht_) : HAL_NOP;
 
     ep_hal_handle_ht_ ? ht::destroy(ep_hal_handle_ht_) : HAL_NOP;
 
@@ -779,12 +769,6 @@ hal_mem_db::init(void)
                              false, true, true);
     HAL_ASSERT_RETURN((enic_l2seg_entry_slab_ != NULL), false);
 
-    // initialize port related data structures
-    port_slab_ = slab::factory("port", HAL_SLAB_PORT,
-                               sizeof(hal::port_t), 8,
-                               false, true, true);
-    HAL_ASSERT_RETURN((port_slab_ != NULL), false);
-
     // initialize endpoint related data structures
     ep_slab_ = slab::factory("EP", HAL_SLAB_EP, sizeof(hal::ep_t), 128,
                              true, true, true);
@@ -942,7 +926,6 @@ hal_mem_db::hal_mem_db()
     lif_slab_ = NULL;
     if_slab_ = NULL;
     enic_l2seg_entry_slab_ = NULL;
-    port_slab_ = NULL;
     ep_slab_ = NULL;
     ep_ip_entry_slab_ = NULL;
     ep_l3_entry_slab_ = NULL;
@@ -1009,7 +992,6 @@ hal_mem_db::~hal_mem_db()
     lif_slab_ ? slab::destroy(lif_slab_) : HAL_NOP;
     if_slab_ ? slab::destroy(if_slab_) : HAL_NOP;
     enic_l2seg_entry_slab_ ? slab::destroy(enic_l2seg_entry_slab_) : HAL_NOP;
-    port_slab_ ? slab::destroy(port_slab_) : HAL_NOP;
     ep_slab_ ? slab::destroy(ep_slab_) : HAL_NOP;
     ep_ip_entry_slab_ ? slab::destroy(ep_ip_entry_slab_) : HAL_NOP;
     ep_l3_entry_slab_ ? slab::destroy(ep_l3_entry_slab_) : HAL_NOP;
@@ -1063,7 +1045,6 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(mc_entry_slab_);
     GET_SLAB(lif_slab_);
     GET_SLAB(if_slab_);
-    GET_SLAB(port_slab_);
     GET_SLAB(ep_slab_);
     GET_SLAB(ep_ip_entry_slab_);
     GET_SLAB(ep_l3_entry_slab_);
@@ -1247,10 +1228,6 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_ENIC_L2SEG_ENTRY:
         g_hal_state->enic_l2seg_entry_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_PORT:
-        g_hal_state->port_slab()->free(elem);
         break;
 
     case HAL_SLAB_EP:

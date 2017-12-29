@@ -68,3 +68,14 @@ cc_library(
         "//:sdk_headers",
     ],
 )
+
+# catalog library
+cc_library(
+    name = "sdk_catalog",
+    srcs = [
+        "libcatalog.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)

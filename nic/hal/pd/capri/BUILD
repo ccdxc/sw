@@ -24,7 +24,6 @@ capri_util_deps = [
     "//nic/utils/bm_allocator:bm_allocator",
     "@sdk//obj:sdk_indexer",
     "@sdk//obj:sdk_slab",
-    "//nic/utils/catalog:catalog",
 ]
 
 capri_pd_deps = [

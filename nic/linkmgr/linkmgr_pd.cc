@@ -28,7 +28,7 @@ linkmgr_init_pd() {
     // initialize the port mac and serdes functions
     port::port_init();
 
-    if (platform_type() == hal::utils::PLATFORM_TYPE_SIM) {
+    if (platform_type() == sdk::lib::platform_type_t::PLATFORM_TYPE_SIM) {
         do {
             rc = lib_model_connect();
             if (rc == -1) {
@@ -65,7 +65,7 @@ port_event_disable_pd(void *ctxt)
 // ----------------------------------------------------------------------------
 // PD If Create
 // ----------------------------------------------------------------------------
-void*
+void *
 port_create_pd(port_args_pd_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
@@ -165,7 +165,7 @@ port_get_pd(port_args_pd_t *args)
     return ret;
 }
 
-void*
+void *
 port_make_clone_pd(void *pd_orig_p)
 {
     HAL_TRACE_DEBUG("{}: port clone", __FUNCTION__);

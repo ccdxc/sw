@@ -3,12 +3,10 @@
 
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_mem.hpp"
-
 #include "nic/hal/lib/hal_handle.hpp"
-
 #include "sdk/slab.hpp"
 #include "sdk/ht.hpp"
-#include "nic/utils/catalog/catalog.hpp"
+#include "sdk/catalog.hpp"
 
 using sdk::lib::slab;
 using sdk::lib::ht;
@@ -86,8 +84,8 @@ class linkmgr_state {
 public:
     hal_ret_t init();
 
-    hal::utils::catalog* catalog() { return catalog_; }
-    void set_catalog(hal::utils::catalog *catalog) { catalog_ = catalog; }
+    sdk::lib::catalog* catalog() { return catalog_; }
+    void set_catalog(sdk::lib::catalog *catalog) { catalog_ = catalog; }
 
     void cfg_db_rlock(bool lock) {
         (lock == true) ? cfg_db_->rlock() : cfg_db_->runlock();
@@ -118,7 +116,7 @@ public:
     static linkmgr_state* factory();
 
 private:
-    hal::utils::catalog  *catalog_;
+    sdk::lib::catalog  *catalog_;
     cfg_db               *cfg_db_;
     mem_db               *mem_db_;
     ht                   *hal_handle_id_ht_;

@@ -28,7 +28,6 @@
 #include "nic/hal/src/rawccb.hpp"
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/hal/src/proxyccb.hpp"
-#include "nic/hal/src/port.hpp"
 #include "nic/hal/src/barco_rings.hpp"
 
 namespace hal {
@@ -40,7 +39,6 @@ using hal::network_t;
 using hal::nwsec_profile_t;
 using hal::dos_policy_t;
 using hal::if_t;
-using hal::port_t;
 using hal::lif_t;
 using hal::session_t;
 using hal::flow_key_t;
@@ -99,18 +97,6 @@ typedef struct pd_lif_upd_args_s {
     bool    rx_policer_changed;
     bool    tx_policer_changed;
 } pd_lif_upd_args_t;
-
-typedef struct pd_port_args_s {
-    port_t  *pi_p;
-
-    PortType         port_type;               // port type
-    PortSpeed        port_speed;              // port speed
-    PortAdminState   admin_state;             // admin state of the port
-    PortOperStatus   oper_status;             // oper status of the port
-    uint32_t         mac_id;                  // mac id associated with the port
-    uint32_t         mac_ch;                  // mac channel associated with the port
-    uint32_t         num_lanes;               // number of lanes for the port
-} __PACK__ pd_port_args_t;
 
 typedef struct pd_if_args_s {
     if_t    *intf;
@@ -259,8 +245,6 @@ typedef struct pd_twice_nat_entry_args_s {
     twice_nat_actions_en    twice_nat_act;
 } __PACK__ pd_twice_nat_entry_args_t;
 
-
-
 typedef struct pd_system_args_s {
     SystemResponse *rsp;
 } __PACK__ pd_system_args_t;
@@ -324,13 +308,6 @@ pd_if_args_init (pd_if_args_t *args)
 }
 
 static inline void
-pd_port_args_init (pd_port_args_t *args)
-{
-    args->pi_p = NULL;
-    return;
-}
-
-static inline void
 pd_if_nwsec_upd_args_init (pd_if_nwsec_upd_args_t *args)
 {
     args->intf = NULL;
@@ -372,7 +349,6 @@ pd_session_args_init (pd_session_args_t *args)
 
     return;
 }
-
 
 static inline void
 pd_l2seg_uplinkif_args_init (pd_l2seg_uplink_args_t *args)
@@ -506,17 +482,6 @@ hal_ret_t pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args);
 hal_ret_t pd_if_lif_update(pd_if_lif_upd_args_t *args);
 hal_ret_t pd_if_mem_free(pd_if_args_t *intf);
 hal_ret_t pd_if_make_clone(if_t *hal_if, if_t *clone);
-
-hal_ret_t pd_port_create     (pd_port_args_t *hal_port);
-hal_ret_t pd_port_update     (pd_port_args_t *hal_port);
-hal_ret_t pd_port_delete     (pd_port_args_t *hal_port);
-hal_ret_t pd_port_get        (pd_port_args_t *hal_port);
-hal_ret_t pd_port_mem_free   (pd_port_args_t *hal_port);
-hal_ret_t pd_port_make_clone (port_t *pi_p, port_t *clone);
-bool      pd_port_has_speed_changed
-                             (pd_port_args_t *hal_port);
-bool      pd_port_has_admin_state_changed
-                             (pd_port_args_t *hal_port);
 
 hal_ret_t
 pd_debug_cli_read(uint32_t tableid,

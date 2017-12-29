@@ -58,24 +58,24 @@ port_speed_t
 catalog::catalog_speed_to_port_speed(std::string speed)
 {
     if (speed == "10G") {
-        return PORT_SPEED_10G;
+        return port_speed_t::PORT_SPEED_10G;
     } else if (speed == "25G") {
-        return PORT_SPEED_25G;
+        return port_speed_t::PORT_SPEED_25G;
     } else if (speed == "100G") {
-        return PORT_SPEED_100G;
+        return port_speed_t::PORT_SPEED_100G;
     }
 
-    return PORT_SPEED_NONE;
+    return port_speed_t::PORT_SPEED_NONE;
 }
 
 port_type_t
 catalog::catalog_type_to_port_type(std::string type)
 {
     if (type == "eth") {
-        return PORT_TYPE_ETH;
+        return port_type_t::PORT_TYPE_ETH;
     }
 
-    return PORT_TYPE_NONE;
+    return port_type_t::PORT_TYPE_NONE;
 }
 
 sdk_ret_t
@@ -112,14 +112,14 @@ platform_type_t
 catalog::catalog_platform_type_to_platform_type(std::string platform_type)
 {
     if (platform_type == "haps") {
-        return PLATFORM_TYPE_HAPS;
+        return platform_type_t::PLATFORM_TYPE_HAPS;
     } else if (platform_type == "hw") {
-        return PLATFORM_TYPE_HW;
+        return platform_type_t::PLATFORM_TYPE_HW;
     } else if (platform_type == "sim") {
-        return PLATFORM_TYPE_SIM;
+        return platform_type_t::PLATFORM_TYPE_SIM;
     }
 
-    return PLATFORM_TYPE_NONE;
+    return platform_type_t::PLATFORM_TYPE_NONE;
 }
 
 sdk_ret_t

@@ -24,7 +24,7 @@ pal_init (bool sim)
     pal_init_cfg(sim);
 
     if (sim) {
-        SDK_TRACE_DEBUG("Initializing PAL in SIM mode.");
+        SDK_TRACE_DEBUG("Initializing PAL in SIM mode");
         return pal_init_sim();
     } else {
         SDK_TRACE_DEBUG("Initializing PAL");

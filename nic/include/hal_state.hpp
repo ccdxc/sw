@@ -4,7 +4,7 @@
 #define __HAL_STATE_HPP__
 
 #include "nic/utils/list/list.hpp"
-#include "nic/utils/catalog/catalog.hpp"
+#include "sdk/catalog.hpp"
 #include "nic/include/eventmgr.hpp"
 #include "sdk/slab.hpp"
 #include "sdk/indexer.hpp"
@@ -81,8 +81,6 @@ public:
     ht *lif_id_ht(void) const { return lif_id_ht_; }
 
     ht *if_id_ht(void) const { return if_id_ht_; }
-
-    ht *port_id_ht(void) const { return port_id_ht_; }
 
     ht *ep_hal_handle_ht(void) const { return ep_hal_handle_ht_; }
 
@@ -200,12 +198,6 @@ private:
     // interface related config
     struct {
         ht         *if_id_ht_;
-    } __PACK__;
-
-    // port related config
-    struct {
-        ht         *port_id_ht_;
-        // ht         *port_hal_handle_ht_;
     } __PACK__;
 
     // endpoint related config
@@ -375,7 +367,6 @@ public:
     slab *lif_slab(void) const { return lif_slab_; }
     slab *if_slab(void) const { return if_slab_; }
     slab *enic_l2seg_entry_slab(void) { return enic_l2seg_entry_slab_; }
-    slab *port_slab(void) const { return port_slab_; }
     slab *ep_slab(void) const { return ep_slab_; }
     slab *ep_ip_entry_slab(void) const { return ep_ip_entry_slab_; }
     slab *ep_l3_entry_slab(void) const { return ep_l3_entry_slab_; }
@@ -420,7 +411,6 @@ private:
     slab    *lif_slab_;
     slab    *if_slab_;
     slab    *enic_l2seg_entry_slab_;
-    slab    *port_slab_;
     slab    *ep_slab_;
     slab    *ep_ip_entry_slab_;
     slab    *ep_l3_entry_slab_;
@@ -516,10 +506,6 @@ public:
     slab *if_slab(void) const { return mem_db_->if_slab(); }
     ht *if_id_ht(void) const { return cfg_db_->if_id_ht(); }
     slab *enic_l2seg_entry_slab(void) const { return mem_db_->enic_l2seg_entry_slab(); }
-
-    // get APIs for port state
-    slab *port_slab(void) const { return mem_db_->port_slab(); }
-    ht *port_id_ht(void) const { return cfg_db_->port_id_ht(); }
 
     // get APIs for endpoint state
     slab *ep_slab(void) const { return mem_db_->ep_slab(); }
@@ -620,19 +606,18 @@ public:
 
     eventmgr *event_mgr(void) const { return oper_db_->event_mgr(); }
 
-    hal::utils::catalog* catalog() { return catalog_; }
-
-    void set_catalog(hal::utils::catalog *catalog) { catalog_ = catalog; }
+    sdk::lib::catalog* catalog(void) const { return catalog_; }
+    void set_catalog(sdk::lib::catalog *catalog) { catalog_ = catalog; }
 
 private:
     bool init(void);
     hal_state();
 
 private:
-    hal_cfg_db             *cfg_db_;
-    hal_oper_db            *oper_db_;
-    hal_mem_db             *mem_db_;
-    hal::utils::catalog    *catalog_;
+    hal_cfg_db           *cfg_db_;
+    hal_oper_db          *oper_db_;
+    hal_mem_db           *mem_db_;
+    sdk::lib::catalog    *catalog_;
 };
 
 extern class hal_state    *g_hal_state;
