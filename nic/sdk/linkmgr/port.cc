@@ -20,70 +20,70 @@ mac_fn_t port::mac_fn;
 serdes_fn_t port::serdes_fn;
 
 // Invoked by the periodic thread when timer expires
-hal_ret_t
+sdk_ret_t
 port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     // wake up the hal control thread to process port event
     ret = linkmgr_notify (LINKMGR_OPERATION_PORT_TIMER, ctxt);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error notifying control-thread for port timer");
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Error notifying control-thread for port timer");
     }
 
     return ret;
 }
 
-hal_ret_t
-port::port_mac_init()
+sdk_ret_t
+port::port_mac_init(void)
 {
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-port::port_mac_fifo_ctrl()
+sdk_ret_t
+port::port_mac_fifo_ctrl(void)
 {
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-port::port_mac_global_mode_cfg()
+sdk_ret_t
+port::port_mac_global_mode_cfg(void)
 {
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_mac_ch_enable(bool enable)
 {
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-port::port_mac_generic_cfg()
+sdk_ret_t
+port::port_mac_generic_cfg(void)
 {
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_mac_rx_tx_enable(bool rx_enable, bool tx_enable)
 {
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-port::port_mac_ch_mode_cfg()
+sdk_ret_t
+port::port_mac_ch_mode_cfg(void)
 {
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 uint32_t
-port::port_mac_port_num_calc()
+port::port_mac_port_num_calc(void)
 {
     return (this->mac_id_ * PORT_LANES_MAX) + this->mac_ch_;
 }
 
-hal_ret_t
-port::port_mac_cfg()
+sdk_ret_t
+port::port_mac_cfg(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
@@ -92,10 +92,10 @@ port::port_mac_cfg()
             static_cast<uint32_t>(this->port_speed_),
             this->num_lanes_);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_mac_enable(bool enable)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
@@ -106,10 +106,10 @@ port::port_mac_enable(bool enable)
                this->num_lanes_,
                enable);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_mac_soft_reset(bool reset)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
@@ -120,10 +120,10 @@ port::port_mac_soft_reset(bool reset)
                    this->num_lanes_,
                    reset);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_mac_stats_reset(bool reset)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
@@ -134,10 +134,10 @@ port::port_mac_stats_reset(bool reset)
                     this->num_lanes_,
                     reset);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_mac_intr_en(bool enable)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
@@ -148,11 +148,11 @@ port::port_mac_intr_en(bool enable)
             this->num_lanes_,
             enable);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-port::port_mac_intr_clr()
+sdk_ret_t
+port::port_mac_intr_clr(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
@@ -161,11 +161,11 @@ port::port_mac_intr_clr()
             static_cast<uint32_t>(this->port_speed_),
             this->num_lanes_);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 bool
-port::port_mac_faults_get()
+port::port_mac_faults_get(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
@@ -178,18 +178,18 @@ port::port_sbus_addr(uint32_t lane)
     return sbus_addr(mac_id_, mac_ch_, lane);
 }
 
-hal_ret_t
-port::port_serdes_cfg()
+sdk_ret_t
+port::port_serdes_cfg(void)
 {
     uint32_t lane = 0;
     for (lane = 0; lane < num_lanes_; ++lane) {
         port::serdes_fn.serdes_cfg(port_sbus_addr(lane));
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_serdes_tx_rx_enable(bool enable)
 {
     uint32_t lane = 0;
@@ -198,10 +198,10 @@ port::port_serdes_tx_rx_enable(bool enable)
                                             enable);
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_serdes_output_enable(bool enable)
 {
     uint32_t lane = 0;
@@ -210,10 +210,10 @@ port::port_serdes_output_enable(bool enable)
                                              enable);
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_serdes_reset(bool reset)
 {
     uint32_t lane = 0;
@@ -222,11 +222,11 @@ port::port_serdes_reset(bool reset)
                                      reset);
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 bool
-port::port_serdes_signal_detect()
+port::port_serdes_signal_detect(void)
 {
     uint32_t lane = 0;
     bool signal_detect = false;
@@ -242,7 +242,7 @@ port::port_serdes_signal_detect()
 }
 
 bool
-port::port_serdes_rdy()
+port::port_serdes_rdy(void)
 {
     uint32_t lane = 0;
     bool serdes_rdy = false;
@@ -257,8 +257,8 @@ port::port_serdes_rdy()
     return serdes_rdy;
 }
 
-hal_ret_t
-port::port_link_sm_process()
+sdk_ret_t
+port::port_link_sm_process(void)
 {
     int timeout = 0;
     bool sig_detect = false;
@@ -385,15 +385,15 @@ port::port_link_sm_process()
             break;
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-port::port_enable()
+sdk_ret_t
+port::port_enable(void)
 {
     /* check if already enabled */
     if (this->admin_state_ == ::port::PORT_ADMIN_STATE_UP) {
-        return HAL_RET_OK;
+        return SDK_RET_OK;
     }
 
     /* enable the port */
@@ -403,15 +403,15 @@ port::port_enable()
 
     this->admin_state_ = ::port::PORT_ADMIN_STATE_UP;
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-port::port_disable()
+sdk_ret_t
+port::port_disable(void)
 {
     /* check if already disabled */
     if (this->admin_state_ == ::port::PORT_ADMIN_STATE_DOWN) {
-        return HAL_RET_OK;
+        return SDK_RET_OK;
     }
 
     /* disable the port */
@@ -421,31 +421,31 @@ port::port_disable()
 
     this->admin_state_ = ::port::PORT_ADMIN_STATE_DOWN;
 
-    return HAL_RET_OK;;
+    return SDK_RET_OK;;
 }
 
-hal_ret_t
-port::port_init()
+sdk_ret_t
+port::port_init(void)
 {
-    hal_ret_t rc = HAL_RET_OK;
+    sdk_ret_t rc = SDK_RET_OK;
 
     rc = port::port_mac_fn_init();
-    if (rc != HAL_RET_OK) {
-        HAL_TRACE_ERR("port mac init failed");
+    if (rc != SDK_RET_OK) {
+        SDK_TRACE_ERR("port mac init failed");
     }
 
     rc = port::port_serdes_fn_init();
-    if (rc != HAL_RET_OK) {
-        HAL_TRACE_ERR("port mac init failed");
+    if (rc != SDK_RET_OK) {
+        SDK_TRACE_ERR("port mac init failed");
     }
 
     return rc;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_enable(port *pd_p)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     if (1) {
         ret = pd_p->port_enable();
@@ -453,8 +453,8 @@ port::port_enable(port *pd_p)
         // wake up the hal control thread to process port event
         ret = linkmgr_notify (LINKMGR_OPERATION_PORT_ENABLE, pd_p);
 
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}: Error notifying control-thread for port enable",
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("{}: Error notifying control-thread for port enable",
                           __FUNCTION__);
         }
     }
@@ -462,10 +462,10 @@ port::port_enable(port *pd_p)
     return ret;
 }
 
-hal_ret_t
+sdk_ret_t
 port::port_disable(port *pd_p)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     if (1) {
         ret = pd_p->port_disable();
@@ -473,8 +473,8 @@ port::port_disable(port *pd_p)
         // wake up the hal control thread to process port event
         ret = linkmgr_notify (LINKMGR_OPERATION_PORT_DISABLE, pd_p);
 
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}: Error notifying control-thread for port disable",
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("{}: Error notifying control-thread for port disable",
                           __FUNCTION__);
         }
     }

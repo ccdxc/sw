@@ -26,10 +26,9 @@
 		nw.proto
 		nwsec_1.proto
 		nwsec.proto
-		nwsec_1.proto
 		port.proto
-		proxy.proto
 		proxyccb.proto
+		proxy.proto
 		proxyrcb.proto
 		qos.proto
 		quiesce.proto
@@ -465,37 +464,6 @@
 		DoSPolicyStats
 		DoSPolicyGetResponse
 		DoSPolicyGetResponseMsg
-		IPSubnet
-		AddressRange
-		AddressSpec
-		AddressStatus
-		Address
-		AddressGroupSpec
-		AddressGroupStatus
-		AddressGroup
-		IPAddressSpec
-		App
-		ApplicationSpec
-		ApplicationStatus
-		Application
-		AppGroupSpec
-		AppGroupStatus
-		AppGroup
-		SecurityRuleAction
-		SecurityRuleSpec
-		SecurityRuleStatus
-		SecurityRule
-		SecurityRuleRequestMsg
-		SecurityRuleResponse
-		SecurityRuleResponseMsg
-		SecurityRuleDeleteRequest
-		SecurityRuleDeleteRequestMsg
-		SecurityRuleDeleteResponse
-		SecurityRuleDeleteResponseMsg
-		SecurityRuleGet
-		SecurityRuleGetMsg
-		SecurityRuleGetResponse
-		SecurityRuleGetResponseMsg
 		PortSpec
 		PortRequestMsg
 		PortResponse
@@ -509,6 +477,20 @@
 		PortGetRequestMsg
 		PortGetResponse
 		PortGetResponseMsg
+		ProxycCbKeyHandle
+		ProxycCbSpec
+		ProxycCbRequestMsg
+		ProxycCbStatus
+		ProxycCbResponse
+		ProxycCbResponseMsg
+		ProxycCbDeleteRequest
+		ProxycCbDeleteRequestMsg
+		ProxycCbDeleteResponseMsg
+		ProxycCbGetRequest
+		ProxycCbGetRequestMsg
+		ProxycCbStats
+		ProxycCbGetResponse
+		ProxycCbGetResponseMsg
 		ProxyKeyHandle
 		ProxySpec
 		ProxyRequestMsg
@@ -533,20 +515,6 @@
 		ProxyGlobalCfgRequest
 		ProxyGlobalCfgRequestMsg
 		ProxyGlobalCfgResponseMsg
-		ProxycCbKeyHandle
-		ProxycCbSpec
-		ProxycCbRequestMsg
-		ProxycCbStatus
-		ProxycCbResponse
-		ProxycCbResponseMsg
-		ProxycCbDeleteRequest
-		ProxycCbDeleteRequestMsg
-		ProxycCbDeleteResponseMsg
-		ProxycCbGetRequest
-		ProxycCbGetRequestMsg
-		ProxycCbStats
-		ProxycCbGetResponse
-		ProxycCbGetResponseMsg
 		ProxyrCbKeyHandle
 		ProxyrCbSpec
 		ProxyrCbRequestMsg
