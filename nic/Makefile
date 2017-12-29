@@ -225,4 +225,5 @@ clean:
 #	$(MAKE) -C p4 clean
 	$(MAKE) -C asm clean
 	$(MAKE) -C proto clean
+	$(MAKE) -C sdk clean
 
