@@ -54,29 +54,55 @@ req_tx_add_headers_2_process:
     phvwr.!c3      BTH_DST_QP, d.dst_qp
 
     crestore       [c6, c5], d.{roce_opt_ts_enable...roce_opt_mss_enable}, 0x3
-    #c5 - ts_enable
-    #c6 - mss_enable
+    #c5 - mss_enable
+    #c6 - ts_enable
     bcf            [!c5 & !c6],  skip_roce_udp_options
     CAPRI_SET_TABLE_3_VALID(0) //BD slot
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_UDP_OPTS)
     phvwrpair      p.roce_options.OCS_kind, ROCE_OPT_KIND_OCS, p.roce_options.OCS_value, 0
     phvwrpair      p.roce_options.TS_kind, ROCE_OPT_KIND_TS, p.roce_options.TS_len, ROCE_OPT_LEN_TS
     //not enough bits on d[] vector to have 64 bit TS value
     phvwr          p.{roce_options.TS_value[15:0]...roce_options.TS_echo[31:16]}, d.{timestamp...timestamp_echo}
     phvwrpair      p.roce_options.MSS_kind, ROCE_OPT_KIND_MSS, p.roce_options.MSS_len, ROCE_OPT_LEN_MSS
     phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 4)       #OCS kind, OCS value
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, roce_options.TS_kind, roce_options.TS_echo, 1, c5)    #TS kind, TS len, TS value
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, roce_options.MSS_kind, roce_options.MSS_value, 2, c6) #MSS kind, MSS len, MSS value
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 3)        #EOL kind
 
 #define ROCE_MAX_OPTION_BYTES (sizeof(p.roce_options)/8)
+#define ROCE_TOTAL_OPTION_BYTES_TS (ROCE_MAX_OPTION_BYTES - ROCE_OPT_LEN_MSS)
+#define ROCE_TOTAL_OPTION_BYTES_MSS (ROCE_MAX_OPTION_BYTES - ROCE_OPT_LEN_TS)
+#define ROCE_TOTAL_OPTION_BYTES_TS_MSS (ROCE_MAX_OPTION_BYTES)
 
-    add            r5, r0, ROCE_MAX_OPTION_BYTES
-    sub.!c5        r5, r5, ROCE_OPT_LEN_TS
-    sub.!c6        r5, r5, ROCE_OPT_LEN_MSS
-    phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, r5
+        .csbegin
+        cswitch [c6, c5]
+        DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_UDP_OPTS) //BDS
+        .brcase 0 #both options not enabled
+            #should not have come this far if both flags were false
+            b              roce_udp_options_done
+            phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, r0 //BDS
 
+        .brcase 1 #MSS enable
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 3)       #OCS kind, OCS value
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.MSS_kind, roce_options.MSS_value, 1) #MSS kind, MSS len, MSS value
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 2)        #EOL kind
+            b              roce_udp_options_done
+            phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_MSS //BDS
+
+        .brcase 2 #TS enable
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 3)       #OCS kind, OCS value
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.TS_kind, roce_options.TS_echo, 1)    #TS kind, TS len, TS value
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 2)        #EOL kind
+            b              roce_udp_options_done
+            phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_TS //BDS
+
+        .brcase 3 #TS enable, MSS enable
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 4)       #OCS kind, OCS value
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.TS_kind, roce_options.TS_echo, 1)          #TS kind, TS len, TS value
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.MSS_kind, roce_options.MSS_value, 2)       #MSS kind, MSS len, MSS value
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 3)        #EOL kind
+            b              roce_udp_options_done
+            phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_TS_MSS //BDS
+
+        .csend
+
+roce_udp_options_done:
 skip_roce_udp_options:
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
 

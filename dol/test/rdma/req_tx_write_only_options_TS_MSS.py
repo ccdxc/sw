@@ -30,7 +30,7 @@ def TestCaseSetup(tc):
 
     # Clear & Write back roce_opt values in SQCB1
     rs.lqp.sq.qstate.data.roce_opt_ts_enable = 1
-    #rs.lqp.sq.qstate.data.roce_opt_mss_enable = 1
+    rs.lqp.sq.qstate.data.roce_opt_mss_enable = 1
     rs.lqp.sq.qstate.data.timestamp = tc.pvtdata.roce_opt_ts_value
     rs.lqp.sq.qstate.data.timestamp_echo = tc.pvtdata.roce_opt_ts_echo >> 16
     rs.lqp.sq.qstate.data.mss = tc.pvtdata.roce_opt_mss

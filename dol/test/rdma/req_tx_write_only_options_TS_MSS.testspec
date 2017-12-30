@@ -65,8 +65,8 @@ packets:
                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
             udp_options :
                options :
-                    #- kind   : MSS
-                    #  data   : ref://testcase/pvtdata/roce_opt_mss
+                    - kind   : MSS
+                      data   : ref://testcase/pvtdata/roce_opt_mss
                     - kind   : TIME
                       #data   : ref://testcase/pvtdata/roce_opt_ts_list
                       data   : 0x00003344 0x55660000
