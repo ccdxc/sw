@@ -485,15 +485,6 @@ asic_rw_loop (void)
                 break;
 
             case HAL_ASIC_RW_OPERATION_PORT:
-                // TODO: This needs to be moved to asic library.
-                #if 0
-                lib_model_mac_msg_send(
-                        rw_entry->port_entry.port_num,
-                        rw_entry->port_entry.speed,
-                        rw_entry->port_entry.type,
-                        rw_entry->port_entry.num_lanes,
-                        rw_entry->port_entry.val);
-                #endif
                 break;
 
             case HAL_ASIC_RW_OPERATION_RING_DOORBELL:
@@ -532,7 +523,7 @@ asic_rw_loop (void)
 // attempt to connect to ASIC model in sim mode
 //------------------------------------------------------------------------------
 void
-asic_rw_init(hal_cfg_t *hal_cfg)
+asic_rw_init (hal_cfg_t *hal_cfg)
 {
     asic_cfg_t  asic_cfg;
     pal_ret_t   palrv;

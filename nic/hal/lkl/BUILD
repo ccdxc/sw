@@ -27,9 +27,6 @@ cc_library(
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic:lkl_includes",
-        #"//nic:sdk_ht",
-        #"//nic:sdk_indexer",
-        #"//nic:sdk_slab",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",
@@ -52,7 +49,6 @@ cc_library(
         "//nic/utils/host_mem:host_mem_includes",
         "//nic/utils/list:list_includes",
         "//nic/utils/print",
-        "//nic/utils/thread",
     ],
 )
 
@@ -76,9 +72,6 @@ cc_library(
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic:lkl_includes",
-        #"//nic:sdk_ht",
-        #"//nic:sdk_indexer",
-        #"//nic:sdk_slab",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",

@@ -17,7 +17,6 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/bitmap",
-        "//nic/utils/thread",
     ],
     copts = sdk_copts,
 )
@@ -31,7 +30,6 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/bitmap",
-        "//nic/utils/thread",
     ],
 )
 

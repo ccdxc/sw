@@ -79,3 +79,14 @@ cc_library(
         "//:sdk_headers",
     ],
 )
+
+# thread library
+cc_library(
+    name = "sdk_thread",
+    srcs = [
+        "libthread.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)

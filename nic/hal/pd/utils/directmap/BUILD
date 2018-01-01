@@ -17,9 +17,6 @@ cc_library(
     hdrs = ["directmap.hpp"],
     copts = sdk_copts,
     deps = [
-        #"//nic:sdk_ht",
-        #"//nic:sdk_indexer",
-        #"//nic:sdk_slab",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",
@@ -27,7 +24,6 @@ cc_library(
         "//nic/hal/pd/iris:iris_includes",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/thread",
         "//nic/hal/pd/capri:capri_includes",
     ],
 )

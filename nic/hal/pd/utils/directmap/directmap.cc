@@ -1,7 +1,6 @@
 #include "nic/hal/pd/utils/directmap/directmap.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/include/hal_lock.hpp"
-// #include "nic/utils/thread/thread.hpp"
 #include "sdk/ht.hpp"
 
 using hal::pd::utils::DirectMap;
@@ -75,11 +74,6 @@ DirectMap::DirectMap(std::string table_name, uint32_t table_id,
                     sharing_en_);
 
     // Initialize the indexer
-    // dm_indexer_ = new indexer(num_entries, thread_safe = thread_safe_);
-#if 0
-    dm_indexer_ = indexer::factory(num_entries, thread_safe_, false, 
-                                   HAL_MEM_ALLOC_DIRECT_MAP_INDEXER);
-#endif
     dm_indexer_ = indexer::factory(num_entries, thread_safe_, false);
 
     // Initialize hash table if sharing is enabled

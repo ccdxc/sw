@@ -21,9 +21,6 @@ cc_library(
     ],
     deps = [
         "//nic/utils/list:list_includes",
-        #"//nic:sdk_include",
-        #"//nic:sdk_ht",
-        #"//nic:sdk_slab",
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_ht",
         "//nic/third-party/spdlog",

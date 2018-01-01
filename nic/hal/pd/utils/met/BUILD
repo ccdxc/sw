@@ -32,7 +32,6 @@ cc_library(
         "//nic/third-party/spdlog",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_pal",
-        "//nic/utils/thread",  # May not be needed
     ],
 )
 
