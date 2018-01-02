@@ -37,6 +37,7 @@ proxyr_s6_chain_xfer:
     /*
      * Evaluate which per-core queue applies
      */
+#ifdef DO_NOT_USE_CPU_SEM
     add         r_scratch, r0, k.common_phv_chain_ring_index_select
     seq         c1, r_scratch, CHAIN_QIDXR_PI_0
     seq         c2, r_scratch, CHAIN_QIDXR_PI_1
@@ -52,7 +53,10 @@ proxyr_s6_chain_xfer:
     add.c3      r_chain_pindex, r0, d.pi_2
     tbladd.c3   d.pi_2, 1
     mincr       r_chain_pindex, k.{common_phv_chain_ring_size_shift}, r0
-    
+#else
+    add         r_chain_pindex, r0, d.{arq_pindex}.wx
+    mincr       r_chain_pindex, k.{common_phv_chain_ring_size_shift}, r0
+#endif
     /*
      * Assume that HW would have dropped the packet if there had been
      * any L3/L4 checksum errors

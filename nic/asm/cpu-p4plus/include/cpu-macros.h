@@ -5,6 +5,7 @@
 #define __CPU_MACROS_H__
 
 #include "capri-macros.h"
+#include "capri_common.h"
 
 #define CPU_PIDX_SIZE                       16
 #define CPU_PIDX_SHIFT                      4
@@ -17,6 +18,7 @@
 
 #define CPU_ARQRX_QIDXR_OFFSET              64
 #define ARQRX_QIDXR_DIR_ENTRY_SIZE_SHIFT    9          /* for 512B */
+#define ARQ_SEM_IDX_ENTRY_SHIFT             3          /* for 8B */
 
 #define CPU_VALID_BIT_SHIFT                 63
 
@@ -68,5 +70,9 @@
     sll    _dest_r, _dest_r, ARQRX_QIDXR_DIR_ENTRY_SIZE_SHIFT; \
     add    _dest_r, _dest_r, _arqrx_qidxr_base_reg
 
+#define CPU_ARQ_SEM_IDX_INC_ADDR(_dir_s, _k_cpu_id, _dest_r) \
+    addi   _dest_r, r0, CAPRI_SEM_ARQ_##_dir_s##_0_IDX_ADDR; \
+    add    _dest_r, _dest_r, _k_cpu_id, ARQ_SEM_IDX_ENTRY_SHIFT; \
+    addi   _dest_r, _dest_r, CAPRI_SEM_INC_OFFSET;
 
 #endif

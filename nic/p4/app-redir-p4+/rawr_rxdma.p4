@@ -317,7 +317,7 @@ metadata alloc_ppage_d_t                alloc_ppage_d;
 metadata alloc_mpage_d_t                alloc_mpage_d;
 
 @pragma scratch_metadata
-metadata arq_rx_pi_d_t                  qidxr_chain_d;
+metadata arq_pi_d_t                     qidxr_chain_d;
 
 
 /*
@@ -609,7 +609,7 @@ action chain_txq_pindex_post_read(pi_curr, ci_curr) {
 /*
  * Stage 6 table 2 action
  */
-action chain_qidxr_pindex_post_read(pi_0, pi_1, pi_2) {
+action chain_qidxr_pindex_post_read(ARQ_PI_PARAMS) {
     // k + i for stage 6 table 2
 
     // from to_stage 6
@@ -620,9 +620,7 @@ action chain_qidxr_pindex_post_read(pi_0, pi_1, pi_2) {
     // from stage to stage
 
     // d for stage 6 table 2
-    modify_field(qidxr_chain_d.pi_0, pi_0);
-    modify_field(qidxr_chain_d.pi_1, pi_1);
-    modify_field(qidxr_chain_d.pi_2, pi_2);
+    GENERATE_ARQ_PI_D(qidxr_chain_d)
 }
 
 

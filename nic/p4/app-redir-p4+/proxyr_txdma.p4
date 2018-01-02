@@ -209,7 +209,7 @@ header_type alloc_mpage_d_t {
 }
 
 
-// d for stage 6 table 1 is arq_rx_pi_d_t
+// d for stage 6 table 1 is arq_pi_d_t
 
 // d for stage 7 table 1
 header_type sem_ppage_d_t {
@@ -306,7 +306,7 @@ metadata sem_ppage_d_t                  sem_ppage_d;
 metadata alloc_mpage_d_t                alloc_mpage_d;
 
 @pragma scratch_metadata
-metadata arq_rx_pi_d_t                  qidxr_chain_d;
+metadata arq_pi_d_t                     qidxr_chain_d;
 
 @pragma scratch_metadata
 metadata pkt_descr_aol_t                desc_aol_d;
@@ -633,7 +633,7 @@ action cleanup_discard() {
 /*
  * Stage 6 table 1 action
  */
-action chain_xfer(pi_0, pi_1, pi_2) {
+action chain_xfer(ARQ_PI_PARAMS) {
 
     // k + i for stage 6 table 1
 
@@ -648,9 +648,7 @@ action chain_xfer(pi_0, pi_1, pi_2) {
     modify_field(to_s6_scratch.mpage, to_s6.mpage);
 
     // d for stage 6 table 2
-    modify_field(qidxr_chain_d.pi_0, pi_0);
-    modify_field(qidxr_chain_d.pi_1, pi_1);
-    modify_field(qidxr_chain_d.pi_2, pi_2);
+    GENERATE_ARQ_PI_D(qidxr_chain_d)
 }
 
 

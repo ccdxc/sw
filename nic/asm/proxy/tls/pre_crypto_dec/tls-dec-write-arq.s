@@ -79,7 +79,11 @@ dma_cmd_descr:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, idesc_A0, idesc_next_pkt)    
 
 dma_cmd_arq_slot:
+#ifdef DO_NOT_USE_CPU_SEM
     CPU_ARQ_PIDX_READ_INC(r6, 0, struct tx_table_s6_t1_tls_write_arq_d, pi_0, r4, r5)
+#else
+    add         r6, r0, d.{arq_pindex}.wx 
+#endif
     phvwr       p.ring_entry_descr_addr, k.to_s6_idesc
 
     CPU_RX_ENQUEUE(r5,

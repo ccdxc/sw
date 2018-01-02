@@ -39,6 +39,7 @@ rawr_s5_chain_pindex_pre_alloc:
      */
     seq         c1, k.common_phv_chain_to_rxq, r0   // delay slot
     bcf         [c1], _chain_txq_ring_indices_launch
+#ifdef DO_NOT_USE_CPU_SEM
     add         r_ring_indices_addr, r0, k.{to_s5_chain_ring_indices_addr_sbit0_ebit31...\
                                             to_s5_chain_ring_indices_addr_sbit32_ebit33} // delay slot
 
@@ -49,6 +50,16 @@ rawr_s5_chain_pindex_pre_alloc:
                           rawr_s6_chain_qidxr_pindex_post_read,
                           r_ring_indices_addr,
                           TABLE_SIZE_512_BITS)
+#else
+    CPU_ARQ_SEM_IDX_INC_ADDR(RX, 
+                             k.common_phv_chain_ring_index_select,
+                             r_ring_indices_addr)
+    CAPRI_NEXT_TABLE_READ(2, 
+                          TABLE_LOCK_DIS,
+                          rawr_s6_chain_qidxr_pindex_post_read,
+                          r_ring_indices_addr,
+                          TABLE_SIZE_64_BITS)
+#endif
     nop.e
     nop
 

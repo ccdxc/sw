@@ -493,7 +493,7 @@ metadata rpage_alloc_d_t rpage_alloc_d;
 @pragma scratch_metadata
 metadata rdesc_alloc_d_t l7_rdesc_alloc_d;
 @pragma scratch_metadata
-metadata arq_rx_pi_d_t arq_rx_pi_d;
+metadata arq_pi_d_t arq_rx_pi_d;
 @pragma scratch_metadata
 metadata write_l7q_d_t write_l7q_d;
 
@@ -1058,7 +1058,7 @@ action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
 /*
  * Stage 5 table 1 action
  */
-action write_arq(ARQ_RX_PI_PARAMS) {
+action write_arq(ARQ_PI_PARAMS) {
 
     // k + i for stage 5
 
@@ -1074,7 +1074,7 @@ action write_arq(ARQ_RX_PI_PARAMS) {
     // from stage to stage
 
     // d for stage 5 table 1
-    GENERATE_ARQ_RX_PI_D
+    GENERATE_ARQ_PI_D(arq_rx_pi_d) 
 }
 
 /*

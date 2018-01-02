@@ -60,6 +60,7 @@ flow_fc_process_done:
 
 tcp_cpu_rx:
 
+#ifdef DO_NOT_USE_CPU_SEM
     addui       r5, r0, hiword(ARQRX_QIDXR_BASE)
     addi        r5, r5, loword(ARQRX_QIDXR_BASE)
     CPU_ARQRX_QIDX_ADDR(0, r3, r5)
@@ -70,7 +71,16 @@ tcp_cpu_rx:
                                  r3,
                                  0,
                                  TABLE_SIZE_512_BITS)
+#else
+    CPU_ARQ_SEM_IDX_INC_ADDR(RX, 0, r3)
 
+    CAPRI_NEXT_TABLE_READ(1, 
+                          TABLE_LOCK_DIS,
+                          tcp_rx_write_arq_stage_start,
+                          r3,
+                          TABLE_SIZE_64_BITS)
+
+#endif
     b           flow_fc_process_done
     nop
 

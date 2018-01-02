@@ -153,7 +153,7 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
          * Provide reasonable defaults for above
          */
         ret = p4pd_proxyr_wring_eval(proxyrcb->chain_rxq_ring_index_select,
-                                     types::WRING_TYPE_ARQRX,
+                                     types::WRING_TYPE_ARQTX,
                                      arq_base, ring_size_shift, entry_size_shift);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{} wring info not found for WRING_TYPE_ARQRX",

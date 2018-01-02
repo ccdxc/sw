@@ -418,7 +418,7 @@ metadata tdesc_alloc_d_t tdesc_alloc_d;
 @pragma scratch_metadata
 metadata tpage_alloc_d_t tpage_alloc_d;
 @pragma scratch_metadata
-metadata arq_tx_pi_d_t arq_tx_pi_d;
+metadata arq_pi_d_t arq_tx_pi_d;
 
 
 
@@ -579,7 +579,7 @@ action tls_queue_brq6(BARCO_CHANNEL_PARAMS) {
 /*
  * Stage 6 table 1 action
  */
-action tls_write_arq(ARQ_TX_PI_PARAMS) {
+action tls_write_arq(ARQ_PI_PARAMS) {
 
     // k + i for stage 6
     GENERATE_GLOBAL_K
@@ -597,7 +597,7 @@ action tls_write_arq(ARQ_TX_PI_PARAMS) {
     // from stage to stage
 
     // d for stage 6 table 1
-    GENERATE_ARQ_TX_PI_D
+    GENERATE_ARQ_PI_D(arq_tx_pi_d)
 }
 
 

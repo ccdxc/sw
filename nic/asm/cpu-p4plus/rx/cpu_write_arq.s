@@ -11,9 +11,12 @@ struct cpu_rx_write_arqrx_d d;
     .param ARQRX_BASE
     .align
 cpu_rx_write_arq_start:
+#ifdef DO_NOT_USE_CPU_SEM
     // Read and increment ARQ PI first in order to release table lock
     CPU_ARQ_PIDX_READ_INC(r6, k.t0_s2s_arqrx_id, d, u.write_arqrx_d.pi_0, r2, r3)
-
+#else
+    add     r6, r0, d.{u.write_arqrx_d.arq_pindex}.wx
+#endif
     CAPRI_CLEAR_TABLE0_VALID
     smeqb   c5, k.common_phv_flags, CPUCB_FLAG_ADD_QS_PKT_TRLR, CPUCB_FLAG_ADD_QS_PKT_TRLR
 

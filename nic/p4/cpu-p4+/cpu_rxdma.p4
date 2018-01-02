@@ -85,6 +85,12 @@ header_type page_alloc_d_t {
     }
 }
 
+header_type write_arqrx_d_t {
+    fields {
+        arq_pindex              : 32;    
+    }
+}
+
 /******************************************************************************
  * Global PHV definitions
  *****************************************************************************/
@@ -164,7 +170,7 @@ metadata desc_alloc_d_t desc_alloc_d;
 metadata page_alloc_d_t page_alloc_d;
 
 @pragma scratch_metadata
-metadata arq_rx_pi_d_t write_arqrx_d;
+metadata arq_pi_d_t write_arqrx_d;
 
 /******************************************************************************
  * Header unions for PHV layout
@@ -314,14 +320,18 @@ action page_alloc(page, pad) {
 
 // Stage 4 table 0 action
 action read_arqrx() {
+    // k + i
+    // from t0_s2s
+    modify_field(t0_s2s_scratch.arqrx_id, t0_s2s.arqrx_id);
+
 }
 
 
 /*
  * Stage 5 table 0 action
  */
-action write_arqrx(pi_0, pi_1, pi_2) {
-    // k + i for stage 3
+action write_arqrx(ARQ_PI_PARAMS) {
+    // k + i
 
     // from t0_s2s
     modify_field(t0_s2s_scratch.page, t0_s2s.page);
@@ -336,8 +346,5 @@ action write_arqrx(pi_0, pi_1, pi_2) {
     // from stage 2 to stage 3
 
     // d for stage 3 table 0
-    modify_field(write_arqrx_d.pi_0, pi_0);
-    modify_field(write_arqrx_d.pi_1, pi_1);
-    modify_field(write_arqrx_d.pi_2, pi_2);
+    GENERATE_ARQ_PI_D(write_arqrx_d)
 }
-

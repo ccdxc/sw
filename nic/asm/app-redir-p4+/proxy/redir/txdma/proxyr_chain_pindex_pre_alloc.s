@@ -33,6 +33,7 @@ proxyr_s5_chain_pindex_pre_alloc:
     bcf         [c1], _cleanup_discard_launch
     sne         c1, k.common_phv_mpage_sem_pindex_full, r0
     bcf         [c1], _mpage_sem_pindex_full
+#ifdef DO_NOT_USE_CPU_SEM
     add         r_ring_indices_addr, r0, k.{to_s5_chain_ring_indices_addr_sbit0_ebit31...\
                                             to_s5_chain_ring_indices_addr_sbit32_ebit33} // delay slot
     beq         r_ring_indices_addr, r0, _null_ring_indices_addr
@@ -50,6 +51,17 @@ proxyr_s5_chain_pindex_pre_alloc:
                           proxyr_s6_chain_xfer,
                           r_ring_indices_addr,
                           TABLE_SIZE_512_BITS)
+#else
+    CPU_ARQ_SEM_IDX_INC_ADDR(TX, 
+                             k.common_phv_chain_ring_index_select,
+                             r_ring_indices_addr)
+    CAPRI_NEXT_TABLE_READ(1, 
+                          TABLE_LOCK_DIS,
+                          proxyr_s6_chain_xfer,
+                          r_ring_indices_addr,
+                          TABLE_SIZE_64_BITS)
+
+#endif
     nop.e
     nop
 
