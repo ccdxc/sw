@@ -265,6 +265,16 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_txq_qtype(rrawrcb.chain_txq_qtype);
     rsp->mutable_spec()->set_chain_txq_qid(rrawrcb.chain_txq_qid);
 
+    rsp->mutable_spec()->set_stat_pkts_redir(rrawrcb.stat_pkts_redir);
+    rsp->mutable_spec()->set_stat_pkts_discard(rrawrcb.stat_pkts_discard);
+    rsp->mutable_spec()->set_stat_cb_not_ready(rrawrcb.stat_cb_not_ready);
+    rsp->mutable_spec()->set_stat_qstate_cfg_err(rrawrcb.stat_qstate_cfg_err);
+    rsp->mutable_spec()->set_stat_pkt_len_err(rrawrcb.stat_pkt_len_err);
+    rsp->mutable_spec()->set_stat_rxq_full(rrawrcb.stat_rxq_full);
+    rsp->mutable_spec()->set_stat_txq_full(rrawrcb.stat_txq_full);
+    rsp->mutable_spec()->set_stat_sem_alloc_full(rrawrcb.stat_sem_alloc_full);
+    rsp->mutable_spec()->set_stat_sem_free_full(rrawrcb.stat_sem_free_full);
+
     // fill operational state of this RAWR CB
     rsp->mutable_status()->set_rawrcb_handle(rawrcb->hal_handle);
 

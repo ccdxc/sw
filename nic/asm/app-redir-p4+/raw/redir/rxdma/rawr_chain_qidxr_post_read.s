@@ -1,9 +1,9 @@
 #include "app_redir_common.h"
 #include "../../../../cpu-p4plus/include/cpu-macros.h"
 
-struct phv_                                             p;
-struct rawr_chain_qidxr_k                               k;
-struct rawr_chain_qidxr_chain_qidxr_pindex_post_read_d  d;
+struct phv_                 p;
+struct rawr_chain_pindex_k  k;
+struct rawr_chain_pindex_d  d;
 
 /*
  * Registers usage
@@ -24,7 +24,7 @@ struct rawr_chain_qidxr_chain_qidxr_pindex_post_read_d  d;
  */
 rawr_s6_chain_qidxr_pindex_post_read:
 
-    CAPRI_CLEAR_TABLE2_VALID
+    CAPRI_CLEAR_TABLE1_VALID
         
     /*
      * TODO: check for queue full
@@ -37,7 +37,7 @@ rawr_s6_chain_qidxr_pindex_post_read:
     CPU_ARQ_PIDX_READ_INC(r_chain_pindex, r_ring_select, d, pi_0, r3, r4)
 #else
     add         r_chain_pindex, r0, d.{arq_pindex}.wx
-#endif
+    CPU_ARQ_PIDX_READ_INC(r_chain_pindex, r_ring_select, d, u.qidxr_post_read_d.pi_0, r3, r4)
     j           rawr_s6_chain_xfer
     mincr       r_chain_pindex, k.common_phv_chain_ring_size_shift, r0 // delay slot
 

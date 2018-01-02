@@ -35,4 +35,14 @@ ip_proto                        : 0
 dir                             : 0
 role                            : 0
 rev_cb_id                       : 0
+stat_pkts_redir                 : 0
+stat_pkts_discard               : 0
+stat_cb_not_ready               : 0
+stat_null_ring_indices_addr     : 0
+stat_aol_err                    : 0
+stat_rxq_full                   : 0
+stat_txq_empty                  : 0
+stat_sem_alloc_full             : 0
+stat_sem_free_full              : 0
+
 

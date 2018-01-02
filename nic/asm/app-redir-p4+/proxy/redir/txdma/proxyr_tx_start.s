@@ -17,6 +17,7 @@ struct proxyr_tx_start_d        d;
 %%
     .param          proxyr_s1_my_txq_entry_consume
     .param          proxyr_s1_flow_key_post_read
+    .param          proxyr_err_stats_inc
     
     .align
 
@@ -37,6 +38,7 @@ proxyr_s0_tx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
+    phvwr       p.common_phv_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
 
     /*
      * qid is our flow ID context
@@ -111,27 +113,15 @@ proxyr_s0_tx_start:
     nop.e
     nop    
     
-/*
- * CB has been de-activated or never made ready
- */
-_proxyrcb_not_ready:
- 
-    /*
-     * TODO: add stats here
-     */
-    jr          r_return
-    phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot
-
-
      
 /*
  * Early exit: my TxQ ring actually empty when entered
  */
 _my_txq_ring_empty:
 
-    /*
-     * TODO: add stats here
-     */
+    PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                                 CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR,
+                                 PROXYRCB_STAT_TXQ_EMPTY_BYTE_OFFS)
     nop.e
     nop
 

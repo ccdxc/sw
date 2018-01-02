@@ -37,6 +37,7 @@ SRC_FILES := \
     $(SRC_DIR)/proxyr_desc_free.s \
     $(SRC_DIR)/proxyr_ppage_free.s \
     $(SRC_DIR)/proxyr_mpage_free.s \
+    $(SRC_DIR)/proxyr_stats.s \
 	
 
 

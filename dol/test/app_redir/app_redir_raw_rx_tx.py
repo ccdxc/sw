@@ -53,15 +53,12 @@ def TestCaseSetup(tc):
     rawrcb.GetObjValPd()
     rawccb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[rawccbid])
     rawccb.GetObjValPd()
-    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
-    arq.Configure()
     rawccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RAWCCBQ"])
     rawccbq.Configure()
     
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
     tc.pvtdata.Add(rnmpr_small)
-    tc.pvtdata.Add(arq)
     tc.pvtdata.Add(rawrcb)
     tc.pvtdata.Add(rawccb)
     tc.pvtdata.Add(rawccbq)
@@ -72,6 +69,10 @@ def TestCaseVerify(tc):
     num_pkts = 1
     if hasattr(tc.module.args, 'num_pkts'):
         num_pkts = int(tc.module.args.num_pkts)
+
+    num_flow_miss_pkts = 0
+    if hasattr(tc.module.args, 'num_flow_miss_pkts'):
+        num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     # Verify chain_rxq_base
@@ -100,7 +101,6 @@ def TestCaseVerify(tc):
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmpr_small = tc.pvtdata.db["RNMPR_SMALL"]
-    arq = tc.pvtdata.db["CPU0000_ARQ"]
     rawccbq = tc.pvtdata.db["RAWCCBQ"]
 
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -109,8 +109,6 @@ def TestCaseVerify(tc):
     rnmpr_cur.Configure()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
     rnmpr_small_cur.Configure()
-    arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
-    arq_cur.Configure()
     rawccbq_cur = tc.infra_data.ConfigStore.objects.db["RAWCCBQ"]
     rawccbq_cur.Configure()
 
@@ -130,12 +128,14 @@ def TestCaseVerify(tc):
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
 
-    # Rx: verify PI for ARQ got incremented
-    if (arq_cur.pi != arq.pi+num_pkts):
-        print("CPU0000_ARQ pi check failed old %d new %d expected %d" %
-                   (arq.pi, arq_cur.pi, arq.pi+num_pkts))
-        #return False
-    print("CPU0000_ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
+    # Rx: verify # packets redirected
+    num_redir_pkts = num_pkts - num_flow_miss_pkts
+    if (rawrcb_cur.stat_pkts_redir != rawrcb.stat_pkts_redir+num_redir_pkts):
+        print("stat_pkts_redir check failed old %d new %d expected %d" %
+              (rawrcb.stat_pkts_redir, rawrcb_cur.stat_pkts_redir, rawrcb.stat_pkts_redir+num_redir_pkts))
+        return False
+    print("stat_pkts_redir old %d new %d" % 
+          (rawrcb.stat_pkts_redir, rawrcb_cur.stat_pkts_redir))
 
     # Tx: verify PI for RAWCCB got incremented
     rawccb_cur.GetObjValPd()

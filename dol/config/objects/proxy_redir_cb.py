@@ -115,6 +115,16 @@ class ProxyrCbObject(base.ConfigObjectBase):
             self.role                         = resp_spec.spec.role
             self.rev_cb_id                    = resp_spec.spec.rev_cb_id
 
+            self.stat_pkts_redir              = resp_spec.spec.stat_pkts_redir
+            self.stat_pkts_discard            = resp_spec.spec.stat_pkts_discard
+            self.stat_cb_not_ready            = resp_spec.spec.stat_cb_not_ready
+            self.stat_null_ring_indices_addr  = resp_spec.spec.stat_null_ring_indices_addr
+            self.stat_aol_err                 = resp_spec.spec.stat_aol_err
+            self.stat_rxq_full                = resp_spec.spec.stat_rxq_full
+            self.stat_txq_empty               = resp_spec.spec.stat_txq_empty
+            self.stat_sem_alloc_full          = resp_spec.spec.stat_sem_alloc_full
+            self.stat_sem_free_full           = resp_spec.spec.stat_sem_free_full
+
         return
 
     def GetObjValPd(self):

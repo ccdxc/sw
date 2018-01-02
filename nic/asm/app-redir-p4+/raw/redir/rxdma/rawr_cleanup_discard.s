@@ -13,6 +13,7 @@ struct rawr_cleanup_discard_k   k;
     .param      rawr_s7_desc_free
     .param      rawr_s7_ppage_free
     .param      rawr_s7_mpage_free
+    .param      rawr_single_stat64_inc
     
     .align
 
@@ -29,9 +30,7 @@ rawr_s6_cleanup_discard:
      */
     add         r_elem_addr, r0, k.{to_s6_desc_sbit0_ebit31...\
                                     to_s6_desc_sbit32_ebit33}
-    sne         c1, k.common_phv_desc_sem_pindex_full, r0
-    seq         c2, r_elem_addr, r0
-    bcf         [c1 | c2], _ppage_cleanup_launch
+    beq         r_elem_addr, r0, _ppage_cleanup_launch
     phvwr       p.to_s7_desc, r_elem_addr   // delay slot
     addi        r_free_inf_addr, r0, CAPRI_SEM_RNMDR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
@@ -45,9 +44,7 @@ _ppage_cleanup_launch:
      */
     add         r_elem_addr, r0, k.{to_s6_ppage_sbit0_ebit5...\
                                     to_s6_ppage_sbit30_ebit33}
-    sne         c1, k.common_phv_ppage_sem_pindex_full, r0
-    seq         c2, r_elem_addr, r0
-    bcf         [c1 | c2], _mpage_cleanup_launch
+    beq         r_elem_addr, r0, _mpage_cleanup_launch
     phvwr       p.to_s7_ppage, r_elem_addr  // delay slot
     addi        r_free_inf_addr, r0, CAPRI_SEM_RNMPR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
@@ -61,9 +58,7 @@ _mpage_cleanup_launch:
      */
     add         r_elem_addr, r0, k.{to_s6_mpage_sbit0_ebit3...\
                                     to_s6_mpage_sbit28_ebit33}
-    sne         c1, k.common_phv_mpage_sem_pindex_full, r0
-    seq         c2, r_elem_addr, r0
-    bcf         [c1 | c2], _packet_discard
+    beq         r_elem_addr, r0, _packet_discard
     phvwr       p.to_s7_mpage, r_elem_addr  // delay slot
     addi        r_free_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS,
@@ -72,6 +67,11 @@ _mpage_cleanup_launch:
                           TABLE_SIZE_64_BITS)
 
 _packet_discard:
+
+    /*
+     * Note that relevant statistics have already been incremented
+     * prior to entering this module.
+     */
     phvwr.e     p.p4_intr_global_drop, 1
     nop
 

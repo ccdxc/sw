@@ -71,6 +71,23 @@ p4pd_get_rawr_rx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+hal_ret_t 
+p4pd_clear_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
+{
+    rawr_stats_err_stat_inc_d   data = {0};
+
+    // hardware index for this entry
+    rawrcb_hw_addr_t hw_addr = rawrcb_pd->hw_addr +
+                               RAWRCB_TABLE_STATS_OFFSET;
+
+    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to write stats entry for RAWRCB");
+        return HAL_RET_HW_FAIL;
+    }
+
+    return HAL_RET_OK;
+}
+
 static hal_ret_t
 p4pd_rawr_wring_eval(uint32_t qid,
                      types::WRingType wring_type,
@@ -190,6 +207,13 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
         data.action_id = pc_offset;
         data.u.rawr_rx_start_d.total = HAL_NUM_RAWRCB_RINGS_MAX;
 
+        /*
+         * Note that similar to qstate, CB stats are cleared only once.
+         */
+        if (!del) {
+            ret = p4pd_clear_rawr_stats_entry(rawrcb_pd);
+        }
+
     } else {
         hw_addr  += RAWRCB_QSTATE_HEADER_TOTAL_SIZE;
         data_p   += RAWRCB_QSTATE_HEADER_TOTAL_SIZE;
@@ -269,13 +293,44 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
 }
 
 hal_ret_t 
+p4pd_get_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
+{
+    rawr_stats_err_stat_inc_d   data;
+    rawrcb_t                    *rawrcb;
+
+    // hardware index for this entry
+    rawrcb_hw_addr_t hw_addr = rawrcb_pd->hw_addr +
+                               RAWRCB_TABLE_STATS_OFFSET;
+
+    if(!p4plus_hbm_read(hw_addr, (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get stats entry for RAWRCB");
+        return HAL_RET_HW_FAIL;
+    }
+    rawrcb = rawrcb_pd->rawrcb;
+    rawrcb->stat_pkts_redir = ntohll(data.stat_pkts_redir);
+    rawrcb->stat_pkts_discard = ntohll(data.stat_pkts_discard);
+    rawrcb->stat_cb_not_ready = ntohl(data.stat_cb_not_ready);
+    rawrcb->stat_qstate_cfg_err = ntohl(data.stat_qstate_cfg_err);
+    rawrcb->stat_pkt_len_err = ntohl(data.stat_pkt_len_err);
+    rawrcb->stat_rxq_full = ntohl(data.stat_rxq_full);
+    rawrcb->stat_txq_full = ntohl(data.stat_txq_full);
+    rawrcb->stat_sem_alloc_full = ntohl(data.stat_sem_alloc_full);
+    rawrcb->stat_sem_free_full = ntohl(data.stat_sem_free_full);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 p4pd_get_rawrcb_rxdma_entry(pd_rawrcb_t* rawrcb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
     
     ret = p4pd_get_rawr_rx_stage0_entry(rawrcb_pd);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get rawr_rx entry");
+    if (ret == HAL_RET_OK) {
+        ret = p4pd_get_rawr_stats_entry(rawrcb_pd);
+    }
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get entire rawr_rx entry");
         goto cleanup;
     }
     return HAL_RET_OK;

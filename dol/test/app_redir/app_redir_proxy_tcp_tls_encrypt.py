@@ -112,8 +112,6 @@ def TestCaseSetup(tc):
     proxyrcb.GetObjValPd()
     proxyccb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[proxyccbid])
     proxyccb.GetObjValPd()
-    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
-    arq.Configure()
     proxyccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["PROXYCCBQ"])
     proxyccbq.Configure()
     
@@ -121,7 +119,6 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
     tc.pvtdata.Add(rnmpr_small)
-    tc.pvtdata.Add(arq)
     tc.pvtdata.Add(brq)
     tc.pvtdata.Add(proxyrcb)
     tc.pvtdata.Add(proxyccb)
@@ -138,6 +135,10 @@ def TestCaseVerify(tc):
     proxyr_meta_pages = 0
     if hasattr(tc.module.args, 'proxyr_meta_pages'):
         proxyr_meta_pages = int(tc.module.args.proxyr_meta_pages)
+
+    num_flow_miss_pkts = 0
+    if hasattr(tc.module.args, 'num_flow_miss_pkts'):
+        num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tlscbid = "TlsCb%04d" % id
@@ -188,7 +189,6 @@ def TestCaseVerify(tc):
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmpr_small = tc.pvtdata.db["RNMPR_SMALL"]
     brq = tc.pvtdata.db["BRQ_ENCRYPT"]
-    arq = tc.pvtdata.db["CPU0000_ARQ"]
     proxyccbq = tc.pvtdata.db["PROXYCCBQ"]
 
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -197,8 +197,6 @@ def TestCaseVerify(tc):
     rnmpr_cur.Configure()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
     rnmpr_small_cur.Configure()
-    arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
-    arq_cur.Configure()
     proxyccbq_cur = tc.infra_data.ConfigStore.objects.db["PROXYCCBQ"]
     proxyccbq_cur.Configure()
 
@@ -224,12 +222,14 @@ def TestCaseVerify(tc):
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
 
-    # Rx: verify PI for ARQ got incremented
-    if (arq_cur.pi != arq.pi+num_pkts):
-        print("CPU0000_ARQ pi check failed old %d new %d expected %d" %
-                   (arq.pi, arq_cur.pi, arq.pi+num_pkts))
-        #return False
-    print("CPU0000_ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
+    # Rx: verify # packets redirected
+    num_redir_pkts = num_pkts - num_flow_miss_pkts
+    if (proxyrcb_cur.stat_pkts_redir != proxyrcb.stat_pkts_redir+num_redir_pkts):
+        print("stat_pkts_redir check failed old %d new %d expected %d" %
+              (proxyrcb.stat_pkts_redir, proxyrcb_cur.stat_pkts_redir, proxyrcb.stat_pkts_redir+num_redir_pkts))
+        return False
+    print("stat_pkts_redir old %d new %d" % 
+          (proxyrcb.stat_pkts_redir, proxyrcb_cur.stat_pkts_redir))
 
     # Tx: verify PI for PROXYCCB got incremented
     time.sleep(1)

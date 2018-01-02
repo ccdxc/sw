@@ -9,12 +9,15 @@ struct rawr_chain_pindex_pre_alloc_k    k;
  * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
 #define r_ring_indices_addr         r3
+#define r_qstate_addr               r4
 
 %%
 
     .param      rawr_s6_chain_txq_pindex_post_read
     .param      rawr_s6_chain_qidxr_pindex_post_read
     .param      rawr_s6_cleanup_discard
+    .param      rawr_err_stats_inc
+    
     .align
     
 rawr_s5_chain_pindex_pre_alloc:
@@ -26,12 +29,12 @@ rawr_s5_chain_pindex_pre_alloc:
      *   1) Redirect to ARM CPU RxQ, or
      *   2) Redirect to a P4+ TxQ
      *
-     * Proceed only if none of the desc/ppage/mpage semaphores 
+     * Proceed only if none of the desc/ppage/mpage semaphores are full
      */
     sne         c1, k.common_phv_desc_sem_pindex_full, r0
     sne         c2, k.common_phv_ppage_sem_pindex_full, r0
     sne         c3, k.common_phv_mpage_sem_pindex_full, r0
-    bcf         [c1 | c2 | c3], _cleanup_discard_launch
+    bcf         [c1 | c2 | c3], _sem_full_discard
 
     /*
      * Based on redirection type, launch the corresponding read
@@ -46,7 +49,7 @@ rawr_s5_chain_pindex_pre_alloc:
     /*
      * Chain to ARM RxQ: access HBM queue index table directly
      */
-    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN,
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN,
                           rawr_s6_chain_qidxr_pindex_post_read,
                           r_ring_indices_addr,
                           TABLE_SIZE_512_BITS)
@@ -80,12 +83,16 @@ _chain_txq_ring_indices_launch:
     
 
 /*
- * Launch common cleanup code for next stage
+ * Discard packet due to semaphore full
  */
-_cleanup_discard_launch:    
+_sem_full_discard:    
 
+    RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                               k.{common_phv_qstate_addr_sbit0_ebit0... \
+                                  common_phv_qstate_addr_sbit33_ebit33},
+                               RAWRCB_STAT_SEM_ALLOC_FULL_BYTE_OFFS)
     /*
-     * TODO: add stats here
+     * Launch common cleanup code for next stage
      */
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, rawr_s6_cleanup_discard)
     nop.e

@@ -50,6 +50,23 @@ message ProxyrCbSpec {
   uint32                dir                        = 21;
   uint32                role                       = 22;
   uint32                rev_cb_id                  = 23;
+
+  /*
+   * 64-bit statistic counters
+   */
+  uint64                stat_pkts_redir            = 24;
+  uint64                stat_pkts_discard          = 25;
+  
+  /*
+   * 32-bit saturating statistic counters
+   */
+  uint32                stat_cb_not_ready          = 26;
+  uint32                stat_null_ring_indices_addr= 27;
+  uint32                stat_aol_err               = 28;
+  uint32                stat_rxq_full              = 29;
+  uint32                stat_txq_empty             = 30;
+  uint32                stat_sem_alloc_full        = 31;
+  uint32                stat_sem_free_full         = 32;
 }
 
 // ProxyrCbRequestMsg is batched add or modify proxyrcb request

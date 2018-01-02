@@ -12,11 +12,13 @@ struct common_p4plus_stage0_app_header_table_d  d;
 #define r_pkt_len                   r3
 #define r_alloc_inf_addr            r4
 #define r_ring_indices_addr         r5
+#define r_qstate_addr               r6
 
 %%
     .param          rawr_s1_desc_sem_pindex_post_update
     .param          rawr_s1_ppage_sem_pindex_post_update
     .param          rawr_s1_mpage_sem_pindex_post_update
+    .param          rawr_err_stats_inc
     
     .align
 
@@ -37,6 +39,7 @@ rawr_s0_rx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
+    phvwr       p.common_phv_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR
 
     /*
      * Two sentinels surround the programming of CB byte sequence:
@@ -77,9 +80,9 @@ rawr_s0_rx_start:
     phvwr       p.common_phv_chain_ring_base, r_chain_txq_base  // delay slot
     phvwr       p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_txq_ring_size_shift
     phvwr       p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_txq_entry_size_shift
-    phvwr       p.common_phv_chain_lif, d.{u.rawr_rx_start_d.chain_txq_lif}.hx
-    phvwr       p.common_phv_chain_qtype, d.u.rawr_rx_start_d.chain_txq_qtype
-    phvwr       p.common_phv_chain_qid, d.{u.rawr_rx_start_d.chain_txq_qid}.wx
+    phvwr       p.t1_s2s_chain_lif, d.{u.rawr_rx_start_d.chain_txq_lif}.hx
+    phvwr       p.t1_s2s_chain_qtype, d.u.rawr_rx_start_d.chain_txq_qtype
+    phvwr       p.t1_s2s_chain_qid, d.{u.rawr_rx_start_d.chain_txq_qid}.wx
     phvwr       p.common_phv_chain_ring_index_select, d.u.rawr_rx_start_d.chain_txq_ring_index_select
     b           _r_ring_indices_addr_check
     add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_txq_ring_indices_addr}.dx // delay slot
@@ -154,9 +157,9 @@ _desc_sem_pindex_fetch_update:
  */
 _packet_len_err_discard:
 
-    /*
-     * TODO: add stats here
-     */
+    RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                               CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
+                               RAWRCB_STAT_PKT_LEN_ERR_BYTE_OFFS)
     phvwr.e     p.p4_intr_global_drop, 1
     nop    
 
@@ -166,21 +169,21 @@ _packet_len_err_discard:
  */
 _qstate_cfg_err_discard:
 
-    /*
-     * TODO: add stats here
-     */
+    RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                               CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
+                               RAWRCB_STAT_QSTATE_CFG_ERR_BYTE_OFFS)
     phvwr.e     p.p4_intr_global_drop, 1
     nop
 
 
 /*
- * CB has been deactivated
+ * CB not currently activated
  */
 _rawrcb_not_ready:     
 
-    /*
-     * TODO: add stats here
-     */
+    RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                               CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
+                               RAWRCB_STAT_CB_NOT_READY_BYTE_OFFS)
     phvwr.e     p.p4_intr_global_drop, 1
     nop
 

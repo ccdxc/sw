@@ -34,13 +34,10 @@ def TestCaseSetup(tc):
     rnmpr.Configure()
     rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
     rnmpr_small.Configure()
-    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
-    arq.Configure()
     
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
     tc.pvtdata.Add(rnmpr_small)
-    tc.pvtdata.Add(arq)
     return
 
 def TestCaseVerify(tc):
@@ -49,11 +46,14 @@ def TestCaseVerify(tc):
     if hasattr(tc.module.args, 'num_pkts'):
         num_pkts = int(tc.module.args.num_pkts)
 
+    num_flow_miss_pkts = 0
+    if hasattr(tc.module.args, 'num_flow_miss_pkts'):
+        num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
+
     # Fetch current values from Platform
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmpr_small = tc.pvtdata.db["RNMPR_SMALL"]
-    arq = tc.pvtdata.db["CPU0000_ARQ"]
 
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
     rnmdr_cur.Configure()
@@ -61,8 +61,6 @@ def TestCaseVerify(tc):
     rnmpr_cur.Configure()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
     rnmpr_small_cur.Configure()
-    arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
-    arq_cur.Configure()
 
     # Verify PI for RNMDR got incremented
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
@@ -79,13 +77,6 @@ def TestCaseVerify(tc):
         return False
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
-
-    # Rx: verify PI for ARQ got incremented
-    if (arq_cur.pi != arq.pi+num_pkts):
-        print("CPU0000_ARQ pi check failed old %d new %d expected %d" %
-                   (arq.pi, arq_cur.pi, arq.pi+num_pkts))
-        #return False
-    print("CPU0000_ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
 
     return True
 
