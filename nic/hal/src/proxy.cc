@@ -33,39 +33,44 @@ proxy_meta_init() {
 
     // CB size 1024, num_entries 4096
     g_meta[types::PROXY_TYPE_TCP] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 1, {0, 5, 12}}};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 1, {0, 5, 12}}, types::PROXY_TYPE_NONE};
 
     // CB size 512, num_entries 4096
     g_meta[types::PROXY_TYPE_TLS] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 4, 12}}};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 4, 12}}, types::PROXY_TYPE_NONE};
 
     g_meta[types::PROXY_TYPE_IPSEC] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}}};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}},
+                        types::PROXY_TYPE_NONE};
 
     // CB size 64 bytes, num_entries = 2
     //  QID 0 : RNMDR
     //  QID 1 : TNMDR
     g_meta[types::PROXY_TYPE_GC] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}, types::PROXY_TYPE_NONE};
 
     g_meta[types::PROXY_TYPE_CPU] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)ceil(log2(types::CpucbId_ARRAYSIZE))}}};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)ceil(log2(types::CpucbId_ARRAYSIZE))}},
+                        types::PROXY_TYPE_NONE};
 
     g_meta[types::PROXY_TYPE_IPFIX] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}, types::PROXY_TYPE_NONE};
 
     g_meta[types::PROXY_TYPE_APP_REDIR] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX,
-            {{APP_REDIR_RAWR_QTYPE, RAWRCB_TABLE_ENTRY_MULTIPLE, (uint8_t)log2(RAWRCB_NUM_ENTRIES_MAX)},
-             {APP_REDIR_RAWC_QTYPE, RAWCCB_TABLE_ENTRY_MULTIPLE, (uint8_t)log2(RAWCCB_NUM_ENTRIES_MAX)},
+            {{APP_REDIR_RAWR_QTYPE, RAWRCB_TABLE_ENTRY_MULTIPLE,
+                        (uint8_t)log2(RAWRCB_NUM_ENTRIES_MAX)},
+             {APP_REDIR_RAWC_QTYPE, RAWCCB_TABLE_ENTRY_MULTIPLE,
+                        (uint8_t)log2(RAWCCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_PROXYR_QTYPE, PROXYRCB_TABLE_ENTRY_MULTIPLE, 
-                        (uint8_t)log2(PROXYRCB_NUM_ENTRIES_MAX * PROXYRCB_NUM_ENTRIES_MAX_MULT)},
+                        (uint8_t)log2(PROXYRCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_PROXYC_QTYPE, PROXYCCB_TABLE_ENTRY_MULTIPLE,
-                        (uint8_t)log2(PROXYCCB_NUM_ENTRIES_MAX * PROXYCCB_NUM_ENTRIES_MAX_MULT)}}}};
+                        (uint8_t)log2(PROXYCCB_NUM_ENTRIES_MAX)}}}, types::PROXY_TYPE_NONE};
+    g_meta[types::PROXY_TYPE_APP_REDIR_PROXY_TCP] = {true, 0, {}, types::PROXY_TYPE_TCP},
 
     // 128 bytes of P4PT state per connection (e.g. dir) and a total of 2^12 connections
     g_meta[types::PROXY_TYPE_P4PT] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_P4PT, 1, {0, 1, 12}}};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_P4PT, 1, {0, 1, 12}}, types::PROXY_TYPE_NONE};
 
     return HAL_RET_OK;
 }
@@ -292,6 +297,24 @@ proxy_init_default_params(proxy_t* proxy)
 }
 
 hal_ret_t
+proxy_init_inherit_parent_meta(proxy_t* proxy)
+{
+    proxy_meta_t    *meta;
+
+    if((NULL == proxy) || (NULL == proxy->meta))
+    {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    meta = proxy->meta;
+    if (!meta->num_lif && (meta->parent_proxy != types::PROXY_TYPE_NONE)) {
+        proxy->meta = &g_meta[meta->parent_proxy];
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 proxy_post_lif_program_init(proxy_t* proxy)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -350,6 +373,9 @@ proxy_factory(types::ProxyType type)
 
     // program LIF for this proxy
     proxy_program_lif(proxy);
+
+    // inherit parent's meta if applicable
+    proxy_init_inherit_parent_meta(proxy);
 
     // post lif programming initialization
     proxy_post_lif_program_init(proxy);

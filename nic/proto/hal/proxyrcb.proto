@@ -47,6 +47,9 @@ message ProxyrCbSpec {
   uint32                vrf                        = 18;
   uint32                af                         = 19;
   types.IPProtocol      ip_proto                   = 20;
+  uint32                dir                        = 21;
+  uint32                role                       = 22;
+  uint32                rev_cb_id                  = 23;
 }
 
 // ProxyrCbRequestMsg is batched add or modify proxyrcb request

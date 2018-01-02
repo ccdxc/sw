@@ -32,6 +32,7 @@ app_redir_dol_sim_page_alloc_full   = 0x0020
 app_redir_dol_sim_chain_rxq_full    = 0x0040
 app_redir_dol_sim_chain_txq_full    = 0x0080
 app_redir_chain_desc_add_aol_offset = 0x0100
+app_redir_dol_skip_chain_doorbell   = 0x0200
 
 rawrcb_num_entries_max  = 4096
 rawccb_num_entries_max  = 4096
@@ -42,26 +43,6 @@ proxyrcb_num_entries_max  = 4096
 proxyccb_num_entries_max  = 4096
 proxyrcb_num_entries_mask = proxyrcb_num_entries_max - 1
 proxyccb_num_entries_mask = proxyccb_num_entries_max - 1
-
-proxyrcb_num_entries_max_mult = 2
-proxyccb_num_entries_max_mult = 2
-
-proxyr_tcp_proxy_dir = 0
-proxyr_tls_proxy_dir = 1
-proxyc_tcp_proxy_dir = proxyr_tcp_proxy_dir
-proxyc_tls_proxy_dir = proxyr_tls_proxy_dir
-
-def proxyr_oper_cb_offset(dir):
-    return (((dir) & 1) * proxyrcb_num_entries_max)
-
-def proxyr_oper_cb_id(dir, cb_id):
-    return proxyr_oper_cb_offset(dir) + cb_id
-
-def proxyc_oper_cb_offset(dir):
-    return (((dir) & 1) * proxyccb_num_entries_max)
-
-def proxyc_oper_cb_id(dir, cb_id):
-    return proxyc_oper_cb_offset(dir) + cb_id
 
 #
 # Build flow key for proxyrcb from tc configs

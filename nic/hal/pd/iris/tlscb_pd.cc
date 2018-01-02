@@ -220,7 +220,7 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
             HAL_TRACE_ERR("Failed to receive serq base for tlscbcb: {}", 
                         tlscb_pd->tlscb->cb_id);
         } else {
-            HAL_TRACE_DEBUG("Sesq id: 0x{0:x}", tlscb_pd->tlscb->cb_id);
+            HAL_TRACE_DEBUG("Serq id: 0x{0:x}", tlscb_pd->tlscb->cb_id);
             HAL_TRACE_DEBUG("Serq base: 0x{0:x}", serq_base);
             data.u.read_tls_stg0_d.serq_base = htonl(serq_base);    
         }
@@ -290,7 +290,7 @@ p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool de
         HAL_TRACE_DEBUG("other fid = 0x{0:x}", data.u.read_tls_stg1_7_d.other_fid);
         // Get L7Q address
         wring_hw_id_t  q_base;
-        uint32_t proxyrcb_id = PROXYR_OPER_CB_ID(PROXYR_TLS_PROXY_DIR, tlscb_pd->tlscb->cb_id);
+        uint32_t proxyrcb_id = tlscb_pd->tlscb->cb_id;
 
         ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYR,
                                      proxyrcb_id, &q_base);

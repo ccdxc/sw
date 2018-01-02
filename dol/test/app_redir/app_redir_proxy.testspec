@@ -13,7 +13,7 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=True
         qpair       : filter://any
-    flow        : filter://proto=TCP,label=PROXY-REDIR-ENC,fwtype=L2,direction=IFLOW
+    flow        : filter://proto=TCP,label=PROXY-REDIR,fwtype=L2,direction=IFLOW
     maxflows    : 1
 
 # Packet section defines the set of input and output packets. Input packets

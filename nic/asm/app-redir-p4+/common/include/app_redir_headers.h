@@ -78,8 +78,7 @@ struct pen_proxy_redir_header_v1_t {
     af                  : 8;
     ip_proto            : 8;
     tcp_flags           : 8;
-    pad                 : 8;
-    redir_miss_pkt_p    : 64;
+    end_pad             : 8;
 };
 
 #define PEN_PROXY_REDIR_HEADER_V1_SIZE                                          \

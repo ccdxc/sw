@@ -238,25 +238,6 @@ header_type common_global_phv_t {
     }
 }
 
-header_type header_phv_pad_64_t {
-    fields {
-        hdr_pad                         : 64;
-    }    
-}
-
-header_type header_phv_pad_72_t {
-    fields {
-        hdr_pad                         : 72;
-    }    
-}
-
-header_type dma_phv_pad_128_t {
-    fields {
-        dma_pad                         : 128;
-    }    
-}
-
-
 /*
  * to_stage PHV definitions
  */
@@ -382,34 +363,27 @@ metadata pkt_descr_t                    aol;
 @pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_t         p4plus_cpu_pkt;
 
-/*
- * The above p4plus_cpu_pkt + pen_app_redir_hdr + pen_app_redir_version_hdr +
- * pen_proxyr_hdr_v1 would cause pen_proxyr_hdr_v1 to be split across 2 flits
- * with some intervening bits. Hence, insert a pad to push L7 headers
- * to a completely new flit.
- */
 @pragma dont_trim
 metadata pen_app_redir_header_t         pen_app_redir_hdr;
 
 @pragma dont_trim
 metadata pen_app_redir_version_header_t pen_app_redir_version_hdr;
 
-#if 0
-@pragma dont_trim
-metadata header_phv_pad_72_t            header_phv_pad_72;
-#endif
-
+/*
+ * The above p4plus_cpu_pkt + pen_app_redir_hdr + pen_app_redir_version_hdr +
+ * pen_proxyr_hdr_v1 would cause pen_proxyr_hdr_v1 to be split across 2 flits
+ * with some intervening bits. Hence, insert a pa_align 512 pragma is inserted
+ * to push pen_proxyr_hdr_v1 to a completely new flit.
+ */
 @pragma dont_trim
 @pragma pa_align 512
 metadata pen_proxy_redir_header_v1_t    pen_proxyr_hdr_v1;
-
-@pragma dont_trim
-metadata header_phv_pad_64_t            header_phv_pad_64;
 
 /*
  * DMA descriptors for redirecting
  */
 @pragma dont_trim
+@pragma pa_align 512
 metadata dma_cmd_phv2mem_t              dma_meta;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t              dma_proxyr_hdr;
@@ -417,10 +391,6 @@ metadata dma_cmd_phv2mem_t              dma_proxyr_hdr;
 metadata dma_cmd_phv2mem_t              dma_desc;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t              dma_chain;
-
-//@pragma dont_trim
-//metadata dma_phv_pad_128_t              dma_pad_128;
-
 
 
 /*

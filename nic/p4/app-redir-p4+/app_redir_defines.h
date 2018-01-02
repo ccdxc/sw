@@ -93,8 +93,7 @@ header_type pen_proxy_redir_header_v1_t {
         af                  : 8;
         ip_proto            : 8;
         tcp_flags           : 8;
-        pad                 : 8;
-        redir_miss_pkt_p    : 64;
+        end_pad             : 8;
     }
 }
 

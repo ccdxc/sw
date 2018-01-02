@@ -66,7 +66,13 @@ proxyc_s3_desc_enqueue:
                 CAPRI_PHV_START_OFFSET(chain_txq_desc_addr_descr_addr)
     phvwri      p.dma_chain_dma_cmd_phv_end_addr,   \
                 CAPRI_PHV_END_OFFSET(chain_txq_desc_addr_descr_addr)
-    phvwri      p.dma_chain_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    /*
+     * DOL can request not to ring the service chain's doorbell
+     */                
+    smeqh       c1, r_proxyccb_flags, APP_REDIR_DOL_SKIP_CHAIN_DOORBELL,\
+                                      APP_REDIR_DOL_SKIP_CHAIN_DOORBELL
+    bcf         [c1], _skip_chain_doorbell
+    phvwri      p.dma_chain_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM  // delay slot
 
     /*
      * Set up DMA to increment PI and ring doorbell
@@ -92,7 +98,11 @@ proxyc_s3_desc_enqueue:
     phvwri      p.dma_doorbell_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     
     CAPRI_DMA_CMD_STOP_FENCE(dma_doorbell_dma_cmd)
-                                
+    nop.e
+    nop
+
+_skip_chain_doorbell:    
+    CAPRI_DMA_CMD_STOP_FENCE(dma_chain_dma_cmd)
     nop.e
     nop
 

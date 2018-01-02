@@ -259,23 +259,6 @@ header_type common_global_phv_t {
     }
 }
 
-header_type dma_phv_pad_448_t {
-    fields {
-        dma_pad                         : 448;    
-    }    
-}
-
-header_type dma_phv_pad_64_t {
-    fields {
-        dma_pad                         : 64;
-    }    
-}
-    
-header_type dma_phv_pad_256_t {
-    fields {
-        dma_pad                         : 256;
-    }    
-}
 
 /*
  * to_stage PHV definitions
@@ -385,12 +368,11 @@ metadata ring_entry_t                   ring_entry;
 metadata doorbell_data_raw_t            chain_txq_db_data; 
 
 @pragma dont_trim
-metadata dma_phv_pad_64_t               dma_phv_pad_64;
-
-@pragma dont_trim
+@pragma pa_align 512
 metadata pkt_descr_t                    aol; 
 
 @pragma dont_trim
+@pragma pa_align 512
 metadata dma_cmd_pkt2mem_t              dma_cpu_pkt;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t              dma_meta;
@@ -402,9 +384,6 @@ metadata dma_cmd_phv2mem_t              dma_desc;
 metadata dma_cmd_phv2mem_t              dma_chain;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t              dma_doorbell;
-
-@pragma dont_trim
-metadata dma_phv_pad_256_t              dma_pad_256;
 
 
 /*

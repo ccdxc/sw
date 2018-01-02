@@ -5,6 +5,7 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/proxyrcb.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/pd/common/pd_api.hpp"
@@ -227,6 +228,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_source_port(get_rsp.mutable_spec()->source_port());
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());
+    spec->set_l7_proxy_type(get_rsp.mutable_spec()->l7_proxy_type());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),
@@ -292,6 +294,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     spec->set_source_port(get_rsp.mutable_spec()->source_port());
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());
+    spec->set_l7_proxy_type(get_rsp.mutable_spec()->l7_proxy_type());
     
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(), 
@@ -353,6 +356,22 @@ update_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
     return ctx.update_flow(flowupd);
 }
 
+static bool
+tcp_is_proxy_enabled_for_flow(const flow_key_t &flow_key)
+{
+    return is_proxy_enabled_for_flow(types::PROXY_TYPE_TCP, flow_key) ||
+           is_proxy_enabled_for_flow(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, flow_key);
+}
+
+static proxy_flow_info_t*
+tcp_proxy_get_flow_info(const flow_key_t& flow_key)
+{
+    proxy_flow_info_t*      pfi;
+
+    pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, &flow_key);
+    return pfi ? pfi : proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, &flow_key);
+}
+
 fte::pipeline_action_t
 tcp_exec_cpu_lif(fte::ctx_t& ctx)
 {
@@ -365,8 +384,7 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     flow_key.dir = 0;
 
     // Check if TCP proxy is enabled for the flow
-    if(!is_proxy_enabled_for_flow(types::PROXY_TYPE_TCP,
-                                 flow_key)) {
+    if(!tcp_is_proxy_enabled_for_flow(flow_key)) {
         HAL_TRACE_DEBUG("tcp-proxy: not enabled for flow: {}", ctx.key());
         return fte::PIPELINE_CONTINUE;
     }
@@ -380,8 +398,7 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     }
 
     // get the flow info for the tcp proxy service 
-    pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP,
-                              &flow_key);
+    pfi = tcp_proxy_get_flow_info(flow_key);
 
     if(!pfi) {
         // Allocate PFI for the flow
@@ -391,7 +408,7 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
             ctx.set_feature_status(ret);
             return fte::PIPELINE_END;
         }
-        pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, &flow_key);
+        pfi = tcp_proxy_get_flow_info(flow_key);
         HAL_ASSERT_RETURN((NULL != pfi), fte::PIPELINE_CONTINUE);
     }
 
@@ -424,8 +441,7 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
         flow_key.dir = 0;
 
         // get the flow info for the tcp proxy service 
-        pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP,
-                                  &flow_key);
+        pfi = tcp_proxy_get_flow_info(flow_key);
         if (pfi) {
             if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.sl2seg(), &shw_vlan_id) == HAL_RET_OK) {
               HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
@@ -508,7 +524,6 @@ tcp_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
-
 void
 tcp_transmit_pkt(unsigned char* pkt, 
                  unsigned int len, 
@@ -516,7 +531,7 @@ tcp_transmit_pkt(unsigned char* pkt,
                  uint16_t dst_lif, 
                  uint16_t src_lif, 
                  hal::flow_direction_t dir, 
-                 uint16_t hw_vlan_id) 
+                 uint16_t hw_vlan_id)
 {
     if (gl_ctx) {
         HAL_TRACE_DEBUG("tcp-proxy: txpkt dir={} src_lif={} hw_vlan_id={}", dir, src_lif, hw_vlan_id);

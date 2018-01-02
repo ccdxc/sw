@@ -5,6 +5,7 @@
 #include "nic/hal/src/tlscb.hpp"
 #include "nic/hal/lkl/lklshim_tls.hpp"
 #include "nic/hal/src/crypto_keys.hpp"
+#include "nic/hal/src/proxyccb.hpp"
 
 namespace hal {
 namespace tls {
@@ -144,6 +145,7 @@ tls_api_update_cb(uint32_t id,
     HAL_TRACE_DEBUG("tls: got serq ci {}", get_resp.spec().serq_ci());
     spec.set_serq_ci(get_resp.spec().serq_ci());
     spec.set_serq_pi(get_resp.spec().serq_pi());
+    spec.set_l7_proxy_type(get_resp.spec().l7_proxy_type());
 
     HAL_TRACE_DEBUG("tls: updating TCPCB: id: {}, key_index: {}, command: {}, salt: {}, iv: {}, is_decrypt: {}",
                      id, key_index, command, salt, explicit_iv, is_decrypt_flow);
@@ -282,11 +284,11 @@ tls_api_init(void)
 }
 
 hal_ret_t
-tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid,
-                 types::AppRedirType l7_proxy_type)
+tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    ret = tls_api_createcb(enc_qid, false, dec_qid, l7_proxy_type);
+    ret = tls_api_createcb(enc_qid, false, dec_qid,
+                           proxyccb_tlscb_l7_proxy_type_eval(enc_qid));
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: Failed to create enc flow tlscb, qid: {}, ret: {}", enc_qid, ret);
         return ret;
@@ -296,7 +298,8 @@ tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid,
      * If TLS bypass mode is set, we'll fake both flows as "encrypt", so the bypass barco
      * logic is triggered, as there is no TLS processing to be done anyway.
      */
-    ret = tls_api_createcb(dec_qid, !proxy_tls_bypass_mode, enc_qid, l7_proxy_type);
+    ret = tls_api_createcb(dec_qid, !proxy_tls_bypass_mode, enc_qid,
+                           proxyccb_tlscb_l7_proxy_type_eval(dec_qid));
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: Failed to create dec flow tlscb, qid: {}, ret: {}", dec_qid, ret);
         return ret;
