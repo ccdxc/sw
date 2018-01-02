@@ -283,8 +283,7 @@ public:
 
            	for (int i = 0; i < count; i ++) {
                	TableStatsEntry table_entry = table_stats.table_stats(i);
-               	std::cout << "Table ID: " << table_entry.table_id() << "\n"
-                    << "Table type: " << table_entry.table_type() << "\n"
+               	std::cout << "Table type: " << table_entry.table_type() << "\n"
                     << "Table name: " << table_entry.table_name() << "\n"
                     << "Table size: " << table_entry.table_size() << "\n"
                     << "Overflow size: " << table_entry.overflow_table_size() << "\n"

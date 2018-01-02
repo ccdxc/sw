@@ -57,18 +57,6 @@ message DropStatsEntry {
   uint64    drop_count                              = 32;       // drop count for multiple drop reasons
 }
 
-// Unique table identifiers
-enum TableId {
-  TABLE_ID_NONE                                     = 0;
-  TABLE_ID_INPUT_PROPERTIES                         = 1;
-  TABLE_ID_REGISTERED_MACS                          = 2;
-  TABLE_ID_NACL                                     = 3;
-  TABLE_ID_DDOS_SRC_DST                             = 4;
-  TABLE_ID_INPUT_PROPERTIES_MAC_VLAN                = 5;
-  TABLE_ID_DROP_STATS                               = 6;
-  TABLE_ID_INPUT_MAPPING_TUNNELED                   = 7;
-}
-
 // Table types
 enum TableType {
   TABLE_TYPE_NONE                                   = 0;
@@ -80,17 +68,16 @@ enum TableType {
 
 // TableStatsEntry captures table specific stats for h/w table health monitoring
 message TableStatsEntry {
-  TableId      table_id                             = 1;   // table identifier
-  TableType    table_type                           = 2;   // type of the table
-  string       table_name                           = 3;   // table name
-  uint32       table_size                           = 4;   // table size
-  uint32       overflow_table_size                  = 5;   // overflow table size, if applicable
-  uint32       entries_in_use                       = 6;   // number of entries in use
-  uint32       overflow_entries_in_use              = 7;   // number of overflow entries in use, if applicable
-  uint32       num_inserts                          = 8;   // number of insert operations attemtped
-  uint32       num_insert_errors                    = 9;   // number of failed insert operations
-  uint32       num_deletes                          = 10;  // number of delete operations attempted
-  uint32       num_delete_errors                    = 11;  // number of failed delete operations
+  TableType    table_type                           = 1;   // type of the table
+  string       table_name                           = 2;   // table name
+  uint32       table_size                           = 3;   // table size
+  uint32       overflow_table_size                  = 4;   // overflow table size, if applicable
+  uint32       entries_in_use                       = 5;   // number of entries in use
+  uint32       overflow_entries_in_use              = 6;   // number of overflow entries in use, if applicable
+  uint32       num_inserts                          = 7;   // number of insert operations attemtped
+  uint32       num_insert_errors                    = 8;   // number of failed insert operations
+  uint32       num_deletes                          = 9;  // number of delete operations attempted
+  uint32       num_delete_errors                    = 10;  // number of failed delete operations
 }
 
 // TableStats is container for statistics of all tables in the data path

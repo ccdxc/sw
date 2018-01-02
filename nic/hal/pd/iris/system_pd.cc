@@ -102,8 +102,6 @@ pd_system_populate_drop_stats(DropStatsEntry *stats_entry,
                              hbm_counter1  = 0, hbm_counter2 = 0;
     hbm_addr_t               stats_base_addr;
 
-    HAL_TRACE_DEBUG("PD-System: Populating drop stats");
-
     // Find the base addr for specific Drop Stats index
     stats_base_addr = hbm_get_addr_for_stat_index(P4TBL_ID_DROP_STATS, idx);
 
@@ -249,12 +247,8 @@ pd_system_populate_index_table_stats(sys::TableStatsEntry *stats_entry,
     DirectMap               *dm;
 
     dm = g_hal_state_pd->dm_table(id);
-    HAL_ASSERT(dm != NULL);
-
-    switch (id) {
-    default:
-        //stats_entry->set_table_id(id);
-        break;
+    if (!dm) {
+        return ret;
     }
 
     stats_entry->set_table_type (sys::TABLE_TYPE_INDEX);
@@ -279,12 +273,8 @@ pd_system_populate_flow_table_stats(sys::TableStatsEntry *stats_entry,
     Flow                    *fl;
 
     fl = g_hal_state_pd->flow_table();
-    HAL_ASSERT(fl != NULL);
-
-    switch (id) {
-    default:
-        //stats_entry->set_table_id(id);
-        break;
+    if (!fl) {
+        return ret;
     }
 
     stats_entry->set_table_type (sys::TABLE_TYPE_HASH);
@@ -309,13 +299,10 @@ pd_system_populate_acl_tcam_table_stats(sys::TableStatsEntry *stats_entry,
     acl_tcam                *acl_tcam;
 
     acl_tcam = g_hal_state_pd->acl_table();
-    HAL_ASSERT(acl_tcam != NULL);
-
-    switch (id) {
-    default:
-        stats_entry->set_table_id(sys::TABLE_ID_NACL);
-        break;
+    if (!acl_tcam) {
+        return ret;
     }
+
     stats_entry->set_table_type (sys::TABLE_TYPE_TCAM);
     stats_entry->set_table_name(acl_tcam->table_name());
     stats_entry->set_table_size(acl_tcam->table_capacity());
@@ -338,24 +325,10 @@ pd_system_populate_tcam_table_stats(sys::TableStatsEntry *stats_entry,
     Tcam                    *tcam;
 
     tcam = g_hal_state_pd->tcam_table(id);
-    HAL_ASSERT(tcam != NULL);
-
-    switch (id) {
-    case P4TBL_ID_DDOS_SRC_DST:
-        stats_entry->set_table_id(sys::TABLE_ID_DDOS_SRC_DST);
-        break;
-    case P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN:
-        stats_entry->set_table_id(sys::TABLE_ID_INPUT_PROPERTIES_MAC_VLAN);
-        break;
-    case P4TBL_ID_DROP_STATS:
-        stats_entry->set_table_id(sys::TABLE_ID_DROP_STATS);
-        break;
-    case P4TBL_ID_INPUT_MAPPING_TUNNELED:
-        stats_entry->set_table_id(sys::TABLE_ID_INPUT_MAPPING_TUNNELED);
-        break;
-    default:
-        break;
+    if (!tcam) {
+        return ret;
     }
+
     stats_entry->set_table_type (sys::TABLE_TYPE_TCAM);
     stats_entry->set_table_name(tcam->table_name());
     stats_entry->set_table_size(tcam->table_capacity());
@@ -378,18 +351,11 @@ pd_system_populate_hash_tcam_table_stats(sys::TableStatsEntry *stats_entry,
     Hash                    *hash;
 
     hash = g_hal_state_pd->hash_tcam_table(id);
-    HAL_ASSERT(hash != NULL);
 
-    switch (id) {
-    case P4TBL_ID_INPUT_PROPERTIES:
-        stats_entry->set_table_id(sys::TABLE_ID_INPUT_PROPERTIES);
-        break;
-    case P4TBL_ID_REGISTERED_MACS:
-        stats_entry->set_table_id(sys::TABLE_ID_REGISTERED_MACS);
-        break;
-    default:
-        break;
+    if (!hash) {
+        return ret;
     }
+
     stats_entry->set_table_type (sys::TABLE_TYPE_HASH_TCAM);
     stats_entry->set_table_name(hash->table_name());
     stats_entry->set_table_size(hash->table_capacity());
@@ -412,15 +378,15 @@ pd_system_populate_table_stats(sys::TableStatsEntry *stats_entry,
 
     HAL_TRACE_DEBUG("PD-System: Populating table stats");
 
-    if (id >= P4TBL_ID_INDEX_MIN) {
+    if (id >= P4TBL_ID_INDEX_MIN && id <= P4TBL_ID_INDEX_MAX) {
         return pd_system_populate_index_table_stats(stats_entry, id);
     } else if (id == P4TBL_ID_NACL) {
         return pd_system_populate_acl_tcam_table_stats(stats_entry, id);
-    } else if (id >= P4TBL_ID_TCAM_MIN) {
+    } else if (id >= P4TBL_ID_TCAM_MIN && id <= P4TBL_ID_TCAM_MAX) {
         return pd_system_populate_tcam_table_stats(stats_entry, id);
-    } else if (id >= P4TBL_ID_HASH_OTCAM_MIN) {
+    } else if (id >= P4TBL_ID_HASH_OTCAM_MIN && id <= P4TBL_ID_HASH_OTCAM_MAX) {
         return pd_system_populate_hash_tcam_table_stats(stats_entry, id);
-    } else if (id >= P4TBL_ID_HASH_MIN) {
+    } else if (id >= P4TBL_ID_HASH_MIN && id <= P4TBL_ID_HASH_MAX) {
         return pd_system_populate_flow_table_stats(stats_entry, id);
     } else {
         stats_entry->set_table_type (sys::TABLE_TYPE_NONE);
@@ -439,8 +405,10 @@ pd_table_stats_get(pd_system_args_t *pd_sys_args)
 
     HAL_TRACE_DEBUG("PD-System: Querying table stats");
 
-    for (i = (int)P4TBL_ID_INPUT_PROPERTIES;
-            i <= (int)P4TBL_ID_INPUT_MAPPING_TUNNELED; i ++) {
+    for (i = (int)P4TBL_ID_TBLMIN; i <= (int)P4TBL_ID_TBLMAX; i++) {
+        if (i >= (int)P4TBL_ID_MPU_MIN && i <= (int)P4TBL_ID_MPU_MAX) {
+            continue;
+        }
         stats_entry = rsp->mutable_stats()->mutable_table_stats()->
             add_table_stats();
      	pd_system_populate_table_stats(stats_entry, (p4pd_table_id)i);
