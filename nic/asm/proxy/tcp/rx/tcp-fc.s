@@ -20,14 +20,13 @@ struct s4_t0_tcp_rx_tcp_fc_d d;
     .param          tcp_rx_write_arq_stage_start
     .param          tcp_rx_write_l7q_stage_start
     .param          ARQRX_QIDXR_BASE
-    .param          ARQRX_BASE
     .align  
 tcp_rx_fc_stage_start:
     CAPRI_SET_DEBUG_STAGE4_7(p.s5_s2s_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_0)
     sne         c1, k.common_phv_write_arq, r0
     bcf         [c1], tcp_cpu_rx
-    phvwr       p.to_s5_xrq_base, d.serq_base
-        // TODO : FC stage has to be implemented
+
+    // TODO : FC stage has to be implemented
 
     
     /*
@@ -60,10 +59,6 @@ flow_fc_process_done:
     nop
 
 tcp_cpu_rx:
-
-    addui       r5, r0, hiword(ARQRX_BASE)
-    addi        r5, r5, loword(ARQRX_BASE)
-    phvwr       p.to_s5_xrq_base, r5
 
     addui       r5, r0, hiword(ARQRX_QIDXR_BASE)
     addi        r5, r5, loword(ARQRX_QIDXR_BASE)

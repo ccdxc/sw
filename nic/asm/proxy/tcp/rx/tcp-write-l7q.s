@@ -10,9 +10,10 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../../app-redir-p4+/common/include/app_redir_shared.h"
+#include "INGRESS_s5_t2_tcp_rx_k.h"
 
 struct phv_ p;
-struct s5_t2_tcp_rx_k k;
+struct s5_t2_tcp_rx_k_ k;
 struct s5_t2_tcp_rx_write_l7q_d d;
 
 %%
@@ -31,7 +32,7 @@ tcp_rx_write_l7q_stage_start:
 
 dma_cmd_l7_descr:
     /* Set the DMA_WRITE CMD for descr */
-    add         r5, k.{s5_t2_s2s_l7_descr_sbit0_ebit15...s5_t2_s2s_l7_descr_sbit16_ebit31}, r0
+    add         r5, k.{s5_t2_s2s_l7_descr}, r0
     addi        r1, r5, NIC_DESC_ENTRY_0_OFFSET
 
     phvwr       p.aol_A1, k.{to_s5_page}.dx
@@ -57,7 +58,7 @@ dma_cmd_l7q_slot:
     add         r1, r5, d.{l7q_base}.dx
 
     // increment pi as a part of ringing dorrbell
-    phvwr       p.l7_ring_entry_descr_addr, k.{s5_t2_s2s_l7_descr_sbit0_ebit15...s5_t2_s2s_l7_descr_sbit16_ebit31}
+    phvwr       p.l7_ring_entry_descr_addr, k.{s5_t2_s2s_l7_descr}
     CAPRI_DMA_CMD_PHV2MEM_SETUP(l7_ring_slot_dma_cmd, r1, l7_ring_entry_descr_addr, l7_ring_entry_descr_addr)
     addi        r7, r7, 1
 

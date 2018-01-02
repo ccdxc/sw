@@ -11,7 +11,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 83
+#define CAPRI_P4PLUS_NUM_SYMBOLS 84
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -405,11 +405,9 @@ capri_p4p_asm_init()
     symbols[31].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
 
     symbols[32].name = "tcp-fc.bin";
-    symbols[32].num_params = 2;
-    symbols[32].params[0].name = ARQRX_BASE;
-    symbols[32].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
-    symbols[32].params[1].name = ARQRX_QIDXR_BASE;
-    symbols[32].params[1].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
+    symbols[32].num_params = 1;
+    symbols[32].params[0].name = ARQRX_QIDXR_BASE;
+    symbols[32].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
 
     symbols[33].name = "tls-dec-read-rnmdr-free-idx.bin";
     symbols[33].num_params = 1;
@@ -694,6 +692,11 @@ capri_p4p_asm_init()
     symbols[82].num_params = 1;
     symbols[82].params[0].name = ARQRX_BASE;
     symbols[82].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
+
+    symbols[83].name = "tcp-write-arq.bin";
+    symbols[83].num_params = 1;
+    symbols[83].params[0].name = ARQRX_BASE;
+    symbols[83].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

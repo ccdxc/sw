@@ -272,7 +272,6 @@ header_type tcp_cc_d_t {
 // d for stage 4 table 0
 header_type tcp_fc_d_t {
     fields {
-        serq_base               : 32;
         page                    : 32;
         descr                   : 32;
         page_cnt                : 16;
@@ -284,6 +283,7 @@ header_type tcp_fc_d_t {
 // d for stage 5 table 0
 header_type write_serq_d_t {
     fields {
+        serq_base               : 32;
         nde_addr                : 64;
         nde_offset              : 16;
         nde_len                 : 16;
@@ -331,38 +331,11 @@ header_type to_stage_2_phv_t {
     }
 }
 
-#if 0
-header_type to_stage_3_phv_t {
-    // tcp-fra
-    fields {
-        pad1                    : 8;
-        packets_out             : 16;
-        pad2                    : 8;
-        srtt_us                 : 32;
-        undo_retrans            : 32;
-        sacked_out              : 16;
-        lost_out                : 8;
-    }
-}
-
-header_type to_stage_4_phv_t {
-    // tcp-cc
-    fields {
-        prr_out                 : 32;
-        snd_cwnd                : 16;
-        loss_cwnd               : 16;
-        snd_ssthresh            : 16;
-        ca_state                : 8;
-        retrans_out             : 8;
-    }
-}
-#endif
-
 header_type to_stage_4_phv_t {
     // tcp-fc
     fields {
-        page_count              : 32;
-        page                    : 32;
+        page_count              : 16;
+        page                    : 34;
         descr                   : 32;
         l7_descr                : 32;
     }
@@ -371,9 +344,8 @@ header_type to_stage_4_phv_t {
 header_type to_stage_5_phv_t {
     // write-serq
     fields {
-        page                    : 32;
+        page                    : 34;
         descr                   : 32;
-        xrq_base                : 32;
         xrq_pidx                : 16;
         payload_len             : 16;
     }
@@ -1020,7 +992,7 @@ action tcp_cc(curr_ts, prr_delivered, last_time, epoch_start, cnt,
 /*
  * Stage 4 table 0 action
  */
-action tcp_fc(serq_base, page, descr, page_cnt, l7_descr) {
+action tcp_fc(page, descr, page_cnt, l7_descr) {
     // k + i for stage 4
 
     // from to_stage 4
@@ -1034,7 +1006,6 @@ action tcp_fc(serq_base, page, descr, page_cnt, l7_descr) {
     // from stage to stage
 
     // d for stage 4 table 0
-    modify_field(tcp_fc_d.serq_base, serq_base);
     modify_field(tcp_fc_d.page, page);
     modify_field(tcp_fc_d.descr, descr);
     modify_field(tcp_fc_d.page_cnt, page_cnt);
@@ -1044,7 +1015,7 @@ action tcp_fc(serq_base, page, descr, page_cnt, l7_descr) {
 /*
  * Stage 5 table 0 action
  */
-action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
+action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
         debug_stage0_3_thread, debug_stage4_7_thread, serq_pidx, ato,
         ooo_offset,
         pkts_rcvd, pages_alloced, desc_alloced, debug_num_pkt_to_mem,
@@ -1055,7 +1026,6 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(to_s5_scratch.page, to_s5.page);
     modify_field(to_s5_scratch.descr, to_s5.descr);
     modify_field(to_s5_scratch.xrq_pidx, to_s5.xrq_pidx);
-    modify_field(to_s5_scratch.xrq_base, to_s5.xrq_base);
     modify_field(to_s5_scratch.payload_len, to_s5.payload_len);
 
     // from ki global
@@ -1069,6 +1039,7 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(s5_s2s_scratch.ooo_offset, s5_s2s.ooo_offset);
 
     // d for stage 5 table 0
+    modify_field(write_serq_d.serq_base, serq_base);
     modify_field(write_serq_d.nde_addr, nde_addr);
     modify_field(write_serq_d.nde_offset, nde_offset);
     modify_field(write_serq_d.nde_len, nde_len);
@@ -1095,7 +1066,6 @@ action write_arq(ARQ_RX_PI_PARAMS) {
     modify_field(to_s5_scratch.page, to_s5.page);
     modify_field(to_s5_scratch.descr, to_s5.descr);
     modify_field(to_s5_scratch.xrq_pidx, to_s5.xrq_pidx);
-    modify_field(to_s5_scratch.xrq_base, to_s5.xrq_base);
     modify_field(to_s5_scratch.payload_len, to_s5.payload_len);
 
     // from ki global
@@ -1116,7 +1086,6 @@ action write_l7q(l7q_base, l7q_pidx) {
     modify_field(to_s5_scratch.page, to_s5.page);
     modify_field(to_s5_scratch.descr, to_s5.descr);
     modify_field(to_s5_scratch.xrq_pidx, to_s5.xrq_pidx);
-    modify_field(to_s5_scratch.xrq_base, to_s5.xrq_base);
     modify_field(to_s5_scratch.payload_len, to_s5.payload_len);
 
     // from ki global

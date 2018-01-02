@@ -17,10 +17,10 @@ struct s1_t1_tcp_tx_read_sesq_ci_d d;
 	
 %%
         .align
-        .param          tcp_tx_sesq_consume_stage2_start
         .param          tcp_tx_read_descr_start
         .param          tcp_tx_read_tcp_flags_start
 tcp_tx_sesq_read_ci_stage1_start:
+        CAPRI_CLEAR_TABLE_VALID(1)
 
         sne             c1, k.common_phv_pending_asesq, r0
 
@@ -29,8 +29,6 @@ tcp_tx_sesq_read_ci_stage1_start:
 
         sub             r4, r3, NIC_DESC_ENTRY_0_OFFSET
         phvwr           p.to_s3_sesq_desc_addr, r4
-
-        CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_tx_sesq_consume_stage2_start)
 
 		CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                         tcp_tx_read_descr_start, r3, TABLE_SIZE_512_BITS)

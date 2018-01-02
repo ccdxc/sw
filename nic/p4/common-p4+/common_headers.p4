@@ -9,6 +9,7 @@
 
 #define ADDRESS_WIDTH 64
 #define HBM_ADDRESS_WIDTH 32
+#define HBM_FULL_ADDRESS_WIDTH 34
 
 #define RAW_TABLE_SIZE_1    0
 #define RAW_TABLE_SIZE_2    1

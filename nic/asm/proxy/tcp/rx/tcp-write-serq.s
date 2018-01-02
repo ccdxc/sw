@@ -102,7 +102,7 @@ dma_cmd_serq_slot:
     CAPRI_OPERAND_DEBUG(d.{serq_pidx}.hx)
     sll         r5, d.{serq_pidx}.hx, NIC_SERQ_ENTRY_SIZE_SHIFT
     /* Set the DMA_WRITE CMD for SERQ slot */
-    add         r1, r5, k.to_s5_xrq_base
+    add         r1, r5, d.serq_base
     // increment serq pi as a part of ringing dorrbell
 
     phvwr       p.ring_entry_descr_addr, k.to_s5_descr

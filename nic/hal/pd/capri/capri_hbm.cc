@@ -1,4 +1,5 @@
 #include "nic/include/base.h"
+#include "nic/include/capri_common.h"
 #include <unistd.h>
 #include <iostream>
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -15,7 +16,7 @@ namespace pt = boost::property_tree;
 static capri_hbm_region_t *hbm_regions_;
 static int num_hbm_regions_;
 
-#define HBM_OFFSET(x)       (0x0C0000000ull + (x))
+#define HBM_OFFSET(x)       CAPRI_HBM_OFFSET(x)
 
 hal_ret_t
 capri_hbm_parse()

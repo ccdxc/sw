@@ -44,8 +44,7 @@
 #define tx_table_s1_t2_action read_xmit
 
 #define tx_table_s2_t0_action read_descr
-#define tx_table_s2_t1_action sesq_consume
-#define tx_table_s2_t2_action read_tcp_flags
+#define tx_table_s2_t1_action read_tcp_flags
 
 #define tx_table_s3_t0_action retx
 
@@ -136,7 +135,7 @@ header_type tcp_tx_pending_d_t {
 // d for stage 2
 // Reads sesq or retx_head descriptor, uses pkt_descr_aol_t
 
-// d for stage 2 table 2
+// d for stage 2 table 1
 header_type tcp_tx_read_tcp_flags_d_t {
     fields {
         tcp_flags               : 8;
@@ -218,7 +217,7 @@ header_type to_stage_2_phv_t {
 header_type to_stage_3_phv_t {
     fields {
         sesq_desc_addr          : HBM_ADDRESS_WIDTH;
-        addr                    : HBM_ADDRESS_WIDTH;
+        addr                    : HBM_FULL_ADDRESS_WIDTH;
         offset                  : OFFSET_WIDTH;
         len                     : LEN_WIDTH;
     }
@@ -237,7 +236,7 @@ header_type to_stage_4_phv_t {
 header_type to_stage_5_phv_t {
     fields {
         snd_cwnd                : 16;
-        addr                    : HBM_ADDRESS_WIDTH;
+        addr                    : HBM_FULL_ADDRESS_WIDTH;
         offset                  : OFFSET_WIDTH;
         len                     : LEN_WIDTH;
         state                   : 8;
@@ -249,13 +248,12 @@ header_type to_stage_5_phv_t {
 
 header_type to_stage_6_phv_t {
     fields {
-        xmit_cursor_addr        : HBM_ADDRESS_WIDTH;
+        xmit_cursor_addr        : HBM_FULL_ADDRESS_WIDTH;
         xmit_cursor_offset      : OFFSET_WIDTH;
         xmit_cursor_len         : LEN_WIDTH;
 
         rcv_nxt                 : SEQ_NUMBER_WIDTH;
         rcv_mss                 : 16;
-        ca_state                : 8;
 
         pending_challenge_ack_send : 1;
         pending_sync_mss        : 1;
@@ -643,25 +641,11 @@ action read_descr(A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt) {
 /*
  * Stage 2 table 1 action
  */
-action sesq_consume() {
-
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // from to_stage 2
-    modify_field(to_s2_scratch.sesq_cidx, to_s2.sesq_cidx);
-
-    // d for stage 2
-}
-
-/*
- * Stage 2 table 2 action
- */
 action read_tcp_flags(tcp_flags) {
     // from ki global
     GENERATE_GLOBAL_K
 
-    // d for stage 2 table 2
+    // d for stage 2 table 1
     modify_field(read_tcp_flags_d.tcp_flags, tcp_flags);
 }
 /*
@@ -780,7 +764,6 @@ action tso(TSO_PARAMS) {
     modify_field(to_s6_scratch.xmit_cursor_len, to_s6.xmit_cursor_len);
     modify_field(to_s6_scratch.rcv_nxt, to_s6.rcv_nxt);
     modify_field(to_s6_scratch.rcv_mss, to_s6.rcv_mss);
-    modify_field(to_s6_scratch.ca_state, to_s6.ca_state);
     modify_field(to_s6_scratch.pending_challenge_ack_send, to_s6.pending_challenge_ack_send);
     modify_field(to_s6_scratch.pending_sync_mss, to_s6.pending_sync_mss);
     modify_field(to_s6_scratch.pending_tso_keep_alive, to_s6.pending_tso_keep_alive);

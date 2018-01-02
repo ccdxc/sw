@@ -91,7 +91,7 @@
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
         retx_head_desc                  : HBM_ADDRESS_WIDTH     ;\
         retx_tail_desc                  : HBM_ADDRESS_WIDTH     ;\
-        retx_xmit_cursor                : HBM_ADDRESS_WIDTH     ;\
+        retx_xmit_cursor                : 40                    ;\
         retx_next_desc                  : HBM_ADDRESS_WIDTH     ;\
         retx_head_offset                : 16                    ;\
         retx_head_len                   : 16                    ;\
@@ -116,8 +116,8 @@
 
 #define TCB_XMIT_SHARED_STATE \
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
-        xmit_cursor_addr                : HBM_ADDRESS_WIDTH     ;\
         xmit_next_desc                  : HBM_ADDRESS_WIDTH     ;\
+        xmit_cursor_addr                : 40                    ;\
         xmit_offset                     : 16                    ;\
         xmit_len                        : 16                    ;\
         packets_out                     : 16                    ;\

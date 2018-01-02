@@ -17,6 +17,7 @@ struct s5_t1_tcp_rx_write_arq_d d;
 
 %%
     .align    
+    .param          ARQRX_BASE
 tcp_rx_write_arq_stage_start:
     CAPRI_CLEAR_TABLE1_VALID
 
@@ -97,10 +98,12 @@ dma_cmd_descr:
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_LEAVE_IN_ARQ, TCP_DDOL_LEAVE_IN_ARQ
 dma_cmd_arq_slot:
     CPU_ARQ_PIDX_READ_INC(r6, 0, struct s5_t1_tcp_rx_write_arq_d, pi_0, r4, r5)
+    addui       r4, r0, hiword(ARQRX_BASE)
+    addi        r4, r4, loword(ARQRX_BASE)
     CPU_RX_ENQUEUE(r5,
                    k.to_s5_descr,
                    r6,
-                   k.to_s5_xrq_base,
+                   r4,
                    ring_entry_descr_addr,
                    ring_slot_dma_cmd, 
                    1, 

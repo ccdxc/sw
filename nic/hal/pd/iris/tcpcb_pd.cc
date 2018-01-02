@@ -207,19 +207,6 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         data.u.tcp_fc_d.page_cnt = 0x1000;
-        // Get Serq address
-        wring_hw_id_t  serq_base;
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
-                                     tcpcb_pd->tcpcb->cb_id,
-                                     &serq_base);
-        if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to receive serq base for tcp cb: {}", 
-                        tcpcb_pd->tcpcb->cb_id);
-        } else {
-            HAL_TRACE_DEBUG("Serq id: 0x{0:x}", tcpcb_pd->tcpcb->cb_id);
-            HAL_TRACE_DEBUG("Serq base: 0x{0:x}", serq_base);
-            data.u.tcp_fc_d.serq_base = htonl(serq_base);    
-        }
     }
     
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
@@ -233,9 +220,25 @@ hal_ret_t
 p4pd_add_or_del_tcpcb_write_serq(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     s5_t0_tcp_rx_write_serq_d write_serq_d = { 0 };
+    hal_ret_t ret = HAL_RET_OK;
 
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_WRITE_SERQ);
+
+    if(!del) {
+        // Get Serq address
+        wring_hw_id_t  serq_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
+                                     tcpcb_pd->tcpcb->cb_id,
+                                     &serq_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive serq base for tcp cb: {}", 
+                        tcpcb_pd->tcpcb->cb_id);
+        } else {
+            HAL_TRACE_DEBUG("Serq base: 0x{0:x}", serq_base);
+            write_serq_d.serq_base = htonl(serq_base);    
+        }
+    }
 
     if(!p4plus_hbm_write(hwid, (uint8_t *)&write_serq_d, sizeof(write_serq_d))) {
         HAL_TRACE_ERR("Failed to create rx: write_serq entry for TCP CB");
@@ -382,9 +385,26 @@ p4pd_get_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
-    tcpcb_pd->tcpcb->serq_base = ntohl(data.u.tcp_fc_d.serq_base);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_get_tcp_rx_write_serq_entry(pd_tcpcb_t* tcpcb_pd)
+{
+    s5_t0_tcp_rx_d      data = {0};
+
+    // hardware index for this entry
+    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_WRITE_SERQ);
+
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to read rx: write_serq entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+
+    tcpcb_pd->tcpcb->serq_base = ntohl(data.u.write_serq_d.serq_base);
     HAL_TRACE_DEBUG("Received serq_base: 0x{0:x}", tcpcb_pd->tcpcb->serq_base);
-    
+
     return HAL_RET_OK;
 }
 
@@ -406,6 +426,12 @@ p4pd_get_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd)
     }
 
     ret = p4pd_get_tcp_rx_tcp_fc_entry(tcpcb_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get tcp_fc entry");
+        goto cleanup;
+    }
+
+    ret = p4pd_get_tcp_rx_write_serq_entry(tcpcb_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get tcp_fc entry");
         goto cleanup;
