@@ -51,7 +51,7 @@ func AssertOk(tb TBApi, err error, msg string) {
 func AssertEquals(tb TBApi, exp, act interface{}, msg string) {
 	if !reflect.DeepEqual(exp, act) {
 		_, file, line, _ := runtime.Caller(1)
-		tb.Fatalf("\033[31m%s:%d:\n\n\texp: %#v\n\n\tgot: %#v\033[39m\n\n", filepath.Base(file), line, exp, act)
+		tb.Fatalf("\033[31m%s:%d:\n\n\texp: %#v\n\n\tgot: %#v\n\n\tmsg: %#v\n\n\033[39m", filepath.Base(file), line, exp, act, msg)
 	}
 }
 

@@ -140,7 +140,7 @@ endif
 
 
 unit-test:
-	$(info +++ go test $(TO_BUILD))
+	$(info +++ go test -p 1 $(TO_BUILD))
 	$(GOCMD) test -p 1 $(TO_BUILD); \
 
 unit-race-test:
@@ -148,7 +148,7 @@ unit-race-test:
 	go test -race $(TO_BUILD)
 
 unit-test-verbose:
-	$(info +++ go test $(TO_BUILD))
+	$(info +++ go test -v -p 1 $(TO_BUILD))
 	$(GOCMD) test -v -p 1 $(TO_BUILD); \
 
 cover:
