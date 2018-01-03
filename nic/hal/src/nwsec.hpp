@@ -33,28 +33,64 @@ namespace hal {
 typedef struct nwsec_profile_s {
     hal_spinlock_t        slock;                  // lock to protect this structure
     nwsec_profile_id_t    profile_id;             // profile id
-    uint32_t              cnxn_tracking_en:1;
-    uint32_t              ipsg_en:1;
-    uint32_t              tcp_rtt_estimate_en:1;
+
     uint32_t              session_idle_timeout;
     uint32_t              tcp_cnxn_setup_timeout;
     uint32_t              tcp_close_timeout;
     uint32_t              tcp_close_wait_timeout;
 
+    uint32_t              cnxn_tracking_en:1;
+    uint32_t              ipsg_en:1;
+    uint32_t              tcp_rtt_estimate_en:1;
     uint32_t              ip_normalization_en:1;
     uint32_t              tcp_normalization_en:1;
     uint32_t              icmp_normalization_en:1;
+    uint32_t              ip_reassembly_en:1;
 
     uint32_t              ip_ttl_change_detect_en:1;
+    uint32_t              ip_src_grd_en:1;
     uint32_t              ip_rsvd_flags_action:2;
     uint32_t              ip_df_action:2;
     uint32_t              ip_options_action:2;
     uint32_t              ip_invalid_len_action:2;
+    uint32_t              ip_spoof_pkt_drop:1;
+    uint32_t              ip_loose_src_routing_pkt_drop:1;
+    uint32_t              ip_malformed_option_pkt_drop:1;
+    uint32_t              ip_record_route_option_pkt_drop:1;
+    uint32_t              ip_strict_src_routing_pkt_drop:1;
+    uint32_t              ip_ts_option_pkt_drop:1;
+    uint32_t              ip_unknown_option_pkt_drop:1;
+    uint32_t              ip_stream_id_option_pkt_drop:1;
+    uint32_t              ip_rsvd_fld_set_pkt_drop:1;
+    uint32_t              ip_clear_df_bit:1;
     uint32_t              ip_normalize_ttl:8;
+
+    uint32_t              ipv6_anycast_src_drop:1;
+    uint32_t              ipv6_v4_compatible_addr_drop:1;
+    uint32_t              ipv6_needless_ip_frag_hdr_drop:1;
+    uint32_t              ipv6_invalid_options_pkt_drop:1;
+    uint32_t              ipv6_rsvd_fld_set_pkt_drop:1;
+    uint32_t              ipv6_rtg_hdr_pkt_drop:1;
+    uint32_t              ipv6_dst_options_hdr_pkt_drop:1;
+    uint32_t              ipv6_hop_by_hop_options_pkt_drop:1;
+
 
     uint32_t              icmp_redirect_msg_drop:1;
     uint32_t              icmp_deprecated_msgs_drop:1;
     uint32_t              icmp_invalid_code_action:2;
+    uint32_t              icmp_dst_unreach_ignore_payload:1;
+    uint32_t              icmp_param_prblm_ignore_payload:1;
+    uint32_t              icmp_pkt_too_big_ignore_payload:1;
+    uint32_t              icmp_redirect_ignore_payload:1;
+    uint32_t              icmp_time_exceed_ignore_payload:1;
+    uint32_t              icmp_error_drop:1;
+    uint32_t              icmp_fragments_drop:1;
+    uint32_t              icmp_large_pkt_drop:1;
+    uint32_t              icmp_ping_zero_id_drop:1;
+    uint32_t              icmp_need_frag_suppress:1;
+    uint32_t              icmp_time_exceed_suppress:1;
+    uint32_t              icmpv6_large_msg_mtu_small_drop:1;
+
 
     uint32_t              tcp_non_syn_first_pkt_drop:1;
     uint32_t              tcp_split_handshake_drop:1;
@@ -74,6 +110,15 @@ typedef struct nwsec_profile_s {
     uint32_t              tcp_ts_not_present_drop:1;
     uint32_t              tcp_invalid_flags_drop:1;
     uint32_t              tcp_nonsyn_noack_drop:1;
+    uint32_t              tcp_syn_with_data_drop:1;
+    uint32_t              tcp_syn_ack_with_data_drop:1;
+    uint32_t              tcp_overlapping_segments_drop:1;
+    uint32_t              tcp_strip_ts_option:1;
+    uint32_t              tcp_conn_trk_bypass_window_err:1;
+    uint32_t              tcp_urg_flag_ptr_clear:1;
+    uint32_t              tcp_mss;
+
+    uint32_t              multicast_src_drop:1;
 
     hal_handle_t          hal_handle;             // HAL allocated handle
 

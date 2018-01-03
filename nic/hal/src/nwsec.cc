@@ -139,45 +139,85 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    if (NWSEC_SPEC_CHECK(cnxn_tracking_en) ||
-            NWSEC_SPEC_CHECK(ipsg_en) ||
-            NWSEC_SPEC_CHECK(tcp_rtt_estimate_en) ||
-            NWSEC_SPEC_CHECK(session_idle_timeout) ||
-            NWSEC_SPEC_CHECK(tcp_cnxn_setup_timeout) ||
-            NWSEC_SPEC_CHECK(tcp_close_timeout) ||
-            NWSEC_SPEC_CHECK(tcp_close_wait_timeout) ||
-            NWSEC_SPEC_CHECK(ip_normalization_en) ||
-            NWSEC_SPEC_CHECK(tcp_normalization_en) ||
-            NWSEC_SPEC_CHECK(icmp_normalization_en) ||
-            NWSEC_SPEC_CHECK(ip_ttl_change_detect_en) ||
-            NWSEC_SPEC_CHECK(ip_rsvd_flags_action) ||
-            NWSEC_SPEC_CHECK(ip_df_action) ||
-            NWSEC_SPEC_CHECK(ip_options_action) ||
-            NWSEC_SPEC_CHECK(ip_invalid_len_action) ||
-            NWSEC_SPEC_CHECK(ip_normalize_ttl) ||
-            NWSEC_SPEC_CHECK(icmp_invalid_code_action) ||
-            NWSEC_SPEC_CHECK(icmp_deprecated_msgs_drop) ||
-            NWSEC_SPEC_CHECK(icmp_redirect_msg_drop) ||
-            NWSEC_SPEC_CHECK(tcp_non_syn_first_pkt_drop) ||
-            NWSEC_SPEC_CHECK(tcp_split_handshake_drop) ||
-            NWSEC_SPEC_CHECK(tcp_rsvd_flags_action) ||
-            NWSEC_SPEC_CHECK(tcp_unexpected_mss_action) ||
-            NWSEC_SPEC_CHECK(tcp_unexpected_win_scale_action) ||
-            NWSEC_SPEC_CHECK(tcp_unexpected_sack_perm_action) ||
-            NWSEC_SPEC_CHECK(tcp_urg_ptr_not_set_action) ||
-            NWSEC_SPEC_CHECK(tcp_urg_flag_not_set_action) ||
-            NWSEC_SPEC_CHECK(tcp_urg_payload_missing_action) ||
-            NWSEC_SPEC_CHECK(tcp_rst_with_data_action) ||
-            NWSEC_SPEC_CHECK(tcp_data_len_gt_mss_action) ||
-            NWSEC_SPEC_CHECK(tcp_data_len_gt_win_size_action) ||
-            NWSEC_SPEC_CHECK(tcp_unexpected_ts_option_action) ||
-            NWSEC_SPEC_CHECK(tcp_unexpected_sack_option_action) ||
-            NWSEC_SPEC_CHECK(tcp_unexpected_echo_ts_action) ||
-            NWSEC_SPEC_CHECK(tcp_ts_not_present_drop) ||
-            NWSEC_SPEC_CHECK(tcp_invalid_flags_drop) ||
-            NWSEC_SPEC_CHECK(tcp_nonsyn_noack_drop)) {
+    if (NWSEC_SPEC_CHECK(session_idle_timeout) ||
+        NWSEC_SPEC_CHECK(tcp_cnxn_setup_timeout) ||
+        NWSEC_SPEC_CHECK(tcp_close_timeout) ||
+        NWSEC_SPEC_CHECK(tcp_close_wait_timeout) ||
+        NWSEC_SPEC_CHECK(cnxn_tracking_en) ||
+        NWSEC_SPEC_CHECK(ipsg_en) ||
+        NWSEC_SPEC_CHECK(tcp_rtt_estimate_en) ||
+        NWSEC_SPEC_CHECK(ip_normalization_en) ||
+        NWSEC_SPEC_CHECK(tcp_normalization_en) ||
+        NWSEC_SPEC_CHECK(icmp_normalization_en) ||
+        NWSEC_SPEC_CHECK(ip_reassembly_en) ||
+        NWSEC_SPEC_CHECK(ip_ttl_change_detect_en) ||
+        NWSEC_SPEC_CHECK(ip_src_grd_en) ||
+        NWSEC_SPEC_CHECK(ip_rsvd_flags_action) ||
+        NWSEC_SPEC_CHECK(ip_df_action) ||
+        NWSEC_SPEC_CHECK(ip_options_action) ||
+        NWSEC_SPEC_CHECK(ip_invalid_len_action) ||
+        NWSEC_SPEC_CHECK(ip_spoof_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_loose_src_routing_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_malformed_option_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_record_route_option_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_strict_src_routing_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_ts_option_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_unknown_option_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_stream_id_option_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_rsvd_fld_set_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ip_clear_df_bit) ||
+        NWSEC_SPEC_CHECK(ip_normalize_ttl) ||
+        NWSEC_SPEC_CHECK(ipv6_anycast_src_drop) ||
+        NWSEC_SPEC_CHECK(ipv6_v4_compatible_addr_drop) ||
+        NWSEC_SPEC_CHECK(ipv6_needless_ip_frag_hdr_drop) ||
+        NWSEC_SPEC_CHECK(ipv6_invalid_options_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ipv6_rsvd_fld_set_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ipv6_rtg_hdr_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ipv6_dst_options_hdr_pkt_drop) ||
+        NWSEC_SPEC_CHECK(ipv6_hop_by_hop_options_pkt_drop) ||
+        NWSEC_SPEC_CHECK(icmp_invalid_code_action) ||
+        NWSEC_SPEC_CHECK(icmp_deprecated_msgs_drop) ||
+        NWSEC_SPEC_CHECK(icmp_redirect_msg_drop) ||
+        NWSEC_SPEC_CHECK(icmp_dst_unreach_ignore_payload) ||
+        NWSEC_SPEC_CHECK(icmp_param_prblm_ignore_payload) ||
+        NWSEC_SPEC_CHECK(icmp_pkt_too_big_ignore_payload) ||
+        NWSEC_SPEC_CHECK(icmp_redirect_ignore_payload) ||
+        NWSEC_SPEC_CHECK(icmp_time_exceed_ignore_payload) ||
+        NWSEC_SPEC_CHECK(icmp_error_drop) ||
+        NWSEC_SPEC_CHECK(icmp_fragments_drop) ||
+        NWSEC_SPEC_CHECK(icmp_large_pkt_drop) ||
+        NWSEC_SPEC_CHECK(icmp_ping_zero_id_drop) ||
+        NWSEC_SPEC_CHECK(icmp_need_frag_suppress) ||
+        NWSEC_SPEC_CHECK(icmp_time_exceed_suppress) ||
+        NWSEC_SPEC_CHECK(icmpv6_large_msg_mtu_small_drop) ||
+        NWSEC_SPEC_CHECK(tcp_non_syn_first_pkt_drop) ||
+        NWSEC_SPEC_CHECK(tcp_split_handshake_drop) ||
+        NWSEC_SPEC_CHECK(tcp_rsvd_flags_action) ||
+        NWSEC_SPEC_CHECK(tcp_unexpected_mss_action) ||
+        NWSEC_SPEC_CHECK(tcp_unexpected_win_scale_action) ||
+        NWSEC_SPEC_CHECK(tcp_unexpected_sack_perm_action) ||
+        NWSEC_SPEC_CHECK(tcp_urg_ptr_not_set_action) ||
+        NWSEC_SPEC_CHECK(tcp_urg_flag_not_set_action) ||
+        NWSEC_SPEC_CHECK(tcp_urg_payload_missing_action) ||
+        NWSEC_SPEC_CHECK(tcp_rst_with_data_action) ||
+        NWSEC_SPEC_CHECK(tcp_data_len_gt_mss_action) ||
+        NWSEC_SPEC_CHECK(tcp_data_len_gt_win_size_action) ||
+        NWSEC_SPEC_CHECK(tcp_unexpected_ts_option_action) ||
+        NWSEC_SPEC_CHECK(tcp_unexpected_sack_option_action) ||
+        NWSEC_SPEC_CHECK(tcp_unexpected_echo_ts_action) ||
+        NWSEC_SPEC_CHECK(tcp_ts_not_present_drop) ||
+        NWSEC_SPEC_CHECK(tcp_invalid_flags_drop) ||
+        NWSEC_SPEC_CHECK(tcp_nonsyn_noack_drop) ||
+        NWSEC_SPEC_CHECK(tcp_syn_with_data_drop) ||
+        NWSEC_SPEC_CHECK(tcp_syn_ack_with_data_drop) ||
+        NWSEC_SPEC_CHECK(tcp_overlapping_segments_drop) ||
+        NWSEC_SPEC_CHECK(tcp_strip_ts_option) ||
+        NWSEC_SPEC_CHECK(tcp_conn_trk_bypass_window_err) ||
+        NWSEC_SPEC_CHECK(tcp_urg_flag_ptr_clear) ||
+        NWSEC_SPEC_CHECK(tcp_mss) ||
+        NWSEC_SPEC_CHECK(multicast_src_drop)) {
                 app_ctxt->nwsec_changed = true;
-            }
+    }
 
     if (NWSEC_SPEC_CHECK(ipsg_en)) {
         HAL_TRACE_DEBUG("pi-sec-prof:{}:ipsg changed {} => {}",
@@ -191,7 +231,7 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
 //------------------------------------------------------------------------------
 // function that reads from spec and populates PI structure
 //------------------------------------------------------------------------------
-#define NWSEC_SPEC_ASSIGN(fname) sec_prof->fname = spec.fname()
+#define NWSEC_SPEC_ASSIGN(fname) (sec_prof->fname = spec.fname())
 // initialize security profile object from the config spec
 static inline void
 nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
@@ -203,25 +243,66 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
         sec_prof->profile_id = spec.key_or_handle().profile_id();
     }
 
-    NWSEC_SPEC_ASSIGN(cnxn_tracking_en);
-    NWSEC_SPEC_ASSIGN(ipsg_en);
-    NWSEC_SPEC_ASSIGN(tcp_rtt_estimate_en);
     NWSEC_SPEC_ASSIGN(session_idle_timeout);
     NWSEC_SPEC_ASSIGN(tcp_cnxn_setup_timeout);
     NWSEC_SPEC_ASSIGN(tcp_close_timeout);
     NWSEC_SPEC_ASSIGN(tcp_close_wait_timeout);
+
+    NWSEC_SPEC_ASSIGN(cnxn_tracking_en);
+    NWSEC_SPEC_ASSIGN(ipsg_en);
+    NWSEC_SPEC_ASSIGN(tcp_rtt_estimate_en);
     NWSEC_SPEC_ASSIGN(ip_normalization_en);
     NWSEC_SPEC_ASSIGN(tcp_normalization_en);
     NWSEC_SPEC_ASSIGN(icmp_normalization_en);
+    NWSEC_SPEC_ASSIGN(ip_reassembly_en);
     NWSEC_SPEC_ASSIGN(ip_ttl_change_detect_en);
+    NWSEC_SPEC_ASSIGN(ip_src_grd_en);
+
     NWSEC_SPEC_ASSIGN(ip_rsvd_flags_action);
     NWSEC_SPEC_ASSIGN(ip_df_action);
     NWSEC_SPEC_ASSIGN(ip_options_action);
     NWSEC_SPEC_ASSIGN(ip_invalid_len_action);
+    NWSEC_SPEC_ASSIGN(ip_spoof_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_loose_src_routing_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_malformed_option_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_record_route_option_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_strict_src_routing_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_ts_option_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_unknown_option_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_stream_id_option_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_rsvd_fld_set_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ip_clear_df_bit);
     NWSEC_SPEC_ASSIGN(ip_normalize_ttl);
+
+
+    NWSEC_SPEC_ASSIGN(ipv6_anycast_src_drop);
+    NWSEC_SPEC_ASSIGN(ipv6_v4_compatible_addr_drop);
+    NWSEC_SPEC_ASSIGN(ipv6_needless_ip_frag_hdr_drop);
+    NWSEC_SPEC_ASSIGN(ipv6_invalid_options_pkt_drop);
+
+    NWSEC_SPEC_ASSIGN(ipv6_rsvd_fld_set_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ipv6_rtg_hdr_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ipv6_dst_options_hdr_pkt_drop);
+    NWSEC_SPEC_ASSIGN(ipv6_hop_by_hop_options_pkt_drop);
+
+
+
     NWSEC_SPEC_ASSIGN(icmp_invalid_code_action);
     NWSEC_SPEC_ASSIGN(icmp_deprecated_msgs_drop);
     NWSEC_SPEC_ASSIGN(icmp_redirect_msg_drop);
+    NWSEC_SPEC_ASSIGN(icmp_dst_unreach_ignore_payload);
+    NWSEC_SPEC_ASSIGN(icmp_param_prblm_ignore_payload);
+    NWSEC_SPEC_ASSIGN(icmp_pkt_too_big_ignore_payload);
+    NWSEC_SPEC_ASSIGN(icmp_redirect_ignore_payload);
+    NWSEC_SPEC_ASSIGN(icmp_time_exceed_ignore_payload);
+    NWSEC_SPEC_ASSIGN(icmp_error_drop);
+    NWSEC_SPEC_ASSIGN(icmp_fragments_drop);
+    NWSEC_SPEC_ASSIGN(icmp_large_pkt_drop);
+    NWSEC_SPEC_ASSIGN(icmp_ping_zero_id_drop);
+    NWSEC_SPEC_ASSIGN(icmp_need_frag_suppress);
+    NWSEC_SPEC_ASSIGN(icmp_time_exceed_suppress);
+    NWSEC_SPEC_ASSIGN(icmpv6_large_msg_mtu_small_drop);
+
     NWSEC_SPEC_ASSIGN(tcp_non_syn_first_pkt_drop);
     NWSEC_SPEC_ASSIGN(tcp_split_handshake_drop);
     NWSEC_SPEC_ASSIGN(tcp_rsvd_flags_action);
@@ -240,6 +321,16 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(tcp_ts_not_present_drop);
     NWSEC_SPEC_ASSIGN(tcp_invalid_flags_drop);
     NWSEC_SPEC_ASSIGN(tcp_nonsyn_noack_drop);
+    NWSEC_SPEC_ASSIGN(tcp_syn_with_data_drop);
+    NWSEC_SPEC_ASSIGN(tcp_syn_ack_with_data_drop);
+    NWSEC_SPEC_ASSIGN(tcp_overlapping_segments_drop);
+    NWSEC_SPEC_ASSIGN(tcp_strip_ts_option);
+    NWSEC_SPEC_ASSIGN(tcp_conn_trk_bypass_window_err);
+    NWSEC_SPEC_ASSIGN(tcp_urg_flag_ptr_clear);
+    NWSEC_SPEC_ASSIGN(tcp_mss);
+
+    NWSEC_SPEC_ASSIGN(multicast_src_drop);
+
 
     return;
 }
@@ -464,35 +555,68 @@ security_profile_spec_print (SecurityProfileSpec& spec)
     }
 
     // buf.write("cnxn_tracking_en: {}, ", spec.cnxn_tracking_en());
+    NWSEC_SPEC_FIELD_PRINT(session_idle_timeout);
+    NWSEC_SPEC_FIELD_PRINT(tcp_cnxn_setup_timeout);
+    NWSEC_SPEC_FIELD_PRINT(tcp_close_timeout);
+    NWSEC_SPEC_FIELD_PRINT(tcp_close_wait_timeout);
+    buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(cnxn_tracking_en);
     NWSEC_SPEC_FIELD_PRINT(ipsg_en);
     NWSEC_SPEC_FIELD_PRINT(tcp_rtt_estimate_en);
-    NWSEC_SPEC_FIELD_PRINT(session_idle_timeout);
-    NWSEC_SPEC_FIELD_PRINT(tcp_cnxn_setup_timeout);
-    buf.write("\n");
-    NWSEC_SPEC_FIELD_PRINT(tcp_close_timeout);
-    NWSEC_SPEC_FIELD_PRINT(tcp_close_wait_timeout);
     NWSEC_SPEC_FIELD_PRINT(ip_normalization_en);
     NWSEC_SPEC_FIELD_PRINT(tcp_normalization_en);
     NWSEC_SPEC_FIELD_PRINT(icmp_normalization_en);
+    NWSEC_SPEC_FIELD_PRINT(ip_reassembly_en);
     NWSEC_SPEC_FIELD_PRINT(ip_ttl_change_detect_en);
+    NWSEC_SPEC_FIELD_PRINT(ip_src_grd_en);
     buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(ip_rsvd_flags_action);
     NWSEC_SPEC_FIELD_PRINT(ip_df_action);
     NWSEC_SPEC_FIELD_PRINT(ip_options_action);
     NWSEC_SPEC_FIELD_PRINT(ip_invalid_len_action);
+    NWSEC_SPEC_FIELD_PRINT(ip_spoof_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_loose_src_routing_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_malformed_option_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_record_route_option_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_strict_src_routing_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_ts_option_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_unknown_option_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_stream_id_option_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_rsvd_fld_set_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ip_clear_df_bit);
     NWSEC_SPEC_FIELD_PRINT(ip_normalize_ttl);
+    buf.write("\n");
+    NWSEC_SPEC_FIELD_PRINT(ipv6_anycast_src_drop);
+    NWSEC_SPEC_FIELD_PRINT(ipv6_v4_compatible_addr_drop);
+    NWSEC_SPEC_FIELD_PRINT(ipv6_needless_ip_frag_hdr_drop);
+    NWSEC_SPEC_FIELD_PRINT(ipv6_invalid_options_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ipv6_rsvd_fld_set_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ipv6_rtg_hdr_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ipv6_dst_options_hdr_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(ipv6_hop_by_hop_options_pkt_drop);
+    buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(icmp_invalid_code_action);
     NWSEC_SPEC_FIELD_PRINT(icmp_deprecated_msgs_drop);
-    buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(icmp_redirect_msg_drop);
+    NWSEC_SPEC_FIELD_PRINT(icmp_dst_unreach_ignore_payload);
+    NWSEC_SPEC_FIELD_PRINT(icmp_param_prblm_ignore_payload);
+    NWSEC_SPEC_FIELD_PRINT(icmp_pkt_too_big_ignore_payload);
+    NWSEC_SPEC_FIELD_PRINT(icmp_redirect_ignore_payload);
+    NWSEC_SPEC_FIELD_PRINT(icmp_time_exceed_ignore_payload);
+    NWSEC_SPEC_FIELD_PRINT(icmp_error_drop);
+    NWSEC_SPEC_FIELD_PRINT(icmp_fragments_drop);
+    NWSEC_SPEC_FIELD_PRINT(icmp_large_pkt_drop);
+    NWSEC_SPEC_FIELD_PRINT(icmp_ping_zero_id_drop);
+    NWSEC_SPEC_FIELD_PRINT(icmp_need_frag_suppress);
+    NWSEC_SPEC_FIELD_PRINT(icmp_time_exceed_suppress);
+    NWSEC_SPEC_FIELD_PRINT(icmpv6_large_msg_mtu_small_drop);
+    buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(tcp_non_syn_first_pkt_drop);
     NWSEC_SPEC_FIELD_PRINT(tcp_split_handshake_drop);
     NWSEC_SPEC_FIELD_PRINT(tcp_rsvd_flags_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_mss_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_win_scale_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_sack_perm_action);
-    buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(tcp_urg_ptr_not_set_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_urg_flag_not_set_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_urg_payload_missing_action);
@@ -500,12 +624,20 @@ security_profile_spec_print (SecurityProfileSpec& spec)
     NWSEC_SPEC_FIELD_PRINT(tcp_data_len_gt_mss_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_data_len_gt_win_size_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_ts_option_action);
-    buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_sack_option_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_unexpected_echo_ts_action);
     NWSEC_SPEC_FIELD_PRINT(tcp_ts_not_present_drop);
     NWSEC_SPEC_FIELD_PRINT(tcp_invalid_flags_drop);
     NWSEC_SPEC_FIELD_PRINT(tcp_nonsyn_noack_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_syn_with_data_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_syn_ack_with_data_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_overlapping_segments_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_strip_ts_option);
+    NWSEC_SPEC_FIELD_PRINT(tcp_conn_trk_bypass_window_err);
+    NWSEC_SPEC_FIELD_PRINT(tcp_urg_flag_ptr_clear);
+    NWSEC_SPEC_FIELD_PRINT(tcp_mss);
+    NWSEC_SPEC_FIELD_PRINT(multicast_src_drop);
+    buf.write("\n");
 
     HAL_TRACE_DEBUG(buf.c_str());
     return ret;
