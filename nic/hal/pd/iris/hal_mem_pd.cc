@@ -692,7 +692,7 @@ hal_state_pd::factory(void)
 // Gives slab for a slab id
 // ----------------------------------------------------------------------------
 #define GET_SLAB(slab_name) \
-    if (slab_name && slab_name->get_slab_id() == slab_id) { \
+    if (slab_name && slab_name->slab_id() == slab_id) { \
         return slab_name; \
     }
 
@@ -1302,9 +1302,11 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSECCB_PD:
         g_hal_state_pd->ipseccb_slab()->free(elem);
-    
+        break;
+ 
     case HAL_SLAB_IPSECCB_DECRYPT_PD:
         g_hal_state_pd->ipseccb_decrypt_slab()->free(elem);
+        break;
     
     case HAL_SLAB_CPUCB_PD:
         g_hal_state_pd->cpucb_slab()->free(elem);

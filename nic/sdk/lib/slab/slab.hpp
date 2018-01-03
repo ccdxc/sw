@@ -45,7 +45,15 @@ public:
     uint32_t num_frees(void) const { return num_frees_; }
     uint32_t num_alloc_fails(void) const { return num_alloc_fails_; }
     uint32_t num_blocks(void) const { return num_blocks_; }
-    slab_id_t get_slab_id(void) const { return slab_id_; }
+
+    slab_id_t slab_id(void) const { return slab_id_; }
+    const char *slab_name(void) const { return name_; }
+    uint32_t elem_sz(void) const { return elem_sz_; }
+    uint32_t elems_per_block(void) const { return elems_per_block_; }
+    bool thread_safe(void) const { return thread_safe_; }
+    bool grow_on_demand(void) const { return grow_on_demand_; }
+    //bool delay_delete(void) const { return delay_delete_; }
+    bool zero_on_alloc(void) const { return zero_on_alloc_; }
 
 private:
     // slab private state

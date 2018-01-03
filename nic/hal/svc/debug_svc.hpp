@@ -20,6 +20,8 @@ using debug::MemTrackGetRequest;
 using debug::MemTrackGetRequestMsg;
 using debug::MemTrackGetResponse;
 using debug::MemTrackGetResponseMsg;
+using debug::SlabGetRequestMsg;
+using debug::SlabGetResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -29,6 +31,9 @@ public:
     Status MemTrackGet(ServerContext *context,
                        const MemTrackGetRequestMsg *req,
                        MemTrackGetResponseMsg *rsp) override;
+    Status SlabGet(ServerContext *context,
+                   const SlabGetRequestMsg *req,
+                   SlabGetResponseMsg *rsp) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__

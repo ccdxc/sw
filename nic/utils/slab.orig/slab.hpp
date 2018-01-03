@@ -42,6 +42,12 @@ public:
     friend hal_ret_t hal::free_to_slab(hal_slab_t slab_id, void *elem);
     friend hal_ret_t hal::pd::free_to_slab(hal_slab_t slab_id, void *elem);
     hal_slab_t get_slab_id(void) const { return slab_id_; }
+    const char *get_slab_name(void) const { return name_; }
+    uint32_t elem_sz(void) const { return elem_sz_; }
+    uint32_t elems_per_block(void) const { return elems_per_block_; }
+    bool thread_safe(void) const { return thread_safe_; }
+    bool grow_on_demand(void) const { return grow_on_demand_; }
+    bool zero_on_alloc(void) const { return zero_on_alloc_; }
 
 private:
     hal_spinlock_t    slock_;

@@ -1020,7 +1020,7 @@ hal_mem_db::~hal_mem_db()
 // gives the slab of a slab id
 //----------------------------------------------------------------------------
 #define GET_SLAB(slab_name)                                 \
-    if (slab_name && slab_name->get_slab_id() == slab_id) { \
+    if (slab_name && slab_name->slab_id() == slab_id) { \
         return slab_name;                                   \
     }
 

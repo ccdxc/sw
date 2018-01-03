@@ -10,8 +10,9 @@ namespace hal {
 
 // HAL memory slabs
 typedef enum hal_slab_e {
-    HAL_SLAB_NONE,
-    HAL_SLAB_HANDLE,
+    HAL_SLAB_NONE = 0,
+    HAL_SLAB_PI_MIN,
+    HAL_SLAB_HANDLE = HAL_SLAB_PI_MIN,
     HAL_SLAB_HANDLE_HT_ENTRY,
     HAL_SLAB_HANDLE_LIST_ENTRY,
     HAL_SLAB_HANDLE_ID_HT_ENTRY,
@@ -74,7 +75,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_PI_MAX,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
-    HAL_SLAB_VRF_PD,
+    HAL_SLAB_PD_MIN,
+    HAL_SLAB_VRF_PD = HAL_SLAB_PD_MIN,
     HAL_SLAB_L2SEG_PD,
     HAL_SLAB_MC_ENTRY_PD,
     HAL_SLAB_LIF_PD,

@@ -71,6 +71,7 @@ class arp_trans_t : public trans_t {
 public:
     static ht *arplearn_key_ht(void) { return arplearn_key_ht_; }
     static ht *arplearn_ip_entry_ht(void) { return arplearn_ip_entry_ht_; }
+    static slab *arplearn_slab(void) { return arplearn_slab_; }
 
 private:
     arp_trans_key_t trans_key_;

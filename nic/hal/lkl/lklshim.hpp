@@ -87,6 +87,8 @@ typedef struct lklshim_listen_sockets_t_ {
 /*
  * Extern definitions.
  */
+extern slab *lklshim_flowdb_slab;
+extern slab *lklshim_lsockdb_slab;
 extern ht *lklshim_flow_db;
 extern lklshim_flow_t           *lklshim_flow_by_qid[MAX_PROXY_FLOWS];
 

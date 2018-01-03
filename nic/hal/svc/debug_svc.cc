@@ -120,3 +120,23 @@ Status DebugServiceImpl::MemTrackGet(ServerContext *context,
     }
     return Status::OK;
 }
+
+Status DebugServiceImpl::SlabGet(ServerContext *context,
+                                 const SlabGetRequestMsg *req,
+                                 SlabGetResponseMsg *rsp)
+{
+    uint32_t    i, nreqs = req->request_size();
+
+    HAL_TRACE_DEBUG("Rcvd Slab Get Request");
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        auto request = req->request(i);
+        hal::slab_get_from_req(request, rsp);
+    }
+
+    return Status::OK;
+}

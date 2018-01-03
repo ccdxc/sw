@@ -98,7 +98,7 @@ hal_test_utils_populate (slab_stats_t *stats, slab *slab)
         return;
     }
 
-    stats->slab_id = (hal_slab_t)slab->get_slab_id();
+    stats->slab_id = (hal_slab_t)slab->slab_id();
     stats->num_in_use = slab->num_in_use();
     stats->num_allocs = slab->num_allocs();
     stats->num_frees = slab->num_frees();

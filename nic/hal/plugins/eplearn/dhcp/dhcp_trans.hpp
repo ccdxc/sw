@@ -91,6 +91,8 @@ class dhcp_trans_t : public trans_t  {
 public:public:
     static ht *dhcplearn_key_ht(void) { return dhcplearn_key_ht_; }
     static ht *dhcplearn_ip_entry_ht(void) { return dhcplearn_ip_entry_ht_; }
+    static slab *dhcplearn_slab(void) { return dhcplearn_slab_; }
+
 private:
     dhcp_trans_key_t trans_key_;
     class dhcp_fsm_t;  // forward declaration.

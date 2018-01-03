@@ -7,6 +7,7 @@
 #include "nic/gen/proto/hal/port.grpc.pb.h"
 #include "nic/gen/proto/hal/event.grpc.pb.h"
 #include "nic/gen/proto/hal/system.grpc.pb.h"
+#include "nic/gen/proto/hal/debug.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -52,6 +53,14 @@ using sys::TableStats;
 using sys::TableStatsEntry;
 using types::Empty;
 
+using debug::Debug;
+using debug::SlabGetRequest;
+using debug::SlabGetRequestMsg;
+using debug::SlabGetResponse;
+using debug::SlabGetResponseMsg;
+using debug::SlabSpec;
+using debug::SlabStats;
+
 using event::Event;
 using event::EventRequest;
 using event::EventResponse;
@@ -62,7 +71,8 @@ class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
     l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
-	event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)) {}
+	event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
+    debug_stub_(Debug::NewStub(channel)) {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -235,6 +245,45 @@ public:
                   << rsp_msg.response(0).api_status()
                   << std::endl;
         return -1;
+    }
+
+    int slab_get() {
+       	ClientContext           context;
+        SlabGetRequest          *req;
+        SlabGetRequestMsg       req_msg;
+        SlabGetResponse         rsp;
+        SlabGetResponseMsg      rsp_msg;
+        SlabSpec                spec;
+        SlabStats               stats;
+        Status                  status;
+        int                     rsp_count, i;
+
+        req = req_msg.add_request();
+        req->set_id(5);
+
+        std::cout << "Slab Get\n\n";
+        status = debug_stub_->SlabGet(&context, req_msg, &rsp_msg);
+
+        if (status.ok()) {
+            rsp_count = rsp_msg.response_size();
+            for (i = 0; i < rsp_count; i ++) {
+                rsp = rsp_msg.response(i);
+                if ((rsp.api_status() != types::API_STATUS_OK) || !rsp.has_spec() || !rsp.has_stats()) {
+                    continue;
+                }
+                spec = rsp.spec();
+                std::cout << "Slab Name" << spec.name() << "\n";
+
+                stats = rsp.stats();
+                std::cout << "Num elements in use: " << stats.num_elements_in_use() << "\n";
+                std::cout << "Num allocs: " << stats.num_allocs() << "\n";
+                std::cout << "Num frees: " << stats.num_frees() << "\n";
+                std::cout << "Num alloc errors: " << stats.num_alloc_errors() << "\n";
+                std::cout << "Num blocks: " << stats.num_blocks() << "\n\n";
+            }
+        }
+
+        return 0;
     }
 
     int system_get() {
@@ -479,6 +528,7 @@ private:
     std::unique_ptr<Port::Stub> port_stub_;
     std::unique_ptr<Event::Stub> event_stub_;
 	std::unique_ptr<System::Stub> system_stub_;
+	std::unique_ptr<Debug::Stub> debug_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
@@ -683,10 +733,13 @@ main (int argc, char** argv)
     // create L2 segment
     assert(hclient.l2segment_create(1, 1, 1) != 0);
     hclient.vrf_delete_by_id(1);
-#endif
 
     // Get system statistics
     hclient.system_get();
+#endif
+
+    // Get slab statistics
+    hclient.slab_get();
 
     // subscribe and listen to HAL events
     hclient.event_test();
