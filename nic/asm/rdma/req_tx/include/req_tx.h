@@ -121,11 +121,9 @@ struct req_tx_phv_t {
     dma_cmd3 : 128;
 
     /* flit 6 */
-    rsvd: 8;                                        //  1B  free
     rrq_p_index: 16;                                //  2B
-    pad:  24;                                       //  3B  free
     struct rdma_immeth_t immeth;                    //  4B
-    struct p4plus_to_p4_header_t p4plus_to_p4;      // 14B
+    struct p4plus_to_p4_header_t p4plus_to_p4;      // 18B
 
     union {                                         // 28B
         struct rdma_reth_t reth;                        // 16B

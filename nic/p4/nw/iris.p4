@@ -299,11 +299,9 @@ header_type scratch_metadata_t {
 @pragma deparser_variable_length_header
 @pragma dont_trim
 metadata capri_deparser_len_t capri_deparser_len;
-#ifdef GSO_CSUM
 @pragma gso_csum_header
 @pragma dont_trim
 metadata capri_gso_csum_phv_loc_t   capri_gso_csum;
-#endif
 
 @pragma gso_csum_header
 @pragma dont_trim

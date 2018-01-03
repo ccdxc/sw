@@ -14,8 +14,8 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     
     // Intrinsic
     phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, 0
-    phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, 16
+    phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
+    phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
 
     // App Header 
     phvwri p.ipsec_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT

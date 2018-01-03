@@ -75,6 +75,10 @@ typedef struct p4plus_to_p4_header_s {
     uint16_t    ip_id_delta;
     uint32_t    tcp_seq_delta;
     uint16_t    vlan_tag;
+    uint32_t    gso_start:14;
+    uint32_t    gso_offset:14;
+    uint32_t    byte_align_pad:3;
+    uint32_t    gso_valid:1;
 } __attribute__ ((__packed__)) p4plus_to_p4_header_t;
     
 typedef struct cpu_to_p4plus_header_s {

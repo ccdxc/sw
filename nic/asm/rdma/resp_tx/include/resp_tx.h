@@ -56,8 +56,8 @@ struct resp_tx_phv_t {
     //***NOTE: Keep 4 bytes after pad with in this flit, so that can be copied as ICRC data into phv
     //ICRC data does not need to be given as zero as Capri overtites icrc after computation
     icrc     :  32;                              //  4B
-    rsvd2    : 344;                              // 43B
-    struct p4plus_to_p4_header_t p4plus_to_p4;   // 14B
+    rsvd2    : 312;                              // 39B
+    struct p4plus_to_p4_header_t p4plus_to_p4;   // 18B
 
     /* flit 6 */
     rsvd1   : 16;                                //  2B

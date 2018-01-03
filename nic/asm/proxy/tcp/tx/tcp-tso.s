@@ -59,7 +59,7 @@ dma_cmd_intrinsic:
 
     CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport,
                                 p4_intr_global_tm_instance_type,
-                                p4_txdma_intr_qid, tcp_app_header_vlan_tag)
+                                p4_txdma_intr_qid, tcp_app_header_gso_valid)
 
 dma_cmd_hdr:
     add             r5, k.common_phv_qstate_addr, TCP_TCB_HEADER_TEMPLATE_OFFSET

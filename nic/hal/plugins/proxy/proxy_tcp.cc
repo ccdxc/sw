@@ -536,8 +536,8 @@ tcp_transmit_pkt(unsigned char* pkt,
     if (gl_ctx) {
         HAL_TRACE_DEBUG("tcp-proxy: txpkt dir={} src_lif={} hw_vlan_id={}", dir, src_lif, hw_vlan_id);
         if (true){//is_connect_req) {
-            hal::pd::cpu_to_p4plus_header_t cpu_header;
-            hal::pd::p4plus_to_p4_header_t  p4plus_header;
+            hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
+            hal::pd::p4plus_to_p4_header_t  p4plus_header = {0};
 
             p4plus_header.flags = 0;
             if (dir == FLOW_DIR_FROM_UPLINK) {
@@ -546,7 +546,6 @@ tcp_transmit_pkt(unsigned char* pkt,
                     cpu_header.hw_vlan_id = hw_vlan_id;
                     cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
                     p4plus_header.flags =  P4PLUS_TO_P4_FLAGS_LKP_INST;
-                    
                 } else {
                     cpu_header.src_lif = src_lif;
                     cpu_header.hw_vlan_id = 0;

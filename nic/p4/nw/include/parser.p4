@@ -419,16 +419,12 @@ parser parse_vm_bounce {
 parser parse_txdma {
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
-#ifdef GSO_CSUM
     set_metadata(ohi.gso_start, p4plus_to_p4.gso_start + 0);
     set_metadata(ohi.gso_offset, p4plus_to_p4.gso_offset + 0);
     return select(p4plus_to_p4.gso_valid) {
         0x1:        parse_gso;
         default:    parse_ethernet;
     }
-#else
-    return parse_ethernet;
-#endif
 }
 
 @pragma generic_checksum_start capri_gso_csum.gso_checksum
@@ -1840,8 +1836,6 @@ calculated_field udp_opt_ocs.chksum {
     update udp_opt_checksum;
 }
 
-#ifdef GSO_CSUM
-
 field_list gso_checksum_list {
     p4plus_to_p4.gso_start; // Gso start should be first field in the input list.
                             // 'gso_start' should also be included in write only ohi list.
@@ -1861,9 +1855,6 @@ field_list_calculation gso_checksum {
 calculated_field capri_gso_csum.gso_checksum {
     update gso_checksum;
 }
-
-#endif
-
 
 parser parse_inner_udp {
     extract(inner_udp);

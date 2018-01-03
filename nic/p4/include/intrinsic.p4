@@ -272,14 +272,12 @@ header_type p4plus_to_p4_header_t {
         ip_id_delta         : 16;
         tcp_seq_delta       : 32;
         vlan_tag            : 16;
-#ifdef GSO_CSUM
         gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs
                                   // that appear before L2 hdr
         gso_offset          : 14; // should be adjusted to include size of all intrinsic hdrs
                                   // that appear before L2 hdr
         byte_align_pad      : 3;
         gso_valid           : 1;
-#endif
     }
 }
 

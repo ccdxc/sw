@@ -79,17 +79,21 @@ header_type ipsec_int_pad_t {
 header_type p4plus_to_p4_ipsec_header_t {                                                                                                              
     fields {
         p4plus_app_id       : 4;
-        table0_valid : 1;
-        table1_valid : 1;
-        table2_valid : 1;
-        table3_valid : 1;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
         flags               : 8;
         udp_opt_bytes       : 8;
         rsvd                : 24;
         ip_id_delta         : 16;
         tcp_seq_delta       : 32;
         vlan_tag            : 16;
-        ipsec_pad1 : 152;
+        gso_start           : 14;
+        gso_offset          : 14;
+        byte_align_pad      : 3;
+        gso_valid           : 1;
+        ipsec_pad1          : 120;
     }
 }
 

@@ -7,7 +7,6 @@
 #define GLOBAL_DATA_WIDTH 128
 #define TO_STAGE_DATA_WIDTH 128
 
-//14B
 struct p4plus_to_p4_header_t {
     p4plus_app_id      : 4;
     pad                : 4;
@@ -17,6 +16,10 @@ struct p4plus_to_p4_header_t {
     ip_id_delta        : 16;
     tcp_seq_delta      : 32;
     vlan_tag           : 16;
+    gso_start           : 14;
+    gso_offset          : 14;
+    byte_align_pad      : 3;
+    gso_valid           : 1;
 };
 
 #define P4PLUS_TO_P4_APP_ID     p.p4plus_to_p4.p4plus_app_id

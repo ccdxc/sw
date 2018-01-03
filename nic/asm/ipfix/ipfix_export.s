@@ -31,7 +31,7 @@ ipfix_export_packet:
     phvwr       p.phv2pkt_cmd1_dma_cmd_phv_start_addr1, \
                     CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid)
     phvwr       p.phv2pkt_cmd1_dma_cmd_phv_end_addr1, \
-                    CAPRI_PHV_END_OFFSET(ipfix_app_header_vlan_tag)
+                    CAPRI_PHV_END_OFFSET(ipfix_app_header_gso_valid)
     phvwr       p.phv2pkt_cmd1_dma_cmd_cmdsize, 1
 
     // memory to packet
