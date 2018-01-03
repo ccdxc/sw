@@ -1936,6 +1936,7 @@ class Checksum:
 
         #Generate ASIC Config
         csum_hdr_index = 0
+        _csum_obj = None
         for _, is_phdr, _calfldobj in self.dpr_hw_csum_obj:
             if not is_phdr:
                 _csum_obj = _calfldobj.DeParserCsumObjGet()
@@ -1961,6 +1962,16 @@ class Checksum:
                                      _phdr_csum_obj.PhdrProfileNumGet()
                 _phdr_profile_obj.ConfigGenerate(dpp_json['cap_dpp']\
                                              ['registers'][phdr_cfg_name], _calfldobj.phdr_fields)
+
+        #Deparser expects unused Csum Hdr Slots to be programmed with start fld
+        #in increasing order.
+        if _csum_obj:
+            last_start_fld = _csum_obj.HdrFldStartGet()
+            for unfilled_index in  range(csum_hdr_index, deparser.be.hw_model['deparser']['max_csum_hdrs']):
+                csum_hdr_cfg_name = 'cap_dppcsum_csr_cfg_csum_hdrs[%d]' % unfilled_index
+                dpp_json['cap_dpp']['registers'][csum_hdr_cfg_name]['hdrfld_start']['value'] = str(last_start_fld + 1)
+                dpp_json['cap_dpp']['registers'][csum_hdr_cfg_name]['_modified'] = True
+                last_start_fld += 1
 
         #Json is dumped in the caller to cfg-file.
 

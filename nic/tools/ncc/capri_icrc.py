@@ -1847,8 +1847,18 @@ class Icrc:
 
             icrc_hdr_index += 1
 
-        #Json is dumped in the caller to cfg-file.
+        #Deparser expects unused icrc Hdr Slots to be programmed with start fld
+        #in increasing order.
+        if len(self.dpr_hw_icrc_obj):
+            last_start_fld = _calfldobj.HdrFldStartGet()
+            for unfilled_index in  range(icrc_hdr_index, deparser.be.hw_model['deparser']['max_crc_hdrs']):
+                icrc_hdr_cfg_name = 'cap_dppcsum_csr_cfg_crc_hdrs[%d]' % unfilled_index
+                dpp_json['cap_dpp']['registers'][icrc_hdr_cfg_name]['hdrfld_start']['value'] = \
+                                                                                  str(last_start_fld + 1)
+                dpp_json['cap_dpp']['registers'][icrc_hdr_cfg_name]['_modified'] = True
+                last_start_fld += 1
 
+        #Json is dumped in the caller to cfg-file.
 
     def IcrcLogicalOutputCreate(self):
         out_dir = self.be.args.gen_dir + '/%s/logs' % (self.be.prog_name)

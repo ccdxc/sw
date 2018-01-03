@@ -109,6 +109,8 @@ capri_model = {
         'len_phv_start' : 528,  #Has to be 16b slots in first flit phv
         'max_csum_engines' : 5,
         'dpa_start_hvb_in_phv' : 511,
+        'max_crc_hdrs' : 16,
+        'max_csum_hdrs' : 24,
         'hdrfld_info_start' : 4 #First four hdr fld can be used for special
                                 #purpose to rewrite phv in deparser. Use case
                                 #is GSO csum
