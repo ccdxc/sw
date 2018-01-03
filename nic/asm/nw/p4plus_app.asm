@@ -124,14 +124,14 @@ p4plus_app_cpu_common:
   phvwr       p.p4_to_p4plus_cpu_packet_len, r2
 
   bal         r7, f_p4plus_cpu_pkt
-  phvwr       p.p4_to_p4plus_cpu_valid, TRUE
-  phvwr       p.p4_to_p4plus_cpu_ip_valid, TRUE
-  phvwr       p.capri_rxdma_intrinsic_valid, TRUE
-  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
+  .assert(offsetof(p, p4_to_p4plus_cpu_ip_valid) - offsetof(p, capri_rxdma_intrinsic_valid) == 2)
+  phvwr       p.{p4_to_p4plus_cpu_ip_valid, p4_to_p4plus_cpu_valid, \
+                 capri_rxdma_intrinsic_valid}, 0x7
+  phvwr.e     p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_CPU_HDR_SZ)
-  phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
-  phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
+  phvwrpair   p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
+                p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
 
 .align
 p4plus_app_ipsec:
@@ -241,9 +241,7 @@ f_p4plus_cpu_pkt:
   phvwrpair   p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
                   k.control_metadata_lkp_flags_egress[5:0], \
               p.p4_to_p4plus_cpu_pkt_src_tm_iq[4:0], k.control_metadata_src_tm_iq
-  sub         r1, r0, 1
-  phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_l3_offset}, r1
-  phvwr       p.{p4_to_p4plus_cpu_pkt_l4_offset...p4_to_p4plus_cpu_pkt_payload_offset}, r1
+  phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_payload_offset}, -1
   // r1 : offset
   // r2 : flags
   add         r1, r0, r6
@@ -286,7 +284,7 @@ lb_cpu_pkt_tcp:
   phvwr       p.p4_to_p4plus_cpu_pkt_l4_offset, r1.hx
   add         r1, r1, k.tcp_dataOffset, 2
   phvwr       p.p4_to_p4plus_cpu_pkt_payload_offset, r1.hx
-  sle         c3, k.tcp_dataOffset, 5 
+  sle         c3, k.tcp_dataOffset, 5
   or.!c3      r2, r2, CPU_FLAGS_TCP_OPTIONS_PRESENT
   phvwr       p.p4_to_p4plus_cpu_pkt_flags, r2
   add         r2, r0, r0
