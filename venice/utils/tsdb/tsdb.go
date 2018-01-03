@@ -322,8 +322,8 @@ func LogField(kind string, objectMeta api.ObjectMeta, fieldName string, value in
 		point := Point{Tags: tblObj.Tags(), Fields: make(map[string]interface{})}
 		point.Fields[fieldName] = value
 		tblObj.AddPoints([]Point{point})
+		tblObj.Delete()
 	}
-	tblObj.Delete()
 }
 
 // global runtime information maintained on per process basis
