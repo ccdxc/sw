@@ -21,13 +21,32 @@
 #define HAL_TM_MAX_DSCP_VALS    64
 
 #define HAL_TM_INVALID_Q        -1
-// Offset at which the uplink queues start at P4-ig
-#define HAL_TM_P4_UPLINK_IQ_OFFSET  16
-// Offset at which the oqs for rxdma only classes start
-#define HAL_TM_RXDMA_OQ_OFFSET      16
 
-#define HAL_TM_P4_SPAN_QUEUE        30
-#define HAL_TM_P4_CPU_COPY_QUEUE    31
+// There are 32 queues at both P4-ig and P4-eg. The idea is to 
+// maintain the same queue when pkt goes through the pipeline in P4-ig and
+// P4-eg. However, hardware imposes few restrictions on the queue usage:
+//      - In the P4-ig port, the uplink traffic can use only 24-31 oqs
+//      - In the P4-eg port, 30 and 31 oqs are reserved for SPAN and CPU-COPY
+//      - In both the ports one oq is needed for recirc cases.
+//
+// To accomodate these, the queue allocation is done as follows:
+//      - Traffic from TxDMA will enter P4-ig with OQs 0-15, and carry over the
+//        same while going to P4-eg
+//      - Traffic from Uplink will enter P4-ig with OQs 24-31 (HAL_TM_P4_UPLINK_IQ_OFFSET)
+//        and get remapped to OQs 16-23 by the qos-table
+//        (HAL_TM_P4_UPLINK_EGRESS_OQ_OFFSET)
+//
+// For recirc, oq 31 (TM_P4_IG_RECIRC_QUEUE) is used in P4-ig and oq 29 is used in P4-eg
+//
+// Offset at which the uplink queues start at P4-ig
+#define HAL_TM_P4_UPLINK_IQ_OFFSET          24 
+// Offset at which the uplink queues start at P4-eg
+#define HAL_TM_P4_UPLINK_EGRESS_OQ_OFFSET   16
+// Offset at which the oqs for rxdma only classes start
+#define HAL_TM_RXDMA_OQ_OFFSET              16
+
+#define HAL_TM_P4_SPAN_QUEUE                30
+#define HAL_TM_P4_CPU_COPY_QUEUE            31
 
 typedef uint32_t tm_port_t;
 typedef int32_t tm_q_t;

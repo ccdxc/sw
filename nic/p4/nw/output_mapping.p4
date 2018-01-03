@@ -1,10 +1,10 @@
 /*****************************************************************************/
 /* Output mapping                                                            */
 /*****************************************************************************/
-action redirect_to_remote(tunnel_index, tm_oport, egress_mirror_en, tm_oqueue) {
+action redirect_to_remote(tunnel_index, tm_oport, egress_mirror_en, tm_oq) {
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_index);
     modify_field(capri_intrinsic.tm_oport, tm_oport);
-    modify_field(capri_intrinsic.tm_oq, tm_oqueue);
+    modify_field(capri_intrinsic.tm_oq, tm_oq);
 
     if (egress_mirror_en == TRUE) {
         modify_field(capri_intrinsic.tm_span_session,
@@ -16,11 +16,11 @@ action redirect_to_remote(tunnel_index, tm_oport, egress_mirror_en, tm_oqueue) {
 }
 
 action redirect_to_cpu(dst_lif, egress_mirror_en, 
-                       control_tm_oqueue, cpu_copy_tm_oqueue) {
+                       control_tm_oq, cpu_copy_tm_oq) {
     if (control_metadata.cpu_copy == TRUE) {
-        modify_field(capri_intrinsic.tm_oq, cpu_copy_tm_oqueue);
+        modify_field(capri_intrinsic.tm_oq, cpu_copy_tm_oq);
     } else {
-        modify_field(capri_intrinsic.tm_oq, control_tm_oqueue);
+        modify_field(capri_intrinsic.tm_oq, control_tm_oq);
     }
     modify_field(control_metadata.to_cpu, TRUE);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
@@ -44,7 +44,7 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     if (nports == 1) {
         modify_field(capri_intrinsic.tm_oport, egress_port1);
         // Set the Output queue to use
-        modify_field(capri_intrinsic.tm_oq, control_metadata.egress_tm_oqueue);
+        modify_field(capri_intrinsic.tm_oq, control_metadata.dest_tm_oq);
     } else {
         // use entropy hash to choose the destination port
         modify_field(scratch_metadata.entropy_hash,

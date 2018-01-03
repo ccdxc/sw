@@ -23,7 +23,7 @@ set_tm_oport:
   seq.c1      c1, k.control_metadata_span_copy, FALSE 
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
   phvwrpair   p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif, \
-                p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue[4:0]
+                p.capri_intrinsic_tm_oq, k.control_metadata_dest_tm_oq[4:0]
   phvwr       p.control_metadata_rdma_enabled, d.u.set_tm_oport_d.rdma_enabled
   phvwr       p.control_metadata_p4plus_app_id, d.u.set_tm_oport_d.p4plus_app_id
 
@@ -49,8 +49,8 @@ set_tm_oport_common:
 .align
 redirect_to_cpu:
   seq         c1, k.control_metadata_cpu_copy, TRUE
-  phvwr.c1    p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.cpu_copy_tm_oqueue
-  phvwr.!c1   p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.control_tm_oqueue
+  phvwr.c1    p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.cpu_copy_tm_oq
+  phvwr.!c1   p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.control_tm_oq
   phvwr       p.control_metadata_to_cpu, TRUE
   seq         c1, d.u.redirect_to_cpu_d.egress_mirror_en, TRUE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
@@ -64,5 +64,5 @@ redirect_to_remote:
   seq         c1, d.u.redirect_to_remote_d.egress_mirror_en, TRUE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
   phvwr       p.capri_intrinsic_tm_oport, d.u.redirect_to_remote_d.tm_oport
-  phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_remote_d.tm_oqueue
+  phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_remote_d.tm_oq
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.redirect_to_remote_d.tunnel_index

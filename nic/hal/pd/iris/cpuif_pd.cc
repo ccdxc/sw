@@ -244,8 +244,8 @@ pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
     om_cpu.dst_lif = pd_lif->hw_lif_id; // 1023 
     // TODO: Fix this
     om_cpu.egress_mirror_en = 0;
-    om_cpu.control_tm_oqueue = 0;
-    om_cpu.cpu_copy_tm_oqueue = 0;
+    om_cpu.control_tm_oq = 0;
+    om_cpu.cpu_copy_tm_oq = 0;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);

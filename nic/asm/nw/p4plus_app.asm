@@ -240,7 +240,7 @@ f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.{flow_lkp_metadata_lkp_vrf}.hx
   phvwrpair   p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
                   k.control_metadata_lkp_flags_egress[5:0], \
-              p.p4_to_p4plus_cpu_pkt_src_tm_iq[4:0], k.capri_intrinsic_tm_iq
+              p.p4_to_p4plus_cpu_pkt_src_tm_iq[4:0], k.control_metadata_src_tm_iq
   sub         r1, r0, 1
   phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_l3_offset}, r1
   phvwr       p.{p4_to_p4plus_cpu_pkt_l4_offset...p4_to_p4plus_cpu_pkt_payload_offset}, r1

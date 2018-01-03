@@ -38,8 +38,9 @@ struct pd_qos_class_s {
     tm_q_t           uplink_iq;
     tm_q_t           txdma_iq[HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS];
     tm_q_t           p4_q[HAL_PD_QOS_NUM_IQ_TYPES];
-    pd_qos_oq_type_e oq_type;
-    tm_q_t           oq;
+    tm_q_t           p4_eg_q[HAL_PD_QOS_NUM_IQ_TYPES];
+    pd_qos_oq_type_e dest_oq_type;
+    tm_q_t           dest_oq;
     bool             pcie_oq; // indicates if the rxdma oq is towards pcie/hbm
     uint32_t         cells_per_mtu;
 
@@ -76,10 +77,13 @@ qos_class_pd_init (pd_qos_class_t *qos_class)
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_q); i++) {
         qos_class->p4_q[i] = HAL_TM_INVALID_Q;
     }
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_eg_q); i++) {
+        qos_class->p4_eg_q[i] = HAL_TM_INVALID_Q;
+    }
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->txdma_iq); i++) {
         qos_class->txdma_iq[i] = HAL_TM_INVALID_Q;
     }
-    qos_class->oq = HAL_TM_INVALID_Q;
+    qos_class->dest_oq = HAL_TM_INVALID_Q;
 
     return qos_class;
 }

@@ -306,7 +306,7 @@ action f_p4plus_cpu_pkt(offset) {
                  control_metadata.lkp_flags_egress);
     modify_field(p4_to_p4plus_cpu_pkt.lkp_type,
                  control_metadata.lkp_flags_egress);
-    modify_field(p4_to_p4plus_cpu_pkt.src_tm_iq, capri_intrinsic.tm_iq);
+    modify_field(p4_to_p4plus_cpu_pkt.src_tm_iq, control_metadata.src_tm_iq);
 
     modify_field(p4_to_p4plus_cpu_pkt.l2_offset, 0xFFFF);
     modify_field(p4_to_p4plus_cpu_pkt.l3_offset, 0xFFFF);

@@ -75,7 +75,8 @@ header_type control_metadata_t {
         qtype                          : 8;
         tm_iport                       : 4;
         egress_mirror_session_id       : 8;
-        egress_tm_oqueue               : 5;
+        dest_tm_oq                     : 5;
+        src_tm_iq                      : 5;                                 
         normalization_cpu_reason       : 8;
         ingress_bypass                 : 1;
         egress_bypass                  : 1;

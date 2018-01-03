@@ -263,6 +263,14 @@ capri_tm_uplink_input_map_update (tm_port_t port,
     cpp_int oq_map_val = 0;
     cpp_int use_ip = 0;
 
+    if ((imap->p4_oq < (signed)HAL_TM_P4_UPLINK_IQ_OFFSET) ||
+        (imap->p4_oq >= (signed)tm_get_num_iqs_for_port_type(TM_PORT_TYPE_P4))) {
+        HAL_TRACE_ERR("CAPRI-TM::{}:{} Invalid P4 Oq {} for uplink port {}",
+                      __func__, __LINE__,
+                      imap->p4_oq, port);
+        return HAL_RET_INVALID_ARG;
+    }
+
     switch(port) {
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]

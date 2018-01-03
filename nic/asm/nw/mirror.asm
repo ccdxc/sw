@@ -19,7 +19,7 @@ local_span:
   phvwr       p.tunnel_metadata_tunnel_originate, FALSE
   bne         r1, r0, span_truncation
   phvwrpair   p.rewrite_metadata_tunnel_rewrite_index, 0, \
-              p.control_metadata_egress_tm_oqueue[4:0], d.u.local_span_d.span_tm_oqueue
+              p.control_metadata_dest_tm_oq[4:0], d.u.local_span_d.span_tm_oq
   phvwr.e     p.capri_intrinsic_tm_span_session, 0
   nop
 
@@ -30,8 +30,8 @@ remote_span:
   phvwr       p.tunnel_metadata_tunnel_originate, TRUE
   phvwrpair   p.rewrite_metadata_tunnel_rewrite_index[9:0], \
                 d.u.remote_span_d.tunnel_rewrite_index, \
-              p.control_metadata_egress_tm_oqueue[4:0], \
-                d.u.remote_span_d.span_tm_oqueue
+              p.control_metadata_dest_tm_oq[4:0], \
+                d.u.remote_span_d.span_tm_oq
   bne         r1, r0, span_truncation
   phvwr       p.rewrite_metadata_tunnel_vnid, d.u.remote_span_d.vlan
   phvwr.e     p.capri_intrinsic_tm_span_session, 0
@@ -45,8 +45,8 @@ erspan_mirror:
   bne         r1, r0, span_truncation
   phvwrpair   p.rewrite_metadata_tunnel_rewrite_index[9:0], \
                 d.u.erspan_mirror_d.tunnel_rewrite_index, \
-              p.control_metadata_egress_tm_oqueue[4:0], \
-                d.u.erspan_mirror_d.span_tm_oqueue
+              p.control_metadata_dest_tm_oq[4:0], \
+                d.u.erspan_mirror_d.span_tm_oq
   phvwr.e     p.capri_intrinsic_tm_span_session, 0
   nop
 

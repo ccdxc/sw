@@ -7,6 +7,7 @@ action set_replica_rewrites() {
                  tunnel_metadata.tunnel_originate);
     modify_field(tunnel_metadata.tunnel_terminate_egress,
                  tunnel_metadata.tunnel_terminate);
+    modify_field(control_metadata.src_tm_iq, capri_intrinsic.tm_iq);
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
 
     if ((capri_intrinsic.tm_instance_type == TM_INSTANCE_TYPE_CPU) or

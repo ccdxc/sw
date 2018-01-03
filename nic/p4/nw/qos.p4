@@ -13,7 +13,7 @@ header_type qos_metadata_t {
 }
 metadata qos_metadata_t qos_metadata;
 
-action qos(egress_tm_oqueue, cos_en, cos, dscp_en, dscp) {
+action qos(egress_tm_oq, dest_tm_oq, cos_en, cos, dscp_en, dscp) {
     /* copy the oq to iq, needed by PBC */
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
 
@@ -24,7 +24,8 @@ action qos(egress_tm_oqueue, cos_en, cos, dscp_en, dscp) {
     modify_field(qos_metadata.dscp, dscp);
 
     /* Output queue selection */
-    modify_field(control_metadata.egress_tm_oqueue, egress_tm_oqueue);
+    modify_field(capri_intrinsic.tm_oq, egress_tm_oq);
+    modify_field(control_metadata.dest_tm_oq, dest_tm_oq);
 
     /* promote size of data fields to multiple of bytes */
     modify_field(scratch_metadata.size8, cos_en);

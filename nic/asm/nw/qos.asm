@@ -10,7 +10,8 @@ struct phv_  p;
 %%
 qos:
   /* copy the oq to iq, needed by PBC */
-  phvwr     p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
+  phvwrpair p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq, \
+            p.capri_intrinsic_tm_oq, d.qos_d.egress_tm_oq
 
   /* qos info */
   ASSERT_PHVWR(p, qos_metadata_cos_en, qos_metadata_dscp,
@@ -25,5 +26,4 @@ qos:
                qos_d.dscp}
 
   /* output queue selection */
-  phvwr     p.control_metadata_egress_tm_oqueue, d.qos_d.egress_tm_oqueue
-
+  phvwr     p.control_metadata_dest_tm_oq, d.qos_d.dest_tm_oq

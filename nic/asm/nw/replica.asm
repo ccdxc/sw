@@ -13,6 +13,7 @@ set_replica_rewrites:
                 k.tunnel_metadata_tunnel_terminate[0], \
               p.tunnel_metadata_tunnel_originate_egress, \
                 k.tunnel_metadata_tunnel_originate[0]
+  phvwr       p.control_metadata_src_tm_iq, k.capri_intrinsic_tm_iq
   phvwr       p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
   seq         c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_CPU
   seq.!c1     c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_CPU_AND_DROP
