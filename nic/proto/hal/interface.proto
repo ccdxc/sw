@@ -131,7 +131,7 @@ message LifSpec {
   types.ObjectMeta           meta                        = 1;    // object meta
   // key_or_handle is LIF's key or handle
   kh.LifKeyHandle            key_or_handle               = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.InterfaceKeyHandle      pinned_uplink_if_key_handle = 3 [(gogoproto.jsontag) = "ref", (gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}" ];
+  kh.InterfaceKeyHandle      pinned_uplink_if_key_handle = 3 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}" ];
   IfStatus                   admin_status                = 4;    // admin status of the interface
   repeated LifQStateMapEntry lif_qstate_map              = 5;    // LIF -> Qstate map.
   bool                       vlan_strip_en               = 6;    // LIF vlan strip enable
@@ -171,7 +171,7 @@ message LifRdmaData {
 
 // LifResponse response to one LifSpec
 message LifResponse {
-  types.ApiStatus     api_status   = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus     api_status   = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   LifStatus           status       = 2;    // operational status
   uint64              hw_lif_id    = 3;    // Hardware Lif Id
   repeated LifQState  qstate       = 4;    // Qstate Address info
@@ -264,7 +264,7 @@ message LifDeleteRequestMsg {
 
 // LifDeleteResponse is response to LIF delete request
 message LifDeleteResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
 }
 
 // LifDeleteResponseMsg is batched response to LifDeleteRequestMsg
@@ -329,7 +329,7 @@ message LifGetRequestMsg {
 
 // LifGetResponse captures all the information about a LIF
 message LifGetResponse {
-  types.ApiStatus           api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus           api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   LifSpec                   spec       = 2;    // LIF configuration
   LifStatus                 status     = 3;    // LIF operational status
   LifStats                  stats      = 4;    // LIF statistics
@@ -388,18 +388,18 @@ message EnicInfo {
     uint64                l2segment_id         = 1; // user (external) l2segment
     fixed64               mac_address          = 2; // MAC address of the endpoint
     uint32                encap_vlan_id        = 3; // Encap Vlan
-    kh.L2SegmentKeyHandle l2segment_key_handle = 4 [(gogoproto.jsontag) = "ref"];
+    kh.L2SegmentKeyHandle l2segment_key_handle = 4 [(gogoproto.moretags) = "venice:ref"];
 }
 
 message EnicClassicInfo {
-    repeated kh.L2SegmentKeyHandle l2segment_key_handle = 1 [(gogoproto.jsontag) = "l2seg_ref"]; // classic: l2segs allowed on the enic
+    repeated kh.L2SegmentKeyHandle l2segment_key_handle = 1 [(gogoproto.moretags) = "venice:l2seg_ref"]; // classic: l2segs allowed on the enic
     uint64                native_l2segment_handle       = 2; // classic: native l2seg on the enic
 }
 
 // mandatory attributes expected if interface type is IF_TYPE_ENIC
 message IfEnicInfo {
   IfEnicType            enic_type               = 1; // type of enic interface
-  kh.LifKeyHandle       lif_key_or_handle       = 2 [(gogoproto.jsontag) = "ref"]; // LIF identifier for this interface
+  kh.LifKeyHandle       lif_key_or_handle       = 2 [(gogoproto.moretags) = "venice:ref"]; // LIF identifier for this interface
   uint64                pinned_uplink_if_handle = 3; // uplink this enic is pinned to
   oneof enic_type_info {
       EnicInfo          enic_info               = 4;
@@ -416,7 +416,7 @@ message IfUplinkInfo {
 message IfUplinkPCInfo {
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
   uint64                         native_l2segment_id   = 1;    // L2 segment to map the packets to, if they are untagged
-  repeated kh.InterfaceKeyHandle member_if_key_handle  = 2 [(gogoproto.jsontag)="ref"];
+  repeated kh.InterfaceKeyHandle member_if_key_handle  = 2 [(gogoproto.jsontag) = "venice:ref"];
 }
 
 //------------------------------------------------------------------------------
@@ -447,24 +447,25 @@ message IfTunnelInfo {
     IfTunnelVxlanInfo   vxlan_info      = 2;
     IfTunnelGREInfo     gre_info        = 3;
   }
-  kh.VrfKeyHandle       vrf_key_handle  = 4 [(gogoproto.jsontag) = "vrf_ref"];
+  kh.VrfKeyHandle       vrf_key_handle  = 4 [(gogoproto.moretags) = "venice:vrf_ref"];
 }
 
 // attributes for CPU If
 message IfCPUInfo {
-  kh.LifKeyHandle lif_key_or_handle   = 2 [(gogoproto.jsontag) = "ref"];    // LIF identifier for this interface
+  kh.LifKeyHandle lif_key_or_handle   = 2 [(gogoproto.moretags) = "venice:ref"];    // LIF identifier for this interface
 }
+
 // InterfaceSpec is used to add or update of an interface
 message InterfaceSpec {
   types.ObjectMeta   meta              = 1;     // object meta
-  kh.InterfaceKeyHandle key_or_handle  = 2  [(gogoproto.jsontag) = "key"];     // interface being created/updated
+  kh.InterfaceKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];     // interface being created/updated
   IfType             type              = 4;     // type of interface
   IfStatus           admin_status      = 5;     // admin status of the interface
   oneof if_info {
-    IfEnicInfo       if_enic_info      = 6  [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
-    IfUplinkInfo     if_uplink_info    = 7  [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
-    IfUplinkPCInfo   if_uplink_pc_info = 8  [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINKPC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
-    IfTunnelInfo     if_tunnel_info    = 9  [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
+    IfEnicInfo       if_enic_info      = 6 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
+    IfUplinkInfo     if_uplink_info    = 7 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
+    IfUplinkPCInfo   if_uplink_pc_info = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK_PC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+    IfTunnelInfo     if_tunnel_info    = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
     IfCPUInfo        if_cpu_info       = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton 
   }
 }
@@ -483,7 +484,7 @@ message InterfaceStatus {
 
 // InterfaceResponse is response to one InterfaceSpec
 message InterfaceResponse {
-  types.ApiStatus    api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus    api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   InterfaceStatus    status      = 2;    // operational status
 }
 
@@ -495,7 +496,7 @@ message InterfaceResponseMsg {
 // InterfaceDeleteRequest is used to delete a interface object
 message InterfaceDeleteRequest {
   types.ObjectMeta      meta             = 1;    // object meta
-  kh.InterfaceKeyHandle    key_or_handle = 2 [(gogoproto.jsontag) = "key"];    // interface being deleted
+  kh.InterfaceKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];    // interface being deleted
 }
 
 // InterfaceDeleteRequestMsg is used to delete a batch of interfaces
@@ -505,7 +506,7 @@ message InterfaceDeleteRequestMsg {
 
 // InterfaceDeleteResponse is batched response to InterfaceDeleteRequest
 message InterfaceDeleteResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];      // API status code 
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];      // API status code 
 }
 
 // InterfaceDeleteResponseMsg is batched response to InterfaceDeleteRequestMsg
@@ -524,7 +525,7 @@ message InterfaceStats {
 // InterfaceGetRequest is used to get information about a interface
 message InterfaceGetRequest {
   types.ObjectMeta      meta             = 1;    // object meta
-  kh.InterfaceKeyHandle    key_or_handle = 2 [(gogoproto.jsontag) = "key"];    // interface key or handle
+  kh.InterfaceKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];    // interface key or handle
 }
 
 // InterfaceGetRequestMsg is batched GET request for interfaces
@@ -534,7 +535,7 @@ message InterfaceGetRequestMsg {
 
 // InterfaceGetResponse captures all the information about a interface
 message InterfaceGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   InterfaceSpec      spec       = 2;    // interface specification/configuration
   InterfaceStatus    status     = 3;    // interface status
   InterfaceStats     stats      = 4;    // interface statistics
@@ -549,9 +550,9 @@ message InterfaceGetResponseMsg {
 // InterfaceL2SegmentSpec carries the user vlan that is being added or deleted
 // on an uplink interface or uplink PC
 message InterfaceL2SegmentSpec {
-  types.ObjectMeta         meta                    = 1;    // object meta
-  kh.L2SegmentKeyHandle    l2segment_key_or_handle = 2 [(gogoproto.jsontag) = "ref"];    // L2 segment Id corresponding to the vlan
-  kh.InterfaceKeyHandle    if_key_handle           = 3 [(gogoproto.jsontag) = "interface_ref"];    // Uplink/Uplink PC key or handle
+  types.ObjectMeta                meta             = 1;    // object meta
+  kh.L2SegmentKeyHandle    l2segment_key_or_handle = 2 [(gogoproto.moretags) = "venice:ref"];    // L2 segment Id corresponding to the vlan
+  kh.InterfaceKeyHandle              if_key_handle = 3 [(gogoproto.moretags) = "venice:interface_ref"];    // Uplink/Uplink PC key or handle
 }
 
 // InterfaceL2SegmentRequestMsg is batched request message to bring vlans
@@ -562,7 +563,7 @@ message InterfaceL2SegmentRequestMsg {
 
 // InterfaceL2SegmentResponse is response to InterfaceL2SegmentSpec
 message InterfaceL2SegmentResponse {
-  types.ApiStatus       api_status        = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus       api_status        = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
 }
 
 // InterfaceL2SegmentResponseMsg is batched response to InterfaceL2SegmentResponse

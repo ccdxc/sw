@@ -20,8 +20,8 @@ import "types.proto";
 // either by its id or HAL allocated handle
 message SecurityProfileKeyHandle {
   oneof key_or_handle {
-    uint32     profile_id     = 1 [(gogoproto.jsontag) = "unique"];     // App allocated unique security profile id
-    fixed64    profile_handle = 2 [(gogoproto.jsontag) = "handle"];     // id of the SecurityProfile returned by HAL
+    uint32     profile_id     = 1 [(gogoproto.moretags) = "venice:unique"];     // App allocated unique security profile id
+    fixed64    profile_handle = 2 [(gogoproto.moretags) = "venice:handle"];     // id of the SecurityProfile returned by HAL
   }
 }
 
@@ -29,8 +29,8 @@ message SecurityProfileKeyHandle {
 // VrfKeyHandle is used to operate on a vrf either by its key or handle
 message VrfKeyHandle {
   oneof key_or_handle {
-    uint64     vrf_id     = 1  [(gogoproto.jsontag) = "unique"];   // unique vrf id allocated by app
-    fixed64    vrf_handle = 2 [(gogoproto.jsontag) = "handle"];    // vrf handle returned by HAL
+    uint64     vrf_id     = 1  [(gogoproto.moretags) = "venice:unique"];   // unique vrf id allocated by app
+    fixed64    vrf_handle = 2 [(gogoproto.moretags) = "venice:handle"];    // vrf handle returned by HAL
   }
 }
 
@@ -38,7 +38,7 @@ message VrfKeyHandle {
 message NetworkKeyHandle {
   oneof key_or_handle {
     types.IPPrefix     ip_prefix    = 1;    // IP prefix
-    fixed64            nw_handle    = 2  [(gogoproto.jsontag) = "handle"];    // network's handle returned by HAL
+    fixed64            nw_handle    = 2  [(gogoproto.moretags) = "venice:handle"];    // network's handle returned by HAL
   }
 }
 
@@ -46,11 +46,11 @@ message NetworkKeyHandle {
 // segment id or HAL allocated handle
 message L2SegmentKeyHandle {
   oneof key_or_handle {
-    uint64     segment_id        = 1 [(gogoproto.jsontag) = "unique"];   // App allocated unique L2 segment id
+    uint64     segment_id        = 1 [(gogoproto.moretags) = "venice:unique"];   // App allocated unique L2 segment id
                                          // NOTE:
                                          // 1. this is unique across all types of L2 segments
                                          // 2. this is allocated by the HAL app
-    fixed64    l2segment_handle  = 2 [(gogoproto.jsontag) = "handle"];     // id of the L2 segment returned by HAL
+    fixed64    l2segment_handle  = 2 [(gogoproto.moretags) = "venice:handle"];     // id of the L2 segment returned by HAL
   }
 }
 
@@ -114,7 +114,7 @@ message InterfaceKeyHandle {
 // EndpointL2Key is L2 key of the endpoint
 // NOTE: An endpoint can have only one L2 key
 message EndpointL2Key {
-  kh.L2SegmentKeyHandle l2segment_key_handle = 1 [(gogoproto.jsontag) = "ref"];
+  kh.L2SegmentKeyHandle l2segment_key_handle = 1 [(gogoproto.moretags) = "venice:ref"];
   uint64     mac_address          = 2;
 }
 

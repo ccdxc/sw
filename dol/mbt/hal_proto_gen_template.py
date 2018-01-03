@@ -39,7 +39,8 @@ sys.path.insert(0, fullpath)
 //::         continue
 //::     #endif
 //::     fileName = fileFullName[:-3]
-//::     fileGrpcName = fileName[:fileName.find('_')] + '_pb2_grpc'
+//::     # fileGrpcName = fileName[:fileName.find('_')] + '_pb2_grpc'
+//::     fileGrpcName = fileName[:fileName.rfind('_')] + '_pb2_grpc'
 //::     if not os.path.isfile(fullpath + fileGrpcName + ".py"):
 //::         continue
 //::     #endif

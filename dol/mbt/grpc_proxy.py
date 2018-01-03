@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-# This is a step before integrating with Config validator. This acts as 
-# a standalone pass-through proxy between dol and hal.
 from concurrent import futures
 import grpc
 import os
@@ -10,7 +8,7 @@ paths = [
     '/nic/gen/proto/',
     '/nic/gen/proto/hal/',
     '/nic/cli/', # To get tenjin_wrapper.
-    '/dol/config_validator/'
+    '/dol/mbt/'
 ]
 
 ws_top = os.path.dirname(sys.argv[0]) + '/../..'
@@ -28,8 +26,8 @@ from tenjin_wrapper import *
 def genProxyServerMethods():
     tenjin_prefix = "//::"
     
-    template = ws_top + '/dol/config_validator/hal_proto_gen_template.py'
-    out_file = ws_top + '/dol/config_validator/hal_proto_gen.py'
+    template = ws_top + '/dol/mbt/hal_proto_gen_template.py'
+    out_file = ws_top + '/dol/mbt/hal_proto_gen.py'
     
     dic = {}
     with open(out_file, "w") as of:
@@ -45,11 +43,11 @@ def initClient():
     print( "Connected to HAL" )
 
 def serve():
-    if 'CV_GRPC_PORT' in os.environ:
-        port = os.environ['CV_GRPC_PORT']
+    if 'MBT_GRPC_PORT' in os.environ:
+        port = os.environ['MBT_GRPC_PORT']
     else:
         port = '50051'
-    logger.info("Starting ConfigValidator GRPC Server on port %s" %(port))
+    logger.info("Starting Model Based Tester GRPC Server on port %s" %(port))
     server = hal_proto_gen.proxyServer
     server.add_insecure_port('[::]:%s' %(port))
     server.start()

@@ -107,38 +107,26 @@ class ConfigObject():
         self.is_dol_created = is_dol_created
         self.is_dol_config_modified = False
 
-    def process_message(self, op_type, dol_message):
-        crud_op = self._cfg_meta_object.OperHandler(op_type)
-        gen_data = crud_op._req_meta_obj.process_message(message=dol_message)
-
-        try:
-            message = crud_op._req_msg()
-            GrpcReqRspMsg.parse_dict(gen_data, message)
-        except:
-            print (gen_data)
-            raise
+    def process_message(self, op_type, message):
         assert not self.key_or_handle
-        key_or_handle = GrpcReqRspMsg.GetKeyObject(message)
-        if key_or_handle:
-            self.key_or_handle =  GrpcReqRspMsg.protobuf_to_dict(key_or_handle)
+        self.key_or_handle = GrpcReqRspMsg.GetKeyObject(message)
         self.ext_ref_objects = GrpcReqRspMsg.GetExtRefObjects(message)
         return message
 
-    def generate(self, op_type, ext_refs={}, constraints=None):
+    def generate(self, op_type, ext_refs={}, external_constraints=None):
         crud_op = self._cfg_meta_object.OperHandler(op_type)
         while True:
-            gen_data = crud_op._req_meta_obj.generate_message(key=self.key_or_handle,
-                                                              ext_refs = ext_refs, constraints=constraints)
-            try:
-                message = crud_op._req_msg()
-                GrpcReqRspMsg.parse_dict(gen_data, message)
-            except:
-                print (gen_data)
-                raise
+            message = crud_op._req_meta_obj.generate_message(key=self.key_or_handle,
+                                                              ext_refs = ext_refs, external_constraints=external_constraints)
+            # try:
+            #     message = crud_op._req_msg()
+            #     GrpcReqRspMsg.parse_dict(gen_data, message)
+            # except:
+            #     print (gen_data)
+            #     raise
             if not self.key_or_handle:
                 self.key_or_handle = GrpcReqRspMsg.GetKeyObject(message)
                 
-                self.key_or_handle =  GrpcReqRspMsg.protobuf_to_dict(self.key_or_handle)
                 if self.key_or_handle:
                     if any((self.key_or_handle == obj.key_or_handle) for obj in self.object_helper._config_objects):
                         # Hacky way to avoid creating 2 messages with the same key, by just creating another object.
@@ -159,7 +147,7 @@ class ConfigObject():
         crud_op = self._cfg_meta_object.OperHandler(op_type)
         return crud_op._post_cb
     
-    def process(self, op_type, redo=False, ext_refs={}, dol_message=None, constraints=None):
+    def process(self, op_type, redo=False, ext_refs={}, dol_message=None, external_constraints=None):
         if op_type == ConfigObjectMeta.CREATE and not redo:
             ext_refs = ext_refs
         else:
@@ -172,7 +160,7 @@ class ConfigObject():
             self._msg_cache[op_type] = req_message
             return 'API_STATUS_OK'
         if not redo:
-            req_message = self.generate(op_type, ext_refs=ext_refs, constraints=constraints)
+            req_message = self.generate(op_type, ext_refs=ext_refs, external_constraints=external_constraints)
         else:
             req_message = self._msg_cache[op_type]
         
@@ -262,9 +250,9 @@ class ConfigObjectHelper(object):
         for config_object in self._config_objects:
             config_object.is_dol_config_modified = True
 
-    def CreateConfigObject(self, status, ext_refs={}, constraints=None):
+    def CreateConfigObject(self, status, ext_refs={}, external_constraints=None):
         config_object = ConfigObject(self._cfg_meta, self)
-        ret_status = config_object.process(ConfigObjectMeta.CREATE, ext_refs=ext_refs, constraints=constraints)
+        ret_status = config_object.process(ConfigObjectMeta.CREATE, ext_refs=ext_refs, external_constraints=external_constraints)
         if ret_status != status:
             logger.critical("Status code does not match expected : %s," 
                         "actual : %s" % (status, ret_status) )
@@ -272,7 +260,7 @@ class ConfigObjectHelper(object):
             if ConfigObjectMeta.CREATE not in self._ignore_ops:
                 assert False
             else:
-                return None
+                return config_object
         else:
             config_object._status = ConfigObject._CREATED
         return config_object
@@ -417,14 +405,14 @@ def CreateConfigFromDol(incoming_message):
     try:
         object_helper = cfg_meta_mapper.dol_message_map[type(incoming_message).__name__]
     except KeyError:
-        # This object hasn't been enabled in Config Validator as yet. Return
+        # This object hasn't been enabled in MBT as yet. Return
         logger.info("Not reading config from DOL for %s" %(type(incoming_message)))
         return
     messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
     for message in messages:
             object_helper.ReadDolConfig(message)
 
-def CreateConfigFromKeyType(key_type, ext_refs, constraints=None):
+def CreateConfigFromKeyType(key_type, ext_refs, external_constraints=None):
     object_helper = cfg_meta_mapper.key_type_to_config[key_type]
-    ref_object = object_helper.CreateConfigObject('API_STATUS_OK', ext_refs, constraints)
+    ref_object = object_helper.CreateConfigObject('API_STATUS_OK', ext_refs, external_constraints)
     return ref_object.key_or_handle

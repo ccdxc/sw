@@ -44,8 +44,8 @@ parser.add_argument('--tcscale', dest='tcscale', default=None,
                     help='Testcase Scale Factor.')
 parser.add_argument('--shuffle', dest='shuffle', default=1,
                     help='Shuffle tests and loop for X times.')
-parser.add_argument('--configtoggle', dest='configtoggle',
-                    action='store_true', help='Enable configuration toggle '
+parser.add_argument('--mbt', dest='mbt',
+                    action='store_true', help='Enable model based tester'
                     'for enabled features')
 #parser.add_argument('--cfgscale', dest='cfgscale', default=None,
 #                    help='Configuration Scale Factor.')

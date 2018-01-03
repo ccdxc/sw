@@ -862,7 +862,7 @@ func (m *SecurityProfileStatus) GetProfileHandle() uint64 {
 
 // SecurityProfileResponse is response to SecurityProfileSpec
 type SecurityProfileResponse struct {
-	ApiStatus     ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus     ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	ProfileStatus *SecurityProfileStatus `protobuf:"bytes,2,opt,name=profile_status,json=profileStatus" json:"profile_status,omitempty"`
 }
 
@@ -951,7 +951,7 @@ func (m *SecurityProfileDeleteRequestMsg) GetRequest() []*SecurityProfileDeleteR
 
 // SecurityProfileResponse is response to SecurityProfileSpec
 type SecurityProfileDeleteResponse struct {
-	ApiStatus     ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus     ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	ProfileStatus *SecurityProfileStatus `protobuf:"bytes,2,opt,name=profile_status,json=profileStatus" json:"profile_status,omitempty"`
 }
 
@@ -1051,7 +1051,7 @@ func (*SecurityProfileStats) Descriptor() ([]byte, []int) { return fileDescripto
 
 // SecurityProfileGetResponse captures all the information about a SecurityProfile profile
 type SecurityProfileGetResponse struct {
-	ApiStatus ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus              `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	Spec      *SecurityProfileSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
 	Status    *SecurityProfileStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
 	Stats     *SecurityProfileStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
@@ -1317,7 +1317,7 @@ func (m *SGPolicy) GetEgFwRules() []*FirewallRuleSpec {
 type SecurityGroupPolicySpec struct {
 	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
 	// key_or_handle is the security group's unique identifier
-	KeyOrHandle *SecurityGroupPolicyKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key"`
+	KeyOrHandle *SecurityGroupPolicyKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 	PolicyRules *SGPolicy                     `protobuf:"bytes,3,opt,name=policy_rules,json=policyRules" json:"policy_rules,omitempty"`
 }
 
@@ -1385,7 +1385,7 @@ func (m *SecurityGroupPolicyStatus) GetPolicyHandle() uint64 {
 
 // SecurityGroupResponse is the response to SecurityGroupPolicySpec
 type SecurityGroupPolicyResponse struct {
-	ApiStatus ApiStatus                  `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus                  `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	Status    *SecurityGroupPolicyStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
 }
 
@@ -1433,7 +1433,7 @@ func (m *SecurityGroupPolicyResponseMsg) GetResponse() []*SecurityGroupPolicyRes
 type SecurityGroupPolicyDeleteRequest struct {
 	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
 	// key_or_handle is the security group's unique identifier
-	KeyOrHandle *SecurityGroupPolicyKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key"`
+	KeyOrHandle *SecurityGroupPolicyKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 }
 
 func (m *SecurityGroupPolicyDeleteRequest) Reset()         { *m = SecurityGroupPolicyDeleteRequest{} }
@@ -1477,7 +1477,7 @@ func (m *SecurityGroupPolicyDeleteRequestMsg) GetRequest() []*SecurityGroupPolic
 }
 
 type SecurityGroupPolicyDeleteResponse struct {
-	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 }
 
 func (m *SecurityGroupPolicyDeleteResponse) Reset()         { *m = SecurityGroupPolicyDeleteResponse{} }
@@ -1518,7 +1518,7 @@ func (m *SecurityGroupPolicyDeleteResponseMsg) GetResponse() []*SecurityGroupPol
 type SecurityGroupPolicyGetRequest struct {
 	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
 	// key_or_handle is the security group's unique identifier
-	KeyOrHandle *SecurityGroupPolicyKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key"`
+	KeyOrHandle *SecurityGroupPolicyKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 }
 
 func (m *SecurityGroupPolicyGetRequest) Reset()         { *m = SecurityGroupPolicyGetRequest{} }
@@ -1572,7 +1572,7 @@ func (*SecurityGroupPolicyStats) Descriptor() ([]byte, []int) { return fileDescr
 
 // SecurityGroupGetResponse captures all the information about a security group
 type SecurityGroupPolicyGetResponse struct {
-	ApiStatus ApiStatus                  `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus                  `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	Spec      *SecurityGroupPolicySpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
 	Status    *SecurityGroupPolicyStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
 	Stats     *SecurityGroupPolicyStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
@@ -1643,7 +1643,7 @@ func (m *SecurityGroupPolicyGetResponseMsg) GetApiStatus() ApiStatus {
 type SecurityGroupSpec struct {
 	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
 	// Key_or_handle is the security group's unique identifier
-	KeyOrHandle *SecurityGroupKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key"`
+	KeyOrHandle *SecurityGroupKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 }
 
 func (m *SecurityGroupSpec) Reset()                    { *m = SecurityGroupSpec{} }
@@ -1701,7 +1701,7 @@ func (m *SecurityGroupStatus) GetSgHandle() uint64 {
 
 // SecurityGroupResponse is the response to SecurityGroupSpec
 type SecurityGroupResponse struct {
-	ApiStatus ApiStatus            `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus            `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	Status    *SecurityGroupStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
 }
 
@@ -1745,7 +1745,7 @@ func (m *SecurityGroupResponseMsg) GetResponse() []*SecurityGroupResponse {
 type SecurityGroupDeleteRequest struct {
 	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
 	// key_or_handle is the security group's unique identifier
-	KeyOrHandle *SecurityGroupKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key"`
+	KeyOrHandle *SecurityGroupKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 }
 
 func (m *SecurityGroupDeleteRequest) Reset()                    { *m = SecurityGroupDeleteRequest{} }
@@ -1789,7 +1789,7 @@ func (m *SecurityGroupDeleteRequestMsg) GetRequest() []*SecurityGroupDeleteReque
 // SecurityGroupDeleteResponseMsg is batched response to
 // SecurityGroupDeleteRequestMsg
 type SecurityGroupDeleteResponseMsg struct {
-	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 }
 
 func (m *SecurityGroupDeleteResponseMsg) Reset()         { *m = SecurityGroupDeleteResponseMsg{} }
@@ -1810,7 +1810,7 @@ func (m *SecurityGroupDeleteResponseMsg) GetApiStatus() []ApiStatus {
 type SecurityGroupGetRequest struct {
 	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
 	// key_or_handle is the security group's unique identifier
-	KeyOrHandle *SecurityGroupKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key"`
+	KeyOrHandle *SecurityGroupKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 }
 
 func (m *SecurityGroupGetRequest) Reset()                    { *m = SecurityGroupGetRequest{} }
@@ -1860,7 +1860,7 @@ func (*SecurityGroupStats) Descriptor() ([]byte, []int) { return fileDescriptorN
 
 // SecurityGroupGetResponse captures all the information about a security group
 type SecurityGroupGetResponse struct {
-	ApiStatus ApiStatus            `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus            `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	Spec      *SecurityGroupSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
 	Status    *SecurityGroupStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
 	Stats     *SecurityGroupStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
@@ -2437,7 +2437,7 @@ func (m *DoSPolicyStatus) GetDosHandle() uint64 {
 
 // DoSResponse is the response to DoSPolicySpec
 type DoSPolicyResponse struct {
-	ApiStatus ApiStatus        `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus        `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	Status    *DoSPolicyStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
 }
 
@@ -2520,7 +2520,7 @@ func (m *DoSPolicyDeleteRequestMsg) GetRequest() []*DoSPolicyDeleteRequest {
 }
 
 type DoSPolicyDeleteResponse struct {
-	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 }
 
 func (m *DoSPolicyDeleteResponse) Reset()                    { *m = DoSPolicyDeleteResponse{} }
@@ -2606,7 +2606,7 @@ func (*DoSPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptorNwsec
 
 // DoSGetResponse captures all the information about a security group
 type DoSPolicyGetResponse struct {
-	ApiStatus ApiStatus        `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status"`
+	ApiStatus ApiStatus        `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
 	Spec      *DoSPolicySpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
 	Status    *DoSPolicyStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
 	Stats     *DoSPolicyStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`

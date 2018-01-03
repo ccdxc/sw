@@ -214,7 +214,7 @@ message SecurityProfileStatus {
 
 // SecurityProfileResponse is response to SecurityProfileSpec
 message SecurityProfileResponse {
-  types.ApiStatus          api_status     = 1	[(gogoproto.jsontag) = "api_status"]; // API status code
+  types.ApiStatus          api_status     = 1	[(gogoproto.moretags) = "venice:api_status"]; // API status code
   SecurityProfileStatus    profile_status = 2;    // SecurityProfile profile operational status
 }
 
@@ -237,7 +237,7 @@ message SecurityProfileDeleteRequestMsg {
 
 // SecurityProfileResponse is response to SecurityProfileSpec
 message SecurityProfileDeleteResponse {
-  types.ApiStatus          api_status     = 1 [(gogoproto.jsontag) = "api_status"]; // API status code
+  types.ApiStatus          api_status     = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
   SecurityProfileStatus    profile_status = 2;    // SecurityProfile profile operational status
 }
 
@@ -264,7 +264,7 @@ message SecurityProfileStats {
 
 // SecurityProfileGetResponse captures all the information about a SecurityProfile profile
 message SecurityProfileGetResponse {
-  types.ApiStatus          api_status = 1    [(gogoproto.jsontag) = "api_status"];// API status code
+  types.ApiStatus          api_status = 1    [(gogoproto.moretags) = "venice:api_status"];// API status code
   SecurityProfileSpec      spec       = 2;    // config spec
   SecurityProfileStatus    status     = 3;    // operational status
   SecurityProfileStats     stats      = 4;    // stats, if any
@@ -338,7 +338,7 @@ message SGPolicy {
 message SecurityGroupPolicySpec {
   types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
   SGPolicy                        policy_rules   = 3;    // ingress policy
 }
 
@@ -354,7 +354,7 @@ message SecurityGroupPolicyStatus {
 
 // SecurityGroupResponse is the response to SecurityGroupPolicySpec
 message SecurityGroupPolicyResponse {
-  types.ApiStatus              api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus              api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   SecurityGroupPolicyStatus    status      = 2;    // operational status
 }
 
@@ -367,7 +367,7 @@ message SecurityGroupPolicyResponseMsg {
 message SecurityGroupPolicyDeleteRequest {
   types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityGroupDeleteRequestMsg is used to delete a batch of security group policies.
@@ -376,7 +376,7 @@ message SecurityGroupPolicyDeleteRequestMsg {
 }
 
 message SecurityGroupPolicyDeleteResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
 }
 // SecurityGroupPolicyDeleteResponseMsg is batched response to
 // SecurityGroupPolicyDeleteRequestMsg
@@ -388,7 +388,7 @@ message SecurityGroupPolicyDeleteResponseMsg {
 message SecurityGroupPolicyGetRequest {
   types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityGroupGetRequestMsg is batched GET request for security group policies
@@ -403,7 +403,7 @@ message SecurityGroupPolicyStats {
 
 // SecurityGroupGetResponse captures all the information about a security group
 message SecurityGroupPolicyGetResponse {
-  types.ApiStatus              api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus              api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   SecurityGroupPolicySpec      spec       = 2;    // configuration of security policy
   SecurityGroupPolicyStatus    status     = 3;    // operational state of security policy
   SecurityGroupPolicyStats     stats      = 4;    // debug status of security policy
@@ -418,7 +418,7 @@ message SecurityGroupPolicyGetResponseMsg {
 message SecurityGroupSpec {
     types.ObjectMeta          meta          = 1; // object meta
     // Key_or_handle is the security group's unique identifier
-    kh.SecurityGroupKeyHandle key_or_handle = 2 [(gogoproto.jsontag) = "key"];
+    kh.SecurityGroupKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityGroupRequestMsg is batched add or modify security group policy request
@@ -433,7 +433,7 @@ message SecurityGroupStatus {
 
 // SecurityGroupResponse is the response to SecurityGroupSpec
 message SecurityGroupResponse {
-  types.ApiStatus        api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus        api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   SecurityGroupStatus    status      = 2;    // operational status
 }
 
@@ -446,7 +446,7 @@ message SecurityGroupResponseMsg {
 message SecurityGroupDeleteRequest {
   types.ObjectMeta          meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
+  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityGroupDeleteRequestMsg is used to delete a batch of security groups
@@ -457,14 +457,14 @@ message SecurityGroupDeleteRequestMsg {
 // SecurityGroupDeleteResponseMsg is batched response to
 // SecurityGroupDeleteRequestMsg
 message SecurityGroupDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  repeated types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
 }
 
 // SecurityGroupGetRequest is used to get information about a security group
 message SecurityGroupGetRequest {
   types.ObjectMeta          meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
+  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityGroupGetRequestMsg is batched GET request for security groups
@@ -478,7 +478,7 @@ message SecurityGroupStats {
 
 // SecurityGroupGetResponse captures all the information about a security group
 message SecurityGroupGetResponse {
-  types.ApiStatus        api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus        api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   SecurityGroupSpec      spec       = 2;    // configuration of security group
   SecurityGroupStatus    status     = 3;    // operational state of security group
   SecurityGroupStats     stats      = 4;    // debug status of security group
@@ -588,7 +588,7 @@ message DoSPolicyStatus {
 
 // DoSResponse is the response to DoSPolicySpec
 message DoSPolicyResponse {
-  types.ApiStatus       api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus       api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   DoSPolicyStatus       status      = 2;    // operational status
 }
 
@@ -609,7 +609,7 @@ message DoSPolicyDeleteRequestMsg {
 }
 
 message DoSPolicyDeleteResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
 }
 
 // DoSPolicyDeleteResponseMsg is batched response to
@@ -635,7 +635,7 @@ message DoSPolicyStats {
 
 // DoSGetResponse captures all the information about a security group
 message DoSPolicyGetResponse {
-  types.ApiStatus         api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus         api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   DoSPolicySpec           spec       = 2;    // configuration of DoS
   DoSPolicyStatus         status     = 3;    // operational state of DoS
   DoSPolicyStats          stats      = 4;    // debug status of DoS

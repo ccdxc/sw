@@ -9,7 +9,7 @@ import grpc
 
 from infra.common.glopts                  import GlobalOptions
 from infra.common.logging                 import cfglogger
-from config_validator.cv_signaling_client import SignalingClient
+from mbt.mbt_signaling_client import SignalingClient
 
 import types_pb2            as types_pb2
 import vrf_pb2              as vrf_pb2
@@ -139,9 +139,9 @@ def init():
     global HalChannel
     if IsHalDisabled(): return
 
-    if 'CV_GRPC_PORT' in os.environ: # If config toggle mode is enabled
-        assert GlobalOptions.configtoggle
-        port = os.environ['CV_GRPC_PORT']
+    if 'MBT_GRPC_PORT' in os.environ: # If MBT toggle mode is enabled
+        assert GlobalOptions.mbt
+        port = os.environ['MBT_GRPC_PORT']
     elif 'HAL_GRPC_PORT' in os.environ:
         port = os.environ['HAL_GRPC_PORT']
     else:
@@ -152,9 +152,9 @@ def init():
     cfglogger.info("Waiting for HAL to be ready ...")
     grpc.channel_ready_future(HalChannel).result()
     cfglogger.info("Connected to HAL!")
-    if GlobalOptions.configtoggle:
+    if GlobalOptions.mbt:
         SignalingClient.Connect()
-        cfglogger.info("Connected to the config validator")
+        cfglogger.info("Connected to the Model based tester")
     return
 
 def IsHalDisabled():
@@ -166,7 +166,7 @@ def ConfigureLifs(objlist, update = False):
     api = stub.LifUpdate if update else stub.LifCreate
     msg = interface_pb2.LifRequestMsg
     __config(objlist, msg, api)
-    if not update and GlobalOptions.configtoggle:
+    if not update and GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)
         SignalingClient.Wait()
     return
@@ -185,7 +185,7 @@ def ConfigureInterfaces(objlist, update = False):
     msg = interface_pb2.InterfaceRequestMsg
     api = stub.InterfaceUpdate if update else stub.InterfaceCreate
     __config(objlist, msg, api)
-    if not update and GlobalOptions.configtoggle:
+    if not update and GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)
         SignalingClient.Wait()
     return
@@ -218,7 +218,7 @@ def ConfigureTenants(objlist):
     msg = vrf_pb2.VrfRequestMsg
     __config(objlist, msg,
              stub.VrfCreate)
-    if GlobalOptions.configtoggle:
+    if GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)
         SignalingClient.Wait()
     return
@@ -412,7 +412,7 @@ def ConfigureSegments(objlist):
     msg = l2segment_pb2.L2SegmentRequestMsg
     __config(objlist, msg,
              stub.L2SegmentCreate)
-    if GlobalOptions.configtoggle:
+    if GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)
         SignalingClient.Wait()
     return
@@ -470,7 +470,7 @@ def ConfigureSecurityProfiles(objlist, update = False):
     msg = nwsec_pb2.SecurityProfileRequestMsg
     if update: api = stub.SecurityProfileUpdate
     __config(objlist, msg, api)
-    if not update and GlobalOptions.configtoggle:
+    if not update and GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)
         SignalingClient.Wait()
     return
@@ -490,7 +490,7 @@ def ConfigureSecurityGroups(objlist, update = False):
     msg = nwsec_pb2.SecurityGroupRequestMsg
     if update: api = stub.SecurityGroupUpdate
     __config(objlist, msg, api)
-    if not update and GlobalOptions.configtoggle:
+    if not update and GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)
         SignalingClient.Wait()
     return
@@ -517,7 +517,7 @@ def ConfigureSecurityGroupPolicies(objlist, update = False):
     msg = nwsec_pb2.SecurityGroupPolicyRequestMsg
     if update: api = stub.SecurityGroupPolicyUpdate
     __config(objlist, msg, api)
-    if not update and GlobalOptions.configtoggle:
+    if not update and GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)
         SignalingClient.Wait()
     return
@@ -557,7 +557,7 @@ def ConfigureNetworks(objlist):
     stub = nw_pb2.NetworkStub(HalChannel)
     msg = nw_pb2.NetworkRequestMsg
     __config(objlist, msg, stub.NetworkCreate)
-    if GlobalOptions.configtoggle:
+    if GlobalOptions.mbt:
         SignalingClient.SendSignalingData(msg.__name__)
         SignalingClient.Wait()
     return

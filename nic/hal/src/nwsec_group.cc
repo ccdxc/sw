@@ -348,7 +348,7 @@ security_group_policy_create(nwsec::SecurityGroupPolicySpec& spec,
                              nwsec_policy_cfg_create_abort_cb,
                              nwsec_policy_cfg_create_cleanup_cb);
 end:
-    nwsec_policy_cfg_prepare_rsp(rsp, ret, nwsec_plcy_cfg->hal_handle);
+    nwsec_policy_cfg_prepare_rsp(rsp, ret, nwsec_plcy_cfg ? nwsec_plcy_cfg->hal_handle : HAL_HANDLE_INVALID);
      
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;

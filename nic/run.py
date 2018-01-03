@@ -33,7 +33,7 @@ build_log = nic_dir + "/build.log"
 model_log = nic_dir + "/model.log"
 hal_log = nic_dir + "/hal.log"
 dol_log = nic_dir + "/dol.log"
-config_log = nic_dir + "/config.log"
+mbt_log = nic_dir + "/mbt.log"
 storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
 
@@ -266,8 +266,8 @@ def run_dol(args):
     if args.shuffle is not None:
         cmd.append('--shuffle')
         cmd.append(args.shuffle)
-    if args.configtoggle is True:
-        cmd.append('--configtoggle')
+    if args.mbt is True:
+        cmd.append('--mbt')
 
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
@@ -284,22 +284,28 @@ def run_dol(args):
 
 #    log.close()
 
-def run_config_toggler(args):
+def run_mbt(standalone=True):
     dol_dir = nic_dir + "/../dol"
     os.chdir(dol_dir)
 
-    log = open(config_log, "a+")
-    cmd = ['./config_validator/main.py']
-    if args.configtoggle is True:
-        cmd.append('--configtoggle')
+    log = open(mbt_log, "a+")
+    cmd = ['./mbt/main.py']
+    # If topology is set, then it is being run in DOL mode.
+    if not standalone:
+        cmd.append('--mbt')
     p = Popen(cmd)
-    print "* Starting Config validator with  pid (" + str(p.pid) + ")"
-    print "- Log file: " + config_log + "\n"
+    print "* Starting Model based testing with  pid (" + str(p.pid) + ")"
+    print "- Log file: " + mbt_log + "\n"
 
     lock = open(lock_file, "a+")
     lock.write(str(p.pid) + "\n")
     lock.close()
-    return
+
+    status = None
+    if standalone:
+        p.communicate()
+        status = p.returncode
+    return status
 
 # Sample Client
 '''
@@ -447,9 +453,9 @@ def main():
                         default=False, help="GFT tests")
     parser.add_argument('--shuffle', dest='shuffle', default=None,
                         help='Shuffle tests and loop for X times.')
-    parser.add_argument('--configtoggle', dest='configtoggle', default=None,
+    parser.add_argument('--mbt', dest='mbt', default=None,
                         action='store_true',
-                         help='Modify DOL config before starting packet tests')
+                         help='Modify DOL config testre starting packet tests')
     args = parser.parse_args()
 
     if args.cleanup:
@@ -486,17 +492,21 @@ def main():
             status = run_gft_test()
             if status != 0:
                 print "- GFT test failed, status=", status
+        elif args.mbt and not args.feature:
+            status = run_mbt()
+            if status != 0:
+                print "- MBT test failed, status=", status
         else:
-          if args.configtoggle:
-             cv_port = find_port()
-             print "* Using port (" + str(cv_port) + ") for ConfigToggler\n"
-             os.environ["CV_GRPC_PORT"] = str(cv_port)
-             run_config_toggler(args)
+            if args.mbt:
+                mbt_port = find_port()
+                print "* Using port (" + str(mbt_port) + ") for mbt\n"
+                os.environ["MBT_GRPC_PORT"] = str(mbt_port)
+                run_mbt(standalone=False)
 
-          status = run_dol(args)
-          if status == 0:
-             if (args.e2etls):
-                status = run_e2e_tlsproxy_dol()
+            status = run_dol(args)
+            if status == 0:
+                if (args.e2etls):
+                    status = run_e2e_tlsproxy_dol()
         if args.coveragerun:
             dump_coverage_data()
         cleanup(keep_logs=True)

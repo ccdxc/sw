@@ -173,7 +173,7 @@ message IPRange {
 // IP Prefix object
 message IPPrefix {
   IPAddress    address       = 1;      // IP address
-  uint32       prefix_len    = 2[(gogoproto.moretags) = "range:0-128"];      // prefix length
+  uint32       prefix_len    = 2[(gogoproto.moretags) = "venice:range:0-128"];      // prefix length
 }
 
 // PortRange object has low and high end of the port ranges

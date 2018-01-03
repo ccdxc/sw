@@ -10,9 +10,9 @@ os.environ['WS_TOP'] = ws_top
 class SignalingClientHelper():
     def Connect(self, ):
         context = zmq.Context()
-        print( "Connecting to signaling server at %s/zmqsockcv" %(ws_top))
+        print( "Connecting to signaling server at %s/zmqsockmbt" %(ws_top))
         self.socket = context.socket(zmq.REQ)
-        self.socket.connect("ipc://%s/zmqsockcv" % ws_top)
+        self.socket.connect("ipc://%s/zmqsockmbt" % ws_top)
 
     def SendSignalingData(self, string):
         self.socket.send_string(string)

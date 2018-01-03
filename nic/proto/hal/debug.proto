@@ -89,7 +89,7 @@ message MemTrackStats {
 
 // MemTrackGetResponse captures debug information per allocation id
 message MemTrackGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   MemTrackSpec       spec       = 2;    // spec (aka. identifier of mem track object)
   MemTrackStatus     status     = 3;    // oper status, if any
   MemTrackStats      stats      = 4;    // statistics
@@ -138,7 +138,7 @@ message SlabGetRequestMsg {
 
 // SlabGetResponse captures all information about a slab
 message SlabGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   SlabSpec           spec       = 2;    // slab attributes
   SlabStatus         status     = 3;    // operational status of the slab
   SlabStats          stats      = 4;    // stats of the slab

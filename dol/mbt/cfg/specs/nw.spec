@@ -14,7 +14,7 @@ objects:
             api      : NetworkCreate
             request  : NetworkRequestMsg
             response : NetworkResponseMsg
-            pre_cb   : None
+            pre_cb   : callback://network/PreCreateCb
             post_cb  : callback://network/PostCreateCb
         update:
             api      : NetworkUpdate

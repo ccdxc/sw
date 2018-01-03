@@ -24,10 +24,10 @@ message NetworkSpec {
   types.ObjectMeta                   meta              = 1;    // common object meta
   // key_or_handle is the network being create or updated
   kh.NetworkKeyHandle                key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.VrfKeyHandle                    vrf_key_handle    = 3 [(gogoproto.jsontag) = "ref"];
+  kh.VrfKeyHandle                    vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
   uint64                             rmac              = 4;    // router mac for this network
-  fixed64                            gateway_ep_handle = 5 [(gogoproto.jsontag) = "handle"];    // gateway ep handle
-  repeated kh.SecurityGroupKeyHandle sg_key_handle     = 6 [(gogoproto.jsontag) = "ref"];    // list of security group handles
+  fixed64                            gateway_ep_handle = 5 [(gogoproto.moretags) = "venice:handle"];    // gateway ep handle
+  repeated kh.SecurityGroupKeyHandle sg_key_handle     = 6 [(gogoproto.moretags) = "venice:ref"];    // list of security group handles
 }
 
 // NetworkRequestMsg is batched request message used to create/update network
@@ -43,7 +43,7 @@ message NetworkStatus {
 
 // NetworkResponse is response to one NetworkSpec
 message NetworkResponse {
-  types.ApiStatus    api_status = 1[(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus    api_status = 1[(gogoproto.moretags) = "venice:api_status"];    // API status code
   NetworkStatus      status     = 2;    // operational status
 }
 
@@ -57,12 +57,12 @@ message NetworkDeleteRequest {
   types.ObjectMeta              meta               = 1;    // object meta
   // key_or_handle is the network being deleted
   kh.NetworkKeyHandle  key_or_handle      = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.VrfKeyHandle      vrf_key_handle     = 3 [(gogoproto.jsontag) = "ref"];
+  kh.VrfKeyHandle      vrf_key_handle     = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // NetworkDeleteResponse is response to NetworkDeleteRequest
 message NetworkDeleteResponse {
-  types.ApiStatus          		api_status     = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus          		api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   kh.NetworkKeyHandle  key_or_handle  = 2;
 }
 
@@ -85,7 +85,7 @@ message NetworkGetRequest {
   types.ObjectMeta                meta              = 1;    // object meta
   // key_or_handle is the key or handle of the network object being retrieved
   kh.NetworkKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.VrfKeyHandle        vrf_key_handle    = 3 [(gogoproto.jsontag) = "ref"];
+  kh.VrfKeyHandle        vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // NetworkGetRequestMsg is batched GET request for networks
@@ -95,7 +95,7 @@ message NetworkGetRequestMsg {
 
 // NetworkGetResponse captures all the information about a network
 message NetworkGetResponse {
-  types.ApiStatus  api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   NetworkSpec      spec       = 2;    // network specification/configuration
   NetworkStatus    status     = 3;    // network status
   NetworkStats     stats      = 4;    // network statistics

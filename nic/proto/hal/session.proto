@@ -170,7 +170,7 @@ message FlowSpec {
 message SessionSpec {
   types.ObjectMeta     meta                   = 1;    // object meta
   // session_id is unique session identifier
-  fixed32              session_id             = 2 [(gogoproto.jsontag) = "key"];
+  fixed32              session_id             = 2 [(gogoproto.moretags) = "venice:\"key\""];
   bool                 conn_track_en          = 3;    // TRUE if connection tracking is ON
   bool                 tcp_ts_option          = 4;   // TCP timestamp option seen or not
   bool                 tcp_sack_perm_option   = 5;   // TCP SACK Permitted option negotiated or not
@@ -241,7 +241,7 @@ message SessionResponseMsg {
 message SessionDeleteRequest {
   types.ObjectMeta    meta           = 1;    // object meta
   // session_handle is the handle of the session
-  fixed64             session_handle = 2 [(gogoproto.jsontag) = "key"];
+  fixed64             session_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SessionDeleteRequestMsg is batched session delete request
@@ -258,7 +258,7 @@ message SessionDeleteResponseMsg {
 message SessionGetRequest {
   types.ObjectMeta    meta           = 1;    // object meta
   // session_handle is the handle of the session
-  fixed64             session_handle = 2 [(gogoproto.jsontag) = "key"];
+  fixed64             session_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SessionGetRequestMsg  is batched get request

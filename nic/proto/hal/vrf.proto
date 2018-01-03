@@ -26,7 +26,7 @@ message VrfSpec {
   types.ObjectMeta                      meta                 = 1;    // common object meta
   // key_or_handle is vrf's unique identifier
   kh.VrfKeyHandle                       key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.SecurityProfileKeyHandle           security_key_handle  = 3 [(gogoproto.jsontag) = "ref"];    // security profile, if any
+  kh.SecurityProfileKeyHandle           security_key_handle  = 3 [(gogoproto.moretags) = "venice:ref"];    // security profile, if any
   types.VrfType    					    vrf_type             = 4;
   types.IPAddress     					mytep_ip             = 5;    // Local VTEP IP address for vxlan tunnels
   types.IPPrefix      					gipo_prefix          = 6;    // GIPo prefix
@@ -44,7 +44,7 @@ message VrfStatus {
 
 // VrfResponse is response to VrfSpec
 message VrfResponse {
-  types.ApiStatus    api_status      = 1 [(gogoproto.jsontag) = "api_status"];  // API status code
+  types.ApiStatus    api_status      = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
   VrfStatus          vrf_status      = 2;    // vrf status, if api succeeded
 }
 
@@ -62,7 +62,7 @@ message VrfDeleteRequest {
 
 // VrfDeleteResponse is response to VrfDeleteRequest
 message VrfDeleteResponse {
-  types.ApiStatus                api_status     = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  types.ApiStatus                api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   kh.VrfKeyHandle       key_or_handle  = 2;
 }
 
@@ -99,7 +99,7 @@ message VrfStats {
 // VrfGetResponse captures all the information about a vrf
 // only if api_status indicates success, other fields are valid
 message VrfGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];     // API status code
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];     // API status code
   VrfSpec         spec       = 2;    // vrf configuration
   VrfStatus       status     = 3;    // operational state of vrf
   VrfStats        stats      = 4;    // stats of the vrf

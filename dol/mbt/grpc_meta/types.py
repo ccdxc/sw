@@ -3,19 +3,20 @@ import re
 import string
 import random
 import pdb
+import os
 
 from google.protobuf import json_format
-from google.protobuf import descriptor
+from google.protobuf.descriptor import FieldDescriptor
 
 #This is bad design but when right now object generation is tied to the types
 import config_mgr
 
 _tag_checker_map = {
      "key_field"     : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "key" in y,
-     "ext_ref_field" : lambda x, y : x  == "gogoproto.jsontag" and  "ref" in y,
-     "api_field"     : lambda x, y : x  == "gogoproto.jsontag" and  y == "api_status",
-     "handle_field"  : lambda x, y : x  == "gogoproto.jsontag" and y == "handle",
-     "unique_field"  : lambda x, y : x  == "gogoproto.jsontag" and y == "unique",
+     "ext_ref_field" : lambda x, y : x  == "gogoproto.moretags" and "ref" in y,
+     "api_field"     : lambda x, y : x  == "gogoproto.moretags" and "api_status" in y,
+     "handle_field"  : lambda x, y : x  == "gogoproto.moretags" and "handle" in y,
+     "unique_field"  : lambda x, y : x  == "gogoproto.moretags" and "unique" in y,
      "range_field"   : lambda x, y : x  == "gogoproto.moretags" and "range" in y,
 }
 
@@ -55,6 +56,49 @@ def get_constraints(field):
         else:
             return constraints.split('=')
     return None
+
+def generate_float(field):
+    return random.uniform(0.0, 99999.99)
+    
+def generate_int(field):
+    if is_range_field(field):
+        range_str = field.GetOptions().__str__().split(":")[-1].strip()
+        range_str = range_str.replace("\"", "")
+        range_str = range_str.split("-")
+        return random.randint(int(range_str[0]), int(range_str[1]))
+    return random.randint(0, 99999)
+
+def generate_bool(field):
+    return random.choice([True, False])
+
+def generate_string(field):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for _ in range(16))
+
+def generate_enum(field):
+    return random.randint(0, len(field.enum_type.values))
+
+def generate_bytes(field):
+    return os.urandom(16)
+
+type_map = {
+    FieldDescriptor.TYPE_DOUBLE: generate_float,
+    FieldDescriptor.TYPE_FLOAT: generate_float,
+    FieldDescriptor.TYPE_INT32: generate_int,
+    FieldDescriptor.TYPE_INT64: generate_int,
+    FieldDescriptor.TYPE_UINT32: generate_int,
+    FieldDescriptor.TYPE_UINT64: generate_int,
+    FieldDescriptor.TYPE_SINT32: generate_int,
+    FieldDescriptor.TYPE_SINT64: generate_int,
+    FieldDescriptor.TYPE_FIXED32: generate_int,
+    FieldDescriptor.TYPE_FIXED64: generate_int,
+    FieldDescriptor.TYPE_SFIXED32: generate_int,
+    FieldDescriptor.TYPE_SFIXED64: generate_int,
+    FieldDescriptor.TYPE_BOOL: generate_bool,
+    FieldDescriptor.TYPE_STRING: generate_string,
+    FieldDescriptor.TYPE_BYTES: generate_bytes,
+    FieldDescriptor.TYPE_ENUM: generate_enum,
+}
 
 class GrpcMetaField:
     _meta_fields_ = {}
@@ -122,12 +166,12 @@ class GrpcMetaField:
                     
         return 0, 99999
     
-@GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_UINT32)
+@GrpcMetaField.register(FieldDescriptor.CPPTYPE_UINT32)
 class GrpcMetaFieldUint32(GrpcMetaField):
     
     def __init__(self, grpc_field):
         super(GrpcMetaFieldUint32, self).__init__(grpc_field)
-        self.type = descriptor.FieldDescriptor.CPPTYPE_UINT32
+        self.type = FieldDescriptor.CPPTYPE_UINT32
         self._range = self.get_range()
 
     def process_data(self, message):
@@ -136,12 +180,12 @@ class GrpcMetaFieldUint32(GrpcMetaField):
     def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         return  random.randint(self._range[0], self._range[1])
 
-@GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_UINT64)
+@GrpcMetaField.register(FieldDescriptor.CPPTYPE_UINT64)
 class GrpcMetaFieldUint64(GrpcMetaField):
     
     def __init__(self, grpc_field):
         super(GrpcMetaFieldUint64, self).__init__(grpc_field)
-        self.type = descriptor.FieldDescriptor.CPPTYPE_UINT64
+        self.type = FieldDescriptor.CPPTYPE_UINT64
 
     def process_data(self, message):
         return message
@@ -149,12 +193,12 @@ class GrpcMetaFieldUint64(GrpcMetaField):
     def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         return  random.randint(0, 99999)
 
-@GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_STRING)
+@GrpcMetaField.register(FieldDescriptor.CPPTYPE_STRING)
 class GrpcMetaFieldString(GrpcMetaField):
     
     def __init__(self, grpc_field):
         super(GrpcMetaFieldString, self).__init__(grpc_field)
-        self.type = descriptor.FieldDescriptor.CPPTYPE_STRING
+        self.type = FieldDescriptor.CPPTYPE_STRING
 
     def process_data(self, message):
         return message
@@ -163,12 +207,12 @@ class GrpcMetaFieldString(GrpcMetaField):
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for _ in range(16))
         
-@GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_BOOL)
+@GrpcMetaField.register(FieldDescriptor.CPPTYPE_BOOL)
 class GrpcMetaFieldBool(GrpcMetaField):
     
     def __init__(self, grpc_field):
         super(GrpcMetaFieldBool, self).__init__(grpc_field)
-        self.type = descriptor.FieldDescriptor.CPPTYPE_BOOL
+        self.type = FieldDescriptor.CPPTYPE_BOOL
 
     def process_data(self, message):
         return message
@@ -176,12 +220,12 @@ class GrpcMetaFieldBool(GrpcMetaField):
     def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         return random.choice([True, False])
 
-@GrpcMetaField.register(descriptor.FieldDescriptor.CPPTYPE_ENUM)
+@GrpcMetaField.register(FieldDescriptor.CPPTYPE_ENUM)
 class GrpcMetaFieldEnum(GrpcMetaField):
     
     def __init__(self, grpc_field):
         super(GrpcMetaFieldEnum, self).__init__(grpc_field)
-        self.type = descriptor.FieldDescriptor.CPPTYPE_ENUM
+        self.type = FieldDescriptor.CPPTYPE_ENUM
 
     def process_data(self, message):
         return message
@@ -189,3 +233,5 @@ class GrpcMetaFieldEnum(GrpcMetaField):
     def generate_data(self, key, ext_refs, is_key_field=False, constraints=None):
         enum_value = random.randint(0, len(self._grpc_field.enum_type.values) - 1)
         return self._grpc_field.enum_type.values[enum_value].name
+
+

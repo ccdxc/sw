@@ -30,13 +30,13 @@ import grpc_proxy
 import threading
 from infra.common.glopts import GlobalOptions
 
-objects.CallbackField.SetPackagePath("config_validator.cfg.callbacks")
+objects.CallbackField.SetPackagePath("mbt.cfg.callbacks")
 
 def start_zmq_server():
     logger.info("Starting ZMQ server for signaling DOL!")
     context = zmq.Context()
     socket = context.socket(zmq.REP)
-    socket.bind("ipc://%s/zmqsockcv" % ws_top)
+    socket.bind("ipc://%s/zmqsockmbt" % ws_top)
     while True:
         #  Wait for next request from client
         message = socket.recv().decode("utf-8")
@@ -45,7 +45,7 @@ def start_zmq_server():
         socket.send_string ("Proceed")
 
 # Create a thread for zmq signaling with DOL
-if GlobalOptions.configtoggle:
+if GlobalOptions.mbt:
     threading.Thread(target=start_zmq_server).start()
 
 def get_hal_channel():
@@ -71,7 +71,7 @@ op_map = {
 
 hal_channel = get_hal_channel()
 
-config_specs = parser.ParseDirectory("config_validator/cfg/specs", "*.spec")
+config_specs = parser.ParseDirectory("mbt/cfg/specs", "*.spec")
 for config_spec in config_specs:
     if config_spec.graphEnabled:
         logger.info("Adding config spec for service : " , config_spec.Service)
@@ -83,11 +83,11 @@ logger.info("Building Config dependency information")
 # In the intermediate stage now, add just the pass-through server.
 # Will change this in the next commit TODO
 #grpc_proxy.initClient()
-if GlobalOptions.configtoggle:
+if GlobalOptions.mbt:
     # This is blocking.
     grpc_proxy.serve()
 
-test_specs = parser.ParseDirectory("config_validator/test/specs", "*.spec")
+test_specs = parser.ParseDirectory("mbt/test/specs", "*.spec")
 for test_spec in test_specs:
     if not test_spec.Enabled:
         continue
