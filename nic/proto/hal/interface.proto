@@ -142,8 +142,8 @@ message LifSpec {
   uint32                     rdma_max_pt_entries         = 11;   // RDMA: max pt entries
   repeated QStateSetReq      lif_qstate                  = 12;   // Initialize Qstate
   LifRssSpec                 rss                         = 13;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer                  = 14;    // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer                  = 15;    // QOS Policer for rx traffic
+  qos.PolicerSpec            tx_policer                  = 14;   // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 15;   // QOS Policer for rx traffic
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -457,14 +457,14 @@ message IfCPUInfo {
 // InterfaceSpec is used to add or update of an interface
 message InterfaceSpec {
   types.ObjectMeta   meta              = 1;     // object meta
-  kh.InterfaceKeyHandle key_or_handle  = 2 [(gogoproto.jsontag) = "key"];     // interface being created/updated
+  kh.InterfaceKeyHandle key_or_handle  = 2  [(gogoproto.jsontag) = "key"];     // interface being created/updated
   IfType             type              = 4;     // type of interface
   IfStatus           admin_status      = 5;     // admin status of the interface
   oneof if_info {
-    IfEnicInfo       if_enic_info      = 6 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
-    IfUplinkInfo     if_uplink_info    = 7 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
-    IfUplinkPCInfo   if_uplink_pc_info = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINKPC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
-    IfTunnelInfo     if_tunnel_info    = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
+    IfEnicInfo       if_enic_info      = 6  [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
+    IfUplinkInfo     if_uplink_info    = 7  [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
+    IfUplinkPCInfo   if_uplink_pc_info = 8  [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINKPC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+    IfTunnelInfo     if_tunnel_info    = 9  [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
     IfCPUInfo        if_cpu_info       = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton 
   }
 }
@@ -549,9 +549,9 @@ message InterfaceGetResponseMsg {
 // InterfaceL2SegmentSpec carries the user vlan that is being added or deleted
 // on an uplink interface or uplink PC
 message InterfaceL2SegmentSpec {
-  types.ObjectMeta                meta             = 1;    // object meta
+  types.ObjectMeta         meta                    = 1;    // object meta
   kh.L2SegmentKeyHandle    l2segment_key_or_handle = 2 [(gogoproto.jsontag) = "ref"];    // L2 segment Id corresponding to the vlan
-  kh.InterfaceKeyHandle              if_key_handle = 3 [(gogoproto.jsontag) = "interface_ref"];    // Uplink/Uplink PC key or handle
+  kh.InterfaceKeyHandle    if_key_handle           = 3 [(gogoproto.jsontag) = "interface_ref"];    // Uplink/Uplink PC key or handle
 }
 
 // InterfaceL2SegmentRequestMsg is batched request message to bring vlans

@@ -4,6 +4,7 @@
 #include "nic/gen/proto/hal/types.grpc.pb.h"
 #include "nic/gen/proto/hal/vrf.grpc.pb.h"
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
+#include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/gen/proto/hal/port.grpc.pb.h"
 #include "nic/gen/proto/hal/event.grpc.pb.h"
 #include "nic/gen/proto/hal/system.grpc.pb.h"
@@ -29,6 +30,16 @@ using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentResponseMsg;
+
+using intf::Interface;
+using intf::InterfaceSpec;
+using intf::InterfaceRequestMsg;
+using intf::InterfaceResponse;
+using intf::InterfaceResponseMsg;
+using intf::InterfaceL2SegmentSpec;
+using intf::InterfaceL2SegmentRequestMsg;
+using intf::InterfaceL2SegmentResponseMsg;
+using intf::InterfaceL2SegmentResponse;
 
 using port::Port;
 using port::PortSpec;
@@ -61,6 +72,8 @@ using debug::SlabGetResponseMsg;
 using debug::SlabSpec;
 using debug::SlabStats;
 
+using types::EncapInfo;
+
 using event::Event;
 using event::EventRequest;
 using event::EventResponse;
@@ -72,7 +85,7 @@ public:
     hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
     l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
 	event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
-    debug_stub_(Debug::NewStub(channel)) {}
+    debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)) {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -357,6 +370,7 @@ public:
 
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_vrf_id(vrf_id);
+        spec->set_vrf_type(::types::VRF_TYPE_CUSTOMER);
 
         status = vrf_stub_->VrfCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
@@ -455,9 +469,12 @@ public:
         return;
     }
 
-    uint64_t l2segment_create(uint32_t vrf_id,
+    uint64_t l2segment_create(uint64_t vrf_id,
                               uint64_t l2segment_id,
-                              uint64_t l4_profile_handle) {
+                              ::types::L2SegmentType l2seg_type,
+                              ::l2segment::BroadcastFwdPolicy bcast_policy,
+                              ::l2segment::MulticastFwdPolicy mcast_policy,
+                              EncapInfo   l2seg_encap) {
         L2SegmentSpec           *spec;
         L2SegmentRequestMsg     req_msg;
         L2SegmentResponseMsg    rsp_msg;
@@ -467,9 +484,12 @@ public:
         spec = req_msg.add_request();
         spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_segment_id(l2segment_id);
-        spec->mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-        spec->mutable_wire_encap()->set_encap_value(100);
-
+        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+        spec->set_segment_type(l2seg_type);
+        spec->set_mcast_fwd_policy(mcast_policy);
+        spec->set_bcast_fwd_policy(bcast_policy);
+        spec->mutable_wire_encap()->set_encap_type(l2seg_encap.encap_type());
+        spec->mutable_wire_encap()->set_encap_value(l2seg_encap.encap_value());
         status = l2seg_stub_->L2SegmentCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
@@ -482,6 +502,76 @@ public:
                   << rsp_msg.response(0).api_status()
                   << std::endl;
         return 0;
+    }
+
+    // create few uplinks
+    void uplinks_create(uint32_t num_uplinks, uint64_t native_l2seg_id) {
+        InterfaceSpec           *spec;
+        InterfaceRequestMsg     req_msg;
+        InterfaceResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+        static uint64_t         if_id = 1;
+        static uint64_t         port_num = 1;
+
+        for (uint32_t i = 0; i < num_uplinks; i++) {
+            spec = req_msg.add_request();
+            spec->mutable_key_or_handle()->set_interface_id(if_id++);
+            spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
+            spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+            spec->mutable_if_uplink_info()->set_port_num(port_num++);
+            spec->mutable_if_uplink_info()->set_native_l2segment_id(native_l2seg_id);
+        }
+        status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
+                std::cout << "Uplink interface create succeeded, handle = "
+                          << rsp_msg.response(i).status().if_handle()
+                          << std::endl;
+            }
+        } else {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                std::cout << "Uplink interface create failed, error = "
+                          << rsp_msg.response(i).api_status()
+                          << std::endl;
+            }
+        }
+
+        return;
+    }
+
+    void add_l2seg_on_uplinks(uint32_t num_uplinks, uint64_t l2seg_id) {
+        InterfaceL2SegmentSpec           *spec;
+        InterfaceL2SegmentRequestMsg     req_msg;
+        InterfaceL2SegmentResponseMsg    rsp_msg;
+        ClientContext                    context;
+        Status                           status;
+        static uint64_t                  if_id = 1;
+
+        for (uint32_t i = 0; i < num_uplinks; i++) {
+            spec = req_msg.add_request();
+            spec->mutable_l2segment_key_or_handle()->set_segment_id(l2seg_id);
+            spec->mutable_if_key_handle()->set_interface_id(if_id++);
+        }
+        status = intf_stub_->AddL2SegmentOnUplink(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
+                std::cout << "L2 Segment " << l2seg_id
+                          << " add on uplink " << i + 1
+                          << " succeeded" << std::endl;
+            }
+        } else {
+            for (uint32_t i = 0; i < num_uplinks; i++) {
+                std::cout << "L2 Segment " << l2seg_id
+                          << " add on uplink " << i + 1
+                          << " failed, err " << rsp_msg.response(i).api_status()
+                          << std::endl;
+            }
+        }
+
+        return;
     }
 
     void event_test(void) {
@@ -529,6 +619,7 @@ private:
     std::unique_ptr<Event::Stub> event_stub_;
 	std::unique_ptr<System::Stub> system_stub_;
 	std::unique_ptr<Debug::Stub> debug_stub_;
+    std::unique_ptr<Interface::Stub> intf_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
@@ -702,10 +793,11 @@ int port_test(hal_client *hclient, int vrf_id)
 int
 main (int argc, char** argv)
 {
-#if 0
-    uint64_t    hal_handle;
-    int         vrf_id = 1;
-#endif
+    uint64_t    vrf_handle;
+    uint64_t    l2seg_handle;
+    uint64_t    vrf_id = 1, l2seg_id = 1;
+    EncapInfo   l2seg_encap;
+
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
 
@@ -717,31 +809,42 @@ main (int argc, char** argv)
 
     // delete a non-existent vrf
     hclient.vrf_delete_by_id(1);
-
-    // create a vrf and perform GETs
-    hal_handle = hclient.vrf_create(1);
-    assert(hal_handle != 0);
-    assert(hclient.vrf_get_by_handle(hal_handle) != 0);
-    assert(hclient.vrf_get_by_id(1) != 0);
-    hclient.vrf_delete_by_handle(hal_handle);
-    assert(hclient.vrf_get_by_id(1) == 0);   // should fail
-
-    // recreate the vrf
-    hal_handle = hclient.vrf_create(1);
-    assert(hal_handle != 0);
-
-    // create L2 segment
-    assert(hclient.l2segment_create(1, 1, 1) != 0);
-    hclient.vrf_delete_by_id(1);
-
-    // Get system statistics
-    hclient.system_get();
 #endif
 
+    // create a vrf and perform GETs
+    vrf_handle = hclient.vrf_create(vrf_id);
+    assert(vrf_handle != 0);
+    assert(hclient.vrf_get_by_handle(vrf_handle) != 0);
+    assert(hclient.vrf_get_by_id(vrf_id) != 0);
+    //hclient.vrf_delete_by_handle(hal_handle);
+    //assert(hclient.vrf_get_by_id(1) == 0);   // should fail
+
+    // recreate the vrf
+    //vrf_handle = hclient.vrf_create(vrf_id);
+    //assert(vrf_handle != 0);
+
     // Get slab statistics
-    hclient.slab_get();
+    //hclient.slab_get();
+
+    // create L2 segment
+    l2seg_encap.set_encap_type(::types::ENCAP_TYPE_NONE);
+    l2seg_encap.set_encap_value(0);
+    l2seg_handle =
+        hclient.l2segment_create(vrf_id, l2seg_id,
+                                 ::types::L2_SEGMENT_TYPE_TENANT,
+                                 ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
+                                 ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
+                                 l2seg_encap);
+    assert(l2seg_handle != 0);
+
+    hclient.uplinks_create(4, l2seg_id);
+    hclient.add_l2seg_on_uplinks(4, l2seg_id);
+    //hclient.vrf_delete_by_id(1);
+
+    // Get system statistics
+    //hclient.system_get();
 
     // subscribe and listen to HAL events
-    hclient.event_test();
+    //hclient.event_test();
     return 0;
 }
