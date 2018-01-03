@@ -306,32 +306,33 @@ sfw_exec(fte::ctx_t& ctx)
             flowupd.flow_state.tcp_ack_num = ntohl(rxhdr->tcp_ack_num);
             flowupd.flow_state.tcp_win_sz = ntohs(rxhdr->tcp_window);
 
+            //set defaults
+            flowupd.flow_state.tcp_mss = DEFAULT_MSS;
+            flowupd.flow_state.tcp_ws_option_sent = 0;
+            flowupd.flow_state.tcp_ts_option_sent = 0;
+            flowupd.flow_state.tcp_sack_perm_option_sent = 0;
+
             // TCP Options
             if (rxhdr->flags & CPU_FLAGS_TCP_OPTIONS_PRESENT) {
                 // MSS Option
-                flowupd.flow_state.tcp_mss = DEFAULT_MSS;
                 if (rxhdr->tcp_options & CPU_TCP_OPTIONS_MSS) {
                     flowupd.flow_state.tcp_mss = ntohs(rxhdr->tcp_mss);
                 }
 
                 // Window Scale option
-                flowupd.flow_state.tcp_ws_option_sent = 0;
                 if (rxhdr->tcp_options & CPU_TCP_OPTIONS_WINDOW_SCALE) {
                     flowupd.flow_state.tcp_ws_option_sent = 1;
                     flowupd.flow_state.tcp_win_scale = rxhdr->tcp_ws;
                 }
 
                 // timestamp option
-                flowupd.flow_state.tcp_ts_option_sent = 0;
                 if (rxhdr->tcp_options & CPU_TCP_OPTIONS_TIMESTAMP) {
                     flowupd.flow_state.tcp_ts_option_sent = 1;
                 }
                 // sack_permitted option
-                flowupd.flow_state.tcp_sack_perm_option_sent = 0;
                 if (rxhdr->tcp_options & CPU_TCP_OPTIONS_SACK_PERMITTED) {
                     flowupd.flow_state.tcp_sack_perm_option_sent = 1;
                 }
-                
             }
         }
     } else { /* rflow */
