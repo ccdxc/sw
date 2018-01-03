@@ -130,12 +130,14 @@ appid_exec(fte::ctx_t& ctx)
         goto done;
     case APPID_STATE_NEEDED:
         // appid not previously started
+        app_redir_policy_applic_set(ctx);
         ctx.register_feature_session_state((fte::feature_session_state_t*)app_ctx->appid_info());
         HAL_TRACE_DEBUG("appid state needed, begin scanning pkt");
         ret = exec_appid_start(ctx);
         HAL_TRACE_DEBUG("appid state needed, end scanning pkt, status={}", ret);
         break;
     case APPID_STATE_IN_PROGRESS:
+        app_redir_policy_applic_set(ctx);
         HAL_TRACE_DEBUG("appid state in progress, begin scanning pkt");
         ret = exec_appid_continue(ctx);
         HAL_TRACE_DEBUG("appid state in progress, end scanning pkt, status={}", ret);
@@ -155,10 +157,7 @@ appid_exec(fte::ctx_t& ctx)
     }
 
 done:
-    if(ctx.flow_miss()) {
-        if (app_ctx->appid_in_progress())
-            app_redir_policy_applic_set(ctx);
-    } else if(!app_ctx->appid_updated() && !app_ctx->appid_completed()) {
+    if(!ctx.flow_miss() && !app_ctx->appid_updated() && !app_ctx->appid_completed()) {
         app_ctx->set_pipeline_end(true);
         return app_redir_exec_fini(ctx);
     }

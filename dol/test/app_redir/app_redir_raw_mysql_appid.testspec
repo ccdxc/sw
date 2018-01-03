@@ -39,7 +39,7 @@ packets:
             tcp:
                 #sport   : ref://testcase/config/flow/sport
                 sport   : 46625
-                dport   : 3307
+                dport   : 3306
                 #seq     : callback://tcpcb/tcpcb/GetSeqNum
                 #ack     : callback://tcpcb/tcpcb/GetAckNum
                 seq     : 0
@@ -58,7 +58,7 @@ packets:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip
             tcp:
-                sport   : 3307
+                sport   : 3306
                 dport   : 46625
                 #dport   : ref://testcase/config/flow/sport
                 #seq     : callback://tcpcb/tcpcb/GetReverseFlowSeqNum
@@ -80,7 +80,7 @@ packets:
                 dst     : ref://testcase/config/flow/dip
             tcp:
                 sport   : 46625
-                dport   : 3307
+                dport   : 3306
                 seq     : 0x1
                 ack     : 0x1
                 flags   : ack
@@ -97,7 +97,7 @@ packets:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip
             tcp:
-                sport   : 3307
+                sport   : 3306
                 dport   : 46625
                 seq     : 0x1
                 ack     : 0x1
@@ -118,7 +118,7 @@ packets:
                 dst     : ref://testcase/config/flow/dip
             tcp:
                 sport   : 46625
-                dport   : 3307
+                dport   : 3306
                 seq     : 0x1
                 ack     : 0x4f
                 flags   : ack

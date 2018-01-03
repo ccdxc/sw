@@ -33,7 +33,7 @@ targets:
   parser:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo parser --feature parser" ]
   telemetry:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo telemetry --feature telemetry" ]
   p4pt:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo proxy --feature p4pt" ]
-  app_redir:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo proxy --feature app_redir" ]
+  app_redir:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo app_redir --feature app_redir" ]
   # configtoggle: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo up2up --feature networking --configtoggle" ]
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft-build && ./run.py  --gft" ]
   base-ethnw:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo base --feature eth,networking" ]

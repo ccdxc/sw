@@ -1,9 +1,9 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_APP_REDIR
+    id: SEGMENT_NATIVE_APP_REDIR
 
 type        : tenant
-native      : False
+native      : True
 broadcast   : flood
 multicast   : flood
 l4lb        : True

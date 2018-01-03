@@ -456,6 +456,8 @@ class FlowObject(base.ConfigObjectBase):
             assert(0)
 
         action = "FLOW_ACTION_" + self.action
+        if action == "FLOW_ACTION_DENY":
+            action = "FLOW_ACTION_DROP"	
         req_spec.flow_data.flow_info.flow_action = haldefs.session.FlowAction.Value(action)
         nat_type = "NAT_TYPE_" + self.nat_type
         req_spec.flow_data.flow_info.nat_type = haldefs.session.NatType.Value(nat_type)
