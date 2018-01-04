@@ -9,6 +9,7 @@ import (
 	"time"
 
 	apisrv "github.com/pensando/sw/venice/apiserver"
+	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -67,8 +68,8 @@ func TestRegistration(t *testing.T) {
 		t.Errorf("could not retrieve registered service")
 	}
 
-	m1 := newFakeMessage("", true)
-	m2 := newFakeMessage("", true)
+	m1 := mocks.NewFakeMessage("", true)
+	m2 := mocks.NewFakeMessage("", true)
 	msgs := make(map[string]apisrv.Message)
 	msgs["msg1"] = m1
 	msgs["msg2"] = m2

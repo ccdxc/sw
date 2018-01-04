@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -16,6 +17,7 @@ import (
 
 type bookstoreHooks struct {
 	svc     apiserver.Service
+	idMutex sync.Mutex
 	orderID int64
 	logger  log.Logger
 	tracer  opentracing.Tracer
@@ -34,8 +36,11 @@ func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interf
 	if oper == apiserver.CreateOper {
 		// Here we are just using a local ID. This might more typically be calling a distributed
 		// ID generator to reserve an ID.
+		s.idMutex.Lock()
 		s.orderID++
-		r.Spec.Id = fmt.Sprintf("order-%d", s.orderID)
+		id := s.orderID
+		s.idMutex.Unlock()
+		r.Spec.Id = fmt.Sprintf("order-%d", id)
 		r.Name = r.Spec.Id
 		s.logger.InfoLog("msg", "Created new order ID", "order", r.Spec.Id)
 		r.Status.Status = "PROCESSING"

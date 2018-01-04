@@ -2,195 +2,32 @@ package apisrvpkg
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	oldcontext "golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
 	apisrv "github.com/pensando/sw/venice/apiserver"
+	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
-	"github.com/pensando/sw/venice/utils/log"
 )
-
-// fakeMessage is used as a mock object for testing.
-type fakeMessage struct {
-	calledTxfms    []string
-	kvpath         string
-	validateRslt   bool
-	validateCalled int
-	defaultCalled  int
-	kvwrites       int
-	kvreads        int
-	kvdels         int
-	kvlists        int
-	kvwatch        int
-	txnwrites      int
-	txngets        int
-	txndels        int
-	objverwrite    int
-	uuidwrite      int
-}
-
-var txnTestKey = "/txn/testobj"
-
-func (m *fakeMessage) WithTransform(from, to string, fn apisrv.TransformFunc) apisrv.Message { return m }
-func (m *fakeMessage) WithValidate(fn apisrv.ValidateFunc) apisrv.Message                    { return m }
-func (m *fakeMessage) WithDefaulter(fn apisrv.DefaulterFunc) apisrv.Message                  { return m }
-func (m *fakeMessage) WithKeyGenerator(fn apisrv.KeyGenFunc) apisrv.Message                  { return m }
-func (m *fakeMessage) WithKvUpdater(fn apisrv.UpdateKvFunc) apisrv.Message                   { return m }
-func (m *fakeMessage) WithKvGetter(fn apisrv.GetFromKvFunc) apisrv.Message                   { return m }
-func (m *fakeMessage) WithKvDelFunc(fn apisrv.DelFromKvFunc) apisrv.Message                  { return m }
-func (m *fakeMessage) WithResponseWriter(fn apisrv.ResponseWriterFunc) apisrv.Message        { return m }
-func (m *fakeMessage) WithKvTxnDelFunc(fn apisrv.DelFromKvTxnFunc) apisrv.Message            { return m }
-func (m *fakeMessage) WithKvTxnUpdater(fn apisrv.UpdateKvTxnFunc) apisrv.Message             { return m }
-func (m *fakeMessage) WithKvListFunc(fn apisrv.ListFromKvFunc) apisrv.Message                { return m }
-func (m *fakeMessage) WithKvWatchFunc(fn apisrv.WatchKvFunc) apisrv.Message                  { return m }
-func (m *fakeMessage) WithObjectVersionWriter(fn apisrv.SetObjectVersionFunc) apisrv.Message { return m }
-func (m *fakeMessage) WithUUIDWriter(fn apisrv.CreateUUIDFunc) apisrv.Message                { return m }
-func (m *fakeMessage) WithCreationTimeWriter(fn apisrv.SetCreationTimeFunc) apisrv.Message   { return m }
-func (m *fakeMessage) WithModTimeWriter(fn apisrv.SetModTimeFunc) apisrv.Message             { return m }
-func (m *fakeMessage) GetKind() string                                                       { return "" }
-func (m *fakeMessage) WriteObjVersion(i interface{}, version string) interface{}             { return i }
-func (m *fakeMessage) ListFromKv(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-	m.kvlists++
-	return nil, nil
-}
-func (m *fakeMessage) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, prefix string) error {
-	m.kvwatch++
-	return nil
-}
-func (m *fakeMessage) DelFromKv(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
-	m.kvdels++
-	return nil, nil
-}
-func (m *fakeMessage) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key string) error {
-	m.txndels++
-	txn.Delete(key)
-	return nil
-}
-func (m *fakeMessage) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error {
-	m.txnwrites++
-	msg := i.(*kvstore.TestObj)
-	if create {
-		txn.Create(txnTestKey, msg)
-	} else {
-		txn.Update(txnTestKey, msg)
-	}
-	return nil
-}
-func (m *fakeMessage) GetKVKey(i interface{}, prefix string) (string, error) {
-	return m.kvpath, nil
-}
-func (m *fakeMessage) WriteToKv(ctx context.Context, kv kvstore.Interface, i interface{}, prerfix string, create, ignStatus bool) (interface{}, error) {
-	m.kvwrites++
-	return i, nil
-}
-func (m *fakeMessage) GetFromKv(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
-	m.kvreads++
-	return nil, nil
-}
-func (m *fakeMessage) PrepareMsg(from, to string, i interface{}) (interface{}, error) {
-	m.calledTxfms = append(m.calledTxfms, from+"-"+to)
-	return i, nil
-}
-func (m *fakeMessage) Default(i interface{}) interface{} {
-	return i
-}
-func (m *fakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) error {
-	if m.validateRslt {
-		return nil
-	}
-	return errors.New("Setup to fail validation")
-}
-
-func newFakeMessage(kvPath string, validateResult bool) apisrv.Message {
-	r := fakeMessage{kvpath: kvPath, validateRslt: validateResult}
-	return &r
-}
-
-func (m *fakeMessage) transformCb(from, to string, i interface{}) interface{} {
-	r, _ := m.PrepareMsg(from, to, i)
-	return r
-}
-
-func (m *fakeMessage) validateFunc(i interface{}, ver string, ignstatus bool) error {
-	m.validateCalled++
-	return nil
-}
-
-func (m *fakeMessage) defaultFunc(i interface{}) interface{} {
-	m.defaultCalled++
-	return i
-}
-
-func (m *fakeMessage) kvUpdateFunc(ctx context.Context, kv kvstore.Interface, i interface{}, prefix string, create bool, ignstatus bool) (interface{}, error) {
-	m.kvwrites++
-	return i, nil
-}
-
-func (m *fakeMessage) txnUpdateFunc(ctx context.Context, kvstore kvstore.Txn, i interface{}, prefix string, create bool) error {
-	m.txnwrites++
-	return nil
-}
-
-func (m *fakeMessage) kvGetFunc(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
-	m.kvreads++
-	return nil, nil
-}
-
-func (m *fakeMessage) kvDelFunc(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
-	m.kvdels++
-	return nil, nil
-}
-
-func (m *fakeMessage) delFromKvTxnFunc(ctx context.Context, kvstore kvstore.Txn, key string) error {
-	m.txndels++
-	return nil
-}
-
-func (m *fakeMessage) objVerWrite(i interface{}, version string) interface{} {
-	m.objverwrite++
-	return i
-}
-
-func (m *fakeMessage) kvWatchFunc(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-	m.kvwatch++
-	return nil
-}
-
-func (m *fakeMessage) kvListFunc(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-	m.kvlists++
-	return nil, nil
-}
-func (m *fakeMessage) CreateUUID(i interface{}) (interface{}, error) {
-	m.uuidwrite++
-	return i, nil
-}
-func (m *fakeMessage) WriteCreationTime(i interface{}) (interface{}, error) {
-	return i, nil
-}
-func (m *fakeMessage) WriteModTime(i interface{}) (interface{}, error) {
-	return i, nil
-}
 
 // TestPrepareMessage
 // Tests the version transform functionality of the message.
 // Tests both when there is a valid transformation and when the
 // transformation is not registered.
 func TestPrepareMessage(t *testing.T) {
-	f := newFakeMessage("/test", true).(*fakeMessage)
-	m := NewMessage("TestType1").WithTransform("v1", "v2", f.transformCb)
-	msg := fakeMessage{}
+	f := mocks.NewFakeMessage("/test", true).(*mocks.FakeMessage)
+	m := NewMessage("TestType1").WithTransform("v1", "v2", f.TransformCb)
+	msg := mocks.FakeMessage{}
 	m.PrepareMsg("v1", "v2", msg)
-	if len(f.calledTxfms) != 1 {
-		t.Errorf("Expecting 1 transform found %v", len(f.calledTxfms))
+	if len(f.CalledTxfms) != 1 {
+		t.Errorf("Expecting 1 transform found %v", len(f.CalledTxfms))
 	}
 
-	if f.calledTxfms[0] != "v1-v2" {
-		t.Errorf("Expecting [v1-v2] transform found %v", f.calledTxfms[0])
+	if f.CalledTxfms[0] != "v1-v2" {
+		t.Errorf("Expecting [v1-v2] transform found %v", f.CalledTxfms[0])
 	}
 
 	// Call with unregistered transform
@@ -226,49 +63,49 @@ func (s fakeGrpcStream) SetTrailer(_ metadata.MD) {
 // Tests the various Hooks for the message
 func TestMessageWith(t *testing.T) {
 	MustGetAPIServer()
-	f := newFakeMessage("/test", true).(*fakeMessage)
-	m := NewMessage("TestType1").WithValidate(f.validateFunc).WithDefaulter(f.defaultFunc)
-	m = m.WithKvUpdater(f.kvUpdateFunc).WithKvGetter(f.kvGetFunc).WithKvDelFunc(f.kvDelFunc).WithObjectVersionWriter(f.objVerWrite)
-	m = m.WithKvTxnUpdater(f.txnUpdateFunc).WithKvTxnDelFunc(f.delFromKvTxnFunc)
-	m = m.WithKvWatchFunc(f.kvWatchFunc).WithKvListFunc(f.kvListFunc)
+	f := mocks.NewFakeMessage("/test", true).(*mocks.FakeMessage)
+	m := NewMessage("TestType1").WithValidate(f.ValidateFunc).WithDefaulter(f.DefaultFunc)
+	m = m.WithKvUpdater(f.KvUpdateFunc).WithKvGetter(f.KvGetFunc).WithKvDelFunc(f.KvDelFunc).WithObjectVersionWriter(f.ObjverwriteFunc)
+	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc)
+	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc)
 	m = m.WithUUIDWriter(f.CreateUUID)
 	singletonAPISrv.runstate.running = true
 	m.Validate(nil, "", true)
 	var kv kvstore.Interface
-	if f.validateCalled != 1 {
-		t.Errorf("Expecting 1 validation found %d", f.validateCalled)
+	if f.ValidateCalled != 1 {
+		t.Errorf("Expecting 1 validation found %d", f.ValidateCalled)
 	}
 	m.Default(nil)
-	if f.defaultCalled != 1 {
-		t.Errorf("Expecting 1 call to Defaulter function found %d", f.defaultCalled)
+	if f.DefaultCalled != 1 {
+		t.Errorf("Expecting 1 call to Defaulter function found %d", f.DefaultCalled)
 	}
 
 	m.GetFromKv(context.TODO(), kv, "testkey")
-	if f.kvreads != 1 {
-		t.Errorf("Expecting 1 call to KV read found %d", f.kvreads)
+	if f.Kvreads != 1 {
+		t.Errorf("Expecting 1 call to KV read found %d", f.Kvreads)
 	}
 
 	m.WriteToKv(context.TODO(), kv, nil, "testprefix", true, true)
-	if f.kvwrites != 1 {
-		t.Errorf("Expecting 1 call to KV Write found %d", f.kvwrites)
+	if f.Kvwrites != 1 {
+		t.Errorf("Expecting 1 call to KV Write found %d", f.Kvwrites)
 	}
 
 	m.WriteToKvTxn(context.TODO(), nil, nil, "testprefix", true)
-	if f.txnwrites != 1 {
-		t.Errorf("Expecting 1 call to Txn write found %d", f.txnwrites)
+	if f.Txnwrites != 1 {
+		t.Errorf("Expecting 1 call to Txn write found %d", f.Txnwrites)
 	}
 	m.DelFromKv(context.TODO(), kv, "testKey")
-	if f.kvdels != 1 {
-		t.Errorf("Expecting 1 call to KV Del found %d", f.kvdels)
+	if f.Kvdels != 1 {
+		t.Errorf("Expecting 1 call to KV Del found %d", f.Kvdels)
 	}
 
 	m.DelFromKvTxn(context.TODO(), nil, "testKey")
-	if f.txndels != 1 {
-		t.Errorf("Expecting 1 call to Txn Del found %d", f.txndels)
+	if f.Txndels != 1 {
+		t.Errorf("Expecting 1 call to Txn Del found %d", f.Txndels)
 	}
 	m.CreateUUID(nil)
-	if f.uuidwrite != 1 {
-		t.Errorf("Expecting 1 call to CreateUUID found %d", f.uuidwrite)
+	if f.Uuidwrite != 1 {
+		t.Errorf("Expecting 1 call to CreateUUID found %d", f.Uuidwrite)
 	}
 
 	ctx := context.TODO()

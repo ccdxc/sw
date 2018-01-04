@@ -4,15 +4,16 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/venice/apiserver"
+	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 )
 
 // TestMethodKvWrite
 // Test registering of methods to service and retrieval
 func TestSvcAddMethod(t *testing.T) {
 	svc := NewService("testSvc").(*ServiceHdlr)
-	svc.AddMethod("Method1", newFakeMethod(true))
-	svc.AddMethod("Method2", newFakeMethod(true))
-	svc.AddMethod("AutoWatchMethod2", newFakeMethod(true))
+	svc.AddMethod("Method1", mocks.NewFakeMethod(true))
+	svc.AddMethod("Method2", mocks.NewFakeMethod(true))
+	svc.AddMethod("AutoWatchMethod2", mocks.NewFakeMethod(true))
 
 	if len(svc.Methods) != 3 {
 		t.Errorf("Expecting [3] methods found [%v]", len(svc.Methods))
@@ -28,13 +29,13 @@ func TestSvcAddMethod(t *testing.T) {
 		t.Errorf("Get method [Method2] failed")
 	}
 
-	m1 := svc.GetMethod("Method1").(*fakeMethod)
+	m1 := svc.GetMethod("Method1").(*mocks.FakeMethod)
 	svc.Disable()
-	if m1.enabled == true {
+	if m1.Enabled == true {
 		t.Errorf("method should be Disabled")
 	}
 	svc.Enable()
-	if m1.enabled == false {
+	if m1.Enabled == false {
 		t.Errorf("method should be Enabled")
 	}
 }
