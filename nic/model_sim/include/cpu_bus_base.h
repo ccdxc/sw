@@ -29,7 +29,7 @@ class cpu_csr_node_info_base {
 
         virtual void write(uint64_t addr, uint32_t data, uint32_t flags) {};
         virtual uint32_t read(uint64_t addr, uint32_t flags) { return 0xdeadbeef; };
-        virtual void block_write(uint64_t addr, int size, vector<uint32_t> data, uint32_t flags) {}
+        virtual void block_write(uint64_t addr, int size, const vector<uint32_t>& data, uint32_t flags) {}
         virtual vector<uint32_t> block_read(uint64_t addr, int size, uint32_t flags) {
             vector<uint32_t> a;
             for(int ii = 0; ii < size; ii++) { a.push_back(0xdeadbeef); }
@@ -64,7 +64,7 @@ public:
 
   virtual uint32_t read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0 ; 
   virtual void write(uint32_t chip, uint64_t addr, uint32_t data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0;
-  virtual void block_write(uint32_t chip, uint64_t addr, int size, vector<uint32_t> data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0;
+  virtual void block_write(uint32_t chip, uint64_t addr, int size, const vector<uint32_t>& data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0;
   virtual vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0; 
   virtual bool burst_write(uint32_t chip, uint64_t addr, unsigned int len, const unsigned char * data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e, bool reverse_byte_order = false) {
     PLOG_ERR("cpu burst write not implemented. name=" << _cpu_if_name << " path:" << _cpu_if_hier_path << endl);

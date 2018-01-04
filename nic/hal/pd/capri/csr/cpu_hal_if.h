@@ -20,7 +20,7 @@ public:
   virtual void write(uint32_t chip, uint64_t addr, uint32_t data,
                      cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e);
   void block_write(uint32_t chip, uint64_t addr, int size,
-                   vector<uint32_t> data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) {}
+                   const vector<uint32_t>& data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) {}
   vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size,
                               cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) {
     vector<uint32_t> ret_val;

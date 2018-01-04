@@ -68,9 +68,9 @@ public:
   void add_cpu_csr_node_info(std::shared_ptr<cpu_csr_node_info_base> node_ptr);
   bool cpu_csr_node_write(uint32_t chip, uint64_t addr, uint32_t data, uint32_t flags=secure_acc_e);
   bool cpu_csr_node_read(uint32_t chip, uint64_t addr, uint32_t & data, uint32_t flags=secure_acc_e);
-  bool cpu_csr_node_block_write(uint32_t chip, uint64_t addr, uint32_t size, vector<uint32_t> data, uint32_t flags=secure_acc_e);
+  bool cpu_csr_node_block_write(uint32_t chip, uint64_t addr, uint32_t size, const vector<uint32_t>& data, uint32_t flags=secure_acc_e);
   bool cpu_csr_node_block_read(uint32_t chip, uint64_t addr, uint32_t size, vector<uint32_t> & data, uint32_t flags=secure_acc_e);
-  void block_write(uint32_t chip, uint64_t addr, int size, vector<uint32_t> data, bool no_zero_time, uint32_t flags=secure_acc_e);
+  void block_write(uint32_t chip, uint64_t addr, int size, const vector<uint32_t>& data, bool no_zero_time, uint32_t flags=secure_acc_e);
   vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size, bool no_zero_time, uint32_t flags=secure_acc_e);
   bool burst_write(uint32_t chip, uint64_t addr, unsigned int len, const unsigned char * data, bool no_zero_time, uint32_t flags=secure_acc_e, bool reverse_byte_order = false);
   bool burst_read(uint32_t chip, uint64_t addr, unsigned int len, unsigned char * data, bool no_zero_time, uint32_t flags=secure_acc_e, bool reverse_byte_order = false);
