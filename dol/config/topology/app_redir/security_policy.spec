@@ -11,10 +11,52 @@ policies:
                 log    :  True
                 svcs:
                     - svc:
-                        proto    : 0
-                        dst_port : 0
+                        proto    : 6
+                        dst_port : 3306
+                    - svc:
+                        proto    : 17
+                        dst_port : 53
+                    - svc:
+                        proto    : 6
+                        dst_port : 12380
+                    - svc:
+                        proto    : 6
+                        dst_port : 27017
                 apps:
                     - app : "MYSQL"
+                    - app : "DNS"
+                    - app : "HTTP"
+                    - app : "MONGO"
+            - rule:
+                action :  ALLOW
+                log    :  True
+                svcs:
+                    - svc:
+                        proto    : 6
+                        dst_port : 3307
+                    - svc:
+                        proto    : 6
+                        dst_port : 2501
+                    - svc:
+                        proto    : 6
+                        dst_port : 19694
+                    - svc:
+                        proto    : 6
+                        dst_port : 23763
+                    - svc:
+                        proto    : 6
+                        dst_port : 23765
+                    - svc:
+                        proto    : 6
+                        dst_port : 23767
+            - rule:
+                action :  DENY
+                log    :  True
+                svcs:
+                    - svc:
+                        proto    : 0
+                        dst_port : 0
+
 
     - policy:
         id         : SEC_POLICY_ALLOW12
@@ -25,7 +67,49 @@ policies:
                 log    :  True
                 svcs:
                     - svc:
+                        proto    : 6
+                        dst_port : 3306
+                    - svc:
+                        proto    : 17
+                        dst_port : 53
+                    - svc:
+                        proto    : 6
+                        dst_port : 12380
+                    - svc:
+                        proto    : 6
+                        dst_port : 27017
+                apps:
+                    - app : "MYSQL"
+                    - app : "DNS"
+                    - app : "HTTP"
+                    - app : "MONGO"
+            - rule:
+                action :  ALLOW
+                log    :  True
+                svcs:
+                    - svc:
+                        proto    : 6
+                        dst_port : 3307
+                    - svc:
+                        proto    : 6
+                        dst_port : 2501
+                    - svc:
+                        proto    : 6
+                        dst_port : 19694
+                    - svc:
+                        proto    : 6
+                        dst_port : 23763
+                    - svc:
+                        proto    : 6
+                        dst_port : 23765
+                    - svc:
+                        proto    : 6
+                        dst_port : 23767
+            - rule:
+                action :  DENY
+                log    :  True
+                svcs:
+                    - svc:
                         proto    : 0
                         dst_port : 0
-                apps:
-                    - app : "DNS"
+

@@ -6,6 +6,8 @@ type    : tenant
 overlay : vlan
 
 segments:
+    - spec  : ref://store/specs/id=SEGMENT_NATIVE_APP_REDIR
+      count : 1
     - spec  : ref://store/specs/id=SEGMENT_APP_REDIR
       count : 1
 
@@ -16,5 +18,12 @@ nfveps: 0
 
 security_profile: ref://store/objects/id=SEC_PROF_ACTIVE
 security_policy: ref://store/specs/id=SECURITY_POLICY_APP_REDIR
+
+sessions:
+    unidest:
+        ipv4:
+            - ref://store/specs/id=SESSION_TCP_APP_REDIR
+        ipv6: None
+        mac: None
 
 lif: ref://store/specs/id=LIF_ETH

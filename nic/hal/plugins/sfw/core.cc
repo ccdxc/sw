@@ -67,6 +67,8 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
                 if(appid_policy) {
                     if(!app_ctx->appid_started()) {
                         app_ctx->set_appid_needed();
+                        match_rslt->valid  = 1;
+                        match_rslt->action = session::FLOW_ACTION_ALLOW;
                         return HAL_RET_OK;
                     }
 
