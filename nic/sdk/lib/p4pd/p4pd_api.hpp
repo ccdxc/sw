@@ -60,9 +60,10 @@ typedef int p4pd_error_t;
 
 //#include "nic/include/base.h"
 
-namespace sdk {
-namespace pd {
-namespace p4 {
+// TODO: Should eventually have to move p4pd to this namespace
+// namespace sdk {
+// namespace pd {
+// namespace p4 {
 
 #define P4PD_TCAM_DC_BIT                            0
 #define P4PD_TCAM_DC_UINT8                          0xFF
@@ -946,8 +947,8 @@ p4pd_error_t p4pd_gft_hwkey_hwmask_build(uint32_t tableid, void *swkey,
 
 /*======================== P4PD GLOBAL/COMMON TABLE C/R/W routines =============*/
 
-}   // namespace p4 
-}   // namespace pd
-}   // namespace sdk
+// }   // namespace p4 
+// }   // namespace pd
+// }   // namespace sdk
 
 #endif

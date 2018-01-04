@@ -541,7 +541,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg->vrf_handle = vrf->hal_handle;
     l2seg->seg_id = spec.key_or_handle().segment_id();
     l2seg->segment_type = spec.segment_type();
-    l2seg->pinned_uplink = spec.pinned_uplink();
+    l2seg->pinned_uplink = spec.pinned_uplink_if_handle();
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
     l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
     ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());

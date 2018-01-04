@@ -36,8 +36,7 @@ namespace hal {
 
 typedef struct l2seg_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
-    hal_handle_t          vrf_handle;           // vrf's handle
-    // vrf_id_t           vrf_id;               // vrf this L2 segment belongs to
+    hal_handle_t          vrf_handle;              // vrf's handle
     l2seg_id_t            seg_id;                  // L2 segment id
     L2SegmentType         segment_type;            // type of L2 segment
     encap_t               wire_encap;              // wire encap
@@ -54,7 +53,6 @@ typedef struct l2seg_s {
     uint32_t              num_ep;                  // no. of endpoints
     // forward references
     block_list            *nw_list;                // network list 
-    // dllist_ctxt_t         nw_list_head;            // network list
     // back references
     block_list            *if_list;                // interface list  
 

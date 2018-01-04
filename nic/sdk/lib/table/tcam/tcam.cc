@@ -6,7 +6,7 @@
 #include <cstring>
 
 using sdk::table::tcam_entry_t;
-using namespace sdk::pd::p4;         
+// using namespace sdk::pd::p4;         
 
 namespace sdk {
 namespace table {

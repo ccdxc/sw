@@ -139,7 +139,7 @@ class SegmentObject(base.ConfigObjectBase):
         return self.fabencap == 'VLAN'
     def IsFabEncapVxlan(self):
         return self.fabencap == 'VXLAN'
-    
+
     def IsIPV4EpLearnEnabled(self):
         return self.tenant.IsIPV4EpLearnEnabled()
 
@@ -314,7 +314,7 @@ class SegmentObject(base.ConfigObjectBase):
         req_spec.bcast_fwd_policy = self.broadcast_policy
 
         if (self.pinnedif != None):
-            req_spec.pinned_uplink = self.pinnedif.hal_handle
+            req_spec.pinned_uplink_if_handle = self.pinnedif.hal_handle
 
         for nw in self.obj_helper_nw.nws:
             if nw.ip_prefix:

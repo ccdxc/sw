@@ -19,7 +19,6 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/p4/nw/include/defines.h"
-#include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/plugins/plugins.hpp"
 #include "nic/hal/src/utils.hpp"
