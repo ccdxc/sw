@@ -1,0 +1,535 @@
+# Feature Test Modules List
+feature:
+    id          : rdma_ext
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    selectors:
+        maxrdmasessions: 8
+
+modules:
+    - module:
+        name    : RDMA_TX_SEND_ONLY_REXMIT_TIMEOUT
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_rexmit_timeout
+        spec    : req_tx_send_only_rexmit_timeout.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+ 
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_16B
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline_16B.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_DCQCN_RL
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inline_dcqcn_rl
+        spec    : req_tx_send_only_inline_dcqcn_rl.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_WRITE_ONLY_INLINE_16B
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_only
+        spec    : req_tx_write_only_inline_16B.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_2SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_2sges
+        spec    : req_tx_send_first_mid_last_2sges.testspec
+        ignore  : False
+  
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_IMM
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_imm
+        spec    : req_tx_send_first_mid_last_imm.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_ONLY_ECN_NO_CNP
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_ecn_no_cnp
+        spec    : req_rx_read_only_ecn_no_cnp.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_ONLY_2SGES
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only
+        spec    : req_rx_read_only_2sges.testspec
+        ignore  : False
+  
+    - module:
+        name    : RDMA_REQ_RX_READ_FML_EXACT
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_fml_exact
+        spec    : req_rx_read_fml_exact.testspec
+        ignore  : False
+
+    #- module:
+    #    name    : RDMA_TX_READ
+    #    enable  : True
+    #    package : test.rdma
+    #    module  : req_tx_read
+    #    spec    : req_tx_read.testspec
+    #    ignore  : False
+
+    #- module:
+    #    name    : RDMA_TX_ATOMIC_FETCHADD
+    #    enable  : True
+    #    package : test.rdma
+    #    module  : req_tx_atomic_fetchadd
+    #    spec    : req_tx_atomic_fetchadd.testspec
+    #    ignore  : False
+  
+    #- module:
+    #    name    : RDMA_TX_ATOMIC_CMPSWAP
+    #    enable  : True
+    #    package : test.rdma
+    #    module  : req_tx_atomic_cmpswap
+    #    spec    : req_tx_atomic_cmpswap.testspec
+    #    ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_4sges
+        spec    : req_tx_send_only_4sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_3SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_3sges
+        spec    : req_tx_send_only_3sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_IMM_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_imm_4sges
+        spec    : req_tx_send_only_imm_4sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INV_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inv_4sges
+        spec    : req_tx_send_only_inv_4sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_4sges
+        spec    : req_tx_send_first_mid_last_4sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_IMM_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_imm_4sges
+        spec    : req_tx_send_first_mid_last_imm_4sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_INV_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_inv_4sges
+        spec    : req_tx_send_first_mid_last_inv_4sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_ACK_EMPTY_RRQ
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_ack_empty_rrq
+        spec    : req_rx_coalesced_ack_empty_rrq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_ACK_NONEMPTY_RRQ
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_ack_nonempty_rrq
+        spec    : req_rx_coalesced_ack_nonempty_rrq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_READ_RESP_ACK
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_read_resp_ack
+        spec    : req_rx_coalesced_read_resp_ack.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_READ_RESP_ACK_2
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_read_resp_ack_2
+        spec    : req_rx_coalesced_read_resp_ack_2.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_COALESCED_ATOMIC_RESP_ACK
+        enable  : True
+        package : test.rdma
+        module  : req_rx_coalesced_atomic_resp_ack
+        spec    : req_rx_coalesced_atomic_resp_ack.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_ECN_NO_CNP
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_ecn_no_cnp
+        spec    : resp_rx_send_only_ecn_no_cnp.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_NO_OPTIONS
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_no_options
+        spec    : resp_rx_send_only_no_options.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_OPTIONS_NO_OCS
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_options_no_OCS
+        spec    : resp_rx_send_only_options_no_OCS.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_OPTIONS_OCS_ERROR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_options_OCS_error
+        spec    : resp_rx_send_only_options_OCS_error.testspec
+        ignore  : True
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_OPTIONS_OCS_AS_NON_FIRST_OPTION
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_options_OCS_as_non_first_option
+        spec    : resp_rx_send_only_options_OCS_as_non_first_option.testspec
+        ignore  : True
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_2CQ_1EQ
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_2cq_1eq
+        spec    : resp_rx_send_only_2cq_1eq.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR1
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_inv_lkey_err
+        spec    : resp_rx_send_only_inv_lkey_err1.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR2
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_inv_lkey_err
+        spec    : resp_rx_send_only_inv_lkey_err2.testspec
+        ignore  : True
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR3
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_inv_lkey_err3
+        spec    : resp_rx_send_only_inv_lkey_err3.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_INV_SRVC_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_inv_srvc_err
+        spec    : resp_rx_send_first_inv_srvc_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_2sges
+        spec    : resp_rx_send_only_2sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_FIRST_LAST_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_last_2sges
+        spec    : resp_rx_send_first_last_2sges.testspec
+        ignore  : False
+
+#   - module:
+#       name    : RDMA_RX_SEND_FML_ACK_ON_FIRST
+#       enable  : True
+#       package : test.rdma
+#       module  : resp_rx_send_fml_ack
+#       spec    : resp_rx_send_fml_ack_on_first.testspec
+#       ignore  : True
+
+    - module:
+        name    : RDMA_RX_SEND_FML_ACK_SYNDROME8
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack_syndrome8.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_ACK_SYNDROME13
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack_syndrome13.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_ACK_SYNDROME25
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack_syndrome25.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_FML_ACK_SYNDROME35
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack_syndrome35.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_LAST_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_last_2sges
+        spec    : resp_rx_send_first_mid_last_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_IMM_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_imm_2sges
+        spec    : resp_rx_send_only_imm_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_LAST_IMM_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_last_imm_2sges
+        spec    : resp_rx_send_first_last_imm_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_LAST_IMM_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_last_imm_2sges
+        spec    : resp_rx_send_first_mid_last_imm_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_INV_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_inv_2sges
+        spec    : resp_rx_send_only_inv_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_LAST_INV_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_last_inv_2sges
+        spec    : resp_rx_send_first_last_inv_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_LAST_INV_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_last_inv_2sges
+        spec    : resp_rx_send_first_mid_last_inv_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_PMTU_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_pmtu_err
+        spec    : resp_rx_send_first_pmtu_err.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_FIRST_SEQ_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_seq_err
+        spec    : resp_rx_send_first_seq_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_INV_RKEY2
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_inv_rkey2
+        spec    : resp_rx_write_only_inv_rkey2.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_INV_RKEY1
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_inv_rkey1
+        spec    : resp_rx_write_only_inv_rkey1.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_IMM_INV_RKEY1
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_imm_inv_rkey1
+        spec    : resp_rx_write_only_imm_inv_rkey1.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_IMM_INV_RKEY2
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_imm_inv_rkey2
+        spec    : resp_rx_write_only_imm_inv_rkey2.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_FIRST_INV_RKEY1
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_first_inv_rkey1
+        spec    : resp_rx_write_first_inv_rkey1.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_FIRST_INV_RKEY2
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_first_inv_rkey2
+        spec    : resp_rx_write_first_inv_rkey2.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_FML_IMM_INV_RKEY1
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_fml_imm_inv_rkey1
+        spec    : resp_rx_write_fml_imm_inv_rkey1.testspec
+        ignore  : False
+ 
+    # RQ Duplicate testcases
+    - module:
+        name    : RDMA_RX_DUPLICATE_SEND_ONLY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_send_only
+        spec    : resp_rx_duplicate_send_only.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_SEND_LAST_INV
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_send_last_inv
+        spec    : resp_rx_duplicate_send_last_inv.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_WRITE_ONLY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_write_only
+        spec    : resp_rx_duplicate_write_only.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_WRITE_LAST_IMM
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_write_last_imm
+        spec    : resp_rx_duplicate_write_last_imm.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_READ_ONLY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_read_only
+        spec    : resp_rx_duplicate_read_only.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RX_DUPLICATE_ATOMIC
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_duplicate_atomic
+        spec    : resp_rx_duplicate_atomic.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_RESP_RX_SEND_ONLY_ICRC_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_icrc_err
+        spec    : resp_rx_send_only_icrc_err.testspec
+        ignore  : False
+
+#    - module:
+#        name    : RDMA_RESP_RX_UD_SEND_ONLY_MLNX
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_icrc_err
+#        spec    : resp_rx_ud_send_only_mlnx.testspec
+#        ignore  : False
+
