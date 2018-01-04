@@ -1,4 +1,8 @@
 nic/third-party/grpc/*
+nic/third-party/boost/*
+nic/third-party/google/*
+nic/third-party/isc/*
+nic/third-party/zmq/*
 
 nic/third-party/lkl/export/bin/liblkl.so
 nic/third-party/lkl/export/x86_64/bin/liblkl.so
