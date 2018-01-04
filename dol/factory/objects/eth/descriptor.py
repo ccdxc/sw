@@ -13,27 +13,26 @@ class EthTxDescriptor(Packet):
     fields_desc = [
         LELongField("addr", 0),
         LEShortField("len", 0),
-        LEShortField("vlan_tag", 0),
-        BitField("mss", 0, 14),
-        BitField("encap", 0, 2),
+        LEShortField("vlan_tci", 0),
         BitField("hdr_len", 0, 10),
-        BitField("offload", 0, 2),
-        BitField("eop", 0, 1),
-        BitField("cq_entry", 0, 1),
-        BitField("vlan_insert", 0, 1),
-        BitField("rsvd0", 0, 1),
+        BitField("rsvd2", 0, 3),
+        BitField("V", 0, 1),
+        BitField("C", 0, 1),
+        BitField("O", 0, 1),
+        BitField("mss_or_csumoff", 0, 14),
+        BitField("rsvd3_or_rsvd4", 0, 2),
     ]
 
 
 class EthTxCqDescriptor(Packet):
     fields_desc = [
-        # Info
-        LEShortField("completion_index", 0),
-        ByteField("queue_id", 0),
-        ByteField("err_code", 0),
-        # END
-        BitField("rsvd0", 0, 95),
+        ByteField("status", 0),
+        ByteField("rsvd", 0),
+        LEShortField("comp_index", 0),
+        LELongField("rsvd2", 0),
+        BitField("rsvd3", 0, 24),
         BitField("color", 0, 1),
+        BitField("rsvd4", 0, 7),
     ]
 
 
@@ -41,27 +40,28 @@ class EthRxDescriptor(Packet):
     fields_desc = [
         LELongField("addr", 0),
         LEShortField("len", 0),
-        BitField("rsvd0", 0, 48),
+        BitField("opcode", 0, 3),
+        BitField("rsvd2", 0, 13),
+        LEIntField("rsvd3", 0),
     ]
 
 
 class EthRxCqDescriptor(Packet):
     fields_desc = [
-        # Info
-        LEShortField("completion_index", 0),
-        ByteField("queue_id", 0),
-        ByteField("err_code", 0),
-        # From - P4
-        LEShortField("flags", 0),
-        LEShortField("vlan_tag", 0),
-        LEIntField("checksum", 0),
-        LEShortField("bytes_written", 0),
-        # From - RSS table
-        ByteField("rss_type", 0),
+        ByteField("status", 0),
+        ByteField("rsvd", 0),
+        LEShortField("comp_index", 0),
         LEIntField("rss_hash", 0),
-        # END
-        BitField("rsvd0", 0, 103),
+        LEShortField("csum", 0),
+        LEShortField("vlan_tci", 0),
+        ByteField("len_lo", 0),
+        BitField("csum_level", 0, 2),
+        BitField("len_hi", 0, 6),
+        BitField("rss_type", 0, 4),
+        BitField("rsvd2", 0, 3),
+        BitField("V", 0, 1),
         BitField("color", 0, 1),
+        BitField("rsvd3", 0, 7),
     ]
 
 
@@ -129,8 +129,8 @@ class EthDescriptorObject(base.FactoryObjectBase):
         # Make sure none of the fields are None
         assert(not any(field is None for field in spec.fields.keys()))
         # Make sure all field names are valid
-        field_names = [field.name for field in self.__data_class__.fields_desc]
-        assert(all(name in field_names for name in spec.fields.keys()))
+        #field_names = [field.name for field in self.__data_class__.fields_desc]
+        #assert(all(name in field_names for name in spec.fields.keys()))
 
         self.fields = {k: getattr(spec.fields, k) for k in spec.fields.keys()}
         self._buf = getattr(spec.fields, '_buf', None)
@@ -216,8 +216,12 @@ class EthRxCqDescriptorObject(EthDescriptorObject):
         # This is a read-only descriptor type
         return
 
+    @property
+    def len(self):
+        return (self._data[self.__data_class__].len_hi << 8) + self._data[self.__data_class__].len_lo
+
     def GetCompletionIndex(self):
-        return self._data[self.__data_class__].completion_index
+        return self._data[self.__data_class__].comp_index
 
     def GetColor(self):
         return self._data[self.__data_class__].color
@@ -239,7 +243,7 @@ class EthTxCqDescriptorObject(EthDescriptorObject):
         return
 
     def GetCompletionIndex(self):
-        return self._data[self.__data_class__].completion_index
+        return self._data[self.__data_class__].comp_index
 
     def GetColor(self):
         return self._data[self.__data_class__].color

@@ -148,32 +148,32 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY0
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY0/size
-            vlan_tag      : callback://classic/packets/GetExpectedMcastPacketQtag
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY0/size
+            vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
     - descriptor:
         id      : EXP_DESC_COPY1 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY1
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY1/size
-            vlan_tag      : callback://classic/packets/GetExpectedMcastPacketQtag
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY1/size
+            vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
     - descriptor:
         id      : EXP_DESC_COPY2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY2
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY2/size
-            vlan_tag      : callback://classic/packets/GetExpectedMcastPacketQtag
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY2/size
+            vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
     - descriptor:
         id      : EXP_DESC_COPY3 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY3
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY3/size
-            vlan_tag      : callback://classic/packets/GetExpectedMcastPacketQtag
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY3/size
+            vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
 
 

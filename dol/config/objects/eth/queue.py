@@ -8,10 +8,9 @@ import model_sim.src.model_wrap as model_wrap
 
 from scapy.all import *
 
-
-class EthQstate(Packet):
+class EthRxQstate(Packet):
     fields_desc = [
-        ByteField("pc_offset", 0),
+        ByteField("pc", 0),
         ByteField("rsvd", 0),
         BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
@@ -25,32 +24,48 @@ class EthQstate(Packet):
         LEShortField("c_index0", 0),
         LEShortField("p_index1", 0),
         LEShortField("c_index1", 0),
-        LEShortField("p_index2", 0),
-        LEShortField("c_index2", 0),
-        LEShortField("p_index3", 0),
-        LEShortField("c_index3", 0),
-        LEShortField("p_index4", 0),
-        LEShortField("c_index4", 0),
-        LEShortField("p_index5", 0),
-        LEShortField("c_index5", 0),
-        LEShortField("p_index6", 0),
-        LEShortField("c_index6", 0),
-        LEShortField("p_index7", 0),
-        LEShortField("c_index7", 0),
 
         ByteField("enable", 0),
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
-        LELongField("cq_base", 0),
-        LEShortField("rss_type", 0),    # For TX queues it is __pad
+        LELongField("cq_ring_base", 0),
+        LEShortField("rss_type", 0),
+        LEIntField("intr_assert_addr", 0),
         BitField("color", 1, 1),
-        BitField("__pad0", 0, 23),
+        BitField("__pad", 0, 183),
+    ]
+
+
+class EthTxQstate(Packet):
+    fields_desc = [
+        ByteField("pc", 0),
+        ByteField("rsvd", 0),
+        BitField("cosA", 0, 4),
+        BitField("cosB", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("host", 0, 4),
+        BitField("total", 0, 4),
+        LEShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+        LEShortField("p_index1", 0),
+        LEShortField("c_index1", 0),
+
+        ByteField("enable", 0),
+        LELongField("ring_base", 0),
+        LEShortField("ring_size", 0),
+        LELongField("cq_ring_base", 0),
+        LEIntField("intr_assert_addr", 0),
+        BitField("color", 1, 1),
+        BitField("__pad", 0, 199),
     ]
 
 
 class AdminQstate(Packet):
     fields_desc = [
-        ByteField("pc_offset", 0),
+        ByteField("pc", 0),
         ByteField("rsvd", 0),
         BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
@@ -68,15 +83,18 @@ class AdminQstate(Packet):
         ByteField("enable", 0),
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
-        BitField("__pad0", 296, 0),
     ]
 
 
 class EthQstateObject(object):
-    def __init__(self, addr, size):
+
+    __data_class__ = None
+
+    def __init__(self, cls, addr, size):
         self.addr = addr
         self.size = size
-        self.data = EthQstate(model_wrap.read_mem(self.addr, self.size))
+        self.__data_class__ = cls
+        self.data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
 
     def Write(self, lgh = cfglogger):
         lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
@@ -84,41 +102,35 @@ class EthQstateObject(object):
         self.Read(lgh)
 
     def Read(self, lgh = cfglogger):
-        data = EthQstate(model_wrap.read_mem(self.addr, self.size))
+        data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
         lgh.ShowScapyObject(data)
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
 
-    def set_ring_count(self, host, total):
-        assert(isinstance(host, int) and isinstance(total, int))
-        self.data[EthQstate].host = host
-        self.data[EthQstate].total = total
-        model_wrap.write_mem(self.addr + 5, bytes(ctypes.c_uint8(host << 4 | total)), 1)
-
     def set_enable(self, value):
         assert(isinstance(value, int))
-        self.data[EthQstate].enable = value
-        model_wrap.write_mem(self.addr + 40, bytes(ctypes.c_uint8(value)), 1)
+        self.data[self.__data_class__].enable = value
+        model_wrap.write_mem(self.addr + 16, bytes(ctypes.c_uint8(value)), 1)
 
     def set_ring_base(self, value):
         assert(isinstance(value, int))
-        self.data[EthQstate].ring_base = value
-        model_wrap.write_mem(self.addr + 41, bytes(ctypes.c_uint64(value)), 8)
+        self.data[self.__data_class__].ring_base = value
+        model_wrap.write_mem(self.addr + 17, bytes(ctypes.c_uint64(value)), 8)
 
     def set_ring_size(self, value):
         assert(isinstance(value, int))
         value = int(math.log(value, 2))
-        self.data[EthQstate].ring_size = value
-        model_wrap.write_mem(self.addr + 49, bytes(ctypes.c_uint16(value)), 2)
+        self.data[self.__data_class__].ring_size = value
+        model_wrap.write_mem(self.addr + 25, bytes(ctypes.c_uint16(value)), 2)
 
     def set_cq_base(self, value):
         assert(isinstance(value, int))
-        self.data[EthQstate].cq_base = value
-        model_wrap.write_mem(self.addr + 51, bytes(ctypes.c_uint64(value)), 8)
+        self.data[self.__data_class__].cq_base = value
+        model_wrap.write_mem(self.addr + 27, bytes(ctypes.c_uint64(value)), 8)
 
     def set_rss_type(self, value):
         assert(isinstance(value, int))
-        self.data[EthQstate].rss_type = value
-        model_wrap.write_mem(self.addr + 59, bytes(ctypes.c_uint16(value)), 2)
+        self.data[self.__data_class__].rss_type = value
+        model_wrap.write_mem(self.addr + 35, bytes(ctypes.c_uint16(value)), 2)
 
     def Show(self, lgh = cfglogger):
         lgh.ShowScapyObject(self.data)
@@ -161,9 +173,6 @@ class AdminQstateObject(object):
     def set_cq_base(self, value):
         pass
 
-    def set_rss_type(self, value):
-        pass
-
     def get_ring_size(self):
         return int(math.pow(2, self.data[AdminQstate].ring_size))
 
@@ -190,12 +199,21 @@ class EthQueueObject(QueueObject):
     @property
     def qstate(self):
         if self._qstate is None:
-            if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
+            if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
+                self._qstate = EthQstateObject(EthTxQstate, addr=self.GetQstateAddr(), size=self.queue_type.size)
+            elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+                self._qstate = EthQstateObject(EthRxQstate, addr=self.GetQstateAddr(), size=self.queue_type.size)
+            elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
                 self._qstate = AdminQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
             else:
-                self._qstate = EthQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
-            cfglogger.info(self)
-
+                cfglogger.critical("Unable to initialize Qstate for Queue Type %s" % self.queue_type.purpose)
+                raise NotImplementedError
+            cfglogger.info("Loading Qstate: Lif=%s QType=%s QID=%s Addr=0x%x Size=%s" %
+                           (self.queue_type.lif.id,
+                            self.queue_type.type,
+                            self.id,
+                            self.GetQstateAddr(),
+                            self.queue_type.size))
         return self._qstate
 
     def GetQstateAddr(self):
@@ -207,15 +225,19 @@ class EthQueueObject(QueueObject):
         req_spec.qid = 0    # HACK
         req_spec.label.handle = "p4plus"
         if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-            req_spec.queue_state = bytes(EthQstate())
+            req_spec.queue_state = bytes(EthTxQstate(host=1, total=1,
+                                                     enable=1))
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "eth_tx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
-            req_spec.queue_state = bytes(EthQstate())
+            req_spec.queue_state = bytes(EthRxQstate(host=1, total=1,
+                                                     enable=1,
+                                                     rss_type=self.queue_type.lif.rss_type))
             req_spec.label.prog_name = "rxdma_stage0.bin"
             req_spec.label.label = "eth_rx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
-            req_spec.queue_state = bytes(AdminQstate())
+            req_spec.queue_state = bytes(AdminQstate(host=1, total=1,
+                                                     enable=1))
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "adminq_stage0"
         else:
@@ -228,14 +250,10 @@ class EthQueueObject(QueueObject):
 
         self.obj_helper_ring.Configure()
         self.descriptors = [None] * self.size
-
-        self.qstate.set_enable(1)
-        self.qstate.set_ring_count(1, 1)
         for ring in self.obj_helper_ring.rings:
             if ring.id == 'R0':
                 self.qstate.set_ring_base(ring._mem.pa)
                 self.qstate.set_ring_size(ring.size)
-                self.qstate.set_rss_type(self.queue_type.lif.rss_type)
             elif ring.id == 'R1':
                 self.qstate.set_cq_base(ring._mem.pa)
             else:

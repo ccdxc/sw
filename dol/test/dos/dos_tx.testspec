@@ -124,7 +124,7 @@ descriptors:
         id      : DESC2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
-            err_code : 0x0
+            status     : 0x0
 
     - descriptor:
         id      : DESC3 # Input Descriptor
@@ -138,7 +138,7 @@ descriptors:
         id      : DESC4 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
-            err_code : 0x0
+            status     : 0x0
 
 session:
     - step:

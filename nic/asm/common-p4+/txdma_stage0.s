@@ -21,6 +21,7 @@
     .param      tcp_tx_read_rx2tx_shared_process
     .param      tls_stage0
     .param      eth_tx_fetch_desc
+    .param      eth_tx_drop
     .param      esp_ipv4_tunnel_h2n_txdma_stage0
     .param      cpu_tx_stage0_start
     .param      ipfix_start
@@ -44,7 +45,7 @@ dummy:
 
 //Do not change the order of this entry. 
 //Keep it the first one after dummy
-//This has to align with the txdma_stage0.s program
+//This has to align with the rxdma_stage0.s program
 .align
 rdma_resp_tx_stage0:
     j resp_tx_rqcb_process
@@ -52,16 +53,25 @@ rdma_resp_tx_stage0:
 
 //Do not change the order of this entry. 
 //Keep it the second one after dummy
-//This has to align with the txdma_stage0.s program
+//This has to align with the rxdma_stage0.s program
 .align
 rdma_req_tx_stage0:
     j req_tx_sqcb_process
     nop
 
+//Do not change the order of this entry
+//This has to align with the rxdma_stage0.s program
+.align
+eth_rx_stage0_dummy:
+    j eth_tx_drop
+    nop
+
+//Do not change the order of this entry
+//This has to align with the rxdma_stage0.s program
 .align
 eth_tx_stage0:
-   j    eth_tx_fetch_desc
-   nop
+    j eth_tx_fetch_desc
+    nop
 
 .align
 tcp_tx_stage0:

@@ -131,13 +131,13 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC24
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_ENIC24/size
+            len                   : ref://testcase/buffers/id=EXP_BUF_ENIC24/size
     - descriptor:
         id      : EXP_DESC_ENIC25 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf  : ref://testcase/buffers/id=EXP_BUF_ENIC25
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_ENIC25/size
+            len                   : ref://testcase/buffers/id=EXP_BUF_ENIC25/size
 
 trigger:
     descriptors:

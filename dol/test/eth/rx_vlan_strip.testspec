@@ -100,8 +100,8 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=BUF2
-            bytes_written : ref://testcase/buffers/id=BUF2/size
-            vlan_tag      : callback://networking/packets/GetExpectedPacketQtag
+            len                   : ref://testcase/buffers/id=BUF2/size
+            vlan_tci      : callback://networking/packets/GetExpectedPacketQtag
 
 trigger:
     descriptors:

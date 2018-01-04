@@ -32,9 +32,8 @@ action eth_rx_dummy(data0, data1, data2, data3, data4, data5, data6, data7)
 
 action eth_rx_app_header(
     rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, p_index1, c_index1, p_index2, c_index2, p_index3, c_index3, 
-    p_index4, c_index4, p_index5, c_index5, p_index6, c_index6, p_index7, c_index7, 
-    enable, ring_base, ring_size, cq_ring_base, rss_type, color)
+    p_index0, c_index0, p_index1, c_index1,
+    enable, ring_base, ring_size, cq_ring_base, rss_type, intr_assert_addr, color)
 {
     // --- For K+I struct generation
 
@@ -74,6 +73,7 @@ action eth_rx_app_header(
     modify_field(eth_rx_qstate.ring_size, ring_size);
     modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base);
     modify_field(eth_rx_qstate.rss_type, rss_type);
+    modify_field(eth_rx_qstate.intr_assert_addr, intr_assert_addr);
     modify_field(eth_rx_qstate.color, color);
 }
 
@@ -81,30 +81,21 @@ action eth_rx_rss_skip()
 {
     // --- For K+I struct generation
 
-    // --- Global K+I
-
-    // --- Stage-To-Stage K+I
-    modify_field(eth_rx_t0_s2s_scratch.packet_len, eth_rx_t0_s2s.packet_len);
-    modify_field(eth_rx_t0_s2s_scratch.cq_desc_addr, eth_rx_t0_s2s.cq_desc_addr);
-    modify_field(eth_rx_t0_s2s_scratch.qstate_addr, eth_rx_t0_s2s.qstate_addr);
+    MODIFY_ETH_RX_GLOBAL
+    MODIFY_ETH_RX_T0_S2S
 
     // --- For D-struct generation
 }
 
 action eth_rx_fetch_desc(
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, p_index1, c_index1, p_index2, c_index2, p_index3, c_index3, 
-    p_index4, c_index4, p_index5, c_index5, p_index6, c_index6, p_index7, c_index7, 
-    enable, ring_base, ring_size, cq_ring_base, rss_type, color)
+    p_index0, c_index0, p_index1, c_index1,
+    enable, ring_base, ring_size, cq_ring_base, rss_type, intr_assert_addr, color)
 {
     // --- For K+I struct generation
 
-    // --- Global K+I
-
-    // --- Stage-To-Stage K+I
-    modify_field(eth_rx_t0_s2s_scratch.packet_len, eth_rx_t0_s2s.packet_len);
-    modify_field(eth_rx_t0_s2s_scratch.cq_desc_addr, eth_rx_t0_s2s.cq_desc_addr);
-    modify_field(eth_rx_t0_s2s_scratch.qstate_addr, eth_rx_t0_s2s.qstate_addr);
+    MODIFY_ETH_RX_GLOBAL
+    MODIFY_ETH_RX_T0_S2S
 
     // --- For D-struct generation
     modify_field(eth_rx_qstate.pc, pc);
@@ -114,23 +105,21 @@ action eth_rx_fetch_desc(
     modify_field(eth_rx_qstate.ring_size, ring_size);
     modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base);
     modify_field(eth_rx_qstate.rss_type, rss_type);
+    modify_field(eth_rx_qstate.intr_assert_addr, intr_assert_addr);
     modify_field(eth_rx_qstate.color, color);
 }
 
-action eth_rx_packet(addr, len)
+action eth_rx_packet(addr, /* addr_lo, addr_hi, rsvd */ len, opcode, rsvd2,
+    rsvd3)
 {
     // --- For K+I struct generation
 
-    // --- Global K+I
-
-    // --- To-Stage K+I
-
-    // --- Stage-To-Stage K+I
-    modify_field(eth_rx_t0_s2s_scratch.packet_len, eth_rx_t0_s2s.packet_len);
-    modify_field(eth_rx_t0_s2s_scratch.cq_desc_addr, eth_rx_t0_s2s.cq_desc_addr);
-    modify_field(eth_rx_t0_s2s_scratch.qstate_addr, eth_rx_t0_s2s.qstate_addr);
+    MODIFY_ETH_RX_GLOBAL
+    MODIFY_ETH_RX_T0_S2S
 
     // --- For D-struct generation
     modify_field(eth_rx_desc.addr, addr);
     modify_field(eth_rx_desc.len, len);
+    modify_field(eth_rx_desc.opcode, opcode);
+    modify_field(eth_rx_desc.rsvd2, rsvd2);    
 }

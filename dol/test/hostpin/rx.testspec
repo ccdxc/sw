@@ -104,7 +104,7 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=BUF2
-            bytes_written : 0
+            len                   : 0
 
 trigger:
     descriptors:

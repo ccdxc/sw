@@ -108,8 +108,8 @@ descriptors:
             _buf  : ref://testcase/buffers/id=TX_BUF
             addr  : ref://testcase/buffers/id=TX_BUF/addr
             len   : ref://testcase/buffers/id=TX_BUF/size
-            vlan_insert : 1
-            vlan_tag : callback://networking/packets/GetVlanId
+            V     : 1
+            vlan_tci : callback://networking/packets/GetVlanId
 
     - descriptor:
         id      : RX_DESC_COPY0 # Input Descriptor
@@ -140,21 +140,21 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY0
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY0/size
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY0/size
 
     - descriptor:
         id      : EXP_DESC_COPY1 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY1
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY1/size
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY1/size
 
     - descriptor:
         id      : EXP_DESC_COPY2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY2
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY2/size
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY2/size
 
 trigger:
     descriptors:

@@ -24,6 +24,7 @@ SRC_FILES := \
 	eth_rx_rss_indir.s \
 	eth_rx_fetch_desc.s \
 	eth_rx_packet.s \
+	eth_rx_drop.s \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

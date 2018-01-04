@@ -15,25 +15,7 @@ typedef struct qstate {     // 64 B
     uint8_t     host : 4;
     uint8_t     total : 4;
     uint16_t    pid;
-
-    uint16_t    p_index0;
-    uint16_t    c_index0;
-    uint16_t    p_index1;
-    uint16_t    c_index1;
-    uint16_t    p_index2;
-    uint16_t    c_index2;
-    uint16_t    p_index3;
-    uint16_t    c_index3;
-    uint16_t    p_index4;
-    uint16_t    c_index4;
-    uint16_t    p_index5;
-    uint16_t    c_index5;
-    uint16_t    p_index6;
-    uint16_t    c_index6;
-    uint16_t    p_index7;
-    uint16_t    c_index7;
-
-    uint8_t     app_data[24];   /* application specific area */
+    uint8_t     app_data[56];   /* application specific area */
 } __attribute__((packed)) qstate_t;
 
 u_int64_t lif_qstate_map_addr(const int lif);

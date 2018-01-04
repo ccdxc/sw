@@ -4,11 +4,3 @@ meta:
     package : factory.objects.eth
     module  : descriptor
     objname : EthTxCqDescriptorObject
-
-completion_index : None
-rsvd0 : const/0x0
-queue_id : None
-rsvd1 : const/0x0
-err_code : None
-completion_type : None
-color : None

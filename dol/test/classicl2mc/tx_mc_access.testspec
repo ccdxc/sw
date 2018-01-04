@@ -143,14 +143,14 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY0
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY0/size
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY0/size
 
     - descriptor:
         id      : EXP_DESC_COPY1_ALLMC # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY1_ALLMC
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY1_ALLMC/size
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY1_ALLMC/size
 
 trigger:
     descriptors:

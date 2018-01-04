@@ -58,14 +58,14 @@ descriptors:
             _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
-            vlan_insert : 1
-            vlan_tag : callback://networking/packets/GetVlanId
+            V     : 1
+            vlan_tci : callback://networking/packets/GetVlanId
 
     - descriptor:
         id      : DESC2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
-            err_code : 0x0
+            status     : 0x0
 
 trigger:
     descriptors:

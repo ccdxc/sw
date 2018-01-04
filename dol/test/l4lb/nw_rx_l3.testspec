@@ -148,7 +148,7 @@ descriptors:
     #    id      : DESC2 # Expected Descriptor
     #    template: ref://factory/templates/id=DESCR_ETH_TX_CQ
     #    fields:
-    #        err_code : 0x0
+    #        status     : 0x0
     #
     - descriptor:
         id      : DESC1 # Input Descriptor
@@ -162,7 +162,7 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=BUF2
-            bytes_written : ref://testcase/buffers/id=BUF2/size
+            len                   : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:

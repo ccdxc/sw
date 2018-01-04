@@ -4,15 +4,3 @@ meta:
     package : factory.objects.eth
     module  : descriptor
     objname : EthTxDescriptorObject
-
-addr          : None
-len           : None
-vlan_tag      : None
-mss           : None
-encap         : const/0x0
-hdr_len       : const/0x0
-offload_mode  : const/0x0
-eop           : const/0x0
-cq_entry      : const/0x1
-vlan_insert   : const/0x0
-rsvd0         : const/0x0

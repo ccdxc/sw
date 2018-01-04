@@ -26,12 +26,15 @@ eth_rx_fetch_desc:
   phvwr           p.common_te0_phv_table_addr, r5
   phvwri          p.common_te0_phv_table_raw_table_size, LG2_RX_DESC_SIZE
 
-  // Completion descriptor address
+  // Save completion and interrupt information
   add             r1, d.{cq_ring_base}.dx, d.{p_index1}.hx, LG2_RX_CMPL_DESC_SIZE
   phvwr           p.eth_rx_t0_s2s_cq_desc_addr, r1
+  phvwr           p.eth_rx_t0_s2s_intr_assert_addr, d.{intr_assert_addr}.wx
+  phvwri          p.eth_rx_t0_s2s_intr_assert_data, 0x01000000
 
-  // Completion descriptor
-  phvwr           p.eth_rx_cq_desc_completion_index, d.c_index0
+  // Build completion entry in the PHV
+  phvwri          p.eth_rx_cq_desc_status, 0
+  phvwr           p.eth_rx_cq_desc_comp_index, d.c_index0
   phvwr           p.eth_rx_cq_desc_color, d.color
 
   // Claim the descriptor

@@ -10,11 +10,13 @@
 
 header_type eth_tx_cq_desc_p {
     fields {
-        completion_index : 16;
-        queue_id : 8;
-        err_code : 8;
-        rsvd0 : 95;
+        status : 8;
+        rsvd : 8;
+        comp_index : 16;
+        rsvd2 : 64;
+        rsvd3 : 24;
         color : 1;
+        rsvd4 : 7;
     }
 }
 
@@ -38,24 +40,12 @@ header_type eth_tx_qstate_d {
         c_index0 : 16;
         p_index1 : 16;
         c_index1 : 16;
-        p_index2 : 16;
-        c_index2 : 16;
-        p_index3 : 16;
-        c_index3 : 16;
-        p_index4 : 16;
-        c_index4 : 16;
-        p_index5 : 16;
-        c_index5 : 16;
-        p_index6 : 16;
-        c_index6 : 16;
-        p_index7 : 16;
-        c_index7 : 16;
 
         enable : 8;
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;
-        __pad : 16;
+        intr_assert_addr : 32;
         color : 1;
     }
 }
@@ -63,16 +53,20 @@ header_type eth_tx_qstate_d {
 header_type eth_tx_desc_d {
     fields {
         addr : 64;
+        //addr_lo : 32;
+        //addr_hi : 20;
+        //rsvd : 4;
+        //num_sg_elems : 5;
+        //opcode : 3;
         len : 16;
-        vlan_tag : 16;
-        mss : 14;
-        encap : 2;
+        vlan_tci : 16;
         hdr_len : 10;
-        offload : 2;
-        eop : 1;
-        cq_entry : 1;
-        vlan_insert : 1;
-        rsvd0 : 1;
+        rsvd2 : 3;
+        V : 1;
+        C : 1;
+        O : 1;
+        mss_or_csumoff : 14;
+        rsvd3_or_rsvd4 : 2;
     }
 }
 
@@ -81,18 +75,18 @@ header_type eth_tx_desc_d {
  ***/
 
 header_type eth_tx_global_k {
-    // global k (max 128)
     fields {
-        lif     : 11;       // LIF number
-        qtype   : 3;        // Queue type
-        qid     : 24;       // Queue ID
+        lif     : 11;
+        qtype   : 3;
+        qid     : 24;
     }
 }
 
-header_type eth_tx_to_stage_1_k {
-    // to_stage k (max 128 bits)
+header_type eth_tx_t0_s2s_k {
     fields {
         cq_desc_addr : 64;
+        intr_assert_addr : 32;
+        intr_assert_data : 32;
     }
 }
 
@@ -108,6 +102,7 @@ metadata eth_tx_desc_d eth_tx_desc;
 /*****************************************************************************
  *  K-vector
  *****************************************************************************/
+
 // Union with Common-TXDMA PHV headers
 
 // Global PHV headers (Available in STAGES=ALL, MPUS=ALL)
@@ -117,12 +112,12 @@ metadata eth_tx_global_k eth_tx_global;
 metadata eth_tx_global_k eth_tx_global_scratch;
 
 // To Stage N PHV headers (Available in STAGE=N, MPUS=ALL)
+/*
 @pragma pa_header_union ingress to_stage_1
 metadata eth_tx_to_stage_1_k eth_tx_to_s1;
 @pragma scratch_metadata
 metadata eth_tx_to_stage_1_k eth_tx_to_s1_scratch;
 
-/*
 @pragma pa_header_union ingress to_stage_2
 metadata eth_tx_to_stage_2_p eth_tx_to_s2;
 @pragma scratch_metadata
@@ -154,7 +149,27 @@ metadata eth_tx_to_stage_7_p eth_tx_to_s7;
 metadata eth_tx_to_stage_7_p eth_tx_to_s7_scratch;
 */
 
-// Stage N to N+1 PHV headers (Available in STAGE=N,N+1 MPUS=ALL)
+// Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
+@pragma pa_header_union ingress common_t0_s2s
+metadata eth_tx_t0_s2s_k eth_tx_t0_s2s;
+@pragma scratch_metadata
+metadata eth_tx_t0_s2s_k eth_tx_t0_s2s_scratch;
+/*
+@pragma pa_header_union ingress common_t1_s2s
+metadata eth_tx_t1_s2s_k eth_tx_t1_s2s;
+@pragma scratch_metadata
+metadata eth_tx_t1_s2s_k eth_tx_t1_s2s_scratch;
+
+@pragma pa_header_union ingress common_t2_s2s
+metadata eth_tx_t2_s2s_k eth_tx_t2_s2s;
+@pragma scratch_metadata
+metadata eth_tx_t2_s2s_k eth_tx_t2_s2s_scratch;
+
+@pragma pa_header_union ingress common_t3_s2s
+metadata eth_tx_t3_s2s_k eth_tx_t3_s2s;
+@pragma scratch_metadata
+metadata eth_tx_t3_s2s_k eth_tx_t3_s2s_scratch;
+*/
 
 /*****************************************************************************
  * P-vetor
@@ -175,3 +190,5 @@ metadata dma_cmd_phv2pkt_t dma_cmd0;
 metadata dma_cmd_mem2pkt_t dma_cmd1;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd2;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd3;

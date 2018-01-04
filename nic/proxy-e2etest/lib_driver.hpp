@@ -9,26 +9,39 @@ enum queue_type {
 
 struct tx_desc {    // 16 B
 
-    uint64_t    addr;
+    uint64_t    addr:52;
+    uint64_t    rsvd:4;
+    uint64_t    num_sg_elems:5;
+    uint64_t    opcode:3;
     uint16_t    len;
-    uint16_t    vlan_tag;
-    uint16_t    mss : 14;
-    uint8_t     encap : 2;
-    uint16_t    hdr_len : 10;
-    uint8_t     offload_mode : 2;
-    uint8_t     eop : 1;
-    uint8_t     cq_entry : 1;
-    uint8_t     vlan_insert : 1;
-    uint8_t     rsvd0 : 1;
+    uint16_t    vlan_tci;
+    uint16_t    hdr_len:10;
+    uint16_t    rsvd2:3;
+    uint16_t    V:1;
+    uint16_t    C:1;
+    uint16_t    O:1;
+
+    union {
+        struct {
+            uint16_t mss:14;
+            uint16_t rsvd3:2;
+        };
+        struct {
+            uint16_t csum_offset:14;
+            uint16_t rsvd4:2;
+        };
+    };
 
 } __attribute__((packed));
 
 struct rx_desc {    // 16 B
 
-    uint64_t    addr;
+    uint64_t    addr:52;
+    uint64_t    rsvd:12;
     uint16_t    len;
-    uint16_t    packet_len;
-    uint32_t    __pad0;
+    uint16_t    opcode:3;
+    uint16_t    rsvd2:13;
+    uint32_t    rsvd3;
 
 } __attribute__((packed));
 
@@ -48,18 +61,6 @@ struct qstate {
     uint16_t    c_index0;
     uint16_t    p_index1;
     uint16_t    c_index1;
-    uint16_t    p_index2;
-    uint16_t    c_index2;
-    uint16_t    p_index3;
-    uint16_t    c_index3;
-    uint16_t    p_index4;
-    uint16_t    c_index4;
-    uint16_t    p_index5;
-    uint16_t    c_index5;
-    uint16_t    p_index6;
-    uint16_t    c_index6;
-    uint16_t    p_index7;
-    uint16_t    c_index7;
 
     uint8_t     enable;
     uint64_t    ring_base;

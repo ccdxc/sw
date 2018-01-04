@@ -20,6 +20,7 @@ CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 SRC_FILES := \
 	eth_tx_fetch_desc.s \
 	eth_tx_packet.s \
+	eth_tx_drop.s \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

@@ -1,22 +1,6 @@
 meta:
     id      : DESCR_ETH_RX_CQ
-    size    : 32
+    size    : 16
     package : factory.objects.eth
     module  : descriptor
     objname : EthRxCqDescriptorObject
-
-completion_index : None
-queue_id : None
-rss_type : None
-rss_hash : None
-bytes_written : None
-checksum : None
-vlan_valid : None
-vlan_tci : None
-flags : None
-encap : None
-pkt_error : None
-dma_error : None
-color : None
-completion_type : None
-rsvd0 : const/0x0

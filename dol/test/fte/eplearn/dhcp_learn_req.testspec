@@ -49,7 +49,7 @@ descriptors:
         id      : EX_TXDESCR_REQUEST
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
-            err_code : 0x0
+            status     : 0x0
 
 session:
     - step:

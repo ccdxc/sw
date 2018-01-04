@@ -26,9 +26,8 @@ action eth_tx_dummy(data0, data1, data2, data3, data4, data5, data6, data7)
 
 action eth_tx_fetch_desc(
         pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-        p_index0, c_index0, p_index1, c_index1, p_index2, c_index2, p_index3, c_index3, 
-        p_index4, c_index4, p_index5, c_index5, p_index6, c_index6, p_index7, c_index7, 
-        enable, ring_base, ring_size, cq_ring_base, __pad, color)
+        p_index0, c_index0, p_index1, c_index1,
+        enable, ring_base, ring_size, cq_ring_base, intr_assert_addr, color)
 {
     // For K+I struct generation
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -43,35 +42,28 @@ action eth_tx_fetch_desc(
     modify_field(eth_tx_qstate.ring_base, ring_base);
     modify_field(eth_tx_qstate.ring_size, ring_size);
     modify_field(eth_tx_qstate.cq_ring_base, cq_ring_base);
-    modify_field(eth_tx_qstate.__pad, __pad);
+    modify_field(eth_tx_qstate.intr_assert_addr, intr_assert_addr);
     modify_field(eth_tx_qstate.color, color);
 }
 
-action eth_tx_packet(addr, len, vlan_tag, mss, encap, hdr_len, offload, eop,
-                     cq_entry, vlan_insert, rsvd0)
+action eth_tx_packet(addr,
+        /* addr_lo, addr_hi, rsvd, num_sg_elems, opcode */
+        len, vlan_tci, hdr_len, rsvd2, V, C, O, mss_or_csumoff, rsvd3_or_rsvd4)
 {
     // For K+I struct generation
 
-    // Global K+I
-    modify_field(eth_tx_global_scratch.lif, eth_tx_global.lif);
-    modify_field(eth_tx_global_scratch.qtype, eth_tx_global.qtype);
-    modify_field(eth_tx_global_scratch.qid, eth_tx_global.qid);
-
-    // To-Stage K+I
-    modify_field(eth_tx_to_s1_scratch.cq_desc_addr, eth_tx_to_s1.cq_desc_addr);
-
-    // Stage-to-Stage K+I
+    MODIFY_ETH_TX_GLOBAL
+    MODIFY_ETH_TX_T0_S2S
 
     // For D-struct generation
     modify_field(eth_tx_desc.addr, addr);
     modify_field(eth_tx_desc.len, len);
-    modify_field(eth_tx_desc.vlan_tag, vlan_tag);
-    modify_field(eth_tx_desc.mss, mss);
-    modify_field(eth_tx_desc.encap, encap);
+    modify_field(eth_tx_desc.vlan_tci, vlan_tci);
     modify_field(eth_tx_desc.hdr_len, hdr_len);
-    modify_field(eth_tx_desc.offload, offload);
-    modify_field(eth_tx_desc.eop, eop);
-    modify_field(eth_tx_desc.cq_entry, cq_entry);
-    modify_field(eth_tx_desc.vlan_insert, vlan_insert);
-    modify_field(eth_tx_desc.rsvd0, rsvd0);
+    modify_field(eth_tx_desc.rsvd2, rsvd2);
+    modify_field(eth_tx_desc.V, V);
+    modify_field(eth_tx_desc.C, C);
+    modify_field(eth_tx_desc.O, O);
+    modify_field(eth_tx_desc.mss_or_csumoff, mss_or_csumoff);
+    modify_field(eth_tx_desc.rsvd3_or_rsvd4, rsvd3_or_rsvd4);
 }

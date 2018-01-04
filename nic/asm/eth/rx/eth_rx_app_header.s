@@ -15,13 +15,14 @@ struct common_p4plus_stage0_app_header_table_eth_rx_app_header_d d;
 eth_rx_app_header:
 
   // Save all required information from APP header
-  phvwr           p.eth_rx_t0_s2s_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1, p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+  phvwr           p.eth_rx_global_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1, p4_rxdma_intr_qstate_addr_sbit2_ebit33}
   phvwr           p.eth_rx_t0_s2s_packet_len, k.p4_to_p4plus_packet_len
 
   // Build completion entry in the PHV
-  phvwr           p.eth_rx_cq_desc_bytes_written, k.{p4_to_p4plus_packet_len}.hx
-  phvwr           p.eth_rx_cq_desc_checksum, k.{p4_to_p4plus_csum}.wx
-  phvwr           p.eth_rx_cq_desc_vlan_tag, k.{p4_to_p4plus_vlan_pcp...p4_to_p4plus_vlan_vid_sbit4_ebit11}.hx
+  phvwr           p.eth_rx_cq_desc_csum, k.{p4_to_p4plus_csum}.wx
+  phvwr           p.eth_rx_cq_desc_vlan_tci, k.{p4_to_p4plus_vlan_pcp...p4_to_p4plus_vlan_vid_sbit4_ebit11}.hx
+  phvwr           p.eth_rx_cq_desc_len_lo, k.p4_to_p4plus_packet_len[7:0]
+  phvwr           p.eth_rx_cq_desc_len_hi, k.p4_to_p4plus_packet_len[13:8]
 
 // Write RSS input to PHV
 eth_rx_rss_input:

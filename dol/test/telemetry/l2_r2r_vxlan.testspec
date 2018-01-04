@@ -478,28 +478,28 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF1
-            bytes_written : ref://testcase/buffers/id=EXP_BUF1/size
+            len                   : ref://testcase/buffers/id=EXP_BUF1/size
 
     - descriptor:
         id      : EXP_DESC2
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF2
-            bytes_written : ref://testcase/buffers/id=EXP_BUF2/size
+            len                   : ref://testcase/buffers/id=EXP_BUF2/size
 
     - descriptor:
         id      : EXP_DESC3
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF3
-            bytes_written : ref://testcase/buffers/id=EXP_BUF3/size
+            len                   : ref://testcase/buffers/id=EXP_BUF3/size
 
     - descriptor:
         id      : EXP_DESC4
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF4
-            bytes_written : ref://testcase/buffers/id=EXP_BUF4/size
+            len                   : ref://testcase/buffers/id=EXP_BUF4/size
 
 trigger:
     descriptors:

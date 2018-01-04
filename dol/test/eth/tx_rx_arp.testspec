@@ -97,14 +97,14 @@ descriptors:
         id      : EX_TXDESCR
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
-            err_code : 0x0
+            status     : 0x0
 
     - descriptor:
         id      : EX_RXDESCR
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXBUF
-            bytes_written : ref://testcase/buffers/id=EXBUF/size
+            len                   : ref://testcase/buffers/id=EXBUF/size
 
 trigger:
     descriptors:

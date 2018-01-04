@@ -3,7 +3,7 @@
 
 #define LG2_RX_DESC_SIZE        (4)
 #define LG2_TX_DESC_SIZE        (4)
-#define LG2_RX_CMPL_DESC_SIZE   (5)
+#define LG2_RX_CMPL_DESC_SIZE   (4)
 #define LG2_TX_CMPL_DESC_SIZE   (4)
 #define LG2_RX_QSTATE_SIZE      (6)
 

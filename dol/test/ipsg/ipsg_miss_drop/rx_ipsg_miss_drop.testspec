@@ -74,7 +74,6 @@ packets:
             tcp:
                 flags: ack
 
-
 buffers:
     - buffer:
         id      : BUF1  # Input Buffer

@@ -31,11 +31,13 @@ eth_tx_fetch_desc:
 
   // Completion descriptor address
   add             r1, d.{cq_ring_base}.dx, d.{p_index1}.hx, LG2_TX_CMPL_DESC_SIZE
-  phvwr           p.eth_tx_to_s1_cq_desc_addr, r1
+  phvwr           p.eth_tx_t0_s2s_cq_desc_addr, r1
+  phvwr           p.eth_tx_t0_s2s_intr_assert_addr, d.{intr_assert_addr}.wx
+  phvwri          p.eth_tx_t0_s2s_intr_assert_data, 0x01000000
 
   // Completion descriptor
-  phvwr           p.eth_tx_cq_desc_completion_index, d.c_index0
-  phvwr           p.eth_tx_cq_desc_queue_id, k.{p4_txdma_intr_qid}.hx
+  phvwr           p.eth_tx_cq_desc_comp_index, d.c_index0
+  phvwr           p.eth_tx_cq_desc_status, 0
   phvwr           p.eth_tx_cq_desc_color, d.color
 
   // Claim the descriptor
@@ -56,7 +58,6 @@ eth_tx_fetch_desc:
   nop.e
   nop
 
-.align
 abort_tx:
   // Update doorbell
   or              r1, k.p4_intr_global_lif_sbit3_ebit10, k.p4_intr_global_lif_sbit0_ebit2, 8

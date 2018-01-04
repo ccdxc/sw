@@ -52,17 +52,34 @@ typedef struct ethparams_s {
     mac_t mac;
 } ethparams_t;
 
-typedef struct qstate_app_eth {
+typedef struct {
+    uint16_t    p_index0;
+    uint16_t    c_index0;
+    uint16_t    p_index1;
+    uint16_t    c_index1;
+
     uint8_t     enable;
     uint64_t    ring_base;
     uint16_t    ring_size;
     uint64_t    cq_ring_base;
     uint32_t    intr_assert_addr;
     uint8_t     color;
-} __attribute__((packed)) qstate_app_eth_t;
+} __attribute__((packed)) qstate_app_ethtx_t;
 
-typedef qstate_app_eth_t qstate_app_ethtx_t;
-typedef qstate_app_eth_t qstate_app_ethrx_t;
+typedef struct {
+    uint16_t    p_index0;
+    uint16_t    c_index0;
+    uint16_t    p_index1;
+    uint16_t    c_index1;
+
+    uint8_t     enable;
+    uint64_t    ring_base;
+    uint16_t    ring_size;
+    uint64_t    cq_ring_base;
+    uint16_t    rss_type;
+    uint32_t    intr_assert_addr;
+    uint8_t     color;
+} __attribute__((packed)) qstate_app_ethrx_t;
 
 static simdev_t *current_sd;
 
@@ -303,8 +320,11 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qs.host = 2;
     qs.total = 2;
     qs.pid = cmd->pid;
-    memset(&qs.p_index0, 0, 32);
     qsethtx = (qstate_app_ethtx_t *)qs.app_data;
+    qsethtx->p_index0 = 0;
+    qsethtx->c_index0 = 0;
+    qsethtx->p_index1 = 0;
+    qsethtx->c_index1 = 0;
     qsethtx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethtx->ring_size = cmd->ring_size;
     qsethtx->cq_ring_base = roundup(cmd->ring_base + (1 << cmd->ring_size), 4096);
@@ -363,8 +383,11 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qs.host = 2;
     qs.total = 2;
     qs.pid = cmd->pid;
-    memset(&qs.p_index0, 0, 32);
     qsethrx = (qstate_app_ethrx_t *)qs.app_data;
+    qsethrx->p_index0 = 0;
+    qsethrx->c_index0 = 0;
+    qsethrx->p_index1 = 0;
+    qsethrx->c_index1 = 0;
     qsethrx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethrx->ring_size = cmd->ring_size;
     qsethrx->cq_ring_base = roundup(cmd->ring_base + (1 << cmd->ring_size), 4096);
@@ -526,11 +549,6 @@ devcmd_debug_q_dump(struct admin_cmd *acmd, struct admin_comp *acomp)
         comp->status = 1;
         return;
     }
-
-    comp->p_index0 = qs.p_index0;
-    comp->c_index0 = qs.c_index0;
-    comp->p_index1 = qs.p_index1;
-    comp->c_index1 = qs.c_index1;
 }
 
 static void

@@ -149,24 +149,24 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY0
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY0/size
-            vlan_tag      : callback://classic/packets/GetExpectedMcastPacketQtag
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY0/size
+            vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
     - descriptor:
         id      : EXP_DESC_COPY1 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY1
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY1/size
-            vlan_tag      : callback://classic/packets/GetExpectedMcastPacketQtag
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY1/size
+            vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
     - descriptor:
         id      : EXP_DESC_COPY2_ALLMC # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY2_ALLMC
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_COPY2_ALLMC/size
-            vlan_tag      : callback://classic/packets/GetExpectedMcastPacketQtag
+            len                   : ref://testcase/buffers/id=EXP_BUF_COPY2_ALLMC/size
+            vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
 trigger:
     descriptors:

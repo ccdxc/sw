@@ -603,7 +603,6 @@ hntap_host_tx_to_model (char *pktbuf, int size)
 
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt, opkt;
-  std::pair<uint32_t, uint64_t> db;
   uint8_t *buf;
 
   ipkt.resize(size);
@@ -617,7 +616,7 @@ hntap_host_tx_to_model (char *pktbuf, int size)
        */
       memcpy(opkt.data(), pkt, size);
       TLOG("Host-Tx: Bypassing model, packet size: %d (%d), on port: %d cos %d\n",
-	  opkt.size(), size, port, cos);
+              opkt.size(), size, port, cos);
       goto send_to_nettap;
   }
 
@@ -637,15 +636,10 @@ hntap_host_tx_to_model (char *pktbuf, int size)
   memcpy(buf, ipkt.data(), ipkt.size());
   TLOG("buf %p size %lu\n", buf, ipkt.size());
   hntap_dump_pkt((char *)buf, ipkt.size());
-  post_buffer(lif_id, TX, 0, buf, ipkt.size());
 
   // Transmit Packet
   TLOG("Writing packet to model! size: %d on port: %d\n", ipkt.size(), port);
-
-  TLOG("\nDOORBELL\n");
-  db = make_doorbell(0x3 /* upd */, lif_id /* lif */, TX /* type */,
-		     0 /* pid */, 0 /* qid */, 0 /* ring */, 0 /* p_index */);
-  step_doorbell(db.first, db.second);
+  post_buffer(lif_id, TX, 0, buf, ipkt.size());
 
   // Wait for packet to come out of port
   get_next_pkt(opkt, port, cos);

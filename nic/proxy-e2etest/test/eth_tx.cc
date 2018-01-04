@@ -50,16 +50,10 @@ int main(int argc, char *argv[]) {
   uint8_t *buf = alloc_buffer(ipkt.size());
   assert(buf != NULL);
   memcpy(buf, ipkt.data(), ipkt.size());
-  post_buffer(lif_id, TX, 0, buf, ipkt.size());
 
   // Transmit Packet
   std::cout << "Writing packet to model! size: " << ipkt.size() << " on port: " << port << std::endl;
-
-  printf("\nDOORBELL\n");
-  std::pair<uint32_t, uint64_t> db = make_doorbell(
-                                                   0x3 /* upd */, lif_id /* lif */, TX /* type */,
-                                                   0 /* pid */, 0 /* qid */, 0 /* ring */, 0 /* p_index */);
-  step_doorbell(db.first, db.second);
+  post_buffer(lif_id, TX, 0, buf, ipkt.size());
 
   // Wait for packet to come out of port
   get_next_pkt(opkt, port, cos);

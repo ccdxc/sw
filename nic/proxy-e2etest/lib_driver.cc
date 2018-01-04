@@ -161,20 +161,9 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
       assert(0);
     }
     qi.cq_queue_addr = g_host_mem->VirtToPhys(qi.cq_queue);
-   
+
     txq = (struct tx_desc *) qi.queue;
-    for (int x = 0; x < size; x++) {
-      txq[x].addr = 0xFEEDBABADEAFBABA;
-      txq[x].len = 0x3333;
-      txq[x].vlan_tag = 0;
-      txq[x].mss = 0;
-      txq[x].encap = 0;
-      txq[x].hdr_len = 0;
-      txq[x].offload_mode = 0;
-      txq[x].eop = 0;
-      txq[x].cq_entry = 0;
-      txq[x].vlan_insert = 0;
-    }
+    memset(txq, 0, sizeof(txq[0]) * size);
     break;
 
   case RX:
@@ -193,41 +182,34 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
     qi.cq_queue_addr = g_host_mem->VirtToPhys(qi.cq_queue);
  
     rxq = (struct rx_desc *) qi.queue;
-    for (int x = 0; x < size; x++) {
-      rxq[x].addr = 0xFEEDBABADEAFBABA;
-      rxq[x].len = 0x3333;
-      rxq[x].packet_len = 0x0;
-    }
+    memset(rxq, 0, sizeof(rxq[0]) * size);
     break;
 
   default:
     assert(0);
   }
 
-  qi.qstate = (struct qstate *) calloc(1, sizeof(struct qstate));
   qi.qstate_addr = get_qstate_addr(lif, qtype, qid);
   if (qi.qstate_addr == 0) {
     assert(0);
   }
-  qi.qstate->ring_base = g_host_mem->VirtToPhys(qi.queue);
-  qi.qstate->ring_size = (uint16_t)log2(size);
-  qi.qstate->cq_ring_base = g_host_mem->VirtToPhys(qi.cq_queue);
-  qi.qstate->cosA = 0;
-  qi.qstate->cosB = 0;
-  qi.qstate->enable = 1;
-  qi.qstate->host = 1;
-  qi.qstate->total = 1;
+  qi.qstate = (struct qstate *) calloc(1, sizeof(struct qstate));
+  set_queue_info(lif, qtype, qid, qi);
+
+  // Read-Modify-Write the qstate structure
+  read_queue(lif, qtype, qid);
   qi.qstate->p_index0 = 0;
   qi.qstate->c_index0 = 0;
   qi.qstate->p_index1 = 0;
   qi.qstate->c_index1 = 0;
-  qi.qstate->pc_offset = 3;
+  qi.qstate->enable = 1;
+  qi.qstate->ring_base = g_host_mem->VirtToPhys(qi.queue);
+  qi.qstate->ring_size = (uint16_t)log2(size);
+  qi.qstate->cq_ring_base = g_host_mem->VirtToPhys(qi.cq_queue);
+  write_queue(lif, qtype, qid);
 
-  set_queue_info(lif, qtype, qid, qi);
   printf("QSTATE: lif = %lu qtype = %d qid = %d addr = %lx ring_base %lx cq_ring_base %lx\n",
          lif, qtype, qid, qi.qstate_addr, qi.qstate->ring_base, qi.qstate->cq_ring_base);
-
-  write_queue(lif, qtype, qid);
 }
 
 bool
@@ -282,20 +264,13 @@ print_queue(uint64_t lif, queue_type qtype, uint32_t qid) {
   case RX:
     rxq = (struct rx_desc *) qi.queue;
     for (int i = 0; i < qi.qstate->ring_size; i++) {
-      printf("addr=0x%0lx len=0x%0x rsvd0=0x%0x\n",
-             rxq[i].addr, rxq[i].len, rxq[i].packet_len);
+      printf("addr=0x%0lx len=0x%0x\n", rxq[i].addr, rxq[i].len);
     }
     break;
   case TX:
     txq = (struct tx_desc *) qi.queue;
     for (int i = 0; i < qi.qstate->ring_size; i++) {
-      printf("addr=0x%0lx len=0x%x vlan_tag=0x%x mss=0x%x"
-             " encap=0x%x hdr_len=0x%x offload_mode=0x%x"
-             " eop=0x%x cq_entry=0x%x vlan_insert=0x%x\n",
-             txq[i].addr, txq[i].len,
-             txq[i].vlan_tag, txq[i].mss,
-             txq[i].encap, txq[i].hdr_len, txq[i].offload_mode, txq[i].eop,
-             txq[i].cq_entry, txq[i].vlan_insert);
+      printf("addr=0x%0lx len=0x%x", txq[i].addr, txq[i].len);
     }
     break;
   default:
@@ -314,6 +289,8 @@ post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t si
 
   struct tx_desc *txq;
   struct rx_desc *rxq;
+  int upd;
+  std::pair<uint32_t, uint64_t> db;
 
   switch (qtype) {
   case TX:
@@ -326,7 +303,7 @@ post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t si
            qi.qstate->p_index0,
            txq[qi.qstate->p_index0].addr,
            txq[qi.qstate->p_index0].len); 
-
+    upd = 0xb;
     break;
   case RX:
     rxq = (struct rx_desc *) qi.queue;
@@ -337,15 +314,20 @@ post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t si
            g_host_mem->VirtToPhys(rxq),
            qi.qstate->p_index0,
            rxq[qi.qstate->p_index0].addr,
-           rxq[qi.qstate->p_index0].len); 
-    break;
+           rxq[qi.qstate->p_index0].len);
+   upd = 0x8;
+   break;
   default:
     break;
   }
 
   qi.qstate->p_index0++;
   qi.qstate->p_index0 &= ((uint16_t) pow(2, qi.qstate->ring_size) - 1);
-  write_mem(qi.qstate_addr + offsetof(struct qstate, p_index0), (uint8_t *)&qi.qstate->p_index0, sizeof(qi.qstate->p_index0));
+
+  printf("\nDOORBELL\n");
+  db = make_doorbell(upd, lif, qtype,
+                     0 /* pid */, qid, 0 /* ring */, qi.qstate->p_index0);
+  step_doorbell(db.first, db.second);
 }
 
 void
@@ -361,8 +343,7 @@ consume_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t
   case RX:
     rxq = (struct rx_desc *) qi.queue;
     //assert(rxq[qi.qstate->c_index1].addr == g_host_mem->VirtToPhys(buf));
-    *size = rxq[qi.qstate->c_index1].packet_len;
-    *size = 74;
+    *size = rxq[qi.qstate->c_index1].len;
     break;
   default:
     break;
