@@ -158,8 +158,12 @@ inline void ipv6_prefix_len_to_mask(ipv6_addr_t *v6_addr, uint8_t len) {
         v6_addr->addr64[1] = 0;
     }
     while (len) {
-        v6_addr->addr8[wp++] = len >= 8 ? 0xff : 0xff & (~((1<<(8-len))-1));
-        len -= 8;
+        v6_addr->addr32[wp++] = (len >= 32) ? 0xffffffff : (0xffffffff & (~((1<<(32-len))-1)));
+        if (len >= 32) {
+            len -= 32;
+        } else {
+            len = 0;
+        }
     }
 }
 
