@@ -18,6 +18,11 @@ import (
 // length of watcher channel
 const watcherQueueLen = 1000
 
+type syncFlag struct {
+	sync.RWMutex
+	flag bool
+}
+
 // Watcher watches api server for changes
 type Watcher struct {
 	waitGrp         sync.WaitGroup          // wait group to wait on all go routines to exit
@@ -26,9 +31,10 @@ type Watcher struct {
 	vmmEpWatcher    chan kvstore.WatchEvent // vmm endpoint watcher
 	sgWatcher       chan kvstore.WatchEvent // sg object watcher
 	sgPolicyWatcher chan kvstore.WatchEvent // sg object watcher
+	tenantWatcher   chan kvstore.WatchEvent // tenant object watcher
 	watchCtx        context.Context         // ctx for watchers
 	watchCancel     context.CancelFunc      // cancel for watchers
-	stopFlag        bool                    // boolean flag to exit the API watchers
+	stopFlag        syncFlag                // boolean flag to exit the API watchers
 	debugStats      *debug.Stats            // debug Stats
 }
 
@@ -135,6 +141,35 @@ func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *network.Sg
 	}
 }
 
+// handleTenantEvent handles tenant event
+func (w *Watcher) handleTenantEvent(et kvstore.WatchEventType, tn *network.Tenant) {
+	switch et {
+	case kvstore.Created:
+		w.debugStats.Increment("CreateTenant")
+		// ask statemgr to create the tenant
+		err := w.statemgr.CreateTenant(tn)
+		if err != nil {
+			log.Errorf("Error creating tenant {%+v}. Err: %v", tn, err)
+			w.debugStats.Increment("CreateTenantFails")
+			return
+		}
+
+	case kvstore.Updated:
+		// FIXME:
+	case kvstore.Deleted:
+
+		w.debugStats.Increment("DeleteTenant")
+		// ask statemgr to delete the tenant
+		err := w.statemgr.DeleteTenant(tn.Tenant)
+		if err != nil {
+			log.Errorf("Error deleting tenant {%+v}. Err: %v", tn, err)
+			w.debugStats.Increment("DeleteTenantFails")
+			return
+		}
+
+	}
+}
+
 // runNetwatcher watches on a channel for changes from api server
 func (w *Watcher) runNetwatcher() {
 	log.Infof("Network watcher running")
@@ -149,7 +184,12 @@ func (w *Watcher) runNetwatcher() {
 		case evt, ok := <-w.netWatcher:
 			// if channel has error, we are done..
 			if !ok {
-				log.Infof("Exiting network watcher(channel closed)")
+				if w.stopped() {
+					return
+				}
+				log.Infof("Restarting network watcher")
+				w.netWatcher = make(chan kvstore.WatchEvent, watcherQueueLen)
+				go w.runNetwatcher()
 				return
 			}
 
@@ -185,11 +225,16 @@ func (w *Watcher) runVmmEpwatcher() {
 		case evt, ok := <-w.vmmEpWatcher:
 			// if channel has error, we are done..
 			if !ok {
-				log.Infof("Exiting network watcher(channel closed)")
+				if w.stopped() {
+					return
+				}
+				log.Infof("Restarting vmm ep watcher")
+				w.vmmEpWatcher = make(chan kvstore.WatchEvent, watcherQueueLen)
+				go w.runVmmEpwatcher()
 				return
 			}
 
-			// convert to network object
+			// convert to endpoint object
 			var ep *network.Endpoint
 			switch tp := evt.Object.(type) {
 			case *network.Endpoint:
@@ -221,7 +266,12 @@ func (w *Watcher) runSgwatcher() {
 		case evt, ok := <-w.sgWatcher:
 			// if channel has error, we are done..
 			if !ok {
-				log.Infof("Exiting sg watcher(channel closed)")
+				if w.stopped() {
+					return
+				}
+				log.Infof("Restarting security group watcher")
+				w.sgWatcher = make(chan kvstore.WatchEvent, watcherQueueLen)
+				go w.runSgwatcher()
 				return
 			}
 
@@ -246,7 +296,6 @@ func (w *Watcher) runSgwatcher() {
 // runSgPolicyWatcher watches on a channel for changes from api server
 func (w *Watcher) runSgPolicyWatcher() {
 	log.Infof("SgPolicy watcher running")
-
 	// setup wait group
 	w.waitGrp.Add(1)
 	defer w.waitGrp.Done()
@@ -257,11 +306,16 @@ func (w *Watcher) runSgPolicyWatcher() {
 		case evt, ok := <-w.sgPolicyWatcher:
 			// if channel has error, we are done..
 			if !ok {
-				log.Infof("Exiting sg policy watcher(channel closed)")
+				if w.stopped() {
+					return
+				}
+				log.Infof("Restarting security group policy watcher")
+				w.sgPolicyWatcher = make(chan kvstore.WatchEvent, watcherQueueLen)
+				go w.runSgPolicyWatcher()
 				return
 			}
 
-			// convert to sg object
+			// convert to sg policy object
 			var sgp *network.Sgpolicy
 			switch tp := evt.Object.(type) {
 			case *network.Sgpolicy:
@@ -279,10 +333,52 @@ func (w *Watcher) runSgPolicyWatcher() {
 	}
 }
 
+// runTenantwatcher watches on a channel for changes from api server
+func (w *Watcher) runTenantwatcher() {
+
+	log.Infof("Tenant watcher running")
+
+	// setup wait group
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
+
+	// loop till channel is closed
+	for {
+		select {
+		case evt, ok := <-w.tenantWatcher:
+			// if channel has error, we are done..
+			if !ok {
+				if w.stopped() {
+					return
+				}
+				log.Infof("Restarting tenant watcher")
+				w.tenantWatcher = make(chan kvstore.WatchEvent, watcherQueueLen)
+				go w.runTenantwatcher()
+				return
+			}
+
+			// convert to tenant object
+			var tn *network.Tenant
+			switch tp := evt.Object.(type) {
+			case *network.Tenant:
+				tn = evt.Object.(*network.Tenant)
+			default:
+				log.Fatalf("tenant watcher Found object of invalid type: %v, %v", tp, evt)
+				return
+			}
+
+			log.Infof("Watcher: Got tenant watch event(%s): {%+v}", evt.Type, tn)
+
+			// TODO process each event in its own go routine
+			w.handleTenantEvent(evt.Type, tn)
+		}
+	}
+}
+
 // Stop watcher
 func (w *Watcher) Stop() {
 	// stop the context
-	w.stopFlag = true
+	w.stop()
 	w.watchCancel()
 
 	// close the channels
@@ -290,6 +386,7 @@ func (w *Watcher) Stop() {
 	close(w.sgPolicyWatcher)
 	close(w.sgWatcher)
 	close(w.vmmEpWatcher)
+	close(w.tenantWatcher)
 
 	// wait for all goroutines to exit
 	w.waitGrp.Wait()
@@ -307,9 +404,13 @@ func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string, resolver 
 		vmmEpWatcher:    make(chan kvstore.WatchEvent, watcherQueueLen),
 		sgWatcher:       make(chan kvstore.WatchEvent, watcherQueueLen),
 		sgPolicyWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
+		tenantWatcher:   make(chan kvstore.WatchEvent, watcherQueueLen),
 		watchCtx:        watchCtx,
 		watchCancel:     watchCancel,
 		debugStats:      debugStats,
+		stopFlag: syncFlag{
+			flag: false,
+		},
 	}
 
 	// start a go routine to handle messages coming on watcher channel
@@ -317,12 +418,27 @@ func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string, resolver 
 	go watcher.runVmmEpwatcher()
 	go watcher.runSgwatcher()
 	go watcher.runSgPolicyWatcher()
+	go watcher.runTenantwatcher()
 
 	// handle api watchers
 	go watcher.runApisrvWatcher(watchCtx, apisrvURL, resolver)
 	go watcher.runVmmWatcher(watchCtx, vmmURL, resolver)
 
 	return watcher, nil
+}
+
+func (w *Watcher) stopped() (val bool) {
+	w.stopFlag.RLock()
+
+	defer w.stopFlag.RUnlock()
+	val = w.stopFlag.flag
+	return
+}
+
+func (w *Watcher) stop() {
+	w.stopFlag.Lock()
+	w.stopFlag.flag = true
+	w.stopFlag.Unlock()
 }
 
 // ******************* Functions for testing and emulating *********************
@@ -535,6 +651,49 @@ func (w *Watcher) DeleteSgpolicy(tenant, pname string) error {
 
 	// inject the object into the sg watcher
 	w.sgPolicyWatcher <- evt
+
+	return nil
+}
+
+// CreateTenant injects a create tenant event on the watcher
+func (w *Watcher) CreateTenant(tenant string) error {
+	// build network object
+	tn := network.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   tenant,
+			Tenant: tenant,
+		},
+	}
+
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &tn,
+	}
+	// inject the object into the network watcher
+	w.tenantWatcher <- evt
+
+	return nil
+}
+
+// DeleteTenant injects a delete network event to the watcher
+func (w *Watcher) DeleteTenant(tenant string) error {
+	// create a dummy tenant object
+	tn := network.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   tenant,
+			Tenant: tenant,
+		},
+	}
+
+	// create the watch event
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Deleted,
+		Object: &tn,
+	}
+	// inject the object into the tenant watcher
+	w.tenantWatcher <- evt
 
 	return nil
 }

@@ -153,6 +153,11 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		c.Assert(aerr, IsNil)
 		it.datapaths = append(it.datapaths, dp)
 
+		// set tenant create expectations for mock clients
+		if it.datapathKind.String() == "mock" {
+			dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+		}
+
 		// agent
 		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "", nil)
 		c.Assert(aerr, IsNil)
@@ -209,6 +214,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 		for _, dp := range it.datapaths {
 			dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 			dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+			dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 		}
 	}
 

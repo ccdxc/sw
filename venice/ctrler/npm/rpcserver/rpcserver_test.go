@@ -40,6 +40,10 @@ func (d *dummyWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
 	return nil
 }
 
+func (d *dummyWriter) WriteTenant(tn *network.Tenant) error {
+	return nil
+}
+
 // createRPCServerClient creates rpc client and server
 func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpckit.RPCClient) {
 	// create network state manager
@@ -63,6 +67,17 @@ func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpcki
 		Status: network.NetworkStatus{},
 	}
 
+	tn := network.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testTenant",
+		},
+	}
+
+	// create a tenant
+	err = stateMgr.CreateTenant(&tn)
+	AssertOk(t, err, "Failed to create tenant")
 	// create a dummy network
 	err = stateMgr.CreateNetwork(&np)
 	AssertOk(t, err, "Failed to create network")

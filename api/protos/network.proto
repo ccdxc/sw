@@ -20,14 +20,7 @@ message TenantSpec {
 
 // status part of tenant object
 message TenantStatus {
-    // list of all users in this tenant
-    repeated string Users    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "users,omitempty"];
-    // list of all networks in this tenant
-    repeated string Networks = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "networks,omitempty"];
-    // list of all security groups in this tenant
-    repeated string SGs      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sgs,omitempty"];
-    // list of all service(LB) objects in this tenant
-    repeated string Services = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "services,omitempty"];
+
 }
 
 // Tenant represents an org or a tenant

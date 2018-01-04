@@ -243,3 +243,43 @@ func TestSgPolicyWriter(t *testing.T) {
 	// stop api server
 	apiSrv.Stop()
 }
+
+func TestTenantWriter(t *testing.T) {
+	// create network state manager
+	wr, err := NewAPISrvWriter(apisrvURL, nil)
+	AssertOk(t, err, "Error creating apisrv writer")
+
+	// api server
+	apiSrv := createAPIServer(apisrvURL)
+	Assert(t, (apiSrv != nil), "Error creating api server")
+
+	// api server client
+	logger := log.WithContext("Pkg", "writer_test")
+	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
+	AssertOk(t, err, "Error creating api client")
+
+	tn := network.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testPostTenant",
+			Name:   "testPostTenant",
+		},
+	}
+
+	// create the tenant object in api server
+	_, err = apicl.TenantV1().Tenant().Create(context.Background(), &tn)
+	AssertOk(t, err, "Error creating network")
+
+	// write the update
+	tn.Spec.AdminUser = "testUser"
+	err = wr.WriteTenant(&tn)
+	AssertOk(t, err, "Error writing to apisrv")
+
+	// get the values back from api server
+	ts, err := apicl.TenantV1().Tenant().Get(context.Background(), &tn.ObjectMeta)
+	AssertOk(t, err, "Error getting network")
+	AssertEquals(t, "testUser", ts.Spec.AdminUser, "Tenant admin user did not match")
+
+	// stop api server
+	apiSrv.Stop()
+}

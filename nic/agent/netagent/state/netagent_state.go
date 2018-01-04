@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
+	config "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -34,6 +35,36 @@ func NewNetAgent(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) 
 		endpointDB: make(map[string]*netproto.Endpoint),
 		secgroupDB: make(map[string]*netproto.SecurityGroup),
 		tenantDB:   make(map[string]*netproto.Tenant),
+	}
+
+	c := config.Agent{
+		ObjectMeta: api.ObjectMeta{
+			Name: "AgentConfig",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Agent",
+		},
+		Spec: config.AgentSpec{
+			Mode: config.AgentMode_CLASSIC,
+		},
+	}
+
+	_, err = emdb.Read(&c)
+
+	// Blank slate. Persist config and do init stuff
+	if err != nil {
+		err := emdb.Write(&c)
+		if err != nil {
+			emdb.Close()
+			return nil, err
+		}
+		// We need to create a default tenant at startup as HAL expects an actual tenant object to be present before any api calls
+		err = createDefaultTenant(dp)
+		if err != nil {
+			emdb.Close()
+			return nil, err
+
+		}
 	}
 
 	err = dp.SetAgent(&nagent)
@@ -73,4 +104,14 @@ func objectKey(meta api.ObjectMeta) string {
 // GetAgentID returns UUID of the agent
 func (na *NetAgent) GetAgentID() string {
 	return na.nodeUUID
+}
+
+func createDefaultTenant(dp NetDatapathAPI) error {
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "default",
+		},
+	}
+	return dp.CreateTenant(&tn)
 }

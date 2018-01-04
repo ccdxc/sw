@@ -54,6 +54,50 @@ func createSg(stateMgr *Statemgr, tenant, sgname string, selectors []string) (*n
 	return &sg, err
 }
 
+// createTenant utility function to create a tenant
+func createTenant(stateMgr *Statemgr, tenant string) error {
+	// network params
+	tn := network.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: tenant,
+			Name:   tenant,
+		},
+	}
+
+	// create a network
+	return stateMgr.CreateTenant(&tn)
+}
+
+// createEndpoint utility function to create an endpoint
+func createEndpoint(stateMgr *Statemgr, tenant, endpoint, net string) (*EndpointState, error) {
+	// network params
+	ep := network.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      endpoint,
+			Namespace: "",
+			Tenant:    tenant,
+		},
+		Spec: network.EndpointSpec{},
+		Status: network.EndpointStatus{
+			EndpointUUID:   "testEndpointUUID",
+			WorkloadUUID:   "testContainerUUID",
+			WorkloadName:   "testContainerName",
+			Network:        net,
+			HomingHostAddr: "192.168.1.1",
+			HomingHostName: "testHost",
+		},
+	}
+
+	nw, err := stateMgr.FindNetwork(tenant, net)
+	if err != nil {
+		log.Errorf("could not find the network %v", net)
+		return nil, err
+	}
+	return nw.CreateEndpoint(&ep)
+}
+
 // dummy writer
 type dummyWriter struct {
 	// no fields
@@ -72,6 +116,10 @@ func (d *dummyWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
 }
 
 func (d *dummyWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteTenant(tn *network.Tenant) error {
 	return nil
 }
 
@@ -256,7 +304,6 @@ func TestEndpointCreateFailure(t *testing.T) {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
-
 	// create a network
 	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/30", "10.1.1.2")
 	AssertOk(t, err, "Error creating the network")
@@ -324,7 +371,6 @@ func TestEndpointListWatch(t *testing.T) {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
-
 	// create a network
 	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating the network")
@@ -390,7 +436,6 @@ func TestSgCreateDelete(t *testing.T) {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
-
 	// create sg
 	sg, err := createSg(stateMgr, "default", "testSg", []string{"env:production", "app:procurement"})
 	AssertOk(t, err, "Error creating security group")
@@ -416,7 +461,6 @@ func TestSgAttachEndpoint(t *testing.T) {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
-
 	// create sg
 	_, err = createSg(stateMgr, "default", "testSg", []string{"env:production", "app:procurement"})
 	AssertOk(t, err, "Error creating security group")
@@ -501,7 +545,6 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
-
 	// create sg
 	_, err = createSg(stateMgr, "default", "procurement", []string{"env:production", "app:procurement"})
 	AssertOk(t, err, "Error creating security group")
@@ -590,7 +633,6 @@ func TestEndpointConcurrency(t *testing.T) {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
-
 	// create a network
 	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating the network")
@@ -672,4 +714,88 @@ func TestEndpointConcurrency(t *testing.T) {
 	for i := 0; i < concurrency; i++ {
 		AssertOk(t, <-waitCh, "Error deleting endpoint")
 	}
+}
+
+// TestTenantCreateDelete tests tenant create and delete
+func TestTenantCreateDelete(t *testing.T) {
+	// create network state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create tenant
+	err = createTenant(stateMgr, "testTenant")
+	AssertOk(t, err, "Error creating the tenant")
+
+	// verify tenant got created
+	tn, err := stateMgr.FindTenant("testTenant")
+	AssertOk(t, err, "Error finding the tenant")
+	AssertEquals(t, tn.Name, "testTenant", "Did not match expected tenant name")
+
+	// create networks
+	err = createNetwork(stateMgr, "testTenant", "testNetwork1", "10.1.1.0/24", "10.1.1.254")
+	AssertOk(t, err, "Error creating network")
+	err = createNetwork(stateMgr, "testTenant", "testNetwork2", "192.168.1.1/24", "192.168.1.254")
+	AssertOk(t, err, "Error creating network")
+
+	// create security groups
+	_, err = createSg(stateMgr, "testTenant", "testSg1", []string{"env:production", "app:procurement"})
+	AssertOk(t, err, "Error creating security group")
+	_, err = createSg(stateMgr, "testTenant", "testSg2", []string{"env:production", "app:procurement"})
+	AssertOk(t, err, "Error creating security group")
+
+	// create endpoints
+	_, err = createEndpoint(stateMgr, "testTenant", "testEndpoint1", "testNetwork1")
+	AssertOk(t, err, "Error creating endpoint")
+	_, err = createEndpoint(stateMgr, "testTenant", "testEndpoint2", "testNetwork2")
+	AssertOk(t, err, "Error creating endpoint")
+
+	// delete the tenant
+	err = stateMgr.DeleteTenant("testTenant")
+	AssertOk(t, err, "Deleting tenant failed.")
+
+	// verify tenant is deleted from the db
+	_, err = stateMgr.FindTenant("testTenant")
+	Assert(t, err != nil, "Tenant still found after its deleted")
+
+	// delete resources
+	nw1, _ := stateMgr.FindNetwork("testTenant", "testNetwork1")
+	nw2, _ := stateMgr.FindNetwork("testTenant", "testNetwork2")
+
+	ep1, _ := stateMgr.FindEndpoint("testTenant", "testEndpoint1")
+	ep2, _ := stateMgr.FindEndpoint("testTenant", "testEndpoint2")
+
+	ep1.Delete()
+	ep2.Delete()
+
+	_, err = nw1.DeleteEndpoint(ep1.GetObjectMeta())
+	AssertOk(t, err, "Could not delete endpoint")
+	_, err = nw2.DeleteEndpoint(ep2.GetObjectMeta())
+	AssertOk(t, err, "Could not delete endpoint")
+
+	err = stateMgr.DeleteSecurityGroup("testTenant", "testSg1")
+	AssertOk(t, err, "Error deleting the security group.")
+	err = stateMgr.DeleteSecurityGroup("testTenant", "testSg2")
+	AssertOk(t, err, "Error deleting the security group.")
+
+	err = stateMgr.DeleteNetwork("testTenant", "testNetwork1")
+	AssertOk(t, err, "Error deleting the network.")
+	err = stateMgr.DeleteNetwork("testTenant", "testNetwork2")
+	AssertOk(t, err, "Error deleting the network.")
+}
+
+// TestNonExistentTenantDeletion will test that non existent tenants can't be deleted
+func TestNonExistentTenantDeletion(t *testing.T) {
+	// create network state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// delete the tenant
+	err = stateMgr.DeleteTenant("nonExistingTenant")
+	Assert(t, err == ErrTenantNotFound, "Deleting tenant failed.")
 }

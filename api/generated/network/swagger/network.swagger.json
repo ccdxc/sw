@@ -204,42 +204,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "Status.Users",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Status.Networks",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Status.SGs",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Status.Services",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         ],
         "tags": [
@@ -2287,12 +2251,10 @@
       "type": "object",
       "properties": {
         "Type": {
-          "type": "string",
-          "title": "list of all users in this tenant"
+          "type": "string"
         },
         "Object": {
-          "$ref": "#/definitions/networkLbPolicy",
-          "title": "list of all networks in this tenant"
+          "$ref": "#/definitions/networkLbPolicy"
         }
       },
       "title": "status part of tenant object"
@@ -2935,33 +2897,7 @@
       }
     },
     "networkTenantStatus": {
-      "type": "object",
-      "properties": {
-        "Users": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Networks": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "SGs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Services": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
+      "type": "object"
     }
   }
 }

@@ -88,12 +88,34 @@ func TestApiWatcher(t *testing.T) {
 	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l)
 	AssertOk(t, err, "Error creating api server client")
 
-	// create a network in api server
+	// create a default tenant
+	tenant := network.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testTenant",
+		},
+	}
+
+	tn, err := apicl.TenantV1().Tenant().Create(context.Background(), &tenant)
+	AssertOk(t, err, "failed to create tenant")
+	AssertEquals(t, "testTenant", tn.Name, "tenant names did not match")
+
+	// verify the tenant got created
+	AssertEventually(t, func() (bool, []interface{}) {
+		_, terr := stateMgr.FindTenant("testTenant")
+		return terr == nil, nil
+	}, "Tenant not found in statemgr")
+	ts, err := stateMgr.FindTenant("testTenant")
+	AssertOk(t, err, "Could not find the tenant")
+	AssertEquals(t, "testTenant", ts.Name, "tenant names did not match")
+
+	//create a network in api server
 	net := network.Network{
 		TypeMeta: api.TypeMeta{Kind: "network"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "test",
+			Tenant: "testTenant",
+			Name:   "testNetwork",
 		},
 		Spec: network.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
@@ -106,10 +128,10 @@ func TestApiWatcher(t *testing.T) {
 
 	// verify network got created
 	AssertEventually(t, func() (bool, []interface{}) {
-		_, nerr := stateMgr.FindNetwork("default", "test")
+		_, nerr := stateMgr.FindNetwork("testTenant", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
-	nw, err := stateMgr.FindNetwork("default", "test")
+	nw, err := stateMgr.FindNetwork("testTenant", "testNetwork")
 	AssertOk(t, err, "Could not find the network")
 	Assert(t, (nw.Spec.IPv4Subnet == "10.1.1.0/24"), "Got invalid network", nw)
 
@@ -117,7 +139,7 @@ func TestApiWatcher(t *testing.T) {
 	nwif := orch.NwIF{
 		ObjectKind: "NwIF",
 		ObjectMeta: &api.ObjectMeta{
-			Tenant: "default",
+			Tenant: "testTenant",
 			Name:   "test-nwif",
 			UUID:   "test-nwif",
 		},
@@ -128,7 +150,7 @@ func TestApiWatcher(t *testing.T) {
 			IpAddress:   "10.1.1.1",
 			MacAddress:  "11:11:11:11:11:11",
 			PortGroup:   "test",
-			Network:     "test",
+			Network:     "testNetwork",
 			SmartNIC_ID: "test-host",
 		},
 	}
@@ -137,10 +159,10 @@ func TestApiWatcher(t *testing.T) {
 
 	// verify endpoint got created
 	AssertEventually(t, func() (bool, []interface{}) {
-		_, perr := stateMgr.FindEndpoint("default", "test-nwif")
+		_, perr := stateMgr.FindEndpoint("testTenant", "test-nwif")
 		return (perr == nil), nil
 	}, "Endpoint not found in statemgr")
-	ep, err := stateMgr.FindEndpoint("default", "test-nwif")
+	ep, err := stateMgr.FindEndpoint("testTenant", "test-nwif")
 	AssertOk(t, err, "Could not find the endpoint")
 	Assert(t, (ep.Status.MicroSegmentVlan == 22), "Endpoint did not match", ep)
 
@@ -150,7 +172,7 @@ func TestApiWatcher(t *testing.T) {
 
 	// verify endpoint is gone
 	AssertEventually(t, func() (bool, []interface{}) {
-		_, perr := stateMgr.FindEndpoint("default", "test-nwif")
+		_, perr := stateMgr.FindEndpoint("testTenant", "test-nwif")
 		return (perr != nil), nil
 	}, "Endpoint still found in statemgr")
 
@@ -160,7 +182,7 @@ func TestApiWatcher(t *testing.T) {
 
 	// verify network is gone
 	AssertEventually(t, func() (bool, []interface{}) {
-		_, nerr := stateMgr.FindNetwork("default", "test")
+		_, nerr := stateMgr.FindNetwork("testTenant", "test")
 		return (nerr != nil), nil
 	}, "Endpoint still found in statemgr")
 

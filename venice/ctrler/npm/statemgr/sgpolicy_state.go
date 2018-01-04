@@ -3,7 +3,6 @@
 package statemgr
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/pensando/sw/api/generated/network"
@@ -67,7 +66,7 @@ func SgpolicyStateFromObj(obj memdb.Object) (*SgpolicyState, error) {
 		sgpobj := obj.(*SgpolicyState)
 		return sgpobj, nil
 	default:
-		return nil, errors.New("Incorrect object type")
+		return nil, ErrIncorrectObjectType
 	}
 }
 

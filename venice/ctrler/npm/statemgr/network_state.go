@@ -5,7 +5,6 @@ package statemgr
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -18,9 +17,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
-
-// ErrorCoundNotFindEndpoint is returned when an endpoint is not found
-var ErrorCoundNotFindEndpoint = errors.New("Could not find the endpoint")
 
 // NetworkState is a wrapper for network object
 type NetworkState struct {
@@ -37,7 +33,7 @@ func NetworkStateFromObj(obj memdb.Object) (*NetworkState, error) {
 		nsobj := obj.(*NetworkState)
 		return nsobj, nil
 	default:
-		return nil, errors.New("Incorrect object type")
+		return nil, ErrIncorrectObjectType
 	}
 }
 
@@ -277,11 +273,11 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 
 // DeleteEndpoint deletes an endpoint
 func (ns *NetworkState) DeleteEndpoint(epmeta *api.ObjectMeta) (*EndpointState, error) {
-	// see if we have the dnpoint
+	// see if we have the endpoint
 	eps, ok := ns.FindEndpoint(epmeta.Name)
 	if !ok {
 		log.Errorf("could not find the endpoint %+v", epmeta)
-		return nil, ErrorCoundNotFindEndpoint
+		return nil, ErrEndpointNotFound
 	}
 
 	// free the IPv4 address
@@ -295,7 +291,6 @@ func (ns *NetworkState) DeleteEndpoint(epmeta *api.ObjectMeta) (*EndpointState, 
 	if err != nil {
 		log.Errorf("Error deleting the endpoint{%+v}. Err: %v", eps, err)
 	}
-
 	// remove it from the database
 	ns.Lock()
 	delete(ns.endpointDB, eps.endpointKey())
@@ -422,7 +417,6 @@ func (sm *Statemgr) CreateNetwork(nw *network.Network) error {
 		log.Errorf("Error creating new network state. Err: %v", err)
 		return err
 	}
-
 	log.Infof("Created Network state {Meta: %+v, Spec: %+v}", ns.ObjectMeta, ns.Spec)
 
 	// store it in local DB
@@ -452,7 +446,6 @@ func (sm *Statemgr) DeleteNetwork(tenant, network string) error {
 		log.Errorf("Error deleting the network {%+v}. Err: %v", ns, err)
 		return err
 	}
-
 	// delete it from the DB
 	return sm.memDB.DeleteObject(nso)
 }

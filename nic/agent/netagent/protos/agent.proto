@@ -1,0 +1,50 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package nagent;
+option go_package="state";
+
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// Agent Modes
+enum AgentMode {
+    CLASSIC     = 0; // Standalone mode without venice
+    MANAGED     = 1; // Managed mode with venice running
+}
+
+// Agent config object
+message Agent {
+
+    option (venice.objectPrefix) = "config";
+
+    api.TypeMeta TypeMeta      = 1 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta ObjectMeta  = 2 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "meta,omitempty"];
+
+    // AgentSpec has agent configuration
+    AgentSpec Spec             = 3 [(gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the NIC.
+    AgentStatus Status         = 4 [(gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// AgentSpec contains initial bootstrap configuration of the Naples I/O subsystem
+message AgentSpec {
+    // Agent Mode. ToDo Add VeniceIP
+    AgentMode Mode             = 1 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "mode,omitempty"];
+}
+
+// AgentStatus contains agent status.
+message AgentStatus{
+
+}

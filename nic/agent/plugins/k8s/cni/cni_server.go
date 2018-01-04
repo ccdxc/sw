@@ -309,7 +309,7 @@ func (c *Server) DelPod(r *http.Request) (interface{}, error) {
 
 	// Ask network agent to create and endpoint
 	err := c.agent.EndpointDeleteReq(&epinfo)
-	if err != nil && !strings.Contains(err.Error(), statemgr.ErrorCoundNotFindEndpoint.Error()) {
+	if err != nil && !strings.Contains(err.Error(), statemgr.ErrEndpointNotFound.Error()) {
 		log.Errorf("Error deleting the endpoint: {%+v}. Err: %v", epinfo, err)
 		return nil, err
 	}

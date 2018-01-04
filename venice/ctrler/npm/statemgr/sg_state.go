@@ -3,7 +3,6 @@
 package statemgr
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/pensando/sw/api/generated/network"
@@ -117,7 +116,7 @@ func SecurityGroupStateFromObj(obj memdb.Object) (*SecurityGroupState, error) {
 		sgobj := obj.(*SecurityGroupState)
 		return sgobj, nil
 	default:
-		return nil, errors.New("Incorrect object type")
+		return nil, ErrIncorrectObjectType
 	}
 }
 
@@ -185,7 +184,6 @@ func (sm *Statemgr) CreateSecurityGroup(sg *network.SecurityGroup) error {
 		log.Errorf("Error attaching endpoints to security group %s. Err: %v", sgs.Name, err)
 		return err
 	}
-
 	log.Infof("Created Security Group state {%+v}", sgs)
 
 	// store it in local DB
@@ -221,7 +219,6 @@ func (sm *Statemgr) DeleteSecurityGroup(tenant, sgname string) error {
 		log.Errorf("Error deleting the sg {%+v}. Err: %v", sg, err)
 		return err
 	}
-
 	// delete it from the DB
 	return sm.memDB.DeleteObject(sg)
 }

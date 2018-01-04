@@ -56,12 +56,6 @@ type BoltdbStore struct {
 	boltDb *bolt.DB // boltdb instance
 }
 
-//// ResourceID holds id for the a particular resource
-//type ResourceID struct {
-//	ResType string
-//	ID      uint64
-//}
-
 // kindStore stores all keys for a kind
 type kindStore struct {
 	store map[string]Object // map of objects

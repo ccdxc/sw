@@ -17,6 +17,7 @@ import (
 type Writer interface {
 	WriteNetwork(nw *network.Network) error
 	WriteEndpoint(ep *network.Endpoint, update bool) error
+	WriteTenant(tn *network.Tenant) error
 	WriteSecurityGroup(sg *network.SecurityGroup) error
 	WriteSgPolicy(sgp *network.Sgpolicy) error
 }
@@ -105,6 +106,27 @@ func (wr *APISrvWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
 			_, err = apicl.EndpointV1().Endpoint().Update(context.Background(), ep)
 		}
 	}
+	return err
+}
+
+// WriteTenant writes tenant object
+func (wr *APISrvWriter) WriteTenant(tn *network.Tenant) error {
+	// if we have no URL, we are done
+	if wr.apisrvURL == "" {
+		return nil
+	}
+
+	// get the api client
+	apicl, err := wr.getAPIClient()
+	if err != nil {
+		return err
+	}
+
+	// FIXME: clear the resource version till we figure out CAS semantics
+	tn.ObjectMeta.ResourceVersion = ""
+
+	// write it
+	_, err = apicl.TenantV1().Tenant().Update(context.Background(), tn)
 	return err
 }
 

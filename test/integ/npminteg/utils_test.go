@@ -7,6 +7,8 @@ import (
 
 	"github.com/prometheus/common/log"
 
+	"github.com/golang/mock/gomock"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
@@ -36,6 +38,11 @@ func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string) (*Dpagent, error) 
 	if err != nil {
 		log.Errorf("Error creating hal datapath. Err: %v", err)
 		return nil, err
+	}
+
+	// set tenant create expectations for mock clients
+	if kind.String() == "mock" {
+		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
 	// create new network agent

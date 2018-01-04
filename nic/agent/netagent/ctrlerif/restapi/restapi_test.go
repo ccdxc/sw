@@ -39,6 +39,11 @@ func setup() (*RestServer, error) {
 		return nil, err
 	}
 
+	// Set tenant creation expectation
+	if dp.Kind.String() == "mock" {
+		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+	}
+
 	nagent, err := state.NewNetAgent(dp, "", "dummy-node-uuid")
 	if err != nil {
 		log.Errorf("Could not create net agent")

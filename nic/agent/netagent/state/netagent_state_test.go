@@ -839,8 +839,8 @@ func TestTenantCreateDelete(t *testing.T) {
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "default",
+			Tenant: "testTenant",
+			Name:   "testTenant",
 		},
 	}
 
@@ -849,7 +849,7 @@ func TestTenantCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating tenant")
 	tnt, err := ag.FindTenant(tn.ObjectMeta)
 	AssertOk(t, err, "Tenant was not found in DB")
-	Assert(t, tnt.Name == "default", "Tenant names did not match", tnt)
+	Assert(t, tnt.Name == "testTenant", "Tenant names did not match", tnt)
 
 	// verify duplicate tenant creations succeed
 	err = ag.CreateTenant(&tn)

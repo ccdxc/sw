@@ -56,6 +56,30 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 	defer epWatcher.Stop()
 
+	// tenant object watcher
+	tnWatcher, err := apicl.TenantV1().Tenant().Watch(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to start watch (%s)\n", err)
+		return
+	}
+	defer tnWatcher.Stop()
+
+	// get all current tenants
+	tnList, err := apicl.TenantV1().Tenant().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list tenants (%s)\n", err)
+		return
+	}
+
+	// add all tenants
+	for _, tn := range tnList {
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Object: tn,
+		}
+		w.tenantWatcher <- evt
+	}
+
 	// get all current networks
 	netList, err := apicl.NetworkV1().Network().List(ctx, &opts)
 	if err != nil {
@@ -135,6 +159,12 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 				return
 			}
 			w.vmmEpWatcher <- *evt
+		case evt, ok := <-tnWatcher.EventChan():
+			if !ok {
+				log.Errorf("Error receiving from apisrv watcher")
+				return
+			}
+			w.tenantWatcher <- *evt
 		}
 	}
 }
@@ -170,7 +200,7 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 		apicl.Close()
 
 		// if stop flag is set, we are done
-		if w.stopFlag {
+		if w.stopped() {
 			log.Infof("Exiting API server watcher")
 			return
 		}
@@ -287,7 +317,7 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string, resolver res
 		}
 
 		// if stop flag is set, we are done
-		if w.stopFlag {
+		if w.stopped() {
 			log.Infof("Exiting VMM watcher")
 			return
 		}

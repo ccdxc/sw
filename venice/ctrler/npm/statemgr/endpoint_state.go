@@ -3,7 +3,6 @@
 package statemgr
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/pensando/sw/api/generated/network"
@@ -31,7 +30,7 @@ func EndpointStateFromObj(obj memdb.Object) (*EndpointState, error) {
 		epobj := obj.(*EndpointState)
 		return epobj, nil
 	default:
-		return nil, errors.New("Incorrect object type")
+		return nil, ErrIncorrectObjectType
 	}
 }
 

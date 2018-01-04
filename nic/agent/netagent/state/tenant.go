@@ -104,6 +104,10 @@ func (na *NetAgent) UpdateTenant(tn *netproto.Tenant) error {
 
 // DeleteTenant deletes a tenant
 func (na *NetAgent) DeleteTenant(tn *netproto.Tenant) error {
+	if tn.Name == "default" {
+		return errors.New("default tenants can not be deleted")
+	}
+
 	existingTenant, err := na.FindTenant(tn.ObjectMeta)
 	if err != nil {
 		log.Errorf("Tenant %+v not found", tn.ObjectMeta)
