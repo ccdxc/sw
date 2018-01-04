@@ -107,11 +107,11 @@ skip_roce_udp_options:
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
 
     bcf            [!c3], exit
+    add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
+    phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_FEEDBACK) // Branch Delay Slot
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
-    add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
-    phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
 
     phvwr          p.p4_intr_global.tm_iport, TM_PORT_INGRESS
     phvwr          p.p4_intr_global.tm_oport, TM_PORT_DMA
