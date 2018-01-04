@@ -90,7 +90,7 @@ _sem_full_discard:
     RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                k.{common_phv_qstate_addr_sbit0_ebit0... \
                                   common_phv_qstate_addr_sbit33_ebit33},
-                               RAWRCB_STAT_SEM_ALLOC_FULL_BYTE_OFFS)
+                               p.t3_s2s_inc_stat_current_all)
     /*
      * Launch common cleanup code for next stage
      */

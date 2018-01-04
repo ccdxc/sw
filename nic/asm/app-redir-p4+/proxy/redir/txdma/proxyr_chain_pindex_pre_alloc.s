@@ -77,7 +77,7 @@ _null_ring_indices_addr:
     PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                  k.{common_phv_qstate_addr_sbit0_ebit5... \
                                     common_phv_qstate_addr_sbit30_ebit33},
-                                 PROXYRCB_STAT_NULL_RING_INDICES_ADDR_BYTE_OFFS)
+                                 p.t3_s2s_inc_stat_null_ring_indices_addr)
     b           _cleanup_discard_launch
     nop
     
@@ -89,7 +89,7 @@ _mpage_sem_pindex_full:
     PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                  k.{common_phv_qstate_addr_sbit0_ebit5... \
                                     common_phv_qstate_addr_sbit30_ebit33},
-                                 PROXYRCB_STAT_SEM_ALLOC_FULL_BYTE_OFFS)
+                                 p.t3_s2s_inc_stat_sem_alloc_full)
     b           _cleanup_discard_launch
     nop
 

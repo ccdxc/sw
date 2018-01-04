@@ -35,6 +35,8 @@ stat_qstate_cfg_err             : 0
 stat_pkt_len_err                : 0
 stat_rxq_full                   : 0
 stat_txq_full                   : 0
-stat_sem_alloc_full             : 0
+stat_desc_sem_alloc_full        : 0
+stat_mpage_sem_alloc_full       : 0
+stat_ppage_sem_alloc_full       : 0
 stat_sem_free_full              : 0
 

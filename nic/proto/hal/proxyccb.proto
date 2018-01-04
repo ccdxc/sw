@@ -42,6 +42,22 @@ message ProxycCbSpec {
   uint32                chain_txq_qtype            = 14;
   uint32                chain_txq_qid              = 15;
   uint32                chain_txq_ring             = 16;
+  
+  /*
+   * 64-bit statistic counters
+   */
+  uint64                stat_pkts_chain            = 17;
+  uint64                stat_pkts_discard          = 18;
+  
+  /*
+   * 32-bit saturating statistic counters
+   */
+  uint32                stat_cb_not_ready          = 19;
+  uint32                stat_my_txq_empty          = 20;
+  uint32                stat_aol_err               = 21;
+  uint32                stat_txq_full              = 22;
+  uint32                stat_desc_sem_free_full    = 23;
+  uint32                stat_page_sem_free_full    = 24;
 }
 
 // ProxycCbRequestMsg is batched add or modify proxyccb request

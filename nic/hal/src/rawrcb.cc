@@ -272,7 +272,9 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
     rsp->mutable_spec()->set_stat_pkt_len_err(rrawrcb.stat_pkt_len_err);
     rsp->mutable_spec()->set_stat_rxq_full(rrawrcb.stat_rxq_full);
     rsp->mutable_spec()->set_stat_txq_full(rrawrcb.stat_txq_full);
-    rsp->mutable_spec()->set_stat_sem_alloc_full(rrawrcb.stat_sem_alloc_full);
+    rsp->mutable_spec()->set_stat_desc_sem_alloc_full(rrawrcb.stat_desc_sem_alloc_full);
+    rsp->mutable_spec()->set_stat_mpage_sem_alloc_full(rrawrcb.stat_mpage_sem_alloc_full);
+    rsp->mutable_spec()->set_stat_ppage_sem_alloc_full(rrawrcb.stat_ppage_sem_alloc_full);
     rsp->mutable_spec()->set_stat_sem_free_full(rrawrcb.stat_sem_free_full);
 
     // fill operational state of this RAWR CB

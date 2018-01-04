@@ -68,7 +68,9 @@ typedef struct rawrcb_s {
     uint32_t              stat_pkt_len_err;
     uint32_t              stat_rxq_full;
     uint32_t              stat_txq_full;
-    uint32_t              stat_sem_alloc_full;
+    uint32_t              stat_desc_sem_alloc_full;
+    uint32_t              stat_mpage_sem_alloc_full;
+    uint32_t              stat_ppage_sem_alloc_full;
     uint32_t              stat_sem_free_full;
 
     hal_handle_t          hal_handle;               // HAL allocated handle

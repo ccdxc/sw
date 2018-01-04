@@ -314,7 +314,9 @@ p4pd_get_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
     rawrcb->stat_pkt_len_err = ntohl(data.stat_pkt_len_err);
     rawrcb->stat_rxq_full = ntohl(data.stat_rxq_full);
     rawrcb->stat_txq_full = ntohl(data.stat_txq_full);
-    rawrcb->stat_sem_alloc_full = ntohl(data.stat_sem_alloc_full);
+    rawrcb->stat_desc_sem_alloc_full = ntohl(data.stat_desc_sem_alloc_full);
+    rawrcb->stat_mpage_sem_alloc_full = ntohl(data.stat_mpage_sem_alloc_full);
+    rawrcb->stat_ppage_sem_alloc_full = ntohl(data.stat_ppage_sem_alloc_full);
     rawrcb->stat_sem_free_full = ntohl(data.stat_sem_free_full);
 
     return HAL_RET_OK;

@@ -42,43 +42,40 @@
 /*
  * For use by NCC ASM code
  */
-#define RAWRCB_STAT_PKTS_REDIR_BYTE_OFFS    \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_pkts_redir))
-#define RAWRCB_STAT_PKTS_DISCARD_BYTE_OFFS  \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_pkts_discard))
-#define RAWRCB_STAT_CB_NOT_READY_BYTE_OFFS  \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_cb_not_ready))
-#define RAWRCB_STAT_QSTATE_CFG_ERR_BYTE_OFFS\
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_qstate_cfg_err))
-#define RAWRCB_STAT_PKT_LEN_ERR_BYTE_OFFS   \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_pkt_len_err))
-#define RAWRCB_STAT_RXQ_FULL_BYTE_OFFS      \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_rxq_full))
-#define RAWRCB_STAT_TXQ_FULL_BYTE_OFFS      \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_txq_full))
-#define RAWRCB_STAT_SEM_ALLOC_FULL_BYTE_OFFS\
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_sem_alloc_full))
-#define RAWRCB_STAT_SEM_FREE_FULL_BYTE_OFFS \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(rawr_stats_err_stat_inc_d, stat_sem_free_full))
-
-#define RAWRCB_SINGLE_STAT_INC_LAUNCH(table, qstate_addr_dst,                   \
-                                      qstate_addr_src, stat_byte_offs)          \
+#define RAWRCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                   \
+                                      qstate_addr_src, phv_inc_stat)            \
     APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
-                              RAWRCB_TABLE_STATS_OFFSET, stat_byte_offs,        \
-                              p.t3_s2s_stat_byte_offs, rawr_single_stat_inc)
+                              RAWRCB_TABLE_STATS_OFFSET,                        \
+                              phv_inc_stat, rawr_normal_stats_inc)
 #define RAWRCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                      \
-                                   qstate_addr_src, stat_byte_offs)             \
+                                   qstate_addr_src, phv_inc_stat)               \
     APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
-                              RAWRCB_TABLE_STATS_OFFSET, stat_byte_offs,        \
-                              p.t3_s2s_stat_byte_offs, rawr_err_stats_inc)
+                              RAWRCB_TABLE_STATS_OFFSET,                        \
+                              phv_inc_stat, rawr_err_stats_inc)
 
 /*
  * Raw Chain Control Block sizes
  */
-#define RAWCCB_TABLE_ENTRY_SIZE             64
-#define RAWCCB_TABLE_ENTRY_SIZE_SHFT        6
+#define RAWCCB_TABLE_ENTRY_SIZE             128
+#define RAWCCB_TABLE_ENTRY_SIZE_SHFT        7
 #define RAWCCB_TABLE_ENTRY_MULTIPLE         (RAWCCB_TABLE_ENTRY_SIZE_SHFT - \
                                              CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT + 1)
+#define RAWCCB_TABLE_STATS_OFFSET           (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+
+/*
+ * For use by NCC ASM code
+ */
+#define RAWCCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                   \
+                                      qstate_addr_src, phv_inc_stat)            \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              RAWCCB_TABLE_STATS_OFFSET,                        \
+                              phv_inc_stat, rawc_normal_stats_inc)
+#define RAWCCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                      \
+                                   qstate_addr_src, phv_inc_stat)               \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              RAWCCB_TABLE_STATS_OFFSET,                        \
+                              phv_inc_stat, rawc_err_stats_inc)
+
 /*
  * Proxy Redirect Control Block sizes
  */
@@ -92,42 +89,38 @@
 /*
  * For use by NCC ASM code
  */
-#define PROXYRCB_STAT_PKTS_REDIR_BYTE_OFFS  \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_pkts_redir))
-#define PROXYRCB_STAT_PKTS_DISCARD_BYTE_OFFS\
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_pkts_discard))
-#define PROXYRCB_STAT_CB_NOT_READY_BYTE_OFFS\
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_cb_not_ready))
-#define PROXYRCB_STAT_NULL_RING_INDICES_ADDR_BYTE_OFFS\
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_null_ring_indices_addr))
-#define PROXYRCB_STAT_AOL_ERR_BYTE_OFFS     \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_aol_err))
-#define PROXYRCB_STAT_RXQ_FULL_BYTE_OFFS    \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_rxq_full))
-#define PROXYRCB_STAT_TXQ_EMPTY_BYTE_OFFS   \
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_txq_empty))
-#define PROXYRCB_STAT_SEM_ALLOC_FULL_BYTE_OFFS\
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_sem_alloc_full))
-#define PROXYRCB_STAT_SEM_FREE_FULL_BYTE_OFFS\
-    SIZE_IN_BYTES(APP_REDIR_BIT_OFFS_STRUCT(proxyr_stats_err_stat_inc_d, stat_sem_free_full))
-
-#define PROXYRCB_SINGLE_STAT_INC_LAUNCH(table, qstate_addr_dst,                 \
-                                       qstate_addr_src, stat_byte_offs)         \
+#define PROXYRCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                 \
+                                        qstate_addr_src, phv_inc_stat)          \
     APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
-                              PROXYRCB_TABLE_STATS_OFFSET, stat_byte_offs,      \
-                              p.t3_s2s_stat_byte_offs, proxyr_single_stat_inc)
+                              PROXYRCB_TABLE_STATS_OFFSET,                      \
+                              phv_inc_stat, proxyr_normal_stats_inc)
 #define PROXYRCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                    \
-                                   qstate_addr_src, stat_byte_offs)             \
+                                   qstate_addr_src, phv_inc_stat)               \
     APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
-                              PROXYRCB_TABLE_STATS_OFFSET, stat_byte_offs,      \
-                              p.t3_s2s_stat_byte_offs, proxyr_err_stats_inc)
+                              PROXYRCB_TABLE_STATS_OFFSET,                      \
+                              phv_inc_stat, proxyr_err_stats_inc)
 /*
  * Proxy Chain Control Block sizes
  */
-#define PROXYCCB_TABLE_ENTRY_SIZE           64
-#define PROXYCCB_TABLE_ENTRY_SIZE_SHFT      6
+#define PROXYCCB_TABLE_ENTRY_SIZE           128
+#define PROXYCCB_TABLE_ENTRY_SIZE_SHFT      7
 #define PROXYCCB_TABLE_ENTRY_MULTIPLE       (PROXYCCB_TABLE_ENTRY_SIZE_SHFT -   \
                                              CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT + 1)
+#define PROXYCCB_TABLE_STATS_OFFSET         (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+
+/*
+ * For use by NCC ASM code
+ */
+#define PROXYCCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                 \
+                                        qstate_addr_src, phv_inc_stat)          \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              PROXYCCB_TABLE_STATS_OFFSET,                      \
+                              phv_inc_stat, proxyc_normal_stats_inc)
+#define PROXYCCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                    \
+                                   qstate_addr_src, phv_inc_stat)               \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              PROXYCCB_TABLE_STATS_OFFSET,                      \
+                              phv_inc_stat, proxyc_err_stats_inc)
 
 /*
  * Max number of CBs, i.e., number of queues, supported for each type.

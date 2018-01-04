@@ -258,6 +258,15 @@ proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_txq_qid(rproxyccb.chain_txq_qid);
     rsp->mutable_spec()->set_chain_txq_ring(rproxyccb.chain_txq_ring);
 
+    rsp->mutable_spec()->set_stat_pkts_chain(rproxyccb.stat_pkts_chain);
+    rsp->mutable_spec()->set_stat_pkts_discard(rproxyccb.stat_pkts_discard);
+    rsp->mutable_spec()->set_stat_cb_not_ready(rproxyccb.stat_cb_not_ready);
+    rsp->mutable_spec()->set_stat_my_txq_empty(rproxyccb.stat_my_txq_empty);
+    rsp->mutable_spec()->set_stat_aol_err(rproxyccb.stat_aol_err);
+    rsp->mutable_spec()->set_stat_txq_full(rproxyccb.stat_txq_full);
+    rsp->mutable_spec()->set_stat_desc_sem_free_full(rproxyccb.stat_desc_sem_free_full);
+    rsp->mutable_spec()->set_stat_page_sem_free_full(rproxyccb.stat_page_sem_free_full);
+
     rsp->mutable_spec()->set_pi(rproxyccb.pi);
     rsp->mutable_spec()->set_ci(rproxyccb.ci);
 

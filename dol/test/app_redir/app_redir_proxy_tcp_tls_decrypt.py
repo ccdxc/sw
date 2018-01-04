@@ -184,6 +184,7 @@ def TestCaseVerify(tc):
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
         print("RNMDR pi check failed old %d new %d expected %d" %
                      (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
+        app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
         return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
 
@@ -192,6 +193,7 @@ def TestCaseVerify(tc):
         print("RNMPR pi check failed old %d new %d expected %d" %
                   (rnmpr.pi+rnmpr_small.pi, rnmpr_cur.pi+rnmpr_small_cur.pi,
                    rnmpr.pi+rnmpr_small.pi+num_pkts+proxyr_meta_pages))
+        app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
         return False
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
@@ -201,6 +203,7 @@ def TestCaseVerify(tc):
     if (proxyrcb_cur.stat_pkts_redir != proxyrcb.stat_pkts_redir+num_redir_pkts):
         print("stat_pkts_redir check failed old %d new %d expected %d" %
               (proxyrcb.stat_pkts_redir, proxyrcb_cur.stat_pkts_redir, proxyrcb.stat_pkts_redir+num_redir_pkts))
+        app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
         return False
     print("stat_pkts_redir old %d new %d" % 
           (proxyrcb.stat_pkts_redir, proxyrcb_cur.stat_pkts_redir))
@@ -208,12 +211,24 @@ def TestCaseVerify(tc):
     # Tx: verify PI for PROXYCCB got incremented
     time.sleep(1)
     proxyccb_cur.GetObjValPd()
-    if (proxyccb_cur.pi != proxyccb.pi+num_pkts):
+    if (proxyccb_cur.pi != proxyccb.pi+num_redir_pkts):
         print("PROXYCCB pi check failed old %d new %d expected %d" %
-                      (proxyccb.pi, proxyccb_cur.pi, proxyccb.pi+num_pkts))
+                      (proxyccb.pi, proxyccb_cur.pi, proxyccb.pi+num_redir_pkts))
+        app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
         return False
     print("PROXYCCB pi old %d new %d" % (proxyccb.pi, proxyccb_cur.pi))
 
+    # Tx: verify # packets chained
+    if (proxyccb_cur.stat_pkts_chain != proxyccb.stat_pkts_chain+num_redir_pkts):
+        print("stat_pkts_chain check failed old %d new %d expected %d" %
+              (proxyccb.stat_pkts_chain, proxyccb_cur.stat_pkts_chain, proxyccb.stat_pkts_chain+num_redir_pkts))
+        app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
+        return False
+    print("stat_pkts_chain old %d new %d" % 
+          (proxyccb.stat_pkts_chain, proxyccb_cur.stat_pkts_chain))
+
+    app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
+    app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
     return True
 
 def TestCaseTeardown(tc):

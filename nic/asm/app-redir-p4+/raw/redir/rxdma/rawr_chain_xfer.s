@@ -22,7 +22,7 @@ struct rawr_chain_pindex_k              k;
 #define r_scratch                       r7
 
 %%
-    .param      rawr_single_stat_inc
+    .param      rawr_normal_stats_inc
     
     .align
 
@@ -174,10 +174,10 @@ rawr_s6_chain_xfer:
     /*
      * Gather packet redirect statistics
      */
-     RAWRCB_SINGLE_STAT_INC_LAUNCH(3, r_scratch, 
+     RAWRCB_NORMAL_STAT_INC_LAUNCH(3, r_scratch, 
                                    k.{common_phv_qstate_addr_sbit0_ebit0...\
                                       common_phv_qstate_addr_sbit33_ebit33},
-                                   RAWRCB_STAT_PKTS_REDIR_BYTE_OFFS)
+                                   p.t3_s2s_inc_stat_pkts_redir)
     /*
      * If the next service ring belongs to a TxQ, set up DMA to increment
      * pindex and ring doorbell.

@@ -159,7 +159,7 @@ _packet_len_err_discard:
 
     RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
-                               RAWRCB_STAT_PKT_LEN_ERR_BYTE_OFFS)
+                               p.t3_s2s_inc_stat_pkt_len_err)
     phvwr.e     p.p4_intr_global_drop, 1
     nop    
 
@@ -171,7 +171,7 @@ _qstate_cfg_err_discard:
 
     RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
-                               RAWRCB_STAT_QSTATE_CFG_ERR_BYTE_OFFS)
+                               p.t3_s2s_inc_stat_qstate_cfg_err)
     phvwr.e     p.p4_intr_global_drop, 1
     nop
 
@@ -183,7 +183,7 @@ _rawrcb_not_ready:
 
     RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
-                               RAWRCB_STAT_CB_NOT_READY_BYTE_OFFS)
+                               p.t3_s2s_inc_stat_cb_not_ready)
     phvwr.e     p.p4_intr_global_drop, 1
     nop
 

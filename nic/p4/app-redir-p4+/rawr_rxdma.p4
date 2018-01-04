@@ -83,22 +83,6 @@
 #include "../cpu-p4+/cpu_rx_common.p4"
 
 
-#define GENERATE_GLOBAL_K \
-    modify_field(common_global_scratch.chain_ring_base, common_phv.chain_ring_base); \
-    modify_field(common_global_scratch.packet_len, common_phv.packet_len); \
-    modify_field(common_global_scratch.chain_to_rxq, common_phv.chain_to_rxq); \
-    modify_field(common_global_scratch.desc_sem_pindex_full, common_phv.desc_sem_pindex_full); \
-    modify_field(common_global_scratch.ppage_sem_pindex_full, common_phv.ppage_sem_pindex_full); \
-    modify_field(common_global_scratch.mpage_sem_pindex_full, common_phv.mpage_sem_pindex_full); \
-    modify_field(common_global_scratch.chain_ring_size_shift, common_phv.chain_ring_size_shift); \
-    modify_field(common_global_scratch.chain_entry_size_shift, common_phv.chain_entry_size_shift); \
-    modify_field(common_global_scratch.chain_ring_index_select, common_phv.chain_ring_index_select); \
-    modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
-    modify_field(common_global_scratch.rawrcb_flags, common_phv.rawrcb_flags); \
-    modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
-
-
-
 /*
  * D-vectors
  */
@@ -246,13 +230,13 @@ header_type rawrcb_stats_t {
         stat_pkt_len_err                : 32;
         stat_rxq_full                   : 32;
         stat_txq_full                   : 32;
-        stat_sem_alloc_full             : 32;
+        stat_desc_sem_alloc_full        : 32;
+        stat_ppage_sem_alloc_full       : 32;
+        stat_mpage_sem_alloc_full       : 32;
         stat_sem_free_full              : 32;
         unused0                         : 32;
         unused1                         : 32;
         unused2                         : 32;
-        unused3                         : 32;
-        unused4                         : 32;
     }
 }
 
@@ -276,6 +260,20 @@ header_type common_global_phv_t {
         chain_entry_size_shift          : 5;
     }
 }
+
+#define GENERATE_GLOBAL_K \
+    modify_field(common_global_scratch.chain_ring_base, common_phv.chain_ring_base); \
+    modify_field(common_global_scratch.packet_len, common_phv.packet_len); \
+    modify_field(common_global_scratch.chain_to_rxq, common_phv.chain_to_rxq); \
+    modify_field(common_global_scratch.desc_sem_pindex_full, common_phv.desc_sem_pindex_full); \
+    modify_field(common_global_scratch.ppage_sem_pindex_full, common_phv.ppage_sem_pindex_full); \
+    modify_field(common_global_scratch.mpage_sem_pindex_full, common_phv.mpage_sem_pindex_full); \
+    modify_field(common_global_scratch.chain_ring_size_shift, common_phv.chain_ring_size_shift); \
+    modify_field(common_global_scratch.chain_entry_size_shift, common_phv.chain_entry_size_shift); \
+    modify_field(common_global_scratch.chain_ring_index_select, common_phv.chain_ring_index_select); \
+    modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
+    modify_field(common_global_scratch.rawrcb_flags, common_phv.rawrcb_flags); \
+    modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr);
 
 
 /*
@@ -352,12 +350,48 @@ header_type common_t1_s2s_phv_t {
     }
 }
 
+#define GENERATE_T1_S2S_K \
+    modify_field(t1_s2s_scratch.chain_lif, t1_s2s.chain_lif); \
+    modify_field(t1_s2s_scratch.chain_qtype, t1_s2s.chain_qtype); \
+    modify_field(t1_s2s_scratch.chain_qid, t1_s2s.chain_qid);
+    
+
 header_type common_t3_s2s_phv_t {
     fields {
         // (max is STAGE_2_STAGE_WIDTH or 160 bits)
-        stat_byte_offs          : 8;
+        inc_stat_begin                : 1;
+        inc_stat_pkts_redir           : 1;
+        inc_stat_pkts_discard         : 1;
+        inc_stat_cb_not_ready         : 1;
+        inc_stat_qstate_cfg_err       : 1;
+        inc_stat_pkt_len_err          : 1;
+        inc_stat_rxq_full             : 1;
+        inc_stat_txq_full             : 1;
+        inc_stat_desc_sem_alloc_full  : 1;
+        inc_stat_ppage_sem_alloc_full : 1;
+        inc_stat_mpage_sem_alloc_full : 1;
+        inc_stat_sem_free_full        : 1;
+        inc_stat_current_all          : 1;
+        inc_stat_end                  : 1;
     }
 }
+
+#define GENERATE_T3_S2S_K \
+    modify_field(t3_s2s_scratch.inc_stat_begin, t3_s2s.inc_stat_begin); \
+    modify_field(t3_s2s_scratch.inc_stat_pkts_redir, t3_s2s.inc_stat_pkts_redir); \
+    modify_field(t3_s2s_scratch.inc_stat_pkts_discard, t3_s2s.inc_stat_pkts_discard); \
+    modify_field(t3_s2s_scratch.inc_stat_cb_not_ready, t3_s2s.inc_stat_cb_not_ready); \
+    modify_field(t3_s2s_scratch.inc_stat_qstate_cfg_err, t3_s2s.inc_stat_qstate_cfg_err); \
+    modify_field(t3_s2s_scratch.inc_stat_pkt_len_err, t3_s2s.inc_stat_pkt_len_err); \
+    modify_field(t3_s2s_scratch.inc_stat_rxq_full, t3_s2s.inc_stat_rxq_full); \
+    modify_field(t3_s2s_scratch.inc_stat_txq_full, t3_s2s.inc_stat_txq_full); \
+    modify_field(t3_s2s_scratch.inc_stat_desc_sem_alloc_full, t3_s2s.inc_stat_desc_sem_alloc_full); \
+    modify_field(t3_s2s_scratch.inc_stat_ppage_sem_alloc_full, t3_s2s.inc_stat_ppage_sem_alloc_full); \
+    modify_field(t3_s2s_scratch.inc_stat_mpage_sem_alloc_full, t3_s2s.inc_stat_mpage_sem_alloc_full); \
+    modify_field(t3_s2s_scratch.inc_stat_sem_free_full, t3_s2s.inc_stat_sem_free_full); \
+    modify_field(t3_s2s_scratch.inc_stat_current_all, t3_s2s.inc_stat_current_all); \
+    modify_field(t3_s2s_scratch.inc_stat_end, t3_s2s.inc_stat_end);
+    
 
 /*
  * Header unions for PHV layout
@@ -520,6 +554,8 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
  * Stage 1 table 0 action
  */
 action desc_pindex_post_update(pindex, pindex_full) {
+    
+    // d for stage
     modify_field(sem_desc_d.pindex, pindex);
     modify_field(sem_desc_d.pindex_full, pindex_full);
 }
@@ -528,6 +564,8 @@ action desc_pindex_post_update(pindex, pindex_full) {
  * Stage 1 table 1 action
  */
 action ppage_pindex_post_update(pindex, pindex_full) {
+    
+    // d for stage
     modify_field(sem_ppage_d.pindex, pindex);
     modify_field(sem_ppage_d.pindex_full, pindex_full);
 }
@@ -536,6 +574,8 @@ action ppage_pindex_post_update(pindex, pindex_full) {
  * Stage 1 table 2 action
  */
 action mpage_pindex_post_update(pindex, pindex_full) {
+    
+    // d for stage
     modify_field(sem_mpage_d.pindex, pindex);
     modify_field(sem_mpage_d.pindex_full, pindex_full);
     
@@ -692,9 +732,7 @@ action chain_xfer() {
     GENERATE_GLOBAL_K
     
     // from stage to stage
-    modify_field(t1_s2s_scratch.chain_lif, t1_s2s.chain_lif);
-    modify_field(t1_s2s_scratch.chain_qtype, t1_s2s.chain_qtype);
-    modify_field(t1_s2s_scratch.chain_qid, t1_s2s.chain_qid);
+    GENERATE_T1_S2S_K
 }
 
 
@@ -766,9 +804,11 @@ action err_stat_inc(stat_pkts_redir,
                     stat_pkt_len_err,
                     stat_rxq_full,
                     stat_txq_full,
-                    stat_sem_alloc_full,
+                    stat_desc_sem_alloc_full,
+                    stat_ppage_sem_alloc_full,
+                    stat_mpage_sem_alloc_full,
                     stat_sem_free_full,
-                    unused0, unused1, unused2, unused3, unused4) {
+                    unused0, unused1, unused2) {
     // k + i for stage x table 3
     
     // from to_stage x
@@ -777,7 +817,7 @@ action err_stat_inc(stat_pkts_redir,
     //GENERATE_GLOBAL_K
 
     // from stage to stage
-    modify_field(t3_s2s_scratch.stat_byte_offs, t3_s2s.stat_byte_offs);
+    GENERATE_T3_S2S_K
 
     // d for stage x table 3
     modify_field(rawrcb_stats_d.stat_pkts_redir, stat_pkts_redir);
@@ -787,12 +827,12 @@ action err_stat_inc(stat_pkts_redir,
     modify_field(rawrcb_stats_d.stat_pkt_len_err, stat_pkt_len_err);
     modify_field(rawrcb_stats_d.stat_rxq_full, stat_rxq_full);
     modify_field(rawrcb_stats_d.stat_txq_full, stat_txq_full);
-    modify_field(rawrcb_stats_d.stat_sem_alloc_full, stat_sem_alloc_full);
+    modify_field(rawrcb_stats_d.stat_desc_sem_alloc_full, stat_desc_sem_alloc_full);
+    modify_field(rawrcb_stats_d.stat_ppage_sem_alloc_full, stat_ppage_sem_alloc_full);
+    modify_field(rawrcb_stats_d.stat_mpage_sem_alloc_full, stat_mpage_sem_alloc_full);
     modify_field(rawrcb_stats_d.stat_sem_free_full, stat_sem_free_full);
     modify_field(rawrcb_stats_d.unused0, unused0);
     modify_field(rawrcb_stats_d.unused1, unused1);
     modify_field(rawrcb_stats_d.unused2, unused2);
-    modify_field(rawrcb_stats_d.unused3, unused3);
-    modify_field(rawrcb_stats_d.unused4, unused4);
 }
 

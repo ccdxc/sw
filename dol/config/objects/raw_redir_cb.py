@@ -89,7 +89,9 @@ class RawrCbObject(base.ConfigObjectBase):
             self.stat_pkt_len_err             = resp_spec.spec.stat_pkt_len_err
             self.stat_rxq_full                = resp_spec.spec.stat_rxq_full
             self.stat_txq_full                = resp_spec.spec.stat_txq_full
-            self.stat_sem_alloc_full          = resp_spec.spec.stat_sem_alloc_full
+            self.stat_desc_sem_alloc_full     = resp_spec.spec.stat_desc_sem_alloc_full
+            self.stat_mpage_sem_alloc_full    = resp_spec.spec.stat_mpage_sem_alloc_full
+            self.stat_ppage_sem_alloc_full    = resp_spec.spec.stat_ppage_sem_alloc_full
             self.stat_sem_free_full           = resp_spec.spec.stat_sem_free_full
 
         return

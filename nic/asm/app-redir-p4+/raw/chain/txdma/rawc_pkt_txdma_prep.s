@@ -18,10 +18,17 @@ struct rawc_pkt_prep_pkt_prep_d d;
 #define r_return                    r6  // subroutine return address
 #define r_cpu_header_addr           r7  // page address of cpu_to_p4plus_header_t
 
+/*
+ * Register reuse
+ */
+#define r_qstate_addr               r_addr
+
 %%
 
     .param      rawc_s3_pkt_txdma_post
     .param      rawc_s3_cpu_flags_not_read
+    .param      rawc_err_stats_inc
+
     .align
     
 /*
@@ -188,9 +195,10 @@ _dma_mem2pkt_prep:
  */
 _aol_error:
 
-    /*
-     * TODO: add stats here
-     */
+    RAWCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                               k.{common_phv_qstate_addr_sbit0_ebit5... \
+                                  common_phv_qstate_addr_sbit30_ebit33},
+                               p.t3_s2s_inc_stat_aol_err)
     APP_REDIR_TXDMA_INVALID_AOL_TRAP()
     jr          r_return
     phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot

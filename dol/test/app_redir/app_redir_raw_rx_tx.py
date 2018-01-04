@@ -116,6 +116,7 @@ def TestCaseVerify(tc):
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
         print("RNMDR pi check failed old %d new %d expected %d" %
                      (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
+        app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
         return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
 
@@ -124,6 +125,7 @@ def TestCaseVerify(tc):
         print("RNMPR pi check failed old %d new %d expected %d" %
                   (rnmpr.pi+rnmpr_small.pi, rnmpr_cur.pi+rnmpr_small_cur.pi,
                    rnmpr.pi+rnmpr_small.pi+num_pkts))
+        app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
         return False
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
@@ -133,6 +135,7 @@ def TestCaseVerify(tc):
     if (rawrcb_cur.stat_pkts_redir != rawrcb.stat_pkts_redir+num_redir_pkts):
         print("stat_pkts_redir check failed old %d new %d expected %d" %
               (rawrcb.stat_pkts_redir, rawrcb_cur.stat_pkts_redir, rawrcb.stat_pkts_redir+num_redir_pkts))
+        app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
         return False
     print("stat_pkts_redir old %d new %d" % 
           (rawrcb.stat_pkts_redir, rawrcb_cur.stat_pkts_redir))
@@ -142,9 +145,21 @@ def TestCaseVerify(tc):
     if (rawccb_cur.pi != rawccb.pi+num_pkts):
         print("RAWCCB pi check failed old %d new %d expected %d" %
                       (rawccb.pi, rawccb_cur.pi, rawccb.pi+num_pkts))
+        app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
         return False
     print("RAWCCB pi old %d new %d" % (rawccb.pi, rawccb_cur.pi))
 
+    # Tx: verify # packets chained
+    if (rawccb_cur.stat_pkts_chain != rawccb.stat_pkts_chain+num_pkts):
+        print("stat_pkts_chain check failed old %d new %d expected %d" %
+              (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain, rawccb.stat_pkts_chain+num_pkts))
+        app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
+        return False
+    print("stat_pkts_chain old %d new %d" % 
+          (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain))
+
+    app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
+    app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
     return True
 
 def TestCaseTeardown(tc):

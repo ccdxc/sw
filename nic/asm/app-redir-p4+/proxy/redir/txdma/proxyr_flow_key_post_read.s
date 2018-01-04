@@ -56,6 +56,6 @@ _proxyrcb_not_ready:
     PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                  k.{common_phv_qstate_addr_sbit0_ebit5... \
                                     common_phv_qstate_addr_sbit30_ebit33},
-                                 PROXYRCB_STAT_CB_NOT_READY_BYTE_OFFS)
+                                 p.t3_s2s_inc_stat_cb_not_ready)
     phvwri.e    p.common_phv_do_cleanup_discard, TRUE
     nop

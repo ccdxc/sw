@@ -26,6 +26,7 @@ rawr_s1_ppage_sem_pindex_post_update:
     CAPRI_CLEAR_TABLE1_VALID
     
     phvwr       p.common_phv_ppage_sem_pindex_full, d.pindex_full
+    phvwr       p.t3_s2s_inc_stat_ppage_sem_alloc_full, d.pindex_full
     
     /*
      * If semaphore full, handle it in a later stage but

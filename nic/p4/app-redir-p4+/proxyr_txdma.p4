@@ -77,19 +77,6 @@
 #include "../cpu-p4+/cpu_rx_common.p4"
 
 
-#define GENERATE_GLOBAL_K \
-    modify_field(common_global_scratch.chain_ring_base, common_phv.chain_ring_base); \
-    modify_field(common_global_scratch.do_cleanup_discard, common_phv.do_cleanup_discard); \
-    modify_field(common_global_scratch.mpage_sem_pindex_full, common_phv.mpage_sem_pindex_full); \
-    modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
-    modify_field(common_global_scratch.chain_ring_size_shift, common_phv.chain_ring_size_shift); \
-    modify_field(common_global_scratch.chain_entry_size_shift, common_phv.chain_entry_size_shift); \
-    modify_field(common_global_scratch.chain_ring_index_select, common_phv.chain_ring_index_select); \
-    modify_field(common_global_scratch.proxyrcb_flags, common_phv.proxyrcb_flags); \
-    modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
-
-
-
 /*
  * D-vectors
  */
@@ -264,6 +251,18 @@ header_type common_global_phv_t {
     }
 }
 
+#define GENERATE_GLOBAL_K \
+    modify_field(common_global_scratch.chain_ring_base, common_phv.chain_ring_base); \
+    modify_field(common_global_scratch.do_cleanup_discard, common_phv.do_cleanup_discard); \
+    modify_field(common_global_scratch.mpage_sem_pindex_full, common_phv.mpage_sem_pindex_full); \
+    modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
+    modify_field(common_global_scratch.chain_ring_size_shift, common_phv.chain_ring_size_shift); \
+    modify_field(common_global_scratch.chain_entry_size_shift, common_phv.chain_entry_size_shift); \
+    modify_field(common_global_scratch.chain_ring_index_select, common_phv.chain_ring_index_select); \
+    modify_field(common_global_scratch.proxyrcb_flags, common_phv.proxyrcb_flags); \
+    modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr);
+
+
 /*
  * to_stage PHV definitions
  */
@@ -279,6 +278,14 @@ header_type to_stage_1_phv_t {
         my_txq_qtype                    : 3;
     }
 }
+
+#define GENERATE_TO_S1_K \
+    modify_field(to_s1_scratch.proxyrcb_deactivate, to_s1.proxyrcb_deactivate); \
+    modify_field(to_s1_scratch.my_txq_ring_size_shift, to_s1.my_txq_ring_size_shift); \
+    modify_field(to_s1_scratch.my_txq_ci_curr, to_s1.my_txq_ci_curr); \
+    modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif); \
+    modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype); \
+    modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
 
 
 header_type to_stage_5_phv_t {
@@ -296,6 +303,12 @@ header_type to_stage_6_phv_t {
         mpage                           : 34;
     }
 }
+
+#define GENERATE_TO_S6_K \
+    modify_field(to_s6_scratch.desc,  to_s6.desc); \
+    modify_field(to_s6_scratch.ppage, to_s6.ppage); \
+    modify_field(to_s6_scratch.mpage, to_s6.mpage);
+
 
 header_type to_stage_7_phv_t {
     fields {
@@ -347,10 +360,35 @@ metadata pkt_descr_aol_t                desc_aol_d;
 header_type common_t3_s2s_phv_t {
     fields {
         // (max is STAGE_2_STAGE_WIDTH or 160 bits)
-        stat_byte_offs          : 8;
+        inc_stat_begin                  : 1;
+        inc_stat_pkts_redir             : 1;
+        inc_stat_pkts_discard           : 1;
+        inc_stat_cb_not_ready           : 1;
+        inc_stat_null_ring_indices_addr : 1;
+        inc_stat_aol_err                : 1;
+        inc_stat_rxq_full               : 1;
+        inc_stat_txq_empty              : 1;
+        inc_stat_sem_alloc_full         : 1;
+        inc_stat_sem_free_full          : 1;
+        inc_stat_current_all            : 1;
+        inc_stat_end                    : 1;
     }
 }
 
+#define GENERATE_T3_S2S_K \
+    modify_field(t3_s2s_scratch.inc_stat_begin, t3_s2s.inc_stat_begin); \
+    modify_field(t3_s2s_scratch.inc_stat_pkts_redir, t3_s2s.inc_stat_pkts_redir); \
+    modify_field(t3_s2s_scratch.inc_stat_pkts_discard, t3_s2s.inc_stat_pkts_discard); \
+    modify_field(t3_s2s_scratch.inc_stat_cb_not_ready, t3_s2s.inc_stat_cb_not_ready); \
+    modify_field(t3_s2s_scratch.inc_stat_null_ring_indices_addr, t3_s2s.inc_stat_null_ring_indices_addr); \
+    modify_field(t3_s2s_scratch.inc_stat_aol_err, t3_s2s.inc_stat_aol_err); \
+    modify_field(t3_s2s_scratch.inc_stat_rxq_full, t3_s2s.inc_stat_rxq_full); \
+    modify_field(t3_s2s_scratch.inc_stat_txq_empty, t3_s2s.inc_stat_txq_empty); \
+    modify_field(t3_s2s_scratch.inc_stat_sem_alloc_full, t3_s2s.inc_stat_sem_alloc_full); \
+    modify_field(t3_s2s_scratch.inc_stat_sem_free_full, t3_s2s.inc_stat_sem_free_full); \
+    modify_field(t3_s2s_scratch.inc_stat_current_all, t3_s2s.inc_stat_current_all); \
+    modify_field(t3_s2s_scratch.inc_stat_end, t3_s2s.inc_stat_end);
+    
 
 /*
  * Header unions for PHV layout
@@ -495,12 +533,7 @@ action start(rsvd, cosA, cosB, cos_sel,
 action consume(desc) {
 
     // from to_stage
-    modify_field(to_s1_scratch.proxyrcb_deactivate, to_s1.proxyrcb_deactivate);
-    modify_field(to_s1_scratch.my_txq_ring_size_shift, to_s1.my_txq_ring_size_shift);
-    modify_field(to_s1_scratch.my_txq_ci_curr, to_s1.my_txq_ci_curr);
-    modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
-    modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
-    modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
+    GENERATE_TO_S1_K
     
     // from ki global
     GENERATE_GLOBAL_K
@@ -520,12 +553,7 @@ action flow_key_post_read(ip_sa, ip_da, sport, dport,
     // k + i for stage 1 table 1
 
     // from to_stage 1
-    modify_field(to_s1_scratch.proxyrcb_deactivate, to_s1.proxyrcb_deactivate);
-    modify_field(to_s1_scratch.my_txq_ring_size_shift, to_s1.my_txq_ring_size_shift);
-    modify_field(to_s1_scratch.my_txq_ci_curr, to_s1.my_txq_ci_curr);
-    modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif);
-    modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype);
-    modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
+    GENERATE_TO_S1_K
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -659,9 +687,7 @@ action cleanup_discard() {
     // k + i for stage 6
 
     // from to_stage 6
-    modify_field(to_s6_scratch.desc,  to_s6.desc);
-    modify_field(to_s6_scratch.ppage, to_s6.ppage);
-    modify_field(to_s6_scratch.mpage, to_s6.mpage);
+    GENERATE_TO_S6_K
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -683,9 +709,7 @@ action chain_xfer(ARQ_PI_PARAMS) {
     GENERATE_GLOBAL_K
 
     // from stage to stage
-    modify_field(to_s6_scratch.desc,  to_s6.desc);
-    modify_field(to_s6_scratch.ppage, to_s6.ppage);
-    modify_field(to_s6_scratch.mpage, to_s6.mpage);
+    GENERATE_TO_S6_K
 
     // d for stage 6 table 2
     GENERATE_ARQ_PI_D(qidxr_chain_d)
@@ -777,8 +801,8 @@ action err_stat_inc(stat_pkts_redir,
     //GENERATE_GLOBAL_K
 
     // from stage to stage
-    modify_field(t3_s2s_scratch.stat_byte_offs, t3_s2s.stat_byte_offs);
-
+    GENERATE_T3_S2S_K
+    
     // d for stage x table 3
     modify_field(proxyrcb_stats_d.stat_pkts_redir, stat_pkts_redir);
     modify_field(proxyrcb_stats_d.stat_pkts_discard, stat_pkts_discard);

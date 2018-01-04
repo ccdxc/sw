@@ -7,47 +7,56 @@ struct rawr_stats_err_stat_inc_d        d;
 /*
  * Registers usage
  */
+#define r_discard                   r1
 
 %%
     
     .align
 
 /*
- * Non-atomic increment of a 32-bit saturating error counter.
+ * Non-atomic increment of a 32-bit saturating error counters.
  * In addition, a 64-bit packet discard counter is also incremented.
  *
  * Caution: function is stage agnostic, but must not be launched from stage 7!
  */
 rawr_err_stats_inc:
 
-    seq         c1, k.t3_s2s_stat_byte_offs, RAWRCB_STAT_CB_NOT_READY_BYTE_OFFS
-    tblsadd.c1  d.stat_cb_not_ready, 1
-    seq         c1, k.t3_s2s_stat_byte_offs, RAWRCB_STAT_QSTATE_CFG_ERR_BYTE_OFFS
-    tblsadd.c1  d.stat_qstate_cfg_err, 1
-    seq         c1, k.t3_s2s_stat_byte_offs, RAWRCB_STAT_PKT_LEN_ERR_BYTE_OFFS
-    tblsadd.c1  d.stat_pkt_len_err, 1
-    seq         c1, k.t3_s2s_stat_byte_offs, RAWRCB_STAT_RXQ_FULL_BYTE_OFFS
-    tblsadd.c1  d.stat_rxq_full, 1
-    seq         c1, k.t3_s2s_stat_byte_offs, RAWRCB_STAT_TXQ_FULL_BYTE_OFFS
-    tblsadd.c1  d.stat_txq_full, 1
-    seq         c1, k.t3_s2s_stat_byte_offs, RAWRCB_STAT_SEM_ALLOC_FULL_BYTE_OFFS
-    tblsadd.c1  d.stat_sem_alloc_full, 1
-    seq         c1, k.t3_s2s_stat_byte_offs, RAWRCB_STAT_SEM_FREE_FULL_BYTE_OFFS
-    tblsadd.c1  d.stat_sem_free_full, 1
+    CAPRI_CLEAR_TABLE3_VALID
     
-    phvwri.e    p.app_header_table3_valid, 0
-    tbladd.c1   d.stat_pkts_discard, 1  // delay slot
+    add         r_discard, r0, r0
+    or          r_discard, r_discard, k.t3_s2s_inc_stat_cb_not_ready
+    tblsadd     d.stat_cb_not_ready,  k.t3_s2s_inc_stat_cb_not_ready
+    or          r_discard, r_discard,  k.t3_s2s_inc_stat_qstate_cfg_err
+    tblsadd     d.stat_qstate_cfg_err, k.t3_s2s_inc_stat_qstate_cfg_err
+    or          r_discard, r_discard, k.t3_s2s_inc_stat_pkt_len_err
+    tblsadd     d.stat_pkt_len_err,   k.t3_s2s_inc_stat_pkt_len_err
+    or          r_discard, r_discard, k.t3_s2s_inc_stat_rxq_full
+    tblsadd     d.stat_rxq_full,      k.t3_s2s_inc_stat_rxq_full
+    or          r_discard, r_discard, k.t3_s2s_inc_stat_txq_full
+    tblsadd     d.stat_txq_full,      k.t3_s2s_inc_stat_txq_full
+    or          r_discard, r_discard,       k.t3_s2s_inc_stat_desc_sem_alloc_full
+    tblsadd     d.stat_desc_sem_alloc_full, k.t3_s2s_inc_stat_desc_sem_alloc_full
+    or          r_discard, r_discard,        k.t3_s2s_inc_stat_mpage_sem_alloc_full
+    tblsadd     d.stat_mpage_sem_alloc_full, k.t3_s2s_inc_stat_mpage_sem_alloc_full
+    or          r_discard, r_discard,        k.t3_s2s_inc_stat_ppage_sem_alloc_full
+    tblsadd     d.stat_ppage_sem_alloc_full, k.t3_s2s_inc_stat_ppage_sem_alloc_full
+    or          r_discard, r_discard, k.t3_s2s_inc_stat_sem_free_full
+    tblsadd     d.stat_sem_free_full, k.t3_s2s_inc_stat_sem_free_full
 
+    tbladd.e    d.stat_pkts_discard, r_discard
+    phvwri      p.{t3_s2s_inc_stat_begin...t3_s2s_inc_stat_end}, 0 // delay slot
+    
     .align
 
 /*
- * Non-atomic increment of a single counter.
+ * Non-atomic increment of normal (good) counters.
  *
  * Caution: function is stage agnostic, but must not be launched from stage 7!
  */
-rawr_single_stat_inc:
+rawr_normal_stats_inc:
 
-    phvwri      p.app_header_table3_valid, 0
-    seq.e       c1, k.t3_s2s_stat_byte_offs, RAWRCB_STAT_PKTS_REDIR_BYTE_OFFS
-    tbladd.c1   d.stat_pkts_redir, 1    // delay slot
+    CAPRI_CLEAR_TABLE3_VALID
+    
+    tbladd.e    d.stat_pkts_redir, k.t3_s2s_inc_stat_pkts_redir
+    phvwri      p.{t3_s2s_inc_stat_begin...t3_s2s_inc_stat_end}, 0 // delay slot
 

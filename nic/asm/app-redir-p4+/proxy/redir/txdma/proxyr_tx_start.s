@@ -121,7 +121,7 @@ _my_txq_ring_empty:
 
     PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                  CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR,
-                                 PROXYRCB_STAT_TXQ_EMPTY_BYTE_OFFS)
+                                 p.t3_s2s_inc_stat_txq_empty)
     nop.e
     nop
 

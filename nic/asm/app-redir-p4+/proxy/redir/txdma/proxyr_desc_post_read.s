@@ -74,7 +74,7 @@ _aol_error:
     PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                  k.{common_phv_qstate_addr_sbit0_ebit5... \
                                     common_phv_qstate_addr_sbit30_ebit33},
-                                 PROXYRCB_STAT_AOL_ERR_BYTE_OFFS)
+                                 p.t3_s2s_inc_stat_aol_err)
     APP_REDIR_TXDMA_INVALID_AOL_TRAP()
     phvwri      p.common_phv_do_cleanup_discard, TRUE
 
