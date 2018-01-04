@@ -698,6 +698,7 @@ tcp_rx_slow_path:
                             TCP_PARSED_STATE_HANDLE_IN_CPU, \
                             TCP_PARSED_STATE_HANDLE_IN_CPU
     phvwri.c1       p.common_phv_write_arq, 1
+    tblwr.c1        d.u.tcp_rx_d.alloc_descr, 1
 
     seq             c2, d.u.tcp_rx_d.state, TCP_LISTEN
     phvwri.c2       p.common_phv_write_tcp_app_hdr,1
