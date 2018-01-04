@@ -59,8 +59,7 @@ req_tx_sqwqe_process:
     .brend
 
 set_write_reth:
-    phvwr RETH_VA, d.write.va
-    phvwr RETH_RKEY, d.write.r_key
+    phvwrpair RETH_VA, d.write.va, RETH_RKEY, d.write.r_key
     phvwr RETH_LEN, d.write.length
 
 send_or_write:
@@ -70,15 +69,12 @@ send_or_write:
     bcf            [!c1], set_sge_arg
     seq            c2, d.base.inline_data_vld, 1 // Branch Delay Slot
 
-    phvwr DETH_Q_KEY, d.ud_send.q_key
-    phvwr DETH_SRC_QP, k.global.qid
+    phvwrpair DETH_Q_KEY, d.ud_send.q_key, DETH_SRC_QP, k.global.qid
     phvwr BTH_DST_QP, d.ud_send.dst_qp
 
     // setup cqwqe for UD completion
-    phvwr          p.rdma_feedback.feedback_type, RDMA_UD_FEEDBACK
-    phvwr          p.rdma_feedback.ud.wrid, d.base.wrid
-    phvwr          p.rdma_feedback.ud.optype, d.base.op_type
-    phvwr          p.rdma_feedback.ud.status, 0
+    phvwrpair      p.rdma_feedback.feedback_type, RDMA_UD_FEEDBACK, p.rdma_feedback.ud.wrid, d.base.wrid
+    phvwrpair      p.rdma_feedback.ud.optype[3:0], d.base.op_type, p.rdma_feedback.ud.status, 0
 
     // For UD, length should be less than pmtu
     add            r4, r0, k.args.log_pmtu
@@ -115,16 +111,13 @@ set_sge_arg:
 read:
     // prepare atomic header
     #phvwr           RETH_VA_RKEY_LEN, d.{read.va...read.length}
-    phvwr          RETH_VA, d.read.va
-    phvwr          RETH_RKEY, d.read.r_key
+    phvwrpair      RETH_VA, d.read.va, RETH_RKEY, d.read.r_key
     phvwr          RETH_LEN, d.read.length
 
     // prepare RRQWQE descriptor
-    phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ
-    phvwr          RRQWQE_NUM_SGES, d.base.num_sges
-    phvwr          RRQWQE_READ_LEN, d.read.length
+    phvwrpair      RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ, RRQWQE_NUM_SGES, d.base.num_sges
     add            r2, k.to_stage.sq.wqe_addr, TXWQE_SGE_OFFSET
-    phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, r2
+    phvwrpair      RRQWQE_READ_LEN, d.read.length, RRQWQE_READ_WQE_SGE_LIST_ADDR, r2
 
     //CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, first, 1)
@@ -161,17 +154,12 @@ read:
 
 atomic:
     // prepare atomic header
-    phvwr          ATOMIC_VA, d.atomic.va
-    phvwr          ATOMIC_R_KEY, d.atomic.r_key
-    phvwr          ATOMIC_CMP_DATA, d.atomic.cmp_data
-    phvwr          ATOMIC_SWAP_OR_ADD_DATA, d.atomic.swap_or_add_data
+    phvwrpair      ATOMIC_VA, d.atomic.va, ATOMIC_R_KEY, d.atomic.r_key
+    phvwrpair      ATOMIC_SWAP_OR_ADD_DATA, d.atomic.swap_or_add_data, ATOMIC_CMP_DATA, d.atomic.cmp_data
 
     // prepare RRQWQE descriptor
-    phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_ATOMIC
-    phvwr          RRQWQE_NUM_SGES, 1
-    phvwr          RRQWQE_ATOMIC_SGE_VA, d.atomic.sge.va
-    phvwr          RRQWQE_ATOMIC_SGE_LEN, d.atomic.sge.len
-    phvwr          RRQWQE_ATOMIC_SGE_LKEY, d.atomic.sge.l_key
+    phvwrpair      RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_ATOMIC, RRQWQE_NUM_SGES, 1
+    phvwr          p.{rrqwqe.atomic.sge.va...rrqwqe.atomic.sge.l_key}, d.{atomic.sge.va...atomic.sge.l_key}
  
     //CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, first, 1)

@@ -29,8 +29,7 @@ add_headers:
 
     // dma_cmd[0] : addr1 - p4_intr
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(DMA_CMD_BASE, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type, 3)
-    phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
-    phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
+    phvwrpair       p.common.p4_intr_global_tm_iport, TM_PORT_DMA, p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
 
 
     // No need to fill p4_txdma_intr fields as they are already filled before stage0
@@ -39,8 +38,7 @@ add_headers:
 
     // dma_cmd[0] : addr3 - p4plus_to_p4_header
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(DMA_CMD_BASE, p4plus_to_p4, p4plus_to_p4, 2);
-    phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
-    phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+    phvwrpair        P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
 
     // dma_cmd[1] - header_template
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_HEADER_TEMPLATE)

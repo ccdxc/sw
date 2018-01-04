@@ -16,8 +16,7 @@ req_tx_add_headers_2_process:
 
     // dma_cmd[0] : addr1 - p4_intr
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type, 3)
-    phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
-    phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
+    phvwrpair      p.common.p4_intr_global_tm_iport, TM_PORT_DMA, p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
 
     // No need to fill p4_txdma_intr fields as they are already filled before stage0
     // dma_cmd[0] : addr2 - p4_txdma_intr
@@ -25,9 +24,8 @@ req_tx_add_headers_2_process:
 
     // dma_cmd[0] : addr3 - p4plus_to_p4_header
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, p4plus_to_p4, p4plus_to_p4, 2);
-    phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
-    phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
-
+    phvwrpair      P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+  
     #c3 - UD service. Needed only for send & send_imm
     seq            c3, d.service, RDMA_SERV_TYPE_UD
 
@@ -113,17 +111,13 @@ skip_roce_udp_options:
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
 
-    phvwr          p.p4_intr_global.tm_iport, TM_PORT_INGRESS
-    phvwr          p.p4_intr_global.tm_oport, TM_PORT_DMA
-    phvwr          p.p4_intr_global.tm_iq, 0
-    phvwr          p.p4_intr_global.lif, k.global.lif     
-    phvwr          p.p4_intr_rxdma.intr_qid, k.global.qid
+    phvwrpair      p.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.p4_intr_global.tm_oport, TM_PORT_DMA
+    phvwrpair      p.p4_intr_global.tm_iq, 0, p.p4_intr_global.lif, k.global.lif
     SQCB0_ADDR_GET(r1)
-    phvwr          p.p4_intr_rxdma.intr_qstate_addr, r1
-    phvwr          p.p4_intr_rxdma.intr_qtype, k.global.qtype
+    phvwrpair      p.p4_intr_rxdma.intr_qid, k.global.qid, p.p4_intr_rxdma.intr_qstate_addr, r1
     phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET 
 
-    phvwr          p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
+    phvwrpair      p.p4_intr_rxdma.intr_qtype, k.global.qtype, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
 
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)

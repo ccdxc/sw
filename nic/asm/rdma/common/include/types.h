@@ -552,10 +552,10 @@ struct rrqwqe_atomic_t {
 
 struct rrqwqe_t {
     read_rsp_or_atomic : 1;
-    num_sges           : 7;
+    rsvd               : 7;
+    num_sges           : 8;
     psn                : 24;
     msn                : 24;
-    rsvd               : 8;
     union {
         struct rrqwqe_read_t   read;
         struct rrqwqe_atomic_t atomic;
@@ -564,10 +564,10 @@ struct rrqwqe_t {
 
 struct rrqwqe_d_t {
     read_rsp_or_atomic : 1;
-    num_sges           : 7;
+    rsvd               : 7;
+    num_sges           : 8;
     psn                : 24;
     msn                : 24;
-    rsvd               : 8;
     union {
         struct rrqwqe_read_t   read;
         struct rrqwqe_atomic_t atomic;

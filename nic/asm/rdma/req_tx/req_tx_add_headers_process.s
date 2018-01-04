@@ -155,8 +155,7 @@ req_tx_add_headers_process:
         sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
         add            r3, r3, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
-        phvwr          RRQWQE_PSN, d.tx_psn           
-        phvwr          RRQWQE_MSN, d.ssn
+        phvwr          p.{rrqwqe.psn...rrqwqe.msn}, d.{tx_psn...ssn}
         
         // dma_cmd[3]
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
@@ -256,9 +255,8 @@ req_tx_add_headers_process:
         sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
         add            r3, r3, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
-        phvwr          RRQWQE_PSN, d.tx_psn
         phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
-        phvwr          RRQWQE_MSN, d.ssn
+        phvwr          p.{rrqwqe.psn...rrqwqe.msn}, d.{tx_psn...ssn}
         
         // dma_cmd[3] 
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
@@ -279,9 +277,8 @@ req_tx_add_headers_process:
         sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
         add            r3, r3, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
-        phvwr          RRQWQE_PSN, d.tx_psn
         phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
-        phvwr          RRQWQE_MSN, d.ssn
+        phvwr          p.{rrqwqe.psn...rrqwqe.msn}, d.{tx_psn...ssn}
         
         // dma_cmd[3] - rrqwqe
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
@@ -292,11 +289,10 @@ req_tx_add_headers_process:
     .brend
 
 op_type_end:
-    phvwr          BTH_OPCODE, r2
 
     b.!c6          inc_psn
     // phv_p->bth.psn = sqcb1_p->tx_psn
-    phvwr          BTH_PSN, d.tx_psn  // Branch Delay Slot
+    phvwrpair      BTH_OPCODE, r2, BTH_PSN, d.tx_psn // Branch Delay Slot
 
     // if (adjust_psn)
     // tx_psn = read_len >> log_pmtu
