@@ -218,6 +218,17 @@ gft-build: sdk
 	bazel build --copt=-DGFT $(SDK_OPTS) hal:hal
 	bazel build --copt=-DGFT $(SDK_OPTS) hal/test/gtests:gft_test
 
+BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
+hal-rtl: sdk
+	$(MAKE) -j4 -C p4
+	$(MAKE) -C asm
+	$(MAKE) -C proto
+	$(MAKE) V=1 -j8 -C gen/proto/hal
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/plugins/...
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
+	$(MAKE) capmodel
+
 clean:
 	bazel clean
 	rm -rf GEN_TEST_RESULTS_DIR

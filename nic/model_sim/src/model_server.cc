@@ -348,6 +348,14 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             }
             break;
 
+         case BUFF_TYPE_EXIT_SIM:
+            {
+	        buff->type = BUFF_TYPE_STATUS;
+	        buff->status = 0;
+            }
+            break;
+
+    
         case BUFF_TYPE_STATUS:
         default:
             assert(0);

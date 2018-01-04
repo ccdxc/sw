@@ -859,6 +859,7 @@ void get_capri_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 
 void queues_shutdown() {
   nvme_e2e_ssd.reset();
+  exit_simulation();
 }
 
 }  // namespace queues

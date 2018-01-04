@@ -146,3 +146,20 @@ def step_tmr_wheel_update(slowfast, ctime):
             error_exit()
     zmq_close(socket)
     pass
+
+def exit_simulation ():
+    buffsize = 4096
+    socket = zmq_connect()
+    buff = pack('iiiiiiiQ', 19, 0, 0, 0, 0, 0, 0, 0)
+    try:
+        socket.send(buff)
+        msg = socket.recv()
+    except zmq.ZMQError as e:
+        if e.errno == zmq.EAGAIN:
+            error_exit()
+    btype, size, port, cos, status, slowfast, ctime, addr= unpack('iiiiiiiQ', msg[0:40])
+    eoffset = 40 + size
+    pkt = msg[40:eoffset]
+    zmq_close(socket)
+    return pkt
+    pass

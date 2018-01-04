@@ -76,10 +76,12 @@ def run_rtl(args):
     os.environ["ZMQ_SOC_DIR"] = os.getcwd()
     os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]  
     model_test = "core_basic_dol"
+    one_pkt_mode = ""
     if args.model_test:
         model_test = args.model_test
-     
-    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-ucli', 'ucli_core', '-run_args', ' +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=0 +top_sb/initial_timeout_ns=60000 ' ]
+    if args.one_pkt_mode:
+        one_pkt_mode = "+dol_one_pkt_mode=1" 
+    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-ucli', 'ucli_core', '-run_args', ' %s +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=0 +top_sb/initial_timeout_ns=60000 '%one_pkt_mode ]
     if args.noverilog:
         model_cmd = model_cmd + ['-ro', '-nbc']
     if args.test_suf:
@@ -203,10 +205,13 @@ def dump_coverage_data():
 
 
 # Run Storage DOL
-def run_storage_dol(port):
+def run_storage_dol(port, args):
     bin_dir = nic_dir + "/../bazel-bin/dol/test/storage"
     os.chdir(bin_dir)
-    cmd = ['./storage_test', '--hal_port', str(port)]
+    if args.storage_test:
+      cmd = ['./storage_test', '--hal_port', str(port), '--test_group', args.storage_test]
+    else:
+      cmd = ['./storage_test', '--hal_port', str(port)]
     p = Popen(cmd)
     p.communicate()
     return p.returncode
@@ -429,6 +434,8 @@ def main():
                         help='Skip verilog compile dol as well.')
     parser.add_argument('--model_test', dest='model_test', default=None,
                         help='Model test name')
+    parser.add_argument('--one_pkt_mode', dest='one_pkt_mode', action="store_true",
+                        help='Enable DOL one pkt mode')
     parser.add_argument('--test_suf', dest='test_suf', default=None,
                         help='Model test suffix.')
     parser.add_argument("--asmcov", action="store_true",
@@ -455,7 +462,9 @@ def main():
                         help='Shuffle tests and loop for X times.')
     parser.add_argument('--mbt', dest='mbt', default=None,
                         action='store_true',
-                         help='Modify DOL config testre starting packet tests')
+                        help='Modify DOL config testre starting packet tests')
+    parser.add_argument('--storage_test', dest='storage_test', default=None,
+                        help='Run only a subtest of storage test suite')
     args = parser.parse_args()
 
     if args.cleanup:
@@ -485,7 +494,7 @@ def main():
                 run_hal(args)
 
         if args.storage:
-            status = run_storage_dol(port)
+            status = run_storage_dol(port, args)
             if status != 0:
                 print "- Storage dol failed, status=", status
         elif args.gft:

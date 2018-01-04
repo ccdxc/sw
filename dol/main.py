@@ -71,5 +71,8 @@ if __name__ == '__main__':
     print("Runtime:")
     timeprofiler.TotalTimeProfiler.Stop()
     timeprofiler.Show()
+    if not glopts.GlobalOptions.dryrun:
+        import model_sim.src.model_wrap as model_wrap
+        model_wrap.exit_simulation()
     sys.exit(status)
 
