@@ -57,8 +57,8 @@ header_type parser_ohi_t {
         udp_opt_ocs___start_off     : 16;
         roce_bth___start_off        : 16; // ohi allocated to store hdr offset
         // Write only variable to capture length value from pkt for csum puporses into OHI.
-        ipv4___hdr_len              : 16;
-        inner_ipv4___hdr_len        : 16;
+        ipv4_options_blob___hdr_len : 16;
+        inner_ipv4_options_blob___hdr_len : 16;
         l3_len                      : 16;   // l3 len - used for pkt_len check
         inner_l3_len                : 16;   // l3 len - used for pkt_len check
         l4_len                      : 16;
@@ -533,7 +533,7 @@ field_list ipv4_checksum_list {
     ipv4.dstAddr;
 }
 
-@pragma checksum hdr_len_expr ohi.ipv4___hdr_len + 20
+@pragma checksum hdr_len_expr ohi.ipv4_options_blob___hdr_len + 20
 @pragma checksum verify_len ohi.l4_len
 field_list_calculation ipv4_checksum {
     input {
@@ -648,7 +648,7 @@ calculated_field parser_metadata.icrc {
 
 parser parse_ipv4_frag {
     extract(ipv4);
-    set_metadata(ohi.ipv4___hdr_len, (ipv4.ihl << 2) - 20);
+    set_metadata(ohi.ipv4_options_blob___hdr_len, (ipv4.ihl << 2) - 20);
     // ipv6_options_len is set to header-size - 20 because
     // ipv6_options_len is used to compute icrc_len and 
     // in parse_udp 28 bytes are added. 8 Extra bytes because
@@ -663,7 +663,7 @@ parser parse_ipv4_frag {
 }
 parser parse_inner_ipv4_frag {
     extract(inner_ipv4);
-    set_metadata(ohi.inner_ipv4___hdr_len, (inner_ipv4.ihl << 2) - 20);
+    set_metadata(ohi.inner_ipv4_options_blob___hdr_len, (inner_ipv4.ihl << 2) - 20);
     //For csum, load ipv4.totalLen. ihl << 2 is subtracted from totalLen
     //using optimized instruction.
     set_metadata(ohi.inner_l4_len, inner_ipv4.totalLen + 0);
@@ -673,7 +673,7 @@ parser parse_inner_ipv4_frag {
 
 parser parse_base_ipv4 {
     extract(ipv4);
-    set_metadata(ohi.ipv4___hdr_len, (ipv4.ihl << 2) - 20);
+    set_metadata(ohi.ipv4_options_blob___hdr_len, (ipv4.ihl << 2) - 20);
     // ipv6_options_len is set to header-size - 20 because
     // ipv6_options_len is used to compute icrc_len and 
     // in parse_udp 28 bytes are added. 8 Extra bytes because
@@ -772,7 +772,7 @@ parser parse_ipv4_options_blob {
 
     // set hdr len same as option header len. In csum profile
     // standard IP hdr len of 20 bytes is adjusted.
-    set_metadata(ohi.ipv4___hdr_len, (ipv4.ihl << 2) - 20);
+    set_metadata(ohi.ipv4_options_blob___hdr_len, (ipv4.ihl << 2) - 20);
     //For csum, load ipv4.totalLen. ihl << 2 is subtracted from totalLen
     //using optimized instruction.
     set_metadata(parser_metadata.ipv6_options_len, (ipv4.ihl << 2) - 20);
@@ -1566,7 +1566,7 @@ field_list inner_ipv4_checksum_list {
     inner_ipv4.dstAddr;
 }
 
-@pragma checksum hdr_len_expr ohi.inner_ipv4___hdr_len + 20
+@pragma checksum hdr_len_expr ohi.inner_ipv4_options_blob___hdr_len + 20
 @pragma checksum verify_len ohi.inner_l4_len
 field_list_calculation inner_ipv4_checksum {
     input {
@@ -1584,7 +1584,7 @@ calculated_field inner_ipv4.hdrChecksum {
 parser parse_base_inner_ipv4 {
     // option-blob parsing - extract inner_ipv4 here
     extract(inner_ipv4);
-    set_metadata(ohi.inner_ipv4___hdr_len, (inner_ipv4.ihl << 2) - 20);
+    set_metadata(ohi.inner_ipv4_options_blob___hdr_len, (inner_ipv4.ihl << 2) - 20);
     //For csum, load ipv4.totalLen. ihl << 2 is subtracted from totalLen
     //using optimized instruction.
     set_metadata(ohi.inner_l4_len, inner_ipv4.totalLen + 0);
@@ -1668,7 +1668,7 @@ parser parse_inner_ipv4_options_blob {
     extract(inner_ipv4);
     // set hdr len same as option header len. In csum profile
     // standard IP hdr len of 20 bytes is adjusted.
-    set_metadata(ohi.inner_ipv4___hdr_len, (inner_ipv4.ihl << 2) - 20);
+    set_metadata(ohi.inner_ipv4_options_blob___hdr_len, (inner_ipv4.ihl << 2) - 20);
     //For csum, load ipv4.totalLen. ihl << 2 is subtracted from totalLen
     //using optimized instruction.
     set_metadata(ohi.inner_l4_len, inner_ipv4.totalLen + 0);

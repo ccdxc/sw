@@ -2057,8 +2057,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     #pdb.set_trace()
     # ohi_inst
 
-    expr_shared_ohi_id = {}
-
     hw_max_ohi_per_state = len(sram['ohi_inst'])
     s = 0
     headers = []
@@ -2108,14 +2106,19 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 assert len(parser.ohi[hdr]) > 1, pdb.set_trace() # ERROR
             else:
                 # slot[0] : pkt offset
+                '''
                 if hdr_off != 0:
+                    # split state check ???
+                    # XXXX looks incorrect code....
+                    pdb.set_trace()
                     ohi_id = parser.get_ohi_slot()
                     ohi.id = ohi_id
+                '''
                 sram['ohi_inst'][s]['sel']['value'] = str(1)    # provide pkt_offset
                 sram['ohi_inst'][s]['muxsel']['value'] = str(0) # NA
                 sram['ohi_inst'][s]['idx_val']['value'] = str(hdr_off + ohi.start)
                 sram['ohi_inst'][s]['slot_num']['value'] = str(ohi.id)
-                if (ohi.start + hdr_off) == 0:
+                if ohi.start == 0:
                     ohi_inst_allocator[s] = (hdr.name + '___start_off', ohi.id)
                 s += 1
 
@@ -2156,7 +2159,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 parser.logger.debug('OHI instruction[%d]: ohi_slot %d off %d, len %s' % \
                     (s, ohi.var_id, ohi.start + hdr_off, ohi.length))
                 flat_expr_str = ohi.length.flatten_capri_expr()
-                expr_shared_ohi_id[flat_expr_str] = (s, ohi, hdr, mux_inst_id)
                 s += 1
             else:
                 # for fixed size ohi, deparser is programmed with fixed length
@@ -2178,38 +2180,28 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 break
         if ohi_id != None:
             # already programmed
-            pdb.set_trace()
+            # pdb.set_trace()
+            parser.logger.debug("%s:OHI (wr-only) %s shared ohi_id %d ohi_instruction %d" % \
+                (parser.d.name, dst_name, ohi_id, ohi_inst))
             continue
-        # create new ohi instruction, mux inst is already allocated
-        assert s < hw_max_ohi_per_state, pdb.set_trace()
-        mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
-        mux_inst_id_to_capri_expr_map[mux_inst_id] = set_op.capri_expr
-
         #pdb.set_trace()
         if dst_name not in parser.wr_only_ohi:
             parser.logger.debug("OHI (wr-only) %s is not programmed here - TBD csum changes" % \
                 (set_op.dst))
             continue
-        flat_expr_str = set_op.capri_expr.flatten_capri_expr()
-        if flat_expr_str not in expr_shared_ohi_id.keys():
-            ohi_id = parser.wr_only_ohi[dst_name]
-            sram['ohi_inst'][s]['sel']['value'] = str(3)  # len using mux_inst_data
-            sram['ohi_inst'][s]['muxsel']['value'] = str(mux_inst_id)
-            sram['ohi_inst'][s]['idx_val']['value'] = str(0) # NA
-            sram['ohi_inst'][s]['slot_num']['value'] = str(ohi_id)
-            mux_inst_id_to_ohi_id_map[mux_inst_id] = ohi_id
-            parser.logger.debug('OHI (wr-only) instruction[%d]: ohi_slot %d, %s=%s' %
-                                (s, ohi_id, dst_name, set_op))
-            s += 1
-        else:
-            #Ohi instruction for no-reg set-ops is already computed and loaded in ohi.
-            #Inorder to share ohi_instruction, ohiID allocated for <hdr-name>___hdr_len
-            #will be modified to match ohiID used for capri_expr that computed header len.
-            _inst, _ohi_updated, _hdr, _mux_inst_id = expr_shared_ohi_id[flat_expr_str]
-            sram['ohi_inst'][_inst]['slot_num']['value'] = str(parser.wr_only_ohi[dst_name])
-            _ohi_updated.var_id = parser.wr_only_ohi[dst_name]
-            mux_inst_id_to_ohi_id_map[_mux_inst_id] = parser.wr_only_ohi[dst_name]
-            ohi_inst_allocator[_inst] = (_hdr.name + '___hdr_len', _ohi_updated.var_id)
+        # create new ohi instruction, mux inst may be already allocated
+        assert s < hw_max_ohi_per_state, pdb.set_trace()
+        mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
+        mux_inst_id_to_capri_expr_map[mux_inst_id] = set_op.capri_expr
+        ohi_id = parser.wr_only_ohi[dst_name]
+        sram['ohi_inst'][s]['sel']['value'] = str(3)  # len using mux_inst_data
+        sram['ohi_inst'][s]['muxsel']['value'] = str(mux_inst_id)
+        sram['ohi_inst'][s]['idx_val']['value'] = str(0) # NA
+        sram['ohi_inst'][s]['slot_num']['value'] = str(ohi_id)
+        mux_inst_id_to_ohi_id_map[mux_inst_id] = ohi_id
+        parser.logger.debug('OHI (wr-only) instruction[%d]: ohi_slot %d, %s=%s' %
+                            (s, ohi_id, dst_name, set_op))
+        s += 1
 
     # Build offset instruction at the end so that if possible
     # mux instructions can be re-used by adjusting constant values
@@ -3261,8 +3253,12 @@ def capri_te_cfg_output(stage):
         # update to asic doc - axi=1 => SRAM
         if ct.is_hbm:
             json_tbl_['axi']['value'] = str(0)
+            #json_tbl_['hbm']['value'] = str(1)
         else:
+            # XXX there can be tables in host mem (not hbm) for which axi should set to 0
+            # currently there are no host tables supported (need a pragma)
             json_tbl_['axi']['value'] = str(1)
+            #json_tbl_['hbm']['value'] = str(0)
 
         if ct.is_hash_table() and ct.d_size < ct.start_key_off:
             # Program APC location. APC location is always first byte
