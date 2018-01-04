@@ -77,8 +77,13 @@ wqe_bktrack:
     add            r5, r0, r0 // Branch Delay Slot 
     // wqe_addr = wqe_addr - (1 << log_wqe_size) 
     add            r5, k.to_stage.bktrack.log_wqe_size, r0
-    srlv           r5, 1, r5
-    sub            r5, k.to_stage.bktrack.wqe_addr, r5
+    sllv           r5, 1, r5
+    // check for c_index wrap around upon backtracking and based on that
+    // add or subtract c_index*wqe_size to the previous wqe address
+    slt            c1, k.args.sq_c_index, r4
+    sub.!c1        r5, k.to_stage.bktrack.wqe_addr, r5
+    sll.c1         r5, r4, k.to_stage.bktrack.log_wqe_size
+    add.c1         r5, k.to_stage.bktrack.wqe_addr, r5
 
     // Upate wqe addr to the previos wqe
     CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
@@ -160,9 +165,9 @@ sge_bktrack:
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_c_index, k.args.sq_c_index)
     //CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, in_progress, k.args.in_progress)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, current_sge_id, k.args.current_sge_id)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, current_sge_offset, k.args.current_sge_offset)
-    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, num_sges, k.args.num_sges)
+    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, current_sge_id, 0)
+    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, current_sge_offset, 0)
+    CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, num_sges, d.base.num_sges)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, op_type, d.base.op_type)
     // Always copy imm_data assuming op_type to be send. imm_data is ignored
     // if op_type is not send

@@ -29,9 +29,8 @@ req_tx_bktrack_sqsge_process:
 sge_loop:
     CAPRI_TABLE_GET_FIELD(r5, r1, SGE_T, len)
     //if (sge_p->len > current_sge_offset)
-    blt            r2, r5, next_sge_start
-    // current_sge_id = current_sge_id + 1
-    sub            r1, r1, 1, LOG_SIZEOF_SGE_T_BITS // Branch Delay Slot
+    blt            r5, r2, next_sge_start
+    nop            // Branch Delay Slot
 
     // length = sge_p->len - current_sge_offset
     sub            r5, r5, r2 
@@ -60,19 +59,27 @@ sge_loop:
     setcf          c7, [c0] // Branch Delay Slot
 
 next_sge:
-    // current_sge_offset = (1 << log_pmtu) - partial_pkt_bytes
+    // current_sge_offset = partial_pkty_bytes ? ((1 << log_pmtu) - partial_pkt_bytes) : 0
     mincr          r5, r4, r0  
-    sllv           r7, 1, r4
-    sub            r2, r7, r5
+    seq            c1, r5, r0
+    sllv.!c1       r7, 1, r4
+    sub.!c1        r2, r7, r5
+    add.c1         r2, r5, r0
+
+    // current_sge_id = current_sge_id + 1
+    sub            r1, r1, 1, LOG_SIZEOF_SGE_T_BITS
 
     bne            r1, r0, sge_loop
     // tx_psn = tx_psn + num_pkts
     add            r3, r6, r3 // Branch Delay Slot
      
 next_sge_start:
+    // current_sge_id = current_sge_id + 1
+    sub            r1, r1, 1, LOG_SIZEOF_SGE_T_BITS
+
     bne            r1, r0, sge_loop
-    // current_sge_offset = 0
-    add            r2, r0, r0 // Branch Delay Slot
+    // current_sge_offset -= sge_p->len
+    sub            r2, r2, r5 // Branch Delay Slot
     
 
     mfspr          r5, spr_mpuid
@@ -126,8 +133,8 @@ sqcb_writeback:
 
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_offset, r2)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_id, r1)
-    add            r2, k.args.num_sges, r1
-    CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, num_sges, r2)
+    //sub            r2, k.args.num_sges, r1
+    CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, num_sges, k.args.num_sges)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, op_type, k.args.op_type)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, sq_c_index, k.args.sq_c_index)
     CAPRI_SET_FIELD_C(r7, SQCB0_WRITE_BACK_T, empty_rrq_bktrack, 1, c7)

@@ -48,22 +48,31 @@ process_rx_pkt:
 
     // TODO Check valid PSN
 
-    // skip ack sanity checks if there is no aeth hdr
+    // bth.psn >= sqcb1_p->rexmit_psn, valid response
+    scwlt24        c1, k.to_stage.bth_psn, d.rexmit_psn
+
     ARE_ALL_FLAGS_SET(c2, r2, REQ_RX_FLAG_AETH)
-    bcf            [!c2], set_arg
-    add            r3, k.to_stage.syndrome, r0 // Branch Delay Slot
+    bcf            [!c2 & c1], duplicate_read_resp_mid
+    // rexmit_psn is resp psn + 1
+    add            r1, k.to_stage.bth_psn, 1 // Branch Delay Slot
+
+    // skip ack sanity checks if there is no aeth hdr
+    bcf            [!c2], post_rexmit_psn
+    phvwr          p.rexmit_psn, r1 // Branch Delay Slot
  
+check_ack_sanity:
     // if (msn >= sqcb1_p->ssn) invalid_pkt_msn
     scwle24        c3, d.ssn, k.to_stage.msn 
     bcf            [c3], invalid_pkt_msn
 
-    // bth.psn >= sqcb1_p->rexmit_psn, valid ack
-    scwlt24        c1, k.to_stage.bth_psn, d.rexmit_psn // Branch Delay Slot
+    add            r3, k.to_stage.syndrome, r0
+
+    ARE_ALL_FLAGS_SET(c2, r2, REQ_RX_FLAG_ACK) // Branch Delay Slot
     bcf            [!c1], process_aeth
 
+    IS_MASKED_VAL_EQUAL_B(c4, r3, SYNDROME_MASK, ACK_SYNDROME) // Branch Delay Slot
+
     // bth.psn < sqcb1_p->rexmit_psn, duplicate and not unsolicited p_ack, drop
-    ARE_ALL_FLAGS_SET(c2, r2, REQ_RX_FLAG_ACK) // Branch Delay Slot
-    ARE_ALL_FLAGS_SET_B(c4, r3, ACK_SYNDROME)
     bcf            [!c2 | !c4], duplicate_ack
 
     // unsolicited ack i.e. duplicate of most recent p_ack is allowed
@@ -77,13 +86,8 @@ process_aeth:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
     SQCB1_ADDR_GET(r5)
 
-    IS_ANY_FLAG_SET_B(c4, r3, RNR_SYNDROME|RESV_SYNDROME|NAK_SYNDROME)
-    bcf            [c4], post_rexmit_psn
-    phvwr          p.rexmit_psn, k.to_stage.bth_psn // Branch Delay Slot
-   
-    // if ACK, rexmit_psn is ack_psn + 1
-    add            r1, k.to_stage.bth_psn, 1
-    phvwr          p.rexmit_psn, r1
+    bcf            [!c4], post_rexmit_psn
+    phvwr.!c4      p.rexmit_psn, k.to_stage.bth_psn // Branch Delay Slot
 
     // if (sqcb1_p->lsn != ((1 << (sqcb1_p->credits >> 1)) + sqcb1_p->msn))
     //     doorbell_incr_pindex(fc_ring_id) 
@@ -149,6 +153,7 @@ unsolicited_ack:
     nop.e
     nop
 
+duplicate_read_resp_mid:
 duplicate_ack:
 recirc_cnt_exceed:
 recirc:

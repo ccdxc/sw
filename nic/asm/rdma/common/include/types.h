@@ -106,6 +106,7 @@ struct rdma_atomiceth_t {
 #define NAK_CODE_REM_ACC_ERR    2
 #define NAK_CODE_REM_OP_ERR     3
 #define NAK_CODE_INV_RD_REQ     4
+#define NAK_CODE_MASK           0x1f
 
 #define AETH_CODE_ACK   0
 #define AETH_CODE_RNR   1
@@ -373,6 +374,12 @@ struct resp_tx_flags_t {
     smeqb   _c, _flags, _flags_test, _flags_test
 #define IS_ANY_FLAG_SET_B(_c, _flags, _flags_test) \
     smneb   _c, _flags, _flags_test, 0
+
+#define IS_MASKED_VAL_EQUAL(_c, _cmp_r, _mask, _val) \
+    smeqh   _c, _cmp_r, _mask, _val
+
+#define IS_MASKED_VAL_EQUAL_B(_c, _cmp_r, _mask, _val) \
+    smeqb   _c, _cmp_r, _mask, _val
 
 #define RDMA_OPC_SERV_TYPE_SHIFT               5
 
@@ -829,8 +836,8 @@ union header_template_t {
 #define RNR_SYNDROME        0x20
 #define RESV_SYNDROME       0x40
 #define NAK_SYNDROME        0x60
+#define SYNDROME_MASK       0x60
 
-#define NAK_SEQ_ERR_SYNDROME   0x60
 #define SYNDROME_CREDITS_MASK 0x1F
 
 #define DECODE_ACK_SYNDROME_CREDITS(_credits_r, _syndrome, _cf)         \

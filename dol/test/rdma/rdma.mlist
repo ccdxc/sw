@@ -468,6 +468,61 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SQ_BKTRACK_WQE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_wqe
+        spec    : req_tx_sq_bktrack_wqe.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_TX_SQ_BKTRACK_READ_WQE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_read_wqe
+        spec    : req_tx_sq_bktrack_read_wqe.testspec
+        ignore  : False
+    
+    - module:
+        name    : RDMA_TX_SQ_BKTRACK_SGE1_MID
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_sge1_mid
+        spec    : req_tx_sq_bktrack_sge1_mid.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SQ_BKTRACK_SGE2_START
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_sge2_start
+        spec    : req_tx_sq_bktrack_sge2_start.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SQ_BKTRACK_SGE2_MID
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_sge2_mid
+        spec    : req_tx_sq_bktrack_sge2_mid.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SQ_BKTRACK_SGE3_START
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_sge3_start
+        spec    : req_tx_sq_bktrack_sge3_start.testspec
+        ignore  : False
+    - module:
+        name    : RDMA_TX_SQ_BKTRACK_SGE3_MID
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_sge3_mid
+        spec    : req_tx_sq_bktrack_sge3_mid.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY
         enable  : True
         package : test.rdma

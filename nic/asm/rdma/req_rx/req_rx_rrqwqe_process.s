@@ -58,42 +58,50 @@ ack:
     cmov           r2, c3, r2, k.to_stage.msn
 
 p_ack:
-    phvwr          p.cqwqe.id.msn, r2 // Branch Delay Slot
-
-    IS_ANY_FLAG_SET_B(c3, r1, RNR_SYNDROME|RESV_SYNDROME|NAK_SYNDROME)
-    bcf            [c3], n_ack
+    IS_MASKED_VAL_EQUAL(c3, r1, SYNDROME_MASK, ACK_SYNDROME)
+    bcf            [!c3], n_ack
     nop            // Branch Delay Slot
   
-    // if aeth contains already ack'ed msn, do not post CQ
-    //scwle24        c1, r2, k.args.msn // Branch Delay Slot
-    //bcf            [c1], end
-    //nop            // Branch Delay Slot
+    phvwr          p.cqwqe.id.msn, r2 // Branch Delay Slot
 
     bcf            [c2], set_cqcb_arg
     // if (pkt_psn >= rrqwqe_p->psn)
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
     scwle24        c1, d.psn, k.to_stage.bth_psn // Branch Delay Slot
-    phvwr.c1       p.rexmit_psn, d.psn
+    seq            c2, k.args.in_progress, 1
+    phvwr.!c2      p.rexmit_psn, d.psn 
+    phvwr.c2       p.rexmit_psn, k.args.e_rsp_psn
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c1)
+
+    // If ack msn in implicit nak is already acked' do not post CQ
+    scwle24        c1, r2, k.args.msn
+    bcf            [c1], end
+    nop            // Branch Delay Slot
 
     b              set_cqcb_arg
     nop            // Branch Delay Slot
 
 n_ack:
-    ARE_ALL_FLAGS_SET_B(c3, r1, NAK_SYNDROME)
+    IS_MASKED_VAL_EQUAL_B(c3, r1, SYNDROME_MASK, NAK_SYNDROME)
     bcf            [!c3], rnr
     nop            // Branch Delay Slot
 
 nak_seq_error:
     // SQ backtrack if NAK is due to SEQ_ERR    
-    seq            c3, r1, NAK_SEQ_ERR_SYNDROME
+    IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_SEQ_ERR)
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c3)
+
+    // if implicit ack MSN in NAK matches already ack'ed msn, do not post CQ
+    sub            r2, r2, 1
+    scwle24        c1, r2, k.args.msn
+    bcf            [c1], end
+    phvwr          p.cqwqe.id.msn, r2 // Branch Delay Slot
 
     b              set_cqcb_arg
     nop            // Branch Delay Slot
 
 rnr:
-    ARE_ALL_FLAGS_SET_B(c3, r1, RNR_SYNDROME)
+    IS_MASKED_VAL_EQUAL_B(c3, r1, SYNDROME_MASK, RNR_SYNDROME)
     bcf            [!c3], invalid_syndrome
     nop            // Branch Delay Slot
 

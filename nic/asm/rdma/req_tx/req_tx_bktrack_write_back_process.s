@@ -22,21 +22,26 @@ req_tx_bktrack_write_back_process:
      tblwr         d.curr_op_type, k.args.op_type
 
      seq           c2, k.args.empty_rrq_bktrack, 1
-     bcf           [!c2], end
+     bcf           [!c2], update_spec_cindex
      // set SQ c_index to the backtracked value
      tblwr         SQ_C_INDEX, k.args.sq_c_index // Branch Delay Slot
 
-     // Empty RRQ ring
-     tblwr         RRQ_C_INDEX, RRQ_P_INDEX
+     // backtrack RRQ ring
+     tblwr         RRQ_P_INDEX, RRQ_C_INDEX
      // Empty backtrack and retransmit timer rings
      tblwr         SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
      tblwr         SQ_TIMER_C_INDEX, SQ_TIMER_P_INDEX
 
-end:
-     CAPRI_SET_TABLE_0_VALID(0)
+update_spec_cindex:
  
      // Set speculative cindex to next cindex so that speculative wqe 
      // processing can take place after backtrack 
      tblwr         SPEC_SQ_C_INDEX, SQ_C_INDEX
+     bbeq          k.args.in_progress, 0, end
+     CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot
+
+     tblmincri     SPEC_SQ_C_INDEX,  d.log_num_wqes, 1
+
+end:
      nop.e
      nop
