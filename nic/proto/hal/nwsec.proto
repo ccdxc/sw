@@ -417,7 +417,7 @@ message SecurityGroupPolicyGetResponseMsg {
 
 message SecurityGroupSpec {
     types.ObjectMeta          meta          = 1; // object meta
-    // Key_or_handle is the security group's unique identifier
+    // key_or_handle is the security group's unique identifier
     kh.SecurityGroupKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 

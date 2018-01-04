@@ -5,10 +5,14 @@
 #include "nic/gen/proto/hal/vrf.grpc.pb.h"
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
+#include "nic/gen/proto/hal/nw.grpc.pb.h"
+#include "nic/gen/proto/hal/nwsec.grpc.pb.h"
 #include "nic/gen/proto/hal/port.grpc.pb.h"
 #include "nic/gen/proto/hal/event.grpc.pb.h"
 #include "nic/gen/proto/hal/system.grpc.pb.h"
 #include "nic/gen/proto/hal/debug.grpc.pb.h"
+#include "nic/gen/proto/hal/endpoint.grpc.pb.h"
+#include "nic/gen/proto/hal/session.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -30,6 +34,34 @@ using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentResponseMsg;
+
+using nw::Network;
+using nw::NetworkSpec;
+using nw::NetworkRequestMsg;
+using nw::NetworkResponseMsg;
+using kh::NetworkKeyHandle;
+
+using endpoint::Endpoint;
+using endpoint::EndpointSpec;
+using endpoint::EndpointRequestMsg;
+using endpoint::EndpointResponse;
+using endpoint::EndpointResponseMsg;
+
+using nwsec::NwSecurity;
+using nwsec::SecurityGroupSpec;
+using nwsec::SecurityGroupRequestMsg;
+using nwsec::SecurityGroupResponseMsg;
+using kh::SecurityGroupKeyHandle;
+
+using session::Session;
+using session::SessionSpec;
+using session::SessionRequestMsg;
+using session::SessionResponseMsg;
+using session::FlowSpec;
+using session::FlowKey;
+using session::FlowInfo;
+using session::ConnTrackInfo;
+using session::FlowData;
 
 using intf::Interface;
 using intf::InterfaceSpec;
@@ -73,6 +105,7 @@ using debug::SlabSpec;
 using debug::SlabStats;
 
 using types::EncapInfo;
+using types::IPAddress;
 
 using event::Event;
 using event::EventRequest;
@@ -85,7 +118,9 @@ public:
     hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
     l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
 	event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
-    debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)) {}
+    debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)),
+    sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
+    ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)) {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -361,12 +396,12 @@ public:
        	return 0;
    	}
 
-    uint64_t vrf_create(uint32_t vrf_id) {
+    uint64_t vrf_create(uint64_t vrf_id) {
         VrfSpec           *spec;
         VrfRequestMsg     req_msg;
         VrfResponseMsg    rsp_msg;
-        ClientContext        context;
-        Status               status;
+        ClientContext     context;
+        Status            status;
 
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_vrf_id(vrf_id);
@@ -386,12 +421,152 @@ public:
         return 0;
     }
 
+    uint64_t sg_create(uint64_t sg_id) {
+        SecurityGroupSpec           *spec;
+        SecurityGroupRequestMsg     req_msg;
+        SecurityGroupResponseMsg    rsp_msg;
+        ClientContext               context;
+        Status                      status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_security_group_id(sg_id);
+        status = sg_stub_->SecurityGroupCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "SG create succeeded, handle = "
+                      << rsp_msg.response(0).status().sg_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().sg_handle();
+        }
+        std::cout << "SG create failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return 0;
+    }
+
+    uint64_t ep_create(uint64_t vrf_id, uint64_t l2seg_id,
+                       uint64_t if_id, uint64_t sg_id,
+                       uint64_t mac_addr, uint32_t ip_addr) {
+        EndpointSpec              *spec;
+        EndpointRequestMsg        req_msg;
+        EndpointResponseMsg       rsp_msg;
+        SecurityGroupKeyHandle    *sg_kh;
+        IPAddress                 *ip;
+        ClientContext             context;
+        Status                    status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
+        spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac_addr);
+        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+        spec->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(if_id);
+        if (ip_addr) {
+            ip = spec->mutable_endpoint_attrs()->add_ip_address();
+            ip->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+            ip->set_v4_addr(ip_addr);
+        }
+        sg_kh = spec->mutable_endpoint_attrs()->add_sg_key_handle();
+        sg_kh->set_security_group_id(sg_id);
+        status = ep_stub_->EndpointCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Endpoint create succeeded, handle = "
+                      << rsp_msg.response(0).endpoint_status().endpoint_handle()
+                      << std::endl;
+            return rsp_msg.response(0).endpoint_status().endpoint_handle();
+        }
+        std::cout << "Endpoint create failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return 0;
+    }
+
+    uint64_t session_create(uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
+                            ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
+                            ::session::FlowAction action) {
+        SessionSpec               *spec;
+        SessionRequestMsg         req_msg;
+        SessionResponseMsg        rsp_msg;
+        FlowSpec                  *flow;
+        ClientContext             context;
+        Status                    status;
+
+        spec = req_msg.add_request();
+        spec->mutable_meta()->set_vrf_id(vrf_id);
+        spec->set_session_id(session_id);
+        spec->set_conn_track_en(false);
+        spec->set_tcp_ts_option(false);
+        spec->set_tcp_sack_perm_option(false);
+        spec->set_iflow_syn_ack_delta(0);
+        flow = spec->mutable_initiator_flow();
+        flow->mutable_flow_key()->mutable_v4_key()->set_sip(sip);
+        flow->mutable_flow_key()->mutable_v4_key()->set_dip(dip);
+        flow->mutable_flow_key()->mutable_v4_key()->set_ip_proto(proto);
+        flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_sport(sport);
+        flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(dport);
+        flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
+
+        flow = spec->mutable_responder_flow();
+        flow->mutable_flow_key()->mutable_v4_key()->set_sip(dip);
+        flow->mutable_flow_key()->mutable_v4_key()->set_dip(sip);
+        flow->mutable_flow_key()->mutable_v4_key()->set_ip_proto(proto);
+        flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_sport(dport);
+        flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(sport);
+        flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
+
+        status = session_stub_->SessionCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Session create succeeded, handle = "
+                      << rsp_msg.response(0).status().session_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().session_handle();
+        }
+        std::cout << "Session create failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return 0;
+    }
+
+    uint64_t nw_create(uint64_t nw_id, uint64_t vrf_id, uint32_t ip_pfx,
+                       uint8_t pfx_len, uint64_t rmac, uint64_t sg_id) {
+        NetworkSpec               *spec;
+        NetworkRequestMsg         req_msg;
+        NetworkResponseMsg        rsp_msg;
+        SecurityGroupKeyHandle    *sg_kh;
+        ClientContext             context;
+        Status                    status;
+
+        // now create network
+        spec = req_msg.add_request();
+        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+        spec->mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+        spec->mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(ip_pfx);
+        spec->mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(pfx_len);
+        spec->set_rmac(rmac);
+        //spec->set_gateway_ep_handle(gw_ep_handle);
+        sg_kh = spec->add_sg_key_handle();
+        sg_kh->set_security_group_id(sg_id);
+        status = nw_stub_->NetworkCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Network create succeeded, handle = "
+                      << rsp_msg.response(0).status().nw_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().nw_handle();
+        }
+        std::cout << "Network create failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return 0;
+    }
+
     uint64_t vrf_get_by_id(uint32_t id) {
         VrfGetRequestMsg     req_msg;
         VrfGetRequest        *req;
         VrfGetResponseMsg    rsp_msg;
-        ClientContext           context;
-        Status                  status;
+        ClientContext        context;
+        Status               status;
 
         req = req_msg.add_request();
         req->mutable_key_or_handle()->set_vrf_id(id);
@@ -471,6 +646,7 @@ public:
 
     uint64_t l2segment_create(uint64_t vrf_id,
                               uint64_t l2segment_id,
+                              uint64_t nw_handle,
                               ::types::L2SegmentType l2seg_type,
                               ::l2segment::BroadcastFwdPolicy bcast_policy,
                               ::l2segment::MulticastFwdPolicy mcast_policy,
@@ -478,12 +654,15 @@ public:
         L2SegmentSpec           *spec;
         L2SegmentRequestMsg     req_msg;
         L2SegmentResponseMsg    rsp_msg;
+        NetworkKeyHandle        *nw_kh;
         ClientContext           context;
         Status                  status;
 
         spec = req_msg.add_request();
         spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_segment_id(l2segment_id);
+        nw_kh = spec->add_network_key_handle();
+        nw_kh->set_nw_handle(nw_handle);
         spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
         spec->set_segment_type(l2seg_type);
         spec->set_mcast_fwd_policy(mcast_policy);
@@ -505,18 +684,17 @@ public:
     }
 
     // create few uplinks
-    void uplinks_create(uint32_t num_uplinks, uint64_t native_l2seg_id) {
+    void uplinks_create(uint64_t if_id_start, uint32_t num_uplinks, uint64_t native_l2seg_id) {
         InterfaceSpec           *spec;
         InterfaceRequestMsg     req_msg;
         InterfaceResponseMsg    rsp_msg;
         ClientContext           context;
         Status                  status;
-        static uint64_t         if_id = 1;
         static uint64_t         port_num = 1;
 
         for (uint32_t i = 0; i < num_uplinks; i++) {
             spec = req_msg.add_request();
-            spec->mutable_key_or_handle()->set_interface_id(if_id++);
+            spec->mutable_key_or_handle()->set_interface_id(if_id_start++);
             spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
             spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
             spec->mutable_if_uplink_info()->set_port_num(port_num++);
@@ -541,18 +719,17 @@ public:
         return;
     }
 
-    void add_l2seg_on_uplinks(uint32_t num_uplinks, uint64_t l2seg_id) {
+    void add_l2seg_on_uplinks(uint64_t if_id_start, uint32_t num_uplinks, uint64_t l2seg_id) {
         InterfaceL2SegmentSpec           *spec;
         InterfaceL2SegmentRequestMsg     req_msg;
         InterfaceL2SegmentResponseMsg    rsp_msg;
         ClientContext                    context;
         Status                           status;
-        static uint64_t                  if_id = 1;
 
         for (uint32_t i = 0; i < num_uplinks; i++) {
             spec = req_msg.add_request();
             spec->mutable_l2segment_key_or_handle()->set_segment_id(l2seg_id);
-            spec->mutable_if_key_handle()->set_interface_id(if_id++);
+            spec->mutable_if_key_handle()->set_interface_id(if_id_start++);
         }
         status = intf_stub_->AddL2SegmentOnUplink(&context, req_msg, &rsp_msg);
         if (status.ok()) {
@@ -620,6 +797,10 @@ private:
 	std::unique_ptr<System::Stub> system_stub_;
 	std::unique_ptr<Debug::Stub> debug_stub_;
     std::unique_ptr<Interface::Stub> intf_stub_;
+    std::unique_ptr<NwSecurity::Stub> sg_stub_;
+    std::unique_ptr<Network::Stub> nw_stub_;
+    std::unique_ptr<Endpoint::Stub> ep_stub_;
+    std::unique_ptr<Session::Stub> session_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
@@ -793,9 +974,9 @@ int port_test(hal_client *hclient, int vrf_id)
 int
 main (int argc, char** argv)
 {
-    uint64_t    vrf_handle;
-    uint64_t    l2seg_handle;
-    uint64_t    vrf_id = 1, l2seg_id = 1;
+    uint64_t    vrf_handle, l2seg_handle, sg_handle;
+    uint64_t    nw1_handle, nw2_handle, session_handle;
+    uint64_t    vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     EncapInfo   l2seg_encap;
 
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
@@ -825,20 +1006,56 @@ main (int argc, char** argv)
 
     // Get slab statistics
     //hclient.slab_get();
+  
+    // create a security group
+    sg_handle = hclient.sg_create(sg_id);
+    assert(sg_handle != 0);
 
-    // create L2 segment
-    l2seg_encap.set_encap_type(::types::ENCAP_TYPE_NONE);
-    l2seg_encap.set_encap_value(0);
+    // create network objects
+    nw1_handle = hclient.nw_create(nw_id, vrf_id, 0x0a0a0100, 24, 0x020a0a0101, sg_id);
+    assert(nw1_handle != 0);
+    nw_id++;
+    nw2_handle = hclient.nw_create(nw_id, vrf_id, 0x0a0a0200, 24, 0x020a0a0201, sg_id);
+    assert(nw2_handle != 0);
+
+    // create L2 segments
+    l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
+    l2seg_encap.set_encap_value(100);
     l2seg_handle =
-        hclient.l2segment_create(vrf_id, l2seg_id,
+        hclient.l2segment_create(vrf_id, l2seg_id, nw1_handle,
                                  ::types::L2_SEGMENT_TYPE_TENANT,
                                  ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
                                  ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
                                  l2seg_encap);
     assert(l2seg_handle != 0);
+    // create uplinks with this L2 seg as native L2 seg
+    hclient.uplinks_create(if_id, 4, l2seg_id);
+    // bringup this L2seg on all uplinks
+    hclient.add_l2seg_on_uplinks(if_id, 4, l2seg_id);
 
-    hclient.uplinks_create(4, l2seg_id);
-    hclient.add_l2seg_on_uplinks(4, l2seg_id);
+    l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
+    l2seg_encap.set_encap_value(101);
+    l2seg_handle =
+        hclient.l2segment_create(vrf_id, l2seg_id + 1, nw2_handle,
+                                 ::types::L2_SEGMENT_TYPE_TENANT,
+                                 ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
+                                 ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
+                                 l2seg_encap);
+    assert(l2seg_handle != 0);
+    // bringup this L2seg on all uplinks
+    hclient.add_l2seg_on_uplinks(if_id, 4, l2seg_id + 1);
+
+    // create endpoints
+    hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x020a0a0102, 0x0a0a0102);
+    hclient.ep_create(vrf_id, l2seg_id + 1, if_id + 1, sg_id, 0x020a0a0202, 0x0a0a0202);
+
+    // create a session
+    session_handle = hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a0202,
+                                            ::types::IPProtocol::IPPROTO_UDP,
+                                            10000, 10001,
+                                            ::session::FlowAction::FLOW_ACTION_ALLOW);
+    assert(session_handle != 0);
+
     //hclient.vrf_delete_by_id(1);
 
     // Get system statistics

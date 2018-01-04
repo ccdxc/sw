@@ -44,10 +44,10 @@ message EndpointAttributes {
 
 // EndpointSpec is used to add or update an endpoint
 message EndpointSpec {
-    types.ObjectMeta   meta              = 1;    // common object meta
-    kh.EndpointKeyHandle   key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
-    kh.VrfKeyHandle    vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
-    EndpointAttributes endpoint_attrs    = 4;    // endpoint's attributes
+    types.ObjectMeta        meta              = 1;    // common object meta
+    kh.EndpointKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
+    kh.VrfKeyHandle         vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
+    EndpointAttributes      endpoint_attrs    = 4;    // endpoint's attributes
 }
 
 // EndpointRequestMsg is batched add or modify endpoint request
