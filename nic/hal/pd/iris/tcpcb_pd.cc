@@ -490,6 +490,20 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
             tcpcb_pd->tcpcb->desc_alloced, tcpcb_pd->tcpcb->debug_num_pkt_to_mem,
             tcpcb_pd->tcpcb->debug_num_phv_to_mem);
 
+    tcpcb_pd->tcpcb->debug_atomic_delta = stats.debug_atomic_delta;
+    tcpcb_pd->tcpcb->debug_atomic0_incr1247 = stats.debug_atomic0_incr1247;
+    tcpcb_pd->tcpcb->debug_atomic1_incr247 = stats.debug_atomic1_incr247;
+    tcpcb_pd->tcpcb->debug_atomic2_incr47 = stats.debug_atomic2_incr47;
+    tcpcb_pd->tcpcb->debug_atomic3_incr47 = stats.debug_atomic3_incr47;
+    tcpcb_pd->tcpcb->debug_atomic4_incr7 = stats.debug_atomic4_incr7;
+    tcpcb_pd->tcpcb->debug_atomic5_incr7 = stats.debug_atomic5_incr7;
+    tcpcb_pd->tcpcb->debug_atomic6_incr7 = stats.debug_atomic6_incr7;
+
+    HAL_TRACE_DEBUG("atomic_delta {} atomic0 {} atomic1 {}",
+            tcpcb_pd->tcpcb->debug_atomic_delta,
+            tcpcb_pd->tcpcb->debug_atomic0_incr1247,
+            tcpcb_pd->tcpcb->debug_atomic1_incr247);
+
     tcpcb_pd->tcpcb->debug_stage0_7_thread = (write_serq_d.debug_stage4_7_thread << 16) |
             write_serq_d.debug_stage0_3_thread;
     HAL_TRACE_DEBUG("debug_stage0_7_thread 0x{0:x}",

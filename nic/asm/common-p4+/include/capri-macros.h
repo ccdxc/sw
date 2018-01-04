@@ -103,21 +103,25 @@
         phvwr           _p_field, _d_field; \
         tblwr           _d_field, _inc_val; \
 
-// Increment 1 stat (sz = 0)
 // shift by 27, to get upper 6 bits of 33 bit HBM address
 // Note atomic stats region can only reside within 33 bits
 // of HBM space (+ 2G)
 // 0x80000000 (HBM base) is added by asic, so subtract it first
-#define CAPRI_ATOMIC_STATS_INCR1(_stats_name, _addr, _offs, _val) \
-        seq             c1, _val, 0; \
-        bcf             [c1], _stats_name##_atomic_stats_update_done; \
+// r1 = addr, r2 = data
+#define CAPRI_ATOMIC_STATS_ADDR_HI(_sz, _addr, _offs) \
         add             r1, _addr, _offs; \
         subi            r1, r1, 0x80000000; \
         srl             r2, r1, 27; \
         andi            r1, r1, ((1 << 27) - 1); \
         addi            r1, r1, CAPRI_MEM_SEM_ATOMIC_ADD_START; \
-        add             r2, 0, r2, 2; \
+        add             r2, _sz, r2, 2; \
         sll             r2, r2, 56; \
+
+// Increment 1 stat (sz = 0)
+#define CAPRI_ATOMIC_STATS_INCR1(_stats_name, _addr, _offs, _val) \
+        seq             c1, _val, 0; \
+        bcf             [c1], _stats_name##_atomic_stats_update_done; \
+        CAPRI_ATOMIC_STATS_ADDR_HI(0, _addr, _offs); \
         or              r2, r2, _val; \
         memwr.dx        r1, r2
 
@@ -131,6 +135,42 @@
         sll.##_cx       r2, r2, 56; \
         or.##_cx        r2, r2, _val; \
         memwr.dx.##_cx  r1, r2
+
+#define CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(_addr, _offs, _val) \
+        CAPRI_ATOMIC_STATS_ADDR_HI(0, _addr, _offs); \
+        or              r2, r2, _val; \
+        memwr.dx        r1, r2
+
+// Increment 2 stats (sz = 1)
+#define CAPRI_ATOMIC_STATS_INCR2_NO_CHECK(_addr, _offs, _val0, \
+                _val1) \
+        CAPRI_ATOMIC_STATS_ADDR_HI(1, _addr, _offs); \
+        or              r2, r2, _val0; \
+        or              r2, r2, _val1, 32; \
+        memwr.dx        r1, r2
+
+// Increment 4 stats (sz = 2)
+#define CAPRI_ATOMIC_STATS_INCR4_NO_CHECK(_addr, _offs, _val0, \
+                _val1, _val2, _val3) \
+        CAPRI_ATOMIC_STATS_ADDR_HI(2, _addr, _offs); \
+        or              r2, r2, _val0; \
+        or              r2, r2, _val1, 16; \
+        or              r2, r2, _val2, 32; \
+        or              r2, r2, _val3, 48; \
+        memwr.dx        r1, r2
+
+// Increment 7 stats (sz = 3)
+#define CAPRI_ATOMIC_STATS_INCR7_NO_CHECK(_addr, _offs, _val0, \
+                _val1, _val2, _val3, _val4, _val5, _val6) \
+        CAPRI_ATOMIC_STATS_ADDR_HI(3, _addr, _offs); \
+        or              r2, r2, _val0; \
+        or              r2, r2, _val1, 8; \
+        or              r2, r2, _val2, 16; \
+        or              r2, r2, _val3, 24; \
+        or              r2, r2, _val4, 32; \
+        or              r2, r2, _val5, 40; \
+        or              r2, r2, _val6, 48; \
+        memwr.dx        r1, r2
         
 #define CAPRI_COUNTER16_INC(_counter16, _atomic_counter_offset, _val)                                             \
         slt             c1, d.##_counter16, 0xFFFF;                                                               \

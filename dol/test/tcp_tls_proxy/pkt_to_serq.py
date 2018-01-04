@@ -180,6 +180,47 @@ def TestCaseVerify(tc):
                 (tcpcb.debug_num_phv_to_mem, tcb_cur.debug_num_phv_to_mem))
         return False
 
+    # Verify atomic stats
+    if hasattr(tc.module.args, 'atomic_stats') and tc.module.args.atomic_stats:
+        print("debug_atomic_delta: %d" % tcb_cur.debug_atomic_delta)
+        print("debug_atomic0_incr1247: %d" % tcb_cur.debug_atomic0_incr1247)
+        print("debug_atomic1_incr247: %d" % tcb_cur.debug_atomic1_incr247)
+        print("debug_atomic2_incr47: %d" % tcb_cur.debug_atomic2_incr47)
+        print("debug_atomic3_incr47: %d" % tcb_cur.debug_atomic3_incr47)
+        print("debug_atomic4_incr7: %d" % tcb_cur.debug_atomic4_incr7)
+        print("debug_atomic5_incr7: %d" % tcb_cur.debug_atomic5_incr7)
+        print("debug_atomic6_incr7: %d" % tcb_cur.debug_atomic6_incr7)
+
+        increment = tcb_cur.debug_atomic_delta
+        counter = tcb_cur.debug_atomic0_incr1247 - tcpcb.debug_atomic0_incr1247
+        if counter != increment * num_pkts * 4:
+            print("debug_atomic0_incr1247 not as expected")
+            return False
+        counter = tcb_cur.debug_atomic1_incr247 - tcpcb.debug_atomic1_incr247
+        if counter != increment * num_pkts * 3:
+            print("debug_atomic1_incr247 not as expected")
+            return False
+        counter = tcb_cur.debug_atomic2_incr47 - tcpcb.debug_atomic2_incr47
+        if counter != increment * num_pkts * 2:
+            print("debug_atomic2_incr47 not as expected")
+            return False
+        counter = tcb_cur.debug_atomic3_incr47 - tcpcb.debug_atomic3_incr47
+        if counter != increment * num_pkts * 2:
+            print("debug_atomic3_incr47 not as expected")
+            return False
+        counter = tcb_cur.debug_atomic4_incr7 - tcpcb.debug_atomic4_incr7
+        if counter != increment * num_pkts:
+            print("debug_atomic4_incr7 not as expected")
+            return False
+        counter = tcb_cur.debug_atomic5_incr7 - tcpcb.debug_atomic5_incr7
+        if counter != increment * num_pkts:
+            print("debug_atomic5_incr7 not as expected")
+            return False
+        counter = tcb_cur.debug_atomic6_incr7 - tcpcb.debug_atomic6_incr7
+        if counter != increment * num_pkts:
+            print("debug_atomic5_incr8 not as expected")
+            return False
+
     return True
 
 def TestCaseTeardown(tc):

@@ -300,6 +300,15 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_stats()->set_debug_num_phv_to_mem(rtcpcb.debug_num_phv_to_mem);
     rsp->mutable_stats()->set_debug_stage0_7_thread(rtcpcb.debug_stage0_7_thread);
 
+    rsp->mutable_stats()->set_debug_atomic_delta(rtcpcb.debug_atomic_delta);
+    rsp->mutable_stats()->set_debug_atomic0_incr1247(rtcpcb.debug_atomic0_incr1247);
+    rsp->mutable_stats()->set_debug_atomic1_incr247(rtcpcb.debug_atomic1_incr247);
+    rsp->mutable_stats()->set_debug_atomic2_incr47(rtcpcb.debug_atomic2_incr47);
+    rsp->mutable_stats()->set_debug_atomic3_incr47(rtcpcb.debug_atomic3_incr47);
+    rsp->mutable_stats()->set_debug_atomic4_incr7(rtcpcb.debug_atomic4_incr7);
+    rsp->mutable_stats()->set_debug_atomic5_incr7(rtcpcb.debug_atomic5_incr7);
+    rsp->mutable_stats()->set_debug_atomic6_incr7(rtcpcb.debug_atomic6_incr7);
+
     rsp->mutable_stats()->set_bytes_sent(rtcpcb.bytes_sent);
     rsp->mutable_stats()->set_pkts_sent(rtcpcb.pkts_sent);
     rsp->mutable_stats()->set_debug_num_phv_to_pkt(rtcpcb.debug_num_phv_to_pkt);

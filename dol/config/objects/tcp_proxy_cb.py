@@ -114,6 +114,15 @@ class TcpCbObject(base.ConfigObjectBase):
             self.debug_num_phv_to_mem = resp_spec.stats.debug_num_phv_to_mem
             self.debug_stage0_7_thread = resp_spec.stats.debug_stage0_7_thread
 
+            self.debug_atomic_delta = resp_spec.stats.debug_atomic_delta
+            self.debug_atomic0_incr1247 = resp_spec.stats.debug_atomic0_incr1247
+            self.debug_atomic1_incr247 = resp_spec.stats.debug_atomic1_incr247
+            self.debug_atomic2_incr47 = resp_spec.stats.debug_atomic2_incr47
+            self.debug_atomic3_incr47 = resp_spec.stats.debug_atomic3_incr47
+            self.debug_atomic4_incr7 = resp_spec.stats.debug_atomic4_incr7
+            self.debug_atomic5_incr7 = resp_spec.stats.debug_atomic5_incr7
+            self.debug_atomic6_incr7 = resp_spec.stats.debug_atomic6_incr7
+
         return
 
     def GetObjValPd(self):

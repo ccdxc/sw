@@ -65,14 +65,14 @@ typedef struct __attribute__((__packed__)) __tcp_rx_stats_t {
     uint64_t debug_num_phv_to_mem;
     uint64_t debug_num_pkt_to_mem;
     uint64_t stats6;
-    uint64_t stats7;
-    uint64_t stats8;
-    uint64_t stats9;
-    uint64_t stats10;
-    uint64_t stats11;
-    uint64_t stats12;
-    uint64_t stats13;
-    uint64_t stats14;
+    uint64_t debug_atomic_delta;
+    uint64_t debug_atomic0_incr1247;
+    uint64_t debug_atomic1_incr247;
+    uint64_t debug_atomic2_incr47;
+    uint64_t debug_atomic3_incr47;
+    uint64_t debug_atomic4_incr7;
+    uint64_t debug_atomic5_incr7;
+    uint64_t debug_atomic6_incr7;
     uint64_t stats15;
 } tcp_rx_stats_t;
 

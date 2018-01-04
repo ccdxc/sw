@@ -75,6 +75,15 @@ typedef struct tcpcb_s {
     uint64_t              debug_num_phv_to_mem;
     uint64_t              debug_num_pkt_to_mem;
 
+    uint64_t              debug_atomic_delta;
+    uint64_t              debug_atomic0_incr1247;
+    uint64_t              debug_atomic1_incr247;
+    uint64_t              debug_atomic2_incr47;
+    uint64_t              debug_atomic3_incr47;
+    uint64_t              debug_atomic4_incr7;
+    uint64_t              debug_atomic5_incr7;
+    uint64_t              debug_atomic6_incr7;
+
     // tx stats
     uint64_t              bytes_sent;
     uint64_t              pkts_sent;

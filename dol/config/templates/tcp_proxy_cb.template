@@ -54,3 +54,11 @@ state       : 0
 asesq       : 0
 asesq_pi    : 0
 asesq_ci    : 0
+debug_atomic_delta      : 0
+debug_atomic0_incr1247  : 0
+debug_atomic1_incr247   : 0
+debug_atomic2_incr47    : 0
+debug_atomic3_incr47    : 0
+debug_atomic4_incr7     : 0
+debug_atomic5_incr7     : 0
+debug_atomic6_incr7     : 0
