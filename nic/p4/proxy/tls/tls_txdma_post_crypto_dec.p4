@@ -94,6 +94,11 @@ header_type to_stage_3_phv_t {
     modify_field(to_s3_scratch.odesc, to_s3.odesc);                                                     \
     modify_field(to_s3_scratch.ipage, to_s3.ipage);
 
+header_type to_stage_4_phv_t {
+    fields {
+        do_post_ccm_dec                 : 1;
+    }
+}
 
 header_type to_stage_5_phv_t {
     fields {
@@ -155,6 +160,9 @@ metadata tls_stage_post_crypto_stats_d_t tls_post_crypto_stats_d;
 metadata to_stage_3_phv_t to_s3_scratch;
 
 @pragma scratch_metadata
+metadata to_stage_4_phv_t to_s4_scratch;
+
+@pragma scratch_metadata
 metadata to_stage_5_phv_t to_s5_scratch;
 
 @pragma scratch_metadata
@@ -163,6 +171,9 @@ metadata to_stage_6_phv_t to_s6_scratch;
 
 @pragma pa_header_union ingress to_stage_3
 metadata to_stage_3_phv_t to_s3;
+
+@pragma pa_header_union ingress to_stage_4
+metadata to_stage_4_phv_t to_s4;
 
 @pragma pa_header_union ingress to_stage_5
 metadata to_stage_5_phv_t to_s5;
@@ -288,6 +299,9 @@ action tls_l7_desc_alloc(desc) {
 /* Stage 4 Table 0 action */
 action tls_read_odesc(PKT_DESCR_AOL_ACTION_PARAMS) {
     GENERATE_GLOBAL_K
+
+    /* To Stage 4 fields */
+    modify_field(to_s4_scratch.do_post_ccm_dec, to_s4.do_post_ccm_dec);
 
     GENERATE_PKT_DESCR_AOL_D
 }

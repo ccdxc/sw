@@ -52,19 +52,10 @@ table_read_QUEUE_BRQ:
      * 2 separate passes, HMAC-SHA2 in the 1st pass and then AES-CBC in the 2nd pass (we're in
      * the 2nd pass now). So we'll use the HMAC-SHA2 mac-generate command value instead of the
      * one in TLSCB.
-     *
-     * NOTE: Also, in order to distinguish the 2 post-barco-crypto stages of AES-CBC-HMAC-SHA2 2 pass
-     * pipeline (one for HMAC-SHA2 mac generation and one for AES-CBC encrypt), we currently keep
-     * state in the TLSCB barco-command field (we do +1 in pre-mac stage and -1 here in post-mac stage).
-     * This assumes only one outstanding request to barco per TLSCB, which needs to be removed -- We'll
-     * use a different BSQ ring-id eventually for barco to ring response doorbell on, to distinguish
-     * this case.
      */
     /* phvwr       p.barco_desc_command, d.u.tls_bld_brq4_d.barco_command
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)*/
     phvwri       p.barco_desc_command, TLS_WORD_SWAP(CAPRI_BARCO_COMMAND_HMAC_SHA256_GENERATE)
-    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)
-    tbladd       d.{u.tls_bld_brq4_d.barco_command}.wx, 1
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)
 
     addi        r1, r0, NTLS_AAD_SIZE
@@ -75,8 +66,15 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_doorbell_address, r4.dx
     CAPRI_OPERAND_DEBUG(r4.dx)
 
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
+    /*
+     * We'll use a different BSQ ring-id for barco to ring doorbell on with the response,
+     * to indicate that this is the intermediate pass of the AES-CBC-HMAC-SHA2 Mac-then-encrypt
+     * stage, so we can resubmit the post-MAC response for 'encrypt' request back to barco
+     * for 2nd pass.
+     *
+     * data will be in r3
+     */
+    CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ_2PASS, 0)
     phvwr       p.barco_desc_doorbell_data, r3.dx
     CAPRI_OPERAND_DEBUG(r3.dx)
 

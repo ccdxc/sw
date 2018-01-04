@@ -9,6 +9,7 @@
 #define tx_table_s2_t0_action       check_tls_hdr
 
 #define tx_table_s3_t0_action       read_tls_hdr_or_auth_tag
+#define tx_table_s3_t1_action       read_tlscb_blk2
 
 #define tx_table_s4_t0_action       update_tlscb_records_state
 #define tx_table_s4_t1_action       read_tnmdr_pidx_odesc
@@ -145,6 +146,9 @@ header_type pad_to_dma_cmds_t {
 
 @pragma scratch_metadata
 metadata tlscb_0_t tlscb_0_d;
+
+@pragma scratch_metadata
+metadata tlscb_1_t tlscb_1_d;
 
 @pragma scratch_metadata
 metadata tlscb_records_state_t  TLSCB_RECORDS_STATE_SCRATCH;
@@ -443,6 +447,13 @@ action read_tls_hdr_or_auth_tag(BYTES_16_PARAMS) {
     GENERATE_BYTES_16_D
 }
 
+/* Stage 3 Table 1 Action */
+action read_tlscb_blk2(TLSCB_1_PARAMS) {
+
+    GENERATE_GLOBAL_K
+
+    GENERATE_TLSCB_1_D
+}
 
 @pragma scratch_metadata
 metadata tls_header_t TLS_HDR_SCRATCH;

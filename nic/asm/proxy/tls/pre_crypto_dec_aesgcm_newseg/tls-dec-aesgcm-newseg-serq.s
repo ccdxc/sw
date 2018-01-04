@@ -44,16 +44,25 @@ tls_dec_pre_crypto_aesgcm_newseg_process:
     sll         r2, r2, NIC_SERQ_ENTRY_SIZE_SHIFT
     add         r2, r2, D(serq_base)
 
+    /* Increment CI in stage 0 and acknowledge the doorbell */
+    tbladd      D(ci_0).hx, 1
+	
     /* Acknowledge the doorbell */
 	//CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
-    addi    r4, r0, \
-            CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
-	add		r1, k.p4_txdma_intr_qid, r0
-	/* data will be in r3 */
-    add     r5, D(pi_0).hx, r0
-	CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_SERQ, r5)
+    addi        r4, r0, \
+    CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
+    add		r1, k.p4_txdma_intr_qid, r0
 
-	memwr.dx  	 r4, r3
+    /* data will be in r3
+     *
+     * We have incremented CI above, we'll ring the doorbell with that value and let
+     * the scheduler re-evaluate if ci != pi. We can optimize to not ring the doorbell if
+     * we can do the ci != pi check ourselves (in stage-0)
+     */
+    add         r5, D(ci_0).hx, r0
+    CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_SERQ, r5)
+
+    memwr.dx    r4, r3
 
 
 table_read_DESC:

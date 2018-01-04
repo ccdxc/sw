@@ -1,5 +1,6 @@
 /*
  *	Implements the read tnmpr alloc idx of the TxDMA P4+ tls  pipeline
+ * Stage 2, Table 2
  */
 
 #include "tls-phv.h"

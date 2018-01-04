@@ -18,11 +18,12 @@ struct tx_table_s0_t0_d d;
 
 	.param		tls_pre_crypto_process
    	.param		tls_post_crypto_process
+   	.param		tls_mac_post_crypto_process
 	
 tls_stage0:
      CAPRI_OPERAND_DEBUG(r7)
 	.brbegin
-	    brpri		r7[1:0], [0,1]
+	    brpri		r7[2:0], [0,1]
 	    nop
 	        .brcase 0
 	            j tls_pre_crypto_process
@@ -31,7 +32,11 @@ tls_stage0:
 	            j tls_post_crypto_process
 	            nop
 	        .brcase 2
-	            j tls_pre_crypto_process
+	            // BSQ_2PASS ring, for post-MAC stage o MAC-then-Encrypt 2 pass pipeline
+	            j tls_mac_post_crypto_process
+	            nop
+	        .brcase 3
+	            nop.e
 	            nop
 	.brend
 

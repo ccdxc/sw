@@ -203,12 +203,18 @@ def TestCaseVerify(tc):
                             (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
 
     # 10. Verify header size, this is the AAD size and is 13 bytes 
-    if brq_cur.ring_entries[brq_cur.pi-1].header_size != 0xd:
-        print("Header Size Check Failed: Got 0x%x, Expected: 0xd" %
-                                (brq_cur.ring_entries[brq_cur.pi-1].header_size))
+    #     In case of AES-CCM, TLS uses a fixed header size of 2 16-byte blocks including AAD.
+    if tc.module.args.cipher_suite == "CCM":
+       hdr_size = 0x20
+    else:
+       hdr_size = 0xd
+    if brq_cur.ring_entries[brq_cur.pi-1].header_size != hdr_size:
+        print("Header Size Check Failed: Got 0x%x, Expected: 0x%x" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].header_size, hdr_size))
         return False
-    print("Header Size Check Success: Got 0x%x, Expected: 0xd" %
-                            (brq_cur.ring_entries[brq_cur.pi-1].header_size))
+    else:
+        print("Header Size Check Success: Got 0x%x, Expected: 0x%x" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].header_size, hdr_size))
 
     # 11. Barco Status check
     if brq_cur.ring_entries[brq_cur.pi-1].barco_status != 0:

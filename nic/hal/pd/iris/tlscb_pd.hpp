@@ -14,6 +14,8 @@ namespace pd {
 
 #define P4PD_TLSCB_STAGE_ENTRY_OFFSET            64
 
+// NOTE : ** These offsets need to match the offsets in 
+// nic/asm/proxy/tls/include/tls-table.h **
 typedef enum tlscb_hwid_order_ {
     P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0 = 0,
     P4PD_HWID_TLS_TX_S1_T0_READ_TLS_ST1_7 = 1,
@@ -23,6 +25,14 @@ typedef enum tlscb_hwid_order_ {
     P4PD_HWID_TLS_TX_POST_CRYPTO_STATS_U16 = 5,
     P4PD_HWID_TLS_TX_POST_CRYPTO_STATS1_U64 = 6,
     P4PD_HWID_TLS_TX_POST_CRYPTO_STATS2_U64 = 7,
+    P4PD_HWID_TLS_TX_OPER_DATA_0_U64        = 8,
+    P4PD_HWID_TLS_TX_OPER_DATA_1_U64        = 9,
+    P4PD_HWID_TLS_TX_OPER_DATA_2_U64        = 10,
+    P4PD_HWID_TLS_TX_OPER_DATA_3_U64        = 11,
+    P4PD_HWID_TLS_TX_OPER_DATA_4_U64        = 12,
+    P4PD_HWID_TLS_TX_OPER_DATA_5_U64        = 13,
+    P4PD_HWID_TLS_TX_OPER_DATA_6_U64        = 14,
+    P4PD_HWID_TLS_TX_OPER_DATA_7_U64        = 15,
 } tlscb_hwid_order_t;
 
 typedef uint64_t    tlscb_hw_id_t;

@@ -43,8 +43,8 @@ tls_dec_aesgcm_no_barco_enqueue:
 tls_dec_aesgcm_read_barco_pidx_done:
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_aesgcm_queue_barco,
 	                    K(tls_global_phv_qstate_addr),
-                        TLS_TCB_OFFSET,
-                        TABLE_SIZE_512_BITS)
+                            TLS_TCB_OFFSET,
+                            TABLE_SIZE_512_BITS)
 
     nop.e
     nop

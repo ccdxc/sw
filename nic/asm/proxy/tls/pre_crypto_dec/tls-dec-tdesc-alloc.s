@@ -1,5 +1,6 @@
 /*
  *	Implements the tnmdr ring desc of the TxDMA P4+ tls  pipeline
+ * Stage 3, Table 1
  */
 
 #include "tls-phv.h"

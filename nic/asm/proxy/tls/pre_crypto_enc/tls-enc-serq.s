@@ -38,7 +38,10 @@ tls_enc_pre_crypto_process:
     phvwr       p.tls_global_phv_fid, k.p4_txdma_intr_qid
     add         r3, r0, d.{u.read_tls_stg0_d.ci_0}.hx
     sll         r3, r3, NIC_SERQ_ENTRY_SIZE_SHIFT
-    # TBD  : move to updated ci
+
+    /* Increment CI in stage 0 */
+    tbladd      d.{u.read_tls_stg0_d.ci_0}.hx, 1
+	
     #add        r3, r0, r0
     add         r3, r3, d.u.read_tls_stg0_d.serq_base
 

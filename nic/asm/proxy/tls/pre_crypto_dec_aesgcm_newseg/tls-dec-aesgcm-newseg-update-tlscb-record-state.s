@@ -309,8 +309,8 @@ tls_dec_aesgcm_update_tlscb_record_state_done:
 
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_aesgcm_process_auth_tag,
 	                    K(tls_global_phv_qstate_addr),
-                        TLS_TCB_CRYPT_OFFSET,
-                        TABLE_SIZE_512_BITS)
+                            TLS_TCB_OPER_DATA_OFFSET,
+                            TABLE_SIZE_512_BITS)
 
 	nop.e
 	nop

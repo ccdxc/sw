@@ -1,5 +1,5 @@
 /*
- * 	Construct the barco request in this stage for decrypt
+ *      Construct the barco request in this stage for decrypt
  * Stage 5, Table 0
  */
 
@@ -11,18 +11,18 @@
 #include "tls_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-	
+        
 struct tx_table_s5_t0_k     k;
 struct phv_                 p;
 struct tx_table_s5_t0_d     d;
-	
+        
 %%
-	    .param      tls_dec_queue_brq_process
-	    .param      tls_dec_queue_brq_mpp_process
-   	    .param      tls_dec_write_arq
-#	    .param		BRQ_QPCB_BASE
-        .param      ARQRX_QIDXR_BASE
-        .param      ARQTX_BASE
+            .param      tls_dec_queue_brq_process
+            .param      tls_dec_queue_brq_mpp_process
+            .param      tls_dec_write_arq
+#           .param      BRQ_QPCB_BASE
+            .param      ARQRX_QIDXR_BASE
+            .param      ARQTX_BASE
         
 tls_dec_bld_barco_req_process:
     seq         c1, k.tls_global_phv_write_arq, r0
@@ -46,34 +46,34 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_key_desc_index, d.u.tls_bld_brq5_d.barco_key_desc_index
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_key_desc_index)
 
-    phvwr       p.crypto_iv_salt, d.u.tls_bld_brq5_d.salt
-    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.salt)
-
-    /* FIXME: Misnomer, this is actually the sequence number */
-	phvwr		p.s4_s6_t0_phv_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
-    tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
-
     phvwr       p.barco_desc_command, d.u.tls_bld_brq5_d.barco_command
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_command)
+
+    /* address will be in r4 */
+    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    phvwr       p.barco_desc_doorbell_address, r4.dx
+    CAPRI_OPERAND_DEBUG(r4.dx)
+
+        /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
+    phvwr       p.barco_desc_doorbell_data, r3.dx
+    CAPRI_OPERAND_DEBUG(r3.dx)
+
+    /*
+     * Check if this is AES-CCM decrypt case, which has some differences in the barco
+     * request encoding as compared to GCM (barco-command[31:24] value 0x05,
+     * endian-swapped).
+     */
+    bbeq        k.tls_global_phv_do_pre_ccm_dec, 1, tls_dec_bld_barco_req_ccm_process
+    nop
+        
+    /* FIXME: Misnomer, this is actually the sequence number */
+    phvwr       p.s4_s6_t0_phv_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
+    tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
 
     addi        r1, r0, NTLS_AAD_SIZE
     phvwr       p.barco_desc_header_size, r1.wx
 
-	/* address will be in r4 */
-	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
-    phvwr       p.barco_desc_doorbell_address, r4.dx
-    CAPRI_OPERAND_DEBUG(r4.dx)
-
-	/* data will be in r3 */
-	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
-    phvwr       p.barco_desc_doorbell_data, r3.dx
-    CAPRI_OPERAND_DEBUG(r3.dx)
-
-    /* The barco-command[31:24] is checked for GCM/CCM/CBC. endian-swapped */
-    smeqb  c4, d.u.tls_bld_brq5_d.barco_command[7:0], 0xf0, 0x30
-    bcf    [!c4], tls_dec_queue_to_brq_mpp_ring
-    nop
-	
     addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
 
 tls_dec_bld_barco_req_process_done:
@@ -84,18 +84,6 @@ tls_dec_bld_barco_req_process_done:
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_queue_brq_process, r3, TABLE_SIZE_32_BITS);
         nop.e
         nop
-
-tls_dec_queue_to_brq_mpp_ring:
-    addi        r3, r0, CAPRI_BARCO_MP_MPNS_REG_MPP1_PRODUCER_IDX
-
-tls_dec_bld_barco_req_process_done_2:
-    /* FIXME: The Capri model currently does not support a read of 8 bytes from register space
-     * enable this once it is fixed
-     *  CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_process, r3, TABLE_SIZE_64_BITS);
-     */
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_queue_brq_mpp_process, r3, TABLE_SIZE_32_BITS);
-	nop.e
-	nop
 
 tls_cpu_rx:
 
@@ -129,7 +117,29 @@ tls_cpu_rx:
     nop
 
 #endif
-    b.c4           tls_dec_bld_barco_req_process_done
+    b        tls_dec_bld_barco_req_process_done
     nop
-    b               tls_dec_bld_barco_req_process_done_2
-    nop
+
+tls_dec_bld_barco_req_ccm_process:
+    phvwri      p.ccm_header_with_aad_B_0_flags, TLS_AES_CCM_HDR_B0_FLAGS
+        
+    /* FIXME: Misnomer, this is actually the sequence number */
+    phvwr       p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
+    tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
+
+    phvwri      p.ccm_header_with_aad_B_1_aad_size, NTLS_AAD_SIZE
+    phvwri      p.ccm_header_with_aad_B_1_zero_pad, 0
+        
+    addi        r1, r0, TLS_AES_CCM_HEADER_SIZE
+    phvwr       p.barco_desc_header_size, r1.wx
+
+tls_dec_queue_to_brq_mpp_ring:
+    addi        r3, r0, CAPRI_BARCO_MP_MPNS_REG_MPP1_PRODUCER_IDX
+
+    /* FIXME: The Capri model currently does not support a read of 8 bytes from register space
+     * enable this once it is fixed
+     *  CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_process, r3, TABLE_SIZE_64_BITS);
+     */
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_queue_brq_mpp_process, r3, TABLE_SIZE_32_BITS);
+        nop.e
+        nop

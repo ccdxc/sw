@@ -55,9 +55,6 @@ table_read_QUEUE_BRQ:
     bbeq        k.to_s4_do_pre_ccm_enc, 1, tls_enc_bld_ccm_hdr_phv
     nop
         
-    phvwr       p.crypto_iv_salt, d.u.tls_bld_brq4_d.salt
-    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.salt)
-
     phvwr.!c1   p.crypto_iv_explicit_iv, d.u.tls_bld_brq4_d.explicit_iv
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.explicit_iv)
 
@@ -79,7 +76,6 @@ tls_enc_bld_ccm_hdr_phv:
      * Setup PHV for CCM here.
      */
     phvwri      p.ccm_header_with_aad_B_0_flags, TLS_AES_CCM_HDR_B0_FLAGS
-    phvwr       p.ccm_header_with_aad_B_0_nonce_salt, d.u.tls_bld_brq4_d.salt
     phvwr       p.ccm_header_with_aad_B_0_nonce_explicit_iv, d.u.tls_bld_brq4_d.explicit_iv
     phvwri      p.ccm_header_with_aad_B_1_aad_size, 13
     phvwr       p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq4_d.explicit_iv

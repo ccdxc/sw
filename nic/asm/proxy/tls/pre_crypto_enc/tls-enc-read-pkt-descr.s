@@ -74,11 +74,11 @@ tls_enc_pkt_descriptor_ccm_process:
      *   B_1: 2-byte AAD-size + 13-byte AAD (8-byte Seq-num + 5-byte
      *                                       TLS-hdr) + 1-byte zero-pad
      */ 
-    subi        r2, r2, (TLS_AES_CCM_HEADER_BLOCK_SIZE * 2)
+    subi        r2, r2, TLS_AES_CCM_HEADER_SIZE
     phvwr       p.idesc_O0, r2.wx
 
     add         r1, r0, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
-    addi        r1, r1, (TLS_AES_CCM_HEADER_BLOCK_SIZE * 2)
+    addi        r1, r1, TLS_AES_CCM_HEADER_SIZE
     phvwr       p.idesc_L0, r1.wx
 
     /* Setup odesc length */

@@ -223,22 +223,6 @@ header_type barco_desc_pad_t {
     }
 }
 
-header_type ccm_header_t {
-    fields {
-        B_0_flags                   : 8;
-        B_0_nonce_salt              : 32;
-        B_0_nonce_explicit_iv       : 64;
-        B_0_length                  : 24;
-        B_1_aad_size                : 16;
-        B_1_aad_seq_num             : 64;
-        B_1_aad_type                : 8;
-        B_1_aad_version_major       : 8;
-        B_1_aad_version_minor       : 8;
-        B_1_aad_length              : 16;
-        B_1_zero_pad                : 8;
-    }
-}
-
 @pragma scratch_metadata
 metadata tlscb_0_t tlscb_0_d;
 
@@ -379,6 +363,7 @@ action tls_rx_serq(TLSCB_1_PARAMS) {
     /* To Stage 2 fields */
     modify_field(to_s2_scratch.serq_ci, to_s2.serq_ci);
     modify_field(to_s2_scratch.idesc, to_s2.idesc);
+    modify_field(to_s2_scratch.do_pre_ccm_enc, to_s2.do_pre_ccm_enc);
 
     GENERATE_TLSCB_1_D
 }

@@ -42,19 +42,9 @@ table_read_QUEUE_ENC_BRQ:
      * The "barco-command" in the TLSCB will have value for "AES-CBC-HMAC-SHA2", but we perform
      * 2 separate passes, HMAC-SHA2 in the 1st pass and then AES-CBC in the 2nd pass (we're in
      * the 2nd pass now). So we'll use the AES-CBC command value instead of the one in TLSCB.
-     *
-     * NOTE: Also, in order to distinguish the 2 post-barco-crypto stages of AES-CBC-HMAC-SHA2 2 pass
-     * pipeline (one for HMAC-SHA2 mac generation and one for AES-CBC encrypt), we currently keep
-     * state in the TLSCB barco-command field (we do +1 in pre-mac stage and -1 here in post-mac stage).
-     * This assumes only one outstanding request to barco per TLSCB, which needs to be removed -- We'll
-     * use a different BSQ ring-id eventually for barco to ring response doorbell on, to distinguish
-     * this case.
      */
     //phvwr       p.barco_desc_command, d.u.tls_bld_brq3_d.barco_command
     phvwri      p.barco_desc_command, TLS_WORD_SWAP(CAPRI_BARCO_COMMAND_AES_CBC_ENCRYPT)
-
-    tblsub      d.{u.tls_bld_brq3_d.barco_command}.wx, 1
-    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq3_d.barco_command)
 
     /* address will be in r4 */
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)

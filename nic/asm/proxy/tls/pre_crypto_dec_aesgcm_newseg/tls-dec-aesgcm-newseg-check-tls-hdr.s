@@ -20,6 +20,7 @@ struct tx_table_s2_t0_k k;
 
 %%
     .param          tls_dec_aesgcm_read_tls_hdr_or_auth_tag
+    .param          tls_dec_aesgcm_read_tlscb_blk2
 
 tls_dec_aesgcm_check_tls_hdr:
 
@@ -72,6 +73,10 @@ tls_dec_aesgcm_check_tls_hdr:
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_aesgcm_read_tls_hdr_or_auth_tag, r3,
             TABLE_SIZE_512_BITS)
 
+    CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_EN, tls_dec_aesgcm_read_tlscb_blk2,
+	                         K(tls_global_phv_qstate_addr),
+                                 TLS_TCB_CRYPT_OFFSET,
+                                 TABLE_SIZE_512_BITS)
     nop.e
     nop
 
@@ -178,7 +183,11 @@ tls_dec_aesgcm_read_auth_tag:
     */
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_aesgcm_read_tls_hdr_or_auth_tag, r3,
             TABLE_SIZE_512_BITS)
-    
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_EN, tls_dec_aesgcm_read_tlscb_blk2,
+	                         K(tls_global_phv_qstate_addr),
+                                 TLS_TCB_CRYPT_OFFSET,
+                                 TABLE_SIZE_512_BITS)
 
 tls_dec_aesgcm_check_tls_hdr_done:
 	

@@ -21,6 +21,22 @@ typedef enum {
     CAPRI_SYMM_ENCTYPE_AES_CBC_HMAC_SHA384 = 10
 } capri_barco_symm_enctype_e;
 
+#define TLS_AES_CCM_AUTH_TAG_SIZE             16
+#define TLS_AES_CCM_LENGTH_FIELD_SIZE          3
+#define TLS_AES_CCM_AAD_PRESENT                1
+#define TLS_AES_CCM_NONCE_SIZE                12
+#define TLS_AES_CCM_NONCE_SALT_SIZE            4
+#define TLS_AES_CCM_NONCE_EXPLICIT_SIZE        8
+#define TLS_AES_CCM_AAD_SIZE                  13
+#define TLS_AES_CCM_HEADER_BLOCK_SIZE         16
+#define TLS_AES_CCM_HEADER_SIZE               (TLS_AES_CCM_HEADER_BLOCK_SIZE * 2)
+#define TLS_AES_CCM_HEADER_AAD_OFFSET         18 // 3rd byte of B_1
+
+#define TLS_AES_CCM_HDR_B0_FLAGS  \
+    (TLS_AES_CCM_AAD_PRESENT << 6 | \
+    (((TLS_AES_CCM_AUTH_TAG_SIZE - 2)/2) << 3) | \
+    (TLS_AES_CCM_LENGTH_FIELD_SIZE -1))
+
 static inline const char *
 capri_barco_symm_enctype_name (capri_barco_symm_enctype_e encaptype)
 {

@@ -9,6 +9,8 @@ header_type tlscb_0_t {
         CAPRI_QSTATE_HEADER_RING(0)
         // 4 Bytes BSQ ring
         CAPRI_QSTATE_HEADER_RING(1)
+        // 4 Bytes BSQ-2PASS ring
+        CAPRI_QSTATE_HEADER_RING(2)
 
         active_segment                  : 1;
         pad                             : 15;
@@ -27,17 +29,16 @@ header_type tlscb_0_t {
         barco_command                   : 32;
         barco_key_desc_index            : 32;
 
-        salt                            : 32;
         explicit_iv                     : 64;
         l7_proxy_type                   : 8;
         // TBD: Total used   : 512 bits, pending: 0
     }
 }
 
-#define TLSCB_0_PARAMS                                                                                  \
-rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, active_segment, pad,    \
-serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_ci, dec_flow,       \
-debug_dol, barco_command, barco_key_desc_index, salt, explicit_iv, l7_proxy_type
+#define TLSCB_0_PARAMS                                                                                              \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, pi_2, ci_2, active_segment, pad,    \
+serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_ci, dec_flow,                   \
+debug_dol, barco_command, barco_key_desc_index, explicit_iv, l7_proxy_type
 
 #define GENERATE_TLSCB_0_D                                                                               \
     modify_field(tlscb_0_d.rsvd, rsvd);                                                                  \
@@ -52,6 +53,8 @@ debug_dol, barco_command, barco_key_desc_index, salt, explicit_iv, l7_proxy_type
     modify_field(tlscb_0_d.ci_0, ci_0);                                                                  \
     modify_field(tlscb_0_d.pi_1, pi_1);                                                                  \
     modify_field(tlscb_0_d.ci_1, ci_1);                                                                  \
+    modify_field(tlscb_0_d.pi_2, pi_2);                                                                  \
+    modify_field(tlscb_0_d.ci_2, ci_2);                                                                  \
     modify_field(tlscb_0_d.active_segment, active_segment);                                              \
     modify_field(tlscb_0_d.pad, pad);                                                                    \
     modify_field(tlscb_0_d.serq_base, serq_base);                                                        \
@@ -65,7 +68,6 @@ debug_dol, barco_command, barco_key_desc_index, salt, explicit_iv, l7_proxy_type
     modify_field(tlscb_0_d.debug_dol, debug_dol);                                                        \
     modify_field(tlscb_0_d.barco_command, barco_command);                                                \
     modify_field(tlscb_0_d.barco_key_desc_index, barco_key_desc_index);                                  \
-    modify_field(tlscb_0_d.salt, salt);                                                                  \
     modify_field(tlscb_0_d.explicit_iv, explicit_iv);                                                    \
     modify_field(tlscb_0_d.l7_proxy_type, l7_proxy_type);
 
@@ -90,7 +92,7 @@ header_type tlscb_1_t {
     fields {
         qhead                           : ADDRESS_WIDTH;
         qtail                           : ADDRESS_WIDTH;
-        una_desc                        : ADDRESS_WIDTH;
+        una_desc                        : HBM_ADDRESS_WIDTH;
         una_desc_idx                    : 8;
         una_data_offset                 : 16;
         una_data_len                    : 16;
@@ -104,13 +106,14 @@ header_type tlscb_1_t {
         l7q_base                        : 64;
         sw_l7q_pi                       : 16;
         barco_hmac_key_desc_index       : 32;
-        // Total used   : 464 bits, pending: 48
-        pad                             : 48;
+        salt                            : 32;
+        // Total used   : 496 bits, pending: 16
+        pad                             : 16;
     }
 }
 
 #define TLSCB_1_PARAMS                                                                                  \
-qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi, barco_hmac_key_desc_index
+qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi, barco_hmac_key_desc_index, salt
 #
 
 #define GENERATE_TLSCB_1_D                                                                              \
@@ -130,6 +133,7 @@ qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, n
     modify_field(tlscb_1_d.l7q_base, l7q_base);                                                         \
     modify_field(tlscb_1_d.sw_l7q_pi, sw_l7q_pi);                                                       \
     modify_field(tlscb_1_d.barco_hmac_key_desc_index, barco_hmac_key_desc_index);                       \
+    modify_field(tlscb_1_d.salt, salt);                                                                 \
 
 /* TODO:
     - ipage reference counting support 
@@ -577,3 +581,18 @@ header_type tnmpr_entry_t {
     modify_field(TNMPR_ENTRY_SCRATCH.desc, desc);               \
     modify_field(TNMPR_ENTRY_SCRATCH.pad, pad);
 
+header_type ccm_header_t {
+    fields {
+        B_0_flags                   : 8;
+        B_0_nonce_salt              : 32;
+        B_0_nonce_explicit_iv       : 64;
+        B_0_length                  : 24;
+        B_1_aad_size                : 16;
+        B_1_aad_seq_num             : 64;
+        B_1_aad_type                : 8;
+        B_1_aad_version_major       : 8;
+        B_1_aad_version_minor       : 8;
+        B_1_aad_length              : 16;
+        B_1_zero_pad                : 8;
+    }
+}

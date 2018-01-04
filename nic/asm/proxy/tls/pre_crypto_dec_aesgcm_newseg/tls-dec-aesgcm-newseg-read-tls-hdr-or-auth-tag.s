@@ -433,8 +433,8 @@ tls_dec_aesgcm_read_tls_hdr_no_auth_tag_in_segment:
 tls_dec_aesgcm_read_tls_hdr_or_auth_tag_done:
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_aesgcm_process_segment,
 	                    K(tls_global_phv_qstate_addr),
-                        TLS_TCB_CRYPT_OFFSET,
-                        TABLE_SIZE_512_BITS)
+                            TLS_TCB_OPER_DATA_OFFSET,
+                            TABLE_SIZE_512_BITS)
 
 tls_dec_aesgcm_read_tls_hdr_or_auth_tag_error:	
 	nop.e

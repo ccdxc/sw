@@ -33,8 +33,8 @@ tls_dec_aesgcm_read_serq_entry_process:
 
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_aesgcm_check_tls_hdr,
 	                    K(tls_global_phv_qstate_addr),
-                        TLS_TCB_CRYPT_OFFSET,
-                        TABLE_SIZE_512_BITS)
+                            TLS_TCB_OPER_DATA_OFFSET,
+                            TABLE_SIZE_512_BITS)
 
 tls_dec_aesgcm_read_serq_entry_process_done:
 	

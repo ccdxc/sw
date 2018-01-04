@@ -462,12 +462,40 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     /* Copy the header+data input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)header, header_len)) {
-        HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write header bytes into ilist memory @ {:x}",
-		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
-		      (uint64_t) curr_ptr);
-        ret = HAL_RET_INVALID_ARG;
-        goto cleanup;
+    if (enc_type == CAPRI_SYMM_ENCTYPE_AES_CCM) {
+        uint8_t ccm_header[TLS_AES_CCM_HEADER_SIZE], *ptr;
+
+	memset(ccm_header, 0, sizeof(ccm_header));
+	ptr = ccm_header;
+        *ptr++ = TLS_AES_CCM_HDR_B0_FLAGS;
+        memcpy(ptr, iv, iv_len);
+	ptr += iv_len;
+        ptr++;
+        *(uint16_t *)ptr = encrypt ? htons((uint16_t)plaintext_len) : htons((uint16_t)ciphertext_len);
+        ptr += 2;
+        *(uint16_t *)ptr = htons(TLS_AES_CCM_AAD_SIZE);
+        ptr += 2;
+	memcpy(ptr, header, header_len);
+	ptr += header_len;
+        *ptr = 0;  // 1-byte zero pad
+
+	if (capri_hbm_write_mem(curr_ptr, (uint8_t*)ccm_header, sizeof(ccm_header))) {
+            HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write header bytes into ilist memory @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) curr_ptr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
+        header_len = TLS_AES_CCM_HEADER_SIZE;
+    } else {
+
+        if (capri_hbm_write_mem(curr_ptr, (uint8_t*)header, header_len)) {
+	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write header bytes into ilist memory @ {:x}",
+			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+			  (uint64_t) curr_ptr);
+	    ret = HAL_RET_INVALID_ARG;
+	    goto cleanup;
+	}
     }
 
     curr_ptr +=  header_len;
@@ -580,8 +608,10 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     switch (enc_type) {
     case CAPRI_SYMM_ENCTYPE_AES_CCM:
       sym_req_descr.command = encrypt ?
-	CAPRI_BARCO_SYM_COMMAND_AES_CCM_Encrypt(iv_len, auth_tag_len) :
-	CAPRI_BARCO_SYM_COMMAND_AES_CCM_Decrypt(iv_len, auth_tag_len);
+	//CAPRI_BARCO_SYM_COMMAND_AES_CCM_Encrypt(iv_len, auth_tag_len) :
+	//CAPRI_BARCO_SYM_COMMAND_AES_CCM_Decrypt(iv_len, auth_tag_len);
+	CAPRI_BARCO_SYM_COMMAND_AES_CCM_Encrypt(0, auth_tag_len) :
+	CAPRI_BARCO_SYM_COMMAND_AES_CCM_Decrypt(0, auth_tag_len);
       break;
     case CAPRI_SYMM_ENCTYPE_AES_SHA256_CBC:
       sym_req_descr.command = encrypt ?

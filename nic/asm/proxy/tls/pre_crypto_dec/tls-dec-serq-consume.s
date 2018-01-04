@@ -27,15 +27,22 @@ struct tx_table_s2_t3_d d;
         
 tls_dec_serq_consume_process:
     CAPRI_CLEAR_TABLE3_VALID
-	/* SERQ_cidx got incremented due to the auto-inc read address used */
-	/* address will be in r4 */
-	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
-	add		r1, k.tls_global_phv_fid, r0
-	/* data will be in r3 */
-    add     r5, d.{u.tls_serq_consume_d.pi_0}.hx, r0
-	CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_SERQ, r5)
 
-	memwr.dx  	 r4, r3
+    /* address will be in r4 */
+    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
+    add	    r1, k.tls_global_phv_fid, r0
 
-	nop.e
-	nop
+    /*
+     * data will be in r3
+     *
+     * We'd have incremented CI in stage 0, we'll ring the doorbell with that value and let
+     * the scheduler re-evaluate if ci != pi. We can optimize to not ring the doorbell if
+     * we can do the ci != pi check ourselves (in stage-0)
+     */
+    add     r5, d.{u.tls_serq_consume_d.ci_0}.hx, r0
+    CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_SERQ, r5)
+
+    memwr.dx  	 r4, r3
+
+    nop.e
+    nop

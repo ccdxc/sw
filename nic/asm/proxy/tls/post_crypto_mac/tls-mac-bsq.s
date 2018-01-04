@@ -31,6 +31,9 @@ tls_mac_post_crypto_process:
 
     add         r3, r0, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
+    /* Increment CI for the BSQ-2PASS ring that we got doorbell on, here in stage 0 */
+    tbladd      d.{u.read_tls_stg0_d.ci_2}.hx, 1
+
 table_read_rx_bsq_mac: 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_mac_rx_bsq_mac_process,
 	                         r3, TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)

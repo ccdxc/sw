@@ -303,7 +303,7 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ_AES256_CCM_DECRYPT
-        enable  : False
+        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes256_ccm_record_pkt.testspec

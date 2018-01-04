@@ -34,13 +34,16 @@ tls_enc_post_crypto_process:
     phvwri.c1   p.to_s4_do_post_ccm_enc, 1
     slt.s       c2, 0, r2
     phvwri.c2   p.to_s4_do_post_cbc_enc, 1
-        
+
     phvwr       p.tls_global_phv_fid, k.p4_txdma_intr_qid
 
     phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
     add         r3, r0, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
+    /* Increment CI in stage 0 */
+    tbladd      d.{u.read_tls_stg0_d.ci_1}.hx, 1
+	
     phvwr       p.to_s6_debug_dol, d.u.read_tls_stg0_d.debug_dol
 table_read_rx_bsq_enc: 
         CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_rx_bsq_enc_process,

@@ -64,18 +64,25 @@ tls_enc_post_read_odesc_do_ccm:
     sub         r1, r1, (TLS_AES_CCM_HEADER_SIZE - NTLS_AAD_SIZE)
     phvwr       p.odesc_L0, r1.wx
 
-    /* Compute TLS header address and setup DMA command */
-    add         r1, r0, d.{u.tls_read_odesc_d.A0}.dx
-    add         r1, r1, d.{u.tls_read_odesc_d.O0}.wx
-    add         r2, r1, (TLS_AES_CCM_HEADER_SIZE - NTLS_AAD_SIZE)
-
+    /*
+     * At the O0 of the odesc, there's 2 16-byte blocks of CCM-header, followed by
+     * ciphertext. For output packet we'll move the offset to have 13-bytes of AAD
+     * followed by ciphertext.
+     * We will also need to write the AAD content (5-byte TLS-header + 8-byte seq-num)
+     * at the new O0, which we'll setup a DMA for.
+     */
+    add         r1, d.{u.tls_read_odesc_d.O0}.wx, (TLS_AES_CCM_HEADER_SIZE - NTLS_AAD_SIZE)
+    phvwr       p.odesc_O0, r1.wx
+    add         r2, r1, d.{u.tls_read_odesc_d.A0}.dx
+	
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r2, tls_hdr_tls_hdr_type, tls_hdr_tls_iv)    
 
     /*
      * We will set the next table-read from the AAD offset inside the CCM header we currently
      * have at O0 to obtain the AAD fields.
+     * (d.{u.tls_read_odesc_d.A0}.dx + d.{u.tls_read_odesc_d.O0}.wx +  TLS_AES_CCM_HEADER_AAD_OFFSET)
      */
-    add         r1, r1, TLS_AES_CCM_HEADER_AAD_OFFSET
+    subi         r1, r2, 1
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_read_aad_process,
                           r1, TABLE_SIZE_512_BITS)
     nop.e

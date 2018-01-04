@@ -106,7 +106,8 @@ rsvd,cosA,cosB,cos_sel,eval_last,host,total,pid, pi_0,ci_0
         modify_field(tls_global_phv_scratch.pending_rx_serq, tls_global_phv.pending_rx_serq);           \
         modify_field(tls_global_phv_scratch.pending_rx_brq, tls_global_phv.pending_rx_brq);             \
         modify_field(tls_global_phv_scratch.pending_queue_brq, tls_global_phv.pending_queue_brq);       \
-        modify_field(tls_global_phv_scratch.write_arq, tls_global_phv.write_arq);       \
+        modify_field(tls_global_phv_scratch.write_arq, tls_global_phv.write_arq);                       \
+        modify_field(tls_global_phv_scratch.do_pre_ccm_dec, tls_global_phv.do_pre_ccm_dec);             \
         modify_field(tls_global_phv_scratch.tls_global_pad0, tls_global_phv.tls_global_pad0);           \
         modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
         modify_field(tls_global_phv_scratch.tls_hdr_type, tls_global_phv.tls_hdr_type);                 \
@@ -125,7 +126,8 @@ header_type tls_global_phv_t {
         pending_rx_brq                  : 1;
         pending_queue_brq               : 1;
         write_arq                       : 1;
-        tls_global_pad0                 : 3;
+        do_pre_ccm_dec                  : 1;
+        tls_global_pad0                 : 2;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
         tls_hdr_type                    : 8;
         tls_hdr_version_major           : 8;
@@ -143,6 +145,7 @@ header_type to_stage_3_phv_t {
 
 header_type to_stage_4_phv_t {
     fields {
+        pad                             : 96;
         debug_dol                       : 8;
     }
 }
@@ -193,10 +196,11 @@ header_type to_stage_6_phv_t {
         modify_field(TO.next_tls_hdr_offset, FROM.next_tls_hdr_offset);
 
 
-#define GENERATE_S2_S3_T0                                                               \
-        modify_field(s2_s3_t0_scratch.idesc_aol0_addr, s2_s3_t0_phv.idesc_aol0_addr);   \
+#define GENERATE_S2_S3_T0                                                                   \
+        modify_field(s2_s3_t0_scratch.idesc_aol0_addr, s2_s3_t0_phv.idesc_aol0_addr);       \
         modify_field(s2_s3_t0_scratch.idesc_aol0_offset, s2_s3_t0_phv.idesc_aol0_offset);   \
         modify_field(s2_s3_t0_scratch.idesc_aol0_len, s2_s3_t0_phv.idesc_aol0_len);
+
 header_type s2_s3_t0_phv_t {
     fields {
         idesc_aol0_addr                 : ADDRESS_WIDTH;
@@ -315,7 +319,6 @@ metadata barco_dbell_t barco_dbell;
 metadata p4_to_p4plus_cpu_pkt_2_t cpu_hdr2;
 
 
-
 @pragma pa_header_union ingress to_stage_3 odesc_dma_src
 metadata to_stage_3_phv_t to_s3;
 @pragma dont_trim
@@ -363,6 +366,8 @@ metadata pkt_descr_aol_t odesc;
 metadata barco_desc_t barco_desc;
 @pragma dont_trim
 metadata ring_entry_t ring_entry;
+@pragma dont_trim
+metadata ccm_header_t ccm_header_with_aad;
 @pragma dont_trim
 metadata pad_to_dma_cmds_t pad_to_dma_cmds;
 

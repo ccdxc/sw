@@ -133,8 +133,7 @@ tls_dec_aesgcm_equeue_barco:
 /* ==== DMA commands when we are submitting the request to Barco ==== */
 
 /* AAD, IV, Auth Tag */
-    /* Setup Salt, explicit IV already setup */
-    phvwr           p.iv_salt, D(salt)
+    /* Setup explicit IV already setup ('salt' is in TLSCB 2nd-block, which is read separately */
 
     /* Bump up sequence number in CB used in AAD */
     phvwr           p.aad_aad_seq_num, D(explicit_iv)

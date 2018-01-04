@@ -30,9 +30,16 @@ tls_mac_bsq_consume_process:
     /* address will be in r4 */
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
     add		r1, k.tls_global_phv_fid, r0
-    /* data will be in r3 */
-    add         r5, d.{pi_1}.hx, r0
-    CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_BSQ, r5)
+
+    /*
+     * data will be in r3
+     *
+     * We'd have incremented CI for the BSQ-2PASS ring in stage 0, we'll ring the doorbell
+     * with that value and let the scheduler re-evaluate if ci != pi. We can optimize to
+     * not ring the doorbell if we can do the ci != pi check ourselves (in stage-0)
+     */
+    add         r5, d.{ci_2}.hx, r0
+    CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_BSQ_2PASS, r5)
 
     memwr.dx  	r4, r3
 

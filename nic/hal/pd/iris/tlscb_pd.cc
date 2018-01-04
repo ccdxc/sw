@@ -65,7 +65,6 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
     tlscb_pd->tlscb->debug_dol = ntohl(data.u.read_tls_stg0_d.debug_dol);
     tlscb_pd->tlscb->command = data.u.read_tls_stg0_d.barco_command;
     tlscb_pd->tlscb->crypto_key_idx = data.u.read_tls_stg0_d.barco_key_desc_index;
-    tlscb_pd->tlscb->salt = ntohl(data.u.read_tls_stg0_d.salt);
     tlscb_pd->tlscb->explicit_iv = data.u.read_tls_stg0_d.explicit_iv;
     tlscb_pd->tlscb->is_decrypt_flow = data.u.read_tls_stg0_d.dec_flow;
     tlscb_pd->tlscb->l7_proxy_type = types::AppRedirType(data.u.read_tls_stg0_d.l7_proxy_type);
@@ -79,7 +78,6 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
     HAL_TRACE_DEBUG("Received debug_dol: 0x{0:x}", tlscb_pd->tlscb->debug_dol);
     HAL_TRACE_DEBUG("Received command: 0x{0:x}", tlscb_pd->tlscb->command);
     HAL_TRACE_DEBUG("Received crypto_key_idx: 0x{0:x}", tlscb_pd->tlscb->crypto_key_idx);
-    HAL_TRACE_DEBUG("Received salt: 0x{0:x}", tlscb_pd->tlscb->salt);
     HAL_TRACE_DEBUG("Received explicit_iv: 0x{0:x}", tlscb_pd->tlscb->explicit_iv);
     HAL_TRACE_DEBUG("Received dec_flow : 0x{0:x}", tlscb_pd->tlscb->is_decrypt_flow);
     HAL_TRACE_DEBUG("Received L7 proxy type: {}", tlscb_pd->tlscb->l7_proxy_type);
@@ -102,6 +100,9 @@ p4pd_get_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd)
     }
     tlscb_pd->tlscb->other_fid = ntohs(data.u.read_tls_stg1_7_d.other_fid);
     HAL_TRACE_DEBUG("Received other fid: 0x{0:x}", tlscb_pd->tlscb->other_fid);
+
+    tlscb_pd->tlscb->salt = ntohl(data.u.read_tls_stg1_7_d.salt);
+    HAL_TRACE_DEBUG("Received salt: 0x{0:x}", tlscb_pd->tlscb->salt);
 
     tlscb_pd->tlscb->crypto_hmac_key_idx = data.u.read_tls_stg1_7_d.barco_hmac_key_desc_index;
     HAL_TRACE_DEBUG("Received HMAC key index: 0x{0:x}", tlscb_pd->tlscb->crypto_hmac_key_idx);
@@ -209,7 +210,7 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         HAL_TRACE_DEBUG("TLS TXDMA Stage0 Received pc address 0x{0:x}", pc_offset);
 
         data.action_id = pc_offset;
-        data.u.read_tls_stg0_d.total = 2;
+        data.u.read_tls_stg0_d.total = 3;
 
         // Get Serq address
         wring_hw_id_t  serq_base;
@@ -246,9 +247,6 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
 
         data.u.read_tls_stg0_d.barco_key_desc_index = tlscb_pd->tlscb->crypto_key_idx;
         HAL_TRACE_DEBUG("Barco Key Desc Index = 0x{0:x}", data.u.read_tls_stg0_d.barco_key_desc_index);
-
-        data.u.read_tls_stg0_d.salt = (tlscb_pd->tlscb->salt);
-        HAL_TRACE_DEBUG("Salt = 0x{0:x}", data.u.read_tls_stg0_d.salt);
 
         data.u.read_tls_stg0_d.explicit_iv = (tlscb_pd->tlscb->explicit_iv);
         HAL_TRACE_DEBUG("Explicit IV = 0x{0:x}", data.u.read_tls_stg0_d.explicit_iv);
@@ -288,6 +286,10 @@ p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool de
     if(!del) {
         data.u.read_tls_stg1_7_d.other_fid = htons(tlscb_pd->tlscb->other_fid);
         HAL_TRACE_DEBUG("other fid = 0x{0:x}", data.u.read_tls_stg1_7_d.other_fid);
+
+        data.u.read_tls_stg1_7_d.salt = tlscb_pd->tlscb->salt;
+        HAL_TRACE_DEBUG("Salt = 0x{0:x}", data.u.read_tls_stg1_7_d.salt);
+
         // Get L7Q address
         wring_hw_id_t  q_base;
         uint32_t proxyrcb_id = tlscb_pd->tlscb->cb_id;

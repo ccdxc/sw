@@ -43,7 +43,8 @@ SRC_FILES := \
 	$(SRC_DIR)/tls-dec-aesgcm-newseg-proc-auth-tag.s					\
 	$(SRC_DIR)/tls-dec-aesgcm-newseg-read-barco-pidx.s					\
 	$(SRC_DIR)/tls-dec-aesgcm-newseg-queue-barco.s						\
-	$(SRC_DIR)/tls-dec-aesgcm-read-odesc-opage-cache.s
+	$(SRC_DIR)/tls-dec-aesgcm-read-odesc-opage-cache.s                                      \
+	$(SRC_DIR)/tls-dec-aesgcm-newseg-read-tlscb-blk2.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 
