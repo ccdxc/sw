@@ -45,12 +45,10 @@ ack:
     // r1 = aeth_syndrome
     add            r1, k.to_stage.syndrome, r0
 
-    // c2 = TRUE if rrq_empty
-    seq            c2, k.args.rrq_empty, 1
     //phv_p->cqwqe.id.msn = pkt_msn
     //if (sqcb1_to_rrqwqe_info_p->rrq_empty == FALSE)
     //    phv_p->cqwqe.id.msn = min((rrqwqe_p->msn - 1), phv_p->aeth.msn)
-    bcf            [c2], p_ack
+    bbeq           k.args.rrq_empty, 1, p_ack
     add            r2, k.to_stage.msn, r0 // Branch Delay Slot
     add            r2, d.msn, 0
     mincr          r2, 24, -1
@@ -64,7 +62,7 @@ p_ack:
   
     phvwr          p.cqwqe.id.msn, r2 // Branch Delay Slot
 
-    bcf            [c2], set_cqcb_arg
+    bbeq           k.args.rrq_empty, 1, set_cqcb_arg
     // if (pkt_psn >= rrqwqe_p->psn)
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
     scwle24        c1, d.psn, k.to_stage.bth_psn // Branch Delay Slot
@@ -119,7 +117,7 @@ read_or_atomic:
     sne.c1         c2, k.to_stage.bth_psn, k.args.e_rsp_psn
     sne.!c1        c2, k.to_stage.bth_psn, d.psn
     bcf            [c2], out_of_order_rsp
-    nop            // Branch Delay Slot
+    add            r5, r0, k.global.flags //Branch Delay Slot
     
     ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST)
 

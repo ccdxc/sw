@@ -43,8 +43,8 @@ req_rx_sqcb1_process:
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
 process_rx_pkt:
-    add            r2, r0, k.global.flags
-    beqi           r2, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
+    bbeq           k.global.flags.req_rx._feedback, 1, process_feedback
+    add            r2, r0, k.global.flags //Branch Delay Slot
 
     // TODO Check valid PSN
 
@@ -97,8 +97,7 @@ process_aeth:
 
 post_credits:
     // dma_cmd - msn and credits
-    phvwr          p.msn, k.to_stage.msn
-    phvwr          p.credits, k.to_stage.syndrome[4:0]
+    phvwrpair      p.msn, k.to_stage.msn, p.credits, k.to_stage.syndrome[4:0]
 
     add            r4, r5, SQCB1_MSN_OFFSET
     DMA_HBM_PHV2MEM_SETUP(r6, msn, credits, r4)

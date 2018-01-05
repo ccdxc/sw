@@ -42,8 +42,7 @@ ptseg_loop:
     tblrdp.dx     r6, r6, 0, CAPRI_SIZEOF_U64_BITS
     add           r6, r2, r6
 
-    seq           c1, k.args.is_atomic, 1
-    bcf           [!c1], pkt2mem
+    bbne          k.args.is_atomic, 1, pkt2mem
     nop
 
 phv2mem:

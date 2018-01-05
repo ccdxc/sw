@@ -16,8 +16,7 @@ req_rx_sqcb1_write_back_process:
     seq            c1, k.args.incr_nxt_to_go_token_id, 1
     tblmincri.c1   d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
 
-    seq            c1, k.args.post_bktrack, 1
-    bcf            [!c1], end
+    bbne           k.args.post_bktrack, 1, end
     nop            // Branch Delay Slot
 
 post_bktrack_ring:
