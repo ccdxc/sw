@@ -10,7 +10,8 @@ struct resp_tx_to_stage_dcqcn_info_t {
     congestion_mgmt_enable: 1;
     packet_len: 14;
     new_cindex: 16; // Used by DCQCN algorithm and DCQCN timer.
-    rsvd: 63;
+    new_timer_cindex: 16;
+    rsvd: 47;
 };
 
 struct resp_tx_to_stage_rqcb1_wb_info_t {

@@ -22,6 +22,10 @@ struct resp_tx_rqcb1_process_k_t k;
 #define LOG_ALPHA_MAX           16
 #define ALPHA_TIMER_INTERVAL    55
 
+// Max-rate of QP in Mbps to shutdown DCQCN algorithm. DCQCN algo will be restarted again on receiving CNP.
+// TODO: This can be fed as a loader-param from HAL.
+#define QP_MAX_RATE             100000 
+
 %%
 resp_tx_dcqcn_rate_process:
 
@@ -39,7 +43,8 @@ resp_tx_dcqcn_rate_process:
     bcf     [!c2], cnp_recv_process
 
     // Load F with 5 iterations. Check should F be configurable??
-    addi     F, r0, 5
+    addi    F, r0, 5
+    add     TARGET_RATE, d.target_rate, r0
 
     //  Find if Max(T, BC) < F. If yes, jump to fast_recovery
     slt     c2, d.byte_counter_exp_cnt, d.timer_exp_cnt
@@ -54,6 +59,11 @@ resp_tx_dcqcn_rate_process:
     nop
 
 additive_increase:
+    // Check target-rate has reached MAX-QP-RATE. If yes, stop further target-rate-increase.
+    slt     c1, TARGET_RATE, QP_MAX_RATE
+    bcf     [!c1], skip_target_rate_inc
+    nop
+
     // Rt = Rt + Ri. 
     //TODO: Check if Ri should be configurable?? Setting it to 5 Mbps by default.
     addi    Ri, r0, 5
@@ -65,6 +75,13 @@ additive_increase:
 
     tblwr   d.rate_enforced, RATE_ENFORCED
     tblwr   d.target_rate, TARGET_RATE
+
+    // Check enforced rate has reached MAX-QP-RATE. If yes, shutdown DCQCN timers to stop further rate-increase.
+    slt     c1, RATE_ENFORCED, QP_MAX_RATE
+    bcf     [c1], exit
+    nop   // BD-slot
+    tblwr   d.max_rate_reached, 1
+    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, k.to_stage.s4.dcqcn.new_timer_cindex, r1, r2)
     nop.e
     nop
 
@@ -78,12 +95,17 @@ fast_recovery:
     nop
 
 hyper_increase:
+    // Check target-rate has reached MAX-QP-RATE. If yes, stop further target-rate-increase.
+    slt     c1, d.target_rate, QP_MAX_RATE
+    bcf     [!c1], skip_target_rate_inc
+    nop
     // Rt = Rt + (i * Ri). 
     //TODO:Check if Ri and i should be configurable?? Setting it to 5 Mbps and 3 by default.
     addi    Ri, r0, 5
     muli    r1, Ri, 3
     add     TARGET_RATE, d.target_rate, r1
 
+skip_target_rate_inc:
     // Rc = ((Rt + Rc) / 2)
     add     r1, d.rate_enforced, TARGET_RATE
     srl     RATE_ENFORCED, r1, 1
@@ -91,6 +113,12 @@ hyper_increase:
     tblwr   d.rate_enforced, RATE_ENFORCED
     tblwr   d.target_rate, TARGET_RATE
 
+    // Check enforced rate has reached MAX-QP-RATE. If yes, shutdown DCQCN timers to stop further rate-increase.
+    slt     c1, RATE_ENFORCED, QP_MAX_RATE
+    bcf     [c1], exit
+    nop   // BD-slot
+    tblwr   d.max_rate_reached, 1
+    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, k.to_stage.s4.dcqcn.new_timer_cindex, r1, r2)
     nop.e
     nop
 
@@ -121,11 +149,18 @@ cnp_recv_process:
 
     // Update num-cnp-processed.
     tblmincri   d.num_cnp_processed, 8, 1
-
-    // Restart alpha timer.
-    // TODO: Check if there is special handling to restart timer??
-    CAPRI_START_SLOW_TIMER(r1, r6, k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
     CAPRI_SET_TABLE_0_VALID(0)
+ 
+    bbeq    d.max_rate_reached, 0, exit
+    /* 
+     * Timer will be started only when CNP is received after max_rate_reached is hit. 
+     * Init value of max_rate_reached will be set to 1 to kick-start dcqcn timers when first CNP is received.
+     * Also, Timers will NOT be restarted everytime CNP is received.Impact of this should be minimal since 
+     * timer T runs as a multiplicative factor to alpha-timer. So not restarting alpha timer here 
+     * should have minimal impact on timer T and subsequent dcqcn rate-increase.
+     */
+    CAPRI_START_SLOW_TIMER(r1, r6, k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
+    tblwr   d.max_rate_reached, 0
     nop.e
     nop
 

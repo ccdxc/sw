@@ -929,8 +929,10 @@ struct dcqcn_cb_t {
     byte_counter_exp_cnt:   16; // Num of times byte-counter expired.
     timer_exp_cnt:          16; // Num of times timer T expired.(T)
     num_alpha_exp_cnt:      16; // Num times alpha-timer expired since timer T expired.
-    num_cnp_rcvd:          8;  // Num of CNP received used by rate-compute-ring for processing CNPs.
+    num_cnp_rcvd:           8;  // Num of CNP received used by rate-compute-ring for processing CNPs.
     num_cnp_processed:      8;  // Num of CNP processed used by rate-compute-ring.
+    max_rate_reached:       1;  // This will be set if we have reached max-qp-rate and dcqcn rate-increase timers are stopped.
+    rsvd0:                  7;
 
     // Rate-limiter token-bucket related params.
     last_sched_timestamp:   48;
@@ -941,7 +943,6 @@ struct dcqcn_cb_t {
     // For model testing only.
     num_sched_drop: 8; // Number of times packet was scheduled and dropped due to insufficient tokens.
     cur_timestamp:  32; // For debugging on Model since model doesnt have timestamps
-    pad :           8;
 };
 
 

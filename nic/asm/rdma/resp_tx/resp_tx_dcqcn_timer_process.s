@@ -32,25 +32,27 @@ resp_tx_dcqcn_timer_process:
     tblwr       d.alpha_value, r2
    
     // Check if timer T expired. 
-    tblmincri   d.num_alpha_exp_cnt, 0x10, 1
+    tblmincri   d.num_alpha_exp_cnt, 16, 1
     slt         c1, d.num_alpha_exp_cnt, d.timer_exp_thr
     bcf         [c1], restart_timer
     nop 
     
     // Timer T expired. Ring doorbell to run dcqcn algo. 
-    tblmincri   d.timer_exp_cnt, 0x10, 1
+    tblmincri   d.timer_exp_cnt, 16, 1
     DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
     tblwr       d.num_alpha_exp_cnt, 0
 
 restart_timer: 
+    // Skip timer restart if max rate is reached.
+    // This flag will help to avoid race-condition of timer-restart after max rate is reached, if timer-expiry and max-rate is hit simulataneously.
+    bbeq        d.max_rate_reached, 1, skip_timer_restart
+    nop
     // Restart alpha timer. Alpha timer runs for 55us by default.
-    // TODO: Check if special handling is required for restarting timers??
     CAPRI_START_SLOW_TIMER(r1, r6, k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
+    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, k.to_stage.s4.dcqcn.new_cindex, r1, r2)
 
+skip_timer_restart:
     CAPRI_SET_TABLE_0_VALID(0)
-    //TODO: Should cindex be updated in this case??
-    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, k.to_stage.s4.dcqcn.new_cindex, r1, r2) 
-
     nop.e
     nop
 

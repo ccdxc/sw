@@ -1118,7 +1118,6 @@ typedef struct rqcb_s {
 
 //dcqcn_cb_t dynamically allocated to store dcqcn related info in HBM
 typedef struct dcqcn_cb_s {
-    uint32_t            rsvd: 24;
     uint64_t            cur_timestamp: 32; // For model testing only. Will be removed.
     uint8_t             num_sched_drop; // For model testing only. Number of times packet was scheduled
                                         // and dropped due to insufficient tokens. 
@@ -1126,6 +1125,8 @@ typedef struct dcqcn_cb_s {
     uint64_t            cur_avail_tokens: 48;
     uint16_t            delta_ticks_last_sched;
     uint64_t            last_sched_timestamp: 48;
+    uint8_t             rsvd0: 7;
+    uint8_t             max_rate_reached: 1;
     uint8_t             num_cnp_processed;
     uint8_t             num_cnp_rcvd;
     uint16_t            num_alpha_exp_cnt;

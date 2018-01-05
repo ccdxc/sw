@@ -58,8 +58,14 @@ resp_tx_rqcb_process:
     // Increment c-index and pass to stage 4
     add         r2, r0, DCQCN_RATE_COMPUTE_C_INDEX
     mincr       r2, 16, 1 // c_index is 16 bit
+    // Increment timer-c-index and pass to stage 4. This is used to stop dcqcn-timer on reaching max-qp-rate.
+    add         r3, r0, DCQCN_TIMER_C_INDEX
+    mincr       r3, 16, 1 // c_index is 16 bit
+
     CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.new_cindex, r2)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.new_timer_cindex, r3)
+
 
     add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES  #RQCB1 address
     CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)

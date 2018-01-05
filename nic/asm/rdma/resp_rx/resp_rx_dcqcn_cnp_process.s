@@ -20,6 +20,8 @@ resp_rx_dcqcn_cnp_process:
     nop
 
     tblmincri   d.num_cnp_rcvd, 8, 1 //num_cnp_recvd is 8-bit field.
+    // Ring doorbell to cut-rate and reset dcqcn params.
+    DOORBELL_INC_PINDEX(k.global.lif,  k.global.qtype, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
 
     nop.e
     nop

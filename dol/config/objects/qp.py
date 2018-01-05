@@ -334,8 +334,10 @@ class RdmaDCQCNstate(scapy.Packet):
         scapy.BitField("byte_counter_exp_cnt",0, 16),
         scapy.BitField("timer_exp_cnt", 0, 16),
         scapy.BitField("num_alpha_exp_cnt", 0, 16), 
-        scapy.BitField("num_cnp_rcvd", 0, 8),
-        scapy.BitField("num_cnp_processed", 0, 8),
+        scapy.ByteField("num_cnp_rcvd", 0),
+        scapy.ByteField("num_cnp_processed", 0),
+        scapy.BitField("max_rate_reached", 0, 1),
+        scapy.BitField("rsvd0", 0, 7),
 
         scapy.BitField("last_sched_timestamp", 0, 48),
         scapy.BitField("delta_tokens_last_sched", 0, 16),
@@ -344,7 +346,6 @@ class RdmaDCQCNstate(scapy.Packet):
 
         scapy.ByteField("num_sched_drop", 0),
         scapy.BitField("cur_timestamp", 0, 32),
-        scapy.BitField("pad", 0, 8),
     ]
 
 class QpObjectHelper:

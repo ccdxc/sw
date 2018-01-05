@@ -82,7 +82,8 @@ rate_enforce:
     add           r2, k.to_stage.s4.dcqcn.packet_len, d.cur_byte_counter
     tblwr         d.cur_byte_counter, r2 
     slt           c2, d.cur_byte_counter, d.byte_counter_thr
-    bcf           [c2], load_write_back
+    seq           c4, d.max_rate_reached, 1
+    bcf           [c2 | c4], load_write_back
     nop
 
 ring_dcqcn_doorbell:
