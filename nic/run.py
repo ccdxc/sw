@@ -307,6 +307,10 @@ def run_dol(args):
     print "* MODEL exit code " + str(model_process.returncode)
     print "* HAL exit code " + str(hal_process.returncode)
     print "* DOL exit code " + str(p.returncode)
+    if model_process.returncode:
+        return model_process.returncode
+    if hal_process.returncode:
+        return hal_process.returncode
     return p.returncode
 
 #    log.close()
