@@ -19,51 +19,46 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                               const DebugRequestMsg *req,
                               DebugResponseMsg *rsp)
 {
-    HAL_TRACE_DEBUG("Rcvd DEBUG Invoke Request");
-    int table_access = 0;
-    int reg_access = 0;
-    uint32_t data = 0x0;
-    hal_ret_t ret = HAL_RET_OK;
+    bool         table_access = false;
+    bool         reg_access = false;
+    uint32_t     data = 0x0;
+    hal_ret_t    ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("Rcvd Ddebug request");
 
     DebugSpec spec = req->request(0);
     DebugResponse *response = rsp->add_response();
-
     debug::DebugKeyHandle key_handle = spec.key_or_handle();
 
-    if (key_handle.key_or_handle_case() ==
-                debug::DebugKeyHandle::kTableId) {
-        table_access = 1;
-        HAL_TRACE_DEBUG("{}: Table: {}",
-                        __FUNCTION__, key_handle.table_id());
+    if ((key_handle.key_or_handle_case() == debug::DebugKeyHandle::kTableId) ||
+        (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kTableName)) {
+        HAL_TRACE_DEBUG("{}: Table: {}", __FUNCTION__, key_handle.table_id());
+        table_access = true;
+    } else if ((key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegId) ||
+               (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegName)) {
+        HAL_TRACE_DEBUG("{}: Reg: {}", __FUNCTION__, key_handle.reg_id());
+        reg_access = true;
     }
-
-    if (key_handle.key_or_handle_case() ==
-                debug::DebugKeyHandle::kRegId) {
-        reg_access = 1;
-        HAL_TRACE_DEBUG("{}: Reg: {}",
-                        __FUNCTION__, key_handle.reg_id());
-    }
-
-    HAL_TRACE_DEBUG("{}: operation: {}",
-                    __FUNCTION__, spec.opn_type(), spec.index());
+    HAL_TRACE_DEBUG("{}: operation: {} index: {}", __FUNCTION__,
+                    spec.opn_type(), spec.index());
 
     if (table_access) {
-        HAL_TRACE_DEBUG("{}: operation: {} index: {}",
-                        __FUNCTION__, spec.opn_type(), spec.index());
-
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
+            DebugSpec *rsp_spec = response->mutable_spec();
             ret = hal::pd::pd_debug_cli_read(
                                     key_handle.table_id(),
                                     spec.index(),
-                                    (void *) spec.swkey().c_str(),
-                                    (void *) spec.swkey_mask().c_str(),
-                                    (void *) spec.actiondata().c_str());
+                                    (void *)spec.swkey().c_str(),
+                                    (void *)spec.swkey_mask().c_str(),
+                                    (void *)spec.actiondata().c_str());
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("{}: Hardware read fail", __FUNCTION__);
+                HAL_TRACE_DEBUG("{}: Hardware read failure, err : {}",
+                                __FUNCTION__, ret);
+                response->set_api_status(types::API_STATUS_HW_READ_ERROR);
                 return Status::OK;
             }
 
-            DebugSpec *rsp_spec = response->mutable_rsp_data();
+            response->set_api_status(types::API_STATUS_OK);
             rsp_spec->set_swkey(spec.swkey());
             rsp_spec->set_swkey_mask(spec.swkey_mask());
             rsp_spec->set_actiondata(spec.actiondata());
@@ -71,36 +66,33 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
             ret = hal::pd::pd_debug_cli_write(
                                     key_handle.table_id(),
                                     spec.index(),
-                                    (void *) spec.swkey().c_str(),
-                                    (void *) spec.swkey_mask().c_str(),
-                                    (void *) spec.actiondata().c_str());
+                                    (void *)spec.swkey().c_str(),
+                                    (void *)spec.swkey_mask().c_str(),
+                                    (void *)spec.actiondata().c_str());
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("{}: Hardware write fail", __FUNCTION__);
+                HAL_TRACE_DEBUG("{}: Hardware write failure, err : {}",
+                                __FUNCTION__, ret);
+                response->set_api_status(types::API_STATUS_HW_READ_ERROR);
                 return Status::OK;
             }
+            response->set_api_status(types::API_STATUS_OK);
         }
-    }
-
-    if (reg_access) {
-        HAL_TRACE_DEBUG("{}: Address: 0x{0:x}", __FUNCTION__, spec.addr());
-
+    } else if (reg_access) {
+        HAL_TRACE_DEBUG("{}: Register address: 0x{0:x}", __FUNCTION__,
+                        spec.addr());
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
             data = hal::pd::asic_reg_read(spec.addr());
-
             HAL_TRACE_DEBUG("{}: Read Data: 0x{0:x}", __FUNCTION__, data);
-
-            response->set_ret_data(data);
+            response->set_data(data);
         } else {
             HAL_TRACE_DEBUG("{}: Writing Data: 0x{0:x}",
                             __FUNCTION__, spec.reg_data());
             hal::pd::asic_reg_write(spec.addr(), spec.reg_data());
         }
-
-        response->set_debug_status(types::API_STATUS_OK);
+        response->set_api_status(types::API_STATUS_OK);
     }
 
-    response->set_debug_status(types::API_STATUS_OK);
-
+    response->set_api_status(types::API_STATUS_OK);
     return Status::OK;
 }
 

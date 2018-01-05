@@ -62,8 +62,8 @@ message VrfDeleteRequest {
 
 // VrfDeleteResponse is response to VrfDeleteRequest
 message VrfDeleteResponse {
-  types.ApiStatus                api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  kh.VrfKeyHandle       key_or_handle  = 2;
+  types.ApiStatus    api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  kh.VrfKeyHandle    key_or_handle  = 2;
 }
 
 // VrfDeleteRequestMsg is used to delete a batch of vrfs
@@ -100,9 +100,9 @@ message VrfStats {
 // only if api_status indicates success, other fields are valid
 message VrfGetResponse {
   types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];     // API status code
-  VrfSpec         spec       = 2;    // vrf configuration
-  VrfStatus       status     = 3;    // operational state of vrf
-  VrfStats        stats      = 4;    // stats of the vrf
+  VrfSpec            spec       = 2;    // vrf configuration
+  VrfStatus          status     = 3;    // operational state of vrf
+  VrfStats           stats      = 4;    // stats of the vrf
 }
 
 // VrfGetResponseMsg is batched response to VrfGetRequestMsg

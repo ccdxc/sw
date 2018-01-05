@@ -106,6 +106,8 @@ enum ApiStatus {
   API_STATUS_PROXYC_CB_ID_INVALID         = 70;    // invalid Proxy Chain CB id
   API_STATUS_PROXYC_CB_NOT_FOUND          = 71;    // invalid Proxy Chain CB
   API_STATUS_QOS_CLASS_NOT_FOUND          = 72;    // qos_class not found
+  API_STATUS_HW_READ_ERROR                = 73;    // hardware read error
+  API_STATUS_HW_WRITE_ERROR               = 74;    // hardware write error
 }
 
 // common meta object that is part of all other top level objects
