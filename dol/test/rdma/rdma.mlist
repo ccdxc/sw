@@ -19,19 +19,21 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_REXMIT_TIMEOUT
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_rexmit_timeout
+        spec    : req_tx_send_only_rexmit_timeout.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
         name    : RDMA_TX_SEND_ONLY_2SGES
         enable  : True
         package : test.rdma
         module  : req_tx_send_only_2sges
         spec    : req_tx_send_only_2sges.testspec
-        ignore  : False
- 
-    - module:
-        name    : RDMA_TX_SEND_FIRST_LAST
-        enable  : True
-        package : test.rdma
-        module  : req_tx_send_first_last
-        spec    : req_tx_send_first_last.testspec
         ignore  : False
  
     - module:
@@ -50,15 +52,6 @@ modules:
         spec    : req_tx_send_only_inline.testspec
         ignore  : False
 
-    - module:
-        name    : RDMA_TX_SEND_ONLY_INLINE_DCQCN_PASS
-        enable  : True
-        package : test.rdma
-        module  : req_tx_send_only_inline_dcqcn_pass
-        spec    : req_tx_send_only_inline_dcqcn_pass.testspec
-        ignore  : False
-
- 
     - module:
         name    : RDMA_TX_SEND_ONLY_IMM
         enable  : True
@@ -92,36 +85,12 @@ modules:
        ignore  : False
 
     - module:
-       name    : RDMA_TX_SEND_FIRST_LAST_INV
-       enable  : True
-       package : test.rdma
-       module  : req_tx_send_first_last_inv
-       spec    : req_tx_send_first_last_inv.testspec
-       ignore  : False
-
-    - module:
        name    : RDMA_TX_SEND_FIRST_MID_LAST_INV
        enable  : True
        package : test.rdma
        module  : req_tx_send_first_mid_last_inv
        spec    : req_tx_send_first_mid_last_inv.testspec
        ignore  : False
-
-    - module:
-        name    : RDMA_TX_WRITE_ONLY_OPTIONS_TS
-        enable  : True
-        package : test.rdma
-        module  : req_tx_write_only_options_TS
-        spec    : req_tx_write_only_options_TS.testspec
-        ignore  : False
-
-    - module:
-        name    : RDMA_TX_WRITE_ONLY_OPTIONS_MSS
-        enable  : True
-        package : test.rdma
-        module  : req_tx_write_only_options_MSS
-        spec    : req_tx_write_only_options_MSS.testspec
-        ignore  : False
 
     - module:
         name    : RDMA_TX_WRITE_ONLY_OPTIONS_TS_MSS
@@ -162,14 +131,6 @@ modules:
         spec    : req_tx_write_only_inline_imm.testspec
  
     - module:
-        name    : RDMA_TX_WRITE_FIRST_LAST
-        enable  : True
-        package : test.rdma
-        module  : req_tx_write_first_last
-        spec    : req_tx_write_first_last.testspec
-        ignore  : False
-
-    - module:
         name    : RDMA_TX_WRITE_FIRST_MID_LAST
         enable  : True
         package : test.rdma
@@ -177,14 +138,6 @@ modules:
         spec    : req_tx_write_first_mid_last.testspec
         ignore  : False
   
-    - module:
-        name    : RDMA_TX_WRITE_FIRST_LAST_IMM
-        enable  : True
-        package : test.rdma
-        module  : req_tx_write_first_last_imm
-        spec    : req_tx_write_first_last_imm.testspec
-        ignore  : False
-
     - module:
         name    : RDMA_TX_WRITE_FIRST_MID_LAST_IMM
         enable  : True
@@ -202,11 +155,11 @@ modules:
         ignore  : False
  
     - module:
-        name    : RDMA_TX_SEND_FIRST_LAST_IMM
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_IMM
         enable  : True
         package : test.rdma
-        module  : req_tx_send_first_last_imm
-        spec    : req_tx_send_first_last_imm.testspec
+        module  : req_tx_send_first_mid_last_imm
+        spec    : req_tx_send_first_mid_last_imm.testspec
         ignore  : False
 
     - module:
@@ -215,22 +168,6 @@ modules:
         package : test.rdma
         module  : req_rx_read_only
         spec    : req_rx_read_only.testspec
-        ignore  : False
-
-    - module:
-        name    : RDMA_REQ_RX_READ_ONLY_ECN_CNP
-        enable  : True
-        package : test.rdma
-        module  : req_rx_read_only_ecn_cnp
-        spec    : req_rx_read_only_ecn_cnp.testspec
-        ignore  : False
-
-    - module:
-        name    : RDMA_REQ_RX_READ_FIRST_LAST
-        enable  : True
-        package : test.rdma
-        module  : req_rx_read_first_last
-        spec    : req_rx_read_first_last.testspec
         ignore  : False
 
     - module:
@@ -314,35 +251,11 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_TX_SQ_BKTRACK_SGE3_START
-        enable  : True
-        package : test.rdma
-        module  : req_tx_sq_bktrack_sge3_start
-        spec    : req_tx_sq_bktrack_sge3_start.testspec
-        ignore  : False
-
-    - module:
-        name    : RDMA_TX_SQ_BKTRACK_SGE3_MID
-        enable  : True
-        package : test.rdma
-        module  : req_tx_sq_bktrack_sge3_mid
-        spec    : req_tx_sq_bktrack_sge3_mid.testspec
-        ignore  : False
-
-    - module:
         name    : RDMA_RX_SEND_ONLY
         enable  : True
         package : test.rdma
         module  : resp_rx_send_only
         spec    : resp_rx_send_only.testspec
-        ignore  : False
-
-    - module:
-        name    : RDMA_RX_SEND_ONLY_ECN_CNP
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_send_only_ecn_cnp
-        spec    : resp_rx_send_only_ecn_cnp.testspec
         ignore  : False
 
     - module:
@@ -375,14 +288,6 @@ modules:
         package : test.rdma
         module  : resp_rx_ud_mcast_tx_classic
         spec    : resp_rx_ud_mcast_tx_classic.testspec
-        ignore  : False
-
-    - module:
-        name    : RDMA_RX_SEND_FIRST_LAST
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_send_first_last
-        spec    : resp_rx_send_first_last.testspec
         ignore  : False
 
     - module:
@@ -434,14 +339,6 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_RESP_RX_READ_FIRST_LAST
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_read_first_last
-        spec    : resp_rx_read_first_last.testspec
-        ignore  : False
-
-    - module:
         name    : RDMA_RESP_RX_READ_FIRST_MID_LAST
         enable  : True
         package : test.rdma
@@ -482,22 +379,6 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_RX_WRITE_FIRST_LAST
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_write_first_last
-        spec    : resp_rx_write_first_last.testspec
-        ignore  : False
-  
-    - module:
-        name    : RDMA_RX_WRITE_FIRST_LAST_IMM
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_write_first_last_imm
-        spec    : resp_rx_write_first_last_imm.testspec
-        ignore  : False
-  
-    - module:
         name    : RDMA_RX_WRITE_FIRST_MID_LAST
         enable  : True
         package : test.rdma
@@ -531,14 +412,6 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_RX_ATOMIC_CMPSWAP
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_atomic_cmpswap
-        spec    : resp_rx_atomic_cmpswap.testspec
-        ignore  : False
-
-    - module:
         name    : RDMA_RX_ATOMIC_CMPSWAP2
         enable  : True
         package : test.rdma
@@ -563,14 +436,6 @@ modules:
         package : test.rdma
         module  : resp_rx_send_only_4sges
         spec    : resp_rx_send_only_4sges.testspec
-        ignore  : False
- 
-    - module:
-        name    : RDMA_RX_SEND_ONLY_3SGES
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_send_only_3sges
-        spec    : resp_rx_send_only_3sges.testspec
         ignore  : False
  
     - module:
