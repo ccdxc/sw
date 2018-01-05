@@ -84,9 +84,11 @@ def run_rtl(args):
         model_test = args.model_test
     if args.one_pkt_mode:
         one_pkt_mode = "+dol_one_pkt_mode=1" 
-    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-ucli', 'ucli_core', '-run_args', ' %s +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=0 +top_sb/initial_timeout_ns=60000 '%one_pkt_mode ]
+    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=0 +top_sb/initial_timeout_ns=60000 '%one_pkt_mode ]
     if args.noverilog:
         model_cmd = model_cmd + ['-ro', '-nbc']
+    if not args.no_asic_dump:
+        model_cmd = model_cmd + [ '-ucli', 'ucli_core' ]
     if args.test_suf:
         model_cmd = model_cmd + ['-test_suf', args.test_suf ]
     print os.getcwd() + "/asic/capri/verif/top/env"
@@ -457,6 +459,8 @@ def main():
                         help='Model test name')
     parser.add_argument('--one_pkt_mode', dest='one_pkt_mode', action="store_true",
                         help='Enable DOL one pkt mode')
+    parser.add_argument('--no_asic_dump', dest='no_asic_dump', action="store_true",
+                        help='Disable rtl dump')
     parser.add_argument('--test_suf', dest='test_suf', default=None,
                         help='Model test suffix.')
     parser.add_argument("--asmcov", action="store_true",
