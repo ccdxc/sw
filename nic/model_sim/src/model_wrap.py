@@ -13,9 +13,13 @@ def zmq_connect ():
     #  Socket to talk to server
     socket = context.socket(zmq.REQ)
     socket.setsockopt(zmq.RCVTIMEO, _model_sock_timeo_sec * 1000) 
-    socket.setsockopt(zmq.SNDTIMEO, _model_sock_timeo_sec * 1000) 
+    socket.setsockopt(zmq.SNDTIMEO, _model_sock_timeo_sec * 1000)
+    model_socket_name = 'zmqsock'
+    if 'MODEL_SOCKET_NAME' in os.environ:
+        model_socket_name = os.environ['MODEL_SOCKET_NAME']
+
     model_sock_path = os.environ['MODEL_SOCK_PATH']
-    zmqsockstr = 'ipc:///' + model_sock_path + '/zmqsock'
+    zmqsockstr = 'ipc:///' + model_sock_path + '/' + model_socket_name
     socket.connect(zmqsockstr)
     return socket
 

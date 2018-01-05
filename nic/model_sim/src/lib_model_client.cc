@@ -27,6 +27,7 @@ std::mutex g_zmq_mutex;
 int lib_model_connect ()
 {
     char zmqsockstr[100];
+    char *model_socket_name = NULL;
     int rc;
     uint16_t event;
     int timeout_ms = MODEL_ZMQ_SOCK_TIMEOUT_SEC * 1000;
@@ -35,8 +36,13 @@ int lib_model_connect ()
         return 0;
     
     printf ("Connecting to ASIC model....\n");
+    model_socket_name = std::getenv("MODEL_SOCKET_NAME");
+    if (model_socket_name == NULL) {
+        model_socket_name = (char *)"zmqsock";
+    }
     const char* user_str = std::getenv("PWD");
-    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", user_str);
+    snprintf(zmqsockstr, 100, "ipc:///%s/%s", user_str, model_socket_name);
+
     __zmq_context = zmq_ctx_new ();
     __zmq_sock = zmq_socket (__zmq_context, ZMQ_REQ);
     rc = zmq_setsockopt (__zmq_sock, ZMQ_RCVTIMEO, &timeout_ms, sizeof(timeout_ms));

@@ -368,10 +368,16 @@ static void wait_loop() {
     int rc;
     buffer_hdr_t *buff;
     char zmqsockstr[200];
+    char *model_socket_name = NULL;
     char recv_buff[MODEL_ZMQ_BUFF_SIZE];
     
     const char* user_str = std::getenv("PWD");
-    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock", user_str);
+    model_socket_name = std::getenv("MODEL_SOCKET_NAME");
+    if (model_socket_name == NULL) {
+        model_socket_name = (char *)"zmqsock";
+    }
+    snprintf(zmqsockstr, 100, "ipc:///%s/%s", user_str, model_socket_name);
+
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);

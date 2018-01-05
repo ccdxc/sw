@@ -70,6 +70,9 @@ def build():
 # ASIC model
 
 def run_rtl(args):
+    global model_log
+    if args.test_suf:
+        model_log = nic_dir + "/logs_%s/model.log" % args.test_suf
     log = open(model_log, "w")
     os.environ["ASIC_SRC"] = os.getcwd() + "/asic"
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:" + os.getcwd() + "/asic/capri/model/capsim-gen/lib:/home/asic/bin/tools/lib64"
@@ -98,6 +101,9 @@ def run_rtl(args):
     lock.close()
 
 def run_model(args):
+    global model_log
+    if args.test_suf:
+        model_log = nic_dir + "/logs_%s/model.log" % args.test_suf
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:/home/asic/bin/tools/lib64"
 
     #model_dir = nic_dir + "/model_sim/build"
@@ -144,6 +150,17 @@ def run_model(args):
 
 # HAL
 
+def wait_for_hal():
+    # Wait until gRPC is listening on port
+    log2 = open(hal_log, "r")
+    loop = 1
+    while loop == 1:
+        for line in log2.readlines():
+            if "listening on" in line:
+                loop = 0
+    log2.close()
+    return
+
 
 def run_hal(args):
     snort_dir = nic_dir + "/third-party/snort3/export"
@@ -158,10 +175,13 @@ def run_hal(args):
     hal_dir = nic_dir + "/../bazel-bin/nic/hal"
     os.chdir(hal_dir)
 
-    log = open(hal_log, "w")
+    global hal_log
     jsonfile = 'hal.json'
     if args.rtl:
         jsonfile = 'hal_rtl.json'
+
+    if args.test_suf is not None:
+         hal_log = nic_dir + "/logs_%s/hal.log" % args.test_suf
     os.system("cp " + nic_dir + "/conf/hal_switch.ini " + nic_dir + "/conf/hal.ini")
     if args.hostpin:
         #jsonfile = 'hal_hostpin.json'
@@ -169,6 +189,8 @@ def run_hal(args):
     if args.classic:
         #jsonfile = 'hal_classic.json'
         os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
+    
+    log = open(hal_log, "w")
     p = Popen(["./hal", "--config", jsonfile], stdout=log, stderr=log)
     global hal_process
     hal_process = p
@@ -179,18 +201,9 @@ def run_hal(args):
     lock.write(str(p.pid) + "\n")
     lock.close()
 
-    log2 = open(hal_log, "r")
-    loop = 1
     time.sleep(10)
     #return
 
-    # Wait until gRPC is listening on port
-
-    while loop == 1:
-        for line in log2.readlines():
-            if "listening on" in line:
-                loop = 0
-    log2.close()
     os.system("rm " + nic_dir + "/conf/hal.ini")
     return
 
@@ -206,6 +219,7 @@ def dump_coverage_data():
 
 # Run Storage DOL
 def run_storage_dol(port, args):
+    wait_for_hal()
     bin_dir = nic_dir + "/../bazel-bin/dol/test/storage"
     os.chdir(bin_dir)
     if args.storage_test:
@@ -281,9 +295,16 @@ def run_dol(args):
     lock = open(lock_file, "a+")
     lock.write(str(p.pid) + "\n")
     lock.close()
-    p.communicate()
+    #p.communicate()
     log.close()
 
+    while p.poll() is None and\
+          model_process.poll() is None and\
+          hal_process.poll() is None:
+          time.sleep(5)
+
+    print "* MODEL exit code " + str(model_process.returncode)
+    print "* HAL exit code " + str(hal_process.returncode)
     print "* DOL exit code " + str(p.returncode)
     return p.returncode
 
@@ -466,6 +487,12 @@ def main():
     parser.add_argument('--storage_test', dest='storage_test', default=None,
                         help='Run only a subtest of storage test suite')
     args = parser.parse_args()
+
+    if args.test_suf is not None:
+        os.system("mkdir -p " + nic_dir + "/logs_%s" % args.test_suf)
+        os.environ['MODEL_SOCKET_NAME'] = "zmqsock_%s" % args.test_suf
+        global lock_file
+        lock_file = nic_dir + "/logs_%s/.run.pid" % args.test_suf
 
     if args.cleanup:
         if os.path.isfile(lock_file):
