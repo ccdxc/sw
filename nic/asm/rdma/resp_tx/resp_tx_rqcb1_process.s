@@ -21,8 +21,7 @@ resp_tx_rqcb1_process:
     phvwr       p.bth.dst_qp, d.dst_qp
 
     // prepare aeth
-    phvwr       p.aeth.msn, d.aeth.msn
-    phvwr       p.aeth.syndrome, d.aeth.syndrome
+    phvwrpair   p.aeth.syndrome, d.aeth.syndrome, p.aeth.msn, d.aeth.msn
 
     // check for read_rsp_lock. If already taken, give up scheduling 
     // opportunity

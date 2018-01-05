@@ -41,8 +41,7 @@ resp_tx_rsqwqe_process:
     
 process_atomic:
     add         BTH_OPCODE, RDMA_PKT_OPC_ATOMIC_ACK, k.args.serv_type, BTH_OPC_SVC_SHIFT
-    phvwr       p.bth.opcode, BTH_OPCODE
-    phvwr       p.bth.psn, d.psn
+    phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, d.psn
 
     // prepare atomicaeth header
     phvwr       p.atomicaeth.orig_data, d.{atomic.orig_data}.dx
@@ -151,8 +150,7 @@ process_read:
 
 next:
 
-    phvwr       p.bth.opcode, BTH_OPCODE
-    phvwr       p.bth.psn, CURR_PSN
+    phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, CURR_PSN
 
     add         XFER_VA, d.read.va, BYTES_SENT
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, transfer_va, XFER_VA)

@@ -35,8 +35,7 @@ resp_rx_eqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
 
-    phvwr           p.eqwqe.cq_id, k.args.cq_id
-    phvwr           p.eqwqe.color, EQ_COLOR 
+    phvwrpair       p.eqwqe.cq_id, k.args.cq_id, p.eqwqe.color, EQ_COLOR
 
     add             r1, r0, d.log_wqe_size
     sllv            r1, EQ_P_INDEX, r1

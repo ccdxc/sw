@@ -1797,7 +1797,6 @@ action roce_cq_handler(wrid_msn, op_type, status, rsvd0, qp, rsvd1) {
   modify_field(roce_cq_wqe_scratch.wrid_msn, wrid_msn);
   modify_field(roce_cq_wqe_scratch.op_type, op_type);
   modify_field(roce_cq_wqe_scratch.status, status);
-  modify_field(roce_cq_wqe_scratch.rsvd0, rsvd0);
   modify_field(roce_cq_wqe_scratch.qp, qp);
   modify_field(roce_cq_wqe_scratch.rsvd1, rsvd1);
 

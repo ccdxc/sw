@@ -172,8 +172,7 @@ process_send_write_fml:
     tblwr.c3    d.msn, r1
 
     // populate ack info
-    phvwr       p.ack_info.psn, d.e_psn
-    phvwr       p.ack_info.aeth.msn, r1
+    phvwrpair   p.ack_info.psn, d.e_psn, p.ack_info.aeth.msn, r1
     RQ_CREDITS_GET(r1, r2, c7)
     AETH_ACK_SYNDROME_GET(r2, r1)
     phvwr       p.ack_info.aeth.syndrome, r2
@@ -228,8 +227,7 @@ write_non_first_pkt:
 
 wr_skip_immdt_as_dbell:
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, incr_c_index, 1)
-    phvwr       p.cqwqe.imm_data_vld, 1
-    phvwr       p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
+    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
     b           rc_checkout
     phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
 
@@ -250,8 +248,7 @@ process_send:
     bcf         [!c6], send_check_immdt
     nop         //BD Slot
 
-    phvwr       p.cqwqe.rkey_inv_vld, 1
-    phvwr       p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
+    phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
     CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_WB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
@@ -322,8 +319,7 @@ skip_token_id_check:
     tblwr       d.msn, r1
 
     // populate ack info
-    phvwr       p.ack_info.psn, d.e_psn
-    phvwr       p.ack_info.aeth.msn, r1
+    phvwrpair   p.ack_info.psn, d.e_psn, p.ack_info.aeth.msn, r1
     RQ_CREDITS_GET(r1, r2, c1)
     AETH_ACK_SYNDROME_GET(r2, r1)
     phvwr       p.ack_info.aeth.syndrome, r2
@@ -350,8 +346,7 @@ process_send_only:
     bcf         [!c7], send_only_check_immdt
     nop         //BD Slot
 
-    phvwr       p.cqwqe.rkey_inv_vld, 1
-    phvwr       p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
+    phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
     CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_WB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
@@ -425,8 +420,7 @@ process_write_only:
     
 wr_only_skip_immdt_as_dbell:
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, incr_c_index, 1)
-    phvwr       p.cqwqe.imm_data_vld, 1
-    phvwr       p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
+    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
     b           rc_checkout
     phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
 
@@ -456,8 +450,7 @@ process_read_atomic:
 
     // common params for both read/atomic
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
-    phvwr       p.rsqwqe.read.va, CAPRI_RXDMA_RETH_VA
-    phvwr       p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY
+    phvwrpair   p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY, p.rsqwqe.read.va, CAPRI_RXDMA_RETH_VA
     CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, va, CAPRI_RXDMA_RETH_VA)
     CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
     CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, rsq_p_index, NEW_RSQ_P_INDEX)
@@ -512,9 +505,8 @@ process_atomic:
 process_fna:
     //c5:fna
     CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA(r5)
-    phvwr           p.pcie_atomic.compare_data_or_add_data, r5.dx
-    phvwr.e         p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_FNA
-    phvwr           p.pcie_atomic.tlp_len, PCIE_TLP_LEN_FNA //Exit slot
+    phvwrpair.e     p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_FNA, p.pcie_atomic.tlp_len, PCIE_TLP_LEN_FNA
+    phvwr           p.pcie_atomic.compare_data_or_add_data, r5.dx //Exit Slot
 
 process_cswap:
     //c6:cswap
@@ -522,9 +514,8 @@ process_cswap:
     //CAPRI_RXDMA_BTH_ATOMICETH_CMP_DATA1(r5)
     //phvwr           p.pcie_atomic.compare_data_or_add_data, r5.wx
     CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA(r5)
-    phvwr           p.pcie_atomic.swap_data, r5.dx
-    phvwr.e         p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_CSWAP
-    phvwr           p.pcie_atomic.tlp_len, PCIE_TLP_LEN_CSWAP   //Exit Slot
+    phvwrpair.e     p.pcie_atomic.atomic_type, PCIE_ATOMIC_TYPE_CSWAP, p.pcie_atomic.tlp_len, PCIE_TLP_LEN_CSWAP
+    phvwr           p.pcie_atomic.swap_data, r5.dx  //Exit Slot
 
 /****** Logic for handling out-of-order packets ******/
 seq_err_or_duplicate:
@@ -618,8 +609,7 @@ seq_err_nak:
     phvwr       p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR)    //BD Slot
 
 nak: 
-    phvwr       p.ack_info.psn, d.e_psn
-    phvwr       p.ack_info.aeth.msn, d.msn
+    phvwrpair   p.ack_info.psn, d.e_psn, p.ack_info.aeth.msn, d.msn
       
     add         RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
@@ -659,16 +649,13 @@ process_ud:
     IS_ANY_FLAG_SET(c6, r7, RESP_RX_FLAG_IMMDT) //BD Slot
 
     // populate completion entry
-    phvwr       p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID
-    phvwr       p.cqwqe.op_type, OP_TYPE_SEND_RCVD
-    phvwr       p.cqwqe.src_qp, CAPRI_RXDMA_DETH_SRC_QP
-    phvwr       p.cqwqe.ipv4, 1
+    phvwrpair   p.cqwqe.op_type, OP_TYPE_SEND_RCVD, p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID
+    phvwrpair   p.cqwqe.src_qp, CAPRI_RXDMA_DETH_SRC_QP, p.cqwqe.ipv4, 1
     CAPRI_RXDMA_DETH_SMAC(r5)
     CAPRI_RXDMA_DETH_IMMETH_SMAC1(r1)
     cmov        r1, c6, r1, r5
-    phvwr       p.cqwqe.smac, r1
-    phvwr.c6    p.cqwqe.imm_data_vld, 1
-    phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_DETH_IMMETH_DATA
+    phvwr           p.cqwqe.smac, r1
+    phvwrpair.c6    p.cqwqe.imm_data_vld, 1, p.cqwqe.imm_data, CAPRI_RXDMA_DETH_IMMETH_DATA
     
 
     // in case of UD speculation is always enabled as all the 

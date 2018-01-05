@@ -27,21 +27,18 @@ add_headers_common:
     // intrinsic
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_INTRINSIC)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type)
-    phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
-    phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
+    phvwrpair       p.common.p4_intr_global_tm_iport, TM_PORT_DMA, p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_TXDMA_INTRINSIC)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, common.p4_txdma_intr_qid, common.p4_txdma_intr_txdma_rsv)
     phvwr          p.common.p4_txdma_intr_qid, k.global.qid
     RQCB0_ADDR_GET(r1)
-    phvwr           p.common.p4_txdma_intr_qstate_addr, r1
-    phvwr          p.common.p4_txdma_intr_qtype, k.global.qtype
+    phvwrpair       p.common.p4_txdma_intr_qstate_addr, r1, p.common.p4_txdma_intr_qtype, k.global.qtype
 
     // common-p4+
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_COMMON_P4PLUS)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, p4plus_to_p4, p4plus_to_p4);
-    phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
-    phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+    phvwrpair       P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
 
     bbeq           k.to_stage.s5.rqcb1_wb.ack_nak_process, 1, add_ack_header
     phvwr          P4PLUS_TO_P4_VLAN_TAG, 0 //BD-slot
@@ -67,12 +64,10 @@ rsq_write_back:
     
 add_ack_header:
     add         r2, RDMA_PKT_OPC_ACK, k.to_stage.s5.rqcb1_wb.ack_nack_serv_type, BTH_OPC_SVC_SHIFT
-    phvwr       p.bth.opcode, r2
-    phvwr       p.bth.dst_qp, d.dst_qp
+    phvwrpair   p.bth.opcode, r2, p.bth.dst_qp, d.dst_qp
 
     // prepare aeth
-    phvwr       p.aeth.msn, d.aeth.msn
-    phvwr       p.aeth.syndrome, d.aeth.syndrome
+    phvwrpair   p.aeth.syndrome, d.aeth.syndrome, p.aeth.msn, d.aeth.msn
 
     // prepare BTH
     phvwr       p.bth.psn, d.ack_nak_psn

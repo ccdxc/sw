@@ -101,6 +101,5 @@ exit:
     nop
 
 atomic:
-    phvwr               p.pcie_atomic.host_addr, DMA_ADDR.dx
-    nop.e
+    phvwr.e             p.pcie_atomic.host_addr, DMA_ADDR.dx
     CAPRI_SET_TABLE_1_VALID(0) //Exit slot
