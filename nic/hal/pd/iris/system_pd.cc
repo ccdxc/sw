@@ -232,9 +232,11 @@ pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
     stats_entry->set_drop_tcp_unexpected_syn(
             drop_reason & (1 << DROP_TCP_UNEXPECTED_PKT));
 
-    stats_entry->set_drop_count(
-            hbm_counter +
-            data->drop_stats_action_u.drop_stats_drop_stats.drop_pkts);
+    uint64_t drop_stats_pkts = 0;
+    memcpy(&drop_stats_pkts,
+           data->drop_stats_action_u.drop_stats_drop_stats.drop_pkts,
+           sizeof(data->drop_stats_action_u.drop_stats_drop_stats.drop_pkts));
+    stats_entry->set_drop_count(hbm_counter + drop_stats_pkts);
 
     return ret;
 }

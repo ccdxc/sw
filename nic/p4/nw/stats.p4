@@ -24,31 +24,15 @@ table ingress_tx_stats {
 /*****************************************************************************/
 /* Drop accounting per reason code                                           */
 /*****************************************************************************/
-action drop_stats(stats_idx, drop_pkts, mirror_en, mirror_session_id) {
+action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     if (mirror_en == TRUE) {
         modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
     }
 
     // dummy ops to keep compiler happy
-    modify_field(scratch_metadata.stats_packets, drop_pkts);
-    modify_field(scratch_metadata.stats_idx, stats_idx);
+    modify_field(scratch_metadata.drop_stats_packets, drop_pkts);
+    modify_field(scratch_metadata.drop_stats_pad, pad);
     modify_field(scratch_metadata.ingress_mirror_en, mirror_en);
-
-    // TCP options padding - required due to normalization
-    if ((tcp.valid == TRUE) and (tcp.dataOffset > 5)) {
-        // Pad tcp options header to make it multiple of 4
-        // Since we trim only the tcp ts option, we dont have to check for
-        // other tcp options
-        if ((tcp_option_timestamp.valid == FALSE) and
-            (tcp_option_timestamp.optLength > 0)) {
-            // dummy ops to keep compiler happy
-            modify_field(capri_p4_intrinsic.packet_len,
-                         capri_p4_intrinsic.packet_len);
-            //curr_opt_len = ((tcp.dataOffset * 4) - tcp_option_timestamp.optLength)
-            //num_bytes_to_pad = (4 - (curr_opt_len % 4))
-            //PAD with EOLs
-        }
-    }
 }
 
 @pragma stage 5
@@ -59,10 +43,9 @@ table drop_stats {
         control_metadata.drop_reason : ternary;
     }
     actions {
-        nop;
         drop_stats;
     }
-    default_action : nop;
+    default_action : drop_stats;
     size : DROP_STATS_TABLE_SIZE;
 }
 

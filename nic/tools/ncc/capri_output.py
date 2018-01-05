@@ -3324,7 +3324,10 @@ def capri_te_cfg_output(stage):
             if ct.is_raw:
                 json_tbl_['lock_en_raw']['value'] = str(1)
             else:
-                json_tbl_['lock_en']['value'] = str(1)
+                if ct.match_type == match_type.TERNARY:
+                    json_tbl_['lock_en']['value'] = str(0)
+                else:
+                    json_tbl_['lock_en']['value'] = str(1)
         else:
             json_tbl_['lock_en']['value'] = str(0)
 
