@@ -22,9 +22,6 @@ struct phv_ p;
 
 storage_tx_seq_comp_desc_handler_start:
 
-   // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_UPDATE
-
    // Store the various parts of the descriptor in the K+I vectors for later use
    phvwr	p.storage_kivec4_sgl_addr, d.sgl_addr
    phvwr	p.storage_kivec4_data_addr, d.data_addr

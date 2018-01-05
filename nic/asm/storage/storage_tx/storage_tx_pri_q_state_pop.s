@@ -38,20 +38,20 @@ storage_tx_pri_q_state_pop_start:
 
    // If high priority queue can be serviced, go with it, else check medium
    // priority queue
-   PRI_QUEUE_CAN_POP(d.p_ndx_hi, d.c_ndx_hi, d.hi_running, d.hi_weight, 
+   PRI_QUEUE_CAN_POP(d.p_ndx_hi, d.w_ndx_hi, d.hi_running, d.hi_weight, 
                      check_med)
    SERVICE_PRI_QUEUE(d.w_ndx_hi, NVME_BE_PRIORITY_HI)
 
 check_med:
    // If medium priority queue can be serviced, go with it, else check low
    // priority queue
-   PRI_QUEUE_CAN_POP(d.p_ndx_med, d.c_ndx_med, d.med_running, d.med_weight,
+   PRI_QUEUE_CAN_POP(d.p_ndx_med, d.w_ndx_med, d.med_running, d.med_weight,
                      check_lo)
    SERVICE_PRI_QUEUE(d.w_ndx_med, NVME_BE_PRIORITY_MED)
 
 check_lo:
    // If medium priority queue can be serviced, go with it, else exit
-   PRI_QUEUE_CAN_POP(d.p_ndx_lo, d.c_ndx_lo, d.lo_running, d.lo_weight,
+   PRI_QUEUE_CAN_POP(d.p_ndx_lo, d.w_ndx_lo, d.lo_running, d.lo_weight,
                      clear_doorbell)
    SERVICE_PRI_QUEUE(d.w_ndx_lo, NVME_BE_PRIORITY_LO)
 

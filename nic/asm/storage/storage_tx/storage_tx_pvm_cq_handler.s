@@ -18,9 +18,6 @@ struct phv_ p;
 
 storage_tx_pvm_cq_handler_start:
 
-   // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_UPDATE
-
    // Initialize the remaining fields of the PVM command in the PHV
    phvwr	p.{nvme_sta_cspec...nvme_sta_status}, d.{cspec...status}
 
