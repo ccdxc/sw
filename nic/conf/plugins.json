@@ -24,9 +24,12 @@
             "exit_func" : "sfw_exit",
             "auto_load" : "true",
             "deps"      : [],
-            "features"  : ["sfw"]
+            "features"  : [
+                "sfw",
+                "conntrack"
+            ]
         },
-        { 
+        {
             "name"      : "alg_utils",
             "provider"  : "pensando.io",
             "lib"       : "alg_utils/libalg_utils.so",
@@ -125,10 +128,10 @@
             "auto_load" : "true",
             "deps"      : [],
             "features"  : [
-                "tcp", 
-                "tcp-trigger-connection", 
+                "tcp",
+                "tcp-trigger-connection",
                 "quiesce",
-                "tls", 
+                "tls",
                 "ipsec",
                 "app-p4pt"
             ]
@@ -145,8 +148,8 @@
             "deps"      : [],
             "features"  : [
                 "app-redir-miss",
-                "app-redir", 
-                "app-redir-fini", 
+                "app-redir",
+                "app-redir-fini",
                 "app-redir-appid"
             ]
         }
@@ -161,6 +164,7 @@
                 "pensando.io/network:ingress-checks",
                 "pensando.io/eplearn:eplearn",
                 "pensando.io/sfw:sfw",
+                "pensando.io/sfw:conntrack",
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
                 "pensando.io/alg_rpc:alg_rpc",
@@ -191,6 +195,7 @@
                 "pensando.io/app-redir:app-redir-appid",
                 "pensando.io/network:stage-marker",
                 "pensando.io/sfw:sfw",
+                "pensando.io/sfw:conntrack",
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
                 "pensando.io/alg_rpc:alg_rpc",

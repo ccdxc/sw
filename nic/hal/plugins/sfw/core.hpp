@@ -10,6 +10,7 @@ namespace plugins {
 namespace sfw {
 
 const std::string FTE_FEATURE_SFW("pensando.io/sfw:sfw");
+const std::string FTE_FEATURE_CONNTRACK("pensando.io/sfw:conntrack");
 
 // Stateful firewall state 
 typedef struct sfw_info_s {

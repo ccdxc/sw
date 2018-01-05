@@ -1,3 +1,4 @@
+//{C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "nic/fte/fte.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/p4/nw/include/defines.h"
@@ -11,9 +12,6 @@ using namespace hal::app_redir;
 namespace hal {
 namespace plugins {
 namespace sfw {
-
-#define DEFAULT_MSS 536 // RFC6691
-#define DEFAULT_WINDOW_SIZE 512
 
 hal_ret_t
 net_sfw_match_rules(fte::ctx_t                  &ctx,
@@ -277,74 +275,6 @@ sfw_exec(fte::ctx_t& ctx)
             flowupd.action = session::FLOW_ACTION_DROP;
         } else {
             flowupd.action = session::FLOW_ACTION_ALLOW;
-        }
-    }
-
-    ret = ctx.update_flow(flowupd);
-    if (ret != HAL_RET_OK) {
-        ctx.set_feature_status(ret);
-        return fte::PIPELINE_END;
-    }
-
-    //Todo(lseshan) Move connection tracking to different function
-    // connection tracking
-    if (!net_sfw_conn_tracking_configured(ctx)) {
-        return fte::PIPELINE_CONTINUE;
-    }
-
-    //iflow
-    flowupd = {type: fte::FLOWUPD_FLOW_STATE};
-
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
-        if (ctx.protobuf_request()) {
-            net_sfw_extract_session_state_from_spec(&flowupd.flow_state,
-                                            ctx.sess_spec()->initiator_flow().flow_data());
-            flowupd.flow_state.syn_ack_delta = ctx.sess_spec()->iflow_syn_ack_delta();
-        } else {
-            const fte::cpu_rxhdr_t *rxhdr = ctx.cpu_rxhdr();
-            flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
-            // Expectation is to program the next expected seq num.
-            flowupd.flow_state.tcp_seq_num = ntohl(rxhdr->tcp_seq_num) + 1;
-            flowupd.flow_state.tcp_ack_num = ntohl(rxhdr->tcp_ack_num);
-            flowupd.flow_state.tcp_win_sz = ntohs(rxhdr->tcp_window);
-
-            //set defaults
-            flowupd.flow_state.tcp_mss = DEFAULT_MSS;
-            flowupd.flow_state.tcp_ws_option_sent = 0;
-            flowupd.flow_state.tcp_ts_option_sent = 0;
-            flowupd.flow_state.tcp_sack_perm_option_sent = 0;
-
-            // TCP Options
-            if (rxhdr->flags & CPU_FLAGS_TCP_OPTIONS_PRESENT) {
-                // MSS Option
-                if (rxhdr->tcp_options & CPU_TCP_OPTIONS_MSS) {
-                    flowupd.flow_state.tcp_mss = ntohs(rxhdr->tcp_mss);
-                }
-
-                // Window Scale option
-                if (rxhdr->tcp_options & CPU_TCP_OPTIONS_WINDOW_SCALE) {
-                    flowupd.flow_state.tcp_ws_option_sent = 1;
-                    flowupd.flow_state.tcp_win_scale = rxhdr->tcp_ws;
-                }
-
-                // timestamp option
-                if (rxhdr->tcp_options & CPU_TCP_OPTIONS_TIMESTAMP) {
-                    flowupd.flow_state.tcp_ts_option_sent = 1;
-                }
-                // sack_permitted option
-                if (rxhdr->tcp_options & CPU_TCP_OPTIONS_SACK_PERMITTED) {
-                    flowupd.flow_state.tcp_sack_perm_option_sent = 1;
-                }
-            }
-        }
-    } else { /* rflow */
-        if (ctx.protobuf_request()) {
-            net_sfw_extract_session_state_from_spec(&flowupd.flow_state,
-                                            ctx.sess_spec()->responder_flow().flow_data());
-        } else {
-            flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
-            flowupd.flow_state.tcp_mss = DEFAULT_MSS;
-            flowupd.flow_state.tcp_win_sz = DEFAULT_WINDOW_SIZE; //This is to allow the SYN Packet to go through.
         }
     }
 

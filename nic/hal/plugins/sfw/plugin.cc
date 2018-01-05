@@ -6,12 +6,14 @@ namespace plugins {
 namespace sfw {
 
 fte::pipeline_action_t sfw_exec(fte::ctx_t &ctx);
+fte::pipeline_action_t conntrack_exec(fte::ctx_t &ctx);
 
 extern "C" hal_ret_t sfw_init() {
     fte::feature_info_t info = {
         state_size: sizeof(sfw_info_t),
     };
     fte::register_feature(FTE_FEATURE_SFW, sfw_exec, info);
+    fte::register_feature(FTE_FEATURE_CONNTRACK, conntrack_exec);
     return HAL_RET_OK;
 }
 
