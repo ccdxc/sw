@@ -24,7 +24,7 @@ storage_tx_pvm_roce_sq_cb_pop_start:
    sllv		r2, r2, r1
    subi		r2, r2, 1
    and		r2, d.roce_msn, r2
-   seq		c1, d.c_ndx, r2
+   seq		c1, d.w_ndx, r2
    bcf		[c1], clear_doorbell
    nop
     

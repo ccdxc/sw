@@ -18,9 +18,6 @@ struct phv_ p;
 
 storage_tx_pvm_roce_sq_wqe_process_start:
 
-   // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_UPDATE
-
    // If operation type is send on the target side, then the buffer has to 
    // posted back
    seq		c1, d.op_type, ROCE_OP_TYPE_SEND

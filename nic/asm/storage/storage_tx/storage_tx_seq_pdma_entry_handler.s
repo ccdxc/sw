@@ -16,9 +16,6 @@ struct phv_ p;
 %%
 storage_tx_seq_pdma_entry_handler_start:
 
-   // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_UPDATE
-
    // Setup the source of the mem2mem DMA into DMA cmd 1
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.src_addr, d.data_size,
                      d.src_lif_override, d.src_lif_override, dma_m2m_1)

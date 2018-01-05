@@ -18,7 +18,7 @@ struct phv_ p;
 
 storage_tx_roce_cq_cb_pop_start:
    // If queue is empty, exit
-   QUEUE_EMPTY(d.p_ndx, d.c_ndx, clear_doorbell)
+   QUEUE_EMPTY(d.p_ndx, d.w_ndx, clear_doorbell)
 
    // Pop the entry from the queue. Note: The working consumer index is updated
    // in the pop operation to ensure that 2 consumers don't pop the same entry.

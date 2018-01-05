@@ -18,9 +18,6 @@ struct phv_ p;
 
 storage_tx_nvme_sq_handler_start:
 
-   // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_UPDATE
-
    // Save the NVME command to PHV
    phvwr	p.{nvme_cmd_opc...nvme_cmd_dw15}, d.{opc...dw15}                                           
 

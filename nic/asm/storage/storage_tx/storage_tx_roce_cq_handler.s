@@ -18,9 +18,6 @@ struct phv_ p;
 
 storage_tx_roce_cq_handler_start:
 
-   // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_UPDATE
-
    // Store the qp in the K+I vector
    phvwr	p.storage_kivec0_dst_qid, d.qp
 

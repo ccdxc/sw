@@ -16,9 +16,6 @@ struct phv_ p;
 
 storage_tx_nvme_be_sq_handler_start:
 
-   // Update the priority queue doorbell to clear the scheduler bit
-   PRI_QUEUE_POP_DOORBELL_UPDATE
-
    // Save the R2N WQE to PHV
    R2N_WQE_FULL_COPY
 

@@ -19,9 +19,6 @@ struct phv_ p;
 
 storage_tx_seq_r2n_entry_handler_start:
 
-   // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_UPDATE
-
    // Overwrite the destination queue parameters in K+I vector based on the
    // PVM status passed in
    phvwr	p.{storage_kivec0_dst_lif...storage_kivec0_dst_qaddr},	\

@@ -104,9 +104,6 @@
 // PC input must be a 28-bit value
 #define LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, _pc)		\
   phvwri	p.app_header_table0_valid, 1;				\
-  phvwri	p.app_header_table1_valid, 0;				\
-  phvwri	p.app_header_table2_valid, 0;				\
-  phvwri	p.app_header_table3_valid, 0;				\
   phvwri	p.common_te0_phv_table_lock_en, 1;			\
   phvwr		p.common_te0_phv_table_pc, _pc;				\
   phvwr		p.common_te0_phv_table_addr, _table_addr;		\
@@ -170,10 +167,7 @@
 
 // Used in the last stage of a pipeline to clear all table valid bits
 #define LOAD_NO_TABLES							\
-  phvwri	p.app_header_table0_valid, 0;				\
-  phvwri	p.app_header_table1_valid, 0;				\
-  phvwri	p.app_header_table2_valid, 0;				\
-  phvwri.e	p.app_header_table3_valid, 0;				\
+  phvwri.e	p.app_header_table0_valid, 0;				\
   nop
 
 // Capri PHV Bit to Byte Macros
@@ -236,62 +230,47 @@
 // Setup the doorbell data. Write back the data in little endian format
 #define DOORBELL_DATA_SETUP(_db_data, _index, _ring, _qid, _pid)	\
    add		r1, r0, _index;						\
-   sll		r2, _ring, DOORBELL_DATA_RING_SHIFT;			\
-   or		r1, r1, r2;						\
-   sll		r2, _qid, DOORBELL_DATA_QID_SHIFT;			\
-   or		r1, r1, r2;						\
-   sll		r2, _pid, DOORBELL_DATA_PID_SHIFT;			\
-   or		r1, r1, r2;						\
+   add		r1, r1, _ring, DOORBELL_DATA_RING_SHIFT;		\
+   add		r1, r1, _qid, DOORBELL_DATA_QID_SHIFT;			\
+   add		r1, r1, _pid, DOORBELL_DATA_PID_SHIFT;			\
    phvwr	p._db_data, r1.dx;					\
 
 // Setup the doorbell address. Output will be stored in GPR r7.
 #define DOORBELL_ADDR_SETUP(_lif, _qtype, _sched_wr, _upd)		\
-   sll		r7, _qtype, DOORBELL_ADDR_QTYPE_SHIFT;			\
-   sll		r1, _lif, DOORBELL_ADDR_LIF_SHIFT;			\
-   or		r7, r7, r1;						\
-   addi		r1, r0, _sched_wr;					\
-   sll		r1, r1, DOORBELL_ADDR_SCHED_WR_SHIFT;			\
-   or		r7, r7, r1;						\
-   addi		r1, r0, _upd;						\
-   sll		r1, r1, DOORBELL_ADDR_UPD_SHIFT;			\
-   or		r7, r7, r1;						\
-   addi		r1, r0, DOORBELL_ADDR_WA_LOCAL_BASE;			\
-   or		r7, r7, r1;						\
+   add		r7, r0, _qtype, DOORBELL_ADDR_QTYPE_SHIFT;		\
+   add		r7, r7, _lif, DOORBELL_ADDR_LIF_SHIFT;			\
+   addi		r7, r7, _sched_wr;					\
+   addi		r7, r7, _upd;						\
+   addi		r7, r7, DOORBELL_ADDR_WA_LOCAL_BASE;			\
 
-// DMA write w_ndx to c_ndx via to pop the entry. Doorbell update is needed 
-// to reset the scheduler bit.
-#define QUEUE_POP_DOORBELL_UPDATE					\
-   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX,	\
-                       r0, STORAGE_KIVEC1_SRC_QID, r0)			\
-   DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,\
-                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_C_NDX)	\
-   DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
-                     r7, dma_p2m_0)					\
-
-// DMA write w_ndx to c_ndx via to pop the entry. Select the ring based on the
-// on the I/O priority. Doorbell update is needed to reset the scheduler bit.
-#define PRI_QUEUE_POP_DOORBELL_UPDATE					\
-   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX,	\
-                       STORAGE_KIVEC0_IO_PRIORITY,			\
-                       STORAGE_KIVEC1_SRC_QID, r0)			\
-   DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,\
-                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_C_NDX)	\
-   DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
-                     r7, dma_p2m_0)					\
 
 // Clear the doorbell as there was no work to be done. Note index can
 // be 0 (r0) as there is no update.
-#define QUEUE_DOORBELL_CLEAR(_ring)					\
+#define QUEUE_DOORBELL_CLEAR(_ring, _wr_sched)				\
    DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r0, _ring,		\
                        STAGE0_KIVEC_QID, r0)				\
    DOORBELL_ADDR_SETUP(STAGE0_KIVEC_LIF, STAGE0_KIVEC_QTYPE,		\
-                       DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_NONE)	\
+                       _wr_sched, DOORBELL_UPDATE_NONE)			\
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
                      r7, dma_p2m_0)					\
 
-// TODO: Fix the ring for the priority queue API
-#define PRI_QUEUE_POP_DOORBELL_CLEAR	QUEUE_DOORBELL_CLEAR(r0)
-#define QUEUE_POP_DOORBELL_CLEAR	QUEUE_DOORBELL_CLEAR(r0)
+// Queue pop doorbell clear is done in two stages:
+// 1. table write of w_ndx to c_ndx (this should make p_ndx == c_ndx)
+// 2. scheduler bit clear with eval (this would eval p_ndx == c_ndx)
+#define QUEUE_POP_DOORBELL_CLEAR					\
+   tblwr d.c_ndx, d.w_ndx;						\
+   QUEUE_DOORBELL_CLEAR(r0, DOORBELL_SCHED_WR_EVAL)			\
+
+// Queue pop doorbell clear is done in two stages:
+// 1. table write of w_ndx to c_ndx for all priorities 
+//    (this should make p_ndx == c_ndx for all priorities)
+// 2. scheduler bit clear (no ring needed here) with eval 
+//    (this would eval p_ndx == c_ndx for all priorites)
+#define PRI_QUEUE_POP_DOORBELL_CLEAR					\
+   tblwr d.c_ndx_lo, d.w_ndx_lo;					\
+   tblwr d.c_ndx_med, d.w_ndx_med;					\
+   tblwr d.c_ndx_hi, d.w_ndx_hi;					\
+   QUEUE_DOORBELL_CLEAR(r0, DOORBELL_SCHED_WR_RESET)			\
 
 // Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
 // bit for the doorbell 
@@ -390,8 +369,8 @@
    _QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, 2, _branch_instr)
 
 // Queue empty check
-#define QUEUE_EMPTY(_p_ndx, _c_ndx, _branch_instr)			\
-   seq		c1, _p_ndx, _c_ndx;					\
+#define QUEUE_EMPTY(_p_ndx, _w_ndx, _branch_instr)			\
+   seq		c1, _p_ndx, _w_ndx;					\
    bcf		[c1], _branch_instr;					\
    nop;									\
 
@@ -422,9 +401,9 @@
 
 // Priority queue pop check - based on queue empty AND 
 // priority counter < priority weight
-#define	PRI_QUEUE_CAN_POP(_p_ndx, _c_ndx, _pri_running, _pri_weight,	\
+#define	PRI_QUEUE_CAN_POP(_p_ndx, _w_ndx, _pri_running, _pri_weight,	\
                           _branch_instr)				\
-   QUEUE_EMPTY(_p_ndx, _c_ndx, _branch_instr)				\
+   QUEUE_EMPTY(_p_ndx, _w_ndx, _branch_instr)				\
    slt		c1, _pri_running, _pri_weight;				\
    bcf		![c1], _branch_instr;					\
    nop;									\
