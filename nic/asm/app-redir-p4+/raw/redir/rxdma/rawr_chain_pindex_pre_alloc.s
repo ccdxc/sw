@@ -57,7 +57,7 @@ rawr_s5_chain_pindex_pre_alloc:
     CPU_ARQ_SEM_IDX_INC_ADDR(RX, 
                              k.common_phv_chain_ring_index_select,
                              r_ring_indices_addr)
-    CAPRI_NEXT_TABLE_READ(2, 
+    CAPRI_NEXT_TABLE_READ(1, 
                           TABLE_LOCK_DIS,
                           rawr_s6_chain_qidxr_pindex_post_read,
                           r_ring_indices_addr,
@@ -90,7 +90,7 @@ _sem_full_discard:
     RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                k.{common_phv_qstate_addr_sbit0_ebit0... \
                                   common_phv_qstate_addr_sbit33_ebit33},
-                               p.t3_s2s_inc_stat_current_all)
+                               p.t3_s2s_inc_stat_check_all)
     /*
      * Launch common cleanup code for next stage
      */

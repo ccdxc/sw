@@ -498,7 +498,7 @@ pd_rawrcb_update (pd_rawrcb_args_t *args)
     if (ret == HAL_RET_OK) {
 
         // program rawrcb
-        ret = p4pd_add_or_del_rawrcb_entry(rawrcb_pd, false, true);
+        ret = p4pd_add_or_del_rawrcb_entry(rawrcb_pd, false, false);
     }
 
     if (ret != HAL_RET_OK) {

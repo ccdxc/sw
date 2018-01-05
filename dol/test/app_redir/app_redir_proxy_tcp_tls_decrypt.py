@@ -52,6 +52,7 @@ def TestCaseSetup(tc):
     # 1. Configure PROXYRCB in HBM before packet injection
     proxyrcb = tc.infra_data.ConfigStore.objects.db[proxyrcbid]
     # let HAL fill in defaults for chain_rxq_base, etc.
+    proxyrcb.my_txq_base = 0
     proxyrcb.chain_rxq_base = 0
     proxyrcb.proxyrcb_flags = app_redir_shared.app_redir_dol_pipeline_loopbk_en
 
@@ -83,6 +84,7 @@ def TestCaseSetup(tc):
     proxyccb = tc.infra_data.ConfigStore.objects.db[proxyccbid]
     # let HAL fill in defaults for my_txq_base, etc.
     proxyccb.my_txq_base = 0
+    proxyccb.chain_txq_base = 0
     proxyccb.chain_txq_lif = app_redir_shared.service_lif_tcp_proxy
     proxyccb.chain_txq_qtype = 0
     proxyccb.chain_txq_qid = id

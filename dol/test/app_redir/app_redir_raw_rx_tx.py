@@ -30,6 +30,7 @@ def TestCaseSetup(tc):
     # 1. Configure RAWRCB in HBM before packet injection
     rawrcb = tc.infra_data.ConfigStore.objects.db[rawrcbid]
     # let HAL fill in defaults for chain_rxq_base, etc.
+    rawrcb.chain_txq_base = 0
     rawrcb.chain_rxq_base = 0
     rawrcb.rawrcb_flags = app_redir_shared.app_redir_dol_pipeline_loopbk_en
     rawrcb.SetObjValPd()

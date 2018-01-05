@@ -335,8 +335,12 @@ header_type common_t3_s2s_phv_t {
         inc_stat_txq_full             : 1;
         inc_stat_desc_sem_free_full   : 1;
         inc_stat_page_sem_free_full   : 1;
-        inc_stat_current_all          : 1;
         inc_stat_end                  : 1;
+	
+	/* Check all above for increment applicability;
+	 * must be outside of inc_stat_begin...inc_stat_end
+	 */
+        inc_stat_check_all            : 1;
     }
 }
 
@@ -350,8 +354,8 @@ header_type common_t3_s2s_phv_t {
     modify_field(t3_s2s_scratch.inc_stat_txq_full, t3_s2s.inc_stat_txq_full); \
     modify_field(t3_s2s_scratch.inc_stat_desc_sem_free_full, t3_s2s.inc_stat_desc_sem_free_full); \
     modify_field(t3_s2s_scratch.inc_stat_page_sem_free_full, t3_s2s.inc_stat_page_sem_free_full); \
-    modify_field(t3_s2s_scratch.inc_stat_current_all, t3_s2s.inc_stat_current_all); \
-    modify_field(t3_s2s_scratch.inc_stat_end, t3_s2s.inc_stat_end);
+    modify_field(t3_s2s_scratch.inc_stat_end, t3_s2s.inc_stat_end); \
+    modify_field(t3_s2s_scratch.inc_stat_check_all, t3_s2s.inc_stat_check_all);
 
 
 /*

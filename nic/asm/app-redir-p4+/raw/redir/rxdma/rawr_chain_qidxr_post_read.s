@@ -32,12 +32,12 @@ rawr_s6_chain_qidxr_pindex_post_read:
     /*
      * Evaluate which per-core queue applies
      */
-    add         r_ring_select, r0, k.common_phv_chain_ring_index_select
 #ifdef DO_NOT_USE_CPU_SEM
+    add         r_ring_select, r0, k.common_phv_chain_ring_index_select
     CPU_ARQ_PIDX_READ_INC(r_chain_pindex, r_ring_select, d, pi_0, r3, r4)
 #else
-    add         r_chain_pindex, r0, d.{arq_pindex}.wx
-    CPU_ARQ_PIDX_READ_INC(r_chain_pindex, r_ring_select, d, u.qidxr_post_read_d.pi_0, r3, r4)
+    add         r_chain_pindex, r0, d.{u.qidxr_post_read_d.arq_pindex}.wx
+#endif    
     j           rawr_s6_chain_xfer
     mincr       r_chain_pindex, k.common_phv_chain_ring_size_shift, r0 // delay slot
 

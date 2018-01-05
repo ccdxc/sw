@@ -493,7 +493,11 @@ pd_proxyccb_update (pd_proxyccb_args_t *args)
     ret = pd_proxyccb_deactivate(args);
     if (ret == HAL_RET_OK) {
 
-        // program proxyccb
+        /*
+         * program proxyccb
+         * until TCP/TLS moves away from maintaining our PI in its CB,
+         * we have to clear our PI/CI on update here
+         */
         ret = p4pd_add_or_del_proxyccb_entry(proxyccb_pd, false, true);
     }
 
