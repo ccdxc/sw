@@ -13,6 +13,7 @@ SUBDIRS = \
           ipfix \
           adminq \
           gft \
+          oracle \
           p4pt \
           $(NULL)
 

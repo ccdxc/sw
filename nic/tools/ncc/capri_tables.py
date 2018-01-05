@@ -3539,6 +3539,8 @@ class capri_stage:
                 # skip the bytes reserved for placing bits
                 continue
             fid = b/flit_szB
+            if fid not in h_km.flit_km_profiles:
+                continue
             if len(h_km.flit_km_profiles[fid].k_byte_sel) == 0:
                 continue
             hk_start = h_km.flit_km_profiles[fid].k_byte_sel[0]
