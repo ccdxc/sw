@@ -9,6 +9,8 @@ def error_exit():
 
 def zmq_connect ():
     _model_sock_timeo_sec = 60
+    if 'MODEL_TIMEOUT' in os.environ:
+        _model_sock_timeo_sec = int(os.environ['MODEL_TIMEOUT'])
     context = zmq.Context()
     #  Socket to talk to server
     socket = context.socket(zmq.REQ)
@@ -18,7 +20,7 @@ def zmq_connect ():
     if 'MODEL_SOCKET_NAME' in os.environ:
         model_socket_name = os.environ['MODEL_SOCKET_NAME']
 
-    model_sock_path = os.environ['MODEL_SOCK_PATH']
+    model_sock_path = os.environ['ZMQ_SOC_DIR']
     zmqsockstr = 'ipc:///' + model_sock_path + '/' + model_socket_name
     socket.connect(zmqsockstr)
     return socket

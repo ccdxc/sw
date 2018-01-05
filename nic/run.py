@@ -76,7 +76,6 @@ def run_rtl(args):
     log = open(model_log, "w")
     os.environ["ASIC_SRC"] = os.getcwd() + "/asic"
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:" + os.getcwd() + "/asic/capri/model/capsim-gen/lib:/home/asic/bin/tools/lib64"
-    os.environ["ZMQ_SOC_DIR"] = os.getcwd()
     os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]  
     model_test = "core_basic_dol"
     one_pkt_mode = ""
@@ -492,11 +491,14 @@ def main():
                         help='Run only a subtest of storage test suite')
     args = parser.parse_args()
 
+    zmq_soc_dir = nic_dir
     if args.test_suf is not None:
         os.system("mkdir -p " + nic_dir + "/logs_%s" % args.test_suf)
-        os.environ['MODEL_SOCKET_NAME'] = "zmqsock_%s" % args.test_suf
+        #os.environ['MODEL_SOCKET_NAME'] = "zmqsock_%s" % args.test_suf
         global lock_file
         lock_file = nic_dir + "/logs_%s/.run.pid" % args.test_suf
+        zmq_soc_dir = nic_dir + "/logs_%s/" % args.test_suf
+    os.environ['ZMQ_SOC_DIR'] = zmq_soc_dir
 
     if args.cleanup:
         if os.path.isfile(lock_file):

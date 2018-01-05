@@ -40,7 +40,7 @@ int lib_model_connect ()
     if (model_socket_name == NULL) {
         model_socket_name = (char *)"zmqsock";
     }
-    const char* user_str = std::getenv("PWD");
+    const char* user_str = std::getenv("ZMQ_SOC_DIR");
     snprintf(zmqsockstr, 100, "ipc:///%s/%s", user_str, model_socket_name);
 
     __zmq_context = zmq_ctx_new ();

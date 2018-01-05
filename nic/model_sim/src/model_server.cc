@@ -371,7 +371,7 @@ static void wait_loop() {
     char *model_socket_name = NULL;
     char recv_buff[MODEL_ZMQ_BUFF_SIZE];
     
-    const char* user_str = std::getenv("PWD");
+    const char* user_str = std::getenv("ZMQ_SOC_DIR");
     model_socket_name = std::getenv("MODEL_SOCKET_NAME");
     if (model_socket_name == NULL) {
         model_socket_name = (char *)"zmqsock";
