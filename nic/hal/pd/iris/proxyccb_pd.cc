@@ -153,7 +153,7 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
     if (!proxyccb->chain_txq_base) {
         lif = proxyccb->chain_txq_lif;
         assert((lif == SERVICE_LIF_TCP_PROXY) || (lif == SERVICE_LIF_TLS_PROXY));
-        ret = p4pd_proxyc_wring_eval(proxyccb->cb_id & PROXYCCB_NUM_ENTRIES_MASK,
+        ret = p4pd_proxyc_wring_eval(proxyccb->chain_txq_qid,
                                      lif == SERVICE_LIF_TCP_PROXY ?
                                      types::WRING_TYPE_SESQ : types::WRING_TYPE_SERQ,
                                      txq_base, ring_size_shift, entry_size_shift);
@@ -165,7 +165,7 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
 
         data.u.start_d.chain_txq_base = txq_base;
         data.u.start_d.chain_txq_ring_indices_addr = 
-             g_lif_manager->GetLIFQStateAddr(lif, 0, proxyccb->cb_id & PROXYCCB_NUM_ENTRIES_MASK) +
+             g_lif_manager->GetLIFQStateAddr(lif, 0, proxyccb->chain_txq_qid) +
              (CAPRI_QSTATE_HEADER_COMMON_SIZE + 
               (proxyccb->chain_txq_ring * CAPRI_QSTATE_HEADER_RING_SINGLE_SIZE));
         data.u.start_d.chain_txq_ring_size_shift  = ring_size_shift;
