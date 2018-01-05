@@ -12,7 +12,6 @@ struct rqcb1_t d;
 #define F_INV_RKEY               c5
 #define F_MID_OR_LAST            c4
 #define F_ERR                    c3
-#define F_COMPL                  c2
 
 #define GBL_FLAGS           r7
 #define TBL_ID              r6
@@ -23,8 +22,6 @@ struct rqcb1_t d;
 #define KEY_ADDR            r3
 #define RAW_TABLE_PC        r2
 
-#define CQ_INFO_T   struct resp_rx_rqcb_to_cq_info_t
-#define INV_RKEY_T  struct resp_rx_inv_rkey_info_t
 #define STATS_INFO_T struct resp_rx_stats_info_t
 
 %%
@@ -35,6 +32,9 @@ struct rqcb1_t d;
 .align
 resp_rx_rqcb1_write_back_process:
 
+    bbeq        k.global.flags.resp_rx._only, 1, skip_updates
+    add         r7, r0, k.global.flags //BD Slot
+
     tblwr       d.current_sge_id, k.args.current_sge_id;
     tblwr       d.current_sge_offset, k.args.current_sge_offset;
     crestore    [c2, c1], k.{to_stage.s4.wb1.update_wqe_ptr...to_stage.s4.wb1.update_num_sges}, 0x3
@@ -43,10 +43,9 @@ resp_rx_rqcb1_write_back_process:
     tblwr.c2    d.curr_wqe_ptr, k.args.curr_wqe_ptr;
     tblwr.c1    d.num_sges, k.to_stage.s4.wb1.num_sges
 
-    add         r7, r0, k.global.flags
+skip_updates:
 
     // if completion is not set, stats after writeback
-    IS_ANY_FLAG_SET(F_COMPL, r7, RESP_RX_FLAG_COMPLETION)
     bbne        k.global.flags.resp_rx._completion, 1, stats
     //assumption is that write back is called with table 2
     CAPRI_SET_TABLE_2_VALID(0)  //BD Slot
@@ -80,17 +79,12 @@ inv_rkey:
 
 
     CAPRI_GET_TABLE_3_K(resp_rx_phv_t, KEY_P)
-    CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, ARG_P)
-    CAPRI_SET_FIELD(ARG_P, INV_RKEY_T, tbl_id, TABLE_3)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_inv_rkey_process)
     CAPRI_NEXT_TABLE_I_READ(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, KEY_ADDR)
 
 completion:
     
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, KEY_P)
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
-    CAPRI_SET_FIELD(ARG_P, CQ_INFO_T, tbl_id, TABLE_2)
-    CAPRI_SET_FIELD(ARG_P, CQ_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
     RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_cqcb_process)
     CAPRI_NEXT_TABLE_I_READ(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, CQCB_ADDR)

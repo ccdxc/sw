@@ -10,7 +10,6 @@ struct resp_rx_rqpt_process_k_t k;
 
 #define TBL_KEY_P   r4
 #define TBL_ARG_P   r5
-#define TBL_ID      r6
 #define RAW_TABLE_PC r1
 #define GLOBAL_FLAGS r7
 
@@ -35,8 +34,8 @@ resp_rx_rqpt_process:
     add     r3, r3, k.args.page_offset
     // now r3 has wqe_p to load
 
-    add     TBL_ID, r0, k.args.tbl_id
-    CAPRI_GET_TABLE_I_K_AND_ARG(resp_rx_phv_t, TBL_ID, TBL_KEY_P, TBL_ARG_P)
+    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, TBL_KEY_P)
+    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, TBL_ARG_P)
 
     //CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, in_progress, 0)
     //CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, current_sge_id, 0)
@@ -45,7 +44,6 @@ resp_rx_rqpt_process:
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, curr_wqe_ptr, r3)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, cache, k.args.cache)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
-    CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, tbl_id, k.args.tbl_id)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
     // if write_with_imm, load resp_rx_rqwqe_wrid_process, 

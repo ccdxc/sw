@@ -7,7 +7,6 @@ struct resp_rx_phv_t p;
 struct resp_rx_cqcb_process_k_t k;
 struct cqcb_t d;
 
-#define TBL_ID              r7
 #define KEY_P               r6
 #define ARG_P               r5
 #define PAGE_INDEX          r3
@@ -22,8 +21,6 @@ struct cqcb_t d;
 
 .align
 resp_rx_cqcb_process:
-
-    add             TBL_ID, r0, k.args.tbl_id
 
     seq             c1, CQ_P_INDEX, 0
     // flip the color if cq is wrap around
@@ -56,13 +53,10 @@ resp_rx_cqcb_process:
     add     PAGE_INDEX, PAGE_INDEX, d.pt_base_addr, PT_BASE_ADDR_SHIFT
     // now r3 has page_p to load
     
-    CAPRI_GET_TABLE_I_K_AND_ARG(resp_rx_phv_t, TBL_ID, KEY_P, ARG_P)
-
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, tbl_id, TBL_ID)
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, arm, d.arm)
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, cq_id, d.cq_id)
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, eq_id, d.eq_id)
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, dma_cmd_index, k.args.dma_cmd_index)
+    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, KEY_P)
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
+    #copy fields cq_id, eq_id, and arm
+    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, arm, d.{cq_id...arm})
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_seg_offset, PAGE_SEG_OFFSET)
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_offset, PAGE_OFFSET)
 

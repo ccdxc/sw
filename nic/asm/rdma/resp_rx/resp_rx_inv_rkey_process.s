@@ -8,7 +8,6 @@ struct resp_rx_inv_rkey_process_k_t k;
 struct key_entry_aligned_t d;
 
 #define KEY_P   r7
-#define TBL_ID  r6
 
 %%
 
@@ -30,8 +29,7 @@ resp_rx_inv_rkey_process:
     // update the state to FREE
     tblwr       d.state, KEY_STATE_FREE
 
-    add         TBL_ID, r0, k.args.tbl_id
-    CAPRI_SET_TABLE_I_VALID(TBL_ID, 0)
+    CAPRI_SET_TABLE_3_VALID(0)
 
     nop.e
     nop

@@ -29,8 +29,7 @@ resp_rx_rqwqe_wrid_process:
     //TODO: change to DMA
     //memwr.d     r6, d.wrid
 
-    add         r1, r0, k.args.tbl_id
-    CAPRI_SET_TABLE_I_VALID(r1, 0)
+    CAPRI_SET_TABLE_0_VALID(0)
 
     nop.e
     nop

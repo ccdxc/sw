@@ -19,6 +19,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_EQ
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_eq
+        spec    : req_tx_send_only_eq.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY_REXMIT_TIMEOUT
         enable  : True
         package : test.rdma
@@ -251,6 +259,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_SEND_ONLY_EQ
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_eq
+        spec    : resp_rx_send_only_eq.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY
         enable  : True
         package : test.rdma
@@ -271,7 +287,7 @@ modules:
         enable  : True
         package : test.rdma
         module  : resp_rx_send_only_dbell
-        spec    : resp_rx_send_only.testspec
+        spec    : resp_rx_send_only_eq.testspec
         ignore  : False
 
     - module:

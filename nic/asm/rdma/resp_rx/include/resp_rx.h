@@ -185,10 +185,9 @@ struct resp_rx_rqcb_to_wqe_info_t {
     current_sge_offset: 32;
     //computed
     num_valid_sges: 6;
-    tbl_id: 2;
     dma_cmd_index: 8;
     recirc_path:1;
-    pad: 23;
+    pad: 25;
 };
 
 struct resp_rx_rqwqe_process_k_t {
@@ -292,10 +291,7 @@ struct resp_rx_ptseg_process_k_t {
 
 //20
 struct resp_rx_rqcb_to_cq_info_t {
-    tbl_id: 3;
-    rsvd: 5;
-    dma_cmd_index: 8;
-    pad: 144;
+    pad: 160;
 };
 
 struct resp_rx_cqcb_process_k_t {
@@ -309,13 +305,10 @@ struct resp_rx_cqcb_process_k_t {
 struct resp_rx_cqcb_to_pt_info_t {
     page_offset: 16;
     page_seg_offset: 8;
-    dma_cmd_index: 8;
-    eq_id: 24;
     cq_id: 24;
+    eq_id: 24;
     arm: 1;
-    tbl_id: 3;
-    rsvd: 4;
-    pad: 72;
+    pad: 87;
 };
 
 struct resp_rx_cqpt_process_k_t {
@@ -327,11 +320,8 @@ struct resp_rx_cqpt_process_k_t {
 
 //20
 struct resp_rx_cqcb_to_eq_info_t {
-    tbl_id: 3;
-    rsvd: 5;
-    dma_cmd_index: 8;  
     cq_id: 24;
-    pad: 120;
+    pad: 136;
 };
 
 struct resp_rx_eqcb_process_k_t {
@@ -364,8 +354,7 @@ struct resp_rx_rqcb_to_write_rkey_info_t {
     remaining_payload_bytes: 16;
     load_reth: 1;
     incr_c_index: 1;
-    rsvd1: 6;
-    rsvd2: 8;
+    rsvd: 14;
 };
 
 struct resp_rx_write_dummy_process_k_t {
@@ -395,8 +384,7 @@ struct resp_rx_read_atomic_process_k_t {
 
 //20
 struct resp_rx_inv_rkey_info_t {
-    tbl_id: 8;
-    pad: 152;
+    pad: 160;
 };
 
 struct resp_rx_inv_rkey_process_k_t {
