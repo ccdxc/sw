@@ -1639,7 +1639,7 @@ class Checksum:
                 pseudo_hdrs = None
                 _s = parse_path_hdrs.intersection(csum_phdrs)
                 if len(_s):
-                    assert(len(_s) <= 2), pdb.set_trace()
+                    assert(len(_s) <= 3), pdb.set_trace()
                     pseudo_hdrs = _s
 
                 #After resetting csum unit allocation to start from start,
@@ -1970,6 +1970,7 @@ class Checksum:
             for unfilled_index in  range(csum_hdr_index, deparser.be.hw_model['deparser']['max_csum_hdrs']):
                 csum_hdr_cfg_name = 'cap_dppcsum_csr_cfg_csum_hdrs[%d]' % unfilled_index
                 dpp_json['cap_dpp']['registers'][csum_hdr_cfg_name]['hdrfld_start']['value'] = str(last_start_fld + 1)
+                dpp_json['cap_dpp']['registers'][csum_hdr_cfg_name]['hdrfld_end']['value'] = str(last_start_fld + 2)
                 dpp_json['cap_dpp']['registers'][csum_hdr_cfg_name]['_modified'] = True
                 last_start_fld += 1
 

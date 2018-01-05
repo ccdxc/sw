@@ -252,11 +252,6 @@ class DeParserCsumProfile:
 
     def CsumProfilePhdrNextHdrGet(self):
         return self.phdr_next_hdr
-    def CsumEightBitSet(self, eight_bit):
-        self.eight_bit = eight_bit
-
-    def CsumEightBitGet(self):
-        return self.eight_bit
 
     def CsumEightBitSet(self, eight_bit):
         self.eight_bit = eight_bit

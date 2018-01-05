@@ -1855,6 +1855,8 @@ class Icrc:
                 icrc_hdr_cfg_name = 'cap_dppcsum_csr_cfg_crc_hdrs[%d]' % unfilled_index
                 dpp_json['cap_dpp']['registers'][icrc_hdr_cfg_name]['hdrfld_start']['value'] = \
                                                                                   str(last_start_fld + 1)
+                dpp_json['cap_dpp']['registers'][icrc_hdr_cfg_name]['hdrfld_end']['value'] = \
+                                                                                  str(last_start_fld + 2)
                 dpp_json['cap_dpp']['registers'][icrc_hdr_cfg_name]['_modified'] = True
                 last_start_fld += 1
 
