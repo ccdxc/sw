@@ -466,6 +466,11 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     	return meta->get_hw_meta_fn(wring_pd);
     }
 
+    if(sem_addr == 0) {
+        HAL_TRACE_DEBUG("skipping PI/CI read for sem addr 0");
+        return ret;    
+    }
+
     HAL_TRACE_DEBUG("Reading pi from the addr: 0x{0:x}", sem_addr);
 
     uint32_t value;
