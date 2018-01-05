@@ -47,11 +47,31 @@ capri_model = {
             'rsvd'              : '7', 
             # hash_type
             'num_hash_types'    : 4,    # 0-3 CRC hash, 4= toeplitz hash
+
             #Pic Table Opcodes
-            'pic_tbl_opcode_saturate_none'  : 0,
-            'pic_tbl_opcode_saturate_minmax': 1,
-            'pic_tbl_opcode_saturate_oprd3' : 2,
-            'pic_tbl_opcode_saturate_neg'   : 3,
+            'pic_tbl_opcode_operation_none'  : 0, # define PIC_TBL_OPCODE_OPERATION_NONE    0
+            'pic_tbl_opcode_operation_add'   : 1, # define PIC_TBL_OPCODE_OPERATION_ADD     1
+            'pic_tbl_opcode_operation_sub'   : 2, # define PIC_TBL_OPCODE_OPERATION_SUB     2
+            'pic_tbl_opcode_operation_min'   : 3, # define PIC_TBL_OPCODE_OPERATION_MIN     3
+            'pic_tbl_opcode_operation_max'   : 4, # define PIC_TBL_OPCODE_OPERATION_MAX     4
+            'pic_tbl_opcode_operation_avg'   : 5, # define PIC_TBL_OPCODE_OPERATION_AVG     5
+            'pic_tbl_opcode_operation_cpy'   : 6, # define PIC_TBL_OPCODE_OPERATION_CPY     6
+            'pic_tbl_opcode_operation_bitset': 7, # define PIC_TBL_OPCODE_OPERATION_BITSET  7
+            'pic_tbl_opcode_operation_clear' : 8, # define PIC_TBL_OPCODE_OPERATION_CLEAR   8
+
+            'pic_tbl_opcode_oprd1_sel_counter': 0, # define PIC_TBL_OPCODE_OPRD1_SEL_COUNTER  0
+            'pic_tbl_opcode_oprd1_sel_rate'   : 1, # define PIC_TBL_OPCODE_OPRD1_SEL_RATE     1
+            'pic_tbl_opcode_oprd1_sel_tbkt'   : 2, # define PIC_TBL_OPCODE_OPRD1_SEL_TBKT     2
+
+            'pic_tbl_opcode_oprd2_sel_one'    : 0, # define PIC_TBL_OPCODE_OPRD2_SEL_ONE       0
+            'pic_tbl_opcode_oprd2_sel_pktsize': 1, # define PIC_TBL_OPCODE_OPRD2_SEL_PKTSIZE   1
+            'pic_tbl_opcode_oprd2_sel_rate'   : 2, # define PIC_TBL_OPCODE_OPRD2_SEL_RATE      2
+            'pic_tbl_opcode_oprd2_sel_policer': 3, # define PIC_TBL_OPCODE_OPRD2_SEL_POLICER   3
+
+            'pic_tbl_opcode_saturate_none'  : 0,  # define PIC_TBL_OPCODE_SATURATE_NONE    0
+            'pic_tbl_opcode_saturate_minmax': 1,  # define PIC_TBL_OPCODE_SATURATE_MINMAX  1
+            'pic_tbl_opcode_saturate_oprd3' : 2,  # define PIC_TBL_OPCODE_SATURATE_OPRD3   2
+            'pic_tbl_opcode_saturate_neg'   : 3,  # define PIC_TBL_OPCODE_SATURATE_NEG     3
         }
     },
     'parser': {
