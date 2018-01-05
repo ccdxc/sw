@@ -234,7 +234,7 @@ adjust_table_setup:
 
     //TODO: enable below code once spr_mpuid register is available
     //mfspr       spr_mpuid, r6
-    //seq         c1, r6[6:2], CAPRI_STAGE_LAST
+    //seq         c1, r6[4:2], CAPRI_STAGE_LAST
     //phvwr.c1    p.common.p4_intr_recirc, 1
 
     nop.e

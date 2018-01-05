@@ -482,7 +482,15 @@ _I_K_next:;
 #define CAPRI_GET_STAGE_7_ARG(_phv_name, _arg_base_r) \
     add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_7_to_stage_data);
 
-#bits 6-2 has the stage-id, we care about 4:2 only, max 8 stages 0-7
+# Info on spr_mpuid
+# bits 6-2 represente pipe+stage, we care about stage only (bits 4:2)
+#    bits 6-5 has pipeline info:
+#       00 : P4 Egress
+#       01 : P4 Ingress
+#       10 : TXDMA
+#       11 : RXDMA
+#    bits 4-2 has stage number : 0-7
+# bits 1-0 represents mpuid: 0-3
 #branch on current stage-id, so 0 maps to 1 etc.,
 #define CAPRI_GET_STAGE_NEXT_ARG(_phv_name, _arg_base_r) \
     mfspr   _arg_base_r, spr_mpuid; \

@@ -24,7 +24,7 @@ req_tx_dcqcn_enforce_process:
     
     // Pin dcqcn_enforce to stage 4
     mfspr         r1, spr_mpuid
-    seq           c1, r1[6:2], STAGE_4
+    seq           c1, r1[4:2], STAGE_4
     bcf           [!c1], bubble_to_next_stage
     
     // Skip this stage if congestion_mgmt is disabled.

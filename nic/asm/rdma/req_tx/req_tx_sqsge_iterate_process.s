@@ -13,7 +13,7 @@ struct req_tx_sqsge_process_k_t k;
 .align
 req_tx_sqsge_iterate_process:
     mfspr          r1, spr_mpuid
-    add            r1, r1[6:2], r0
+    add            r1, r1[4:2], r0
     
     beqi           r1, STAGE_7, trigger_stg0_sqsge_process
     nop            // Branch Delay Slot

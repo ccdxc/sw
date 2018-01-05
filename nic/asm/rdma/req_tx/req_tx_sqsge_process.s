@@ -155,7 +155,7 @@ sge_loop:
     // rest of the fields are initialized to default
 
     mfspr          r1, spr_mpuid
-    seq            c1, r1[6:2], STAGE_3
+    seq            c1, r1[4:2], STAGE_3
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)

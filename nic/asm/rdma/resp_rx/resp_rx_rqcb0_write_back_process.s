@@ -24,7 +24,7 @@ struct rqcb0_t d;
 .align
 resp_rx_rqcb0_write_back_process:
     //mfspr           r1, spr_mpuid
-    //seq             c1, r1[6:2], STAGE_3
+    //seq             c1, r1[4:2], STAGE_3
     //bcf             [!c1], exit
     
     seq             c1, k.to_stage.s3.wb0.my_token_id, d.nxt_to_go_token_id

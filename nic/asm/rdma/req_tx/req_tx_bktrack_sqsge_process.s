@@ -83,7 +83,7 @@ next_sge_start:
     
 
     mfspr          r5, spr_mpuid
-    seq            c1, r5[6:2], CAPRI_STAGE_LAST-1
+    seq            c1, r5[4:2], CAPRI_STAGE_LAST-1
     bcf            [c1], sqcb_writeback
 
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7) // Branch Delay Slot

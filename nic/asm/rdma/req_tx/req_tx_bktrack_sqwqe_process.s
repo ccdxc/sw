@@ -102,7 +102,7 @@ wqe_bktrack:
     CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
 
     mfspr          r7, spr_mpuid
-    seq            c1, r7[6:2], CAPRI_STAGE_LAST-1
+    seq            c1, r7[4:2], CAPRI_STAGE_LAST-1
     bcf            [c1], sqcb_writeback
     
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
@@ -151,7 +151,7 @@ read_or_sge_bktrack:
 
 sge_bktrack:
     mfspr        r7, spr_mpuid
-    seq          c1, r7[6:2], CAPRI_STAGE_LAST-1
+    seq          c1, r7[4:2], CAPRI_STAGE_LAST-1
     bcf          [c1], sqcb_writeback
     
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7) // Branch Delay Slot
