@@ -63,7 +63,7 @@ init_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
     pciehcfg_setconf_vendorid(pcfg, 0x1af4);    /* Vendor ID Redhat */
     pciehcfg_setconf_deviceid(pcfg, 0x1000);    /* transitional virtio-net */
     /* XXX */
-    pciehcfg_setconf_deviceid(pcfg, 0x2000);    /* XXXtest: keep drv away */
+    //pciehcfg_setconf_deviceid(pcfg, 0x2000);    /* XXXtest: keep drv away */
     /* XXX */
     pciehcfg_setconf_subvendorid(pcfg, 0x1af4); /* Subvendor ID Redhat */
     pciehcfg_setconf_subdeviceid(pcfg, 0x0001); /* Subdevice ID virtio-net */

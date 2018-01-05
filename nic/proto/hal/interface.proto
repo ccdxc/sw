@@ -76,6 +76,8 @@ enum LifQPurpose {
   LIF_QUEUE_PURPOSE_EQ        = 7;    // Event Queue
   LIF_QUEUE_PURPOSE_NVME      = 8;    // Both SQ/CQ use this.
   LIF_QUEUE_PURPOSE_STORAGE   = 9;    // All the PVM queues.
+  LIF_QUEUE_PURPOSE_VIRTIO_TX = 10;
+  LIF_QUEUE_PURPOSE_VIRTIO_RX = 11;
 
   // Add more purposes as needed.
 }

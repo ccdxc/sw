@@ -5,6 +5,8 @@ LIBDIRS = $(NULL)
 PGMDIRS =  \
       rx \
       tx \
+	  virtio_tx \
+	  virtio_rx \
       $(NULL)
 
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

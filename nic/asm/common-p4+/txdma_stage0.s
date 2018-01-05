@@ -35,6 +35,7 @@
     .param      storage_tx_roce_cq_cb_pop_start
     .param      proxyr_s0_tx_start
     .param      proxyc_s0_tx_start
+    .param      virtio_tx_read_qstate_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -153,4 +154,9 @@ proxyr_tx_stage0:
 .align
 proxyc_tx_stage0:
     j   proxyc_s0_tx_start
+    nop
+
+.align
+virtio_tx_stage0:
+    j virtio_tx_read_qstate_start
     nop

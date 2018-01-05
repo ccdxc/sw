@@ -147,6 +147,17 @@ intr_drvcfg(const int intr)
 }
 
 void
+intr_drvcfg_unmasked(const int intr)
+{
+    u_int64_t pa = intr_drvcfg_addr(intr);
+
+    simdev_write_reg(pa + offsetof(intr_drvcfg_t, mask), 0);
+    simdev_write_reg(pa + offsetof(intr_drvcfg_t, coal_init), 0);
+    simdev_write_reg(pa + offsetof(intr_drvcfg_t, mask_on_assert), 0);
+    simdev_write_reg(pa + offsetof(intr_drvcfg_t, coal_curr), 0);
+}
+
+void
 intr_pba_clear(const int intr)
 {
     const u_int64_t pa = intr_drvcfg_addr(intr);

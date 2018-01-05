@@ -29,6 +29,7 @@ u_int64_t db_host_addr(const int lif);
 void intr_pba_cfg(const int lif,
                   const int intr_start, const size_t intr_count);
 void intr_drvcfg(const int intr);
+void intr_drvcfg_unmasked(const int intr);
 void intr_pba_clear(const int intr);
 void intr_msixcfg(const int intr,
                   const u_int64_t msgaddr,
