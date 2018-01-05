@@ -37,16 +37,17 @@ resp_rx_rqcb1_write_back_process:
 
     tblwr       d.current_sge_id, k.args.current_sge_id;
     tblwr       d.current_sge_offset, k.args.current_sge_offset;
-    seq         c1, k.to_stage.s4.wb1.update_wqe_ptr, 1
-    tblwr.c1    d.curr_wqe_ptr, k.args.curr_wqe_ptr;
-    seq         c1, k.to_stage.s4.wb1.update_num_sges, 1
+    crestore    [c2, c1], k.{to_stage.s4.wb1.update_wqe_ptr...to_stage.s4.wb1.update_num_sges}, 0x3
+    #c2 - update_wqe_ptr
+    #c1 - update_num_sges
+    tblwr.c2    d.curr_wqe_ptr, k.args.curr_wqe_ptr;
     tblwr.c1    d.num_sges, k.to_stage.s4.wb1.num_sges
 
-    add                     r7, r0, k.global.flags
+    add         r7, r0, k.global.flags
 
     // if completion is not set, stats after writeback
     IS_ANY_FLAG_SET(F_COMPL, r7, RESP_RX_FLAG_COMPLETION)
-    bcf                     [!F_COMPL], stats
+    bbne        k.global.flags.resp_rx._completion, 1, stats
     //assumption is that write back is called with table 2
     CAPRI_SET_TABLE_2_VALID(0)  //BD Slot
 

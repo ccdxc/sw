@@ -60,11 +60,11 @@ resp_rx_rqcb_process:
     add r3, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
-    CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
 
     //Temporary code to test UDP options
     //For now, checking on ts flag for both options ts and mss to avoid performance cost
     bbeq     CAPRI_APP_DATA_ROCE_OPT_TS_VALID, 0, skip_roce_opt_parsing
+    CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE) //BD Slot
     //get rqcb3 address
     add      r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB3_OFFSET_BYTES
     memwr.d  r5, CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO
@@ -91,9 +91,9 @@ skip_roce_opt_parsing:
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID) //BD Slot
 
     //Check if ECN bits are set in Packet and congestion management is enabled.                      
+    bbne     d.congestion_mgmt_enable, 1, skip_cnp_receive
     sne      c2, k.rdma_bth_ecn, 3  //c2 is not used after assignment above. Re-using it.
-    sne      c7, d.congestion_mgmt_enable, 1
-    bcf     [c2 | c7], skip_cnp_send
+    bcf      [c2], skip_cnp_send
 
     //Process sending CNP packet to the requester.
     CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, r4)
@@ -294,15 +294,13 @@ send_in_progress:
 process_only_rd_atomic:
     // for read and atomic, start DMA commands from flit 9 instead of 8
     RXDMA_DMA_CMD_PTR_SET_C(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, !c1) //BD Slot
-    seq         c7, d.disable_speculation, 0
-    seq         c1, d.token_id, d.nxt_to_go_token_id
-    bcf         [c7], skip_token_id_check
+    bbeq        d.disable_speculation, 0, skip_token_id_check
     tbladd      d.token_id, 1   //BD Slot
+    seq         c1, d.token_id, d.nxt_to_go_token_id
     bcf         [!c1], recirc_wait_for_turn
-    nop //BD Slot
 skip_token_id_check:
 
-    seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type
+    seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type //BD Slot in straight path
     bcf         [!c7], inv_req_nak
     // is pkt psn same as e_psn ?
     seq         c7, d.e_psn, CAPRI_APP_DATA_BTH_PSN //BD Slot
@@ -344,10 +342,10 @@ process_send_only:
     phvwr       p.cqwqe.op_type, OP_TYPE_SEND_RCVD //BD Slot
 
     bcf         [!c7], send_only_check_immdt
-    nop         //BD Slot
+    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4) //BD Slot
 
     phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
-    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4)
+
     CAPRI_SET_FIELD(r4, TO_S_WB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_only_check_immdt:
