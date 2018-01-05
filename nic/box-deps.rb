@@ -9,6 +9,7 @@ env GOPATH: "/go",
 
 run "yum -y install https://centos7.iuscommunity.org/ius-release.rpm"
 run "yum -y install python36u python36u-pip"
+run "yum -y install softhsm libtool-ltdl-devel"
 run "ln -s /usr/bin/python3.6 /usr/bin/python3"
 run "ln -s /usr/bin/pip3.6 /usr/bin/pip3"
 run "yum install -y epel-release"
@@ -251,7 +252,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.6"
+tag "pensando/nic:1.7"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
