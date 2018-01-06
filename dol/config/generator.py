@@ -53,8 +53,9 @@ def process(topospec):
         SwDscrRingHelper.main("NMDR")
         SwDscrRingHelper.main("NMPR")
         BRQHelper.main()
-        SwDscrRingHelper.main("ARQ")
-        SwDscrRingHelper.main("ARQ-TX")
+        for i in range(3):
+            SwDscrRingHelper.main("ARQ", ('CPU%04d' % i), i)
+            SwDscrRingHelper.main("ARQ-TX", ('CPU%04d' % i), i)
         SwDscrRingHelper.main("RAWCCBQ")
         SwDscrRingHelper.main("PROXYRCBQ")
         SwDscrRingHelper.main("PROXYCCBQ")

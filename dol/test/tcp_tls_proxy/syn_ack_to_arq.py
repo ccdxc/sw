@@ -47,7 +47,7 @@ def TestCaseSetup(tc):
     tnmdr.Configure()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     tnmpr.Configure()
-    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["ARQ"])
+    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
     arq.Configure()
 
     sesqid = "TCPCB%04d_SESQ" % id
@@ -75,14 +75,14 @@ def TestCaseVerify(tc):
 
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
-    arq = tc.pvtdata.db["ARQ"]
+    arq = tc.pvtdata.db["CPU0000_ARQ"]
 
     # 1. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.Configure()
-    arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ"]
+    arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
     arq_cur.Configure()
 
     print("arq pi 0x%x" % (arq.pi))

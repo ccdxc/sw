@@ -62,7 +62,7 @@ def TestCaseSetup(tc):
     tnmdr.Configure()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     tnmpr.Configure()
-    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["ARQ"])
+    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
     arq.Configure()
 
     sesqid = "TCPCB%04d_SESQ" % id

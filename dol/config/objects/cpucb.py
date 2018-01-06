@@ -25,18 +25,7 @@ class CpuCbObject(base.ConfigObjectBase):
         self.id = qid
         gid = "CpuCb%04d" % qid
         self.GID(gid)
-        # self.spec = spec_obj
-        # cfglogger.info("  - %s" % self)
-
-        # self.uplinks = objects.ObjectDatabase()
-        # for uplink_spec in self.spec.uplinks:
-            # uplink_obj = uplink_spec.Get(Store)
-            # self.uplinks.Set(uplink_obj.GID(), uplink_obj)
-
-        # assert(len(self.uplinks) > 0)
         cfglogger.info("  - %s" % self)
-        self.arq = SwDscrRingHelper.main("ARQ", gid, self.id)
-        self.arq_tx = SwDscrRingHelper.main("ARQ-TX", gid, self.id)
 
         return
 

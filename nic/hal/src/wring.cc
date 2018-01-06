@@ -238,6 +238,7 @@ wring_get_meta (WRingSpec& spec, WRingGetMetaResponse *rsp)
 
     wring_init(&wring);
     wring.wring_type = spec.type();
+    wring.wring_id = spec.key_or_handle().wring_id();
 
     pd::pd_wring_args_init(&pd_wring_args);
     pd_wring_args.wring = &wring;

@@ -447,8 +447,10 @@ arqrx_get_hw_meta(pd_wring_t* wring_pd)
 		return HAL_RET_HW_FAIL;
     }
 #endif
-    HAL_TRACE_DEBUG("ARQRX PI ADDR 0x{0:x}", addr);
-    HAL_TRACE_DEBUG("ARQRX PI VALUE 0x{0:x}", pindex);
+    HAL_TRACE_DEBUG("ARQRX id: {} pi addr 0x{0:x}, value: {}", 
+                        wring_pd->wring->wring_id,
+                        addr,
+                        pindex);
 	wring_pd->wring->pi = pindex;
 	return HAL_RET_OK;
 }

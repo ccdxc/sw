@@ -48,7 +48,7 @@ def TestCaseSetup(tc):
     tnmdr.Configure()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     tnmpr.Configure()
-    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["ARQ-TX"])
+    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ-TX"])
 
     sesqid = "TCPCB%04d_SESQ" % id
     sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
@@ -120,9 +120,9 @@ def TestCaseVerify(tc):
     tnmpr_cur.Configure()
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]
-    arq = tc.pvtdata.db["ARQ-TX"]
+    arq = tc.pvtdata.db["CPU0000_ARQ-TX"]
 
-    arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ-TX"]
+    arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ-TX"]
     arq_cur.Configure()
 
     # 2. Verify descriptor

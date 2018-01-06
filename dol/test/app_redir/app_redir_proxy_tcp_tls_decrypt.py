@@ -103,7 +103,7 @@ def TestCaseSetup(tc):
     proxyrcb.GetObjValPd()
     proxyccb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[proxyccbid])
     proxyccb.GetObjValPd()
-    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["ARQ"])
+    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
     arq.Configure()
     proxyccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["PROXYCCBQ"])
     proxyccbq.Configure()
@@ -162,7 +162,7 @@ def TestCaseVerify(tc):
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmpr_small = tc.pvtdata.db["RNMPR_SMALL"]
     brq = tc.pvtdata.db["BRQ_ENCRYPT"]
-    arq = tc.pvtdata.db["ARQ"]
+    arq = tc.pvtdata.db["CPU0000_ARQ"]
     proxyccbq = tc.pvtdata.db["PROXYCCBQ"]
 
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -171,7 +171,7 @@ def TestCaseVerify(tc):
     rnmpr_cur.Configure()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
     rnmpr_small_cur.Configure()
-    arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ"]
+    arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
     arq_cur.Configure()
     proxyccbq_cur = tc.infra_data.ConfigStore.objects.db["PROXYCCBQ"]
     proxyccbq_cur.Configure()
@@ -200,10 +200,10 @@ def TestCaseVerify(tc):
 
     # Rx: verify PI for ARQ got incremented
     if (arq_cur.pi != arq.pi+num_pkts):
-        print("ARQ pi check failed old %d new %d expected %d" %
+        print("CPU0000_ARQ pi check failed old %d new %d expected %d" %
                    (arq.pi, arq_cur.pi, arq.pi+num_pkts))
         #return False
-    print("ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
+    print("CPU0000_ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
 
     # Tx: verify PI for PROXYCCB got incremented
     time.sleep(1)

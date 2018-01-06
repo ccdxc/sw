@@ -53,7 +53,7 @@ def TestCaseSetup(tc):
     rawrcb.GetObjValPd()
     rawccb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[rawccbid])
     rawccb.GetObjValPd()
-    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["ARQ"])
+    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
     arq.Configure()
     rawccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RAWCCBQ"])
     rawccbq.Configure()
@@ -100,7 +100,7 @@ def TestCaseVerify(tc):
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmpr_small = tc.pvtdata.db["RNMPR_SMALL"]
-    arq = tc.pvtdata.db["ARQ"]
+    arq = tc.pvtdata.db["CPU0000_ARQ"]
     rawccbq = tc.pvtdata.db["RAWCCBQ"]
 
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -109,7 +109,7 @@ def TestCaseVerify(tc):
     rnmpr_cur.Configure()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
     rnmpr_small_cur.Configure()
-    arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ"]
+    arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
     arq_cur.Configure()
     rawccbq_cur = tc.infra_data.ConfigStore.objects.db["RAWCCBQ"]
     rawccbq_cur.Configure()
@@ -132,10 +132,10 @@ def TestCaseVerify(tc):
 
     # Rx: verify PI for ARQ got incremented
     if (arq_cur.pi != arq.pi+num_pkts):
-        print("ARQ pi check failed old %d new %d expected %d" %
+        print("CPU0000_ARQ pi check failed old %d new %d expected %d" %
                    (arq.pi, arq_cur.pi, arq.pi+num_pkts))
         #return False
-    print("ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
+    print("CPU0000_ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
 
     # Tx: verify PI for RAWCCB got incremented
     rawccb_cur.GetObjValPd()

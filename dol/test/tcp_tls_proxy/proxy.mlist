@@ -619,6 +619,22 @@ modules:
             - flow: filter://type=IPV4
  
     - module:
+        name    : FLOWS_TO_ARQ
+        package : test.tcp_tls_proxy
+        module  : flows_to_arq
+        spec    : flows_to_arq.testspec
+        iterate :
+            - flow: filter://type=IPV4
+    
+    - module:
+        name    : FLOWS_TO_ARQ_V6
+        package : test.tcp_tls_proxy
+        module  : flows_to_arq
+        spec    : flows_to_arq.testspec
+        iterate :
+            - flow: filter://type=IPV6
+
+    - module:
         name    : PKT_TO_ARQ_TO_UPLINK
         package : test.tcp_tls_proxy
         module  : pkt_to_arq_to_uplink
@@ -631,7 +647,7 @@ modules:
         name    : PKT_TO_ARQ_TO_UPLINK_V6
         package : test.tcp_tls_proxy
         module  : pkt_to_arq_to_uplink
-        spec    : pkt_to_arq_to_uplink_v6.testspec
+        spec    : pkt_to_arq_to_uplink.testspec
         iterate :
             - flow: filter://type=IPV6
 
@@ -639,7 +655,9 @@ modules:
         name    : FLOWS_TO_ARQ_TO_UPLINK
         package : test.tcp_tls_proxy
         module  : pkt_to_arq_to_uplink
-        spec    : flows_to_arq_to_uplink.testspec
+        spec    : pkt_to_arq_to_uplink.testspec
+        args    :
+            maxflows: 4
         iterate :
             - flow: filter://type=IPV4
 
