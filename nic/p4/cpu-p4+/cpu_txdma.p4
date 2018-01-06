@@ -12,8 +12,6 @@
 #
 #define tx_table_s2_t0 cpu_tx_read_asq_descr
 #define tx_table_s2_t0_action read_asq_descr
-#define tx_table_s2_t1 cpu_tx_asq_consume
-#define tx_table_s2_t1_action asq_consume
 
 #define tx_table_s3_t0 cpu_tx_read_cpu_hdr
 #define tx_table_s3_t0_action read_cpu_hdr
@@ -89,12 +87,6 @@ header_type to_stage_1_phv_t {
     }    
 }
 
-header_type to_stage_2_phv_t {
-    fields {
-        asq_cidx                : 16;     
-    }    
-}
-
 header_type to_stage_5_phv_t {
     fields {
         src_lif                 : 16;
@@ -138,17 +130,11 @@ metadata p4plus_to_p4_header_t cpu_app_header;
 @pragma pa_header_union ingress to_stage_1
 metadata to_stage_1_phv_t to_s1;
 
-@pragma pa_header_union ingress to_stage_2
-metadata to_stage_2_phv_t to_s2;
-
 @pragma pa_header_union ingress to_stage_5
 metadata to_stage_5_phv_t to_s5;
 
 @pragma scratch_metadata
 metadata to_stage_1_phv_t to_s1_scratch;
-
-@pragma scratch_metadata
-metadata to_stage_2_phv_t to_s2_scratch;
 
 @pragma scratch_metadata
 metadata to_stage_5_phv_t to_s5_scratch;
@@ -252,10 +238,6 @@ action read_asq_descr(A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt) {
      // from ki global
     GENERATE_GLOBAL_K
 
-   
-    // from to_stage 2
-    modify_field(to_s2_scratch.asq_cidx, to_s2.asq_cidx);
-
     // d for stage 2
     modify_field(read_asq_descr_d.A0, A0);
     modify_field(read_asq_descr_d.O0, O0);
@@ -269,15 +251,6 @@ action read_asq_descr(A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt) {
     modify_field(read_asq_descr_d.next_addr, next_addr);
     modify_field(read_asq_descr_d.next_pkt, next_pkt);
 }
-
-// Stage 2 table 1
-action asq_consume() {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    modify_field(to_s2_scratch.asq_cidx, to_s2.asq_cidx);    
-}
-
 
 // Stage 3 table 0
 action read_cpu_hdr(flags, src_lif, hw_vlan_id, l2_offset, tm_oq) {
