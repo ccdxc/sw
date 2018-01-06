@@ -103,9 +103,8 @@ if_get_lport_id(if_t *pi_if)
         case intf::IF_TYPE_TUNNEL:
             ep_t *remote_tep_ep;
             if_t *ep_if;
-            bool v4;
             intf::IfType tif_type;
-            remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4);
+            remote_tep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
             ep_if = if_get_if_from_ep(remote_tep_ep);
             tif_type = intf_get_if_type(ep_if);
             HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
@@ -170,9 +169,8 @@ if_get_hw_lif_id(if_t *pi_if)
         case intf::IF_TYPE_TUNNEL:
             ep_t *remote_tep_ep;
             if_t *ep_if;
-            bool v4;
             intf::IfType tif_type;
-            remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4);
+            remote_tep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
             ep_if = if_get_if_from_ep(remote_tep_ep);
             tif_type = intf_get_if_type(ep_if);
             HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
@@ -186,11 +184,12 @@ if_get_hw_lif_id(if_t *pi_if)
     return hw_lif_id;
 }
 
+#if 0
 // ----------------------------------------------------------------------------
 // Given a tunnel PI, get the remote TEP EP
 // ----------------------------------------------------------------------------
 ep_t *
-if_get_tunnelif_remote_tep_ep(if_t *pi_if, bool *v4_valid)
+if_get_tunnelif_remote_tep_ep(if_t *pi_if)
 {
     ep_t *remote_tep_ep = NULL;
 
@@ -218,6 +217,7 @@ if_get_tunnelif_remote_tep_ep(if_t *pi_if, bool *v4_valid)
 
     return remote_tep_ep;
 }
+#endif
 
 // ----------------------------------------------------------------------------
 // Given an EP return PI if 
@@ -320,7 +320,6 @@ if_get_tm_oport(if_t *pi_if)
     if_t                       *pi_up_if;
     ep_t                       *remote_tep_ep;
     if_t                       *ep_if;
-    bool                       v4;
     intf::IfType               tif_type;
 
     if (pi_if == NULL) {
@@ -344,7 +343,7 @@ if_get_tm_oport(if_t *pi_if)
             }
             break;
         case intf::IF_TYPE_TUNNEL:
-            remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4);
+            remote_tep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
             ep_if = if_get_if_from_ep(remote_tep_ep);
             tif_type = intf_get_if_type(ep_if);
             HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);

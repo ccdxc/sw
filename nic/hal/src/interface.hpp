@@ -55,60 +55,62 @@ namespace hal {
 
 // l2seg entry used for classic enic if
 typedef struct if_l2seg_entry_s {
-    hal_handle_t    l2seg_handle;               // l2segment handle
-    void            *pd;                        // pd pointer
-    dllist_ctxt_t   lentry;                     // list context
+    hal_handle_t    l2seg_handle;                   // l2segment handle
+    void            *pd;                            // pd pointer
+    dllist_ctxt_t   lentry;                         // list context
 } __PACK__ if_l2seg_entry_t;
 
 // Interface strucutre
 typedef struct if_s {
-    hal_spinlock_t      slock;                       // lock to protect this structure
-    if_id_t             if_id;                       // interface id
-    intf::IfType        if_type;                     // interface type
-    intf::IfStatus      if_admin_status;             // admin status
-    vrf_id_t            tid;                         // vrf id (TODO: what is this for ?)
+    hal_spinlock_t      slock;                      // lock to protect this structure
+    if_id_t             if_id;                      // interface id
+    intf::IfType        if_type;                    // interface type
+    intf::IfStatus      if_admin_status;            // admin status
+    vrf_id_t            tid;                        // vrf id (TODO: what is this for ?)
 
     union {
         // enic interface info
         struct {
-            intf::IfEnicType    enic_type;           // type of ENIC
-            hal_handle_t        lif_handle;          // handle to corresponding LIF
-            hal_handle_t        l2seg_handle;        // handle to l2seg
-            mac_addr_t          mac_addr;            // EP's MAC addr
-            vlan_id_t           encap_vlan;          // vlan enabled on this if
-            // classic mode fields
-            hal_handle_t        native_l2seg_clsc;   // native l2seg
-            hal_handle_t        pinned_uplink;       // pinned uplink
+            intf::IfEnicType    enic_type;          // type of ENIC
+            hal_handle_t        lif_handle;         // handle to corresponding LIF
+            hal_handle_t        l2seg_handle;       // handle to l2seg
+            mac_addr_t          mac_addr;           // EP's MAC addr
+            vlan_id_t           encap_vlan;         // vlan enabled on this if
+            // classic mode fields                  
+            hal_handle_t        native_l2seg_clsc;  // native l2seg
+            hal_handle_t        pinned_uplink;      // pinned uplink
         } __PACK__;
 
         // uplink interface info
         struct {
             // doesnt have to exist. hence storing the id. have to exist only
             //    on add_l2seg_to_uplink
-            l2seg_id_t          native_l2seg;        // native (vlan) on uplink (pc).
+            l2seg_id_t          native_l2seg;       // native (vlan) on uplink (pc).
                                                      
 
             // TOOD: List of L2segs on this Uplink
             // uplink if
             struct {
-                uint32_t        uplink_port_num;     // uplink port number
-                bool            is_pc_mbr;           // is a PC member   
-                hal_handle_t    uplinkpc_handle;     // PC its part of
+                uint32_t        uplink_port_num;    // uplink port number
+                bool            is_pc_mbr;          // is a PC member   
+                hal_handle_t    uplinkpc_handle;    // PC its part of
             } __PACK__;
             // uplink PC if
             struct {
-                // uint32_t      uplink_pc_num;         // uplink port channel number
+                // uint32_t      uplink_pc_num;     // uplink port channel number
                 // block_list      *pc_mbr_list;
             } __PACK__;
         } __PACK__;
         // tunnel interface info
         struct {
-            intf::IfTunnelEncapType encap_type;   // type of Encap
+            intf::IfTunnelEncapType encap_type;     // type of Encap
+            hal_handle_t rtep_ep_handle;            // Remote TEP EP's handle
+            // TODO: have to add back ref from ep
             union {
                 /* VxLAN tunnel info */
                 struct {
-                    ip_addr_t vxlan_ltep; // Local TEP
-                    ip_addr_t vxlan_rtep; // Remote TEP
+                    ip_addr_t vxlan_ltep;           // Local TEP
+                    ip_addr_t vxlan_rtep;           // Remote TEP
                 } __PACK__;
                 /* GRE tunnel info */
                 struct {

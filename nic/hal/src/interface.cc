@@ -11,6 +11,8 @@
 #include "nic/hal/src/rdma.hpp"
 #include "nic/include/oif_list_api.hpp"
 
+#define TNNL_ENC_TYPE intf::IfTunnelEncapType
+
 using hal::pd::pd_if_args_t;
 
 namespace hal {
@@ -689,7 +691,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     }
 
     if ((hal_if->if_type == intf::IF_TYPE_TUNNEL) && 
-            (hal_if->encap_type == intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_GRE)) {
+            (hal_if->encap_type == TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_GRE)) {
         ep_t *ep;
         switch (hal_if->gre_dest.af) {
             case IP_AF_IPV4:
@@ -2275,6 +2277,37 @@ end:
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// Given a tunnel, get the remote TEP EP
+// ----------------------------------------------------------------------------
+ep_t *
+tunnel_if_get_remote_tep_ep(if_t *pi_if)
+{
+    ep_t *remote_tep_ep = NULL;
+
+    if (pi_if->encap_type == 
+            TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
+        if (pi_if->vxlan_rtep.af == IP_AF_IPV4) {
+            remote_tep_ep = find_ep_by_v4_key(pi_if->tid,
+                                          pi_if->vxlan_rtep.addr.v4_addr);
+        } else {
+            remote_tep_ep = find_ep_by_v6_key(pi_if->tid, &pi_if->vxlan_rtep);
+        }
+    } else if (pi_if->encap_type == 
+            TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_GRE) {
+        if (pi_if->gre_dest.af == IP_AF_IPV4) {
+            remote_tep_ep = find_ep_by_v4_key(pi_if->tid,
+                                          pi_if->gre_dest.addr.v4_addr);
+        } else {
+            remote_tep_ep = find_ep_by_v6_key(pi_if->tid, &pi_if->gre_dest);
+        }
+    }
+
+    return remote_tep_ep;
+}
+
+
+
 //------------------------------------------------------------------------------
 // Tunnel If Create 
 //------------------------------------------------------------------------------
@@ -2282,7 +2315,8 @@ hal_ret_t
 tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, 
                   if_t *hal_if)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    hal_ret_t  ret      = HAL_RET_OK;
+    ep_t       *rtep_ep = NULL;
 
     HAL_TRACE_DEBUG("pi-tunnelif:{}:tunnelif create for id {}", __FUNCTION__, 
                     spec.key_or_handle().interface_id());
@@ -2306,13 +2340,13 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
         goto end;
     }
     if (hal_if->encap_type ==
-            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
+            TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
         ip_addr_spec_to_ip_addr(&hal_if->vxlan_ltep,
                                 if_tunnel_info.vxlan_info().local_tep());
         ip_addr_spec_to_ip_addr(&hal_if->vxlan_rtep,
                                 if_tunnel_info.vxlan_info().remote_tep());
     } else if (hal_if->encap_type ==
-            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_GRE) {
+            TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_GRE) {
         ip_addr_spec_to_ip_addr(&hal_if->gre_source,
                                 if_tunnel_info.gre_info().source());
         ip_addr_spec_to_ip_addr(&hal_if->gre_dest,
@@ -2323,7 +2357,23 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
         ret = HAL_RET_IF_INFO_INVALID;
         HAL_TRACE_ERR("pi-tunnelif:{}:unsupported encap type:{}",
                       __FUNCTION__, hal_if->encap_type);
+        goto end;
     }
+
+    // Get remote tep EP
+    rtep_ep = tunnel_if_get_remote_tep_ep(hal_if);
+    if (!rtep_ep) {
+        ret = HAL_RET_IF_INFO_INVALID;
+        HAL_TRACE_ERR("pi-tunnelif:{}: unable to find rtep ep for IP: {}."
+                      "ret:{}",
+                      __FUNCTION__, 
+                      hal_if->encap_type == 
+                      TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN ? 
+                      ipaddr2str(&hal_if->vxlan_rtep) : 
+                      ipaddr2str(&hal_if->gre_dest), ret);
+        goto end;
+    }
+    hal_if->rtep_ep_handle = rtep_ep->hal_handle;
 
 end:
     return ret;

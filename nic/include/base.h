@@ -94,6 +94,15 @@ do {                                                       \
     }                                                      \
 } while (FALSE)
 
+#define HAL_ABORT_TRACE(cond, args...)                     \
+do {                                                       \
+    if (!(cond)) {                                         \
+        HAL_TRACE_ERR(args);                               \
+        abort();                                           \
+    }                                                      \
+} while (FALSE)
+
+
 #define HAL_ASSERT_RETURN(cond, rv)                        \
 do {                                                       \
     if (!(cond)) {                                         \

@@ -488,45 +488,51 @@ hal_ret_t
 pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key, 
                        pd_tunnelif_t *pd_tif)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-    if_t        *pi_if;
-    l2seg_t     *l2seg;
-    ep_t        *remote_tep_ep;
+    hal_ret_t   ret            = HAL_RET_OK;
+    if_t        *pi_if         = NULL;
+    l2seg_t     *l2seg         = NULL;
+    if_t        *ep_if         = NULL;
+    mac_addr_t  *mac           = NULL;
+    ep_t        *rtep_ep = NULL;
     uint8_t     actionid;
-    if_t        *ep_if;
     uint8_t     vlan_v;
     uint16_t    vlan_id;
-    mac_addr_t  *mac;
-    bool        v4_valid = FALSE;
 
     memset(tnnl_rw_key, 0, sizeof(pd_tnnl_rw_entry_key_t));
+
     pi_if = (if_t *) pd_tif->pi_if;
-    HAL_ASSERT(pi_if);
+    HAL_ABORT_TRACE(pi_if, "ABORT:{}: PD should always have PI",
+                    __FUNCTION__);
 
     actionid = pd_tunnelif_get_p4pd_encap_action_id(pi_if->encap_type);
 
-    remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4_valid);
-    HAL_ASSERT(remote_tep_ep);
+    rtep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
+    HAL_ABORT_TRACE(rtep_ep, "ABORT:{}: should have caught in PI",
+                    __FUNCTION__);
     
-    l2seg = find_l2seg_by_handle(remote_tep_ep->l2seg_handle);
-    HAL_ASSERT(l2seg);
+    l2seg = find_l2seg_by_handle(rtep_ep->l2seg_handle);
+    HAL_ABORT_TRACE(l2seg, "ABORT:{}: EP should not exist with no l2seg",
+                    __FUNCTION__);
     
-    ep_if = find_if_by_handle(remote_tep_ep->if_handle);
-    HAL_ASSERT(ep_if);
+    ep_if = find_if_by_handle(rtep_ep->if_handle);
+    HAL_ABORT_TRACE(ep_if, "ABORT:{}: EP should not exist with no IF",
+                    __FUNCTION__);
     
     ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    HAL_ABORT_TRACE(ret == HAL_RET_OK, "ABORT:{}: EP presence means "
+                    "l2seg should be UP on IF",
+                    __FUNCTION__);
 
     tnnl_rw_key->tnnl_rw_act = (tunnel_rewrite_actions_en) actionid;
 
     if ((actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) ||
         (actionid == TUNNEL_REWRITE_ENCAP_ERSPAN_ID)) {
         /* MAC DA */
-        mac = ep_get_mac_addr(remote_tep_ep);
+        mac = ep_get_mac_addr(rtep_ep);
         memcpy(tnnl_rw_key->mac_da, mac, sizeof(mac_addr_t));
 
         /* MAC SA */
-        mac = ep_get_rmac(remote_tep_ep, l2seg);
+        mac = ep_get_rmac(rtep_ep, l2seg);
         memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
 
         /* Populate vxlan encap params */

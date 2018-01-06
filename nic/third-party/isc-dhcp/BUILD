@@ -30,6 +30,7 @@ cc_library(
         "c++",
         "--std=c++11",
         "-Wno-misleading-indentation",
+        "-Wno-unused-variable",
     ] + sdk_copts,
     deps = [
         "//nic/include:base_includes",
