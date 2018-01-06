@@ -7,6 +7,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include <memory>
 
@@ -31,6 +32,13 @@ inline const key_t HostMemHandle() {
   char *env_key;
   if ((env_key = getenv(kEnvMemLabel)) != nullptr) {
     return atoi(env_key);
+  }
+  if (getenv("MODEL_SHMKEY_PATH")) {
+      assert(getenv("MODEL_SHMKEY_PROJID"));
+      printf("Deriving Model SHM Key from Path:%s ProjID:%s\n",
+             getenv("MODEL_SHMKEY_PATH"), getenv("MODEL_SHMKEY_PROJID"));
+      return ftok(getenv("MODEL_SHMKEY_PATH"),
+                  atoi(getenv("MODEL_SHMKEY_PROJID")));
   }
   return kShmKey + getuid();
 }
