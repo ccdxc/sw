@@ -22,3 +22,10 @@ hal-proto: clean-proto
 clean-proto:
 	# Regenerate all .pb.go. This avoids conflicts due to file renames in nic/proto/hal
 	rm -f ${GEN_DIR}/*.pb.go
+
+proto-sync: hal-proto
+	# Will verify if the generated pb.go are committed
+	@$(eval DIFFS=`git ls-files --exclude-standard --modified --directory ${CURDIR}`)
+	@echo "Found the following uncommitted pb.go files, if any"
+	@echo $(DIFFS)
+	@test -z "$(DIFFS)"

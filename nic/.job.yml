@@ -39,6 +39,7 @@ targets:
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft-build && ./run.py  --gft" ]
   base-ethnw:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo base --feature eth,networking" ]
   base-rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo base --feature rdma" ]
+  proto-sync: ["sh", "-c", "cd /sw && make pull-assets && cd $GOPATH/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto && make proto-sync"]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
