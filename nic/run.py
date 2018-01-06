@@ -304,6 +304,11 @@ def run_dol(args):
           hal_process.poll() is None:
           time.sleep(5)
 
+    if args.rtl:
+        # Wait for runtest to finish.
+        while model_process.poll() is None:
+            time.sleep(5)
+
     print "* MODEL exit code " + str(model_process.returncode)
     print "* HAL exit code " + str(hal_process.returncode)
     print "* DOL exit code " + str(p.returncode)
