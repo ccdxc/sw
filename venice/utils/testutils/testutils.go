@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/venice/utils/testenv"
 )

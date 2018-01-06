@@ -11,8 +11,8 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/venice/orch/simapi"
 	"github.com/pensando/sw/venice/orch/vchub/sim"

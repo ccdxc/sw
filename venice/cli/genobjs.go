@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"

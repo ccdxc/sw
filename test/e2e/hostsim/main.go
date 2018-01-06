@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/venice/orch/simapi"
 	n "github.com/pensando/sw/venice/utils/netutils"

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"

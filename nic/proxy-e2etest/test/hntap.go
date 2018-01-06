@@ -11,9 +11,9 @@ import (
 	"flag"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
+	log "github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 )
 

@@ -11,8 +11,8 @@ import (
 	"path"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"text/template"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"

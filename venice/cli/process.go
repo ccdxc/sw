@@ -15,8 +15,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/ghodss/yaml"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"golang.org/x/crypto/ssh/terminal"
 

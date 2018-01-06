@@ -93,7 +93,7 @@ Projects with a ★ have had particular influence on Go kit's design (or vice-ve
 - [mattheath/phosphor](https://github.com/mondough/phosphor), distributed system tracing
 - [pivotal-golang/lager](https://github.com/pivotal-golang/lager), an opinionated logging library
 - [rubyist/circuitbreaker](https://github.com/rubyist/circuitbreaker), circuit breaker library
-- [Sirupsen/logrus](https://github.com/Sirupsen/logrus), structured, pluggable logging for Go ★
+- [Sirupsen/logrus](https://github.com/sirupsen/logrus), structured, pluggable logging for Go ★
 - [sourcegraph/appdash](https://github.com/sourcegraph/appdash), application tracing system based on Google's Dapper
 - [spacemonkeygo/monitor](https://github.com/spacemonkeygo/monitor), data collection, monitoring, instrumentation, and Zipkin client library
 - [streadway/handy](https://github.com/streadway/handy), net/http handler filters

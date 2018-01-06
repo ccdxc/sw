@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
+	"github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
