@@ -467,4 +467,5 @@ cc_inc_library(
     ],
 )
 
-exports_files(["tools/ncc/tenjin_wrapper.py"])
+exports_files(["tools/ncc/tenjin_wrapper.py", 
+               "asic/capri/model/cap_pb/cap_pbc_csr.json"])

@@ -243,4 +243,11 @@ capri_tm_repl_table_base_addr_set(uint64_t addr);
 hal_ret_t
 capri_tm_repl_table_token_size_set(uint32_t size_in_bits);
 
+void
+capri_tm_dump_debug_regs(void);
+void
+capri_tm_dump_config_regs(void);
+void
+capri_tm_dump_all_regs(void);
+
 #endif

@@ -593,7 +593,8 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
         if (qos_class_id == 0) {
             ret = qos_tbl->update(qos_class_id, &d);
         } else {
-            ret = qos_tbl->insert_withid(&d, qos_class_id);
+            ret = qos_tbl->update(qos_class_id, &d);
+            //ret = qos_tbl->insert_withid(&d, qos_class_id);
         }
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-qos::{}: qos table write failure, qos-class {}, "

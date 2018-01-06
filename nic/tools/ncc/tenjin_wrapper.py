@@ -46,12 +46,13 @@ if __name__ == '__main__':
     parser.add_argument("--template", required=True, help="Template file") 
     parser.add_argument("--outfile", required=True, help="Output file") 
     parser.add_argument("--prefix", default="//::", help="Tenjin prefix") 
+    parser.add_argument("--args", default=None, help="Args to pass to tenjin") 
     args = parser.parse_args()
 
     template = args.template
     out_file = args.outfile
     tenjin_prefix = args.prefix
 
-    dic = {}
+    dic = {"args":args.args}
     with open(out_file, "w") as of:
         render_template(of, template, dic, None, prefix=tenjin_prefix)

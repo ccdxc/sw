@@ -770,11 +770,13 @@ p4pd_qos_init (void)
     qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
     HAL_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
 
-    ret = qos_tbl->insert_withid(&d, 0);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-qos::{}: qos table write failure ret {}",
-                      __func__, ret);
-        return ret;
+    for (int i = 0; i < QOS_TABLE_SIZE; i++) {
+        ret = qos_tbl->insert_withid(&d, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-qos::{}: qos table write failure ret {}",
+                          __func__, ret);
+            return ret;
+        }
     }
     return ret;
 }

@@ -71,6 +71,50 @@
 //:: #endfor
 //::
 //::
+//:: import json
+//:: def get_reg_instances(regs, types):
+//:: import re
+//:: instances = []
+//:: for reg,data in sorted(regs.items()):
+//::    if types is None or len(set(reg.split('_')) & types):
+//::        is_array = int(data["is_array"])
+//::        inst_name = data["inst_name"][4:]
+//::        if is_array:
+//::            mg = re.search('\[(\d+)\]$', reg)
+//::            array_index = int(mg.groups()[0])
+//::            inst_name = inst_name + '[%s]' % array_index
+//::        #endif   
+//::        instances.append(inst_name)
+//::    #endif   
+//:: #endfor
+//:: return instances
+//:: #enddef
+//::
+//:: with open(_context['args']) as data_file:
+//::    data = json.load(data_file)
+//:: #endwith
+//:: regs = data["cap_pbc"]["registers"]
+//:: memories = data["cap_pbc"]["memories"]
+//:: 
+//:: fns = OrderedDict()
+//:: fns["debug"] = set(['cnt', 'sta', 'sat'])
+//:: fns["config"] = set(['cfg'])
+//:: fns["all"] = None
+//::
+//:: for fn,types in fns.items():
+
+void
+capri_tm_dump_${fn}_regs (void)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+//:: instances = get_reg_instances(regs, types)
+//:: for inst_name in instances:
+    ${inst_name}.read();
+    ${inst_name}.show();
+//:: #endfor
+}
+//:: #endfor
 
 tm_port_type_e
 tm_port_type_get (tm_port_t port)
@@ -479,7 +523,7 @@ hal_ret_t
 capri_tm_hw_config_load_poll (int phase)
 {
     if (phase == 0) {
-//        cap_pb_init_done(0,0);
+        cap_pb_init_done(0,0);
     }
     return HAL_RET_OK;
 }
@@ -487,8 +531,8 @@ capri_tm_hw_config_load_poll (int phase)
 hal_ret_t
 capri_tm_asic_init (void)
 {
-    cap_pb_init_start(0,0);
-    cap_pb_init_done(0,0);
+//    cap_pb_init_start(0,0);
+//    cap_pb_init_done(0,0);
     return HAL_RET_OK;
 }
 
