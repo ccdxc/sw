@@ -705,9 +705,9 @@ security_profile_create (SecurityProfileSpec& spec,
     dhl_entry.handle = sec_prof->hal_handle;
     dhl_entry.obj = sec_prof;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(sec_prof->hal_handle, &cfg_ctxt, 
                              nwsec_create_add_cb,
                              nwsec_create_commit_cb,
@@ -1031,9 +1031,9 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
     dhl_entry.handle  = sec_prof->hal_handle;
     dhl_entry.obj     = sec_prof;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(sec_prof->hal_handle, &cfg_ctxt, 
                              nwsec_update_upd_cb,
                              nwsec_update_commit_cb,
@@ -1234,9 +1234,9 @@ security_profile_delete (SecurityProfileDeleteRequest& req,
     dhl_entry.handle = nwsec->hal_handle;
     dhl_entry.obj = nwsec;
     cfg_ctxt.app_ctxt = NULL;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_del_obj(nwsec->hal_handle, &cfg_ctxt, 
                              nwsec_delete_del_cb,
                              nwsec_delete_commit_cb,
@@ -1365,7 +1365,7 @@ nwsec_prof_add_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
 
     nwsec_profile_lock(nwsec, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&nwsec->vrf_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&nwsec->vrf_list_head, &entry->dllist_ctxt);
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -1391,7 +1391,7 @@ nwsec_prof_del_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == vrf->hal_handle) {
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
 

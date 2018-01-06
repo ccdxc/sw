@@ -12,10 +12,10 @@ cc_library(
     deps = [
         #"//nic:sdk_ht",
         "@sdk//obj:sdk_ht",
+        "@sdk//obj:sdk_list",
         "//nic/hal:hal_includes",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/list:list_includes",
         "//nic/hal/lib:hal_handle",
     ],
 )

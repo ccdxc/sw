@@ -3,7 +3,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -16,7 +16,7 @@ using l2segment::BroadcastFwdPolicy;
 using types::L2SegmentType;
 
 using sdk::lib::ht_ctxt_t;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 
 using kh::L2SegmentKeyHandle;
 using l2segment::L2SegmentSpec;

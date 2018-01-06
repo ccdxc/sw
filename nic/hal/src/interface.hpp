@@ -4,7 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/eth.h"
 #include "nic/include/ip.h"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
@@ -15,7 +15,7 @@
 // #include "nic/utils/block_list/block_list.hpp"
 
 using sdk::lib::ht_ctxt_t;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 using hal::utils::bitmap;
 
 using intf::LifSpec;
@@ -239,10 +239,10 @@ if_init (if_t *hal_if)
     hal_if->pinned_uplink = HAL_HANDLE_INVALID;
     hal_if->is_pc_mbr = false;
     hal_if->uplinkpc_handle = HAL_HANDLE_INVALID;
-    utils::dllist_reset(&hal_if->l2seg_list_head);
-    utils::dllist_reset(&hal_if->enicif_list_head);
-    utils::dllist_reset(&hal_if->mbr_if_list_head);
-    utils::dllist_reset(&hal_if->l2seg_list_clsc_head);
+    sdk::lib::dllist_reset(&hal_if->l2seg_list_head);
+    sdk::lib::dllist_reset(&hal_if->enicif_list_head);
+    sdk::lib::dllist_reset(&hal_if->mbr_if_list_head);
+    sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
 
     return hal_if;
 }

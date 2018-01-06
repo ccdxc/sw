@@ -2,7 +2,7 @@
 #define __vrf_HPP__
 
 #include "nic/include/base.h"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -14,7 +14,7 @@
 #include "nic/hal/src/nwsec.hpp"
 
 using sdk::lib::ht_ctxt_t;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 using hal::utils::block_list;
 using kh::VrfKeyHandle;
 

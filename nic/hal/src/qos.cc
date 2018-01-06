@@ -614,9 +614,9 @@ qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 
     dhl_entry.handle = qos_class->hal_handle;
     dhl_entry.obj = qos_class;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(qos_class->hal_handle, &cfg_ctxt, 
                              qos_class_create_add_cb,
                              qos_class_create_commit_cb,
@@ -1039,9 +1039,9 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
 
     dhl_entry.handle = copp->hal_handle;
     dhl_entry.obj = copp;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(copp->hal_handle, &cfg_ctxt, 
                              copp_create_add_cb,
                              copp_create_commit_cb,

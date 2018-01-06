@@ -7,11 +7,12 @@
 #include "nic/include/hal_lock.hpp"
 #include "sdk/slab.hpp"
 #include "sdk/ht.hpp"
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 
 using sdk::lib::ht;
 using sdk::lib::slab;
 using sdk::lib::ht_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 
 namespace hal {
 namespace utils {

@@ -20,9 +20,10 @@ cc_library(
         "hal_handle.hpp",
     ],
     deps = [
-        "//nic/utils/list:list_includes",
+        "@sdk//obj:sdk_list",
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_ht",
+        "//nic/include:base_includes",
         "//nic/third-party/spdlog",
     ],
     copts = sdk_copts,

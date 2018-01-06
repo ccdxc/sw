@@ -5,7 +5,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/gen/proto/hal/multicast.pb.h"
@@ -100,7 +100,7 @@ static inline mc_entry_t *mc_entry_init (mc_entry_t *mc_entry)
     mc_entry->hal_handle = 0;
 
     // initialize meta information
-    utils::dllist_reset(&mc_entry->if_list_head);
+    sdk::lib::dllist_reset(&mc_entry->if_list_head);
     return mc_entry;
 }
 

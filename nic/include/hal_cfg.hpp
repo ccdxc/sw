@@ -5,9 +5,9 @@
 
 
 #include "nic/include/base.h"
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 namespace hal {
 
 #define HAL_MAX_NAME_STR         16

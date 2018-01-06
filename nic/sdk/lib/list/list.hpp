@@ -11,7 +11,7 @@
 #ifndef __LIST_HPP__
 #define __LIST_HPP__
 
-#include "nic/include/base.h"
+#include "sdk/base.hpp"
 
 namespace sdk {
 namespace lib {
@@ -92,9 +92,9 @@ dllist_empty (dllist_ctxt_t *head)
 static inline void
 dllist_move (dllist_ctxt_t *dst, dllist_ctxt_t *src)
 {
-    if ((dst_head == NULL) || (src_head == NULL) ||
-        ((src_head->prev == src_head->next) &&
-         (src_head == src_head->prev))) {
+    if ((dst == NULL) || (src == NULL) ||
+        ((src->prev == src->next) &&
+         (src == src->prev))) {
         // src list is empty
         return;
     }

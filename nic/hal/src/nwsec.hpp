@@ -192,7 +192,7 @@ nwsec_profile_init (nwsec_profile_t *sec_prof)
     HAL_SPINLOCK_INIT(&sec_prof->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
-    utils::dllist_reset(&sec_prof->vrf_list_head);
+    sdk::lib::dllist_reset(&sec_prof->vrf_list_head);
 
     return sec_prof;
 }

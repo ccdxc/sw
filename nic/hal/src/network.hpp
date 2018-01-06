@@ -117,9 +117,9 @@ network_init (network_t *network)
     }
     HAL_SPINLOCK_INIT(&network->slock, PTHREAD_PROCESS_PRIVATE);
 
-    utils::dllist_reset(&network->sg_list_head);
-    utils::dllist_reset(&network->l2seg_list_head);
-    utils::dllist_reset(&network->session_list_head);
+    sdk::lib::dllist_reset(&network->sg_list_head);
+    sdk::lib::dllist_reset(&network->l2seg_list_head);
+    sdk::lib::dllist_reset(&network->session_list_head);
 
 
     // initialize the operational state
@@ -128,7 +128,7 @@ network_init (network_t *network)
     // initialize meta information
     // network->nwkey_ht_ctxt.reset();
     // network->hal_handle_ht_ctxt.reset();
-    // utils::dllist_reset(&network->l2seg_nw_lentry);
+    // sdk::lib::dllist_reset(&network->l2seg_nw_lentry);
 
     return network;
 }

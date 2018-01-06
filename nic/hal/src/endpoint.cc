@@ -703,14 +703,14 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 
     // handle IP address information, if any
     // TODO: check if any IPs are already known to us already !!
-    utils::dllist_reset(&ep->ip_list_head);
+    sdk::lib::dllist_reset(&ep->ip_list_head);
     for (i = 0; i < num_ips; i++) {
         // add the IP to EP
-        utils::dllist_reset(&ip_entry[i]->ep_ip_lentry);
+        sdk::lib::dllist_reset(&ip_entry[i]->ep_ip_lentry);
         ip_addr_spec_to_ip_addr(&ip_entry[i]->ip_addr, spec.endpoint_attrs().ip_address(i));
         ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG; 
         ep->ep_flags |= EP_FLAGS_LEARN_SRC_CFG;
-        utils::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
+        sdk::lib::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
     }
 
     // allocate hal handle id
@@ -745,9 +745,9 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     dhl_entry.handle = ep->hal_handle;
     dhl_entry.obj = ep;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(ep->hal_handle, &cfg_ctxt, 
                              endpoint_create_add_cb,
                              endpoint_create_commit_cb,
@@ -908,16 +908,16 @@ ep_copy_ip_list (ep_t *dst_ep, ep_t *src_ep)
     HAL_TRACE_DEBUG("pi-ep:{}:Before copy EP's IPs:");
     ep_print_ips(src_ep);
 
-    utils::dllist_reset(&dst_ep->ip_list_head);
+    sdk::lib::dllist_reset(&dst_ep->ip_list_head);
 
     dllist_for_each_safe(curr, next, &(src_ep->ip_list_head)) {
         pi_ip_entry = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
         HAL_TRACE_DEBUG("PI-EP:{}: Copying to clone ip: {}", 
                 __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
 
-        utils::dllist_del(&pi_ip_entry->ep_ip_lentry);
+        sdk::lib::dllist_del(&pi_ip_entry->ep_ip_lentry);
 
-        utils::dllist_add(&dst_ep->ip_list_head, &pi_ip_entry->ep_ip_lentry);
+        sdk::lib::dllist_add(&dst_ep->ip_list_head, &pi_ip_entry->ep_ip_lentry);
     }
 
     return HAL_RET_OK;
@@ -1276,8 +1276,8 @@ endpoint_update_ip_op(ep_t *ep, ip_addr_t *ip_addr, uint64_t learn_src_flag,
     del_iplist = (dllist_ctxt_t *)HAL_CALLOC(
             HAL_MEM_ALLOC_DLLIST, sizeof(dllist_ctxt_t));
     HAL_ABORT(del_iplist != NULL);
-    utils::dllist_reset(add_iplist);
-    utils::dllist_reset(del_iplist);
+    sdk::lib::dllist_reset(add_iplist);
+    sdk::lib::dllist_reset(del_iplist);
     ep_ipe = (ep_ip_entry_t *)g_hal_state->ep_ip_entry_slab()->alloc();
     HAL_ABORT(ep_ipe != NULL);
     memcpy(&ep_ipe->ip_addr, ip_addr, sizeof(ip_addr_t));
@@ -1287,12 +1287,12 @@ endpoint_update_ip_op(ep_t *ep, ip_addr_t *ip_addr, uint64_t learn_src_flag,
      * if we learn't if from config.
      */
     ep_ipe->ip_flags = learn_src_flag;
-    utils::dllist_reset(&ep_ipe->ep_ip_lentry);
+    sdk::lib::dllist_reset(&ep_ipe->ep_ip_lentry);
     if (op == IP_UPDATE_OP_ADD) {
-        utils::dllist_add(add_iplist, &ep_ipe->ep_ip_lentry);
+        sdk::lib::dllist_add(add_iplist, &ep_ipe->ep_ip_lentry);
         ep_ipe->pd = NULL;
     } else if (op == IP_UPDATE_OP_DELETE) {
-        utils::dllist_add(del_iplist, &ep_ipe->ep_ip_lentry);
+        sdk::lib::dllist_add(del_iplist, &ep_ipe->ep_ip_lentry);
         dllist_for_each(lnode, &(ep->ip_list_head)) {
             pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
             if (!memcmp(ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t))) {
@@ -1321,9 +1321,9 @@ endpoint_update_ip_op(ep_t *ep, ip_addr_t *ip_addr, uint64_t learn_src_flag,
     dhl_entry.handle = ep->hal_handle;
     dhl_entry.obj = ep;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(ep->hal_handle, &cfg_ctxt,
                              endpoint_update_upd_cb,
                              endpoint_update_commit_cb,
@@ -1386,8 +1386,8 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
     *del_iplist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST, sizeof(dllist_ctxt_t));
     HAL_ABORT(*del_iplist != NULL);
 
-    utils::dllist_reset(*add_iplist);
-    utils::dllist_reset(*del_iplist);
+    sdk::lib::dllist_reset(*add_iplist);
+    sdk::lib::dllist_reset(*del_iplist);
 
     num_ips = req.endpoint_attrs().ip_address_size();
     HAL_TRACE_DEBUG("pi-ep:{}:Before Checking for added IPs. Num:{}", 
@@ -1404,8 +1404,8 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
             memcpy(&ep_ipe->ip_addr, &ip_addr, sizeof(ip_addr_t));
             ep_ipe->ip_flags = EP_FLAGS_LEARN_SRC_CFG;
             ep_ipe->pd = NULL;
-            utils::dllist_reset(&ep_ipe->ep_ip_lentry);
-            utils::dllist_add(*add_iplist, &ep_ipe->ep_ip_lentry);
+            sdk::lib::dllist_reset(&ep_ipe->ep_ip_lentry);
+            sdk::lib::dllist_add(*add_iplist, &ep_ipe->ep_ip_lentry);
             *iplist_change = true;
         }
     }
@@ -1437,8 +1437,8 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
             memcpy(&ep_ipe->ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t));
             ep_ipe->ip_flags = pi_ip_entry->ip_flags;
             ep_ipe->pd = pi_ip_entry->pd;
-            utils::dllist_reset(&ep_ipe->ep_ip_lentry);
-            utils::dllist_add(*del_iplist, &ep_ipe->ep_ip_lentry);
+            sdk::lib::dllist_reset(&ep_ipe->ep_ip_lentry);
+            sdk::lib::dllist_add(*del_iplist, &ep_ipe->ep_ip_lentry);
             *iplist_change = true;
             HAL_TRACE_DEBUG("PI-EP-Update:{}: Added to delete list ip: {}", 
                     __FUNCTION__, ipaddr2str(&(ep_ipe->ip_addr)));
@@ -1484,7 +1484,7 @@ endpoint_free_ip_list(dllist_ctxt_t *iplist)
     dllist_for_each_safe(curr, next, iplist) {
         pi_ip_entry = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
         // delete from list
-        utils::dllist_del(&pi_ip_entry->ep_ip_lentry);
+        sdk::lib::dllist_del(&pi_ip_entry->ep_ip_lentry);
         // free the entry
         g_hal_state->ep_ip_entry_slab()->free(pi_ip_entry);
     }
@@ -1516,10 +1516,10 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
         HAL_TRACE_DEBUG("PI-EP-Update:{}: Adding new IP {}", 
                 __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
 
-        utils::dllist_del(&pi_ip_entry->ep_ip_lentry);
+        sdk::lib::dllist_del(&pi_ip_entry->ep_ip_lentry);
 
         // Insert into EP's ip list 
-        utils::dllist_add(&ep->ip_list_head, &pi_ip_entry->ep_ip_lentry);
+        sdk::lib::dllist_add(&ep->ip_list_head, &pi_ip_entry->ep_ip_lentry);
 
         // Insert to L3 hash table with (VRF, IP) key
         l3_key.vrf_id = vrf->vrf_id;
@@ -1562,10 +1562,10 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
         HAL_TRACE_DEBUG("PI-EP-Update:{}: Deleting IP {}", 
                 __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
 
-        utils::dllist_del(&pi_ip_entry->ep_ip_lentry);
+        sdk::lib::dllist_del(&pi_ip_entry->ep_ip_lentry);
 
         if (ip_in_ep(&pi_ip_entry->ip_addr, ep, &del_ip_entry)) {
-            utils::dllist_del(&del_ip_entry->ep_ip_lentry);
+            sdk::lib::dllist_del(&del_ip_entry->ep_ip_lentry);
 
             // Remove from hash table
             l3_key.vrf_id = vrf->vrf_id;
@@ -1719,9 +1719,9 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     dhl_entry.handle  = ep->hal_handle;
     dhl_entry.obj     = ep;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(ep->hal_handle, &cfg_ctxt, 
                              endpoint_update_upd_cb,
                              endpoint_update_commit_cb,
@@ -1916,9 +1916,9 @@ endpoint_delete (EndpointDeleteRequest& req,
     dhl_entry.handle = ep->hal_handle;
     dhl_entry.obj = ep;
     cfg_ctxt.app_ctxt = NULL;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_del_obj(ep->hal_handle, &cfg_ctxt, 
                              endpoint_delete_del_cb,
                              endpoint_delete_commit_cb,
@@ -2075,7 +2075,7 @@ ep_add_session (ep_t *ep, session_t *session)
 
     ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&ep->session_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&ep->session_list_head, &entry->dllist_ctxt);
     ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -2102,7 +2102,7 @@ ep_del_session (ep_t *ep, session_t *session)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == session->hal_handle) {
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
 

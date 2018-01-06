@@ -3,6 +3,9 @@
 #include "nic/utils/eventmgr/eventmgr.hpp"
 #include "nic/include/hal_mem.hpp"
 
+using sdk::lib::dllist_reset;
+using sdk::lib::dllist_del;
+
 namespace hal {
 namespace utils {
 
@@ -385,7 +388,7 @@ eventmgr::unsubscribe_(event_state_t *event_state,
         if (event_lstate->lctxt == listener_state->lctxt) {
             HAL_TRACE_DEBUG("Unsubscribed listener {} from event {}",
                             listener_state->lctxt, event_state->event_id);
-            utils::dllist_del(&event_lstate->lentry);
+            sdk::lib::dllist_del(&event_lstate->lentry);
             event_listener_state_slab_->free(event_lstate);
             break;
         }

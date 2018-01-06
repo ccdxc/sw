@@ -9,10 +9,10 @@
 #define __BLOCK_LIST_HPP__
 
 #include "nic/include/base.h"
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/utils/iterator/iterator_tpl.h"
 
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 
 namespace hal {
 namespace utils {

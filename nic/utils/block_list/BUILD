@@ -11,7 +11,7 @@ cc_library(
     deps = [
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/list:list_includes",
+        "@sdk//obj:sdk_list",
         "//nic/utils/iterator:iterator",
     ],
     copts = sdk_copts,

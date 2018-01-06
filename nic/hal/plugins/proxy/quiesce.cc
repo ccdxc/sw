@@ -13,7 +13,7 @@
 #include "nic/hal/src/session.hpp"
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"

@@ -6,7 +6,7 @@
 #include "sdk/ht.hpp"
 
 #include "nic/include/base.h"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
 
@@ -37,7 +37,7 @@ using hal::hal_handle_id_ht_entry_t;
 using hal::hal_handle_get_from_handle_id;
 using hal::hal_handle_get_obj;
 using sdk::lib::ht_ctxt_t;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 
 namespace linkmgr {
 

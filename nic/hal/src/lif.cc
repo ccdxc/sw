@@ -614,9 +614,9 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     dhl_entry.handle  = hal_handle;
     dhl_entry.obj     = lif;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(hal_handle, &cfg_ctxt,
                              lif_create_add_cb,
                              lif_create_commit_cb,
@@ -1047,9 +1047,9 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     dhl_entry.handle  = lif->hal_handle;
     dhl_entry.obj     = lif;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(lif->hal_handle, &cfg_ctxt, 
                              lif_update_upd_cb,
                              lif_update_commit_cb,
@@ -1256,9 +1256,9 @@ lif_delete (LifDeleteRequest& req, LifDeleteResponse *rsp)
     dhl_entry.handle  = lif->hal_handle;
     dhl_entry.obj     = lif;
     cfg_ctxt.app_ctxt = NULL;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_del_obj(lif->hal_handle, &cfg_ctxt, 
                              lif_delete_del_cb,
                              lif_delete_commit_cb,
@@ -1383,7 +1383,7 @@ lif_add_if (lif_t *lif, if_t *hal_if)
 
     lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&lif->if_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&lif->if_list_head, &entry->dllist_ctxt);
     lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -1410,7 +1410,7 @@ lif_del_if (lif_t *lif, if_t *hal_if)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == hal_if->hal_handle) {
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
 

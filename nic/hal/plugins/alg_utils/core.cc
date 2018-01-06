@@ -1,5 +1,5 @@
 #include "nic/hal/plugins/alg_utils/core.hpp"
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/include/fte_db.hpp"
 
 namespace hal {
@@ -364,7 +364,7 @@ void alg_state::move_expflow_to_l4sess(app_session_t *app_sess,
  * Helper to get the control session expected flow.
  */
 l4_alg_status_t *alg_state::get_ctrl_expflow(app_session_t *app_sess) {
-    hal::utils::dllist_ctxt_t   *lentry, *next;
+    sdk::lib::dllist_ctxt_t   *lentry, *next;
 
     HAL_SPINLOCK_LOCK(&app_sess->slock);
     dllist_for_each_safe(lentry, next, &app_sess->exp_flow_lhead)
@@ -384,7 +384,7 @@ l4_alg_status_t *alg_state::get_ctrl_expflow(app_session_t *app_sess) {
  * Helper to get the control L4 alg session.
  */
 l4_alg_status_t *alg_state::get_ctrl_l4sess(app_session_t *app_sess) {
-    hal::utils::dllist_ctxt_t   *lentry, *next;
+    sdk::lib::dllist_ctxt_t   *lentry, *next;
 
     HAL_SPINLOCK_LOCK(&app_sess->slock);
     dllist_for_each_safe(lentry, next, &app_sess->l4_sess_lhead)

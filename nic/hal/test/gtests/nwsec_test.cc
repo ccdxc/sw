@@ -2,7 +2,7 @@
 #include "nic/hal/src/network.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/hal/src/nwsec_group.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"

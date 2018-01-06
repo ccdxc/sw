@@ -2,6 +2,7 @@
 #define __UTILS_HPP__
 
 #include "nic/gen/proto/hal/types.pb.h"
+#include "sdk/list.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/ip.h"
 

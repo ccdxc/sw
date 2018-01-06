@@ -454,9 +454,9 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     dhl_entry.handle  = vrf->hal_handle;
     dhl_entry.obj     = vrf;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(vrf->hal_handle, &cfg_ctxt, 
                              vrf_create_add_cb,
                              vrf_create_commit_cb,
@@ -817,9 +817,9 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     dhl_entry.handle = vrf->hal_handle;
     dhl_entry.obj = vrf;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(vrf->hal_handle, &cfg_ctxt, 
                              vrf_update_upd_cb,
                              vrf_update_commit_cb,
@@ -1104,9 +1104,9 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
     dhl_entry.handle = vrf->hal_handle;
     dhl_entry.obj = vrf;
     cfg_ctxt.app_ctxt = NULL;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_del_obj(vrf->hal_handle, &cfg_ctxt, 
                              vrf_delete_del_cb,
                              vrf_delete_commit_cb,

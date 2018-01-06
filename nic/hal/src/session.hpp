@@ -2,7 +2,7 @@
 #define __SESSION_HPP__
 
 #include "nic/include/base.h"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/ip.h"
 #include "nic/hal/src/interface.hpp"
@@ -14,7 +14,7 @@
 #include "nic/hal/src/qos.hpp"
 
 using sdk::lib::ht_ctxt_t;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 
 using session::FlowKeyL2;
 using session::FlowKeyV4;

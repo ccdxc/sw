@@ -3,7 +3,7 @@
 #ifndef __HAL_STATE_HPP__
 #define __HAL_STATE_HPP__
 
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/catalog.hpp"
 #include "nic/include/eventmgr.hpp"
 #include "sdk/slab.hpp"
@@ -22,7 +22,7 @@ using sdk::lib::indexer;
 using sdk::lib::ht;
 using hal::utils::bitmap;
 using hal::utils::eventmgr;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 
 typedef enum hal_forwarding_mode_s {
     HAL_FORWARDING_MODE_NONE              = 0,

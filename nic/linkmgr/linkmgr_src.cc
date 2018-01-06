@@ -13,7 +13,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "sdk/pal.hpp"
 #include "sdk/ht.hpp"
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_svc.hpp"
@@ -29,8 +29,8 @@ using boost::property_tree::ptree;
 using linkmgr::pd::port_args_pd_t;
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
-using hal::utils::dllist_add;
-using hal::utils::dllist_reset;
+using sdk::lib::dllist_add;
+using sdk::lib::dllist_reset;
 
 namespace linkmgr {
 

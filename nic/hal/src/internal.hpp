@@ -4,7 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/eth.h"
 #include "nic/include/ip.h"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/gen/proto/hal/internal.pb.h"

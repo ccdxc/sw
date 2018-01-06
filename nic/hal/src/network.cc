@@ -398,9 +398,9 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     dhl_entry.handle = nw->hal_handle;
     dhl_entry.obj = nw;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(nw->hal_handle, &cfg_ctxt, 
                              network_create_add_cb,
                              network_create_commit_cb,
@@ -799,9 +799,9 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
                                                 sizeof(dllist_ctxt_t));
     HAL_ABORT(*aggr_sglist != NULL);
 
-    utils::dllist_reset(*add_sglist);
-    utils::dllist_reset(*del_sglist);
-    utils::dllist_reset(*aggr_sglist);
+    sdk::lib::dllist_reset(*add_sglist);
+    sdk::lib::dllist_reset(*del_sglist);
+    sdk::lib::dllist_reset(*aggr_sglist);
 
     num_sgs = spec.sg_key_handle_size();
     HAL_TRACE_DEBUG("pi-network:{}:num_sgs:{}", 
@@ -857,7 +857,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
             lentry->handle_id = entry->handle_id;
 
             // Insert into the list
-            utils::dllist_add(*del_sglist, &lentry->dllist_ctxt);
+            sdk::lib::dllist_add(*del_sglist, &lentry->dllist_ctxt);
             *sglist_change = true;
             HAL_TRACE_DEBUG("pi-network:{}: added to delete list hdl: {}", 
                     __FUNCTION__, lentry->handle_id);
@@ -971,9 +971,9 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
     dhl_entry.handle = nw->hal_handle;
     dhl_entry.obj = nw;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(nw->hal_handle, &cfg_ctxt, 
                              network_update_upd_cb,
                              network_update_commit_cb,
@@ -1238,9 +1238,9 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
     dhl_entry.handle = nw->hal_handle;
     dhl_entry.obj = nw;
     cfg_ctxt.app_ctxt = NULL;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_del_obj(nw->hal_handle, &cfg_ctxt, 
                              network_delete_del_cb,
                              network_delete_commit_cb,
@@ -1278,7 +1278,7 @@ network_add_l2seg (network_t *nw, l2seg_t *l2seg)
 
     network_lock(nw, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&nw->l2seg_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&nw->l2seg_list_head, &entry->dllist_ctxt);
     network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -1305,7 +1305,7 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
         HAL_TRACE_DEBUG("pi-nw:{}:checking l2seg_hdl:{}", entry->handle_id);
         if (entry->handle_id == l2seg->hal_handle) {
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
 
@@ -1346,7 +1346,7 @@ network_add_session (network_t *nw, session_t *sess)
 
     network_lock(nw, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&nw->session_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&nw->session_list_head, &entry->dllist_ctxt);
     network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -1373,7 +1373,7 @@ network_del_session (network_t *nw, session_t *sess)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == sess->hal_handle) {
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
 

@@ -339,9 +339,9 @@ security_group_policy_create(nwsec::SecurityGroupPolicySpec& spec,
     dhl_entry.obj  = nwsec_plcy_cfg;
     cfg_ctxt.app_ctxt = &app_ctxt;
     
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(nwsec_plcy_cfg->hal_handle, &cfg_ctxt,
                              nwsec_policy_cfg_create_add_cb,
                              nwsec_policy_cfg_create_commit_cb,
@@ -596,9 +596,9 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
     dhl_entry.obj  = nwsec_grp;
     cfg_ctxt.app_ctxt = &app_ctxt;
 
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(nwsec_grp->hal_handle, &cfg_ctxt,
                              nwsec_group_create_add_cb,
                              nwsec_group_create_commit_cb,
@@ -708,7 +708,7 @@ del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
         nwsec_policy_nw_info = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (nwsec_policy_nw_info->handle_id == nw_handle_id) {
             // Remove from list
-            utils::dllist_del(&nwsec_policy_nw_info->dllist_ctxt);
+            sdk::lib::dllist_del(&nwsec_policy_nw_info->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(nwsec_policy_nw_info);
 
@@ -787,7 +787,7 @@ del_ep_from_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
         nwsec_policy_ep_info  = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (nwsec_policy_ep_info != NULL) {
             if (nwsec_policy_ep_info->handle_id == ep_handle_id) {
-                utils::dllist_del(curr);
+                sdk::lib::dllist_del(curr);
                 g_hal_state->hal_handle_id_list_entry_slab()->free(nwsec_policy_ep_info);
                 //Unlock and return
                 HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);

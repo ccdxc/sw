@@ -2,7 +2,7 @@
 #define __ENDPOINT_HPP__
 
 #include "nic/include/base.h"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/ip.h"
 #include "sdk/ht.hpp"
@@ -189,8 +189,8 @@ ep_init (ep_t *ep)
     memset(ep, 0, sizeof(ep_t));
     HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_PRIVATE);
     
-    utils::dllist_reset(&ep->ip_list_head);
-    utils::dllist_reset(&ep->session_list_head);
+    sdk::lib::dllist_reset(&ep->ip_list_head);
+    sdk::lib::dllist_reset(&ep->session_list_head);
     ep->sgs.sg_id_cnt = 0;
     memset(&ep->sgs.arr_sg_id, 0 , MAX_SG_PER_ARRAY);
 

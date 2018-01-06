@@ -303,7 +303,7 @@ hal_add_to_handle_list (dllist_ctxt_t *handle_list, hal_handle_t handle)
         goto end;
     }
     entry->handle_id = handle;
-    utils::dllist_add(handle_list, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(handle_list, &entry->dllist_ctxt);
 
 end:
 
@@ -345,7 +345,7 @@ hal_free_handles_list (dllist_ctxt_t *list)
     dllist_for_each_safe(curr, next, list) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         HAL_TRACE_DEBUG("{}: freeing list handle: {}", __FUNCTION__, entry->handle_id);
-        utils::dllist_del(&entry->dllist_ctxt);
+        sdk::lib::dllist_del(&entry->dllist_ctxt);
         g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
     }
 }

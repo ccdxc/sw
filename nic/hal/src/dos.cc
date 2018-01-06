@@ -138,7 +138,7 @@ dos_policy_init_from_spec (dos_policy_t *dosp,
      * Populate the list of security groups that this DoS policy
      * is attached to
      */
-    utils::dllist_reset(&dosp->sg_list_head);
+    sdk::lib::dllist_reset(&dosp->sg_list_head);
     num_sgs = spec.sg_handle_size();
     for (int i = 0; i < num_sgs; i++) {
         /* Lookup the SG by handle and then get the SG-id */
@@ -150,7 +150,7 @@ dos_policy_init_from_spec (dos_policy_t *dosp,
                  dos_policy_sg_list_entry_slab()->alloc();
         entry->sg_id = sg_id;
         // Insert into the list
-        utils::dllist_add(&dosp->sg_list_head, &entry->dllist_ctxt);
+        sdk::lib::dllist_add(&dosp->sg_list_head, &entry->dllist_ctxt);
     }
 
     /* Populate Ingress and Egress policy params if present in the config */
@@ -380,9 +380,9 @@ dos_policy_create (nwsec::DoSPolicySpec& spec,
     dhl_entry.handle = dosp->hal_handle;
     dhl_entry.obj = dosp;
     //cfg_ctx.app_ctx = &app_ctx;
-    utils::dllist_reset(&cfg_ctx.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctx.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(dosp->hal_handle, &cfg_ctx, 
                              dos_policy_create_add_cb,
                              dos_policy_create_commit_cb,
@@ -645,9 +645,9 @@ dos_policy_update (nwsec::DoSPolicySpec& spec,
     dhl_entry.handle = dosp->hal_handle;
     dhl_entry.obj = dosp;
     //cfg_ctx.app_ctx = &app_ctx;
-    utils::dllist_reset(&cfg_ctx.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctx.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(dosp->hal_handle, &cfg_ctx, 
                              dos_policy_update_upd_cb,
                              dos_policy_update_commit_cb,
@@ -844,9 +844,9 @@ dos_policy_delete (DoSPolicyDeleteRequest& req,
     dhl_entry.handle = dosp->hal_handle;
     dhl_entry.obj = dosp;
     //cfg_ctx.app_ctx = NULL;
-    utils::dllist_reset(&cfg_ctx.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctx.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctx.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_del_obj(dosp->hal_handle, &cfg_ctx, 
                              dos_policy_delete_del_cb,
                              dos_policy_delete_commit_cb,

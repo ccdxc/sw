@@ -386,27 +386,27 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
         ep_add_session(dep, session);
     }
 
-    utils::dllist_reset(&session->sif_session_lentry);
+    sdk::lib::dllist_reset(&session->sif_session_lentry);
     if (sif) {
         HAL_SPINLOCK_LOCK(&sif->slock);
-        // utils::dllist_add(&sif->session_list_head, &session->sif_session_lentry);
+        // sdk::lib::dllist_add(&sif->session_list_head, &session->sif_session_lentry);
         HAL_SPINLOCK_UNLOCK(&sif->slock);
     }
 
-    utils::dllist_reset(&session->dif_session_lentry);
+    sdk::lib::dllist_reset(&session->dif_session_lentry);
     if (dif && sif != dif) {
         HAL_SPINLOCK_LOCK(&dif->slock);
-        // utils::dllist_add(&dif->session_list_head,
+        // sdk::lib::dllist_add(&dif->session_list_head,
         //                  &session->dif_session_lentry);
         HAL_SPINLOCK_UNLOCK(&dif->slock);
     }
 
 #if 0
     // session list is changed to block list
-    utils::dllist_reset(&session->vrf_session_lentry);
+    sdk::lib::dllist_reset(&session->vrf_session_lentry);
     if (vrf) {
         HAL_SPINLOCK_LOCK(&vrf->slock);
-        utils::dllist_add(&vrf->session_list_head,
+        sdk::lib::dllist_add(&vrf->session_list_head,
                           &session->vrf_session_lentry);
         HAL_SPINLOCK_UNLOCK(&vrf->slock);
     }

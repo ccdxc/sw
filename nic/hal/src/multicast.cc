@@ -228,7 +228,7 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
     HAL_TRACE_DEBUG("pi-mc_entry:{}:adding {} no. of oifs", __FUNCTION__, num_oifs);
     HAL_TRACE_DEBUG("pi-mc_entry:{}:received {} oifs", __FUNCTION__, num_oifs);
 
-    utils::dllist_reset(&mc_entry->if_list_head);
+    sdk::lib::dllist_reset(&mc_entry->if_list_head);
     for (uint32_t i = 0; i < num_oifs; i++) {
         if_handle = spec.oif_handles(i);
         pi_if = find_if_by_handle(if_handle);
@@ -529,9 +529,9 @@ hal_ret_t multicast_entry_create(MulticastEntrySpec& spec,
     dhl_entry.handle = mc_entry->hal_handle;
     dhl_entry.obj = mc_entry;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(mc_entry->hal_handle, &cfg_ctxt,
                              mc_entry_create_add_cb,
                              mc_entry_create_commit_cb,

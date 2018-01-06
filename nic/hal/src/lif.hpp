@@ -4,7 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/eth.h"
 #include "nic/include/ip.h"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/hal/src/vrf.hpp"
@@ -23,7 +23,7 @@ using intf::LifGetRequest;
 using intf::LifGetResponse;
 
 using sdk::lib::ht_ctxt_t;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 using hal::utils::bitmap;
 
 namespace hal {
@@ -153,7 +153,7 @@ lif_init (lif_t *lif)
     lif->pinned_uplink = HAL_HANDLE_INVALID;
 
     // initialize meta information
-    utils::dllist_reset(&lif->if_list_head);
+    sdk::lib::dllist_reset(&lif->if_list_head);
 
     return lif;
 }

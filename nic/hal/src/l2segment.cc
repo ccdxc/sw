@@ -454,7 +454,7 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
     HAL_TRACE_DEBUG("pi-l2seg:{}:networks added:", __FUNCTION__);
     hal_print_handles_block_list(l2seg->nw_list);
 #if 0
-    utils::dllist_reset(&l2seg->nw_list_head);
+    sdk::lib::dllist_reset(&l2seg->nw_list_head);
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);        
         nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
@@ -591,9 +591,9 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     dhl_entry.handle = l2seg->hal_handle;
     dhl_entry.obj = l2seg;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(l2seg->hal_handle, &cfg_ctxt, 
                              l2seg_create_add_cb,
                              l2seg_create_commit_cb,
@@ -1006,7 +1006,7 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
             lentry->handle_id = *p_hdl_id;
 
             // Insert into the list
-            utils::dllist_add(*del_nwlist, &lentry->dllist_ctxt);
+            sdk::lib::dllist_add(*del_nwlist, &lentry->dllist_ctxt);
 #endif
             hal_add_to_handle_block_list(del_nwlist, *p_hdl_id);
             *nwlist_change = true;
@@ -1208,9 +1208,9 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     dhl_entry.handle = l2seg->hal_handle;
     dhl_entry.obj = l2seg;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(l2seg->hal_handle, &cfg_ctxt, 
                              l2seg_update_upd_cb,
                              l2seg_update_commit_cb,
@@ -1481,9 +1481,9 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
     dhl_entry.handle = l2seg->hal_handle;
     dhl_entry.obj = l2seg;
     cfg_ctxt.app_ctxt = NULL;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_del_obj(l2seg->hal_handle, &cfg_ctxt, 
                              l2seg_delete_del_cb,
                              l2seg_delete_commit_cb,

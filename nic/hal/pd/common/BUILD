@@ -22,10 +22,10 @@ cc_library(
     deps = [
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_pal",
+        "@sdk//obj:sdk_list",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/list:list_includes",
         "//nic/utils/thread",
     ],
     alwayslink = 1,

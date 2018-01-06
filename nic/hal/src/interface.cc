@@ -519,7 +519,7 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
             // uplinkpc_del_uplinkif(hal_if, find_if_by_handle(entry->handle_id));
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
         }
@@ -527,7 +527,7 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
             entry = dllist_entry(curr, hal_handle_id_list_entry_t,
                         dllist_ctxt);
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
         }
@@ -720,9 +720,9 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     dhl_entry.handle = hal_if->hal_handle;
     dhl_entry.obj = hal_if;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = HAL_RET_OK;
     ret = hal_handle_add_obj(hal_if->hal_handle, &cfg_ctxt,
                              if_create_add_cb,
@@ -986,7 +986,7 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     /*
      *TODO: We should ignore the ones which are already added.
      */
-    utils::dllist_reset(&hal_if->l2seg_list_head);
+    sdk::lib::dllist_reset(&hal_if->l2seg_list_head);
     for (int i = 0; i < spec.if_uplink_pc_info().l2segment_id_size(); i++) {
         l2seg_id = spec.if_uplink_pc_info().l2segment_id(i);
         l2seg = find_l2seg_by_id(l2seg_id);
@@ -1140,10 +1140,10 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
         }
 
         // Remove entry from temp. list
-        utils::dllist_del(&entry->lentry);
+        sdk::lib::dllist_del(&entry->lentry);
 
         // Add entry in the main list
-        utils::dllist_add(&hal_if->l2seg_list_clsc_head, 
+        sdk::lib::dllist_add(&hal_if->l2seg_list_clsc_head, 
                           &entry->lentry);
 
         // Add the back reference in l2seg
@@ -1157,11 +1157,11 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
         HAL_ASSERT(l2seg != NULL);
 
         // Remove entry from temp. list
-        utils::dllist_del(&entry->lentry);
+        sdk::lib::dllist_del(&entry->lentry);
         if (l2seg_in_classic_enicif(hal_if, entry->l2seg_handle, 
                                     &del_l2seg_entry)) {
             // Remove entry from main list
-            utils::dllist_del(&del_l2seg_entry->lentry);
+            sdk::lib::dllist_del(&del_l2seg_entry->lentry);
 
             // Del the back reference from l2seg
             ret = l2seg_del_if(l2seg, hal_if);
@@ -1509,9 +1509,9 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
     dhl_entry.handle = hal_if->hal_handle;
     dhl_entry.obj = hal_if;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_upd_obj(hal_if->hal_handle, &cfg_ctxt, 
                              if_update_upd_cb,
                              if_update_commit_cb,
@@ -1935,8 +1935,8 @@ enicif_classic_add_l2seg(if_t *hal_if, l2seg_t *l2seg)
         goto end;
     }
     l2seg_entry->l2seg_handle = l2seg->hal_handle;
-    utils::dllist_reset(&l2seg_entry->lentry);
-    utils::dllist_add(&hal_if->l2seg_list_clsc_head, &l2seg_entry->lentry);
+    sdk::lib::dllist_reset(&l2seg_entry->lentry);
+    sdk::lib::dllist_add(&hal_if->l2seg_list_clsc_head, &l2seg_entry->lentry);
 
     HAL_TRACE_DEBUG("pi-enicif:{}:L2segs:", __FUNCTION__);
     enicif_print_l2seg_entry_list(&hal_if->l2seg_list_clsc_head);
@@ -2001,7 +2001,7 @@ enicif_add_to_l2seg_entry_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
     }
     entry->l2seg_handle = handle;
     // Insert into the list
-    utils::dllist_add(handle_list, &entry->lentry);
+    sdk::lib::dllist_add(handle_list, &entry->lentry);
 
 end:
     return ret;
@@ -2022,7 +2022,7 @@ enicif_free_l2seg_entry_list(dllist_ctxt_t *list)
         HAL_TRACE_DEBUG("{}: freeing l2seg handle: {}", __FUNCTION__, 
                         entry->l2seg_handle);
         // Remove from list
-        utils::dllist_del(&entry->lentry);
+        sdk::lib::dllist_del(&entry->lentry);
         // Free the entry
         g_hal_state->enic_l2seg_entry_slab()->free(entry);
     }
@@ -2130,7 +2130,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
         HAL_TRACE_DEBUG("pi-enicif:{}:Received {} number of l2segs",
                         __FUNCTION__, 
                         clsc_enic_info->l2segment_key_handle_size());
-        utils::dllist_reset(&hal_if->l2seg_list_clsc_head);
+        sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
         for (int i = 0; i < clsc_enic_info->l2segment_key_handle_size();
                 i++) {
             l2seg_clsc_key_handle = clsc_enic_info->l2segment_key_handle(i);
@@ -2208,7 +2208,7 @@ uplinkpc_add_l2segment (if_t *uppc, l2seg_t *seg)
 
     if_lock(uppc);      // lock
     // Insert into the list
-    utils::dllist_add(&uppc->l2seg_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&uppc->l2seg_list_head, &entry->dllist_ctxt);
     if_unlock(uppc);      // unlock
 
 end:
@@ -2247,7 +2247,7 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     HAL_TRACE_DEBUG("pi-uplinkpc:{}:adding {} no. of members", __FUNCTION__,
                     spec.if_uplink_pc_info().member_if_key_handle_size());
     // Walk through member uplinks
-    utils::dllist_reset(&hal_if->mbr_if_list_head);
+    sdk::lib::dllist_reset(&hal_if->mbr_if_list_head);
     for (int i = 0; i < spec.if_uplink_pc_info().member_if_key_handle_size(); i++) {
         mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
         mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
@@ -2262,7 +2262,7 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 
 #if 0
     // Walk through l2segments.
-    utils::dllist_reset(&hal_if->l2seg_list_head);
+    sdk::lib::dllist_reset(&hal_if->l2seg_list_head);
     for (int i = 0; i < spec.if_uplink_pc_info().l2segment_id_size(); i++) {
         l2seg_id = spec.if_uplink_pc_info().l2segment_id(i);
         l2seg = find_l2seg_by_id(l2seg_id);
@@ -2691,9 +2691,9 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
     dhl_entry.handle = hal_if->hal_handle;
     dhl_entry.obj = hal_if;
     cfg_ctxt.app_ctxt = NULL;
-    utils::dllist_reset(&cfg_ctxt.dhl);
-    utils::dllist_reset(&dhl_entry.dllist_ctxt);
-    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_del_obj(hal_if->hal_handle, &cfg_ctxt, 
                              if_delete_del_cb,
                              if_delete_commit_cb,
@@ -2875,8 +2875,8 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
                                                sizeof(dllist_ctxt_t));
     HAL_ABORT(*del_l2seglist != NULL);
 
-    utils::dllist_reset(*add_l2seglist);
-    utils::dllist_reset(*del_l2seglist);
+    sdk::lib::dllist_reset(*add_l2seglist);
+    sdk::lib::dllist_reset(*del_l2seglist);
 
     num_l2segs = clsc_enic_info->l2segment_key_handle_size();
     HAL_TRACE_DEBUG("pi-enicif:{}:number of l2segs:{}", 
@@ -2928,7 +2928,7 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
             lentry->pd = entry->pd;
 
             // Insert into the list
-            utils::dllist_add(*del_l2seglist, &lentry->lentry);
+            sdk::lib::dllist_add(*del_l2seglist, &lentry->lentry);
             *l2seglist_change = true;
             HAL_TRACE_DEBUG("pi-enicif:{}: added to delete list hdl: {}", 
                     __FUNCTION__, lentry->l2seg_handle);
@@ -2979,9 +2979,9 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
                                                 sizeof(dllist_ctxt_t));
     HAL_ABORT(*aggr_mbrlist != NULL);
 
-    utils::dllist_reset(*add_mbrlist);
-    utils::dllist_reset(*del_mbrlist);
-    utils::dllist_reset(*aggr_mbrlist);
+    sdk::lib::dllist_reset(*add_mbrlist);
+    sdk::lib::dllist_reset(*del_mbrlist);
+    sdk::lib::dllist_reset(*aggr_mbrlist);
 
     num_mbrs = spec.if_uplink_pc_info().member_if_key_handle_size();
     HAL_TRACE_DEBUG("pi-if:{}:pc mbrs:{}", 
@@ -3043,7 +3043,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
             lentry->handle_id = entry->handle_id;
 
             // Insert into the list
-            utils::dllist_add(*del_mbrlist, &lentry->dllist_ctxt);
+            sdk::lib::dllist_add(*del_mbrlist, &lentry->dllist_ctxt);
             *mbrlist_change = true;
             HAL_TRACE_DEBUG("pi-uplinkpc:{}: added to delete list hdl: {}", 
                     __FUNCTION__, lentry->handle_id);
@@ -3211,7 +3211,7 @@ uplinkpc_add_uplinkif (if_t *uppc, if_t *upif)
 
     if_lock(uppc, __FILENAME__, __LINE__, __func__);          // lock
     // Insert into the list
-    utils::dllist_add(&uppc->mbr_if_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&uppc->mbr_if_list_head, &entry->dllist_ctxt);
     if_unlock(uppc, __FILENAME__, __LINE__, __func__);      // unlock
 
 end:
@@ -3235,7 +3235,7 @@ uplinkpc_del_uplinkif (if_t *uppc, if_t *upif)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == upif->hal_handle) {
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
             ret = HAL_RET_OK;
@@ -3273,7 +3273,7 @@ if_add_l2seg (if_t *hal_if, l2seg_t *l2seg)
 
     if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&hal_if->l2seg_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&hal_if->l2seg_list_head, &entry->dllist_ctxt);
     if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -3298,7 +3298,7 @@ if_del_l2seg (if_t *hal_if, l2seg_t *l2seg)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == l2seg->hal_handle) {
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
 
@@ -3337,7 +3337,7 @@ uplink_add_enicif (if_t *uplink, if_t *enic_if)
 
     if_lock(enic_if, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&uplink->enicif_list_head, &entry->dllist_ctxt);
+    sdk::lib::dllist_add(&uplink->enicif_list_head, &entry->dllist_ctxt);
     if_unlock(enic_if, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -3362,7 +3362,7 @@ uplink_del_enicif (if_t *uplink, if_t *enic_if)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == enic_if->hal_handle) {
             // Remove from list
-            utils::dllist_del(&entry->dllist_ctxt);
+            sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
 

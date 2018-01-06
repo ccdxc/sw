@@ -9,7 +9,7 @@
 #include "nic/include/hal_lock.hpp"
 
 #include "sdk/ht.hpp"
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 
 #include "linkmgr_src.hpp"
 #include "linkmgr_state.hpp"

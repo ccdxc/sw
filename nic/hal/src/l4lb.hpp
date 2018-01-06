@@ -2,7 +2,7 @@
 #define __L4LB_HPP__
 
 #include "nic/include/base.h"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/ip.h"
 #include "sdk/ht.hpp"

@@ -14,6 +14,16 @@ cc_library(
     ],
 )
 
+# List
+cc_library(
+    name = "sdk_list",
+    srcs = [
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)
+
 # Slab 
 cc_library(
     name = "sdk_slab",

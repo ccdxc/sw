@@ -3,7 +3,7 @@
 #include "fte_flow.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/vrf.hpp"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
@@ -245,7 +245,7 @@ ctx_t::lookup_session()
     }
 
     // Init feature sepcific session state
-    hal::utils::dllist_ctxt_t   *entry;
+    sdk::lib::dllist_ctxt_t   *entry;
     dllist_for_each(entry, &session_->feature_list_head) {
         feature_session_state_t *state =
             dllist_entry(entry, feature_session_state_t, session_feature_lentry);
@@ -529,7 +529,7 @@ ctx_t::update_flow_table()
             for (uint16_t id = 0; id < num_features_; id++) {
                 feature_session_state_t *state = feature_state_[id].session_state;
                 if (state) {
-                    hal::utils::dllist_add(&session_->feature_list_head,
+                    sdk::lib::dllist_add(&session_->feature_list_head,
                                            &state->session_feature_lentry);
                 }
             }

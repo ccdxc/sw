@@ -3,14 +3,14 @@
 
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
-#include "nic/include/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/wring.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 
 using sdk::lib::ht_ctxt_t;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 
 using wring::WRingSpec;
 using wring::WRingStatus;

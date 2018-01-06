@@ -8,12 +8,12 @@
 #include "nic/include/base.h"
 #include "nic/include/hal_cfg.hpp"
 
-#include "nic/utils/list/list.hpp"
+#include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/slab.hpp"
 
 using sdk::lib::ht_ctxt_t;
-using hal::utils::dllist_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
 using sdk::lib::slab;
 using sdk::lib::ht;
 
