@@ -31,7 +31,7 @@ meta:
     io.pensando.network.sg: dev-sg              # arbitrary label to allow security group selection for the workload
     io.pensando.network.svc: dev-app            # arbitrary label to allow 'service' to select the endpoint
 `,
-	`lbPolicy`: `kind: lbPolicy 			# kind of this object
+	`lbpolicy`: `kind: lbPolicy 			# kind of this object
 meta:
   name: basic-lb-policy 	# name of this object
   # tenant: default		# override tenant value (applicable only for super admin user)

@@ -3,6 +3,7 @@
 
 package vcli
 
+{{/* ToDo Remove special casing for Timestamp */}}
 import (
 	contxt "context"
 	"encoding/json"
@@ -16,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
+	api2 "github.com/pensando/sw/api"
 )
 
 func getObj(ctx *context) (obj interface{}, objList interface{}) {
@@ -34,9 +36,15 @@ func getSubObj(kind string) interface{} {
 {{ range $obj := . }}
 	{{ range $subObj := .Structs }}
 		{{ if eq (visited $subObj) false }}
-		case "{{$subObj}}":
-			var v {{$obj.Package}}.{{$subObj}}
-			return v
+		    {{ if eq $subObj "Timestamp"}}
+        	    case "{{$subObj}}":
+        		    var v api2.{{$subObj}}
+        		    return &v
+            {{ else }}
+        	    case "{{$subObj}}":
+        	        var v {{$obj.Package}}.{{$subObj}}
+                    return v
+            {{ end }}
 		{{ end }}
 	{{ end }}
 {{ end }}
@@ -114,14 +122,21 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 {{ range $obj := . }}
 	{{ range $subObj := .Structs }}
 		{{ if eq (visited $subObj) false }}
-func write{{ $subObj}}Obj(obj {{$obj.Package}}.{{ $subObj}}, specKvs map[string]ref.FInfo) *{{$obj.Package}}.{{ $subObj }} {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
+		    {{ if eq $subObj "Timestamp"}}
+		        func write{{ $subObj}}Obj(obj api2.{{ $subObj}}, specKvs map[string]ref.FInfo) *api2.{{ $subObj }} {
+            {{ else }}
+                func write{{ $subObj}}Obj(obj {{$obj.Package}}.{{ $subObj}}, specKvs map[string]ref.FInfo) *{{$obj.Package}}.{{ $subObj }} {
+            {{ end }}
+                    refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+                    new := ref.WriteKvs(obj, refCtx, specKvs)
 
-	new{{ $subObj }} := new.({{$obj.Package}}.{{ $subObj }})
-
-	return &new{{ $subObj }}
-}
+                    {{ if eq $subObj "Timestamp"}}
+                        new{{ $subObj }} := new.(api2.{{ $subObj }})
+                    {{ else }}
+                        new{{ $subObj }} := new.({{$obj.Package}}.{{ $subObj }})
+                    {{ end }}
+                    return &new{{ $subObj }}
+                }
 		{{ end }}
 	{{ end }}
 {{ end }}

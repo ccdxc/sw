@@ -4,6 +4,7 @@
 package pregen
 
 import (
+	api2 "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/cli/api"
@@ -59,6 +60,10 @@ func GetObjSpec(objName string) interface{} {
 // GetSubObj is
 func GetSubObj(kind string) interface{} {
 	switch kind {
+
+	case "Timestamp":
+		var v api2.Timestamp
+		return &v
 
 	case "HealthCheckSpec":
 		var v network.HealthCheckSpec

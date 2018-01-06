@@ -43,7 +43,7 @@ type ObjectInfo struct {
 var Objs = map[string]ObjectInfo{
 	"node": {Name: "node", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/nodes", Perms: "rw",
 		Structs: []string{"NodeCondition", "PortCondition", "ConditionStatus"}},
-	"cluster": {Name: "cluster", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/cluster", Perms: "rw"},
+	"cluster": {Name: "cluster", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/cluster", Perms: "rw", Structs: []string{"Timestamp"}},
 	"smartNIC": {Name: "smartNIC", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/smartnics", Perms: "rw",
 		Structs: []string{"PortSpec", "PortStatus", "SmartNICCondition"}},
 	"tenant":        {Name: "tenant", Package: "network", GrpcService: "tenant", URL: "/v1/tenants/tenants", Perms: "rw"},

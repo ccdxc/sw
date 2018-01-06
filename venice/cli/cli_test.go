@@ -707,13 +707,15 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --mac-address --phase {smartNIC}") {
+	if !strings.Contains(out, "--label --dry-run --file --mac-address --mgmt-ip --node-name --phase {smartNIC}") {
 		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
 	}
+
 	out = veniceCLI("update smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --mac-address --phase") {
+	if !strings.Contains(out, "--label --dry-run --file --mac-address --mgmt-ip --node-name --phase") {
 		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
 	}
+
 	out = veniceCLI("delete smartNIC --gbc")
 	if !strings.Contains(out, "--label --dry-run --regular-expression") {
 		t.Fatalf("smartNIC command completion: invalid output '%s'", out)

@@ -10,10 +10,10 @@ go run gen.go objs
 # then generate objects, cli, cmds, etc.
 go run gen.go
 
-gofmt -s -w $VENICE_DIR/gen/pregen/genobjs.go
-gofmt -s -w $VENICE_DIR/genobjs.go
-gofmt -s -w $VENICE_DIR/gencmds.go
-gofmt -s -w $VENICE_DIR/testserver/tserver/genobjs.go
-gofmt -s -w $VENICE_DIR/testserver/tserver/tserver.go
+goimports -local "github.com/pensando/sw" -l -w $VENICE_DIR/gen/pregen/genobjs.go
+goimports -local "github.com/pensando/sw" -l -w $VENICE_DIR/genobjs.go
+goimports -local "github.com/pensando/sw" -l -w $VENICE_DIR/gencmds.go
+goimports -local "github.com/pensando/sw" -l -w $VENICE_DIR/testserver/tserver/genobjs.go
+goimports -local "github.com/pensando/sw" -l -w $VENICE_DIR/testserver/tserver/tserver.go
 
 exit 0

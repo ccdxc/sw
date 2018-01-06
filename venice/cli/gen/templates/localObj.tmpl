@@ -3,8 +3,11 @@
 
 package pregen
 
+{{/* ToDo Remove special casing for Timestamp */}}
+
 import (
 	"github.com/pensando/sw/venice/cli/api"
+	api2 "github.com/pensando/sw/api"
 {{ include "../api/pkgs.txt" }}
 )
 
@@ -26,9 +29,15 @@ func GetSubObj(kind string) interface{} {
 {{ range $apiObj := . }}
 	{{ range $subObj := .Structs }}
 		{{ if eq (visited $subObj) false }}
-			case "{{$subObj}}":
-				var v {{$apiObj.Package}}.{{$subObj}}
-				return &v
+		    {{ if eq $subObj "Timestamp"}}
+		        case "{{$subObj}}":
+		            var v api2.{{$subObj}}
+		            return &v
+		    {{ else }}
+			    case "{{$subObj}}":
+				    var v {{$apiObj.Package}}.{{$subObj}}
+				    return &v
+		    {{ end }}
 		{{ end }}
 	{{ end }}
 {{ end }}

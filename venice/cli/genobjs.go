@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
 
+	api2 "github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -69,6 +70,10 @@ func getObj(ctx *context) (obj interface{}, objList interface{}) {
 
 func getSubObj(kind string) interface{} {
 	switch kind {
+
+	case "Timestamp":
+		var v api2.Timestamp
+		return &v
 
 	case "HealthCheckSpec":
 		var v network.HealthCheckSpec
@@ -607,7 +612,18 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 	return objmKvs, specKvs, objmValidKvs, specValidKvs
 }
 
+func writeTimestampObj(obj api2.Timestamp, specKvs map[string]ref.FInfo) *api2.Timestamp {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newTimestamp := new.(api2.Timestamp)
+
+	return &newTimestamp
+}
+
 func writeHealthCheckSpecObj(obj network.HealthCheckSpec, specKvs map[string]ref.FInfo) *network.HealthCheckSpec {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
@@ -617,6 +633,7 @@ func writeHealthCheckSpecObj(obj network.HealthCheckSpec, specKvs map[string]ref
 }
 
 func writeNodeConditionObj(obj cmd.NodeCondition, specKvs map[string]ref.FInfo) *cmd.NodeCondition {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
@@ -626,6 +643,7 @@ func writeNodeConditionObj(obj cmd.NodeCondition, specKvs map[string]ref.FInfo) 
 }
 
 func writePortConditionObj(obj cmd.PortCondition, specKvs map[string]ref.FInfo) *cmd.PortCondition {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
@@ -635,6 +653,7 @@ func writePortConditionObj(obj cmd.PortCondition, specKvs map[string]ref.FInfo) 
 }
 
 func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FInfo) *cmd.ConditionStatus {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
@@ -644,6 +663,7 @@ func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FIn
 }
 
 func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.SGRule {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
@@ -653,6 +673,7 @@ func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.S
 }
 
 func writePortSpecObj(obj cmd.PortSpec, specKvs map[string]ref.FInfo) *cmd.PortSpec {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
@@ -662,6 +683,7 @@ func writePortSpecObj(obj cmd.PortSpec, specKvs map[string]ref.FInfo) *cmd.PortS
 }
 
 func writePortStatusObj(obj cmd.PortStatus, specKvs map[string]ref.FInfo) *cmd.PortStatus {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
@@ -671,6 +693,7 @@ func writePortStatusObj(obj cmd.PortStatus, specKvs map[string]ref.FInfo) *cmd.P
 }
 
 func writeSmartNICConditionObj(obj cmd.SmartNICCondition, specKvs map[string]ref.FInfo) *cmd.SmartNICCondition {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
@@ -680,6 +703,7 @@ func writeSmartNICConditionObj(obj cmd.SmartNICCondition, specKvs map[string]ref
 }
 
 func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *api.UserAuditLog {
+
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 

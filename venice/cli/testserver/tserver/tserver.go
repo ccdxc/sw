@@ -13,10 +13,11 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
-	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
+
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/utils/kvstore"

@@ -1154,6 +1154,14 @@ var CreateSmartNICFlags = []cli.Flag{
 	},
 
 	cli.StringFlag{
+		Name: "mgmt-ip",
+	},
+
+	cli.StringFlag{
+		Name: "node-name",
+	},
+
+	cli.StringFlag{
 		Name: "phase",
 	},
 }
