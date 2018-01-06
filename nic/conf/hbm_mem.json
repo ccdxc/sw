@@ -245,10 +245,12 @@
             "size_kb": 2048
         },
         {
-            "_comment": "space = N/2 + 2N/3, N = Num timers",
-            "_comment2": "Num timers = 128K",
+            "_comment": "hash depth = 1024",
+            "_comment1": "data space = 1024 * 16 * 64 = 1024K",
+            "_comment1": "key space = 1024 * 64 = 64K",
+            "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
-            "size_kb": 150
+            "size_kb": 1088
         },
         {
             "name": "tx-scheduler",

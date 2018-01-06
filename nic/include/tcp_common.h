@@ -53,4 +53,20 @@
 #define TCPF_CLOSING      (1 << 11)
 #define TCPF_NEW_SYN_RECV (1 << 12)
 
+/* debug_dol encodings - need to match defines in tcp_proxy.py */
+#define TCP_DDOL_PKT_TO_SERQ            0x1
+#define TCP_DDOL_TEST_ATOMIC_STATS      0x2
+#define TCP_DDOL_DONT_QUEUE_TO_SERQ     0x4
+#define TCP_DDOL_LEAVE_IN_ARQ           0x8
+#define TCP_DDOL_DONT_RING_TX_DOORBELL  0x10
+#define TCP_DDOL_DEL_ACK_TIMER          0x20
+#define TCP_DDOL_PKT_TO_L7Q             0x40
+#define TCP_DDOL_BYPASS_BARCO           0x80
+// Tx encodings
+#define TCP_TX_DDOL_DONT_SEND_ACK       0x1
+#define TCP_TX_DDOL_DONT_TX             0x2
+#define TCP_TX_DDOL_BYPASS_BARCO        0x4
+#define TCP_TX_DDOL_DONT_START_RETX_TIMER 0x8
+#define TCP_TX_DDOL_FORCE_TIMER_FULL    0x10
+
 #endif /* #ifndef __TCP_COMMON_H__ */

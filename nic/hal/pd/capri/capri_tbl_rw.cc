@@ -642,8 +642,8 @@ capri_p4plus_recirc_init() {
     cap0.pt.pt.psp.cfg_profile.write();
 }
 
-static void
-capri_timer_init(void)
+void
+capri_timer_init_helper(uint32_t key_lines)
 {
     uint64_t timer_key_hbm_base_addr;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -656,7 +656,7 @@ capri_timer_init(void)
     HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
     HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
     txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
-    txs_csr->cfg_timer_static.tmr_hsh_depth(CAPRI_TIMER_NUM_KEY_CACHE_LINES - 1);
+    txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
     txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
     txs_csr->cfg_timer_static.write();
 
@@ -688,6 +688,12 @@ capri_timer_init(void)
     }
 #endif
     HAL_TRACE_DEBUG("Done initializing timer wheel");
+}
+
+static void
+capri_timer_init(void)
+{
+    capri_timer_init_helper(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
 }
 
 /* This function initializes the stage id register for p4 plus pipelines such that:

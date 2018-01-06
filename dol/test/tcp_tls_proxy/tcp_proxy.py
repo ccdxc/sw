@@ -17,6 +17,7 @@ tcp_tx_debug_dol_dont_send_ack = 0x1
 tcp_tx_debug_dol_dont_tx = 0x2
 tcp_tx_debug_dol_bypass_barco = 0x4
 tcp_tx_debug_dol_dont_start_retx_timer = 0x8
+tcp_tx_debug_dol_force_timer_full = 0x10
 
 tcp_state_ESTABLISHED = 1
 tcp_state_SYN_SENT = 2
@@ -48,6 +49,7 @@ def SetupProxyArgs(tc):
     test_timer = 0
     test_retx_timer = 0
     test_cancel_retx_timer = 0
+    test_retx_timer_full = 0
     ooo_seq_delta = 0
     num_pkts = 1
     test_retx = None
@@ -92,6 +94,9 @@ def SetupProxyArgs(tc):
         fin_ack = tc.module.args.fin_ack
     if hasattr(tc.module.args, 'final_fin'):
         final_fin = tc.module.args.final_fin
+    if hasattr(tc.module.args, 'test_retx_timer_full'):
+        test_retx_timer_full = tc.module.args.test_retx_timer_full
+        tc.module.logger.info("- test_retx_timer_full %s" % tc.module.args.test_retx_timer_full)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -135,6 +140,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.test_timer = test_timer
     tc.pvtdata.test_retx_timer = test_retx_timer
     tc.pvtdata.test_cancel_retx_timer = test_cancel_retx_timer
+    tc.pvtdata.test_retx_timer_full = test_retx_timer_full
     tc.pvtdata.ooo_seq_delta = ooo_seq_delta
     tc.pvtdata.num_pkts = num_pkts
     tc.pvtdata.test_retx = test_retx
@@ -168,8 +174,10 @@ def init_tcb_inorder(tc, tcb):
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
-    if not tc.pvtdata.test_retx_timer:
+    if not tc.pvtdata.test_retx_timer and not tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
+    if tc.pvtdata.test_retx_timer_full:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_force_timer_full
     if tc.pvtdata.same_flow:
         tcb.source_port = tc.config.flow.sport
         tcb.dest_port = tc.config.flow.dport
@@ -256,8 +264,10 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
-    if not tc.pvtdata.test_retx_timer:
+    if not tc.pvtdata.test_retx_timer and not tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
+    if tc.pvtdata.test_retx_timer_full:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_force_timer_full
     if tc.pvtdata.bypass_barco:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
         tcb.debug_dol |= tcp_debug_dol_bypass_barco

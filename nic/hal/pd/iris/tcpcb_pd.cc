@@ -10,6 +10,7 @@
 #include "nic/hal/pd/iris/p4pd_tcp_proxy_api.h"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/wring_pd.hpp"
 #include "nic/hal/src/proxy.hpp"
@@ -569,11 +570,55 @@ p4pd_get_tcp_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+#define     DEBUG_DOL_TEST_TIMER_FULL_SET       1
+#define     DEBUG_DOL_TEST_TIMER_FULL_RESET     0
+#define     DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES  2
+
+static void
+debug_dol_init_timer_full_area(int state)
+{
+    uint64_t timer_key_hbm_base_addr;
+    uint8_t byte;
+    uint64_t data[DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES * 2 * 8];
+
+    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
+    timer_key_hbm_base_addr += (DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES *
+                    CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * 64);
+
+    if (state == DEBUG_DOL_TEST_TIMER_FULL_SET) {
+        byte = 0xff;
+    } else {
+        byte = 0;
+    }
+
+    memset(&data, byte, sizeof(data));
+
+    p4plus_hbm_write(timer_key_hbm_base_addr, (uint8_t *)&data, sizeof(data));
+}
+
+static void
+debug_dol_test_timer_full(int state)
+{
+    if (state == DEBUG_DOL_TEST_TIMER_FULL_SET) {
+        /*
+         * Debug code to force num key_lines to 2
+         */
+        HAL_TRACE_DEBUG("setting num key_lines = 2");
+        capri_timer_init_helper(DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES);
+    } else {
+        HAL_TRACE_DEBUG("resetting num key_lines back to default");
+        capri_timer_init_helper(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
+    }
+
+    debug_dol_init_timer_full_area(state);
+}
+
 hal_ret_t 
 p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     s0_t0_tcp_tx_d                 data = {0};
     hal_ret_t                      ret = HAL_RET_OK;
+    static tcpcb_hw_id_t           debug_dol_timer_full_hw_id;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
@@ -593,6 +638,15 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_ST;
         data.u.read_rx2tx_d.snd_wnd = htonl(tcpcb_pd->tcpcb->snd_wnd);
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcpcb_pd->tcpcb->debug_dol_tx);
+        if (!debug_dol_timer_full_hw_id &&
+                tcpcb_pd->tcpcb->debug_dol_tx & TCP_TX_DDOL_FORCE_TIMER_FULL) {
+            debug_dol_test_timer_full(DEBUG_DOL_TEST_TIMER_FULL_SET);
+            debug_dol_timer_full_hw_id = hwid;
+        } else if (debug_dol_timer_full_hw_id &&
+                !(tcpcb_pd->tcpcb->debug_dol_tx & TCP_TX_DDOL_FORCE_TIMER_FULL)) {
+            debug_dol_test_timer_full(DEBUG_DOL_TEST_TIMER_FULL_RESET);
+            debug_dol_timer_full_hw_id = 0;
+        }
         data.u.read_rx2tx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.read_rx2tx_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
         data.u.read_rx2tx_d.pending_ack_send = tcpcb_pd->tcpcb->pending_ack_send;

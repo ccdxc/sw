@@ -17,21 +17,26 @@
 
 #define CAPRI_TIMER_WHEEL_DEPTH         4096
 
-#define CAPRI_MAX_TIMERS                (128 * 1024)
 #define CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE    16
 #define CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE   12
 
 // This needs to be a power of 2
-#define CAPRI_TIMER_NUM_KEY_CACHE_LINES \
-                (CAPRI_MAX_TIMERS / CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE)
+#define CAPRI_TIMER_NUM_KEY_CACHE_LINES 1024
+
+// each line is 64B
+// Each key in key line takes up 1 line in data space
+#define CAPRI_TIMER_HBM_DATA_SPACE \
+    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * 64)
 
 #define CAPRI_TIMER_HBM_KEY_SPACE \
-                ((CAPRI_MAX_TIMERS / CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE) * 8)
-#define CAPRI_TIMER_HBM_DATA_SPACE \
-                (((CAPRI_MAX_TIMERS / CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE) * 8 \
-                + 64) \ & 0xffffffc0)
+    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * 64)
+
 #define CAPRI_TIMER_HBM_SPACE \
-                (CAPRI_TIMER_HBM_KEY_SPACE + CAPRI_TIMER_HBM_DATA_SPACE)
+    (CAPRI_TIMER_HBM_KEY_SPACE + CAPRI_TIMER_HBM_DATA_SPACE)
+
+#define CAPRI_MAX_TIMERS \
+    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * \
+     CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE)
 
 int capri_table_rw_init();
 
@@ -85,5 +90,7 @@ int capri_hbm_table_entry_read(uint32_t tableid,
 int capri_table_constant_write(uint32_t tableid, uint64_t val);
 
 int capri_table_constant_read(uint32_t tableid, uint64_t *val);
+
+void capri_timer_init_helper(uint32_t key_lines);
 
 #endif

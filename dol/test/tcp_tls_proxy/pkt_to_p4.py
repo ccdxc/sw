@@ -200,7 +200,8 @@ def TestCaseVerify(tc):
     print("debug_num_mem_to_pkt = %d:" % other_tcpcb_cur.debug_num_mem_to_pkt)
 
     num_rx_pkts = tc.pvtdata.num_pkts
-    if tc.pvtdata.test_retx_timer and not tc.pvtdata.test_cancel_retx_timer:
+    if (tc.pvtdata.test_retx_timer or tc.pvtdata.test_retx_timer_full) \
+            and not tc.pvtdata.test_cancel_retx_timer:
         num_tx_pkts = tc.pvtdata.num_pkts * 2
     else:
         num_tx_pkts = tc.pvtdata.num_pkts
@@ -411,4 +412,26 @@ def TestCaseTeardown(tc):
         rnmdr.pi = 0
         rnmdr.ci = 1024
         rnmdr.SetMeta()
+    if tc.pvtdata.test_retx_timer_full:
+        #
+        # Reset the debug_dol_tx to 0, so that we reset the temporary
+        # timer config
+        #
+        id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+        if tc.config.flow.IsIflow():
+            tcbid = "TcpCb%04d" % id
+            other_tcbid = "TcpCb%04d" % (id + 1)
+        else:
+            tcbid = "TcpCb%04d" % (id + 1)
+            other_tcbid = "TcpCb%04d" % id
+
+        tcpcb = tc.pvtdata.db[tcbid]
+        tcpcb = tc.infra_data.ConfigStore.objects.db[tcbid]
+        tcpcb.debug_dol_tx = 0
+        tcpcb.SetObjValPd()
+
+        other_tcpcb = tc.pvtdata.db[other_tcbid]
+        other_tcpcb = tc.infra_data.ConfigStore.objects.db[other_tcbid]
+        other_tcpcb.debug_dol_tx = 0
+        other_tcpcb.SetObjValPd()
     return

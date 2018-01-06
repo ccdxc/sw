@@ -182,6 +182,14 @@ tcp_tx_st_expired:
     memwr.dx        r4, r3
 
 tcp_tx_st_expired_end:
+    // DEBUG code
+    // If we are testing timer full case, don't start the timer again to
+    // prevent an endless loop. We do need to process one timer to test
+    // the timer full case (in the timer full case, the timer expires
+    // immediately)
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TIMER_FULL, TCP_TX_DDOL_FORCE_TIMER_FULL
+    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+
     nop.e
     nop
 
