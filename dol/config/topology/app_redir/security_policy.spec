@@ -22,11 +22,19 @@ policies:
                     - svc:
                         proto    : 6
                         dst_port : 27017
+                    - svc:
+                        proto    : 6
+                        dst_port : 9042
+                    - svc:
+                        proto    : 6
+                        dst_port : 5432
                 apps:
                     - app : "MYSQL"
                     - app : "DNS"
                     - app : "HTTP"
                     - app : "MONGO"
+                    - app : "CASSANDRA"
+                    - app : "POSTGRES"
             - rule:
                 action :  ALLOW
                 log    :  True
@@ -78,11 +86,19 @@ policies:
                     - svc:
                         proto    : 6
                         dst_port : 27017
+                    - svc:
+                        proto    : 6
+                        dst_port : 9042
+                    - svc:
+                        proto    : 6
+                        dst_port : 5432
                 apps:
                     - app : "MYSQL"
                     - app : "DNS"
                     - app : "HTTP"
                     - app : "MONGO"
+                    - app : "CASSANDRA"
+                    - app : "POSTGRES"
             - rule:
                 action :  ALLOW
                 log    :  True

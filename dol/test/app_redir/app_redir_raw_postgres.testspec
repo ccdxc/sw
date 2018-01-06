@@ -1,0 +1,199 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://fwtype=L2
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : BASE_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        #encaps      :
+        #    - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+    - packet:
+        id          : PKT_SYN
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : 0
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : 46624
+                dport   : 5432
+                #seq     : callback://tcpcb/tcpcb/GetSeqNum
+                #ack     : callback://tcpcb/tcpcb/GetAckNum
+                seq     : 0xaf86a7ff
+                ack     : 0
+                flags   : syn
+
+    - packet:
+        id          : PKT_SYN_ACK
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : 0
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/endpoint/macaddr
+                dst     : ref://testcase/config/src/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
+            tcp:
+                sport   : 5432
+                dport   : 46624
+                #seq     : callback://tcpcb/tcpcb/GetReverseFlowSeqNum
+                #ack     : callback://tcpcb/tcpcb/GetReverseFlowAckNum
+                seq     : 0x4b9f5fce
+                ack     : 0xaf86a800
+                flags   : syn,ack
+
+    - packet:
+        id          : PKT_ACK
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : 0
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : 46624
+                dport   : 5432
+                seq     : 0xaf86a800
+                ack     : 0x4b9f5fcf
+                flags   : ack
+
+    - packet:
+        id          : PKT_POSTGRES_REQ
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_POSTGRES_REQ/size
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : 46624
+                dport   : 5432
+                seq     : 0xaf86a800
+                ack     : 0x4b9f5fcf
+                flags   : ack
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_POSTGRES_REQ/data
+
+    - packet:
+        id          : PKT_POSTGRES_RESP
+        clone       : ref://testcase/packets/id=BASE_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_POSTGRES_RESP/size
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/endpoint/macaddr
+                dst     : ref://testcase/config/src/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
+            tcp:
+                sport   : 5432
+                dport   : 46624
+                seq     : 0x4b9f5fcf
+                ack     : 0xaf86a826  #TODO use dynamic size
+                flags   : ack
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_POSTGRES_RESP/data
+        
+session:
+    - step:
+        direction   : iflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+        expect:
+            delay   : 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+
+                # First packet is a flow miss, so also expect a packet on the FTE (CPU) port.
+                # Note that FTE will install flows in both directions so subsequent packets
+                # are all expected to be flow hits.
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN
+                    port    : 128
+    - step:
+        direction   : rflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN_ACK
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+        expect:
+            delay   : 1
+            packets:
+                # Flow hit expects packet on port. Even though the packet is also
+                # redirected to CPU, it is thru a different LIF and does not
+                # translate to port 128 so we don't expect anything on that.
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_SYN_ACK
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+    - step:
+        direction   : iflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_ACK
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_ACK
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+    - step:
+        direction   : iflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_POSTGRES_REQ
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_POSTGRES_REQ
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+    - step:
+        direction   : rflow
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_POSTGRES_RESP
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT_POSTGRES_RESP
+                    port    : ref://testcase/config/src/endpoint/intf/ports

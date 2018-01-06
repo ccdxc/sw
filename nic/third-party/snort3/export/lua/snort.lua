@@ -34,10 +34,12 @@ require('snort_config')
 
 -- this depends on SNORT_LUA_PATH
 -- where to find other config files
-conf_dir = os.getenv('SNORT_LUA_PATH')
+snort_lua_dir = os.getenv('SNORT_LUA_PATH')
 
-if ( not conf_dir ) then
+if ( not snort_lua_dir ) then
     conf_dir = '.'
+else
+    conf_dir = snort_lua_dir
 end
 
 -- this depends on SNORT_DAQ_PATH
@@ -139,7 +141,8 @@ appid =
     --app_detector_dir = 'directory to load appid detectors from'
     log_stats = true,
     app_stats_period = 60,
-    app_detector_dir = '/etc/snort',
+    --app_detector_dir = '/etc/snort',
+    app_detector_dir = snort_lua_dir,
 }
 
 --[[

@@ -57,7 +57,26 @@ modules:
         name    : APP_REDIR_RAW_MONGO
         module  : app_redir_raw_appid
         spec    : app_redir_raw_mongo.testspec
-        enable  : False
+        #enable  : False
+        args    :
+            num_pkts : 5
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_CASSANDRA
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_cassandra.testspec
+        #enable  : False
+        args    :
+            num_pkts : 5
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_POSTGRES
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_postgres.testspec
         args    :
             num_pkts : 5
         iterate :
