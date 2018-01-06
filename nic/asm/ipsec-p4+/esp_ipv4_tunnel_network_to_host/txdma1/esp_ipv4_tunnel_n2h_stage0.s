@@ -25,9 +25,9 @@ esp_ipv4_tunnel_n2h_txdma_stage0:
 	        .brcase 1
 	            j esp_ipv4_tunnel_n2h_txdma2_initial_table
 	            nop
-	        .brcase 2
-	            j esp_ipv4_tunnel_n2h_txdma1_initial_table
-	            nop
+            .brcase 2
+                nop.e
+                nop
 	.brend
 
 	nop.e
