@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import binascii
+import atexit
 
 import model_sim.src.model_wrap as model_wrap
 import infra.penscapy.penscapy as penscapy
@@ -63,3 +64,10 @@ class ModelConnectorObject:
         return rxpkts
 
 ModelConnector = ModelConnectorObject()
+
+def exit_cleanup():
+    if not GlobalOptions.dryrun:
+        model_wrap.exit_simulation()
+    return
+
+atexit.register(exit_cleanup)
