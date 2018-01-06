@@ -5883,7 +5883,7 @@ class capri_table_manager:
 
                         if ctable.is_writeback and ctable.match_type == match_type.TERNARY:
                             opcode  = ((capri_model['match_action']['te_consts']['pic_tbl_opcode_operation_add']))
-                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd1_sel_rate']) << 4)
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd1_sel_tbkt']) << 4)
                             opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd2_sel_one'])  << 6)
                             opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_saturate_none'])  << 8)
                             profile['opcode']['value'] = "0x%x" % (opcode)

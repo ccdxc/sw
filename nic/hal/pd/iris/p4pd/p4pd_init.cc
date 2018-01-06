@@ -492,6 +492,19 @@ p4pd_drop_stats_init (void)
         }
     }
 
+    // catch all entry for unknown drop reasons
+    memset(&key, 0, sizeof(key));
+    memset(&key_mask, 0, sizeof(key_mask));
+    memset(&data, 0, sizeof(data));
+    key.entry_inactive_drop_stats = 0;
+    key_mask.entry_inactive_drop_stats_mask = 0xFF;
+    ret = tcam->insert_withid(&key, &key_mask, &data, DROP_MAX + 1);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
+                DROP_MAX + 1, ret);
+        return ret;
+    }
+
     return HAL_RET_OK;
 }
 
