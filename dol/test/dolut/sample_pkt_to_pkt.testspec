@@ -15,6 +15,7 @@ packets:
     - packet:
         id          : PKT1     # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        paddingsize : 32
         template    : ref://factory/packets/id=ETH_IPV4_TCP
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG

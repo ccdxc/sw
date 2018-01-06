@@ -104,7 +104,7 @@ lb_ipv4_normalizaiton_optimal:
   slt.!c1     c1, 5, k.flow_lkp_metadata_ipv4_hlen
   add.c2      r1, k.ipv4_totalLen, 18 // c2 has vlan_tag_valid to TRUE
   add.!c2     r1, k.ipv4_totalLen, 14
-  sle.!c1     c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+  slt.!c1     c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}
   seq         c3, k.control_metadata_uplink, FALSE
   sne.c3      c3, d.u.l4_profile_d.ip_normalize_ttl, r0
@@ -211,16 +211,15 @@ lb_ipv4_norm_options_tunnel_terminate:
 lb_ipv4_norm_invalid_length:
   b.c4        lb_ipv4_norm_ttl
   seq         c4, d.u.l4_profile_d.ip_normalize_ttl, 0
-  b.c7        lb_ipv4_norm_invalid_length_tunnel_terminate
   seq         c1, k.vlan_tag_valid, 1
   add.c1      r1, k.ipv4_totalLen, 18
   add.!c1     r1, k.ipv4_totalLen, 14
-  slt         c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+  slt         c2, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  b.!c1       lb_ipv4_norm_ttl
-  seq         c1, d.u.l4_profile_d.ip_invalid_len_action, NORMALIZATION_ACTION_DROP
-  phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
-  phvwr.c1    p.capri_intrinsic_drop, 1
+  b.!c2       lb_ipv4_norm_ttl
+  seq         c2, d.u.l4_profile_d.ip_invalid_len_action, NORMALIZATION_ACTION_DROP
+  phvwr.c2.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
+  phvwr.c2    p.capri_intrinsic_drop, 1
   // Edit action
   // To edit the packet, we need to know what is the current payload length after
   // the parsed headers so that we can truncate the packet by the difference of
@@ -229,10 +228,31 @@ lb_ipv4_norm_invalid_length:
   // is parsing and then do the calculation so that we update the 
   // capri_deparser_len_trunc_pkt_len.
   // When editing we need to make sure we don't truncate lower than 64 byte packet
+  sle         c2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, MIN_ETHER_FRAME_LEN
+  b.c2        lb_ipv4_norm_ttl
+  // Calculate the total parsed packet length from ethernet header onwards. 
+  // If we parsed more than the packet length we will not truncate the packet.
+  // Reason being we don't what all headers are parsed and marking them all 
+  // invalid might not be striaght forward.
+  sub         r2, k.control_metadata_parser_payload_offset, k.control_metadata_parser_outer_eth_offset
+  // This case should be ideally catched by parser "packet_len_check" pragma.
+  sle         c2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
+  b.c2        lb_ipv4_norm_ttl
+  // Now calculate what is the value to write to capri_deparser_len_trunc_pkt_len.
+  sub         r3, r1, r2
+  phvwr       p.capri_deparser_len_trunc_pkt_len, r3 
+  phvwr       p.capri_deparser_len_trunc, 1
   b           lb_ipv4_norm_ttl
-  nop
+  phvwr       p.capri_intrinsic_payload, 0
 
-
+#if 0
+ For invalid length we will only normalize based on outer IP total length.
+ If we really need to do based on tunnel termination for inner then the
+ optimal code which checks for bad packets also need to do this check and
+ in input_mapping_native/tunnel we need to normalize the ipv4 total length
+ to a common field. 
 // c1 - Has vlan_valid flag
 lb_ipv4_norm_invalid_length_tunnel_terminate:
   add.c1      r1, k.ipv4_ihl, 34    // 18 (eth+vlan) + 8 (udp) + 8 (vxlan)
@@ -252,8 +272,24 @@ lb_ipv4_norm_invalid_length_tunnel_terminate:
   // is parsing and then do the calculation so that we update the 
   // capri_deparser_len_trunc_pkt_len.
   // When editing we need to make sure we don't truncate lower than 64 byte packet
+  // For VxLAN terminated packets this is not a isue. 
+  // Calculate the total parsed packet length from ethernet header onwards. 
+  // If we parsed more than the packet length we will not truncate the packet.
+  // Reason being we don't what all headers are parsed and marking them all 
+  // invalid might not be striaght forward.
+  sub         r2, k.control_metadata_parser_payload_offset, k.control_metadata_parser_inner_eth_offset
+  // This case should be ideally catched by parser "packet_len_check" pragma.
+  sle         c2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
+  b.c2        lb_ipv4_norm_ttl
+  // Now calculate what is the value to write to capri_deparser_len_trunc_pkt_len.
+  sub         r3, r1, r2
+  phvwr       p.capri_deparser_len_trunc_pkt_len, r3 
+  phvwr       p.capri_deparser_len_trunc, 1
   b           lb_ipv4_norm_ttl
-  nop
+  phvwr       p.capri_intrinsic_payload, 0
+
+#endif /* 0 */
 
 lb_ipv4_norm_ttl:
   jr.c4       r7

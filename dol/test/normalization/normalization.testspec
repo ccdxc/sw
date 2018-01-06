@@ -55,6 +55,8 @@ packets:
     - packet:
         id          : PKT1     # Input packet 1
         payloadsize : callback://normalization/callbacks/GetInputPayloadSize
+        #paddingsize : 100
+        paddingsize : callback://normalization/callbacks/GetInputPaddingSize
         #pendol      : True
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
@@ -81,6 +83,7 @@ packets:
     - packet:
         id          : PKT2     # Expected packet 2
         payloadsize : callback://normalization/callbacks/GetExpectedPayloadSize
+        paddingsize : callback://normalization/callbacks/GetExpectedPaddingSize
         #pendol      : True
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :

@@ -71,6 +71,18 @@ profiles:
       fields:
          ip_invalid_len_action: EDIT
 
+    - id: SEC_PROF_IPV6_INVALID_LEN_ACTION_ALLOW
+      fields:
+         ip_invalid_len_action: ALLOW
+
+    - id: SEC_PROF_IPV6_INVALID_LEN_ACTION_DROP
+      fields:
+         ip_invalid_len_action: DROP
+
+    - id: SEC_PROF_IPV6_INVALID_LEN_ACTION_EDIT
+      fields:
+         ip_invalid_len_action: EDIT
+
     - id: SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_ALLOW
       fields:
          icmp_invalid_code_action: ALLOW

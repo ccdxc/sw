@@ -148,6 +148,7 @@ class PacketSpec(objects.FrameworkObject):
         self.Clone(FactoryStore.testobjects.Get('PACKET'))
         # Convert the Testspec format to Header Template format
         # i.e. add the 'fields' level
+        self.paddingsize    = spec.paddingsize
         self.payloadsize    = spec.payloadsize
         self.template       = spec.template
         self.encaps         = spec.encaps
@@ -214,6 +215,11 @@ class Packet(objects.FrameworkObject):
         if pktspec.clone:
             basepkt = pktspec.clone.Get(tc)
             self.Clone(basepkt)
+
+            if pktspec.paddingsize != 0:
+                self.pktspec.paddingsize = pktspec.paddingsize
+            if objects.IsCallback(self.pktspec.paddingsize):
+                self.pktspec.paddingsize = self.pktspec.paddingsize.call(tc, self)
             return
 
         if pktspec.template == None:
@@ -251,6 +257,8 @@ class Packet(objects.FrameworkObject):
     
     def GetPayloadSize(self):
         return self.payloadsize
+    def GetPaddingSize(self):
+        return self.pktspec.paddingsize
 
     def __get_payload_size(self, tc):
         if self.spec.payloadsize == None:

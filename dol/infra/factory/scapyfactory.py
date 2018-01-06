@@ -388,10 +388,12 @@ class ScapyPacketObject:
         if packet.IsIcrcEnabled():
             self.__update_icrc(packet)
 
+
         self.pktbytes = bytes(self.spkt)
         self.rawbytes = bytes(self.spkt)
         #self.__add_crc_header()
-
+        if packet.GetPaddingSize():
+            self.rawbytes += bytes([0xff] * packet.GetPaddingSize())
         return
 
     def __build_from_scapypacket(self, spkt):
