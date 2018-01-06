@@ -5,6 +5,8 @@ export NIC_DIR=$PWD
 echo "NIC_DIR = $NIC_DIR"
 export ASIC_SRC=$NIC_DIR/asic
 export ASIC_GEN=$NIC_DIR/asic_gen
+export COVFILE=$NIC_DIR/coverage/bullseye_model.cov
+BULLSEYE_PATH=/home/asic/tools/eda/bullseye/bin
 echo "ASIC_SRC = $ASIC_SRC"
 echo "ASIC_GEN = $ASIC_GEN"
 export PATH=$ASIC_SRC/common/tools/bin/:$PATH
@@ -15,10 +17,13 @@ if [ $# -eq 0 ]; then
     gen_rtl -n -v -j$(grep -c processor /proc/cpuinfo)
 elif [ $1 == "--coverage" ]; then
     echo "Starting ASIC build with coverage"
-    gen_rtl -n -v -- --coverage=1 -j$(grep -c processor /proc/cpuinfo)
+    $BULLSEYE_PATH/cov01 -1
+    gen_rtl -n -v -- --coverage=1 EXT_CC_OVERRIDE=$BULLSEYE_PATH/g++  -j $(grep -c processor /proc/cpuinfo)
+    $BULLSEYE_PATH/cov01 -0
 elif [ $1 == "--clean" ]; then
     echo "Starting ASIC clean build"
     gen_rtl -n -v -c
+    rm -f $COVFILE
 else
     echo "Invalid args. Use --coverage or --clean"
     exit

@@ -40,4 +40,12 @@ if not capri_loader_conf:
 gen_dir = os.environ.get("GEN_DIR")
 if not gen_dir:
     print ("GEN Dir path not set, please set GEN_DIR")
-    sys.exit(1)    
+    sys.exit(1)
+
+bullseye_model_cov_file = os.environ.get("BULLSEYE_MODEL_COVERAGE_FILE", None)
+bullseye_model_html_output_dir = os.environ.get("BULLSEYE_HTML_OUTPUT_DIR", None)
+
+bullseye_covhtml_cmd = os.environ.get("BULLSEYE_COVHTML")
+if not bullseye_covhtml_cmd:
+    print ("Bulls eye covhtml command path not set, please set BULLSEYE_COVHTML")
+    sys.exit(1)

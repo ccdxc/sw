@@ -36,6 +36,7 @@ dol_log = nic_dir + "/dol.log"
 mbt_log = nic_dir + "/mbt.log"
 storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
+bullseye_model_cov_file = nic_dir + "/coverage/bullseye_model.cov"
 
 lock_file = nic_dir + "/.run.pid"
 
@@ -126,7 +127,9 @@ def run_model(args):
         dump_dir= nic_dir + "/coverage/asm_out_all"
         model_cmd.append("+mpu_pc_cov_dump_dir=" + dump_dir)
 
-    p = Popen(model_cmd, stdout=log, stderr=log)
+    model_env = os.environ.copy()
+    model_env["COVFILE"] = bullseye_model_cov_file
+    p = Popen(model_cmd, stdout=log, stderr=log, env=model_env)
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
     print "- Log file: " + model_log + "\n"
 

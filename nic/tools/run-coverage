@@ -69,6 +69,8 @@ done
 
 export COVERAGE_CONFIG_PATH=$NIC_DIR/conf/
 export COVERAGE_OUTPUT=$NIC_DIR/coverage
+export BULLSEYE_MODEL_COVERAGE_FILE=$COVERAGE_OUTPUT/bullseye_model.cov
+export BULLSEYE_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/bullseye_model_coverage
 
 
 if [ $keep_data -eq 0 ];then
@@ -93,6 +95,7 @@ mkdir -p $MPU_PC_COV_DUMP_DIR
 export CAPCOV=$NIC_DIR/asic/capri/model/capsim-gen/bin/capcov
 export CAPRI_LOADER_CONF=$NIC_DIR/../bazel-bin/nic/hal/capri_loader.conf
 export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
+export BULLSEYE_COVHTML=/home/asic/tools/eda/bullseye/bin/covhtml
 export GEN_DIR=$NIC_DIR/gen
 
 if [ ${#skip_targets[@]} -eq 0 ]; then
@@ -110,6 +113,7 @@ set -o pipefail
 
 #Set up locale encoding for pipenv
 localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
+export LANG=en_US.UTF-8
 #Install Virtual Env if not installed before.
 pip3 install --user pipenv
 #Setup path for Pipenv
