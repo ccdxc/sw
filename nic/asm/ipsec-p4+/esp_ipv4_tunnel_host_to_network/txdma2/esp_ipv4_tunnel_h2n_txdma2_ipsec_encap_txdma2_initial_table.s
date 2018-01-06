@@ -31,16 +31,18 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr p.ipsec_to_stage3_is_v6, r2 
     smeqb c3, d.flags, IPSEC_FLAGS_NATT_MASK, IPSEC_FLAGS_NATT_MASK 
     phvwr.c3 p.ipsec_to_stage3_is_nat_t, 1
-    addi r1, r0, 1
-    add r1, r1, d.barco_ring_cindex  
+    //addi r1, r0, 1
+    //add r1, r1, d.barco_ring_cindex  
+    tbladd d.{barco_ring_cindex}.hx, 1
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
-    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, r1)
+    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.{barco_ring_cindex}.hx)
     memwr.dx  r4, r3
-    tblwr d.barco_ring_cindex, r1
-    nop
-    add r3, r0, d.barco_cindex
-    addi r3, r3, 1
-    tblwr d.barco_cindex, r3
+    //tblwr d.barco_ring_cindex, r1
+    //nop
+    //add r3, r0, d.barco_cindex
+    //addi r3, r3, 1
+    //tblwr d.barco_cindex, r3
+    tbladd d.barco_cindex, 1
     nop.e
     nop
 
