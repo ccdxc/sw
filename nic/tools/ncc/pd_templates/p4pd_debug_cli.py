@@ -910,3 +910,9 @@ def table_dump():
         print("=================================================================================")
         for table in data['tables']:
             print( "{:<30} {:<6} {:<10} {:<10} {:<5} {:<10} {:<7}".format(str(table['name']), table_name_to_id_dict[table['name']], str(table['match_type']), str(table['direction']),  table['stage'], table['stage_table_id'], table['num_entries']))
+
+
+def populate_register(ctx):
+    if (ctx['opn'] == 'read'):
+        data = iris.p4pd_register_entry_read(str(ctx['reg_name']))
+        print data

@@ -21,7 +21,8 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
 {
     bool         table_access = false;
     bool         reg_access = false;
-    uint32_t     data = 0x0;
+    string       data;
+
     hal_ret_t    ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("Rcvd Ddebug request");
@@ -81,7 +82,12 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
         HAL_TRACE_DEBUG("{}: Register address: 0x{0:x}", __FUNCTION__,
                         spec.addr());
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
-            data = hal::pd::asic_reg_read(spec.addr());
+            if (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegName) {
+                data = hal::pd::asic_csr_dump((char *)key_handle.reg_name().c_str());
+            }  else {
+                uint64_t val = hal::pd::asic_reg_read(spec.addr());
+                data = std::to_string(val);
+            }
             HAL_TRACE_DEBUG("{}: Read Data: 0x{0:x}", __FUNCTION__, data);
             response->set_data(data);
         } else {

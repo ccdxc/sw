@@ -189,6 +189,29 @@ def ${table}_index(ctx, ids):
 #    config['index'] = ids
 #    print config
 //::    #endfor
+
+
+## register
+@hardware.group()
+@click.pass_context
+def register(ctx):
+    ctx.obj={}
+    pass
+
+@register.group()
+@click.pass_context
+def read(ctx):
+    ctx.obj['opn'] = 'read'
+
+@read.group(invoke_without_command=True)
+@click.argument('reg_name', type=click.STRING)
+@click.pass_context
+def reg_name(ctx, reg_name):
+    config= {}
+    config['reg_name'] = reg_name
+    config['opn'] = ctx.obj['opn']
+    backend.populate_register(config)
+    pass
 register_repl(dbg_cli)
 dbg_cli.add_command(debug)
 

@@ -117,7 +117,7 @@ class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
     l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
-	event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
+    event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
     debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)),
     sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)) {}
@@ -296,7 +296,7 @@ public:
     }
 
     int slab_get() {
-       	ClientContext           context;
+           ClientContext           context;
         SlabGetRequest          *req;
         SlabGetRequestMsg       req_msg;
         SlabGetResponse         rsp;
@@ -335,52 +335,52 @@ public:
     }
 
     int system_get() {
-       	ClientContext       context;
-       	Empty               request;
-       	SystemResponse      response;
+           ClientContext       context;
+           Empty               request;
+           SystemResponse      response;
         Status              status;
-       	Stats               stats;
-       	DropStats           drop_stats;
-       	DropStatsEntry      drop_entry;
-       	TableStats          table_stats;
-       	TableStatsEntry     table_entry;
-       	int                 count;
+           Stats               stats;
+           DropStats           drop_stats;
+           DropStatsEntry      drop_entry;
+           TableStats          table_stats;
+           TableStatsEntry     table_entry;
+           int                 count;
 
-       	std::cout << "System Get\n";
-       	status = system_stub_->SystemGet(&context, request, &response);
-       	if (status.ok() && (response.api_status() == types::API_STATUS_OK)) {
-           	// Get Statistics
-           	Stats stats = response.stats();
+           std::cout << "System Get\n";
+           status = system_stub_->SystemGet(&context, request, &response);
+           if (status.ok() && (response.api_status() == types::API_STATUS_OK)) {
+               // Get Statistics
+               Stats stats = response.stats();
 
-           	// First print drop stats
+               // First print drop stats
 
-           	// Get DropStats
-           	DropStats drop_stats = stats.drop_stats();
+               // Get DropStats
+               DropStats drop_stats = stats.drop_stats();
 
-           	// Get count of DropEntries
-           	count = drop_stats.drop_entries_size();
+               // Get count of DropEntries
+               count = drop_stats.drop_entries_size();
 
-           	std::cout << "\nDrop Statistics:\n";
+               std::cout << "\nDrop Statistics:\n";
 
-           	for (int i = 0; i < count; i ++) {
-               	DropStatsEntry drop_entry = drop_stats.drop_entries(i);
-               	std::cout << "Stats " << i
+               for (int i = 0; i < count; i ++) {
+                   DropStatsEntry drop_entry = drop_stats.drop_entries(i);
+                   std::cout << "Stats " << i
                     << ": " << drop_entry.drop_count() << "\n";
-           	}
+               }
 
-           	// Print table stats
+               // Print table stats
 
-           	// Get TableStats
-           	TableStats table_stats = stats.table_stats();
+               // Get TableStats
+               TableStats table_stats = stats.table_stats();
 
-           	// Get count of TableStats
-           	count = table_stats.table_stats_size();
+               // Get count of TableStats
+               count = table_stats.table_stats_size();
 
-           	std::cout << "\nTable Statistics:\n";
+               std::cout << "\nTable Statistics:\n";
 
-           	for (int i = 0; i < count; i ++) {
-               	TableStatsEntry table_entry = table_stats.table_stats(i);
-               	std::cout << "Table type: " << table_entry.table_type() << "\n"
+               for (int i = 0; i < count; i ++) {
+                   TableStatsEntry table_entry = table_stats.table_stats(i);
+                   std::cout << "Table type: " << table_entry.table_type() << "\n"
                     << "Table name: " << table_entry.table_name() << "\n"
                     << "Table size: " << table_entry.table_size() << "\n"
                     << "Overflow size: " << table_entry.overflow_table_size() << "\n"
@@ -390,11 +390,11 @@ public:
                     << "Num insert errors: " << table_entry.num_insert_errors() << "\n"
                     << "Num deletes: " << table_entry.num_deletes() << "\n"
                     << "Num delete errors: " << table_entry.num_delete_errors() << "\n\n";
-           	}
-       	}
+               }
+           }
 
-       	return 0;
-   	}
+           return 0;
+       }
 
     uint64_t vrf_create(uint64_t vrf_id) {
         VrfSpec           *spec;
@@ -794,8 +794,8 @@ private:
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
     std::unique_ptr<Port::Stub> port_stub_;
     std::unique_ptr<Event::Stub> event_stub_;
-	std::unique_ptr<System::Stub> system_stub_;
-	std::unique_ptr<Debug::Stub> debug_stub_;
+    std::unique_ptr<System::Stub> system_stub_;
+    std::unique_ptr<Debug::Stub> debug_stub_;
     std::unique_ptr<Interface::Stub> intf_stub_;
     std::unique_ptr<NwSecurity::Stub> sg_stub_;
     std::unique_ptr<Network::Stub> nw_stub_;
@@ -974,13 +974,13 @@ int port_test(hal_client *hclient, int vrf_id)
 int
 main (int argc, char** argv)
 {
+    hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
+                                           grpc::InsecureChannelCredentials()));
+
     uint64_t    vrf_handle, l2seg_handle, sg_handle;
     uint64_t    nw1_handle, nw2_handle, session_handle;
     uint64_t    vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     EncapInfo   l2seg_encap;
-
-    hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
-                                           grpc::InsecureChannelCredentials()));
 
 #if 0
     //port_test(&hclient, vrf_id);

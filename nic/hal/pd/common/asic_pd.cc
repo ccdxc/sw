@@ -565,5 +565,12 @@ asic_rw_start (void *ctxt)
     return NULL;
 }
 
+std::string
+asic_pd_csr_dump(char *csr_str)
+{
+    HAL_TRACE_DEBUG("{} csr string {}", __FUNCTION__, csr_str);
+    return asic_csr_dump(csr_str);
+}
+
 }    // namespace pd
 }    // namespace hal

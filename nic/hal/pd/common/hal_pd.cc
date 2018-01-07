@@ -10,6 +10,13 @@ extern bool gl_super_user;
 
 namespace pd {
 
+std::string
+hal_pd_csr_dump(char *csr_str)
+{
+    HAL_TRACE_DEBUG("{} csr string {}", __FUNCTION__, csr_str);
+    return asic_pd_csr_dump(csr_str);
+}
+
 //------------------------------------------------------------------------------
 // PD init routine to
 // - start USD thread that inits the ASIC, which will then start ASIC RW thread

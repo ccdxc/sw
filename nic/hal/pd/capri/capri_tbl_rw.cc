@@ -20,6 +20,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
+#include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 
 #ifndef P4PD_CLI
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -783,6 +784,7 @@ int capri_table_rw_init()
     cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
+    register_chip_inst("cap0", 0, 0);
 
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
@@ -1629,4 +1631,28 @@ int capri_table_constant_read(uint32_t tableid, uint64_t *val)
             value().convert_to<uint64_t>();
     }
     return (CAPRI_OK);
+}
+
+namespace hal {
+namespace pd {
+
+string
+asic_csr_dump (char *csr_str)
+{
+    HAL_TRACE_DEBUG("{} csr string {}", __FUNCTION__, csr_str);
+    string csr_string = std::string(csr_str);
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_csr_base *cap = cap0.search_csr_by_name(csr_string);
+    if (NULL != cap) {
+        cap->read();
+        HAL_TRACE_DEBUG("{0:s}: {1:s}, value 0x{2:x}",
+                        __FUNCTION__, csr_str, cap->all().convert_to<uint64_t>());
+    } else {
+        HAL_TRACE_DEBUG("{} search returned NULL", __FUNCTION__);
+    }
+
+    return csr_read(std::string(csr_str));
+
+}
+}
 }

@@ -1024,7 +1024,7 @@ def capri_asm_output_table(be, ctable):
                 if self.km_off+strm_off < self.union_end:
                     pstr += findent + '_%s_end_pad_%d : %d; // k[%d:%d]\n' % \
                                     (s_name, self.km_off+strm_off,
-                                     self.union_end-strm_off-self.km_off, 
+                                     self.union_end-strm_off-self.km_off,
                                      511-strm_off-self.km_off, 511-self.union_end+1)
                 #if len(flist) > 1:
                 pstr += indent2 + '};\n'
@@ -1832,7 +1832,7 @@ def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,        
     if nxt_cs.gso_csum_calfldobj:
         parser.be.checksum.GsoCsumParserConfigGenerate(parser, \
                                                parse_states_in_path, nxt_cs, sram)
-    return ohi_instr_allocated_count 
+    return ohi_instr_allocated_count
 
 
 def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = None):
@@ -2440,7 +2440,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         sram['meta_inst'][m]['sel']['value'] = meta_ops['nop']
         sram['meta_inst'][m]['phv_idx']['value'] = str(0)
         sram['meta_inst'][m]['val']['value'] = str(0)
-    
+
     for m,used in enumerate(mux_idx_allocator):
         if used != None:
             continue
@@ -2666,7 +2666,7 @@ def capri_parser_output_decoders(parser):
                             = csum_prof
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]['_modified']\
-                            = True 
+                            = True
                 if csum_phdr_prof != None:
                     #For handling wide register store word_size  *  profile#
                     csum_phdr_prof['word_size'] = str(hex(int(csum_phdr_t['word_size'], 16) * phdr_inst))
@@ -2675,7 +2675,7 @@ def capri_parser_output_decoders(parser):
                                                           = csum_phdr_prof
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]['_modified']\
-                            = True 
+                            = True
 
                 #Generate Gso csum related profile config for parser block
                 csum_prof, cprof_inst = parser.be.checksum.\
@@ -3864,6 +3864,9 @@ def capri_p4pd_create_swig_custom_hdr(be):
     content_str += '                 void     *swkey_mask,\n';
     content_str += '                 void     *actiondata);\n';
 
+    content_str += 'std::string\n';
+    content_str += 'p4pd_register_entry_read(std::string regname);\n';
+
     out_file = out_dir + 'iris_custom.h'
     with open(out_file, "w") as of:
         of.write(content_str)
@@ -3930,6 +3933,7 @@ def capri_p4pd_create_swig_interface(be):
 %include "cmalloc.i"
 %include "cpointer.i"
 %include "std_vector.i"
+%include "std_string.i"
 %{
     #include <thread>
     #include "nic/gen/iris/include/p4pd.h"

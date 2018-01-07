@@ -226,28 +226,28 @@ ${api_prefix}_entry_read(uint32_t  tableid,
         case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            memcpy(actiondata, (void*)debug_rsp_msg.response(0).rsp_data().actiondata().c_str(),
+            memcpy(actiondata, (void*)debug_rsp_msg.response(0).spec().actiondata().c_str(),
                    sizeof(${table}_actiondata));
             break;
 
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
-            memcpy(swkey, (void*)debug_rsp_msg.response(0).rsp_data().swkey().c_str(),
+            memcpy(swkey, (void*)debug_rsp_msg.response(0).spec().swkey().c_str(),
                    sizeof(${table}_swkey_t));
 
-            memcpy(actiondata, (void*)debug_rsp_msg.response(0).rsp_data().actiondata().c_str(),
+            memcpy(actiondata, (void*)debug_rsp_msg.response(0).spec().actiondata().c_str(),
                    sizeof(${table}_actiondata));
             break;
 
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Ternary':
-            memcpy(swkey, (void*)debug_rsp_msg.response(0).rsp_data().swkey().c_str(),
+            memcpy(swkey, (void*)debug_rsp_msg.response(0).spec().swkey().c_str(),
                    sizeof(${table}_swkey_t));
 
-            memcpy(swkey_mask, (void*)debug_rsp_msg.response(0).rsp_data().swkey_mask().c_str(),
+            memcpy(swkey_mask, (void*)debug_rsp_msg.response(0).spec().swkey_mask().c_str(),
                    sizeof(${table}_swkey_mask_t));
 
-            memcpy(actiondata, (void*)debug_rsp_msg.response(0).rsp_data().actiondata().c_str(),
+            memcpy(actiondata, (void*)debug_rsp_msg.response(0).spec().actiondata().c_str(),
                    sizeof(${table}_actiondata));
             break;
             //
@@ -260,3 +260,31 @@ ${api_prefix}_entry_read(uint32_t  tableid,
     }
     return (P4PD_SUCCESS);
 }
+
+std::string
+p4pd_register_entry_read(std::string   reg_name)
+{
+    DebugRequestMsg    debug_req_msg;
+    DebugResponseMsg   debug_rsp_msg;
+    ClientContext      context;
+    DebugSpec          *debug_spec = NULL;
+    DebugKeyHandle     *key_or_handle = NULL;
+
+    debug_spec = debug_req_msg.add_request();
+
+    key_or_handle = debug_spec->mutable_key_or_handle();
+
+    key_or_handle->set_reg_name(reg_name);
+
+    debug_spec->set_opn_type(::debug::DEBUG_OP_TYPE_READ);
+
+    auto channel =
+        grpc::CreateChannel("localhost:50054", grpc::InsecureChannelCredentials());
+
+    auto stub = ::debug::Debug::NewStub(channel);
+
+    Status status = stub->DebugInvoke(&context, debug_req_msg, &debug_rsp_msg);
+    return debug_rsp_msg.response(0).data();
+
+}
+

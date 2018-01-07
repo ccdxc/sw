@@ -78,6 +78,10 @@ bool is_hal_ctrl_thread();
 bool
 is_asic_rw_thread();
 
+std::string asic_pd_csr_dump(char *csr_str);
+
+std::string asic_csr_dump(char *csr_str);
+
 }    // namespace pd
 }    // namespace hal
 

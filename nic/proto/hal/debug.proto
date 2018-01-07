@@ -56,7 +56,7 @@ message DebugRequestMsg {
 message DebugResponse {
     types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
     DebugSpec          spec       = 2; // incoming spec
-    uint64             data       = 3; // return data for read operations
+    string             data       = 3; // return data for read operations
 }
 
 // Batched DEBUG response msg

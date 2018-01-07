@@ -104,6 +104,8 @@ cc_library(
         "asic/capri/model/utils/msg_man.cc",
         "asic/capri/model/utils/msg_stream.h",
         "asic/capri/model/utils/msg_stream.cc",
+        "asic/capri/model/utils/cap_csr_py_if.cc",
+        "asic/capri/model/utils/cap_csr_py_if.h",
         #"asic/capri/model/utils/cap_blk_env_top.cc",
         #"asic/capri/model/utils/cap_test_factory.h",
         #"asic/capri/model/utils/cap_blk_env_top.h",
