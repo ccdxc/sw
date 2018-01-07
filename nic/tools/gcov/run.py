@@ -483,7 +483,7 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
     <br><a href="%s">BullsEye Model Total Coverage</a></br>
     <br><a href="total_cov/asm/Total_asm.html">ASM Total Coverage</a></br>
     </p>
-    """ % (env.bullseye_model_html_output_dir + "/index.html")
+    """ % (os.path.relpath(env.bullseye_model_html_output_dir) + "/index.html")
 
     op_file.write(total_cov_info)
     asm_cov_str = "<br><br><strong>ASM Detailed Information</strong></br></br>"
