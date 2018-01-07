@@ -307,8 +307,9 @@ def run_dol(args):
           hal_process.poll() is None:
           time.sleep(5)
 
-    if args.rtl:
-        # Wait for runtest to finish.
+    if args.rtl and p.returncode == 0:
+        # Wait for runtest to finish only in case of DOL finishing
+        # successfully.
         while model_process.poll() is None:
             time.sleep(5)
 
