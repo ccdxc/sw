@@ -5,7 +5,7 @@ feature:
     package : test.parser
     module  : parser
     enable  : True
-    ignore  : True
+    ignore  : False
 
 modules:
     - module:
@@ -93,13 +93,6 @@ modules:
               scenario  : BAD_CHECKSUM,OUTER_UDP
 
     - module:
-        name    : VXLAN_INNER_UDP_ZERO
-        spec    : checksum_vxlan.testspec
-        iterate :
-            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
-              scenario  : ZERO_CHECKSUM,INNER_UDP
-
-    - module:
         name    : VXLAN_OUTER_IPV4_UDP
         spec    : checksum_vxlan.testspec
         iterate :
@@ -136,21 +129,21 @@ modules:
 
     - module:
         name    : IPV4_FIRST_FRAGMENT_UDP
-        spec    : ip.testspec
+        spec    : ip_drop.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : FIRST_FRAGMENT,BAD_CHECKSUM,IPV4,UDP
 
     - module:
         name    : IPV4_MIDDLE_FRAGMENT
-        spec    : ip.testspec
+        spec    : ip_drop.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : MIDDLE_FRAGMENT,BAD_CHECKSUM,UDP
 
     - module:
         name    : IPV4_LAST_FRAGMENT
-        spec    : ip.testspec
+        spec    : ip_drop.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : LAST_FRAGMENT,BAD_CHECKSUM,UDP

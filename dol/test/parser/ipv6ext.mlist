@@ -33,3 +33,27 @@ modules:
             - ipopts: FRAGMENT
               flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
 
+    - module:
+        name    : HOP_BY_HOP_TCP
+        iterate :
+            - ipopts: HOP_BY_HOP
+              flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+
+    - module:
+        name    : DEST_OPT_TCP
+        iterate :
+            - ipopts: DEST_OPT
+              flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+
+    - module:
+        name    : ROUTING_TCP
+        iterate :
+            - ipopts: ROUTING
+              flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+
+    - module:
+        name    : FRAGMENT_TCP
+        iterate :
+            - ipopts: FRAGMENT
+              flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+

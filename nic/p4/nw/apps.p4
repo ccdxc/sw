@@ -4,6 +4,9 @@
 
 action p4plus_app_default () {
     f_egress_tcp_options_fixup();
+    if (control_metadata.checksum_results != 0) {
+        drop_packet();
+    }
 }
 
 action p4plus_app_tcp_proxy() {

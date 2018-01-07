@@ -10,6 +10,8 @@ struct phv_         p;
 
 .align
 p4plus_app_default:
+  sne         c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
   seq         c1, k.tcp_valid, TRUE
   sle         c2, k.tcp_dataOffset, 5
   setcf.e     c1, [c1 & !c2]

@@ -900,7 +900,7 @@ parser parse_ipv6_ulp {
     // Because ipv6_options_len has extra 20 bytes (set in ipv6_option_blob state), blob
     // header length should be 20 bytes less.
     set_metadata(ohi.ipv6_options_blob___hdr_len, parser_metadata.ipv6_options_len-20);
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - parser_metadata.ipv6_options_len);
+    //set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - parser_metadata.ipv6_options_len);
     set_metadata(l3_metadata.ipv6_ulp, parser_metadata.ipv6_nextHdr);
     return select(parser_metadata.ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
@@ -916,7 +916,7 @@ parser parse_ipv6_ulp {
 }
 
 parser parse_ipv6_tcp {
-    set_metadata(ohi.l4_len, parser_metadata.l4_trailer + 0);
+    set_metadata(ohi.l4_len, parser_metadata.l4_trailer - parser_metadata.ipv6_options_len + 20);
     return parse_tcp_ipv6;
 }
 
