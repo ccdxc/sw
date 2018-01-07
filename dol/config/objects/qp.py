@@ -269,6 +269,7 @@ class QpObject(base.ConfigObjectBase):
         cfglogger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
         cfglogger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
         cfglogger.info("isipv6: %d" % (isipv6))
+        cfglogger.info("isVXLAN: %d" % (rdma_session.IsVXLAN))
 
         EthHdr = scapy.Ether(src=rdma_session.session.initiator.ep.macaddr.get(),
                              dst=rdma_session.session.responder.ep.macaddr.get())

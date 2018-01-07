@@ -367,10 +367,22 @@ class ScapyPacketObject:
         self.rawbytes += penscapy.struct.pack("I", crc)
         return
 
+    def GetIcrc(self):
+        return self.spkt[penscapy.ICRC].icrc
+
     def __update_icrc(self, packet):
-        builder = IcrcHeaderBuilder(packet)
-        icrc = builder.GetIcrc()                                                                                
-        icrc = (((icrc << 24) & 0xFF000000) | ((icrc <<  8) & 0x00FF0000) | ((icrc >>  8) & 0x0000FF00) | ((icrc >> 24) & 0x000000FF))
+        if packet.IsNewIcrcRequired():
+            builder = IcrcHeaderBuilder(packet)
+            icrc = builder.GetIcrc()
+            #convert to network byte format
+            icrc = (((icrc << 24) & 0xFF000000) |\
+                           ((icrc <<  8) & 0x00FF0000) |\
+                           ((icrc >>  8) & 0x0000FF00) |\
+                           ((icrc >> 24) & 0x000000FF))
+        elif packet.IsInheritIcrcRequired():
+            # no need to byte swap - as already swapped when icrc header constructed
+            icrc = packet.GetBasePacketIcrc()
+
         logger.debug("ICRC after byte swap: 0x%x" % icrc) 
         self.spkt[penscapy.ICRC].icrc = icrc
         return

@@ -183,6 +183,8 @@ class Packet(objects.FrameworkObject):
         self.rawbytes = None
         self.pendol = None
         self.icrc   = False
+        self.inherit_icrc   = False
+        self.basepkt = None
         self.LockAttributes()
 
         pktspec = PacketSpec(testspec_packet)
@@ -220,6 +222,17 @@ class Packet(objects.FrameworkObject):
                 self.pktspec.paddingsize = pktspec.paddingsize
             if objects.IsCallback(self.pktspec.paddingsize):
                 self.pktspec.paddingsize = self.pktspec.paddingsize.call(tc, self)
+            self.basepkt = basepkt
+
+            # Special handling for ICRC inheritance.
+            # ICRC is not carried in the hdrsorder metadata, 
+            # hence it must be explicitly inherited. Current 'icrc' 
+            # knob is used to calculate new icrc for this packet. 
+            # Hence adding a new knob for inherit case.
+            self.inherit_icrc = False
+            if self.basepkt.icrc is True and pktspec.icrc is False:
+                self.inherit_icrc = True
+            self.icrc = pktspec.icrc
             return
 
         if pktspec.template == None:
@@ -385,7 +398,15 @@ class Packet(objects.FrameworkObject):
         return
 
     def IsIcrcEnabled(self):
+        return self.icrc or self.inherit_icrc
+    def IsNewIcrcRequired(self):
         return self.icrc
+    def IsInheritIcrcRequired(self):
+        return self.inherit_icrc
+    def GetBasePacketIcrc(self):
+        return self.basepkt.GetIcrc()
+    def GetIcrc(self):
+        return self.spktobj.GetIcrc()
 
     def GetScapyPacket(self):
         return self.spktobj.GetScapyPacket()

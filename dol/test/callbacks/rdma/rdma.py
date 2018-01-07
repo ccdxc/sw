@@ -248,3 +248,32 @@ def GetRqAethSyndrome(tc, pkt, args = None):
 # return aeth msn stored in rqcb
 def GetRqAethMsn(tc, pkt, args = None):
     return tc.pvtdata.rq_pre_qstate.aeth_msn
+
+def __get_template(tid):
+    if tid == None: return None
+    return infra_api.GetPacketTemplate(tid)
+
+def GetPacketEncaps(testcase, packet):
+    encaps = []
+    is_vxlan = testcase.config.rdmasession.rqp.pd.ep.segment.IsFabEncapVxlan()
+
+    # Add VLAN encap always
+    encaps.append(__get_template('ENCAP_QTAG'))
+
+    # Also add VXLAN encap for VXLAN end point
+    if is_vxlan:
+        encaps.append(__get_template('ENCAP_VXLAN'))
+
+    if len(encaps):
+        return encaps
+
+    return None
+
+def GetPacketQtag(testcase, packet):
+    is_vxlan = testcase.config.rdmasession.rqp.pd.ep.segment.IsFabEncapVxlan()
+
+    if is_vxlan:
+        return testcase.config.rdmasession.rqp.pd.ep.intf.vlan_id
+    else:
+        return testcase.config.rdmasession.rqp.pd.ep.segment.vlan_id
+

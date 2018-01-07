@@ -640,7 +640,7 @@ calculated_field parser_metadata.icrc {
     // currently RDMA pkt from host is not encaped . Hence its L3 hdr is only v4/v6
     // not inner v4/v6. Adding code below in comment so that it can
     // be enabled once p4 support for RDMA encap is supported.
-#if 0
+#if 1
     verify inner_ipv4_roce_icrc if (valid(roce_bth));
     verify inner_ipv6_roce_icrc if (valid(roce_bth));
 #endif
@@ -1861,7 +1861,12 @@ parser parse_inner_udp {
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.dstPort);
     set_metadata(ohi.inner_l4_len, inner_udp.len + 0);
-    return parse_dummy;
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - inner_udp.len);
+    set_metadata(parser_metadata.l4_len, inner_udp.len-8);
+    return select(latest.dstPort) {
+        UDP_PORT_ROCE_V2: parse_roce_v2;
+        default:          parse_dummy;
+    }
     //return ingress;
 }
 

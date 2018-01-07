@@ -28,7 +28,7 @@ class RdmaSessionObject(base.ConfigObjectBase):
         super().__init__()
         return
 
-    def Init(self, session, lqp, rqp):
+    def Init(self, session, lqp, rqp, vxlan):
         self.id = resmgr.RdmaSessionIdAllocator.get()
         self.GID("RdmaSession%d" % self.id)
         self.lqp = lqp
@@ -37,6 +37,7 @@ class RdmaSessionObject(base.ConfigObjectBase):
         self.ah_size = 0
         self.session = session
         self.IsIPV6 = session.IsIPV6()
+        self.IsVXLAN = vxlan
 
     def Configure(self):
         self.lqp.ConfigureHeaderTemplate(self, True, self.session.IsIPV6())
@@ -54,6 +55,8 @@ class RdmaSessionObject(base.ConfigObjectBase):
         cfglogger.info('- Session: %s' % self.session.GID())
         cfglogger.info('- LQP: %s' % self.lqp.GID())
         cfglogger.info('- RQP: %s' % self.rqp.GID())
+        cfglogger.info('- IsIPV6: %s' % self.IsIPV6())
+        cfglogger.info('- IsVxLAN: %s' % self.IsVxLAN)
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -140,6 +143,10 @@ class RdmaSessionObjectHelper:
         self.rdma_sessions = []
         self.nw_sessions = []
         self.used_qps = []
+        self.v4_non_vxlan_count = 0
+        self.v6_non_vxlan_count = 0
+        self.v4_vxlan_count = 0
+        self.v6_vxlan_count = 0
         return
 
     def __get_qps_for_ep(self, ep):
@@ -165,17 +172,59 @@ class RdmaSessionObjectHelper:
             ep1_qps = self.__get_qps_for_ep(ep1)
             ep2_qps = self.__get_qps_for_ep(ep2)
             
+            #cfglogger.info("RDMA RC Generate: EP1 %s (%s, %d) EP2 %s (%s, %d) IPv6 %d VXLAN %d" %\
+            #                (ep1.GID(), not ep1.remote, len(ep1_qps), ep2.GID(), not ep2.remote,
+            #                len(ep2_qps), nw_s.IsIPV6(), ep2.segment.IsFabEncapVxlan()))
+
+            # Select 8 total RC Sessions, for now hard code this session split
+            # but later can be added to topo spec, so selction criterion can change between
+            # different topologies
+            # 2 : v4 & non-VXLAN
+            # 2 : v6 & non-VXLAN
+            # 0 : v4 & VXLAN (enable after testspec changes)
+            # 0 : v6 & VXLAN (enable after testspec changes)
+
             for lqp in ep1_qps:
                 if lqp in self.used_qps: continue
                 if not lqp.svc == 0 : continue
                 for rqp in ep2_qps:
                     if not rqp.svc == 0 : continue
                     if rqp in self.used_qps: continue
+                    vxlan = ep2.segment.IsFabEncapVxlan()
+                    ipv6  = nw_s.IsIPV6()
+
+                    if vxlan and not nw_s.iflow.IsL2():
+                       #cfglogger.info('SKIP: VXLAN Routed Sessions for now')
+                       continue
+
+                    #cfglogger.info("RDMA RC CHECK: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s"
+                    #               " IPv6 %d VXLAN %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
+                    #               not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(),
+                    #               ep2.segment.IsFabEncapVxlan()))
+
+                    if not ipv6 and not vxlan:  # v4 non-vxlan
+                       self.v4_non_vxlan_count += 1
+                       if self.v4_non_vxlan_count > 2: continue
+                    elif ipv6 and not vxlan:    # v6 non-vxlan
+                       self.v6_non_vxlan_count +=1
+                       if self.v6_non_vxlan_count > 2: continue
+                    elif not ipv6 and vxlan:    # v4 vxlan
+                       self.v4_vxlan_count += 1
+                       if self.v4_vxlan_count > 0: continue
+                    else:                       # v6 vxlan
+                       self.v6_vxlan_count += 1
+                       if self.v6_vxlan_count > 0: continue
+
                     self.used_qps.append(lqp)
                     self.used_qps.append(rqp)
 
+                    cfglogger.info("RDMA RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
+                                   "IPv6 %d VXLAN %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
+                                   not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(), 
+                                   ep2.segment.IsFabEncapVxlan()))
+
                     rdma_s = RdmaSessionObject()
-                    rdma_s.Init(nw_s, lqp, rqp)
+                    rdma_s.Init(nw_s, lqp, rqp, vxlan)
                     self.rdma_sessions.append(rdma_s)
                     break
                 break
@@ -201,8 +250,10 @@ class RdmaSessionObjectHelper:
                     self.used_qps.append(lqp)
                     self.used_qps.append(rqp)
 
+                    vxlan = ep2.segment.IsFabEncapVxlan()
+
                     rdma_s = RdmaSessionObject()
-                    rdma_s.Init(nw_s, lqp, rqp)
+                    rdma_s.Init(nw_s, lqp, rqp, vxlan)
                     self.rdma_sessions.append(rdma_s)
                     break
                 break

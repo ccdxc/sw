@@ -271,7 +271,7 @@ class EndpointObject(base.ConfigObjectBase):
             for qp in pdudqps:
                 cfglogger.debug("      Adding QP: PD %s, QP %s" % (eppd.GID(), qp.GID()))
                 self.udqps.append(qp)
-        cfglogger.debug("   Total UDPQs in this endpoint: Qps %d" % (len(self.udqps)))
+        cfglogger.debug("   Total UDQPs in this endpoint: Qps %d" % (len(self.udqps)))
 
 
     def ConfigurePds(self):
