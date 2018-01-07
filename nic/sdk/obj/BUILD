@@ -100,3 +100,14 @@ cc_library(
         "//:sdk_headers",
     ],
 )
+
+# twheel library
+cc_library(
+    name = "sdk_twheel",
+    srcs = [
+        "libtwheel.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)

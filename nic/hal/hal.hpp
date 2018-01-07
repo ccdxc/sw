@@ -5,8 +5,7 @@
 
 #include <string>
 #include "nic/include/base.h"
-#include "nic/utils/thread/thread.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "sdk/thread.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 
@@ -16,7 +15,7 @@ namespace hal {
 class LIFManager;
 extern LIFManager *g_lif_manager;
 
-using utils::thread;
+using sdk::lib::thread;
 
 #define HAL_MAX_CORES                                4
 #define HAL_CONTROL_CORE_ID                          0

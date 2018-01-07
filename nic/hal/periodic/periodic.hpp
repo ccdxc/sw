@@ -9,31 +9,28 @@
 #define __HAL_PERIODIC_HPP__
 
 #include "nic/include/base.h"
-#include "nic/utils/thread/thread.hpp"
-#include "nic/utils/twheel/twheel.hpp"
+#include "sdk/twheel.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace hal {
-
 namespace periodic {
 
 void *periodic_thread_init(void *ctxt);
 void *periodic_thread_run(void *ctxt);
-
-bool periodic_thread_is_running();
+bool periodic_thread_is_running(void);
 
 //------------------------------------------------------------------------------
 // API invoked by other threads to trigger cb after timeout
 // Returns the timer entry used to update/delete the timer
 //------------------------------------------------------------------------------
-void*
+void *
 periodic_timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
-                         hal::utils::twheel_cb_t cb, bool periodic);
+                         sdk::lib::twheel_cb_t cb, bool periodic);
 
 //------------------------------------------------------------------------------
 // API invoked by other threads to delete the scheduled timer
 //------------------------------------------------------------------------------
-void* periodic_timer_delete (void *timer);
+void *periodic_timer_delete (void *timer);
 
 // API to delay delete any slab objects
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id,             // slab to free back to

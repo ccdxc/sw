@@ -77,6 +77,7 @@ cc_library(
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_list",
         "//nic/hal:hal_includes",
+        "//nic/hal/lib:hal_handle_includes",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/iris:iris_includes",
         "//nic/hal/periodic",
@@ -86,6 +87,5 @@ cc_library(
         "//nic/utils/bm_allocator",
         "//nic/utils/host_mem:host_mem_includes",
         "//nic/utils/print",
-        "//nic/utils/thread",
     ],
 )

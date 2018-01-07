@@ -34,6 +34,7 @@ cc_binary(
         "//nic:lkl",
         "//nic:halproto",
         "//nic:grpc",
+        "//nic/hal/lib:hal_handle",
         "//nic/third-party/isc-dhcp",  # TODO(move to eplearn plugin)
 
         # PD
@@ -62,6 +63,9 @@ cc_library(
     hdrs = [
         "hal.hpp",
     ] + glob(["src/*.hpp"]),
+    deps = [
+        "//nic/hal/lib:hal_handle_includes",
+    ]
 )
 
 cc_library(
@@ -83,9 +87,11 @@ cc_library(
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_logger",
+        "@sdk//obj:sdk_thread",
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         "//nic/fte:fte_includes",
         "//nic/hal:hal_includes",
+        "//nic/hal/lib:hal_handle_includes",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/common:pdcommon",
         "//nic/hal/pd/iris:iris_includes",
@@ -105,7 +111,6 @@ cc_library(
         "//nic/utils/fsm",
         "//nic/utils/host_mem:host_mem_includes",
         "//nic/utils/print",
-        "//nic/utils/thread",
     ],
 )
 

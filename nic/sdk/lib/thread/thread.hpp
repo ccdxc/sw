@@ -48,8 +48,8 @@ public:
     void set_pthread_id(pthread_t pthread_id) { pthread_id_ = pthread_id; }
     pthread_t pthread_id(void) const { return pthread_id_; }
     bool is_running(void) const { return running_; }
-    void set_running(bool running) { running_ = running; }
     bool can_yield(void) const { return can_yield_; }
+    void set_running(bool running) { running_ = running; }
     void set_data(void *data) { data_ = data; }
 
     void* data() {

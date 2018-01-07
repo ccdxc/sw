@@ -1,7 +1,7 @@
 #ifndef __HAL_PD_HPP__
 #define __HAL_PD_HPP__
 
-#include "nic/hal/hal.hpp"
+#include "nic/include/hal.hpp"
 #include "nic/hal/pd/hal_pd_error.hpp"
 
 namespace hal {

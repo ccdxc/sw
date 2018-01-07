@@ -25,7 +25,7 @@ void app_redir_exit() {
 }
 
 void app_redir_thread_init(int tid) {
-    hal::utils::thread* t = hal::utils::thread::current_thread();
+    sdk::lib::thread *t = sdk::lib::thread::current_thread();
     if (t) {
         // Must be run in the correct thread
         assert((int) t->thread_id() == tid);
@@ -34,7 +34,7 @@ void app_redir_thread_init(int tid) {
 }
 
 void app_redir_thread_exit(int tid) {
-    hal::utils::thread* t = hal::utils::thread::current_thread();
+    sdk::lib::thread *t = sdk::lib::thread::current_thread();
     if (t) {
         // Must be run in the correct thread
         assert((int) t->thread_id() == tid);

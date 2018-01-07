@@ -57,15 +57,15 @@ using boost::property_tree::ptree;
 static thread *
 current_thread (void)
 {
-    return hal::utils::thread::current_thread() ?
-               hal::utils::thread::current_thread() :
+    return sdk::lib::thread::current_thread() ?
+               sdk::lib::thread::current_thread() :
                g_hal_threads[HAL_THREAD_ID_CFG];
 }
 
 static void *
 fte_pkt_loop_start (void *ctxt)
 {
-    HAL_THREAD_INIT(ctxt);
+    SDK_THREAD_INIT(ctxt);
 
     thread *curr_thread = hal::current_thread();
     thread_init_plugins(curr_thread->thread_id());
@@ -183,7 +183,9 @@ hal_thread_init (hal_cfg_t *hal_cfg)
         g_hal_threads[tid] =
             thread::factory(static_cast<const char *>(thread_name), tid,
                             core_id, fte_pkt_loop_start,
-                            thread_prio, SCHED_FIFO, false);
+                            thread_prio,
+                            gl_super_user ? SCHED_FIFO : SCHED_OTHER,
+                            false);
         g_hal_threads[tid]->set_data(hal_cfg);
         HAL_ABORT(g_hal_threads[tid] != NULL);
     }
@@ -194,7 +196,9 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                         HAL_THREAD_ID_PERIODIC,
                         HAL_CONTROL_CORE_ID,
                         hal_periodic_loop_start,
-                        thread_prio - 1, SCHED_RR, true);
+                        thread_prio - 1,
+                        gl_super_user ? SCHED_RR : SCHED_OTHER,
+                        true);
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
     g_hal_threads[HAL_THREAD_ID_PERIODIC]->start(g_hal_threads[HAL_THREAD_ID_PERIODIC]);
 
@@ -230,7 +234,9 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                         HAL_THREAD_ID_CFG,
                         HAL_CONTROL_CORE_ID,
                         thread::dummy_entry_func,
-                        sched_param.sched_priority, SCHED_RR, true);
+                        sched_param.sched_priority,
+                        gl_super_user ? SCHED_RR : SCHED_OTHER,
+                        true);
     g_hal_threads[HAL_THREAD_ID_CFG]->set_data(g_hal_threads[HAL_THREAD_ID_CFG]);
     g_hal_threads[HAL_THREAD_ID_CFG]->set_pthread_id(pthread_self());
     g_hal_threads[HAL_THREAD_ID_CFG]->set_running(true);

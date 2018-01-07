@@ -3,7 +3,6 @@
 #ifndef __HAL_CFG_HPP__
 #define __HAL_CFG_HPP__
 
-
 #include "nic/include/base.h"
 #include "sdk/list.hpp"
 

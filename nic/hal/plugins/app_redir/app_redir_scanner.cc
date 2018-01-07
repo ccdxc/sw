@@ -99,7 +99,7 @@ static bool scanner_dlclose()
 
 void scanner_periodic_cb(uint32_t timer_id, void* ctx)
 {
-    hal::utils::thread* t = hal::utils::thread::current_thread();
+    sdk::lib::thread* t = sdk::lib::thread::current_thread();
     if (t) {
         assert(t->thread_id() == hal::HAL_THREAD_ID_PERIODIC);
     }
@@ -112,7 +112,7 @@ void scanner_periodic_cb(uint32_t timer_id, void* ctx)
 }
 
 hal_ret_t scanner_init(int thread_num) {
-    hal::utils::thread* t = hal::utils::thread::current_thread();
+    sdk::lib::thread* t = sdk::lib::thread::current_thread();
     uint32_t tid = t ? t->thread_id() : hal::HAL_THREAD_ID_MAX;
 
     if (thread_num >= hal::HAL_THREAD_ID_MAX) {
@@ -306,7 +306,7 @@ hal_ret_t scanner_run() {
 /* submit a packet to scanner and run it */
 hal_ret_t scanner_run(appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_len, void* ctx) {
     void *snort_flow_handle = nullptr;
-    hal::utils::thread* t = hal::utils::thread::current_thread();
+    sdk::lib::thread* t = sdk::lib::thread::current_thread();
     uint32_t tid = t ? t->thread_id() : hal::HAL_THREAD_ID_FTE_MIN;
     assert(tid >= hal::HAL_THREAD_ID_FTE_MIN && tid <= hal::HAL_THREAD_ID_FTE_MAX);
 

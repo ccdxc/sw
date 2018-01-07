@@ -11,17 +11,20 @@
 // HAPS platform methods
 //---------------------------------------------------------------------------
 
-bool serdes_signal_detect_haps(uint32_t sbus_addr)
+bool
+serdes_signal_detect_haps (uint32_t sbus_addr)
 {
     return true;
 }
 
-bool serdes_rdy_haps(uint32_t sbus_addr)
+bool
+serdes_rdy_haps (uint32_t sbus_addr)
 {
     return true;
 }
 
-int serdes_output_enable_haps(uint32_t sbus_addr, bool enable)
+int
+serdes_output_enable_haps (uint32_t sbus_addr, bool enable)
 {
     // sbus_addr repurposed as instance id for HAPS
     uint32_t chip = sbus_addr;
@@ -40,19 +43,22 @@ int serdes_output_enable_haps(uint32_t sbus_addr, bool enable)
     return SDK_RET_OK;
 }
 
-int serdes_cfg_haps(uint32_t sbus_addr)
+int
+serdes_cfg_haps (uint32_t sbus_addr)
 {
     // for HAPS, serdes cfg is to un-reset serdes
     serdes_output_enable_haps (sbus_addr, true);
     return SDK_RET_OK;
 }
 
-int serdes_tx_rx_enable_haps(uint32_t sbus_addr, bool enable)
+int
+serdes_tx_rx_enable_haps (uint32_t sbus_addr, bool enable)
 {
     return SDK_RET_OK;
 }
 
-int serdes_reset_haps(uint32_t sbus_addr, bool reset)
+int
+serdes_reset_haps (uint32_t sbus_addr, bool reset)
 {
     return SDK_RET_OK;
 }

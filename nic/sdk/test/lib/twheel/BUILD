@@ -3,11 +3,13 @@
 package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
-cc_library(
-    name = "ht",
-    srcs = glob(["*.cc"]),
-    hdrs = glob(["*.hpp"]),
+# Slab Test
+cc_test(
+    name = "twheel_test",
+    srcs = ["twheel_test.cc"],
     deps = [
+        "//:gtest",
         "//:sdk_headers",
+        "//lib/twheel:twheel",
     ],
 )

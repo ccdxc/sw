@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "nic/utils/fsm/fsm.hpp"
 #include <map>
-#include "nic/include/twheel.hpp"
+#include "sdk/twheel.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include <vector>
 
@@ -16,7 +16,7 @@ using hal::utils::fsm_state_machine_t;
 using hal::utils::fsm_state_machine_def_t;
 using hal::utils::fsm_timer_t;
 using hal::utils::fsm_state_timer_ctx;
-using hal::utils::twheel;
+using sdk::lib::twheel;
 
 #define STATE_ID_1 1
 #define STATE_ID_2 2

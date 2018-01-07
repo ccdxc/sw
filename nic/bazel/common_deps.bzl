@@ -35,6 +35,7 @@ gl_deps_list = [
         "//nic:p4pluspd_txdma",
         "//nic:p4pluspd_rxdma",
         "//nic:asic_libs",
+        "//nic/hal/lib:hal_handle",
 
         # External
         "//:gtest",

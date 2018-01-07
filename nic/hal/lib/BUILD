@@ -9,6 +9,9 @@ cc_library(
     hdrs = [
         "hal_handle.hpp",
     ],
+    deps = [
+        "@sdk//obj:sdk_list",
+    ]
 )
 
 cc_library(

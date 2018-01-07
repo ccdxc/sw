@@ -34,22 +34,24 @@ using sdk::lib::dllist_reset;
 
 namespace linkmgr {
 
-hal::utils::thread  *g_linkmgr_threads[hal::HAL_THREAD_ID_MAX];
+sdk::lib::thread    *g_linkmgr_threads[hal::HAL_THREAD_ID_MAX];
 class linkmgr_state *g_linkmgr_state;
 linkmgr_cfg_t       linkmgr_cfg;
 
-hal::utils::thread *
-current_thread()
+sdk::lib::thread *
+current_thread (void)
 {
-    return hal::utils::thread::current_thread();
+    return sdk::lib::thread::current_thread();
 }
 
-bool hw_access_mock_mode()
+bool
+hw_access_mock_mode (void)
 {
     return g_linkmgr_state->catalog()->access_mock_mode();
 }
 
-uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
+uint32_t
+sbus_addr (uint32_t asic_num, uint32_t asic_port, uint32_t lane)
 {
     return g_linkmgr_state->catalog()->sbus_addr(asic_num, asic_port, lane);
 }
@@ -167,7 +169,7 @@ linkmgr_thread_init (void)
     // spawn periodic thread that does background tasks
     thread_id = hal::HAL_THREAD_ID_PERIODIC;
     g_linkmgr_threads[thread_id] =
-        hal::utils::thread::factory(
+        sdk::lib::thread::factory(
                         std::string("periodic-thread").c_str(),
                         thread_id,
                         HAL_CONTROL_CORE_ID,
@@ -195,11 +197,11 @@ linkmgr_thread_init (void)
     // create a thread object for this main thread
     thread_id = hal::HAL_THREAD_ID_CFG;
     g_linkmgr_threads[thread_id] =
-        hal::utils::thread::factory(
+        sdk::lib::thread::factory(
                         std::string("cfg-thread").c_str(),
                         thread_id,
                         HAL_CONTROL_CORE_ID,
-                        hal::utils::thread::dummy_entry_func,
+                        sdk::lib::thread::dummy_entry_func,
                         sched_param.sched_priority, SCHED_RR, true);
     g_linkmgr_threads[thread_id]->set_data(g_linkmgr_threads[thread_id]);
     g_linkmgr_threads[thread_id]->set_pthread_id(pthread_self());

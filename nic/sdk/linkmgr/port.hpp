@@ -262,14 +262,12 @@ public:
     static sdk_ret_t port_disable(port *pd_p);
 
 private:
-    ::port::PortOperStatus  oper_status_;    // port operational status
-    ::port::PortSpeed       port_speed_;     // port speed
-    ::port::PortType        port_type_;      // port type
-    ::port::PortAdminState  admin_state_;    // port admin state
-
-    port_link_sm_t        link_sm_;        // port link state machine
+    port_oper_status_t      oper_status_;    // port operational status
+    port_speed_t            port_speed_;     // port speed
+    port_type_t             port_type_;      // port type
+    port_admin_state_t      admin_state_;    // port admin state
+    port_link_sm_t        link_sm_;          // port link state machine
     void                  *link_bring_up_timer_;   // port link bring up timer
-
     uint32_t              mac_id_;          // mac instance for this port
     uint32_t              mac_ch_;          // mac channel within mac instance
     uint32_t              num_lanes_;       // number of lanes for this port

@@ -16,7 +16,7 @@ common_deps = [
     "@sdk//obj:sdk_ht",
     "@sdk//obj:sdk_indexer",
     "@sdk//obj:sdk_slab",
-    "//nic/utils/twheel:twheel",
+    "@sdk//obj:sdk_twheel",
     "//nic/utils/block_list:block_list",
     "//nic/third-party/spdlog",
     "//nic:gen_proto_includes",

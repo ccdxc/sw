@@ -90,10 +90,10 @@ linkmgr_loop (void)
 hal_ret_t
 linkmgr_notify (uint8_t operation, void *ctxt)
 {
-    uint16_t           pindx;
-    hal::utils::thread *curr_thread = current_thread();
-    uint32_t           curr_tid = curr_thread->thread_id();
-    linkmgr_entry_t   *rw_entry;
+    uint16_t            pindx;
+    sdk::lib::thread    *curr_thread = current_thread();
+    uint32_t            curr_tid = curr_thread->thread_id();
+    linkmgr_entry_t     *rw_entry;
 
     if (g_linkmgr_workq[curr_tid].nentries >= LINKMGR_CONTROL_Q_SIZE) {
         HAL_TRACE_ERR("Error: operation {} for thread {}, tid {} full",

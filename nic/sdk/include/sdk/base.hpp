@@ -50,6 +50,13 @@ do {                                                       \
 
 #define SDK_ASSERT(cond)        __ASSERT__(cond)
 
+#define SDK_ABORT(cond)                                    \
+do {                                                       \
+    if (!(cond)) {                                         \
+        abort();                                           \
+    }                                                      \
+} while (FALSE)
+
 //-----------------------------------------------------------------------------
 // X-Macro for defining enums (generates enum definition and string formatter)
 //

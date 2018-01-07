@@ -5,21 +5,17 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <atomic>
-#include "nic/utils/twheel/twheel.hpp"
-#include "nic/utils/thread/thread.hpp"
-#include "nic/include/asic_pd.hpp"
-#include "nic/include/periodic.hpp"
-#include "port_mac.hpp"
-#include "linkmgr.hpp"
-#include "port.hpp"
+#include "sdk/twheel.hpp"
+#include "sdk/thread.hpp"
+#include "sdk/linkmgr/port_mac.hpp"
+#include "sdk/linkmgr/port.hpp"
 
 namespace linkmgr {
-namespace pd {
 
 mac_fn_t port::mac_fn;
 serdes_fn_t port::serdes_fn;
 
-// Invoked by the periodic thread when timer expires
+// invoked by the periodic thread when timer expires
 sdk_ret_t
 port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
 {
@@ -312,7 +308,7 @@ port::port_link_sm_process(void)
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                         0, timeout, this,
-                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
                 break;
             }
@@ -346,7 +342,7 @@ port::port_link_sm_process(void)
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                             0, timeout, this,
-                            (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                            (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                             false);
                 break;
             }
@@ -362,7 +358,7 @@ port::port_link_sm_process(void)
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                         0, timeout, this,
-                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
                 break;
             }
@@ -482,5 +478,4 @@ port::port_disable(port *pd_p)
     return ret;
 }
 
-}    // namespace pd
 }    // namespace linkmgr

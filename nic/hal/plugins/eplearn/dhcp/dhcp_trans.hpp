@@ -7,7 +7,7 @@
 #include "nic/fte/fte.hpp"
 #include "nic/include/hal_state.hpp"
 #include "sdk/ht.hpp"
-#include "nic/include/twheel.hpp"
+#include "sdk/twheel.hpp"
 #include "../common/trans.hpp"
 
 #define HAL_MAX_DHCP_TRANS 512
@@ -23,7 +23,7 @@ using hal::utils::fsm_state_machine_t;
 using hal::utils::fsm_state_machine_def_t;
 using hal::utils::fsm_timer_t;
 using hal::utils::fsm_state_timer_ctx;
-using hal::utils::twheel;
+using sdk::lib::twheel;
 struct packet; //forward declaration.
 
 namespace hal {

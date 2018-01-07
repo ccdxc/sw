@@ -20,7 +20,6 @@ cc_test(
     deps = [
         ":shmseg",
         "//nic/utils/trace",
-        #"//nic:sdk_logger",
         "@sdk//obj:sdk_logger",
         # External
         "//:gtest",

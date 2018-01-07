@@ -1,22 +1,25 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//------------------------------------------------------------------------------
+
 #ifndef __TWHEEL_HPP__
 #define __TWHEEL_HPP__
 
 #include <time.h>
-#include "nic/include/base.h"
-#include "nic/include/timestamp.h"
-#include "nic/include/hal_lock.hpp"
+#include "sdk/base.hpp"
+#include "sdk/lock.hpp"
 #include "sdk/slab.hpp"
+#include "sdk/timestamp.hpp"
 
 using sdk::lib::slab;
 
-namespace hal {
-namespace utils {
+namespace sdk {
+namespace lib {
 
 #define TWHEEL_DEFAULT_SLICE_DURATION    250      // in msecs
 #define TWHEEL_DEFAULT_DURATION          (2 * 60 * TIME_MSECS_PER_MIN) // 2 hr
 
 typedef void (*twheel_cb_t)(uint32_t timer_id, void *ctxt);
-
 typedef struct twentry_s twentry_t;
 struct twentry_s {
     uint32_t       timer_id_;    // unique (in app's space) timer id
@@ -32,7 +35,7 @@ struct twentry_s {
 
 // one slice of the timer wheel
 typedef struct tw_slice_s {
-    hal_spinlock_t    slock_;          // lock for thread safety
+    sdk_spinlock_t    slock_;          // lock for thread safety
     twentry_t         *slice_head_;    // slice head
 }  __PACK__ tw_slice_t;
 
@@ -66,7 +69,7 @@ private:
 private:
     twheel() {};
     ~twheel();
-    hal_ret_t init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe);
+    sdk_ret_t init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe);
     void init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
                        bool periodic, void *ctxt, twheel_cb_t cb);
 
@@ -99,8 +102,8 @@ private:
 
 };
 
-}    // namespace hal
-}    // namespace utils
+}    // namespace lib
+}    // namespace sdk
 
 #endif    // __TWHEEL_HPP__
 

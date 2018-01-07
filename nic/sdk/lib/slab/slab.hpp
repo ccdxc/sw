@@ -17,6 +17,10 @@ namespace lib {
 // slab id servers as unique identifier for a slab instance, this id is not used
 // by the library itself
 typedef uint32_t slab_id_t;
+enum {
+    SDK_SLAB_ID_TWHEEL,
+    SDK_SLAB_ID_RSVD,
+};
 
 #define SLAB_NAME_MAX_LEN        16
 

@@ -182,7 +182,7 @@ hal_ret_t port_get(port::PortGetRequest& req,
 
 hal_ret_t linkmgr_init();
 
-hal::utils::thread* current_thread();
+sdk::lib::thread *current_thread(void);
 
 hal_ret_t port_event_timer(void *ctxt);
 hal_ret_t port_event_enable(void *ctxt);

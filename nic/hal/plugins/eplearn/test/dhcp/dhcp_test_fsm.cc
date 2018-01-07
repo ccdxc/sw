@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
-#include "nic/include/twheel.hpp"
+#include "sdk/twheel.hpp"
 // clang-format off
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_packet.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_learn.hpp"
@@ -23,7 +23,7 @@
 
 using namespace Tins;
 using namespace hal::eplearn;
-using hal::utils::twheel;
+using sdk::lib::twheel;
 using namespace hal;
 
 twheel *hal_twheel;

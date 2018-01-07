@@ -1,7 +1,13 @@
-#include "nic/utils/twheel/twheel.hpp"
-#include <gtest/gtest.h>
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// Test Cases to verify timer wheel library
+//------------------------------------------------------------------------------
 
-using hal::utils::twheel;
+#include <gtest/gtest.h>
+#include "sdk/twheel.hpp"
+
+using sdk::lib::twheel;
 
 class twheel_test : public ::testing::Test {
 protected:

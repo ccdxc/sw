@@ -23,7 +23,7 @@ cc_library(
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_list",
-        "//nic/utils/thread:thread",
+        "//nic/hal/lib:hal_handle_includes",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/iris:iris_includes",

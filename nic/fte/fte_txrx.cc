@@ -86,7 +86,7 @@ fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
 
 //------------------------------------------------------------------------------
 // Get fte_id
-// ***Should be called from FTE thread***
+// Should be called from FTE thread
 //------------------------------------------------------------------------------
 uint8_t
 fte_id()
@@ -99,7 +99,7 @@ fte_id()
 //------------------------------------------------------------------------------
 // Asynchronouly executes the fn in the specified fte thread,
 // If the softq is full, it blocks until a slot is empty.
-// ***Should be called from non FTE thread***
+// Should be called from non FTE thread
 //-----------------------------------------------------------------------------
 hal_ret_t
 fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
@@ -235,7 +235,7 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
 hal_ret_t
 inst_t::softq_enqueue(softq_fn_t fn, void *data)
 {
-    hal::utils::thread *curr_thread = hal::hal_get_current_thread();
+    sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
 
     HAL_TRACE_DEBUG("fte: softq enqueue fte.{} fn={:p} data={:p}",
                     id_, (void*)fn, data);

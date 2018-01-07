@@ -12,11 +12,10 @@ cc_library(
         "//nic/hal:hal_includes",
         "//nic/hal/periodic",
         "//nic/include:base_includes",
+        "//nic/hal/lib:hal_handle_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/print",
-        #"//nic:sdk_slab",
         "@sdk//obj:sdk_slab",
-        "//nic/utils/thread",
     ],
     copts = sdk_copts,
 )
@@ -27,7 +26,6 @@ cc_test(
     deps = [
         ":pt",
         "//nic/utils/trace",
-        #"//nic:sdk_logger",
         "@sdk//obj:sdk_logger",
         "//nic/hal/test:hal_mock",
         # External

@@ -5,8 +5,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/timerfd.h>
-#include "nic/utils/thread/thread.hpp"
-#include "nic/utils/twheel/twheel.hpp"
+#include "sdk/thread.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 
 //------------------------------------------------------------------------------
@@ -24,7 +23,7 @@ namespace hal {
 namespace periodic {
 
 // global timer wheel for periodic thread's use
-hal::utils::twheel *g_twheel;
+sdk::lib::twheel *g_twheel;
 static volatile bool g_twheel_is_running = false;
 
 // timer fd information
@@ -102,11 +101,11 @@ timerfd_wait (struct periodic_info *pinfo, uint64_t *missed)
 void *
 periodic_thread_init (void *ctxt)
 {
-    HAL_THREAD_INIT(ctxt);
+    SDK_THREAD_INIT(ctxt);
 
     // create a timer wheel
-    g_twheel = hal::utils::twheel::factory(TWHEEL_DEFAULT_SLICE_DURATION,
-                                           TWHEEL_DEFAULT_DURATION, true);
+    g_twheel = sdk::lib::twheel::factory(TWHEEL_DEFAULT_SLICE_DURATION,
+                                         TWHEEL_DEFAULT_DURATION, true);
     if (g_twheel == NULL) {
         HAL_TRACE_ERR("Periodic thread failed to create timer wheel");
         return NULL;
@@ -193,7 +192,7 @@ hal_ret_t
 delay_delete_to_slab (hal_slab_t slab_id, void *elem)
 {
     g_twheel->add_timer(slab_id, TIME_MSECS_PER_SEC << 1, elem,
-                        (hal::utils::twheel_cb_t)slab_delay_delete_cb, false);
+                        (sdk::lib::twheel_cb_t)slab_delay_delete_cb, false);
     return HAL_RET_OK;
 }
 
@@ -203,7 +202,7 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
 //------------------------------------------------------------------------------
 void*
 periodic_timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
-                         hal::utils::twheel_cb_t cb, bool periodic)
+                         sdk::lib::twheel_cb_t cb, bool periodic)
 {
     return g_twheel->add_timer(timer_id, timeout, ctxt, cb, periodic);
 }

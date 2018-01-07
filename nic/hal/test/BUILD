@@ -11,8 +11,9 @@ cc_library(
     ],
     deps = [
         "//nic/include:base_includes",
+        "//nic/hal/lib:hal_handle_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/thread:thread",
+        "@sdk//obj:sdk_thread",
     ],
     alwayslink = 1,
     #copts = sdk_copts,
@@ -26,7 +27,7 @@ cc_binary(
     deps = [
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/thread:thread",
+        "@sdk//obj:sdk_thread",
         "//nic:gen_proto_includes",
         "//nic:halproto",
         "//nic:grpc",

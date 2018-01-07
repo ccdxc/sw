@@ -7,8 +7,7 @@
 #include <atomic>
 #include "nic/include/port.hpp"
 #include "nic/include/asic_pd.hpp"
-#include "nic/utils/twheel/twheel.hpp"
-#include "nic/utils/thread/thread.hpp"
+#include "sdk/twheel.hpp"
 #include "hal_control.hpp"
 #include "nic/include/periodic.hpp"
 #include "port_mac.hpp"
@@ -302,7 +301,7 @@ port::port_link_sm_process()
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                         0, timeout, this,
-                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
                 break;
             }
@@ -336,7 +335,7 @@ port::port_link_sm_process()
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                             0, timeout, this,
-                            (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                            (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                             false);
                 break;
             }
@@ -352,7 +351,7 @@ port::port_link_sm_process()
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                         0, timeout, this,
-                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
                 break;
             }
@@ -441,7 +440,7 @@ port::port_enable(port *pd_p)
         ret = pd_p->port_enable();
     } else {
         // wake up the hal control thread to process port event
-        ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_ENABLE, pd_p);
+        ret = hal_control_notify(HAL_CONTROL_OPERATION_PORT_ENABLE, pd_p);
 
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{}: Error notifying control-thread for port enable",
@@ -461,7 +460,7 @@ port::port_disable(port *pd_p)
         ret = pd_p->port_disable();
     } else {
         // wake up the hal control thread to process port event
-        ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_DISABLE, pd_p);
+        ret = hal_control_notify(HAL_CONTROL_OPERATION_PORT_DISABLE, pd_p);
 
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{}: Error notifying control-thread for port disable",

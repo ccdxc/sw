@@ -5,6 +5,9 @@
 #include "nic/include/hal_control.hpp"
 
 namespace hal {
+
+extern bool gl_super_user;
+
 namespace pd {
 
 //------------------------------------------------------------------------------
@@ -32,7 +35,9 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         thread::factory(std::string("hal-control").c_str(),
                 thread_id, HAL_CONTROL_CORE_ID,
                 hal::pd::hal_control_start,
-                sched_get_priority_max(SCHED_RR), SCHED_RR, true);
+                sched_get_priority_max(SCHED_RR),
+                gl_super_user ? SCHED_RR : SCHED_OTHER,
+                true);
     HAL_ABORT(g_hal_threads[thread_id] != NULL);
 
     // set custom data

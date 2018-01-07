@@ -5,8 +5,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <atomic>
-#include "nic/utils/twheel/twheel.hpp"
-#include "nic/utils/thread/thread.hpp"
+#include "sdk/twheel.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/include/periodic.hpp"
 #include "port_mac.hpp"
@@ -312,7 +311,7 @@ port::port_link_sm_process()
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                         0, timeout, this,
-                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
                 break;
             }
@@ -346,7 +345,7 @@ port::port_link_sm_process()
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                             0, timeout, this,
-                            (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                            (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                             false);
                 break;
             }
@@ -362,7 +361,7 @@ port::port_link_sm_process()
                 this->link_bring_up_timer_ =
                     hal::periodic::periodic_timer_schedule(
                         0, timeout, this,
-                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
                 break;
             }

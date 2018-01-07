@@ -10,7 +10,6 @@ cc_test(
     deps = [
         "//:gtest",
         "//:sdk_headers",
-        "//obj:sdk_logger",
         "//obj:sdk_slab",
     ],
 )

@@ -1,43 +1,47 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//------------------------------------------------------------------------------
+
 #include <assert.h>
 #include <unistd.h>
-#include "nic/utils/twheel/twheel.hpp"
-#include "nic/include/hal_mem.hpp"
+#include "sdk/mem.hpp"
+#include "sdk/twheel.hpp"
 
-namespace hal {
-namespace utils {
+namespace sdk {
+namespace lib {
 
 //------------------------------------------------------------------------------
 // init function for the timer wheel
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 twheel::init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe)
 {
     uint32_t    i;
 
-    twentry_slab_ = slab::factory("twheel", HAL_SLAB_RSVD,
+    twentry_slab_ = slab::factory("twheel", SDK_SLAB_ID_TWHEEL,
                                   sizeof(twentry_t), 256,
                                   thread_safe, true, false);
     if (twentry_slab_ == NULL) {
-        return HAL_RET_OOM;
+        return SDK_RET_OOM;
     }
     slice_intvl_ = slice_intvl;
     thread_safe_ = thread_safe;
     clock_gettime(CLOCK_MONOTONIC, &prev_tick_tp_);
     nslices_ = wheel_duration/slice_intvl;
-    twheel_ = (tw_slice_t *)HAL_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL,
+    twheel_ = (tw_slice_t *)SDK_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL,
                                        nslices_ * sizeof(tw_slice_t));
     if (twheel_ == NULL) {
         slab::destroy(twentry_slab_);
-        return HAL_RET_OOM;
+        return SDK_RET_OOM;
     }
     if (thread_safe_) {
         for (i = 0; i < nslices_; i++) {
-            HAL_SPINLOCK_INIT(&twheel_[i].slock_, PTHREAD_PROCESS_PRIVATE);
+            SDK_SPINLOCK_INIT(&twheel_[i].slock_, PTHREAD_PROCESS_PRIVATE);
         }
     }
     curr_slice_ = 0;
     num_entries_ = 0;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -54,15 +58,15 @@ twheel::factory(uint64_t slice_intvl, uint32_t wheel_duration,
         (wheel_duration <= slice_intvl)) {
         return NULL;
     }
-    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL, sizeof(twheel));
+    mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL, sizeof(twheel));
     if (!mem) {
         return NULL;
     }
     new_twheel = new (mem) twheel();
     if (new_twheel->init(slice_intvl, wheel_duration, thread_safe) !=
-            HAL_RET_OK) {
+            SDK_RET_OK) {
         new_twheel->~twheel();
-        HAL_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, mem);
+        SDK_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, mem);
         return NULL;
     }
     return new_twheel;
@@ -80,10 +84,10 @@ twheel::~twheel()
     }
     if (thread_safe_) {
         for (i = 0; i < nslices_; i++) {
-            HAL_SPINLOCK_DESTROY(&twheel_[i].slock_);
+            SDK_SPINLOCK_DESTROY(&twheel_[i].slock_);
         }
     }
-    HAL_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twheel_);
+    SDK_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twheel_);
 }
 
 void
@@ -93,7 +97,7 @@ twheel::destroy(twheel *twh)
         return;
     }
     twh->~twheel();
-    HAL_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twh);
+    SDK_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twh);
 }
 
 //------------------------------------------------------------------------------
@@ -130,13 +134,11 @@ twheel::add_timer(uint32_t timer_id, uint64_t timeout, void *ctxt,
     init_twentry_(twentry, timer_id, timeout, periodic, ctxt, cb);
 
     if (thread_safe_) {
-        HAL_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
-        //HAL_TRACE_DEBUG("{}:{} locked slice {}", __FUNCTION__, __LINE__, curr_slice_);
+        SDK_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
     }
     insert_timer_(twentry);
     if (thread_safe_) {
-        //HAL_TRACE_DEBUG("{}:{} unlocking slice {}", __FUNCTION__, __LINE__, curr_slice_);
-        HAL_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
+        SDK_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
     }
 
     return twentry;
@@ -159,13 +161,11 @@ twheel::del_timer(void *timer)
     ctxt = twentry->ctxt_;
 
     if (thread_safe_) {
-        HAL_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
-        //HAL_TRACE_DEBUG("{}:{} locked slice {}", __FUNCTION__, __LINE__, curr_slice_);
+        SDK_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
     }
     remove_timer_(twentry);
     if (thread_safe_) {
-        //HAL_TRACE_DEBUG("{}:{} unlocking slice {}", __FUNCTION__, __LINE__, curr_slice_);
-        HAL_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
+        SDK_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
     }
     twentry_slab_->free(twentry);
 
@@ -186,8 +186,7 @@ twheel::upd_timer(void *timer, uint64_t timeout, bool periodic)
     twentry = static_cast<twentry_t *>(timer);
 
     if (thread_safe_) {
-        HAL_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
-        //HAL_TRACE_DEBUG("{}:{} locked slice {}", __FUNCTION__, __LINE__, curr_slice_);
+        SDK_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
     }
     // remove this entry from current slice
     remove_timer_(twentry);
@@ -197,8 +196,7 @@ twheel::upd_timer(void *timer, uint64_t timeout, bool periodic)
     // re-insert in the right slice
     insert_timer_(twentry);
     if (thread_safe_) {
-        //HAL_TRACE_DEBUG("{}:{} unlocking slice {}", __FUNCTION__, __LINE__, curr_slice_);
-        HAL_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
+        SDK_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
     }
     return twentry;
 }
@@ -224,13 +222,12 @@ twheel::tick(uint32_t msecs_elapsed)
 
     // compute the number of slices to walk from current slice
     nslices = msecs_elapsed/slice_intvl_;
-    HAL_ASSERT(nslices >= 1);
+    SDK_ASSERT(nslices >= 1);
 
     // process all the timer events from current slice
     do {
         if (thread_safe_) {
-            HAL_SPINLOCK_LOCK(&twheel_[curr_slice_].slock_);
-            //HAL_TRACE_DEBUG("{}:{} locked slice {}", __FUNCTION__, __LINE__, curr_slice_);
+            SDK_SPINLOCK_LOCK(&twheel_[curr_slice_].slock_);
         }
         twentry = twheel_[curr_slice_].slice_head_;
         while (twentry) {
@@ -255,13 +252,12 @@ twheel::tick(uint32_t msecs_elapsed)
             }
         }
         if (thread_safe_) {
-            //HAL_TRACE_DEBUG("{}:{} unlocking slice {}", __FUNCTION__, __LINE__, curr_slice_);
-            HAL_SPINLOCK_UNLOCK(&twheel_[curr_slice_].slock_);
+            SDK_SPINLOCK_UNLOCK(&twheel_[curr_slice_].slock_);
         }
         curr_slice_ = (curr_slice_ + 1)%nslices_;
     } while (--nslices);
 }
 
-}    // namespace hal
-}    // namespace utils
+}    // namespace lib
+}    // namespace sdk
 

@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
-#include "nic/include/twheel.hpp"
+#include "sdk/twheel.hpp"
 
 #include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/ndp_learn.hpp"
@@ -23,7 +23,7 @@
 using namespace Tins;
 using namespace hal;
 using namespace hal::eplearn;
-using hal::utils::twheel;
+using sdk::lib::twheel;
 
 /*
  * Note: For now timer wheel is supposed to be non-thread safe.

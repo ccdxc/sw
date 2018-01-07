@@ -136,14 +136,14 @@ thread::start(void *ctxt)
             SDK_TRACE_ERR("pthread_attr_setschedpolicy failure, err : %d", rv);
             return SDK_RET_ERR;
         }
-    }
 
-    // set the thread priority
-    sched_params.sched_priority = prio_;
-    rv = pthread_attr_setschedparam(&attr, &sched_params);
-    if (rv != 0) {
-        SDK_TRACE_ERR("pthread_attr_setschedparam failure, err : {}", rv);
-        return SDK_RET_ERR;
+        // set the thread priority
+        sched_params.sched_priority = prio_;
+        rv = pthread_attr_setschedparam(&attr, &sched_params);
+        if (rv != 0) {
+            SDK_TRACE_ERR("pthread_attr_setschedparam failure, err : {}", rv);
+            return SDK_RET_ERR;
+        }
     }
 
     // create the thread now

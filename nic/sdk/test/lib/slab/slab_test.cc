@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //
-// Test Cases to verify Slab library
+// Test Cases to verify slab library
 //------------------------------------------------------------------------------
 
 #include <gtest/gtest.h>

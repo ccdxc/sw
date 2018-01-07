@@ -23,10 +23,11 @@ cc_library(
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_pal",
         "@sdk//obj:sdk_list",
+        "@sdk//obj:sdk_thread",
         "//nic/hal/pd:hal_pd_includes",
+        "//nic/hal/lib:hal_handle_includes",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/thread",
     ],
     alwayslink = 1,
 )

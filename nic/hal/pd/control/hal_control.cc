@@ -7,10 +7,13 @@
 #include <atomic>
 #include "hal_control.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/utils/thread/thread.hpp"
+#include "sdk/thread.hpp"
 #include "nic/include/asic_pd.hpp"
 
 namespace hal {
+
+extern bool gl_super_user;
+
 namespace pd {
 
 //------------------------------------------------------------------------------
@@ -19,7 +22,7 @@ namespace pd {
 void*
 hal_control_start (void *ctxt)
 {
-    HAL_THREAD_INIT(ctxt);
+    SDK_THREAD_INIT(ctxt);
 
     hal_cfg_t *hal_cfg =
                 (hal_cfg_t *)hal::hal_get_current_thread()->data();
@@ -34,7 +37,9 @@ hal_control_start (void *ctxt)
         thread::factory(std::string("asic-rw").c_str(),
                 HAL_THREAD_ID_ASIC_RW, HAL_CONTROL_CORE_ID,
                 hal::pd::asic_rw_start,
-                sched_get_priority_max(SCHED_RR), SCHED_RR, true);
+                sched_get_priority_max(SCHED_RR),
+                gl_super_user ? SCHED_RR : SCHED_OTHER,
+                true);
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_ASIC_RW] != NULL);
 
     // set custom data
