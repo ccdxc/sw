@@ -20,6 +20,8 @@ p4plus_app_default:
 
 .align
 p4plus_app_classic_nic:
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
+  phvwr       p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
   // r7 : packet_len
   or          r7, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
                   k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8

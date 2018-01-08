@@ -28,8 +28,8 @@ ipsg_hit:
   phvwr.c1    p.capri_intrinsic_drop, 1
 
 f_normalization:
-  bbeq        k.l4_metadata_icmp_normalization_en, TRUE, icmp_normalization
   bbeq        k.l4_metadata_tcp_normalization_en, TRUE, tcp_stateless_normalization
+  bbeq        k.l4_metadata_icmp_normalization_en, TRUE, icmp_normalization
   nop
   nop.e
   nop

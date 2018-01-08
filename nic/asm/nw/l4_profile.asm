@@ -87,15 +87,17 @@ l4_profile:
 // c5 - IPv4
 f_ip_normalization_optimal:
   seq         c1, d.u.l4_profile_d.ip_normalization_en, 1
+  jr.!c1      r7
   // First do all IP normalizaiton checks here optimally before we
   // proceed to checking each knob.
+  // we can use bbeq here to branch if we spare a bit for V4 and V6. But
+  // that might increase the lkp_type beyond 4 bits. So not chaning it for now.
   // Good Packet start
   seq         c5, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   seq         c6, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
-
-  bcf         [c1 & c5], lb_ipv4_normalizaiton_optimal
+  b.c5        lb_ipv4_normalizaiton_optimal
   seq         c2, k.vlan_tag_valid, 1
-  bcf         [c1 & c6], lb_ipv6_normalization_optimal
+  b.c6        lb_ipv6_normalization_optimal
   seq         c1, k.l3_metadata_ip_option_seen, TRUE
   jr          r7
 
