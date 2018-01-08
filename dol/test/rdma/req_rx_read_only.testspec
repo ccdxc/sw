@@ -19,20 +19,16 @@ selectors:
 
 packets:
     - packet:
-        id          : READ_REQ # Transmit packet
+        id          : READ_REQ_BASE # Base packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
             eth:
                 src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
                 dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
-            qtag:
-                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
@@ -56,6 +52,28 @@ packets:
                 data    : None
 
     - packet:
+        id          : READ_REQ
+        encaps      : callback://rdma/rdma/GetPacketEncaps
+        clone       : ref://testcase/packets/id=READ_REQ_BASE
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/macaddr
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/ltep
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rtep
+                tos     : 0
+                id      : 0
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/rdmasession/rqp/pd/ep/segment/vxlan_id
+            qtag:
+                vlan    : callback://rdma/rdma/GetPacketQtag
+                                                                   
+    - packet:
          id          : READ_RESP_ONLY_PYLD # Receive payload
          payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
          template    : ref://factory/packets/id=PAYLOAD
@@ -64,41 +82,57 @@ packets:
                  data    : ref://factory/payloads/id=PAYLOAD_FF64/data
     
     - packet:
-         id          : READ_RESP_ONLY    # Receive packet 
-         payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
-         icrc        : True
-         encaps      :
-             - ref://factory/packets/id=ENCAP_QTAG
-         headers     :
-             # Add all possible headers, the final headers will be selected
-             # based on the Flow.
-             eth:
-                 src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
-                 dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
-             qtag:
-                 vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
-             ipv4:
-                 src     : ref://testcase/config/rdmasession/session/responder/addr
-                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
-                 ttl     : 64
-             ipv6:
-                 src     : ref://testcase/config/rdmasession/session/responder/addr
-                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
-                 hlim    : 64
-             udp:
-                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
-                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
-             bth:
-                 opcode  : 16
-                 destqp  : ref://testcase/config/rdmasession/lqp/id
-                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
-             aeth:
+        id          : READ_RESP_ONLY_BASE # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 16
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+            aeth:
                 syndrome : 14 # TODO - credits
                 msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
-             payload:
-                 data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/rawbytes
+            payload:
+                data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/rawbytes
 
+    - packet:
+        id          : READ_RESP_ONLY    # Receive packet 
+        encaps      : callback://rdma/rdma/GetPacketEncaps
+        clone       : ref://testcase/packets/id=READ_RESP_ONLY_BASE
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rmacaddr
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rtep
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/rdmasession/rqp/pd/ep/segment/vxlan_id
+            qtag:
+                vlan    : callback://rdma/rdma/GetPacketQtag
+                prio    : 0
 
 buffers:
     - buffer:

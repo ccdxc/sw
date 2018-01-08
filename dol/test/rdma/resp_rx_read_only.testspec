@@ -25,22 +25,18 @@ packets:
         headers     :
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
-
    - packet:
-        id          : IN_PKT    # Input packet 
+        id          : IN_PKT_BASE    # Base for Input packet 
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
-        encaps      :   
-            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
             eth:
                 src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
                 dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
-            qtag:
-                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+
             ipv4:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
@@ -64,20 +60,37 @@ packets:
                 data    : None
 
    - packet:
-        id          : EXP_PKT    # Output packet, Reverse all fields from the IN_PKT
+        id          : IN_PKT    # Input packet 
+        encaps      : callback://rdma/rdma/GetPacketEncaps
+        clone       : ref://testcase/packets/id=IN_PKT_BASE
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rmacaddr
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rtep
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/rdmasession/rqp/pd/ep/segment/vxlan_id
+            qtag:
+                vlan    : callback://rdma/rdma/GetPacketQtag
+                prio    : 0
+
+   - packet:
+        id          : EXP_PKT_BASE    # Expected Ack packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
-        encaps      :   
-            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
             eth:
                 src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
                 dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
-            qtag:
-                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
@@ -98,6 +111,29 @@ packets:
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+
+   - packet:
+        id          : EXP_PKT    # Expected Ack packet
+        encaps      : callback://rdma/rdma/GetPacketEncaps
+        clone       : ref://testcase/packets/id=EXP_PKT_BASE
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/macaddr
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/ltep
+                dst     : ref://testcase/config/rdmasession/rqp/pd/ep/intf/rtep
+                tos     : 0
+                id      : 0
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/rdmasession/rqp/pd/ep/segment/vxlan_id
+            qtag:
+                vlan    : callback://rdma/rdma/GetPacketQtag
 
 buffers:
     - buffer:

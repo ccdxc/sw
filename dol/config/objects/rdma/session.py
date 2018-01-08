@@ -181,8 +181,8 @@ class RdmaSessionObjectHelper:
             # different topologies
             # 2 : v4 & non-VXLAN
             # 2 : v6 & non-VXLAN
-            # 0 : v4 & VXLAN (enable after testspec changes)
-            # 0 : v6 & VXLAN (enable after testspec changes)
+            # 1 : v4 & VXLAN (enable after testspec changes)
+            # 1 : v6 & VXLAN (enable after testspec changes)
 
             for lqp in ep1_qps:
                 if lqp in self.used_qps: continue
@@ -210,10 +210,10 @@ class RdmaSessionObjectHelper:
                        if self.v6_non_vxlan_count > 2: continue
                     elif not ipv6 and vxlan:    # v4 vxlan
                        self.v4_vxlan_count += 1
-                       if self.v4_vxlan_count > 0: continue
+                       if self.v4_vxlan_count > 1: continue
                     else:                       # v6 vxlan
                        self.v6_vxlan_count += 1
-                       if self.v6_vxlan_count > 0: continue
+                       if self.v6_vxlan_count > 1: continue
 
                     self.used_qps.append(lqp)
                     self.used_qps.append(rqp)
