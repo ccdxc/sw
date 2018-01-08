@@ -4,7 +4,7 @@ echo -e "\033[36m Building Cscope ...\033[0m"
 uname=`uname -s`
 if [ x$uname == xLinux ]
 then
-  find -type f -and -regex '.*/.*\.\(c\|cpp\|cc\|h\|hpp\|p4\|s\|asm\|py\|proto\|spec\)$' > cscope.files
+  find -type f -and -regex '.*/.*\.\(c\|cpp\|cc\|h\|hpp\|p4\|s\|asm\|proto\|spec\)$' > cscope.files
 elif [ x$uname == xDarwin ]
 then
   find . -name '*.c' 2> /dev/null > cscope.files

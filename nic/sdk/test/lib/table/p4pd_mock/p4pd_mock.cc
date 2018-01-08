@@ -5,9 +5,9 @@
 //------------------------------------------------------------------------------
 #include "sdk/base.hpp"
 
-namespace sdk {
-namespace pd {
-namespace p4 {
+// namespace sdk {
+// namespace pd {
+// namespace p4 {
 
 // read API
 int p4pd_entry_read(uint32_t tableid, uint32_t index, void *swkey,
@@ -94,6 +94,6 @@ int p4pd_global_table_properties_get(uint32_t tableid,
     return 0;
 }
 
-}   // namespace p4
-}   // namespace pd
-}   // namespace sdk
+// }   // namespace p4
+// }   // namespace pd
+// }   // namespace sdk

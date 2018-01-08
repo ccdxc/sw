@@ -112,6 +112,8 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/tcam:tcam_test
 	# PD
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
+	# SDK Tests
+	$(MAKE) -C sdk build-test
 
 post-make:
 	mkdir -p obj/cano
@@ -146,8 +148,6 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) $(SNORT_CMD_OPTS) ./nic/hal/test/gtests/appid_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/appid_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/qos_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/copp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/copp_test.xml"
-
-	# Revisit as its failing intermittently in sanity
 	#$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
 	#$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
 	# PI Utils gtests
@@ -169,6 +169,12 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	# PD gtests
 	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/rw_tbl_test.xml"
 	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/tnnl_rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tnnl_rw_tbl_test.xml"
+	# SDK tests
+	@find sdk/bazel-bin/test -name *.runfiles_manifest* | sed 's/\.runfiles_manifest$$//1' | \
+	while read i; \
+		do printf "\nRunning $$i\n" && $$i --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/$(basename($$i)).xml"; \
+	done \
+	
 
 
 VAL_CMD = valgrind --xml=yes 
