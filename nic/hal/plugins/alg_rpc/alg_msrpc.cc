@@ -12,7 +12,7 @@ namespace hal {
 namespace plugins {
 namespace alg_rpc {
 
-using namespace hal::plugins::alg_rpc;
+using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
 
 uuid_t epm_uuid = {0xe1af8308, 0x5d1f, 0x11c9, 0x91, 0xa4, {0x08, 0x00, 0x2b, 0x14, 0xa0, 0xfa}};
@@ -503,6 +503,8 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
     if (!status) {
         if (l4_sess && l4_sess->isCtrl == TRUE) {
             g_rpc_state->cleanup_app_session(l4_sess->app_session);
+        } else { /* Cleanup data session */
+            g_rpc_state->cleanup_l4_sess(l4_sess);
         }
     } else {
         l4_sess->session = ctx.session();
@@ -551,7 +553,8 @@ hal_ret_t process_msrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
     // Todo (Pavithra) Get the Firewall data and make sure that the UUID
     // is still allowed in the config
     /*
-     * Alloc APP session, L4 Session and RPC info
+     * Alloc L4 Session. This is just to keep a backward reference to the
+     * app session that created it.
      */
     ret = g_rpc_state->alloc_and_insert_l4_sess(l4_sess->app_session, &l4_sess);
     HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
@@ -569,6 +572,9 @@ hal_ret_t process_msrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
  * Initialize RPC Info 
  */
 static void reset_rpc_info(rpc_info_t *rpc_info) {
+    if (rpc_info->pkt_len && rpc_info->pkt != NULL) {
+        HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt); 
+    }
     memset(rpc_info, 0, sizeof(rpc_info_t));
     rpc_info->pkt_type = PDU_NONE;
     rpc_info->callback = parse_msrpc_cn_control_flow;
@@ -597,15 +603,25 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
     }
 
     pgm_offset = __parse_cn_common_hdr(pkt, rpc_msg_offset, &rpc_hdr);
+
+    /*
+     * L7 Fragment reassembly
+     */
     if (rpc_hdr.rpc_ver_minor == 0 || rpc_hdr.flags & PFC_LAST_FRAG) {
         rpc_info->rpc_frag_cont = 0;
 
         // If this is the last frag of a multi-PDU 
         // transmission and doesnt have the first & last frag set
         if (!(rpc_hdr.flags & PFC_FIRST_FRAG)) {
-            memcpy(&rpc_info->pkt[rpc_info->pkt_len], &pkt[pgm_offset], ctx.pkt_len());
-            pkt = rpc_info->pkt;
-            pkt_len = rpc_info->pkt_len;
+            if ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
+                memcpy(&rpc_info->pkt[rpc_info->pkt_len], &pkt[pgm_offset], (pkt_len-pgm_offset));
+                rpc_info->pkt_len += (pkt_len-pgm_offset);
+                pkt = rpc_info->pkt;
+                pkt_len = rpc_info->pkt_len;
+            } else {
+                HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
+                reset_rpc_info(rpc_info);
+            }
         }
     } else {
         if (rpc_hdr.ptype != PDU_BIND && rpc_hdr.ptype != PDU_ALTER_CTXT &&
@@ -615,12 +631,19 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
         }
 
         // First fragment alloc memory and store the packet
-        if (rpc_hdr.flags & PFC_FIRST_FRAG) 
-            rpc_info->pkt = (uint8_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, MAX_ALG_RPC_PKT_SZ);
-        memcpy(&rpc_info->pkt[rpc_info->pkt_len], pkt, pkt_len);
-        rpc_info->pkt_len += pkt_len;
-        // L7 Fragments are received before we decode the header
+        if (rpc_hdr.flags & PFC_FIRST_FRAG) {
+            rpc_info->pkt = alloc_rpc_pkt();
+            rpc_info->payload_offset = rpc_msg_offset;
+        }
+
         rpc_info->rpc_frag_cont = 1;
+        if ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
+            memcpy(&rpc_info->pkt[rpc_info->pkt_len], &pkt[pgm_offset], (pkt_len-pgm_offset));
+            rpc_info->pkt_len += (pkt_len-pgm_offset);
+        } else {
+            HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
+            reset_rpc_info(rpc_info);
+        } 
     
         /*
          * Store the packet until all of it is received or we hit the
@@ -921,7 +944,10 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
                 ret = ctx.update_flow(flowupd);
             }
-        } else {
+        } else if (ctx.key().proto == IP_PROTO_TCP) {
+            /*
+             * Install Mcast copy only for Connection-oriented MSRPC
+             */
             flowupd.type = fte::FLOWUPD_MCAST_COPY;
             flowupd.mcast_info.mcast_en = 1;
             flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;

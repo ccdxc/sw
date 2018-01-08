@@ -1,5 +1,5 @@
 /*
- * alg_msrpc.hpp
+ * alg_sunrpc.hpp
  */
 #pragma once
 
@@ -15,7 +15,7 @@ using namespace hal::plugins::alg_utils;
 /*
  * Function prototypes
  */
-hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess);
+hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess);
 
 }  // namespace alg_rpc
 }  // namespace plugins

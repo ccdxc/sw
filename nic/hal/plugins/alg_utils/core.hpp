@@ -35,9 +35,7 @@ int in6_pton(const char *src, int srclen, uint8_t *dst,
  * Inlines
  */
 // Big-Endian util
-inline uint64_t
-__be_pack_uint64(const uint8_t *buf, uint32_t *idx)
-{
+inline uint64_t __be_pack_uint64(const uint8_t *buf, uint32_t *idx) {
     int shift = 56;
     uint64_t val = 0;
 
@@ -49,9 +47,7 @@ __be_pack_uint64(const uint8_t *buf, uint32_t *idx)
     return val;
 }
 
-inline uint32_t
-__be_pack_uint32(const uint8_t *buf, uint32_t *idx)
-{
+inline uint32_t __be_pack_uint32(const uint8_t *buf, uint32_t *idx) {
     int shift = 24;
     uint32_t val = 0;
 
@@ -63,9 +59,7 @@ __be_pack_uint32(const uint8_t *buf, uint32_t *idx)
     return val;
 }
 
-inline uint16_t
-__be_pack_uint16(const uint8_t *buf, uint32_t *idx)
-{
+inline uint16_t __be_pack_uint16(const uint8_t *buf, uint32_t *idx) {
     int shift = 8;
     uint32_t val = 0;
 
@@ -78,9 +72,7 @@ __be_pack_uint16(const uint8_t *buf, uint32_t *idx)
 }
 
 //Little Endian util
-inline uint64_t
-__le_pack_uint64(const uint8_t *buf, uint32_t *idx)
-{
+inline uint64_t __le_pack_uint64(const uint8_t *buf, uint32_t *idx) {
     int shift = 0;
     uint64_t val = 0;
 
@@ -92,9 +84,7 @@ __le_pack_uint64(const uint8_t *buf, uint32_t *idx)
     return val;
 }
 
-inline uint32_t
-__le_pack_uint32(const uint8_t *buf, uint32_t *idx)
-{
+inline uint32_t __le_pack_uint32(const uint8_t *buf, uint32_t *idx) {
     int shift = 0;
     uint32_t val = 0;
 
@@ -106,9 +96,8 @@ __le_pack_uint32(const uint8_t *buf, uint32_t *idx)
     return val;
 }
 
-inline uint32_t
-__pack_uint32(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
-{
+inline uint32_t __pack_uint32(const uint8_t *buf, uint32_t *idx, 
+                                                uint8_t format=0) {
     if (format == 1) {
         return (__le_pack_uint32(buf, idx));
     } else {
@@ -116,9 +105,7 @@ __pack_uint32(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
     }
 }
 
-inline uint16_t
-__le_pack_uint16(const uint8_t *buf, uint32_t *idx)
-{
+inline uint16_t __le_pack_uint16(const uint8_t *buf, uint32_t *idx) {
     int shift = 0;
     uint32_t val = 0;
 
@@ -130,9 +117,8 @@ __le_pack_uint16(const uint8_t *buf, uint32_t *idx)
     return val;
 }
 
-inline uint16_t
-__pack_uint16(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
-{
+inline uint16_t __pack_uint16(const uint8_t *buf, uint32_t *idx, 
+                                                 uint8_t format=0) {
     if (format == 1) {
         return (__le_pack_uint16(buf, idx));
     } else {
@@ -140,9 +126,8 @@ __pack_uint16(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
     }
 }
 
-inline uint64_t
-__pack_uint64(const uint8_t *buf, uint32_t *idx, uint8_t format=0)
-{
+inline uint64_t __pack_uint64(const uint8_t *buf, uint32_t *idx, 
+                                                 uint8_t format=0) {
     if (format == 1) {
         return (__le_pack_uint64(buf, idx));
     } else {
@@ -220,6 +205,8 @@ public:
     slab *l4_sess_slab() const { return l4_sess_slab_; }
     slab *alg_info_slab() const { return alg_info_slab_; }
     ht *app_sess_ht(void) const { return app_sess_ht_; }
+    void cleanup_exp_flow(l4_alg_status_t *exp_flow);
+    void cleanup_l4_sess(l4_alg_status_t *l4_sess);
     void cleanup_app_session(app_session_t *app);
     hal_ret_t alloc_and_insert_exp_flow(app_session_t *app_sess, 
                                         hal::flow_key_t key,

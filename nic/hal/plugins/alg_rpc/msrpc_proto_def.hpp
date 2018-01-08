@@ -22,8 +22,6 @@
 #define MSRPC_DEFAULT_FLOORS 3
 #define MAX_FLOORS     65535
 #define MAX_CONTEXT    255
-#define WORD_BYTES     4
-#define SHORT_BYTES    2
 #define UUID_PROTO_SZ    6 
 #define L4_PROTO_SZ      4
 #define L3_PROTO_SZ      6

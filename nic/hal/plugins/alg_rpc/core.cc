@@ -17,6 +17,10 @@ void incr_parse_error(l4_alg_status_t *sess) {
     HAL_ATOMIC_INC_UINT32(&((rpc_info_t *)sess->info)->parse_errors, 1);
 }
 
+uint8_t *alloc_rpc_pkt(void) {
+    return ((uint8_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, MAX_ALG_RPC_PKT_SZ));
+}
+
 /*
  * Expected flow callback. FTE issues this callback with the expected flow data
  */
@@ -85,8 +89,16 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb) 
  * RPC info cleanup handler
  */
 void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
-    if (l4_sess->info != NULL)
+    rpc_info_t *rpc_info = NULL;
+    if (l4_sess->info != NULL) {
+        rpc_info = (rpc_info_t *)l4_sess->info;
+        /*
+         * Free the packet if it was alloced
+         */
+        if (rpc_info->pkt_len && rpc_info->pkt)
+            HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);        
         g_rpc_state->alg_info_slab()->free((rpc_info_t *)l4_sess->info);
+    }
 }
 
 /*
@@ -107,14 +119,14 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     if (alg_state != NULL) 
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
 
+    HAL_TRACE_DEBUG("Firewall Info ALG Proto: {} l4_sess {:p}", 
+                    sfw_info->alg_proto, (void *)l4_sess);
     if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC ||
         (l4_sess && l4_sess->alg == nwsec::APP_SVC_MSFT_RPC)) {
         ret = alg_msrpc_exec(ctx, sfw_info, l4_sess); 
-#if 0
-    } else if (sfw_info->alg_proto == nwsec::APP_SVC_SUNRPC ||
-         (l4_sess && l4_sess->alg == nwsec::APP_SVC_SUNRPC) {
-        ret = alg_sunrpc_exec(ctx, l4_sess);
-#endif
+    } else if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC ||
+         (l4_sess && l4_sess->alg == nwsec::APP_SVC_SUN_RPC)) {
+        ret = alg_sunrpc_exec(ctx, sfw_info, l4_sess);
     }
 
     if (ret != HAL_RET_OK)

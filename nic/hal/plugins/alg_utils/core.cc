@@ -400,6 +400,21 @@ l4_alg_status_t *alg_state::get_ctrl_l4sess(app_session_t *app_sess) {
     return NULL;
 }
 
+void alg_state::cleanup_l4_sess(l4_alg_status_t *l4_sess) {
+    dllist_del(&l4_sess->l4_sess_lentry);
+    if (l4_sess_cleanup_hdlr_)
+        l4_sess_cleanup_hdlr_(l4_sess);
+    l4_sess_slab()->free(l4_sess);
+}
+
+void alg_state::cleanup_exp_flow(l4_alg_status_t *exp_flow) {
+    fte::remove_expected_flow(exp_flow->entry.key);
+    dllist_del(&exp_flow->exp_flow_lentry);
+    if (l4_sess_cleanup_hdlr_)
+        l4_sess_cleanup_hdlr_(exp_flow);
+    l4_sess_slab()->free(exp_flow);
+}
+
 void alg_state::cleanup_app_session(app_session_t *app_sess) {
     dllist_ctxt_t   *lentry, *next;
 
@@ -413,23 +428,14 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     {
         l4_alg_status_t *exp_flow = dllist_entry(lentry, 
                                   l4_alg_status_t, exp_flow_lentry);
-
-        fte::remove_expected_flow(exp_flow->entry.key);
-        dllist_del(&exp_flow->exp_flow_lentry);
-        if (l4_sess_cleanup_hdlr_)
-            l4_sess_cleanup_hdlr_(exp_flow);
-        l4_sess_slab()->free(exp_flow);
+        cleanup_exp_flow(exp_flow);
     }
 
     dllist_for_each_safe(lentry, next, &app_sess->l4_sess_lhead)
     {
         l4_alg_status_t *l4_sess = dllist_entry(lentry,
                                    l4_alg_status_t, l4_sess_lentry);
-
-        dllist_del(&l4_sess->l4_sess_lentry);
-        if (l4_sess_cleanup_hdlr_)
-            l4_sess_cleanup_hdlr_(l4_sess); 
-        l4_sess_slab()->free(l4_sess);
+        cleanup_l4_sess(l4_sess);
     }
 
     // Callback to remove the app session from
