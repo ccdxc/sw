@@ -5,6 +5,7 @@ graphEnabled : True
 objects:
     - object:
         name : L2Segment
+        key_handle : L2SegmentKeyHandle
         ignore:
             - op : Get
             - op : Update

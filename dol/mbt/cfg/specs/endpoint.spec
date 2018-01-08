@@ -5,6 +5,7 @@ graphEnabled : False
 objects:
     - object :
         name : Endpoint
+        key_handle : EndpointKeyHandle
         ignore:
             - op : Get
             - op : Update

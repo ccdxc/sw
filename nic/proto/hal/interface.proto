@@ -416,7 +416,7 @@ message IfUplinkInfo {
 message IfUplinkPCInfo {
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
   uint64                         native_l2segment_id   = 1;    // L2 segment to map the packets to, if they are untagged
-  repeated kh.InterfaceKeyHandle member_if_key_handle  = 2 [(gogoproto.jsontag) = "venice:ref"];
+  repeated kh.InterfaceKeyHandle member_if_key_handle  = 2 [(gogoproto.moretags) = "venice:ref"];
 }
 
 //------------------------------------------------------------------------------

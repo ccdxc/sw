@@ -5,6 +5,7 @@ graphEnabled : True
 objects:
     - object :
         name : Vrf
+        key_handle : VrfKeyHandle
         ignore:
             - op : Get
             - op : Update

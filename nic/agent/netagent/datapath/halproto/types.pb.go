@@ -290,6 +290,10 @@
 		EndpointL3Key
 		EndpointKey
 		EndpointKeyHandle
+		MulticastEntryKeyIP
+		MulticastEntryKeyMac
+		MulticastEntryKey
+		MulticastEntryKeyHandle
 		L2SegmentSpec
 		L2SegmentRequestMsg
 		L2SegmentStatus
@@ -336,10 +340,6 @@
 		L4LbServiceGetRequestMsg
 		L4LbServiceGetResponse
 		L4LbServiceGetResponseMsg
-		MulticastEntryKeyIP
-		MulticastEntryKeyMac
-		MulticastEntryKey
-		MulticastEntryKeyHandle
 		MulticastEntrySpec
 		MulticastEntryRequestMsg
 		MulticastEntryStatus
@@ -347,6 +347,7 @@
 		MulticastEntryResponseMsg
 		MulticastEntryDeleteRequest
 		MulticastEntryDeleteRequestMsg
+		MulticastEntryDeleteResponse
 		MulticastEntryDeleteResponseMsg
 		MulticastEntryGetRequest
 		MulticastEntryGetRequestMsg

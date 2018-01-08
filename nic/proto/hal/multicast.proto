@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "kh.proto";
 
 package multicast;
 option go_package="halproto";
@@ -16,35 +17,10 @@ service Multicast {
   rpc MulticastEntryGet (MulticastEntryGetRequestMsg) returns (MulticastEntryGetResponseMsg) {}
 }
 
-message MulticastEntryKeyIP {
-  types.IPAddress          source = 1;              // Source IP
-  types.IPAddress          group  = 2;              // Destination IP
-}
-
-message MulticastEntryKeyMac {
-  fixed64 group = 1;                                // Multicast MAC
-}
-
-message MulticastEntryKey {
-  oneof ip_or_mac {
-    MulticastEntryKeyIP  ip  = 1;
-    MulticastEntryKeyMac mac = 2;
-  }
-  fixed64 l2_segment_handle  = 3;                   // L2 segment handle
-}
-
-// MulticastEntryKeyHandle
-message MulticastEntryKeyHandle {
-  oneof key_or_handle {
-    MulticastEntryKey key    = 1;
-    fixed64 multicast_handle = 2;
-  }
-}
-
 message MulticastEntrySpec {
-  types.ObjectMeta        meta          = 1;
-  MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  repeated fixed64        oif_handles   = 3;        // output interface handles
+  types.ObjectMeta        meta                   = 1;
+  kh.MulticastEntryKeyHandle key_or_handle          = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  repeated kh.InterfaceKeyHandle oif_key_handles = 3 [(gogoproto.moretags) = "venice:ref, venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_ENIC}"];        // output interface handles
 }
 
 message MulticastEntryRequestMsg {
@@ -56,7 +32,7 @@ message MulticastEntryStatus {
 }
 
 message MulticastEntryResponse {
-  types.ApiStatus      api_status   = 1;            // status
+  types.ApiStatus      api_status   = 1 [(gogoproto.moretags) = "venice:api_status"];            // status
   MulticastEntryStatus entry_status = 2;
 }
 
@@ -66,20 +42,23 @@ message MulticastEntryResponseMsg {
 
 message MulticastEntryDeleteRequest {
   types.ObjectMeta        meta          = 1;
-  MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 message MulticastEntryDeleteRequestMsg {
   repeated MulticastEntryDeleteRequest request = 1; // batched request
 }
 
+message MulticastEntryDeleteResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.jsontag) = "api_status"];
+}
 message MulticastEntryDeleteResponseMsg {
-  repeated types.ApiStatus api_status = 1;          // batched response
+  repeated MulticastEntryDeleteResponse response = 1;          // batched response
 }
 
 message MulticastEntryGetRequest {
   types.ObjectMeta        meta          = 1;
-  MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 message MulticastEntryGetRequestMsg {
@@ -87,8 +66,8 @@ message MulticastEntryGetRequestMsg {
 }
 
 message MulticastEntryGetResponse {
-  types.ApiStatus  api_status  = 1;
-  repeated fixed64 oif_handles = 2;                 // output interface handles
+  types.ApiStatus  api_status  = 1 [(gogoproto.jsontag) = "venice:api_status"];
+  repeated kh.InterfaceKeyHandle oif_key_handles = 2 [(gogoproto.moretags) = "veniceref"];        // output interface handles
 }
 
 message MulticastEntryGetResponseMsg {

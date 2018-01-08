@@ -5,6 +5,7 @@ graphEnabled : True
 objects:
     - object:
         name : Network
+        key_handle : NetworkKeyHandle
         ignore:
             - op : Get
             - op : Update

@@ -75,13 +75,13 @@ class GrpcReqRspMsg:
         
     @staticmethod
     def GetApiStatusObject(message):
-        api_status = GrpcReqRspMsg.GetObjectHelper(message, grpc_meta_types.is_api_status_field)
+        matched_objs = []
+        GrpcReqRspMsg.GetObjectHelper(message, grpc_meta_types.is_api_status_field, matched_objs)
         # If an empty api status is received, we assume that the status is API_STATUS_OK
-        if not api_status:
-            retval = 'API_STATUS_OK'
-        else:
-            retval = types_pb2.ApiStatus.DESCRIPTOR.values_by_number[api_status].name
-        return retval
+        for status in matched_objs:
+            if status != types_pb2.API_STATUS_OK:
+                return types_pb2.ApiStatus.DESCRIPTOR.values_by_number[status].name
+        return 'API_STATUS_OK'
 
     @staticmethod
     def GetExtRefObjects(message):
@@ -146,7 +146,7 @@ class GrpcReqRspMsg:
         return prefix_len
 
     @staticmethod
-    def generate_key_field(message):
+    def generate_key_field(message, key, ext_refs, external_constraints):
         # The convention is to define the ID as the first argument of the KeyHandle object.
         key_name = message.DESCRIPTOR.fields[0].name
         if key_name == 'ip_prefix':
@@ -159,7 +159,7 @@ class GrpcReqRspMsg:
                 setattr(message, key_name, KeyIdAllocator.get() + 65535)
             else:
                 sub_message = getattr(message, key_name)
-                GrpcReqRspMsg.static_generate_message(sub_message)
+                GrpcReqRspMsg.static_generate_message(sub_message, key, ext_refs, external_constraints)
 
     @staticmethod
     def get_constraints(field):
@@ -257,7 +257,7 @@ class GrpcReqRspMsg:
                             sub_message.CopyFrom(key)
                         else:
                             # The convention followed is that the first field is the key.
-                            GrpcReqRspMsg.generate_key_field(sub_message)
+                            GrpcReqRspMsg.generate_key_field(sub_message, key, ext_refs, external_constraints)
                     elif grpc_meta_types.is_ext_ref_field(field):
                         # If there is an ext_ref already, for this field, then use it. 
                         # Else, create the appropriate object and use that.

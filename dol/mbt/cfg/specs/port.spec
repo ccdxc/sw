@@ -5,6 +5,7 @@ graphEnabled : False
 objects:
     - object :
         name : Port
+        key_handle : PortKeyHandle
         ignore:
             - op : Get
             - op : Update

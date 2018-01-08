@@ -13,7 +13,7 @@ import config_mgr
 
 _tag_checker_map = {
      "key_field"     : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "key" in y,
-     "ext_ref_field" : lambda x, y : x  == "gogoproto.moretags" and "ref" in y,
+     "ext_ref_field" : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "ref" in y,
      "api_field"     : lambda x, y : x  == "gogoproto.moretags" and "api_status" in y,
      "handle_field"  : lambda x, y : x  == "gogoproto.moretags" and "handle" in y,
      "unique_field"  : lambda x, y : x  == "gogoproto.moretags" and "unique" in y,

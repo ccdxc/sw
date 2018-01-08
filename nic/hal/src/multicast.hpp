@@ -15,11 +15,11 @@
 using multicast::MulticastEntrySpec;
 using multicast::MulticastEntryStatus;
 using multicast::MulticastEntryResponse;
-using multicast::MulticastEntryKeyHandle;
+using kh::MulticastEntryKeyHandle;
 using multicast::MulticastEntryRequestMsg;
 using multicast::MulticastEntryResponseMsg;
 using multicast::MulticastEntryDeleteRequest;
-using multicast::MulticastEntryDeleteResponseMsg;
+using multicast::MulticastEntryDeleteResponse;
 using multicast::MulticastEntryGetRequest;
 using multicast::MulticastEntryGetRequestMsg;
 using multicast::MulticastEntryGetResponse;
@@ -165,7 +165,7 @@ hal_ret_t multicast_entry_create(MulticastEntrySpec& spec,
 hal_ret_t multicast_entry_update(MulticastEntrySpec& spec,
                                  MulticastEntryResponse *rsp);
 hal_ret_t multicast_entry_delete(MulticastEntryDeleteRequest& req,
-                                 MulticastEntryDeleteResponseMsg *rsp);
+                                 MulticastEntryDeleteResponse *rsp);
 hal_ret_t multicast_entry_get(MulticastEntryGetRequest& req,
                               MulticastEntryGetResponse *rsp);
 

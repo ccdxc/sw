@@ -205,7 +205,7 @@ class ConfigObjectHelper(object):
                     %(service_object.name, spec.Service))
         self._cfg_meta = ConfigObjectMeta(self._pb2, self._stub, self._spec, self._service_object)
         try:
-            self.key_type = getattr(cfg_meta_mapper.kh_proto, service_object.name + "KeyHandle")
+            self.key_type = getattr(cfg_meta_mapper.kh_proto, service_object.key_handle)
             logger.info("Adding config meta for the object %s in service %s"
                         %(service_object.name, spec.Service))
             cfg_meta_mapper.Add(self.key_type, service_object, self)

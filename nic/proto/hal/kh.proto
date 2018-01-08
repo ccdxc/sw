@@ -141,4 +141,27 @@ message EndpointKeyHandle {
   }
 }
 
+message MulticastEntryKeyIP {
+  types.IPAddress          source = 1;              // Source IP
+  types.IPAddress          group  = 2;              // Destination IP
+}
 
+message MulticastEntryKeyMac {
+  fixed64 group = 1;                                // Multicast MAC
+}
+
+message MulticastEntryKey {
+  oneof ip_or_mac {
+    MulticastEntryKeyIP  ip  = 1;
+    MulticastEntryKeyMac mac = 2;
+  }
+  L2SegmentKeyHandle l2segment_key_handle  = 3 [(gogoproto.moretags) = "venice:ref"];    // L2 segment handle
+}
+
+// MulticastEntryKeyHandle
+message MulticastEntryKeyHandle {
+  oneof key_or_handle {
+    MulticastEntryKey key    = 1;
+    fixed64 multicast_handle = 2;
+  }
+}

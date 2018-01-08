@@ -70,7 +70,11 @@ mc_entry_lookup_key_or_handle (const MulticastEntryKeyHandle& kh)
 
     if (kh.key_or_handle_case() == MulticastEntryKeyHandle::kKey) {
         mc_key_t mc_key;
-        mc_key.l2seg_handle = kh.key().l2_segment_handle();
+        auto l2seg = l2seg_lookup_key_or_handle(kh.key().l2segment_key_handle());
+        if (!l2seg) {
+            return NULL;
+        }
+        mc_key.l2seg_handle = l2seg->hal_handle;
         if (kh.key().has_ip()) {
             ip_addr_spec_to_ip_addr(&mc_key.u.ip, kh.key().ip().group());
             mc_entry = find_mc_entry_by_key(&mc_key);
@@ -185,7 +189,7 @@ validate_mc_entry_create(MulticastEntrySpec& spec,
     }
 
     // must provide valid l2segment
-    if (spec.key_or_handle().key().l2_segment_handle() == HAL_HANDLE_INVALID) {
+    if (!spec.key_or_handle().key().has_l2segment_key_handle()) {
         HAL_TRACE_ERR("pi-mc_entry:{}:mc_entry l2segment not valid in request",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
@@ -221,27 +225,27 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
     hal_ret_t               ret = HAL_RET_OK;
     uint32_t                num_oifs = 0;
     if_t                    *pi_if = NULL;
-    hal_handle_t            if_handle;
+    InterfaceKeyHandle      if_key_handle;
 
-    num_oifs = (uint32_t) spec.oif_handles_size();
+    num_oifs = (uint32_t) spec.oif_key_handles_size();
 
     HAL_TRACE_DEBUG("pi-mc_entry:{}:adding {} no. of oifs", __FUNCTION__, num_oifs);
     HAL_TRACE_DEBUG("pi-mc_entry:{}:received {} oifs", __FUNCTION__, num_oifs);
 
     sdk::lib::dllist_reset(&mc_entry->if_list_head);
     for (uint32_t i = 0; i < num_oifs; i++) {
-        if_handle = spec.oif_handles(i);
-        pi_if = find_if_by_handle(if_handle);
+        if_key_handle = spec.oif_key_handles(i);
+        pi_if = if_lookup_key_or_handle(if_key_handle);
         if (pi_if == NULL) {
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
         }
 
         HAL_TRACE_DEBUG("pi-mc_entry:{}:adding if_id:{} type:{} handle:{} to oif.",
-                        __FUNCTION__, if_handle);
+                        __FUNCTION__, pi_if->hal_handle);
 
         // add if to list
-        hal_add_to_handle_list(&mc_entry->if_list_head, if_handle);
+        hal_add_to_handle_list(&mc_entry->if_list_head, pi_if->hal_handle);
     }
 
     HAL_TRACE_DEBUG("pi-mc_entry:{}:oifs added:", __FUNCTION__);
@@ -454,6 +458,8 @@ hal_ret_t multicast_entry_create(MulticastEntrySpec& spec,
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt  = { 0 };
     mc_entry_create_app_ctxt_t  app_ctxt  = { 0 };
+    L2SegmentKeyHandle          kh;
+    l2seg_t                     *l2seg = NULL;
 
     hal_api_trace(" API Begin: mc entry create ");
 
@@ -485,17 +491,18 @@ hal_ret_t multicast_entry_create(MulticastEntrySpec& spec,
                                 spec.key_or_handle().key().ip().group());
     }
 
-    mc_entry->key.l2seg_handle = spec.key_or_handle().key().l2_segment_handle();
-
+    kh = spec.key_or_handle().key().l2segment_key_handle();
     // make sure the l2segment is configured
-    if (find_l2seg_by_handle(mc_entry->key.l2seg_handle) == NULL) {
+    l2seg = l2seg_lookup_key_or_handle(kh);
+    if (l2seg == NULL) {
         HAL_TRACE_ERR("pi-mc_entry:{}:failed to create a mc_entry, "
-                      "l2seg {} doesnt exist", __FUNCTION__,
-                      mc_entry->key.l2seg_handle);
+                      "l2seg {} {} doesnt exist", __FUNCTION__,
+                      kh.segment_id(), kh.l2segment_handle());
         rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
     }
+    mc_entry->key.l2seg_handle = l2seg->hal_handle;
 
     HAL_TRACE_DEBUG("pi-mc_entry:{}:mc_entry create :{}", __FUNCTION__,
                     mc_key_to_string(&mc_entry->key));
@@ -559,7 +566,7 @@ hal_ret_t multicast_entry_update(MulticastEntrySpec& spec,
 }
 
 hal_ret_t multicast_entry_delete(MulticastEntryDeleteRequest& req,
-                                 MulticastEntryDeleteResponseMsg *rsp)
+                                 MulticastEntryDeleteResponse *rsp)
 {
     return HAL_RET_OK;
 }

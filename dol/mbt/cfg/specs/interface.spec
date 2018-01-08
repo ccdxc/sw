@@ -5,6 +5,7 @@ graphEnabled : True
 objects:
     - object :
         name : Interface
+        key_handle : InterfaceKeyHandle
         ignore:
             - op : Get
             - op : Update
@@ -36,6 +37,7 @@ objects:
             post_cb  : None
     - object :
         name : Lif
+        key_handle : LifKeyHandle
         ignore:
             - op : Get
             - op : Update

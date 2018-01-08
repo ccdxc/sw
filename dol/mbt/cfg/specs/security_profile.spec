@@ -5,6 +5,7 @@ graphEnabled : True
 objects: 
     - object : 
         name : SecurityProfile
+        key_handle : SecurityProfileKeyHandle
         ignore:
             - op : Create
             - op : Get
@@ -36,6 +37,7 @@ objects:
             post_cb  : callback://security_profile/PostGetCb
     - object : 
         name : SecurityGroup
+        key_handle : SecurityGroupKeyHandle
         ignore:
             - op : Create
             - op : Get
@@ -67,6 +69,7 @@ objects:
             post_cb  : None
     - object : 
         name : SecurityGroupPolicy
+        key_handle : SecurityGroupPolicyKeyHandle
         ignore:
             - op : Create
             - op : Delete

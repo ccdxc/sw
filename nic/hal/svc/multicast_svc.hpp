@@ -13,7 +13,7 @@ using multicast::Multicast;
 using multicast::MulticastEntrySpec;
 using multicast::MulticastEntryStatus;
 using multicast::MulticastEntryResponse;
-using multicast::MulticastEntryKeyHandle;
+using kh::MulticastEntryKeyHandle;
 using multicast::MulticastEntryRequestMsg;
 using multicast::MulticastEntryResponseMsg;
 using multicast::MulticastEntryDeleteRequestMsg;
