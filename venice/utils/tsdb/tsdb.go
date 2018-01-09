@@ -169,6 +169,17 @@ func Close() {
 	}
 }
 
+// MUST be called with gctx.Lock held
+func newTable(name string, config Config) (Table, error) {
+	if _, ok := gctx.tables[name]; ok {
+		return nil, fmt.Errorf("table '%s' already exists", name)
+	}
+	tbl := &table{name: name, config: config}
+	gctx.tables[name] = tbl
+
+	return tbl, nil
+}
+
 // NewTable returns a table to the user, on which Points would be added
 func NewTable(name string, config Config) (Table, error) {
 
@@ -178,19 +189,9 @@ func NewTable(name string, config Config) (Table, error) {
 	if gctx == nil {
 		return nil, fmt.Errorf("Uninitialized client")
 	}
-
 	gctx.Lock()
 	defer gctx.Unlock()
-
-	if _, ok := gctx.tables[name]; ok {
-		return nil, fmt.Errorf("table '%s' already exists", name)
-	}
-
-	tbl := &table{name: name, config: config}
-
-	gctx.tables[name] = tbl
-
-	return tbl, nil
+	return newTable(name, config)
 }
 
 // AddPoints adds elements to the time series on the specified table
@@ -245,19 +246,21 @@ func NewTableObj(obj interface{}, config Config) (TableObj, error) {
 		return nil, fmt.Errorf("error finding object kind: kvs = %+v", kvs)
 	}
 
+	gctx.Lock()
 	tbl, ok := gctx.tables[v.ValueStr[0]]
 	if !ok {
-		t, err := NewTable(v.ValueStr[0], config)
+		t, err := newTable(v.ValueStr[0], config)
 		if err != nil {
+			gctx.Unlock()
 			return nil, err
 		}
 		tbl = t.(*table)
 		tbl.objs = make(map[string]*tableObj)
 	}
+	gctx.Unlock()
 
 	tbl.Lock()
 	defer tbl.Unlock()
-
 	tblObj := &tableObj{tbl: tbl, tags: make(map[string]string)}
 
 	if err := fillKeys(kvs, tblObj.tags); err != nil {
