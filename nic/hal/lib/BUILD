@@ -28,6 +28,7 @@ cc_library(
         "@sdk//obj:sdk_ht",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
+        "//nic/hal/periodic:periodic",
     ],
     copts = sdk_copts,
 )

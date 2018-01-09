@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "nic/hal/pd/iris/rw_pd.hpp"
+#include "nic/include/hal_state.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/eth.h"
 
@@ -20,6 +21,10 @@ protected:
 
   // will be called immediately after each test before the destructor
   virtual void TearDown() {
+  }
+
+  static void SetUpTestCase() {
+      hal::g_delay_delete = false;
   }
 
 };

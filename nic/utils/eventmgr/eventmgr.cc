@@ -2,6 +2,7 @@
 
 #include "nic/utils/eventmgr/eventmgr.hpp"
 #include "nic/include/hal_mem.hpp"
+#include "nic/include/hal_state.hpp"
 
 using sdk::lib::dllist_reset;
 using sdk::lib::dllist_del;
@@ -224,7 +225,7 @@ hal_ret_t
 eventmgr::del_event_listener_(event_listener_state_t *event_lstate)
 {
     dllist_del(&event_lstate->lentry);
-    event_listener_state_slab_->free(event_lstate);
+    hal::delay_delete_to_slab(HAL_SLAB_EVENT_MAP_LISTENER, event_lstate);
 
     return HAL_RET_OK;
 }
@@ -366,11 +367,11 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt)
 error:
 
     if (new_event_state && event_state) {
-        event_map_slab_->free(event_state);
+        hal::delay_delete_to_slab(HAL_SLAB_EVENT_MAP, event_state);
     }
 
     if (new_lstate && listener_state) {
-        event_listener_state_slab_->free(listener_state);
+        hal::delay_delete_to_slab(HAL_SLAB_EVENT_MAP_LISTENER, listener_state);
     }
 
     return ret;
@@ -389,7 +390,8 @@ eventmgr::unsubscribe_(event_state_t *event_state,
             HAL_TRACE_DEBUG("Unsubscribed listener {} from event {}",
                             listener_state->lctxt, event_state->event_id);
             sdk::lib::dllist_del(&event_lstate->lentry);
-            event_listener_state_slab_->free(event_lstate);
+            hal::delay_delete_to_slab(HAL_SLAB_EVENT_MAP_LISTENER,
+                                      event_lstate);
             break;
         }
     }
@@ -490,7 +492,7 @@ eventmgr::unsubscribe_listener(void *lctxt)
         event_id++;
     }
 
-    listener_slab_->free(listener_state);
+    hal::delay_delete_to_slab(HAL_SLAB_EVENT_LISTENER, listener_state);
     return HAL_RET_OK;
 }
 

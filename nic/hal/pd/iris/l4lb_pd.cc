@@ -218,7 +218,7 @@ l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
 hal_ret_t
 l4lb_pd_free (pd_l4lb_t *l4lb)
 {
-    g_hal_state_pd->l4lb_pd_slab()->free(l4lb);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_L4LB_PD, l4lb);
     return HAL_RET_OK;
 }
 

@@ -74,7 +74,7 @@ rw_entry_pd_alloc_init (void)
 static inline hal_ret_t
 rw_entry_pd_free (pd_rw_entry_t *rwe)
 {
-    g_hal_state_pd->rw_entry_slab()->free(rwe);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_RW_PD, rwe);
     return HAL_RET_OK;
 }
 

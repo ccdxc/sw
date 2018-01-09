@@ -150,7 +150,7 @@ static inline hal_ret_t
 nwsec_policy_svc_free(nwsec_policy_svc_t *nwsec_plcy_rules)
 {
     HAL_SPINLOCK_DESTROY(&nwsec_plcy_rules->slock);
-    g_hal_state->nwsec_policy_svc_slab()->free(nwsec_plcy_rules);
+    hal::delay_delete_to_slab(HAL_SLAB_NWSEC_POLICY_SVC, nwsec_plcy_rules);
     return HAL_RET_OK;
 }
 
@@ -187,7 +187,7 @@ static inline hal_ret_t
 nwsec_policy_appid_free(nwsec_policy_appid_t *nwsec_plcy_rules)
 {
     HAL_SPINLOCK_DESTROY(&nwsec_plcy_rules->slock);
-    g_hal_state->nwsec_policy_appid_slab()->free(nwsec_plcy_rules);
+    hal::delay_delete_to_slab(HAL_SLAB_NWSEC_POLICY_APPID, nwsec_plcy_rules);
     return HAL_RET_OK;
 }
 
@@ -230,7 +230,7 @@ static inline hal_ret_t
 nwsec_policy_rules_free(nwsec_policy_rules_t *nwsec_plcy_rules) 
 {
     HAL_SPINLOCK_DESTROY(&nwsec_plcy_rules->slock);
-    g_hal_state->nwsec_policy_rules_slab()->free(nwsec_plcy_rules);
+    hal::delay_delete_to_slab(HAL_SLAB_NWSEC_POLICY_RULES, nwsec_plcy_rules);
     return HAL_RET_OK;
 }
 //-----------------------------------------------------------------------------
@@ -291,7 +291,7 @@ nwsec_policy_cfg_alloc_init (void)
 static inline hal_ret_t
 nwsec_policy_cfg_free(nwsec_policy_cfg_t *nwsec_plcy_cfg)
 {
-    g_hal_state->nwsec_policy_cfg_slab()->free(nwsec_plcy_cfg);
+    hal::delay_delete_to_slab(HAL_SLAB_NWSEC_POLICY_CFG, nwsec_plcy_cfg);
     return HAL_RET_OK;
 }
 
@@ -375,7 +375,7 @@ static inline hal_ret_t
 nwsec_group_free(nwsec_group_t *nwsec_grp)
 {
     HAL_SPINLOCK_DESTROY(&nwsec_grp->slock);
-    g_hal_state->nwsec_group_slab()->free(nwsec_grp);
+    hal::delay_delete_to_slab(HAL_SLAB_NWSEC_GROUP, nwsec_grp);
     return HAL_RET_OK;
 }
 
@@ -401,7 +401,7 @@ add_nwsec_group_to_db (nwsec_group_t *nwsec_grp)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add security group {} to handle mapping, "
                       "err : {}", nwsec_grp->sg_id, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);;
     //nwsec_grp->hal_handle = handle_id;

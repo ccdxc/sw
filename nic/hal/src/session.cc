@@ -234,13 +234,12 @@ hal_ret_t
 session_cleanup (session_t *session)
 {
     if (session->iflow) {
-        g_hal_state->flow_slab()->free(session->iflow);
+        hal::delay_delete_to_slab(HAL_SLAB_FLOW, session->iflow);
     }
     if (session->rflow) {
-        g_hal_state->flow_slab()->free(session->rflow);
+        hal::delay_delete_to_slab(HAL_SLAB_FLOW, session->rflow);
     }
-
-    g_hal_state->session_slab()->free(session);
+    hal::delay_delete_to_slab(HAL_SLAB_SESSION, session);
 
     return HAL_RET_OK;
 }

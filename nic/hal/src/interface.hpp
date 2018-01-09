@@ -260,8 +260,7 @@ static inline hal_ret_t
 if_free (if_t *hal_if)
 {
     HAL_SPINLOCK_DESTROY(&hal_if->slock);
-    HAL_TRACE_DEBUG("pi-if:{}:trying to free", __FUNCTION__);
-    g_hal_state->if_slab()->free(hal_if);
+    hal::delay_delete_to_slab(HAL_SLAB_IF, hal_if);
     return HAL_RET_OK;
 }
 

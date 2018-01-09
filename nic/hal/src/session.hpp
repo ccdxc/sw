@@ -98,7 +98,6 @@ typedef struct flow_key_s {
     uint8_t              dir:1;
     vrf_id_t             vrf_id;    // vrf id
 
-
     union {
         // L2 flow key information
         struct {
@@ -132,8 +131,8 @@ typedef struct flow_key_s {
     } __PACK__;
 } __PACK__ flow_key_t;
 
-//spdlog formatter for flow_key_t
-const char* flowkey2str(const flow_key_t& key);
+// spdlog formatter for flow_key_t
+const char *flowkey2str(const flow_key_t& key);
 inline std::ostream& operator<<(std::ostream& os, const flow_key_t& key)
 {
     return os << flowkey2str(key);
@@ -318,7 +317,6 @@ find_session_by_id (session_id_t session_id)
     return (session_t *)g_hal_state->session_id_ht()->lookup(&session_id);
 }
 
-
 extern void *session_get_key_func(void *entry);
 extern uint32_t session_compute_hash_func(void *key, uint32_t ht_size);
 extern bool session_compare_key_func(void *key1, void *key2);
@@ -349,11 +347,11 @@ hal_ret_t extract_flow_key_from_spec (vrf_id_t tid,
                                       flow_key_t *flow_key, 
                                       const FlowKey& flow_spec_key);
 
-hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle, session_t **sess);
+hal_ret_t session_create(const session_args_t *args,
+                         hal_handle_t *session_handle, session_t **sess);
 hal_ret_t session_update(const session_args_t *args, session_t *session);
 hal_ret_t session_delete(const session_args_t *args, session_t *session);
 hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
-
 
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);

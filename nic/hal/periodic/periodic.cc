@@ -159,61 +159,29 @@ periodic_thread_is_running (void)
 }
 
 //------------------------------------------------------------------------------
-// callback invoked by the timerwheel to release an object to its slab
-//------------------------------------------------------------------------------
-void
-slab_delay_delete_cb (hal_slab_t slab_id, void *elem)
-{
-    hal_ret_t    ret;
-
-    if (slab_id < HAL_SLAB_PI_MAX) {
-        ret = hal::free_to_slab(slab_id, elem);
-    } else if (slab_id < HAL_SLAB_PD_MAX) {
-        ret = hal::pd::free_to_slab(slab_id, elem);
-    } else {
-        HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
-        ret = HAL_RET_INVALID_ARG;
-    }
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to release elem {} to slab id {}",
-                      elem, slab_id);
-    }
-}
-
-//------------------------------------------------------------------------------
-// API invoked by slab library to delay delete its elements.
-// NOTE: currently delay delete timeout is 2 seconds, it is expected that any
-//       other threads using (a pointer to) this object should be done with this
-//       object within this timeout or else this memory can be freed and
-//       allocated for other objects and can result in corruptions. Hence, tune
-//       this timeout, if needed
-//------------------------------------------------------------------------------
-hal_ret_t
-delay_delete_to_slab (hal_slab_t slab_id, void *elem)
-{
-    g_twheel->add_timer(slab_id, TIME_MSECS_PER_SEC << 1, elem,
-                        (sdk::lib::twheel_cb_t)slab_delay_delete_cb, false);
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
 // API invoked by other threads to trigger cb after timeout
 // Returns the timer entry used to update/delete the timer
 //------------------------------------------------------------------------------
-void*
-periodic_timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
-                         sdk::lib::twheel_cb_t cb, bool periodic)
+void *
+timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
+                sdk::lib::twheel_cb_t cb, bool periodic)
 {
-    return g_twheel->add_timer(timer_id, timeout, ctxt, cb, periodic);
+    if (g_twheel) {
+        return g_twheel->add_timer(timer_id, timeout, ctxt, cb, periodic);
+    }
+    return NULL;
 }
 
 //------------------------------------------------------------------------------
 // API invoked by other threads to delete the scheduled timer
 //------------------------------------------------------------------------------
-void*
-periodic_timer_delete (void *timer)
+void *
+timer_delete (void *timer)
 {
-    return g_twheel->del_timer(timer);
+    if (g_twheel) {
+        return g_twheel->del_timer(timer);
+    }
+    return NULL;
 }
 
 }    // namespace periodic

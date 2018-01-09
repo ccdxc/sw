@@ -59,7 +59,7 @@ pd_cpuif_alloc_init(void)
 static inline hal_ret_t
 pd_cpuif_free (pd_cpuif_t *cpuif)
 {
-    g_hal_state_pd->cpuif_pd_slab()->free(cpuif);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_CPUIF_PD, cpuif);
     return HAL_RET_OK;
 }
 
@@ -69,7 +69,7 @@ pd_cpuif_free (pd_cpuif_t *cpuif)
 static inline hal_ret_t
 pd_cpuif_pd_mem_free (pd_cpuif_t *cpuif)
 {
-    g_hal_state_pd->cpuif_pd_slab()->free(cpuif);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_CPUIF_PD, cpuif);
     return HAL_RET_OK;
 }
 

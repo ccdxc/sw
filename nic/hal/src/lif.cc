@@ -77,7 +77,7 @@ lif_add_to_db (lif_t *lif, hal_handle_t handle)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:failed to add lif id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -101,7 +101,7 @@ lif_del_from_db (lif_t *lif)
         remove(&lif->lif_id);
 
     // free up
-    g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
 
     return HAL_RET_OK;
 }
@@ -1412,8 +1412,7 @@ lif_del_if (lif_t *lif, if_t *hal_if)
             // Remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-
+            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
             ret = HAL_RET_OK;
         }
     }

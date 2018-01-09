@@ -346,7 +346,7 @@ hal_free_handles_list (dllist_ctxt_t *list)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         HAL_TRACE_DEBUG("{}: freeing list handle: {}", __FUNCTION__, entry->handle_id);
         sdk::lib::dllist_del(&entry->dllist_ctxt);
-        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
     }
 }
 

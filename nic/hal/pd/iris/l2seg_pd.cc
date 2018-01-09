@@ -134,7 +134,7 @@ l2seg_pd_add_to_db (pd_l2seg_t *pd_l2seg, hal_handle_t handle)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pd-l2seg:{}:failed to add hw id to handle mapping, "
                       "err : {}", __FUNCTION__, sdk_ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::pd::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -156,7 +156,7 @@ l2seg_pd_del_from_db (pd_l2seg_t *pd_l2seg)
 
     if (entry) {
         // free up
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::pd::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
 
     return HAL_RET_OK;

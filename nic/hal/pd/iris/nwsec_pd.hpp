@@ -58,7 +58,7 @@ nwsec_pd_alloc_init (void)
 static inline hal_ret_t
 nwsec_pd_free (pd_nwsec_profile_t *nwsec_pd)
 {
-    g_hal_state_pd->nwsec_pd_slab()->free(nwsec_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_SECURITY_PROFILE_PD, nwsec_pd);
     return HAL_RET_OK;
 }
 
@@ -67,7 +67,7 @@ nwsec_pd_free (pd_nwsec_profile_t *nwsec_pd)
 static inline hal_ret_t
 nwsec_pd_mem_free (pd_nwsec_profile_t *nwsec_pd)
 {
-    g_hal_state_pd->nwsec_pd_slab()->free(nwsec_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_SECURITY_PROFILE_PD, nwsec_pd);
     return HAL_RET_OK;
 }
 

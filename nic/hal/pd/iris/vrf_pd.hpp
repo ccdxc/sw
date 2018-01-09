@@ -86,7 +86,7 @@ static inline hal_ret_t
 vrf_pd_free (pd_vrf_t *ten)
 {
     ten->l2seg_hw_id_idxr_ ? indexer::destroy(ten->l2seg_hw_id_idxr_) : HAL_NOP;
-    g_hal_state_pd->vrf_slab()->free(ten);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_VRF_PD, ten);
     return HAL_RET_OK;
 }
 
@@ -94,7 +94,7 @@ vrf_pd_free (pd_vrf_t *ten)
 static inline hal_ret_t
 vrf_pd_mem_free (pd_vrf_t *ten)
 {
-    g_hal_state_pd->vrf_slab()->free(ten);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_VRF_PD, ten);
     return HAL_RET_OK;
 }
 

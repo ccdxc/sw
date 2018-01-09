@@ -85,7 +85,7 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to add if id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -104,9 +104,7 @@ if_del_from_db (if_t *hal_if)
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->if_id_ht()->
         remove(&hal_if->if_id);
-
-    // free up
-    g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
 
     return HAL_RET_OK;
 }
@@ -1169,15 +1167,17 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
             ret = l2seg_del_if(l2seg, hal_if);
             HAL_ASSERT(ret == HAL_RET_OK);
 
-            // Free entry from temp list
-            g_hal_state->enic_l2seg_entry_slab()->free(del_l2seg_entry);
+            // free entry from temp list
+            hal::delay_delete_to_slab(HAL_SLAB_ENIC_L2SEG_ENTRY,
+                                      del_l2seg_entry);
 
-            // Free entry of main list
-            g_hal_state->enic_l2seg_entry_slab()->free(entry);
+            // free entry of main list
+            hal::delay_delete_to_slab(HAL_SLAB_ENIC_L2SEG_ENTRY, entry);
         }
     }
 
 end:
+
     // Free add & del list
     enicif_cleanup_l2seg_entry_list(&app_ctxt->add_l2segclsclist);
     enicif_cleanup_l2seg_entry_list(&app_ctxt->del_l2segclsclist);
@@ -2026,7 +2026,7 @@ enicif_free_l2seg_entry_list(dllist_ctxt_t *list)
         // Remove from list
         sdk::lib::dllist_del(&entry->lentry);
         // Free the entry
-        g_hal_state->enic_l2seg_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_ENIC_L2SEG_ENTRY, entry);
     }
 }
 
@@ -3287,7 +3287,7 @@ uplinkpc_del_uplinkif (if_t *uppc, if_t *upif)
             // Remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
             ret = HAL_RET_OK;
         }
     }
@@ -3350,8 +3350,7 @@ if_del_l2seg (if_t *hal_if, l2seg_t *l2seg)
             // Remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-
+            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
             ret = HAL_RET_OK;
         }
     }
@@ -3406,16 +3405,14 @@ uplink_del_enicif (if_t *uplink, if_t *enic_if)
     hal_handle_id_list_entry_t  *entry = NULL;
     dllist_ctxt_t               *curr = NULL, *next = NULL;
 
-
     if_lock(uplink, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &uplink->enicif_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == enic_if->hal_handle) {
-            // Remove from list
+            // remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);
-            // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-
+            // free the entry
+            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
             ret = HAL_RET_OK;
         }
     }

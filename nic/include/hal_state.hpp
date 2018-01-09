@@ -14,6 +14,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/ip.h"
 #include "nic/include/hal_mem.hpp"
+#include "nic/hal/periodic/periodic.hpp"
 
 namespace hal {
 
@@ -621,6 +622,7 @@ private:
 };
 
 extern class hal_state    *g_hal_state;
+extern bool               g_delay_delete;
 
 static inline bool
 is_forwarding_mode_host_pinned (void)
@@ -629,15 +631,63 @@ is_forwarding_mode_host_pinned (void)
 }
 
 static inline bool
-is_forwarding_mode_classic_nic()
+is_forwarding_mode_classic_nic (void)
 {
     return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC;
 }
 
 static inline bool
-is_forwarding_mode_smart_nic()
+is_forwarding_mode_smart_nic (void)
 {
     return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH;
+}
+
+//------------------------------------------------------------------------------
+// callback invoked by the timerwheel to release an object to its slab
+//------------------------------------------------------------------------------
+static inline void
+slab_delay_delete_cb (hal_slab_t slab_id, void *elem)
+{
+    hal_ret_t    ret;
+
+    if (slab_id < HAL_SLAB_PI_MAX) {
+        ret = hal::free_to_slab(slab_id, elem);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to release elem {} to slab id {}",
+                          elem, slab_id);
+        }
+    } else {
+        HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
+    }
+    return;
+}
+
+//------------------------------------------------------------------------------
+// wrapper function to delay delete slab elements
+// NOTE: currently delay delete timeout is 2 seconds, it is expected that any
+//       other threads using (a pointer to) this object should be done with this
+//       object within this timeout or else this memory can be freed and
+//       allocated for other objects and can result in corruptions. Hence, tune
+//       this timeout, if needed
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+delay_delete_to_slab (hal_slab_t slab_id, void *elem)
+{
+    void    *timer_ctxt;
+
+    if (g_delay_delete && hal::periodic::periodic_thread_is_running()) {
+        timer_ctxt =
+            hal::periodic::timer_schedule(slab_id,
+                                          TIME_MSECS_PER_SEC << 1, elem,
+                                          (sdk::lib::twheel_cb_t)slab_delay_delete_cb,
+                                          false);
+        if (!timer_ctxt) {
+            return HAL_RET_ERR;
+        }
+    } else {
+        slab_delay_delete_cb(slab_id, elem);
+    }
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

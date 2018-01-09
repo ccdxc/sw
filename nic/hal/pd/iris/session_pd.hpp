@@ -71,7 +71,7 @@ session_pd_alloc_init (void)
 static inline hal_ret_t
 session_pd_free (pd_session_t *session_pd)
 {
-    g_hal_state_pd->session_slab()->free(session_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_SESSION_PD, session_pd);
     return HAL_RET_OK;
 }
 

@@ -101,7 +101,7 @@ acl_free (acl_t **acl_)
         return HAL_RET_OK;
     }
     HAL_SPINLOCK_DESTROY(&acl->slock);
-    g_hal_state->acl_slab()->free(acl);
+    hal::delay_delete_to_slab(HAL_SLAB_ACL, acl);
     acl_ = NULL;
     return HAL_RET_OK;
 }

@@ -151,7 +151,7 @@ hal_ret_t scanner_init(int thread_num) {
             goto error;
         }
         if (hal::periodic::periodic_thread_is_running()) {
-            scanner_periodic_timer = hal::periodic::periodic_timer_schedule(
+            scanner_periodic_timer = hal::periodic::timer_schedule(
                     SNORT_PERIODIC_TIMER_ID, SNORT_PERIODIC_INTERVAL, nullptr,
                     scanner_periodic_cb, true);
         } // else this is probably running in gtest
@@ -219,7 +219,7 @@ hal_ret_t scanner_cleanup(int thread_num) {
             goto error;
         }
         if (scanner_periodic_timer) {
-            hal::periodic::periodic_timer_delete(scanner_periodic_timer);
+            hal::periodic::timer_delete(scanner_periodic_timer);
             scanner_periodic_timer = nullptr;
         }
         if (snort_dl.lib_cleanup_main_thread() != 0) {

@@ -68,7 +68,6 @@ go-proto:
 	$(MAKE) -C agent/netagent/datapath/halproto
 
 sdk:
-	#cd sdk && bazel $(BZL_OPT) build -s --keep_going ... && cd -
 	$(MAKE) -C sdk lib
 
 DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj

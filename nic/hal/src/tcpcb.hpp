@@ -143,7 +143,7 @@ static inline hal_ret_t
 tcpcb_free (tcpcb_t *tcpcb)
 {
     HAL_SPINLOCK_DESTROY(&tcpcb->slock);
-    g_hal_state->tcpcb_slab()->free(tcpcb);
+    hal::delay_delete_to_slab(HAL_SLAB_TCPCB, tcpcb);
     return HAL_RET_OK;
 }
 

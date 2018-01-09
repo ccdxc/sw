@@ -85,7 +85,7 @@ static inline hal_ret_t
 cpucb_free (cpucb_t *cpucb)
 {
     HAL_SPINLOCK_DESTROY(&cpucb->slock);
-    g_hal_state->cpucb_slab()->free(cpucb);
+    hal::delay_delete_to_slab(HAL_SLAB_CPUCB, cpucb);
     return HAL_RET_OK;
 }
 

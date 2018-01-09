@@ -263,7 +263,8 @@ end:
             pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
             if (pi_ip_entry->pd) {
                 // Free PD IP entry
-                g_hal_state_pd->ep_pd_ip_entry_slab()->free(pi_ip_entry->pd);
+                hal::pd::delay_delete_to_slab(HAL_SLAB_EP_IP_ENTRY_PD,
+                                              pi_ip_entry->pd);
                 // Unlink PD from PI
                 pi_ip_entry->pd = NULL;
             }
@@ -343,7 +344,8 @@ ep_pd_delete_pd_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
         pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
         if (pi_ip_entry->pd) {
             // Free PD IP entry
-            g_hal_state_pd->ep_pd_ip_entry_slab()->free(pi_ip_entry->pd);
+            hal::pd::delay_delete_to_slab(HAL_SLAB_EP_IP_ENTRY_PD,
+                                          pi_ip_entry->pd);
             // Unlink PD from PI
             pi_ip_entry->pd = NULL;
             HAL_TRACE_DEBUG("PD-EP:{}: Freeing PD IP Entry: {}",

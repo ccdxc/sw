@@ -209,7 +209,7 @@ static inline hal_ret_t
 nwsec_profile_free (nwsec_profile_t *sec_prof)
 {
     HAL_SPINLOCK_DESTROY(&sec_prof->slock);
-    g_hal_state->nwsec_profile_slab()->free(sec_prof);
+    hal::delay_delete_to_slab(HAL_SLAB_SECURITY_PROFILE, sec_prof);
     return HAL_RET_OK;
 }
 

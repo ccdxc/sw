@@ -145,7 +145,7 @@ static inline hal_ret_t
 vrf_free (vrf_t *vrf)
 {
     HAL_SPINLOCK_DESTROY(&vrf->slock);
-    g_hal_state->vrf_slab()->free(vrf);
+    hal::delay_delete_to_slab(HAL_SLAB_VRF, vrf);
     return HAL_RET_OK;
 }
 

@@ -99,7 +99,7 @@ qos_class_pd_alloc_init(void)
 static inline hal_ret_t
 qos_class_pd_free (pd_qos_class_t *qos_class)
 {
-    g_hal_state_pd->qos_class_pd_slab()->free(qos_class);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_QOS_CLASS_PD, qos_class);
     return HAL_RET_OK;
 }
 
@@ -108,7 +108,7 @@ qos_class_pd_free (pd_qos_class_t *qos_class)
 static inline hal_ret_t
 qos_class_pd_mem_free (pd_qos_class_t *qos_class)
 {
-    g_hal_state_pd->qos_class_pd_slab()->free(qos_class);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_QOS_CLASS_PD, qos_class);
     return HAL_RET_OK;
 }
 

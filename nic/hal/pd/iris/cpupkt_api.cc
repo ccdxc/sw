@@ -23,7 +23,7 @@ cpupkt_ctxt_qinst_info_alloc(void)
 
 static inline void
 cpupkt_ctxt_qinst_info_free(cpupkt_qinst_info_t* qinst_info) {
-    g_hal_state_pd->cpupkt_qinst_info_slab()->free(qinst_info);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_CPUPKT_QINST_INFO_PD, qinst_info);
 }
 
 bool is_cpu_rx_queue(types::WRingType type)

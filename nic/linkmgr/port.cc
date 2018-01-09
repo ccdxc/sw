@@ -267,7 +267,7 @@ port::port_link_sm_process()
     switch (this->link_sm_) {
         case port_link_sm_t::PORT_LINK_SM_DISABLED:
             // stop link bring up timer
-            hal::periodic::periodic_timer_delete (this->link_bring_up_timer_);
+            hal::periodic::timer_delete (this->link_bring_up_timer_);
             this->link_bring_up_timer_ = NULL;  // sanity
 
             // set operational status as down
@@ -309,7 +309,7 @@ port::port_link_sm_process()
 
             if(serdes_rdy == false) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::periodic_timer_schedule(
+                    hal::periodic::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
@@ -343,7 +343,7 @@ port::port_link_sm_process()
 
             if(sig_detect == false) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::periodic_timer_schedule(
+                    hal::periodic::timer_schedule(
                             0, timeout, this,
                             (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                             false);
@@ -359,7 +359,7 @@ port::port_link_sm_process()
 
             if(mac_faults == true) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::periodic_timer_schedule(
+                    hal::periodic::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);

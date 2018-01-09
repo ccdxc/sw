@@ -63,7 +63,7 @@ acl_pd_free (pd_acl_t **pd_acl_)
 {
     pd_acl_t *pd_acl = *pd_acl_;
     if (pd_acl) {
-        g_hal_state_pd->acl_pd_slab()->free(pd_acl);
+        hal::pd::delay_delete_to_slab(HAL_SLAB_ACL_PD, pd_acl);
     }
     *pd_acl_ = NULL;
     return HAL_RET_OK;

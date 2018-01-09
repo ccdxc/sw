@@ -54,7 +54,7 @@ hal_initialize()
 void 
 hal_test_utils_slab_disable_delete()
 {
-    // sdk::lib::slab::g_delay_delete = false;
+    hal::g_delay_delete = false;
 }
 
 slab_stats_t *

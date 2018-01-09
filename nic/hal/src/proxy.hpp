@@ -144,7 +144,7 @@ static inline hal_ret_t
 proxy_free (proxy_t *proxy)
 {
     HAL_SPINLOCK_DESTROY(&proxy->slock);
-    g_hal_state->proxy_slab()->free(proxy);
+    hal::delay_delete_to_slab(HAL_SLAB_PROXY, proxy);
     return HAL_RET_OK;
 }
 
@@ -214,7 +214,8 @@ static inline hal_ret_t
 proxy_flow_info_free (proxy_flow_info_t *proxy_flow_info)
 {
     HAL_SPINLOCK_DESTROY(&proxy_flow_info->slock);
-    g_hal_state->proxy_flow_info_slab()->free(proxy_flow_info);
+    hal::delay_delete_to_slab(HAL_SLAB_PROXY_FLOW_INFO,
+                                        proxy_flow_info);
     return HAL_RET_OK;
 }
 

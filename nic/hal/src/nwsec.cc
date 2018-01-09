@@ -99,7 +99,7 @@ nwsec_add_to_db (nwsec_profile_t *nwsec, hal_handle_t handle)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-sec-prof:{}:failed to add nwsec id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -123,7 +123,7 @@ nwsec_del_from_db (nwsec_profile_t *nwsec)
         remove(&nwsec->profile_id);
 
     // free up
-    g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
 
     return HAL_RET_OK;
 }
@@ -1393,7 +1393,7 @@ nwsec_prof_del_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
             // Remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
 
             ret = HAL_RET_OK;
         }

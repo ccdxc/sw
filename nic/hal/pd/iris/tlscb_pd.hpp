@@ -135,7 +135,7 @@ tlscb_pd_alloc_init (void)
 static inline hal_ret_t
 tlscb_pd_free (pd_tlscb_t *tlscb_pd)
 {
-    g_hal_state_pd->tlscb_slab()->free(tlscb_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_TLSCB_PD, tlscb_pd);
     return HAL_RET_OK;
 }
 

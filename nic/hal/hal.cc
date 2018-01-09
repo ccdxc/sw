@@ -290,7 +290,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
 
     if (!in) {
         HAL_TRACE_ERR("unable to open ini file ... "
-                      "setting forwarding mode: smart-switch");
+                      "setting forwarding mode to smart-switch");
         hal_cfg->forwarding_mode = "smart-switch";
         return HAL_RET_OK;
     }
@@ -298,18 +298,18 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     while (std::getline(in, line)) {
         std::string key = line.substr(0, line.find("="));
         std::string val = line.substr(line.find("=")+1, line.length()-1);
-        // HAL_TRACE_DEBUG("key:{}, val:{}", key, val);
 
         if (key == "forwarding_mode") {
-            if (val != "smart-switch" && val != "smart-host-pinned" && val != "classic") {
-                HAL_TRACE_ERR("Invalid forwarding mode:{}, aborting ...", val);
+            if ((val != "smart-switch") && (val != "smart-host-pinned") &&
+                (val != "classic")) {
+                HAL_TRACE_ERR("Invalid forwarding mode : {}, aborting ...",
+                              val);
                 HAL_ABORT(0);
             }
             hal_cfg->forwarding_mode = val;
-            HAL_TRACE_DEBUG("NIC forwarding mode: {}", val);
+            HAL_TRACE_DEBUG("NIC forwarding mode : {}", val);
         }
     }
-
     in.close();
 
     return ret;
@@ -423,7 +423,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
 
-    // Initialize config parameters from the JSON file.
+    // initialize config parameters from the JSON file
     HAL_ABORT(hal_cfg_init(hal_cfg) == HAL_RET_OK);
 
     // init fte and hal plugins

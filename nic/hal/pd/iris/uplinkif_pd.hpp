@@ -62,7 +62,7 @@ uplinkif_pd_alloc_init(void)
 static inline hal_ret_t
 uplinkif_pd_free (pd_uplinkif_t *upif)
 {
-    g_hal_state_pd->uplinkif_pd_slab()->free(upif);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_UPLINKIF_PD, upif);
     return HAL_RET_OK;
 }
 
@@ -72,7 +72,7 @@ uplinkif_pd_free (pd_uplinkif_t *upif)
 static inline hal_ret_t
 uplinkif_pd_mem_free (pd_uplinkif_t *upif)
 {
-    g_hal_state_pd->uplinkif_pd_slab()->free(upif);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_UPLINKIF_PD, upif);
     return HAL_RET_OK;
 }
 

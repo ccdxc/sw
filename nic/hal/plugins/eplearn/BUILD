@@ -22,6 +22,7 @@ common_deps = [
     "//nic:gen_proto_includes",
     "//nic:grpc",
     "//nic:gen_includes",
+    "//nic/hal/periodic:periodic",
 ]
 
 cc_library(

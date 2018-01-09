@@ -1,7 +1,7 @@
 #include <time.h>
 #include "nic/include/base.h"
 #include "nic/include/eth.h"
-#include "nic/include/timestamp.h"
+#include "sdk/timestamp.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/pd_api.hpp"

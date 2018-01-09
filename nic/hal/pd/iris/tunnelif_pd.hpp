@@ -73,7 +73,7 @@ pd_tunnelif_alloc_init(void)
 static inline hal_ret_t
 pd_tunnelif_free (pd_tunnelif_t *tunnelif)
 {
-    g_hal_state_pd->tunnelif_pd_slab()->free(tunnelif);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_TUNNELIF_PD, tunnelif);
     return HAL_RET_OK;
 }
 

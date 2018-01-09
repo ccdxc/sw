@@ -117,7 +117,7 @@ static inline hal_ret_t
 tlscb_free (tlscb_t *tlscb)
 {
     HAL_SPINLOCK_DESTROY(&tlscb->slock);
-    g_hal_state->tlscb_slab()->free(tlscb);
+    hal::delay_delete_to_slab(HAL_SLAB_TLSCB, tlscb);
     return HAL_RET_OK;
 }
 

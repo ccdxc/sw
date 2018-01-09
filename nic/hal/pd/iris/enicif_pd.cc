@@ -274,7 +274,8 @@ end:
             pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
             if (pi_l2seg_entry->pd) {
                 // Free PD l2seg entry
-                g_hal_state_pd->if_l2seg_entry_slab()->free(pi_l2seg_entry->pd);
+                hal::pd::delay_delete_to_slab(HAL_SLAB_IF_L2SEG_PD,
+                                              pi_l2seg_entry->pd);
                 // Unlink PD from PI
                 pi_l2seg_entry->pd = NULL;
             }
@@ -298,7 +299,8 @@ pd_enicif_dealloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list)
         pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
         if (pi_l2seg_entry->pd) {
             // Free PD IP entry
-            g_hal_state_pd->if_l2seg_entry_slab()->free(pi_l2seg_entry->pd);
+             hal::pd::delay_delete_to_slab(HAL_SLAB_IF_L2SEG_PD,
+                                           pi_l2seg_entry->pd);
             // Unlink PD from PI
             pi_l2seg_entry->pd = NULL;
             HAL_TRACE_DEBUG("pd-enicif:{}: freeing pd enicif l2seg entry for l2seg_hdl: {}",

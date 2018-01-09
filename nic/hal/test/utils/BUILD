@@ -20,6 +20,7 @@ cc_library(
         "//nic/hal/lib:hal_handle_includes",
         "//:gtest",
         "//nic/hal/pd/capri:capri_includes",
+        "//nic/hal/periodic:periodic",
     ],
     copts = sdk_copts
 )

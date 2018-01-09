@@ -647,7 +647,7 @@ lif_pd_depgm_output_mapping_tbl (pd_lif_t *pd_lif)
 hal_ret_t
 lif_pd_free (pd_lif_t *lif)
 {
-    g_hal_state_pd->lif_pd_slab()->free(lif);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_LIF_PD, lif);
     return HAL_RET_OK;
 }
 
@@ -657,7 +657,7 @@ lif_pd_free (pd_lif_t *lif)
 hal_ret_t
 lif_pd_mem_free (pd_lif_t *lif)
 {
-    g_hal_state_pd->lif_pd_slab()->free(lif);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_LIF_PD, lif);
     return HAL_RET_OK;
 }
 

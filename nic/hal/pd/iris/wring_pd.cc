@@ -145,7 +145,7 @@ wring_pd_alloc_init (void)
 static inline hal_ret_t
 wring_pd_free (pd_wring_t *wring_pd)
 {
-    g_hal_state_pd->wring_slab()->free(wring_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_WRING_PD, wring_pd);
     return HAL_RET_OK;
 }
 

@@ -12,8 +12,8 @@ cc_library(
     deps = [
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-#        "//nic:sdk_ht",
-#        "//nic:sdk_slab",
+        "//nic/hal/lib:hal_handle_includes",
+        "//nic/hal/periodic:periodic",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_list",

@@ -46,15 +46,6 @@ bool
 ep_compare_l2_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-#if 0
-    HAL_TRACE_DEBUG("key1.l2_segid {}, key2.l2_segid {}",
-                    ((ep_l2_key_t *)key1)->l2_segid,
-                    ((ep_l2_key_t *)key2)->l2_segid);
-    HAL_TRACE_DEBUG("key1.mac {}, key2.mac {}",
-                    macaddr2str(((ep_l2_key_t *)key1)->mac_addr),
-                    macaddr2str(((ep_l2_key_t *)key2)->mac_addr));
-#endif
-
     if (!memcmp(key1, key2, sizeof(ep_l2_key_t))) {
         return true;
     }
@@ -77,10 +68,6 @@ ep_get_l3_key_func (void *entry)
 uint32_t
 ep_compute_l3_hash_func (void *key, uint32_t ht_size)
 {
-#if 0
-    HAL_TRACE_DEBUG("L3 key hash {}",
-                    sdk::lib::hash_algo::fnv_hash(key, sizeof(ep_l3_key_t)) % ht_size);
-#endif
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(ep_l3_key_t)) % ht_size;
 }
 
@@ -91,16 +78,6 @@ bool
 ep_compare_l3_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-
-#if 0
-    HAL_TRACE_DEBUG("key1.tid {}, key2.tid {}",
-                    ((ep_l3_key_t *)key1)->vrf_id,
-                    ((ep_l3_key_t *)key2)->vrf_id);
-    HAL_TRACE_DEBUG("key1.ip {}, key2.ip {}",
-                    ipaddr2str(&((ep_l3_key_t *)key1)->ip_addr),
-                    ipaddr2str(&((ep_l3_key_t *)key2)->ip_addr));
-#endif
-
     if (!memcmp(key1, key2, sizeof(ep_l3_key_t))) {
         return true;
     }
@@ -134,7 +111,7 @@ ep_add_to_l2_db (ep_t *ep, hal_handle_t handle)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -159,7 +136,7 @@ ep_del_from_l2_db (ep_t *ep)
 
     if (entry) {
         // free up
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
 
     return HAL_RET_OK;
@@ -194,7 +171,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        g_hal_state->ep_l3_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_EP_L3_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -215,7 +192,7 @@ ep_del_from_l3_db (ep_l3_key_t *l3_key)
 
     if (l3_entry) {
         // free up
-        g_hal_state->ep_l3_entry_slab()->free(l3_entry);
+        hal::delay_delete_to_slab(HAL_SLAB_EP_L3_ENTRY, l3_entry);
     }
 
     return HAL_RET_OK;
@@ -1486,7 +1463,7 @@ endpoint_free_ip_list(dllist_ctxt_t *iplist)
         // delete from list
         sdk::lib::dllist_del(&pi_ip_entry->ep_ip_lentry);
         // free the entry
-        g_hal_state->ep_ip_entry_slab()->free(pi_ip_entry);
+        hal::delay_delete_to_slab(HAL_SLAB_EP_IP_ENTRY, pi_ip_entry);
     }
 
     return ret;
@@ -1582,10 +1559,10 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
                             ipaddr2str(&l3_key.ip_addr));
 
             // Free IP entry
-            g_hal_state->ep_ip_entry_slab()->free(del_ip_entry);
+            hal::delay_delete_to_slab(HAL_SLAB_EP_IP_ENTRY, del_ip_entry);
 
             // Free IP entry created for delete
-            g_hal_state->ep_ip_entry_slab()->free(pi_ip_entry);
+            hal::delay_delete_to_slab(HAL_SLAB_EP_IP_ENTRY, pi_ip_entry);
 #if 0
             l3_key.vrf_id = ep->vrf_id;
             memcpy(&l3_key.ip_addr, &del_ip_entry->ip_addr, sizeof(ip_addr_t));
@@ -2104,8 +2081,7 @@ ep_del_session (ep_t *ep, session_t *session)
             // Remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-
+            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
             ret = HAL_RET_OK;
         }
     }

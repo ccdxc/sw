@@ -155,7 +155,7 @@ static inline hal_ret_t
 l2seg_free (l2seg_t *l2seg)
 {
     HAL_SPINLOCK_DESTROY(&l2seg->slock);
-    g_hal_state->l2seg_slab()->free(l2seg);
+    hal::delay_delete_to_slab(HAL_SLAB_L2SEG, l2seg);
     return HAL_RET_OK;
 }
 

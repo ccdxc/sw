@@ -64,7 +64,7 @@ mc_entry_pd_alloc_init (void)
 static inline hal_ret_t
 mc_entry_pd_free (pd_mc_entry_t *mc_entry_pd)
 {
-    g_hal_state_pd->mc_entry_slab()->free(mc_entry_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_MC_ENTRY_PD, mc_entry_pd);
     return HAL_RET_OK;
 }
 
@@ -73,7 +73,7 @@ mc_entry_pd_free (pd_mc_entry_t *mc_entry_pd)
 static inline hal_ret_t
 mc_entry_pd_mem_free (pd_mc_entry_t *mc_entry_pd)
 {
-    g_hal_state_pd->mc_entry_slab()->free(mc_entry_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_MC_ENTRY_PD, mc_entry_pd);
     return HAL_RET_OK;
 }
 

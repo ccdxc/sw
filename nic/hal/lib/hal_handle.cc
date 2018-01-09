@@ -8,8 +8,11 @@
 #include <arpa/inet.h>
 
 #include "hal_handle.hpp"
+#include "nic/include/hal_state.hpp"
 
 namespace hal {
+
+bool g_delay_delete = true;
 
 // process globals
 uint64_t  g_hal_handle = 1;
@@ -54,7 +57,7 @@ hal_handle::factory(hal_obj_id_t obj_id)
     // initialize the handle instance
     if (handle->init(obj_id) == false) {
         handle->~hal_handle();
-        hal_handle_slab()->free(handle);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE, handle);
         return NULL;
     }
 
@@ -244,7 +247,7 @@ hal_handle_alloc (hal_obj_id_t obj_id)
     handle = hal_handle::factory(obj_id);
     if (handle == NULL) {
         HAL_TRACE_ERR("Failed to allocate handle");
-        hal_handle_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_HT_ENTRY, entry);
         return HAL_HANDLE_INVALID;
     }
     // allocate unique handle id
@@ -258,9 +261,9 @@ hal_handle_alloc (hal_obj_id_t obj_id)
                                                   entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to add handle id {} to handle obj", handle_id);
-        hal_handle_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_HT_ENTRY, entry);
         handle->~hal_handle();
-        hal_handle_slab()->free(handle);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE, handle);
         return HAL_HANDLE_INVALID;
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -285,9 +288,9 @@ hal_handle_free (hal_handle_t handle_id)
     }
     if (entry->handle) {
         entry->handle->~hal_handle();
-        hal_handle_slab()->free(entry->handle);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE, entry->handle);
     }
-    hal_handle_ht_entry_slab()->free(entry);
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_HT_ENTRY, entry);
 
     return;
 }

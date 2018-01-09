@@ -210,7 +210,7 @@ ep_free (ep_t *ep)
     HAL_SPINLOCK_DESTROY(&ep->slock);
 
     // TODO: may have to free list of ip entries
-    g_hal_state->ep_slab()->free(ep);
+    hal::delay_delete_to_slab(HAL_SLAB_EP, ep);
     return HAL_RET_OK;
 }
 

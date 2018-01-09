@@ -113,7 +113,7 @@ static inline hal_ret_t
 rawrcb_free (rawrcb_t *rawrcb)
 {
     HAL_SPINLOCK_DESTROY(&rawrcb->slock);
-    g_hal_state->rawrcb_slab()->free(rawrcb);
+    hal::delay_delete_to_slab(HAL_SLAB_RAWRCB, rawrcb);
     return HAL_RET_OK;
 }
 

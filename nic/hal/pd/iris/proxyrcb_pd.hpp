@@ -71,7 +71,7 @@ proxyrcb_pd_alloc_init (proxyrcb_hw_id_t hw_id)
 static inline hal_ret_t
 proxyrcb_pd_free (pd_proxyrcb_t *proxyrcb_pd)
 {
-    g_hal_state_pd->proxyrcb_slab()->free(proxyrcb_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_PROXYRCB_PD, proxyrcb_pd);
     return HAL_RET_OK;
 }
 

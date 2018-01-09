@@ -114,7 +114,7 @@ mc_entry_add_to_db (mc_entry_t *mc_entry, hal_handle_t handle)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-mc_entry:{}:failed to add mc key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -135,7 +135,7 @@ mc_entry_del_from_db (mc_entry_t *mc_entry)
             remove(&mc_entry->key);
 
     // free up
-    g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
 
     return HAL_RET_OK;
 }

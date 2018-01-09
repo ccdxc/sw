@@ -82,7 +82,7 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-network:{}:failed to network key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -109,7 +109,7 @@ network_del_from_db (network_t *nw)
 
     if (entry) {
         // free up
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     } else {
         HAL_TRACE_ERR("pi-network:{}:unable to find network:{}",
                       __FUNCTION__, network_to_str(nw));
@@ -1307,8 +1307,7 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
             // Remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-
+            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
             ret = HAL_RET_OK;
         }
     }
@@ -1375,8 +1374,7 @@ network_del_session (network_t *nw, session_t *sess)
             // Remove from list
             sdk::lib::dllist_del(&entry->dllist_ctxt);
             // Free the entry
-            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-
+            hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
             ret = HAL_RET_OK;
         }
     }

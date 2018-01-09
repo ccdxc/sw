@@ -115,7 +115,7 @@ static inline hal_ret_t
 wring_free (wring_t *wring)
 {
     HAL_SPINLOCK_DESTROY(&wring->slock);
-    g_hal_state->wring_slab()->free(wring);
+    hal::delay_delete_to_slab(HAL_SLAB_WRING, wring);
     return HAL_RET_OK;
 }
 

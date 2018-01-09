@@ -70,6 +70,7 @@ cc_library(
                "//nic/model_sim/include:modelsim_includes",
                "//nic/p4/nw/include:p4_nw_includes",
                "//nic/third-party/spdlog",
+               "//nic/hal/periodic:periodic",
            ] + capri_util_deps +
            capri_pd_deps,
     alwayslink = 1,

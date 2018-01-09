@@ -473,7 +473,7 @@ private:
     DirectMap    **p4plus_txdma_dm_tables_;
 };
 
-extern class hal_state_pd    *g_hal_state_pd;
+hal_ret_t delay_delete_to_slab(hal_slab_t slab_id, void *elem);
 
 } // namespace pd
 } // namespace hal

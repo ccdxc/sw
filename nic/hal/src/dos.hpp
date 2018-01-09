@@ -154,7 +154,7 @@ static inline hal_ret_t
 dos_policy_free (dos_policy_t *dos_policy)
 {
     HAL_SPINLOCK_DESTROY(&dos_policy->slock);
-    g_hal_state->dos_policy_slab()->free(dos_policy);
+    hal::delay_delete_to_slab(HAL_SLAB_DOS_POLICY, dos_policy);
     return HAL_RET_OK;
 }
 

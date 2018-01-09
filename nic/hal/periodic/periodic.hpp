@@ -24,21 +24,13 @@ bool periodic_thread_is_running(void);
 // Returns the timer entry used to update/delete the timer
 //------------------------------------------------------------------------------
 void *
-periodic_timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
-                         sdk::lib::twheel_cb_t cb, bool periodic);
+timer_schedule(uint32_t timer_id, uint64_t timeout, void *ctxt,
+               sdk::lib::twheel_cb_t cb, bool periodic);
 
 //------------------------------------------------------------------------------
 // API invoked by other threads to delete the scheduled timer
 //------------------------------------------------------------------------------
-void *periodic_timer_delete (void *timer);
-
-// API to delay delete any slab objects
-hal_ret_t delay_delete_to_slab(hal_slab_t slab_id,             // slab to free back to
-                               void *elem);                    // element to free back
-
-// callback invoked for delay deleting slab elements back to their respective
-// blocks
-void slab_delay_delete_cb(hal_slab_t slab_id, void *ctxt);
+void *timer_delete(void *timer);
 
 }    // namespace periodic
 }    // namespace hal

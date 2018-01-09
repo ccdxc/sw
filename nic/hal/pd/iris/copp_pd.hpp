@@ -60,7 +60,7 @@ copp_pd_alloc_init(void)
 static inline hal_ret_t
 copp_pd_free (pd_copp_t *copp)
 {
-    g_hal_state_pd->copp_pd_slab()->free(copp);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_COPP_PD, copp);
     return HAL_RET_OK;
 }
 
@@ -69,7 +69,7 @@ copp_pd_free (pd_copp_t *copp)
 static inline hal_ret_t
 copp_pd_mem_free (pd_copp_t *copp)
 {
-    g_hal_state_pd->copp_pd_slab()->free(copp);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_COPP_PD, copp);
     return HAL_RET_OK;
 }
 

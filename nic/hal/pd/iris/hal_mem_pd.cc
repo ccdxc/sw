@@ -19,6 +19,7 @@
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"
+#include "nic/hal/periodic/periodic.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/iris/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/tcpcb_pd.hpp"
@@ -1320,6 +1321,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->rw_entry_slab()->free(elem);
         break;
 
+    case HAL_SLAB_TUNNEL_RW_PD:
+        g_hal_state_pd->tnnl_rw_entry_slab()->free(elem);
+        break;
+
     case HAL_SLAB_CPUPKT_PD:
         g_hal_state_pd->cpupkt_slab()->free(elem);
         break;
@@ -1344,6 +1349,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->cpupkt_qinst_info_slab()->free(elem);
         break;
 
+    case HAL_SLAB_DIRECTMAP_ENTRY:
+        g_hal_state_pd->directmap_entry_slab()->free(elem);
+        break;
+
     case HAL_SLAB_COPP_PD:
         g_hal_state_pd->copp_pd_slab()->free(elem);
         break;
@@ -1355,6 +1364,56 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         break;
     }
 
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// callback invoked by the timerwheel to release an object to its slab
+//------------------------------------------------------------------------------
+static inline void
+pd_slab_delay_delete_cb (hal_slab_t slab_id, void *elem)
+{
+    hal_ret_t    ret;
+
+    if (slab_id < HAL_SLAB_PI_MAX) {
+        ret = hal::free_to_slab(slab_id, elem);
+    } else if (slab_id < HAL_SLAB_PD_MAX) {
+        ret = hal::pd::free_to_slab(slab_id, elem);
+    } else {
+        HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
+        ret = HAL_RET_INVALID_ARG;
+    }
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to release elem {} to slab id {}",
+                      elem, slab_id);
+    }
+}
+
+//------------------------------------------------------------------------------
+// wrapper function to delay delete slab elements
+// NOTE: currently delay delete timeout is 2 seconds, it is expected that any
+//       other threads using (a pointer to) this object should be done with this
+//       object within this timeout or else this memory can be freed and
+//       allocated for other objects and can result in corruptions. Hence, tune
+//       this timeout, if needed
+//------------------------------------------------------------------------------
+hal_ret_t
+delay_delete_to_slab (hal_slab_t slab_id, void *elem)
+{
+    void    *timer_ctxt;
+
+    if (g_delay_delete && hal::periodic::periodic_thread_is_running()) {
+        timer_ctxt =
+            hal::periodic::timer_schedule(slab_id,
+                                          TIME_MSECS_PER_SEC << 1, elem,
+                                          (sdk::lib::twheel_cb_t)slab_delay_delete_cb,
+                                          false);
+        if (!timer_ctxt) {
+            return HAL_RET_ERR;
+        }
+    } else {
+        pd_slab_delay_delete_cb(slab_id, elem);
+    }
     return HAL_RET_OK;
 }
 

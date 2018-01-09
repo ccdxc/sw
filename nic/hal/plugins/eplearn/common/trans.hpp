@@ -53,12 +53,12 @@ public:
         virtual fsm_state_timer_ctx add_timer(uint64_t timeout,
                                               fsm_state_machine_t *ctx,
                                               bool periodic = false) {
-            void *timer = hal::periodic::periodic_timer_schedule(
+            void *timer = hal::periodic::timer_schedule(
                 this->get_timer_id(), timeout, ctx, timeout_handler, periodic);
             return reinterpret_cast<fsm_state_timer_ctx>(timer);
         }
         virtual void delete_timer(fsm_state_timer_ctx timer) {
-            hal::periodic::periodic_timer_delete(timer);
+            hal::periodic::timer_delete(timer);
         }
         static void timeout_handler(uint32_t timer_id, void *ctxt) {
             fsm_state_machine_t* sm_ = reinterpret_cast<fsm_state_machine_t*>(ctxt);

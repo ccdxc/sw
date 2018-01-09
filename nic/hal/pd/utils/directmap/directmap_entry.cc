@@ -45,7 +45,7 @@ directmap_entry_alloc_init (void)
 hal_ret_t
 directmap_entry_free (directmap_entry_t *rwe)
 {
-    hal::pd::g_hal_state_pd->directmap_entry_slab()->free(rwe);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_DIRECTMAP_ENTRY, rwe);
     return HAL_RET_OK;
 }
 

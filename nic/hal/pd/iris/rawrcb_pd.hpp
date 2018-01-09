@@ -71,7 +71,7 @@ rawrcb_pd_alloc_init (rawrcb_hw_id_t hw_id)
 static inline hal_ret_t
 rawrcb_pd_free (pd_rawrcb_t *rawrcb_pd)
 {
-    g_hal_state_pd->rawrcb_slab()->free(rawrcb_pd);
+    hal::delay_delete_to_slab(HAL_SLAB_RAWRCB_PD, rawrcb_pd);
     return HAL_RET_OK;
 }
 

@@ -76,7 +76,7 @@ if_get_hal_handle(if_t *pi_if)
 // ----------------------------------------------------------------------------
 // UplinkIF API: Get UplinkIF's Port number
 //----------------------------------------------------------------------------
-uint32_t 
+uint32_t
 uplinkif_get_port_num(if_t *pi_if)
 {
     return pi_if->uplink_port_num;
@@ -85,7 +85,7 @@ uplinkif_get_port_num(if_t *pi_if)
 //----------------------------------------------------------------------------
 // IF API: Set PD IF in PI IF to Uplink PD
 //----------------------------------------------------------------------------
-void 
+void
 if_set_pd_if(if_t *pi_if, void *pd_if)
 {
     pi_if->pd_if = pd_if;

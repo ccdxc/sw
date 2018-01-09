@@ -145,7 +145,7 @@ static inline hal_ret_t
 network_free (network_t *network)
 {
     HAL_SPINLOCK_DESTROY(&network->slock);
-    g_hal_state->network_slab()->free(network);
+    hal::delay_delete_to_slab(HAL_SLAB_NETWORK, network);
     return HAL_RET_OK;
 }
 

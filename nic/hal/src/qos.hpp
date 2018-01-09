@@ -171,7 +171,7 @@ static inline hal_ret_t
 qos_class_free (qos_class_t *qos_class)
 {
     HAL_SPINLOCK_DESTROY(&qos_class->slock);
-    g_hal_state->qos_class_slab()->free(qos_class);
+    hal::delay_delete_to_slab(HAL_SLAB_COPP, qos_class);
     return HAL_RET_OK;
 }
 
@@ -378,7 +378,7 @@ static inline hal_ret_t
 copp_free (copp_t *copp)
 {
     HAL_SPINLOCK_DESTROY(&copp->slock);
-    g_hal_state->copp_slab()->free(copp);
+    hal::delay_delete_to_slab(HAL_SLAB_COPP, copp);
     return HAL_RET_OK;
 }
 

@@ -172,14 +172,14 @@ ipseccb_pd_decrypt_alloc_init (void)
 static inline hal_ret_t
 ipseccb_pd_free (pd_ipseccb_encrypt_t *ipseccb_pd)
 {
-    g_hal_state_pd->ipseccb_slab()->free(ipseccb_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_IPSECCB_PD, ipseccb_pd);
     return HAL_RET_OK;
 }
 
 static inline hal_ret_t
 ipseccb_pd_decrypt_free (pd_ipseccb_decrypt_t *ipseccb_pd)
 {
-    g_hal_state_pd->ipseccb_decrypt_slab()->free(ipseccb_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_IPSECCB_DECRYPT_PD, ipseccb_pd);
     return HAL_RET_OK;
 }
 

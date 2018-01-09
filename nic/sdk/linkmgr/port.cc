@@ -22,7 +22,7 @@ port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
     sdk_ret_t ret = SDK_RET_OK;
 
     // wake up the hal control thread to process port event
-    ret = linkmgr_notify (LINKMGR_OPERATION_PORT_TIMER, ctxt);
+    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_TIMER, ctxt);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Error notifying control-thread for port timer");
     }
@@ -264,7 +264,7 @@ port::port_link_sm_process(void)
     switch (this->link_sm_) {
         case port_link_sm_t::PORT_LINK_SM_DISABLED:
             // stop link bring up timer
-            hal::periodic::periodic_timer_delete (this->link_bring_up_timer_);
+            hal::periodic::timer_delete(this->link_bring_up_timer_);
             this->link_bring_up_timer_ = NULL;  // sanity
 
             // set operational status as down
@@ -306,7 +306,7 @@ port::port_link_sm_process(void)
 
             if(serdes_rdy == false) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::periodic_timer_schedule(
+                    hal::periodic::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
@@ -340,7 +340,7 @@ port::port_link_sm_process(void)
 
             if(sig_detect == false) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::periodic_timer_schedule(
+                    hal::periodic::timer_schedule(
                             0, timeout, this,
                             (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                             false);
@@ -356,7 +356,7 @@ port::port_link_sm_process(void)
 
             if(mac_faults == true) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::periodic_timer_schedule(
+                    hal::periodic::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
@@ -447,7 +447,7 @@ port::port_enable(port *pd_p)
         ret = pd_p->port_enable();
     } else {
         // wake up the hal control thread to process port event
-        ret = linkmgr_notify (LINKMGR_OPERATION_PORT_ENABLE, pd_p);
+        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, pd_p);
 
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("{}: Error notifying control-thread for port enable",
@@ -467,7 +467,7 @@ port::port_disable(port *pd_p)
         ret = pd_p->port_disable();
     } else {
         // wake up the hal control thread to process port event
-        ret = linkmgr_notify (LINKMGR_OPERATION_PORT_DISABLE, pd_p);
+        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, pd_p);
 
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("{}: Error notifying control-thread for port disable",

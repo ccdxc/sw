@@ -56,7 +56,6 @@ public:
     uint32_t elems_per_block(void) const { return elems_per_block_; }
     bool thread_safe(void) const { return thread_safe_; }
     bool grow_on_demand(void) const { return grow_on_demand_; }
-    //bool delay_delete(void) const { return delay_delete_; }
     bool zero_on_alloc(void) const { return zero_on_alloc_; }
 
 private:

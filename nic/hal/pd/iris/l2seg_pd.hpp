@@ -86,7 +86,7 @@ l2seg_pd_alloc_init (void)
 static inline hal_ret_t
 l2seg_pd_free (pd_l2seg_t *l2seg_pd)
 {
-    g_hal_state_pd->l2seg_slab()->free(l2seg_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_L2SEG_PD, l2seg_pd);
     return HAL_RET_OK;
 }
 
@@ -95,7 +95,7 @@ l2seg_pd_free (pd_l2seg_t *l2seg_pd)
 static inline hal_ret_t
 l2seg_pd_mem_free (pd_l2seg_t *l2seg_pd)
 {
-    g_hal_state_pd->l2seg_slab()->free(l2seg_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_L2SEG_PD, l2seg_pd);
     return HAL_RET_OK;
 }
 

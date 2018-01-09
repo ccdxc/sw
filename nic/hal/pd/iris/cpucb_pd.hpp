@@ -73,7 +73,7 @@ cpucb_pd_alloc_init (void)
 static inline hal_ret_t
 cpucb_pd_free (pd_cpucb_t *cpucb_pd)
 {
-    g_hal_state_pd->cpucb_slab()->free(cpucb_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_CPUCB_PD, cpucb_pd);
     return HAL_RET_OK;
 }
 

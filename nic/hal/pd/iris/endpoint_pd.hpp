@@ -62,7 +62,7 @@ ep_pd_alloc_init(void)
 static inline hal_ret_t
 ep_pd_free (pd_ep_t *ep)
 {
-    g_hal_state_pd->ep_pd_slab()->free(ep);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_EP_PD, ep);
     return HAL_RET_OK;
 }
 
@@ -71,7 +71,7 @@ ep_pd_free (pd_ep_t *ep)
 static inline hal_ret_t
 ep_pd_mem_free (pd_ep_t *ep)
 {
-    g_hal_state_pd->ep_pd_slab()->free(ep);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_EP_PD, ep);
     return HAL_RET_OK;
 }
 
@@ -114,7 +114,7 @@ ep_pd_ip_alloc_init(void)
 static inline hal_ret_t
 ep_pd_ip_free (pd_ep_ip_entry_t *ep_ip)
 {
-    g_hal_state_pd->ep_pd_ip_entry_slab()->free(ep_ip);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_EP_IP_ENTRY_PD, ep_ip);
     return HAL_RET_OK;
 }
 

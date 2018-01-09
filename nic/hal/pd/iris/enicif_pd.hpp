@@ -74,7 +74,7 @@ pd_enicif_alloc_init(void)
 static inline hal_ret_t
 pd_enicif_free (pd_enicif_t *enicif)
 {
-    g_hal_state_pd->enicif_pd_slab()->free(enicif);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_ENICIF_PD, enicif);
     return HAL_RET_OK;
 }
 

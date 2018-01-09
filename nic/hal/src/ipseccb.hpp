@@ -113,7 +113,7 @@ static inline hal_ret_t
 ipseccb_free (ipseccb_t *ipseccb)
 {
     HAL_SPINLOCK_DESTROY(&ipseccb->slock);
-    g_hal_state->ipseccb_slab()->free(ipseccb);
+    hal::delay_delete_to_slab(HAL_SLAB_IPSECCB, ipseccb);
     return HAL_RET_OK;
 }
 

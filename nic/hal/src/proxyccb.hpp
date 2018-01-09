@@ -113,7 +113,7 @@ static inline hal_ret_t
 proxyccb_free (proxyccb_t *proxyccb)
 {
     HAL_SPINLOCK_DESTROY(&proxyccb->slock);
-    g_hal_state->proxyccb_slab()->free(proxyccb);
+    hal::delay_delete_to_slab(HAL_SLAB_PROXYCCB, proxyccb);
     return HAL_RET_OK;
 }
 

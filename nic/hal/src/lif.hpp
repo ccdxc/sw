@@ -169,7 +169,7 @@ static inline hal_ret_t
 lif_free (lif_t *lif)
 {
     HAL_SPINLOCK_DESTROY(&lif->slock);
-    g_hal_state->lif_slab()->free(lif);
+    hal::delay_delete_to_slab(HAL_SLAB_LIF, lif);
     return HAL_RET_OK;
 }
 

@@ -12,6 +12,7 @@ cc_library(
     deps = [
         "//nic:asic_includes",
         "//nic:gen_includes",
+        "@sdk//:sdk_headers",
         "//nic/hal:hal_src",
         "//nic/hal/pd/capri",
         "//nic/hal/pd/capri:capri_includes",

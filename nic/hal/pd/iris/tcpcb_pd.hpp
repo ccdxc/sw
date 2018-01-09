@@ -66,7 +66,7 @@ tcpcb_pd_alloc_init (void)
 static inline hal_ret_t
 tcpcb_pd_free (pd_tcpcb_t *tcpcb_pd)
 {
-    g_hal_state_pd->tcpcb_slab()->free(tcpcb_pd);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_TCPCB_PD, tcpcb_pd);
     return HAL_RET_OK;
 }
 

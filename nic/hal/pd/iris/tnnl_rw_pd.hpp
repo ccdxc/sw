@@ -80,7 +80,7 @@ tnnl_rw_entry_pd_alloc_init (void)
 static inline hal_ret_t
 tnnl_rw_entry_pd_free (pd_tnnl_rw_entry_t *tnnl_rwe)
 {
-    g_hal_state_pd->tnnl_rw_entry_slab()->free(tnnl_rwe);
+    hal::pd::delay_delete_to_slab(HAL_SLAB_TUNNEL_RW_PD, tnnl_rwe);
     return HAL_RET_OK;
 }
 

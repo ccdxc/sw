@@ -26,19 +26,13 @@
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/hal/src/proxyccb.hpp"
 #include "nic/hal/src/dos.hpp"
+#include "nic/hal/periodic/periodic.hpp"
+#include "sdk/twheel.hpp"
+
 namespace hal {
 
 // global instance of all HAL state including config, operational states
 class hal_state    *g_hal_state;
-
-typedef struct cfg_db_dirty_objs_s cfg_db_dirty_objs_t;
-struct cfg_db_dirty_objs_s {
-    void                   *obj;     // object itself (TODO: how do I know what
-                                     // type of object this is to free to right
-                                     // slab) ?? will a base class help ??
-    cfg_version_t          ver;      // version of this object
-    cfg_db_dirty_objs_t    *next;    // next object in the cache
-} __PACK__;
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the config db init state
