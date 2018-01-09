@@ -50,7 +50,7 @@ message ObjectRef {
   // Kind represents the type of the API object.
   string Kind = 1;
   // Namespace of the object, for scoped objects.
-  string NameSpace = 2;
+  string Namespace = 2;
   // Name of the object, unique within a Namespace for scoped objects.
   string Name = 3;
 }

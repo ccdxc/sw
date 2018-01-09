@@ -392,7 +392,7 @@
             "type": "string"
           },
           {
-            "name": "Status.ObjectRef.NameSpace",
+            "name": "Status.ObjectRef.Namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
             "required": false,
@@ -513,7 +513,7 @@
           "type": "string",
           "description": "Kind represents the type of the API object."
         },
-        "NameSpace": {
+        "Namespace": {
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
