@@ -1,0 +1,30 @@
+# Feature Test Modules List
+feature:
+    id          : eth
+    sub         : tx_perf
+    package     : test.eth
+    module      : eth
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : TX_PERF
+        spec    : tx_perf.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+
+    - module:
+        name    : TX_PERF_LT
+        spec    : tx_perf_lt.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+
+    - module:
+        name    : TX_PERF_GT
+        spec    : tx_perf_gt.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False

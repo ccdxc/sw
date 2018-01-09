@@ -1,4 +1,5 @@
 
+#include "defines.h"
 
 /***
  *  Header Type Declarations
@@ -46,27 +47,29 @@ header_type eth_tx_qstate_d {
         ring_size : 16;
         cq_ring_base : 64;
         intr_assert_addr : 32;
+        spurious_db_cnt : 8;
         color : 1;
     }
 }
 
+#define HEADER_TX_DESC(n) \
+    addr##n : 64; \
+    len##n : 16; \
+    vlan_tci##n : 16; \
+    hdr_len##n : 10; \
+    rsvd2##n : 3; \
+    vlan_insert##n : 1; \
+    cq_entry##n : 1; \
+    csum##n : 1; \
+    mss_or_csumoff##n : 14; \
+    rsvd3_or_rsvd4##n : 2;
+
 header_type eth_tx_desc_d {
     fields {
-        addr : 64;
-        //addr_lo : 32;
-        //addr_hi : 20;
-        //rsvd : 4;
-        //num_sg_elems : 5;
-        //opcode : 3;
-        len : 16;
-        vlan_tci : 16;
-        hdr_len : 10;
-        rsvd2 : 3;
-        V : 1;
-        C : 1;
-        O : 1;
-        mss_or_csumoff : 14;
-        rsvd3_or_rsvd4 : 2;
+        HEADER_TX_DESC(0)
+        HEADER_TX_DESC(1)
+        HEADER_TX_DESC(2)
+        HEADER_TX_DESC(3)
     }
 }
 
@@ -87,6 +90,7 @@ header_type eth_tx_t0_s2s_k {
         cq_desc_addr : 64;
         intr_assert_addr : 32;
         intr_assert_data : 32;
+        num_desc : 4;
     }
 }
 
@@ -172,23 +176,43 @@ metadata eth_tx_t3_s2s_k eth_tx_t3_s2s_scratch;
 */
 
 /*****************************************************************************
- * P-vetor
+ * P-vector
  *****************************************************************************/
 
-// App Header
+// Use the App Header from Flit0 for the first packet
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
-metadata p4plus_to_p4_header_t eth_tx_app_hdr;
+metadata p4plus_to_p4_header_t eth_tx_app_hdr0;
+// Additional APP Headers for other packets
+@pragma dont_trim
+@pragma pa_align 512
+metadata p4plus_to_p4_header_t eth_tx_app_hdr1;
+@pragma dont_trim
+metadata p4plus_to_p4_header_t eth_tx_app_hdr2;
+@pragma dont_trim
+metadata p4plus_to_p4_header_t eth_tx_app_hdr3;
 
-// Part of the PHV after Common Area
+@pragma pa_align 512
 @pragma dont_trim
 metadata eth_tx_cq_desc_p eth_tx_cq_desc;
 
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t dma_cmd0;
+metadata dma_cmd_phv2pkt_t dma_hdr0;
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t dma_cmd1;
+metadata dma_cmd_mem2pkt_t dma_pkt0;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd2;
+metadata dma_cmd_phv2pkt_t dma_hdr1;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd3;
+metadata dma_cmd_mem2pkt_t dma_pkt1;
+@pragma dont_trim
+metadata dma_cmd_phv2pkt_t dma_hdr2;
+@pragma dont_trim
+metadata dma_cmd_mem2pkt_t dma_pkt2;
+@pragma dont_trim
+metadata dma_cmd_phv2pkt_t dma_hdr3;
+@pragma dont_trim
+metadata dma_cmd_mem2pkt_t dma_pkt3;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmpl;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_intr;

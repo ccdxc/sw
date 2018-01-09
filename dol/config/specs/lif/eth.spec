@@ -18,10 +18,11 @@ queue_types:
         count       : 1     # Number of queues of this type
         queues:
             - queue:
-                size        : 128    # Number of descriptors in each ring
+                size        : 4096    # Number of descriptors in each ring
                 rings:
                     - ring:
                         id          : R0
+                        buf         : ref://factory/templates/id=ETH_BUFFER
                         desc        : ref://factory/templates/id=DESCR_ETH_TX
 
                     - ring:
@@ -37,10 +38,11 @@ queue_types:
         count       : 1     # Number of queues of this type
         queues:
             - queue:
-                size        : 128    # Number of descriptors in each ring
+                size        : 4096    # Number of descriptors in each ring
                 rings:
                     - ring:
                         id          : R0
+                        buf         : ref://factory/templates/id=ETH_BUFFER
                         desc        : ref://factory/templates/id=DESCR_ETH_RX
 
                     - ring:
@@ -56,7 +58,7 @@ queue_types:
         count       : 1     # Number of queues of this type
         queues:
             - queue:
-                size        : 128    # Number of descriptors in each ring
+                size        : 8    # Number of descriptors in each ring
                 rings:
                     - ring:
                         id          : R0

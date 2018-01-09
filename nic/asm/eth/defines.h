@@ -7,7 +7,7 @@
 #define LG2_TX_CMPL_DESC_SIZE   (4)
 #define LG2_RX_QSTATE_SIZE      (6)
 
-#define ETH_DMA_CMD_PTR         (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
+#define MAX_DESC_PER_PHV        (4)
 
 #define  RSS_TYPE_NONE         (0)
 #define  RSS_TYPE_IPV4         (1)

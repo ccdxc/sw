@@ -41,4 +41,21 @@
 #define MODIFY_ETH_TX_T0_S2S \
     modify_field(eth_tx_t0_s2s_scratch.cq_desc_addr, eth_tx_t0_s2s.cq_desc_addr); \
     modify_field(eth_tx_t0_s2s_scratch.intr_assert_addr, eth_tx_t0_s2s.intr_assert_addr); \
-    modify_field(eth_tx_t0_s2s_scratch.intr_assert_data, eth_tx_t0_s2s.intr_assert_data);
+    modify_field(eth_tx_t0_s2s_scratch.intr_assert_data, eth_tx_t0_s2s.intr_assert_data); \
+    modify_field(eth_tx_t0_s2s_scratch.num_desc, eth_tx_t0_s2s.num_desc);
+
+#define PARAM_TX_DESC(n) \
+    addr##n, len##n, vlan_tci##n, hdr_len##n, rsvd2##n, \
+    vlan_insert##n, cq_entry##n, csum##n, mss_or_csumoff##n, rsvd3_or_rsvd4##n
+
+#define MODIFY_TX_DESC(n) \
+    modify_field(eth_tx_desc.addr##n, addr##n); \
+    modify_field(eth_tx_desc.len##n, len##n); \
+    modify_field(eth_tx_desc.vlan_tci##n, vlan_tci##n); \
+    modify_field(eth_tx_desc.hdr_len##n, hdr_len##n); \
+    modify_field(eth_tx_desc.rsvd2##n, rsvd2##n); \
+    modify_field(eth_tx_desc.vlan_insert##n, vlan_insert##n); \
+    modify_field(eth_tx_desc.cq_entry##n, cq_entry##n); \
+    modify_field(eth_tx_desc.csum##n, csum##n); \
+    modify_field(eth_tx_desc.mss_or_csumoff##n, mss_or_csumoff##n); \
+    modify_field(eth_tx_desc.rsvd3_or_rsvd4##n, rsvd3_or_rsvd4##n); \

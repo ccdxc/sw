@@ -7,6 +7,8 @@ struct phv_ p;
 struct rx_table_s3_t0_k k;
 struct rx_table_s3_t0_eth_rx_packet_d d;
 
+#define ETH_DMA_CMD_PTR    (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
+
 %%
 
 .align

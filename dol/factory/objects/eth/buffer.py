@@ -25,7 +25,7 @@ class EthBufferObject(base.FactoryObjectBase):
         self.addr = None    # Required to fill the 'buf_addr' field of descriptor
         if bind:
             # Allocate Memory for the buffer
-            self._mem = resmgr.HostMemoryAllocator.get(self.size)
+            self._mem = resmgr.HostMemoryAllocator.get(self.size, page_aligned=False)
             self.addr = self._mem.pa
 
         self.logger.info("Init %s" % self)

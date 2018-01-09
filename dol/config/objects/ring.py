@@ -14,6 +14,7 @@ class RingObject(objects.FrameworkObject):
 
     def Init(self, queue, spec): 
         self.GID(spec.id)
+        self.spec = spec
         self.id = spec.id
         self.queue = queue
         self.descriptor_template = spec.desc.Get(FactoryStore)

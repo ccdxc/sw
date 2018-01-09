@@ -12,7 +12,7 @@
 
 #include "../common-p4+/common_txdma.p4"
 #include "eth_txdma.p4"
-#include "defines.h"
+//#include "defines.h"
 
 /******************************************************************************
  * Action functions
@@ -27,7 +27,8 @@ action eth_tx_dummy(data0, data1, data2, data3, data4, data5, data6, data7)
 action eth_tx_fetch_desc(
         pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
         p_index0, c_index0, p_index1, c_index1,
-        enable, ring_base, ring_size, cq_ring_base, intr_assert_addr, color)
+        enable, ring_base, ring_size, cq_ring_base, intr_assert_addr,
+        spurious_db_cnt, color)
 {
     // For K+I struct generation
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -43,27 +44,24 @@ action eth_tx_fetch_desc(
     modify_field(eth_tx_qstate.ring_size, ring_size);
     modify_field(eth_tx_qstate.cq_ring_base, cq_ring_base);
     modify_field(eth_tx_qstate.intr_assert_addr, intr_assert_addr);
+    modify_field(eth_tx_qstate.spurious_db_cnt, spurious_db_cnt);
     modify_field(eth_tx_qstate.color, color);
 }
 
-action eth_tx_packet(addr,
-        /* addr_lo, addr_hi, rsvd, num_sg_elems, opcode */
-        len, vlan_tci, hdr_len, rsvd2, V, C, O, mss_or_csumoff, rsvd3_or_rsvd4)
+action eth_tx_packet(
+    PARAM_TX_DESC(0),
+    PARAM_TX_DESC(1),
+    PARAM_TX_DESC(2),
+    PARAM_TX_DESC(3)
+)
 {
     // For K+I struct generation
-
     MODIFY_ETH_TX_GLOBAL
     MODIFY_ETH_TX_T0_S2S
 
     // For D-struct generation
-    modify_field(eth_tx_desc.addr, addr);
-    modify_field(eth_tx_desc.len, len);
-    modify_field(eth_tx_desc.vlan_tci, vlan_tci);
-    modify_field(eth_tx_desc.hdr_len, hdr_len);
-    modify_field(eth_tx_desc.rsvd2, rsvd2);
-    modify_field(eth_tx_desc.V, V);
-    modify_field(eth_tx_desc.C, C);
-    modify_field(eth_tx_desc.O, O);
-    modify_field(eth_tx_desc.mss_or_csumoff, mss_or_csumoff);
-    modify_field(eth_tx_desc.rsvd3_or_rsvd4, rsvd3_or_rsvd4);
+    MODIFY_TX_DESC(0)
+    MODIFY_TX_DESC(1)
+    MODIFY_TX_DESC(2)
+    MODIFY_TX_DESC(3)
 }

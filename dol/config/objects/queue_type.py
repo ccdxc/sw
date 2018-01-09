@@ -105,9 +105,50 @@ class QueueTypeObject(base.ConfigObjectBase):
             if self.id in eth_queue_type_ids:
                 self.doorbell = doorbell.Doorbell()
                 self.doorbell.Init(self, self.spec)
+                self.Fill()
+
+    def Fill(self):
+        if GlobalOptions.skipverify and self.purpose == "LIF_QUEUE_PURPOSE_RX":
+            from attrdict import AttrDict
+            from infra.factory.store import FactoryStore
+            for queue in self.obj_helper_q.queues:
+                ring_id = 0
+                queue_id = queue.id
+                ring = queue.obj_helper_ring.rings[ring_id]
+                descriptor_template = ring.spec.desc.Get(FactoryStore) if hasattr(ring.spec, 'desc') else None
+                buffer_template = ring.spec.buf.Get(FactoryStore) if hasattr(ring.spec, 'buf') else None
+                for i in range(ring.size - 1):  # Leave one empty slot so PI != CI
+                    uid = 'LIF%s_QTYPE%s_%s_%s_%d' % (
+                        self.lif.hw_lif_id,
+                        self.type,
+                        queue.id,
+                        ring.id,
+                        i)
+                    # Create Buffer
+                    buf = buffer_template.CreateObjectInstance()
+                    buf.Logger(cfglogger)
+                    buf.GID('%s_%s' % (buffer_template.meta.id, uid))
+                    buf_spec = AttrDict(fields=AttrDict(size=1518, bind=True))
+                    buf.Init(buf_spec)
+                    buf.Write()
+                    # Create descriptor
+                    desc = descriptor_template.CreateObjectInstance()
+                    buf.Logger(cfglogger)
+                    buf.GID('%s_%s' % (descriptor_template.meta.id, uid))
+                    desc_spec = AttrDict(fields=AttrDict(addr=buf.addr, len=buf.size))
+                    desc.Init(desc_spec)
+                    desc.Write()
+                    # Post the descriptor
+                    ret = queue.Post(desc)
+                    if ret == status.SUCCESS and i > 0 and i % 4 == 0:
+                        if self.purpose in ["LIF_QUEUE_PURPOSE_RX", "LIF_QUEUE_PURPOSE_TX"]:
+                            self.doorbell.Ring(queue_id, ring_id, ring.pi, 0)
 
     def Post(self, descriptor, queue_id=0):
         if GlobalOptions.dryrun:
+            return status.SUCCESS
+
+        if GlobalOptions.skipverify and self.purpose == "LIF_QUEUE_PURPOSE_RX":
             return status.SUCCESS
 
         ring_id = 0
@@ -115,15 +156,15 @@ class QueueTypeObject(base.ConfigObjectBase):
         ring = queue.obj_helper_ring.rings[ring_id]
         ret = queue.Post(descriptor)
         if ret == status.SUCCESS:
-            queue.qstate.Read()
-            if self.purpose == "LIF_QUEUE_PURPOSE_RX":
+            if not GlobalOptions.skipverify:
+                queue.qstate.Read()
+            if self.purpose in ["LIF_QUEUE_PURPOSE_RX", "LIF_QUEUE_PURPOSE_TX"]:
                 self.doorbell.Ring(queue_id, ring_id, ring.pi, 0)
-            elif self.purpose == "LIF_QUEUE_PURPOSE_TX":
-                self.doorbell.Ring(queue_id, ring_id, ring.pi, 0)
-            queue.qstate.Read()
+            if not GlobalOptions.skipverify:
+                queue.qstate.Read()
 
     def Consume(self, descriptor, queue_id=0):
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.skipverify:
             return status.SUCCESS
 
         ring_id = 1

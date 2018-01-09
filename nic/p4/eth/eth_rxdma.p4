@@ -22,7 +22,7 @@ header_type eth_rx_cq_desc_p {
         len_hi : 6;
         rss_type : 4;
         rsvd2 : 3;
-        V : 1;
+        vlan_strip : 1;
         color : 1;
         rsvd3 : 7;
     }

@@ -32,7 +32,7 @@ class EthRxQstate(Packet):
         LEShortField("rss_type", 0),
         LEIntField("intr_assert_addr", 0),
         BitField("color", 1, 1),
-        BitField("__pad", 0, 183),
+        BitField("__pad", 0, 7),
     ]
 
 
@@ -58,8 +58,9 @@ class EthTxQstate(Packet):
         LEShortField("ring_size", 0),
         LELongField("cq_ring_base", 0),
         LEIntField("intr_assert_addr", 0),
+        ByteField("spurious_db_cnt", 0),
         BitField("color", 1, 1),
-        BitField("__pad", 0, 199),
+        BitField("__pad", 0, 7),
     ]
 
 
@@ -97,11 +98,15 @@ class EthQstateObject(object):
         self.data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
 
     def Write(self, lgh = cfglogger):
+        if GlobalOptions.skipverify:
+            return
         lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
         model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
         self.Read(lgh)
 
     def Read(self, lgh = cfglogger):
+        if GlobalOptions.skipverify:
+            return
         data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
         lgh.ShowScapyObject(data)
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))

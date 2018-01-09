@@ -24,10 +24,10 @@ k = {
 };
 
 d = {
-    enable = 1;
-    p_index0 = 1;
-    c_index0 = 0;
-    ring_size = 0xa00;
+    enable = 0x1;
+    p_index0 = 0x0100;
+    c_index0 = 0x0;
+    ring_size = 0x0a00;
     ring_base = 0x8000000000000000;
     cq_ring_base = 0x8000000000010000;
 };

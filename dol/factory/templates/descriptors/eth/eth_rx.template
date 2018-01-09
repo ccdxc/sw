@@ -4,7 +4,3 @@ meta:
     package : factory.objects.eth
     module  : descriptor
     objname : EthRxDescriptorObject
-
-addr        : None
-len         : None
-rsvd0       : const/0x0

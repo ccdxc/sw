@@ -69,6 +69,7 @@ queue_types:
                 rings:
                     - ring:
                         id          : R0
+                        buf         : ref://factory/templates/id=ETH_BUFFER
                         desc        : ref://factory/templates/id=DESCR_ETH_TX
 
                     - ring:
@@ -107,6 +108,7 @@ queue_types:
                 rings:
                     - ring:
                         id          : R0
+                        buf         : ref://factory/templates/id=ETH_BUFFER
                         desc        : ref://factory/templates/id=DESCR_ETH_RX
 
                     - ring:

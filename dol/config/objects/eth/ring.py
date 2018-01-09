@@ -23,6 +23,7 @@ class EthRingObject(ring.RingObject):
         assert isinstance(self.desc_size, int) and (self.desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
 
     def Configure(self):
+
         if GlobalOptions.dryrun:
             return
 
@@ -32,14 +33,15 @@ class EthRingObject(ring.RingObject):
         cfglogger.info("Creating Ring %s" % self)
 
     def Post(self, descriptor):
+
         if GlobalOptions.dryrun:
             return
+
+        cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.pi, self))
 
         # Check descriptor compatibility
         assert(descriptor is not None)
         assert(self.desc_size == descriptor.size)
-
-        cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.pi, self))
 
         # Bind the descriptor to the ring
         descriptor.Bind(self._mem + (self.desc_size * self.pi))
@@ -54,14 +56,15 @@ class EthRingObject(ring.RingObject):
         return status.SUCCESS
 
     def Consume(self, descriptor):
+
         if GlobalOptions.dryrun:
             return
+
+        cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.ci, self))
 
         # Check descriptor compatibility
         assert(descriptor is not None)
         assert(self.desc_size == descriptor.size)
-
-        cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.ci, self))
 
         # Bind the descriptor to the ring
         descriptor.Bind(self._mem + (self.desc_size * self.ci))
@@ -75,13 +78,12 @@ class EthRingObject(ring.RingObject):
         if descriptor.GetColor() != self.exp_color:
             return status.RETRY
 
-        # Increment consumer index
-        self.ci += 1
-        self.ci %= self.size
-
         # If we have reached the end of the ring then, toggle the expected color
-        if self.ci == 0:
+        if descriptor.GetCompletionIndex() < self.ci:
             self.exp_color = 0 if self.exp_color else 1
+
+        # Increment consumer index
+        self.ci = (descriptor.GetCompletionIndex() + 1) % self.size
 
         return status.SUCCESS
 
