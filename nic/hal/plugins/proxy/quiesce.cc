@@ -37,8 +37,8 @@ quiesce_transmit_pkt(void* data)
 {
     unsigned int len = sizeof(pkt)/sizeof(pkt[0]);
     HAL_TRACE_DEBUG("quiesce_transmit_pkt len={}", len);
-    hal::pd::cpu_to_p4plus_header_t cpu_header;
-    hal::pd::p4plus_to_p4_header_t  p4plus_header;
+    hal::pd::cpu_to_p4plus_header_t cpu_header = {};
+    hal::pd::p4plus_to_p4_header_t  p4plus_header = {};
 
     p4plus_header.flags = 0;
     p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;

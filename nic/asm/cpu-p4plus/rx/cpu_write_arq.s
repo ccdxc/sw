@@ -53,7 +53,7 @@ dma_cmd_descr:
     addi    r3, r0, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
     phvwr   p.aol_O0, r3.wx
     add     r3, r0, k.t0_s2s_payload_len
-    addi.c5 r3, r3, sizeof(p.quiesce_pkt_trlr_timestamp)
+    addi.c5 r3, r3, (sizeof(p.quiesce_pkt_trlr_timestamp) / 8)
     phvwr   p.aol_L0, r3.wx
 
     phvwri  p.dma_cmd2_dma_cmd_phv_start_addr, CPU_PHV_AOL_DESC_START
