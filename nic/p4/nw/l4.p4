@@ -1203,6 +1203,7 @@ action ip_normalization_checks() {
         }
     }
 
+#if 0
     // tunneled packet and terminated
     // 8 Bytes for UDP Header
     // 8 bytes for vxlan Header
@@ -1235,6 +1236,7 @@ action ip_normalization_checks() {
           (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
         modify_field(capri_p4_intrinsic.packet_len, (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen));
     }
+#endif /* 0 */
     // IP Normalize TTL: If the configured value is non-zero then every
     // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
     // ip_normalize_ttl
@@ -1320,6 +1322,35 @@ action ip_normalization_checks() {
             flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
             tunnel_metadata.tunnel_terminate == TRUE) {
             modify_field(inner_ipv6.hopLimit, l4_metadata.ip_normalize_ttl);
+        }
+
+        // Invalid Packet length check.
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
+            (((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv6.payloadLen + 58))) or
+             ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv6.payloadLen + 54))))) {
+            modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
+        }
+        // Vlan tagged packet
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+            ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv6.payloadLen + 58)) and
+            (((ipv6.payloadLen + 58) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
+            if ((ipv6.payloadLen + 58) > MIN_ETHER_FRAME_LEN) {
+                modify_field(capri_p4_intrinsic.packet_len, (ipv6.payloadLen + 58));
+            }
+            if ((ipv6.payloadLen + 58) < MIN_ETHER_FRAME_LEN) {
+                modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
+            }
+        }
+        // Vlan untagged packet
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+            ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv6.payloadLen + 54)) and
+            (((ipv6.payloadLen + 54) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
+            if ((ipv6.payloadLen + 54) > MIN_ETHER_FRAME_LEN) {
+                modify_field(capri_p4_intrinsic.packet_len, (ipv6.payloadLen + 54));
+            }
+            if ((ipv6.payloadLen + 54) < MIN_ETHER_FRAME_LEN) {
+                modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
+            }
         }
     }
 
