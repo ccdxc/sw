@@ -18,6 +18,7 @@
 
 #include <linux/module.h>
 #include <linux/netdevice.h>
+#include <linux/io.h>
 #include <linux/platform_device.h>
 
 #include "ionic.h"
@@ -203,7 +204,6 @@ static int ionic_remove(struct platform_device *pfdev)
 	return 0;
 }
 
-#ifndef FOR_TESTING_MNIC
 static struct platform_driver ionic_driver = {
 	.probe = ionic_probe,
 	.remove = ionic_remove,
@@ -212,6 +212,7 @@ static struct platform_driver ionic_driver = {
 	},
 };
 
+#ifndef FOR_TESTING_MNIC
 static struct resource ionic_resources[] = {
 	{
 		.start = 0xfe800000,
@@ -244,7 +245,6 @@ static struct resource ionic_resources[] = {
 		.name  = "ionic-mnic-irq2",
 	},
 };
-#endif
 
 static u64 ionic_dma_mask = DMA_BIT_MASK(64);
 
@@ -257,6 +257,7 @@ static struct platform_device ionic_device = {
 		.coherent_dma_mask = DMA_BIT_MASK(64),
 	},
 };
+#endif
 
 int ionic_bus_register_driver(void)
 {

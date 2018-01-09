@@ -19,6 +19,7 @@
 #include <linux/ip.h>
 #include <linux/ipv6.h>
 #include <linux/if_vlan.h>
+#include <net/ip6_checksum.h>
 
 #include "ionic.h"
 #include "ionic_lif.h"
