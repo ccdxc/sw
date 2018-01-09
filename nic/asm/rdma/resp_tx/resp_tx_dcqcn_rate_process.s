@@ -152,6 +152,7 @@ cnp_recv_process:
     CAPRI_SET_TABLE_0_VALID(0)
  
     bbeq    d.max_rate_reached, 0, exit
+    tblwr   d.max_rate_reached, 0 // BD-slot
     /* 
      * Timer will be started only when CNP is received after max_rate_reached is hit. 
      * Init value of max_rate_reached will be set to 1 to kick-start dcqcn timers when first CNP is received.
@@ -160,12 +161,11 @@ cnp_recv_process:
      * should have minimal impact on timer T and subsequent dcqcn rate-increase.
      */
     CAPRI_START_SLOW_TIMER(r1, r6, k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
-    tblwr   d.max_rate_reached, 0
     nop.e
     nop
 
 bubble_to_next_stage:
-    seq           c1, r1[6:2], STAGE_3
+    seq           c1, r1[4:2], STAGE_3
     bcf           [!c1], exit
     nop           // Branch Delay Slot
 

@@ -57,7 +57,7 @@ skip_timer_restart:
     nop
 
 bubble_to_next_stage:
-    seq           c1, r1[6:2], STAGE_3
+    seq           c1, r1[4:2], STAGE_3
     bcf           [!c1], exit
     nop           // Branch Delay Slot
 
