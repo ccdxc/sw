@@ -26,13 +26,12 @@
 #define rx_table_s5_t0          rawr_chain_pindex_pre_alloc
 
 #define rx_table_s6_t0          rawr_cleanup_discard
-#define rx_table_s6_t1          rawr_chain_txq_pindex
-#define rx_table_s6_t2          rawr_chain_qidxr
-#define rx_table_s6_t3          rawr_chain_xfer
+#define rx_table_s6_t1          rawr_chain_pindex
 
 #define rx_table_s7_t0          rawr_desc_free
 #define rx_table_s7_t1          rawr_ppage_free
 #define rx_table_s7_t2          rawr_mpage_free
+#define rx_table_s7_t3          rawr_stats              // actually stage agnostic
 
 /*
  * L7 Raw Redirect stage 1
@@ -67,9 +66,9 @@
  * L7 Raw Redirect stage 6
  */
 #define rx_table_s6_t0_action   cleanup_discard
-#define rx_table_s6_t1_action   chain_txq_pindex_post_read
-#define rx_table_s6_t2_action   chain_qidxr_pindex_post_read
-#define rx_table_s6_t3_action   chain_xfer
+#define rx_table_s6_t1_action   chain_xfer
+#define rx_table_s6_t1_action1  txq_post_read
+#define rx_table_s6_t1_action2  qidxr_post_read
 
 /*
  * L7 Raw Redirect stage 7
@@ -77,27 +76,11 @@
 #define rx_table_s7_t0_action   desc_free
 #define rx_table_s7_t1_action   ppage_free
 #define rx_table_s7_t2_action   mpage_free
+#define rx_table_s7_t3_action   err_stat_inc    // actually stage agnostic
+
 
 #include "../common-p4+/common_rxdma.p4"
 #include "../cpu-p4+/cpu_rx_common.p4"
-
-
-#define GENERATE_GLOBAL_K \
-    modify_field(common_global_scratch.chain_ring_base, common_phv.chain_ring_base); \
-    modify_field(common_global_scratch.packet_len, common_phv.packet_len); \
-    modify_field(common_global_scratch.chain_to_rxq, common_phv.chain_to_rxq); \
-    modify_field(common_global_scratch.desc_sem_pindex_full, common_phv.desc_sem_pindex_full); \
-    modify_field(common_global_scratch.ppage_sem_pindex_full, common_phv.ppage_sem_pindex_full); \
-    modify_field(common_global_scratch.mpage_sem_pindex_full, common_phv.mpage_sem_pindex_full); \
-    modify_field(common_global_scratch.chain_ring_size_shift, common_phv.chain_ring_size_shift); \
-    modify_field(common_global_scratch.chain_entry_size_shift, common_phv.chain_entry_size_shift); \
-    modify_field(common_global_scratch.chain_ring_index_select, common_phv.chain_ring_index_select); \
-    modify_field(common_global_scratch.chain_lif, common_phv.chain_lif); \
-    modify_field(common_global_scratch.chain_qtype, common_phv.chain_qtype); \
-    modify_field(common_global_scratch.chain_qid, common_phv.chain_qid); \
-    modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
-    modify_field(common_global_scratch.rawrcb_flags, common_phv.rawrcb_flags); \
-
 
 
 /*
@@ -235,6 +218,27 @@ header_type chain_txq_ring_indices_d_t {
     }
 }
 
+// d for stage x table 3
+header_type rawrcb_stats_t {
+    fields {
+        stat_pkts_redir                 : 64;
+        stat_pkts_discard               : 64;
+
+        // 32-bit saturating statistic counters
+        stat_cb_not_ready               : 32;
+        stat_qstate_cfg_err             : 32;
+        stat_pkt_len_err                : 32;
+        stat_rxq_full                   : 32;
+        stat_txq_full                   : 32;
+        stat_desc_sem_alloc_full        : 32;
+        stat_ppage_sem_alloc_full       : 32;
+        stat_mpage_sem_alloc_full       : 32;
+        stat_sem_free_full              : 32;
+        unused0                         : 32;
+        unused1                         : 32;
+        unused2                         : 32;
+    }
+}
 
 /*
  * Global PHV definitions
@@ -251,13 +255,25 @@ header_type common_global_phv_t {
         rawrcb_flags                    : 16;
         packet_len                      : 16;
         chain_ring_base                 : 34;
-        chain_lif                       : 11;
-        chain_qtype                     : 3;
-        chain_qid                       : 24;
         chain_ring_size_shift           : 5;
+        qstate_addr                     : 34;
         chain_entry_size_shift          : 5;
     }
 }
+
+#define GENERATE_GLOBAL_K \
+    modify_field(common_global_scratch.chain_ring_base, common_phv.chain_ring_base); \
+    modify_field(common_global_scratch.packet_len, common_phv.packet_len); \
+    modify_field(common_global_scratch.chain_to_rxq, common_phv.chain_to_rxq); \
+    modify_field(common_global_scratch.desc_sem_pindex_full, common_phv.desc_sem_pindex_full); \
+    modify_field(common_global_scratch.ppage_sem_pindex_full, common_phv.ppage_sem_pindex_full); \
+    modify_field(common_global_scratch.mpage_sem_pindex_full, common_phv.mpage_sem_pindex_full); \
+    modify_field(common_global_scratch.chain_ring_size_shift, common_phv.chain_ring_size_shift); \
+    modify_field(common_global_scratch.chain_entry_size_shift, common_phv.chain_entry_size_shift); \
+    modify_field(common_global_scratch.chain_ring_index_select, common_phv.chain_ring_index_select); \
+    modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
+    modify_field(common_global_scratch.rawrcb_flags, common_phv.rawrcb_flags); \
+    modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr);
 
 
 /*
@@ -319,6 +335,67 @@ metadata alloc_mpage_d_t                alloc_mpage_d;
 @pragma scratch_metadata
 metadata arq_pi_d_t                     qidxr_chain_d;
 
+@pragma scratch_metadata
+metadata rawrcb_stats_t                 rawrcb_stats_d;
+
+/*
+ * Stage to stage PHV definitions
+ */
+header_type common_t1_s2s_phv_t {
+    fields {
+        // (max is STAGE_2_STAGE_WIDTH or 160 bits)
+        chain_lif               : 11;
+        chain_qtype             : 3;
+        chain_qid               : 24;
+    }
+}
+
+#define GENERATE_T1_S2S_K \
+    modify_field(t1_s2s_scratch.chain_lif, t1_s2s.chain_lif); \
+    modify_field(t1_s2s_scratch.chain_qtype, t1_s2s.chain_qtype); \
+    modify_field(t1_s2s_scratch.chain_qid, t1_s2s.chain_qid);
+    
+
+header_type common_t3_s2s_phv_t {
+    fields {
+        // (max is STAGE_2_STAGE_WIDTH or 160 bits)
+        inc_stat_begin                : 1;
+        inc_stat_pkts_redir           : 1;
+        inc_stat_pkts_discard         : 1;
+        inc_stat_cb_not_ready         : 1;
+        inc_stat_qstate_cfg_err       : 1;
+        inc_stat_pkt_len_err          : 1;
+        inc_stat_rxq_full             : 1;
+        inc_stat_txq_full             : 1;
+        inc_stat_desc_sem_alloc_full  : 1;
+        inc_stat_ppage_sem_alloc_full : 1;
+        inc_stat_mpage_sem_alloc_full : 1;
+        inc_stat_sem_free_full        : 1;
+        inc_stat_end                  : 1;
+	
+	/* Check all above for increment applicability;
+	 * must be outside of inc_stat_begin...inc_stat_end
+	 */
+        inc_stat_check_all            : 1;
+    }
+}
+
+#define GENERATE_T3_S2S_K \
+    modify_field(t3_s2s_scratch.inc_stat_begin, t3_s2s.inc_stat_begin); \
+    modify_field(t3_s2s_scratch.inc_stat_pkts_redir, t3_s2s.inc_stat_pkts_redir); \
+    modify_field(t3_s2s_scratch.inc_stat_pkts_discard, t3_s2s.inc_stat_pkts_discard); \
+    modify_field(t3_s2s_scratch.inc_stat_cb_not_ready, t3_s2s.inc_stat_cb_not_ready); \
+    modify_field(t3_s2s_scratch.inc_stat_qstate_cfg_err, t3_s2s.inc_stat_qstate_cfg_err); \
+    modify_field(t3_s2s_scratch.inc_stat_pkt_len_err, t3_s2s.inc_stat_pkt_len_err); \
+    modify_field(t3_s2s_scratch.inc_stat_rxq_full, t3_s2s.inc_stat_rxq_full); \
+    modify_field(t3_s2s_scratch.inc_stat_txq_full, t3_s2s.inc_stat_txq_full); \
+    modify_field(t3_s2s_scratch.inc_stat_desc_sem_alloc_full, t3_s2s.inc_stat_desc_sem_alloc_full); \
+    modify_field(t3_s2s_scratch.inc_stat_ppage_sem_alloc_full, t3_s2s.inc_stat_ppage_sem_alloc_full); \
+    modify_field(t3_s2s_scratch.inc_stat_mpage_sem_alloc_full, t3_s2s.inc_stat_mpage_sem_alloc_full); \
+    modify_field(t3_s2s_scratch.inc_stat_sem_free_full, t3_s2s.inc_stat_sem_free_full); \
+    modify_field(t3_s2s_scratch.inc_stat_end, t3_s2s.inc_stat_end); \
+    modify_field(t3_s2s_scratch.inc_stat_check_all, t3_s2s.inc_stat_check_all);
+    
 
 /*
  * Header unions for PHV layout
@@ -348,6 +425,17 @@ metadata to_stage_7_phv_t               to_s7;
 @pragma scratch_metadata
 metadata to_stage_7_phv_t               to_s7_scratch;
 
+@pragma dont_trim
+@pragma pa_header_union ingress         common_t1_s2s
+metadata common_t1_s2s_phv_t            t1_s2s;
+@pragma scratch_metadata
+metadata common_t1_s2s_phv_t            t1_s2s_scratch;
+
+@pragma dont_trim
+@pragma pa_header_union ingress         common_t3_s2s
+metadata common_t3_s2s_phv_t            t3_s2s;
+@pragma scratch_metadata
+metadata common_t3_s2s_phv_t            t3_s2s_scratch;
 
 /*
  * PHV following k (for app DMA etc.)
@@ -434,6 +522,8 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     // as set by P4 apps.p4
     modify_field(rawr_scratch_app.packet_len, rawr_app_header.packet_len);
 
+    // from stage to stage
+    
     // d for stage 0
     
     //modify_field(rawrcb_d.pc, pc);
@@ -468,6 +558,8 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
  * Stage 1 table 0 action
  */
 action desc_pindex_post_update(pindex, pindex_full) {
+    
+    // d for stage
     modify_field(sem_desc_d.pindex, pindex);
     modify_field(sem_desc_d.pindex_full, pindex_full);
 }
@@ -476,6 +568,8 @@ action desc_pindex_post_update(pindex, pindex_full) {
  * Stage 1 table 1 action
  */
 action ppage_pindex_post_update(pindex, pindex_full) {
+    
+    // d for stage
     modify_field(sem_ppage_d.pindex, pindex);
     modify_field(sem_ppage_d.pindex_full, pindex_full);
 }
@@ -484,6 +578,8 @@ action ppage_pindex_post_update(pindex, pindex_full) {
  * Stage 1 table 2 action
  */
 action mpage_pindex_post_update(pindex, pindex_full) {
+    
+    // d for stage
     modify_field(sem_mpage_d.pindex, pindex);
     modify_field(sem_mpage_d.pindex_full, pindex_full);
     
@@ -590,7 +686,7 @@ action cleanup_discard() {
 /*
  * Stage 6 table 1 action
  */
-action chain_txq_pindex_post_read(pi_curr, ci_curr) {
+action txq_post_read(pi_curr, ci_curr) {
     // k + i for stage 6 table 1
 
     // from to_stage 6
@@ -607,10 +703,10 @@ action chain_txq_pindex_post_read(pi_curr, ci_curr) {
 
 
 /*
- * Stage 6 table 2 action
+ * Stage 6 table 1 action1
  */
-action chain_qidxr_pindex_post_read(ARQ_PI_PARAMS) {
-    // k + i for stage 6 table 2
+action qidxr_post_read(ARQ_PI_PARAMS) {
+    // k + i for stage 6 table 1
 
     // from to_stage 6
 
@@ -619,13 +715,13 @@ action chain_qidxr_pindex_post_read(ARQ_PI_PARAMS) {
 
     // from stage to stage
 
-    // d for stage 6 table 2
+    // d for stage 6 table 1
     GENERATE_ARQ_PI_D(qidxr_chain_d)
 }
 
 
 /*
- * Stage 6 table 3 action
+ * Stage 6 table 1 action2
  */
 action chain_xfer() {
 
@@ -638,6 +734,9 @@ action chain_xfer() {
 
     // from ki global
     GENERATE_GLOBAL_K
+    
+    // from stage to stage
+    GENERATE_T1_S2S_K
 }
 
 
@@ -698,4 +797,46 @@ action mpage_free(pindex, pindex_full) {
     modify_field(sem_mpage_d.pindex_full, pindex_full);
 }
 
+/*
+ * Stage agnostic table 3 action.
+ * Caution: must not be launched from stage 7.
+ */
+action err_stat_inc(stat_pkts_redir,
+                    stat_pkts_discard,
+                    stat_cb_not_ready,
+                    stat_qstate_cfg_err,
+                    stat_pkt_len_err,
+                    stat_rxq_full,
+                    stat_txq_full,
+                    stat_desc_sem_alloc_full,
+                    stat_ppage_sem_alloc_full,
+                    stat_mpage_sem_alloc_full,
+                    stat_sem_free_full,
+                    unused0, unused1, unused2) {
+    // k + i for stage x table 3
+    
+    // from to_stage x
+
+    // from ki global
+    //GENERATE_GLOBAL_K
+
+    // from stage to stage
+    GENERATE_T3_S2S_K
+
+    // d for stage x table 3
+    modify_field(rawrcb_stats_d.stat_pkts_redir, stat_pkts_redir);
+    modify_field(rawrcb_stats_d.stat_pkts_discard, stat_pkts_discard);
+    modify_field(rawrcb_stats_d.stat_cb_not_ready, stat_cb_not_ready);
+    modify_field(rawrcb_stats_d.stat_qstate_cfg_err, stat_qstate_cfg_err);
+    modify_field(rawrcb_stats_d.stat_pkt_len_err, stat_pkt_len_err);
+    modify_field(rawrcb_stats_d.stat_rxq_full, stat_rxq_full);
+    modify_field(rawrcb_stats_d.stat_txq_full, stat_txq_full);
+    modify_field(rawrcb_stats_d.stat_desc_sem_alloc_full, stat_desc_sem_alloc_full);
+    modify_field(rawrcb_stats_d.stat_ppage_sem_alloc_full, stat_ppage_sem_alloc_full);
+    modify_field(rawrcb_stats_d.stat_mpage_sem_alloc_full, stat_mpage_sem_alloc_full);
+    modify_field(rawrcb_stats_d.stat_sem_free_full, stat_sem_free_full);
+    modify_field(rawrcb_stats_d.unused0, unused0);
+    modify_field(rawrcb_stats_d.unused1, unused1);
+    modify_field(rawrcb_stats_d.unused2, unused2);
+}
 

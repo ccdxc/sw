@@ -1,7 +1,7 @@
 #include "app_redir_common.h"
 
 struct phv_                             p;
-struct rawr_chain_xfer_k                k;
+struct rawr_chain_pindex_k              k;
 
 #define r_chain_pindex                  r1  // must match rawr_chain_qidx_post_read
 #define r_rawrcb_flags                  r2
@@ -22,6 +22,8 @@ struct rawr_chain_xfer_k                k;
 #define r_scratch                       r7
 
 %%
+    .param      rawr_normal_stats_inc
+    
     .align
 
 /*
@@ -37,7 +39,6 @@ struct rawr_chain_xfer_k                k;
  */
 rawr_s6_chain_xfer:
 
-    CAPRI_CLEAR_TABLE3_VALID
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr,\
                 CAPRI_PHV_START_OFFSET(dma_cpu_pkt_dma_cmd_type) / 16
     /*
@@ -141,8 +142,7 @@ rawr_s6_chain_xfer:
      * Set up DMA to enqueue descriptor to next service chain
      */
     add         r_chain_entry, r0, r_chain_pindex      // chain pindex from caller
-    add         r_scratch, r0, k.{common_phv_chain_entry_size_shift_sbit0_ebit2...\
-                                  common_phv_chain_entry_size_shift_sbit3_ebit4}
+    add         r_scratch, r0, k.common_phv_chain_entry_size_shift
     sllv        r_chain_entry, r_chain_entry, r_scratch
     add         r_chain_entry, r_chain_entry, k.{common_phv_chain_ring_base_sbit0_ebit31...\
                                                  common_phv_chain_ring_base_sbit32_ebit33}
@@ -172,13 +172,19 @@ rawr_s6_chain_xfer:
     phvwri      p.dma_chain_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 
     /*
+     * Gather packet redirect statistics
+     */
+     RAWRCB_NORMAL_STAT_INC_LAUNCH(3, r_scratch, 
+                                   k.{common_phv_qstate_addr_sbit0_ebit0...\
+                                      common_phv_qstate_addr_sbit33_ebit33},
+                                   p.t3_s2s_inc_stat_pkts_redir)
+    /*
      * If the next service ring belongs to a TxQ, set up DMA to increment
      * pindex and ring doorbell.
      */
     sne         c1, k.common_phv_chain_to_rxq, r0
     phvwri.c1   p.dma_chain_dma_cmd_eop, TRUE
     phvwri.c1.e p.dma_chain_dma_cmd_wr_fence, TRUE
-    nop
     
     /*
      * Only get here if chaining to a TxQ:
@@ -186,18 +192,19 @@ rawr_s6_chain_xfer:
      * with scheduler bit set/unset as an option
      */
     smeqh       c1, r_rawrcb_flags, APP_REDIR_CHAIN_DOORBELL_NO_SCHED,\
-                                    APP_REDIR_CHAIN_DOORBELL_NO_SCHED
+                                    APP_REDIR_CHAIN_DOORBELL_NO_SCHED // delay slot
     cmov        r_txq_db_sched, c1, DB_NO_SCHED_WR,\
                 DB_SCHED_WR_EVAL_RING
     
     APP_REDIR_SETUP_DB_ADDR(DB_ADDR_BASE,
                             DB_INC_PINDEX,
                             r_txq_db_sched,
-                            k.{common_phv_chain_lif_sbit0_ebit5...\
-                               common_phv_chain_lif_sbit6_ebit10},
-                            k.common_phv_chain_qtype,
+                            k.{t1_s2s_chain_lif_sbit0_ebit7...\
+                               t1_s2s_chain_lif_sbit8_ebit10},
+                            k.t1_s2s_chain_qtype,
                             r_txq_db_addr)
-    APP_REDIR_SETUP_DB_DATA(k.common_phv_chain_qid,
+    APP_REDIR_SETUP_DB_DATA(k.{t1_s2s_chain_qid_sbit0_ebit1...\
+                               t1_s2s_chain_qid_sbit18_ebit23},
                             k.common_phv_chain_ring_index_select,
                             r0, // curr PI is dontcare for DB_INC_PINDEX
                             r_txq_db_data)

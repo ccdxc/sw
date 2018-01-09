@@ -70,6 +70,23 @@ p4pd_get_proxyc_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+hal_ret_t 
+p4pd_clear_proxyc_stats_entry(pd_proxyccb_t* proxyccb_pd)
+{
+    proxyc_stats_err_stat_inc_d   data = {0};
+
+    // hardware index for this entry
+    proxyccb_hw_addr_t hw_addr = proxyccb_pd->hw_addr +
+                                 PROXYCCB_TABLE_STATS_OFFSET;
+
+    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to write stats entry for PROXYCCB");
+        return HAL_RET_HW_FAIL;
+    }
+
+    return HAL_RET_OK;
+}
+
 static hal_ret_t
 p4pd_proxyc_wring_eval(uint32_t qid,
                        types::WRingType wring_type,
@@ -192,6 +209,13 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
         data.action_id = pc_offset;
         data.u.start_d.total = HAL_NUM_PROXYCCB_RINGS_MAX;
 
+        /*
+         * Note that similar to qstate, CB stats are cleared only once.
+         */
+        if (!del) {
+            ret = p4pd_clear_proxyc_stats_entry(proxyccb_pd);
+        }
+
     } else {
         hw_addr  += PROXYCCB_QSTATE_HEADER_TOTAL_SIZE;
         data_p   += PROXYCCB_QSTATE_HEADER_TOTAL_SIZE;
@@ -253,6 +277,33 @@ p4pd_get_proxyccb_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd)
 }
 
 hal_ret_t 
+p4pd_get_proxyc_stats_entry(pd_proxyccb_t* proxyccb_pd)
+{
+    proxyc_stats_err_stat_inc_d   data;
+    proxyccb_t                    *proxyccb;
+
+    // hardware index for this entry
+    proxyccb_hw_addr_t hw_addr = proxyccb_pd->hw_addr +
+                                 PROXYCCB_TABLE_STATS_OFFSET;
+
+    if(!p4plus_hbm_read(hw_addr, (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get stats entry for PROXYCCB");
+        return HAL_RET_HW_FAIL;
+    }
+    proxyccb = proxyccb_pd->proxyccb;
+    proxyccb->stat_pkts_chain = ntohll(data.stat_pkts_chain);
+    proxyccb->stat_pkts_discard = ntohll(data.stat_pkts_discard);
+    proxyccb->stat_cb_not_ready = ntohl(data.stat_cb_not_ready);
+    proxyccb->stat_my_txq_empty = ntohl(data.stat_my_txq_empty);
+    proxyccb->stat_aol_err = ntohl(data.stat_aol_err);
+    proxyccb->stat_txq_full = ntohl(data.stat_txq_full);
+    proxyccb->stat_desc_sem_free_full = ntohl(data.stat_desc_sem_free_full);
+    proxyccb->stat_page_sem_free_full = ntohl(data.stat_page_sem_free_full);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 p4pd_add_or_del_proxyccb_txdma_entry(pd_proxyccb_t* proxyccb_pd,
                                      bool del,
                                      bool qstate_header_overwrite)
@@ -277,7 +328,10 @@ p4pd_get_proxyccb_txdma_entry(pd_proxyccb_t* proxyccb_pd)
     hal_ret_t   ret = HAL_RET_OK;
     
     ret = p4pd_get_proxyccb_tx_stage0_entry(proxyccb_pd);
-    if(ret != HAL_RET_OK) {
+    if (ret == HAL_RET_OK) {
+        ret = p4pd_get_proxyc_stats_entry(proxyccb_pd);
+    }
+    if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get proxyc_tx entry");
         goto cleanup;
     }
@@ -439,7 +493,11 @@ pd_proxyccb_update (pd_proxyccb_args_t *args)
     ret = pd_proxyccb_deactivate(args);
     if (ret == HAL_RET_OK) {
 
-        // program proxyccb
+        /*
+         * program proxyccb
+         * until TCP/TLS moves away from maintaining our PI in its CB,
+         * we have to clear our PI/CI on update here
+         */
         ret = p4pd_add_or_del_proxyccb_entry(proxyccb_pd, false, true);
     }
 

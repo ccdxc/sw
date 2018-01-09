@@ -82,6 +82,18 @@ class RawrCbObject(base.ConfigObjectBase):
             self.chain_txq_qtype              = resp_spec.spec.chain_txq_qtype
             self.chain_txq_qid                = resp_spec.spec.chain_txq_qid
 
+            self.stat_pkts_redir              = resp_spec.spec.stat_pkts_redir
+            self.stat_pkts_discard            = resp_spec.spec.stat_pkts_discard
+            self.stat_cb_not_ready            = resp_spec.spec.stat_cb_not_ready
+            self.stat_qstate_cfg_err          = resp_spec.spec.stat_qstate_cfg_err
+            self.stat_pkt_len_err             = resp_spec.spec.stat_pkt_len_err
+            self.stat_rxq_full                = resp_spec.spec.stat_rxq_full
+            self.stat_txq_full                = resp_spec.spec.stat_txq_full
+            self.stat_desc_sem_alloc_full     = resp_spec.spec.stat_desc_sem_alloc_full
+            self.stat_mpage_sem_alloc_full    = resp_spec.spec.stat_mpage_sem_alloc_full
+            self.stat_ppage_sem_alloc_full    = resp_spec.spec.stat_ppage_sem_alloc_full
+            self.stat_sem_free_full           = resp_spec.spec.stat_sem_free_full
+
         return
 
     def GetObjValPd(self):

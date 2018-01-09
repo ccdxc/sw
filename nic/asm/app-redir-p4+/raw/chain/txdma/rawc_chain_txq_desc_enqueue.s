@@ -19,9 +19,12 @@ struct rawc_desc_enqueue_desc_enqueue_d d;
  * Register reuse
  */
 #define r_rawccb_flags              r_qentry_addr
+#define r_qstate_addr               r_desc
 
 %%
 
+    .param      rawc_err_stats_inc
+    
     .align
     
 /*
@@ -81,12 +84,14 @@ rawc_s2_chain_txq_desc_enqueue:
     APP_REDIR_SETUP_DB_ADDR(DB_ADDR_BASE,
                             DB_INC_PINDEX,
                             DB_SCHED_WR_EVAL_RING,
-                            k.{common_phv_chain_txq_lif_sbit0_ebit5...\
-                               common_phv_chain_txq_lif_sbit6_ebit10},
-                            k.common_phv_chain_txq_qtype,
+                            k.{t0_s2s_chain_txq_lif_sbit0_ebit7...\
+                               t0_s2s_chain_txq_lif_sbit8_ebit10},
+                            k.t0_s2s_chain_txq_qtype,
                             r_db_addr_scratch);
-    APP_REDIR_SETUP_DB_DATA(k.common_phv_chain_txq_qid,
-                            k.common_phv_chain_txq_ring,
+    APP_REDIR_SETUP_DB_DATA(k.{t0_s2s_chain_txq_qid_sbit0_ebit1...\
+                               t0_s2s_chain_txq_qid_sbit18_ebit23},
+                            k.{t0_s2s_chain_txq_ring_sbit0_ebit1...\
+                               t0_s2s_chain_txq_ring_sbit2_ebit2},
                             r0, // current PI is actually dontcare for DB_INC_PINDEX
                             r_db_data_scratch)
                         
@@ -109,8 +114,9 @@ rawc_s2_chain_txq_desc_enqueue:
  */                       
 _txq_ring_full_discard:
 
-    /*
-     * TODO: add stats here
-     */
+    RAWCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                               k.{common_phv_qstate_addr_sbit0_ebit5... \
+                                  common_phv_qstate_addr_sbit30_ebit33},
+                               p.t3_s2s_inc_stat_txq_full)
     phvwri.e    p.common_phv_do_cleanup_discard, TRUE
     nop

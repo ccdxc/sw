@@ -11,9 +11,11 @@ struct rawc_tx_start_start_d    d;
 #define r_pi                        r2  // my_txq producer index
 #define r_return                    r3
 #define r_scratch                   r4
+#define r_qstate_addr               r5
 
 %%
     .param          rawc_s1_my_txq_entry_consume
+    .param          rawc_err_stats_inc
     
     .align
 
@@ -34,6 +36,7 @@ rawc_s0_tx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
+    phvwr       p.common_phv_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
     
     /*
      * qid is our flow ID context
@@ -45,10 +48,10 @@ rawc_s0_tx_start:
     phvwr       p.common_phv_chain_txq_base, d.{chain_txq_base}.dx
     phvwr       p.common_phv_chain_txq_ring_size_shift, d.chain_txq_ring_size_shift
     phvwr       p.common_phv_chain_txq_entry_size_shift, d.chain_txq_entry_size_shift
-    phvwr       p.common_phv_chain_txq_lif, d.{chain_txq_lif}.hx
-    phvwr       p.common_phv_chain_txq_qtype, d.chain_txq_qtype
-    phvwr       p.common_phv_chain_txq_qid, d.{chain_txq_qid}.wx
-    phvwr       p.common_phv_chain_txq_ring, d.chain_txq_ring
+    phvwr       p.t0_s2s_chain_txq_lif, d.{chain_txq_lif}.hx
+    phvwr       p.t0_s2s_chain_txq_qtype, d.chain_txq_qtype
+    phvwr       p.t0_s2s_chain_txq_qid, d.{chain_txq_qid}.wx
+    phvwr       p.t0_s2s_chain_txq_ring, d.chain_txq_ring
     
     phvwr       p.to_s1_chain_txq_ring_indices_addr, d.{chain_txq_ring_indices_addr}.dx
     phvwr       p.to_s1_my_txq_ring_size_shift, d.my_txq_ring_size_shift
@@ -99,9 +102,9 @@ rawc_s0_tx_start:
  */
 _rawccb_not_ready:
  
-    /*
-     * TODO: add stats here
-     */
+    RAWCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                               CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR,
+                               p.t3_s2s_inc_stat_cb_not_ready)
     jr          r_return
     phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot
      
@@ -111,8 +114,8 @@ _rawccb_not_ready:
  */
 _my_txq_ring_empty:
 
-    /*
-     * TODO: add stats here
-     */
+    RAWCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                               CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR,
+                               p.t3_s2s_inc_stat_my_txq_empty)
     nop.e
     nop    

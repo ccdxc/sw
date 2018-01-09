@@ -71,6 +71,23 @@ p4pd_get_proxyr_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+hal_ret_t 
+p4pd_clear_proxyr_stats_entry(pd_proxyrcb_t* proxyrcb_pd)
+{
+    proxyr_stats_err_stat_inc_d data = {0};
+
+    // hardware index for this entry
+    proxyrcb_hw_addr_t hw_addr = proxyrcb_pd->hw_addr +
+                                 PROXYRCB_TABLE_STATS_OFFSET;
+
+    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to write stats entry for PROXYRCB");
+        return HAL_RET_HW_FAIL;
+    }
+
+    return HAL_RET_OK;
+}
+
 static hal_ret_t
 p4pd_proxyr_wring_eval(uint32_t qid,
                        types::WRingType wring_type,
@@ -201,6 +218,13 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
         HAL_TRACE_DEBUG("PROXYRCB programming action-id: {:#x}", pc_offset);
         data.action_id = pc_offset;
         data.u.start_d.total = HAL_NUM_PROXYRCB_RINGS_MAX;
+
+        /*
+         * Note that similar to qstate, CB stats are cleared only once.
+         */
+        if (!del) {
+            ret = p4pd_clear_proxyr_stats_entry(proxyrcb_pd);
+        }
 
     } else {
         hw_addr  += PROXYRCB_QSTATE_HEADER_TOTAL_SIZE;
@@ -355,6 +379,34 @@ p4pd_get_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd)
 }
 
 hal_ret_t 
+p4pd_get_proxyr_stats_entry(pd_proxyrcb_t* proxyrcb_pd)
+{
+    proxyr_stats_err_stat_inc_d data;
+    proxyrcb_t                  *proxyrcb;
+
+    // hardware index for this entry
+    proxyrcb_hw_addr_t hw_addr = proxyrcb_pd->hw_addr +
+                                 PROXYRCB_TABLE_STATS_OFFSET;
+
+    if(!p4plus_hbm_read(hw_addr, (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get stats entry for PROXYRCB");
+        return HAL_RET_HW_FAIL;
+    }
+    proxyrcb = proxyrcb_pd->proxyrcb;
+    proxyrcb->stat_pkts_redir = ntohll(data.stat_pkts_redir);
+    proxyrcb->stat_pkts_discard = ntohll(data.stat_pkts_discard);
+    proxyrcb->stat_cb_not_ready = ntohl(data.stat_cb_not_ready);
+    proxyrcb->stat_null_ring_indices_addr = ntohl(data.stat_null_ring_indices_addr);
+    proxyrcb->stat_aol_err = ntohl(data.stat_aol_err);
+    proxyrcb->stat_rxq_full = ntohl(data.stat_rxq_full);
+    proxyrcb->stat_txq_empty = ntohl(data.stat_txq_empty);
+    proxyrcb->stat_sem_alloc_full = ntohl(data.stat_sem_alloc_full);
+    proxyrcb->stat_sem_free_full = ntohl(data.stat_sem_free_full);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 p4pd_get_proxyrcb_txdma_entry(pd_proxyrcb_t* proxyrcb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -362,6 +414,9 @@ p4pd_get_proxyrcb_txdma_entry(pd_proxyrcb_t* proxyrcb_pd)
     ret = p4pd_get_proxyr_tx_stage0_entry(proxyrcb_pd);
     if (ret == HAL_RET_OK) {
         ret = p4pd_get_proxyr_flow_key_entry(proxyrcb_pd);
+    }
+    if (ret == HAL_RET_OK) {
+        ret = p4pd_get_proxyr_stats_entry(proxyrcb_pd);
     }
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get proxyr_rx entry");
@@ -530,7 +585,11 @@ pd_proxyrcb_update (pd_proxyrcb_args_t *args)
     ret = pd_proxyrcb_deactivate(args);
     if (ret == HAL_RET_OK) {
 
-        // program proxyrcb
+        /*
+         * program proxyrcb
+         * until TCP/TLS moves away from maintaining our PI in its CB,
+         * we have to clear our PI/CI on update here
+         */
         ret = p4pd_add_or_del_proxyrcb_entry(proxyrcb_pd, false, true);
     }
 

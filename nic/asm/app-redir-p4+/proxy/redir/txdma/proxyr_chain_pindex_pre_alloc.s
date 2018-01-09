@@ -9,11 +9,14 @@ struct proxyr_chain_pindex_k    k;
  * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
 #define r_ring_indices_addr         r3
+#define r_qstate_addr               r4
 
 %%
 
     .param      proxyr_s6_chain_xfer      
     .param      proxyr_s6_cleanup_discard      
+    .param      proxyr_err_stats_inc
+
     .align
 
 /*
@@ -71,9 +74,10 @@ proxyr_s5_chain_pindex_pre_alloc:
  */
 _null_ring_indices_addr:    
 
-    /*
-     * TODO: add stats here
-     */
+    PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                                 k.{common_phv_qstate_addr_sbit0_ebit5... \
+                                    common_phv_qstate_addr_sbit30_ebit33},
+                                 p.t3_s2s_inc_stat_null_ring_indices_addr)
     b           _cleanup_discard_launch
     nop
     
@@ -82,9 +86,10 @@ _null_ring_indices_addr:
  */
 _mpage_sem_pindex_full:    
 
-    /*
-     * TODO: add stats here
-     */
+    PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                                 k.{common_phv_qstate_addr_sbit0_ebit5... \
+                                    common_phv_qstate_addr_sbit30_ebit33},
+                                 p.t3_s2s_inc_stat_sem_alloc_full)
     b           _cleanup_discard_launch
     nop
 

@@ -9,9 +9,11 @@ struct proxyc_desc_free_desc_free_d d;
  */
 #define r_table_base                r1  // RNMDR_TABLE_BASE
 #define r_table_idx                 r2  // PI index
+#define r_qstate_addr               r3
 
 %%
     .param      RNMDR_TABLE_BASE
+    .param      proxyc_err_stats_inc
     
     .align
 
@@ -51,9 +53,10 @@ proxyc_s5_desc_free:
  */                                   
 _free_sem_pindex_full:
                                    
-    /*
-     * TODO: add stats here
-     */
+    PROXYCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                                 k.{common_phv_qstate_addr_sbit0_ebit5... \
+                                    common_phv_qstate_addr_sbit30_ebit33},
+                                 p.t3_s2s_inc_stat_desc_sem_free_full)
     APP_REDIR_FREE_SEM_PINDEX_FULL_TRAP()
     nop.e
     nop

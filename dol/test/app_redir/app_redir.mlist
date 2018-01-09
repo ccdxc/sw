@@ -23,6 +23,7 @@ modules:
         spec    : app_redir_raw_multi_pkts.testspec
         args    :
             num_pkts : 3
+            num_flow_miss_pkts : 1
         iterate :
             - flow: filter://type=IPV4
 

@@ -94,7 +94,9 @@ proxyc_s5_page0_free:
 proxyc_page_free_sem_pindex_full:
 
     /*
-     * TODO: add stats here
+     * Would have added stats here.
+     * However, this label may have been arrived at from tage 7
+     * so there are no more stages left to increment stats.
      */
     APP_REDIR_FREE_SEM_PINDEX_FULL_TRAP()
     nop.e

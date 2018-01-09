@@ -35,6 +35,7 @@ SRC_FILES := \
     $(SRC_DIR)/rawc_page0_free.s \
     $(SRC_DIR)/rawc_page1_free.s \
     $(SRC_DIR)/rawc_page2_free.s \
+    $(SRC_DIR)/rawc_stats.s \
 	
 
 

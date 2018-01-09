@@ -11,10 +11,13 @@ struct rawc_pkt_post_pkt_post_d d;
  * so ensure program stage ends after invoking it.
  */
 #define r_cpu_flags                 r3
+#define r_qstate_addr               r4
 
 %%
 
     .param      rawc_s4_cleanup_discard
+    .param      rawc_normal_stats_inc
+    
     .align
 
 /*
@@ -48,9 +51,16 @@ _cleanup_discard_check:
     bcf         [c1], _cleanup_discard_prep
     
     /*
+     * Gather packet chain statistics
+     */
+    RAWCCB_NORMAL_STAT_INC_LAUNCH(3, r_qstate_addr, 
+                                  k.{common_phv_qstate_addr_sbit0_ebit5...\
+                                     common_phv_qstate_addr_sbit30_ebit33},
+                                  p.t3_s2s_inc_stat_pkts_chain)
+    /*
      * If discard was not taken, we are done if service chaining was in effect
      */
-    sne         c1, k.common_phv_next_service_chain_action, r0  // delay slot
+    sne         c1, k.common_phv_next_service_chain_action, r0
     nop.c1.e
     
     /*

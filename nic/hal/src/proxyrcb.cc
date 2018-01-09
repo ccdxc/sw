@@ -302,9 +302,19 @@ proxyrcb_get (ProxyrCbGetRequest& req, ProxyrCbGetResponse *rsp)
     rsp->mutable_spec()->set_pi(rproxyrcb.pi);
     rsp->mutable_spec()->set_ci(rproxyrcb.ci);
 
-    rsp->mutable_spec()->set_dir(proxyrcb->dir);
-    rsp->mutable_spec()->set_role(proxyrcb->role);
-    rsp->mutable_spec()->set_rev_cb_id(proxyrcb->rev_cb_id);
+    rsp->mutable_spec()->set_dir(rproxyrcb.dir);
+    rsp->mutable_spec()->set_role(rproxyrcb.role);
+    rsp->mutable_spec()->set_rev_cb_id(rproxyrcb.rev_cb_id);
+
+    rsp->mutable_spec()->set_stat_pkts_redir(rproxyrcb.stat_pkts_redir);
+    rsp->mutable_spec()->set_stat_pkts_discard(rproxyrcb.stat_pkts_discard);
+    rsp->mutable_spec()->set_stat_cb_not_ready(rproxyrcb.stat_cb_not_ready);
+    rsp->mutable_spec()->set_stat_null_ring_indices_addr(rproxyrcb.stat_null_ring_indices_addr);
+    rsp->mutable_spec()->set_stat_aol_err(rproxyrcb.stat_aol_err);
+    rsp->mutable_spec()->set_stat_rxq_full(rproxyrcb.stat_rxq_full);
+    rsp->mutable_spec()->set_stat_txq_empty(rproxyrcb.stat_txq_empty);
+    rsp->mutable_spec()->set_stat_sem_alloc_full(rproxyrcb.stat_sem_alloc_full);
+    rsp->mutable_spec()->set_stat_sem_free_full(rproxyrcb.stat_sem_free_full);
 
     // fill operational state of this PROXYR CB
     rsp->mutable_status()->set_proxyrcb_handle(proxyrcb->hal_handle);

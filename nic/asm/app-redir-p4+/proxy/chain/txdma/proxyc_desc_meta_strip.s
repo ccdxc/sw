@@ -21,7 +21,7 @@ struct descr_aol_single_t {
  */
 #define r_total_strip               r1  // total # of meta header bytes to strip
 #define r_curr_strip                r2  // current # of meta header bytes to strip
-#define aol_p_r                     r3  // AOL pointer
+#define r_aol_p                     r3  // AOL pointer
 #define r_len                       r4  // work register: current AOL length
 #define r_offs                      r5  // work register: current AOL offset
 #define r_return                    r6  // subroutine return address
@@ -30,13 +30,16 @@ struct descr_aol_single_t {
 /*
  * Registers reuse (post _aol_meta_strip)
  */
-#define r_chain_indices_addr        r1
+#define r_chain_indices_addr        r_total_strip
+#define r_qstate_addr               r_aol_p
  
 %%
 
     .param      proxyc_s3_desc_enqueue
     .param      proxyc_s3_cpu_flags_post_read
     .param      proxyc_s3_cpu_flags_skip_read
+    .param      proxyc_err_stats_inc
+    
     .align
     
 /*
@@ -63,15 +66,15 @@ proxyc_s2_desc_meta_strip:
     addi        r_total_strip, r0, CPU_TO_P4PLUS_HEADER_SIZE + \
                                    P4PLUS_TO_P4_HDR_SZ
     bal         r_return, _aol_meta_strip
-    addi        aol_p_r, r0, APP_REDIR_BIT_OFFS_D_VEC(L0)   // delay slot
+    addi        r_aol_p, r0, APP_REDIR_BIT_OFFS_D_VEC(L0)   // delay slot
     
     sne         c1, r_total_strip, r0
     bal.c1      r_return, _aol_meta_strip
-    addi.c1     aol_p_r, r0, APP_REDIR_BIT_OFFS_D_VEC(L1)   // delay slot
+    addi.c1     r_aol_p, r0, APP_REDIR_BIT_OFFS_D_VEC(L1)   // delay slot
     
     sne         c1, r_total_strip, r0
     bal.c1      r_return, _aol_meta_strip
-    addi.c1     aol_p_r, r0, APP_REDIR_BIT_OFFS_D_VEC(L2)   // delay slot
+    addi.c1     r_aol_p, r0, APP_REDIR_BIT_OFFS_D_VEC(L2)   // delay slot
     
     /*
      * Ensure valid evaluation of r_cpu_header_addr
@@ -127,7 +130,7 @@ _aol_cpu_flags_missing:
 
 
 /*
- * On entry, aol_p_r: points to an AOL in d-vec,
+ * On entry, r_aol_p: points to an AOL in d-vec,
  *           r_total_strip: amount of headers to strip,
  *           r_cpu_header_addr: last evaluated page address to
  *                              cpu_to_p4plus_header_t, if any
@@ -142,9 +145,9 @@ _aol_cpu_flags_missing:
  */
 _aol_meta_strip:
 
-    tblrdp.wx   r_offs, aol_p_r, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, O),  \
+    tblrdp.wx   r_offs, r_aol_p, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, O),  \
                                  APP_REDIR_BIT_SIZE_STRUCT(descr_aol_single_t, O)
-    tblrdp.wx   r_len,  aol_p_r, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, L),  \
+    tblrdp.wx   r_len,  r_aol_p, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, L),  \
                                  APP_REDIR_BIT_SIZE_STRUCT(descr_aol_single_t, L)
     /*
      * Calculate r_cpu_header_addr first
@@ -152,7 +155,7 @@ _aol_meta_strip:
     seq         c1, r_cpu_header_addr, r0
     slt         c2, r_len, CPU_TO_P4PLUS_HEADER_SIZE
     setcf       c1, [c1 & !c2] 
-    tblrdp.c1.dx r_cpu_header_addr, aol_p_r, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, A), \
+    tblrdp.c1.dx r_cpu_header_addr, r_aol_p, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, A), \
                                              APP_REDIR_BIT_SIZE_STRUCT(descr_aol_single_t, A)
     add.c1      r_cpu_header_addr, r_cpu_header_addr, r_offs
 
@@ -162,10 +165,10 @@ _aol_meta_strip:
     slt         c1, r_len, r_total_strip
     cmov        r_curr_strip, c1, r_len, r_total_strip
     add         r_offs, r_offs, r_curr_strip
-    tblwrp.wx   aol_p_r, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, O),          \
+    tblwrp.wx   r_aol_p, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, O),          \
                          APP_REDIR_BIT_SIZE_STRUCT(descr_aol_single_t, O), r_offs
     sub         r_len, r_len, r_curr_strip
-    tblwrp.wx   aol_p_r, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, L),          \
+    tblwrp.wx   r_aol_p, APP_REDIR_BIT_OFFS_STRUCT(descr_aol_single_t, L),          \
                          APP_REDIR_BIT_SIZE_STRUCT(descr_aol_single_t, L), r_len
     jr          r_return
     sub         r_total_strip, r_total_strip, r_curr_strip  // delay slot
@@ -176,9 +179,10 @@ _aol_meta_strip:
  */
 _aol_error:
 
-    /*
-     * TODO: add stats here
-     */
+    PROXYCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                                 k.{common_phv_qstate_addr_sbit0_ebit5... \
+                                    common_phv_qstate_addr_sbit30_ebit33},
+                                 p.t3_s2s_inc_stat_aol_err)
     APP_REDIR_TXDMA_INVALID_AOL_TRAP()
     b           _aol_cpu_flags_read
     phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot

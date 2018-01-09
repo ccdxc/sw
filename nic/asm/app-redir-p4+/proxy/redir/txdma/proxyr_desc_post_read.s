@@ -11,11 +11,14 @@ struct proxyr_desc_desc_post_read_d     d;
  */
 #define r_alloc_inf_addr            r3
 #define r_len                       r4
+#define r_qstate_addr               r5
 
 %%
 
     .param      proxyr_s3_mpage_sem_pindex_post_update
     .param      proxyr_s3_mpage_sem_pindex_skip
+    .param      proxyr_err_stats_inc
+
     .align
     
 /*
@@ -68,9 +71,10 @@ proxyr_s2_desc_post_read:
  */
 _aol_error:
 
-    /*
-     * TODO: add stats here
-     */
+    PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                                 k.{common_phv_qstate_addr_sbit0_ebit5... \
+                                    common_phv_qstate_addr_sbit30_ebit33},
+                                 p.t3_s2s_inc_stat_aol_err)
     APP_REDIR_TXDMA_INVALID_AOL_TRAP()
     phvwri      p.common_phv_do_cleanup_discard, TRUE
 

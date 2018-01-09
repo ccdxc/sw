@@ -57,9 +57,7 @@ _mpage_cleanup_launch:
      */
     add         r_elem_addr, r0, k.{to_s6_mpage_sbit0_ebit3...\
                                     to_s6_mpage_sbit28_ebit33}
-    seq         c1, r_elem_addr, r0
-    sne         c2, k.common_phv_mpage_sem_pindex_full, r0
-    bcf         [c1 | c2], _packet_discard
+    beq         r_elem_addr, r0, _packet_discard
     phvwr       p.to_s7_mpage, r_elem_addr  // delay slot
     addi        r_free_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS,
@@ -70,7 +68,8 @@ _mpage_cleanup_launch:
 _packet_discard:
 
     /*
-     * TODO: add stats here
+     * Note that relevant statistics have already been incremented
+     * prior to entering this module.
      */
     nop.e
     nop

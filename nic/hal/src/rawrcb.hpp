@@ -54,6 +54,25 @@ typedef struct rawrcb_s {
     uint8_t               chain_txq_entry_size_shift;
     uint8_t               chain_txq_ring_index_select;
 
+    /*
+     * 64-bit statistic counters
+     */
+    uint64_t              stat_pkts_redir;
+    uint64_t              stat_pkts_discard;
+
+    /*
+     * 32-bit saturating statistic counters
+     */
+    uint32_t              stat_cb_not_ready;
+    uint32_t              stat_qstate_cfg_err;
+    uint32_t              stat_pkt_len_err;
+    uint32_t              stat_rxq_full;
+    uint32_t              stat_txq_full;
+    uint32_t              stat_desc_sem_alloc_full;
+    uint32_t              stat_mpage_sem_alloc_full;
+    uint32_t              stat_ppage_sem_alloc_full;
+    uint32_t              stat_sem_free_full;
+
     hal_handle_t          hal_handle;               // HAL allocated handle
 
     // PD state

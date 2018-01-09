@@ -61,6 +61,23 @@ typedef struct proxyrcb_s {
     uint8_t               af;
     uint8_t               ip_proto;
     
+    /*
+     * 64-bit statistic counters
+     */
+    uint64_t              stat_pkts_redir;
+    uint64_t              stat_pkts_discard;
+
+    /*
+     * 32-bit saturating statistic counters
+     */
+    uint32_t              stat_cb_not_ready;
+    uint32_t              stat_null_ring_indices_addr;
+    uint32_t              stat_aol_err;
+    uint32_t              stat_rxq_full;
+    uint32_t              stat_txq_empty;
+    uint32_t              stat_sem_alloc_full;
+    uint32_t              stat_sem_free_full;
+
     hal_handle_t          hal_handle;               // HAL allocated handle
 
     // PD state

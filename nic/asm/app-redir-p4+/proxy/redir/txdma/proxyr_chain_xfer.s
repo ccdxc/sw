@@ -16,6 +16,8 @@ struct proxyr_chain_xfer_chain_xfer_d   d;
 #define r_scratch                       r7
 
 %%
+    .param      proxyr_normal_stats_inc
+    
     .align
 
 /*
@@ -168,6 +170,14 @@ proxyr_s6_chain_xfer:
     phvwri      p.dma_chain_dma_cmd_phv_end_addr, \
                 CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
     phvwri      p.dma_chain_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+
+    /*
+     * Gather packet redirect statistics
+     */
+     PROXYRCB_NORMAL_STAT_INC_LAUNCH(3, r_scratch, 
+                                     k.{common_phv_qstate_addr_sbit0_ebit5...\
+                                        common_phv_qstate_addr_sbit30_ebit33},
+                                     p.t3_s2s_inc_stat_pkts_redir)
 
     phvwri      p.dma_chain_dma_cmd_eop, TRUE
     phvwri.e    p.dma_chain_dma_cmd_wr_fence, TRUE

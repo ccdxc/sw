@@ -146,6 +146,17 @@
         add       data_r, ring_id, ring, DB_RING_SHIFT;                         \
         add       data_r, data_r, qid, DB_QID_SHIFT;
 
+/*
+ * Launch error statistic increment
+ */
+#define APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,      \
+                                  stat_table_offs, phv_inc_stat, launch_fn)     \
+        add         qstate_addr_dst, qstate_addr_src, stat_table_offs;          \
+        phvwri      phv_inc_stat, 1;                                            \
+        CAPRI_NEXT_TABLE_READ(table, TABLE_LOCK_DIS,                            \
+                              launch_fn,                                        \
+                              qstate_addr_dst,                                  \
+                              TABLE_SIZE_512_BITS)
 
 #endif //__APP_REDIR_COMMON_H
 

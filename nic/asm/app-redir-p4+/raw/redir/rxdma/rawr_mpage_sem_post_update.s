@@ -26,6 +26,7 @@ rawr_s1_mpage_sem_pindex_post_update:
     CAPRI_CLEAR_TABLE2_VALID
     
     phvwr       p.common_phv_mpage_sem_pindex_full, d.pindex_full
+    phvwr       p.t3_s2s_inc_stat_mpage_sem_alloc_full, d.pindex_full
     
     /*
      * If semaphore full, handle it in a later stage but

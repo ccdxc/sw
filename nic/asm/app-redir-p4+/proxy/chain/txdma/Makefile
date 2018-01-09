@@ -35,6 +35,7 @@ SRC_FILES := \
     $(SRC_DIR)/proxyc_page0_free.s \
     $(SRC_DIR)/proxyc_page1_free.s \
     $(SRC_DIR)/proxyc_page2_free.s \
+    $(SRC_DIR)/proxyc_stats.s \
 	
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

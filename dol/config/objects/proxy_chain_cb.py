@@ -84,6 +84,15 @@ class ProxycCbObject(base.ConfigObjectBase):
             self.pi                           = resp_spec.spec.pi
             self.ci                           = resp_spec.spec.ci
 
+            self.stat_pkts_chain              = resp_spec.spec.stat_pkts_chain
+            self.stat_pkts_discard            = resp_spec.spec.stat_pkts_discard
+            self.stat_cb_not_ready            = resp_spec.spec.stat_cb_not_ready
+            self.stat_my_txq_empty            = resp_spec.spec.stat_my_txq_empty
+            self.stat_aol_err                 = resp_spec.spec.stat_aol_err
+            self.stat_txq_full                = resp_spec.spec.stat_txq_full
+            self.stat_desc_sem_free_full      = resp_spec.spec.stat_desc_sem_free_full
+            self.stat_page_sem_free_full      = resp_spec.spec.stat_page_sem_free_full
+
         return
 
     def GetObjValPd(self):

@@ -42,6 +42,7 @@ SRC_FILES := \
     $(SRC_DIR)/rawr_ppage_free.s \
     $(SRC_DIR)/rawr_mpage_free.s \
     $(SRC_DIR)/rawr_chain_xfer.s \
+    $(SRC_DIR)/rawr_stats.s \
 	
 
 

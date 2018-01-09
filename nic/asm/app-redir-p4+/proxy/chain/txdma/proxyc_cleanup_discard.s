@@ -45,7 +45,12 @@ proxyc_s4_cleanup_discard:
     phvwr       p.t1_s2s_aol_A2, d.A2   // delay slot
 
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, proxyc_s5_page0_no_free)
-    b           _discard_stats_update
+
+    /*
+     * Note that relevant statistics have already been incremented
+     * prior to entering this module.
+     */
+    nop.e
     nop
 
 _page0_sem_free_idx_launch:
@@ -61,11 +66,3 @@ _page0_sem_free_idx_launch:
                           r_free_inf_addr,
                           TABLE_SIZE_64_BITS)
                           
-_discard_stats_update:
-    
-    /*
-     * TODO: add stats here
-     */
-    nop.e
-    nop
-

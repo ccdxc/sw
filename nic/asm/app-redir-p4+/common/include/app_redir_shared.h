@@ -16,7 +16,9 @@
 
 #ifndef CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE
 #define CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE    64
+#define CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT    6
 #endif
+
 
 /*
  * App redirect queue types
@@ -29,28 +31,96 @@
 
 
 /*
- * Control Block sizes
+ * Raw Redirect Control Block sizes
  */
-#define RAWRCB_TABLE_ENTRY_SIZE             64
-#define RAWRCB_TABLE_ENTRY_SIZE_SHFT        6
-#define RAWRCB_TABLE_ENTRY_MULTIPLE         (RAWRCB_TABLE_ENTRY_SIZE /  \
-                                             CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+#define RAWRCB_TABLE_ENTRY_SIZE             128
+#define RAWRCB_TABLE_ENTRY_SIZE_SHFT        7
+#define RAWRCB_TABLE_ENTRY_MULTIPLE         (RAWRCB_TABLE_ENTRY_SIZE_SHFT - \
+                                             CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT + 1)
+#define RAWRCB_TABLE_STATS_OFFSET           (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
 
-#define RAWCCB_TABLE_ENTRY_SIZE             64
-#define RAWCCB_TABLE_ENTRY_SIZE_SHFT        6
-#define RAWCCB_TABLE_ENTRY_MULTIPLE         (RAWCCB_TABLE_ENTRY_SIZE /  \
-                                             CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+/*
+ * For use by NCC ASM code
+ */
+#define RAWRCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                   \
+                                      qstate_addr_src, phv_inc_stat)            \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              RAWRCB_TABLE_STATS_OFFSET,                        \
+                              phv_inc_stat, rawr_normal_stats_inc)
+#define RAWRCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                      \
+                                   qstate_addr_src, phv_inc_stat)               \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              RAWRCB_TABLE_STATS_OFFSET,                        \
+                              phv_inc_stat, rawr_err_stats_inc)
 
-#define PROXYRCB_TABLE_ENTRY_SIZE           128
-#define PROXYRCB_TABLE_ENTRY_SIZE_SHFT      7
-#define PROXYRCB_TABLE_ENTRY_MULTIPLE       (PROXYRCB_TABLE_ENTRY_SIZE /  \
-                                             CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+/*
+ * Raw Chain Control Block sizes
+ */
+#define RAWCCB_TABLE_ENTRY_SIZE             128
+#define RAWCCB_TABLE_ENTRY_SIZE_SHFT        7
+#define RAWCCB_TABLE_ENTRY_MULTIPLE         (RAWCCB_TABLE_ENTRY_SIZE_SHFT - \
+                                             CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT + 1)
+#define RAWCCB_TABLE_STATS_OFFSET           (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+
+/*
+ * For use by NCC ASM code
+ */
+#define RAWCCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                   \
+                                      qstate_addr_src, phv_inc_stat)            \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              RAWCCB_TABLE_STATS_OFFSET,                        \
+                              phv_inc_stat, rawc_normal_stats_inc)
+#define RAWCCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                      \
+                                   qstate_addr_src, phv_inc_stat)               \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              RAWCCB_TABLE_STATS_OFFSET,                        \
+                              phv_inc_stat, rawc_err_stats_inc)
+
+/*
+ * Proxy Redirect Control Block sizes
+ */
+#define PROXYRCB_TABLE_ENTRY_SIZE           256
+#define PROXYRCB_TABLE_ENTRY_SIZE_SHFT      8
+#define PROXYRCB_TABLE_ENTRY_MULTIPLE       (PROXYRCB_TABLE_ENTRY_SIZE_SHFT -   \
+                                             CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT + 1)
 #define PROXYRCB_TABLE_FLOW_KEY_OFFSET      (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+#define PROXYRCB_TABLE_STATS_OFFSET         (2 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
 
-#define PROXYCCB_TABLE_ENTRY_SIZE           64
-#define PROXYCCB_TABLE_ENTRY_SIZE_SHFT      6
-#define PROXYCCB_TABLE_ENTRY_MULTIPLE       (PROXYCCB_TABLE_ENTRY_SIZE /  \
-                                             CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+/*
+ * For use by NCC ASM code
+ */
+#define PROXYRCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                 \
+                                        qstate_addr_src, phv_inc_stat)          \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              PROXYRCB_TABLE_STATS_OFFSET,                      \
+                              phv_inc_stat, proxyr_normal_stats_inc)
+#define PROXYRCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                    \
+                                   qstate_addr_src, phv_inc_stat)               \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              PROXYRCB_TABLE_STATS_OFFSET,                      \
+                              phv_inc_stat, proxyr_err_stats_inc)
+/*
+ * Proxy Chain Control Block sizes
+ */
+#define PROXYCCB_TABLE_ENTRY_SIZE           128
+#define PROXYCCB_TABLE_ENTRY_SIZE_SHFT      7
+#define PROXYCCB_TABLE_ENTRY_MULTIPLE       (PROXYCCB_TABLE_ENTRY_SIZE_SHFT -   \
+                                             CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT + 1)
+#define PROXYCCB_TABLE_STATS_OFFSET         (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+
+/*
+ * For use by NCC ASM code
+ */
+#define PROXYCCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                 \
+                                        qstate_addr_src, phv_inc_stat)          \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              PROXYCCB_TABLE_STATS_OFFSET,                      \
+                              phv_inc_stat, proxyc_normal_stats_inc)
+#define PROXYCCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                    \
+                                   qstate_addr_src, phv_inc_stat)               \
+    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
+                              PROXYCCB_TABLE_STATS_OFFSET,                      \
+                              phv_inc_stat, proxyc_err_stats_inc)
 
 /*
  * Max number of CBs, i.e., number of queues, supported for each type.

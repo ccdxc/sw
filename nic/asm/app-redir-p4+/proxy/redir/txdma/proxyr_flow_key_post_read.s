@@ -4,7 +4,14 @@ struct phv_                                 p;
 struct proxyr_flow_key_k                    k;
 struct proxyr_flow_key_flow_key_post_read_d d;
 
+/*
+ * Registers usage
+ */
+#define r_qstate_addr               r3
+
 %%
+    .param      proxyr_err_stats_inc
+    
     .align
 
 /*
@@ -46,8 +53,9 @@ proxyr_s1_flow_key_post_read:
  */
 _proxyrcb_not_ready:
  
-    /*
-     * TODO: add stats here
-     */
+    PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
+                                 k.{common_phv_qstate_addr_sbit0_ebit5... \
+                                    common_phv_qstate_addr_sbit30_ebit33},
+                                 p.t3_s2s_inc_stat_cb_not_ready)
     phvwri.e    p.common_phv_do_cleanup_discard, TRUE
     nop

@@ -44,7 +44,8 @@ rawr_s7_mpage_free:
 rawr_page_free_sem_pindex_full:
 
     /*
-     * TODO: add stats here
+     * Would have added stats here.
+     * However, this is stage 7 so there are no more stages left to increment stats.
      */
     APP_REDIR_FREE_SEM_PINDEX_FULL_TRAP()
     nop.e

@@ -258,6 +258,15 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_txq_qid(rrawccb.chain_txq_qid);
     rsp->mutable_spec()->set_chain_txq_ring(rrawccb.chain_txq_ring);
 
+    rsp->mutable_spec()->set_stat_pkts_chain(rrawccb.stat_pkts_chain);
+    rsp->mutable_spec()->set_stat_pkts_discard(rrawccb.stat_pkts_discard);
+    rsp->mutable_spec()->set_stat_cb_not_ready(rrawccb.stat_cb_not_ready);
+    rsp->mutable_spec()->set_stat_my_txq_empty(rrawccb.stat_my_txq_empty);
+    rsp->mutable_spec()->set_stat_aol_err(rrawccb.stat_aol_err);
+    rsp->mutable_spec()->set_stat_txq_full(rrawccb.stat_txq_full);
+    rsp->mutable_spec()->set_stat_desc_sem_free_full(rrawccb.stat_desc_sem_free_full);
+    rsp->mutable_spec()->set_stat_page_sem_free_full(rrawccb.stat_page_sem_free_full);
+
     rsp->mutable_spec()->set_pi(rrawccb.pi);
     rsp->mutable_spec()->set_ci(rrawccb.ci);
 
