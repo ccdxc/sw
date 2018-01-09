@@ -92,10 +92,8 @@ add_ack_header:
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
 
-    // TODO: ordering rules
-    // ring doorbell to update C_INDEX to P_INDEX
-    // currently it is done thru memwr. Need to see if it should be done thru DMA
-    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, ACK_NAK_RING_ID, k.to_stage.s5.rqcb1_wb.new_c_index, DB_ADDR, DB_DATA)
+    //updating c_index in stage0 itself.
+    //DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, ACK_NAK_RING_ID, k.to_stage.s5.rqcb1_wb.new_c_index, DB_ADDR, DB_DATA)
     nop.e
     nop
     

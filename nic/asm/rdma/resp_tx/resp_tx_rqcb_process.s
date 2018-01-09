@@ -32,8 +32,15 @@ struct rdma_stage0_table_k k;
     .param      resp_tx_ack_process
 
 resp_tx_rqcb_process:
+    // are all rings empty ?
+    seq            c1, r7[MAX_RQ_RINGS-1:0], r0
+    bcf            [c1], all_rings_empty
+
     // copy intrinsic to global
-    add            r1, r0, offsetof(struct phv_, common_global_global_data)
+    add            r1, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
+
+    // reset ring_empty_counter
+    tblwr          d.ring_empty_counter, 0
 
     // enable below code after spr_tbladdr special purpose register is available in capsim
     #mfspr         r1, spr_tbladdr
@@ -173,13 +180,15 @@ check_ack_nak:
     nop
 
 ack_nak:
+    // overwrite ACK_NAK_C_INDEX with ACK_NAK_P_INDEX
+    tblwr   ACK_NAK_C_INDEX, ACK_NAK_P_INDEX
+
     // Pass congestion_mgmt flag to stage 3 dcqcn-mpu-only. This is used to decide whether to load dcqcn_cb in stage 4 or mpu-only-dcqcn.
     CAPRI_GET_STAGE_3_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.dcqcn.congestion_mgmt_enable, d.congestion_mgmt_enable)
 
     // send new_c_index,serv_type and ack processing flag to stage 5 (writeback)
     CAPRI_GET_STAGE_5_ARG(resp_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.new_c_index, ACK_NAK_P_INDEX)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.ack_nak_process, 1)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.ack_nack_serv_type, d.serv_type)
 
@@ -190,3 +199,15 @@ ack_nak:
 exit:
     nop.e
     nop
+
+all_rings_empty:
+    seq     c1, d.ring_empty_counter, 0
+    bcf     [!c1], skip_doorbell_eval
+    nop     //BD Slot
+
+    // ring doorbell to re-evaluate scheduler
+    DOORBELL_NO_UPDATE(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, r2, r3)
+
+skip_doorbell_eval:
+    phvwr.e     p.common.p4_intr_global_drop, 1
+    tblmincri   d.ring_empty_counter, 8, 1  //Exit Slot

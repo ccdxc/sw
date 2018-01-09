@@ -53,7 +53,8 @@ struct rqcb0_t {
     
     token_id: 8;
     nxt_to_go_token_id: 8;
-    rsq_pindex_prime: 16;
+    rsq_pindex_prime: 8;
+    ring_empty_counter: 8;
 
 
     log_pmtu: 5;

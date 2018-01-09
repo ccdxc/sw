@@ -1027,7 +1027,8 @@ typedef struct rqcb0_s {
     uint32_t  log_rq_page_size: 5;
     uint32_t  log_pmtu: 5;
 
-    uint16_t rsq_pindex_prime;
+    uint8_t  ring_empty_counter: 8;
+    uint8_t  rsq_pindex_prime;
     uint8_t  nxt_to_go_token_id;
     uint8_t  token_id;
     uint8_t  log_rsq_size: 5;
