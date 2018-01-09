@@ -54,6 +54,7 @@ message IpsecCbSpec {
   uint32                is_nat_t              = 25;
   uint32                flags                 = 26;
   uint32                is_random             = 27;
+  uint32                extra_pad             = 28;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

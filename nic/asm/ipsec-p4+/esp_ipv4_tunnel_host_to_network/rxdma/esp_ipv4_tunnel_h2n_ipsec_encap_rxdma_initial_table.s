@@ -35,6 +35,8 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     slt c2, r5, 2
     add.c2 r5, r5, d.block_size 
     subi r5, r5, 2
+    smeqb c4, d.flags, IPSEC_FLAGS_EXTRA_PAD, IPSEC_FLAGS_EXTRA_PAD
+    addi.c4 r5, r5, 64
     phvwr p.ipsec_int_header_pad_size, r5
     addui r6, r0, hiword(IPSEC_PAD_BYTES_HBM_TABLE_BASE)
     addi r6, r6, loword(IPSEC_PAD_BYTES_HBM_TABLE_BASE)
@@ -83,14 +85,9 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwri p.common_te3_phv_table_lock_en, 0
     phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
 
-    add r1, r0, d.esn_lo
-    addi r1, r1, 1
-    tblwr d.esn_lo, r1
-    nop
     // I understand that I need to take care of 32 bit overflow into esn-hi etc.
-    add r1, r0, d.iv
-    addi r1, r1, 1
-    tblwr  d.iv, r1
+    tbladd d.esn_lo, 1
+    tbladd d.iv, 1
     nop.e
     nop
  

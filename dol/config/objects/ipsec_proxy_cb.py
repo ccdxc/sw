@@ -63,6 +63,7 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.is_v6                     = self.is_v6
             req_spec.is_nat_t                  = self.is_nat_t
             req_spec.is_random                 = self.is_random
+            req_spec.extra_pad                 = self.extra_pad
             req_spec.vrf_vlan                  = self.vrf_vlan
         return
 

@@ -160,3 +160,12 @@ modules:
         ignore  : False 
         iterate :
             - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : TCP_V4_EXTRA_PAD 
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : tcp_v4_extra_pad 
+        spec    : tcp_v4_extra_pad.testspec 
+        ignore  : True 
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP

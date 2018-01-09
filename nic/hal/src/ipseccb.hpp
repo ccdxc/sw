@@ -56,6 +56,7 @@ typedef struct ipseccb_s {
     uint8_t               is_v6; 
     uint8_t               is_nat_t;
     uint8_t               is_random;
+    uint8_t               extra_pad;
     uint8_t               flags;
     uint16_t              vrf_vlan;
     uint32_t              last_replay_seq_no;
