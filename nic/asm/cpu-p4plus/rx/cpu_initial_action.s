@@ -14,6 +14,9 @@ struct common_p4plus_stage0_app_header_table_offset_64_d d;
     .align
 cpu_rx_read_shared_stage0_start:
     CAPRI_CLEAR_TABLE0_VALID
+#ifdef CAPRI_IGNORE_TIMESTAMP
+    add     r6, r0, r0
+#endif
     // Store timestamp in the quisce pkt trailer
     phvwr   p.quiesce_pkt_trlr_timestamp, r6.wx
     
