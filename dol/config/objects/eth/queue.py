@@ -250,7 +250,7 @@ class EthQueueObject(QueueObject):
             raise NotImplementedError
 
     def ConfigureRings(self):
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
         self.obj_helper_ring.Configure()
@@ -267,14 +267,14 @@ class EthQueueObject(QueueObject):
         self.qstate.Read()
 
     def Post(self, descriptor):
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return status.SUCCESS
 
         ring = self.obj_helper_ring.rings[0]
         return ring.Post(descriptor)
 
     def Consume(self, descriptor):
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return status.SUCCESS
 
         ring = self.obj_helper_ring.rings[1]

@@ -23,8 +23,7 @@ class EthRingObject(ring.RingObject):
         assert isinstance(self.desc_size, int) and (self.desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
 
     def Configure(self):
-
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
         # Make sure ring_size is a power of 2
@@ -33,8 +32,7 @@ class EthRingObject(ring.RingObject):
         cfglogger.info("Creating Ring %s" % self)
 
     def Post(self, descriptor):
-
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
         cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.pi, self))
@@ -56,8 +54,7 @@ class EthRingObject(ring.RingObject):
         return status.SUCCESS
 
     def Consume(self, descriptor):
-
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
         cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.ci, self))

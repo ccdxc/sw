@@ -145,7 +145,7 @@ class QueueTypeObject(base.ConfigObjectBase):
                             self.doorbell.Ring(queue_id, ring_id, ring.pi, 0)
 
     def Post(self, descriptor, queue_id=0):
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return status.SUCCESS
 
         if GlobalOptions.skipverify and self.purpose == "LIF_QUEUE_PURPOSE_RX":
@@ -164,7 +164,7 @@ class QueueTypeObject(base.ConfigObjectBase):
                 queue.qstate.Read()
 
     def Consume(self, descriptor, queue_id=0):
-        if GlobalOptions.dryrun or GlobalOptions.skipverify:
+        if GlobalOptions.dryrun or GlobalOptions.cfgonly or GlobalOptions.skipverify:
             return status.SUCCESS
 
         ring_id = 1

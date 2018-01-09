@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <assert.h>
 #include <vector>
+#include <queue>
 #include <signal.h>
 #include "../../utils/host_mem/params.hpp"
 #include "zmq_wait.h"
@@ -30,6 +31,7 @@
 #endif
 
 cap_env_base *g_env;
+std::queue<std::vector<uint8_t>> g_cpu_pkts;
 
 /*
  * This block describes the gateway interface between
@@ -122,6 +124,15 @@ static void dumpHBM (void) {
 
 void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
     switch (buff->type) {
+        case BUFF_TYPE_STEP_TIMER_WHEEL:
+        {
+            /* Call step timer wheel update in model */
+            env->step_tmr_wheel_update(buff->slowfast, buff->ctime);
+            buff->type = BUFF_TYPE_STATUS;
+            buff->status = 0;
+            std::cout << "step_tmr_wheel_update slowfast: " << buff->slowfast << " ctime: " << buff->ctime << std::endl;
+        }
+            break;
         case BUFF_TYPE_STEP_PKT:
         {
             std::vector<unsigned char> pkt_vector(buff->data, buff->data + buff->size);
@@ -141,7 +152,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint32_t cos;
             /* Get output packet from the model */
             if (!env->get_next_pkt(out_pkt, port, cos)) {
-                //std::cout << "ERROR: no packet" << std::endl;
+                // std::cout << "ERROR: no packet" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -237,6 +248,122 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             dumpHBM();
             std::cout << "*************** HBM dump END ***************" << std::endl;
         }
+            break;
+        case BUFF_TYPE_STEP_CPU_PKT:
+        {
+            std::vector<uint8_t> pkt_vector(buff->data, buff->data + buff->size);
+
+            g_cpu_pkts.push(pkt_vector);
+            buff->type = BUFF_TYPE_STATUS;
+            buff->status = 0;
+            std::cout << "step_cpu_pkt size: " << buff->size << std::endl;
+        }
+            break;
+        case BUFF_TYPE_GET_NEXT_CPU_PKT:
+        {
+            std::vector<uint8_t> out_pkt;
+            if (g_cpu_pkts.empty()) {
+                // std::cout << "CPU: ERROR: no packet" << std::endl;
+                buff->type = BUFF_TYPE_STATUS;
+                buff->status = -1;
+            } else {
+                out_pkt = g_cpu_pkts.front();
+                g_cpu_pkts.pop();
+                buff->size = out_pkt.size();
+                memcpy(buff->data, out_pkt.data(), out_pkt.size());
+                std::cout << "get_next_cpu_pkt size: " << buff->size << std::endl;
+            }
+        }
+            break;
+        case BUFF_TYPE_MAC_CFG:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC CFG" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+        case BUFF_TYPE_MAC_EN:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC EN" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+        case BUFF_TYPE_MAC_SOFT_RESET:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC SOFT RESET" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+        case BUFF_TYPE_MAC_STATS_RESET:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC STATS RESET" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+        case BUFF_TYPE_MAC_INTR_EN:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC INTR EN/DISABLE" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+        case BUFF_TYPE_MAC_INTR_CLR:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC INTR CLEAR" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+        case BUFF_TYPE_REGISTER_MEM_ADDR:
+            {
+                //g_host_mem.set_match_addr(buff->addr);
+                std::cout << std::hex << "Registered address: 0x" << buff->addr << std::endl;
+            }
+            break;
+         case BUFF_TYPE_EXIT_SIM:
+            {
+                buff->type = BUFF_TYPE_STATUS;
+                buff->status = 0;
+            }
             break;
         case BUFF_TYPE_STATUS:
         default:

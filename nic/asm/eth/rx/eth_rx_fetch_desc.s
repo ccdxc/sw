@@ -33,7 +33,6 @@ eth_rx_fetch_desc:
   phvwri          p.eth_rx_t0_s2s_intr_assert_data, 0x01000000
 
   // Build completion entry in the PHV
-  phvwri          p.eth_rx_cq_desc_status, 0
   phvwr           p.eth_rx_cq_desc_comp_index, d.c_index0
   phvwr           p.eth_rx_cq_desc_color, d.color
 

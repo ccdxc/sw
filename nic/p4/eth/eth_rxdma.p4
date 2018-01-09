@@ -88,8 +88,9 @@ header_type eth_rx_t0_s2s_k {
     fields {
         packet_len : 16;
         cq_desc_addr : 52;
+        __pad : 4;
         intr_assert_addr : 32;
-        intr_assert_data : 32;
+        intr_assert_data : 32;  // Should be byte-aligned for PHV2MEM
     }
 }
 

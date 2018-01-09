@@ -42,13 +42,13 @@ eth_rx_packet:
     phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_cq_desc_status)
     phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_rsvd3)
 
-    seq         c1, r0, k.{eth_rx_t0_s2s_intr_assert_addr_sbit0_ebit3...eth_rx_t0_s2s_intr_assert_addr_sbit28_ebit31}
+    seq         c1, r0, k.eth_rx_t0_s2s_intr_assert_addr
     phvwri.e.c1 p.dma_cmd1_dma_cmd_eop, 1
     nop
 
     // DMA Interrupt
     phvwri      p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwr       p.dma_cmd2_dma_cmd_addr, k.{eth_rx_t0_s2s_intr_assert_addr_sbit0_ebit3...eth_rx_t0_s2s_intr_assert_addr_sbit28_ebit31}
+    phvwr       p.dma_cmd2_dma_cmd_addr, k.eth_rx_t0_s2s_intr_assert_addr
     phvwri      p.dma_cmd2_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_t0_s2s_intr_assert_data)
     phvwri.e    p.dma_cmd2_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_t0_s2s_intr_assert_data)
     phvwri      p.dma_cmd2_dma_cmd_eop, 1

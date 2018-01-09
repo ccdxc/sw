@@ -25,6 +25,7 @@
 
 #define MODIFY_ETH_RX_T0_S2S \
     modify_field(eth_rx_t0_s2s_scratch.packet_len, eth_rx_t0_s2s.packet_len); \
+    modify_field(eth_rx_t0_s2s_scratch.__pad, eth_rx_t0_s2s.__pad); \
     modify_field(eth_rx_t0_s2s_scratch.cq_desc_addr, eth_rx_t0_s2s.cq_desc_addr); \
     modify_field(eth_rx_t0_s2s_scratch.intr_assert_addr, eth_rx_t0_s2s.intr_assert_addr); \
     modify_field(eth_rx_t0_s2s_scratch.intr_assert_data, eth_rx_t0_s2s.intr_assert_data);

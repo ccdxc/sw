@@ -61,7 +61,6 @@ eth_tx_fetch_desc:
 
   // Completion descriptor
   phvwr           p.eth_tx_cq_desc_comp_index, d.c_index0
-  phvwr           p.eth_tx_cq_desc_status, 0
   phvwr           p.eth_tx_cq_desc_color, d.color
 
   // Claim the descriptor
