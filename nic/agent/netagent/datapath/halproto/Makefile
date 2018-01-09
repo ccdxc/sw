@@ -1,8 +1,7 @@
 GEN_DIR = ${CURDIR}
-HAL_PROTO_FILES = $(shell ls ${CURDIR}/../../../../proto/hal/ | grep .proto)
+HAL_PROTO_FILES = $(shell ls ${CURDIR}/../../../../proto/hal/ | grep .proto | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
 default:
 	$(MAKE) hal-proto
-
 	# Generate mock files
 	mockgen -source=endpoint.pb.go -destination=endpoint_mock.go -package=halproto
 	mockgen -source=interface.pb.go -destination=interface_mock.go -package=halproto
@@ -17,7 +16,10 @@ default:
 
 hal-proto: clean-proto
 	# Compile proto definitions
-	protoc --proto_path=../../../../../ -I../../../../../nic/proto -I../../../../../nic/proto/hal -I../../../../../vendor/github.com/gogo/protobuf/gogoproto --gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:. types.proto ${HAL_PROTO_FILES}
+	 LC_ALL=C protoc --proto_path=../../../../../ -I../../../../../nic/proto \
+	-I../../../../../nic/proto/hal \
+	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
+	--gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:. types.proto ${HAL_PROTO_FILES}
 
 clean-proto:
 	# Regenerate all .pb.go. This avoids conflicts due to file renames in nic/proto/hal
