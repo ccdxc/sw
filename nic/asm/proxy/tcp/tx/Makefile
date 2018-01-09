@@ -65,7 +65,7 @@ $(GEN_DIR)/.tcp_tx_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 DEPS_DIRS = $(subst -I,, $(INC_DIRS))
 DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 $(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
-	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
+	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@
 
 
 

@@ -105,6 +105,10 @@ struct s3_t0_tcp_rx_tcp_fra_d d;
     .align
 tcp_rx_fra_stage3_start:
     CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
+#ifdef CAPRI_IGNORE_TIMESTAMP
+    add             r4, r0, r0
+    add             r6, r0, r0
+#endif
     /* r4 is loaded at the beginning of the stage with current timestamp value */
     sne         c1, k.common_phv_write_arq, r0
     bcf         [c1], flow_fra_process_done

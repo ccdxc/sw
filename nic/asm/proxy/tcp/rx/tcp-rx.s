@@ -31,6 +31,10 @@ struct s1_t0_tcp_rx_d d;
      * c7 = Drop packet
      */
 tcp_rx_process_stage1_start:
+#ifdef CAPRI_IGNORE_TIMESTAMP
+    add             r4, r0, r0
+    add             r6, r0, r0
+#endif
     CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
 
     tblwr           d.u.tcp_rx_d.alloc_descr, 1

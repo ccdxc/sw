@@ -27,6 +27,10 @@ tcp_rx_write_serq_stage_start:
     CAPRI_CLEAR_TABLE0_VALID
     CAPRI_OPERAND_DEBUG(k.s5_s2s_debug_stage0_3_thread)
     CAPRI_OPERAND_DEBUG(k.s5_s2s_debug_stage4_7_thread)
+#ifdef CAPRI_IGNORE_TIMESTAMP
+    add             r4, r0, r0
+    add             r6, r0, r0
+#endif
     tblwr       d.debug_stage0_3_thread, k.s5_s2s_debug_stage0_3_thread
     tblwr       d.debug_stage4_7_thread, k.s5_s2s_debug_stage4_7_thread
     seq         c1, k.common_phv_write_arq, 1

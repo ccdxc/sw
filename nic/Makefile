@@ -214,7 +214,7 @@ gft-build: sdk
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
 hal-rtl: sdk
 	$(MAKE) -j4 -C p4
-	$(MAKE) -C asm
+	$(MAKE) -C asm AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP"
 	$(MAKE) -C proto
 	$(MAKE) V=1 -j8 -C gen/proto/hal
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal

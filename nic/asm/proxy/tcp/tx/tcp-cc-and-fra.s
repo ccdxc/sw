@@ -36,6 +36,10 @@ tcp_cc_and_fra_process_start:
 
 tcp_cong_control:
     CAPRI_CLEAR_TABLE_VALID(0)
+#ifdef CAPRI_IGNORE_TIMESTAMP
+    add             r4, r0, r0
+    add             r6, r0, r0
+#endif
     /*
      * Check if we are in congestion window reduction state
      */
