@@ -38,6 +38,7 @@ app_redir_rawrcb_spec_build(const rawrcb_t& rawrcb,
         spec.set_chain_rxq_ring_index_select(rawrcb.chain_rxq_ring_index_select);
     }
 
+    spec.set_redir_span(rawrcb.redir_span);
     spec.set_rawrcb_flags(rawrcb.rawrcb_flags);
 }
 
@@ -109,6 +110,7 @@ app_redir_rawccb_spec_build(const rawccb_t& rawccb,
     spec.set_chain_txq_qtype(rawccb.chain_txq_qtype);
     spec.set_chain_txq_qid(rawccb.chain_txq_qid);
     spec.set_chain_txq_ring(rawccb.chain_txq_ring);
+    spec.set_redir_span(rawccb.redir_span);
 
     spec.set_rawccb_flags(rawccb.rawccb_flags);
 }
