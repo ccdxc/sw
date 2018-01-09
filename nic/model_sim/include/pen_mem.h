@@ -146,7 +146,7 @@ public:
         void * p = nullptr;
         unsigned char *ptr;
 #ifndef NO_THREADS
-        std::lock_guard<std::mutex> l(my_mutex);
+	std::lock_guard<std::mutex> l(my_mutex);
 #endif
         if (last_page_ptr && last_page == page_num) {
             ptr = last_page_ptr;
@@ -243,7 +243,7 @@ public:
                 auto stride = sizeof(decltype(data_knob.eval()));
                 for (int i = curr_len; i > 0; i-=stride) {
 		    auto wlen = (int) stride > i ? i : stride;
-                    auto tmp = 0;
+                    auto tmp = 0ull;
                     memcpy(p,&tmp, wlen);
                     p+= wlen;
                 }
