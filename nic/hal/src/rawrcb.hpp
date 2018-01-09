@@ -44,6 +44,7 @@ typedef struct rawrcb_s {
     uint8_t               chain_rxq_ring_size_shift;
     uint8_t               chain_rxq_entry_size_shift;
     uint8_t               chain_rxq_ring_index_select;
+    uint8_t               redir_span;
 
     uint64_t              chain_txq_base;           // next service chain TxQ base, if any
     uint64_t              chain_txq_ring_indices_addr;
@@ -80,7 +81,7 @@ typedef struct rawrcb_s {
 
     ht_ctxt_t             ht_ctxt;                  // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;       // hal handle based hash table ctxt
-} __PACK__ rawrcb_t;
+} rawrcb_t;
 
 #define HAL_MAX_RAWRCB_HT_SIZE          1024        // hash table size
 

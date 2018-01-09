@@ -49,6 +49,18 @@ class ProxyServiceObject(base.ConfigObjectBase):
             reqspec.key_or_handle.proxy_id = 5
             reqspec.proxy_type = 8
 
+        if self.type == "APP_REDIR_PROXY_TCP":
+            reqspec.key_or_handle.proxy_id = 6
+            reqspec.proxy_type = 9
+
+        if self.type == "APP_REDIR_SPAN":
+            reqspec.key_or_handle.proxy_id = 7
+            reqspec.proxy_type = 10
+
+        if self.type == "APP_REDIR_PROXY_TCP_SPAN":
+            reqspec.key_or_handle.proxy_id = 8
+            reqspec.proxy_type = 11
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

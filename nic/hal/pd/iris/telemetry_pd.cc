@@ -47,7 +47,7 @@ hal_ret_t
 pd_mirror_session_create(pd_mirror_session_args_t *args)
 {
     uint32_t dst_lport;
-    mirror_actiondata action_data; 
+    mirror_actiondata action_data;
     if ((args == NULL) || (args->session == NULL)) {
         HAL_TRACE_ERR("PD-MIRROR-SESSION:: NULL argument");
         return HAL_RET_INVALID_ARG;
@@ -58,13 +58,14 @@ pd_mirror_session_create(pd_mirror_session_args_t *args)
 
     // Add to a PD datastructure instead of stack.
     memset(&action_data, 0, sizeof(mirror_actiondata));
-    HAL_ASSERT((args->session->id >= 0) && (args->session->id < 7));
+    HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
 
     switch (args->session->dest_if->if_type) {
         case intf::IF_TYPE_TUNNEL:
         case intf::IF_TYPE_ENIC:
         case intf::IF_TYPE_UPLINK_PC:
         case intf::IF_TYPE_UPLINK:
+        case intf::IF_TYPE_APP_REDIR:
             dst_lport = if_get_lport_id(args->session->dest_if);
             break;
         default:
@@ -115,7 +116,7 @@ pd_mirror_session_delete(pd_mirror_session_args_t *args)
         return HAL_RET_INVALID_ARG;
     }
     memset(&action_data, 0, sizeof(mirror_actiondata));
-    HAL_ASSERT((args->session->id >= 0) && (args->session->id < 7));
+    HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
     action_data.actionid = MIRROR_DROP_MIRROR_ID;
 
     return pd_mirror_update_hw(args->session->id, &action_data);
@@ -130,7 +131,7 @@ pd_mirror_session_get(pd_mirror_session_args_t *args)
         return HAL_RET_INVALID_ARG;
     }
     memset(&action_data, 0, sizeof(mirror_actiondata));
-    HAL_ASSERT((args->session->id >= 0) && (args->session->id < 7));
+    HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
    
     p4pd_error_t pdret; 
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL, NULL, (void *)&action_data);

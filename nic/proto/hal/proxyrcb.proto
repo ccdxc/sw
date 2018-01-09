@@ -39,34 +39,35 @@ message ProxyrCbSpec {
   uint32                chain_rxq_ring_size_shift  = 11;
   uint32                chain_rxq_entry_size_shift = 12;
   uint32                chain_rxq_ring_index_select= 13;
+  uint32                redir_span                 = 14;
   
-  types.IPAddress       ip_sa                      = 14;
-  types.IPAddress       ip_da                      = 15;
-  uint32                sport                      = 16;
-  uint32                dport                      = 17;
-  uint32                vrf                        = 18;
-  uint32                af                         = 19;
-  types.IPProtocol      ip_proto                   = 20;
-  uint32                dir                        = 21;
-  uint32                role                       = 22;
-  uint32                rev_cb_id                  = 23;
+  types.IPAddress       ip_sa                      = 15;
+  types.IPAddress       ip_da                      = 16;
+  uint32                sport                      = 17;
+  uint32                dport                      = 18;
+  uint32                vrf                        = 19;
+  uint32                af                         = 20;
+  types.IPProtocol      ip_proto                   = 21;
+  uint32                dir                        = 22;
+  uint32                role                       = 23;
+  uint32                rev_cb_id                  = 24;
 
   /*
    * 64-bit statistic counters
    */
-  uint64                stat_pkts_redir            = 24;
-  uint64                stat_pkts_discard          = 25;
+  uint64                stat_pkts_redir            = 25;
+  uint64                stat_pkts_discard          = 26;
   
   /*
    * 32-bit saturating statistic counters
    */
-  uint32                stat_cb_not_ready          = 26;
-  uint32                stat_null_ring_indices_addr= 27;
-  uint32                stat_aol_err               = 28;
-  uint32                stat_rxq_full              = 29;
-  uint32                stat_txq_empty             = 30;
-  uint32                stat_sem_alloc_full        = 31;
-  uint32                stat_sem_free_full         = 32;
+  uint32                stat_cb_not_ready          = 27;
+  uint32                stat_null_ring_indices_addr= 28;
+  uint32                stat_aol_err               = 29;
+  uint32                stat_rxq_full              = 30;
+  uint32                stat_txq_empty             = 31;
+  uint32                stat_sem_alloc_full        = 32;
+  uint32                stat_sem_free_full         = 33;
 }
 
 // ProxyrCbRequestMsg is batched add or modify proxyrcb request

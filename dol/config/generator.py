@@ -18,6 +18,7 @@ from config.objects.qos_class           import QosClassHelper
 from config.objects.proxy_service       import ProxyServiceHelper
 from config.objects.ipsec_proxy_cb      import IpsecCbHelper
 from config.objects.cpu                 import CpuHelper
+from config.objects.app_redir_if        import AppRedirIfHelper
 
 from config.objects.swdr                import SwDscrRingHelper
 from config.objects.brq                 import BRQHelper
@@ -47,8 +48,9 @@ def process(topospec):
     # Phase2 Tenant config - EPs and ENICs
     TenantHelper.ConfigurePhase2()
 
+    app_redir = getattr(topospec, 'app_redir', False)
     proxy = getattr(topospec, 'proxy', False)
-    if proxy == True:
+    if proxy == True or app_redir == True:
         # Global descriptors and page rings
         ProxyServiceHelper.main()
         SwDscrRingHelper.main("NMDR")
@@ -57,9 +59,12 @@ def process(topospec):
         for i in range(3):
             SwDscrRingHelper.main("ARQ", ('CPU%04d' % i), i)
             SwDscrRingHelper.main("ARQ-TX", ('CPU%04d' % i), i)
+
+    if app_redir == True:
         SwDscrRingHelper.main("RAWCCBQ")
         SwDscrRingHelper.main("PROXYRCBQ")
         SwDscrRingHelper.main("PROXYCCBQ")
+        AppRedirIfHelper.main(topospec)
 
     # Generate all sessions
     SessionHelper.main()
@@ -75,6 +80,7 @@ def process(topospec):
     # Generate ACLs
     AclHelper.main(topospec)
     TimerHelper.main(topospec)
+
     return
 
 def main(topofile):

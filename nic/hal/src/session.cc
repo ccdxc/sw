@@ -618,8 +618,8 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
             HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
             return ret;
         }
-        args->iflow[0]->ing_mirror_session = ingress;
-        args->iflow[0]->eg_mirror_session = egress;
+        args->iflow[0]->ing_mirror_session |= ingress;
+        args->iflow[0]->eg_mirror_session |= egress;
 
         if(args->rflow[0] && args->spec->has_responder_flow()) {
             ret = extract_mirror_sessions(args->spec->responder_flow(), &ingress, &egress);
@@ -627,8 +627,8 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
                 HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
                 return ret;
             }
-            args->rflow[0]->ing_mirror_session = ingress;
-            args->rflow[0]->eg_mirror_session = egress;
+            args->rflow[0]->ing_mirror_session |= ingress;
+            args->rflow[0]->eg_mirror_session |= egress;
         }
     }
 

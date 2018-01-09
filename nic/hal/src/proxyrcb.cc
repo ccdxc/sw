@@ -150,6 +150,7 @@ proxyrcb_create (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
     proxyrcb->dir = spec.dir();
     proxyrcb->role = spec.role();
     proxyrcb->rev_cb_id = spec.rev_cb_id();
+    proxyrcb->redir_span = spec.redir_span();
 
     // allocate all PD resources and finish programming
     pd::pd_proxyrcb_args_init(&pd_proxyrcb_args);
@@ -205,6 +206,7 @@ proxyrcb_update (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
     proxyrcb->chain_rxq_ring_size_shift = spec.chain_rxq_ring_size_shift();
     proxyrcb->chain_rxq_entry_size_shift = spec.chain_rxq_entry_size_shift();
     proxyrcb->chain_rxq_ring_index_select = spec.chain_rxq_ring_index_select();
+    proxyrcb->redir_span = spec.redir_span();
 
     if (spec.af() == AF_INET) {
         proxyrcb->ip_sa.v4_addr = spec.ip_sa().v4_addr();
@@ -282,6 +284,7 @@ proxyrcb_get (ProxyrCbGetRequest& req, ProxyrCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_rxq_ring_size_shift(rproxyrcb.chain_rxq_ring_size_shift);
     rsp->mutable_spec()->set_chain_rxq_entry_size_shift(rproxyrcb.chain_rxq_entry_size_shift);
     rsp->mutable_spec()->set_chain_rxq_ring_index_select(rproxyrcb.chain_rxq_ring_index_select);
+    rsp->mutable_spec()->set_redir_span(rproxyrcb.redir_span);
 
     if (rproxyrcb.af == AF_INET) {
         rsp->mutable_spec()->mutable_ip_sa()->set_v4_addr(rproxyrcb.ip_sa.v4_addr);

@@ -51,12 +51,7 @@ rawr_s0_rx_start:
     b.!c1       _rawrcb_not_ready
     phvwr       p.common_phv_rawrcb_flags,\
                 d.{u.rawr_rx_start_d.rawrcb_flags}.hx // delay slot
-    /*
-     * temporarily remove access to tm_instance_type until issue of qid..qtype
-     * range is solved in RDMA
-    seq         c1, CAPRI_INTRINSIC_TM_INSTANCE_TYPE, TM_INSTANCE_TYPE_SPAN
-    phvwr.c1    p.common_phv_redir_span_instance, TRUE
-     */
+    phvwr       p.common_phv_redir_span_instance, d.u.rawr_rx_start_d.redir_span
 
     /*
      * For a given flow, one of 2 types of redirection applies:

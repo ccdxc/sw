@@ -7,7 +7,7 @@ namespace app_redir {
 
 extern "C" {
 
-void app_redir_init() {
+void app_redir_plugin_init() {
     fte::feature_info_t info = {
         state_size: sizeof(app_redir_ctx_t),
         app_redir_ctx_t::init,
@@ -17,10 +17,11 @@ void app_redir_init() {
     fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, appid_exec, info);
     fte::register_feature(FTE_FEATURE_APP_REDIR_FINI, app_redir_exec_fini);
 
+    app_redir_init();
     scanner_init(hal::HAL_THREAD_ID_CFG);
 }
 
-void app_redir_exit() {
+void app_redir_plugin_exit() {
     scanner_cleanup(hal::HAL_THREAD_ID_CFG);
 }
 

@@ -79,6 +79,7 @@ typedef struct proxy_meta_s {
     uint32_t            num_lif;
     proxy_meta_lif_t    lif_info[HAL_PROXY_MAX_ST_LIF_PER_SVC];
     types::ProxyType    parent_proxy;
+    bool                indexer_skip_zero;
 } proxy_meta_t;
 
 typedef struct proxy_s {

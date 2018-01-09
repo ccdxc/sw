@@ -1,0 +1,7 @@
+# App Redirect Interface Config Object Template
+meta:
+    id: AppRedirIf
+
+id         : None  # Name of the object
+lif_id     : 0
+

@@ -840,6 +840,11 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         ret = flow->set_ingress_info(flowupd.ingress_info);
         LOG_FLOW_UPDATE(ingress_info);
         break;
+
+    case FLOWUPD_MIRROR_INFO:
+        ret = flow->set_mirror_info(flowupd.mirror_info);
+        LOG_FLOW_UPDATE(mirror_info);
+        break;
     }
 
 
@@ -1190,5 +1195,11 @@ std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
     return os << "}";
 }
 
+std::ostream& operator<<(std::ostream& os, const mirror_info_t& val)
+{
+    os << "{ing_mirror_session=" << val.ing_mirror_session;
+    os << " ,egr_mirror_session=" << val.egr_mirror_session;
+    return os << "}";
+}
 
 } // namespace fte

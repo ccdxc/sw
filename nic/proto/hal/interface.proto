@@ -355,6 +355,7 @@ enum IfType {
   IF_TYPE_UPLINK_PC    = 3;    // interface representing NIC uplink port channel
   IF_TYPE_TUNNEL       = 4;    // interface representing tunnel
   IF_TYPE_CPU          = 5;    // interface representing CPU
+  IF_TYPE_APP_REDIR    = 6;    // interface representing App Redirect
 }
 
 // RSS Type
@@ -455,6 +456,11 @@ message IfCPUInfo {
   kh.LifKeyHandle lif_key_or_handle   = 2 [(gogoproto.moretags) = "venice:ref"];    // LIF identifier for this interface
 }
 
+// attributes for App Redirect If
+message IfAppRedirInfo {
+  kh.LifKeyHandle lif_key_or_handle   = 2 [(gogoproto.moretags) = "venice:ref"];    // LIF identifier for this interface
+}
+
 // InterfaceSpec is used to add or update of an interface
 message InterfaceSpec {
   types.ObjectMeta   meta              = 1;     // object meta
@@ -467,6 +473,7 @@ message InterfaceSpec {
     IfUplinkPCInfo   if_uplink_pc_info = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK_PC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
     IfTunnelInfo     if_tunnel_info    = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
     IfCPUInfo        if_cpu_info       = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton 
+    IfAppRedirInfo   if_app_redir_info = 11 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_APP_REDIR}"];     // app redirect interface informaton 
   }
 }
 

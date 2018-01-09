@@ -13,7 +13,8 @@ namespace app_redir {
 
 void app_redir_pkt_verdict_set(fte::ctx_t& ctx,
                                app_redir_verdict_t verdict);
-hal_ret_t app_redir_policy_applic_set(fte::ctx_t& ctx);
+hal_ret_t app_redir_policy_applic_set(fte::ctx_t& ctx,
+                                      bool redir_span);
 uint8_t *app_redir_pkt(fte::ctx_t& ctx);
 size_t app_redir_pkt_len(fte::ctx_t& ctx);
 hal_ret_t appid_cleanup_flow(appid_info_t& appid_info);

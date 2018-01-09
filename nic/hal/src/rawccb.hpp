@@ -52,6 +52,7 @@ typedef struct rawccb_s {
     uint8_t               chain_txq_ring_size_shift;
     uint8_t               chain_txq_entry_size_shift;
     uint8_t               chain_txq_ring;
+    uint8_t               redir_span;
 
     /*
      * 64-bit statistic counters
@@ -76,7 +77,7 @@ typedef struct rawccb_s {
 
     ht_ctxt_t             ht_ctxt;                  // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;       // hal handle based hash table ctxt
-} __PACK__ rawccb_t;
+} rawccb_t;
 
 #define HAL_MAX_RAWCCB_HT_SIZE          1024        // hash table size
 

@@ -2,6 +2,7 @@
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/hal_lock.hpp"
 #include "app_redir_plugin.hpp"
 #include "app_redir.hpp"
 #include "app_redir_headers.hpp"
@@ -18,6 +19,27 @@ typedef enum {
     PROXY_FLOW_TYPE_INCLUDE_TCP
 } proxy_flow_type_include_t;
 
+
+/*
+ * rawrcb/rawccb creation for span;
+ * HW always spans to qtype 0 and qid 0, lif is derived from the mirror
+ * session's lport_id. Once in rawrcb, P4+ will hash on flow and spray to
+ * appropriate ARQ.
+ */
+#define APP_REDIR_SPAN_RAWRCB_RAWCCB_ID     0
+
+static hal_spinlock_t       mirror_create_lock;
+static mirror_session_id_t  mirror_session_id;
+
+
+/*
+ * One time initialization outside of any thread context
+ */
+void
+app_redir_init(void)
+{
+    HAL_SPINLOCK_INIT(&mirror_create_lock, PTHREAD_PROCESS_PRIVATE);
+}
 
 
 /*
@@ -86,7 +108,8 @@ app_redir_feature_status_set(fte::ctx_t& ctx,
  */
 static hal_ret_t
 _app_redir_rawrcb_create(fte::ctx_t& ctx,
-                         uint32_t cb_id)
+                         uint32_t cb_id,
+                         bool redir_span)
 {
     rawrcb_t    rawrcb;
 
@@ -98,7 +121,10 @@ _app_redir_rawrcb_create(fte::ctx_t& ctx,
      * would need to be specified here.
      */
     app_redir_rawrcb_init(cb_id, rawrcb);
-    rawrcb.chain_rxq_ring_index_select = fte::fte_id();
+    rawrcb.redir_span = redir_span;
+    if (cb_id != APP_REDIR_SPAN_RAWRCB_RAWCCB_ID) {
+        rawrcb.chain_rxq_ring_index_select = fte::fte_id();
+    }
     return app_redir_rawrcb_create(rawrcb);
 }
 
@@ -108,7 +134,8 @@ _app_redir_rawrcb_create(fte::ctx_t& ctx,
  */
 static hal_ret_t
 _app_redir_rawccb_create(fte::ctx_t& ctx,
-                         uint32_t cb_id)
+                         uint32_t cb_id,
+                         bool redir_span)
 {
     rawccb_t    rawccb;
 
@@ -117,6 +144,7 @@ _app_redir_rawccb_create(fte::ctx_t& ctx,
      * left at zero.
      */
     app_redir_rawccb_init(cb_id, rawccb);
+    rawccb.redir_span = redir_span;
     return app_redir_rawccb_create(rawccb);
 }
 
@@ -138,15 +166,19 @@ app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
      */
     if (ctx.pkt() && (ctx.role() ==  hal::FLOW_ROLE_INITIATOR)) {
 
-        ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_flow_id());
+        ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_flow_id(),
+                                       false);
         if (ret == HAL_RET_OK) {
-            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_flow_id());
+            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_flow_id(),
+                                           false);
         }
         if (ret == HAL_RET_OK) {
-            ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_rev_flow_id());
+            ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_rev_flow_id(),
+                                           false);
         }
         if (ret == HAL_RET_OK) {
-            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_rev_flow_id());
+            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_rev_flow_id(),
+                                           false);
         }
     }
 
@@ -161,7 +193,8 @@ static hal_ret_t
 _app_redir_proxyrcb_create(fte::ctx_t& ctx,
                            uint32_t cb_id,
                            hal::flow_role_t role,
-                           uint32_t rev_cb_id)
+                           uint32_t rev_cb_id,
+                           bool redir_span)
 {
     const flow_key_t&   flow_key = ctx.get_key(role);
     proxyrcb_t          proxyrcb;
@@ -178,6 +211,7 @@ _app_redir_proxyrcb_create(fte::ctx_t& ctx,
     proxyrcb.chain_rxq_ring_index_select = fte::fte_id();
     proxyrcb.role = role;
     proxyrcb.rev_cb_id = rev_cb_id;
+    proxyrcb.redir_span = redir_span;
     ret = app_redir_proxyrcb_flow_key_build(proxyrcb, flow_key);
     if (ret == HAL_RET_OK) {
         ret = app_redir_proxyrcb_create(proxyrcb);
@@ -196,7 +230,8 @@ _app_redir_proxyccb_create(fte::ctx_t& ctx,
                            uint16_t chain_txq_lif,
                            uint8_t chain_txq_qtype,
                            uint32_t chain_txq_qid,
-                           uint8_t chain_txq_ring)
+                           uint8_t chain_txq_ring,
+                           bool redir_span)
 {
     proxyccb_t  proxyccb;
     hal_ret_t   ret;
@@ -207,6 +242,7 @@ _app_redir_proxyccb_create(fte::ctx_t& ctx,
      * constructed by app_redir_proxyccb_chain_txq_build().
      */
     app_redir_proxyccb_init(cb_id, proxyccb);
+    proxyccb.redir_span = redir_span;
     ret = app_redir_proxyccb_chain_txq_build(proxyccb, chain_txq_lif,
                              chain_txq_qtype, chain_txq_qid, chain_txq_ring);
     if (ret == HAL_RET_OK) {
@@ -256,19 +292,23 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
              */
             ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_flow_id(),
                                              hal::FLOW_ROLE_INITIATOR,
-                                             redir_ctx.chain_rev_flow_id());
+                                             redir_ctx.chain_rev_flow_id(),
+                                             redir_ctx.span_flow());
             if (ret == HAL_RET_OK) {
                 ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_flow_id(),
-                           SERVICE_LIF_TLS_PROXY, 0, redir_ctx.chain_flow_id(), 0);
+                           SERVICE_LIF_TLS_PROXY, 0, redir_ctx.chain_flow_id(),
+                           0, redir_ctx.span_flow());
             }
             if (ret == HAL_RET_OK) {
                 ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_rev_flow_id(),
                                                  hal::FLOW_ROLE_RESPONDER,
-                                                 redir_ctx.chain_flow_id());
+                                                 redir_ctx.chain_flow_id(),
+                                                 redir_ctx.span_flow());
             }
             if (ret == HAL_RET_OK) {
                 ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_rev_flow_id(),
-                           SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_flow_id(), 0);
+                           SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_flow_id(),
+                           0, redir_ctx.span_flow());
             }
 
         } else {
@@ -291,25 +331,63 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
              */
             ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_flow_id(),
                                              hal::FLOW_ROLE_INITIATOR,
-                                             redir_ctx.chain_rev_flow_id());
+                                             redir_ctx.chain_rev_flow_id(),
+                                             redir_ctx.span_flow());
             if (ret == HAL_RET_OK) {
 
                 ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_flow_id(), 
-                           SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_rev_flow_id(), 0);
+                           SERVICE_LIF_TCP_PROXY, 0, redir_ctx.chain_rev_flow_id(),
+                           0, redir_ctx.span_flow());
             }
             if (ret == HAL_RET_OK) {
                 ret = _app_redir_proxyrcb_create(ctx, redir_ctx.chain_rev_flow_id(),
                                                  hal::FLOW_ROLE_RESPONDER,
-                                                 redir_ctx.chain_flow_id());
+                                                 redir_ctx.chain_flow_id(),
+                                                 redir_ctx.span_flow());
             }
             if (ret == HAL_RET_OK) {
                 ret = _app_redir_proxyccb_create(ctx, redir_ctx.chain_rev_flow_id(),
-                           SERVICE_LIF_TLS_PROXY, 0, redir_ctx.chain_rev_flow_id(), 0);
+                           SERVICE_LIF_TLS_PROXY, 0, redir_ctx.chain_rev_flow_id(),
+                           0, redir_ctx.span_flow());
             }
         }
     }
 
     return app_redir_feature_status_set(ctx, ret);
+}
+
+
+/*
+ * 
+ * 
+ */
+static hal_ret_t
+app_redir_span_create_init(fte::ctx_t& ctx)
+{
+    rawrcb_t            *rawrcb;
+    hal_ret_t           ret = HAL_RET_OK;
+
+    HAL_SPINLOCK_LOCK(&mirror_create_lock);
+    rawrcb = find_rawrcb_by_id(APP_REDIR_SPAN_RAWRCB_RAWCCB_ID);
+    if (rawrcb) {
+        assert(rawrcb->redir_span);
+        goto done;
+    }
+
+    ret = app_redir_mirror_session_create(mirror_session_id);
+    if (ret == HAL_RET_OK) {
+        ret = _app_redir_rawccb_create(ctx, APP_REDIR_SPAN_RAWRCB_RAWCCB_ID,
+                                       true);
+    }
+    if (ret == HAL_RET_OK) {
+        ret = _app_redir_rawrcb_create(ctx, APP_REDIR_SPAN_RAWRCB_RAWCCB_ID,
+                                       true);
+    }
+
+done:
+
+    HAL_SPINLOCK_UNLOCK(&mirror_create_lock);
+    return ret;
 }
 
 
@@ -610,7 +688,7 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
          * app_redir proxy header is available and we have to extract the
          * flow key on FTE's behalf.
          */
-        if (ctx.arm_lifq().lif == SERVICE_LIF_APP_REDIR) {
+        if (ctx.app_redir_pipeline()) {
             app_redir_flow_key_build_from_redir_hdr(ctx, 
                            (hal::flow_direction_t)cpu_rxhdr->lkp_dir, *app_hdr);
         }
@@ -732,7 +810,15 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
           proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
 
     if (!pfi) {
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_SPAN,
+                                  &flow_key);
+    }
+    if (!pfi) {
         pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP,
+                                  &flow_key);
+    }
+    if (!pfi) {
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN,
                                   &flow_key);
     }
 
@@ -749,7 +835,15 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
         HAL_TRACE_DEBUG("app_redir proxy flow type {}", type);
 
         redir_ctx.set_tcp_tls_proxy_flow((type == types::PROXY_TYPE_TCP) ||
-                                         (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP));
+                          (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP) ||
+                          (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN));
+        /*
+         * span_flow might have been set by appid; if not, evaluate it here
+         */
+        if (!redir_ctx.span_flow()) {
+            redir_ctx.set_span_flow((type == types::PROXY_TYPE_APP_REDIR_SPAN) ||
+                          (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN));
+        }
 
     } else {
         HAL_TRACE_DEBUG("app_redir is not applicable for the flow");
@@ -772,6 +866,8 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
     proxy_flow_info_t       *rpfi = NULL;
     flow_key_t              rev_flow_key;
     hal_ret_t               ret = HAL_RET_OK;
+    types::ProxyType        type;
+    bool                    alloc_qid;
 
     pfi = app_redir_proxy_flow_info_find(ctx, flow_key, flow_type_include);
     if (!pfi) {
@@ -802,15 +898,21 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
         }
 
         /*
-         * Create the flow
+         * Create the flow;
+         * for raw span, HW always spans to qtype 0 and qid 0, lif is derived
+         * from the mirror session's lport_id. Once in rawrcb, P4+ will hash
+         * on flow and spray to appropriate ARQ.
          */
-        ret = proxy_flow_enable(types::PROXY_TYPE_APP_REDIR, flow_key,
-                                !ctx.existing_session(), NULL, NULL);
+        type = redir_ctx.span_flow() ? types::PROXY_TYPE_APP_REDIR_SPAN :
+                                       types::PROXY_TYPE_APP_REDIR;
+        alloc_qid = !ctx.existing_session() &&
+                    (type != types::PROXY_TYPE_APP_REDIR_SPAN);
+        ret = proxy_flow_enable(type, flow_key, alloc_qid, NULL, NULL);
         if (ret != HAL_RET_OK) {
             goto done;
         }
 
-        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
+        pfi = proxy_get_flow_info(type, &flow_key);
         assert(pfi);
         if (rpfi) {
             pfi->qid1 = rpfi->qid1;
@@ -853,15 +955,27 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
     }
 
     if (!redir_ctx.tcp_tls_proxy_flow()) {
-        flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
-        flowupd.fwding.qid_en = true;
-        flowupd.fwding.qtype = APP_REDIR_RAWR_QTYPE;
 
-        HAL_TRACE_DEBUG("app_redir flow forwarding role: {} qid1: {} qid2: {}",
-                        ctx.role(), pfi->qid1, pfi->qid2);
-        HAL_TRACE_DEBUG("app_redir updating lport = {} for sport = {} dport = {}",
-                        flowupd.fwding.lport, flow_key.sport, flow_key.dport);
-        ret = ctx.update_flow(flowupd);
+        if (redir_ctx.span_flow()) {
+            ret = app_redir_span_create_init(ctx);
+            flowupd.type = fte::FLOWUPD_MIRROR_INFO;
+            flowupd.mirror_info.egr_mirror_session = 1 << mirror_session_id;
+            flowupd.mirror_info.ing_mirror_session = 0;
+
+        } else {
+            flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
+            flowupd.fwding.qid_en = true;
+            flowupd.fwding.qtype = APP_REDIR_RAWR_QTYPE;
+
+            HAL_TRACE_DEBUG("app_redir flow forwarding role: {} qid1: {} qid2: {}",
+                            ctx.role(), pfi->qid1, pfi->qid2);
+            HAL_TRACE_DEBUG("app_redir updating lport = {} for sport = {} dport = {}",
+                            flowupd.fwding.lport, flow_key.sport, flow_key.dport);
+        }
+
+        if (ret == HAL_RET_OK) {
+            ret = ctx.update_flow(flowupd);
+        }
     }
     return app_redir_feature_status_set(ctx, ret);
 }
@@ -912,12 +1026,14 @@ app_redir_pkt_verdict_set(fte::ctx_t& ctx,
  * applicability for the current flow.
  */
 hal_ret_t
-app_redir_policy_applic_set(fte::ctx_t& ctx)
+app_redir_policy_applic_set(fte::ctx_t& ctx,
+                            bool redir_span)
 {
     app_redir_ctx_t&        redir_ctx = app_redir_ctxref(ctx);
     hal_ret_t               ret = HAL_RET_OK;
 
     redir_ctx.set_redir_policy_applic(true);
+    redir_ctx.set_span_flow(redir_span);
 
     /*
      * Update flow to redirect to us.
@@ -1038,7 +1154,6 @@ app_redir_exec(fte::ctx_t& ctx)
     app_redir_ctx_t&   redir_ctx = app_redir_ctxref(ctx);
 
     assert(ctx.pkt());
-    redir_ctx.set_chain_flow_id(ctx.cpu_rxhdr()->qid);
 
     /*
      * Handle TCP/TLS proxy handshake

@@ -53,6 +53,7 @@ typedef struct proxyccb_s {
     uint8_t               chain_txq_ring_size_shift;
     uint8_t               chain_txq_entry_size_shift;
     uint8_t               chain_txq_ring;
+    uint8_t               redir_span;
 
     /*
      * 64-bit statistic counters
@@ -77,7 +78,7 @@ typedef struct proxyccb_s {
 
     ht_ctxt_t             ht_ctxt;                  // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;       // hal handle based hash table ctxt
-} __PACK__ proxyccb_t;
+} proxyccb_t;
 
 #define HAL_MAX_PROXYCCB_HT_SIZE          1024      // hash table size
 
@@ -177,7 +178,8 @@ proxyccb_tcpcb_l7_proxy_type_eval(uint32_t flow_id)
 
     if (proxyccb && (proxyccb->chain_txq_lif == SERVICE_LIF_TLS_PROXY)) {
         HAL_TRACE_DEBUG("{} enable TCPCB {} for app_redir", __FUNCTION__, flow_id);
-        return types::APP_REDIR_TYPE_REDIRECT;
+        return proxyccb->redir_span ? types::APP_REDIR_TYPE_REDIRECT :
+                                      types::APP_REDIR_TYPE_SPAN;
     }
 
     return types::APP_REDIR_TYPE_NONE;
@@ -197,7 +199,8 @@ proxyccb_tlscb_l7_proxy_type_eval(uint32_t flow_id)
 
     if (proxyccb && (proxyccb->chain_txq_lif == SERVICE_LIF_TCP_PROXY)) {
         HAL_TRACE_DEBUG("{} enable TLSCB {} for app_redir", __FUNCTION__, flow_id);
-        return types::APP_REDIR_TYPE_REDIRECT;
+        return proxyccb->redir_span ? types::APP_REDIR_TYPE_REDIRECT :
+                                      types::APP_REDIR_TYPE_SPAN;
     }
 
     return types::APP_REDIR_TYPE_NONE;

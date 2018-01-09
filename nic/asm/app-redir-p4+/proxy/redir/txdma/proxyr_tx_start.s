@@ -48,6 +48,7 @@ proxyr_s0_tx_start:
     phvwr       p.to_s1_my_txq_qid, CAPRI_TXDMA_INTRINSIC_QID
 
     phvwr       p.common_phv_proxyrcb_flags, d.{u.start_d.proxyrcb_flags}.hx
+    phvwr       p.common_phv_redir_span_instance, d.u.start_d.redir_span
     
     /*
      * Also prefill certain meta header fields;

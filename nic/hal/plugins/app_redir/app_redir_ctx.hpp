@@ -79,6 +79,7 @@ public:
         app_ctx->chain_pkt_enqueued_     = false;
         app_ctx->redir_policy_applic_    = false;
         app_ctx->tcp_tls_proxy_flow_     = false;
+        app_ctx->span_flow_              = false;
         app_ctx->redir_miss_pkt_p_       = nullptr;
         app_ctx->proxy_flow_info_        = nullptr;
         app_ctx->arm_ctx_                = nullptr;
@@ -121,6 +122,9 @@ public:
 
     bool tcp_tls_proxy_flow() const { return tcp_tls_proxy_flow_; }
     void set_tcp_tls_proxy_flow(bool yesno) { tcp_tls_proxy_flow_ = yesno; }
+
+    bool span_flow() const { return span_flow_; }
+    void set_span_flow(bool yesno) { span_flow_ = yesno; }
 
     uint8_t chain_qtype() const { return chain_qtype_; }
     void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
@@ -245,7 +249,8 @@ private:
     bool                            chain_pkt_enqueued_ : 1,
                                     pipeline_end_       : 1,
                                     redir_policy_applic_: 1,
-                                    tcp_tls_proxy_flow_ : 1;
+                                    tcp_tls_proxy_flow_ : 1,
+                                    span_flow_          : 1;
     app_redir_verdict_t             chain_pkt_verdict_;
     pen_app_redir_header_v1_full_t  redir_miss_hdr_;
     uint8_t                         *redir_miss_pkt_p_;

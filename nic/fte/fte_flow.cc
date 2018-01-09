@@ -425,6 +425,11 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
         attrs.qid = fwding_.qid;
     }
 
+    if (valid_.mirror_info) {
+        config.ing_mirror_session = mirror_info_.ing_mirror_session;
+        config.eg_mirror_session = mirror_info_.egr_mirror_session;
+    }
+
     // header manipulations
     for (int i = 0; i < num_header_updates_; i++) {
         const header_update_t *entry = &header_updates_[i];
@@ -465,6 +470,10 @@ hal_ret_t flow_t::merge_flow(const flow_t &flow)
 
     if (flow.valid_fwding()) {
         set_fwding(flow.fwding());
+    }
+
+    if (flow.valid_mirror_info()) {
+        merge_mirror_info(flow.mirror_info());
     }
 
     for(int i = 0; i < flow.num_header_updates_; i++) {
