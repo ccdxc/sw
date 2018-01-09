@@ -79,6 +79,8 @@ def process(topospec):
 def main(topofile):
     timeprofiler.ConfigTimeProfiler.Start()
     halapi.init()
+    cfglogger.info("Initializing Resmgr")
+    resmgr.init()
     cfglogger.info("Generating Config Objects for Topology = %s" % topofile)
     topospec = parser.ParseFile('config/topology/', topofile)
     process(topospec)

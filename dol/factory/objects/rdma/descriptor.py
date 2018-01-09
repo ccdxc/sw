@@ -287,7 +287,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         Reads a Descriptor from "self.address"
         :return:
         """
-        self.phy_address = resmgr.HostMemoryAllocator.get_v2p(self.address)
+        self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
         desc = RdmaSqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, 32))
         desc.show()
@@ -341,7 +341,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
             sge = self.sges[idx]
             cfglogger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
             mem_handle = resmgr.MemHandle(sge.va,
-                                    resmgr.HostMemoryAllocator.get_v2p(sge.va))
+                                          resmgr.HostMemoryAllocator.v2p(sge.va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
             cfglogger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)
@@ -385,7 +385,7 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         Reads a Descriptor from "self.address"
         :return:
         """
-        self.phy_address = resmgr.HostMemoryAllocator.get_v2p(self.address)
+        self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
         desc = RdmaRqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, 32))
         desc.show()
@@ -432,7 +432,7 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
             sge = self.sges[idx]
             cfglogger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
             mem_handle = resmgr.MemHandle(sge.va,
-                                    resmgr.HostMemoryAllocator.get_v2p(sge.va))
+                                          resmgr.HostMemoryAllocator.v2p(sge.va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
             cfglogger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)
@@ -516,7 +516,7 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         """
         cfglogger.info("Reading CQ Desciptor @0x%x = wrid: 0x%x " % 
                        (self.address, self.wrid))
-        self.phy_address = resmgr.HostMemoryAllocator.get_v2p(self.address)
+        self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaCqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptor()))))
 
@@ -600,7 +600,7 @@ class RdmaEqDescriptorObject(base.FactoryObjectBase):
         :return:
         """
         cfglogger.info("Reading EQ Desciptor @ 0x%x " % (self.address))
-        self.phy_address = resmgr.HostMemoryAllocator.get_v2p(self.address)
+        self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaEqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaEqDescriptor()))))
 

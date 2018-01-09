@@ -1,14 +1,14 @@
 #! /usr/bin/python3
 
+import ctypes
 from infra.common.glopts import GlobalOptions
 
 import infra.common.objects as objects
-import infra.clibs.clibs as clibs
 from ctypes import *
 import os
-import pdb
 
-HostMemoryAllocator = None
+
+HostMemoryAllocator     = None
 
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
 L4LbServiceIdAllocator  = objects.TemplateFieldObject("range/1/4096")
@@ -115,25 +115,39 @@ NullMemHandle = MemHandle(0, 0)
 
 class HostMemory(object):
     def __init__(self):
-        lib = clibs.libHostMem
-        self.init_host_mem = lib.init_host_mem
-        self.delete_host_mem = lib.delete_host_mem
-        self.alloc_host_mem = lib.alloc_page_aligned_host_mem
-        self.host_mem_v2p = lib.host_mem_v2p
-        self.host_mem_p2v = lib.host_mem_p2v
-        self.free_host_mem = lib.free_host_mem
-        self.init_host_mem()
+        path = os.path.join(os.environ['WS_TOP'], "bazel-bin/nic/utils/host_mem/libhost_mem.so")
+        self.lib = ctypes.CDLL(path, mode=ctypes.RTLD_GLOBAL)
+        self.lib.alloc_host_mem.argtypes = [ctypes.c_uint64]
+        self.lib.alloc_host_mem.restype = ctypes.c_void_p
+        self.lib.alloc_page_aligned_host_mem.argtypes = [ctypes.c_uint64]
+        self.lib.alloc_page_aligned_host_mem.restype = ctypes.c_void_p
+        self.lib.host_mem_v2p.argtypes = [ctypes.c_void_p]
+        self.lib.host_mem_v2p.restype = ctypes.c_uint64
+        self.lib.host_mem_p2v.argtypes = [ctypes.c_uint64]
+        self.lib.host_mem_p2v.restype = ctypes.c_void_p
+        self.lib.free_host_mem.argtypes = [ctypes.c_void_p]
+        self.lib.free_host_mem.restype = None
+        if not GlobalOptions.dryrun:
+            assert self.lib.init_host_mem() == 0
 
-    def get(self, size):
+    def get(self, size, page_aligned=True):
         if GlobalOptions.dryrun: return NullMemHandle
         assert isinstance(size, int)
-        ptr = self.alloc_host_mem(size)
-        return MemHandle(ptr, self.host_mem_v2p(ptr))
+        if page_aligned:
+            ptr = self.lib.alloc_page_aligned_host_mem(size)
+        else:
+            ptr = self.lib.alloc_host_mem(size)
+        return MemHandle(ptr, self.lib.host_mem_v2p(ptr))
 
     def p2v(self, pa):
-        if GlobalOptions.dryrun: return NullMemHandle
+        if GlobalOptions.dryrun: return NullMemHandle.pa
         assert isinstance(pa, int)
-        return MemHandle(self.host_mem_p2v(pa), pa)
+        return self.lib.host_mem_p2v(pa)
+
+    def v2p(self, va):
+        if GlobalOptions.dryrun: return NullMemHandle.va
+        assert isinstance(va, int)
+        return self.lib.host_mem_v2p(va)
 
     def write(self, memhandle, data):
         if GlobalOptions.dryrun: return
@@ -150,9 +164,6 @@ class HostMemory(object):
         assert isinstance(memhandle, MemHandle)
         assert isinstance(size, int)
         ba = bytearray([0x0]*size)
-        if GlobalOptions.dryrun:
-            return bytes(ba)
-        assert isinstance(memhandle, MemHandle)
         va = memhandle.va
         arr = c_char * size
         arr = arr.from_buffer(ba)
@@ -166,17 +177,13 @@ class HostMemory(object):
         va = memhandle.va
         memset(va, 0, c_uint64(size))
 
-    def get_v2p(self, va):
-        if GlobalOptions.dryrun: return NullMemHandle.pa
-        return self.host_mem_v2p(va)
-
     def __del__(self):
-        self.delete_host_mem()
+        self.lib.delete_host_mem()
 
 def init():
     global HostMemoryAllocator
     HostMemoryAllocator = HostMemory()
-    assert(HostMemoryAllocator != None)
+    assert HostMemoryAllocator is not None
 
 def InitQos(topospec):
     global QosCosAllocator

@@ -48,7 +48,7 @@ class RdmaRingObject(ring.RingObject):
         cfglogger.info('posting descriptor at pindex: %d..' %(self.queue.qstate.get_pindex(0)))
         descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_pindex(0)))
         descriptor.mem_handle = resmgr.MemHandle(descriptor.address,
-                                                 resmgr.HostMemoryAllocator.get_v2p(descriptor.address))
+                                                 resmgr.HostMemoryAllocator.v2p(descriptor.address))
         descriptor.Write()
         cfglogger.info('incrementing pindex..')
         self.queue.qstate.incr_pindex(0, self.size)

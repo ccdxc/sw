@@ -40,10 +40,6 @@ from infra.common.logging import logger
 import sys
 
 def Main():
-    logger.info("Initializing clibs")
-    clibs.init()
-    resmgr.init()
-
     logger.info("Initializing Config Infra")
     config.init()
 

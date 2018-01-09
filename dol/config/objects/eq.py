@@ -93,7 +93,7 @@ class EqObject(base.ConfigObjectBase):
         self.eqe_base_addr = self.eq_slab.address
         print(self.eqe_base_addr, self.eq_slab.address)
         assert(self.eqe_base_addr)
-        self.eqe_base_addr_phy = resmgr.HostMemoryAllocator.get_v2p(self.eqe_base_addr)
+        self.eqe_base_addr_phy = resmgr.HostMemoryAllocator.v2p(self.eqe_base_addr)
         assert(self.eqe_base_addr_phy)
 
         req_spec.eqe_base_addr_phy = self.eqe_base_addr_phy

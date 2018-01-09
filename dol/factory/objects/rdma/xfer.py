@@ -27,8 +27,8 @@ class RdmaXferObject(base.FactoryObjectBase):
         self.address = spec.fields.slab.address if spec.fields.slab else 0
         self.address += self.offset
         if self.address:
-            self.mem_handle = resmgr.MemHandle(self.address, 
-                                    resmgr.HostMemoryAllocator.get_v2p(self.address))
+            self.mem_handle = resmgr.MemHandle(self.address,
+                                               resmgr.HostMemoryAllocator.v2p(self.address))
         cfglogger.info("Creating Rdma Xfer @0x%x = size: %d offset: %d " %
                        (self.address, self.size, self.offset))
 
