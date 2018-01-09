@@ -626,7 +626,7 @@ hal_state_pd::~hal_state_pd()
     if (tcam_tables_) {
         for (tid = P4TBL_ID_TCAM_MIN; tid < P4TBL_ID_TCAM_MIN; tid++) {
             if (tcam_tables_[tid]) {
-                Tcam::destroy(tcam_tables_[tid]);
+                tcam::destroy(tcam_tables_[tid]);
                 // delete tcam_tables_[tid];
             }
         }
@@ -853,8 +853,8 @@ hal_state_pd::init_tables(void)
     HAL_ASSERT(hash_tcam_tables_ != NULL);
 
     tcam_tables_ =
-        (Tcam **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
-                            sizeof(Tcam *) *
+        (tcam **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
+                            sizeof(tcam *) *
                             (P4TBL_ID_TCAM_MAX - P4TBL_ID_TCAM_MIN + 1));
     HAL_ASSERT(tcam_tables_ != NULL);
 
@@ -900,14 +900,14 @@ hal_state_pd::init_tables(void)
                 /* Allow dup entries must be set to true for ddos tcam tables */
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
-                        Tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                        tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                       tinfo.key_struct_size, tinfo.actiondata_struct_size, true);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }
             } else {
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
-                        Tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                        tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                       tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }
@@ -1013,7 +1013,7 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
             } else {
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
-                        new Tcam(tinfo.tablename, tid, tinfo.tabledepth,
+                        new tcam(tinfo.tablename, tid, tinfo.tabledepth,
                                  tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }
@@ -1110,7 +1110,7 @@ hal_state_pd::p4plus_txdma_init_tables(void)
             } else {
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
-                        new Tcam(tinfo.tablename, tid, tinfo.tabledepth,
+                        new tcam(tinfo.tablename, tid, tinfo.tabledepth,
                                  tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }

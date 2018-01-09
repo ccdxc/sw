@@ -9,11 +9,13 @@ cc_library(
     srcs = [
         "acl_tcam.cc",
         "acl_tcam.hpp",
+        "tcam_entry.cc",
     ],
-    hdrs = ["acl_tcam.hpp"],
+    hdrs = ["acl_tcam.hpp", "tcam_entry.hpp"],
     deps = [
         "//nic/hal/pd:hal_pd_includes",
-        "//nic/hal/pd/utils/tcam:tcam_includes",
+        #"//nic/hal/pd/utils/tcam:tcam_includes",
+        "@sdk//obj:sdk_tcam",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/bitmap",

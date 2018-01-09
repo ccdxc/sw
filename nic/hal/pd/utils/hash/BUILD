@@ -21,7 +21,8 @@ cc_library(
     deps = [
         "@sdk//obj:sdk_indexer",
         "//nic/hal/pd:hal_pd_includes",
-        "//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/tcam",
+        "@sdk//obj:sdk_tcam",
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
     ],

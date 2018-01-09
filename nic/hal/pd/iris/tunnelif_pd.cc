@@ -219,8 +219,9 @@ hal_ret_t
 pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
                                  p4pd_table_id tbl_id)
 {
-    Tcam        *tcam;
+    tcam        *tcam;
     hal_ret_t   ret;
+    sdk_ret_t   sdk_ret;
     int         *arr;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
@@ -234,7 +235,8 @@ pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
 
     for (int i = 0; i < 3; i++) {
         if (arr[i] != -1) {
-            ret = tcam->remove(arr[i]);
+            sdk_ret = tcam->remove(arr[i]);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Input mapping native tcam remove failure, "
                               "idx : {}, err : {}", arr[i], ret);
@@ -253,10 +255,11 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
                          p4pd_table_id tbl_id, int *idx)
 {
     hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           sdk_ret;
     input_mapping_native_swkey_t        key;
     input_mapping_native_swkey_mask_t   mask;
     input_mapping_native_actiondata     data;
-    Tcam                                *tcam;
+    tcam                                *tcam;
     uint32_t                            ret_idx = 0;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
@@ -286,7 +289,8 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
         memset(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, 0xFF, IP6_ADDR8_LEN);
     }
     data.actionid = actionid;
-    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
         *idx = -1;

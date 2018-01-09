@@ -280,10 +280,11 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
                                       p4pd_table_id tbl_id, uint32_t *idx)
 {
     hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           sdk_ret;
     input_mapping_native_swkey_t        key = {0};
     input_mapping_native_swkey_mask_t   mask = {0};
     input_mapping_native_actiondata     data = {0};
-    Tcam                                *tcam;
+    tcam                                *tcam;
     uint32_t                            ret_idx;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
@@ -317,7 +318,8 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
         memrev(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, IP6_ADDR8_LEN);
     }
     data.actionid = actionid;
-    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
         *idx = INVALID_INDEXER_INDEX;
@@ -341,9 +343,10 @@ hal_ret_t
 pd_vrf_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
                                       p4pd_table_id tbl_id)
 {
-    Tcam         *tcam;
+    tcam         *tcam;
     uint32_t     *arr;
     hal_ret_t    ret = HAL_RET_OK;
+    sdk_ret_t    sdk_ret;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     HAL_ASSERT(tcam != NULL);
@@ -356,7 +359,8 @@ pd_vrf_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
 
     for (int i = 0; i < 3; i++) {
         if (arr[i] != INVALID_INDEXER_INDEX) {
-            ret = tcam->remove((uint32_t)arr[i]);
+            sdk_ret = tcam->remove((uint32_t)arr[i]);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Input mapping native tcam remove failure, "
                               "idx : {}, err : {}", arr[i], ret);

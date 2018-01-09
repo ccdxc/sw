@@ -133,10 +133,11 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
                                  p4pd_table_id tbl_id, int *idx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     ddos_src_vf_swkey_t         key;
     ddos_src_vf_swkey_mask_t    mask;
     ddos_src_vf_actiondata      data;
-    Tcam                        *tcam = NULL;
+    tcam                        *tcam = NULL;
     uint32_t                    ret_idx;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
@@ -154,7 +155,8 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
     data.ddos_src_vf_action_u.ddos_src_vf_ddos_src_vf_hit.ddos_src_vf_base_policer_idx = policer_idx;
     HAL_TRACE_DEBUG("pd-dos:{}: act_id: {} pol_index: {} slport: {}",
                      __FUNCTION__, actionid, policer_idx, slport);
-    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
         *idx = -1;
@@ -179,10 +181,11 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
                                   p4pd_table_id tbl_id, int *idx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     ddos_service_swkey_t        key;
     ddos_service_swkey_mask_t   mask;
     ddos_service_actiondata     data;
-    Tcam                        *tcam = NULL;
+    tcam                        *tcam = NULL;
     uint32_t                    ret_idx;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
@@ -223,7 +226,8 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
                     "vrf: {} act_id: {} pol_idx: {}", __FUNCTION__,
                     *ip_addr, dport, proto, vrf, actionid, policer_idx);
 
-    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
         *idx = -1;
@@ -251,10 +255,11 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
                                   p4pd_table_id tbl_id, int *idx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     ddos_src_dst_swkey_t        key;
     ddos_src_dst_swkey_mask_t   mask;
     ddos_src_dst_actiondata     data;
-    Tcam                        *tcam = NULL;
+    tcam                        *tcam = NULL;
     uint32_t                    ret_idx;
     ipv4_addr_t                 v4_mask = {0};
     ipv6_addr_t                 v6_mask = {0};
@@ -329,7 +334,8 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
                     "dport: {} proto: {} vrf: {} act_id: {} pol_idx: {}",
                      __FUNCTION__, *src_ip_addr, src_pfxlen, *dst_ip_addr,
                      dst_pfxlen, dport, proto, vrf, actionid, policer_idx);
-    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
         *idx = -1;

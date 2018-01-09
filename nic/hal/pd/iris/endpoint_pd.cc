@@ -509,10 +509,11 @@ hal_ret_t
 ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           sdk_ret;
     ipsg_swkey_t        key;
     ipsg_swkey_mask     key_mask;
     ipsg_actiondata     data;
-    Tcam                *ipsg_tbl = NULL;
+    tcam                *ipsg_tbl = NULL;
     ep_ip_entry_t       *pi_ep_ip_entry = (ep_ip_entry_t *)pd_ip_entry->pi_ep_ip_entry;
 
     memset(&key, 0, sizeof(key));
@@ -522,7 +523,8 @@ ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry)
     ipsg_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_IPSG);
     HAL_ASSERT_RETURN((ipsg_tbl != NULL), HAL_RET_ERR);
 
-    ret = ipsg_tbl->remove(pd_ip_entry->ipsg_tbl_idx);
+    sdk_ret = ipsg_tbl->remove(pd_ip_entry->ipsg_tbl_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-EP::{}: Unable to deprogram IPSG for: {}",
                 __FUNCTION__, ipaddr2str(&(pi_ep_ip_entry->ip_addr)));
@@ -544,6 +546,7 @@ hal_ret_t
 ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           sdk_ret;
     ipsg_swkey_t        key;
     ipsg_swkey_mask     key_mask;
     ipsg_actiondata     data;
@@ -554,7 +557,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     if_t                *pi_if = NULL;
     // uint64_t            mac_int = 0;
     mac_addr_t          *mac = NULL;
-    Tcam                *ipsg_tbl = NULL;
+    tcam                *ipsg_tbl = NULL;
     
     
     pi_if = find_if_by_handle(pi_ep->if_handle);
@@ -601,8 +604,9 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     if_l2seg_get_encap(pi_if, l2seg, &data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
             &data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
 
-     ret = ipsg_tbl->insert(&key, &key_mask, &data,
+     sdk_ret = ipsg_tbl->insert(&key, &key_mask, &data,
                             &(pd_ip_entry->ipsg_tbl_idx));
+     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
      if (ret != HAL_RET_OK) {
          HAL_TRACE_ERR("PD-EP::{}: Unable to program IPSG for: {}",
                  __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));

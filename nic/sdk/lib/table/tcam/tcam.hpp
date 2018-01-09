@@ -82,7 +82,7 @@ private:
     uint32_t        hwdata_len_;            // hw data len
     ht              *entry_ht_;             // hash table to store entries
     indexer         *indexer_;              // tcam entry indices
-    uint64_t        *stats_;                // Statistics
+    uint64_t        *stats_;                // statistics
 
     sdk_ret_t alloc_index_(uint32_t *idx, bool lowest);
     sdk_ret_t alloc_index_withid_(uint32_t idx);

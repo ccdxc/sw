@@ -443,13 +443,15 @@ hal_ret_t
 pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    Tcam                *inp_prop_mac_vlan_tbl = NULL;
+    sdk_ret_t           sdk_ret;
+    tcam                *inp_prop_mac_vlan_tbl = NULL;
 
     inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
                             P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
     HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
 
-    ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_host);
+    sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_host);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram inp mac vlan table "
                       "for host traffic",
@@ -461,7 +463,8 @@ pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
                       __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_host);
     }
 
-    ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_upl);
+    sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_upl);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram inp mac vlan table "
                       "for uplink traffic",
@@ -965,10 +968,11 @@ hal_ret_t
 pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t                                   ret = HAL_RET_OK;
+    sdk_ret_t                                   sdk_ret;
     input_properties_mac_vlan_swkey_t           key;
     input_properties_mac_vlan_swkey_mask_t      mask;
     input_properties_mac_vlan_actiondata        data;
-    Tcam                                        *inp_prop_mac_vlan_tbl = NULL;
+    tcam                                        *inp_prop_mac_vlan_tbl = NULL;
     mac_addr_t                                  *mac = NULL;
     // uint64_t                                    mac_int = 0;
     // intf::IfEnicType                            enicif_type = intf::IF_ENIC_TYPE_NONE;
@@ -1016,14 +1020,15 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
 
     pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, true);
 
-    ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
-                                        &(pd_enicif->inp_prop_mac_vlan_idx_host));
+    sdk_ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
+                                            &(pd_enicif->inp_prop_mac_vlan_idx_host));
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif:{}:unable to program for Host traffic (EnicIf): {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if));
         goto end;
     } else {
-        HAL_TRACE_DEBUG("pd-enicif:{}:programmed for Host traffic (EnicIf): {} TcamIdx: {}",
+        HAL_TRACE_DEBUG("pd-enicif:{}:programmed for Host traffic (EnicIf): {} tcamIdx: {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), 
                 pd_enicif->inp_prop_mac_vlan_idx_host);
     }
@@ -1058,14 +1063,15 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
     inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
 #endif
 
-    ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
-                                        &(pd_enicif->inp_prop_mac_vlan_idx_upl));
+    sdk_ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
+                                            &(pd_enicif->inp_prop_mac_vlan_idx_upl));
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif:{}: unable to program for Uplink traffic (EnicIf): {} ret: {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), ret);
         goto end;
     } else {
-        HAL_TRACE_ERR("pd-enicif:{}: programmed for Uplink traffic (EnicIf): {} TcamIdx: {}",
+        HAL_TRACE_ERR("pd-enicif:{}: programmed for Uplink traffic (EnicIf): {} tcamIdx: {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), 
                 pd_enicif->inp_prop_mac_vlan_idx_upl);
     }
@@ -1141,8 +1147,9 @@ pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
                                      nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t                                   ret = HAL_RET_OK;
+    sdk_ret_t                                   sdk_ret;
     input_properties_mac_vlan_actiondata        data;
-    Tcam                                        *inp_prop_mac_vlan_tbl = NULL;
+    tcam                                        *inp_prop_mac_vlan_tbl = NULL;
 
     inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
                             P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
@@ -1150,7 +1157,8 @@ pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
 
     pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, true);
 
-    ret = inp_prop_mac_vlan_tbl->update(pd_enicif->inp_prop_mac_vlan_idx_host, &data);
+    sdk_ret = inp_prop_mac_vlan_tbl->update(pd_enicif->inp_prop_mac_vlan_idx_host, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif:{}: unable to program for Host traffic (EnicIf): {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if));

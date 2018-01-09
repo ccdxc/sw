@@ -48,10 +48,16 @@ tcam::factory(char *name, uint32_t id,
     t->stats_ = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_ID_TCAM_STATS,
                                        sizeof(uint64_t) * STATS_MAX);
 
+    SDK_TRACE_DEBUG("tcam::%-30s: tableid: %-3d swkey_len: %-4d "
+                    "hwkey_len_: %-4d hwkeymask_len_: %-4d "
+                    "hwdata_len_: %-4d \n", t->name_, t->id_, t->swkey_len_, 
+                    t->hwkey_len_, t->hwkeymask_len_, t->hwdata_len_);
+#if 0
     SDK_TRACE_DEBUG("tcam::{:<30}: tableid: {:<3} swkey_len: {:<4} "
                     "hwkey_len_: {:<4} hwkeymask_len_: {:<4} "
                     "hwdata_len_: {:<4}", t->name_, t->id_, t->swkey_len_, 
                     t->hwkey_len_, t->hwkeymask_len_, t->hwdata_len_);
+#endif
     return t;
 }
 
@@ -85,6 +91,8 @@ tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len,
     hwkey_len_ = 0;
     hwkeymask_len_ = 0;
     hwdata_len_ = 0;
+
+    p4pd_hwentry_query(id_, &hwkey_len_, &hwkeymask_len_, &hwdata_len_);
 
     hwkey_len_ = (hwkey_len_ >> 3) + ((hwkey_len_ & 0x7) ? 1 : 0);
     hwkeymask_len_ = (hwkeymask_len_ >> 3) + ((hwkeymask_len_ & 0x7) ? 1 : 0);

@@ -75,7 +75,8 @@ cc_library(
         "libtcam.so",
     ],
     deps = [
-        "//:sdk_headers",
+        #"//:sdk_headers",
+        "//lib/table/tcam:tcam",
     ],
 )
 

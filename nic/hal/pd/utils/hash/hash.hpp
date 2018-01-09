@@ -22,12 +22,17 @@
 
 using namespace std;
 
+// global forward declarations
+namespace sdk::table {
+    class tcam;
+}
+using sdk::table::tcam;
+
 namespace hal {
 namespace pd {
 namespace utils {
 
 // forward declarations
-class Tcam;
 class HashEntry;
 
 typedef std::map<uint32_t, HashEntry*> HashEntryMap;
@@ -100,7 +105,7 @@ private:
     uint32_t        hwkey_len_;             // hw key len
     uint32_t        hwdata_len_;            // hw data len
 
-    Tcam            *otcam_;                // overflow tcam
+    tcam  *otcam_;                // overflow tcam
 
     // Hash Value => Hash Entry
     HashEntryMap  hash_entry_map_;

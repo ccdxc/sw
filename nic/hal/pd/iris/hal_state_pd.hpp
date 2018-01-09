@@ -6,7 +6,7 @@
 #include "sdk/ht.hpp"
 #include "nic/hal/pd/utils/directmap/directmap.hpp"
 #include "nic/hal/pd/utils/hash/hash.hpp"
-#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "sdk/tcam.hpp"
 #include "nic/hal/pd/utils/flow/flow.hpp"
 #include "nic/hal/pd/utils/met/met.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
@@ -22,7 +22,7 @@ using sdk::lib::slab;
 using sdk::lib::ht;
 using hal::pd::utils::DirectMap;
 using hal::pd::utils::Hash;
-using hal::pd::utils::Tcam;
+using sdk::table::tcam;
 using hal::pd::utils::Flow;
 using hal::pd::utils::Met;
 using hal::pd::utils::acl_tcam;
@@ -218,7 +218,7 @@ public:
         return hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN];
     }
 
-    Tcam *tcam_table(p4pd_table_id tid) const {
+    tcam *tcam_table(p4pd_table_id tid) const {
         if ((tid < P4TBL_ID_TCAM_MIN) || (tid > P4TBL_ID_TCAM_MAX)) {
             return NULL;
         }
@@ -465,7 +465,7 @@ private:
 
     DirectMap    **dm_tables_;
     Hash         **hash_tcam_tables_;
-    Tcam         **tcam_tables_;
+    tcam         **tcam_tables_;
     Flow         *flow_table_;
     Met          *met_table_;
     acl_tcam     *acl_table_;

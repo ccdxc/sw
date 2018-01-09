@@ -1,6 +1,7 @@
 -I ../../common
 -I ../../
 -I ../../../../sdk/include
+-I ../../../../sdk
 -I ../../../../p4/include
 -I ../../../../p4/rdma/include
 -I ../../..

@@ -54,6 +54,16 @@ void p4pd_global_hwentry_query(uint32_t tableid,
     return;
 }
 
+// hwentry get API
+void
+p4pd_hwentry_query(uint32_t tableid,
+                   uint32_t *hwkey_len,
+                   uint32_t *hwkeymask_len,
+                   uint32_t *hwactiondata_len)
+{
+    return;
+}
+
 // global write API
 int p4pd_global_entry_write(uint32_t tableid, uint32_t index, uint8_t *hwkey,
                             uint8_t *hwkey_y, void *actiondata)

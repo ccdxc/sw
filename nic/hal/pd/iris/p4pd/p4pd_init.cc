@@ -2,7 +2,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
-#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "sdk/tcam.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
@@ -15,7 +15,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 
-using hal::pd::utils::Tcam;
+using sdk::table::tcam;
 using hal::pd::utils::acl_tcam_entry_handle_t;
 using hal::pd::utils::priority_t;
 
@@ -107,7 +107,8 @@ p4pd_input_mapping_native_init (void)
     input_mapping_native_swkey_mask_t    mask;
     input_mapping_native_actiondata      data;
     hal_ret_t                            ret;
-    Tcam                                 *tcam;
+    sdk_ret_t                            sdk_ret;
+    tcam                                 *tcam;
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_NATIVE);
     HAL_ASSERT(tcam != NULL);
@@ -139,10 +140,11 @@ p4pd_input_mapping_native_init (void)
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV4_PACKET_ID;
 
     // insert into the tcam now - default entries are inserted bottom-up
-    ret = tcam->insert(&key, &mask, &data, &idx, false);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
+    if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
-                      "idx : {}, err : {}", idx, ret);
+                      "idx : {}, err : {}", idx, sdk_ret);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         return ret;
     }
     HAL_TRACE_DEBUG("Input mapping native tcam write, "
@@ -175,8 +177,9 @@ p4pd_input_mapping_native_init (void)
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV6_PACKET_ID;
 
     // insert into the tcam now - default entries are inserted bottom-up
-    ret = tcam->insert(&key, &mask, &data, &idx, false);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
@@ -211,7 +214,7 @@ p4pd_input_mapping_native_init (void)
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_NON_IP_PACKET_ID;
 
     // insert into the tcam now
-    ret = tcam->insert(&key, &mask, &data, &idx, false);
+    sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
@@ -231,7 +234,8 @@ p4pd_input_mapping_tunneled_init (void)
     input_mapping_tunneled_swkey_mask_t  mask;
     input_mapping_tunneled_actiondata    data;
     hal_ret_t                            ret;
-    Tcam                                 *tcam;
+    sdk_ret_t                            sdk_ret;
+    tcam                                 *tcam;
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_TUNNELED);
     HAL_ASSERT(tcam != NULL);
@@ -261,8 +265,9 @@ p4pd_input_mapping_tunneled_init (void)
     // set the action
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
     // insert into the tcam now
-    ret = tcam->insert(&key, &mask, &data, &idx, false);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
@@ -297,8 +302,9 @@ p4pd_input_mapping_tunneled_init (void)
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
 
     // insert into the tcam now
-    ret = tcam->insert(&key, &mask, &data, &idx, false);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
@@ -333,8 +339,9 @@ p4pd_input_mapping_tunneled_init (void)
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
 
     // insert into the tcam now
-    ret = tcam->insert(&key, &mask, &data, &idx, false);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
@@ -466,7 +473,8 @@ static hal_ret_t
 p4pd_drop_stats_init (void)
 {
     hal_ret_t                ret;
-    Tcam                     *tcam;
+    sdk_ret_t                sdk_ret;
+    tcam                     *tcam;
     drop_stats_swkey         key      = { 0 };
     drop_stats_swkey_mask    key_mask = { 0 };
     drop_stats_actiondata    data     = { 0 };
@@ -484,8 +492,9 @@ p4pd_drop_stats_init (void)
                sizeof(key_mask.control_metadata_drop_reason_mask));
 
         data.actionid = DROP_STATS_DROP_STATS_ID;
-        ret = tcam->insert_withid(&key, &key_mask, &data, i);
-        if (ret != HAL_RET_OK) {
+        sdk_ret = tcam->insert_withid(&key, &key_mask, &data, i);
+        if (sdk_ret != sdk::SDK_RET_OK) {
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
                     i, ret);
             return ret;
@@ -498,8 +507,9 @@ p4pd_drop_stats_init (void)
     memset(&data, 0, sizeof(data));
     key.entry_inactive_drop_stats = 0;
     key_mask.entry_inactive_drop_stats_mask = 0xFF;
-    ret = tcam->insert_withid(&key, &key_mask, &data, DROP_MAX + 1);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = tcam->insert_withid(&key, &key_mask, &data, DROP_MAX + 1);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
                 DROP_MAX + 1, ret);
         return ret;
@@ -1439,13 +1449,15 @@ compute_checksum_table_t compute_checksum_table[] = {
 };
 
 static hal_ret_t
-p4pd_compute_checksum_init(void) {
+p4pd_compute_checksum_init(void) 
+{
     uint32_t                        idx;
     compute_checksum_swkey_t        key;
     compute_checksum_swkey_mask_t   mask;
     compute_checksum_actiondata     data;
     hal_ret_t                       ret;
-    Tcam                            *tcam;
+    sdk_ret_t                       sdk_ret;
+    tcam                            *tcam;
 
     idx = 0;
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_COMPUTE_CHECKSUM);
@@ -1460,8 +1472,8 @@ p4pd_compute_checksum_init(void) {
     mask.entry_inactive_compute_checksum_mask = 0xFF;
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
     data.actionid = COMPUTE_CHECKSUM_NOP_ID;
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
+    HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
 
     // don't compute checksum for tcptls apptype
@@ -1473,8 +1485,8 @@ p4pd_compute_checksum_init(void) {
     mask.entry_inactive_compute_checksum_mask = 0xFF;
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
     data.actionid = COMPUTE_CHECKSUM_NOP_ID;
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
+    HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
 
     // don't compute checksum for p4pt apptype
@@ -1486,8 +1498,8 @@ p4pd_compute_checksum_init(void) {
     mask.entry_inactive_compute_checksum_mask = 0xFF;
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
     data.actionid = COMPUTE_CHECKSUM_NOP_ID;
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
+    HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
 
     // p4plus_app_id is don't care for all the entries below
@@ -1512,8 +1524,9 @@ p4pd_compute_checksum_init(void) {
         data.actionid = compute_checksum_table[idx].actionid;
 
         // insert into TCAM at idx
-        ret = tcam->insert_withid(&key, &mask, &data, idx);
-        if (ret != HAL_RET_OK) {
+        sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
+        if (sdk_ret != sdk::SDK_RET_OK) {
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             HAL_TRACE_ERR("Compute checksum tcam write failure, "
                           "idx : {}, err : {}", idx, ret);
             return ret;

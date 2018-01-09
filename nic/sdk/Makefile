@@ -28,7 +28,8 @@ else
     STOPONERR = --keep_going
 endif
 
-SKIP_DIRS = --deleted_packages=test/lib/list
+#SKIP_DIRS = --deleted_packages=test/lib/list
+SKIP_DIRS = --deleted_packages=lib/table/directmap,test/lib/list
 BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS)
 
 all: lib

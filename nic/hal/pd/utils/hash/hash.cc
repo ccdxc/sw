@@ -2,7 +2,7 @@
 
 #include "nic/hal/pd/utils/hash/hash_entry.hpp"
 #include "nic/hal/pd/utils/hash/hash.hpp"
-#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "sdk/tcam.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/include/trace.hpp"
 
@@ -61,12 +61,13 @@ Hash::Hash(std::string table_name,
     hash_poly_          = hash_poly;
 
     
-    // Initialize the Overflow Tcam
+    // Initialize the Overflow tcam
     otcam_ = NULL;
     if (otcam_capacity) {
-		otcam_ = Tcam::factory(table_name + "_otcam", otcam_table_id, 
+        // table_name +=  "_otcam";
+		otcam_ = tcam::factory(const_cast<char*>(table_name.c_str()), otcam_table_id, 
 							   otcam_capacity, swkey_len_, swdata_len_);
-        // otcam_ = new Tcam(table_name + "_otcam", otcam_table_id, otcam_capacity,
+        // otcam_ = new tcam(table_name + "_otcam", otcam_table_id, otcam_capacity,
         //        swkey_len_, swdata_len_);
         if (!otcam_) {
             HAL_ASSERT_RETURN_VOID(FALSE);
@@ -101,7 +102,7 @@ Hash::~Hash()
     // Freeing up OTcam
     if (otcam_) {
         // delete otcam_;
-		Tcam::destroy(otcam_);
+		tcam::destroy(otcam_);
     }
     // delete[] stats_;
     HAL_FREE(HAL_MEM_ALLOC_HASH_STATS, stats_);
@@ -121,6 +122,7 @@ Hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
              bool direct_to_otcam)
 {
     hal_ret_t rs            = HAL_RET_OK;
+    // sdk_ret_t sdk_ret       = sdk::SDK_RET_OK;
     p4pd_error_t pd_err     = P4PD_SUCCESS;
     HashEntry *he           = NULL;
     void *hwkey             = NULL;
@@ -184,7 +186,12 @@ Hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
             }
             
             // otcam insert
-            rs = otcam_->insert(key, key_mask, data, &tcam_index);
+            // sdk_ret = otcam_->insert(key, key_mask, data, &tcam_index);
+            otcam_->insert(key, key_mask, data, &tcam_index);
+            rs = HAL_RET_OK;
+            // ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            // TODO: For now ignore this as when we move hash into sdk, 
+            //       everything will be sdk_ret_t
             if (key_mask_free) {
                 HAL_FREE(HAL_MEM_ALLOC_HASH_SW_KEY_MASK_INS, key_mask);
             }
@@ -225,6 +232,7 @@ end:
 hal_ret_t 
 Hash::update(uint32_t hash_idx, void *data)
 {
+    // sdk_ret_t sdk_ret       = sdk::SDK_RET_OK;
     hal_ret_t rs            = HAL_RET_OK;
     p4pd_error_t pd_err     = P4PD_SUCCESS;
     void *hwkey             = NULL;
@@ -267,7 +275,11 @@ Hash::update(uint32_t hash_idx, void *data)
     } else {
         if (otcam_) {
             otcam_id = get_otcam_id_from_hash_idx_(hash_idx);
-            rs = otcam_->update(otcam_id, data);
+            otcam_->update(otcam_id, data);
+            // sdk_ret = otcam_->update(otcam_id, data);
+            // TODO: For now ignore this as when we move hash into sdk, 
+            //       everything will be sdk_ret_t
+            
         } else {
             // Invalid hash idx
             rs = HAL_RET_INVALID_ARG;
@@ -299,6 +311,7 @@ hal_ret_t
 Hash::remove(uint32_t hash_idx)
 {
     hal_ret_t rs = HAL_RET_OK;
+    // sdk_ret_t sdk_ret = sdk::SDK_RET_OK;
     HashEntryMap::iterator itr;
     uint32_t    dleft_id = -1;
     uint32_t    otcam_id = -1;
@@ -332,7 +345,10 @@ Hash::remove(uint32_t hash_idx)
         // entry is tcam
         if (has_otcam_()) {
             otcam_id = get_otcam_id_from_hash_idx_(hash_idx);
-            rs = otcam_->remove(otcam_id);
+            otcam_->remove(otcam_id);
+            // sdk_ret = otcam_->remove(otcam_id);
+            // TODO: For now ignore this as when we move hash into sdk, 
+            //       everything will be sdk_ret_t
         } else {
             rs = HAL_RET_INVALID_ARG;
         }
@@ -357,6 +373,7 @@ hal_ret_t
 Hash::retrieve(uint32_t hash_idx, void *key, void *data)
 {
     hal_ret_t rs = HAL_RET_OK;
+    // sdk_ret_t sdk_ret = sdk::SDK_RET_OK;
     HashEntryMap::iterator itr;
     HashEntry *he = NULL;
     uint32_t dleft_id = -1;
@@ -388,7 +405,10 @@ Hash::retrieve(uint32_t hash_idx, void *key, void *data)
         // entry is tcam
         if (otcam_) {
             otcam_id = get_otcam_id_from_hash_idx_(hash_idx);
-            rs = otcam_->retrieve(otcam_id, key, NULL, data);
+            otcam_->retrieve(otcam_id, key, NULL, data);
+            // sdk_ret = otcam_->retrieve(otcam_id, key, NULL, data);
+            // TODO: For now ignore this as when we move hash into sdk, 
+            //       everything will be sdk_ret_t
         } else {
             rs = HAL_RET_INVALID_ARG;
         }
@@ -685,7 +705,7 @@ Hash::stats_update(Hash::api ap, hal_ret_t rs)
 uint32_t 
 Hash::oflow_table_capacity(void) 
 { 
-    return otcam_ ? otcam_->table_capacity() : 0; 
+    return otcam_ ? otcam_->capacity() : 0; 
 } 
 
 // ----------------------------------------------------------------------------
@@ -703,7 +723,7 @@ Hash::table_num_entries_in_use(void)
 uint32_t
 Hash::oflow_table_num_entries_in_use(void)
 {
-    return otcam_ ? otcam_->table_num_entries_in_use() : 0;
+    return otcam_ ? otcam_->num_entries_in_use() : 0;
 }
 
 // ----------------------------------------------------------------------------

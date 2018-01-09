@@ -7,7 +7,7 @@
  */
 #include <cstring>
 
-#include "nic/hal/pd/utils/tcam/tcam_entry.hpp"
+#include "nic/hal/pd/utils/acl_tcam/tcam_entry.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/include/hal_mem.hpp"

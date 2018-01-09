@@ -1,6 +1,6 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/p4/nw/include/table_sizes.h"
-#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "sdk/tcam.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/system_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
@@ -89,7 +89,8 @@ pd_system_populate_drop_stats(DropStatsEntry *stats_entry,
                             uint8_t idx)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    Tcam                    *tcam;
+    sdk_ret_t               sdk_ret;
+    tcam                    *tcam;
     drop_stats_swkey         key = { 0 };
     drop_stats_swkey_mask    key_mask = { 0 };
     drop_stats_actiondata    data = { 0 };
@@ -98,7 +99,8 @@ pd_system_populate_drop_stats(DropStatsEntry *stats_entry,
     HAL_ASSERT(tcam != NULL);
 
     // Retrieve from SW to get the stats idx
-    ret = tcam->retrieve(idx, &key, &key_mask, &data);
+    sdk_ret = tcam->retrieve(idx, &key, &key_mask, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to retrieve stats idx for: {}",
                 idx);
@@ -106,7 +108,8 @@ pd_system_populate_drop_stats(DropStatsEntry *stats_entry,
     }
 
     // Read from drop stats table
-    ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
+    sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to retrieve drop stats for entry: {}",
                 idx);
@@ -291,7 +294,7 @@ pd_system_populate_tcam_table_stats(sys::TableStatsEntry *stats_entry,
         p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    Tcam                    *tcam;
+    tcam                    *tcam;
 
     tcam = g_hal_state_pd->tcam_table(id);
     if (!tcam) {
@@ -299,15 +302,15 @@ pd_system_populate_tcam_table_stats(sys::TableStatsEntry *stats_entry,
     }
 
     stats_entry->set_table_type (sys::TABLE_TYPE_TCAM);
-    stats_entry->set_table_name(tcam->table_name());
-    stats_entry->set_table_size(tcam->table_capacity());
+    stats_entry->set_table_name(tcam->name());
+    stats_entry->set_table_size(tcam->capacity());
     stats_entry->set_overflow_table_size(0);
-    stats_entry->set_entries_in_use(tcam->table_num_entries_in_use());
+    stats_entry->set_entries_in_use(tcam->num_entries_in_use());
     stats_entry->set_overflow_entries_in_use(0);
-    stats_entry->set_num_inserts(tcam->table_num_inserts());
-    stats_entry->set_num_insert_errors(tcam->table_num_insert_errors());
-    stats_entry->set_num_deletes(tcam->table_num_deletes());
-    stats_entry->set_num_delete_errors(tcam->table_num_delete_errors());
+    stats_entry->set_num_inserts(tcam->num_inserts());
+    stats_entry->set_num_insert_errors(tcam->num_insert_errors());
+    stats_entry->set_num_deletes(tcam->num_deletes());
+    stats_entry->set_num_delete_errors(tcam->num_delete_errors());
 
     return ret;
 }
