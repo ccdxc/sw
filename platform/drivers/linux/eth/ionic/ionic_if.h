@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Pensando Systems, Inc.  All rights reserved.
+ * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
  *
  * This program is free software; you may redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -623,49 +623,55 @@ enum rxq_comp_rss_type {
 };
 
 /** struct rxq_comp - Ethernet receive queue completion descriptor
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @rss_hash:   32-bit RSS hash for the @rss_type indicated
- * @csum:       One's complement of the one's complement sum of the
- *              entire packet data 16-bit words.  If the packet is
- *              odd length, an extra zero-value byte is included in
- *              the @csum calculation but not included in @len.
- * @vlan_tci:   VLAN tag stripped from the packet.  Valid if @V is
- *              set.  Includes .1p and .1q tags.
- * @len:        Received packet length, in bytes.  Excludes FCS.
- * @csum_level: Indicates how many header checksums were
- *              validated by the device.  Possible values are:
- *                 0 = No validation was done or the outer-most
- *                     checksum is invalid.
- *                 1 = Outer most checksum is valid.
- *                 2 = Outer two-most checksums are valid.
- *                 3 = Outer three-most checksums are valid.
- *              Only these protocols are accounted for in
- *              @csum_level.  All other protocols will not count
- *              towards @csum_level.  The L3 IPv4|IPv6 checksum
- *              validation is implied when validating the L4
- *              checksum:
- *                 TCP: IPv4 and IPv6
- *                 UDP: IPv4 and IPv6
- *                 GRE: IPv4 and IPv6, but only if checksum is
- *                      present in GRE header (checksum bit is
- *                      set).
- *                 SCTP: IPv4 and IPv6
- * @rss_type:   RSS type for @rss_hash:
- *                 0 = RSS hash not calcuated
- *                 1 = L3 IPv4
- *                 2 = L3 IPv6
- *                 3 = L3 IPv6 w/ extensions
- *                 4 = L4 IPv4/TCP
- *                 5 = L4 IPv6/TCP
- *                 6 = L4 IPv6/TCP w/ extensions
- *                 7 = L4 IPv4/UDP
- *                 8 = L4 IPv6/UDP
- *                 9 = L4 IPv6/UDP w/ extensions
- * @V:          VLAN header was stripped and placed in @vlan_tci.
- * @color:      Color bit.
+ * @status:       The status of the command.  Values for status are:
+ *                   0 = Successful completion
+ * @comp_index:   The index in the descriptor ring for which this
+ *                is the completion.
+ * @rss_hash:     32-bit RSS hash for the @rss_type indicated
+ * @csum:         One's complement of the one's complement sum of the
+ *                entire packet data 16-bit words.  If the packet is
+ *                odd length, an extra zero-value byte is included in
+ *                the @csum calculation but not included in @len.
+ * @vlan_tci:     VLAN tag stripped from the packet.  Valid if @V is
+ *                set.  Includes .1p and .1q tags.
+ * @len:          Received packet length, in bytes.  Excludes FCS.
+ * @rss_type:     RSS type for @rss_hash:
+ *                   0 = RSS hash not calcuated
+ *                   1 = L3 IPv4
+ *                   2 = L3 IPv6
+ *                   3 = L3 IPv6 w/ extensions
+ *                   4 = L4 IPv4/TCP
+ *                   5 = L4 IPv6/TCP
+ *                   6 = L4 IPv6/TCP w/ extensions
+ *                   7 = L4 IPv4/UDP
+ *                   8 = L4 IPv6/UDP
+ *                   9 = L4 IPv6/UDP w/ extensions
+ * @csum_tcp_ok:  The TCP checksum calculated by the device
+ *                matched the checksum in the receive packet's
+ *                TCP header
+ * @csum_tcp_bad: The TCP checksum calculated by the device did
+ *                not match the checksum in the receive packet's
+ *                TCP header.
+ * @csum_udp_ok:  The UDP checksum calculated by the device
+ *                matched the checksum in the receive packet's
+ *                UDP header
+ * @csum_udp_bad: The UDP checksum calculated by the device did
+ *                not match the checksum in the receive packet's
+ *                UDP header.
+ * @csum_ip_ok:   The IPv4 checksum calculated by the device
+ *                matched the checksum in the receive packet's
+ *                first IPv4 header.  If the receive packet
+ *                contains both a tunnel IPv4 header and a
+ *                transport IPv4 header, the device validates the
+ *                checksum for the both IPv4 headers.
+ * @csum_ip_bad:  The IPv4 checksum calculated by the device did
+ *                not match the checksum in the receive packet's
+ *                first IPv4 header. If the receive packet
+ *                contains both a tunnel IPv4 header and a
+ *                transport IPv4 header, the device validates the
+ *                checksum for both IP headers.
+ * @V:            VLAN header was stripped and placed in @vlan_tci.
+ * @color:        Color bit.
 */
 struct rxq_comp {
 	u32 status:8;
@@ -675,9 +681,15 @@ struct rxq_comp {
 	u16 csum;
 	u16 vlan_tci;
 	u32 len:14;
-	u32 csum_level:2;
+	u32 rsvd2:2;
 	u32 rss_type:4;
-	u32 rsvd2:10;
+	u32 rsvd3:4;
+	u32 csum_tcp_ok:1;
+	u32 csum_tcp_bad:1;
+	u32 csum_udp_ok:1;
+	u32 csum_udp_bad:1;
+	u32 csum_ip_ok:1;
+	u32 csum_ip_bad:1;
 	u32 V:1;
 	u32 color:1;
 } __packed;

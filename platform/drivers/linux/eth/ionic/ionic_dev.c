@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Pensando Systems, Inc.  All rights reserved.
+ * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
  *
  * This program is free software; you may redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,11 @@
  *
  */
 
-#include "ionic.h"
+#include <linux/kernel.h>
+#include <linux/types.h>
+#include <linux/errno.h>
+#include <linux/io.h>
+
 #include "ionic_dev.h"
 
 /* BAR0 resources
@@ -32,58 +36,6 @@
 #define DEV_CMD_DONE			0x00000001
 
 #define ASIC_TYPE_CAPRI			0
-
-union dev_cmd {
-	u32 words[16];
-	struct admin_cmd cmd;
-	struct nop_cmd nop;
-	struct reset_cmd reset;
-	struct identify_cmd identify;
-	struct lif_init_cmd lif_init;
-	struct adminq_init_cmd adminq_init;
-#ifndef ADMINQ
-	struct txq_init_cmd txq_init;
-	struct rxq_init_cmd rxq_init;
-	struct q_enable_cmd q_enable;
-	struct q_disable_cmd q_disable;
-	struct station_mac_addr_get_cmd station_mac_addr_get;
-	struct mtu_set_cmd mtu_set;
-	struct rx_mode_set_cmd rx_mode_set;
-	struct rx_filter_cmd rx_filter;
-#endif
-} __packed;
-
-union dev_cmd_comp {
-	u32 words[4];
-	u8 status;
-	struct admin_comp comp;
-	struct nop_comp nop;
-	struct reset_comp reset;
-	struct identify_comp identify;
-	struct lif_init_comp lif_init;
-	struct adminq_init_comp adminq_init;
-#ifndef ADMINQ
-	struct txq_init_comp txq_init;
-	struct rxq_init_comp rxq_init;
-	q_enable_comp q_enable;
-	q_disable_comp q_disable;
-	struct station_mac_addr_get_comp station_mac_addr_get;
-	mtu_set_comp mtu_set;
-	rx_mode_set_comp rx_mode_set;
-	struct rx_filter_comp rx_filter;
-#endif
-} __packed;
-
-struct dev_cmd_regs {
-	u32 signature;
-	u32 done;
-	union dev_cmd cmd;
-	union dev_cmd_comp comp;
-} __packed;
-
-struct dev_cmd_db {
-	u32 v;
-} __packed;
 
 int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 		    unsigned int num_bars)
@@ -477,9 +429,9 @@ unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
 	return work_done;
 }
 
-int ionic_q_init(struct lif *lif, struct queue *q, unsigned int index,
-		 const char *base, unsigned int num_descs, size_t desc_size,
-		 size_t sg_desc_size, unsigned int pid)
+int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
+		 unsigned int index, const char *base, unsigned int num_descs,
+		 size_t desc_size, size_t sg_desc_size, unsigned int pid)
 {
 	struct desc_info *cur;
 	unsigned int ring_size;
@@ -493,6 +445,7 @@ int ionic_q_init(struct lif *lif, struct queue *q, unsigned int index,
 		return -EINVAL;
 
 	q->lif = lif;
+	q->idev = idev;
 	q->index = index;
 	q->num_descs = num_descs;
 	q->desc_size = desc_size;
@@ -515,11 +468,6 @@ int ionic_q_init(struct lif *lif, struct queue *q, unsigned int index,
 	}
 
 	return 0;
-}
-
-void ionic_q_free(struct queue *q)
-{
-	kfree(q->info);
 }
 
 void ionic_q_map(struct queue *q, void *base, dma_addr_t base_pa)

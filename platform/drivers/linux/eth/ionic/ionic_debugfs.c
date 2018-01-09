@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Pensando Systems, Inc.  All rights reserved.
+ * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
  *
  * This program is free software; you may redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
  */
 
 #include <linux/debugfs.h>
+#include <linux/netdevice.h>
 
 #include "ionic.h"
-#include "ionic_dev.h"
-#include "ionic_adminq.h"
-#include "ionic_debugfs.h"
+#include "ionic_bus.h"
+#include "ionic_lif.h"
 
 #ifdef CONFIG_DEBUG_FS
 
@@ -171,15 +171,21 @@ void ionic_debugfs_destroy(void)
 int ionic_debugfs_add_dev(struct ionic *ionic)
 {
 	struct dentry *dentry;
+#ifdef DEBUGFS_TEST_API
+	int err;
+#endif
 
-	dentry = debugfs_create_dir(pci_name(ionic->pdev), ionic_dir);
+	dentry = debugfs_create_dir(ionic_bus_info(ionic), ionic_dir);
 	if (IS_ERR_OR_NULL(dentry))
 		return PTR_ERR(dentry);
 
 	ionic->dentry = dentry;
 
 #ifdef DEBUGFS_TEST_API
-	return scratch_bufs_add(&ionic->pdev->dev, dentry);
+	err = scratch_bufs_add(ionic->dev, dentry);
+	if (err)
+		debugfs_remove_recursive(ionic->dentry);
+	return err;
 #else
 	return 0;
 #endif
@@ -188,7 +194,7 @@ int ionic_debugfs_add_dev(struct ionic *ionic)
 void ionic_debugfs_del_dev(struct ionic *ionic)
 {
 #ifdef DEBUGFS_TEST_API
-	scratch_bufs_free(&ionic->pdev->dev);
+	scratch_bufs_free(ionic->dev);
 #endif
 	debugfs_remove_recursive(ionic->dentry);
 }
@@ -246,7 +252,7 @@ static const struct debugfs_reg32 dev_cmd_db_regs[] = {
 
 int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 {
-	struct device *dev = &ionic->pdev->dev;
+	struct device *dev = ionic->dev;
 	struct debugfs_regset32 *dev_cmd_regset;
 	struct dentry *dentry;
 
@@ -364,7 +370,7 @@ static const struct debugfs_reg32 intr_ctrl_regs[] = {
 int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 			  struct qcq *qcq)
 {
-	struct device *dev = &lif->ionic->pdev->dev;
+	struct device *dev = lif->ionic->dev;
 	struct dentry *qcq_dentry, *q_dentry, *cq_dentry, *intr_dentry;
 	struct dentry *stats_dentry;
 	struct queue *q = &qcq->q;

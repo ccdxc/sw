@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Pensando Systems, Inc.  All rights reserved.
+ * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
  *
  * This program is free software; you may redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,9 +16,12 @@
  *
  */
 
-#include "ionic.h"
+#include <linux/kernel.h>
+#include <linux/types.h>
+#include <linux/string.h>
+#include <linux/errno.h>
+
 #include "ionic_dev.h"
-#include "ionic_adminq.h"
 
 static void ionic_adminq_txq_init_comp(struct queue *q,
 				       struct desc_info *desc_info,
@@ -26,11 +29,10 @@ static void ionic_adminq_txq_init_comp(struct queue *q,
 {
 	struct queue *txq = cb_arg;
 	struct txq_init_comp *comp = cq_info->cq_desc;
-	struct ionic_dev *idev = &q->lif->ionic->idev;
 
 	txq->qid = comp->qid;
 	txq->qtype = comp->qtype;
-	txq->db = ionic_db_map(idev, txq);
+	txq->db = ionic_db_map(q->idev, txq);
 }
 
 int ionic_adminq_txq_init(struct queue *adminq, struct queue *txq,
@@ -63,11 +65,10 @@ static void ionic_adminq_rxq_init_comp(struct queue *q,
 {
 	struct queue *rxq = cb_arg;
 	struct rxq_init_comp *comp = cq_info->cq_desc;
-	struct ionic_dev *idev = &q->lif->ionic->idev;
 
 	rxq->qid = comp->qid;
 	rxq->qtype = comp->qtype;
-	rxq->db = ionic_db_map(idev, rxq);
+	rxq->db = ionic_db_map(q->idev, rxq);
 }
 
 int ionic_adminq_rxq_init(struct queue *adminq, struct queue *rxq,
@@ -209,18 +210,8 @@ int ionic_adminq_rx_filter_vlan(struct queue *adminq, u16 vid, bool add,
 	return 0;
 }
 
-static void ionic_adminq_rdma_cb(struct queue *q, struct desc_info *desc_info,
-				 struct cq_info *cq_info, void *cb_arg)
-{
-	struct lif *lif = q->lif;
-
-	if (lif->adminq_comp)
-		lif->adminq_comp(q, (struct admin_comp *)cq_info->cq_desc,
-				 cb_arg);
-}
-
 int ionic_adminq_rdma_cmd(struct queue *adminq, struct admin_cmd *cmd,
-			  void *cb_arg)
+			  desc_cb cb, void *cb_arg)
 {
 	switch (cmd->opcode) {
 	case CMD_OPCODE_RDMA_CMD1:
@@ -228,7 +219,7 @@ int ionic_adminq_rdma_cmd(struct queue *adminq, struct admin_cmd *cmd,
 	case CMD_OPCODE_RDMA_CMD3:
 		if (!ionic_q_has_space(adminq, 1))
 			return -ENOSPC;
-		ionic_q_post(adminq, true, ionic_adminq_rdma_cb, cb_arg);
+		ionic_q_post(adminq, true, cb, cb_arg);
 		break;
 	default:
 		return -ENOTSUPP;
@@ -236,6 +227,7 @@ int ionic_adminq_rdma_cmd(struct queue *adminq, struct admin_cmd *cmd,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(ionic_adminq_rdma_cmd);
 
 bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 			  void *cb_arg)

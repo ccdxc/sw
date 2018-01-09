@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Pensando Systems, Inc.  All rights reserved.
+ * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
  *
  * This program is free software; you may redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,22 +19,20 @@
 #ifndef _IONIC_H_
 #define _IONIC_H_
 
-#include <linux/netdevice.h>
-
 #include "ionic_dev.h"
-#include "ionic_adminq.h"
 
 //#define ADMINQ
 
 #define DRV_NAME		"ionic"
-#define NON_TSO_MAX_DESC	16
+#define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
+#define DRV_VERSION		"0.1"
 
 struct ionic {
 	struct pci_dev *pdev;
+	struct platform_device *pfdev;
 	struct device *dev;
 	struct ionic_dev idev;
 	struct dentry *dentry;
-	bool using_dac;
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
 	unsigned int num_bars;
 	union identity *ident;
@@ -46,75 +44,13 @@ struct ionic {
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
 };
 
-struct tx_stats {
-	u64 dma_map_err;
-	u64 pkts;
-	u64 bytes;
-	u64 clean;
-	u64 drop;
-	u64 linearize;
-	u64 stop;
-	u64 no_csum;
-	u64 csum;
-	u64 crc32_csum;
-	u64 tso;
-	u64 frags;
-};
-
-struct rx_stats {
-	u64 dma_map_err;
-	u64 alloc_err;
-	u64 pkts;
-	u64 bytes;
-};
-
-#define QCQ_F_INITED		BIT(0)
-#define QCQ_F_SG		BIT(1)
-#define QCQ_F_INTR		BIT(2)
-#define QCQ_F_TX_STATS		BIT(3)
-#define QCQ_F_RX_STATS		BIT(4)
-
-struct qcq {
-	void *base;
-	dma_addr_t base_pa;
-	unsigned int total_size;
-	struct queue q;
-	struct cq cq;
-	struct intr intr;
-	struct napi_struct napi;
-	union {
-		struct tx_stats tx;
-		struct rx_stats rx;
-	} stats;
-	unsigned int flags;
-};
-
-#define q_to_qcq(q) 		container_of(q, struct qcq, q)
-#define q_to_tx_stats(q) 	&q_to_qcq(q)->stats.tx
-#define q_to_rx_stats(q) 	&q_to_qcq(q)->stats.rx
-#define napi_to_qcq(napi)	container_of(napi, struct qcq, napi)
-#define napi_to_cq(napi) 	&napi_to_qcq(napi)->cq
-
-#define LIF_NAME_MAX_SZ			(32)
-
-struct lif {
-	char name[LIF_NAME_MAX_SZ];
-	struct list_head list;
-	struct net_device *netdev;
-	struct ionic *ionic;
-	bool registered;
-	unsigned int index;
-	struct qcq *adminqcq;
-	struct qcq **txqcqs;
-	struct qcq **rxqcqs;
-	unsigned int ntxqcqs;
-	unsigned int nrxqcqs;
-	unsigned int rx_mode;
-	adminq_cmd adminq_cmd;
-	adminq_comp adminq_comp;
-};
-
-#define lif_to_txq(lif, i)	&lif->txqcqs[i]->q
-#define lif_to_rxq(lif, i)	&lif->rxqcqs[i]->q
+int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
+	       void *cb_arg);
+int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
+int ionic_set_dma_mask(struct ionic *ionic);
+int ionic_setup(struct ionic *ionic);
+int ionic_identify(struct ionic *ionic);
+void ionic_forget_identity(struct ionic *ionic);
+int ionic_reset(struct ionic *ionic);
 
 #endif /* _IONIC_H_ */
