@@ -52,10 +52,6 @@ hbm_get_addr_for_stat_index(p4pd_table_id table_id,
         p4pd_table_properties_get(P4TBL_ID_DROP_STATS, &tbl_ctx);
         stats_base_addr += (tbl_ctx.tabledepth << 3);
         // Fall through
-    case P4TBL_ID_DROP_STATS:
-        p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
-        stats_base_addr += (tbl_ctx.tabledepth << 5);
-        // Fall through
     case P4TBL_ID_COPP_ACTION:
         p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
         stats_base_addr += (tbl_ctx.tabledepth << 5);
@@ -75,7 +71,6 @@ hbm_get_addr_for_stat_index(p4pd_table_id table_id,
     case P4TBL_ID_COPP_ACTION:
         stats_base_addr += (idx << 5);
         break;
-    case P4TBL_ID_DROP_STATS:
     case P4TBL_ID_INGRESS_TX_STATS:
         stats_base_addr += (idx << 3);
         break;
@@ -98,12 +93,6 @@ pd_system_populate_drop_stats(DropStatsEntry *stats_entry,
     drop_stats_swkey         key = { 0 };
     drop_stats_swkey_mask    key_mask = { 0 };
     drop_stats_actiondata    data = { 0 };
-    uint64_t                 hbm_counter = 0, 
-                             hbm_counter1  = 0, hbm_counter2 = 0;
-    hbm_addr_t               stats_base_addr;
-
-    // Find the base addr for specific Drop Stats index
-    stats_base_addr = hbm_get_addr_for_stat_index(P4TBL_ID_DROP_STATS, idx);
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
@@ -113,13 +102,6 @@ pd_system_populate_drop_stats(DropStatsEntry *stats_entry,
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to retrieve stats idx for: {}",
                 idx);
-        goto end;
-    }
-
-	// Read count from HBM with stats idx.
-    if (!p4plus_hbm_read(stats_base_addr, (uint8_t *)&hbm_counter1,
-                sizeof(hbm_counter1))) {
-        HAL_TRACE_ERR("Unable to retrieve HBM stats for: {}", idx);
         goto end;
     }
 
@@ -135,21 +117,7 @@ pd_system_populate_drop_stats(DropStatsEntry *stats_entry,
         goto end;
     }
 
-	// Read count from HBM with stats idx.
-    if (!p4plus_hbm_read(stats_base_addr, (uint8_t *)&hbm_counter2,
-                sizeof(hbm_counter2))) {
-    	HAL_TRACE_ERR("Unable to retrieve HBM stats for entry: {}", idx);
-        goto end;  
-    }
-
-    // TODO: Do we need a check. Why cant we read drop_stats, hbm 
-    if (hbm_counter2 > hbm_counter1) {
-        hbm_counter = hbm_counter2;
-    } else {
-        hbm_counter = hbm_counter1;
-    }
-
-    pd_system_decode(&key, &key_mask, &data, stats_entry, hbm_counter);
+    pd_system_decode(&key, &key_mask, &data, stats_entry);
 
 end:
     return ret;
@@ -157,8 +125,7 @@ end:
 
 hal_ret_t
 pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
-        drop_stats_actiondata *data, DropStatsEntry *stats_entry,
-        uint64_t hbm_counter)
+        drop_stats_actiondata *data, DropStatsEntry *stats_entry)
 {
     hal_ret_t   ret = HAL_RET_OK;
     uint64_t drop_reason, drop_reason_mask;
@@ -236,7 +203,7 @@ pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
     memcpy(&drop_stats_pkts,
            data->drop_stats_action_u.drop_stats_drop_stats.drop_pkts,
            sizeof(data->drop_stats_action_u.drop_stats_drop_stats.drop_pkts));
-    stats_entry->set_drop_count(hbm_counter + drop_stats_pkts);
+    stats_entry->set_drop_count(drop_stats_pkts);
 
     return ret;
 }
