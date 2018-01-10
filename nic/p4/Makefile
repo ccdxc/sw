@@ -1,3 +1,6 @@
+TOPDIR = ..
+CUSTOM = subdirs
+
 SUBDIRS = \
           nw \
           common-p4+ \
@@ -18,8 +21,11 @@ SUBDIRS = \
           $(NULL)
 
 .PHONY: subdirs $(SUBDIRS)
+default: subdirs
 
 subdirs: $(SUBDIRS)
 
 $(SUBDIRS):
 	$(MAKE) -C $@
+
+include $(TOPDIR)/make/Makefile.inc

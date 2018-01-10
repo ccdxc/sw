@@ -222,7 +222,7 @@ clean:
 	bazel clean
 	rm -rf GEN_TEST_RESULTS_DIR
 	rm -rf conf/hal.ini
-#	$(MAKE) -C p4 clean
+	$(MAKE) -C p4 clean
 	$(MAKE) -C asm clean
 	$(MAKE) -C proto clean
 	$(MAKE) -C sdk clean
