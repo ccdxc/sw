@@ -17,12 +17,9 @@ esp_ipv4_tunnel_n2h_txdma1_initial_table:
     phvwr p.p4_intr_global_tm_iq, k.p4_intr_global_tm_iq
     phvwr p.p4_txdma_intr_qtype, k.p4_txdma_intr_qtype
     phvwr p.p4_txdma_intr_qid, k.p4_txdma_intr_qid
-    phvwr p.p4_txdma_intr_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
-
+    //phvwr p.p4_txdma_intr_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33} 
-    
     phvwr p.barco_req_command, d.barco_enc_cmd
-    //phvwr p.barco_req_key_desc_index, d.key_index
     phvwr p.t0_s2s_iv_size, d.iv_size
     phvwr p.t0_s2s_icv_size, d.icv_size
 
@@ -37,14 +34,11 @@ esp_ipv4_tunnel_n2h_txdma1_initial_table:
     sll r2, r1, 3
     add r2, r2, d.cb_ring_base_addr
     phvwr p.common_te0_phv_table_addr, r2
-    //add r1, r0, d.rxdma_ring_cindex
-    //addi r1, r1, 1
     tbladd d.{rxdma_ring_cindex}.hx, 1
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, d.{rxdma_ring_cindex}.hx)
     memwr.dx  r4, r3
-    tblwr d.cb_cindex, r1
-    nop
+    tbladd d.cb_cindex, 1
  
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP) 
     phvwr p.barco_req_doorbell_address, r4.dx 

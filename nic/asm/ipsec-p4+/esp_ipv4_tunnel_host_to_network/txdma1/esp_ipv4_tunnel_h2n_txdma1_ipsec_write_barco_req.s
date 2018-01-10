@@ -37,14 +37,12 @@ esp_ipv4_tunnel_h2n_post_to_barco_ring:
     phvwri p.dma_cmd_post_barco_ring_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END
 
 esp_ipv4_tunnel_h2n_dma_cmd_incr_barco_pindex:
-    add r2, r0, d.barco_pindex
-    addi r2, r2, 1
-    andi r2, r2, 0x3F
+    tbladd d.barco_pindex, 1
+    tbland d.barco_pindex, 0x3F
     phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET 
     phvwri p.app_header_table0_valid, 0
     phvwri p.app_header_table1_valid, 0
     phvwri p.app_header_table2_valid, 0
     phvwri p.app_header_table3_valid, 0
-    tblwr d.barco_pindex, r2
     nop.e
     nop
