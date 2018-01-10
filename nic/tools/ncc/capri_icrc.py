@@ -805,7 +805,7 @@ class IcrcDeParserCalField:
 
     def HdrFldStartEndSet(self, hdrfld_start, hdrfld_end):
         self.hdrfld_start   = hdrfld_start
-        self.hdrfld_end     = 0 #Since CRC calculated is using PHV LEN
+        self.hdrfld_end     = hdrfld_end
 
     def HdrFldStartGet(self):
         return self.hdrfld_start
