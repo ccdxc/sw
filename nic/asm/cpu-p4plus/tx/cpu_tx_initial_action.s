@@ -15,6 +15,9 @@ cpu_tx_stage0_start:
     seq     c1, d.{u.cpu_tx_initial_action_d.ci_0}.hx, d.{u.cpu_tx_initial_action_d.pi_0}.hx
     b.c1    cpu_tx_initial_action_done
 
+#ifdef CAPRI_IGNORE_TIMESTAMP
+    add     r6, r0, r0
+#endif
     phvwr   p.quiesce_pkt_trlr_timestamp, r6.wx
     
     phvwr   p.common_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}

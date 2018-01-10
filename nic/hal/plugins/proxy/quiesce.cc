@@ -44,7 +44,7 @@ quiesce_transmit_pkt(void* data)
     p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
     cpu_header.src_lif = hal::SERVICE_LIF_CPU;
     cpu_header.hw_vlan_id = 0;
-    cpu_header.flags = 0;
+    cpu_header.flags = CPU_TO_P4PLUS_FLAGS_ADD_TX_QS_TRLR;
     cpu_header.l2_offset = 0;
     HAL_TRACE_DEBUG("quiesce: txpkt cpu_header src_lif={} hw_vlan_id={} flags={}",
             cpu_header.src_lif, cpu_header.hw_vlan_id, cpu_header.flags);

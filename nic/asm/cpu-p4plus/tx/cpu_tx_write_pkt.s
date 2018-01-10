@@ -9,7 +9,7 @@ struct cpu_tx_write_pkt_k k;
     .align
 cpu_tx_write_pkt_start:
     CAPRI_CLEAR_TABLE_VALID(0)
-    smeqb   c5, k.{common_phv_flags_sbit0_ebit6...common_phv_flags_sbit7_ebit7}, CPUCB_FLAG_ADD_QS_PKT_TRLR, CPUCB_FLAG_ADD_QS_PKT_TRLR
+    smeqb   c5, k.{common_phv_cpu_hdr_flags_sbit0_ebit6...common_phv_cpu_hdr_flags_sbit15_ebit15}, CPU_TO_P4PLUS_FLAGS_ADD_TX_QS_TRLR, CPU_TO_P4PLUS_FLAGS_ADD_TX_QS_TRLR  
 
 
 dma_cmd_global_intrinsic:
@@ -42,7 +42,7 @@ dma_cmd_data:
     sub     r5, k.to_s5_len, CPU_TO_P4PLUS_HDR_SIZE
 
     phvwri  p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwri  p.dma_cmd2_dma_pkt_eop, 1
+    phvwri.!c5 p.dma_cmd2_dma_pkt_eop, 1
     
     phvwr   p.dma_cmd2_dma_cmd_addr, r4
     phvwr   p.dma_cmd2_dma_cmd_size, r5
