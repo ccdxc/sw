@@ -289,9 +289,9 @@ app_to_appid(std::string app, uint32_t& appid)
     } else if(app == "POSTGRES") {
         appid = 791;
     } else if(app == "MONGO") {
-        appid = 2000001;
+        appid = 2000000;
     } else if(app == "CASSANDRA") {
-        appid = 2000002;
+        appid = 2000001;
     } else if(app == "ANY") {
         appid = 0;
     } else {
