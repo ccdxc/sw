@@ -96,9 +96,6 @@ f_check_parser_errors:
 check_parser_errors_uplink:
   phvwr       p.control_metadata_checksum_results, k.capri_intrinsic_csum_err
   seq         c3, k.capri_p4_intrinsic_crc_err, 0
-  // TBD: Ignoring ICRC error for VXLAN packets in Rx direction, as P4 changes are
-  // being developed to make it work. Remove this after ICRC for VXLAN Rx pkts is fixed.
-  orcf        c3, [c1]
   jrcf        [c2 & c3], r7
   phvwr.!c2   p.control_metadata_drop_reason[DROP_PARSER_LEN_ERR], 1
   phvwr.!c3   p.control_metadata_drop_reason[DROP_PARSER_ICRC_ERR], 1

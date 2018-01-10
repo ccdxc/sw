@@ -42,7 +42,7 @@ native_ipv4_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
 
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwrpair   p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
+  phvwrpair     p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   // r5 : k.udp_dstPort
   or.e          r5, k.udp_dstPort_sbit8_ebit15, k.udp_dstPort_sbit0_ebit7, 8
@@ -69,6 +69,7 @@ native_ipv6_packet_common:
   // r4 : k.l3_metadata_ipv6_ulp
   or            r4, k.l3_metadata_ipv6_ulp_sbit1_ebit7, k.l3_metadata_ipv6_ulp_sbit0_ebit0, 7
   seq           c1, r4, IP_PROTO_UDP
+
   // r5 : k.udp_dstPort
   or            r5, k.udp_dstPort_sbit8_ebit15, k.udp_dstPort_sbit0_ebit7, 8
   phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, r5, \

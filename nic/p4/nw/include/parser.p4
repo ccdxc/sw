@@ -637,13 +637,8 @@ calculated_field parser_metadata.icrc {
     update inner_ipv4_roce_icrc if (valid(roce_bth));
     update inner_ipv6_roce_icrc if (valid(roce_bth));
 
-    // currently RDMA pkt from host is not encaped . Hence its L3 hdr is only v4/v6
-    // not inner v4/v6. Adding code below in comment so that it can
-    // be enabled once p4 support for RDMA encap is supported.
-#if 1
     verify inner_ipv4_roce_icrc if (valid(roce_bth));
     verify inner_ipv6_roce_icrc if (valid(roce_bth));
-#endif
 }
 
 parser parse_ipv4_frag {
@@ -664,6 +659,11 @@ parser parse_ipv4_frag {
 parser parse_inner_ipv4_frag {
     extract(inner_ipv4);
     set_metadata(ohi.inner_ipv4_options_blob___hdr_len, (inner_ipv4.ihl << 2) - 20);
+    // inner_ipv6_options_len is set to header-size - 20 because
+    // inner_ipv6_options_len is used to compute icrc_len and 
+    // in parse_udp 28 bytes are added. 8 Extra bytes because
+    // icrc include 8 bytes of 1's
+    set_metadata(parser_metadata.inner_ipv6_options_len, (inner_ipv4.ihl << 2) - 20);
     //For csum, load ipv4.totalLen. ihl << 2 is subtracted from totalLen
     //using optimized instruction.
     set_metadata(ohi.inner_l4_len, inner_ipv4.totalLen + 0);
@@ -1585,6 +1585,11 @@ parser parse_base_inner_ipv4 {
     // option-blob parsing - extract inner_ipv4 here
     extract(inner_ipv4);
     set_metadata(ohi.inner_ipv4_options_blob___hdr_len, (inner_ipv4.ihl << 2) - 20);
+    // inner_ipv6_options_len is set to header-size - 20 because
+    // inner_ipv6_options_len is used to compute icrc_len and
+    // in parse_inner_udp 28 bytes are added. 8 Extra bytes because
+    // icrc include 8 bytes of 1's
+    set_metadata(parser_metadata.inner_ipv6_options_len, (inner_ipv4.ihl << 2) - 20);
     //For csum, load ipv4.totalLen. ihl << 2 is subtracted from totalLen
     //using optimized instruction.
     set_metadata(ohi.inner_l4_len, inner_ipv4.totalLen + 0);
@@ -1669,6 +1674,7 @@ parser parse_inner_ipv4_options_blob {
     // set hdr len same as option header len. In csum profile
     // standard IP hdr len of 20 bytes is adjusted.
     set_metadata(ohi.inner_ipv4_options_blob___hdr_len, (inner_ipv4.ihl << 2) - 20);
+    set_metadata(parser_metadata.inner_ipv6_options_len, (inner_ipv4.ihl << 2) - 20);
     //For csum, load ipv4.totalLen. ihl << 2 is subtracted from totalLen
     //using optimized instruction.
     set_metadata(ohi.inner_l4_len, inner_ipv4.totalLen + 0);
@@ -1860,14 +1866,24 @@ parser parse_inner_udp {
     extract(inner_udp);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.dstPort);
+    set_metadata(ohi.icrc_len, parser_metadata.inner_ipv6_options_len + inner_udp.len + 28);
     set_metadata(ohi.inner_l4_len, inner_udp.len + 0);
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - inner_udp.len);
-    set_metadata(parser_metadata.l4_len, inner_udp.len-8);
+    set_metadata(parser_metadata.inner_ipv6_options_len, inner_udp.len);
+    //set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - inner_udp.len);
+    //set_metadata(parser_metadata.l4_len, inner_udp.len-8);
     return select(latest.dstPort) {
-        UDP_PORT_ROCE_V2: parse_roce_v2;
+        UDP_PORT_ROCE_V2: parse_inner_roce_v2_pre;
         default:          parse_dummy;
     }
     //return ingress;
+}
+
+
+parser parse_inner_roce_v2_pre {
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - \
+        parser_metadata.inner_ipv6_options_len);
+    set_metadata(parser_metadata.l4_len, parser_metadata.inner_ipv6_options_len-20); // 8 byte udp + 12 byte BTH
+    return parse_roce_v2;
 }
 
 @pragma deparse_only
@@ -1897,7 +1913,9 @@ parser parse_inner_ipv6_option_blob {
     // Note1: that options are parsed using 'no_extract' state i.e. they are not
     // individually extracted to phv/ohi (but hv bits will be set)
     // Note2: inner_ipv6_options_len value used to setup ohi slot is previous value (before init)
-    set_metadata(parser_metadata.inner_ipv6_options_len, 0);
+    // For icrc len calculation, 48 bytes (40byte v6 header and 8 bytes of 1's) need to be added.
+    /// However here add only 20bytes because in parse_udp another 28 bytes are added.
+    set_metadata(parser_metadata.inner_ipv6_options_len, 20);
     extract(inner_ipv6_options_blob);
     return parse_inner_ipv6_extn_hdrs;
 }
@@ -1905,8 +1923,11 @@ parser parse_inner_ipv6_option_blob {
 parser parse_inner_ipv6_ulp {
     // update the header len of the inner_ipv6_options_blob header
     // must use expression to update ohi variable.
-    set_metadata(ohi.inner_ipv6_options_blob___hdr_len, parser_metadata.inner_ipv6_options_len+0);
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - parser_metadata.inner_ipv6_options_len);
+
+    // Because ipv6_options_len has extra 20 bytes (set in ipv6_option_blob state), blob
+    // header length should be 20 bytes less.
+    set_metadata(ohi.inner_ipv6_options_blob___hdr_len, parser_metadata.inner_ipv6_options_len-20);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - parser_metadata.inner_ipv6_options_len + 20);
     set_metadata(l3_metadata.inner_ipv6_ulp, parser_metadata.inner_ipv6_nextHdr);
     return select(parser_metadata.inner_ipv6_nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
@@ -1935,7 +1956,9 @@ parser parse_inner_ipv6_extn_hdrs {
     // To store back into OHI payloadLen - Sum of option hdr len,
     // use set_metadata with zero len
     // set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer + 0);
-    set_metadata(l3_metadata.inner_ipv6_options_len, parser_metadata.inner_ipv6_options_len);
+    // Since parser_metadta.inner_ipv6_options_len is set to 20 in parse_inner_ipv6_option_blob state
+    // subtract those bytes before setting l3_metadata.inner_ipv6_options_len
+    set_metadata(l3_metadata.inner_ipv6_options_len, parser_metadata.inner_ipv6_options_len - 20);
     return select(parser_metadata.inner_ipv6_nextHdr) {
         0x0:  parse_inner_v6_generic_ext_hdr; // hop-by-hop Hdr
         0x2b: parse_inner_v6_generic_ext_hdr; // Routing Hdr
@@ -1964,14 +1987,21 @@ parser parse_inner_ipv6 {
     set_metadata(l3_metadata.inner_ipv6_ulp, latest.nextHdr);
     set_metadata(parser_metadata.l4_trailer, inner_ipv6.payloadLen);
     return select(parser_metadata.inner_ipv6_nextHdr) {
-        IP_PROTO_ICMPV6 : parse_icmpv6;
-        IP_PROTO_TCP : parse_inner_ipv6_tcp;
-        IP_PROTO_UDP : parse_inner_udp;
         0x0:  parse_inner_ipv6_option_blob;   // Hop by Hop Hdr
         0x2b: parse_inner_ipv6_option_blob;   // Routing Hdro
         0x2c: parse_inner_ipv6_option_blob;   // Fragment Hdr
         0x3c: parse_inner_ipv6_option_blob;   // dest_option
         0x87: parse_inner_ipv6_option_blob;   // Mobility Hdr
+        default: parse_inner_ipv6_ulp_no_options;
+    }
+}
+
+parser parse_inner_ipv6_ulp_no_options {
+    set_metadata(parser_metadata.inner_ipv6_options_len, 20);
+    return select(parser_metadata.inner_ipv6_nextHdr) {
+        IP_PROTO_ICMPV6 : parse_icmpv6;
+        IP_PROTO_TCP : parse_inner_ipv6_tcp;
+        IP_PROTO_UDP : parse_inner_udp;
         default: ingress;
     }
 }
