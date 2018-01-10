@@ -280,13 +280,15 @@ hal_ret_t
 rw_pd_depgm_rw_tbl(pd_rw_entry_t *rwe) 
 {
     hal_ret_t            ret = HAL_RET_OK;
-    DirectMap            *rw_tbl = NULL;
+    sdk_ret_t            sdk_ret;
+    directmap            *rw_tbl = NULL;
     fmt::MemoryWriter    buf;
 
     rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
     HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
 
-    ret = rw_tbl->remove(rwe->rw_idx);
+    sdk_ret = rw_tbl->remove(rwe->rw_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         buf.write("PD-RW: Unable to de-program at rw_id: {} for [ rw_act: {}, ",
                   rwe->rw_idx, 
@@ -312,8 +314,9 @@ hal_ret_t
 rw_pd_pgm_rw_tbl(pd_rw_entry_t *rwe)
 {
     hal_ret_t            ret = HAL_RET_OK;
+    sdk_ret_t            sdk_ret;
     rewrite_actiondata   data;
-    DirectMap            *rw_tbl = NULL;
+    directmap            *rw_tbl = NULL;
     fmt::MemoryWriter    buf;
 
     memset(&data, 0, sizeof(data));
@@ -327,7 +330,8 @@ rw_pd_pgm_rw_tbl(pd_rw_entry_t *rwe)
     memcpy(data.rewrite_action_u.rewrite_rewrite.mac_da, rwe->rw_key.mac_da, 6);
     memrev(data.rewrite_action_u.rewrite_rewrite.mac_da, 6);
     data.actionid = rwe->rw_key.rw_act;
-    ret = rw_tbl->insert_withid(&data, rwe->rw_idx);
+    sdk_ret = rw_tbl->insert_withid(&data, rwe->rw_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         buf.write("PD-RW: Unable to program at rw_id: {} for [ rw_act: {}, ",
                   rwe->rw_idx, 

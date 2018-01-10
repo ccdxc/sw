@@ -39,9 +39,9 @@ cc_binary(
 
         # PD
         "//nic/hal/pd/common:pdcommon",
-        "//nic/hal/pd/utils/directmap",
         "//nic/hal/pd/utils/hash",
         "@sdk//obj:sdk_tcam",
+        "@sdk//obj:sdk_directmap",
         "//nic/hal/pd/utils/flow",
         "//nic/hal/pd/utils/met",
         "//nic/hal/pd/utils/acl_tcam",

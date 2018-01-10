@@ -1,33 +1,22 @@
-/* ============================================================================
- |
- | DirectMapEntry
- | 
- |   - Represents an entry in DirectMap Table.
- |
- * ==========================================================================*/
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// directmap entry
+//  - represents an entry in directmap table
+//  - used when sharing is enabled for directmap
+//------------------------------------------------------------------------------
+#ifndef __SDK_DIRECTMAP_ENTRY_HPP__
+#define __SDK_DIRECTMAP_ENTRY_HPP__
 
-#ifndef __DIRECTMAP_ENTRY_HPP__
-#define __DIRECTMAP_ENTRY_HPP__
-
-#include "nic/include/base.h"
-#include "sdk/ht.hpp"
+#include "sdk/base.hpp"
+#include "sdk/mem.hpp"
+#include "lib/ht/ht.hpp"
 
 using sdk::lib::ht_ctxt_t;
 
+namespace sdk {
+namespace table {
 
-namespace hal {
-namespace pd {
-extern class hal_state_pd    *g_hal_state_pd;
-namespace utils {
-
-
-/** ---------------------------------------------------------------------------
- *  directmap entry structure
- *
- *      - Stores data 
- *      - hash table context
- *
- * ---------------------------------------------------------------------------*/
 typedef struct directmap_entry_s {
     void            *data;
     uint16_t        len;
@@ -38,10 +27,9 @@ typedef struct directmap_entry_s {
 } __PACK__ directmap_entry_t;
 
 directmap_entry_t *directmap_entry_alloc_init (void);
-hal_ret_t directmap_entry_free (directmap_entry_t *rwe);
+sdk_ret_t directmap_entry_free (directmap_entry_t *rwe);
 
-}    // namespace utils
-}    // namespace pd
-}    // namespace hal
+}    // namespace table
+}    // namespace sdk
 
-#endif // __DIRECTMAP_ENTRY_HPP__
+#endif // __SDK_DIRECTMAP_ENTRY_HPP__

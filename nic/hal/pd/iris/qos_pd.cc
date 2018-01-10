@@ -565,8 +565,9 @@ static hal_ret_t
 qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t      ret = HAL_RET_OK;
+    sdk_ret_t      sdk_ret;
     qos_class_t    *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
-    DirectMap      *qos_tbl = NULL;
+    directmap      *qos_tbl = NULL;
     qos_actiondata d;
     uint32_t       qos_class_id; 
 
@@ -591,11 +592,12 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
         }
 
         if (qos_class_id == 0) {
-            ret = qos_tbl->update(qos_class_id, &d);
+            sdk_ret = qos_tbl->update(qos_class_id, &d);
         } else {
-            ret = qos_tbl->update(qos_class_id, &d);
+            sdk_ret = qos_tbl->update(qos_class_id, &d);
             //ret = qos_tbl->insert_withid(&d, qos_class_id);
         }
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-qos::{}: qos table write failure, qos-class {}, "
                           "qos-class-id {} ret {}",

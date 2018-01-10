@@ -19,14 +19,16 @@ hal_ret_t
 pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    DirectMap       *session = NULL;
+    sdk_ret_t       sdk_ret;
+    directmap       *session = NULL;
     p4pd_error_t    p4_err;
     char            buff[4096] = {0};
 
     session = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
     HAL_ASSERT_RETURN((session != NULL), HAL_RET_ERR);
 
-    ret = session->update(id, action_data);
+    sdk_ret = session->update(id, action_data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-MIRROR-SESSION::{}: programming sesion {} failed ({})", 
                 __FUNCTION__, id, ret);

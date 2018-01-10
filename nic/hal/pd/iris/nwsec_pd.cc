@@ -149,12 +149,14 @@ hal_ret_t
 nwsec_pd_depgm_l4_prof_tbl (pd_nwsec_profile_t *nwsec_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    DirectMap                   *dm;
+    sdk_ret_t                   sdk_ret;
+    directmap                   *dm;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
     HAL_ASSERT_RETURN((dm != NULL), HAL_RET_ERR);
     
-    ret = dm->remove(nwsec_pd->nwsec_hw_id);
+    sdk_ret = dm->remove(nwsec_pd->nwsec_hw_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-nwsec:{}:unable to deprogram l4_profile_entry:{},"
                 " ret:{}",
@@ -172,7 +174,8 @@ hal_ret_t
 nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
 {
     hal_ret_t                ret;
-    DirectMap                *dm;
+    sdk_ret_t                sdk_ret;
+    directmap                *dm;
     l4_profile_actiondata    data = { 0 };
 
     nwsec_profile_t *profile = (hal::nwsec_profile_t*)pd_nw->nwsec_profile;
@@ -245,10 +248,11 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
         profile->tcp_nonsyn_noack_drop;
     
     if (create) {
-        ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);
+        sdk_ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);
     } else {
-        ret = dm->update(pd_nw->nwsec_hw_id, &data);
+        sdk_ret = dm->update(pd_nw->nwsec_hw_id, &data);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-nwsec:{}:unable to programm l4_profile_entry: {}, ret:{}",
                       __FUNCTION__, pd_nw->nwsec_hw_id, ret);

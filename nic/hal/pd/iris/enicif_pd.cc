@@ -487,12 +487,14 @@ hal_ret_t
 pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    DirectMap           *dm_omap = NULL;
+    sdk_ret_t           sdk_ret;
+    directmap           *dm_omap = NULL;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
     
-    ret = dm_omap->remove(pd_enicif->enic_lport_id);
+    sdk_ret = dm_omap->remove(pd_enicif->enic_lport_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram omapping table",
                 __FUNCTION__, pd_enicif->enic_lport_id);
@@ -895,10 +897,11 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                     table_oper_t oper)
 {
     hal_ret_t                   ret                 = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     uint8_t                     tm_oport            = 0;
     uint8_t                     p4plus_app_id       = 0;
     output_mapping_actiondata   data;
-    DirectMap                   *dm_omap            = NULL;
+    directmap                   *dm_omap            = NULL;
     pd_lif_t                    *pd_lif             = NULL;
     uint32_t                    access_vlan_classic = 0;
 
@@ -931,7 +934,8 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (oper == TABLE_OPER_INSERT) {
-        ret = dm_omap->insert_withid(&data, pd_enicif->enic_lport_id);
+        sdk_ret = dm_omap->insert_withid(&data, pd_enicif->enic_lport_id);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-enicif::{}:if_id:{} {} unable to program",
                           __FUNCTION__, 
@@ -946,7 +950,8 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                             om_tmoport.access_vlan_id);
         }
     } else {
-        ret = dm_omap->update(pd_enicif->enic_lport_id, &data);
+        sdk_ret = dm_omap->update(pd_enicif->enic_lport_id, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-enicif::{}:if_id:{} {} unable to program",
                           __FUNCTION__, 

@@ -463,8 +463,9 @@ hal_ret_t
 lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
 {
     hal_ret_t             ret = HAL_RET_OK;
+    sdk_ret_t             sdk_ret;
     lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
-    DirectMap             *rx_policer_tbl = NULL;
+    directmap             *rx_policer_tbl = NULL;
     rx_policer_actiondata d = {0};
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
@@ -483,10 +484,11 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     }
 
     if (update) {
-        ret = rx_policer_tbl->update(pd_lif->hw_lif_id, &d);
+        sdk_ret = rx_policer_tbl->update(pd_lif->hw_lif_id, &d);
     } else {
-        ret = rx_policer_tbl->insert_withid(&d, pd_lif->hw_lif_id);
+        sdk_ret = rx_policer_tbl->insert_withid(&d, pd_lif->hw_lif_id);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}: rx policer table write failure, lif {}, ret {}",
                       __FUNCTION__, lif_get_lif_id(pi_lif), ret);
@@ -504,12 +506,14 @@ hal_ret_t
 lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
 {
     hal_ret_t             ret = HAL_RET_OK;
-    DirectMap             *rx_policer_tbl = NULL;
+    sdk_ret_t             sdk_ret;
+    directmap             *rx_policer_tbl = NULL;
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
     HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
-    ret = rx_policer_tbl->remove(pd_lif->hw_lif_id);
+    sdk_ret = rx_policer_tbl->remove(pd_lif->hw_lif_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}:lif_id:{},unable to deprogram rx policer table",
                       __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
@@ -531,9 +535,10 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
                               table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     uint8_t                     p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     output_mapping_actiondata   data;
-    DirectMap                   *dm_omap = NULL;
+    directmap                   *dm_omap = NULL;
 
     memset(&data, 0, sizeof(data));
 
@@ -584,7 +589,8 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (oper == TABLE_OPER_INSERT) {
-        ret = dm_omap->insert_withid(&data, pd_lif->lif_lport_id);
+        sdk_ret = dm_omap->insert_withid(&data, pd_lif->lif_lport_id);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-lif::{}:lif_id:{} {} unable to program",
                           __FUNCTION__, 
@@ -598,7 +604,8 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
                             oper, pd_lif->lif_lport_id);
         }
     } else {
-        ret = dm_omap->update(pd_lif->lif_lport_id, &data);
+        sdk_ret = dm_omap->update(pd_lif->lif_lport_id, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-lif::{}:lif_id:{},{} unable to program",
                           __FUNCTION__, 
@@ -622,12 +629,14 @@ hal_ret_t
 lif_pd_depgm_output_mapping_tbl (pd_lif_t *pd_lif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    DirectMap                   *dm_omap = NULL;
+    sdk_ret_t                   sdk_ret;
+    directmap                   *dm_omap = NULL;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
     
-    ret = dm_omap->remove(pd_lif->lif_lport_id);
+    sdk_ret = dm_omap->remove(pd_lif->lif_lport_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}:lif_id:{},unable to deprogram output "
                       "mapping table",

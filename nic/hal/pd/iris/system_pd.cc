@@ -216,7 +216,7 @@ pd_system_populate_index_table_stats(sys::TableStatsEntry *stats_entry,
         p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    DirectMap               *dm;
+    directmap               *dm;
 
     dm = g_hal_state_pd->dm_table(id);
     if (!dm) {
@@ -224,15 +224,15 @@ pd_system_populate_index_table_stats(sys::TableStatsEntry *stats_entry,
     }
 
     stats_entry->set_table_type (sys::TABLE_TYPE_INDEX);
-    stats_entry->set_table_name(dm->table_name());
-    stats_entry->set_table_size(dm->table_capacity());
+    stats_entry->set_table_name(dm->name());
+    stats_entry->set_table_size(dm->capacity());
     stats_entry->set_overflow_table_size(0);
-    stats_entry->set_entries_in_use(dm->table_num_entries_in_use());
+    stats_entry->set_entries_in_use(dm->num_entries_in_use());
     stats_entry->set_overflow_entries_in_use(0);
-    stats_entry->set_num_inserts(dm->table_num_inserts());
-    stats_entry->set_num_insert_errors(dm->table_num_insert_errors());
-    stats_entry->set_num_deletes(dm->table_num_deletes());
-    stats_entry->set_num_delete_errors(dm->table_num_delete_errors());
+    stats_entry->set_num_inserts(dm->num_inserts());
+    stats_entry->set_num_insert_errors(dm->num_insert_errors());
+    stats_entry->set_num_deletes(dm->num_deletes());
+    stats_entry->set_num_delete_errors(dm->num_delete_errors());
 
     return ret;
 }

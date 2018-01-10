@@ -40,7 +40,7 @@
 #include "nic/hal/pd/iris/proxyrcb_pd.hpp"
 #include "nic/hal/pd/iris/proxyccb_pd.hpp"
 #include "nic/hal/pd/iris/dos_pd.hpp"
-#include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
+// #include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 
 namespace hal {
 namespace pd {
@@ -404,11 +404,6 @@ hal_state_pd::init(void)
                                     hal::pd::proxyccb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((proxyccb_hwid_ht_ != NULL), false);
 
-    directmap_entry_slab_ = slab::factory("DIRECTMAP ENTRY", HAL_SLAB_DIRECTMAP_ENTRY,
-                                          sizeof(hal::pd::utils::directmap_entry_t), 128,
-                                          true, true, true);
-    HAL_ASSERT_RETURN((directmap_entry_slab_ != NULL), false);
-
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
@@ -509,8 +504,6 @@ hal_state_pd::hal_state_pd()
 
     proxyccb_slab_ = NULL;
     proxyccb_hwid_ht_ = NULL;
-
-    directmap_entry_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -600,12 +593,10 @@ hal_state_pd::~hal_state_pd()
     proxyccb_slab_ ? slab::destroy(proxyccb_slab_) : HAL_NOP;
     proxyccb_hwid_ht_ ? ht::destroy(proxyccb_hwid_ht_) : HAL_NOP;
 
-    directmap_entry_slab_ ? slab::destroy(directmap_entry_slab_) : HAL_NOP;
-
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
             if (dm_tables_[tid]) {
-                DirectMap::destroy(dm_tables_[tid]);
+                directmap::destroy(dm_tables_[tid]);
                 // delete dm_tables_[tid];
             }
         }
@@ -652,7 +643,7 @@ hal_state_pd::~hal_state_pd()
              tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
                 // delete p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN];
-                DirectMap::destroy(p4plus_rxdma_dm_tables_[tid - 
+                directmap::destroy(p4plus_rxdma_dm_tables_[tid - 
                                    P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
             }
         }
@@ -664,7 +655,7 @@ hal_state_pd::~hal_state_pd()
              tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
                 // delete p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN];
-                DirectMap::destroy(p4plus_txdma_dm_tables_[tid - 
+                directmap::destroy(p4plus_txdma_dm_tables_[tid - 
                                    P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
             }
         }
@@ -838,8 +829,8 @@ hal_state_pd::init_tables(void)
 
     // start instantiating tables based on the parsed information
     dm_tables_ =
-        (DirectMap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
-                                 sizeof(DirectMap *) *
+        (directmap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
+                                 sizeof(directmap *) *
                                  (P4TBL_ID_INDEX_MAX - P4TBL_ID_INDEX_MIN + 1));
     HAL_ASSERT(dm_tables_ != NULL);
 
@@ -918,11 +909,11 @@ hal_state_pd::init_tables(void)
         case P4_TBL_TYPE_INDEX:
             if (tid == P4TBL_ID_TWICE_NAT) {
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                    DirectMap::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                       tinfo.actiondata_struct_size, true, true);
+                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                                       tinfo.actiondata_struct_size, true);
             } else {
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                    DirectMap::factory(tinfo.tablename, tid, tinfo.tabledepth, 
+                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, 
                                        tinfo.actiondata_struct_size);
             }
             HAL_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
@@ -971,8 +962,8 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
 
     // start instantiating tables based on the parsed information
     p4plus_rxdma_dm_tables_ =
-        (DirectMap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
-                                 sizeof(DirectMap *) *
+        (directmap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
+                                 sizeof(directmap *) *
                                  (P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX -
                                   P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
     HAL_ASSERT(p4plus_rxdma_dm_tables_ != NULL);
@@ -1038,7 +1029,7 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
 
         case P4_TBL_TYPE_INDEX:
             p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                DirectMap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
+                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
             HAL_ASSERT(p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 
@@ -1068,8 +1059,8 @@ hal_state_pd::p4plus_txdma_init_tables(void)
 
     // start instantiating tables based on the parsed information
     p4plus_txdma_dm_tables_ =
-        (DirectMap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
-                                 sizeof(DirectMap *) *
+        (directmap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
+                                 sizeof(directmap *) *
                                  (P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX -
                                   P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
     HAL_ASSERT(p4plus_txdma_dm_tables_ != NULL);
@@ -1135,7 +1126,7 @@ hal_state_pd::p4plus_txdma_init_tables(void)
 
         case P4_TBL_TYPE_INDEX:
             p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                DirectMap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
+                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
             HAL_ASSERT(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 
@@ -1347,10 +1338,6 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_CPUPKT_QINST_INFO_PD:
         g_hal_state_pd->cpupkt_qinst_info_slab()->free(elem);
-        break;
-
-    case HAL_SLAB_DIRECTMAP_ENTRY:
-        g_hal_state_pd->directmap_entry_slab()->free(elem);
         break;
 
     case HAL_SLAB_COPP_PD:

@@ -409,7 +409,8 @@ pd_tunnelif_add_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif, uint8_t actionid,
                                        tunnel_rewrite_action_union_t *act)
 {
     hal_ret_t                   ret;
-    DirectMap                   *dm;
+    sdk_ret_t                   sdk_ret;
+    directmap                   *dm;
     tunnel_rewrite_actiondata   d = { 0 };
     uint32_t                    idx;
     
@@ -421,7 +422,8 @@ pd_tunnelif_add_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif, uint8_t actionid,
     d.tunnel_rewrite_action_u = *act;
     
     // insert the entry
-    ret = dm->insert(&d, &idx);
+    sdk_ret = dm->insert(&d, &idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel rewrite table write failure, err : {}", ret);
         return ret;
@@ -456,7 +458,8 @@ hal_ret_t
 pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
 {
     hal_ret_t   ret;
-    DirectMap   *dm;
+    sdk_ret_t   sdk_ret;
+    directmap   *dm;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
     HAL_ASSERT(dm != NULL);
@@ -464,7 +467,8 @@ pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
     
     // remove the entry
     if (pd_tif->tunnel_rw_idx != -1) {
-        ret = dm->remove(pd_tif->tunnel_rw_idx);
+        sdk_ret = dm->remove(pd_tif->tunnel_rw_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("tunnel rewrite table write failure, err : {}", ret);
             return ret;

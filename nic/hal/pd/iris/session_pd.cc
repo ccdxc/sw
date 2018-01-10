@@ -27,7 +27,8 @@ hal_ret_t
 p4pd_add_flow_stats_table_entry (uint32_t *flow_stats_idx)
 {
     hal_ret_t                ret;
-    DirectMap                *dm;
+    sdk_ret_t                sdk_ret;
+    directmap                *dm;
     flow_stats_actiondata    d = { 0 };
 
     HAL_ASSERT(flow_stats_idx != NULL);
@@ -37,7 +38,8 @@ p4pd_add_flow_stats_table_entry (uint32_t *flow_stats_idx)
 
     d.actionid = FLOW_STATS_FLOW_STATS_ID;
     // insert the entry
-    ret = dm->insert(&d, flow_stats_idx);
+    sdk_ret = dm->insert(&d, flow_stats_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, err : {}", ret);
         return ret;
@@ -52,7 +54,7 @@ p4pd_add_flow_stats_table_entry (uint32_t *flow_stats_idx)
 hal_ret_t
 p4pd_del_flow_stats_table_entry (uint32_t flow_stats_idx)
 {
-    DirectMap                *dm;
+    directmap                *dm;
 
     // 0th entry is reserved
     if (!flow_stats_idx) {
@@ -62,7 +64,7 @@ p4pd_del_flow_stats_table_entry (uint32_t flow_stats_idx)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     HAL_ASSERT(dm != NULL);
 
-    return dm->remove(flow_stats_idx);
+    return hal_sdk_ret_to_hal_ret(dm->remove(flow_stats_idx));
 }
 
 //------------------------------------------------------------------------------
@@ -142,7 +144,8 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
                                     nwsec_profile_t *nwsec_profile)
 {
     hal_ret_t                ret;
-    DirectMap                *dm;
+    sdk_ret_t                sdk_ret;
+    directmap                *dm;
     flow_t                   *iflow, *rflow;
     session_state_actiondata    d = { 0 };
     session_t                *session = (session_t *)session_pd->session;
@@ -212,7 +215,8 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
         nwsec_profile ?  nwsec_profile->tcp_rtt_estimate_en : FALSE;
 
     // insert the entry
-    ret = dm->insert(&d, &session_pd->session_state_idx);
+    sdk_ret = dm->insert(&d, &session_pd->session_state_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session state table write failure, err : {}", ret);
         return ret;
@@ -227,7 +231,7 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
 hal_ret_t
 p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 {
-    DirectMap                *dm;
+    directmap                *dm;
 
     // 0th entry is reserved
     if (!session_state_idx) {
@@ -237,7 +241,7 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
     HAL_ASSERT(dm != NULL);
 
-    return dm->remove(session_state_idx);
+    return hal_sdk_ret_to_hal_ret(dm->remove(session_state_idx));
 }
 //------------------------------------------------------------------------------
 // program flow info table entry at either given index or if given index is 0
@@ -251,7 +255,8 @@ hal_ret_t
 p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_role_t role, bool aug)
 {
     hal_ret_t                ret;
-    DirectMap                *dm;
+    sdk_ret_t                sdk_ret;
+    directmap                *dm;
     flow_info_actiondata     d = { 0};
     timespec_t               ts;
     flow_pgm_attrs_t         *flow_attrs = NULL;
@@ -264,7 +269,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     HAL_ASSERT(dm != NULL);
 
-    ret = dm->retrieve(flow_pd->flow_stats_hw_id, &d);
+    sdk_ret = dm->retrieve(flow_pd->flow_stats_hw_id, &d);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
         entry_exists = true;
     }
@@ -352,7 +358,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
 
     if (entry_exists) {
        // Update the entry
-       ret = dm->update(flow_pd->flow_stats_hw_id, &d);
+       sdk_ret = dm->update(flow_pd->flow_stats_hw_id, &d);
+       ret = hal_sdk_ret_to_hal_ret(sdk_ret);
        if (ret != HAL_RET_OK) {
            HAL_TRACE_ERR("flow info table update failure, idx : {}, err : {}",
                       flow_pd->flow_stats_hw_id, ret);
@@ -360,7 +367,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
        }
     } else {
        // insert the entry
-       ret = dm->insert_withid(&d, flow_pd->flow_stats_hw_id);
+       sdk_ret = dm->insert_withid(&d, flow_pd->flow_stats_hw_id);
+       ret = hal_sdk_ret_to_hal_ret(sdk_ret);
        if (ret != HAL_RET_OK) {
            HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
                       flow_pd->flow_stats_hw_id, ret);
@@ -377,7 +385,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
 hal_ret_t
 p4pd_del_flow_info_table_entry (uint32_t index)
 {
-    DirectMap                *dm;
+    directmap                *dm;
 
     // 0th entry is reserved
     if (!index) {
@@ -387,7 +395,7 @@ p4pd_del_flow_info_table_entry (uint32_t index)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     HAL_ASSERT(dm != NULL);
 
-    return dm->remove(index);
+    return hal_sdk_ret_to_hal_ret(dm->remove(index));
 }
 
 //------------------------------------------------------------------------------

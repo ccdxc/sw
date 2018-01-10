@@ -35,8 +35,9 @@ static hal_ret_t
 p4pd_ddos_policers_init (void)
 {
     hal_ret_t                                   ret = HAL_RET_OK;
-    DirectMap                                   *dm;
-    DirectMap                                   *dm_act;
+    sdk_ret_t                                   sdk_ret;
+    directmap                                   *dm;
+    directmap                                   *dm_act;
     ddos_src_vf_policer_actiondata              d_svf = { 0 };
     ddos_service_policer_actiondata             d_service = { 0 };
     ddos_src_dst_policer_actiondata             d_srcdst = { 0 };
@@ -52,12 +53,14 @@ p4pd_ddos_policers_init (void)
     dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_VF_POLICER_ACTION);
     HAL_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
-        ret = dm->insert_withid(&d_svf, i);
+        sdk_ret = dm->insert_withid(&d_svf, i);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ddos src_vf policer init failed, err : {}", ret);
             return ret;
         }
-        ret = dm_act->insert_withid(&dact_svf, i);
+        sdk_ret = dm_act->insert_withid(&dact_svf, i);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ddos src_vf policeract init failed, err : {}", ret);
             return ret;
@@ -68,12 +71,14 @@ p4pd_ddos_policers_init (void)
     dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SERVICE_POLICER_ACTION);
     HAL_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
-        ret = dm->insert_withid(&d_service, i);
+        sdk_ret = dm->insert_withid(&d_service, i);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ddos service policer init failed, err : {}", ret);
             return ret;
         }
-        ret = dm_act->insert_withid(&dact_service, i);
+        sdk_ret = dm_act->insert_withid(&dact_service, i);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ddos service policeract init failed, err : {}", ret);
             return ret;
@@ -84,12 +89,14 @@ p4pd_ddos_policers_init (void)
     dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION);
     HAL_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
-        ret = dm->insert_withid(&d_srcdst, i);
+        sdk_ret = dm->insert_withid(&d_srcdst, i);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ddos src_dst policer init failed, err : {}", ret);
             return ret;
         }
-        ret = dm_act->insert_withid(&dact_srcdst, i);
+        sdk_ret = dm_act->insert_withid(&dact_srcdst, i);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ddos src_dst policeract init failed, err : {}", ret);
             return ret;
@@ -141,10 +148,10 @@ p4pd_input_mapping_native_init (void)
 
     // insert into the tcam now - default entries are inserted bottom-up
     sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
-    if (sdk_ret != sdk::SDK_RET_OK) {
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
-                      "idx : {}, err : {}", idx, sdk_ret);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+                      "idx : {}, err : {}", idx, ret);
         return ret;
     }
     HAL_TRACE_DEBUG("Input mapping native tcam write, "
@@ -356,12 +363,14 @@ static hal_ret_t
 p4pd_l4_profile_init (void)
 {
     hal_ret_t                ret;
-    DirectMap                *dm;
+    sdk_ret_t                sdk_ret;
+    directmap                *dm;
     l4_profile_actiondata    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
     HAL_ASSERT(dm != NULL);
-    ret = dm->insert_withid(&data, L4_PROF_DEFAULT_ENTRY);
+    sdk_ret = dm->insert_withid(&data, L4_PROF_DEFAULT_ENTRY);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("L4 profile table write failure, idx : 0, err : {}",
                       ret);
@@ -375,7 +384,8 @@ static hal_ret_t
 p4pd_flow_info_init (void)
 {
     hal_ret_t               ret;
-    DirectMap               *dm;
+    sdk_ret_t               sdk_ret;
+    directmap               *dm;
     flow_info_actiondata    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
@@ -383,7 +393,9 @@ p4pd_flow_info_init (void)
 
     // "catch-all" flow miss entry
     data.actionid = FLOW_INFO_FLOW_MISS_ID;
-    ret = dm->insert_withid(&data, FLOW_INFO_MISS_ENTRY);
+    sdk_ret = dm->insert_withid(&data, FLOW_INFO_MISS_ENTRY);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow info table write failure for miss entry, err : {}",
                       ret);
@@ -394,7 +406,8 @@ p4pd_flow_info_init (void)
     data.actionid = FLOW_INFO_FLOW_HIT_DROP_ID;
     data.flow_info_action_u.flow_info_flow_hit_drop.flow_index = 0;
     data.flow_info_action_u.flow_info_flow_hit_drop.start_timestamp = 0;
-    ret = dm->insert_withid(&data, FLOW_INFO_DROP_ENTRY);
+    sdk_ret = dm->insert_withid(&data, FLOW_INFO_DROP_ENTRY);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow info table write failure for drop entry, err : {}",
                       ret);
@@ -411,9 +424,10 @@ p4pd_flow_info_init (void)
 static hal_ret_t
 p4pd_session_state_init (void)
 {
-    uint32_t                 idx = SESSION_STATE_NOP_ENTRY;
-    hal_ret_t                ret;
-    DirectMap                *dm;
+    uint32_t                    idx = SESSION_STATE_NOP_ENTRY;
+    hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
+    directmap                   *dm;
     session_state_actiondata    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
@@ -421,7 +435,8 @@ p4pd_session_state_init (void)
 
     // "catch-all" nop entry
     data.actionid = SESSION_STATE_NOP_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow state table write failure, idx : {}, err : {}",
                       idx, ret);
@@ -439,16 +454,18 @@ p4pd_session_state_init (void)
 static hal_ret_t
 p4pd_flow_stats_init (void)
 {
-    hal_ret_t                ret;
-    DirectMap                *dm;
-    flow_stats_actiondata    data = { 0 };
+    hal_ret_t               ret;
+    sdk_ret_t               sdk_ret;
+    directmap               *dm;
+    flow_stats_actiondata   data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     HAL_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
     data.actionid = FLOW_STATS_FLOW_STATS_ID;
-    ret = dm->insert_withid(&data, FLOW_STATS_NOP_ENTRY);
+    sdk_ret = dm->insert_withid(&data, FLOW_STATS_NOP_ENTRY);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
                       FLOW_STATS_NOP_ENTRY, ret);
@@ -456,7 +473,8 @@ p4pd_flow_stats_init (void)
     }
 
     // claim one more entry to be in sync with flow info table
-    ret = dm->insert_withid(&data, FLOW_STATS_RSVD_ENTRY);
+    sdk_ret = dm->insert_withid(&data, FLOW_STATS_RSVD_ENTRY);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
                       FLOW_STATS_RSVD_ENTRY, ret);
@@ -787,14 +805,16 @@ static hal_ret_t
 p4pd_qos_init (void)
 {
     hal_ret_t      ret = HAL_RET_OK;
-    DirectMap      *qos_tbl = NULL;
+    sdk_ret_t      sdk_ret;
+    directmap      *qos_tbl = NULL;
     qos_actiondata d = {0};
 
     qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
     HAL_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
 
     for (int i = 0; i < QOS_TABLE_SIZE; i++) {
-        ret = qos_tbl->insert_withid(&d, i);
+        sdk_ret = qos_tbl->insert_withid(&d, i);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-qos::{}: qos table write failure ret {}",
                           __func__, ret);
@@ -808,7 +828,8 @@ static hal_ret_t
 p4pd_p4plus_app_init (void)
 {
     hal_ret_t                ret = HAL_RET_OK;
-    DirectMap                *dm;
+    sdk_ret_t                sdk_ret;
+    directmap                *dm;
     p4plus_app_actiondata data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_P4PLUS_APP);
@@ -851,7 +872,8 @@ p4pd_p4plus_app_init (void)
                 HAL_ASSERT(0);
         }
 
-        ret = dm->insert_withid(&data, i);
+        sdk_ret = dm->insert_withid(&data, i);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("p4plus app table write failure, idx : {}, err : {}",
                     i, ret);
@@ -902,7 +924,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 {
     uint32_t                              idx = 0;
     hal_ret_t                             ret;
-    DirectMap                             *dm;
+    sdk_ret_t                             sdk_ret;
+    directmap                             *dm;
     tunnel_decap_copy_inner_actiondata    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_DECAP_COPY_INNER);
@@ -910,7 +933,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, true, false, false);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_UDP_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -919,7 +943,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, true, false, false);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_OTHER_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -928,7 +953,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, false, true, false);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_UDP_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -937,7 +963,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, true, false);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_OTHER_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -946,7 +973,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, true, false, true);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_UDP_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -955,7 +983,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, true, false, true);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_OTHER_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -964,7 +993,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, false, true, true);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_UDP_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -973,7 +1003,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, true, true);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_OTHER_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -982,7 +1013,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, false, true);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_NON_IP_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1000,7 +1032,8 @@ static hal_ret_t
 p4pd_twice_nat_init (void)
 {
     hal_ret_t               ret;
-    DirectMap               *dm;
+    sdk_ret_t               sdk_ret;
+    directmap               *dm;
     twice_nat_actiondata    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
@@ -1008,7 +1041,8 @@ p4pd_twice_nat_init (void)
 
     // "catch-all" nop entry
     data.actionid = TWICE_NAT_NOP_ID;
-    ret = dm->insert_withid(&data, TWICE_NAT_NOP_ENTRY);
+    sdk_ret = dm->insert_withid(&data, TWICE_NAT_NOP_ENTRY);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("twice nat table write failure, idx : {}, err : {}",
                       TWICE_NAT_NOP_ENTRY, ret);
@@ -1029,7 +1063,7 @@ p4pd_rewrite_init (void)
 {
     uint32_t              idx = 0;
     hal_ret_t             ret;
-    DirectMap             *dm;
+    directmap             *dm;
     pd_rw_entry_key_t     rw_key{};
     pd_rw_entry_info_t    rw_info{};
 
@@ -1105,7 +1139,8 @@ p4pd_tunnel_encap_update_inner (void)
 {
     uint32_t                              idx = 0;
     hal_ret_t                             ret;
-    DirectMap                             *dm;
+    sdk_ret_t                             sdk_ret;
+    directmap                             *dm;
     tunnel_encap_update_inner_actiondata  data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_ENCAP_UPDATE_INNER);
@@ -1113,7 +1148,8 @@ p4pd_tunnel_encap_update_inner (void)
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, true, false, false);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UDP_REWRITE_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel encap update inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1122,7 +1158,8 @@ p4pd_tunnel_encap_update_inner (void)
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, true, false);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_TCP_REWRITE_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel encap update inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1131,7 +1168,8 @@ p4pd_tunnel_encap_update_inner (void)
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, false, true);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_ICMP_REWRITE_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel encap update inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1140,7 +1178,8 @@ p4pd_tunnel_encap_update_inner (void)
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, false, false);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UNKNOWN_REWRITE_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel encap update inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1149,7 +1188,8 @@ p4pd_tunnel_encap_update_inner (void)
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, true, false, false);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_UDP_REWRITE_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel encap update inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1158,7 +1198,8 @@ p4pd_tunnel_encap_update_inner (void)
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, true, false);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_TCP_REWRITE_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel encap update inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1167,7 +1208,8 @@ p4pd_tunnel_encap_update_inner (void)
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, false, true);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_ICMP_REWRITE_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel encap update inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1176,7 +1218,8 @@ p4pd_tunnel_encap_update_inner (void)
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, false, false);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_UNKNOWN_REWRITE_ID;
-    ret = dm->insert_withid(&data, idx);
+    sdk_ret = dm->insert_withid(&data, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel encap update inner table write failure, "
                       "idx {}, err : {}", idx, ret);
@@ -1223,7 +1266,7 @@ p4pd_tunnel_rewrite_init (void)
 {
     uint32_t                     idx;
     hal_ret_t                    ret;
-    DirectMap                    *dm;
+    directmap                    *dm;
     pd_tnnl_rw_entry_key_t       rw_key{};
     pd_tnnl_rw_entry_info_t      rw_info{};
 
@@ -1263,7 +1306,8 @@ p4pd_mirror_table_init (void)
 {
     uint32_t                     idx = 0;
     hal_ret_t                    ret;
-    DirectMap                    *dm;
+    sdk_ret_t                    sdk_ret;
+    directmap                    *dm;
     mirror_actiondata            data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
@@ -1272,7 +1316,8 @@ p4pd_mirror_table_init (void)
     // Initialize for usable span session.
     data.actionid = MIRROR_DROP_MIRROR_ID;
     for (idx = 0; idx < 8; idx++) {
-        ret = dm->insert_withid(&data, idx);
+        sdk_ret = dm->insert_withid(&data, idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("mirror table initialization failed for idx : {}, err : {}",
                           idx, ret);
@@ -1345,7 +1390,8 @@ p4pd_decode_roce_opcode_init (void)
 {
     uint32_t                     idx = 0;
     hal_ret_t                    ret;
-    DirectMap                    *dm;
+    sdk_ret_t                    sdk_ret;
+    directmap                    *dm;
     decode_roce_opcode_actiondata data = { 0 };
 
     // C++ compiler did not allow sparse initialization. compiler must be old.
@@ -1390,7 +1436,8 @@ p4pd_decode_roce_opcode_init (void)
             data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.raw_flags = 0;
         }
 
-        ret = dm->insert_withid(&data, idx);
+        sdk_ret = dm->insert_withid(&data, idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("decode roce opcode table write failure, idx : {}, err : {}",
                           idx, ret);

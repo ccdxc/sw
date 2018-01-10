@@ -6,7 +6,6 @@
 #include <cstring>
 
 using sdk::table::tcam_entry_t;
-// using namespace sdk::pd::p4;         
 
 namespace sdk {
 namespace table {
@@ -52,12 +51,6 @@ tcam::factory(char *name, uint32_t id,
                     "hwkey_len_: %-4d hwkeymask_len_: %-4d "
                     "hwdata_len_: %-4d \n", t->name_, t->id_, t->swkey_len_, 
                     t->hwkey_len_, t->hwkeymask_len_, t->hwdata_len_);
-#if 0
-    SDK_TRACE_DEBUG("tcam::{:<30}: tableid: {:<3} swkey_len: {:<4} "
-                    "hwkey_len_: {:<4} hwkeymask_len_: {:<4} "
-                    "hwdata_len_: {:<4}", t->name_, t->id_, t->swkey_len_, 
-                    t->hwkey_len_, t->hwkeymask_len_, t->hwdata_len_);
-#endif
     return t;
 }
 
@@ -72,7 +65,7 @@ tcam::destroy(tcam *te)
         SDK_FREE(SDK_MEM_ALLOC_ID_TCAM_STATS, te->stats_);
         SDK_FREE(SDK_MEM_ALLOC_ID_TCAM_NAME, te->name_);
         te->~tcam();
-        SDK_FREE(mtrack_id, te);
+        SDK_FREE(SDK_MEM_ALLOC_ID_TCAM, te);
     }
 }
 

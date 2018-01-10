@@ -298,12 +298,14 @@ hal_ret_t
 tnnl_rw_pd_depgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe) 
 {
     hal_ret_t            ret = HAL_RET_OK;
-    DirectMap            *tnnl_rw_tbl = NULL;
+    sdk_ret_t            sdk_ret;
+    directmap            *tnnl_rw_tbl = NULL;
 
     tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
     HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
 
-    ret = tnnl_rw_tbl->remove(tnnl_rwe->tnnl_rw_idx);
+    sdk_ret = tnnl_rw_tbl->remove(tnnl_rwe->tnnl_rw_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("pd-tnnl_rw: Unable to de-program at tnnl_rw_id: {} "
                         "ret: {}, for ",
@@ -326,8 +328,9 @@ hal_ret_t
 tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan (pd_tnnl_rw_entry_t *tnnl_rwe)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     tunnel_rewrite_actiondata   data;
-    DirectMap                   *tnnl_rw_tbl = NULL;
+    directmap                   *tnnl_rw_tbl = NULL;
 
     memset(&data, 0, sizeof(data));
 
@@ -344,7 +347,8 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan (pd_tnnl_rw_entry_t *tnnl_rwe)
     data_erspan.vlan_valid = tnnl_rwe->tnnl_rw_key.vlan_valid;
     data_erspan.vlan_id = tnnl_rwe->tnnl_rw_key.vlan_id;
     data.actionid = tnnl_rwe->tnnl_rw_key.tnnl_rw_act;
-    ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    sdk_ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-tnnl_rw: Unable to program at tnnl_rw_id: {} for ",
                       tnnl_rwe->tnnl_rw_idx);
@@ -363,8 +367,9 @@ hal_ret_t
 tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan (pd_tnnl_rw_entry_t *tnnl_rwe)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     tunnel_rewrite_actiondata   data;
-    DirectMap                   *tnnl_rw_tbl = NULL;
+    directmap                   *tnnl_rw_tbl = NULL;
 
     memset(&data, 0, sizeof(data));
 
@@ -381,7 +386,8 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan (pd_tnnl_rw_entry_t *tnnl_rwe)
     data_vxlan.vlan_valid = tnnl_rwe->tnnl_rw_key.vlan_valid;
     data_vxlan.vlan_id = tnnl_rwe->tnnl_rw_key.vlan_id;
     data.actionid = tnnl_rwe->tnnl_rw_key.tnnl_rw_act;
-    ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    sdk_ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-tnnl_rw: Unable to program at tnnl_rw_id: {} for ",
                       tnnl_rwe->tnnl_rw_idx);
@@ -399,8 +405,9 @@ hal_ret_t
 tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan (pd_tnnl_rw_entry_t *tnnl_rwe)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     tunnel_rewrite_actiondata   data;
-    DirectMap                   *tnnl_rw_tbl = NULL;
+    directmap                   *tnnl_rw_tbl = NULL;
 
     memset(&data, 0, sizeof(data));
 
@@ -408,7 +415,8 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan (pd_tnnl_rw_entry_t *tnnl_rwe)
     HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
 
     data.actionid = tnnl_rwe->tnnl_rw_key.tnnl_rw_act;
-    ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    sdk_ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-tnnl_rw: Unable to program at tnnl_rw_id: {} for ",
                       tnnl_rwe->tnnl_rw_idx);

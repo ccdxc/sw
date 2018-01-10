@@ -4,7 +4,7 @@
 #include "sdk/indexer.hpp"
 #include "sdk/slab.hpp"
 #include "sdk/ht.hpp"
-#include "nic/hal/pd/utils/directmap/directmap.hpp"
+#include "sdk/directmap.hpp"
 #include "nic/hal/pd/utils/hash/hash.hpp"
 #include "sdk/tcam.hpp"
 #include "nic/hal/pd/utils/flow/flow.hpp"
@@ -20,15 +20,17 @@ using hal::BMAllocator;
 using sdk::lib::indexer;
 using sdk::lib::slab;
 using sdk::lib::ht;
-using hal::pd::utils::DirectMap;
 using hal::pd::utils::Hash;
 using sdk::table::tcam;
+using sdk::table::directmap;
 using hal::pd::utils::Flow;
 using hal::pd::utils::Met;
 using hal::pd::utils::acl_tcam;
 
 namespace hal {
 namespace pd {
+
+extern class hal_state_pd    *g_hal_state_pd;
 
 // LIF HW ID Space for SB LIFs, Uplink Ifs/PCs
 #define HAL_MAX_HW_LIFS         1025        
@@ -188,9 +190,6 @@ public:
     ht *tnnl_rw_table_ht(void) const { return tnnl_rw_table_ht_; }
     indexer *tnnl_rw_tbl_idxr(void) { return tnnl_rw_tbl_idxr_; }
 
-    // get APIs for utils slabs
-    slab *directmap_entry_slab(void) const { return directmap_entry_slab_; }
-
     // get APIs for CPU PKT related state
     slab *cpupkt_slab(void) const { return cpupkt_slab_; }
     slab *cpupkt_qinst_info_slab(void) const {return cpupkt_qinst_info_slab_; }
@@ -203,7 +202,7 @@ public:
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
     hal_ret_t p4plus_txdma_init_tables(void);
-    DirectMap *dm_table(p4pd_table_id tid) const {
+    directmap *dm_table(p4pd_table_id tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
             return NULL;
         }
@@ -237,7 +236,7 @@ public:
         return acl_table_;
     }
 
-    DirectMap *p4plus_rxdma_dm_table(p4pd_common_rxdma_actions_table_id tid) const {
+    directmap *p4plus_rxdma_dm_table(p4pd_common_rxdma_actions_table_id tid) const {
         if ((tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN) ||
             (tid > P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX)) {
             return NULL;
@@ -245,7 +244,7 @@ public:
         return p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN];
     }
 
-    DirectMap *p4plus_txdma_dm_table(p4pd_common_txdma_actions_table_id tid) const {
+    directmap *p4plus_txdma_dm_table(p4pd_common_txdma_actions_table_id tid) const {
         if ((tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN) ||
             (tid > P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX)) {
             return NULL;
@@ -458,19 +457,14 @@ private:
         ht         *proxyccb_hwid_ht_;
     } __PACK__;
 
-    // utils slabs
-    struct {
-        slab       *directmap_entry_slab_;
-    } __PACK__;
-
-    DirectMap    **dm_tables_;
+    directmap    **dm_tables_;
     Hash         **hash_tcam_tables_;
     tcam         **tcam_tables_;
     Flow         *flow_table_;
     Met          *met_table_;
     acl_tcam     *acl_table_;
-    DirectMap    **p4plus_rxdma_dm_tables_;
-    DirectMap    **p4plus_txdma_dm_tables_;
+    directmap    **p4plus_rxdma_dm_tables_;
+    directmap    **p4plus_txdma_dm_tables_;
 };
 
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id, void *elem);

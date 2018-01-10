@@ -19,10 +19,9 @@ gl_deps_list = [
 
         # PD
         "//nic/hal/pd/common:pdcommon",
-        "//nic/hal/pd/utils/directmap",
         "//nic/hal/pd/utils/hash",
-        #"//nic/hal/pd/utils/tcam",
         "@sdk//obj:sdk_tcam",
+        "@sdk//obj:sdk_directmap",
         "//nic/hal/pd/utils/flow",
         "//nic/hal/pd/utils/met",
         "//nic/hal/pd/utils/acl_tcam",

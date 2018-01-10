@@ -13,7 +13,8 @@ hal_ret_t pd_twice_nat_add(pd_twice_nat_entry_args_t *args,
                            uint32_t *twice_nat_idx)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    DirectMap               *dm;
+    sdk_ret_t               sdk_ret;
+    directmap               *dm;
     twice_nat_actiondata    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
@@ -30,7 +31,8 @@ hal_ret_t pd_twice_nat_add(pd_twice_nat_entry_args_t *args,
                sizeof(data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.ip));
     }
 
-    ret = dm->insert(&data, twice_nat_idx);
+    sdk_ret = dm->insert(&data, twice_nat_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to program twice nat for [nat_ip, l4_port] : [{}, {}]",
                       __FUNCTION__, ipaddr2str(&args->nat_ip), args->nat_l4_port);
@@ -47,7 +49,8 @@ hal_ret_t pd_twice_nat_add(pd_twice_nat_entry_args_t *args,
 hal_ret_t pd_twice_nat_del(pd_twice_nat_entry_args_t *args)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    DirectMap               *dm;
+    sdk_ret_t               sdk_ret;
+    directmap               *dm;
     twice_nat_actiondata    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
@@ -64,7 +67,8 @@ hal_ret_t pd_twice_nat_del(pd_twice_nat_entry_args_t *args)
                sizeof(data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.ip));
     }
 
-    ret = dm->remove(0, &data);
+    sdk_ret = dm->remove(0, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to de-program twice nat for [nat_ip, l4_port] : [{}, {}]",
                       __FUNCTION__, ipaddr2str(&args->nat_ip), args->nat_l4_port);

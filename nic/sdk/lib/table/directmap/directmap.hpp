@@ -3,19 +3,12 @@
 //
 // directmap (index) table management library
 //
+// - manages directmap tables
 // - eventually calls P4 APIs to program.
 //
 //------------------------------------------------------------------------------
 #ifndef __SDK_DIRECT_MAP_HPP__
 #define __SDK_DIRECT_MAP_HPP__
-#if 0
-#include <string>
-#include "nic/include/base.h"
-#include "sdk/indexer.hpp"
-#include "nic/include/hal_lock.hpp"
-#include "nic/include/hal_mem.hpp"
-#include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
-#endif
 
 #include "sdk/mem.hpp"
 #include "sdk/base.hpp"
@@ -31,7 +24,7 @@ namespace table {
 typedef bool (*direct_map_iterate_func_t)(uint32_t index, void *data, 
                                           const void *cb_data);
 
-class DirectMap {
+class directmap {
 
 public:
     // Note: Stats are mutually exclusive for every API. Only one stat will
@@ -71,7 +64,7 @@ private:
         ITERATE
     };
 
-    char            *name;          // table name
+    char            *name_;          // table name
     uint32_t        id_;            // table id
     uint32_t        capacity_;      // size of table
     indexer         *indexer_;      // entry indices
@@ -82,55 +75,52 @@ private:
     bool            sharing_en_;    // enable sharing
 
     // private methods
-    hal_ret_t alloc_index_(uint32_t *idx);  
-    hal_ret_t alloc_index_withid_(uint32_t idx);    
-    hal_ret_t free_index_(uint32_t idx);
+    sdk_ret_t alloc_index_(uint32_t *idx);  
+    sdk_ret_t alloc_index_withid_(uint32_t idx);    
+    sdk_ret_t free_index_(uint32_t idx);
     void stats_incr(stats stat);
     void stats_decr(stats stat);
-    void stats_update(api ap, hal_ret_t rs); 
-    hal_ret_t entry_trace_(void *data, uint32_t index);
+    void stats_update(api ap, sdk_ret_t rs); 
+    sdk_ret_t entry_trace_(void *data, uint32_t index);
 
     static void * dm_entry_get_key_func(void *entry);
     static uint32_t dm_entry_compute_hash_func(void *key, uint32_t ht_size);
     static bool dm_entry_compare_key_func(void *key1, void *key2);
 
-    hal_ret_t add_directmap_entry_to_db(directmap_entry_t *dme);
+    sdk_ret_t add_directmap_entry_to_db(directmap_entry_t *dme);
     void *del_directmap_entry_from_db(directmap_entry_t *dme);
     directmap_entry_t *find_directmap_entry(directmap_entry_t *key);
 
-    DirectMap(std::string table_name, uint32_t table_id, uint32_t num_entries, 
-              uint32_t swdata_len, bool thread_safe = true, 
-              bool sharing_en = false);
-    ~DirectMap();
+    directmap(char *name, uint32_t id, uint32_t capacity, 
+              uint32_t swdata_len, bool sharing_en = false);
+    ~directmap();
 public:
     // factory & destroy methods
-    static DirectMap *factory(std::string table_name, uint32_t table_id, 
-                              uint32_t num_entries, uint32_t swdata_len, 
-                              bool thread_safe = true, bool sharing_en = false,
-                              uint32_t mtrack_id = HAL_MEM_ALLOC_DIRECT_MAP);
-    static void destroy(DirectMap *dm, 
-                        uint32_t mtrack_id = HAL_MEM_ALLOC_DIRECT_MAP);
+    static directmap *factory(char *name, uint32_t id, 
+                              uint32_t capacity, uint32_t swdata_len, 
+                              bool sharing_en = false);
+    static void destroy(directmap *dm);
 
     // debug methods
-    uint32_t table_id(void) { return table_id_; }
-    const char *table_name(void) { return table_name_.c_str(); }
-    uint32_t table_capacity(void) { return num_entries_; }
-    uint32_t table_num_entries_in_use(void);
-    uint32_t table_num_inserts(void);
-    uint32_t table_num_insert_errors(void);
-    uint32_t table_num_deletes(void);
-    uint32_t table_num_delete_errors(void);
+    uint32_t id(void) { return id_; }
+    const char *name(void) { return name_;}
+    uint32_t capacity(void) { return capacity_; }
+    uint32_t num_entries_in_use(void) const;
+    uint32_t num_inserts(void) const;
+    uint32_t num_insert_errors(void) const;
+    uint32_t num_deletes(void) const;
+    uint32_t num_delete_errors(void) const;
 
 
     // operational methods
-    hal_ret_t insert(void *data, uint32_t *index);
-    hal_ret_t insert_withid(void *data, uint32_t index);
-    hal_ret_t update(uint32_t index, void *data);
-    hal_ret_t remove(uint32_t index, void *data = NULL);
-    hal_ret_t retrieve(uint32_t index, void *data);
-    hal_ret_t iterate(direct_map_iterate_func_t iterate_func, 
+    sdk_ret_t insert(void *data, uint32_t *index);
+    sdk_ret_t insert_withid(void *data, uint32_t index);
+    sdk_ret_t update(uint32_t index, void *data);
+    sdk_ret_t remove(uint32_t index, void *data = NULL);
+    sdk_ret_t retrieve(uint32_t index, void *data);
+    sdk_ret_t iterate(direct_map_iterate_func_t iterate_func, 
                       const void *cb_data);
-    hal_ret_t fetch_stats(const uint64_t **stats);
+    sdk_ret_t fetch_stats(const uint64_t **stats);
 };
 
 }    // namespace table

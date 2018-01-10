@@ -68,6 +68,16 @@ cc_library(
     ],
 )
 
+# Directmap/Index Table Management Library
+cc_library(
+    name = "sdk_directmap",
+    srcs = [
+        "libdirectmap.so",
+    ],
+    deps = [
+        "//lib/table/directmap:directmap",
+    ],
+)
 # Tcam Table Management Library
 cc_library(
     name = "sdk_tcam",
@@ -75,7 +85,6 @@ cc_library(
         "libtcam.so",
     ],
     deps = [
-        #"//:sdk_headers",
         "//lib/table/tcam:tcam",
     ],
 )

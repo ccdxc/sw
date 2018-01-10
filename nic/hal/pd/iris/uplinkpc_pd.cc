@@ -334,12 +334,14 @@ hal_ret_t
 uplinkpc_pd_depgm_output_mapping_tbl (pd_uplinkpc_t *pd_upif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    DirectMap                   *dm_omap = NULL;
+    sdk_ret_t                   sdk_ret;
+    directmap                   *dm_omap = NULL;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
     
-    ret = dm_omap->remove(pd_upif->uppc_lport_id);
+    sdk_ret = dm_omap->remove(pd_upif->uppc_lport_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-uplinkpc:{}:unable to deprogram omapping table. index:{}",
                 __FUNCTION__, pd_upif->uppc_lport_id);
@@ -518,10 +520,11 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
                                    table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     // uint8_t                     *tm_oport = NULL;
     // if_t                        *pi_if = NULL, *pi_up_if = NULL;
     output_mapping_actiondata   data;
-    DirectMap                   *dm_omap = NULL;
+    directmap                   *dm_omap = NULL;
     // dllist_ctxt_t               *curr, *next;
     // hal_handle_id_list_entry_t  *entry = NULL;
 
@@ -558,7 +561,8 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
 
 
     if (oper == TABLE_OPER_INSERT) {
-        ret = dm_omap->insert_withid(&data, pd_uppcif->uppc_lport_id);
+        sdk_ret = dm_omap->insert_withid(&data, pd_uppcif->uppc_lport_id);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-uplinkpc:{}:{} unable to program. ret:{}",
                     __FUNCTION__, oper, ret);
@@ -569,7 +573,8 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
                             pd_uppcif->uppc_lport_id);
         }
     } else {
-        ret = dm_omap->update(pd_uppcif->uppc_lport_id, &data);
+        sdk_ret = dm_omap->update(pd_uppcif->uppc_lport_id, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-uplinkpc:{}:{} unable to "
                           "program table:output_mapping. ret:{}",

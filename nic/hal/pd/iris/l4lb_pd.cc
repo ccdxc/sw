@@ -3,15 +3,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/l4lb_pd.hpp"
-// #include "nic/include/endpoint_api.hpp"
-// #include "nic/include/interface_api.hpp"
-// #include "nic/hal/pd/iris/endpoint_pd.hpp"
-// #include "nic/hal/pd/iris/lif_pd.hpp"
-// #include "nic/hal/src/l2segment.hpp"
-// #include "nic/hal/src/network.hpp"
-// #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
-// #include "nic/hal/src/utils.hpp"
 
 using namespace hal;
 
@@ -150,9 +142,10 @@ hal_ret_t
 l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
 {
     hal_ret_t            ret = HAL_RET_OK;
+    sdk_ret_t            sdk_ret;
     mac_addr_t           mac_sa, mac_da;
     rewrite_actiondata   data;
-    DirectMap            *rw_tbl = NULL;
+    directmap            *rw_tbl = NULL;
     mac_addr_t           *mac;
     l4lb_service_entry_t *pi_l4lb = (l4lb_service_entry_t *)pd_l4lb->pi_l4lb;
 
@@ -196,7 +189,8 @@ l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
                 HAL_ASSERT(0);
         }
         data.actionid = i;
-        ret = rw_tbl->insert(&data, &(pd_l4lb->rw_tbl_idx[i]));
+        sdk_ret = rw_tbl->insert(&data, &(pd_l4lb->rw_tbl_idx[i]));
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("PD-EP::{}: Unable to program for L4LB: serv_mac:{}", 
                     __FUNCTION__, 

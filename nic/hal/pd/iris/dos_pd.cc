@@ -360,7 +360,8 @@ dos_pd_program_ddos_policer_action (uint8_t actionid, uint8_t saved_color,
                                     uint32_t *idx)
 {
     hal_ret_t                           ret = HAL_RET_OK;
-    DirectMap                           *dm;
+    sdk_ret_t                           sdk_ret;
+    directmap                           *dm;
     ddos_service_policer_action_actiondata d = { 0 };
     
     dm = g_hal_state_pd->dm_table(tbl_id);
@@ -369,7 +370,8 @@ dos_pd_program_ddos_policer_action (uint8_t actionid, uint8_t saved_color,
     d.actionid = actionid;
     DDOS_POLICER_ACTION(ddos_service_policer_saved_color) = saved_color;
     DDOS_POLICER_ACTION(ddos_service_policer_dropped_packets) = dropped_pkts;
-    ret = dm->insert(&d, idx);
+    sdk_ret = dm->insert(&d, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ddos policer action table write failure, "
                       "tbl_id: {} err : {}", tbl_id, ret);
@@ -388,7 +390,8 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
                              p4pd_table_id tbl_id, uint32_t *idx)
 {
     hal_ret_t                           ret = HAL_RET_OK;
-    DirectMap                           *dm;
+    sdk_ret_t                           sdk_ret;
+    directmap                           *dm;
     ddos_service_policer_actiondata     d = { 0 };
     uint32_t                            tbkt;
     
@@ -419,7 +422,8 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
     memcpy(DDOS_POLICER(burst2), &pbr, sizeof(uint32_t));
     memcpy(DDOS_POLICER(tbkt2), &tbkt, sizeof(uint32_t));
     
-    ret = dm->insert(&d, idx);
+    sdk_ret = dm->insert(&d, idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ddos policer table write failure, tbl_id: {} err : {}",
                        tbl_id, ret);

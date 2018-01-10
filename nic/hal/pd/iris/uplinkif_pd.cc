@@ -302,12 +302,14 @@ hal_ret_t
 uplinkif_pd_depgm_output_mapping_tbl (pd_uplinkif_t *pd_upif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    DirectMap                   *dm_omap = NULL;
+    sdk_ret_t                   sdk_ret;
+    directmap                   *dm_omap = NULL;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
     
-    ret = dm_omap->remove(pd_upif->upif_lport_id);
+    sdk_ret = dm_omap->remove(pd_upif->upif_lport_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-uplinkif:{}:unable to deprogram omapping table",
                 __FUNCTION__, pd_upif->upif_lport_id);
@@ -371,9 +373,10 @@ hal_ret_t
 uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     uint8_t                     tm_oport = 0;
     output_mapping_actiondata   data;
-    DirectMap                   *dm_omap = NULL;
+    directmap                   *dm_omap = NULL;
 
     memset(&data, 0, sizeof(data));
 
@@ -394,7 +397,8 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
-    ret = dm_omap->insert_withid(&data, pd_upif->upif_lport_id);
+    sdk_ret = dm_omap->insert_withid(&data, pd_upif->upif_lport_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-uplinkif:{}:unable to program for if_id: {}",
                 __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if));

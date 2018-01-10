@@ -172,8 +172,9 @@ static hal_ret_t
 copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    sdk_ret_t       sdk_ret;
     copp_t          *pi_copp = (copp_t *)pd_copp->pi_copp;
-    DirectMap       *copp_tbl = NULL;
+    directmap       *copp_tbl = NULL;
     copp_actiondata d = {0};
 
     copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
@@ -192,10 +193,11 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
     }
 
     if (update) {
-        ret = copp_tbl->update(pd_copp->hw_policer_id, &d);
+        sdk_ret = copp_tbl->update(pd_copp->hw_policer_id, &d);
     } else {
-        ret = copp_tbl->insert(&d, &pd_copp->hw_policer_id);
+        sdk_ret = copp_tbl->insert(&d, &pd_copp->hw_policer_id);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-copp:{}: copp policer table write failure, copp {}, ret {}",
                       __FUNCTION__, pi_copp->key, ret);
