@@ -127,7 +127,6 @@ p4pd_add_or_del_rawc_tx_stage0_entry(pd_rawccb_t* rawccb_pd,
     uint8_t             entry_size_shift;
 
     rawccb = rawccb_pd->rawccb;
-    data.u.start_d.redir_span = rawccb->redir_span;
     data.u.start_d.my_txq_base = rawccb->my_txq_base;
     data.u.start_d.my_txq_ring_size_shift = rawccb->my_txq_ring_size_shift;
     data.u.start_d.my_txq_entry_size_shift = rawccb->my_txq_entry_size_shift;
@@ -228,7 +227,6 @@ p4pd_get_rawccb_tx_stage0_entry(pd_rawccb_t* rawccb_pd)
         return HAL_RET_HW_FAIL;
     }
     rawccb = rawccb_pd->rawccb;
-    rawccb->redir_span = data.u.start_d.redir_span;
     rawccb->rawccb_flags = data.u.start_d.rawccb_flags;
     rawccb->my_txq_base = data.u.start_d.my_txq_base;
     rawccb->my_txq_ring_size_shift = data.u.start_d.my_txq_ring_size_shift;

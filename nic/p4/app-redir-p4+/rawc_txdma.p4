@@ -95,7 +95,7 @@ header_type rawccb_t {
          * to early detect and enter cleanup.
          */
         rawccb_deactivate               : 8;  // must be first in CB after header rings
-        redir_span                      : 8;
+        pad                             : 8;
         rawccb_flags                    : 16; // DOL flags and others
         my_txq_base                     : 64;
         
@@ -429,7 +429,7 @@ metadata dma_cmd_phv2mem_t              dma_doorbell;
 action start(rsvd, cosA, cosB, cos_sel, 
              eval_last, host, total, pid,
              pi_0, ci_0,
-             rawccb_deactivate, redir_span,
+             rawccb_deactivate,
              my_txq_base, my_txq_ring_size_shift, my_txq_entry_size_shift,
              chain_txq_ring_size_shift, chain_txq_entry_size_shift,
              chain_txq_base, chain_txq_ring_indices_addr,
@@ -467,7 +467,6 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawccb_d.ci_0, ci_0);
     
     modify_field(rawccb_d.rawccb_deactivate, rawccb_deactivate);
-    modify_field(rawccb_d.redir_span, redir_span);
     modify_field(rawccb_d.my_txq_base, my_txq_base);
     modify_field(rawccb_d.my_txq_ring_size_shift, my_txq_ring_size_shift);
     modify_field(rawccb_d.my_txq_entry_size_shift, my_txq_entry_size_shift);

@@ -19,6 +19,13 @@ service_lif_app_redir = 1006
 service_lif_gc        = 1007
 service_lif_p4pt      = 1008
 
+#
+# rawrcb/rawccb creation for span;
+# HW always spans to qtype 0 and qid 0, lif is derived from the mirror
+# session's lport_id. Once in rawrcb, P4+ will hash on flow and spray to
+# appropriate ARQ.
+#
+app_redir_span_rawrcb_id = 0
 
 # 
 # The following definitions should match app_redir_shared.h

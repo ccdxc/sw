@@ -51,8 +51,6 @@ rawr_s0_rx_start:
     b.!c1       _rawrcb_not_ready
     phvwr       p.common_phv_rawrcb_flags,\
                 d.{u.rawr_rx_start_d.rawrcb_flags}.hx // delay slot
-    phvwr       p.common_phv_redir_span_instance, d.u.rawr_rx_start_d.redir_span
-
     /*
      * For a given flow, one of 2 types of redirection applies:
      *   1) Redirect to ARM CPU RxQ, or
@@ -65,9 +63,11 @@ rawr_s0_rx_start:
     bcf         [c1 & c2], _qstate_cfg_err_discard
     
     /*
-     * qid is our flow ID context:
+     * qid is our flow ID context, with qid 0 dedicated for SPAN
      */
-    phvwr       p.pen_raw_redir_hdr_v1_flow_id, CAPRI_RXDMA_INTRINSIC_QID // delay slot
+    seq         c3, CAPRI_RXDMA_INTRINSIC_QID, APP_REDIR_SPAN_RAWRCB_ID // delay slot
+    phvwr.c3    p.common_phv_redir_span_instance, TRUE
+    phvwr       p.pen_raw_redir_hdr_v1_flow_id, CAPRI_RXDMA_INTRINSIC_QID
     bcf         [!c1 & !c2], _qstate_cfg_err_discard
     add         r_pkt_len, r0, k.{rawr_app_header_packet_len_sbit0_ebit5...\
                                   rawr_app_header_packet_len_sbit6_ebit13} // delay slot

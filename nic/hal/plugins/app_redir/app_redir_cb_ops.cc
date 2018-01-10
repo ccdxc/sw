@@ -38,7 +38,6 @@ app_redir_rawrcb_spec_build(const rawrcb_t& rawrcb,
         spec.set_chain_rxq_ring_index_select(rawrcb.chain_rxq_ring_index_select);
     }
 
-    spec.set_redir_span(rawrcb.redir_span);
     spec.set_rawrcb_flags(rawrcb.rawrcb_flags);
 }
 
@@ -110,7 +109,6 @@ app_redir_rawccb_spec_build(const rawccb_t& rawccb,
     spec.set_chain_txq_qtype(rawccb.chain_txq_qtype);
     spec.set_chain_txq_qid(rawccb.chain_txq_qid);
     spec.set_chain_txq_ring(rawccb.chain_txq_ring);
-    spec.set_redir_span(rawccb.redir_span);
 
     spec.set_rawccb_flags(rawccb.rawccb_flags);
 }
@@ -405,7 +403,7 @@ app_redir_proxyccb_update(const proxyccb_t& proxyccb)
 static void
 app_redir_mirror_session_spec_build(MirrorSessionSpec& spec)
 {
-    spec.mutable_id()->set_session_id(7);
+    spec.mutable_id()->set_session_id(MIRROR_SESSION_APP_REDIR_VISIB_ID);
     spec.mutable_local_span_if()->set_interface_id(11);
     spec.set_snaplen(0);
 }

@@ -29,6 +29,13 @@
 #define APP_REDIR_PROXYC_QTYPE              3   /* TCP/TLS proxy chain */
 #define APP_REDIR_NUM_QTYPES_MAX            4
 
+/*
+ * rawrcb/rawccb creation for span;
+ * HW always spans to qtype 0 and qid 0, lif is derived from the mirror
+ * session's lport_id. Once in rawrcb, P4+ will hash on flow and spray to
+ * appropriate ARQ.
+ */
+#define APP_REDIR_SPAN_RAWRCB_ID            0
 
 /*
  * Raw Redirect Control Block sizes

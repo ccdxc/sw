@@ -36,6 +36,9 @@ DEFINE_ENUM(mirror_desttype_en, MIRROR_DESTTYPES)
 DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 #undef EXPORT_FORMATS
 
+// Session ID used by L7 app redirect (visibility mode)
+#define MIRROR_SESSION_APP_REDIR_VISIB_ID    7
+
 typedef struct mirror_session_s {
     hal_spinlock_t slock;
     mirror_session_id_t id;

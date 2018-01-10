@@ -108,7 +108,7 @@ header_type rawrcb_t {
          * to early detect and enter cleanup.
          */
         rawrcb_deactivate               : 8;  // must be first in CB after header common
-        redir_span                      : 8;
+        pad                             : 8;
         rawrcb_flags                    : 16; // DOL flags and others
          
         /*
@@ -486,7 +486,7 @@ metadata dma_cmd_phv2mem_t              dma_doorbell;
  */
 action rawr_rx_start(rsvd, cosA, cosB, cos_sel, 
                      eval_last, host, total, pid,
-                     rawrcb_deactivate, redir_span, chain_rxq_base,
+                     rawrcb_deactivate, chain_rxq_base,
                      chain_rxq_ring_indices_addr, chain_rxq_ring_size_shift,
                      chain_rxq_entry_size_shift, chain_rxq_ring_index_select,
                      chain_txq_base, chain_txq_ring_indices_addr,
@@ -537,7 +537,6 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawrcb_d.pid, pid);
     
     modify_field(rawrcb_d.rawrcb_deactivate, rawrcb_deactivate);
-    modify_field(rawrcb_d.redir_span, redir_span);
     modify_field(rawrcb_d.chain_rxq_base, chain_rxq_base);
     modify_field(rawrcb_d.chain_rxq_ring_indices_addr, chain_rxq_ring_indices_addr);
     modify_field(rawrcb_d.chain_rxq_ring_size_shift, chain_rxq_ring_size_shift);

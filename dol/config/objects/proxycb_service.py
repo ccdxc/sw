@@ -109,8 +109,9 @@ class ProxyCbServiceObjectHelper:
         for proxycb in self.proxy_service_list:
             if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY' or \
                 proxycb.session.iflow.label == 'RAW-REDIR' or proxycb.session.iflow.label == 'RAW-REDIR-FLOW-MISS' or \
-                proxycb.session.iflow.label == 'RAW-REDIR-KNOWN-APPID' or \
+                proxycb.session.iflow.label == 'RAW-REDIR-SPAN' or proxycb.session.iflow.label == 'RAW-REDIR-KNOWN-APPID' or \
                 proxycb.session.iflow.label == 'PROXY-REDIR' or proxycb.session.iflow.label == 'PROXY-REDIR-E2E' or \
+                proxycb.session.iflow.label == 'PROXY-REDIR-SPAN-E2E' or \
                 proxycb.session.iflow.label == 'TCP-PROXY-E2E':
                 lst = []
                 lst.append(proxycb)

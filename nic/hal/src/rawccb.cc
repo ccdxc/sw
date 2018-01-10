@@ -133,7 +133,6 @@ rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
     rawccb->chain_txq_qid = spec.chain_txq_qid();
     rawccb->chain_txq_ring = spec.chain_txq_ring();
 
-    rawccb->redir_span = spec.redir_span();
     rawccb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
@@ -194,7 +193,6 @@ rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
     rawccb->chain_txq_qtype = spec.chain_txq_qtype();
     rawccb->chain_txq_qid = spec.chain_txq_qid();
     rawccb->chain_txq_ring = spec.chain_txq_ring();
-    rawccb->redir_span = spec.redir_span();
 
     pd::pd_rawccb_args_init(&pd_rawccb_args);
     pd_rawccb_args.rawccb = rawccb;
@@ -259,7 +257,6 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_txq_qtype(rrawccb.chain_txq_qtype);
     rsp->mutable_spec()->set_chain_txq_qid(rrawccb.chain_txq_qid);
     rsp->mutable_spec()->set_chain_txq_ring(rrawccb.chain_txq_ring);
-    rsp->mutable_spec()->set_redir_span(rrawccb.redir_span);
 
     rsp->mutable_spec()->set_stat_pkts_chain(rrawccb.stat_pkts_chain);
     rsp->mutable_spec()->set_stat_pkts_discard(rrawccb.stat_pkts_discard);
