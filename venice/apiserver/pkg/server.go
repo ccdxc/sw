@@ -93,14 +93,10 @@ func initAPIServer() {
 
 // reinitAPIServer performs needed initialization on reinit.
 func reinitAPIServer() {
-	oldcond := singletonAPISrv.runstate.cond
-	defer oldcond.L.Unlock()
-	oldcond.L.Lock()
 	singletonAPISrv.services = make(map[string]apiserver.Service)
 	singletonAPISrv.messages = make(map[string]apiserver.Message)
 	singletonAPISrv.hookregs = make(map[string]apiserver.ServiceHookCb)
 	singletonAPISrv.doneCh = make(chan error)
-	singletonAPISrv.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
 	singletonAPISrv.activeWatches = safelist.New()
 }
 
