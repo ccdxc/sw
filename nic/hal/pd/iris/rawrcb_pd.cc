@@ -133,7 +133,6 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
      *   2) Redirect to a P4+ TxQ
      */
     rawrcb = rawrcb_pd->rawrcb;
-    data.u.rawr_rx_start_d.redir_span = rawrcb->redir_span;
     if (rawrcb->chain_txq_base) {
         assert(!rawrcb->chain_rxq_base);
         data.u.rawr_rx_start_d.chain_txq_base = rawrcb->chain_txq_base;
@@ -274,7 +273,6 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
         return HAL_RET_HW_FAIL;
     }
     rawrcb = rawrcb_pd->rawrcb;
-    rawrcb->redir_span = data.u.rawr_rx_start_d.redir_span;
     rawrcb->rawrcb_flags = data.u.rawr_rx_start_d.rawrcb_flags;
     rawrcb->chain_rxq_base = data.u.rawr_rx_start_d.chain_rxq_base;
     rawrcb->chain_rxq_ring_indices_addr = data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr;

@@ -44,7 +44,6 @@ class RawrCbObject(base.ConfigObjectBase):
         req_spec.key_or_handle.rawrcb_id    = self.id
         if req_spec.__class__.__name__ != 'RawrCbGetRequest':
            req_spec.rawrcb_flags                 = self.rawrcb_flags
-           req_spec.redir_span                   = self.redir_span
            req_spec.chain_rxq_base               = self.chain_rxq_base
            req_spec.chain_rxq_ring_indices_addr  = self.chain_rxq_ring_indices_addr
            req_spec.chain_rxq_ring_size_shift    = self.chain_rxq_ring_size_shift
@@ -68,7 +67,6 @@ class RawrCbObject(base.ConfigObjectBase):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'RawrCbResponse':
             self.rawrcb_flags                 = resp_spec.spec.rawrcb_flags
-            self.redir_span                   = resp_spec.spec.redir_span
             self.chain_rxq_base               = resp_spec.spec.chain_rxq_base
             self.chain_rxq_ring_indices_addr  = resp_spec.spec.chain_rxq_ring_indices_addr
             self.chain_rxq_ring_size_shift    = resp_spec.spec.chain_rxq_ring_size_shift

@@ -44,7 +44,6 @@ typedef struct rawrcb_s {
     uint8_t               chain_rxq_ring_size_shift;
     uint8_t               chain_rxq_entry_size_shift;
     uint8_t               chain_rxq_ring_index_select;
-    uint8_t               redir_span;
 
     uint64_t              chain_txq_base;           // next service chain TxQ base, if any
     uint64_t              chain_txq_ring_indices_addr;

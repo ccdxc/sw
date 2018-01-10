@@ -15,7 +15,6 @@ meta:
 id                              : 0 # RAWR CB Local ID
 spec                            : None # (REF) RAWR CB Spec from Base Config.
 rawrcb_flags                    : 0
-redir_span                      : 0
 chain_rxq_base                  : 0
 chain_rxq_ring_indices_addr     : 0
 chain_rxq_ring_size_shift       : 0

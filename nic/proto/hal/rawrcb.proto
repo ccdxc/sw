@@ -42,26 +42,25 @@ message RawrCbSpec {
   uint32                chain_txq_lif              = 14;
   uint32                chain_txq_qtype            = 15;
   uint32                chain_txq_qid              = 16;
-  uint32                redir_span                 = 17;
   
   /*
    * 64-bit statistic counters
    */
-  uint64                stat_pkts_redir            = 18;
-  uint64                stat_pkts_discard          = 19;
+  uint64                stat_pkts_redir            = 17;
+  uint64                stat_pkts_discard          = 18;
   
   /*
    * 32-bit saturating statistic counters
    */
-  uint32                stat_cb_not_ready          = 20;
-  uint32                stat_qstate_cfg_err        = 21;
-  uint32                stat_pkt_len_err           = 22;
-  uint32                stat_rxq_full              = 23;
-  uint32                stat_txq_full              = 24;
-  uint32                stat_desc_sem_alloc_full   = 25;
-  uint32                stat_mpage_sem_alloc_full  = 26;
-  uint32                stat_ppage_sem_alloc_full  = 27;
-  uint32                stat_sem_free_full         = 28;
+  uint32                stat_cb_not_ready          = 19;
+  uint32                stat_qstate_cfg_err        = 20;
+  uint32                stat_pkt_len_err           = 21;
+  uint32                stat_rxq_full              = 22;
+  uint32                stat_txq_full              = 23;
+  uint32                stat_desc_sem_alloc_full   = 24;
+  uint32                stat_mpage_sem_alloc_full  = 25;
+  uint32                stat_ppage_sem_alloc_full  = 26;
+  uint32                stat_sem_free_full         = 27;
 }
 
 // RawrCbRequestMsg is batched add or modify rawrcb request

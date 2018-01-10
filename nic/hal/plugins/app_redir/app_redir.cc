@@ -100,8 +100,7 @@ app_redir_feature_status_set(fte::ctx_t& ctx,
  */
 static hal_ret_t
 _app_redir_rawrcb_create(fte::ctx_t& ctx,
-                         uint32_t cb_id,
-                         bool redir_span)
+                         uint32_t cb_id)
 {
     rawrcb_t    rawrcb;
 
@@ -125,8 +124,7 @@ _app_redir_rawrcb_create(fte::ctx_t& ctx,
  */
 static hal_ret_t
 _app_redir_rawccb_create(fte::ctx_t& ctx,
-                         uint32_t cb_id,
-                         bool redir_span)
+                         uint32_t cb_id)
 {
     rawccb_t    rawccb;
 
@@ -135,7 +133,6 @@ _app_redir_rawccb_create(fte::ctx_t& ctx,
      * left at zero.
      */
     app_redir_rawccb_init(cb_id, rawccb);
-    rawccb.redir_span = redir_span;
     return app_redir_rawccb_create(rawccb);
 }
 
@@ -158,19 +155,15 @@ app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
     if (ctx.pkt() && (ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
         (redir_ctx.chain_flow_id() != APP_REDIR_SPAN_RAWRCB_ID)) {
 
-        ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_flow_id(),
-                                       false);
+        ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_flow_id());
         if (ret == HAL_RET_OK) {
-            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_flow_id(),
-                                           false);
+            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_flow_id());
         }
         if (ret == HAL_RET_OK) {
-            ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_rev_flow_id(),
-                                           false);
+            ret = _app_redir_rawccb_create(ctx, redir_ctx.chain_rev_flow_id());
         }
         if (ret == HAL_RET_OK) {
-            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_rev_flow_id(),
-                                           false);
+            ret = _app_redir_rawrcb_create(ctx, redir_ctx.chain_rev_flow_id());
         }
     }
 

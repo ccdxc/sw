@@ -52,7 +52,6 @@ typedef struct rawccb_s {
     uint8_t               chain_txq_ring_size_shift;
     uint8_t               chain_txq_entry_size_shift;
     uint8_t               chain_txq_ring;
-    uint8_t               redir_span;
 
     /*
      * 64-bit statistic counters
