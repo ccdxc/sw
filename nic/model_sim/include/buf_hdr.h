@@ -27,7 +27,8 @@ typedef enum buff_type_e_ {
     BUFF_TYPE_MAC_INTR_EN = 16,
     BUFF_TYPE_MAC_INTR_CLR = 17,
     BUFF_TYPE_REGISTER_MEM_ADDR = 18,
-    BUFF_TYPE_EXIT_SIM = 19
+    BUFF_TYPE_EXIT_SIM = 19,
+    BUFF_TYPE_CONFIG_DONE = 20,
 } buff_type_e;
 
 typedef struct buffer_port_s_ {

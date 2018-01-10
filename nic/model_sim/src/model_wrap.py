@@ -169,3 +169,20 @@ def exit_simulation ():
     zmq_close(socket)
     return pkt
     pass
+
+def config_done ():
+    buffsize = 4096
+    socket = zmq_connect()
+    buff = pack('iiiiiiiQ', 20, 0, 0, 0, 0, 0, 0, 0)
+    try:
+        socket.send(buff)
+        msg = socket.recv()
+    except zmq.ZMQError as e:
+        if e.errno == zmq.EAGAIN:
+            error_exit()
+    btype, size, port, cos, status, slowfast, ctime, addr= unpack('iiiiiiiQ', msg[0:40])
+    eoffset = 40 + size
+    pkt = msg[40:eoffset]
+    zmq_close(socket)
+    return pkt
+    pass

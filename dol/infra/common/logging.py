@@ -89,8 +89,8 @@ class Logger:
         return
 
     def __get_timestamp(self):
-        #return "[%s] " % str(datetime.datetime.now())
-        return ''
+        return "[%s] " % str(datetime.datetime.now())
+        #return ''
 
     def __format(self, *args, **kwargs):
         text = ""
@@ -146,7 +146,7 @@ class Logger:
         self.level = level
 
     def GetLogPrefix(self):
-        return "[%s][INFO]" % self.name
+        return self.__get_timestamp() + "[%s][INFO]" % self.name
 
     def ShowScapyObject(self, scapyobj):
         scapyobj.show2(indent = 0,

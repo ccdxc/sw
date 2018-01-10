@@ -22,6 +22,7 @@ bool dump_hbm(void);
 void step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
 void register_mem_addr(uint64_t addr);
 void exit_simulation(void);
+void config_done(void);
 // mac config APIs to model
 int lib_model_mac_msg_send (uint32_t port_num,
                             uint32_t speed,

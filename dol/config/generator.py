@@ -24,6 +24,7 @@ from config.objects.brq                 import BRQHelper
 from config.objects.timer               import TimerHelper
 from config.objects.security_policy     import SecurityGroupPolicyHelper
 from infra.common.logging               import cfglogger as cfglogger
+from infra.asic.model                   import ModelConnector
 
 def process(topospec):
     QosClassHelper.main(topospec)
@@ -85,5 +86,6 @@ def main(topofile):
     topospec = parser.ParseFile('config/topology/', topofile)
     process(topospec)
     timeprofiler.ConfigTimeProfiler.Stop()
+    ModelConnector.ConfigDone()
     return
 

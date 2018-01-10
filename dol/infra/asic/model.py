@@ -63,6 +63,11 @@ class ModelConnectorObject:
         self.__recv_cpu_packets(rxpkts)
         return rxpkts
 
+    def ConfigDone(self):
+        if GlobalOptions.dryrun: return
+        model_wrap.config_done()
+        return
+
 ModelConnector = ModelConnectorObject()
 
 def exit_cleanup():
