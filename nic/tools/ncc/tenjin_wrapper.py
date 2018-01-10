@@ -23,6 +23,10 @@ def render_template(out, name, context, templates_dir, prefix=None):
     else:
         engine = TemplateEngine(pp=pp, cache=False)
     out.write(engine.render(name, context, template_globals))
+    if 'KD_DICT' in context:
+        return context['KD_DICT']
+    else:
+        return None
 
 
 # We have not found a use for this yet, so excude it from cov report

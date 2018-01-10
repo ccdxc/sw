@@ -28,6 +28,8 @@
  * For now all actiondata follows Key 
  */
 
+//::     k_d_action_data_json = {}
+//::     k_d_action_data_json['INGRESS_KD'] = {}
 //::     for table in pddict['tables']:
 //::        if pddict['tables'][table]['direction'] == "EGRESS":
 //::            continue
@@ -130,12 +132,15 @@ struct ${table}_k {
 //::        #endif # if k+i len > 0
 
 /* K + D fields */
+//::        k_d_action_data_json['INGRESS_KD'][table] = {}
 //::        for action in pddict['tables'][table]['actions']:
 //::            pad_to_512 = 0
 //::            (actionname, actionfldlist) = action
 //::            kd_size = 0
 //::            pad_data_bits = 0
 //::            totaladatabits = 0
+//::            kd_json = OrderedDict()
+//::            _kdbit = 0
 //::            if len(actionfldlist):
 //::                totaladatabits = 0
 //::                for actionfld in actionfldlist:
@@ -149,6 +154,8 @@ struct ${table}_${actionname}_d {
 //::                    mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::                    if len(pddict['tables'][table]['actions']) > 1:
 //::                        actionpc_bits = 8
+//::                        kd_json[0] = {'bit': 0, 'width': 8, 'field': __action_pc}
+//::                        _kdbit += 8
 //::                    else:
 //::                        actionpc_bits = 0
 //::                    #endif
@@ -166,6 +173,8 @@ struct ${table}_${actionname}_d {
 //::                        axi_pad_bits = ((adata_bits_before_key - max_adata_bits_before_key) >> 4) << 4
 //::                        if axi_pad_bits:
     __pad_axi_shift_bits : ${axi_pad_bits};
+//::                            kd_json[_kdbit] = {'bit': _kdbit, 'width': axi_pad_bits, 'field': '__pad_axi_shift_bits'}
+//::                            _kdbit += axi_pad_bits
 //::                            kd_size += axi_pad_bits
 //::                        #endif
 //::                    #endif
@@ -184,11 +193,15 @@ struct ${table}_${actionname}_d {
 //::                            #endif
 //::                            if actionfldwidth <= fill_adata:
     ${actionfldname} : ${actionfldwidth} ${little_str};
+//::                                kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth, 'field': actionfldname}
+//::                                _kdbit += actionfldwidth
 //::                                fill_adata -= actionfldwidth
 //::                                last_actionfld_bits = actionfldwidth
 //::                                total_adatabits_beforekey += actionfldwidth
 //::                            else:
     ${actionfldname}_sbit0_ebit${fill_adata - 1} : ${fill_adata} ${little_str};
+//::                                kd_json[_kdbit] = {'bit': _kdbit, 'width': fill_adata, 'field': actionfldname + '_sbit0_ebit' + str(fill_adata-1)}
+//::                                _kdbit += fill_adata
 //::                                last_actionfld_bits = fill_adata
 //::                                total_adatabits_beforekey += fill_adata
 //::                                fill_adata = 0
@@ -202,6 +215,8 @@ struct ${table}_${actionname}_d {
 //::                        if (axi_pad_bits + total_adatabits_beforekey + actionpc_bits) < mat_key_start_bit:
 //::                            pad_data_bits = mat_key_start_bit - (axi_pad_bits + total_adatabits_beforekey + actionpc_bits)
     __pad_adata_key_gap_bits : ${pad_data_bits};
+//::                            kd_json[_kdbit] = {'bit': _kdbit, 'width': pad_data_bits, 'field': '__pad_adata_key_gap_bits'}
+//::                            _kdbit += pad_data_bits
 //::                            kd_size += pad_data_bits
 //::                        #endif
 //::                    #endif
@@ -345,6 +360,8 @@ struct ${table}_${actionname}_d {
 //::                    else:
 //::                        # Table Key bits -- Pad it here
     __pad_key_bits : ${_match_key_bit_length}; /* Entire Contiguous Keybits */
+//::                        kd_json[_kdbit] = {'bit': _kdbit, 'width': _match_key_bit_length, 'field': '__pad_key_bits'}
+//::                        _kdbit += _match_key_bit_length
 //::                    #endif
 //::                    kd_size += _match_key_bit_length
 //::                #endif
@@ -365,10 +382,14 @@ struct ${table}_${actionname}_d {
 //::                            skip_adatafld  = False
 //::                            if actionfldwidth > last_actionfld_bits:
     ${actionfldname}_sbit${last_actionfld_bits}_ebit${actionfldwidth - 1} : ${actionfldwidth - last_actionfld_bits} ${little_str};
-//::                            #endif    
+//::                                kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth - last_actionfld_bits, 'field': actionfldname + '_sbit' + str(last_actionfld_bits) + '_ebit' + str(actionfldwidth - 1)}
+//::                                _kdbit += (actionfldwidth - last_actionfld_bits)
+//::                            #endif
 //::                            continue
 //::                        #endif
     ${actionfldname} : ${actionfldwidth};
+//::                            kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth, 'field': actionfldname}
+//::                            _kdbit += actionfldwidth
 //::                    #endfor
 //::                else:
 //::                    for actionfld in actionfldlist:
@@ -380,9 +401,11 @@ struct ${table}_${actionname}_d {
 //::                            #endif
 //::                        #endif
     ${actionfldname} : ${actionfldwidth} ${little_str};
+//::                        kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth, 'field': actionfldname}
+//::                        _kdbit += actionfldwidth
 //::                    #endfor
 //::                #endif
-//::                kd_size += totaladatabits 
+//::                kd_size += totaladatabits
 //::                if len(pddict['tables'][table]['actions']) > 1:
 //::                    if not (pddict['tables'][table]['is_raw']):
 //::                        pad_to_512 = 512 - (8 + kd_size)
@@ -394,9 +417,12 @@ struct ${table}_${actionname}_d {
 //::                #endif
 //::                if (pad_to_512):
     __pad_to_512b : ${pad_to_512};
+//::                    kd_json[_kdbit] = {'bit': _kdbit, 'width': pad_to_512, 'field': '__pad_to_512b'}
+//::                    _kdbit += pad_to_512
 //::                #endif
 };
 //::            #endif
+//::        k_d_action_data_json['INGRESS_KD'][table][actionname] = kd_json
 //::        #endfor
 
 //::        if len(pddict['tables'][table]['actions']) > 1:
@@ -434,5 +460,7 @@ struct ${table}_d {
 
 
 //::     #endfor
+
+//::     _context['KD_DICT'] = k_d_action_data_json
 
 

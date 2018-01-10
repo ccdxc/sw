@@ -90,6 +90,29 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
                             prefix=tenjin_prefix)
             of.close()
 
+def p4pd_generate_asm_code(pd_dict, template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name):
+
+    if output_h_dir and not os.path.exists(output_h_dir):
+        os.mkdir(output_h_dir)
+    if output_c_dir and not os.path.exists(output_c_dir):
+        os.mkdir(output_c_dir)
+    if output_py_dir and not os.path.exists(output_py_dir):
+        os.mkdir(output_py_dir)
+
+    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, pd_dict['cli-name'])
+    kd_json = {}
+    for templatefile, outfile in templates_outfiles:
+        outputfile_path = os.path.dirname(outfile)
+        pdd = {}
+        with open(outfile, "w") as of:
+            pdd['pddict'] = pd_dict
+            kd_dict = render_template(of, templatefile, pdd, template_dir, \
+                            prefix=tenjin_prefix)
+            for k, v in kd_dict.items():
+                kd_json[k] = v
+            of.close()
+    return kd_json
+
 class capri_p4pd:
     def __init__(self, capri_be):
         self.be = capri_be
@@ -1486,7 +1509,8 @@ class capri_p4pd:
         cur_path = os.path.abspath(__file__)
         cur_path = os.path.split(cur_path)[0]
         templatedir = os.path.join(cur_path, 'asm_templates/')
-        p4pd_generate_code(self.pddict, templatedir, outputdir, None, None, '')
+        kd_dict = p4pd_generate_asm_code(self.pddict, templatedir, outputdir, None, None, '')
+        return kd_dict
 
     def generate_swig(self):
         capri_p4pd_create_swig_makefile(self.be)
@@ -1503,5 +1527,7 @@ def capri_p4pd_code_generate(capri_be):
     #with open('/tmp/pddict.json', "w") as of:
     #    json.dump(p4pd.pddict, of, indent=2)
     #    of.close()
-    p4pd.generate_code()
+    k_plus_d_dict = p4pd.generate_code()
     p4pd.generate_swig()
+
+    return k_plus_d_dict

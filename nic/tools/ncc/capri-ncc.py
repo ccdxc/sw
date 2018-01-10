@@ -111,11 +111,15 @@ class capri_backend:
             dp.initialize()
         self.pa.init_synthetic_headers()
 
-    def model_dbg_output(self):
+    def model_dbg_output(self, k_plus_d_dict):
         pa_dbg = self.pa.phv_dbg_output()
         parser_dbg = OrderedDict()
         for d in xgress:
             parser_dbg[d.name] = self.parsers[d].parser_dbg_output()
+
+        if k_plus_d_dict:
+            self.tables.tm_k_plus_d_fields_add(k_plus_d_dict)
+
         te_dbg = self.tables.tm_dbg_output()
 
         dbg_info = OrderedDict()
@@ -232,15 +236,16 @@ def main():
     #for icrc verification, computation.
     capri_be.icrc.IcrcLogicalOutputCreate()
 
-    # generate debug information for model
-    # output into a JSON file for model debug logs
-    capri_be.model_dbg_output()    
-
     if args.asm_out:
         capri_be.pa.capri_asm_output()
         capri_be.tables.capri_asm_output()
 
+    k_plus_d_dict = None
     if args.pd_gen or args.asm_out:
-        capri_p4pd_code_generate(capri_be)
+        k_plus_d_dict = capri_p4pd_code_generate(capri_be)
+
+    # generate debug information for model
+    # output into a JSON file for model debug logs
+    capri_be.model_dbg_output(k_plus_d_dict)
 
 main()

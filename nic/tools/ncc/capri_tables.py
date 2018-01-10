@@ -317,6 +317,7 @@ class capri_table:
         self.last_flit_end_key_off = -1     # for wide key and toeplitz has tables
         self.le_action_params = {}       #Collection of action paramerters that
                                             #are in little endian format.
+        self.k_plus_d = {} #Dictionary of K+D fields for each table's action.
 
     def is_hash_table(self):
         return True if (self.match_type == match_type.EXACT_HASH_OTCAM or \
@@ -4571,6 +4572,8 @@ class capri_stage:
                     km_dbg_info['key_maker_bits'][str(b)] = km_bits
 
                 tbl_dbg_info['key_maker%d' % k] = km_dbg_info
+            #Add K+D details
+            tbl_dbg_info['k_plus_d'] = ct.k_plus_d
             debug_info['Tables'][tbl_id_str] = tbl_dbg_info
 
         return debug_info
@@ -5243,6 +5246,11 @@ class capri_gress_tm:
         for stg in self.stages.values():
             debug_info['stage%d' % stg.id] = stg.stg_te_dbg_output()
         return debug_info
+
+    def tm_k_plus_d_fields_add(self, k_plus_d_dict):
+        for ct in self.tables.values():
+            if ct.p4_table.name in k_plus_d_dict.keys():
+                ct.k_plus_d = k_plus_d_dict[ct.p4_table.name]
 
 class capri_table_mapper:
     def __init__(self, tmgr):
@@ -5943,3 +5951,10 @@ class capri_table_manager:
         for d in xgress:
             te_debug_info[d.name] = self.gress_tm[d].te_dbg_output()
         return te_debug_info
+
+    def tm_k_plus_d_fields_add(self, k_plus_d_dict):
+        for d in xgress:
+            if d == xgress.INGRESS:
+                self.gress_tm[d].tm_k_plus_d_fields_add(k_plus_d_dict['INGRESS_KD'])
+            else:
+                self.gress_tm[d].tm_k_plus_d_fields_add(k_plus_d_dict['EGRESS_KD'])
