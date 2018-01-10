@@ -18,6 +18,7 @@ tcp_tx_debug_dol_dont_tx = 0x2
 tcp_tx_debug_dol_bypass_barco = 0x4
 tcp_tx_debug_dol_dont_start_retx_timer = 0x8
 tcp_tx_debug_dol_force_timer_full = 0x10
+tcp_tx_debug_dol_force_tbl_setaddr = 0x20
 
 tcp_state_ESTABLISHED = 1
 tcp_state_SYN_SENT = 2
@@ -41,6 +42,8 @@ l7_proxy_type_NONE = 0
 l7_proxy_type_REDIR = 1
 l7_proxy_type_SPAN = 2
 
+tcp_ddol_TBLADDR_VALUE = 0x59
+
 def SetupProxyArgs(tc):
     tc.module.logger.info("Testcase Args:")
     same_flow = 0
@@ -50,6 +53,7 @@ def SetupProxyArgs(tc):
     test_retx_timer = 0
     test_cancel_retx_timer = 0
     test_retx_timer_full = 0
+    test_mpu_tblsetaddr = 0
     ooo_seq_delta = 0
     num_pkts = 1
     test_retx = None
@@ -97,6 +101,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'test_retx_timer_full'):
         test_retx_timer_full = tc.module.args.test_retx_timer_full
         tc.module.logger.info("- test_retx_timer_full %s" % tc.module.args.test_retx_timer_full)
+    if hasattr(tc.module.args, 'test_mpu_tblsetaddr'):
+        test_mpu_tblsetaddr = tc.module.args.test_mpu_tblsetaddr
+        tc.module.logger.info("- test_mpu_tblsetaddr %s" % tc.module.args.test_mpu_tblsetaddr)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -141,6 +148,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.test_retx_timer = test_retx_timer
     tc.pvtdata.test_cancel_retx_timer = test_cancel_retx_timer
     tc.pvtdata.test_retx_timer_full = test_retx_timer_full
+    tc.pvtdata.test_mpu_tblsetaddr = test_mpu_tblsetaddr
     tc.pvtdata.ooo_seq_delta = ooo_seq_delta
     tc.pvtdata.num_pkts = num_pkts
     tc.pvtdata.test_retx = test_retx
@@ -178,6 +186,8 @@ def init_tcb_inorder(tc, tcb):
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
     if tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_force_timer_full
+    if tc.pvtdata.test_mpu_tblsetaddr:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_force_tbl_setaddr
     if tc.pvtdata.same_flow:
         tcb.source_port = tc.config.flow.sport
         tcb.dest_port = tc.config.flow.dport
@@ -268,6 +278,8 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
     if tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_force_timer_full
+    if tc.pvtdata.test_mpu_tblsetaddr:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_force_tbl_setaddr
     if tc.pvtdata.bypass_barco:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
         tcb.debug_dol |= tcp_debug_dol_bypass_barco

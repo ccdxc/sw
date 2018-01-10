@@ -506,6 +506,14 @@ modules:
             final_fin : 1
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TBLSETADDR
+        spec    : uplink_to_uplink.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            test_mpu_tblsetaddr : 1
+
+    - module:
         name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4

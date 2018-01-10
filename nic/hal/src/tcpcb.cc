@@ -286,6 +286,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_spec()->set_debug_dol_tx(rtcpcb.debug_dol_tx);
     rsp->mutable_spec()->set_pending_ack_send(rtcpcb.pending_ack_send);
     rsp->mutable_spec()->set_l7_proxy_type(rtcpcb.l7_proxy_type);
+    rsp->mutable_spec()->set_debug_dol_tblsetaddr(rtcpcb.debug_dol_tblsetaddr);
 
 
     // fill operational state of this TCP CB

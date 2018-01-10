@@ -58,6 +58,7 @@ message TcpCbSpec {
   uint64                rx_ts                      = 29;
   uint64                rto                        = 30;
   uint32                snd_cwnd_cnt               = 31;
+  uint32                debug_dol_tblsetaddr       = 32;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

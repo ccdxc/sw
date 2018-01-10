@@ -85,6 +85,7 @@ class TcpCbObject(base.ConfigObjectBase):
             self.ts_recent = resp_spec.spec.ts_recent
             self.debug_dol = resp_spec.spec.debug_dol
             self.debug_dol_tx = resp_spec.spec.debug_dol_tx
+            self.debug_dol_tblsetaddr = resp_spec.spec.debug_dol_tblsetaddr
             self.sesq_pi = resp_spec.spec.sesq_pi
             self.sesq_ci = resp_spec.spec.sesq_ci
             self.asesq_pi = resp_spec.spec.asesq_pi

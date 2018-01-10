@@ -594,6 +594,15 @@ metadata ring_entry_t l7_ring_entry;
 metadata doorbell_data_t db_data;
 @pragma dont_trim
 metadata doorbell_data_t db_data2;
+
+header_type ring_entry_pad_t {
+    fields {
+        ring_entry_pad      : 16;
+    }
+}
+@pragma dont_trim
+metadata ring_entry_pad_t  ring_entry_pad;
+
 /* ring_entry and aol needs to be contiguous in PHV */
 @pragma dont_trim
 metadata ring_entry_t ring_entry; 

@@ -80,7 +80,8 @@
     modify_field(common_global_scratch.debug_dol_dont_tx, common_phv.debug_dol_dont_tx); \
     modify_field(common_global_scratch.debug_dol_free_rnmdr, common_phv.debug_dol_free_rnmdr);\
     modify_field(common_global_scratch.debug_dol_dont_start_retx_timer, common_phv.debug_dol_dont_start_retx_timer);\
-    modify_field(common_global_scratch.debug_dol_bypass_barco, common_phv.debug_dol_bypass_barco);
+    modify_field(common_global_scratch.debug_dol_bypass_barco, common_phv.debug_dol_bypass_barco);\
+    modify_field(common_global_scratch.debug_dol_force_tbl_setaddr, common_phv.debug_dol_force_tbl_setaddr);
 
 /******************************************************************************
  * D-vectors
@@ -108,8 +109,10 @@ header_type rx2tx_d_t {
 
         asesq_base : HBM_ADDRESS_WIDTH; // 4 bytes
 
+        debug_dol_tblsetaddr : 8; // 1 byte
+
         // When this offset changes, modify TCP_TCB_RX2TX_SHARED_WRITE_OFFSET
-        RX2TX_SHARED_STATE      // 22 bytes @ Offset 42
+        RX2TX_SHARED_STATE      // 20 bytes @ Offset 43
     }
 }
 
@@ -198,6 +201,7 @@ header_type common_global_phv_t {
         debug_dol_free_rnmdr    : 1;
         debug_dol_dont_start_retx_timer : 1;
         debug_dol_bypass_barco : 1;
+        debug_dol_force_tbl_setaddr : 1;
     }
 }
 
@@ -436,8 +440,9 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
 
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
-pi_4, ci_4, pi_5, ci_5, debug_dol_tx, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd,\
-ft_pi, __unused_cwnd, rto, rx_flag, state, pending_ack_send, pending_rx_tcp_ack\
+pi_4, ci_4, pi_5, ci_5, debug_dol_tx, debug_dol_tblsetaddr, sesq_base, asesq_base,snd_una,\
+rcv_nxt, snd_wnd,ft_pi, rto, rx_flag, state, pending_ack_send,\
+pending_rx_tcp_ack\
 
 
 
@@ -463,13 +468,13 @@ ft_pi, __unused_cwnd, rto, rx_flag, state, pending_ack_send, pending_rx_tcp_ack\
     modify_field(rx2tx_d.pi_5, pi_5);                                                                  \
     modify_field(rx2tx_d.ci_5, ci_5);                                                                  \
     modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
+    modify_field(rx2tx_d.debug_dol_tblsetaddr, debug_dol_tblsetaddr);                                  \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
     modify_field(rx2tx_d.asesq_base,asesq_base);                                                       \
     modify_field(rx2tx_d.snd_una, snd_una);                                                            \
     modify_field(rx2tx_d.rcv_nxt, rcv_nxt);                                                            \
     modify_field(rx2tx_d.snd_wnd, snd_wnd);                                                            \
     modify_field(rx2tx_d.ft_pi, ft_pi);                                                                \
-    modify_field(rx2tx_d.__unused_cwnd, __unused_cwnd);                                                \
     modify_field(rx2tx_d.rto, rto);                                                                    \
     modify_field(rx2tx_d.rx_flag, rx_flag);                                                            \
     modify_field(rx2tx_d.state, state);                                                                \

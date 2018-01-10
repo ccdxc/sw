@@ -66,6 +66,8 @@ tcp_tx_read_rx2tx_shared_process:
 tcp_tx_launch_sesq:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TBL_SETADDR, TCP_TX_DDOL_FORCE_TBL_SETADDR
+    phvwri.c1       p.common_phv_debug_dol_force_tbl_setaddr, 1
     add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
     phvwr           p.to_s1_sesq_ci_addr, r3
     tbladd          d.{ci_0}.hx, 1
@@ -90,6 +92,12 @@ tcp_tx_launch_sesq:
     memwr.dx        r4, r3
 
 tcp_tx_launch_sesq_end:
+    // DEBUG ONLY code
+    add             r1, k.p4_txdma_intr_qstate_addr, TCP_DDOL_TBLADDR_SHIFT_OFFSET
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TBL_SETADDR, TCP_TX_DDOL_FORCE_TBL_SETADDR
+    tblsetaddr.c1   r1, 2
+    tblwr           d.debug_dol_tblsetaddr, TCP_DDOL_TBLADDR_VALUE
+    // END of DEBUG code
     nop.e
     nop
 

@@ -68,5 +68,9 @@
 #define TCP_TX_DDOL_BYPASS_BARCO        0x4
 #define TCP_TX_DDOL_DONT_START_RETX_TIMER 0x8
 #define TCP_TX_DDOL_FORCE_TIMER_FULL    0x10
+#define TCP_TX_DDOL_FORCE_TBL_SETADDR   0x20
+
+#define TCP_DDOL_TBLADDR_SHIFT_OFFSET   (64 * 15)
+#define TCP_DDOL_TBLADDR_VALUE          0x59
 
 #endif /* #ifndef __TCP_COMMON_H__ */

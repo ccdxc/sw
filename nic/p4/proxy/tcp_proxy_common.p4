@@ -34,7 +34,6 @@
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
         snd_wnd                         : SEQ_NUMBER_WIDTH      ;\
         ft_pi                           : 16                    ;\
-        __unused_cwnd                   : WINDOW_WIDTH          ;\
         rto                             : 16                    ;\
         rx_flag                         : 8                     ;\
         state                           : 8                     ;\

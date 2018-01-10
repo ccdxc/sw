@@ -84,6 +84,8 @@ typedef struct tcpcb_s {
     uint64_t              debug_atomic5_incr7;
     uint64_t              debug_atomic6_incr7;
 
+    uint8_t               debug_dol_tblsetaddr;
+
     // tx stats
     uint64_t              bytes_sent;
     uint64_t              pkts_sent;

@@ -894,6 +894,7 @@ hal_ret_t
 p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
 {
     s0_t0_tcp_tx_d          data = {0};
+    uint16_t                debug_dol_tx;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
@@ -902,6 +903,19 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
+    }
+    debug_dol_tx = ntohs(data.u.read_rx2tx_d.debug_dol_tx);
+    if (debug_dol_tx & TCP_TX_DDOL_FORCE_TBL_SETADDR) {
+        /*
+         * DEBUG ONLY : read at a shifted offset
+         */
+        HAL_TRACE_DEBUG("reading rx2tx at an offset {}",
+                TCP_DDOL_TBLADDR_SHIFT_OFFSET);
+        hwid += TCP_DDOL_TBLADDR_SHIFT_OFFSET;
+        if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+            HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
+            return HAL_RET_HW_FAIL;
+        }
     }
     tcpcb_pd->tcpcb->sesq_base = data.u.read_rx2tx_d.sesq_base;
     tcpcb_pd->tcpcb->sesq_pi = data.u.read_rx2tx_d.pi_0;
@@ -913,6 +927,8 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
 
     tcpcb_pd->tcpcb->pending_ack_send = data.u.read_rx2tx_d.pending_ack_send;
 
+    tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
+
     HAL_TRACE_DEBUG("Received sesq_base: 0x{0:x}", tcpcb_pd->tcpcb->sesq_base);
     HAL_TRACE_DEBUG("Received sesq_pi: 0x{0:x}", tcpcb_pd->tcpcb->sesq_pi);
     HAL_TRACE_DEBUG("Received sesq_ci: 0x{0:x}", tcpcb_pd->tcpcb->sesq_ci);
@@ -921,6 +937,8 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     HAL_TRACE_DEBUG("Received asesq_ci: 0x{0:x}", tcpcb_pd->tcpcb->asesq_ci);
     HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: 0x{0:x}", 
                     tcpcb_pd->tcpcb->pending_ack_send);
+    HAL_TRACE_DEBUG("Received tblsetaddr: 0x{0:x}",
+                    tcpcb_pd->tcpcb->debug_dol_tblsetaddr);
 
     return HAL_RET_OK;
 }

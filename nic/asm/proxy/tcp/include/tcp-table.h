@@ -9,7 +9,7 @@
 // tcp_proxy_api.h **
 #define TCP_TCB_RX2TX_SHARED_OFFSET     0
 #define TCP_TCB_RX2TX_SHARED_WRITE_OFFSET \
-                    (TCP_TCB_RX2TX_SHARED_OFFSET + 42)  // skip intrinsic part etc
+                    (TCP_TCB_RX2TX_SHARED_OFFSET + 43)  // skip intrinsic part etc
 #define TCP_TCB_TX2RX_SHARED_OFFSET     64
 #define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
                     (TCP_TCB_TX2RX_SHARED_OFFSET + 32)  // skip intrinsic part etc

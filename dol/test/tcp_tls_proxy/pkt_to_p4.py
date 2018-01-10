@@ -399,6 +399,14 @@ def TestCaseVerify(tc):
                 print("flow 2 state not TIME_WAIT as expected")
                 return False
 
+    if tc.pvtdata.test_mpu_tblsetaddr:
+        print("debug_dol_tblsetaddr = 0x%x" % \
+                other_tcpcb_cur.debug_dol_tblsetaddr)
+        if (other_tcpcb_cur.debug_dol_tblsetaddr != \
+                tcp_proxy.tcp_ddol_TBLADDR_VALUE):
+            print("tblsetaddr value not as expected")
+            return False
+
     return True
 
 def TestCaseTeardown(tc):
