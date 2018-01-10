@@ -5,6 +5,8 @@ package apiclient
 import (
 	app "github.com/pensando/sw/api/generated/app"
 	appClient "github.com/pensando/sw/api/generated/app/grpc/client"
+	auth "github.com/pensando/sw/api/generated/auth"
+	authClient "github.com/pensando/sw/api/generated/auth/grpc/client"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	bookstoreClient "github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	cmd "github.com/pensando/sw/api/generated/cmd"
@@ -33,6 +35,8 @@ type Services interface {
 
 	// Package is app and len of messages is 3
 	AppV1() app.AppV1Interface
+	// Package is auth and len of messages is 2
+	AuthV1() auth.AuthV1Interface
 	// Package is bookstore and len of messages is 3
 	BookstoreV1() bookstore.BookstoreV1Interface
 	// Package is cmd and len of messages is 3
@@ -73,6 +77,7 @@ type apiGrpcServerClient struct {
 	client *rpckit.RPCClient
 
 	aAppV1                     app.AppV1Interface
+	aAuthV1                    auth.AuthV1Interface
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
 	aCollectionPolicyV1        collection.CollectionPolicyV1Interface
@@ -98,6 +103,10 @@ func (a *apiGrpcServerClient) Close() error {
 
 func (a *apiGrpcServerClient) AppV1() app.AppV1Interface {
 	return a.aAppV1
+}
+
+func (a *apiGrpcServerClient) AuthV1() auth.AuthV1Interface {
+	return a.aAuthV1
 }
 
 func (a *apiGrpcServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
@@ -177,6 +186,7 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Ser
 		logger: logger,
 
 		aAppV1:                     appClient.NewGrpcCrudClientAppV1(client.ClientConn, logger),
+		aAuthV1:                    authClient.NewGrpcCrudClientAuthV1(client.ClientConn, logger),
 		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
 		aCmdV1:                     cmdClient.NewGrpcCrudClientCmdV1(client.ClientConn, logger),
 		aCollectionPolicyV1:        collectionClient.NewGrpcCrudClientCollectionPolicyV1(client.ClientConn, logger),
@@ -200,6 +210,7 @@ type apiRestServerClient struct {
 	url string
 
 	aAppV1                     app.AppV1Interface
+	aAuthV1                    auth.AuthV1Interface
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
 	aCollectionPolicyV1        collection.CollectionPolicyV1Interface
@@ -225,6 +236,10 @@ func (a *apiRestServerClient) Close() error {
 
 func (a *apiRestServerClient) AppV1() app.AppV1Interface {
 	return a.aAppV1
+}
+
+func (a *apiRestServerClient) AuthV1() auth.AuthV1Interface {
+	return a.aAuthV1
 }
 
 func (a *apiRestServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
@@ -297,6 +312,7 @@ func NewRestAPIClient(url string) (Services, error) {
 		url: url,
 
 		aAppV1:                     appClient.NewRestCrudClientAppV1(url),
+		aAuthV1:                    authClient.NewRestCrudClientAuthV1(url),
 		aBookstoreV1:               bookstoreClient.NewRestCrudClientBookstoreV1(url),
 		aCmdV1:                     cmdClient.NewRestCrudClientCmdV1(url),
 		aCollectionPolicyV1:        collectionClient.NewRestCrudClientCollectionPolicyV1(url),

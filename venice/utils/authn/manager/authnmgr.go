@@ -1,0 +1,89 @@
+package manager
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+
+	k8serrors "k8s.io/apimachinery/pkg/util/errors"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/venice/utils/authn"
+	"github.com/pensando/sw/venice/utils/authn/ldap"
+	"github.com/pensando/sw/venice/utils/authn/password"
+	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
+)
+
+var (
+	// ErrNonExistentAuthenticator is returned when a non-existent authenticator is specified in AuthenticatorOrder in AuthenticationPolicy.
+	ErrNonExistentAuthenticator = errors.New("mis-configured authentication policy, authenticator doesn't exist")
+)
+
+//AuthenticationManager authenticates and returns user information
+type AuthenticationManager struct {
+	authenticators []authn.Authenticator
+	apicl          apiclient.Services
+}
+
+//New returns an instance of AuthenticationManager
+func New(apiServer string, resolverUrls string) (*AuthenticationManager, error) {
+	l := log.WithContext("Pkg", "authn")
+	// create a resolver
+	r := resolver.New(&resolver.Config{Name: "authn", Servers: strings.Split(resolverUrls, ",")})
+	apicl, err := apiclient.NewGrpcAPIClient(apiServer, l, rpckit.WithBalancer(balancer.New(r)))
+	if err != nil {
+		log.Errorf("Failed to connect to API server [%s]\n", apiServer)
+		return nil, err
+	}
+
+	// fetch authentication policy
+	objMeta := &api.ObjectMeta{
+		Name: "AuthenticationPolicy",
+	}
+	policy, err := apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), objMeta)
+	if err != nil {
+		log.Errorf("Error fetching authentication policy: Err: %v", err)
+		return nil, err
+	}
+	authenticatorOrder := policy.Spec.Authenticators.GetAuthenticatorOrder()
+	authenticators := make([]authn.Authenticator, len(authenticatorOrder))
+	for i, authenticatorType := range authenticatorOrder {
+		switch authenticatorType {
+		case auth.Authenticators_LOCAL.String():
+			authenticators[i] = password.NewPasswordAuthenticator(apicl, policy.Spec.Authenticators.GetLocal())
+		case auth.Authenticators_LDAP.String():
+			authenticators[i] = ldap.NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
+		case auth.Authenticators_RADIUS.String():
+			return nil, fmt.Errorf("[%s] Authenticator not yet implemented", authenticatorType)
+		default:
+			//Authentication policy can't be created with random strings in AuthenticatorOrder. So this shouldn't occur normally
+			return nil, ErrNonExistentAuthenticator
+		}
+	}
+
+	return &AuthenticationManager{
+		authenticators: authenticators,
+		apicl:          apicl,
+	}, nil
+}
+
+//Authenticate authenticates user using authenticators in the order defined in AuthenticationPolicy. If any authenticator succeeds, it doesn't try the remaining authenticators.
+func (authnmgr *AuthenticationManager) Authenticate(credential authn.Credential) (*auth.User, bool, error) {
+	var errlist []error
+	for _, authenticator := range authnmgr.authenticators {
+		user, ok, err := authenticator.Authenticate(credential)
+		if ok {
+			return user, ok, err
+		}
+		if err != nil {
+			errlist = append(errlist, err)
+		}
+	}
+	return nil, false, k8serrors.NewAggregate(errlist)
+}

@@ -1,5 +1,6 @@
 
 app.proto app
+auth.proto auth
 cmd.proto cmd
 collection.proto collection
 events.proto events

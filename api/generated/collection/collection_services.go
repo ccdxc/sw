@@ -8,7 +8,6 @@ package collection
 
 import (
 	"context"
-
 	"github.com/pensando/sw/api"
 )
 

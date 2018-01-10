@@ -8,7 +8,6 @@ package retention
 
 import (
 	"context"
-
 	"github.com/pensando/sw/api"
 )
 

@@ -8,7 +8,6 @@ package retention
 
 import (
 	fmt "fmt"
-
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"

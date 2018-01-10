@@ -14,6 +14,20 @@
       "protos/app.proto"
     ]
   },
+  "auth": {
+    "Svcs": {
+      "AuthV1": {
+        "Version": "v1",
+        "Messages": [
+          "User",
+          "AuthenticationPolicy"
+        ]
+      }
+    },
+    "Files": [
+      "protos/auth.proto"
+    ]
+  },
   "bookstore": {
     "Svcs": {
       "BookstoreV1": {

@@ -36,22 +36,22 @@ type apiGw struct {
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
-var sinletonAPIGw apiGw
+var singletonAPIGw apiGw
 var once sync.Once
 
 // MustGetAPIGateway gets the singleton API Gateway Object. Initialize if not already done.
 func MustGetAPIGateway() apigw.APIGateway {
 	once.Do(initAPIGw)
-	return &sinletonAPIGw
+	return &singletonAPIGw
 }
 
 // initAPIGw funciton is called exactly once. (Guarded by the once)
 // All inititializaion for the apiGw object goes here.
 func initAPIGw() {
-	sinletonAPIGw.svcmap = make(map[string]apigw.APIGatewayService)
-	sinletonAPIGw.svcname = make(map[string]string)
-	sinletonAPIGw.doneCh = make(chan error)
-	sinletonAPIGw.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
+	singletonAPIGw.svcmap = make(map[string]apigw.APIGatewayService)
+	singletonAPIGw.svcname = make(map[string]string)
+	singletonAPIGw.doneCh = make(chan error)
+	singletonAPIGw.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
 }
 
 // Register a service with the APi Gateway service. Duplicate registrations

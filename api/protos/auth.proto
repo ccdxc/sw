@@ -1,0 +1,172 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package auth;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ----------------------------- User Object -----------------------------
+
+// spec part of user object
+message UserSpec {
+    //User could be local or external like in LDAP
+    enum UserType {
+        LOCAL    = 0; //User managed locally
+        EXTERNAL = 1; //User external to Venice like in LDAP, SAML
+    }
+
+    string Fullname = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "fullname,omitempty"];
+    string Email    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "email,omitempty"];
+    string Password = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "password,omitempty"];
+    string Type     = 4 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(UserSpec.UserType)", (gogoproto.jsontag) = "type,omitempty"];
+}
+
+// status part of user object
+message UserStatus {
+    repeated string Roles             = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "roles,omitempty"];
+    repeated string UserGroups        = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
+    bool IsLoggedIn                   = 3 [(gogoproto.jsontag) = "is-logged-in,omitempty"];
+    api.Timestamp LastSuccessfulLogin = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-successful-login,omitempty"];
+}
+
+// User could be local or external
+message User {
+    option (venice.objectPrefix) = "user";
+    api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the user.
+    UserSpec Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the role binding.
+    UserStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// ----------------------------- Authentication Policy Object -----------------------------
+
+// spec part of authentication policy object
+message AuthenticationPolicySpec {
+    Authenticators Authenticators = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "authenticators,omitempty"];
+}
+
+message Authenticators {
+    enum AuthenticatorType {
+        LOCAL  = 0;
+        LDAP   = 1;
+        RADIUS = 2;
+    }
+
+    Ldap Ldap                          = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ldap,omitempty"];
+    Local Local                        = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "local,omitempty"];
+    Radius Radius                      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "radius,omitempty"];
+
+    //Order in which authenticators are applied. If an authenticator returns success, others are skipped
+    repeated string AuthenticatorOrder = 9 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticator-order,omitempty"];
+}
+
+message Ldap {
+    bool Enabled                          = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
+    string Url                            = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "url,omitempty"];
+    TLSOptions TLSOptions                 = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tls-options,omitempty"];
+    string BaseDN                         = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "base-dn,omitempty"];
+    string BindDN                         = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "bind-dn,omitempty"];
+    string BindPassword                   = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "bind-password,omitempty"];
+    LdapAttributeMapping AttributeMapping = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attribute-mapping,omitempty"];
+}
+
+message TLSOptions {
+    // StartTLS determines if ldap connection uses TLS
+    bool StartTLS                   = 1 [(gogoproto.jsontag) = "start-tls,omitempty"];
+
+    // SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.
+    // If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.
+    // In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.
+    bool SkipServerCertVerification = 2 [(gogoproto.jsontag) = "skip-server-cert-verification,omitempty"];
+
+    // ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.
+    string ServerName               = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "server-name,omitempty"];
+
+    // TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates.
+    string TrustedCerts             = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "trusted-certs,omitempty"];
+}
+
+message LdapAttributeMapping {
+    string User             = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user,omitempty"];
+
+    // UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
+    string UserObjectClass  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-object-class,omitempty"];
+
+    string Tenant           = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tenant,omitempty"];
+    string Group            = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "group,omitempty"];
+
+    // GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search
+    string GroupObjectClass = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "group-object-class,omitempty"];
+
+    string Email            = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "email,omitempty"];
+    string Fullname         = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "fullname,omitempty"];
+}
+
+message Local {
+    bool Enabled = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
+}
+
+message Radius {
+    bool Enabled  = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
+    string Ip     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ip,omitempty"];
+    string Port   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "port,omitempty"];
+    string NasIp  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nas-ip,omitempty"];
+    string Secret = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "secret,omitempty"];
+}
+
+// status part of authentication policy object
+message AuthenticationPolicyStatus {
+}
+
+// AuthenticationPolicy defines various authentication mechanisms available and order in which they are used
+message AuthenticationPolicy {
+    option (venice.objectPrefix) = "authn-policy";
+    api.TypeMeta T                    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O                  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains configuration of authentication mechanisms.
+    AuthenticationPolicySpec Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the authentication policy.
+    AuthenticationPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// Auth REST API
+service AuthV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "auth";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+    option (venice.apiGrpcCrudService) = "User";
+    option (venice.apiGrpcCrudService) = "AuthenticationPolicy";
+    
+    option (venice.apiRestService) = {
+         Object: "User"
+         Method: [ "get", "put", "delete" ]
+         Pattern: "/{O.Tenant}/users/{O.Name}"
+     };
+    option (venice.apiRestService) = {
+         Object: "User"
+         Method: [ "post", "list" ]
+         Pattern: "/{O.Tenant}/users"
+     };
+    option (venice.apiRestService) = {
+         Object: "AuthenticationPolicy"
+         Method: [ "get", "delete" ]
+         Pattern: "/authn-policy/{O.Name}"
+     };
+    option (venice.apiRestService) = {
+         Object: "AuthenticationPolicy"
+         Method: [ "put", "post" ]
+         Pattern: "/authn-policy"
+     };
+}

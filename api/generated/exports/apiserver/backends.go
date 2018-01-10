@@ -8,6 +8,8 @@ package apisrvbackends
 import (
 	// blank import to pull in app service into api server
 	_ "github.com/pensando/sw/api/generated/app/grpc/server"
+	// blank import to pull in auth service into api server
+	_ "github.com/pensando/sw/api/generated/auth/grpc/server"
 	// blank import to pull in cmd service into api server
 	_ "github.com/pensando/sw/api/generated/cmd/grpc/server"
 	// blank import to pull in collection service into api server
