@@ -73,3 +73,39 @@ modules:
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : LAST_FRAGMENT
+
+    - module:
+        name    : IPV4_TOTAL_LEN_GT_PKT
+        spec    : ip_drop.testspec
+        iterate :
+            - flow : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : IPV4_TOTAL_LEN_GT_PKT
+
+    - module:
+        name    : VXLAN_IPV4_TOTAL_LEN_GT_PKT
+        spec    : ip_vxlan_drop.testspec
+        iterate :
+            - flow : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : IPV4_TOTAL_LEN_GT_PKT
+
+    - module:
+        name    : IPV4_TOTAL_LEN_GT_PKT_PROTO255
+        spec    : ip_drop.testspec
+        iterate :
+            - flow : filter://type=IPV4,proto=PROTO255,label=NETWORKING
+              scenario  : IPV4_TOTAL_LEN_GT_PKT
+
+    - module:
+        name    : IPV4_TOTAL_LEN_LT_PKT
+        spec    : ip.testspec
+        iterate :
+            - flow : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : IPV4_TOTAL_LEN_LT_PKT
+
+    - module:
+        name    : VXLAN_IPV4_TOTAL_LEN_LT_PKT
+        spec    : ip_vxlan.testspec
+        iterate :
+            - flow : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : IPV4_TOTAL_LEN_LT_PKT
+

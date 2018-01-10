@@ -31,6 +31,7 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
+                #len     : callback://parser/callbacks/GetIpv4TotalLen
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -42,6 +43,7 @@ packets:
     - packet:
         id          : IN_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
+        paddingsize : callback://parser/callbacks/GetInputPaddingSize
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected

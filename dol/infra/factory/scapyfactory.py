@@ -404,9 +404,11 @@ class ScapyPacketObject:
         self.pktbytes = bytes(self.spkt)
         self.rawbytes = bytes(self.spkt)
         #self.__add_crc_header()
-        if packet.GetPaddingSize():
-            self.rawbytes += bytes([0xff] * packet.GetPaddingSize())
-        return
+        padsize = packet.GetPaddingSize()
+        if padsize < 0:
+            self.rawbytes = self.rawbytes[:len(self.rawbytes) + padsize]
+        else:  
+            self.rawbytes += bytes([0xff] * padsize)
 
     def __build_from_scapypacket(self, spkt):
         self.spkt       = spkt

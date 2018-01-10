@@ -32,6 +32,7 @@ packets:
                 ttl     : 64
                 flags   : callback://parser/callbacks/GetIpv4Flags
                 frag    : callback://parser/callbacks/GetIpv4FragOffset
+                #len     : callback://parser/callbacks/GetIpv4TotalLen
                 options : callback://parser/callbacks/GetIpv4Options
             ipv6:
                 src     : ref://testcase/config/flow/sip
@@ -51,6 +52,7 @@ packets:
     - packet:
         id          : IN_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
+        paddingsize : callback://parser/callbacks/GetInputPaddingSize
         encaps      : callback://networking/packets/GetPacketEncaps
 
     - packet:

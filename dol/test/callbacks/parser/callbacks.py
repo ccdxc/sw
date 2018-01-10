@@ -139,6 +139,21 @@ def GetIpv4FragOffset(tc, pkt):
         return 256
     return 0
 
+def GetIpv4TotalLen(tc, pkt):
+    if tc.pvtdata.scenario is None:
+        return None
+    if 'IPV4_TOTAL_LEN_GT_PKT' in tc.pvtdata.scenario:
+        return 93
+    return None
+
+def GetInputPaddingSize(tc, pkt):
+    if tc.pvtdata.scenario is None:
+        return 0
+    if 'IPV4_TOTAL_LEN_GT_PKT' in tc.pvtdata.scenario:
+        return -1
+    if 'IPV4_TOTAL_LEN_LT_PKT' in tc.pvtdata.scenario:
+        return 1
+    return 0
 
 IpOption2ObjectList = {
     'EOL'           : penscapy.IPOption_EOL,
