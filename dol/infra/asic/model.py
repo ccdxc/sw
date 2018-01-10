@@ -68,6 +68,17 @@ class ModelConnectorObject:
         model_wrap.config_done()
         return
 
+    def TestCaseBegin(self, tcid):
+        if GlobalOptions.dryrun: return
+        model_wrap.testcase_begin(tcid)
+        return
+
+    def TestCaseEnd(self, tcid):
+        if GlobalOptions.dryrun: return
+        model_wrap.testcase_end(tcid)
+        return
+
+
 ModelConnector = ModelConnectorObject()
 
 def exit_cleanup():

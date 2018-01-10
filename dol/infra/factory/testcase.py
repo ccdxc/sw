@@ -13,6 +13,7 @@ from infra.factory.store import FactoryStore as FactoryStore
 from infra.common.logging import logger
 from infra.misc.coverage import TestCaseCoverageHelper
 from infra.common.glopts import GlobalOptions as GlobalOptions
+from infra.asic.model import ModelConnector
 
 class TestCaseParser(parser.ParserBase):
     def __init__(self, path, filename):
@@ -418,6 +419,7 @@ class TestCase(objects.FrameworkObject):
     def StepSetupCallback(self, step):
         self.info("Invoking TestCaseStepSetup.")
         self.module.RunModuleCallback('TestCaseStepSetup', self, step)
+        ModelConnector.TestCaseBegin(self.GID())
         return
 
     def StepTriggerCallback(self, step):
@@ -434,4 +436,5 @@ class TestCase(objects.FrameworkObject):
     def StepTeardownCallback(self, step):
         self.info("Invoking TestCaseStepTeardown.")
         self.module.RunModuleCallback('TestCaseStepTeardown', self, step)
+        ModelConnector.TestCaseEnd(self.GID())
         return

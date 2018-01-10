@@ -361,6 +361,26 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
 	        buff->status = 0;
             }
             break;
+
+         case BUFF_TYPE_TESTCASE_BEGIN:
+            {
+                // Overloading size parameter to pass the tcid
+                printf("============== Starting Testcase TC%06d ===============\n",
+                       buff->size);
+    	        buff->type = BUFF_TYPE_STATUS;
+	            buff->status = 0;
+            }
+            break;
+         case BUFF_TYPE_TESTCASE_END:
+            {
+                // Overloading size parameter to pass the tcid
+                printf("============== Ending Testcase TC%06d ===============\n",
+                       buff->size);
+    	        buff->type = BUFF_TYPE_STATUS;
+	            buff->status = 0;
+            }
+            break;
+
     
         case BUFF_TYPE_STATUS:
         default:

@@ -186,3 +186,29 @@ def config_done ():
     zmq_close(socket)
     return pkt
     pass
+
+def testcase_begin (tcid):
+    buffsize = 4096
+    socket = zmq_connect()
+    buff = pack('iiiiiiiQ', 21, tcid, 0, 0, 0, 0, 0, 0)
+    try:
+        socket.send(buff)
+        msg = socket.recv()
+    except zmq.ZMQError as e:
+        if e.errno == zmq.EAGAIN:
+            error_exit()
+    zmq_close(socket)
+    return
+
+def testcase_end (tcid):
+    buffsize = 4096
+    socket = zmq_connect()
+    buff = pack('iiiiiiiQ', 22, tcid, 0, 0, 0, 0, 0, 0)
+    try:
+        socket.send(buff)
+        msg = socket.recv()
+    except zmq.ZMQError as e:
+        if e.errno == zmq.EAGAIN:
+            error_exit()
+    zmq_close(socket)
+    return
