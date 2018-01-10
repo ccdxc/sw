@@ -47,6 +47,7 @@ type Netctrler struct {
 	Watchr     *watcher.Watcher     // watcher
 	RPCServer  *rpcserver.RPCServer // rpc server
 	debugStats *debug.Stats
+	writr      writer.Writer
 }
 
 // NewNetctrler returns a controller instance
@@ -93,7 +94,25 @@ func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolve
 		Watchr:     watcher,
 		RPCServer:  rpcServer,
 		debugStats: debugStats,
+		writr:      wr,
 	}
 
 	return &ctrler, err
+}
+
+// Stop server and release resources
+func (c *Netctrler) Stop() error {
+	if c.Watchr != nil {
+		c.Watchr.Stop()
+		c.Watchr = nil
+	}
+	if c.RPCServer != nil {
+		c.RPCServer.Stop()
+		c.RPCServer = nil
+	}
+	c.StateMgr = nil
+	if c.writr != nil {
+		c.writr.Close()
+	}
+	return nil
 }

@@ -44,6 +44,10 @@ func (d *dummyWriter) WriteTenant(tn *network.Tenant) error {
 	return nil
 }
 
+func (d *dummyWriter) Close() error {
+	return nil
+}
+
 // createRPCServerClient creates rpc client and server
 func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpckit.RPCClient) {
 	// create network state manager

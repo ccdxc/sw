@@ -2,7 +2,7 @@
 
 // +build linux
 
-package tlsproviders
+package tlsproviders_test
 
 import (
 	"os"

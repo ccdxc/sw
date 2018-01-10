@@ -53,6 +53,7 @@ func TestNetworkWriter(t *testing.T) {
 	// create network state manager
 	wr, err := NewAPISrvWriter(apisrvURL, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
+	defer wr.Close()
 
 	// api server
 	apiSrv := createAPIServer(apisrvURL)
@@ -100,6 +101,7 @@ func TestEndpointWriter(t *testing.T) {
 	// create network state manager
 	wr, err := NewAPISrvWriter(apisrvURL, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
+	defer wr.Close()
 
 	// api server
 	apiSrv := createAPIServer(apisrvURL)
@@ -150,6 +152,7 @@ func TestSgWriter(t *testing.T) {
 	// create network state manager
 	wr, err := NewAPISrvWriter(apisrvURL, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
+	defer wr.Close()
 
 	// api server
 	apiSrv := createAPIServer(apisrvURL)
@@ -196,6 +199,7 @@ func TestSgPolicyWriter(t *testing.T) {
 	// create network state manager
 	wr, err := NewAPISrvWriter(apisrvURL, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
+	defer wr.Close()
 
 	// api server
 	apiSrv := createAPIServer(apisrvURL)
@@ -248,6 +252,7 @@ func TestTenantWriter(t *testing.T) {
 	// create network state manager
 	wr, err := NewAPISrvWriter(apisrvURL, nil)
 	AssertOk(t, err, "Error creating apisrv writer")
+	defer wr.Close()
 
 	// api server
 	apiSrv := createAPIServer(apisrvURL)

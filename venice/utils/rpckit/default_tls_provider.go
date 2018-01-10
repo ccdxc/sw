@@ -5,9 +5,13 @@
 package rpckit
 
 import (
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/testenv"
 )
+
+var certSrvEndpoint = "localhost:" + globals.CMDCertAPIPort
 
 // GetDefaultTLSProvider returns the default TLS provider.
 // svcName is needed by the TLS provider to acquire a valid certificate
@@ -18,16 +22,12 @@ func GetDefaultTLSProvider(svcName string) (TLSProvider, error) {
 		}
 		return nil, nil
 	}
-	// TODO: for the moment we still return nil as default TLS provider
-	// we will switch to CKM-based provider once the server-side is ready
-	/*tlsProvider, err := tlsproviders.NewDefaultCKMBasedProvider(ckmEndpoint, svcName)
+	tlsProvider, err := tlsproviders.NewDefaultCKMBasedProvider(certSrvEndpoint, svcName)
 	if err != nil {
-		log.Errorf("Error getting CKM-based TLS provider for service %s at %s", svcName, ckmEndpoint)
+		log.Errorf("Error getting CKM-based TLS provider for service %s at %s", svcName, certSrvEndpoint)
 		return nil, err
 	}
 	return tlsProvider, nil
-	*/
-	return nil, nil
 }
 
 // ********** FOR TESTING ONLY **********

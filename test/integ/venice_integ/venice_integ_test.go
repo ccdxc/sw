@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
@@ -20,16 +19,20 @@ import (
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/ctrler/npm"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/simapi"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/testenv"
 	"github.com/pensando/sw/venice/utils/tsdb"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
@@ -50,12 +53,17 @@ const (
 	integTestAPIGWURL   = "localhost:9092"
 	vchTestURL          = "localhost:19003"
 	agentDatapathKind   = "mock"
+	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
+	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
+	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
+	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
 )
 
 // veniceIntegSuite is the state of integ test
 type veniceIntegSuite struct {
 	apiSrv       apiserver.Server
 	apiGw        apigw.APIGateway
+	certSrv      *certsrv.CertSrv
 	ctrler       *npm.Netctrler
 	agents       []*netagent.Agent
 	datapaths    []*datapath.HalDatapath
@@ -87,6 +95,45 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	logger := log.GetNewLogger(log.GetDefaultConfig("venice_integ"))
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
+	// start certificate server
+	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
+	c.Assert(err, IsNil)
+	it.certSrv = certSrv
+	log.Infof("Created cert endpoint at %s", globals.CMDCertAPIPort)
+
+	// Now create a mock resolver
+	m := mock.NewResolverService()
+	resolverHandler := service.NewRPCHandler(m)
+	resolverServer, err := rpckit.NewRPCServer("resolver", "localhost:0", rpckit.WithTracerEnabled(true), rpckit.WithTLSProvider(nil))
+	c.Assert(err, IsNil)
+	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
+	resolverServer.Start()
+
+	// populate the mock resolver with apiserver instance.
+	si := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-apiserver-test",
+		},
+		Service: "pen-apiserver",
+		Node:    "localhost",
+		URL:     "localhost:8082",
+	}
+	m.AddServiceInstance(&si)
+
+	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
+	testenv.EnableRpckitTestMode()
+	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
+		p, err := tlsproviders.NewDefaultCKMBasedProvider(certSrv.GetListenURL(), svcName)
+		if err != nil {
+			return nil, err
+		}
+		return p, nil
+	}
+	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
+
 	// api server config
 	sch := runtime.NewScheme()
 	apisrvConfig := apiserver.Config{
@@ -105,28 +152,6 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.apiSrv = apisrvpkg.MustGetAPIServer()
 	go it.apiSrv.Run(apisrvConfig)
 	time.Sleep(time.Millisecond * 100)
-
-	// Now create a mock resolver
-	m := mock.NewResolverService()
-	resolverHandler := service.NewRPCHandler(m)
-	resolverServer, err := rpckit.NewRPCServer("resolver", "localhost:0", rpckit.WithTracerEnabled(true))
-	c.Assert(err, IsNil)
-	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
-	resolverServer.Start()
-
-	// populate the mock resolver with apiserver instance.
-	si := types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "pen-apiserver-test",
-		},
-		Service: "pen-apiserver",
-		Node:    "localhost",
-		URL:     "localhost:8082",
-	}
-	m.AddServiceInstance(&si)
 
 	// api gw config
 	apigwConfig := apigw.Config{
@@ -200,11 +225,13 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.datapaths = []*datapath.HalDatapath{}
 
 	// stop server and client
-	it.ctrler.RPCServer.Stop()
+	it.ctrler.Stop()
 	it.ctrler = nil
 	it.apiSrv.Stop()
 	it.apiGw.Stop()
+	it.certSrv.Stop()
 	it.vcHub.TearDown()
+	it.apisrvClient.Close()
 }
 
 // basic test to make sure all components come up
@@ -250,12 +277,11 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 // Verify basic vchub functionality
 func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 	// setup vchub client
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
-	conn, err := grpc.Dial(vchTestURL, opts...)
+	rpcClient, err := rpckit.NewRPCClient("vchTestURL", vchTestURL)
+	defer rpcClient.Close()
 	c.Assert(err, IsNil)
 
-	vcHubClient := orch.NewOrchApiClient(conn)
+	vcHubClient := orch.NewOrchApiClient(rpcClient.ClientConn)
 	// verify number of smartnics
 	filter := &orch.Filter{}
 	AssertEventually(c, func() (bool, []interface{}) {

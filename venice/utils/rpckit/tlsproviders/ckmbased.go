@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"time"
 
@@ -14,10 +15,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/pensando/sw/venice/ctrler/ckm/rpcserver/ckmproto"
+	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
+)
+
+const (
+	retryInterval = 500 * time.Millisecond
+	maxRetries    = 5
 )
 
 // CKMBasedProvider is a TLS Provider which retrieves keys and certificates from the Cluster Key Manager (CKM)
@@ -33,7 +39,7 @@ type CKMBasedProvider struct {
 	conn *grpc.ClientConn
 
 	// the CKM gRPC client
-	ckmClient ckmproto.CertificatesClient
+	ckmClient certapi.CertificatesClient
 
 	// When providing credentials for a client, use the same certificate for all connections
 	clientCertificate *tls.Certificate
@@ -82,7 +88,7 @@ func (p *CKMBasedProvider) getCkmDialOptions() []grpc.DialOption {
 
 func (p *CKMBasedProvider) fetchCaCertificates() error {
 	// Fetch CA trust chain
-	tcs, err := p.ckmClient.GetCaTrustChain(context.Background(), &ckmproto.Empty{})
+	tcs, err := p.ckmClient.GetCaTrustChain(context.Background(), &certapi.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "Error fetching CA trust chain")
 	}
@@ -95,7 +101,7 @@ func (p *CKMBasedProvider) fetchCaCertificates() error {
 	}
 
 	// Fetch additional trust roots
-	rootsResp, err := p.ckmClient.GetTrustRoots(context.Background(), &ckmproto.Empty{})
+	rootsResp, err := p.ckmClient.GetTrustRoots(context.Background(), &certapi.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "Error fetching trust roots")
 	}
@@ -112,10 +118,15 @@ func (p *CKMBasedProvider) fetchCaCertificates() error {
 }
 
 func (p *CKMBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certificate, error) {
-
-	privateKey, err := p.keyMgr.CreateKeyPair(subjAltName, keymgr.ECDSA256)
+	privateKey, err := p.keyMgr.GetObject(subjAltName, keymgr.ObjectTypeKeyPair)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error generating private key")
+		return nil, errors.Wrap(err, "Error reading key pair from keymgr")
+	}
+	if privateKey == nil {
+		privateKey, err = p.keyMgr.CreateKeyPair(subjAltName, keymgr.ECDSA256)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error generating private key")
+		}
 	}
 	csr, err := certs.CreateCSR(privateKey, []string{subjAltName}, nil)
 	if err != nil {
@@ -123,7 +134,7 @@ func (p *CKMBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 	}
 
 	// Get the CSR signed
-	csrResp, err := p.ckmClient.SignCertificateRequest(context.Background(), &ckmproto.CertificateSignReq{Csr: csr.Raw})
+	csrResp, err := p.ckmClient.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
 	if err != nil {
 		return nil, errors.Wrap(err, "Error issuing sign request")
 	}
@@ -172,13 +183,22 @@ func NewCKMBasedProvider(ckmEpNameOrURL string, km *keymgr.KeyMgr, opts ...CKMPr
 	}
 
 	// Connect to CKM Endpoint and create RPC client
-	log.Infof("Connecting to CKM Endpoint: %v", provider.ckmEndpointURL)
-	conn, err := grpc.Dial(provider.ckmEndpointURL, provider.getCkmDialOptions()...)
-	if err != nil {
+	var success bool
+	var conn *grpc.ClientConn
+	for i := 0; i < maxRetries; i++ {
+		log.Infof("Connecting to CKM Endpoint: %v", provider.ckmEndpointURL)
+		conn, err = grpc.Dial(provider.ckmEndpointURL, provider.getCkmDialOptions()...)
+		if err == nil {
+			success = true
+			provider.ckmClient = certapi.NewCertificatesClient(conn)
+			break
+		}
+		time.Sleep(retryInterval)
+	}
+	if !success {
 		return nil, errors.Wrapf(err, "Failed to dial CKM Endpoint %s", provider.ckmEndpointURL)
 	}
 	provider.conn = conn
-	provider.ckmClient = ckmproto.NewCertificatesClient(conn)
 
 	err = provider.fetchCaCertificates()
 	if err != nil {
@@ -188,6 +208,30 @@ func NewCKMBasedProvider(ckmEpNameOrURL string, km *keymgr.KeyMgr, opts ...CKMPr
 	return provider, nil
 }
 
+// NewDefaultCKMBasedProvider instantiates a new CKM-based TLS provider using a keymgr with default backend
+func NewDefaultCKMBasedProvider(ckmEpNameOrURL, endpointID string, opts ...CKMProviderOption) (*CKMBasedProvider, error) {
+	workDir, err := ioutil.TempDir("", "tlsprovider-"+endpointID+"-")
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error creating workdir for GoCrypto backend")
+	}
+	be, err := keymgr.NewGoCryptoBackend(workDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error instantiating GoCrypto backend")
+	}
+	km, err := keymgr.NewKeyMgr(be)
+	if err != nil {
+		be.Close()
+		return nil, errors.Wrapf(err, "Error instantiating keymgr")
+	}
+	prov, err := NewCKMBasedProvider(ckmEpNameOrURL, km, opts...)
+	if err != nil {
+		km.Close()
+		return nil, errors.Wrapf(err, "Error instantiating keymgr")
+	}
+	return prov, nil
+}
+
+// getServerCertificate is the callback that returns server certificates
 func (p *CKMBasedProvider) getServerCertificate(clientHelloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	serverName := clientHelloInfo.ServerName
 	tlsCert := p.serverCertificates[serverName]
@@ -239,7 +283,12 @@ func (p *CKMBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, e
 // Close closes the client.
 func (p *CKMBasedProvider) Close() {
 	if p.conn != nil {
+		log.Infof("Closing client conn: %+v", p.conn)
 		p.conn.Close()
+		p.conn = nil
 	}
-	p.conn = nil
+	if p.keyMgr != nil {
+		p.keyMgr.Close()
+		p.keyMgr = nil
+	}
 }

@@ -13,6 +13,8 @@ run "curl -LO https://github.com/google/protobuf/releases/download/v3.4.0/protoc
 run "unzip protoc-3.4.0-linux-x86_64.zip"
 run "mv bin/protoc /usr/local/bin"
 run "mv include/google /usr/local/include/"
+env "VENICE_DEV" => "1"
+run "env"
 
 run "mkdir -p '#{DIR}'"
 workdir DIR

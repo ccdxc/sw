@@ -153,7 +153,7 @@ func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
 	srvURL := halGRPCDefaultBaseURL + ":" + halPort
 	// create a grpc client
 	// ToDo Use AgentID for mysvcName
-	rpcClient, err := rpckit.NewRPCClient("hal", srvURL)
+	rpcClient, err := rpckit.NewRPCClient("hal", srvURL, rpckit.WithTLSProvider(nil))
 	if err != nil {
 		log.Errorf("Creating gRPC Client failed on HAL Datapath. Server URL: %s", srvURL)
 		return nil, err

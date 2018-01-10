@@ -32,6 +32,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
@@ -40,7 +41,9 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/testenv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	ventrace "github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -51,6 +54,10 @@ const (
 	resolverURLs      = ":" + globals.CMDGRPCPort
 	minAgents         = 1
 	maxAgents         = 5000
+	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
+	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
+	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
+	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
 )
 
 var (
@@ -66,6 +73,7 @@ type testInfo struct {
 	apiServerPort  string
 	apiServer      apiserver.Server
 	apiClient      apiclient.Services
+	certSrv        *certsrv.CertSrv
 	rpcServer      *rpckit.RPCServer
 	smartNICServer *smartnic.RPCServer
 }
@@ -89,10 +97,10 @@ func getDBPath(index int) string {
 }
 
 // launchCMDServer creates a smartNIC CMD server for SmartNIC service.
-func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpckit.RPCServer, error) {
+func launchCMDServer(m *testing.M, url string) (*rpckit.RPCServer, error) {
 
 	// create an RPC server.
-	rpcServer, err := rpckit.NewRPCServer("smartNIC", url)
+	rpcServer, err := rpckit.NewRPCServer("smartNIC", url, rpckit.WithTLSProvider(nil))
 	if err != nil {
 		fmt.Printf("Error creating RPC-server: %v", err)
 		return nil, err
@@ -121,7 +129,7 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 func createRPCServer(m *testing.M) *rpckit.RPCServer {
 
 	// start the rpc server
-	rpcServer, err := launchCMDServer(m, *cmdURL, "", "", "")
+	rpcServer, err := launchCMDServer(m, *cmdURL)
 	if err != nil {
 		fmt.Printf("Error connecting to grpc server. Err: %v", err)
 		return nil
@@ -343,6 +351,23 @@ func Setup(m *testing.M) {
 	// Init etcd cluster
 	var t testing.T
 
+	// start certificate server
+	// need to do this before Chdir() so that it finds the certificates on disk
+	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
+	if err != nil {
+		log.Errorf("Failed to create certificate server: %v", err)
+		os.Exit(-1)
+	}
+	tInfo.certSrv = certSrv
+	log.Infof("Created cert endpoint at %s", globals.CMDCertAPIPort)
+
+	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
+	testenv.EnableRpckitTestMode()
+	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
+		return tlsproviders.NewDefaultCKMBasedProvider(certSrv.GetListenURL(), svcName)
+	}
+	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
+
 	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
 	os.Chdir("/tmp")
 	cluster := integration.NewClusterV3(&t)
@@ -443,7 +468,13 @@ func Teardown(m *testing.M) {
 	tInfo.rpcServer.Stop()
 
 	// stop the apiServer
+	tInfo.apiClient.Close()
+
+	// stop the apiServer
 	tInfo.apiServer.Stop()
+
+	// stop certificate server
+	tInfo.certSrv.Stop()
 
 	log.Infof("#### ApiServer and CMD smartnic server is STOPPED")
 }

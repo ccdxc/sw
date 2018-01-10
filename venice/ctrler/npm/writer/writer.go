@@ -20,6 +20,7 @@ type Writer interface {
 	WriteTenant(tn *network.Tenant) error
 	WriteSecurityGroup(sg *network.SecurityGroup) error
 	WriteSgPolicy(sgp *network.Sgpolicy) error
+	Close() error
 }
 
 // APISrvWriter is the writer instance
@@ -170,4 +171,17 @@ func (wr *APISrvWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
 	// write it
 	_, err = apicl.SgpolicyV1().Sgpolicy().Update(context.Background(), sgp)
 	return err
+}
+
+// Close stops the client and releases resources
+func (wr *APISrvWriter) Close() error {
+	if wr.resolver != nil {
+		wr.resolver.Stop()
+		wr.resolver = nil
+	}
+	if wr.apicl != nil {
+		wr.apicl.Close()
+		wr.apicl = nil
+	}
+	return nil
 }

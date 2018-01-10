@@ -123,6 +123,10 @@ func (d *dummyWriter) WriteTenant(tn *network.Tenant) error {
 	return nil
 }
 
+func (d *dummyWriter) Close() error {
+	return nil
+}
+
 // TestNetworkCreateDelete tests network create
 func TestNetworkCreateDelete(t *testing.T) {
 	// create network state manager

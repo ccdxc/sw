@@ -1,10 +1,11 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package tlsproviders
+package tlsproviders_test
 
 import (
 	"testing"
 
+	. "github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 

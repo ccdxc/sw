@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package tlsproviders
+package tlsproviders_test
 
 import (
 	"context"
@@ -10,14 +10,15 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
+	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	svc "github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types"
-	ckm "github.com/pensando/sw/venice/ctrler/ckm/mock"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	. "github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -44,7 +45,7 @@ func TestCKMBasedProviderInit(t *testing.T) {
 	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
 
 	// good CKM but nil KeyMgr
-	srv, err := ckm.NewCKMctrler("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
+	srv, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv.Stop()
 	AssertOk(t, err, "Error creating CKM controller at localhost:0")
 	_, err = NewCKMBasedProvider(srv.GetListenURL(), nil)
@@ -54,7 +55,7 @@ func TestCKMBasedProviderInit(t *testing.T) {
 
 func TestCKMBasedProviderRPC(t *testing.T) {
 	// create a mock CKM endpoint
-	srv, err := ckm.NewCKMctrler("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
+	srv, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv.Stop()
 	AssertOk(t, err, "Error creating CKM controller at localhost:0")
 
@@ -93,14 +94,14 @@ func TestCKMBasedProviderRPC(t *testing.T) {
 
 func TestRPCBalancing(t *testing.T) {
 	// start two mock CKM endpoints
-	srv1, err := ckm.NewCKMctrler("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
+	srv1, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv1.Stop()
 	AssertOk(t, err, "Error creating CKM controller at localhost:0")
 	_, portStr1, err := net.SplitHostPort(srv1.GetListenURL())
 	AssertOk(t, err, fmt.Sprintf("Error getting srv1 port from URL: %s", srv1.GetListenURL()))
 	AssertOk(t, err, "Failed to convert port")
 
-	srv2, err := ckm.NewCKMctrler("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
+	srv2, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv2.Stop()
 	AssertOk(t, err, "Error creating CKM controller at localhost:0")
 	_, portStr2, err := net.SplitHostPort(srv2.GetListenURL())
@@ -124,7 +125,7 @@ func TestRPCBalancing(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "t1",
 		},
-		Service: "ckm",
+		Service: "certsrv",
 		Node:    "localhost",
 		URL:     fmt.Sprintf("localhost:%s", portStr1),
 	}
@@ -146,7 +147,7 @@ func TestRPCBalancing(t *testing.T) {
 	AssertOk(t, err, "Error instantiating KeyMgr")
 
 	// create TLS provider
-	tlsProvider, err := NewCKMBasedProvider("ckm", km, WithBalancer(b))
+	tlsProvider, err := NewCKMBasedProvider("certsrv", km, WithBalancer(b))
 	AssertOk(t, err, "Error instantiating CKMBasedProvider")
 	defer tlsProvider.Close()
 
@@ -163,7 +164,7 @@ func TestRPCBalancing(t *testing.T) {
 	// to present to the client during the TLS handshake.
 	// Directly invoke getServerCertificate() and check that the requests are load-balanced.
 	for i := uint64(0); i < 20; i++ {
-		_, err = tlsProvider.getServerCertificate(&tls.ClientHelloInfo{ServerName: fmt.Sprintf("Hello-%d", i)})
+		_, err = tlsProvider.GetServerCertificate(&tls.ClientHelloInfo{ServerName: fmt.Sprintf("Hello-%d", i)})
 		AssertOk(t, err, "Error getting certificate from CKM")
 	}
 

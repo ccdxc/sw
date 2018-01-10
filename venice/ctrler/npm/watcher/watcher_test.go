@@ -37,6 +37,10 @@ func (d *dummyWriter) WriteTenant(tn *network.Tenant) error {
 	return nil
 }
 
+func (d *dummyWriter) Close() error {
+	return nil
+}
+
 func TestNetworkWatcher(t *testing.T) {
 	// create network state manager
 	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
