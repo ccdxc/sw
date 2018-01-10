@@ -263,7 +263,9 @@ extract_rules_from_sg_spec(SecurityGroupPolicySpec& spec,
                           appid);
                 // TODO: Handle resource cleanup before returning
                 if(HAL_RET_OK != ret) {
-                  return ret;
+                    HAL_TRACE_ERR("{}: unknown app {}", __FUNCTION__,
+                                  spec.policy_rules().in_fw_rules(i).apps(apps_cnt));
+                    return ret;
                 }
                 nwsec_plcy_appid->appid = appid;
 
