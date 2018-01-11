@@ -239,7 +239,6 @@ public:
             addr_t page_num = get_page_num(addr);
             unsigned char * ptr = get_page_ptr(page_num, false);
 	    if (ptr == nullptr) {
-                retVal = false;
                 auto stride = sizeof(decltype(data_knob.eval()));
                 for (int i = curr_len; i > 0; i-=stride) {
 		    auto wlen = (int) stride > i ? i : stride;
