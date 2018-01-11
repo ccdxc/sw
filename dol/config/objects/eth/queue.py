@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import math
 from infra.common.defs          import status
 from infra.common.logging       import cfglogger
 from infra.common.glopts        import GlobalOptions
@@ -111,6 +112,12 @@ class EthQstateObject(object):
         lgh.ShowScapyObject(data)
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
 
+    def set_pindex(self, ring, value):
+        assert(isinstance(ring, int) and 0 <= ring <= 1)
+        ring_size = self.data[self.__data_class__].ring_size
+        assert(isinstance(value, int) and 0 <= value <= math.log(2, ring_size))
+        model_wrap.write_mem(self.addr + 8 + (4 * ring), bytes(ctypes.c_uint16(value)), 2)
+
     def set_enable(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].enable = value
@@ -190,6 +197,7 @@ class EthQueueObject(QueueObject):
         super().__init__()
         self._qstate = None
         self._mem = None
+        self.pid = 0
 
     def __str__(self):
         return ("%s Lif:%s/QueueType:%s/Queue:%s/Size:%s/Qstate:%x/QstateSize:%s" %
@@ -249,6 +257,42 @@ class EthQueueObject(QueueObject):
             cfglogger.critical("Unable to set program information for Queue Type %s" % self.queue_type.purpose)
             raise NotImplementedError
 
+    def Fill(self):
+        if GlobalOptions.skipverify and self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+            from attrdict import AttrDict
+            from infra.factory.store import FactoryStore
+            ring_id = 0
+            ring = self.obj_helper_ring.rings[ring_id]
+            descriptor_template = ring.spec.desc.Get(FactoryStore) if hasattr(ring.spec, 'desc') else None
+            buffer_template = ring.spec.buf.Get(FactoryStore) if hasattr(ring.spec, 'buf') else None
+            for i in range(ring.size - 1):  # Leave one empty slot so PI != CI
+                uid = 'LIF%s_QTYPE%s_%s_%s_%d' % (
+                    self.queue_type.lif.hw_lif_id,
+                    self.queue_type.type,
+                    self.id,
+                    ring.id,
+                    i)
+                # Create Buffer
+                buf = buffer_template.CreateObjectInstance()
+                buf.Logger(cfglogger)
+                buf.GID('%s_%s' % (buffer_template.meta.id, uid))
+                buf_spec = AttrDict(fields=AttrDict(size=1518, bind=True))
+                buf.Init(buf_spec)
+                buf.Write()
+                # Create descriptor
+                desc = descriptor_template.CreateObjectInstance()
+                buf.Logger(cfglogger)
+                buf.GID('%s_%s' % (descriptor_template.meta.id, uid))
+                desc_spec = AttrDict(fields=AttrDict(addr=buf.addr, len=buf.size))
+                desc.Init(desc_spec)
+                desc.Write()
+                # Post the descriptor
+                ret = self.Post(desc)
+                assert ret == status.SUCCESS
+
+            if self.queue_type.purpose in ["LIF_QUEUE_PURPOSE_RX", "LIF_QUEUE_PURPOSE_TX"]:
+                self.queue_type.doorbell.Ring(self.id, ring_id, ring.pi, self.pid)
+
     def ConfigureRings(self):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
@@ -263,6 +307,7 @@ class EthQueueObject(QueueObject):
                 self.qstate.set_cq_base(ring._mem.pa)
             else:
                 raise NotImplementedError
+        self.Fill()
 
         self.qstate.Read()
 
