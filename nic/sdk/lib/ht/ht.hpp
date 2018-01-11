@@ -112,9 +112,15 @@ public:
     // bucket level), if the callback function returns true, walk is stopped
     sdk_ret_t walk_safe(ht_walk_cb_t walk_cb, void *ctxt);
 
+    // walk given bucket in thread safe manner (i.e., locking the bucket),
+    // if the callback function returns true, walk is stopped .. if the bucket
+    // given is out of range, walk will fail
+    sdk_ret_t walk_bucket_safe(uint32_t bucket, ht_walk_cb_t walk_cb, void *ctxt);
+
     // helpers for debugging
     uint32_t size(void) const { return num_buckets_; }
     bool is_thread_safe(void) const { return thread_safe_; }
+    uint32_t num_buckets(void) const { return num_buckets_; }
     uint32_t num_entries(void) const { return num_entries_; }
     uint32_t num_inserts(void) const { return num_inserts_; }
     uint32_t num_insert_errors(void) const { return num_insert_err_; }

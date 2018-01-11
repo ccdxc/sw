@@ -307,6 +307,7 @@ ht::walk(ht_walk_cb_t walk_cb, void *ctxt)
 {
     uint32_t     i;
     ht_ctxt_t    *curr, *next;
+    bool         stop_walk = false;
 
     SDK_ASSERT_RETURN((walk_cb != NULL), SDK_RET_INVALID_ARG);
     for (i = 0; i < num_buckets_; i++) {
@@ -314,10 +315,16 @@ ht::walk(ht_walk_cb_t walk_cb, void *ctxt)
         while (curr) {
             // cache the next entry so it is delete-safe
             next = curr->next;
-            walk_cb(curr->entry, ctxt);
+            stop_walk = walk_cb(curr->entry, ctxt);
+            if (stop_walk) {
+                goto end;
+            }
             curr = next;
         }
     }
+
+end:
+
     return SDK_RET_OK;
 }
 
@@ -326,22 +333,63 @@ ht::walk_safe(ht_walk_cb_t walk_cb, void *ctxt)
 {
     uint32_t     i;
     ht_ctxt_t    *curr, *next;
+    bool         stop_walk = false;
 
     SDK_ASSERT_RETURN((walk_cb != NULL), SDK_RET_INVALID_ARG);
     for (i = 0; i < num_buckets_; i++) {
-        curr = ht_buckets_[i].ht_ctxt;
         if (thread_safe_) {
             SDK_SPINLOCK_LOCK(&ht_buckets_[i].slock_);
         }
+        curr = ht_buckets_[i].ht_ctxt;
         while (curr) {
             // cache the next entry so it is delete-safe
             next = curr->next;
-            walk_cb(curr->entry, ctxt);
+            stop_walk = walk_cb(curr->entry, ctxt);
+            if (stop_walk) {
+                if (thread_safe_) {
+                    SDK_SPINLOCK_UNLOCK(&ht_buckets_[i].slock_);
+                }
+                goto end;
+            }
             curr = next;
         }
         if (thread_safe_) {
             SDK_SPINLOCK_UNLOCK(&ht_buckets_[i].slock_);
         }
+    }
+
+end:
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+ht::walk_bucket_safe(uint32_t bucket, ht_walk_cb_t walk_cb, void *ctxt)
+{
+    ht_ctxt_t    *curr, *next;
+    bool         stop_walk = false;
+
+    if (bucket >= num_buckets_) {
+        return SDK_RET_INVALID_ARG;
+    }
+    curr = ht_buckets_[bucket].ht_ctxt;
+    if (thread_safe_) {
+        SDK_SPINLOCK_LOCK(&ht_buckets_[bucket].slock_);
+    }
+    while (curr) {
+        // cache the next entry so it is delete-safe
+        next = curr->next;
+        stop_walk = walk_cb(curr->entry, ctxt);
+        if (stop_walk) {
+            goto end;
+        }
+        curr = next;
+    }
+
+end:
+
+    if (thread_safe_) {
+        SDK_SPINLOCK_UNLOCK(&ht_buckets_[bucket].slock_);
     }
     return SDK_RET_OK;
 }

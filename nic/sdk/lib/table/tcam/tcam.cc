@@ -410,7 +410,7 @@ bool tcam_iter_walk_cb(void *entry, void *ctxt)
 
     te_cb->func(te->key, te->key_mask,
                 te->data, te->index, te_cb->iter_cb_data);
-    return true;
+    return false;
 
 }
 //---------------------------------------------------------------------------
@@ -453,9 +453,9 @@ bool tcam_entry_walk_cb(void *entry, void *ctxt)
         (!std::memcmp(te_cb->te->key_mask, te->key_mask, te->key_len))) {
         te_cb->is_present = true;
         te_cb->te_match = (tcam_entry_t *)entry;
-        return false;
+        return true;
     }
-    return true;
+    return false;
 
 }
 
