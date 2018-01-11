@@ -21,6 +21,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
+#include "nic/hal/pd/iris/p4plus_pd_api.h"
 
 #ifndef P4PD_CLI
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -738,6 +739,30 @@ capri_deparser_init() {
     cap0.dpr.dpr[0].cfg_global_2.write();
 }
 
+static void
+capri_mpu_icache_invalidate (void)
+{
+    int i;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    for (i = 0; i < CAPRI_P4_NUM_STAGES; i++) {
+        cap0.sgi.mpu[i].icache.read();
+        cap0.sgi.mpu[i].icache.invalidate(1);
+        cap0.sgi.mpu[i].icache.write();
+        cap0.sge.mpu[i].icache.read();
+        cap0.sge.mpu[i].icache.invalidate(1);
+        cap0.sge.mpu[i].icache.write();
+    }
+    for (i = 0; i < CAPRI_P4PLUS_NUM_STAGES; i++) {
+        cap0.pcr.mpu[i].icache.read();
+        cap0.pcr.mpu[i].icache.invalidate(1);
+        cap0.pcr.mpu[i].icache.write();
+        cap0.pct.mpu[i].icache.read();
+        cap0.pct.mpu[i].icache.invalidate(1);
+        cap0.pct.mpu[i].icache.write();
+    }
+}
+
+void capri_debug_hbm_reset(void);
 int capri_table_rw_init()
 {
     // !!!!!!
@@ -822,6 +847,10 @@ int capri_table_rw_init()
 
     hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
 #endif
+
+    capri_mpu_icache_invalidate();
+    capri_debug_hbm_reset();
+
     return (CAPRI_OK);
 }
 
@@ -1633,6 +1662,55 @@ int capri_table_constant_read(uint32_t tableid, uint64_t *val)
     return (CAPRI_OK);
 }
 
+void 
+capri_debug_hbm_read(void)
+{
+#ifdef DBG_HBM_EN
+    uint64_t start_addr = DBG_HBM_BASE;
+    uint64_t addr;
+    uint64_t count = DBG_HBM_COUNT;
+    bool rc;
+    uint64_t data;
+
+    HAL_TRACE_DEBUG("------------------ READ HBM START -----------");
+    for (uint64_t i = 0; i < count; i++) {
+        addr = (start_addr + (i<<3)) & 0xffffffff8; 
+        rc = p4plus_hbm_read(addr, (uint8_t *)&data, sizeof(data));
+        if (!rc) {
+            HAL_TRACE_DEBUG("ERROR reading 0x{0:x}", i);
+            continue;
+        }
+        if (data != 0xabababababababab) {
+            HAL_TRACE_DEBUG("addr 0x{0:x}, data 0x{1:x}", i, data);
+        }
+    }
+    HAL_TRACE_DEBUG("------------------ READ HBM END -----------");
+#endif
+}
+
+void 
+capri_debug_hbm_reset(void)
+{
+#ifdef DBG_HBM_EN
+    uint64_t start_addr = DBG_HBM_BASE;
+    uint64_t addr;
+    uint64_t count = DBG_HBM_COUNT;
+    bool rc;
+    uint64_t data = 0xabababababababab;
+
+    HAL_TRACE_DEBUG("------------------ RESET HBM START -----------");
+    for (uint64_t i = 0; i < count; i++) {
+        addr = (start_addr + (i<<3)) & 0xffffffff8; 
+        rc = p4plus_hbm_write(addr, (uint8_t *)&data, sizeof(data));
+        if (!rc) {
+            HAL_TRACE_DEBUG("ERROR writing 0x{0:x}", i);
+            continue;
+        }
+        HAL_TRACE_DEBUG("addr 0x{0:x}, data 0x{1:x}", i, data);
+    }
+    HAL_TRACE_DEBUG("------------------ RESET HBM END -----------");
+#endif
+}
 
 extern
 cap_csr_base * get_csr_base_from_path(string);

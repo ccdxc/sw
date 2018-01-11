@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct nacl_k k;
 struct nacl_d d;
@@ -11,12 +12,16 @@ struct phv_   p;
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:
+  K_DBG_WR(0x80)
+  DBG_WR(0x88, 0x88)
   nop.e
   nop
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nacl_permit:
+  K_DBG_WR(0x80)
+  DBG_WR(0x89, 0x89)
   seq         c2, d.u.nacl_permit_d.force_flow_hit, 1
   phvwr.c2    p.control_metadata_flow_miss, 0
   phvwr.c2    p.control_metadata_flow_miss_ingress, 0
@@ -56,5 +61,7 @@ nacl_permit:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nacl_deny:
+  K_DBG_WR(0x80)
+  DBG_WR(0x8a, 0x8a)
   phvwr.e     p.control_metadata_drop_reason[DROP_NACL], 1
   phvwr       p.capri_intrinsic_drop, 1

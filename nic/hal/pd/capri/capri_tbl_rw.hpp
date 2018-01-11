@@ -38,6 +38,9 @@
     (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * \
      CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE)
 
+#define CAPRI_P4_NUM_STAGES     6
+#define CAPRI_P4PLUS_NUM_STAGES 8
+
 int capri_table_rw_init();
 
 void capri_table_rw_cleanup();

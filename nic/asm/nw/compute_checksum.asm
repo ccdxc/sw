@@ -1,6 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct compute_checksum_k k;
 struct compute_checksum_d d;
@@ -27,6 +28,8 @@ compute_checksum1:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 compute_checksum2:
+  K_DBG_WR(0x130)
+  DBG_WR(0x138, k.{tcp_valid...ipv6_valid})
   seq           c1, k.control_metadata_checksum_ctl[CHECKSUM_CTL_ICRC], TRUE
   balcf         r7, [c1], icrc_ipv4_udp
   phvwr         p.capri_deparser_len_l4_payload_len, k.udp_len

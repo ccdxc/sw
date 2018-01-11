@@ -1,6 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct output_mapping_k k;
 struct output_mapping_d d;
@@ -9,11 +10,15 @@ struct phv_             p;
 %%
 
 output_mapping_drop:
+  K_DBG_WR(0x100)
+  DBG_WR(0x108, k.control_metadata_dst_lport)
   phvwr.e       p.capri_intrinsic_drop, TRUE
   nop
 
 .align
 set_tm_oport:
+  K_DBG_WR(0x100)
+  DBG_WR(0x10a, 0x10a)
   add         r7, r0, r0
   seq         c1, d.u.set_tm_oport_d.nports, 0
   mod.!c1     r7, k.rewrite_metadata_entropy_hash, d.u.set_tm_oport_d.nports
@@ -42,6 +47,7 @@ set_tm_oport:
 set_tm_oport_common:
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7
   phvwr       p.capri_intrinsic_tm_oport, r6
+  DBG_WR(0x10b, r6)
   phvwr       p.control_metadata_vlan_strip, d.u.set_tm_oport_d.vlan_strip
   seq.e       c1, d.u.set_tm_oport_d.encap_vlan_id_valid, TRUE
   phvwr.c1    p.rewrite_metadata_tunnel_vnid, d.u.set_tm_oport_d.encap_vlan_id

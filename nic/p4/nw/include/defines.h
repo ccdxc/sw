@@ -571,3 +571,13 @@
 #define TM_REPL_TYPE_DEFAULT            0  // This is for normal multicast replication
 #define TM_REPL_TYPE_TO_CPU_REL_COPY    1  // This is for copy to cpu using replication and reliable
 #define TM_REPL_TYPE_HONOR_INGRESS      2  // Normal forwarding, Honor the ingress flow decided rewrites.
+
+
+/*****************************************************************************/
+/* Defines for writing into a DBG_WR trace for assembly. This is disabled by */
+/* default, to enable write to DBG_HBM_EN and write a valid HBM base address */
+/* to DBG_HBM_BASE                                                           */
+/*****************************************************************************/
+#define DBG_HBM_EN      0 
+#define DBG_HBM_BASE    0x11AD37000
+#define DBG_HBM_COUNT   0x200

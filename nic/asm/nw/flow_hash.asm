@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct flow_hash_k k;
 struct flow_hash_d d;
@@ -9,6 +10,8 @@ struct phv_        p;
 %%
 
 flow_hash_info:
+  K_DBG_WR(0x40)
+  DBG_WR(0x48, r1)
   or          r7, k.flow_lkp_metadata_lkp_type, k.flow_lkp_metadata_lkp_inst, 4
   or          r7, r7, k.flow_lkp_metadata_lkp_dir, 5
   phvwr       p.control_metadata_lkp_flags_egress, r7
@@ -36,11 +39,13 @@ flow_hash_info:
   seq         c1, d.flow_hash_info_d.more_hashs, 1
   bcf         [c1&c2], flow_hash_more_hashs
   phvwr       p.recirc_header_valid, 0
+  DBG_WR(0x49, 0x49)
   phvwrpair.e p.control_metadata_flow_miss_ingress, 1, \
                 p.control_metadata_flow_miss[0], 1
   phvwr       p.flow_info_metadata_flow_index, 0
 
 flow_hash_hit:
+  DBG_WR(0x4a, d.flow_hash_info_d.flow_index)
   phvwr       p.recirc_header_valid, 0
   phvwr.e     p.flow_info_metadata_flow_index, d.flow_hash_info_d.flow_index
   phvwr       p.rewrite_metadata_entropy_hash, r1

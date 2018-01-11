@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct input_properties_mac_vlan_k k;
 struct input_properties_mac_vlan_d d;
@@ -9,6 +10,8 @@ struct phv_                        p;
 %%
 
 input_properties_mac_vlan:
+  K_DBG_WR(0x30)
+  DBG_WR(0x38, 0x38)
   seq           c2, k.control_metadata_tm_iport, TM_PORT_DMA
   phvwr.c2      p.flow_lkp_metadata_lkp_inst, \
                   k.p4plus_to_p4_flags[P4PLUS_TO_P4_FLAGS_LKP_INST_BIT_POS]
@@ -22,10 +25,12 @@ input_properties_mac_vlan:
   seq           c3, k.recirc_header_valid, TRUE
   phvwr.c3      p.control_metadata_recirc_reason, k.recirc_header_reason
   sub.c3        r1, r1, P4_RECIRC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ
+  DBG_WR(0x39, r1)
 
   // if table lookup is miss, return
   nop.!c1.e
   phvwr         p.capri_p4_intrinsic_packet_len, r1
+  DBG_WR(0x3a, 0x3a)
 
   seq           c1, d.input_properties_mac_vlan_d.src_lif_check_en, 1
   seq           c2, d.input_properties_mac_vlan_d.src_lif, \

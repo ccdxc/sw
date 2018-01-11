@@ -10,6 +10,8 @@ struct phv_         p;
 %%
 
 l4_profile:
+  K_DBG_WR(0x50)
+  DBG_WR(0x58, 0x58)
   ASSERT_PHVWR(p, l4_metadata_ip_normalization_en, l4_metadata_ip_invalid_len_action,
                d, u.l4_profile_d.ip_normalization_en, u.l4_profile_d.ip_invalid_len_action)
   phvwr       p.{l4_metadata_ip_normalization_en ...\
@@ -412,6 +414,8 @@ lb_ipv6_norm_hop_limit:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:
+  K_DBG_WR(0x50)
+  DBG_WR(0x59, 0x59)
   nop.e
   nop
 

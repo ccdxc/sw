@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct input_mapping_tunneled_k k;
 struct phv_                     p;
@@ -8,11 +9,15 @@ struct phv_                     p;
 %%
 
 nop:
+  K_DBG_WR(0x20)
+  DBG_WR(0x28, 0x28)
   nop.e
   nop
 
 .align
 tunneled_ipv4_packet:
+  K_DBG_WR(0x20)
+  DBG_WR(0x29, 0x29)
   bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_ipv4_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -41,6 +46,8 @@ tunneled_ipv4_packet_common:
 
 .align
 tunneled_ipv6_packet:
+  K_DBG_WR(0x20)
+  DBG_WR(0x2a, 0x2a)
   bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -63,6 +70,8 @@ tunneled_ipv6_packet_common:
 
 .align
 tunneled_non_ip_packet:
+  K_DBG_WR(0x20)
+  DBG_WR(0x2b, 0x2b)
   bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_non_ip_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -82,5 +91,7 @@ tunneled_non_ip_packet_common:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 tunneled_vm_bounce_packet:
+  K_DBG_WR(0x20)
+  DBG_WR(0x2c, 0x2c)
   nop.e
   nop

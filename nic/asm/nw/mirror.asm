@@ -1,6 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct mirror_k k;
 struct mirror_d d;
@@ -9,11 +10,15 @@ struct phv_     p;
 %%
 
 nop:
+  K_DBG_WR(0xd0)
+  DBG_WR(0xd8, 0xd8)
   nop.e
   nop
 
 .align
 local_span:
+  K_DBG_WR(0xd0)
+  DBG_WR(0xd9, 0xd9)
   add         r1, r0, d.u.local_span_d.truncate_len
   phvwr       p.control_metadata_dst_lport, d.u.local_span_d.dst_lport
   phvwr       p.tunnel_metadata_tunnel_originate, FALSE
@@ -25,6 +30,8 @@ local_span:
 
 .align
 remote_span:
+  K_DBG_WR(0xd0)
+  DBG_WR(0xda, 0xda)
   add         r1, r0, d.u.remote_span_d.truncate_len
   phvwr       p.control_metadata_dst_lport, d.u.remote_span_d.dst_lport
   phvwr       p.tunnel_metadata_tunnel_originate, TRUE
@@ -39,6 +46,8 @@ remote_span:
 
 .align
 erspan_mirror:
+  K_DBG_WR(0xd0)
+  DBG_WR(0xdb, 0xdb)
   add         r1, r0, d.u.erspan_mirror_d.truncate_len
   phvwr       p.control_metadata_dst_lport, d.u.erspan_mirror_d.dst_lport
   phvwr       p.tunnel_metadata_tunnel_originate, TRUE
@@ -53,6 +62,8 @@ erspan_mirror:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 drop_mirror:
+  K_DBG_WR(0xd0)
+  DBG_WR(0xdc, 0xdc)
   phvwr       p.control_metadata_dst_lport, 0
   phvwr.e     p.capri_intrinsic_drop, TRUE
   phvwr       p.capri_intrinsic_tm_span_session, 0

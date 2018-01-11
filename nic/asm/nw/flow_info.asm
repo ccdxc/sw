@@ -10,6 +10,12 @@ struct phv_        p;
 %%
 
 flow_info:
+  K_DBG_WR(0x60)
+  DBG_WR(0x68, d.u.flow_info_d.dst_lport)
+  DBG_WR(0x69, d.u.flow_info_d.rewrite_index)
+  DBG_WR(0x6a, d.u.flow_info_d.rewrite_flags)
+  DBG_WR(0x6b, d.u.flow_info_d.tunnel_rewrite_index)
+
   /* expected src lif check */
   seq           c1, d.u.flow_info_d.expected_src_lif_check_en, TRUE
   sne.c1        c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
@@ -75,6 +81,8 @@ flow_info:
 
 .align
 flow_miss:
+  K_DBG_WR(0x60)
+  DBG_WR(0x6c, 0x6c)
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   bcf           [c1], validate_ipv4_flow_key
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
@@ -139,6 +147,8 @@ flow_miss_tcp_non_syn_first_pkt_drop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_hit_drop:
+  K_DBG_WR(0x60)
+  DBG_WR(0x6d, 0x6d)
   /* set drop bit */
   phvwr.e       p.control_metadata_drop_reason[DROP_FLOW_HIT], 1
   phvwr         p.capri_intrinsic_drop, 1
@@ -157,6 +167,8 @@ flow_hit_to_vm_bounce:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:
+  K_DBG_WR(0x60)
+  DBG_WR(0x6e, 0x6e)
   nop.e
   nop
 

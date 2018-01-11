@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct input_properties_k k;
 struct input_properties_d d;
@@ -10,6 +11,8 @@ struct phv_               p;
 
 input_properties:
   // if table lookup is miss, return
+  K_DBG_WR(0x00)
+  DBG_WR(0x08, r1)
   nop.!c1.e
   phvwr         p.control_metadata_nic_mode, r5[0]
   phvwrpair     p.control_metadata_src_lif[10:8], k.capri_intrinsic_lif_sbit0_ebit2, \

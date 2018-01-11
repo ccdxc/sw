@@ -2,6 +2,7 @@
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
 #include "../../include/capri_common.h"
+#include "nw.h"
 
 struct flow_stats_k k;
 struct flow_stats_d d;
@@ -10,6 +11,8 @@ struct phv_         p;
 %%
 
 flow_stats:
+  K_DBG_WR(0xb0)
+  DBG_WR(0xb8, 0xb8)
   seq         c1, k.flow_info_metadata_flow_index, 0
   b.c1.e      flow_stats_index_zero
   seq         c1, k.capri_intrinsic_drop, TRUE

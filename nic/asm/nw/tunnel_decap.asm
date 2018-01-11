@@ -1,6 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct phv_ p;
 struct tunnel_decap_k k;
@@ -8,6 +9,7 @@ struct tunnel_decap_k k;
 %%
 
 remove_tunnel_hdrs:
+  K_DBG_WR(0x110)
   seq         c1, k.ipv4_valid, TRUE
   sub.c1      r1, k.ipv4_totalLen, 20
   sub.!c1     r1, r0, k.ipv6_payloadLen

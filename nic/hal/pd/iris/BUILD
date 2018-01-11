@@ -40,6 +40,7 @@ cc_library(
             "hal_state_pd.hpp",
             "rw_pd.hpp",
             "tnnl_rw_pd.hpp",
+            "p4plus_pd_api.h",
             "if_pd_utils.hpp"],
     deps = [
         "//nic:gen_includes",

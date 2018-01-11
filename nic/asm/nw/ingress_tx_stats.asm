@@ -2,6 +2,7 @@
 #include "INGRESS_p.h"
 #include "../../include/capri_common.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct ingress_tx_stats_k k;
 struct ingress_tx_stats_d d;
@@ -10,6 +11,7 @@ struct phv_               p;
 %%
 
 ingress_tx_stats:
+  K_DBG_WR(0xc0)
   phvwr       p.capri_p4_intrinsic_valid, TRUE
   seq         c2, k.capri_intrinsic_drop, 0
   b.c2        tcp_options_fixup

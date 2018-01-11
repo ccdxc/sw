@@ -1,6 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "nw.h"
 
 struct replica_k k;
 struct phv_      p;
@@ -8,6 +9,7 @@ struct phv_      p;
 %%
 
 set_replica_rewrites:
+  K_DBG_WR(0xe0)
   phvwr       p.control_metadata_flow_miss_egress, k.control_metadata_flow_miss
   phvwrpair   p.tunnel_metadata_tunnel_terminate_egress, \
                 k.tunnel_metadata_tunnel_terminate[0], \
