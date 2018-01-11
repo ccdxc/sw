@@ -60,7 +60,7 @@ def TestCaseSetup(tc):
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"])
     else:
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
-    brq.Configure()
+    brq.GetMeta()
 
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
@@ -130,7 +130,11 @@ def TestCaseVerify(tc):
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"]
     else:
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
-    brq_cur.Configure()
+    brq_cur.GetMeta()
+    if brq_cur.pi > 0:
+        brq_cur.GetRingEntries([brq_cur.pi - 1, brq_cur.pi])
+    else:
+        brq_cur.GetRingEntries([brq_cur.pi])
 
     # 1. Verify PI for RNMDR got incremented by respective amount
     # This will be done only for non-reassemble scenarios

@@ -57,7 +57,8 @@ def TestCaseSetup(tc):
     tnmpr.GetMeta()
 
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
-    brq.Configure()
+    brq.GetMeta()
+    brq.GetRingEntries([brq.pi])
     tcpcb = copy.deepcopy(tcb)
     tcpcb.GetObjValPd()
 
@@ -129,7 +130,8 @@ def TestCaseVerify(tc):
     brq = tc.pvtdata.db["BRQ_ENCRYPT"]
     brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    brq_cur.Configure()
+    brq_cur.GetMeta()
+    brq_cur.GetRingEntries([brq_cur.pi])
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     if (brq_cur.pi != (brq.pi+1) or brq_cur.ci != (brq.ci+1)):
         print("brq pi/ci not as expected")
@@ -169,20 +171,21 @@ def TestCaseVerify(tc):
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
 
     # 8. Verify descriptor
+    print("BRQ: Current PI %d" % brq_cur.pi)
     print("BRQ:")
-    print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
-    print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)
-    print("command 0x%x" % brq_cur.ring_entries[0].command)
-    print("key_desc_index 0x%x" % brq_cur.ring_entries[0].key_desc_index)
-    print("iv_addr 0x%x" % brq_cur.ring_entries[0].iv_addr)
-    print("status_addr 0x%x" % brq_cur.ring_entries[0].status_addr)
+    print("ilist_addr 0x%x" % brq_cur.ring_entries[brq_cur.pi].ilist_addr)
+    print("olist_addr 0x%x" % brq_cur.ring_entries[brq_cur.pi].olist_addr)
+    print("command 0x%x" % brq_cur.ring_entries[brq_cur.pi].command)
+    print("key_desc_index 0x%x" % brq_cur.ring_entries[brq_cur.pi].key_desc_index)
+    print("iv_addr 0x%x" % brq_cur.ring_entries[brq_cur.pi].iv_addr)
+    print("status_addr 0x%x" % brq_cur.ring_entries[brq_cur.pi].status_addr)
     # There is an offset of 64 to go past scratch when queuing to barco. Pls modify
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
-    if ((rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[0].ilist_addr - 0x40)) and (maxflows != 2)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
+    if ((rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi].ilist_addr - 0x40)) and (maxflows != 2)):
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi].ilist_addr))
         return False
-    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
+    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi].ilist_addr))
 
     # 3. Verify page
     #if rnmpr.ringentries[rnmdr.pi].handle != brq_cur.swdre_list[0].Addr1:

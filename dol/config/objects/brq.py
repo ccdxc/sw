@@ -136,6 +136,26 @@ class BRQObject(base.ConfigObjectBase):
     def Configure(self):
         self.Sync()
         return
+    def GetMeta(self):
+        # Get ring meta state
+        lst = []
+        lst.append(self) 
+        if (self.defn == "BRQ_GCM"):
+              halapi.GetRingMeta(lst)
+        else:
+            halapi.GetBarcoRingMeta(lst)
+        return
+
+    def GetRingEntries(self, indices):
+        # Get generic ring entries for given slot indices
+        ringentries = []
+        for i in indices:
+            ringentries.append(self.ring_entries[i])
+        if (self.defn == "BRQ_GCM"):
+            halapi.GetRingEntries(ringentries)
+        else:
+            halapi.GetBarcoRingEntries(ringentries)
+        return
     def Show(self):
         cfglogger.info("Ring: %s" % (self.ID()))
         for ring_entry in self.ring_entries:

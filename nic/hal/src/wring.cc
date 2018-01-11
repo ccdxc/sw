@@ -211,7 +211,7 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
             break;
     }
     
-    HAL_TRACE_DEBUG("Ring slot_index: {}", wring.slot_index);
+    HAL_TRACE_DEBUG("Ring slot_index: {}, type: {}", wring.slot_index, wring.wring_type);
     // fill operational state of this WRING
     //rsp->mutable_status()->set_wring_handle(wring->hal_handle);
 

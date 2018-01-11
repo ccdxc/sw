@@ -81,7 +81,6 @@ def TestCaseSetup(tc):
     else:
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
 
-
     tcpcb = copy.deepcopy(tcb)
     tcpcb.GetObjValPd()
 
@@ -184,7 +183,12 @@ def TestCaseVerify(tc):
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CBC"]
     else:
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
-    brq_cur.Configure()
+    brq_cur.GetMeta()
+    if brq_cur.pi > 0:
+        brq_cur.GetRingEntries([brq_cur.pi - 1, brq_cur.pi])
+    else:
+        brq_cur.GetRingEntries([brq_cur.pi])
+
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]
 
@@ -228,19 +232,19 @@ def TestCaseVerify(tc):
         # In case of AES-CBC-HMAC_SHA2 cipher (MAC-then-encrypt), there is software chaining of 2 barco
         # passes, HMAC in the 1st pass, and AES-CBC in the 2nd pass, hence barco command will be AES-CBC
         if tc.module.args.cipher_suite != "CBC" or brq_cur.ring_entries[brq_cur.pi-1].command != 0x1000000:
-            print("BRQ Command Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].command, tlscb.command))
+            print("BRQ Command Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].command, tlscb.command))
             return False
 
 
     # 10. Verify BRQ Descriptor Key Index field
     if brq_cur.ring_entries[brq_cur.pi-1].key_desc_index != tlscb.crypto_key_idx:
-        print("BRQ Crypto Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].key_desc_index, tlscb.crypto_key_idx))
+        print("BRQ Crypto Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].key_desc_index, tlscb.crypto_key_idx))
         return False
 
     # 11. Verify BRQ Descriptor HMAC Key Index field
     #     Activate this check when HW support for AES-CBC-HMAC-SHA2, currently we use software chaining
     #if brq_cur.ring_entries[brq_cur.pi-1].second_key_desc_index != tlscb.crypto_hmac_key_idx:
-        #print("BRQ Crypto HMAC Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].second_key_desc_index, tlscb.crypto_hmac_key_idx))
+        #print("BRQ Crypto HMAC Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].second_key_desc_index, tlscb.crypto_hmac_key_idx))
         #return False
 
     # 12. Verify Salt
