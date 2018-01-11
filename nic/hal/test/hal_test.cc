@@ -296,7 +296,7 @@ public:
     }
 
     int slab_get() {
-           ClientContext           context;
+        ClientContext           context;
         SlabGetRequest          *req;
         SlabGetRequestMsg       req_msg;
         SlabGetResponse         rsp;
@@ -335,52 +335,52 @@ public:
     }
 
     int system_get() {
-           ClientContext       context;
-           Empty               request;
-           SystemResponse      response;
+        ClientContext       context;
+        Empty               request;
+        SystemResponse      response;
         Status              status;
-           Stats               stats;
-           DropStats           drop_stats;
-           DropStatsEntry      drop_entry;
-           TableStats          table_stats;
-           TableStatsEntry     table_entry;
-           int                 count;
+        Stats               stats;
+        DropStats           drop_stats;
+        DropStatsEntry      drop_entry;
+        TableStats          table_stats;
+        TableStatsEntry     table_entry;
+        int                 count;
 
-           std::cout << "System Get\n";
-           status = system_stub_->SystemGet(&context, request, &response);
-           if (status.ok() && (response.api_status() == types::API_STATUS_OK)) {
-               // Get Statistics
-               Stats stats = response.stats();
+        std::cout << "System Get\n";
+        status = system_stub_->SystemGet(&context, request, &response);
+        if (status.ok() && (response.api_status() == types::API_STATUS_OK)) {
+            // Get Statistics
+            Stats stats = response.stats();
 
-               // First print drop stats
+            // First print drop stats
 
-               // Get DropStats
-               DropStats drop_stats = stats.drop_stats();
+            // Get DropStats
+            DropStats drop_stats = stats.drop_stats();
 
-               // Get count of DropEntries
-               count = drop_stats.drop_entries_size();
+            // Get count of DropEntries
+            count = drop_stats.drop_entries_size();
 
-               std::cout << "\nDrop Statistics:\n";
+            std::cout << "\nDrop Statistics:\n";
 
-               for (int i = 0; i < count; i ++) {
-                   DropStatsEntry drop_entry = drop_stats.drop_entries(i);
-                   std::cout << "Stats " << i
-                    << ": " << drop_entry.drop_count() << "\n";
-               }
+            for (int i = 0; i < count; i ++) {
+                DropStatsEntry drop_entry = drop_stats.drop_entries(i);
+                std::cout << "Stats " << i
+                << ": " << drop_entry.drop_count() << "\n";
+            }
 
-               // Print table stats
+            // Print table stats
 
-               // Get TableStats
-               TableStats table_stats = stats.table_stats();
+            // Get TableStats
+            TableStats table_stats = stats.table_stats();
 
-               // Get count of TableStats
-               count = table_stats.table_stats_size();
+            // Get count of TableStats
+            count = table_stats.table_stats_size();
 
-               std::cout << "\nTable Statistics:\n";
+            std::cout << "\nTable Statistics:\n";
 
-               for (int i = 0; i < count; i ++) {
-                   TableStatsEntry table_entry = table_stats.table_stats(i);
-                   std::cout << "Table type: " << table_entry.table_type() << "\n"
+            for (int i = 0; i < count; i ++) {
+                TableStatsEntry table_entry = table_stats.table_stats(i);
+                std::cout << "Table type: " << table_entry.table_type() << "\n"
                     << "Table name: " << table_entry.table_name() << "\n"
                     << "Table size: " << table_entry.table_size() << "\n"
                     << "Overflow size: " << table_entry.overflow_table_size() << "\n"
@@ -390,11 +390,11 @@ public:
                     << "Num insert errors: " << table_entry.num_insert_errors() << "\n"
                     << "Num deletes: " << table_entry.num_deletes() << "\n"
                     << "Num delete errors: " << table_entry.num_delete_errors() << "\n\n";
-               }
-           }
+            }
+        }
 
-           return 0;
-       }
+        return 0;
+    }
 
     uint64_t vrf_create(uint64_t vrf_id) {
         VrfSpec           *spec;

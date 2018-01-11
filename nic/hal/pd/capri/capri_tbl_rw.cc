@@ -1633,6 +1633,10 @@ int capri_table_constant_read(uint32_t tableid, uint64_t *val)
     return (CAPRI_OK);
 }
 
+
+extern
+cap_csr_base * get_csr_base_from_path(string);
+
 namespace hal {
 namespace pd {
 
@@ -1653,6 +1657,52 @@ asic_csr_dump (char *csr_str)
 
     return csr_read(std::string(csr_str));
 
+}
+
+vector < tuple < string, string, string >>
+asic_csr_dump_reg(char *block_name, bool exclude_mem)
+{
+
+    typedef vector< tuple< std::string, std::string, std::string> > reg_data;
+    cap_csr_base *objP = get_csr_base_from_path(block_name);
+    if (objP == 0) { HAL_TRACE_DEBUG("invalid reg name"); return reg_data(); };
+    vector<cap_csr_base *> cap_child_base = objP->get_children(-1);
+    reg_data data_tl;
+    for (auto itr : cap_child_base) {
+        if (itr->get_csr_type() == cap_csr_base::CSR_TYPE_REGISTER) {
+            if(itr->get_parent() != nullptr && exclude_mem) {
+                if (itr->get_parent()->get_csr_type() == cap_csr_base::CSR_TYPE_MEMORY) {
+                    continue;
+                }
+            }
+            // read name of register
+            string name = itr->get_hier_path();
+            // read data - same as csr_read()
+            itr->read();
+            cpp_int data = itr->all();
+            stringstream ss;
+            ss << hex << "0x" << data;
+
+            // read offset
+            uint64_t offset = itr->get_offset();
+            stringstream addr;
+            addr << hex << "0x" << offset;
+
+            data_tl.push_back( tuple< std::string, string, std::string>(name, addr.str(), ss.str()));
+
+        }
+    }
+    return data_tl;
+}
+
+vector <string> asic_csr_list_get(string path, int level) {
+    cap_csr_base *objP = get_csr_base_from_path(path);
+    vector <string> block_name;
+    if (objP == 0) return vector<string>();
+    for (auto itr : objP->get_children(level)) {
+        block_name.push_back(itr->get_hier_path());
+    }
+    return block_name;
 }
 }
 }

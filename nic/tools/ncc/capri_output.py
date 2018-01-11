@@ -3864,8 +3864,10 @@ def capri_p4pd_create_swig_custom_hdr(be):
     content_str += '                 void     *swkey_mask,\n';
     content_str += '                 void     *actiondata);\n';
 
-    content_str += 'std::string\n';
-    content_str += 'p4pd_register_entry_read(std::string regname);\n';
+    content_str += 'void\n';
+    content_str += 'p4pd_register_entry_read(std::string blockname,\n';
+    content_str += '                        std::string regname,\n';
+    content_str += '                        std::string filename);\n';
 
     out_file = out_dir + 'iris_custom.h'
     with open(out_file, "w") as of:

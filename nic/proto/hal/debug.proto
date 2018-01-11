@@ -25,6 +25,7 @@ message DebugKeyHandle {
         string     table_name = 2;    // table name being accessed
         fixed32    reg_id     = 3;    // register ID being accessed
         string     reg_name   = 4;    // register name being accessed
+        string     block_name = 5;    // block name being accessed
     }
 }
 
@@ -35,16 +36,24 @@ enum DebugOperationType {
     DEBUG_OP_TYPE_WRITE = 2;    // write to the given table/register
 }
 
+// Debug table or register
+enum DebugMemoryType {
+    DEBUG_MEM_TYPE_TABLE = 0;  // access Table
+    DEBUG_MEM_TYPE_REG   = 1;  // Register
+}
+
 // DebugSpec msg is used to pass parameters for the Debug
 message DebugSpec {
     DebugKeyHandle      key_or_handle   =   1;      // table/register ID to be accessed
     DebugOperationType  opn_type        =   2;      // read/write operation
-    uint64              addr            =   3;      // address to be read/write
-    uint32              reg_data        =   4;      // data to write
-    uint32              index           =   5;      // index for tables
-    bytes               swkey           =   6;      // structure typecast to char* and wrapped with string
-    bytes               swkey_mask      =   7;      // structure typecast to char* and wrapped with string
-    bytes               actiondata      =   8;      // structure typecast to char* and wrapped with string
+    DebugMemoryType     mem_type        =   3;      // mem type - table or register
+    uint64              addr            =   4;      // address to be read/write
+    uint32              reg_data        =   5;      // data to write
+
+    uint32              index           =   6;      // index for tables
+    bytes               swkey           =   7;      // structure typecast to char* and wrapped with string
+    bytes               swkey_mask      =   8;      // structure typecast to char* and wrapped with string
+    bytes               actiondata      =   9;      // structure typecast to char* and wrapped with string
 }
 
 // Batched DEBUG request message
@@ -52,11 +61,18 @@ message DebugRequestMsg {
     repeated DebugSpec  request = 1;
 }
 
-// DEBUG response
+// Captures the return data for registers
+message RegisterData {
+    string reg_name   = 1;   // Register name 
+    string address    = 2;   // Register address
+    string value      = 3;   // Register value
+}
+
+// DEBUG response - captures keys and data of table as well as registers
 message DebugResponse {
-    types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-    DebugSpec          spec       = 2; // incoming spec
-    string             data       = 3; // return data for read operations
+    types.ApiStatus             api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+    DebugSpec                   spec       = 2; // incoming spec
+    repeated RegisterData       data       = 3; // return data for register read operations
 }
 
 // Batched DEBUG response msg

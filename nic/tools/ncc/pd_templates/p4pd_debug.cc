@@ -261,8 +261,8 @@ ${api_prefix}_entry_read(uint32_t  tableid,
     return (P4PD_SUCCESS);
 }
 
-std::string
-p4pd_register_entry_read(std::string   reg_name)
+void
+p4pd_register_entry_read(std::string block_name, std::string   reg_name, std::string filename)
 {
     DebugRequestMsg    debug_req_msg;
     DebugResponseMsg   debug_rsp_msg;
@@ -275,6 +275,8 @@ p4pd_register_entry_read(std::string   reg_name)
     key_or_handle = debug_spec->mutable_key_or_handle();
 
     key_or_handle->set_reg_name(reg_name);
+    key_or_handle->set_block_name(block_name);
+    debug_spec->set_mem_type(::debug::DEBUG_MEM_TYPE_REG);
 
     debug_spec->set_opn_type(::debug::DEBUG_OP_TYPE_READ);
 
@@ -284,7 +286,31 @@ p4pd_register_entry_read(std::string   reg_name)
     auto stub = ::debug::Debug::NewStub(channel);
 
     Status status = stub->DebugInvoke(&context, debug_req_msg, &debug_rsp_msg);
-    return debug_rsp_msg.response(0).data();
+    
+    int reg_data_sz  = debug_rsp_msg.response(0).data_size();
+    //*len = reg_data_sz;
+    FILE *reg_fd = 0;
+    if (!filename.empty()) {
+        reg_fd = fopen(filename.c_str(), "wb+");
+        if (!reg_fd) {
+            std::cout <<"Null file descriptor";
+            return;
+        }
+    }
+
+    for (uint32_t i = 0; i  < reg_data_sz; i++) {
+        //data[i].reg_name = debug_rsp_msg.response(0).data(i).reg_name();
+        //data[i].offset = debug_rsp_msg.response(0).data(i).address();
+        //data[i].value = debug_rsp_msg.response(0).data(i).value();
+        if (filename.empty()) {
+            std::cout << "RegName: " << debug_rsp_msg.response(0).data(i).reg_name() << "Address(Offset): " <<  debug_rsp_msg.response(0).data(i).address() << "Value: "<< debug_rsp_msg.response(0).data(i).value() << "\n";
+        } else {
+
+            std::fprintf(reg_fd, "RegName:  %s Address: %s Value: %s \n", debug_rsp_msg.response(0).data(i).reg_name().c_str(), debug_rsp_msg.response(0).data(i).address().c_str(),  debug_rsp_msg.response(0).data(i).value().c_str());
+            std::fflush(reg_fd);
+        }
+    }
+    return;;
 
 }
 

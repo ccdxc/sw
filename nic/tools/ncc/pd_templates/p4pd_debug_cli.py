@@ -913,6 +913,8 @@ def table_dump():
 
 
 def populate_register(ctx):
-    if (ctx['opn'] == 'read'):
-        data = iris.p4pd_register_entry_read(str(ctx['reg_name']))
-        print data
+    if (ctx['is_reg_name'] == True):
+        if (ctx['opn'] == 'read'):
+            iris.p4pd_register_entry_read(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
+    else:
+        iris.p4pd_register_entry_read(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))

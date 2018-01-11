@@ -147,6 +147,7 @@
 		DebugKeyHandle
 		DebugSpec
 		DebugRequestMsg
+		RegisterData
 		DebugResponse
 		DebugResponseMsg
 		MemTrackSpec

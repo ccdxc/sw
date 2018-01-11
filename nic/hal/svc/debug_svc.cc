@@ -10,10 +10,20 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug.hpp"
 #include "nic/include/asic_pd.hpp"
+#include <vector>
+#include <tuple>
+using std::vector;
+using std::tuple;
 
 extern uint32_t read_reg_base(uint32_t chip, uint64_t addr);
 extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t data);
 
+struct _reg_info {
+    char *reg_name;
+    int  offset;
+    char *value;
+};
+typedef struct _reg_info reg_info;
 Status
 DebugServiceImpl::DebugInvoke(ServerContext *context,
                               const DebugRequestMsg *req,
@@ -40,6 +50,12 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
         HAL_TRACE_DEBUG("{}: Reg: {}", __FUNCTION__, key_handle.reg_id());
         reg_access = true;
     }
+    if (spec.mem_type() == debug::DEBUG_MEM_TYPE_TABLE) {
+        table_access = true;
+    } else if (spec.mem_type() == debug::DEBUG_MEM_TYPE_REG) {
+        reg_access = true;
+    }
+
     HAL_TRACE_DEBUG("{}: operation: {} index: {}", __FUNCTION__,
                     spec.opn_type(), spec.index());
 
@@ -83,13 +99,69 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                         spec.addr());
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
             if (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegName) {
+
                 data = hal::pd::asic_csr_dump((char *)key_handle.reg_name().c_str());
+                debug::RegisterData *reg_data = response->add_data();
+                reg_data->set_reg_name(key_handle.reg_name());
+                reg_data->set_value(data);
+
+            } else if (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kBlockName) {
+                HAL_TRACE_DEBUG("{}: block name", (char *) key_handle.block_name().c_str());
+
+                /*char *root_path = NULL;
+                root_path = std::getenv("HAL_CONFIG_PATH");
+                string reg_file = std::string(root_path) + "reg_out" + (char *)key_handle.block_name().c_str() + ".txt";
+                HAL_TRACE_DEBUG("reg file {}", reg_file);
+                FILE *reg_fd = fopen(reg_file.c_str(), "ab+");
+
+                if (!reg_fd) {
+                    HAL_TRACE_DEBUG("Returned no file");
+                    return Status::OK;
+                }*/
+                if (strcmp((char *)key_handle.block_name().c_str() , "all") == 0) {
+                    vector<string> block_vector = hal::pd::asic_csr_list_get("cap0", 1);
+
+                    for ( auto block : block_vector) {
+                        HAL_TRACE_DEBUG("Block name: {}", block);
+                        vector < tuple < std::string, string, std::string>> reg_data;
+                        reg_data = hal::pd::asic_csr_dump_reg((char *) (block.c_str()), 1);
+                        for (auto reg : reg_data) {
+                            string reg_name;
+                            string offset;
+                            string value;
+                            std::tie(reg_name, offset, value) = reg;
+                            debug::RegisterData *reg_data = response->add_data();
+                            reg_data->set_reg_name(reg_name);
+                            reg_data->set_value(value);
+                            reg_data->set_address(offset);
+                            //std::fprintf(reg_fd, "%s, offset: %d , value: %s \n",reg_name.c_str(), offset, value.c_str());
+                        }
+                        //fflush(reg_fd);
+                    }
+                    //fclose(reg_fd);
+                } else {
+                    string block_name = key_handle.block_name();
+                    HAL_TRACE_DEBUG("Block name: {}", block_name);
+                    vector < tuple < std::string, string, std::string>> reg_data;
+                    reg_data = hal::pd::asic_csr_dump_reg((char *) (block_name.c_str()), 1);
+                    for (auto reg : reg_data) {
+                        string reg_name;
+                        string offset;
+                        string value;
+                        std::tie(reg_name, offset, value) = reg;
+                        debug::RegisterData *reg_data = response->add_data();
+                        reg_data->set_reg_name(reg_name);
+                        reg_data->set_value(value);
+                        reg_data->set_address(offset);
+                        //std::fprintf(reg_fd, "%s, offset: %d , value: %s \n",reg_name.c_str(), offset, value.c_str());
+                    }
+                    //fflush(reg_fd);
+                    //fclose(reg_fd);
+                }
             }  else {
                 uint64_t val = hal::pd::asic_reg_read(spec.addr());
                 data = std::to_string(val);
             }
-            HAL_TRACE_DEBUG("{}: Read Data: 0x{0:x}", __FUNCTION__, data);
-            response->set_data(data);
         } else {
             HAL_TRACE_DEBUG("{}: Writing Data: 0x{0:x}",
                             __FUNCTION__, spec.reg_data());

@@ -4,6 +4,10 @@
 #define __HAL_PD_ASIC_RW_HPP__
 
 #include "nic/include/base.h"
+#include <vector>
+#include <tuple>
+using std::vector;
+using std::tuple;
 
 namespace hal {
 namespace pd {
@@ -81,6 +85,10 @@ is_asic_rw_thread();
 std::string asic_pd_csr_dump(char *csr_str);
 
 std::string asic_csr_dump(char *csr_str);
+vector < tuple < std::string, std::string, std::string > > asic_csr_dump_reg(char *block_name, bool exlude_mem);
+vector <std::string>
+asic_csr_list_get(std::string path, int level);
+
 
 }    // namespace pd
 }    // namespace hal

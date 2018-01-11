@@ -8,6 +8,9 @@
 # Debug CLI
 #
 
+
+//:: register_list =  ["ppa","sgi","rpc","intr","pxb","sge","pr","pp","pt","tsi","pcr","txs","tse","pct","pb","pm","db","ssi","sse","bx","md","tpc","dpr","mc","dpp","sema","mp", "ms","mx"]
+
 import click
 from click_repl import register_repl
 import iris_debug_cli as backend
@@ -88,6 +91,7 @@ def hardware(ctx):
 @click.pass_context
 def table(ctx):
     ctx.obj = {}
+    ctx.obj['is_reg'] = False
     pass
 
 @table.group()
@@ -124,7 +128,6 @@ def process_results(ctx, rslt, ids):
     for arg, value in rslt:
         config['actionfld'][arg] = value
     backend.populate_table(config)
-    print config
 
 //::        for action in pddict['tables'][table]['actions']:
 //::            (actionname, actionfldlist) = action
@@ -177,7 +180,6 @@ def ${table}_index(ctx, ids):
     config['swkey']={}
     config['swkey_mask']={}
     backend.populate_table(config)
-    print config
     pass
 
 #@${table}_index.resultcallback()
@@ -187,7 +189,6 @@ def ${table}_index(ctx, ids):
 #    config['table_name'] = ctx.obj['table_name']
 #    config['opn'] = ctx.obj['opn']
 #    config['index'] = ids
-#    print config
 //::    #endfor
 
 
@@ -209,9 +210,52 @@ def read(ctx):
 def reg_name(ctx, reg_name):
     config= {}
     config['reg_name'] = reg_name
+    config['block_name'] = ""
+    config['is_reg_name'] = True
     config['opn'] = ctx.obj['opn']
     backend.populate_register(config)
     pass
+
+
+@read.group(invoke_without_command=True)
+@click.option("-f", "--file", "file_name", default="", multiple=False)
+@click.pass_context
+def all(ctx, file_name):
+    config={}
+    config['block_name'] = 'all'
+    config['reg_name'] = ""
+    config['file_name'] = file_name
+    config['is_reg_name'] = False
+    config['opn'] = ctx.obj['opn']
+    backend.populate_register(config)
+    pass
+
+@read.group()
+@click.pass_context
+def block(ctx):
+    pass
+
+@block.group(invoke_without_command=True)
+@click.pass_context
+def block_name(ctx):
+    pass
+
+//:: for block in register_list:
+@block_name.group(invoke_without_command=True)
+@click.option("-f", "--file", "file_name", default="", multiple=False)
+@click.pass_context
+def ${block}(ctx,file_name):
+    ctx.obj['block_name'] = 'cap0.' + '${block}'
+    config = {}
+    config['reg_name'] = ""
+    config['opn'] = ctx.obj['opn']
+    config['block_name'] = ctx.obj['block_name']
+    config['is_reg_name'] = False
+    config['file_name'] = file_name
+    backend.populate_register(config)
+    pass
+//::    #endfor
+
 register_repl(dbg_cli)
 dbg_cli.add_command(debug)
 
