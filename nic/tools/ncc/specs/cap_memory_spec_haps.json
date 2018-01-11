@@ -1,0 +1,48 @@
+{
+  "sram": {
+    "ingress": {
+      "count": 10,
+      "depth": 4096,
+      "width": 128
+    },
+    "egress": {
+      "count": 10,
+      "depth": 4096,
+      "width": 128
+    }
+  },
+  "tcam": {
+    "ingress": {
+      "count": 8,
+      "depth": 256,
+      "width": 128
+    },
+    "egress": {
+      "count": 4,
+      "depth": 256,
+      "width": 128
+    }
+  },
+  "hbm": {
+    "00-p4_program": {
+      "count": 1,
+      "depth": 134217728,
+      "width": 8
+    },
+    "01-atomic_stats": {
+      "count": 1,
+      "depth": 134217728,
+      "width": 8
+    },
+    "02-p4_tables": {
+      "count": 1,
+      "depth": 336592896,
+      "width": 8
+    },
+    "03-mcast_repl": {
+      "count": 1,
+      "depth": 4194304,
+      "width": 8
+    }
+  }
+}

@@ -3558,7 +3558,7 @@ def te_tbl_property_print(json_tbl_):
 def capri_table_memory_spec_load():
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
-    spec_file_path = os.path.join(cur_path, 'csr_json/cap_memory_spec.json')
+    spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec.json')
     spec_file = open(spec_file_path)
     spec = json.load(spec_file)
     spec_file.close()
