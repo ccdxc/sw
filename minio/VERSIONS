@@ -1,4 +1,4 @@
 # format: <name> <version>
-asic_libs cd52605
-ncc_tools cd52605
+asic_libs 5ee06d4
+ncc_tools 5ee06d4
 third_party_libs 1.1.25
