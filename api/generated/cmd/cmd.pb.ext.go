@@ -8,6 +8,7 @@ package cmd
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -72,6 +73,186 @@ func (m *AutoMsgNodeWatchHelper) MakeKey(prefix string) string {
 func (m *AutoMsgSmartNICWatchHelper) MakeKey(prefix string) string {
 	obj := SmartNIC{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *AutoMsgClusterWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgClusterWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgNodeWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgSmartNICWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgSmartNICWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Cluster) Clone(into interface{}) error {
+	out, ok := into.(*Cluster)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ClusterList) Clone(into interface{}) error {
+	out, ok := into.(*ClusterList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ClusterSpec) Clone(into interface{}) error {
+	out, ok := into.(*ClusterSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ClusterStatus) Clone(into interface{}) error {
+	out, ok := into.(*ClusterStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Node) Clone(into interface{}) error {
+	out, ok := into.(*Node)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *NodeCondition) Clone(into interface{}) error {
+	out, ok := into.(*NodeCondition)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *NodeList) Clone(into interface{}) error {
+	out, ok := into.(*NodeList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *NodeSpec) Clone(into interface{}) error {
+	out, ok := into.(*NodeSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *NodeStatus) Clone(into interface{}) error {
+	out, ok := into.(*NodeStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *PortCondition) Clone(into interface{}) error {
+	out, ok := into.(*PortCondition)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *PortSpec) Clone(into interface{}) error {
+	out, ok := into.(*PortSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *PortStatus) Clone(into interface{}) error {
+	out, ok := into.(*PortStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SmartNIC) Clone(into interface{}) error {
+	out, ok := into.(*SmartNIC)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SmartNICCondition) Clone(into interface{}) error {
+	out, ok := into.(*SmartNICCondition)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SmartNICList) Clone(into interface{}) error {
+	out, ok := into.(*SmartNICList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SmartNICSpec) Clone(into interface{}) error {
+	out, ok := into.(*SmartNICSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SmartNICStatus) Clone(into interface{}) error {
+	out, ok := into.(*SmartNICStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
 }
 
 // Validators
@@ -218,6 +399,9 @@ func (m *PortStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *SmartNIC) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
 	if !ignoreStatus {
 		if !m.Status.Validate(ver, ignoreStatus) {
 			return false

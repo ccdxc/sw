@@ -8,6 +8,7 @@ package telemetry
 
 import (
 	"context"
+
 	"github.com/pensando/sw/api"
 )
 

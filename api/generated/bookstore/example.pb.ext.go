@@ -8,6 +8,7 @@ package bookstore
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -74,9 +75,147 @@ func (m *AutoMsgPublisherWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AutoMsgBookWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgBookWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgOrderWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgPublisherWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgPublisherWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Book) Clone(into interface{}) error {
+	out, ok := into.(*Book)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *BookList) Clone(into interface{}) error {
+	out, ok := into.(*BookList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *BookSpec) Clone(into interface{}) error {
+	out, ok := into.(*BookSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *BookStatus) Clone(into interface{}) error {
+	out, ok := into.(*BookStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Order) Clone(into interface{}) error {
+	out, ok := into.(*Order)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *OrderItem) Clone(into interface{}) error {
+	out, ok := into.(*OrderItem)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *OrderList) Clone(into interface{}) error {
+	out, ok := into.(*OrderList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *OrderSpec) Clone(into interface{}) error {
+	out, ok := into.(*OrderSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *OrderStatus) Clone(into interface{}) error {
+	out, ok := into.(*OrderStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Publisher) Clone(into interface{}) error {
+	out, ok := into.(*Publisher)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *PublisherList) Clone(into interface{}) error {
+	out, ok := into.(*PublisherList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *PublisherSpec) Clone(into interface{}) error {
+	out, ok := into.(*PublisherSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 // Validators
 
 func (m *AutoMsgBookWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -102,6 +241,11 @@ func (m *Book) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *BookList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 

@@ -20,7 +20,8 @@ const (
 	CMDCertAPIPort = "9009"
 
 	// API Server
-	APIServerPort = "9003"
+	APIServerPort     = "9003"
+	APIServerRESTPort = "9103"
 
 	// VC Hub
 	VCHubAPIPort = "9004"
@@ -62,6 +63,7 @@ const (
 	CollectorAPIPort = "10777"
 
 	// KV Store keys
+	RootPrefix = "/venice"
 	ClusterKey = "/venice/cmd/cluster"
 	NodesKey   = "/venice/cmd/nodes"
 )

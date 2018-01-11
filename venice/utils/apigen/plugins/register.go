@@ -558,7 +558,7 @@ func checkValidators(file *descriptor.File, msgmap map[string]bool, name string)
 			found = true
 		}
 		if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
-			found = checkValidators(file, msgmap, *fld.TypeName)
+			found = found || checkValidators(file, msgmap, *fld.TypeName)
 		}
 	}
 	msgmap[name] = found
@@ -642,6 +642,7 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 				glog.Infof("Failed %s", err)
 			}
 			if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+				glog.Infof("checking validators for nested message (%s).%s", *msg.Name, *fld.Name)
 				if _, ok := msgmap[*fld.TypeName]; !ok {
 					msgmap[*fld.TypeName] = checkValidators(file, msgmap, *fld.TypeName)
 				}

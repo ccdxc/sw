@@ -1,5 +1,9 @@
 package api
 
+import (
+	"fmt"
+)
+
 // GetObjectKind returns the kind of an object.
 func (t *TypeMeta) GetObjectKind() string {
 	return t.Kind
@@ -15,7 +19,27 @@ func (o *ObjectMeta) GetObjectMeta() *ObjectMeta {
 	return o
 }
 
+// Clone clones the object into into
+func (o *ObjectMeta) Clone(into interface{}) error {
+	return fmt.Errorf("not defined")
+}
+
 // GetListMeta returns the ListMeta of a list object.
 func (l *ListMeta) GetListMeta() *ListMeta {
 	return l
+}
+
+// Clone clones the object into into
+func (l *ListMeta) Clone(into interface{}) error {
+	return fmt.Errorf("not defined")
+}
+
+// Clone clones the object into into
+func (m *Status) Clone(into interface{}) error {
+	out, ok := into.(*Status)
+	if !ok {
+		return fmt.Errorf("mismatched types")
+	}
+	*out = *m
+	return nil
 }

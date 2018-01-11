@@ -34,7 +34,7 @@ func TestInsert(t *testing.T) {
 
 	verifyCount := 0
 	verifyValues := []int{200, 201, 202}
-	iterfunc := func(i interface{}) {
+	iterfunc := func(i interface{}) bool {
 		d := i.(int)
 		found := false
 		for _, v := range verifyValues {
@@ -47,6 +47,10 @@ func TestInsert(t *testing.T) {
 		if !found {
 			t.Errorf("did not find value %d", d)
 		}
+		return true
+	}
+	remfunc := func(i interface{}) {
+		iterfunc(i)
 	}
 
 	l.Iterate(iterfunc)
@@ -55,15 +59,36 @@ func TestInsert(t *testing.T) {
 	}
 
 	if l.Len() != 3 {
-		t.Errorf("wrong length expecting [1] got [%d]", l.Len())
+		t.Errorf("wrong length expecting [3] got [%d]", l.Len())
 	}
 
 	verifyCount = 0
-	l.RemoveAll(iterfunc)
+	l.RemoveAll(remfunc)
 	if verifyCount != 3 {
 		t.Errorf("not all elements found expecting [3] found [%d", verifyCount)
 	}
 	if l.Len() != 0 {
+		t.Errorf("wrong length expecting [1] got [%d]", l.Len())
+	}
+
+	x = 200
+	l.Insert(x)
+	x = 201
+	l.Insert(x)
+	x = 202
+	l.Insert(x)
+	if l.Len() != 3 {
+		t.Errorf("wrong length expecting [3] got [%d]", l.Len())
+	}
+	rtillfn := func(len int, i interface{}) bool {
+		d := i.(int)
+		if d > 201 {
+			return false
+		}
+		return true
+	}
+	l.RemoveTill(rtillfn)
+	if l.Len() != 1 {
 		t.Errorf("wrong length expecting [1] got [%d]", l.Len())
 	}
 }

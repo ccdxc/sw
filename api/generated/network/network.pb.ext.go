@@ -8,6 +8,7 @@ package network
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -135,6 +136,339 @@ func (m *AutoMsgSgpolicyWatchHelper) MakeKey(prefix string) string {
 func (m *AutoMsgTenantWatchHelper) MakeKey(prefix string) string {
 	obj := Tenant{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *AutoMsgEndpointWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgEndpointWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgLbPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgLbPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgNetworkWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgNetworkWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgSecurityGroupWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgServiceWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgServiceWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgSgpolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgSgpolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgTenantWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgTenantWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Endpoint) Clone(into interface{}) error {
+	out, ok := into.(*Endpoint)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EndpointList) Clone(into interface{}) error {
+	out, ok := into.(*EndpointList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EndpointSpec) Clone(into interface{}) error {
+	out, ok := into.(*EndpointSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EndpointStatus) Clone(into interface{}) error {
+	out, ok := into.(*EndpointStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *HealthCheckSpec) Clone(into interface{}) error {
+	out, ok := into.(*HealthCheckSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *LbPolicy) Clone(into interface{}) error {
+	out, ok := into.(*LbPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *LbPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*LbPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *LbPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*LbPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *LbPolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*LbPolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Network) Clone(into interface{}) error {
+	out, ok := into.(*Network)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *NetworkList) Clone(into interface{}) error {
+	out, ok := into.(*NetworkList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *NetworkSpec) Clone(into interface{}) error {
+	out, ok := into.(*NetworkSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *NetworkStatus) Clone(into interface{}) error {
+	out, ok := into.(*NetworkStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SGRule) Clone(into interface{}) error {
+	out, ok := into.(*SGRule)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SecurityGroup) Clone(into interface{}) error {
+	out, ok := into.(*SecurityGroup)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SecurityGroupList) Clone(into interface{}) error {
+	out, ok := into.(*SecurityGroupList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SecurityGroupSpec) Clone(into interface{}) error {
+	out, ok := into.(*SecurityGroupSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SecurityGroupStatus) Clone(into interface{}) error {
+	out, ok := into.(*SecurityGroupStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Service) Clone(into interface{}) error {
+	out, ok := into.(*Service)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ServiceList) Clone(into interface{}) error {
+	out, ok := into.(*ServiceList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ServiceSpec) Clone(into interface{}) error {
+	out, ok := into.(*ServiceSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ServiceStatus) Clone(into interface{}) error {
+	out, ok := into.(*ServiceStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Sgpolicy) Clone(into interface{}) error {
+	out, ok := into.(*Sgpolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SgpolicyList) Clone(into interface{}) error {
+	out, ok := into.(*SgpolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SgpolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*SgpolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SgpolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*SgpolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Tenant) Clone(into interface{}) error {
+	out, ok := into.(*Tenant)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TenantList) Clone(into interface{}) error {
+	out, ok := into.(*TenantList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TenantSpec) Clone(into interface{}) error {
+	out, ok := into.(*TenantSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TenantStatus) Clone(into interface{}) error {
+	out, ok := into.(*TenantStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
 }
 
 // Validators

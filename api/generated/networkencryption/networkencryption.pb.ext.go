@@ -8,6 +8,7 @@ package networkencryption
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,6 +34,69 @@ func (m *TrafficEncryptionPolicyList) MakeKey(prefix string) string {
 func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := TrafficEncryptionPolicy{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgTrafficEncryptionPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *IPsecProtocolSpec) Clone(into interface{}) error {
+	out, ok := into.(*IPsecProtocolSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TLSProtocolSpec) Clone(into interface{}) error {
+	out, ok := into.(*TLSProtocolSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TrafficEncryptionPolicy) Clone(into interface{}) error {
+	out, ok := into.(*TrafficEncryptionPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TrafficEncryptionPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*TrafficEncryptionPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TrafficEncryptionPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*TrafficEncryptionPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TrafficEncryptionPolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*TrafficEncryptionPolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
 }
 
 // Validators

@@ -4,11 +4,13 @@ package rpckit
 
 import (
 	"fmt"
+	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -22,20 +24,21 @@ const (
 func rpcServerUnaryInterceptor(rpcServer *RPCServer) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (interface{}, error) {
-
+		name := fmt.Sprintf("%s/%s", rpcServer.mysvcName, info.FullMethod)
+		rpcstrt := time.Now()
 		// call all the request middlewares
 		for _, m := range rpcServer.middlewares {
 			ctx = m.ReqInterceptor(ctx, RoleServer, rpcServer.mysvcName, info.FullMethod, req)
 		}
-
+		hdlrstrt := time.Now()
 		// finally call the handler
 		resp, err := handler(ctx, req)
-
+		hdr.Record("handler:"+name, time.Since(hdlrstrt))
 		// call all response middlewares
 		for _, m := range rpcServer.middlewares {
 			ctx = m.RespInterceptor(ctx, RoleServer, rpcServer.mysvcName, info.FullMethod, req, resp, err)
 		}
-
+		hdr.Record("rpc:"+name, time.Since(rpcstrt))
 		return resp, err
 	}
 }

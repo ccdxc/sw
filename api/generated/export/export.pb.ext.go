@@ -8,6 +8,7 @@ package export
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -40,17 +41,82 @@ func (m *AutoMsgExportPolicyWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AutoMsgExportPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgExportPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ExportPolicy) Clone(into interface{}) error {
+	out, ok := into.(*ExportPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ExportPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*ExportPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ExportPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*ExportPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ExportPolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*ExportPolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *ExternalCred) Clone(into interface{}) error {
+	out, ok := into.(*ExternalCred)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 // Validators
 
 func (m *AutoMsgExportPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *ExportPolicy) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *ExportPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 

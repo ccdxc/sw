@@ -1584,6 +1584,12 @@
 			"revisionTime": "2016-04-02T20:03:21Z"
 		},
 		{
+			"checksumSHA1": "AHk1Y+L/rkf1jKAmqttDefEWeJw=",
+			"path": "github.com/tchap/go-patricia/patricia",
+			"revision": "5ad6cdb7538b0097d5598c7e57f0a24072adf7dc",
+			"revisionTime": "2017-09-01T15:15:52Z"
+		},
+		{
 			"checksumSHA1": "SCjmkRvVva63m2zGRaAyTYh5xkM=",
 			"path": "github.com/tmc/grpc-websocket-proxy/wsproxy",
 			"revision": "830351dc03c6f07d625727d5f993a463babb20e1",

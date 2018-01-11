@@ -47,6 +47,9 @@ message BookSpec {
   // Added in  version 2 of the API.
   string IdProvider = 4;
   string Category = 5 [(venice.check) = "StrEnum(BookSpec.BookCategories)"];
+  // Used for performance monitoring tests
+  api.Timestamp UpdateTimestamp = 6;
+  bool Terminate = 7;
 }
 
 message BookStatus {

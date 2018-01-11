@@ -115,6 +115,20 @@
             "type": "string"
           },
           {
+            "name": "Spec.UpdateTimestamp.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "Spec.Terminate",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
             "name": "Status.Inventory",
             "in": "query",
             "required": false,
@@ -588,6 +602,13 @@
         },
         "Category": {
           "type": "string"
+        },
+        "UpdateTimestamp": {
+          "$ref": "#/definitions/apiTimestamp"
+        },
+        "Terminate": {
+          "type": "boolean",
+          "format": "boolean"
         }
       }
     },

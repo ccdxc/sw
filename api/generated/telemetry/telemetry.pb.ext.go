@@ -8,6 +8,7 @@ package telemetry
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -40,17 +41,73 @@ func (m *AutoMsgMonitoringPolicyWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AutoMsgMonitoringPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgMonitoringPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *MonitoringPolicy) Clone(into interface{}) error {
+	out, ok := into.(*MonitoringPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *MonitoringPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*MonitoringPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *MonitoringPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*MonitoringPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *MonitoringPolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*MonitoringPolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 // Validators
 
 func (m *AutoMsgMonitoringPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *MonitoringPolicy) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *MonitoringPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 

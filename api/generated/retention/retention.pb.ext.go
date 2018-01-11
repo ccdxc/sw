@@ -8,6 +8,7 @@ package retention
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,6 +34,51 @@ func (m *RetentionPolicyList) MakeKey(prefix string) string {
 func (m *AutoMsgRetentionPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := RetentionPolicy{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *AutoMsgRetentionPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgRetentionPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RetentionPolicy) Clone(into interface{}) error {
+	out, ok := into.(*RetentionPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RetentionPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*RetentionPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RetentionPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*RetentionPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RetentionPolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*RetentionPolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
 }
 
 // Validators

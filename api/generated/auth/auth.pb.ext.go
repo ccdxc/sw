@@ -8,6 +8,7 @@ package auth
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -57,6 +58,150 @@ func (m *AutoMsgUserWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AuthenticationPolicy) Clone(into interface{}) error {
+	out, ok := into.(*AuthenticationPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AuthenticationPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*AuthenticationPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AuthenticationPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*AuthenticationPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AuthenticationPolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*AuthenticationPolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Authenticators) Clone(into interface{}) error {
+	out, ok := into.(*Authenticators)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgAuthenticationPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgAuthenticationPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgUserWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgUserWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Ldap) Clone(into interface{}) error {
+	out, ok := into.(*Ldap)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *LdapAttributeMapping) Clone(into interface{}) error {
+	out, ok := into.(*LdapAttributeMapping)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Local) Clone(into interface{}) error {
+	out, ok := into.(*Local)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Radius) Clone(into interface{}) error {
+	out, ok := into.(*Radius)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TLSOptions) Clone(into interface{}) error {
+	out, ok := into.(*TLSOptions)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *User) Clone(into interface{}) error {
+	out, ok := into.(*User)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *UserList) Clone(into interface{}) error {
+	out, ok := into.(*UserList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *UserSpec) Clone(into interface{}) error {
+	out, ok := into.(*UserSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *UserStatus) Clone(into interface{}) error {
+	out, ok := into.(*UserStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 // Validators
 
 func (m *AuthenticationPolicy) Validate(ver string, ignoreStatus bool) bool {
@@ -67,6 +212,11 @@ func (m *AuthenticationPolicy) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AuthenticationPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
@@ -99,10 +249,16 @@ func (m *Authenticators) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *AutoMsgUserWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -134,6 +290,11 @@ func (m *User) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *UserList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 

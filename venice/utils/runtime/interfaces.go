@@ -11,6 +11,9 @@ type Object interface {
 
 	// Returns the API version of the object.
 	GetObjectAPIVersion() string
+
+	// Clones the Object
+	Clone(into interface{}) error
 }
 
 // ObjectMetaAccessor allows for ObjectMeta access from Object.

@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/trace"
 
+	"github.com/pensando/sw/api/cache"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks"
@@ -35,17 +36,27 @@ func TestMain(m *testing.M) {
 	l := log.WithContext("module", "CrudOpsTest")
 	tinfo.l = l
 	scheme := runtime.NewScheme()
+	cachecfg := cache.Config{
+		Config: store.Config{
+			Type:    store.KVStoreTypeMemkv,
+			Codec:   runtime.NewJSONCodec(scheme),
+			Servers: []string{"test-cluster"},
+		},
+		NumKvClients: 1,
+		Logger:       l,
+	}
+	cache, err := cache.CreateNewCache(cachecfg)
+	if err != nil {
+		panic("failed to create cache")
+	}
 	srvconfig := apiserver.Config{
 		GrpcServerPort: apiserverAddress,
 		DebugMode:      false,
 		Logger:         l,
 		Version:        "v1",
 		Scheme:         scheme,
-		Kvstore: store.Config{
-			Type:  store.KVStoreTypeMemkv,
-			Codec: runtime.NewJSONCodec(scheme),
-		},
-		KVPoolSize: 1,
+		CacheStore:     cache,
+		KVPoolSize:     1,
 	}
 	grpclog.SetLogger(l)
 	trace.Init("ApiServer")

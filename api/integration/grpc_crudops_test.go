@@ -403,7 +403,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("Expected to succeed")
 		}
 	}
-	{ //Update the Book with Status via REST
+	{ // Update the Book with Status via REST
 		book1mod.Status.Inventory = 100
 		_, err = restcl.BookstoreV1().Book().Update(ctx, &book1mod)
 		if err != nil {

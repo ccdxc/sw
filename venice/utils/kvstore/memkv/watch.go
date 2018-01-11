@@ -73,14 +73,14 @@ func (f *MemKv) watch(ctx context.Context, keyOrPrefix string, fromVersion strin
 	return w, nil
 }
 
-func sendEvent(w *watcher, v *memKvRec, deleted bool) {
+func sendEvent(w *watcher, key string, v *memKvRec, deleted bool) {
 	evType := kvstore.Updated
 	if deleted {
 		evType = kvstore.Deleted
 	} else if v.revision == 1 {
 		evType = kvstore.Created
 	}
-	w.sendEvent(evType, []byte(v.value), v.revision)
+	w.sendEvent(evType, key, []byte(v.value), v.revision)
 }
 
 // setupWatchers looks for all watchers and find the ones that
@@ -92,11 +92,11 @@ func (f *MemKv) setupWatchers(key string, v *memKvRec) {
 			if w.recursive {
 				if strings.HasPrefix(key, watchKey) {
 					v.watchers = append(v.watchers, w)
-					sendEvent(w, v, false)
+					sendEvent(w, key, v, false)
 				}
 			} else if watchKey == key {
 				v.watchers = append(v.watchers, w)
-				sendEvent(w, v, false)
+				sendEvent(w, key, v, false)
 			}
 		}
 	}
@@ -115,7 +115,7 @@ func (f *MemKv) sendWatchEvents(key string, v *memKvRec, deleted bool) {
 	}
 
 	for _, w := range v.watchers {
-		sendEvent(w, v, deleted)
+		sendEvent(w, key, v, deleted)
 		if deleted {
 			deleteRecKey(w, key)
 		}
@@ -158,13 +158,13 @@ func (w *watcher) startWatching() {
 	for _, key := range w.keys {
 		v := f.cluster.kvs[key]
 		if v.revision >= w.fromVersion {
-			sendEvent(w, v, false)
+			sendEvent(w, key, v, false)
 		}
 	}
 }
 
 // sendEvent sends out the event unless the watch is stopped.
-func (w *watcher) sendEvent(evType kvstore.WatchEventType, value []byte, version int64) {
+func (w *watcher) sendEvent(evType kvstore.WatchEventType, key string, value []byte, version int64) {
 	f := w.f
 
 	obj, err := f.codec.Decode(value, nil)
@@ -184,6 +184,7 @@ func (w *watcher) sendEvent(evType kvstore.WatchEventType, value []byte, version
 	e := &kvstore.WatchEvent{
 		Type:   evType,
 		Object: obj,
+		Key:    key,
 	}
 
 	if len(w.outCh) == outCount {

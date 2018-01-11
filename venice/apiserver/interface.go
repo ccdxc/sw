@@ -94,9 +94,15 @@ type Config struct {
 	// DevMode specifies if this server is in production mode or dev mode
 	DevMode bool
 	// Version the API server should use as the native version.
-	Version    string
-	Scheme     *runtime.Scheme
+	Version string
+	// Scheme is the schema of runtime objects
+	Scheme *runtime.Scheme
+	// KVPoolSize is the number of backend connections to the KV Store. This is used only
+	//  when the CacheStore parameter is not specified.
 	KVPoolSize int
+	// CacheStore is the cache to use instead of the KV store. The cache in turn establishes
+	//  connections to the backend KV store.
+	CacheStore kvstore.Interface
 }
 
 // TransformFunc is a function that tranforms a message from "from" version to the "to" version.

@@ -174,11 +174,16 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	if config.DebugMode {
 		log.SetTraceDebug()
 	}
-
-	if config.KVPoolSize < 1 {
-		a.config.KVPoolSize = apiserver.DefaultKvPoolSize
+	poolSize := apiserver.DefaultKvPoolSize
+	if config.CacheStore != nil {
+		// override PoolSize to 1
+		a.config.KVPoolSize = 1
+	} else {
+		if config.KVPoolSize < 1 {
+			a.config.KVPoolSize = apiserver.DefaultKvPoolSize
+		}
+		poolSize = a.config.KVPoolSize
 	}
-	poolSize := a.config.KVPoolSize
 
 	opts := []rpckit.Option{}
 	if !config.DevMode {
@@ -215,10 +220,17 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		}
 	}
 
-	// Connect to the KV Store
-	for i := 0; i < poolSize; i++ {
-		if err = a.addKvConnToPool(); err != nil {
-			panic(fmt.Sprintf("could not create KV conn pool entry %d (%s)", i, err))
+	if config.CacheStore != nil {
+		// connect to the cache provided. The cache will in turn connect to the KV store backend.
+		a.nextKvMutex.Lock()
+		a.kvPool = append(a.kvPool, config.CacheStore)
+		a.nextKvMutex.Unlock()
+	} else {
+		// Connect to the KV Store
+		for i := 0; i < poolSize; i++ {
+			if err = a.addKvConnToPool(); err != nil {
+				panic(fmt.Sprintf("could not create KV conn pool entry %d (%s)", i, err))
+			}
 		}
 	}
 	a.Logger.Log("msg", "added Kvstore connections to pool", "count", poolSize, "len", len(a.kvPool))

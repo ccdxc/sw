@@ -100,7 +100,7 @@ func (w *watcher) startWatching(wc clientv3.WatchChan, resp *clientv3.GetRespons
 				evType = kvstore.Created
 			}
 
-			w.sendEvent(evType, kv.Value, kv.ModRevision)
+			w.sendEvent(evType, string(kv.Key), kv.Value, kv.ModRevision)
 		}
 	}
 
@@ -113,6 +113,7 @@ func (w *watcher) startWatching(wc clientv3.WatchChan, resp *clientv3.GetRespons
 		for _, e := range wr.Events {
 			evType := kvstore.Updated
 			value := e.Kv.Value
+			key := string(e.Kv.Key)
 
 			if e.IsCreate() {
 				evType = kvstore.Created
@@ -124,7 +125,7 @@ func (w *watcher) startWatching(wc clientv3.WatchChan, resp *clientv3.GetRespons
 				}
 			}
 
-			w.sendEvent(evType, value, e.Kv.ModRevision)
+			w.sendEvent(evType, key, value, e.Kv.ModRevision)
 		}
 	}
 	// Stop() was called.
@@ -132,7 +133,7 @@ func (w *watcher) startWatching(wc clientv3.WatchChan, resp *clientv3.GetRespons
 }
 
 // sendEvent sends out the event unless the watch is stopped.
-func (w *watcher) sendEvent(evType kvstore.WatchEventType, value []byte, version int64) {
+func (w *watcher) sendEvent(evType kvstore.WatchEventType, key string, value []byte, version int64) {
 	obj, err := w.watchCtx.codec.Decode(value, nil)
 	if err != nil {
 		log.Errorf("Failed to decode %v with error %v", string(value), err)
@@ -149,6 +150,7 @@ func (w *watcher) sendEvent(evType kvstore.WatchEventType, value []byte, version
 
 	e := &kvstore.WatchEvent{
 		Type:   evType,
+		Key:    key,
 		Object: obj,
 	}
 

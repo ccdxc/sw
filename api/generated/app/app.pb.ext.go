@@ -8,6 +8,7 @@ package app
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -67,6 +68,141 @@ func (m *AutoMsgAppUserWatchHelper) MakeKey(prefix string) string {
 func (m *AutoMsgAppWatchHelper) MakeKey(prefix string) string {
 	obj := App{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *App) Clone(into interface{}) error {
+	out, ok := into.(*App)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppList) Clone(into interface{}) error {
+	out, ok := into.(*AppList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppSpec) Clone(into interface{}) error {
+	out, ok := into.(*AppSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppStatus) Clone(into interface{}) error {
+	out, ok := into.(*AppStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppUser) Clone(into interface{}) error {
+	out, ok := into.(*AppUser)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppUserGrp) Clone(into interface{}) error {
+	out, ok := into.(*AppUserGrp)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppUserGrpList) Clone(into interface{}) error {
+	out, ok := into.(*AppUserGrpList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppUserGrpSpec) Clone(into interface{}) error {
+	out, ok := into.(*AppUserGrpSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppUserGrpStatus) Clone(into interface{}) error {
+	out, ok := into.(*AppUserGrpStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppUserList) Clone(into interface{}) error {
+	out, ok := into.(*AppUserList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppUserSpec) Clone(into interface{}) error {
+	out, ok := into.(*AppUserSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AppUserStatus) Clone(into interface{}) error {
+	out, ok := into.(*AppUserStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgAppUserGrpWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgAppUserGrpWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgAppUserWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgAppUserWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgAppWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgAppWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
 }
 
 // Validators

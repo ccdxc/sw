@@ -40,7 +40,16 @@ func (m *{{.Name}})  MakeKey(prefix string) string {
 	obj := {{$type}}{}
 	return obj.MakeKey(prefix)
 } {{end}} {{end}}
-
+{{range .Messages}}{{if isNestedMessage .}}{{else}}
+func (m *{{.Name}}) Clone(into interface{}) error {
+	out, ok := into.(*{{.Name}})
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+{{end}}{{end}}
 // Validators
 {{range .Messages}}{{if isNestedMessage .}}{{else}}{{$msg := .}}{{$msgname := .Name}}
 func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index $validators.Map (derefStr .Name))}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{if $fldv.Repeated}}

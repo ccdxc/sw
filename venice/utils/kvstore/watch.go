@@ -24,6 +24,9 @@ type WatchEvent struct {
 	// Type of the watch event.
 	Type WatchEventType
 
+	// Key is the Kvstore key for the object.
+	Key string
+
 	// For a Deleted event, this is previous version of the object. For an
 	// Error event, it is undefined. For all other events, it is the latest
 	// version of the object.

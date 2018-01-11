@@ -16,7 +16,7 @@ import (
 
 func main() {
 	var (
-		grpcaddr = flag.String("grpc-server", "localhost:8082", "GRPC Port to connect to")
+		grpcaddr = flag.String("grpc-server", "localhost:9003", "GRPC Port to connect to")
 		watch    = flag.Bool("watch", false, "watch publishers")
 	)
 	flag.Parse()
@@ -71,6 +71,7 @@ func main() {
 		Spec: bookstore.PublisherSpec{
 			Id:      "111",
 			Address: "#1 hilane, timbuktoo",
+			WebAddr: "http://sahara.org",
 		},
 	}
 	var pub2 = bookstore.Publisher{
@@ -83,6 +84,7 @@ func main() {
 		Spec: bookstore.PublisherSpec{
 			Id:      "112",
 			Address: "#2 hilane, timbuktoo",
+			WebAddr: "http://amazon.org",
 		},
 	}
 
@@ -112,7 +114,7 @@ func main() {
 	}
 	l.Infof("Received object %+v\n", *ret)
 	if !reflect.DeepEqual(ret.Spec, pub.Spec) {
-		l.Fatalf("updated object [Add] does not match [%+v] :: [%+v]\n", pub.Spec, ret.Spec)
+		l.Fatalf("updated object [Get] does not match [%+v] :: [%+v]\n", pub.Spec, ret.Spec)
 	}
 
 	opts := api.ListWatchOptions{}

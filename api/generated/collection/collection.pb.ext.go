@@ -8,6 +8,7 @@ package collection
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,6 +34,60 @@ func (m *CollectionPolicyList) MakeKey(prefix string) string {
 func (m *AutoMsgCollectionPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := CollectionPolicy{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *AutoMsgCollectionPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgCollectionPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *CollectionPolicy) Clone(into interface{}) error {
+	out, ok := into.(*CollectionPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *CollectionPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*CollectionPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *CollectionPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*CollectionPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *CollectionPolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*CollectionPolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *CollectionTrigger) Clone(into interface{}) error {
+	out, ok := into.(*CollectionTrigger)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
 }
 
 // Validators

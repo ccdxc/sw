@@ -521,6 +521,10 @@ func TestUpdateSmartNIC(t *testing.T) {
 	nic := cmd.SmartNIC{
 		TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{Name: "2222.2222.2222"},
+		Spec: cmd.SmartNICSpec{
+			Phase:  "UNKNOWN",
+			MgmtIp: "10.1.1.1",
+		},
 	}
 	nicObj, err := tInfo.smartNICServer.UpdateSmartNIC(&nic)
 	AssertOk(t, err, "Failed to create nic object, 2222.2222.222")

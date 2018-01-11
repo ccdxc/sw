@@ -10,6 +10,9 @@ type TestObjectWithoutMeta struct {
 	api.TypeMeta
 }
 
+// Clone clones the object
+func (m *TestObjectWithoutMeta) Clone(interface{}) error { return nil }
+
 type TestObjectWithMeta struct {
 	api.TypeMeta
 	api.ObjectMeta

@@ -8,6 +8,7 @@ package events
 
 import (
 	fmt "fmt"
+
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -57,21 +58,136 @@ func (m *AutoMsgEventWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *AutoMsgEventPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgEventPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgEventWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgEventWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *Event) Clone(into interface{}) error {
+	out, ok := into.(*Event)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EventList) Clone(into interface{}) error {
+	out, ok := into.(*EventList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EventPolicy) Clone(into interface{}) error {
+	out, ok := into.(*EventPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EventPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*EventPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EventPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*EventPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EventPolicyStatus) Clone(into interface{}) error {
+	out, ok := into.(*EventPolicyStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EventSource) Clone(into interface{}) error {
+	out, ok := into.(*EventSource)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EventSpec) Clone(into interface{}) error {
+	out, ok := into.(*EventSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *EventStatus) Clone(into interface{}) error {
+	out, ok := into.(*EventStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 // Validators
 
 func (m *AutoMsgEventPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *AutoMsgEventWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *Event) Validate(ver string, ignoreStatus bool) bool {
+	if !ignoreStatus {
+		if !m.Status.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
 func (m *EventList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
@@ -83,6 +199,11 @@ func (m *EventPolicy) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *EventPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
