@@ -19,5 +19,10 @@ run "env"
 run "mkdir -p '#{DIR}'"
 workdir DIR
 
+# FIXME: Fix below code once this issue is fixed: https://github.com/pensando/test-infra/issues/581 
+# install docker
+run "curl -sSL https://get.docker.com | CHANNEL=stable bash"
+copy "tools/test-build/daemon.json", "/etc/docker/daemon.json"
+
 entrypoint []
 cmd %w[/bin/bash]

@@ -10,7 +10,6 @@ set -e
 
 # Usage: dind CMD [ARG...]
 
-# apparmor sucks and Docker needs to know that it's in a container (c) @tianon
 export container=docker
 
 if [ -d /sys/kernel/security ] && ! mountpoint -q /sys/kernel/security; then

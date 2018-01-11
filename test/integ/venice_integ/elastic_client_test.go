@@ -100,11 +100,6 @@ func TestElastic(t *testing.T) {
 	var esClient elastic.ESClient
 	var err error
 
-	// ToDo Re-enable this when CI can test this on all targets.
-	if isCI := os.Getenv("JOB_ID"); len(isCI) != 0 {
-		t.Skip("Elastic client testing is not enabled in CI")
-	}
-
 	//context must be passed for each elastic call
 	ctx := context.Background()
 
