@@ -53,9 +53,9 @@
  */
 
 #define HAL_LOG(level, args...) \
-    hal::utils::hal_logger().log(level, args)
+    if(hal::utils::hal_logger()) hal::utils::hal_logger()->log(level, args)
 #define HAL_LOG_IF(cond, level, args...) \
-    hal::utils::hal_logger().log(cond, level, args)
+    if(hal::utils::hal_logger()) hal::utils::hal_logger()->log(cond, level, args)
 
 #define HAL_TRACE_ERR(args...) HAL_LOG(spdlog::level::err, args)
 #define HAL_TRACE_WARN(args...) HAL_LOG(spdlog::level::warn, args)
@@ -72,7 +72,8 @@ namespace utils {
 
 using logger = spdlog::logger;
 
-logger& hal_logger();
+void logger_init(int cpu_id);
+logger* hal_logger();
 
 } // namespace utils
 } // namespace hal

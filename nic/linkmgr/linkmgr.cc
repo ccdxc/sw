@@ -140,14 +140,18 @@ linkmgr_sig_handler (int sig, siginfo_t *info, void *ptr)
     switch (sig) {
     case SIGINT:
         HAL_GCOV_FLUSH();
-        hal::utils::hal_logger().flush();
+        if (hal::utils::hal_logger()) {
+            hal::utils::hal_logger()->flush();
+        }
         exit(0);
         break;
 
     case SIGUSR1:
     case SIGUSR2:
         HAL_GCOV_FLUSH();
-        hal::utils::hal_logger().flush();
+        if(hal::utils::hal_logger()) {
+            hal::utils::hal_logger()->flush();
+        }
         break;
 
     case SIGHUP:
@@ -156,7 +160,9 @@ linkmgr_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGURG:
     case SIGTERM:
     default:
-        hal::utils::hal_logger().flush();
+        if (hal::utils::hal_logger()) {
+            hal::utils::hal_logger()->flush();
+        }
         break;
     }
 }

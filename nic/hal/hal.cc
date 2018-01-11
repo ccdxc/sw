@@ -115,14 +115,18 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGINT:
     case SIGTERM:
         HAL_GCOV_FLUSH();
-        utils::hal_logger().flush();
+        if (utils::hal_logger()) {
+            utils::hal_logger()->flush();
+        }
         exit(0);
         break;
 
     case SIGUSR1:
     case SIGUSR2:
         HAL_GCOV_FLUSH();
-        utils::hal_logger().flush();
+        if (utils::hal_logger()) {
+            utils::hal_logger()->flush();
+        }
         break;
 
     case SIGHUP:
@@ -130,7 +134,9 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGCHLD:
     case SIGURG:
     default:
-        utils::hal_logger().flush();
+        if (utils::hal_logger()) {
+            utils::hal_logger()->flush();
+        }
         break;
     }
 }
@@ -408,6 +414,9 @@ hal_init (hal_cfg_t *hal_cfg)
     int          tid;
     char         *user = NULL;
     std::string  catalog_file = "catalog.json";
+
+    // Initialize the logger
+    hal::utils::logger_init(HAL_CONTROL_CORE_ID);
 
     HAL_TRACE_DEBUG("Initializing HAL ...");
 
