@@ -82,6 +82,7 @@ public:
     ht *lif_id_ht(void) const { return lif_id_ht_; }
 
     ht *if_id_ht(void) const { return if_id_ht_; }
+    ht *if_name_ht(void) const { return if_name_ht_; }
 
     ht *ep_hal_handle_ht(void) const { return ep_hal_handle_ht_; }
 
@@ -199,6 +200,10 @@ private:
     // interface related config
     struct {
         ht         *if_id_ht_;
+    } __PACK__;
+
+    struct {
+        ht         *if_name_ht_;
     } __PACK__;
 
     // endpoint related config
@@ -506,6 +511,7 @@ public:
     // get APIs for interface state
     slab *if_slab(void) const { return mem_db_->if_slab(); }
     ht *if_id_ht(void) const { return cfg_db_->if_id_ht(); }
+    ht *if_name_ht(void) const { return cfg_db_->if_name_ht(); }
     slab *enic_l2seg_entry_slab(void) const { return mem_db_->enic_l2seg_entry_slab(); }
 
     // get APIs for endpoint state

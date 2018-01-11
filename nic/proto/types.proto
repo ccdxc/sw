@@ -108,6 +108,7 @@ enum ApiStatus {
   API_STATUS_QOS_CLASS_NOT_FOUND          = 72;    // qos_class not found
   API_STATUS_HW_READ_ERROR                = 73;    // hardware read error
   API_STATUS_HW_WRITE_ERROR               = 74;    // hardware write error
+  API_STATUS_INTERFACE_NAME_INVALID       = 75;    // invalid interface name
 }
 
 // common meta object that is part of all other top level objects

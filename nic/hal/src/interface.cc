@@ -59,6 +59,44 @@ if_id_compare_key_func (void *key1, void *key2)
 }
 
 //------------------------------------------------------------------------------
+// Get key function for if name hash table
+//------------------------------------------------------------------------------
+void *
+if_name_get_key_func (void *entry)
+{
+    hal_handle_id_ht_entry_t *ht_entry = NULL;
+    if_t                     *hal_if   = NULL;
+
+    HAL_ASSERT(entry != NULL);
+    ht_entry = (hal_handle_id_ht_entry_t *)entry;
+    if (ht_entry == NULL) {
+        return NULL;
+    }
+    hal_if = (if_t *)hal_handle_get_obj(ht_entry->handle_id);
+    HAL_ASSERT(hal_if != NULL);
+    return (void *)hal_if->if_name;
+}
+
+//------------------------------------------------------------------------------
+// Compute hash function for if name hash table
+//------------------------------------------------------------------------------
+uint32_t
+if_name_compute_hash_func (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, strlen((const char *)key)) % ht_size;
+}
+
+//------------------------------------------------------------------------------
+// Compare key function for if name hash table
+//------------------------------------------------------------------------------
+bool
+if_name_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    return strncasecmp((const char *)key1, (const char *)key2, IFNAMSIZ - 1) == 0;
+}
+
+//------------------------------------------------------------------------------
 // insert a if to HAL config db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
@@ -67,6 +105,7 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
     hal_ret_t                ret;
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t *entry;
+    hal_handle_id_ht_entry_t *name_entry;
 
     HAL_TRACE_DEBUG("pi-hal_if:{}:adding to hal_if id hash table", 
                     __FUNCTION__);
@@ -85,11 +124,41 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
     if (sdk_ret != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to add if id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+        goto err_id_insert;
     }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
+    // add if_name -> handle
+    if (strlen(hal_if->if_name)) {
+        // allocate hash table entry
+        name_entry = (hal_handle_id_ht_entry_t *)
+                      g_hal_state->hal_handle_id_ht_entry_slab()->alloc();
+        if (name_entry == NULL) {
+            sdk_ret = sdk::SDK_RET_OOM;
+            goto err_name_alloc;
+        }
+        name_entry->handle_id = handle;
+        sdk_ret = g_hal_state->if_name_ht()->insert_with_key(hal_if->if_name,
+                                             name_entry, &name_entry->ht_ctxt);
+        if (sdk_ret != sdk::SDK_RET_OK) {
+            HAL_TRACE_ERR("pi-if:{}:failed to add if name {} to handle mapping, "
+                          "err : {}", __FUNCTION__, hal_if->if_name, ret);
+            goto err_name_insert;
+        }
+    }
+
+done:
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
+
+err_name_insert:
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, name_entry);
+
+err_name_alloc:
+    g_hal_state->if_id_ht()->remove(&hal_if->if_id);
+
+err_id_insert:
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+    goto done;
 }
 
 //------------------------------------------------------------------------------
@@ -99,12 +168,19 @@ static inline hal_ret_t
 if_del_from_db (if_t *hal_if)
 {
     hal_handle_id_ht_entry_t *entry;
+    hal_handle_id_ht_entry_t *name_entry;
 
     HAL_TRACE_DEBUG("pi-if:{}:removing from if id hash table", __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->if_id_ht()->
         remove(&hal_if->if_id);
     hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+
+    if (strlen(hal_if->if_name)) {
+        name_entry = (hal_handle_id_ht_entry_t *)
+                      g_hal_state->if_name_ht()->remove(hal_if->if_name);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, name_entry);
+    }
 
     return HAL_RET_OK;
 }
@@ -177,6 +253,14 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         HAL_TRACE_ERR("pi-if:{}:if id not set in request",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_INTERFACE_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // interface name, if present, must have valid length
+    if (strlen(spec.if_name().c_str()) >= (IFNAMSIZ - 1)) {
+        HAL_TRACE_ERR("pi-if:{}:if_name length {} is too long",
+                      __FUNCTION__, strlen(spec.if_name().c_str()));
+        rsp->set_api_status(types::API_STATUS_INTERFACE_NAME_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -638,7 +722,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     }
 
     // check if intf exists already, and reject if one is found
-    if (find_if_by_id(spec.key_or_handle().interface_id())) {
+    if (find_if_by_id(spec.key_or_handle().interface_id()) ||
+        find_if_by_name(spec.if_name().c_str())) {
         HAL_TRACE_ERR("pi-if:{}:failed to create an if, "
                       "if {} exists already", __FUNCTION__,
                       spec.key_or_handle().interface_id());
@@ -657,6 +742,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 
     // consume the config
     hal_if->if_id = spec.key_or_handle().interface_id();
+    strncpy(hal_if->if_name, spec.if_name().c_str(), IFNAMSIZ - 1);
+    hal_if->if_name[IFNAMSIZ - 1] = 0;
     hal_if->if_type = spec.type();
     hal_if->if_admin_status = spec.admin_status();
     hal_if->if_op_status = intf::IF_STATUS_NONE;      // TODO: set this later !!

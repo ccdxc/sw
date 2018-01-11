@@ -1,6 +1,6 @@
 # App Redirect Interface Config Object Template
 meta:
-    id: AppRedirIf
+    id: APP_REDIR_IF
 
 id         : None  # Name of the object
 lif_id     : 0

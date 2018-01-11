@@ -16,7 +16,7 @@ from config.store               import Store
 class AppRedirIfObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
-        self.Clone(Store.templates.Get('AppRedirIf'))
+        self.Clone(Store.templates.Get('APP_REDIR_IF'))
         return
 
     def Init(self, spec):
@@ -26,7 +26,7 @@ class AppRedirIfObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Creating AppRedirIf = %s lif-id=%d" %\
+        cfglogger.info("Creating APP_REDIR_IF = %s lif-id=%d" %\
                        (self.GID(), self.lif_id))
         return
 
@@ -40,13 +40,14 @@ class AppRedirIfObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.interface_id = self.id
+        req_spec.if_name = self.GID()
         req_spec.type = haldefs.interface.IF_TYPE_APP_REDIR
         req_spec.if_app_redir_info.lif_key_or_handle.lif_id = self.lif_id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.if_handle
-        cfglogger.info("- AppRedirIf %s = %s (HDL = 0x%x)" %\
+        cfglogger.info("- APP_REDIR_IF %s = %s (HDL = 0x%x)" %\
                        (self.GID(),\
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))
@@ -59,7 +60,7 @@ class AppRedirIfObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d AppRedirIfs" % len(self.objlist))
+        cfglogger.info("Configuring %d APP_REDIR_IFs" % len(self.objlist))
         halapi.ConfigureInterfaces(self.objlist)
         return
 
@@ -76,7 +77,7 @@ class AppRedirIfObjectHelper:
     def main(self, topospec):
         self.Generate(topospec)
         self.Configure()
-        cfglogger.info("Adding %d AppRedirIfs to Store." % len(self.objlist))
+        cfglogger.info("Adding %d APP_REDIR_IFs to Store." % len(self.objlist))
         return
 
     def GetAll(self):

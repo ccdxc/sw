@@ -21,6 +21,11 @@
 
 
 /*
+ * App redirect interface
+ */
+#define APP_REDIR_IF_NAME                   "appredir1"
+ 
+/*
  * App redirect queue types
  */
 #define APP_REDIR_RAWR_QTYPE                0   /* raw redirect */

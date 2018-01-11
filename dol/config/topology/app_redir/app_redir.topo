@@ -32,7 +32,7 @@ cpu:
 
 app_redir_if:
     - entry:
-        id      : AppRedirIf
+        id      : appredir1
         lif_id  : 1006
 
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_APP_REDIR
