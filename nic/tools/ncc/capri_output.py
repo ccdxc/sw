@@ -3277,9 +3277,13 @@ def capri_te_cfg_output(stage):
         if ct.is_wide_key:
             key_mask_hi = 512 - ct.last_flit_start_key_off
             key_mask_lo = 512 - ct.last_flit_end_key_off
-        else:
+        elif not ct.is_mpu_only():
+            assert ct.start_key_off >= 0, pdb.set_trace()
             key_mask_hi = 512 - ct.start_key_off
             key_mask_lo = 512 - ct.end_key_off
+        else:
+            key_mask_hi = 0
+            key_mask_lo = 0
 
         # for index table the key_mask_lo must be specified in terms of 16bit chunks
         if ct.is_index_table():
@@ -3305,8 +3309,7 @@ def capri_te_cfg_output(stage):
                 lg2_size = log2size(ct.num_entries)
                 json_tbl_['addr_sz']['value'] = str(lg2_size)
 
-
-        # XXX Check w/ asic km0=>lo, km1=>hi (from te.cc)
+        # For asic  km0=>lo, km1=>hi (from te.cc)
         # ncc uses km0 as high key and km1 as lo key bytes, so flip it
         k = 1
         for _km in ct.key_makers:
