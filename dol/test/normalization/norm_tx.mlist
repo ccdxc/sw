@@ -10,11 +10,13 @@ feature:
 
 modules:
     - module:
-        name    : IP
+        name    : IPV4
         iterate :
             - profile    : SEC_PROF_IP_TTL_NORMALIZE_32
               flow: filter://type=IPV4
+
+    - module:
+        name    : IPV6
         iterate :
             - profile    : SEC_PROF_IPV6_HOP_LIMIT_NORMALIZE_32
               flow: filter://type=IPV6
-
