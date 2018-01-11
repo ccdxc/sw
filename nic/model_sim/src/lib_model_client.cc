@@ -95,6 +95,7 @@ int lib_model_conn_close ()
 
 void step_tmr_wheel_update (uint32_t slowfast, uint32_t ctime)
 {
+    int rc;
     // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -107,13 +108,16 @@ void step_tmr_wheel_update (uint32_t slowfast, uint32_t ctime)
 
     if (__lmodel_env)
         return;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
 void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
 {
+    int rc;
     // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -129,13 +133,16 @@ void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
     if (pkt.size() > 4000)
         assert(0);
     memcpy(buff->data, pkt.data(), buff->size);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
 void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
 {
+    int rc;
     // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -150,13 +157,16 @@ void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
     if (buff->size > 4000)
         assert(0);
     memcpy(buff->data, pkt, buff->size);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
 bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -167,8 +177,10 @@ bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
         return true;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_GET_NEXT_PKT;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     port = buff->port;
     cos = buff->cos;
     pkt.resize(buff->size);
@@ -179,6 +191,7 @@ bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 
 bool read_reg (uint64_t addr, uint32_t& data)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -191,8 +204,10 @@ bool read_reg (uint64_t addr, uint32_t& data)
     buff->type = BUFF_TYPE_REG_READ;
     buff->addr = addr;
     buff->size = sizeof(uint32_t);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     memcpy(&data, buff->data, sizeof(uint32_t));
     return true;
 }
@@ -200,6 +215,7 @@ bool read_reg (uint64_t addr, uint32_t& data)
 
 bool write_reg (uint64_t addr, uint32_t data)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -213,8 +229,10 @@ bool write_reg (uint64_t addr, uint32_t data)
     buff->addr = addr;
     buff->size = sizeof(uint32_t);
     memcpy(buff->data, &data, sizeof(uint32_t));
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
 
     return true;
 }
@@ -222,6 +240,7 @@ bool write_reg (uint64_t addr, uint32_t data)
 
 bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -236,8 +255,10 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
     buff->type = BUFF_TYPE_MEM_READ;
     buff->addr = addr;
     buff->size = size;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
     memcpy(data, buff->data, size);
     return true;
 }
@@ -245,6 +266,7 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
 bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -258,8 +280,10 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
     buff->addr = addr;
     buff->size = size;
     memcpy(buff->data, data, size);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
 
     if (!__write_verify_enable)
         return true;
@@ -274,6 +298,7 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
 void step_doorbell (uint64_t addr, uint64_t data)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -288,14 +313,17 @@ void step_doorbell (uint64_t addr, uint64_t data)
         return;
     buff->addr = addr;
     memcpy(buff->data, &data, buff->size);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
 
 bool dump_hbm ()
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -306,7 +334,8 @@ bool dump_hbm ()
         return true;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_HBM_DUMP;
-    zmq_send(__zmq_sock, buffer, 1024, 0);
+    rc = zmq_send(__zmq_sock, buffer, 1024, 0);
+    assert(rc != -1);
     return true;
 }
 
@@ -337,14 +366,17 @@ int lib_model_mac_msg_send (uint32_t port_num,
     port_buf->num_lanes = num_lanes;
     port_buf->val = val;
 
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
 
     return rc;
 }
 
 void register_mem_addr(uint64_t addr)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -357,13 +389,16 @@ void register_mem_addr(uint64_t addr)
     if (__lmodel_env)
         return;
     buff->addr = addr;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
 void exit_simulation()
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -375,13 +410,16 @@ void exit_simulation()
 
     if (__lmodel_env)
         return;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
 void config_done()
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -393,13 +431,16 @@ void config_done()
 
     if (__lmodel_env)
         return;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
 void testcase_begin(int tcid)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -412,13 +453,16 @@ void testcase_begin(int tcid)
 
     if (__lmodel_env)
         return;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
 void testcase_end(int tcid)
 {
+    int rc;
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
@@ -431,7 +475,9 @@ void testcase_end(int tcid)
 
     if (__lmodel_env)
         return;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }

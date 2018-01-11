@@ -412,9 +412,11 @@ static void wait_loop() {
     std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
     while (1) {
         rc = zmq_recv (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+        assert(rc != -1);
         buff = (buffer_hdr_t *) recv_buff;
         process_buff(buff, g_env);
         rc = zmq_send (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+        assert(rc != -1);
     }
     return;
 }
