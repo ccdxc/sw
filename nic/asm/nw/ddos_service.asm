@@ -46,3 +46,12 @@ ddos_type_udp:
   phvwr.e   p.ddos_metadata_ddos_service_policer_idx, r1
   nop
 
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+ddos_service_error:
+  nop.e
+  nop
+

@@ -14,3 +14,12 @@ execute_ddos_service_policer:
   phvwr.c2.e    p.ddos_metadata_ddos_service_policer_color, POLICER_COLOR_YELLOW
   phvwr.!c2.e   p.ddos_metadata_ddos_service_policer_color, POLICER_COLOR_RED
   nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+ddos_service_policer_action:
+  nop.e
+  nop

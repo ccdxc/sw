@@ -90,3 +90,12 @@ flow_hash_recirc:
   phvwrpair.e   p.control_metadata_ingress_bypass, 1, \
                     p.recirc_header_overflow_entry_index, r2
   phvwr         p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+flow_hash_error:
+  nop.e
+  nop

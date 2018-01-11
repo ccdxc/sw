@@ -336,3 +336,12 @@ encap_mpls:
   phvwr       p.{mpls_2_valid,mpls_1_valid,mpls_0_valid}, 0x7
   .brend
 #endif /* PHASE2 */
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+tunnel_rewrite_error:
+  nop.e
+  nop

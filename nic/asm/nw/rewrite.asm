@@ -207,3 +207,12 @@ ipv6_twice_nat_tcp_rewrite:
   b           rewrite
   phvwrmi     p.control_metadata_checksum_ctl, \
                 ( 1 << CHECKSUM_CTL_L4_CHECKSUM), (1 << CHECKSUM_CTL_L4_CHECKSUM)
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+rewrite_error:
+  nop.e
+  nop

@@ -35,3 +35,12 @@ registered_macs_all_multicast:
   add         r1, k.control_metadata_flow_miss_idx, 1
   phvwr.e     p.capri_intrinsic_tm_replicate_en, TRUE
   phvwr       p.capri_intrinsic_tm_replicate_ptr, r1
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+registered_macs_error:
+  nop.e
+  nop

@@ -72,3 +72,12 @@ redirect_to_remote:
   phvwr       p.capri_intrinsic_tm_oport, d.u.redirect_to_remote_d.tm_oport
   phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_remote_d.tm_oq
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.redirect_to_remote_d.tunnel_index
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+output_mapping_error:
+  nop.e
+  nop

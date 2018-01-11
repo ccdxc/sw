@@ -65,3 +65,12 @@ nacl_deny:
   DBG_WR(0x8a, 0x8a)
   phvwr.e     p.control_metadata_drop_reason[DROP_NACL], 1
   phvwr       p.capri_intrinsic_drop, 1
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+nacl_error:
+  nop.e
+  nop

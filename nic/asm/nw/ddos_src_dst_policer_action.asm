@@ -28,3 +28,13 @@ set_drop:
   tbladd        d.u.ddos_src_dst_policer_action_d.ddos_src_dst_policer_dropped_packets, 1
   phvwr.e       p.control_metadata_egress_ddos_src_dst_policer_drop, TRUE
   phvwr         p.capri_intrinsic_drop, 1
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+ddos_src_dst_policer_action_error:
+  nop.e
+  nop
+

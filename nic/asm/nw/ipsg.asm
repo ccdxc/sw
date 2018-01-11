@@ -42,3 +42,12 @@ f_normalization:
 
 #include "icmp_normalization.asm"
 #include "tcp_stateless_normalization.asm"
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+ipsg_error:
+  nop.e
+  nop

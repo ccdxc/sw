@@ -95,3 +95,12 @@ tunneled_vm_bounce_packet:
   DBG_WR(0x2c, 0x2c)
   nop.e
   nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+input_mapping_tunneled_error:
+  nop.e
+  nop

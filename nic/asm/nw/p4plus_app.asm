@@ -308,3 +308,12 @@ lb_cpu_pkt_tcp:
   jr          r7
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr.!c3    p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+p4plus_app_error:
+  nop.e
+  nop

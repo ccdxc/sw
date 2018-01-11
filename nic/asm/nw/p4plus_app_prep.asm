@@ -116,3 +116,12 @@ p4plus_app_classic_nic_ipv4:
 p4plus_app_classic_nic_ipv6:
   phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6
   nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+p4plus_app_prep_error:
+  nop.e
+  nop

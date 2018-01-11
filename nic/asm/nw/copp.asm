@@ -14,3 +14,12 @@ execute_copp:
   nop.!c3.e
   phvwr.c3.e  p.copp_metadata_policer_color, POLICER_COLOR_RED
   phvwr       p.capri_intrinsic_drop, TRUE
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+execute_copp_error:
+  nop.e
+  nop

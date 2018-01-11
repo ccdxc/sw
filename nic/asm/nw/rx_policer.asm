@@ -13,3 +13,12 @@ execute_rx_policer:
   nop.!c1.e
   phvwr.c1.e  p.policer_metadata_rx_policer_color, POLICER_COLOR_RED
   phvwr       p.capri_intrinsic_drop, TRUE
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+rx_policer_error:
+  nop.e
+  nop

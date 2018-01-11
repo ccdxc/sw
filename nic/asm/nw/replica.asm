@@ -54,3 +54,12 @@ set_replica_rewrites:
 lb_replica_honor_ingress:
   nop.e
   nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+replica_error:
+  nop.e
+  nop

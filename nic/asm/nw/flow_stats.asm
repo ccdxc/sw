@@ -77,3 +77,12 @@ flow_stats_index_zero:
  * 8B permit bytes, 8B permit packets, 8B deny bytes, 8B deny packets
  * total per flow index = 32B
  */
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+flow_stats_error:
+  nop.e
+  nop

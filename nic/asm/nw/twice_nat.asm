@@ -21,3 +21,12 @@ twice_nat_rewrite_info:
   DBG_WR(0xf9, 0xf9)
   phvwr.e     p.nat_metadata_twice_nat_ip, d.u.twice_nat_rewrite_info_d.ip
   phvwr       p.nat_metadata_twice_nat_l4_port, d.u.twice_nat_rewrite_info_d.l4_port
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+twice_nat_error:
+  nop.e
+  nop

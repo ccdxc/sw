@@ -27,3 +27,12 @@ qos:
 
   /* output queue selection */
   phvwr     p.control_metadata_dest_tm_oq, d.qos_d.dest_tm_oq
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+qos_error:
+  nop.e
+  nop

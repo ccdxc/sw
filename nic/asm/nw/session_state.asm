@@ -12,6 +12,15 @@ nop:
   nop.e
   nop
 
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+session_state_error:
+  nop.e
+  nop
+
 // Code is written to match the P4 program as much as possible to
 // facilitate changes to assemmbly easily. Once the P4 Program is
 // final and don't anticipate any changes we can optimize the
@@ -821,4 +830,3 @@ lb_tcp_ts_not_present:
   nop
   phvwr.e      p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr        p.capri_intrinsic_drop, 1
-

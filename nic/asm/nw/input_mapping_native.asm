@@ -114,3 +114,12 @@ native_non_ip_packet_common:
                     p.flow_lkp_metadata_lkp_src[47:0], k.ethernet_srcAddr
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+input_mapping_native_error:
+  nop.e
+  nop

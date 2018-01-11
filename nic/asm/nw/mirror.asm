@@ -78,3 +78,12 @@ span_truncation:
   phvwr       p.capri_p4_intrinsic_packet_len, r3
   phvwr.e     p.capri_deparser_len_trunc_pkt_len, r1
   phvwr       p.{capri_intrinsic_payload,capri_deparser_len_trunc}, 0x1
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+mirror_error:
+  nop.e
+  nop

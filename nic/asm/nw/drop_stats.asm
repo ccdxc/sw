@@ -17,3 +17,12 @@ drop_stats:
   phvwr.c1    p.capri_intrinsic_tm_span_session, d.drop_stats_d.mirror_session_id
   nop.e
   nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+drop_stats_error:
+  nop.e
+  nop

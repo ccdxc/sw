@@ -46,3 +46,12 @@ f_p4plus_to_p4_2_other_apps:
   // remove the headers
   phvwr.e       p.capri_txdma_intrinsic_valid, FALSE
   phvwr         p.p4plus_to_p4_valid, FALSE
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+p4plus_to_p4_2_error:
+  nop.e
+  nop

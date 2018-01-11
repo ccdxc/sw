@@ -420,3 +420,12 @@ nop:
   nop
 
 #include "p4plus_to_p4_1.asm"
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+l4_profile_error:
+  nop.e
+  nop

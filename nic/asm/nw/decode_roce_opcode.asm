@@ -52,3 +52,12 @@ decode_roce_opcode:
   add.c1      r1, r1, 40
   sub.e       r1, r1, d.u.decode_roce_opcode_d.len
   phvwr       p.p4_to_p4plus_roce_payload_len, r1
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+decode_roce_opcode_error:
+  nop.e
+  nop

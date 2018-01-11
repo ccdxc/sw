@@ -206,6 +206,7 @@ static uint64_t hbm_mem_base_addr;
 
 /* Store base address for the table. */
 static uint64_t capri_table_asm_base[P4TBL_ID_TBLMAX];
+static uint64_t capri_table_asm_err_offset[P4TBL_ID_TBLMAX];
 static uint64_t capri_table_rxdma_asm_base[P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX];
 static uint64_t capri_table_txdma_asm_base[P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX];
 
@@ -247,6 +248,8 @@ capri_program_table_mpu_pc(void)
             te_csr.cfg_table_property[tbl_ctx.stage_tableid].read();
             te_csr.cfg_table_property[tbl_ctx.stage_tableid]
                     .mpu_pc(((capri_table_asm_base[i]) >> 6));
+            te_csr.cfg_table_property[tbl_ctx.stage_tableid]
+                    .mpu_pc_ofst_err(capri_table_asm_err_offset[i]);
             te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
         } else {
             cap_te_csr_t &te_csr = cap0.sge.te[tbl_ctx.stage];
@@ -254,6 +257,8 @@ capri_program_table_mpu_pc(void)
             te_csr.cfg_table_property[tbl_ctx.stage_tableid].read();
             te_csr.cfg_table_property[tbl_ctx.stage_tableid]
                     .mpu_pc(((capri_table_asm_base[i]) >> 6));
+            te_csr.cfg_table_property[tbl_ctx.stage_tableid]
+                    .mpu_pc_ofst_err(capri_table_asm_err_offset[i]);
             te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
         }
 #ifndef GFT
@@ -553,6 +558,16 @@ capri_table_mpu_base_init()
             HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
                             progname, action_name, capri_action_asm_base[i][j]);
         }
+
+        /* compute error program offset for each table */
+        snprintf(action_name, P4ACTION_NAME_MAX_LEN, "%s_error",
+                 p4pd_tbl_names[i]);
+        capri_program_label_to_offset(P4_PGM_NAME, progname, action_name,
+                                      &capri_table_asm_err_offset[i]);
+        HAL_ASSERT((capri_table_asm_err_offset[i] & 0x3f) == 0);
+        capri_table_asm_err_offset[i] >>= 6;
+        HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                        progname, action_name, capri_table_asm_err_offset[i]);
     }
 
 #ifndef GFT

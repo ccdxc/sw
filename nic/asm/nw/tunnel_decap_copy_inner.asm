@@ -139,3 +139,12 @@ copy_inner_eth_non_ip:
   phvwr       p.ipv6_valid, FALSE
   phvwr.e     p.vlan_tag_valid, FALSE
   phvwr       p.udp_valid, FALSE
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+tunnel_decap_copy_inner_error:
+  nop.e
+  nop

@@ -253,6 +253,15 @@ compute_checksum25:
   phvwr.e       p.inner_ipv6_udp_csum, COMPUTE_INNER_L4_CSUM
   phvwr         p.inner_udp_csum, COMPUTE_INNER_L4_CSUM
 
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum_error:
+  nop.e
+  nop
+
 icrc_ipv4_udp:
   phvwrpair     p.udp_icrc, TRUE, p.ipv4_icrc, TRUE
   phvwrpair     p.udp_opt_ocs_csum, k.udp_opt_ocs_valid, p.roce_bth_icrc, TRUE

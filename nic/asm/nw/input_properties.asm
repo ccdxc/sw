@@ -28,3 +28,12 @@ input_properties:
   phvwr         p.flow_miss_metadata_tunnel_vnid, d.input_properties_d.bounce_vnid
   phvwr.e       p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
   phvwr         p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+input_properties_error:
+  nop.e
+  nop

@@ -31,3 +31,12 @@ remove_tunnel_hdrs:
   .assert(offsetof(p, nvgre_valid) - offsetof(p, gre_valid) == 2)
   phvwrmi.e   p.{nvgre_valid...gre_valid}, 0, 0x5
   phvwr       p.{mpls_2_valid...mpls_0_valid}, 0
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+tunnel_decap_error:
+  nop.e
+  nop

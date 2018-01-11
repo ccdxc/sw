@@ -1,5 +1,6 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "../../p4/nw/include/defines.h"
 #include "../../include/capri_common.h"
 
 #define TX_UCAST_BYTES_OVERFLOW_OFFSET  0
@@ -119,3 +120,12 @@ tx_egress_drops_overflow:
  * Broadcast : 8B bytes, 8B packets, Drops : 8B
  * total per index = 56B
  */
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+tx_stats_error:
+  phvwr.e     p.capri_intrinsic_drop, TRUE
+  nop

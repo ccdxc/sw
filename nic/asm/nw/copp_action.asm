@@ -65,3 +65,12 @@ copp_denied_stats_overflow:
  * 8B permit bytes, 8B permit packets, 8B deny bytes, 8B deby packets
  * total per policer index = 32B
  */
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+copp_action_error:
+  nop.e
+  nop

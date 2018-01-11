@@ -112,3 +112,12 @@ malformed_packet:
   DBG_WR(0x9c, 0x9c)
   phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+validate_packet_error:
+  nop.e
+  nop

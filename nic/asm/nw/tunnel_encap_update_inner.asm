@@ -82,3 +82,11 @@ encap_inner_ipv6_unknown_rewrite:
   phvwr.e     p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
   phvwrpair   p.inner_ipv6_valid, TRUE, p.ipv6_valid, FALSE
 
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+tunnel_encap_update_inner_error:
+  nop.e
+  nop
