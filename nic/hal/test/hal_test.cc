@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include <iostream>
 #include <thread>
+#include <math.h>
 #include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/types.grpc.pb.h"
 #include "nic/gen/proto/hal/vrf.grpc.pb.h"
@@ -34,6 +36,7 @@ using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentResponseMsg;
+using kh::L2SegmentKeyHandle;
 
 using nw::Network;
 using nw::NetworkSpec;
@@ -72,6 +75,11 @@ using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentRequestMsg;
 using intf::InterfaceL2SegmentResponseMsg;
 using intf::InterfaceL2SegmentResponse;
+using intf::LifSpec;
+using intf::LifRequestMsg;
+using intf::LifResponseMsg;
+using intf::LifQStateMapEntry;
+using intf::QStateSetReq;
 
 using port::Port;
 using port::PortSpec;
@@ -444,6 +452,83 @@ public:
         return 0;
     }
 
+    uint64_t lif_create(uint32_t lif_id, uint32_t type_num) {
+        LifSpec              *spec;
+        LifRequestMsg        req_msg;
+        LifResponseMsg       rsp_msg;
+        LifQStateMapEntry    *lif_qstate_map;
+        QStateSetReq         *lif_qstate;
+        ClientContext        context;
+        Status               status;
+        uint32_t             entries = 1;
+        uint32_t             size = 64;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_lif_id(lif_id);
+        spec->set_admin_status(::intf::IF_STATUS_UP);
+        spec->mutable_packet_filter()->set_receive_broadcast(true);
+        lif_qstate_map = spec->add_lif_qstate_map();
+        lif_qstate_map->set_type_num(type_num);
+        lif_qstate_map->set_size(log2(size));
+        lif_qstate_map->set_entries(log2(entries));
+        lif_qstate_map->set_purpose(::intf::LIF_QUEUE_PURPOSE_TX);
+        lif_qstate = spec->add_lif_qstate();
+        lif_qstate->set_lif_handle(0);
+        lif_qstate->set_type_num(type_num);
+        lif_qstate->set_qid(0);
+        /*
+        lif_qstate->mutable_label()->set_handle("p4plus");
+        req_spec.queue_state = bytes(EthTxQstate(host=1, total=1, enable=1));
+        req_spec.label.prog_name = "txdma_stage0.bin";
+        req_spec.label.label = "eth_tx_stage0"
+        */
+        status = intf_stub_->LifCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Lif create succeeded, handle = "
+                      << rsp_msg.response(0).status().lif_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().lif_handle();
+        }
+        std::cout << "Lif create failed, error = "
+                  << rsp_msg.response(0).api_status() << std::endl;
+        return 0;
+    }
+
+    uint64_t enic_if_create(uint32_t enic_if_id, uint32_t lif_id,
+                            uint64_t pinned_uplink_if_handle,
+                            uint64_t native_l2seg_handle,
+                            uint64_t non_native_l2seg_id) {
+        InterfaceSpec           *spec;
+        InterfaceRequestMsg     req_msg;
+        InterfaceResponseMsg    rsp_msg;
+        L2SegmentKeyHandle      *l2seg_kh;
+        ClientContext           context;
+        Status                  status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_interface_id(enic_if_id);
+        spec->set_type(::intf::IfType::IF_TYPE_ENIC);
+        spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+        spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
+        spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
+        spec->mutable_if_enic_info()->set_pinned_uplink_if_handle(pinned_uplink_if_handle);
+        spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(native_l2seg_handle);
+        l2seg_kh = spec->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+        l2seg_kh->set_segment_id(non_native_l2seg_id);
+        status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "ENIC if create succeeded, handle = "
+                      << rsp_msg.response(0).status().if_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().if_handle();
+        }
+        std::cout << "ENIC if create failed, error = "
+                  << rsp_msg.response(0).api_status() << std::endl;
+        return 0;
+    }
+
     uint64_t ep_create(uint64_t vrf_id, uint64_t l2seg_id,
                        uint64_t if_id, uint64_t sg_id,
                        uint64_t mac_addr, uint32_t ip_addr) {
@@ -683,8 +768,9 @@ public:
         return 0;
     }
 
-    // create few uplinks
-    void uplinks_create(uint64_t if_id_start, uint32_t num_uplinks, uint64_t native_l2seg_id) {
+    // create few uplinks and return the handle for the 1st one
+    uint64_t uplinks_create(uint64_t if_id_start, uint32_t num_uplinks,
+                            uint64_t native_l2seg_id) {
         InterfaceSpec           *spec;
         InterfaceRequestMsg     req_msg;
         InterfaceResponseMsg    rsp_msg;
@@ -708,6 +794,7 @@ public:
                           << rsp_msg.response(i).status().if_handle()
                           << std::endl;
             }
+            return rsp_msg.response(0).status().if_handle();
         } else {
             for (uint32_t i = 0; i < num_uplinks; i++) {
                 std::cout << "Uplink interface create failed, error = "
@@ -716,7 +803,7 @@ public:
             }
         }
 
-        return;
+        return 0;
     }
 
     void add_l2seg_on_uplinks(uint64_t if_id_start, uint32_t num_uplinks, uint64_t l2seg_id) {
@@ -977,9 +1064,12 @@ main (int argc, char** argv)
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
 
-    uint64_t    vrf_handle, l2seg_handle, sg_handle;
-    uint64_t    nw1_handle, nw2_handle, session_handle;
+    uint64_t    vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
+    uint64_t    nw1_handle, nw2_handle, uplink_if_handle; //, session_handle;
+    uint64_t    lif_handle, enic_if_handle;
     uint64_t    vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
+    uint64_t    lif_id = 100;
+    uint64_t    enic_if_id = 200;
     EncapInfo   l2seg_encap;
 
 #if 0
@@ -1021,7 +1111,7 @@ main (int argc, char** argv)
     // create L2 segments
     l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
     l2seg_encap.set_encap_value(100);
-    l2seg_handle =
+    native_l2seg_handle = l2seg_handle =
         hclient.l2segment_create(vrf_id, l2seg_id, nw1_handle,
                                  ::types::L2_SEGMENT_TYPE_TENANT,
                                  ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
@@ -1029,7 +1119,7 @@ main (int argc, char** argv)
                                  l2seg_encap);
     assert(l2seg_handle != 0);
     // create uplinks with this L2 seg as native L2 seg
-    hclient.uplinks_create(if_id, 4, l2seg_id);
+    uplink_if_handle = hclient.uplinks_create(if_id, 4, l2seg_id);
     // bringup this L2seg on all uplinks
     hclient.add_l2seg_on_uplinks(if_id, 4, l2seg_id);
 
@@ -1045,16 +1135,33 @@ main (int argc, char** argv)
     // bringup this L2seg on all uplinks
     hclient.add_l2seg_on_uplinks(if_id, 4, l2seg_id + 1);
 
-    // create endpoints
+    // create remote endpoints
     hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x020a0a0102, 0x0a0a0102);
     hclient.ep_create(vrf_id, l2seg_id + 1, if_id + 1, sg_id, 0x020a0a0202, 0x0a0a0202);
 
+#if 0
+    // NOTE: uncomment this in smart nic mode
     // create a session
     session_handle = hclient.session_create(1, vrf_id, 0x0a0a0102, 0x0a0a0202,
                                             ::types::IPProtocol::IPPROTO_UDP,
                                             10000, 10001,
                                             ::session::FlowAction::FLOW_ACTION_ALLOW);
     assert(session_handle != 0);
+#endif
+
+    // create a lif
+    lif_handle = hclient.lif_create(lif_id, 1);
+    assert(lif_handle != 0);
+
+    // create a ENIC interface
+    enic_if_handle = hclient.enic_if_create(enic_if_id, lif_id,
+                                            uplink_if_handle,  // pinned uplink
+                                            native_l2seg_handle,
+                                            l2seg_id + 1);
+    assert(enic_if_handle != 0);
+
+    // create EP with this ENIC
+    hclient.ep_create(vrf_id, l2seg_id, enic_if_id, sg_id, 0x020a0a0103, 0x0a0a0103);
 
     //hclient.vrf_delete_by_id(1);
 
