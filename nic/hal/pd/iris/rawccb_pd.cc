@@ -431,8 +431,9 @@ pd_rawccb_deactivate (pd_rawccb_args_t *args)
     rawccb_pd_init(&curr_rawccb_pd, rawccb->cb_id);
     curr_rawccb_pd.rawccb = &curr_rawccb;
 
-    HAL_TRACE_DEBUG("RAWCCB pd deactivate for id: {}", rawccb->cb_id);
-    
+    curr_rawccb_pd.hw_addr = pd_rawccb_get_base_hw_addr(&curr_rawccb_pd);
+    HAL_TRACE_DEBUG("RAWCCB pd deactivate for id: {} hw_addr 0x{0:x}",
+                    rawccb->cb_id,  curr_rawccb_pd.hw_addr);
     ret = pd_rawccb_get(&curr_args);
     if (ret == HAL_RET_OK) {
         ret = p4pd_add_or_del_rawccb_entry(&curr_rawccb_pd, true, false);

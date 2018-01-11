@@ -551,8 +551,9 @@ pd_proxyrcb_deactivate (pd_proxyrcb_args_t *args)
     proxyrcb_pd_init(&curr_proxyrcb_pd, proxyrcb->cb_id);
     curr_proxyrcb_pd.proxyrcb = &curr_proxyrcb;
 
-    HAL_TRACE_DEBUG("PROXYRCB pd deactivate for id: {}", proxyrcb->cb_id);
-    
+    curr_proxyrcb_pd.hw_addr = pd_proxyrcb_get_base_hw_addr(&curr_proxyrcb_pd);
+    HAL_TRACE_DEBUG("PROXYRCB pd deactivate for id: {} hw_addr 0x{0:x}",
+                    proxyrcb->cb_id,  curr_proxyrcb_pd.hw_addr);
     ret = pd_proxyrcb_get(&curr_args);
     if (ret == HAL_RET_OK) {
         ret = p4pd_add_or_del_proxyrcb_entry(&curr_proxyrcb_pd, true, false);
