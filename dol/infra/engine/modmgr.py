@@ -78,6 +78,7 @@ class Module(objects.FrameworkObject):
         self.selectors  = getattr(spec, 'selectors', None)
         self.tracker    = getattr(spec, 'tracker', False)
         self.runorder   = getattr(spec, 'runorder', 65535)
+        self.rtl        = getattr(spec, 'rtl', True)
         self.id         = self.runorder << 16 + ModuleIdAllocator.get()
         self.module_hdl = None
         self.infra_data = None
@@ -348,6 +349,9 @@ class ModuleDatabase:
 
         if 'iterate' not in pmod.__dict__:
             pmod.iterate = [ None ]
+
+        if GlobalOptions.rtl == True and pmod.rtl == False:
+            return
 
         if not self.__is_test_match(pmod.name):
             return

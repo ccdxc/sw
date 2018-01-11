@@ -7,6 +7,7 @@ feature:
     runorder : 1
     enable   : True
     ignore   : True
+    rtl      : False
     args     :
 
 modules:

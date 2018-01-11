@@ -179,9 +179,13 @@ class TenantObject(base.ConfigObjectBase):
         return self.obj_helper_segment.AllocL4LbBackend(remote, tnnled)
 
     def IsIPV4EpLearnEnabled(self):
+        if GlobalOptions.rtl:
+            return False
         return self.ep_learn and self.ep_learn.ipv4
 
     def IsIPV6EpLearnEnabled(self):
+        if GlobalOptions.rtl:
+            return False
         return self.ep_learn and self.ep_learn.ipv6
     
     def __create_l4lb_services(self):

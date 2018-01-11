@@ -1,0 +1,34 @@
+# Topology Specification
+meta:
+    id: TOPO_HAPS
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+
+uplinkpc: None
+
+acls: None
+
+qos : False
+
+security_profiles: None
+
+tenants:
+    -   spec    : ref://store/specs/id=TENANT_HAPS
+        count   : 1
+        lifns   : range/200/201
+
+cpu: None

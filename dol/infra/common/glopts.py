@@ -49,6 +49,8 @@ parser.add_argument('--mbt', dest='mbt',
                     'for enabled features')
 #parser.add_argument('--cfgscale', dest='cfgscale', default=None,
 #                    help='Configuration Scale Factor.')
+parser.add_argument('--rtl', dest='rtl',
+                    action='store_true', help='Run tests in RTL mode.')
 GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():

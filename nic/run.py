@@ -84,7 +84,7 @@ def run_rtl(args):
         model_test = args.model_test
     if args.one_pkt_mode:
         one_pkt_mode = "+dol_one_pkt_mode=1" 
-    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=0 +top_sb/initial_timeout_ns=60000 '%one_pkt_mode ]
+    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 '%one_pkt_mode ]
     if args.noverilog:
         model_cmd = model_cmd + ['-ro', '-nbc']
     if not args.no_asic_dump:

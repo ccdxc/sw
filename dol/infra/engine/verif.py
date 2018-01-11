@@ -246,8 +246,11 @@ class VerifEngineObject:
         if GlobalOptions.dryrun:
             return
         if step.expect.delay:
-           tc.info("Expectation Delay: %d" % step.expect.delay)
-           time.sleep(step.expect.delay)
+            final_delay = step.expect.delay
+            if GlobalOptions.rtl:
+                final_delay = step.expect.delay * 3
+            tc.info("Expectation Delay: %d" % final_delay)
+            time.sleep(final_delay)
         return
 
     def Verify(self, step, tc):
