@@ -460,8 +460,9 @@ pd_proxyccb_deactivate (pd_proxyccb_args_t *args)
     proxyccb_pd_init(&curr_proxyccb_pd, proxyccb->cb_id);
     curr_proxyccb_pd.proxyccb = &curr_proxyccb;
 
-    HAL_TRACE_DEBUG("PROXYCCB pd deactivate for id: {}", proxyccb->cb_id);
-    
+    curr_proxyccb_pd.hw_addr = pd_proxyccb_get_base_hw_addr(&curr_proxyccb_pd);
+    HAL_TRACE_DEBUG("PROXYCCB pd deactivate for id: {} hw_addr 0x{0:x}",
+                    proxyccb->cb_id,  curr_proxyccb_pd.hw_addr);
     ret = pd_proxyccb_get(&curr_args);
     if (ret == HAL_RET_OK) {
         ret = p4pd_add_or_del_proxyccb_entry(&curr_proxyccb_pd, true, false);
