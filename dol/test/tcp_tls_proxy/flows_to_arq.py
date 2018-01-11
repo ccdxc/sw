@@ -129,7 +129,9 @@ def TestCaseStepVerify(tc, step):
 
     # update all queues for the next step
     rnmdr.GetMeta()
+    rnmdr.GetRingEntries([rnmdr.pi])
     rnmpr.GetMeta()
+    rnmpr.GetRingEntries([rnmpr.pi])
     arq[cpu_id].GetMeta()
     return True
 

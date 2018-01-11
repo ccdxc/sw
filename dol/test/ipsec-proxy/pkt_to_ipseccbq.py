@@ -65,6 +65,7 @@ def TestCaseSetup(tc):
     ipseccb.SetObjValPd()
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr.Configure()
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
     ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
 

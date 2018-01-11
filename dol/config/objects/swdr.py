@@ -277,7 +277,6 @@ class SwDscrRingObjectHelper:
             Store.objects.Add(swdr)
             lst = []
             lst.append(swdr)
-            self.Configure(lst)
         return
 
     def Show(self):
