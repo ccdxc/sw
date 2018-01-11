@@ -113,6 +113,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
 
     switch (sig) {
     case SIGINT:
+    case SIGTERM:
         HAL_GCOV_FLUSH();
         utils::hal_logger().flush();
         exit(0);
@@ -128,7 +129,6 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGQUIT:
     case SIGCHLD:
     case SIGURG:
-    case SIGTERM:
     default:
         utils::hal_logger().flush();
         break;

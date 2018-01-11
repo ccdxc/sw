@@ -133,7 +133,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint32_t cos;
             /* Get output packet from the model */
             if (!env->get_next_pkt(out_pkt, port, cos)) {
-    	        std::cout << "ERROR: no packet" << std::endl;
+    	        std::cout << "get_next_pkt: no packet" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -244,7 +244,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
         {
             std::vector<uint8_t> out_pkt;
             if (g_cpu_pkts.empty()) {
-    	        std::cout << "CPU: ERROR: no packet" << std::endl;
+    	        std::cout << "get_next_cpu_packet: no packet in queue." << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -425,14 +425,6 @@ model_sig_handler (int sig)
     printf("Rcvd signal %u\n", sig);
 
     switch (sig) {
-    case SIGKILL:
-    case SIGINT:
-        std::cout << "Rcvd SIGKILL/SIGINT, flushing code coverage data ..." << std::endl;
-        fflush(stdout);
-        HAL_GCOV_FLUSH();
-        exit(0);
-        break;
-
     case SIGUSR1:
     case SIGUSR2:
         std::cout << "Rcvd SIGUSR1/SIGUSR2, flushing code coverage data ..." << std::endl;
@@ -455,9 +447,6 @@ model_sig_init (void)
     action.sa_handler = model_sig_handler;
     action.sa_flags = 0;
     sigemptyset (&action.sa_mask);
-    sigaction (SIGINT, &action, NULL);
-    sigaction (SIGTERM, &action, NULL);
-    sigaction (SIGHUP, &action, NULL);
     sigaction (SIGUSR1, &action, NULL);
     sigaction (SIGUSR2, &action, NULL);
 }

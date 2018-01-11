@@ -302,27 +302,48 @@ def run_dol(args):
     #p.communicate()
     log.close()
 
-    while p.poll() is None and\
-          model_process.poll() is None and\
-          hal_process.poll() is None:
-          time.sleep(5)
+    while 1:
+        if p and p.poll() is not None:
+            break
+        if model_process and model_process.poll() is not None:
+            break
+        if hal_process and hal_process.poll() is not None:
+            break
+        time.sleep(5)
 
     if args.rtl and p.returncode == 0:
         # Wait for runtest to finish only in case of DOL finishing
         # successfully.
+        count = 0
         while model_process.poll() is None:
+            count += 5
             time.sleep(5)
+            if count % 300 == 0:
+                print "RUNTEST/SIMV not exited after %d seconds" % count
+            if count == 7200: # 2 hours
+                print "%s" % '='*80
+                print "             2 Hour Exit Timeout Reached. Killing all processes."
+                print "%s" % '='*80
+                break
 
-    print "* MODEL exit code " + str(model_process.returncode)
-    print "* HAL exit code " + str(hal_process.returncode)
-    print "* DOL exit code " + str(p.returncode)
-    if model_process.returncode:
-        return model_process.returncode
-    if hal_process.returncode:
-        return hal_process.returncode
-    return p.returncode
 
-#    log.close()
+    exitcode = 0
+    if model_process:
+        print "* MODEL exit code " + str(model_process.returncode)
+        if model_process.returncode:
+            exitcode = model_process.returncode
+
+    if hal_process:
+        print "* HAL exit code " + str(hal_process.returncode)
+        if hal_process.returncode:
+            exitcode = hal_process.returncode
+
+    if p:
+        print "* DOL exit code " + str(p.returncode)
+        if p.returncode:
+            exitcode = p.returncode
+
+    return exitcode
 
 def run_mbt(standalone=True):
     dol_dir = nic_dir + "/../dol"
@@ -347,32 +368,6 @@ def run_mbt(standalone=True):
         status = p.returncode
     return status
 
-# Sample Client
-'''
-def run_sample_client():
-    sample_client_dir = nic_dir + "/model_sim/build"
-    os.chdir(sample_client_dir)
-
-    log = open(sample_client_log, "w")
-    p = Popen(["./sample_client"], stdout=log, stderr=log)
-    print "* Starting Sample Client pid (" + str(p.pid) + ")"
-    print "- Log file: " + sample_client_log + "\n"
-
-    lock = open(lock_file, "a+")
-    lock.write(str(p.pid) + "\n")
-    lock.close()
-    p.communicate()
-    log.close()
-
-    print "* Sample Client exit code " + str(p.returncode)
-    return p.returncode
-
-#    log.close()
-'''
-
-# find_port()
-
-
 def find_port():
     s = socket.socket()
     s.bind(('', 0))
@@ -381,9 +376,6 @@ def find_port():
 
     return port
 
-# is_running()
-
-
 def is_running(pid):
     try:
         os.kill(pid, 0)
@@ -391,21 +383,33 @@ def is_running(pid):
     except OSError:
         return False
 
-# cleanup()
-
-
 def cleanup(keep_logs=True):
-    # print "* Killing running processes:"
+    print "* Killing running processes:"
 
     if not os.path.exists(lock_file):
         return
     lock = open(lock_file, "r")
     for pid in lock:
         if is_running(int(pid)):
-            # print "- pid (" + pid.rstrip() + ")"
-            os.kill(int(pid), 9)
-        # else:
-            # print "- pid (" + pid.rstrip() + ") - process isn't running"
+            print "Sending SIGTERM to process group %d" % int(pid)
+            try:
+                os.killpg(int(pid), signal.SIGTERM)
+            except:
+                print "No processes found with PGID %d" % int(pid)
+
+
+            print "Sending SIGTERM to process %d" % int(pid)
+            try:
+                os.kill(int(pid), signal.SIGTERM)
+            except:
+                print "No processes found with PID %d" % int(pid)
+
+    print "Sending SIGTERM to run.py PG %d" % os.getpid()
+    #try:
+    #    os.killpg(os.getpid(), signal.SIGTERM)
+    #except:
+    #    print "No processes found with PGID %d" % os.getpid()
+
     lock.close()
     os.remove(lock_file)
 
@@ -573,7 +577,15 @@ def main():
         print "- build failed!"
         sys.exit(1)
 
+def signal_handler(signal, frame):
+    #print "cleanup from signal_handler"
+    cleanup()
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler) # ctrl-c
+    signal.signal(signal.SIGTERM, signal_handler) # kill
+    signal.signal(signal.SIGQUIT, signal_handler) # ctrl-d
+    signal.signal(signal.SIGABRT, signal_handler) # Assert or Abort
+    signal.signal(signal.SIGSEGV, signal_handler) # Seg Fault
     atexit.register(cleanup)
     main()
