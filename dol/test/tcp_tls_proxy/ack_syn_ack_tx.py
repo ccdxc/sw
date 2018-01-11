@@ -55,13 +55,13 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.Configure()
+    tnmdr.GetMeta()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.Configure()
+    tnmpr.GetMeta()
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
     arq.Configure()
 

@@ -41,18 +41,19 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
+    rnmdr.GetRingEntries([rnmdr.pi])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.Configure()
+    tnmdr.GetMeta()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.Configure()
+    tnmpr.GetMeta()
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ-TX"])
 
     sesqid = "TCPCB%04d_SESQ" % id
     sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
-    sesq.Configure()
+    sesq.GetMeta()
     tlscbid = "TlsCb%04d" % id
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.debug_dol = (tcp_tls_proxy.tls_debug_dol_leave_in_arq | tcp_tls_proxy.tls_debug_dol_bypass_proxy | tcp_tls_proxy.tls_debug_dol_bypass_barco)
@@ -108,22 +109,23 @@ def TestCaseVerify(tc):
 
     # 3. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
 
     tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.Configure()
+    tnmdr_cur.GetMeta()
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.Configure()
+    tnmpr_cur.GetMeta()
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]
     arq = tc.pvtdata.db["CPU0000_ARQ-TX"]
 
     arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ-TX"]
-    arq_cur.Configure()
+    arq_cur.GetMeta()
+    arq_cur.GetRingEntries([arq.pi])
 
     # 2. Verify descriptor
     if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:

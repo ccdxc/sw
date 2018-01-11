@@ -38,9 +38,9 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
     tlscb.GetObjValPd()
@@ -84,9 +84,9 @@ def TestCaseVerify(tc):
 
     # 2. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
 
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]

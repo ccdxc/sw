@@ -105,11 +105,11 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(other_tlscb)
 
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
     tc.pvtdata.Add(rnmdr)
 
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     tc.pvtdata.Add(rnmpr)
         
     return
@@ -168,9 +168,9 @@ def TestCaseVerify(tc):
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
 
     # Print stats
     if same_flow:

@@ -223,6 +223,34 @@ class SwDscrRingObject(base.ConfigObjectBase):
         RingEntryHelper.Configure(self.swdre_list)
         return
 
+    def GetMeta(self):
+        # Configure generic ring entries
+        lst = []
+        lst.append(self) 
+        halapi.GetRingMeta(lst)
+        return
+
+    def GetRingEntries(self, indices):
+        # Configure generic ring entries
+        ringentries = []
+        for i in indices:
+            ringentries.append(self.ringentries[i])
+        halapi.GetRingEntries(ringentries)
+        return
+
+    def GetRingEntryAOL(self, indices):
+        # Setup handles
+        swdre_list = []
+        for idx in indices:
+            handle = self.ringentries[idx].GetHandle()
+            self.swdre_list[idx].SetHandle(handle)
+            swdre_list.append(self.swdre_list[idx])
+
+        # Configure entry specific information
+        RingEntryHelper = HelperDB[self.swdr_type]
+        RingEntryHelper.Configure(swdre_list)
+        return
+
     def SetMeta(self):
         lst = []
         lst.append(self)

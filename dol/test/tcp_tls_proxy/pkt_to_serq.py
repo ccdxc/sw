@@ -48,12 +48,15 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
+    rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
+    rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
+    rnmpr.GetRingEntries([rnmdr.pi])
     serqid = "TLSCB%04d_SERQ" % id
     serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
-    serq.Configure()
+    serq.GetMeta()
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
     tlscb.GetObjValPd()
     tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
@@ -108,13 +111,15 @@ def TestCaseVerify(tc):
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
     serqid = "TLSCB%04d_SERQ" % id
     serq = tc.pvtdata.db[serqid]
     serq_cur = tc.infra_data.ConfigStore.objects.db[serqid]
-    serq_cur.Configure()
+    serq_cur.GetMeta()
+    serq_cur.GetRingEntries([tlscb.serq_pi])
+    serq_cur.GetRingEntryAOL([tlscb.serq_pi])
 
     # 4. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
@@ -135,7 +140,7 @@ def TestCaseVerify(tc):
         return False
 
     # 6. Verify page
-    if not ooo and rnmpr.ringentries[0].handle != serq_cur.swdre_list[0].Addr1:
+    if not ooo and rnmpr.ringentries[rnmdr.pi].handle != serq_cur.swdre_list[tlscb.serq_pi].Addr1:
         print("Page handle not as expected in serq_cur.swdre_list")
         #return False
 

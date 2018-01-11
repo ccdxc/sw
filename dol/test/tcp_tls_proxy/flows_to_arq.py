@@ -44,13 +44,15 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
+    rnmdr.GetRingEntries([rnmdr.pi])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
+    rnmpr.GetRingEntries([rnmpr.pi])
     for i in range(3):
         arqid = ('CPU%04d_ARQ' % i)
         arq.insert(i, copy.deepcopy(tc.infra_data.ConfigStore.objects.db[arqid]))
-        arq[i].Configure()
+        arq[i].GetMeta()
     
     return
 
@@ -89,12 +91,14 @@ def TestCaseStepVerify(tc, step):
 
     # 1. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
     arqid = 'CPU%04d_ARQ' % cpu_id
     arq_cur = tc.infra_data.ConfigStore.objects.db[arqid]
-    arq_cur.Configure()
+    arq_cur.GetMeta()
+    arq_cur.GetRingEntries([arq[cpu_id].pi])
+    arq_cur.GetRingEntryAOL([arq[cpu_id].pi])
 
     # 2. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+1):
@@ -124,9 +128,9 @@ def TestCaseStepVerify(tc, step):
         return False
 
     # update all queues for the next step
-    rnmdr.Configure()
-    rnmpr.Configure()
-    arq[cpu_id].Configure()
+    rnmdr.GetMeta()
+    rnmpr.GetMeta()
+    arq[cpu_id].GetMeta()
     return True
 
    

@@ -50,12 +50,14 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
+    rnmdr.GetRingEntries([rnmdr.pi])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
+    rnmpr.GetRingEntries([0])
     serqid = "TLSCB%04d_SERQ" % id
     serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
-    serq.Configure()
+    serq.GetMeta()
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
     tlscb.GetObjValPd()
     tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
@@ -110,13 +112,15 @@ def TestCaseVerify(tc):
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
     serqid = "TLSCB%04d_SERQ" % id
     serq = tc.pvtdata.db[serqid]
     serq_cur = tc.infra_data.ConfigStore.objects.db[serqid]
-    serq_cur.Configure()
+    serq_cur.GetMeta()
+    serq_cur.GetRingEntries([tlscb.serq_pi])
+    serq_cur.GetRingEntryAOL([0])
 
     # Verify PI for RNMDR got incremented by 2 (one for SERQ and another for L7Q)
     if (rnmdr_cur.pi != (rnmdr.pi + 1) ):

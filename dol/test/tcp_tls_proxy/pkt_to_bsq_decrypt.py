@@ -44,13 +44,15 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
+    rnmdr.GetRingEntries([rnmdr.pi])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.Configure()
+    tnmdr.GetMeta()
+    tnmdr.GetRingEntries([tnmdr.pi])
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.Configure()
+    tnmpr.GetMeta()
 
     if tc.module.args.cipher_suite == "CCM":
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"])
@@ -108,16 +110,16 @@ def TestCaseVerify(tc):
 
     #  Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
 
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
 
     tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.Configure()
+    tnmdr_cur.GetMeta()
 
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.Configure()
+    tnmpr_cur.GetMeta()
 
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.GetObjValPd()

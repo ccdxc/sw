@@ -40,15 +40,17 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
+    rnmdr.GetRingEntries([rnmdr.pi])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
+    rnmpr.GetRingEntries([0])
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.Configure()
+    tnmdr.GetMeta()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.Configure()
+    tnmpr.GetMeta()
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
-    arq.Configure()
+    arq.GetMeta()
 
     sesqid = "TCPCB%04d_SESQ" % id
     sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
@@ -79,11 +81,13 @@ def TestCaseVerify(tc):
 
     # 1. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
     arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
-    arq_cur.Configure()
+    arq_cur.GetMeta()
+    arq_cur.GetRingEntries([arq.pi])
+    arq_cur.GetRingEntryAOL([0])
 
     print("arq pi 0x%x" % (arq.pi))
     print("arq cur pi 0x%x" % (arq_cur.pi))

@@ -95,7 +95,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(other_tlscb)
 
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
     if tc.pvtdata.sem_full and tc.pvtdata.sem_full == 'nmdr':
         rnmdr.pi = 0
         rnmdr.ci = 2    # ring size of 2, so can hold 1 entry
@@ -103,15 +103,15 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(rnmdr)
 
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.Configure()
+    tnmdr.GetMeta()
     tc.pvtdata.Add(tnmdr)
 
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     tc.pvtdata.Add(rnmpr)
         
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.Configure()
+    tnmpr.GetMeta()
     tc.pvtdata.Add(tnmpr)
 
     return
@@ -173,16 +173,16 @@ def TestCaseVerify(tc):
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
 
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]
     tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.Configure()
+    tnmdr_cur.GetMeta()
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.Configure()
+    tnmpr_cur.GetMeta()
 
     # Print stats
     if same_flow:
