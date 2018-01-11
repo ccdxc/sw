@@ -659,9 +659,9 @@ capri_p4p_asm_init()
     symbols[76].name = "rx_table_cpu_hash.bin";
     symbols[76].num_params = 2;
     symbols[76].params[0].name = CAPRI_CPU_HASH_MASK;
-    symbols[76].params[0].val = 0x3;
+    symbols[76].params[0].val = 0x1;
     symbols[76].params[1].name = CAPRI_CPU_MAX_ARQID;
-    symbols[76].params[1].val = 0x2; 
+    symbols[76].params[1].val = 0x0; 
 
     symbols[77].name = "tls-mac-queue-brq.bin";
     symbols[77].num_params = 1;

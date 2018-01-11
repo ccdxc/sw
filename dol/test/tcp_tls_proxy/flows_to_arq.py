@@ -73,8 +73,8 @@ def getCpuId(tc, step):
                                 BitArray(bytes=toeplitz.toeplitz_symmetric_key))
     print("Calculated hash: 0x%x" % hash_value)
     # get the last 2 bits to get cpu-id
-    cpu_id = hash_value & 0x3
-    cpu_id = cpu_id if cpu_id < 3 else 0
+    cpu_id = hash_value & 0x1
+    cpu_id = cpu_id if cpu_id < 1 else 0
     return cpu_id
 
 

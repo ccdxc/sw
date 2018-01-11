@@ -461,6 +461,7 @@ hal_init (hal_cfg_t *hal_cfg)
         // start fte threads
         for (tid = HAL_THREAD_ID_FTE_MIN; tid <= HAL_THREAD_ID_FTE_MAX; tid++) {
             g_hal_threads[tid]->start(g_hal_threads[tid]);
+            break;
         }
     }
 
