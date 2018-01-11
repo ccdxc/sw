@@ -346,11 +346,11 @@ def run_dol(args):
     return exitcode
 
 def run_mbt(standalone=True):
-    dol_dir = nic_dir + "/../dol"
-    os.chdir(dol_dir)
+    mbt_dir = nic_dir + "/../mbt"
+    os.chdir(mbt_dir)
 
     log = open(mbt_log, "a+")
-    cmd = ['./mbt/main.py']
+    cmd = ['./main.py']
     # If topology is set, then it is being run in DOL mode.
     if not standalone:
         cmd.append('--mbt')

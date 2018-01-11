@@ -7,9 +7,9 @@ import config.hal.defs      as haldefs
 
 import grpc
 
-from infra.common.glopts                  import GlobalOptions
-from infra.common.logging                 import cfglogger
-from mbt.mbt_signaling_client import SignalingClient
+from infra.common.glopts  import GlobalOptions
+from infra.common.logging import cfglogger
+from mbt_signaling_client import SignalingClient
 
 import types_pb2            as types_pb2
 import vrf_pb2              as vrf_pb2

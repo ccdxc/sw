@@ -8,10 +8,10 @@ paths = [
     '/nic/gen/proto/',
     '/nic/gen/proto/hal/',
     '/nic/cli/', # To get tenjin_wrapper.
-    '/dol/mbt/'
+    '/mbt/'
 ]
 
-ws_top = os.path.dirname(sys.argv[0]) + '/../..'
+ws_top = os.path.dirname(sys.argv[0]) + '/..'
 ws_top = os.path.abspath(ws_top)
 os.environ['WS_TOP'] = ws_top
 for path in paths:
@@ -26,8 +26,8 @@ from tenjin_wrapper import *
 def genProxyServerMethods():
     tenjin_prefix = "//::"
     
-    template = ws_top + '/dol/mbt/hal_proto_gen_template.py'
-    out_file = ws_top + '/dol/mbt/hal_proto_gen.py'
+    template = ws_top + '/mbt/hal_proto_gen_template.py'
+    out_file = ws_top + '/mbt/hal_proto_gen.py'
     
     dic = {}
     with open(out_file, "w") as of:

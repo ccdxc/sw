@@ -9,6 +9,7 @@ timeprofiler.InitTimeProfiler.Start()
 paths = [
     '/nic/gen/proto/',
     '/nic/gen/proto/hal/',
+    '/mbt/',
     '/nic',
     '/dol/third_party/'
 ]

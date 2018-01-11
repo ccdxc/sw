@@ -16,14 +16,14 @@ else:
     port = '50054'
 channel = grpc.insecure_channel('localhost:%s' %(port))
 
-//:: ws_top = os.path.dirname(sys.argv[0]) + '/../..'
+//:: ws_top = os.path.dirname(sys.argv[0]) + '/..'
 //:: ws_top = os.path.abspath(ws_top)
 //:: os.environ['WS_TOP'] = ws_top
 //:: fullpath = ws_top + '/nic/gen/proto/'
 //:: sys.path.insert(0, fullpath)
 //:: fullpath = ws_top + '/nic/gen/proto/hal/'
 //:: sys.path.insert(0, fullpath)
-ws_top = os.path.dirname(sys.argv[0]) + '/../..'
+ws_top = os.path.dirname(sys.argv[0]) + '/..'
 ws_top = os.path.abspath(ws_top)
 os.environ['WS_TOP'] = ws_top
 fullpath = ws_top + '/nic/gen/proto/hal/'

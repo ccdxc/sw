@@ -8,12 +8,12 @@ import zmq
 paths = [
     '/nic/gen/proto/',
     '/nic/gen/proto/hal/',
-    '/nic',
+    '/nic/',
     '/dol/',
-    '/dol/third_party/'
+    '/dol/third_party/',
 ]
 
-ws_top = os.path.dirname(sys.argv[0]) + '/../..'
+ws_top = os.path.dirname(sys.argv[0]) + '/..'
 ws_top = os.path.abspath(ws_top)
 os.environ['WS_TOP'] = ws_top
 for path in paths:
@@ -30,7 +30,7 @@ import grpc_proxy
 import threading
 from infra.common.glopts import GlobalOptions
 
-objects.CallbackField.SetPackagePath("mbt.cfg.callbacks")
+objects.CallbackField.SetPackagePath("cfg.callbacks")
 
 def start_zmq_server():
     logger.info("Starting ZMQ server for signaling DOL!")
@@ -71,7 +71,7 @@ op_map = {
 
 hal_channel = get_hal_channel()
 
-config_specs = parser.ParseDirectory("mbt/cfg/specs", "*.spec")
+config_specs = parser.ParseDirectory("../mbt/cfg/specs", "*.spec")
 for config_spec in config_specs:
     if config_spec.graphEnabled:
         logger.info("Adding config spec for service : " , config_spec.Service)
@@ -87,7 +87,7 @@ if GlobalOptions.mbt:
     # This is blocking.
     grpc_proxy.serve()
 
-test_specs = parser.ParseDirectory("mbt/test/specs", "*.spec")
+test_specs = parser.ParseDirectory("../mbt/mbt_test/specs", "*.spec")
 for test_spec in test_specs:
     if not test_spec.Enabled:
         continue
