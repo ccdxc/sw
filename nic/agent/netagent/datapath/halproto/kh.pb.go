@@ -7,6 +7,8 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1830,7 +1832,8 @@ func (m *SecurityProfileKeyHandle_ProfileHandle) MarshalTo(dAtA []byte) (int, er
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.ProfileHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ProfileHandle))
+	i += 8
 	return i, nil
 }
 func (m *VrfKeyHandle) Marshal() (dAtA []byte, err error) {
@@ -1869,7 +1872,8 @@ func (m *VrfKeyHandle_VrfHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.VrfHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.VrfHandle))
+	i += 8
 	return i, nil
 }
 func (m *NetworkKeyHandle) Marshal() (dAtA []byte, err error) {
@@ -1915,7 +1919,8 @@ func (m *NetworkKeyHandle_NwHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.NwHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.NwHandle))
+	i += 8
 	return i, nil
 }
 func (m *L2SegmentKeyHandle) Marshal() (dAtA []byte, err error) {
@@ -1954,7 +1959,8 @@ func (m *L2SegmentKeyHandle_L2SegmentHandle) MarshalTo(dAtA []byte) (int, error)
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.L2SegmentHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.L2SegmentHandle))
+	i += 8
 	return i, nil
 }
 func (m *SecurityRuleKeyHandle) Marshal() (dAtA []byte, err error) {
@@ -1993,7 +1999,8 @@ func (m *SecurityRuleKeyHandle_SecurityRuleHandle) MarshalTo(dAtA []byte) (int, 
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.SecurityRuleHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SecurityRuleHandle))
+	i += 8
 	return i, nil
 }
 func (m *SecurityGroupPolicyId) Marshal() (dAtA []byte, err error) {
@@ -2067,7 +2074,8 @@ func (m *SecurityGroupPolicyKeyHandle_SecurityGroupPolicyHandle) MarshalTo(dAtA 
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.SecurityGroupPolicyHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SecurityGroupPolicyHandle))
+	i += 8
 	return i, nil
 }
 func (m *SecurityGroupKeyHandle) Marshal() (dAtA []byte, err error) {
@@ -2106,7 +2114,8 @@ func (m *SecurityGroupKeyHandle_SecurityGroupHandle) MarshalTo(dAtA []byte) (int
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.SecurityGroupHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SecurityGroupHandle))
+	i += 8
 	return i, nil
 }
 func (m *PortKeyHandle) Marshal() (dAtA []byte, err error) {
@@ -2138,14 +2147,16 @@ func (m *PortKeyHandle_PortId) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0xd
 	i++
-	i = encodeFixed32Kh(dAtA, i, uint32(m.PortId))
+	encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.PortId))
+	i += 4
 	return i, nil
 }
 func (m *PortKeyHandle_PortHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.PortHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.PortHandle))
+	i += 8
 	return i, nil
 }
 func (m *LifKeyHandle) Marshal() (dAtA []byte, err error) {
@@ -2177,14 +2188,16 @@ func (m *LifKeyHandle_LifId) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0xd
 	i++
-	i = encodeFixed32Kh(dAtA, i, uint32(m.LifId))
+	encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.LifId))
+	i += 4
 	return i, nil
 }
 func (m *LifKeyHandle_LifHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.LifHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.LifHandle))
+	i += 8
 	return i, nil
 }
 func (m *InterfaceKeyHandle) Marshal() (dAtA []byte, err error) {
@@ -2216,14 +2229,16 @@ func (m *InterfaceKeyHandle_InterfaceId) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x9
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.InterfaceId))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.InterfaceId))
+	i += 8
 	return i, nil
 }
 func (m *InterfaceKeyHandle_IfHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.IfHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.IfHandle))
+	i += 8
 	return i, nil
 }
 func (m *EndpointL2Key) Marshal() (dAtA []byte, err error) {
@@ -2383,7 +2398,8 @@ func (m *EndpointKeyHandle_EndpointHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.EndpointHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.EndpointHandle))
+	i += 8
 	return i, nil
 }
 func (m *MulticastEntryKeyIP) Marshal() (dAtA []byte, err error) {
@@ -2442,7 +2458,8 @@ func (m *MulticastEntryKeyMac) MarshalTo(dAtA []byte) (int, error) {
 	if m.Group != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Kh(dAtA, i, uint64(m.Group))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Group))
+		i += 8
 	}
 	return i, nil
 }
@@ -2553,26 +2570,9 @@ func (m *MulticastEntryKeyHandle_MulticastHandle) MarshalTo(dAtA []byte) (int, e
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Kh(dAtA, i, uint64(m.MulticastHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MulticastHandle))
+	i += 8
 	return i, nil
-}
-func encodeFixed64Kh(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Kh(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
 }
 func encodeVarintKh(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
@@ -3034,15 +3034,8 @@ func (m *SecurityProfileKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &SecurityProfileKeyHandle_ProfileHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3122,15 +3115,8 @@ func (m *VrfKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &VrfKeyHandle_VrfHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3222,15 +3208,8 @@ func (m *NetworkKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &NetworkKeyHandle_NwHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3310,15 +3289,8 @@ func (m *L2SegmentKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &L2SegmentKeyHandle_L2SegmentHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3398,15 +3370,8 @@ func (m *SecurityRuleKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.RuleKeyOrHandle = &SecurityRuleKeyHandle_SecurityRuleHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3586,15 +3551,8 @@ func (m *SecurityGroupPolicyKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.PolicyKeyOrHandle = &SecurityGroupPolicyKeyHandle_SecurityGroupPolicyHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3674,15 +3632,8 @@ func (m *SecurityGroupKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &SecurityGroupKeyHandle_SecurityGroupHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3742,11 +3693,8 @@ func (m *PortKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			v = uint32(dAtA[iNdEx-4])
-			v |= uint32(dAtA[iNdEx-3]) << 8
-			v |= uint32(dAtA[iNdEx-2]) << 16
-			v |= uint32(dAtA[iNdEx-1]) << 24
 			m.KeyOrHandle = &PortKeyHandle_PortId{v}
 		case 2:
 			if wireType != 1 {
@@ -3756,15 +3704,8 @@ func (m *PortKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &PortKeyHandle_PortHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3824,11 +3765,8 @@ func (m *LifKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			v = uint32(dAtA[iNdEx-4])
-			v |= uint32(dAtA[iNdEx-3]) << 8
-			v |= uint32(dAtA[iNdEx-2]) << 16
-			v |= uint32(dAtA[iNdEx-1]) << 24
 			m.KeyOrHandle = &LifKeyHandle_LifId{v}
 		case 2:
 			if wireType != 1 {
@@ -3838,15 +3776,8 @@ func (m *LifKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &LifKeyHandle_LifHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3906,15 +3837,8 @@ func (m *InterfaceKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &InterfaceKeyHandle_InterfaceId{v}
 		case 2:
 			if wireType != 1 {
@@ -3924,15 +3848,8 @@ func (m *InterfaceKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &InterfaceKeyHandle_IfHandle{v}
 		default:
 			iNdEx = preIndex
@@ -4323,15 +4240,8 @@ func (m *EndpointKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &EndpointKeyHandle_EndpointHandle{v}
 		default:
 			iNdEx = preIndex
@@ -4507,15 +4417,8 @@ func (m *MulticastEntryKeyMac) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Group = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Group = uint64(dAtA[iNdEx-8])
-			m.Group |= uint64(dAtA[iNdEx-7]) << 8
-			m.Group |= uint64(dAtA[iNdEx-6]) << 16
-			m.Group |= uint64(dAtA[iNdEx-5]) << 24
-			m.Group |= uint64(dAtA[iNdEx-4]) << 32
-			m.Group |= uint64(dAtA[iNdEx-3]) << 40
-			m.Group |= uint64(dAtA[iNdEx-2]) << 48
-			m.Group |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipKh(dAtA[iNdEx:])
@@ -4753,15 +4656,8 @@ func (m *MulticastEntryKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &MulticastEntryKeyHandle_MulticastHandle{v}
 		default:
 			iNdEx = preIndex

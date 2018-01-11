@@ -9,7 +9,7 @@ package restapi
 import (
 	"testing"
 
-	"github.com/pensando/sw/api"
+	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"

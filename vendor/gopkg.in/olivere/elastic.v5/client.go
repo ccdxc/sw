@@ -26,7 +26,7 @@ import (
 
 const (
 	// Version is the current version of Elastic.
-	Version = "5.0.48"
+	Version = "5.0.59"
 
 	// DefaultURL is the default endpoint of Elasticsearch on the local machine.
 	// It is used e.g. when initializing a new Client without a specific URL.
@@ -1086,6 +1086,7 @@ func (c *Client) startupHealthcheck(timeout time.Duration) error {
 	c.mu.Unlock()
 
 	// If we don't get a connection after "timeout", we bail.
+	var lastErr error
 	start := time.Now()
 	for {
 		// Make a copy of the HTTP client provided via options to respect
@@ -1104,12 +1105,17 @@ func (c *Client) startupHealthcheck(timeout time.Duration) error {
 			res, err := cl.Do(req)
 			if err == nil && res != nil && res.StatusCode >= 200 && res.StatusCode < 300 {
 				return nil
+			} else if err != nil {
+				lastErr = err
 			}
 		}
 		time.Sleep(1 * time.Second)
 		if time.Now().Sub(start) > timeout {
 			break
 		}
+	}
+	if lastErr != nil {
+		return errors.Wrapf(ErrNoClient, "health check timeout: %v", lastErr)
 	}
 	return errors.Wrap(ErrNoClient, "health check timeout")
 }
@@ -1168,12 +1174,18 @@ func (c *Client) mustActiveConn() error {
 }
 
 // PerformRequest does a HTTP request to Elasticsearch.
+// See PerformRequestWithContentType for details.
+func (c *Client) PerformRequest(ctx context.Context, method, path string, params url.Values, body interface{}, ignoreErrors ...int) (*Response, error) {
+	return c.PerformRequestWithContentType(ctx, method, path, params, body, "application/json", ignoreErrors...)
+}
+
+// PerformRequestWithContentType executes a HTTP request with a specific content type.
 // It returns a response (which might be nil) and an error on failure.
 //
 // Optionally, a list of HTTP error codes to ignore can be passed.
 // This is necessary for services that expect e.g. HTTP status 404 as a
 // valid outcome (Exists, IndicesExists, IndicesTypeExists).
-func (c *Client) PerformRequest(ctx context.Context, method, path string, params url.Values, body interface{}, ignoreErrors ...int) (*Response, error) {
+func (c *Client) PerformRequestWithContentType(ctx context.Context, method, path string, params url.Values, body interface{}, contentType string, ignoreErrors ...int) (*Response, error) {
 	start := time.Now().UTC()
 
 	c.mu.RLock()
@@ -1235,6 +1247,9 @@ func (c *Client) PerformRequest(ctx context.Context, method, path string, params
 
 		if basicAuth {
 			req.SetBasicAuth(basicAuthUsername, basicAuthPassword)
+		}
+		if contentType != "" {
+			req.Header.Set("Content-Type", contentType)
 		}
 
 		// Set body

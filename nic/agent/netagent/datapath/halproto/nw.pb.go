@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -606,7 +608,8 @@ func (m *NetworkSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.GatewayEpHandle != 0 {
 		dAtA[i] = 0x29
 		i++
-		i = encodeFixed64Nw(dAtA, i, uint64(m.GatewayEpHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.GatewayEpHandle))
+		i += 8
 	}
 	if len(m.SgKeyHandle) > 0 {
 		for _, msg := range m.SgKeyHandle {
@@ -671,7 +674,8 @@ func (m *NetworkStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.NwHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Nw(dAtA, i, uint64(m.NwHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.NwHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -1059,24 +1063,6 @@ func (m *NetworkGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Nw(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Nw(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintNw(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1454,15 +1440,8 @@ func (m *NetworkSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.GatewayEpHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.GatewayEpHandle = uint64(dAtA[iNdEx-8])
-			m.GatewayEpHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.GatewayEpHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.GatewayEpHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.GatewayEpHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.GatewayEpHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.GatewayEpHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.GatewayEpHandle |= uint64(dAtA[iNdEx-1]) << 56
 		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SgKeyHandle", wireType)
@@ -1633,15 +1612,8 @@ func (m *NetworkStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NwHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.NwHandle = uint64(dAtA[iNdEx-8])
-			m.NwHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.NwHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.NwHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.NwHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.NwHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.NwHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.NwHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNw(dAtA[iNdEx:])

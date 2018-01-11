@@ -59,14 +59,14 @@ func action(ctx *cli.Context) error {
 
 	path := path.Join(name, version, "asset.tgz")
 
-	stat, err := mc.StatObject(asset.RootBucket, path)
+	stat, err := mc.StatObject(asset.RootBucket, path, minio.StatObjectOptions{})
 	if err != nil {
 		return err
 	}
 
 	logrus.Infof("Downloading %fMB, please be patient...", float64(stat.Size)/float64(1024*1024))
 
-	obj, err := mc.GetObject(asset.RootBucket, path)
+	obj, err := mc.GetObject(asset.RootBucket, path, minio.GetObjectOptions{})
 	if err != nil {
 		return err
 	}

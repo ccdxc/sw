@@ -8,9 +8,9 @@ ExecStartPre=-/usr/bin/docker kill pen-kube-scheduler
 ExecStartPre=-/usr/bin/docker rm pen-kube-scheduler
 ExecStart=/usr/pensando/bin/systemd-docker \
 	--cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host \
-	--name pen-kube-scheduler ${REGISTRY_URL}/google_containers/kube-scheduler-amd64:v1.6.6 \
+	--name pen-kube-scheduler ${REGISTRY_URL}/google_containers/kube-scheduler-amd64:v1.7.12 \
 	kube-scheduler \
-	$KUBE_MASTER 
+	$KUBE_MASTER
 ExecStop=/usr/bin/docker stop -t 2 pen-kube-scheduler
 ExecStopPost=/usr/bin/docker rm -f pen-kube-scheduler
 Restart=always

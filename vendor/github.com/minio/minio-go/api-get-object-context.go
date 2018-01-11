@@ -1,5 +1,6 @@
 /*
- * Minio Go Library for Amazon S3 Compatible Cloud Storage (C) 2017 Minio, Inc.
+ * Minio Go Library for Amazon S3 Compatible Cloud Storage
+ * Copyright 2017 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +20,7 @@ package minio
 import "context"
 
 // GetObjectWithContext - returns an seekable, readable object.
-func (c Client) GetObjectWithContext(ctx context.Context, bucketName, objectName string) (*Object, error) {
-	return c.getObjectWithContext(ctx, bucketName, objectName)
+// The options can be used to specify the GET request further.
+func (c Client) GetObjectWithContext(ctx context.Context, bucketName, objectName string, opts GetObjectOptions) (*Object, error) {
+	return c.getObjectWithContext(ctx, bucketName, objectName, opts)
 }

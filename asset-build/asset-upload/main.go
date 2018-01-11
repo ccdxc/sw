@@ -85,7 +85,7 @@ func action(ctx *cli.Context) error {
 
 	logrus.Infof("Uploading %f MB, please be patient...", float64(fi.Size())/float64(1024*1024))
 
-	n, err := mc.PutObject(asset.RootBucket, assetPath, f, -1, &minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
+	n, err := mc.PutObject(asset.RootBucket, assetPath, f, -1, minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
 	if err != nil {
 		return err
 	}

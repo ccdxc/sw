@@ -22,7 +22,7 @@ do
     	vagrant ssh ${nodes[0]} -- 'KUBECONFIG=$HOME/admin.conf kubectl -n kube-system get ds -l '\''k8s-app=kube-proxy'\'' -o json | /usr/local/bin/jq-linux64 '\''.items[0].spec.template.spec.containers[0].command |= .+ ["--proxy-mode=userspace"]'\'' |   kubectl apply -f - && kubectl -n kube-system delete pods -l '\''k8s-app=kube-proxy'\'''
 
         # Add weave networking
-        vagrant ssh ${nodes[0]} -- 'KUBECONFIG=$HOME/admin.conf /usr/bin/kubectl apply -f https://git.io/weave-kube-1.6'
+        vagrant ssh ${nodes[0]} -- 'KUBECONFIG=$HOME/admin.conf /usr/bin/kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.1.3/weave-daemonset-k8s-1.7.yaml'
     else
     	echo Adding ${nodes[$i]} to cluster
     	vagrant ssh ${nodes[$i]} -- 'sudo kubeadm join --token f0c861.753c505740ecde4c --skip-preflight-checks=true '$master_ip':6443'

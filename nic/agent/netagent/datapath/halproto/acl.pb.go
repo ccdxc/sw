@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2055,7 +2057,8 @@ func (m *AclHandle) MarshalTo(dAtA []byte) (int, error) {
 	if m.Handle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Acl(dAtA, i, uint64(m.Handle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Handle))
+		i += 8
 	}
 	return i, nil
 }
@@ -2089,7 +2092,8 @@ func (m *AclKeyHandle_AclId) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0xd
 	i++
-	i = encodeFixed32Acl(dAtA, i, uint32(m.AclId))
+	encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.AclId))
+	i += 4
 	return i, nil
 }
 func (m *AclKeyHandle_AclHandle) MarshalTo(dAtA []byte) (int, error) {
@@ -2855,7 +2859,8 @@ func (m *AclActionInfo) MarshalTo(dAtA []byte) (int, error) {
 	if m.CoppPolicerHandle != 0 {
 		dAtA[i] = 0x21
 		i++
-		i = encodeFixed64Acl(dAtA, i, uint64(m.CoppPolicerHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.CoppPolicerHandle))
+		i += 8
 	}
 	if m.RedirectIfKeyHandle != nil {
 		dAtA[i] = 0x2a
@@ -3349,24 +3354,6 @@ func (m *AclGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Acl(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Acl(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintAcl(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -3990,15 +3977,8 @@ func (m *AclHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Handle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Handle = uint64(dAtA[iNdEx-8])
-			m.Handle |= uint64(dAtA[iNdEx-7]) << 8
-			m.Handle |= uint64(dAtA[iNdEx-6]) << 16
-			m.Handle |= uint64(dAtA[iNdEx-5]) << 24
-			m.Handle |= uint64(dAtA[iNdEx-4]) << 32
-			m.Handle |= uint64(dAtA[iNdEx-3]) << 40
-			m.Handle |= uint64(dAtA[iNdEx-2]) << 48
-			m.Handle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAcl(dAtA[iNdEx:])
@@ -4057,11 +4037,8 @@ func (m *AclKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			v = uint32(dAtA[iNdEx-4])
-			v |= uint32(dAtA[iNdEx-3]) << 8
-			v |= uint32(dAtA[iNdEx-2]) << 16
-			v |= uint32(dAtA[iNdEx-1]) << 24
 			m.KeyOrHandle = &AclKeyHandle_AclId{v}
 		case 2:
 			if wireType != 2 {
@@ -5939,15 +5916,8 @@ func (m *AclActionInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.CoppPolicerHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.CoppPolicerHandle = uint64(dAtA[iNdEx-8])
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.CoppPolicerHandle |= uint64(dAtA[iNdEx-1]) << 56
 		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RedirectIfKeyHandle", wireType)

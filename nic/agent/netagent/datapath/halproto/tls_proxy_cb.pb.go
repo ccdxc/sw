@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -883,7 +885,8 @@ func (m *TlsCbKeyHandle_TlscbHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.TlscbHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TlscbHandle))
+	i += 8
 	return i, nil
 }
 func (m *TlsCbSpec) Marshal() (dAtA []byte, err error) {
@@ -979,68 +982,78 @@ func (m *TlsCbSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.TnmdrAlloc != 0 {
 		dAtA[i] = 0x71
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.TnmdrAlloc))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TnmdrAlloc))
+		i += 8
 	}
 	if m.TnmprAlloc != 0 {
 		dAtA[i] = 0x79
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.TnmprAlloc))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TnmprAlloc))
+		i += 8
 	}
 	if m.RnmdrFree != 0 {
 		dAtA[i] = 0x81
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.RnmdrFree))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.RnmdrFree))
+		i += 8
 	}
 	if m.RnmprFree != 0 {
 		dAtA[i] = 0x89
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.RnmprFree))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.RnmprFree))
+		i += 8
 	}
 	if m.EncRequests != 0 {
 		dAtA[i] = 0x91
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.EncRequests))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.EncRequests))
+		i += 8
 	}
 	if m.EncCompletions != 0 {
 		dAtA[i] = 0x99
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.EncCompletions))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.EncCompletions))
+		i += 8
 	}
 	if m.EncFailures != 0 {
 		dAtA[i] = 0xa1
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.EncFailures))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.EncFailures))
+		i += 8
 	}
 	if m.DecRequests != 0 {
 		dAtA[i] = 0xa9
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.DecRequests))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DecRequests))
+		i += 8
 	}
 	if m.DecCompletions != 0 {
 		dAtA[i] = 0xb1
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.DecCompletions))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DecCompletions))
+		i += 8
 	}
 	if m.DecFailures != 0 {
 		dAtA[i] = 0xb9
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.DecFailures))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DecFailures))
+		i += 8
 	}
 	if m.Salt != 0 {
 		dAtA[i] = 0xc0
@@ -1108,21 +1121,24 @@ func (m *TlsCbSpec) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		dAtA[i] = 0x2
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.MacRequests))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MacRequests))
+		i += 8
 	}
 	if m.MacCompletions != 0 {
 		dAtA[i] = 0x89
 		i++
 		dAtA[i] = 0x2
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.MacCompletions))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MacCompletions))
+		i += 8
 	}
 	if m.MacFailures != 0 {
 		dAtA[i] = 0x91
 		i++
 		dAtA[i] = 0x2
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.MacFailures))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MacFailures))
+		i += 8
 	}
 	return i, nil
 }
@@ -1175,7 +1191,8 @@ func (m *TlsCbStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.TlscbHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64TlsProxyCb(dAtA, i, uint64(m.TlscbHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TlscbHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -1515,24 +1532,6 @@ func (m *TlsCbGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64TlsProxyCb(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32TlsProxyCb(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintTlsProxyCb(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1893,15 +1892,8 @@ func (m *TlsCbKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &TlsCbKeyHandle_TlscbHandle{v}
 		default:
 			iNdEx = preIndex
@@ -2236,15 +2228,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.TnmdrAlloc = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.TnmdrAlloc = uint64(dAtA[iNdEx-8])
-			m.TnmdrAlloc |= uint64(dAtA[iNdEx-7]) << 8
-			m.TnmdrAlloc |= uint64(dAtA[iNdEx-6]) << 16
-			m.TnmdrAlloc |= uint64(dAtA[iNdEx-5]) << 24
-			m.TnmdrAlloc |= uint64(dAtA[iNdEx-4]) << 32
-			m.TnmdrAlloc |= uint64(dAtA[iNdEx-3]) << 40
-			m.TnmdrAlloc |= uint64(dAtA[iNdEx-2]) << 48
-			m.TnmdrAlloc |= uint64(dAtA[iNdEx-1]) << 56
 		case 15:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TnmprAlloc", wireType)
@@ -2253,15 +2238,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.TnmprAlloc = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.TnmprAlloc = uint64(dAtA[iNdEx-8])
-			m.TnmprAlloc |= uint64(dAtA[iNdEx-7]) << 8
-			m.TnmprAlloc |= uint64(dAtA[iNdEx-6]) << 16
-			m.TnmprAlloc |= uint64(dAtA[iNdEx-5]) << 24
-			m.TnmprAlloc |= uint64(dAtA[iNdEx-4]) << 32
-			m.TnmprAlloc |= uint64(dAtA[iNdEx-3]) << 40
-			m.TnmprAlloc |= uint64(dAtA[iNdEx-2]) << 48
-			m.TnmprAlloc |= uint64(dAtA[iNdEx-1]) << 56
 		case 16:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RnmdrFree", wireType)
@@ -2270,15 +2248,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.RnmdrFree = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.RnmdrFree = uint64(dAtA[iNdEx-8])
-			m.RnmdrFree |= uint64(dAtA[iNdEx-7]) << 8
-			m.RnmdrFree |= uint64(dAtA[iNdEx-6]) << 16
-			m.RnmdrFree |= uint64(dAtA[iNdEx-5]) << 24
-			m.RnmdrFree |= uint64(dAtA[iNdEx-4]) << 32
-			m.RnmdrFree |= uint64(dAtA[iNdEx-3]) << 40
-			m.RnmdrFree |= uint64(dAtA[iNdEx-2]) << 48
-			m.RnmdrFree |= uint64(dAtA[iNdEx-1]) << 56
 		case 17:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RnmprFree", wireType)
@@ -2287,15 +2258,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.RnmprFree = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.RnmprFree = uint64(dAtA[iNdEx-8])
-			m.RnmprFree |= uint64(dAtA[iNdEx-7]) << 8
-			m.RnmprFree |= uint64(dAtA[iNdEx-6]) << 16
-			m.RnmprFree |= uint64(dAtA[iNdEx-5]) << 24
-			m.RnmprFree |= uint64(dAtA[iNdEx-4]) << 32
-			m.RnmprFree |= uint64(dAtA[iNdEx-3]) << 40
-			m.RnmprFree |= uint64(dAtA[iNdEx-2]) << 48
-			m.RnmprFree |= uint64(dAtA[iNdEx-1]) << 56
 		case 18:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EncRequests", wireType)
@@ -2304,15 +2268,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.EncRequests = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.EncRequests = uint64(dAtA[iNdEx-8])
-			m.EncRequests |= uint64(dAtA[iNdEx-7]) << 8
-			m.EncRequests |= uint64(dAtA[iNdEx-6]) << 16
-			m.EncRequests |= uint64(dAtA[iNdEx-5]) << 24
-			m.EncRequests |= uint64(dAtA[iNdEx-4]) << 32
-			m.EncRequests |= uint64(dAtA[iNdEx-3]) << 40
-			m.EncRequests |= uint64(dAtA[iNdEx-2]) << 48
-			m.EncRequests |= uint64(dAtA[iNdEx-1]) << 56
 		case 19:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EncCompletions", wireType)
@@ -2321,15 +2278,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.EncCompletions = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.EncCompletions = uint64(dAtA[iNdEx-8])
-			m.EncCompletions |= uint64(dAtA[iNdEx-7]) << 8
-			m.EncCompletions |= uint64(dAtA[iNdEx-6]) << 16
-			m.EncCompletions |= uint64(dAtA[iNdEx-5]) << 24
-			m.EncCompletions |= uint64(dAtA[iNdEx-4]) << 32
-			m.EncCompletions |= uint64(dAtA[iNdEx-3]) << 40
-			m.EncCompletions |= uint64(dAtA[iNdEx-2]) << 48
-			m.EncCompletions |= uint64(dAtA[iNdEx-1]) << 56
 		case 20:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EncFailures", wireType)
@@ -2338,15 +2288,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.EncFailures = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.EncFailures = uint64(dAtA[iNdEx-8])
-			m.EncFailures |= uint64(dAtA[iNdEx-7]) << 8
-			m.EncFailures |= uint64(dAtA[iNdEx-6]) << 16
-			m.EncFailures |= uint64(dAtA[iNdEx-5]) << 24
-			m.EncFailures |= uint64(dAtA[iNdEx-4]) << 32
-			m.EncFailures |= uint64(dAtA[iNdEx-3]) << 40
-			m.EncFailures |= uint64(dAtA[iNdEx-2]) << 48
-			m.EncFailures |= uint64(dAtA[iNdEx-1]) << 56
 		case 21:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DecRequests", wireType)
@@ -2355,15 +2298,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DecRequests = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DecRequests = uint64(dAtA[iNdEx-8])
-			m.DecRequests |= uint64(dAtA[iNdEx-7]) << 8
-			m.DecRequests |= uint64(dAtA[iNdEx-6]) << 16
-			m.DecRequests |= uint64(dAtA[iNdEx-5]) << 24
-			m.DecRequests |= uint64(dAtA[iNdEx-4]) << 32
-			m.DecRequests |= uint64(dAtA[iNdEx-3]) << 40
-			m.DecRequests |= uint64(dAtA[iNdEx-2]) << 48
-			m.DecRequests |= uint64(dAtA[iNdEx-1]) << 56
 		case 22:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DecCompletions", wireType)
@@ -2372,15 +2308,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DecCompletions = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DecCompletions = uint64(dAtA[iNdEx-8])
-			m.DecCompletions |= uint64(dAtA[iNdEx-7]) << 8
-			m.DecCompletions |= uint64(dAtA[iNdEx-6]) << 16
-			m.DecCompletions |= uint64(dAtA[iNdEx-5]) << 24
-			m.DecCompletions |= uint64(dAtA[iNdEx-4]) << 32
-			m.DecCompletions |= uint64(dAtA[iNdEx-3]) << 40
-			m.DecCompletions |= uint64(dAtA[iNdEx-2]) << 48
-			m.DecCompletions |= uint64(dAtA[iNdEx-1]) << 56
 		case 23:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DecFailures", wireType)
@@ -2389,15 +2318,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DecFailures = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DecFailures = uint64(dAtA[iNdEx-8])
-			m.DecFailures |= uint64(dAtA[iNdEx-7]) << 8
-			m.DecFailures |= uint64(dAtA[iNdEx-6]) << 16
-			m.DecFailures |= uint64(dAtA[iNdEx-5]) << 24
-			m.DecFailures |= uint64(dAtA[iNdEx-4]) << 32
-			m.DecFailures |= uint64(dAtA[iNdEx-3]) << 40
-			m.DecFailures |= uint64(dAtA[iNdEx-2]) << 48
-			m.DecFailures |= uint64(dAtA[iNdEx-1]) << 56
 		case 24:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Salt", wireType)
@@ -2559,15 +2481,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.MacRequests = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.MacRequests = uint64(dAtA[iNdEx-8])
-			m.MacRequests |= uint64(dAtA[iNdEx-7]) << 8
-			m.MacRequests |= uint64(dAtA[iNdEx-6]) << 16
-			m.MacRequests |= uint64(dAtA[iNdEx-5]) << 24
-			m.MacRequests |= uint64(dAtA[iNdEx-4]) << 32
-			m.MacRequests |= uint64(dAtA[iNdEx-3]) << 40
-			m.MacRequests |= uint64(dAtA[iNdEx-2]) << 48
-			m.MacRequests |= uint64(dAtA[iNdEx-1]) << 56
 		case 33:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MacCompletions", wireType)
@@ -2576,15 +2491,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.MacCompletions = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.MacCompletions = uint64(dAtA[iNdEx-8])
-			m.MacCompletions |= uint64(dAtA[iNdEx-7]) << 8
-			m.MacCompletions |= uint64(dAtA[iNdEx-6]) << 16
-			m.MacCompletions |= uint64(dAtA[iNdEx-5]) << 24
-			m.MacCompletions |= uint64(dAtA[iNdEx-4]) << 32
-			m.MacCompletions |= uint64(dAtA[iNdEx-3]) << 40
-			m.MacCompletions |= uint64(dAtA[iNdEx-2]) << 48
-			m.MacCompletions |= uint64(dAtA[iNdEx-1]) << 56
 		case 34:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MacFailures", wireType)
@@ -2593,15 +2501,8 @@ func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.MacFailures = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.MacFailures = uint64(dAtA[iNdEx-8])
-			m.MacFailures |= uint64(dAtA[iNdEx-7]) << 8
-			m.MacFailures |= uint64(dAtA[iNdEx-6]) << 16
-			m.MacFailures |= uint64(dAtA[iNdEx-5]) << 24
-			m.MacFailures |= uint64(dAtA[iNdEx-4]) << 32
-			m.MacFailures |= uint64(dAtA[iNdEx-3]) << 40
-			m.MacFailures |= uint64(dAtA[iNdEx-2]) << 48
-			m.MacFailures |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTlsProxyCb(dAtA[iNdEx:])
@@ -2741,15 +2642,8 @@ func (m *TlsCbStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.TlscbHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.TlscbHandle = uint64(dAtA[iNdEx-8])
-			m.TlscbHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.TlscbHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.TlscbHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.TlscbHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.TlscbHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.TlscbHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.TlscbHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTlsProxyCb(dAtA[iNdEx:])

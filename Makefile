@@ -26,16 +26,11 @@ PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 
 default:
-	$(MAKE) deps
 	$(MAKE) ws-tools
 	$(MAKE) checks
 	$(MAKE) qbuild
 	$(MAKE) unit-test
 	$(MAKE) cover
-
-deps:
-	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/kardianos/govendor/ && go install )
 
 goimports-src:
 	$(info +++ goimports $(PKG_DIRS))
@@ -67,7 +62,6 @@ qbuild:
 	go install -v $(TO_BUILD)
 
 build:
-	$(MAKE) deps
 	$(MAKE) ws-tools
 	$(MAKE) protogen
 	$(MAKE) checks
@@ -121,15 +115,14 @@ container-compile:
 
 ws-tools:
 	$(info +++ building WS tools)
-	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/protobuf/protoc-gen-go/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protoc-gen-gofast/ && go install ) && \
+	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protoc-gen-gofast && go install) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/protobuf/protoc-gen-go && go install) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/venice/utils/apigen/protoc-gen-pensando && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/GeertJohan/go.rice/rice/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/gomock/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/mockgen/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/golang.org/x/tools/imports && go install)
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/gomock && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/mockgen && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint && go install )
 	$(MAKE) local-goimports-install
 
 # Installs goimports only in non CI environments.

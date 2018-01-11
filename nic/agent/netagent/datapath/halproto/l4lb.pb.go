@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1588,7 +1590,8 @@ func (m *HealthCheck) MarshalTo(dAtA []byte) (int, error) {
 	if m.ProbePort != 0 {
 		dAtA[i] = 0xd
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.ProbePort))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.ProbePort))
+		i += 4
 	}
 	if m.ProbeProtocol != 0 {
 		dAtA[i] = 0x10
@@ -1598,12 +1601,14 @@ func (m *HealthCheck) MarshalTo(dAtA []byte) (int, error) {
 	if m.ProbeInterval != 0 {
 		dAtA[i] = 0x1d
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.ProbeInterval))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.ProbeInterval))
+		i += 4
 	}
 	if m.ProbesPerInterval != 0 {
 		dAtA[i] = 0x25
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.ProbesPerInterval))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.ProbesPerInterval))
+		i += 4
 	}
 	return i, nil
 }
@@ -1689,7 +1694,8 @@ func (m *L4LbServiceKeyHandle_ServiceHandle) MarshalTo(dAtA []byte) (int, error)
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64L4Lb(dAtA, i, uint64(m.ServiceHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ServiceHandle))
+	i += 8
 	return i, nil
 }
 func (m *L4LbServiceSpec) Marshal() (dAtA []byte, err error) {
@@ -1740,7 +1746,8 @@ func (m *L4LbServiceSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.ServiceMac != 0 {
 		dAtA[i] = 0x21
 		i++
-		i = encodeFixed64L4Lb(dAtA, i, uint64(m.ServiceMac))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ServiceMac))
+		i += 8
 	}
 	if m.SessionAffinity != 0 {
 		dAtA[i] = 0x28
@@ -1823,7 +1830,8 @@ func (m *L4LbServiceStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.ServiceHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64L4Lb(dAtA, i, uint64(m.ServiceHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ServiceHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -2012,27 +2020,32 @@ func (m *L4LbServiceStats) MarshalTo(dAtA []byte) (int, error) {
 	if m.NumActiveBackends != 0 {
 		dAtA[i] = 0xd
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumActiveBackends))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumActiveBackends))
+		i += 4
 	}
 	if m.NumActiveSessions != 0 {
 		dAtA[i] = 0x15
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumActiveSessions))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumActiveSessions))
+		i += 4
 	}
 	if m.NumSessionsLoadBalanced != 0 {
 		dAtA[i] = 0x1d
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumSessionsLoadBalanced))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumSessionsLoadBalanced))
+		i += 4
 	}
 	if m.NumSessionsFailed != 0 {
 		dAtA[i] = 0x25
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumSessionsFailed))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumSessionsFailed))
+		i += 4
 	}
 	if m.NumHealthChangeEvents != 0 {
 		dAtA[i] = 0x2d
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumHealthChangeEvents))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumHealthChangeEvents))
+		i += 4
 	}
 	return i, nil
 }
@@ -2113,7 +2126,8 @@ func (m *L4LbBackendKeyHandle_ServiceHandle) MarshalTo(dAtA []byte) (int, error)
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64L4Lb(dAtA, i, uint64(m.ServiceHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ServiceHandle))
+	i += 8
 	return i, nil
 }
 func (m *L4LbBackendSpec) Marshal() (dAtA []byte, err error) {
@@ -2217,7 +2231,8 @@ func (m *L4LbBackendStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.ServiceHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64L4Lb(dAtA, i, uint64(m.ServiceHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ServiceHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -2406,22 +2421,26 @@ func (m *L4LbBackendStats) MarshalTo(dAtA []byte) (int, error) {
 	if m.NumActiveSessions != 0 {
 		dAtA[i] = 0xd
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumActiveSessions))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumActiveSessions))
+		i += 4
 	}
 	if m.NumTotalSessions != 0 {
 		dAtA[i] = 0x15
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumTotalSessions))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumTotalSessions))
+		i += 4
 	}
 	if m.NumHealthCheckFailures != 0 {
 		dAtA[i] = 0x1d
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumHealthCheckFailures))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumHealthCheckFailures))
+		i += 4
 	}
 	if m.NumHealthProbeFailures != 0 {
 		dAtA[i] = 0x25
 		i++
-		i = encodeFixed32L4Lb(dAtA, i, uint32(m.NumHealthProbeFailures))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumHealthProbeFailures))
+		i += 4
 	}
 	return i, nil
 }
@@ -2730,24 +2749,6 @@ func (m *L4LbServiceGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64L4Lb(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32L4Lb(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintL4Lb(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -3362,11 +3363,8 @@ func (m *HealthCheck) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ProbePort = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.ProbePort = uint32(dAtA[iNdEx-4])
-			m.ProbePort |= uint32(dAtA[iNdEx-3]) << 8
-			m.ProbePort |= uint32(dAtA[iNdEx-2]) << 16
-			m.ProbePort |= uint32(dAtA[iNdEx-1]) << 24
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProbeProtocol", wireType)
@@ -3394,11 +3392,8 @@ func (m *HealthCheck) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ProbeInterval = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.ProbeInterval = uint32(dAtA[iNdEx-4])
-			m.ProbeInterval |= uint32(dAtA[iNdEx-3]) << 8
-			m.ProbeInterval |= uint32(dAtA[iNdEx-2]) << 16
-			m.ProbeInterval |= uint32(dAtA[iNdEx-1]) << 24
 		case 4:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProbesPerInterval", wireType)
@@ -3407,11 +3402,8 @@ func (m *HealthCheck) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ProbesPerInterval = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.ProbesPerInterval = uint32(dAtA[iNdEx-4])
-			m.ProbesPerInterval |= uint32(dAtA[iNdEx-3]) << 8
-			m.ProbesPerInterval |= uint32(dAtA[iNdEx-2]) << 16
-			m.ProbesPerInterval |= uint32(dAtA[iNdEx-1]) << 24
 		default:
 			iNdEx = preIndex
 			skippy, err := skipL4Lb(dAtA[iNdEx:])
@@ -3623,15 +3615,8 @@ func (m *L4LbServiceKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &L4LbServiceKeyHandle_ServiceHandle{v}
 		default:
 			iNdEx = preIndex
@@ -3777,15 +3762,8 @@ func (m *L4LbServiceSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ServiceMac = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.ServiceMac = uint64(dAtA[iNdEx-8])
-			m.ServiceMac |= uint64(dAtA[iNdEx-7]) << 8
-			m.ServiceMac |= uint64(dAtA[iNdEx-6]) << 16
-			m.ServiceMac |= uint64(dAtA[iNdEx-5]) << 24
-			m.ServiceMac |= uint64(dAtA[iNdEx-4]) << 32
-			m.ServiceMac |= uint64(dAtA[iNdEx-3]) << 40
-			m.ServiceMac |= uint64(dAtA[iNdEx-2]) << 48
-			m.ServiceMac |= uint64(dAtA[iNdEx-1]) << 56
 		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SessionAffinity", wireType)
@@ -4029,15 +4007,8 @@ func (m *L4LbServiceStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ServiceHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.ServiceHandle = uint64(dAtA[iNdEx-8])
-			m.ServiceHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.ServiceHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.ServiceHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.ServiceHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.ServiceHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.ServiceHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.ServiceHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipL4Lb(dAtA[iNdEx:])
@@ -4588,11 +4559,8 @@ func (m *L4LbServiceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumActiveBackends = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumActiveBackends = uint32(dAtA[iNdEx-4])
-			m.NumActiveBackends |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumActiveBackends |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumActiveBackends |= uint32(dAtA[iNdEx-1]) << 24
 		case 2:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumActiveSessions", wireType)
@@ -4601,11 +4569,8 @@ func (m *L4LbServiceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumActiveSessions = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumActiveSessions = uint32(dAtA[iNdEx-4])
-			m.NumActiveSessions |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumActiveSessions |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumActiveSessions |= uint32(dAtA[iNdEx-1]) << 24
 		case 3:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumSessionsLoadBalanced", wireType)
@@ -4614,11 +4579,8 @@ func (m *L4LbServiceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumSessionsLoadBalanced = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumSessionsLoadBalanced = uint32(dAtA[iNdEx-4])
-			m.NumSessionsLoadBalanced |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumSessionsLoadBalanced |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumSessionsLoadBalanced |= uint32(dAtA[iNdEx-1]) << 24
 		case 4:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumSessionsFailed", wireType)
@@ -4627,11 +4589,8 @@ func (m *L4LbServiceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumSessionsFailed = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumSessionsFailed = uint32(dAtA[iNdEx-4])
-			m.NumSessionsFailed |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumSessionsFailed |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumSessionsFailed |= uint32(dAtA[iNdEx-1]) << 24
 		case 5:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumHealthChangeEvents", wireType)
@@ -4640,11 +4599,8 @@ func (m *L4LbServiceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumHealthChangeEvents = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumHealthChangeEvents = uint32(dAtA[iNdEx-4])
-			m.NumHealthChangeEvents |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumHealthChangeEvents |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumHealthChangeEvents |= uint32(dAtA[iNdEx-1]) << 24
 		default:
 			iNdEx = preIndex
 			skippy, err := skipL4Lb(dAtA[iNdEx:])
@@ -4837,15 +4793,8 @@ func (m *L4LbBackendKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &L4LbBackendKeyHandle_ServiceHandle{v}
 		default:
 			iNdEx = preIndex
@@ -5154,15 +5103,8 @@ func (m *L4LbBackendStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ServiceHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.ServiceHandle = uint64(dAtA[iNdEx-8])
-			m.ServiceHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.ServiceHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.ServiceHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.ServiceHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.ServiceHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.ServiceHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.ServiceHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipL4Lb(dAtA[iNdEx:])
@@ -5713,11 +5655,8 @@ func (m *L4LbBackendStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumActiveSessions = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumActiveSessions = uint32(dAtA[iNdEx-4])
-			m.NumActiveSessions |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumActiveSessions |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumActiveSessions |= uint32(dAtA[iNdEx-1]) << 24
 		case 2:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumTotalSessions", wireType)
@@ -5726,11 +5665,8 @@ func (m *L4LbBackendStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumTotalSessions = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumTotalSessions = uint32(dAtA[iNdEx-4])
-			m.NumTotalSessions |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumTotalSessions |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumTotalSessions |= uint32(dAtA[iNdEx-1]) << 24
 		case 3:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumHealthCheckFailures", wireType)
@@ -5739,11 +5675,8 @@ func (m *L4LbBackendStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumHealthCheckFailures = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumHealthCheckFailures = uint32(dAtA[iNdEx-4])
-			m.NumHealthCheckFailures |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumHealthCheckFailures |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumHealthCheckFailures |= uint32(dAtA[iNdEx-1]) << 24
 		case 4:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumHealthProbeFailures", wireType)
@@ -5752,11 +5685,8 @@ func (m *L4LbBackendStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumHealthProbeFailures = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumHealthProbeFailures = uint32(dAtA[iNdEx-4])
-			m.NumHealthProbeFailures |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumHealthProbeFailures |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumHealthProbeFailures |= uint32(dAtA[iNdEx-1]) << 24
 		default:
 			iNdEx = preIndex
 			skippy, err := skipL4Lb(dAtA[iNdEx:])

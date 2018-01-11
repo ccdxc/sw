@@ -1,8 +1,8 @@
 package types
 
 import (
-	"k8s.io/api/core/v1"
 	k8sclient "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/venice/utils/kvstore"

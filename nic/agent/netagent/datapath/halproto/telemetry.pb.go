@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2012,7 +2014,8 @@ func (m *CollectorSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.L2SegHandle != 0 {
 		dAtA[i] = 0x21
 		i++
-		i = encodeFixed64Telemetry(dAtA, i, uint64(m.L2SegHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.L2SegHandle))
+		i += 8
 	}
 	if m.DestIp != nil {
 		dAtA[i] = 0x2a
@@ -3129,24 +3132,6 @@ func (m *MirrorSessionResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Telemetry(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Telemetry(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintTelemetry(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -3949,15 +3934,8 @@ func (m *CollectorSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.L2SegHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.L2SegHandle = uint64(dAtA[iNdEx-8])
-			m.L2SegHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.L2SegHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.L2SegHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.L2SegHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.L2SegHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.L2SegHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.L2SegHandle |= uint64(dAtA[iNdEx-1]) << 56
 		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DestIp", wireType)

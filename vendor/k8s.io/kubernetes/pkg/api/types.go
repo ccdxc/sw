@@ -615,7 +615,7 @@ type EmptyDirVolumeSource struct {
 	// The default is nil which means that the limit is undefined.
 	// More info: http://kubernetes.io/docs/user-guide/volumes#emptydir
 	// +optional
-	SizeLimit resource.Quantity
+	SizeLimit *resource.Quantity
 }
 
 // StorageMedium defines ways that storage can be allocated to a volume.
@@ -1008,7 +1008,7 @@ type DownwardAPIVolumeSource struct {
 type DownwardAPIVolumeFile struct {
 	// Required: Path is  the relative path name of the file to be created. Must not be absolute or contain the '..' path. Must be utf-8 encoded. The first item of the relative path must not start with '..'
 	Path string
-	// Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are supported.
+	// Required: Selects a field of the pod: only annotations, labels, name and  namespace are supported.
 	// +optional
 	FieldRef *ObjectFieldSelector
 	// Selects a resource of the container: only resources limits and requests
@@ -1373,7 +1373,7 @@ type EnvVar struct {
 // Only one of its fields may be set.
 type EnvVarSource struct {
 	// Selects a field of the pod: supports metadata.name, metadata.namespace, metadata.labels, metadata.annotations,
-	// metadata.uid, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP.
+	// spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP.
 	// +optional
 	FieldRef *ObjectFieldSelector
 	// Selects a resource of the container: only resources limits and requests
@@ -2213,20 +2213,6 @@ type PodSpec struct {
 	// file if specified. This is only valid for non-hostNetwork pods.
 	// +optional
 	HostAliases []HostAlias
-	// If specified, indicates the pod's priority. "SYSTEM" is a special keyword
-	// which indicates the highest priority. Any other name must be defined by
-	// creating a PriorityClass object with that name.
-	// If not specified, the pod priority will be default or zero if there is no
-	// default.
-	// +optional
-	PriorityClassName string
-	// The priority value. Various system components use this field to find the
-	// priority of the pod. When Priority Admission Controller is enabled, it
-	// prevents users from setting this field. The admission controller populates
-	// this field from PriorityClassName.
-	// The higher the value, the higher the priority.
-	// +optional
-	Priority *int32
 }
 
 // HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the

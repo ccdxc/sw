@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -459,7 +461,8 @@ func (m *EndpointEvent) MarshalTo(dAtA []byte) (int, error) {
 	if m.L2SegmentHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Event(dAtA, i, uint64(m.L2SegmentHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.L2SegmentHandle))
+		i += 8
 	}
 	if m.MacAddress != 0 {
 		dAtA[i] = 0x10
@@ -487,7 +490,8 @@ func (m *PortEvent) MarshalTo(dAtA []byte) (int, error) {
 	if m.PortId != 0 {
 		dAtA[i] = 0xd
 		i++
-		i = encodeFixed32Event(dAtA, i, uint32(m.PortId))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.PortId))
+		i += 4
 	}
 	if m.Status != 0 {
 		dAtA[i] = 0x10
@@ -559,24 +563,6 @@ func (m *EventResponse_PortEvent) MarshalTo(dAtA []byte) (int, error) {
 		i += n4
 	}
 	return i, nil
-}
-func encodeFixed64Event(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Event(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
 }
 func encodeVarintEvent(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
@@ -832,15 +818,8 @@ func (m *EndpointEvent) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.L2SegmentHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.L2SegmentHandle = uint64(dAtA[iNdEx-8])
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.L2SegmentHandle |= uint64(dAtA[iNdEx-1]) << 56
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MacAddress", wireType)
@@ -918,11 +897,8 @@ func (m *PortEvent) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.PortId = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.PortId = uint32(dAtA[iNdEx-4])
-			m.PortId |= uint32(dAtA[iNdEx-3]) << 8
-			m.PortId |= uint32(dAtA[iNdEx-2]) << 16
-			m.PortId |= uint32(dAtA[iNdEx-1]) << 24
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)

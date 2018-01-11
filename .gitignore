@@ -40,3 +40,10 @@ nic/third-party/google/*
 nic/third-party/isc/*
 nic/third-party/zmq/*
 nic/third-party/grpc/*
+
+# Remove binaries in vendor
+vendor/**/*.png
+vendor/**/*.bin
+vendor/**/*.db
+vendor/**/*.tff
+vendor/**/*.woff

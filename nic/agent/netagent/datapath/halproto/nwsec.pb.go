@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -4185,7 +4187,8 @@ func (m *SecurityProfileStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.ProfileHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Nwsec(dAtA, i, uint64(m.ProfileHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ProfileHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -4800,7 +4803,8 @@ func (m *SecurityGroupPolicyStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.PolicyHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Nwsec(dAtA, i, uint64(m.PolicyHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.PolicyHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -5249,7 +5253,8 @@ func (m *SecurityGroupStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.SgHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Nwsec(dAtA, i, uint64(m.SgHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SgHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -6040,7 +6045,8 @@ func (m *DoSPolicySpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.DosHandle != 0 {
 		dAtA[i] = 0x21
 		i++
-		i = encodeFixed64Nwsec(dAtA, i, uint64(m.DosHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DosHandle))
+		i += 8
 	}
 	if len(m.SgHandle) > 0 {
 		dAtA53 := make([]byte, len(m.SgHandle)*10)
@@ -6110,7 +6116,8 @@ func (m *DoSPolicyStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.DosHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Nwsec(dAtA, i, uint64(m.DosHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DosHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -6206,7 +6213,8 @@ func (m *DoSPolicyDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 	if m.DosHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Nwsec(dAtA, i, uint64(m.DosHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DosHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -6322,7 +6330,8 @@ func (m *DoSPolicyGetRequest) MarshalTo(dAtA []byte) (int, error) {
 	if m.DosHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Nwsec(dAtA, i, uint64(m.DosHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DosHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -6458,24 +6467,6 @@ func (m *DoSPolicyGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Nwsec(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Nwsec(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintNwsec(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -9447,15 +9438,8 @@ func (m *SecurityProfileStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ProfileHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.ProfileHandle = uint64(dAtA[iNdEx-8])
-			m.ProfileHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.ProfileHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.ProfileHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.ProfileHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.ProfileHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.ProfileHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.ProfileHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNwsec(dAtA[iNdEx:])
@@ -11192,15 +11176,8 @@ func (m *SecurityGroupPolicyStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.PolicyHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.PolicyHandle = uint64(dAtA[iNdEx-8])
-			m.PolicyHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.PolicyHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.PolicyHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.PolicyHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.PolicyHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.PolicyHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.PolicyHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNwsec(dAtA[iNdEx:])
@@ -12501,15 +12478,8 @@ func (m *SecurityGroupStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.SgHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.SgHandle = uint64(dAtA[iNdEx-8])
-			m.SgHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.SgHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.SgHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.SgHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.SgHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.SgHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.SgHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNwsec(dAtA[iNdEx:])
@@ -14893,15 +14863,8 @@ func (m *DoSPolicySpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DosHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DosHandle = uint64(dAtA[iNdEx-8])
-			m.DosHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.DosHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.DosHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.DosHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.DosHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.DosHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.DosHandle |= uint64(dAtA[iNdEx-1]) << 56
 		case 5:
 			if wireType == 0 {
 				var v uint64
@@ -15103,15 +15066,8 @@ func (m *DoSPolicyStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DosHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DosHandle = uint64(dAtA[iNdEx-8])
-			m.DosHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.DosHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.DosHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.DosHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.DosHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.DosHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.DosHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNwsec(dAtA[iNdEx:])
@@ -15386,15 +15342,8 @@ func (m *DoSPolicyDeleteRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DosHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DosHandle = uint64(dAtA[iNdEx-8])
-			m.DosHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.DosHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.DosHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.DosHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.DosHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.DosHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.DosHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNwsec(dAtA[iNdEx:])
@@ -15717,15 +15666,8 @@ func (m *DoSPolicyGetRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DosHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DosHandle = uint64(dAtA[iNdEx-8])
-			m.DosHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.DosHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.DosHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.DosHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.DosHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.DosHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.DosHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNwsec(dAtA[iNdEx:])

@@ -37,10 +37,10 @@ function createCollectorContainer() {
 }
 
 function createBinContainerTarBall() {
-    staticimages="registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 \
-        registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.6.6 \
-        registry.test.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.6.6 \
-        registry.test.pensando.io:5000/coreos/etcd:v3.2.1 registry.test.pensando.io:5000/elasticsearch/elasticsearch:5.4.1 \
+    staticimages="registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.7.12 \
+        registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.7.12 \
+        registry.test.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.7.12 \
+        registry.test.pensando.io:5000/coreos/etcd:v3.2.13 registry.test.pensando.io:5000/elasticsearch/elasticsearch:5.4.1 \
         registry.test.pensando.io:5000/beats/filebeat:5.4.1 registry.test.pensando.io:5000/pens-ntp:v0.2 \
         registry.test.pensando.io:5000/influxdb:1.4.2"
     for i in $staticimages

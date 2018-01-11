@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	k8sclient "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
+	clientTypes "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -551,12 +551,11 @@ func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Co
 func createDaemonSet(client k8sclient.Interface, module *types.Module) (err error) {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
-
-	dsConfig := &v1beta1.DaemonSet{
+	dsConfig := &clientTypes.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: module.Name,
 		},
-		Spec: v1beta1.DaemonSetSpec{
+		Spec: clientTypes.DaemonSetSpec{
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
@@ -589,11 +588,11 @@ func createDeployment(client k8sclient.Interface, module *types.Module) (err err
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
-	dConfig := &v1beta1.Deployment{
+	dConfig := &clientTypes.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: module.Name,
 		},
-		Spec: v1beta1.DeploymentSpec{
+		Spec: clientTypes.DeploymentSpec{
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{

@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -3401,7 +3403,8 @@ func (m *LifStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.LifHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Interface(dAtA, i, uint64(m.LifHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.LifHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -4454,7 +4457,8 @@ func (m *EnicInfo) MarshalTo(dAtA []byte) (int, error) {
 	if m.MacAddress != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Interface(dAtA, i, uint64(m.MacAddress))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MacAddress))
+		i += 8
 	}
 	if m.EncapVlanId != 0 {
 		dAtA[i] = 0x18
@@ -5005,7 +5009,8 @@ func (m *InterfaceStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.IfHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Interface(dAtA, i, uint64(m.IfHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.IfHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -5212,22 +5217,26 @@ func (m *InterfaceStats) MarshalTo(dAtA []byte) (int, error) {
 	if m.NumTxPackets != 0 {
 		dAtA[i] = 0xd
 		i++
-		i = encodeFixed32Interface(dAtA, i, uint32(m.NumTxPackets))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumTxPackets))
+		i += 4
 	}
 	if m.NumTxBytes != 0 {
 		dAtA[i] = 0x15
 		i++
-		i = encodeFixed32Interface(dAtA, i, uint32(m.NumTxBytes))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumTxBytes))
+		i += 4
 	}
 	if m.NumRxPackets != 0 {
 		dAtA[i] = 0x1d
 		i++
-		i = encodeFixed32Interface(dAtA, i, uint32(m.NumRxPackets))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumRxPackets))
+		i += 4
 	}
 	if m.NumRxBytes != 0 {
 		dAtA[i] = 0x25
 		i++
-		i = encodeFixed32Interface(dAtA, i, uint32(m.NumRxBytes))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.NumRxBytes))
+		i += 4
 	}
 	return i, nil
 }
@@ -5519,24 +5528,6 @@ func (m *InterfaceL2SegmentResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Interface(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Interface(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintInterface(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -7501,15 +7492,8 @@ func (m *LifStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.LifHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.LifHandle = uint64(dAtA[iNdEx-8])
-			m.LifHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.LifHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.LifHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.LifHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.LifHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.LifHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.LifHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipInterface(dAtA[iNdEx:])
@@ -10760,15 +10744,8 @@ func (m *EnicInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.MacAddress = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.MacAddress = uint64(dAtA[iNdEx-8])
-			m.MacAddress |= uint64(dAtA[iNdEx-7]) << 8
-			m.MacAddress |= uint64(dAtA[iNdEx-6]) << 16
-			m.MacAddress |= uint64(dAtA[iNdEx-5]) << 24
-			m.MacAddress |= uint64(dAtA[iNdEx-4]) << 32
-			m.MacAddress |= uint64(dAtA[iNdEx-3]) << 40
-			m.MacAddress |= uint64(dAtA[iNdEx-2]) << 48
-			m.MacAddress |= uint64(dAtA[iNdEx-1]) << 56
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EncapVlanId", wireType)
@@ -12285,15 +12262,8 @@ func (m *InterfaceStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.IfHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.IfHandle = uint64(dAtA[iNdEx-8])
-			m.IfHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.IfHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.IfHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.IfHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.IfHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.IfHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.IfHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipInterface(dAtA[iNdEx:])
@@ -12882,11 +12852,8 @@ func (m *InterfaceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumTxPackets = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumTxPackets = uint32(dAtA[iNdEx-4])
-			m.NumTxPackets |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumTxPackets |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumTxPackets |= uint32(dAtA[iNdEx-1]) << 24
 		case 2:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumTxBytes", wireType)
@@ -12895,11 +12862,8 @@ func (m *InterfaceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumTxBytes = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumTxBytes = uint32(dAtA[iNdEx-4])
-			m.NumTxBytes |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumTxBytes |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumTxBytes |= uint32(dAtA[iNdEx-1]) << 24
 		case 3:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumRxPackets", wireType)
@@ -12908,11 +12872,8 @@ func (m *InterfaceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumRxPackets = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumRxPackets = uint32(dAtA[iNdEx-4])
-			m.NumRxPackets |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumRxPackets |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumRxPackets |= uint32(dAtA[iNdEx-1]) << 24
 		case 4:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NumRxBytes", wireType)
@@ -12921,11 +12882,8 @@ func (m *InterfaceStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NumRxBytes = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.NumRxBytes = uint32(dAtA[iNdEx-4])
-			m.NumRxBytes |= uint32(dAtA[iNdEx-3]) << 8
-			m.NumRxBytes |= uint32(dAtA[iNdEx-2]) << 16
-			m.NumRxBytes |= uint32(dAtA[iNdEx-1]) << 24
 		default:
 			iNdEx = preIndex
 			skippy, err := skipInterface(dAtA[iNdEx:])

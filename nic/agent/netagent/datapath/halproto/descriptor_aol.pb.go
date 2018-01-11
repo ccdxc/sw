@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -294,7 +296,8 @@ func (m *DescrAolRequest) MarshalTo(dAtA []byte) (int, error) {
 	if m.DescrAolHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64DescriptorAol(dAtA, i, uint64(m.DescrAolHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DescrAolHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -362,57 +365,68 @@ func (m *DescrAolSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.DescrAolHandle != 0 {
 		dAtA[i] = 0x19
 		i++
-		i = encodeFixed64DescriptorAol(dAtA, i, uint64(m.DescrAolHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DescrAolHandle))
+		i += 8
 	}
 	if m.Address1 != 0 {
 		dAtA[i] = 0x21
 		i++
-		i = encodeFixed64DescriptorAol(dAtA, i, uint64(m.Address1))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Address1))
+		i += 8
 	}
 	if m.Offset1 != 0 {
 		dAtA[i] = 0x2d
 		i++
-		i = encodeFixed32DescriptorAol(dAtA, i, uint32(m.Offset1))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Offset1))
+		i += 4
 	}
 	if m.Length1 != 0 {
 		dAtA[i] = 0x35
 		i++
-		i = encodeFixed32DescriptorAol(dAtA, i, uint32(m.Length1))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Length1))
+		i += 4
 	}
 	if m.Address2 != 0 {
 		dAtA[i] = 0x39
 		i++
-		i = encodeFixed64DescriptorAol(dAtA, i, uint64(m.Address2))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Address2))
+		i += 8
 	}
 	if m.Offset2 != 0 {
 		dAtA[i] = 0x45
 		i++
-		i = encodeFixed32DescriptorAol(dAtA, i, uint32(m.Offset2))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Offset2))
+		i += 4
 	}
 	if m.Length2 != 0 {
 		dAtA[i] = 0x4d
 		i++
-		i = encodeFixed32DescriptorAol(dAtA, i, uint32(m.Length2))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Length2))
+		i += 4
 	}
 	if m.Address3 != 0 {
 		dAtA[i] = 0x51
 		i++
-		i = encodeFixed64DescriptorAol(dAtA, i, uint64(m.Address3))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Address3))
+		i += 8
 	}
 	if m.Offset3 != 0 {
 		dAtA[i] = 0x5d
 		i++
-		i = encodeFixed32DescriptorAol(dAtA, i, uint32(m.Offset3))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Offset3))
+		i += 4
 	}
 	if m.Length3 != 0 {
 		dAtA[i] = 0x65
 		i++
-		i = encodeFixed32DescriptorAol(dAtA, i, uint32(m.Length3))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Length3))
+		i += 4
 	}
 	if m.NextDescrAolHandle != 0 {
 		dAtA[i] = 0x69
 		i++
-		i = encodeFixed64DescriptorAol(dAtA, i, uint64(m.NextDescrAolHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.NextDescrAolHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -447,24 +461,6 @@ func (m *DescrAolResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64DescriptorAol(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32DescriptorAol(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintDescriptorAol(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -640,15 +636,8 @@ func (m *DescrAolRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DescrAolHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DescrAolHandle = uint64(dAtA[iNdEx-8])
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDescriptorAol(dAtA[iNdEx:])
@@ -840,15 +829,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DescrAolHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DescrAolHandle = uint64(dAtA[iNdEx-8])
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.DescrAolHandle |= uint64(dAtA[iNdEx-1]) << 56
 		case 4:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Address1", wireType)
@@ -857,15 +839,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Address1 = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Address1 = uint64(dAtA[iNdEx-8])
-			m.Address1 |= uint64(dAtA[iNdEx-7]) << 8
-			m.Address1 |= uint64(dAtA[iNdEx-6]) << 16
-			m.Address1 |= uint64(dAtA[iNdEx-5]) << 24
-			m.Address1 |= uint64(dAtA[iNdEx-4]) << 32
-			m.Address1 |= uint64(dAtA[iNdEx-3]) << 40
-			m.Address1 |= uint64(dAtA[iNdEx-2]) << 48
-			m.Address1 |= uint64(dAtA[iNdEx-1]) << 56
 		case 5:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Offset1", wireType)
@@ -874,11 +849,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Offset1 = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Offset1 = uint32(dAtA[iNdEx-4])
-			m.Offset1 |= uint32(dAtA[iNdEx-3]) << 8
-			m.Offset1 |= uint32(dAtA[iNdEx-2]) << 16
-			m.Offset1 |= uint32(dAtA[iNdEx-1]) << 24
 		case 6:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Length1", wireType)
@@ -887,11 +859,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Length1 = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Length1 = uint32(dAtA[iNdEx-4])
-			m.Length1 |= uint32(dAtA[iNdEx-3]) << 8
-			m.Length1 |= uint32(dAtA[iNdEx-2]) << 16
-			m.Length1 |= uint32(dAtA[iNdEx-1]) << 24
 		case 7:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Address2", wireType)
@@ -900,15 +869,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Address2 = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Address2 = uint64(dAtA[iNdEx-8])
-			m.Address2 |= uint64(dAtA[iNdEx-7]) << 8
-			m.Address2 |= uint64(dAtA[iNdEx-6]) << 16
-			m.Address2 |= uint64(dAtA[iNdEx-5]) << 24
-			m.Address2 |= uint64(dAtA[iNdEx-4]) << 32
-			m.Address2 |= uint64(dAtA[iNdEx-3]) << 40
-			m.Address2 |= uint64(dAtA[iNdEx-2]) << 48
-			m.Address2 |= uint64(dAtA[iNdEx-1]) << 56
 		case 8:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Offset2", wireType)
@@ -917,11 +879,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Offset2 = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Offset2 = uint32(dAtA[iNdEx-4])
-			m.Offset2 |= uint32(dAtA[iNdEx-3]) << 8
-			m.Offset2 |= uint32(dAtA[iNdEx-2]) << 16
-			m.Offset2 |= uint32(dAtA[iNdEx-1]) << 24
 		case 9:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Length2", wireType)
@@ -930,11 +889,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Length2 = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Length2 = uint32(dAtA[iNdEx-4])
-			m.Length2 |= uint32(dAtA[iNdEx-3]) << 8
-			m.Length2 |= uint32(dAtA[iNdEx-2]) << 16
-			m.Length2 |= uint32(dAtA[iNdEx-1]) << 24
 		case 10:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Address3", wireType)
@@ -943,15 +899,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Address3 = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Address3 = uint64(dAtA[iNdEx-8])
-			m.Address3 |= uint64(dAtA[iNdEx-7]) << 8
-			m.Address3 |= uint64(dAtA[iNdEx-6]) << 16
-			m.Address3 |= uint64(dAtA[iNdEx-5]) << 24
-			m.Address3 |= uint64(dAtA[iNdEx-4]) << 32
-			m.Address3 |= uint64(dAtA[iNdEx-3]) << 40
-			m.Address3 |= uint64(dAtA[iNdEx-2]) << 48
-			m.Address3 |= uint64(dAtA[iNdEx-1]) << 56
 		case 11:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Offset3", wireType)
@@ -960,11 +909,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Offset3 = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Offset3 = uint32(dAtA[iNdEx-4])
-			m.Offset3 |= uint32(dAtA[iNdEx-3]) << 8
-			m.Offset3 |= uint32(dAtA[iNdEx-2]) << 16
-			m.Offset3 |= uint32(dAtA[iNdEx-1]) << 24
 		case 12:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Length3", wireType)
@@ -973,11 +919,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Length3 = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Length3 = uint32(dAtA[iNdEx-4])
-			m.Length3 |= uint32(dAtA[iNdEx-3]) << 8
-			m.Length3 |= uint32(dAtA[iNdEx-2]) << 16
-			m.Length3 |= uint32(dAtA[iNdEx-1]) << 24
 		case 13:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NextDescrAolHandle", wireType)
@@ -986,15 +929,8 @@ func (m *DescrAolSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NextDescrAolHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.NextDescrAolHandle = uint64(dAtA[iNdEx-8])
-			m.NextDescrAolHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.NextDescrAolHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.NextDescrAolHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.NextDescrAolHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.NextDescrAolHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.NextDescrAolHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.NextDescrAolHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDescriptorAol(dAtA[iNdEx:])

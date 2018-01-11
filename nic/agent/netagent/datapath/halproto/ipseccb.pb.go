@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -835,7 +837,8 @@ func (m *IpsecCbKeyHandle_IpseccbHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Ipseccb(dAtA, i, uint64(m.IpseccbHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.IpseccbHandle))
+	i += 8
 	return i, nil
 }
 func (m *IpsecCbSpec) Marshal() (dAtA []byte, err error) {
@@ -911,7 +914,8 @@ func (m *IpsecCbSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.Iv != 0 {
 		dAtA[i] = 0x59
 		i++
-		i = encodeFixed64Ipseccb(dAtA, i, uint64(m.Iv))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Iv))
+		i += 8
 	}
 	if m.IvSalt != 0 {
 		dAtA[i] = 0x60
@@ -945,7 +949,8 @@ func (m *IpsecCbSpec) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64Ipseccb(dAtA, i, uint64(m.SeqNoBmp))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SeqNoBmp))
+		i += 8
 	}
 	if m.Sip6 != nil {
 		dAtA[i] = 0x92
@@ -1085,7 +1090,8 @@ func (m *IpsecCbStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.IpseccbHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Ipseccb(dAtA, i, uint64(m.IpseccbHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.IpseccbHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -1425,24 +1431,6 @@ func (m *IpsecCbGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Ipseccb(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Ipseccb(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintIpseccb(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1786,15 +1774,8 @@ func (m *IpsecCbKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &IpsecCbKeyHandle_IpseccbHandle{v}
 		default:
 			iNdEx = preIndex
@@ -2058,15 +2039,8 @@ func (m *IpsecCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Iv = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Iv = uint64(dAtA[iNdEx-8])
-			m.Iv |= uint64(dAtA[iNdEx-7]) << 8
-			m.Iv |= uint64(dAtA[iNdEx-6]) << 16
-			m.Iv |= uint64(dAtA[iNdEx-5]) << 24
-			m.Iv |= uint64(dAtA[iNdEx-4]) << 32
-			m.Iv |= uint64(dAtA[iNdEx-3]) << 40
-			m.Iv |= uint64(dAtA[iNdEx-2]) << 48
-			m.Iv |= uint64(dAtA[iNdEx-1]) << 56
 		case 12:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IvSalt", wireType)
@@ -2170,15 +2144,8 @@ func (m *IpsecCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.SeqNoBmp = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.SeqNoBmp = uint64(dAtA[iNdEx-8])
-			m.SeqNoBmp |= uint64(dAtA[iNdEx-7]) << 8
-			m.SeqNoBmp |= uint64(dAtA[iNdEx-6]) << 16
-			m.SeqNoBmp |= uint64(dAtA[iNdEx-5]) << 24
-			m.SeqNoBmp |= uint64(dAtA[iNdEx-4]) << 32
-			m.SeqNoBmp |= uint64(dAtA[iNdEx-3]) << 40
-			m.SeqNoBmp |= uint64(dAtA[iNdEx-2]) << 48
-			m.SeqNoBmp |= uint64(dAtA[iNdEx-1]) << 56
 		case 18:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sip6", wireType)
@@ -2555,15 +2522,8 @@ func (m *IpsecCbStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.IpseccbHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.IpseccbHandle = uint64(dAtA[iNdEx-8])
-			m.IpseccbHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.IpseccbHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.IpseccbHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.IpseccbHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.IpseccbHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.IpseccbHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.IpseccbHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipIpseccb(dAtA[iNdEx:])

@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1019,7 +1021,8 @@ func (m *TcpCbKeyHandle_TcpcbHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64TcpProxyCb(dAtA, i, uint64(m.TcpcbHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TcpcbHandle))
+	i += 8
 	return i, nil
 }
 func (m *TcpCbSpec) Marshal() (dAtA []byte, err error) {
@@ -1075,7 +1078,8 @@ func (m *TcpCbSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.SerqBase != 0 {
 		dAtA[i] = 0x39
 		i++
-		i = encodeFixed64TcpProxyCb(dAtA, i, uint64(m.SerqBase))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SerqBase))
+		i += 8
 	}
 	if m.DebugDol != 0 {
 		dAtA[i] = 0x40
@@ -1085,7 +1089,8 @@ func (m *TcpCbSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.SesqBase != 0 {
 		dAtA[i] = 0x49
 		i++
-		i = encodeFixed64TcpProxyCb(dAtA, i, uint64(m.SesqBase))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SesqBase))
+		i += 8
 	}
 	if m.SesqPi != 0 {
 		dAtA[i] = 0x50
@@ -1151,7 +1156,8 @@ func (m *TcpCbSpec) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		dAtA[i] = 0x1
 		i++
-		i = encodeFixed64TcpProxyCb(dAtA, i, uint64(m.AsesqBase))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AsesqBase))
+		i += 8
 	}
 	if m.AsesqPi != 0 {
 		dAtA[i] = 0xa8
@@ -1293,7 +1299,8 @@ func (m *TcpCbStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.TcpcbHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64TcpProxyCb(dAtA, i, uint64(m.TcpcbHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TcpcbHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -1744,24 +1751,6 @@ func (m *TcpCbGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64TcpProxyCb(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32TcpProxyCb(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintTcpProxyCb(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -2173,15 +2162,8 @@ func (m *TcpCbKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &TcpCbKeyHandle_TcpcbHandle{v}
 		default:
 			iNdEx = preIndex
@@ -2369,15 +2351,8 @@ func (m *TcpCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.SerqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.SerqBase = uint64(dAtA[iNdEx-8])
-			m.SerqBase |= uint64(dAtA[iNdEx-7]) << 8
-			m.SerqBase |= uint64(dAtA[iNdEx-6]) << 16
-			m.SerqBase |= uint64(dAtA[iNdEx-5]) << 24
-			m.SerqBase |= uint64(dAtA[iNdEx-4]) << 32
-			m.SerqBase |= uint64(dAtA[iNdEx-3]) << 40
-			m.SerqBase |= uint64(dAtA[iNdEx-2]) << 48
-			m.SerqBase |= uint64(dAtA[iNdEx-1]) << 56
 		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DebugDol", wireType)
@@ -2405,15 +2380,8 @@ func (m *TcpCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.SesqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.SesqBase = uint64(dAtA[iNdEx-8])
-			m.SesqBase |= uint64(dAtA[iNdEx-7]) << 8
-			m.SesqBase |= uint64(dAtA[iNdEx-6]) << 16
-			m.SesqBase |= uint64(dAtA[iNdEx-5]) << 24
-			m.SesqBase |= uint64(dAtA[iNdEx-4]) << 32
-			m.SesqBase |= uint64(dAtA[iNdEx-3]) << 40
-			m.SesqBase |= uint64(dAtA[iNdEx-2]) << 48
-			m.SesqBase |= uint64(dAtA[iNdEx-1]) << 56
 		case 10:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SesqPi", wireType)
@@ -2624,15 +2592,8 @@ func (m *TcpCbSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.AsesqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.AsesqBase = uint64(dAtA[iNdEx-8])
-			m.AsesqBase |= uint64(dAtA[iNdEx-7]) << 8
-			m.AsesqBase |= uint64(dAtA[iNdEx-6]) << 16
-			m.AsesqBase |= uint64(dAtA[iNdEx-5]) << 24
-			m.AsesqBase |= uint64(dAtA[iNdEx-4]) << 32
-			m.AsesqBase |= uint64(dAtA[iNdEx-3]) << 40
-			m.AsesqBase |= uint64(dAtA[iNdEx-2]) << 48
-			m.AsesqBase |= uint64(dAtA[iNdEx-1]) << 56
 		case 21:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AsesqPi", wireType)
@@ -3001,15 +2962,8 @@ func (m *TcpCbStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.TcpcbHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.TcpcbHandle = uint64(dAtA[iNdEx-8])
-			m.TcpcbHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.TcpcbHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.TcpcbHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.TcpcbHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.TcpcbHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.TcpcbHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.TcpcbHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTcpProxyCb(dAtA[iNdEx:])

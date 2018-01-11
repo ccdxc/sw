@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1878,12 +1880,14 @@ func (m *FlowKeyL2) MarshalTo(dAtA []byte) (int, error) {
 	if m.Smac != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.Smac))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Smac))
+		i += 8
 	}
 	if m.Dmac != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.Dmac))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Dmac))
+		i += 8
 	}
 	if m.L2SegmentId != 0 {
 		dAtA[i] = 0x18
@@ -2000,12 +2004,14 @@ func (m *FlowKeyV4) MarshalTo(dAtA []byte) (int, error) {
 	if m.Sip != 0 {
 		dAtA[i] = 0xd
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.Sip))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Sip))
+		i += 4
 	}
 	if m.Dip != 0 {
 		dAtA[i] = 0x15
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.Dip))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Dip))
+		i += 4
 	}
 	if m.IpProto != 0 {
 		dAtA[i] = 0x18
@@ -2281,7 +2287,8 @@ func (m *FlowInfo) MarshalTo(dAtA []byte) (int, error) {
 	if m.NatDmac != 0 {
 		dAtA[i] = 0x39
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.NatDmac))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.NatDmac))
+		i += 8
 	}
 	if m.TcpState != 0 {
 		dAtA[i] = 0x40
@@ -2343,32 +2350,38 @@ func (m *ConnTrackInfo) MarshalTo(dAtA []byte) (int, error) {
 	if m.FlowCreateTs != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.FlowCreateTs))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.FlowCreateTs))
+		i += 8
 	}
 	if m.FlowBytes != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.FlowBytes))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.FlowBytes))
+		i += 8
 	}
 	if m.FlowPackets != 0 {
 		dAtA[i] = 0x1d
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.FlowPackets))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.FlowPackets))
+		i += 4
 	}
 	if m.ExceptionBits != 0 {
 		dAtA[i] = 0x25
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.ExceptionBits))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.ExceptionBits))
+		i += 4
 	}
 	if m.TcpSeqNum != 0 {
 		dAtA[i] = 0x2d
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.TcpSeqNum))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.TcpSeqNum))
+		i += 4
 	}
 	if m.TcpAckNum != 0 {
 		dAtA[i] = 0x35
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.TcpAckNum))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.TcpAckNum))
+		i += 4
 	}
 	if m.TcpWinSz != 0 {
 		dAtA[i] = 0x38
@@ -2492,7 +2505,8 @@ func (m *SessionSpec) MarshalTo(dAtA []byte) (int, error) {
 	if m.SessionId != 0 {
 		dAtA[i] = 0x15
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.SessionId))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.SessionId))
+		i += 4
 	}
 	if m.ConnTrackEn {
 		dAtA[i] = 0x18
@@ -2600,7 +2614,8 @@ func (m *FlowStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.FlowHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.FlowHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.FlowHandle))
+		i += 8
 	}
 	if m.ConnTrackInfo != nil {
 		dAtA[i] = 0x12
@@ -2727,7 +2742,8 @@ func (m *SessionStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.SessionHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.SessionHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SessionHandle))
+		i += 8
 	}
 	if m.IflowStatus != nil {
 		dAtA[i] = 0x12
@@ -2907,7 +2923,8 @@ func (m *SessionDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 	if m.SessionHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.SessionHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SessionHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -3005,7 +3022,8 @@ func (m *SessionGetRequest) MarshalTo(dAtA []byte) (int, error) {
 	if m.SessionHandle != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.SessionHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SessionHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -3058,17 +3076,20 @@ func (m *FlowStats) MarshalTo(dAtA []byte) (int, error) {
 	if m.FlowPackets != 0 {
 		dAtA[i] = 0xd
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.FlowPackets))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.FlowPackets))
+		i += 4
 	}
 	if m.FlowBytes != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Session(dAtA, i, uint64(m.FlowBytes))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.FlowBytes))
+		i += 8
 	}
 	if m.RexmitPackets != 0 {
 		dAtA[i] = 0x1d
 		i++
-		i = encodeFixed32Session(dAtA, i, uint32(m.RexmitPackets))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.RexmitPackets))
+		i += 4
 	}
 	return i, nil
 }
@@ -3191,24 +3212,6 @@ func (m *SessionGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Session(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Session(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintSession(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -3863,15 +3866,8 @@ func (m *FlowKeyL2) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Smac = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Smac = uint64(dAtA[iNdEx-8])
-			m.Smac |= uint64(dAtA[iNdEx-7]) << 8
-			m.Smac |= uint64(dAtA[iNdEx-6]) << 16
-			m.Smac |= uint64(dAtA[iNdEx-5]) << 24
-			m.Smac |= uint64(dAtA[iNdEx-4]) << 32
-			m.Smac |= uint64(dAtA[iNdEx-3]) << 40
-			m.Smac |= uint64(dAtA[iNdEx-2]) << 48
-			m.Smac |= uint64(dAtA[iNdEx-1]) << 56
 		case 2:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Dmac", wireType)
@@ -3880,15 +3876,8 @@ func (m *FlowKeyL2) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Dmac = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Dmac = uint64(dAtA[iNdEx-8])
-			m.Dmac |= uint64(dAtA[iNdEx-7]) << 8
-			m.Dmac |= uint64(dAtA[iNdEx-6]) << 16
-			m.Dmac |= uint64(dAtA[iNdEx-5]) << 24
-			m.Dmac |= uint64(dAtA[iNdEx-4]) << 32
-			m.Dmac |= uint64(dAtA[iNdEx-3]) << 40
-			m.Dmac |= uint64(dAtA[iNdEx-2]) << 48
-			m.Dmac |= uint64(dAtA[iNdEx-1]) << 56
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field L2SegmentId", wireType)
@@ -4249,11 +4238,8 @@ func (m *FlowKeyV4) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Sip = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Sip = uint32(dAtA[iNdEx-4])
-			m.Sip |= uint32(dAtA[iNdEx-3]) << 8
-			m.Sip |= uint32(dAtA[iNdEx-2]) << 16
-			m.Sip |= uint32(dAtA[iNdEx-1]) << 24
 		case 2:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Dip", wireType)
@@ -4262,11 +4248,8 @@ func (m *FlowKeyV4) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.Dip = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Dip = uint32(dAtA[iNdEx-4])
-			m.Dip |= uint32(dAtA[iNdEx-3]) << 8
-			m.Dip |= uint32(dAtA[iNdEx-2]) << 16
-			m.Dip |= uint32(dAtA[iNdEx-1]) << 24
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IpProto", wireType)
@@ -4959,15 +4942,8 @@ func (m *FlowInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.NatDmac = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.NatDmac = uint64(dAtA[iNdEx-8])
-			m.NatDmac |= uint64(dAtA[iNdEx-7]) << 8
-			m.NatDmac |= uint64(dAtA[iNdEx-6]) << 16
-			m.NatDmac |= uint64(dAtA[iNdEx-5]) << 24
-			m.NatDmac |= uint64(dAtA[iNdEx-4]) << 32
-			m.NatDmac |= uint64(dAtA[iNdEx-3]) << 40
-			m.NatDmac |= uint64(dAtA[iNdEx-2]) << 48
-			m.NatDmac |= uint64(dAtA[iNdEx-1]) << 56
 		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TcpState", wireType)
@@ -5140,15 +5116,8 @@ func (m *ConnTrackInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.FlowCreateTs = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.FlowCreateTs = uint64(dAtA[iNdEx-8])
-			m.FlowCreateTs |= uint64(dAtA[iNdEx-7]) << 8
-			m.FlowCreateTs |= uint64(dAtA[iNdEx-6]) << 16
-			m.FlowCreateTs |= uint64(dAtA[iNdEx-5]) << 24
-			m.FlowCreateTs |= uint64(dAtA[iNdEx-4]) << 32
-			m.FlowCreateTs |= uint64(dAtA[iNdEx-3]) << 40
-			m.FlowCreateTs |= uint64(dAtA[iNdEx-2]) << 48
-			m.FlowCreateTs |= uint64(dAtA[iNdEx-1]) << 56
 		case 2:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FlowBytes", wireType)
@@ -5157,15 +5126,8 @@ func (m *ConnTrackInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.FlowBytes = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.FlowBytes = uint64(dAtA[iNdEx-8])
-			m.FlowBytes |= uint64(dAtA[iNdEx-7]) << 8
-			m.FlowBytes |= uint64(dAtA[iNdEx-6]) << 16
-			m.FlowBytes |= uint64(dAtA[iNdEx-5]) << 24
-			m.FlowBytes |= uint64(dAtA[iNdEx-4]) << 32
-			m.FlowBytes |= uint64(dAtA[iNdEx-3]) << 40
-			m.FlowBytes |= uint64(dAtA[iNdEx-2]) << 48
-			m.FlowBytes |= uint64(dAtA[iNdEx-1]) << 56
 		case 3:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FlowPackets", wireType)
@@ -5174,11 +5136,8 @@ func (m *ConnTrackInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.FlowPackets = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.FlowPackets = uint32(dAtA[iNdEx-4])
-			m.FlowPackets |= uint32(dAtA[iNdEx-3]) << 8
-			m.FlowPackets |= uint32(dAtA[iNdEx-2]) << 16
-			m.FlowPackets |= uint32(dAtA[iNdEx-1]) << 24
 		case 4:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExceptionBits", wireType)
@@ -5187,11 +5146,8 @@ func (m *ConnTrackInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ExceptionBits = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.ExceptionBits = uint32(dAtA[iNdEx-4])
-			m.ExceptionBits |= uint32(dAtA[iNdEx-3]) << 8
-			m.ExceptionBits |= uint32(dAtA[iNdEx-2]) << 16
-			m.ExceptionBits |= uint32(dAtA[iNdEx-1]) << 24
 		case 5:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TcpSeqNum", wireType)
@@ -5200,11 +5156,8 @@ func (m *ConnTrackInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.TcpSeqNum = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.TcpSeqNum = uint32(dAtA[iNdEx-4])
-			m.TcpSeqNum |= uint32(dAtA[iNdEx-3]) << 8
-			m.TcpSeqNum |= uint32(dAtA[iNdEx-2]) << 16
-			m.TcpSeqNum |= uint32(dAtA[iNdEx-1]) << 24
 		case 6:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TcpAckNum", wireType)
@@ -5213,11 +5166,8 @@ func (m *ConnTrackInfo) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.TcpAckNum = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.TcpAckNum = uint32(dAtA[iNdEx-4])
-			m.TcpAckNum |= uint32(dAtA[iNdEx-3]) << 8
-			m.TcpAckNum |= uint32(dAtA[iNdEx-2]) << 16
-			m.TcpAckNum |= uint32(dAtA[iNdEx-1]) << 24
 		case 7:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TcpWinSz", wireType)
@@ -5598,11 +5548,8 @@ func (m *SessionSpec) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.SessionId = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.SessionId = uint32(dAtA[iNdEx-4])
-			m.SessionId |= uint32(dAtA[iNdEx-3]) << 8
-			m.SessionId |= uint32(dAtA[iNdEx-2]) << 16
-			m.SessionId |= uint32(dAtA[iNdEx-1]) << 24
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ConnTrackEn", wireType)
@@ -5889,15 +5836,8 @@ func (m *FlowStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.FlowHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.FlowHandle = uint64(dAtA[iNdEx-8])
-			m.FlowHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.FlowHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.FlowHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.FlowHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.FlowHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.FlowHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.FlowHandle |= uint64(dAtA[iNdEx-1]) << 56
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ConnTrackInfo", wireType)
@@ -6273,15 +6213,8 @@ func (m *SessionStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.SessionHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.SessionHandle = uint64(dAtA[iNdEx-8])
-			m.SessionHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.SessionHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.SessionHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.SessionHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.SessionHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.SessionHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.SessionHandle |= uint64(dAtA[iNdEx-1]) << 56
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IflowStatus", wireType)
@@ -6775,15 +6708,8 @@ func (m *SessionDeleteRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.SessionHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.SessionHandle = uint64(dAtA[iNdEx-8])
-			m.SessionHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.SessionHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.SessionHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.SessionHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.SessionHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.SessionHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.SessionHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSession(dAtA[iNdEx:])
@@ -7068,15 +6994,8 @@ func (m *SessionGetRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.SessionHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.SessionHandle = uint64(dAtA[iNdEx-8])
-			m.SessionHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.SessionHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.SessionHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.SessionHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.SessionHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.SessionHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.SessionHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSession(dAtA[iNdEx:])
@@ -7216,11 +7135,8 @@ func (m *FlowStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.FlowPackets = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.FlowPackets = uint32(dAtA[iNdEx-4])
-			m.FlowPackets |= uint32(dAtA[iNdEx-3]) << 8
-			m.FlowPackets |= uint32(dAtA[iNdEx-2]) << 16
-			m.FlowPackets |= uint32(dAtA[iNdEx-1]) << 24
 		case 2:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FlowBytes", wireType)
@@ -7229,15 +7145,8 @@ func (m *FlowStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.FlowBytes = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.FlowBytes = uint64(dAtA[iNdEx-8])
-			m.FlowBytes |= uint64(dAtA[iNdEx-7]) << 8
-			m.FlowBytes |= uint64(dAtA[iNdEx-6]) << 16
-			m.FlowBytes |= uint64(dAtA[iNdEx-5]) << 24
-			m.FlowBytes |= uint64(dAtA[iNdEx-4]) << 32
-			m.FlowBytes |= uint64(dAtA[iNdEx-3]) << 40
-			m.FlowBytes |= uint64(dAtA[iNdEx-2]) << 48
-			m.FlowBytes |= uint64(dAtA[iNdEx-1]) << 56
 		case 3:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RexmitPackets", wireType)
@@ -7246,11 +7155,8 @@ func (m *FlowStats) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.RexmitPackets = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.RexmitPackets = uint32(dAtA[iNdEx-4])
-			m.RexmitPackets |= uint32(dAtA[iNdEx-3]) << 8
-			m.RexmitPackets |= uint32(dAtA[iNdEx-2]) << 16
-			m.RexmitPackets |= uint32(dAtA[iNdEx-1]) << 24
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSession(dAtA[iNdEx:])

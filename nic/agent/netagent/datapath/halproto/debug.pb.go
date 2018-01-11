@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1015,7 +1017,8 @@ func (m *DebugKeyHandle_TableId) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0xd
 	i++
-	i = encodeFixed32Debug(dAtA, i, uint32(m.TableId))
+	encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.TableId))
+	i += 4
 	return i, nil
 }
 func (m *DebugKeyHandle_TableName) MarshalTo(dAtA []byte) (int, error) {
@@ -1030,7 +1033,8 @@ func (m *DebugKeyHandle_RegId) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x1d
 	i++
-	i = encodeFixed32Debug(dAtA, i, uint32(m.RegId))
+	encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.RegId))
+	i += 4
 	return i, nil
 }
 func (m *DebugKeyHandle_RegName) MarshalTo(dAtA []byte) (int, error) {
@@ -1767,24 +1771,6 @@ func (m *SlabGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Debug(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Debug(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintDebug(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -2186,11 +2172,8 @@ func (m *DebugKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			v = uint32(dAtA[iNdEx-4])
-			v |= uint32(dAtA[iNdEx-3]) << 8
-			v |= uint32(dAtA[iNdEx-2]) << 16
-			v |= uint32(dAtA[iNdEx-1]) << 24
 			m.KeyOrHandle = &DebugKeyHandle_TableId{v}
 		case 2:
 			if wireType != 2 {
@@ -2229,11 +2212,8 @@ func (m *DebugKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 4) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			v = uint32(dAtA[iNdEx-4])
-			v |= uint32(dAtA[iNdEx-3]) << 8
-			v |= uint32(dAtA[iNdEx-2]) << 16
-			v |= uint32(dAtA[iNdEx-1]) << 24
 			m.KeyOrHandle = &DebugKeyHandle_RegId{v}
 		case 4:
 			if wireType != 2 {

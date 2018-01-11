@@ -25,7 +25,7 @@ import (
 	"github.com/pensando/sw/venice/utils/trace"
 
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
-	"github.com/openzipkin/zipkin-go-opentracing/_thrift/gen-go/zipkincore"
+	"github.com/openzipkin/zipkin-go-opentracing/thrift/gen-go/zipkincore"
 )
 
 // newRPCServerClient create an RPC server and client

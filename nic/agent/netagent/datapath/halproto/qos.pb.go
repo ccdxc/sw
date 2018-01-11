@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1580,7 +1582,8 @@ func (m *QosClassKeyHandle_QosClassHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Qos(dAtA, i, uint64(m.QosClassHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.QosClassHandle))
+	i += 8
 	return i, nil
 }
 func (m *QosBuffer) Marshal() (dAtA []byte, err error) {
@@ -1984,7 +1987,8 @@ func (m *QosClassStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.QosClassHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Qos(dAtA, i, uint64(m.QosClassHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.QosClassHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -2355,7 +2359,8 @@ func (m *CoppKeyHandle_CoppHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Qos(dAtA, i, uint64(m.CoppHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.CoppHandle))
+	i += 8
 	return i, nil
 }
 func (m *CoppSpec) Marshal() (dAtA []byte, err error) {
@@ -2454,7 +2459,8 @@ func (m *CoppStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.CoppHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Qos(dAtA, i, uint64(m.CoppHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.CoppHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -2668,24 +2674,6 @@ func (m *CoppGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Qos(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Qos(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintQos(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -3465,15 +3453,8 @@ func (m *QosClassKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &QosClassKeyHandle_QosClassHandle{v}
 		default:
 			iNdEx = preIndex
@@ -4663,15 +4644,8 @@ func (m *QosClassStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.QosClassHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.QosClassHandle = uint64(dAtA[iNdEx-8])
-			m.QosClassHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.QosClassHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.QosClassHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.QosClassHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.QosClassHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.QosClassHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.QosClassHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQos(dAtA[iNdEx:])
@@ -5719,15 +5693,8 @@ func (m *CoppKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &CoppKeyHandle_CoppHandle{v}
 		default:
 			iNdEx = preIndex
@@ -6017,15 +5984,8 @@ func (m *CoppStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.CoppHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.CoppHandle = uint64(dAtA[iNdEx-8])
-			m.CoppHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.CoppHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.CoppHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.CoppHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.CoppHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.CoppHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.CoppHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQos(dAtA[iNdEx:])

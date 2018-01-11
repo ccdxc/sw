@@ -12,6 +12,8 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+import encoding_binary "encoding/binary"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1073,7 +1075,8 @@ func (m *WRingKeyHandle_WringHandle) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x11
 	i++
-	i = encodeFixed64Wring(dAtA, i, uint64(m.WringHandle))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.WringHandle))
+	i += 8
 	return i, nil
 }
 func (m *WRingSpec) Marshal() (dAtA []byte, err error) {
@@ -1177,7 +1180,8 @@ func (m *WRingStatus) MarshalTo(dAtA []byte) (int, error) {
 	if m.WringHandle != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Wring(dAtA, i, uint64(m.WringHandle))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.WringHandle))
+		i += 8
 	}
 	return i, nil
 }
@@ -1462,12 +1466,14 @@ func (m *WRingBarcoGCMDescMsg) MarshalTo(dAtA []byte) (int, error) {
 	if m.IlistAddr != 0 {
 		dAtA[i] = 0x9
 		i++
-		i = encodeFixed64Wring(dAtA, i, uint64(m.IlistAddr))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.IlistAddr))
+		i += 8
 	}
 	if m.OlistAddr != 0 {
 		dAtA[i] = 0x11
 		i++
-		i = encodeFixed64Wring(dAtA, i, uint64(m.OlistAddr))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.OlistAddr))
+		i += 8
 	}
 	if m.Command != 0 {
 		dAtA[i] = 0x18
@@ -1482,22 +1488,26 @@ func (m *WRingBarcoGCMDescMsg) MarshalTo(dAtA []byte) (int, error) {
 	if m.IvAddr != 0 {
 		dAtA[i] = 0x29
 		i++
-		i = encodeFixed64Wring(dAtA, i, uint64(m.IvAddr))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.IvAddr))
+		i += 8
 	}
 	if m.StatusAddr != 0 {
 		dAtA[i] = 0x31
 		i++
-		i = encodeFixed64Wring(dAtA, i, uint64(m.StatusAddr))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.StatusAddr))
+		i += 8
 	}
 	if m.DoorbellAddr != 0 {
 		dAtA[i] = 0x39
 		i++
-		i = encodeFixed64Wring(dAtA, i, uint64(m.DoorbellAddr))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DoorbellAddr))
+		i += 8
 	}
 	if m.DoorbellData != 0 {
 		dAtA[i] = 0x41
 		i++
-		i = encodeFixed64Wring(dAtA, i, uint64(m.DoorbellData))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DoorbellData))
+		i += 8
 	}
 	if m.Salt != 0 {
 		dAtA[i] = 0x48
@@ -1507,7 +1517,8 @@ func (m *WRingBarcoGCMDescMsg) MarshalTo(dAtA []byte) (int, error) {
 	if m.ExplicitIv != 0 {
 		dAtA[i] = 0x51
 		i++
-		i = encodeFixed64Wring(dAtA, i, uint64(m.ExplicitIv))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.ExplicitIv))
+		i += 8
 	}
 	if m.HeaderSize != 0 {
 		dAtA[i] = 0x58
@@ -1591,7 +1602,8 @@ func (m *WRingGetEntriesResponse_Value) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0x31
 	i++
-	i = encodeFixed64Wring(dAtA, i, uint64(m.Value))
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Value))
+	i += 8
 	return i, nil
 }
 func (m *WRingGetEntriesResponse_BarcoGcmDesc) MarshalTo(dAtA []byte) (int, error) {
@@ -1774,24 +1786,6 @@ func (m *WRingSetMetaResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func encodeFixed64Wring(dAtA []byte, offset int, v uint64) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	dAtA[offset+4] = uint8(v >> 32)
-	dAtA[offset+5] = uint8(v >> 40)
-	dAtA[offset+6] = uint8(v >> 48)
-	dAtA[offset+7] = uint8(v >> 56)
-	return offset + 8
-}
-func encodeFixed32Wring(dAtA []byte, offset int, v uint32) int {
-	dAtA[offset] = uint8(v)
-	dAtA[offset+1] = uint8(v >> 8)
-	dAtA[offset+2] = uint8(v >> 16)
-	dAtA[offset+3] = uint8(v >> 24)
-	return offset + 4
-}
 func encodeVarintWring(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -2193,15 +2187,8 @@ func (m *WRingKeyHandle) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.KeyOrHandle = &WRingKeyHandle_WringHandle{v}
 		default:
 			iNdEx = preIndex
@@ -2515,15 +2502,8 @@ func (m *WRingStatus) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.WringHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.WringHandle = uint64(dAtA[iNdEx-8])
-			m.WringHandle |= uint64(dAtA[iNdEx-7]) << 8
-			m.WringHandle |= uint64(dAtA[iNdEx-6]) << 16
-			m.WringHandle |= uint64(dAtA[iNdEx-5]) << 24
-			m.WringHandle |= uint64(dAtA[iNdEx-4]) << 32
-			m.WringHandle |= uint64(dAtA[iNdEx-3]) << 40
-			m.WringHandle |= uint64(dAtA[iNdEx-2]) << 48
-			m.WringHandle |= uint64(dAtA[iNdEx-1]) << 56
 		default:
 			iNdEx = preIndex
 			skippy, err := skipWring(dAtA[iNdEx:])
@@ -3359,15 +3339,8 @@ func (m *WRingBarcoGCMDescMsg) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.IlistAddr = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.IlistAddr = uint64(dAtA[iNdEx-8])
-			m.IlistAddr |= uint64(dAtA[iNdEx-7]) << 8
-			m.IlistAddr |= uint64(dAtA[iNdEx-6]) << 16
-			m.IlistAddr |= uint64(dAtA[iNdEx-5]) << 24
-			m.IlistAddr |= uint64(dAtA[iNdEx-4]) << 32
-			m.IlistAddr |= uint64(dAtA[iNdEx-3]) << 40
-			m.IlistAddr |= uint64(dAtA[iNdEx-2]) << 48
-			m.IlistAddr |= uint64(dAtA[iNdEx-1]) << 56
 		case 2:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field OlistAddr", wireType)
@@ -3376,15 +3349,8 @@ func (m *WRingBarcoGCMDescMsg) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.OlistAddr = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.OlistAddr = uint64(dAtA[iNdEx-8])
-			m.OlistAddr |= uint64(dAtA[iNdEx-7]) << 8
-			m.OlistAddr |= uint64(dAtA[iNdEx-6]) << 16
-			m.OlistAddr |= uint64(dAtA[iNdEx-5]) << 24
-			m.OlistAddr |= uint64(dAtA[iNdEx-4]) << 32
-			m.OlistAddr |= uint64(dAtA[iNdEx-3]) << 40
-			m.OlistAddr |= uint64(dAtA[iNdEx-2]) << 48
-			m.OlistAddr |= uint64(dAtA[iNdEx-1]) << 56
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Command", wireType)
@@ -3431,15 +3397,8 @@ func (m *WRingBarcoGCMDescMsg) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.IvAddr = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.IvAddr = uint64(dAtA[iNdEx-8])
-			m.IvAddr |= uint64(dAtA[iNdEx-7]) << 8
-			m.IvAddr |= uint64(dAtA[iNdEx-6]) << 16
-			m.IvAddr |= uint64(dAtA[iNdEx-5]) << 24
-			m.IvAddr |= uint64(dAtA[iNdEx-4]) << 32
-			m.IvAddr |= uint64(dAtA[iNdEx-3]) << 40
-			m.IvAddr |= uint64(dAtA[iNdEx-2]) << 48
-			m.IvAddr |= uint64(dAtA[iNdEx-1]) << 56
 		case 6:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StatusAddr", wireType)
@@ -3448,15 +3407,8 @@ func (m *WRingBarcoGCMDescMsg) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.StatusAddr = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.StatusAddr = uint64(dAtA[iNdEx-8])
-			m.StatusAddr |= uint64(dAtA[iNdEx-7]) << 8
-			m.StatusAddr |= uint64(dAtA[iNdEx-6]) << 16
-			m.StatusAddr |= uint64(dAtA[iNdEx-5]) << 24
-			m.StatusAddr |= uint64(dAtA[iNdEx-4]) << 32
-			m.StatusAddr |= uint64(dAtA[iNdEx-3]) << 40
-			m.StatusAddr |= uint64(dAtA[iNdEx-2]) << 48
-			m.StatusAddr |= uint64(dAtA[iNdEx-1]) << 56
 		case 7:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DoorbellAddr", wireType)
@@ -3465,15 +3417,8 @@ func (m *WRingBarcoGCMDescMsg) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DoorbellAddr = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DoorbellAddr = uint64(dAtA[iNdEx-8])
-			m.DoorbellAddr |= uint64(dAtA[iNdEx-7]) << 8
-			m.DoorbellAddr |= uint64(dAtA[iNdEx-6]) << 16
-			m.DoorbellAddr |= uint64(dAtA[iNdEx-5]) << 24
-			m.DoorbellAddr |= uint64(dAtA[iNdEx-4]) << 32
-			m.DoorbellAddr |= uint64(dAtA[iNdEx-3]) << 40
-			m.DoorbellAddr |= uint64(dAtA[iNdEx-2]) << 48
-			m.DoorbellAddr |= uint64(dAtA[iNdEx-1]) << 56
 		case 8:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DoorbellData", wireType)
@@ -3482,15 +3427,8 @@ func (m *WRingBarcoGCMDescMsg) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.DoorbellData = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.DoorbellData = uint64(dAtA[iNdEx-8])
-			m.DoorbellData |= uint64(dAtA[iNdEx-7]) << 8
-			m.DoorbellData |= uint64(dAtA[iNdEx-6]) << 16
-			m.DoorbellData |= uint64(dAtA[iNdEx-5]) << 24
-			m.DoorbellData |= uint64(dAtA[iNdEx-4]) << 32
-			m.DoorbellData |= uint64(dAtA[iNdEx-3]) << 40
-			m.DoorbellData |= uint64(dAtA[iNdEx-2]) << 48
-			m.DoorbellData |= uint64(dAtA[iNdEx-1]) << 56
 		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Salt", wireType)
@@ -3518,15 +3456,8 @@ func (m *WRingBarcoGCMDescMsg) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.ExplicitIv = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.ExplicitIv = uint64(dAtA[iNdEx-8])
-			m.ExplicitIv |= uint64(dAtA[iNdEx-7]) << 8
-			m.ExplicitIv |= uint64(dAtA[iNdEx-6]) << 16
-			m.ExplicitIv |= uint64(dAtA[iNdEx-5]) << 24
-			m.ExplicitIv |= uint64(dAtA[iNdEx-4]) << 32
-			m.ExplicitIv |= uint64(dAtA[iNdEx-3]) << 40
-			m.ExplicitIv |= uint64(dAtA[iNdEx-2]) << 48
-			m.ExplicitIv |= uint64(dAtA[iNdEx-1]) << 56
 		case 11:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field HeaderSize", wireType)
@@ -3760,15 +3691,8 @@ func (m *WRingGetEntriesResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + 8) > l {
 				return io.ErrUnexpectedEOF
 			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			v = uint64(dAtA[iNdEx-8])
-			v |= uint64(dAtA[iNdEx-7]) << 8
-			v |= uint64(dAtA[iNdEx-6]) << 16
-			v |= uint64(dAtA[iNdEx-5]) << 24
-			v |= uint64(dAtA[iNdEx-4]) << 32
-			v |= uint64(dAtA[iNdEx-3]) << 40
-			v |= uint64(dAtA[iNdEx-2]) << 48
-			v |= uint64(dAtA[iNdEx-1]) << 56
 			m.WRingSlotInfo = &WRingGetEntriesResponse_Value{v}
 		case 7:
 			if wireType != 2 {
