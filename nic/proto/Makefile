@@ -1,7 +1,7 @@
 GEN_DIR = ../gen/proto/hal
 TOPDIR = ..
 CUSTOM = $(GEN_DIR)/proto
-CUSTOM_CLEAN =
+CUSTOM_CLEAN = gen_proto_clean
 include $(TOPDIR)/make/Makefile.inc
 
 # Adding more clean files
@@ -65,6 +65,9 @@ $(GEN_DIR)/cp_mfile_proto:
 
 cxx_build:
 	$(MAKE) -O3 -C $(GEN_DIR)
+
+gen_proto_clean:
+	rm -rf ../gen/proto
 
 # clean:
 # 	rm -f $(GEN_DIR)/*.pb.* $(GEN_DIR)/*.pb-c.* $(GEN_DIR)/*.py $((GEN_DIR)/*.pb.go $(GEN_DIR)/*proto 

@@ -226,4 +226,9 @@ clean:
 	$(MAKE) -C asm clean
 	$(MAKE) -C proto clean
 	$(MAKE) -C sdk clean
+	$(MAKE) check_clean
+
+check_clean:
+	@tools/check_clean.sh gen
+
 

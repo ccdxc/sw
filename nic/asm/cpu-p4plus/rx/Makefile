@@ -71,6 +71,7 @@ $(TMP_FILES): %.x: %.ctl
 test: $(TMP_FILES)
 
 clean:
+	rm -rf $(GEN_DIR)/.cpu_rx_asm
 	@rm -fR $(OBJ_DIR)/*.bin
 
 .asm_test:

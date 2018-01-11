@@ -40,7 +40,7 @@ lib:
 	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj \;
 	@chmod 755 obj/*.so
 
-test: build-test
+test: lib build-test
 	@echo Running tests ...
 	@find bazel-bin/test -name *.runfiles_manifest* | sed 's/\.runfiles_manifest$$//1' | while read i; do printf "\nRunning $$i\n" && $$i; done
 
