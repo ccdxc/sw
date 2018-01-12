@@ -314,3 +314,53 @@ p4pd_register_entry_read(std::string block_name, std::string   reg_name, std::st
 
 }
 
+
+void
+p4pd_register_list(std::string block_name, std::string   reg_name, std::string filename)
+{
+    DebugRequestMsg    debug_req_msg;
+    DebugResponseMsg   debug_rsp_msg;
+    ClientContext      context;
+    DebugSpec          *debug_spec = NULL;
+    DebugKeyHandle     *key_or_handle = NULL;
+
+    debug_spec = debug_req_msg.add_request();
+
+    key_or_handle = debug_spec->mutable_key_or_handle();
+
+    key_or_handle->set_reg_name(reg_name);
+    key_or_handle->set_block_name(block_name);
+    debug_spec->set_mem_type(::debug::DEBUG_MEM_TYPE_REG);
+
+    debug_spec->set_opn_type(::debug::DEBUG_OP_TYPE_READ);
+
+    auto channel =
+        grpc::CreateChannel("localhost:50054", grpc::InsecureChannelCredentials());
+
+    auto stub = ::debug::Debug::NewStub(channel);
+
+    Status status = stub->DebugInvoke(&context, debug_req_msg, &debug_rsp_msg);
+    
+    int reg_data_sz  = debug_rsp_msg.response(0).data_size();
+    FILE *reg_fd = 0;
+    if (!filename.empty()) {
+        reg_fd = fopen(filename.c_str(), "wb+");
+        if (!reg_fd) {
+            std::cout <<"Null file descriptor";
+            return;
+        }
+    }
+
+    for (uint32_t i = 0; i  < reg_data_sz; i++) {
+        if (filename.empty()) {
+            std::cout << "RegName: " << debug_rsp_msg.response(0).data(i).reg_name() << "\n";
+        } else {
+
+            std::fprintf(reg_fd, "RegName:  %s \n", debug_rsp_msg.response(0).data(i).reg_name().c_str()); 
+            std::fflush(reg_fd);
+        }
+    }
+    return;;
+
+}
+

@@ -38,8 +38,9 @@ enum DebugOperationType {
 
 // Debug table or register
 enum DebugMemoryType {
-    DEBUG_MEM_TYPE_TABLE = 0;  // access Table
-    DEBUG_MEM_TYPE_REG   = 1;  // Register
+    DEBUG_MEM_TYPE_NONE  = 0;   // Invalid memory
+    DEBUG_MEM_TYPE_TABLE = 1;  // access Table
+    DEBUG_MEM_TYPE_REG   = 2;  // Register
 }
 
 // DebugSpec msg is used to pass parameters for the Debug

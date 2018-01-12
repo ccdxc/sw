@@ -3872,6 +3872,11 @@ def capri_p4pd_create_swig_custom_hdr(be):
     content_str += '                        std::string regname,\n';
     content_str += '                        std::string filename);\n';
 
+    content_str += 'void\n';
+    content_str += 'p4pd_register_list(std::string blockname,\n';
+    content_str += '                   std::string regname,\n';
+    content_str += '                   std::string filename);\n';
+
     out_file = out_dir + 'iris_custom.h'
     with open(out_file, "w") as of:
         of.write(content_str)

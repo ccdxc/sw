@@ -641,7 +641,7 @@ class ${table}():
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${table}_u${i}.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${table}_u${i}.${p4fldname}, i))
         print(valstr)
 
 //::                        #endif
@@ -913,8 +913,7 @@ def table_dump():
 
 
 def populate_register(ctx):
-    if (ctx['is_reg_name'] == True):
-        if (ctx['opn'] == 'read'):
-            iris.p4pd_register_entry_read(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
-    else:
+    if (ctx['opn'] == 'read'):
         iris.p4pd_register_entry_read(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
+    elif (ctx['opn'] == 'list'):
+        iris.p4pd_register_list(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
