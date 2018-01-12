@@ -5571,30 +5571,19 @@ class capri_table_mapper:
         memory = self.memory[mem_type][region]
         memory['space'] = [[0 for x in range(memory['width'])] for y in range(memory['depth'])]
 
-        blk_width = self.memory[mem_type][region]['blk_w']
-        blk_depth = self.memory[mem_type][region]['blk_d']
-        blk_count = self.memory[mem_type][region]['blk_c']
-
-        curr_blk = 0
         for table in tables:
             ctable = self.tmgr.gress_tm[xgress_from_string(region)].tables[table['name']]
             if ctable.is_policer or ctable.is_writeback:
 
-                req_depth = table['depth']
-                req_width = table['width']
+                depth = table['depth']
+                width = table['width']
                 index = self.tables[mem_type][region].index(table)
 
-                while req_depth > blk_depth:
-                    req_depth = req_depth / 2
-                    req_width = req_width * 2
+                while not table['layout'] and depth > 0:
+                    table['layout'] = self.scavenge_unused_space(mem_type, region, depth, width, table['width'], index)
 
-                blks_reqd = (req_width + blk_width - 1) / blk_width
-
-                if (curr_blk + blks_reqd) <= blk_count:
-                    top = 0
-                    left = curr_blk * blk_width
-                    table['layout'] = self.carve_memory(memory, top, left, top + req_depth - 1, left + req_width - 1, index)
-                    curr_blk += blks_reqd
+                    width = width * 2
+                    depth = depth / 2
 
         return
 
