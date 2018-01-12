@@ -45,6 +45,7 @@ p4plus_app_classic_nic_no_vlan_strip:
   phvwr.c1    p.p4_to_p4plus_classic_nic_csum_ok, TRUE
 
   phvwr       p.p4_to_p4plus_classic_nic_packet_len, r7
+  phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, r7
   phvwr       p.p4_to_p4plus_classic_nic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.p4_to_p4plus_classic_nic_p4plus_app_id, k.control_metadata_p4plus_app_id

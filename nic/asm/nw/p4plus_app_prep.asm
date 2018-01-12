@@ -16,7 +16,7 @@ p4plus_app_prep:
   seq         c2, k.inner_ipv6_valid, TRUE
 
   // l2 checksum (CHECKSUM_COMPLETE)
-  phvwrpair   p.ipv4_l2csum, k.ipv4_valid, p.ipv6_l2csum, k.ipv6_valid
+  phvwr       p.ethernet_l2csum, TRUE
   phvwr       p.p4_to_p4plus_classic_nic_l2csum, TRUE
 
   // checksum level

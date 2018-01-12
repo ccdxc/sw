@@ -1515,7 +1515,7 @@ class Checksum:
                 return True
         return False
 
-    def IsL3HdrInL2CompleteCsumCompute(self, hdrname):
+    def IsL2HdrInL2CompleteCsumCompute(self, hdrname):
         for calfldobj in self.l2_csum_cal_fieldlist_update:
             if calfldobj.phdr_name == hdrname:
                 return True
@@ -2019,14 +2019,14 @@ class Checksum:
         for calfldobj in self.l2_csum_cal_fieldlist_update:
             calfldhdr = calfldobj.CalculatedFieldHdrGet()
             _csum_obj = calfldobj.DeParserCsumObjGet()
-            l3hdr_name  = calfldobj.CsumPhdrNameGet()
+            l2hdr_name  = calfldobj.CsumPhdrNameGet()
 
-            if l3hdr_name == '':
+            if l2hdr_name == '':
                 hf_name = calfldhdr + '.l2csum'
                 hdr_inst = self.be.h.p4_header_instances[calfldhdr]
             else:
-                hf_name = l3hdr_name + '.l2csum'
-                hdr_inst = self.be.h.p4_header_instances[l3hdr_name]
+                hf_name = l2hdr_name + '.l2csum'
+                hdr_inst = self.be.h.p4_header_instances[l2hdr_name]
 
             _csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr_inst])
             csumhv = -1
@@ -2047,7 +2047,7 @@ class Checksum:
             _csum_profile_obj = calfldobj.DeParserCsumProfileObjGet()
             _csum_profile_obj.CsumProfileNumSet(csum_profile)
 
-            if l3hdr_name == '':
+            if l2hdr_name == '':
                 #case : Header/Container of l2 csum result field
                 _csum_obj.CsumCopyVldSet(1)
                 locadj = -1
