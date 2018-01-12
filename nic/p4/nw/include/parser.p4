@@ -85,23 +85,19 @@ metadata parser_ohi_t ohi;
         ETHERTYPE_MPLS : parse_mpls;                       \
         ETHERTYPE_IPV4 : parse_ipv4;                       \
         ETHERTYPE_IPV6 : parse_ipv6;                       \
-        ETHERTYPE_ARP : parse_arp_rarp;                    \
-        ETHERTYPE_RARP : parse_arp_rarp;                   \
         default: ingress
 
 #define PARSE_ETHERTYPE_MINUS_VLAN                         \
         ETHERTYPE_MPLS : parse_mpls;                       \
         ETHERTYPE_IPV4 : parse_ipv4;                       \
         ETHERTYPE_IPV6 : parse_ipv6;                       \
-        ETHERTYPE_ARP : parse_arp_rarp;                    \
-        ETHERTYPE_RARP : parse_arp_rarp;                   \
         default: ingress
 
 header cap_phv_intr_global_t capri_intrinsic;
 header cap_phv_intr_p4_t    capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
-
+header tm_replication_data_t tm_replication_data;
 
 // dummy headers that are extracted and thrown away (rxdma span copies)
 header cap_phv_intr_rxdma_t              e2e_capri_rxdma_intrinsic;
@@ -126,15 +122,14 @@ header ipv4_t ipv4;
 header ipv6_t ipv6;
 header icmp_t icmp;
 header icmp_t icmpv6;
-@pragma pa_header_union ingress v6_ah_esp
 header ah_t ah;
-@pragma pa_header_union ingress v6_ah_esp
 header esp_t esp;
 
 header udp_t udp;
 // udp payload is treated as header when parsing udp trailer options
 @pragma hdr_len parser_metadata.l4_len
 header udp_payload_t udp_payload;
+
 @pragma pa_header_union xgress vxlan_gpe genv nvgre
 header vxlan_t vxlan;
 header vxlan_gpe_t vxlan_gpe;
@@ -150,7 +145,12 @@ header erspan_header_t3_t erspan_t3_header;
 
 @pragma pa_header_union ingress inner_udp icmp icmpv6
 header tcp_t tcp;
+
+header icmp_echo_req_reply_t icmp_echo;
+
 // TCP options
+@pragma hdr_len parser_metadata.parse_tcp_counter
+header tcp_options_blob_t tcp_options_blob;
 header tcp_option_unknown_t tcp_option_unknown;
 @pragma no_ohi xgress
 header tcp_option_eol_t tcp_option_eol;
@@ -190,6 +190,8 @@ header udp_opt_timestamp_t udp_opt_timestamp;
 header udp_opt_unknown_t udp_opt_unknown;
 
 // IPv4 Options
+@pragma hdr_len ipv4.ihl
+header ipv4_options_blob_t ipv4_options_blob;
 header ipv4_option_EOL_t ipv4_option_EOL;
 header ipv4_option_NOP_t ipv4_option_NOP;
 header ipv4_option_security_t ipv4_option_security;
@@ -199,6 +201,8 @@ header ipv4_option_ssr_t ipv4_option_ssr;
 header ipv4_option_rr_t ipv4_option_rr;
 
 // Inner IPv4 Options
+@pragma hdr_len inner_ipv4.ihl
+header ipv4_options_blob_t inner_ipv4_options_blob;
 header ipv4_option_EOL_t inner_ipv4_option_EOL;
 header ipv4_option_NOP_t inner_ipv4_option_NOP;
 header ipv4_option_security_t inner_ipv4_option_security;
@@ -212,6 +216,17 @@ header ethernet_t inner_ethernet;
 header ipv4_t inner_ipv4;
 header ipv6_t inner_ipv6;
 header udp_t inner_udp;
+
+// IPv6 extension headers
+@pragma hdr_len parser_metadata.ipv6_options_len
+header ipv6_options_blob_t ipv6_options_blob;
+header ipv6_extn_generic_t v6_generic;
+header ipv6_extn_frag_t v6_frag;
+
+// Inner IPv6 extension headers
+@pragma hdr_len parser_metadata.inner_ipv6_options_len
+header ipv6_options_blob_t inner_ipv6_options_blob;
+header ipv6_extn_generic_t inner_v6_generic;
 
 // name 'capri_i2e_metadata' has a special meaning
 header capri_i2e_metadata_t capri_i2e_metadata;
@@ -436,8 +451,6 @@ parser parse_nic {
     set_metadata(control_metadata.uplink, 1);
     return parse_ethernet;
 }
-
-header tm_replication_data_t tm_replication_data;
 
 // NCC work-around.. intrinsic meta and tm_replication_data are in different flits
 // which is not allowed by hardware. Eventually NCC will implement logic
@@ -759,9 +772,6 @@ parser parse_ipv4_options {
 }
 #endif
 
-
-@pragma hdr_len ipv4.ihl
-header ipv4_options_blob_t ipv4_options_blob;
 parser parse_ipv4_options_blob {
     // Separate state is created to set options_seen flag 
     // Otherwise options can be extracted blindly.. if they happen to be 0 len
@@ -825,9 +835,6 @@ parser parse_ipv6_in_ip {
     set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_IP_IN_IP);
     return parse_inner_ipv6;
 }
-header ipv6_extn_generic_t v6_generic;
-header ipv6_extn_frag_t v6_frag;
-header ipv6_extn_ah_esp_t v6_ah_esp;
 
 // use no_extract pragma to simply move the packet offset forward w/o extraction
 // similar to advance() feature in P4-16
@@ -840,31 +847,6 @@ parser parse_v6_generic_ext_hdr {
     return parse_ipv6_extn_hdrs;
 }
 
-
-// if AH or ESP are hit - done - no more parsing as these are supposed to
-// be last in v6 ext-header sequence.
-@pragma allow_set_meta ipsec_metadata.seq_no
-@pragma allow_set_meta ipsec_metadata.ipsec_type
-parser parse_v6_ipsec_esp_hdr {
-    extract(esp);
-    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
-    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
-    set_metadata(ipsec_metadata.seq_no, latest.seqNo);
-    set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_ESP);
-    return ingress;
-}
-
-@pragma allow_set_meta ipsec_metadata.seq_no
-@pragma allow_set_meta ipsec_metadata.ipsec_type
-parser parse_v6_ipsec_ah_hdr {
-    extract(v6_ah_esp);
-    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
-    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
-    set_metadata(ipsec_metadata.seq_no, latest.seqNo);
-    set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_AH);
-    return ingress;
-}
-
 #if 0
 parser parse_fragment_hdr {
     extract(v6_frag);
@@ -873,9 +855,6 @@ parser parse_fragment_hdr {
     return parse_ipv6_extn_hdrs;
 }
 #endif /* 0 */
-
-@pragma hdr_len parser_metadata.ipv6_options_len
-header ipv6_options_blob_t ipv6_options_blob;
 
 @pragma dont_advance_packet
 parser parse_ipv6_option_blob {
@@ -909,8 +888,8 @@ parser parse_ipv6_ulp {
         IP_PROTO_GRE : parse_gre;
         IP_PROTO_IPV4 : parse_ipv4_in_ip;
         IP_PROTO_IPV6 : parse_ipv6_in_ip;
-        0x33 : parse_v6_ipsec_ah_hdr;
-        0x32 : parse_v6_ipsec_esp_hdr;
+        IP_PROTO_IPSEC_AH : parse_ipsec_ah;
+        IP_PROTO_IPSEC_ESP : parse_ipsec_esp;
         default: ingress;
     }
 }
@@ -945,12 +924,11 @@ parser parse_ipv6_extn_hdrs {
     // subtract those bytes before setting l3_metadata.ipv6_options_len
     set_metadata(l3_metadata.ipv6_options_len, parser_metadata.ipv6_options_len - 20);
     return select(parser_metadata.ipv6_nextHdr) {
-        0x0:  parse_v6_generic_ext_hdr; // hop-by-hop Hdr
-        0x2b: parse_v6_generic_ext_hdr; // Routing Hdr
-        // Note2: ipv6_options_len value used to setup ohi slot is previous value (before init)
-        0x2c: parse_v6_generic_ext_hdr; // Fragment Hdr
-        0x3c: parse_v6_generic_ext_hdr; // Dest_option Hdr
-        0x87: parse_v6_generic_ext_hdr; // Mobility Hdr
+        IPV6_PROTO_EXTN_HOPBYHOP :  parse_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_ROUTING_HDR : parse_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_FRAGMENT_HDR : parse_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_DEST_OPT_HDR : parse_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_MOBILITY_HDR : parse_v6_generic_ext_hdr;
         default: parse_ipv6_ulp;
     }
 }
@@ -966,11 +944,11 @@ parser parse_ipv6 {
     set_metadata(ohi.l4_len, ipv6.payloadLen + 0);
     set_metadata(ohi.l3_len, ipv6.payloadLen + 0);
     return select(parser_metadata.ipv6_nextHdr) {
-        0x0  :  parse_ipv6_option_blob;   // Hop by Hop Hdr
-        0x2b : parse_ipv6_option_blob;   // Routing Hdr
-        0x2c : parse_ipv6_option_blob;   // Fragment Hdr
-        0x3c : parse_ipv6_option_blob;   // dest_option
-        0x87 : parse_ipv6_option_blob;   // Mobility Hdr
+        IPV6_PROTO_EXTN_HOPBYHOP:  parse_ipv6_option_blob;
+        IPV6_PROTO_EXTN_ROUTING_HDR : parse_ipv6_option_blob;
+        IPV6_PROTO_EXTN_FRAGMENT_HDR : parse_ipv6_option_blob;
+        IPV6_PROTO_EXTN_DEST_OPT_HDR : parse_ipv6_option_blob;
+        IPV6_PROTO_EXTN_MOBILITY_HDR : parse_ipv6_option_blob;
         default: parse_ipv6_ulp_no_options;
     }
 }
@@ -984,8 +962,8 @@ parser parse_ipv6_ulp_no_options {
         IP_PROTO_GRE : parse_gre;
         IP_PROTO_IPV4 : parse_ipv4_in_ip;
         IP_PROTO_IPV6 : parse_ipv6_in_ip;
-        0x33 : parse_v6_ipsec_ah_hdr;
-        0x32 : parse_v6_ipsec_esp_hdr;
+        IP_PROTO_IPSEC_AH : parse_ipsec_ah;
+        IP_PROTO_IPSEC_ESP : parse_ipsec_esp;
         default: ingress;
     }
 }
@@ -1031,8 +1009,6 @@ parser parse_icmpv6 {
         default: ingress;
     }
 }
-
-header icmp_echo_req_reply_t icmp_echo;
 
 parser parse_icmp_echo_req_reply {
     extract(icmp_echo);
@@ -1103,8 +1079,6 @@ calculated_field tcp.checksum {
     update ipv6_tcp_checksum if (valid(ipv6));
 }
 
-@pragma hdr_len parser_metadata.parse_tcp_counter
-header tcp_options_blob_t tcp_options_blob;
 parser parse_tcp_ipv6 {
     extract(tcp);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
@@ -1301,7 +1275,6 @@ parser parse_roce_v2 {
         0x64 : parse_roce_deth;
         0x65 : parse_roce_deth_immdt;
         default : parse_udp_trailer;
-        //default : ingress;
     }
 }
 
@@ -1309,7 +1282,6 @@ parser parse_roce_deth {
     extract(roce_deth);
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len-8);
     return select(latest.reserved) {
-        //default : ingress;
         default : parse_udp_trailer;
         0x1 mask 0x0 : parse_roce_eth;
     }
@@ -1320,7 +1292,6 @@ parser parse_roce_deth_immdt {
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len-12);
     return select(latest.reserved) {
         default : parse_udp_trailer;
-        //default : ingress;
         0x1 mask 0x0 : parse_roce_eth;
     }
 }
@@ -1329,7 +1300,6 @@ parser parse_roce_deth_immdt {
 parser parse_udp_trailer {
     return select(parser_metadata.l4_trailer) {
         0x0000 mask 0xffff: ingress;
-        //0x8000 mask 0x8000: ingress_error;
         default : parse_udp_payload;
     }
 }
@@ -1479,11 +1449,11 @@ parser parse_udp {
     set_metadata(ohi.l4_len, udp.len + 0);
     set_metadata(parser_metadata.ipv6_options_len, udp.len);
     return select(latest.dstPort) {
-        UDP_PORT_VXLAN mask 0x0ffff: parse_vxlan;
-        UDP_PORT_GENV mask 0x0ffff: parse_geneve;
-        UDP_PORT_VXLAN_GPE  mask 0x0ffff: parse_vxlan_gpe;
+        UDP_PORT_VXLAN : parse_vxlan;
+        UDP_PORT_GENV : parse_geneve;
+        UDP_PORT_VXLAN_GPE : parse_vxlan_gpe;
         UDP_PORT_ROCE_V2: parse_roce_v2_pre;
-        UDP_PORT_NATT  mask 0x0ffff: parse_ipsec_esp;
+        UDP_PORT_NATT : parse_ipsec_esp;
         default: ingress;
     }
 }
@@ -1520,10 +1490,6 @@ parser parse_nvgre {
 parser parse_erspan_t3 {
     extract(erspan_t3_header);
     return parse_inner_ethernet;
-}
-
-parser parse_arp_rarp {
-    return ingress;
 }
 
 parser parse_vxlan {
@@ -1659,10 +1625,6 @@ parser parse_inner_ipv4_options {
     }
 }
 #endif
-
-
-@pragma hdr_len inner_ipv4.ihl
-header ipv4_options_blob_t inner_ipv4_options_blob;
 
 parser parse_inner_ipv4_options_blob {
     // Separate state is created to set options_seen flag 
@@ -1819,7 +1781,6 @@ calculated_field inner_udp.checksum {
     update inner_ipv6_udp_checksum if (valid(inner_ipv6));
 }
 
-
 field_list udp_opt_checksum_list {
     udp_opt_ocs.kind; // First field in UDP options related to csum
     payload; // specify payload keyword as list of options
@@ -1869,13 +1830,10 @@ parser parse_inner_udp {
     set_metadata(ohi.icrc_len, parser_metadata.inner_ipv6_options_len + inner_udp.len + 28);
     set_metadata(ohi.inner_l4_len, inner_udp.len + 0);
     set_metadata(parser_metadata.inner_ipv6_options_len, inner_udp.len);
-    //set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - inner_udp.len);
-    //set_metadata(parser_metadata.l4_len, inner_udp.len-8);
     return select(latest.dstPort) {
         UDP_PORT_ROCE_V2: parse_inner_roce_v2_pre;
         default:          parse_dummy;
     }
-    //return ingress;
 }
 
 
@@ -1892,18 +1850,13 @@ parser parse_dummy {
     // hdr unions and same set_metadata from multiple states while computing topo-graph
     return select (current(0,16)) {
         default: ingress;
-        0x1 mask 0x0000 : parse_v6_ipsec_esp_hdr;
+        0x1 mask 0x0000 : parse_ipsec_esp;
         0x2 mask 0x0000 : parse_ipsec_ah;
-        0x3 mask 0x0000 : parse_ipsec_esp;
-        0x4 mask 0x0000 : parse_icmp;
-        0x5 mask 0x0000 : parse_ipv6_tcp;
-        0x6 mask 0x0000 : parse_ipv4_tcp;
-        0x7 mask 0x0000 : parse_v6_ipsec_ah_hdr;
+        0x3 mask 0x0000 : parse_icmp;
+        0x4 mask 0x0000 : parse_ipv6_tcp;
+        0x5 mask 0x0000 : parse_ipv4_tcp;
     }
 }
-
-@pragma hdr_len parser_metadata.inner_ipv6_options_len
-header ipv6_options_blob_t inner_ipv6_options_blob;
 
 @pragma dont_advance_packet
 parser parse_inner_ipv6_option_blob {
@@ -1937,7 +1890,6 @@ parser parse_inner_ipv6_ulp {
     }
 }
 
-header ipv6_extn_generic_t inner_v6_generic;
 // use no_extract pragma to simply move the packet offset forward w/o extraction
 // similar to advance() feature in P4-16
 @pragma no_extract
@@ -1960,12 +1912,11 @@ parser parse_inner_ipv6_extn_hdrs {
     // subtract those bytes before setting l3_metadata.inner_ipv6_options_len
     set_metadata(l3_metadata.inner_ipv6_options_len, parser_metadata.inner_ipv6_options_len - 20);
     return select(parser_metadata.inner_ipv6_nextHdr) {
-        0x0:  parse_inner_v6_generic_ext_hdr; // hop-by-hop Hdr
-        0x2b: parse_inner_v6_generic_ext_hdr; // Routing Hdr
-        // Note2: ipv6_options_len value used to setup ohi slot is previous value (before init)
-        0x2c: parse_inner_v6_generic_ext_hdr; // Fragment Hdr
-        0x3c: parse_inner_v6_generic_ext_hdr; // Dest_option Hdr
-        0x87: parse_inner_v6_generic_ext_hdr; // Mobility Hdr
+        IPV6_PROTO_EXTN_HOPBYHOP :  parse_inner_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_ROUTING_HDR : parse_inner_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_FRAGMENT_HDR : parse_inner_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_DEST_OPT_HDR : parse_inner_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_MOBILITY_HDR : parse_inner_v6_generic_ext_hdr;
         default: parse_inner_ipv6_ulp;
     }
 }
@@ -1987,11 +1938,11 @@ parser parse_inner_ipv6 {
     set_metadata(l3_metadata.inner_ipv6_ulp, latest.nextHdr);
     set_metadata(parser_metadata.l4_trailer, inner_ipv6.payloadLen);
     return select(parser_metadata.inner_ipv6_nextHdr) {
-        0x0:  parse_inner_ipv6_option_blob;   // Hop by Hop Hdr
-        0x2b: parse_inner_ipv6_option_blob;   // Routing Hdro
-        0x2c: parse_inner_ipv6_option_blob;   // Fragment Hdr
-        0x3c: parse_inner_ipv6_option_blob;   // dest_option
-        0x87: parse_inner_ipv6_option_blob;   // Mobility Hdr
+        IPV6_PROTO_EXTN_HOPBYHOP :  parse_inner_ipv6_option_blob;
+        IPV6_PROTO_EXTN_ROUTING_HDR : parse_inner_ipv6_option_blob;
+        IPV6_PROTO_EXTN_FRAGMENT_HDR : parse_inner_ipv6_option_blob;
+        IPV6_PROTO_EXTN_DEST_OPT_HDR : parse_inner_ipv6_option_blob;
+        IPV6_PROTO_EXTN_MOBILITY_HDR : parse_inner_ipv6_option_blob;
         default: parse_inner_ipv6_ulp_no_options;
     }
 }
@@ -2015,7 +1966,6 @@ parser parse_inner_ethernet {
         default: ingress;
     }
 }
-
 
 field_list l2_complete_ipv4_checksum_list {
    ipv4.srcAddr;
@@ -2050,4 +2000,3 @@ calculated_field p4_to_p4plus_classic_nic.csum {
    update ipv4_l2_complete_checksum if (valid(ipv4));
    update ipv6_l2_complete_checksum if (valid(ipv6));
 }
-

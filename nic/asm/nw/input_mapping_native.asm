@@ -47,11 +47,9 @@ native_ipv4_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
 
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwrpair     p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
+  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
-  // r5 : k.udp_dstPort
-  or.e          r5, k.udp_dstPort_sbit8_ebit15, k.udp_dstPort_sbit0_ebit7, 8
-  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, r5, \
+  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
                     p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
 native_ipv4_esp_packet:
@@ -73,13 +71,8 @@ native_ipv6_packet_common:
   sub           r7, k.ipv6_payloadLen, k.tcp_dataOffset, 2
   phvwr         p.l4_metadata_tcp_data_len, r7
 
-  // r4 : k.l3_metadata_ipv6_ulp
-  or            r4, k.l3_metadata_ipv6_ulp_sbit1_ebit7, k.l3_metadata_ipv6_ulp_sbit0_ebit0, 7
-  seq           c1, r4, IP_PROTO_UDP
-
-  // r5 : k.udp_dstPort
-  or            r5, k.udp_dstPort_sbit8_ebit15, k.udp_dstPort_sbit0_ebit7, 8
-  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, r5, \
+  seq           c1, k.l3_metadata_ipv6_ulp, IP_PROTO_UDP
+  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
                     p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
@@ -88,7 +81,7 @@ native_ipv6_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_dst, k.{ipv6_dstAddr_sbit0_ebit31, \
                                                ipv6_dstAddr_sbit32_ebit127}
 
-  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, r4, \
+  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
                     p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit

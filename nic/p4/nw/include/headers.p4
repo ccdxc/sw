@@ -206,18 +206,6 @@ header_type ipv6_extn_frag_t {
     }
 }
 
-header_type ipv6_extn_ah_esp_t {
-    fields {
-        nextHdr : 8;
-        len : 8;
-        rsvd : 16;
-        spi_hi : 16;
-        spi_lo : 16;
-        seqNo : 32;
-    }
-}
- 
-
 header_type icmp_t {
     fields {
         typeCode : 16;

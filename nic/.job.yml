@@ -52,3 +52,4 @@ logfiles:
   - /sw/nic/model.log
   - /sw/nic/build.log
   - /sw/nic/storage_dol.log
+  - /sw/nic/core.*

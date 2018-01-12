@@ -371,7 +371,7 @@ action f_p4plus_cpu_pkt(offset) {
         modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
         add_to_field(scratch_metadata.offset, 4);
     }
-    if ((ah.valid == TRUE) or (v6_ah_esp.valid == TRUE)) {
+    if (ah.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
         add_to_field(scratch_metadata.offset, 12);
     }
