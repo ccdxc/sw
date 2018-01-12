@@ -34,7 +34,12 @@ int lib_model_connect ()
 
     if (__lmodel_env)
         return 0;
-    
+
+    if (getenv("MODEL_TIMEOUT")) {
+        printf("Setting MODEL_TIMEOUT to %s\n", getenv("MODEL_TIMEOUT"));
+        timeout_ms = atoi(getenv("MODEL_TIMEOUT")) * 1000;
+    }
+
     printf ("Connecting to ASIC model....\n");
     model_socket_name = std::getenv("MODEL_SOCKET_NAME");
     if (model_socket_name == NULL) {
