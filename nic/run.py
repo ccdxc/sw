@@ -291,6 +291,8 @@ def run_dol(args):
         cmd.append(args.shuffle)
     if args.mbt is True:
         cmd.append('--mbt')
+    if args.rtl is True:
+        cmd.append('--rtl')
 
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
