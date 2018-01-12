@@ -53,10 +53,6 @@ using intf::IfType;
 
 namespace hal {
 
-#ifndef IFNAMSIZ
-#define	IFNAMSIZ	16
-#endif
-
 // l2seg entry used for classic enic if
 typedef struct if_l2seg_entry_s {
     hal_handle_t    l2seg_handle;                   // l2segment handle
@@ -70,7 +66,6 @@ typedef struct if_s {
     if_id_t             if_id;                      // interface id
     intf::IfType        if_type;                    // interface type
     intf::IfStatus      if_admin_status;            // admin status
-    char                if_name[IFNAMSIZ];
     vrf_id_t            tid;                        // vrf id (TODO: what is this for ?)
 
     union {
@@ -301,36 +296,6 @@ find_if_by_id (if_id_t if_id)
 }
 
 static inline if_t *
-find_if_by_name (const char *if_name)
-{
-    hal_handle_id_ht_entry_t    *entry;
-    if_t                        *hal_if;
-
-    if (if_name && strlen(if_name)) {
-        entry = (hal_handle_id_ht_entry_t *)g_hal_state->
-            if_name_ht()->lookup((void *)if_name);
-        if (entry) {
-
-            // check for object type
-            HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
-                       HAL_OBJ_ID_INTERFACE);
-
-            hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
-            return hal_if;
-        }
-    }
-    return NULL;
-}
-
-static inline if_id_t
-find_if_id_by_name (const char *if_name)
-{
-    if_t    *hal_if = find_if_by_name(if_name);
-
-    return hal_if ? hal_if->if_id : HAL_IFINDEX_INVALID;
-}
-
-static inline if_t *
 find_if_by_handle (hal_handle_t handle)
 {
     auto hal_handle = hal_handle_get_from_handle_id(handle);
@@ -384,10 +349,6 @@ find_lif_by_if_handle (hal_handle_t if_handle)
 extern void *if_id_get_key_func(void *entry);
 extern uint32_t if_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool if_id_compare_key_func(void *key1, void *key2);
-
-extern void *if_name_get_key_func(void *entry);
-extern uint32_t if_name_compute_hash_func(void *key, uint32_t ht_size);
-extern bool if_name_compare_key_func(void *key1, void *key2);
 
 hal_ret_t uplinkif_add_uplinkpc (if_t *upif, if_t *uppc);
 hal_ret_t uplinkif_del_uplinkpc (if_t *upif, if_t *uppc);

@@ -466,15 +466,14 @@ message InterfaceSpec {
   types.ObjectMeta   meta              = 1;     // object meta
   kh.InterfaceKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];     // interface being created/updated
   IfType             type              = 4;     // type of interface
-  string             if_name           = 5;     // name of interface
-  IfStatus           admin_status      = 6;     // admin status of the interface
+  IfStatus           admin_status      = 5;     // admin status of the interface
   oneof if_info {
-    IfEnicInfo       if_enic_info      = 7 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
-    IfUplinkInfo     if_uplink_info    = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
-    IfUplinkPCInfo   if_uplink_pc_info = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK_PC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
-    IfTunnelInfo     if_tunnel_info    = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
-    IfCPUInfo        if_cpu_info       = 11 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton 
-    IfAppRedirInfo   if_app_redir_info = 12 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_APP_REDIR}"];     // app redirect interface informaton 
+    IfEnicInfo       if_enic_info      = 6 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
+    IfUplinkInfo     if_uplink_info    = 7 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
+    IfUplinkPCInfo   if_uplink_pc_info = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK_PC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+    IfTunnelInfo     if_tunnel_info    = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
+    IfCPUInfo        if_cpu_info       = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton 
+    IfAppRedirInfo   if_app_redir_info = 11 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_APP_REDIR}"];     // app redirect interface informaton 
   }
 }
 

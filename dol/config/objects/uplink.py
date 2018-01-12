@@ -108,7 +108,6 @@ class UplinkObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.interface_id = self.id
-        req_spec.if_name = self.GID()
 
         req_spec.type = haldefs.interface.IF_TYPE_UPLINK
         req_spec.admin_status = self.status

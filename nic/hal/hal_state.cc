@@ -89,12 +89,6 @@ hal_cfg_db::init(void)
                             hal::if_id_compare_key_func);
     HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
 
-    if_name_ht_ = ht::factory(HAL_MAX_INTERFACES,
-                            hal::if_name_get_key_func,
-                            hal::if_name_compute_hash_func,
-                            hal::if_name_compare_key_func);
-    HAL_ASSERT_RETURN((if_name_ht_ != NULL), false);
-
     // initialize flow/session related data structures
     session_id_ht_ = ht::factory(HAL_MAX_SESSIONS,
                                  hal::session_get_key_func,
@@ -339,7 +333,6 @@ hal_cfg_db::hal_cfg_db()
 
     lif_id_ht_ = NULL;
     if_id_ht_ = NULL;
-    if_name_ht_ = NULL;
 
     ep_hal_handle_ht_ = NULL;
 
@@ -387,6 +380,7 @@ hal_cfg_db::hal_cfg_db()
 
     rawrcb_id_ht_ = NULL;
     rawrcb_hal_handle_ht_ = NULL;
+    app_redir_if_id_ = HAL_IFINDEX_INVALID;
 
     rawccb_id_ht_ = NULL;
     rawccb_hal_handle_ht_ = NULL;
@@ -442,7 +436,6 @@ hal_cfg_db::~hal_cfg_db()
 
     lif_id_ht_ ? ht::destroy(lif_id_ht_) : HAL_NOP;
     if_id_ht_ ? ht::destroy(if_id_ht_) : HAL_NOP;
-    if_name_ht_ ? ht::destroy(if_name_ht_) : HAL_NOP;
 
     ep_hal_handle_ht_ ? ht::destroy(ep_hal_handle_ht_) : HAL_NOP;
 

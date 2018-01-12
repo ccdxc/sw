@@ -403,7 +403,7 @@ app_redir_proxyccb_update(const proxyccb_t& proxyccb)
 static void
 app_redir_mirror_session_spec_build(MirrorSessionSpec& spec)
 {
-    if_id_t     app_redir_if_id = find_if_id_by_name(APP_REDIR_IF_NAME);
+    if_id_t     app_redir_if_id = get_app_redir_if_id();
 
     HAL_TRACE_DEBUG("{} session {} for if_id {}", __FUNCTION__,
                     MIRROR_SESSION_APP_REDIR_VISIB_ID, app_redir_if_id);
