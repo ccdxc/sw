@@ -34,7 +34,7 @@ func main() {
 		LogToFile:   true,
 		CtxSelector: log.ContextAll,
 		FileCfg: log.FileConfig{
-			Filename:   "/tmp/collector.log",
+			Filename:   "/var/log/pensando/collector.log",
 			MaxSize:    10, // TODO: These needs to be part of Service Config Object
 			MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
 			MaxAge:     7,  // TODO: These needs to be part of Service Config Object
