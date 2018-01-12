@@ -40,6 +40,7 @@ nic/third-party/google/*
 nic/third-party/isc/*
 nic/third-party/zmq/*
 nic/third-party/grpc/*
+nic/conf/init_bins
 
 # Remove binaries in vendor
 vendor/**/*.png

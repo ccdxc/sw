@@ -32,7 +32,7 @@ capri_default_config_init (void)
     }
 
     for (i = 0; i < num_phases; i++) {
-        full_path =  std::string(cfg_path) + "/" + "init_" + 
+        full_path =  std::string(cfg_path) + "/init_bins/" + "init_" + 
                                         std::to_string(i) + "_bin";
 
         // Check if directory is present

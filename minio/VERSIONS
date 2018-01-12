@@ -2,3 +2,4 @@
 asic_libs cb6ceac
 ncc_tools cb6ceac.1
 third_party_libs 1.1.25
+pbc_config 1.3

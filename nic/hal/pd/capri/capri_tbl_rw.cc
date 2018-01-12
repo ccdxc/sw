@@ -1680,7 +1680,7 @@ int capri_table_constant_read(uint32_t tableid, uint64_t *val)
 void 
 capri_debug_hbm_read(void)
 {
-#ifdef DBG_HBM_EN
+#if DBG_HBM_EN
     uint64_t start_addr = DBG_HBM_BASE;
     uint64_t addr;
     uint64_t count = DBG_HBM_COUNT;
@@ -1706,7 +1706,7 @@ capri_debug_hbm_read(void)
 void 
 capri_debug_hbm_reset(void)
 {
-#ifdef DBG_HBM_EN
+#if DBG_HBM_EN
     uint64_t start_addr = DBG_HBM_BASE;
     uint64_t addr;
     uint64_t count = DBG_HBM_COUNT;

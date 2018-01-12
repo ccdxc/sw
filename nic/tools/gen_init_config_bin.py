@@ -54,7 +54,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--logfile", help="Log file to parse")
     parser.add_argument("-b", "--bindir", help="Bin directory prefix", 
-            default = os.path.join(nic_dir, 'conf', 'init'))
+            default = os.path.join(nic_dir, 'conf', 'init_bins', 'init'))
     parser.add_argument("-m", "--marker", help="Marker string", default = None)
     parser.add_argument("-c", "--csr", help="CSR name", default = 'pbc')
 
