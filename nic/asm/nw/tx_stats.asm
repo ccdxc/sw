@@ -19,7 +19,7 @@ tx_stats:
   add         r3, r0, k.flow_lkp_metadata_pkt_type
   .brbegin
   br          r3[1:0]
-  mul         r4, k.control_metadata_src_lif, 7, 3
+  add         r4, r0, k.control_metadata_src_lif, 6
   .brcase 0
   add         r7, d.tx_stats_d.tx_ucast_pkts, 1
   bgti        r7, 0xF, tx_ucast_overflow
@@ -52,7 +52,7 @@ tx_stats:
 tx_egress_drops:
   add         r6, d.tx_stats_d.tx_egress_drops, 1
   bgti        r6, 0xF, tx_egress_drops_overflow
-  mul         r4, k.control_metadata_src_lif, 7, 3
+  add         r4, r0, k.control_metadata_src_lif, 6
   tblwr.e     d.tx_stats_d.tx_egress_drops, r6
   nop
 
@@ -117,8 +117,8 @@ tx_egress_drops_overflow:
 /*
  * stats allocation in the atomic add region:
  * Unicast : 8B bytes, 8B packets, Multicast : 8B bytes, 8B packets,
- * Broadcast : 8B bytes, 8B packets, Drops : 8B
- * total per index = 56B
+ * Broadcast : 8B bytes, 8B packets, Drops : 8B, pad (to align) : 8B
+ * total per index = 64B
  */
 
 /*****************************************************************************/

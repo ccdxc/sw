@@ -344,7 +344,7 @@ static int capri_stats_region_init()
 
     capri_table_constant_write(P4TBL_ID_TX_STATS, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
-    stats_base_addr += ((tbl_ctx.tabledepth << 5) + (tbl_ctx.tabledepth << 4) + (tbl_ctx.tabledepth << 3));
+    stats_base_addr += (tbl_ctx.tabledepth << 6);
 
     capri_table_constant_write(P4TBL_ID_INGRESS_TX_STATS, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
