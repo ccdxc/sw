@@ -1,16 +1,12 @@
-/*
- * Copyright (c) 2017, Pensando Systems Inc.
- */
-
-#include <Python.h>
-#include "scapy_pkt_gen.h"
-#include "cap_env_base.h"
-#include "cpu.h"
+#include <python2.7/Python.h>
+#include "nic/model_sim/include/scapy_pkt_gen.h"
+#include "nic/model_sim/include/cap_env_base.h"
+#include "nic/model_sim/include/cpu.h"
 #include <iomanip>
 #include <zmq.h>
-#include "HBM.h"
-#include "HOST_MEM.h"
-#include "buf_hdr.h"
+#include "nic/model_sim/include/HBM.h"
+#include "nic/model_sim/include/HOST_MEM.h"
+#include "nic/model_sim/include/buf_hdr.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -20,10 +16,9 @@
 #include <vector>
 #include <queue>
 #include <signal.h>
-#include "../../utils/host_mem/params.hpp"
+#include "nic/utils/host_mem/params.hpp"
 #include "zmq_wait.h"
 
-#define MODEL_ZMQ_BUFF_SIZE             12288
 #ifdef COVERAGE
 #define HAL_GCOV_FLUSH()     { ::__gcov_flush(); }
 #else
@@ -32,6 +27,7 @@
 
 cap_env_base *g_env;
 std::queue<std::vector<uint8_t>> g_cpu_pkts;
+extern "C" void __gcov_flush();
 
 /*
  * This block describes the gateway interface between
@@ -84,7 +80,6 @@ model_server_write_mem(u_int64_t addr, u_int8_t *buf, size_t size)
 
 } /* extern "C" */
 
-extern "C" void __gcov_flush();
 namespace utils {
 
 class HostMem : public pen_mem_base {
@@ -103,11 +98,12 @@ class HostMem : public pen_mem_base {
       addr &= ~(1ULL << 63);
       return sim_server_write_clientmem(addr, data, len) >= 0;
   }
-
  private:
 };
 
 }  // namespace utils
+
+utils::HostMem g_host_mem;
 
 static void dumpHBM (void) {
       auto it = HBM::access()->begin();
@@ -152,7 +148,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint32_t cos;
             /* Get output packet from the model */
             if (!env->get_next_pkt(out_pkt, port, cos)) {
-                // std::cout << "ERROR: no packet" << std::endl;
+                // std::cout << "get_next_pkt: no packet" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -263,7 +259,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
         {
             std::vector<uint8_t> out_pkt;
             if (g_cpu_pkts.empty()) {
-                // std::cout << "CPU: ERROR: no packet" << std::endl;
+                std::cout << "get_next_cpu_packet: no packet in queue." << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
@@ -275,6 +271,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             }
         }
             break;
+
         case BUFF_TYPE_MAC_CFG:
             {
                 bool ret = true;
@@ -288,6 +285,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 }
             }
             break;
+
         case BUFF_TYPE_MAC_EN:
             {
                 bool ret = true;
@@ -301,6 +299,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 }
             }
             break;
+
         case BUFF_TYPE_MAC_SOFT_RESET:
             {
                 bool ret = true;
@@ -314,6 +313,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 }
             }
             break;
+
         case BUFF_TYPE_MAC_STATS_RESET:
             {
                 bool ret = true;
@@ -327,6 +327,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 }
             }
             break;
+
         case BUFF_TYPE_MAC_INTR_EN:
             {
                 bool ret = true;
@@ -340,6 +341,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 }
             }
             break;
+
         case BUFF_TYPE_MAC_INTR_CLR:
             {
                 bool ret = true;
@@ -353,18 +355,47 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 }
             }
             break;
+
         case BUFF_TYPE_REGISTER_MEM_ADDR:
             {
                 //g_host_mem.set_match_addr(buff->addr);
                 std::cout << std::hex << "Registered address: 0x" << buff->addr << std::endl;
             }
             break;
+
          case BUFF_TYPE_EXIT_SIM:
             {
+            buff->type = BUFF_TYPE_STATUS;
+            buff->status = 0;
+            }
+            break;
+
+         case BUFF_TYPE_CONFIG_DONE:
+            {
+            buff->type = BUFF_TYPE_STATUS;
+            buff->status = 0;
+            }
+            break;
+
+         case BUFF_TYPE_TESTCASE_BEGIN:
+            {
+                // Overloading size parameter to pass the tcid
+                printf("============== Starting Testcase TC%06d ===============\n",
+                       buff->size);
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = 0;
             }
             break;
+         case BUFF_TYPE_TESTCASE_END:
+            {
+                // Overloading size parameter to pass the tcid
+                printf("============== Ending Testcase TC%06d ===============\n",
+                       buff->size);
+                buff->type = BUFF_TYPE_STATUS;
+                buff->status = 0;
+            }
+            break;
+
         case BUFF_TYPE_STATUS:
         default:
             assert(0);
@@ -387,45 +418,33 @@ zmq_model_recv(void *socket, void *arg)
     zmq_send (socket, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
 }
 
-//  ZMQ Socket to talk to clients
-static void *
-init_zmq_model_server(void)
-{
-    const char *user = std::getenv("PWD");
-    char zmqsockstr[200];
-    snprintf(zmqsockstr, sizeof(zmqsockstr), "ipc:///%s/zmqsock", user);
-    void *context = zmq_ctx_new ();
-    void *responder = zmq_socket (context, ZMQ_REP);
-    int rc = zmq_bind(responder, zmqsockstr);
-    assert (rc == 0);
-    return responder;
-}
-
 static void wait_loop() {
     int rc;
     buffer_hdr_t *buff;
     char zmqsockstr[200];
+    char *model_socket_name = NULL;
     char recv_buff[MODEL_ZMQ_BUFF_SIZE];
-    
-    const char* user_str = std::getenv("PWD");
-    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock", user_str);
+
+    const char* user_str = std::getenv("ZMQ_SOC_DIR");
+    model_socket_name = std::getenv("MODEL_SOCKET_NAME");
+    if (model_socket_name == NULL) {
+        model_socket_name = (char *)"zmqsock";
+    }
+    snprintf(zmqsockstr, 100, "ipc:///%s/%s", user_str, model_socket_name);
+
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);
     rc = zmq_bind(responder, zmqsockstr);
     assert (rc == 0);
     std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
-    while (1) {
-        rc = zmq_recv (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
-        buff = (buffer_hdr_t *) recv_buff;
-        process_buff(buff, g_env);
-        rc = zmq_send (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
-    }
+    zmq_wait_add(responder, zmq_model_recv, NULL);
+
     return;
 }
 
 static void
-model_sig_handler (int sig, siginfo_t *info, void *ptr)
+model_sig_handler (int sig)
 {
     printf("Rcvd signal %u\n", sig);
 
@@ -459,38 +478,29 @@ model_sig_handler (int sig, siginfo_t *info, void *ptr)
 static void
 model_sig_init (void)
 {
-    struct sigaction    act;
-
-    memset(&act, 0, sizeof(act));
-    act.sa_sigaction = model_sig_handler;
-    act.sa_flags = SA_SIGINFO;
-    sigaction(SIGKILL, &act, NULL);
-    sigaction(SIGINT, &act, NULL);
-    sigaction(SIGUSR1, &act, NULL);
-    sigaction(SIGUSR2, &act, NULL);
-    return;
+    struct sigaction action;
+    action.sa_handler = model_sig_handler;
+    action.sa_flags = 0;
+    sigemptyset (&action.sa_mask);
+    sigaction (SIGINT, &action, NULL);
+    sigaction (SIGKILL, &action, NULL);
+    sigaction (SIGUSR1, &action, NULL);
+    sigaction (SIGUSR2, &action, NULL);
 }
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     model_sig_init();
 
-    utils::HostMem host_mem;
-    HOST_MEM::access(&host_mem);
+    HOST_MEM::access(&g_host_mem);
 
     sknobs_init(argc, argv);
     auto env = new cap_env_base(0);
     env->init();
     env->load_debug();
     g_env = env;
-
-    void *responder = init_zmq_model_server();
-    zmq_wait_add(responder, zmq_model_recv, NULL);
-
+    wait_loop();
     sim_server_init(argc, argv);
-
-    std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
     zmq_wait_loop();
 
     return 0;

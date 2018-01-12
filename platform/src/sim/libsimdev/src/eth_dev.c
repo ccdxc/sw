@@ -63,7 +63,8 @@ typedef struct {
     uint16_t    ring_size;
     uint64_t    cq_ring_base;
     uint32_t    intr_assert_addr;
-    uint8_t     color;
+    uint8_t     color:1;
+    uint8_t     rsvd:7;
 } __attribute__((packed)) qstate_app_ethtx_t;
 
 typedef struct {
@@ -78,7 +79,8 @@ typedef struct {
     uint64_t    cq_ring_base;
     uint16_t    rss_type;
     uint32_t    intr_assert_addr;
-    uint8_t     color;
+    uint8_t     color:1;
+    uint8_t     rsvd:7;
 } __attribute__((packed)) qstate_app_ethrx_t;
 
 static simdev_t *current_sd;
@@ -321,16 +323,16 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qs.total = 2;
     qs.pid = cmd->pid;
     qsethtx = (qstate_app_ethtx_t *)qs.app_data;
+    qsethtx->enable = cmd->E;
     qsethtx->p_index0 = 0;
     qsethtx->c_index0 = 0;
     qsethtx->p_index1 = 0;
     qsethtx->c_index1 = 0;
     qsethtx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethtx->ring_size = cmd->ring_size;
-    qsethtx->cq_ring_base = roundup(cmd->ring_base + (1 << cmd->ring_size), 4096);
-    qsethtx->enable = cmd->E;
+    qsethtx->cq_ring_base = roundup(qsethtx->ring_base + (1 << cmd->ring_size), 4096);
     qsethtx->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
-    qsethtx->color = 0xff;
+    qsethtx->color = 1;
 
     if (eth_write_txqstate(sd, cmd->index, &qs) < 0) {
         simdev_error("devcmd_txq_init: write_txqstate %d failed\n",
@@ -388,12 +390,12 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethrx->c_index0 = 0;
     qsethrx->p_index1 = 0;
     qsethrx->c_index1 = 0;
+    qsethrx->enable = cmd->E;
     qsethrx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethrx->ring_size = cmd->ring_size;
-    qsethrx->cq_ring_base = roundup(cmd->ring_base + (1 << cmd->ring_size), 4096);
-    qsethrx->enable = 1;
+    qsethrx->cq_ring_base = roundup(qsethrx->ring_base + (1 << cmd->ring_size), 4096);
     qsethrx->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
-    qsethrx->color = 0xff;
+    qsethrx->color = 1;
 
     if (eth_write_rxqstate(sd, cmd->index, &qs) < 0) {
         simdev_error("devcmd_rxq_init: write_rxqstate %d failed\n",

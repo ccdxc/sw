@@ -115,23 +115,23 @@ NullMemHandle = MemHandle(0, 0)
 
 class HostMemory(object):
     def __init__(self):
-        path = os.path.join(os.environ['WS_TOP'], "bazel-bin/nic/utils/host_mem/libhost_mem.so")
-        self.lib = ctypes.CDLL(path, mode=ctypes.RTLD_GLOBAL)
-        self.lib.alloc_host_mem.argtypes = [ctypes.c_uint64]
-        self.lib.alloc_host_mem.restype = ctypes.c_void_p
-        self.lib.alloc_page_aligned_host_mem.argtypes = [ctypes.c_uint64]
-        self.lib.alloc_page_aligned_host_mem.restype = ctypes.c_void_p
-        self.lib.host_mem_v2p.argtypes = [ctypes.c_void_p]
-        self.lib.host_mem_v2p.restype = ctypes.c_uint64
-        self.lib.host_mem_p2v.argtypes = [ctypes.c_uint64]
-        self.lib.host_mem_p2v.restype = ctypes.c_void_p
-        self.lib.free_host_mem.argtypes = [ctypes.c_void_p]
-        self.lib.free_host_mem.restype = None
-        if not GlobalOptions.dryrun:
+        if not GlobalOptions.dryrun and GlobalOptions.hostmem:
+            path = os.path.join(os.environ['WS_TOP'], "bazel-bin/nic/utils/host_mem/libhost_mem.so")
+            self.lib = ctypes.CDLL(path, mode=ctypes.RTLD_GLOBAL)
+            self.lib.alloc_host_mem.argtypes = [ctypes.c_uint64]
+            self.lib.alloc_host_mem.restype = ctypes.c_void_p
+            self.lib.alloc_page_aligned_host_mem.argtypes = [ctypes.c_uint64]
+            self.lib.alloc_page_aligned_host_mem.restype = ctypes.c_void_p
+            self.lib.host_mem_v2p.argtypes = [ctypes.c_void_p]
+            self.lib.host_mem_v2p.restype = ctypes.c_uint64
+            self.lib.host_mem_p2v.argtypes = [ctypes.c_uint64]
+            self.lib.host_mem_p2v.restype = ctypes.c_void_p
+            self.lib.free_host_mem.argtypes = [ctypes.c_void_p]
+            self.lib.free_host_mem.restype = None
             assert self.lib.init_host_mem() == 0
 
     def get(self, size, page_aligned=True):
-        if GlobalOptions.dryrun: return NullMemHandle
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return NullMemHandle
         assert isinstance(size, int)
         if page_aligned:
             ptr = self.lib.alloc_page_aligned_host_mem(size)
@@ -140,17 +140,17 @@ class HostMemory(object):
         return MemHandle(ptr, self.lib.host_mem_v2p(ptr))
 
     def p2v(self, pa):
-        if GlobalOptions.dryrun: return NullMemHandle.pa
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return NullMemHandle.pa
         assert isinstance(pa, int)
         return self.lib.host_mem_p2v(pa)
 
     def v2p(self, va):
-        if GlobalOptions.dryrun: return NullMemHandle.va
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return NullMemHandle.va
         assert isinstance(va, int)
         return self.lib.host_mem_v2p(va)
 
     def write(self, memhandle, data):
-        if GlobalOptions.dryrun: return
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return
         assert isinstance(memhandle, MemHandle)
         assert isinstance(data, bytes)
         va = memhandle.va
@@ -160,7 +160,7 @@ class HostMemory(object):
         memmove(va, arr, sizeof(arr))
 
     def read(self, memhandle, size):
-        if GlobalOptions.dryrun: return bytes()
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return bytes()
         assert isinstance(memhandle, MemHandle)
         assert isinstance(size, int)
         ba = bytearray([0x0]*size)
@@ -171,13 +171,14 @@ class HostMemory(object):
         return bytes(ba)
 
     def zero(self, memhandle, size):
-        if GlobalOptions.dryrun: return
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return
         assert isinstance(memhandle, MemHandle)
         assert isinstance(size, int)
         va = memhandle.va
         memset(va, 0, c_uint64(size))
 
     def __del__(self):
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return
         self.lib.delete_host_mem()
 
 def init():

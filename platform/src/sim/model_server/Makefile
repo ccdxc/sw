@@ -17,6 +17,7 @@ LCFLAGS = \
 	-I ../../lib/pciehsvc/include \
 	-I ../libsimlib/include \
 	-I ../libsimdev/include \
+	-I ../../../../ \
 	$(NULL)
 LCXXFLAGS = $(LCFLAGS)
 LLDFLAGS = \
