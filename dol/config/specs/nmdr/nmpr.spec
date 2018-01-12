@@ -7,7 +7,7 @@ entries:
         name        : TNMPR
         haltype     : 6
         type        : PAGE_VIA_REF 
-        count       : 16
+        count       : 32 
     - entry:
         name        : RNMPR
         haltype     : 7
@@ -17,7 +17,7 @@ entries:
         name        : TNMPR_SMALL
         haltype     : 4
         type        : PAGE_VIA_REF 
-        count       : 16
+        count       : 32 
     - entry:
         name        : RNMPR_SMALL
         haltype     : 5

@@ -66,18 +66,25 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr.GetMeta()
+    rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
+    rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
     ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
 
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
+    rnmpr.GetRingEntries([rnmpr.pi])
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.Configure()
+    tnmdr.GetMeta()
+    tnmdr.GetRingEntries([tnmdr.pi])
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.Configure()
+    tnmpr.GetMeta()
+    tnmpr.GetRingEntries([tnmpr.pi])
 
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
-    brq.Configure()
+    brq.GetMeta()
+    brq.GetRingEntries([brq.pi])
 
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
@@ -108,16 +115,21 @@ def TestCaseVerify(tc):
     tnmpr = tc.pvtdata.db["TNMPR"]
 
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
+    rnmdr_cur.GetRingEntries([rnmdr_cur.pi, rnmdr_cur.pi + 1])
+    rnmdr_cur.GetRingEntryAOL([rnmdr_cur.pi, rnmdr_cur.pi + 1])
 
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
+    rnmpr_cur.GetRingEntries([rnmpr.pi,rnmpr_cur.pi])
 
     tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.Configure()
+    tnmdr_cur.GetMeta()
+    tnmdr_cur.GetRingEntries([tnmdr.pi,tnmdr_cur.pi])
 
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.Configure()
+    tnmpr_cur.GetMeta()
+    tnmpr_cur.GetRingEntries([tnmpr.pi,tnmpr_cur.pi])
 
     # 2. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi - rnmdr.pi > 2):
@@ -128,7 +140,8 @@ def TestCaseVerify(tc):
     brq = tc.pvtdata.db["BRQ_ENCRYPT"]
     brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    brq_cur.Configure()
+    brq_cur.GetMeta()
+    brq_cur.GetRingEntries([brq.pi, brq_cur.pi])
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     if (brq_cur.pi != (brq.pi+1)):
         print("brq pi/ci not as expected")
