@@ -60,13 +60,15 @@ dma_cmd_data:
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
     /*
-     * TODO : for SACK case, to_s5_payload_len constitutes the total
-     * accumulated payload len. We need to pass only the current
-     * packet length. For now the DMA works if we pass a larger length
+     * For SACK case, to_s5_payload_len is total accumulated length of
+     * packet. s5_s2s_payload_len is the packet we just got and that
+     * is what we want to DMA
      */
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.to_s5_payload_len)
-    sne         c1, k.common_phv_ooo_rcv, r0
-    bcf         [c1], dma_ooo_process
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.s5_s2s_payload_len)
+    seq         c1, k.common_phv_ooo_rcv, 1
+    seq         c2, k.common_phv_pending_txdma, 1
+    setcf       c1, [c1 & !c2]
+    phvwr.c1    p.pkt_dma_dma_cmd_eop, 1
 
 dma_cmd_descr:
     /*

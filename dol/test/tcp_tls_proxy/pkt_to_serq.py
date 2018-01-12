@@ -180,10 +180,6 @@ def TestCaseVerify(tc):
         print("phv2mem not as expected, %d vs received %d" %
                 (tcpcb.debug_num_phv_to_mem + 4*num_pkts, tcb_cur.debug_num_phv_to_mem))
         return False
-    elif ooo and tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem:
-        print("phv2mem not as expected, %d vs received %d" %
-                (tcpcb.debug_num_phv_to_mem, tcb_cur.debug_num_phv_to_mem))
-        return False
 
     # Verify atomic stats
     if hasattr(tc.module.args, 'atomic_stats') and tc.module.args.atomic_stats:

@@ -169,12 +169,6 @@ def TestCaseVerify(tc):
                 (tcpcb.desc_alloced + num_pages, tcb_cur.desc_alloced))
         return False
 
-    # 10. Verify phv2mem counter
-    if tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem+4:
-        print("phv2mem not as expected, %d vs received %d" %
-                (tcpcb.debug_num_phv_to_mem + 4, tcb_cur.debug_num_phv_to_mem))
-        return False
-
     return True
 
 def TestCaseTeardown(tc):

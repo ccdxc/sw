@@ -884,6 +884,12 @@ flow_rx_drop:
 
 ooo_received:
     /*
+     * We need to send immediate ack (dupack)
+     */
+    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
+    phvwr           p.common_phv_pending_txdma, 1
+    phvwr           p.rx2tx_pending_ack_send, 1
+    /*
      * We can receive upto window of rcv_nxt to rcv_nxt + CELL_SIZE *
      * NUM_CELLS into the future.  If we receive an end sequence number beyond
      * that, drop the packet Else set the ooo_rcv_bitmap accordingly

@@ -114,6 +114,17 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : OOO_PKT_TO_SERQ_V4_DUPACK
+        spec    : ooo_pkt_ack.testspec
+        module  : pkt_to_serq
+        args    :
+            maxflows: 1
+            ooo_seq_delta: 1000
+            send_ack : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : FLOWS_TO_SERQ_V4
         spec    : one_pkt.testspec
         module  : pkt_to_serq

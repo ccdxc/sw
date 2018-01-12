@@ -97,6 +97,8 @@ dma_cmd_data:
     add             r2, k.to_s6_xmit_cursor_addr, k.to_s6_xmit_cursor_offset
 
     /* Write L = min(mss, descriptor entry len) */
+    seq             c1, k.to_s6_xmit_cursor_len, 0
+    b.c1            pkts_sent_stats_update_start
     slt             c1, k.to_s6_rcv_mss, k.to_s6_xmit_cursor_len
     add.c1          r6, k.to_s6_rcv_mss, r0
     add.!c1         r6, k.to_s6_xmit_cursor_len, r0
