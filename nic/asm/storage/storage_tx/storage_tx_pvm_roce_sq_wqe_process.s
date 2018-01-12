@@ -41,8 +41,7 @@ storage_tx_pvm_roce_sq_wqe_process_start:
                              storage_tx_roce_rq_push_start)
 
 exit:
-   // Setup the start and end DMA pointers
-   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_0_dma_cmd_eop,
-                 p4_txdma_intr_dma_cmd_ptr)
+   // No need to setup the start and end DMA pointers, just drop PHV
+   phvwr	p.p4_intr_global_drop, 1
    LOAD_NO_TABLES
 
