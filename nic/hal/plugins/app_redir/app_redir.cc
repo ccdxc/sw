@@ -586,6 +586,7 @@ static hal_ret_t
 app_redir_app_hdr_validate(fte::ctx_t& ctx)
 {
     app_redir_ctx_t&                redir_ctx = app_redir_ctxref(ctx);
+    const flow_key_t&               flow_key = ctx.key();
     pen_app_redir_header_v1_full_t  *app_hdr;
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     size_t                          pkt_len;
@@ -627,12 +628,12 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
     case PEN_RAW_REDIR_V1_FORMAT:
 
         /*
-         * Raw vrf not accessible from P4+ so have to set it here
+         * Tenant ID not accessible from P4+ so have to set it here
          */
         flags = ntohs(app_hdr->raw.flags);
-        app_hdr->raw.vrf = cpu_rxhdr->lkp_vrf;
+        app_hdr->raw.vrf = htons(flow_key.vrf_id);
         HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
-                        ntohl(app_hdr->raw.flow_id), flags, app_hdr->raw.vrf);
+                        ntohl(app_hdr->raw.flow_id), flags, flow_key.vrf_id);
         if ((pkt_len < PEN_RAW_REDIR_HEADER_V1_FULL_SIZE) ||
             ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
                         PEN_RAW_REDIR_HEADER_V1_SIZE)) {
