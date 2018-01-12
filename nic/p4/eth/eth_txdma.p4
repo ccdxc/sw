@@ -53,16 +53,22 @@ header_type eth_tx_qstate_d {
 }
 
 #define HEADER_TX_DESC(n) \
-    addr##n : 64; \
+    addr_lo##n : 48; \
+    rsvd##n : 4; \
+    addr_hi##n : 4; \
+    opcode##n : 3; \
+    num_sg_elems##n: 5; \
     len##n : 16; \
     vlan_tci##n : 16; \
-    hdr_len##n : 10; \
-    rsvd2##n : 3; \
-    vlan_insert##n : 1; \
-    cq_entry##n : 1; \
+    hdr_len_lo##n : 8; \
     csum##n : 1; \
-    mss_or_csumoff##n : 14; \
-    rsvd3_or_rsvd4##n : 2;
+    cq_entry##n : 1; \
+    vlan_insert##n : 1; \
+    rsvd2##n : 3; \
+    hdr_len_hi##n: 2; \
+    mss_or_csumoff_lo##n : 8; \
+    rsvd3_or_rsvd4##n : 2; \
+    mss_or_csumoff_hi##n : 6;
 
 header_type eth_tx_desc_d {
     fields {

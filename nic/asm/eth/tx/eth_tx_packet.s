@@ -24,7 +24,10 @@ struct tx_table_s1_t0_eth_tx_packet_d d;
     phvwri      p.dma_pkt##n##_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT; \
     phvwri      p.dma_pkt##n##_dma_pkt_eop, 1; \
     phvwri      p.dma_pkt##n##_dma_cmd_host_addr, 1; \
-    phvwr       p.dma_pkt##n##_dma_cmd_addr, d.{addr##n}.dx; \
+    or          r1, d.addr_lo##n, d.addr_hi##n, 48; \
+    add         r1, r0, r1.dx; \
+    or          r1, r1[63:16], r1[11:8], 48; \
+    phvwr       p.dma_pkt##n##_dma_cmd_addr, r1; \
     phvwr       p.dma_pkt##n##_dma_cmd_size, d.{len##n}.hx;
 
 #define BUILD_APP_HEADER(n) \
@@ -34,10 +37,38 @@ struct tx_table_s1_t0_eth_tx_packet_d d;
     phvwr.c1    p.eth_tx_app_hdr##n##_vlan_tag, d.{vlan_tci##n}.hx; \
     phvwr.c1    p.eth_tx_app_hdr##n##_flags, r1;
 
+#define DEBUG_DESCR_FLD(name) \
+    add         r7, r0, d.##name
+
+#define DEBUG_DESCR(n) \
+    DEBUG_DESCR_FLD(addr_lo##n); \
+    DEBUG_DESCR_FLD(addr_hi##n); \
+    DEBUG_DESCR_FLD(rsvd##n); \
+    DEBUG_DESCR_FLD(num_sg_elems##n); \
+    DEBUG_DESCR_FLD(opcode##n); \
+    DEBUG_DESCR_FLD(len##n); \
+    DEBUG_DESCR_FLD(vlan_tci##n); \
+    DEBUG_DESCR_FLD(hdr_len_lo##n); \
+    DEBUG_DESCR_FLD(hdr_len_hi##n); \
+    DEBUG_DESCR_FLD(rsvd2##n); \
+    DEBUG_DESCR_FLD(vlan_insert##n); \
+    DEBUG_DESCR_FLD(cq_entry##n); \
+    DEBUG_DESCR_FLD(csum##n); \
+    DEBUG_DESCR_FLD(mss_or_csumoff_lo##n); \
+    DEBUG_DESCR_FLD(mss_or_csumoff_hi##n); \
+    DEBUG_DESCR_FLD(rsvd3_or_rsvd4##n)
+
 %%
 
 .align
 eth_tx_packet:
+
+#if 0
+    DEBUG_DESCR(0)
+    DEBUG_DESCR(1)
+    DEBUG_DESCR(2)
+    DEBUG_DESCR(3)
+#endif
 
     // Set intrinsics
     phvwri      p.p4_intr_global_tm_iport, TM_PORT_DMA

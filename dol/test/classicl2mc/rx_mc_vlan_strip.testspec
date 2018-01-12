@@ -149,7 +149,8 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY0
-            len                   : ref://testcase/buffers/id=EXP_BUF_COPY0/size
+            len           : ref://testcase/buffers/id=EXP_BUF_COPY0/size
+            V             : callback://networking/packets/PacketIsVlanTagged
             vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
     - descriptor:
@@ -157,7 +158,8 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY1
-            len                   : ref://testcase/buffers/id=EXP_BUF_COPY1/size
+            len           : ref://testcase/buffers/id=EXP_BUF_COPY1/size
+            V             : callback://networking/packets/PacketIsVlanTagged
             vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
     - descriptor:
@@ -165,7 +167,8 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=EXP_BUF_COPY2_ALLMC
-            len                   : ref://testcase/buffers/id=EXP_BUF_COPY2_ALLMC/size
+            len           : ref://testcase/buffers/id=EXP_BUF_COPY2_ALLMC/size
+            V             : callback://networking/packets/PacketIsVlanTagged
             vlan_tci      : callback://classic/packets/GetExpectedMcastPacketQtag
 
 trigger:

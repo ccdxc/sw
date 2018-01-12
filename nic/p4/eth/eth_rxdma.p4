@@ -18,13 +18,18 @@ header_type eth_rx_cq_desc_p {
         csum : 16;
         vlan_tci : 16;
         len_lo : 8;
-        csum_level : 2;
+        rsvd2 : 2;
         len_hi : 6;
+        rsvd3 : 4;
         rss_type : 4;
-        rsvd2 : 3;
-        vlan_strip : 1;
         color : 1;
-        rsvd3 : 7;
+        vlan_strip : 1;
+        csum_ip_bad : 1;
+        csum_ip_ok : 1;
+        csum_udp_bad : 1;
+        csum_udp_ok : 1;
+        csum_tcp_bad : 1;
+        csum_tcp_ok : 1;
     }
 }
 
@@ -63,14 +68,15 @@ header_type eth_rx_qstate_d {
 
 header_type eth_rx_desc_d {
     fields {
-        addr : 64;
-        //addr_lo : 32;
-        //addr_hi : 20;
-        //rsvd : 12;
+        addr_lo : 48;
+        rsvd0 : 4;
+        addr_hi : 4;
+        rsvd1 : 8;
         len : 16;
+        rsvd2 : 5;
         opcode : 3;
-        rsvd2 : 13;
-        rsvd3 : 32;
+        rsvd3 : 8;
+        rsvd4 : 32;
     }
 }
 

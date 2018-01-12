@@ -1,105 +1,125 @@
 #! /usr/bin/python3
 
-import copy
+from pprint import pformat
 from scapy.all import *
 import config.resmgr            as resmgr
-import infra.penscapy.penscapy  as penscapy
 from infra.common.logging       import cfglogger
+from ctypes import *
 
 import infra.factory.base as base
 
 
-class EthTxDescriptor(Packet):
-    fields_desc = [
-        LELongField("addr", 0),
-        LEShortField("len", 0),
-        LEShortField("vlan_tci", 0),
-        BitField("hdr_len", 0, 10),
-        BitField("rsvd2", 0, 3),
-        BitField("V", 0, 1),
-        BitField("C", 0, 1),
-        BitField("O", 0, 1),
-        BitField("mss_or_csumoff", 0, 14),
-        BitField("rsvd3_or_rsvd4", 0, 2),
+IONIC_TX_MAX_SG_ELEMS = 16
+
+
+def to_dict(obj):
+    if isinstance(obj, Array):
+        return [to_dict(x) for x in obj]
+    elif isinstance(obj, Structure) or isinstance(obj, Union):
+        return {x[0]: to_dict(getattr(obj, x[0])) for x in obj._fields_}
+    elif isinstance(obj, int):
+        return "0x%x" % obj
+    else:
+        return obj
+
+
+def ctypes_pformat(cstruct):
+    return cstruct.__class__.__name__ + '\n' + pformat(to_dict(cstruct))
+
+
+class EthRxDescriptor(LittleEndianStructure):
+    _fields_ = [
+        ("addr", c_uint64, 52),
+        ("rsvd", c_uint64, 12),
+        ("len", c_uint16),
+        ("opcode", c_uint16, 3),
+        ("rsvd2", c_uint16, 13),
+        ("rsvd3", c_uint32)
     ]
 
 
-class EthTxCqDescriptor(Packet):
-    fields_desc = [
-        ByteField("status", 0),
-        ByteField("rsvd", 0),
-        LEShortField("comp_index", 0),
-        LELongField("rsvd2", 0),
-        BitField("rsvd3", 0, 24),
-        BitField("color", 0, 1),
-        BitField("rsvd4", 0, 7),
+class EthRxCqDescriptor(LittleEndianStructure):
+    _fields_ = [
+        ("status", c_uint32, 8),
+        ("rsvd", c_uint32, 8),
+        ("comp_index", c_uint32, 16),
+        ("rss_hash", c_uint32),
+        ("csum", c_uint16),
+        ("vlan_tci", c_uint16),
+        ("len", c_uint32, 14),
+        ("rsvd2", c_uint32, 2),
+        ("rss_type", c_uint32, 4),
+        ("rsvd3", c_uint32, 4),
+        ("csum_tcp_ok", c_uint32, 1),
+        ("csum_tcp_bad", c_uint32, 1),
+        ("csum_udp_ok", c_uint32, 1),
+        ("csum_udp_bad", c_uint32, 1),
+        ("csum_ip_ok", c_uint32, 1),
+        ("csum_ip_bad", c_uint32, 1),
+        ("V", c_uint32, 1),
+        ("color", c_uint32, 1),
     ]
 
 
-class EthRxDescriptor(Packet):
-    fields_desc = [
-        LELongField("addr", 0),
-        LEShortField("len", 0),
-        BitField("opcode", 0, 3),
-        BitField("rsvd2", 0, 13),
-        LEIntField("rsvd3", 0),
+class EthTxDescriptor(LittleEndianStructure):
+    _fields_ = [
+        ("addr", c_uint64, 52),
+        ("rsvd", c_uint64, 4),
+        ("num_sg_elems", c_uint64, 5),
+        ("opcode", c_uint64, 3),
+        ("len", c_uint16),
+        ("vlan_tci", c_uint16),
+        ("hdr_len", c_uint16, 10),
+        ("rsvd2", c_uint16, 3),
+        ("V", c_uint16, 1),
+        ("C", c_uint16, 1),
+        ("O", c_uint16, 1),
+        ("mss_or_csumoffset", c_uint16, 14),
+        ("rsvd3_or_rsvd4", c_uint16, 2),
     ]
 
 
-class EthRxCqDescriptor(Packet):
-    fields_desc = [
-        ByteField("status", 0),
-        ByteField("rsvd", 0),
-        LEShortField("comp_index", 0),
-        LEIntField("rss_hash", 0),
-        LEShortField("csum", 0),
-        LEShortField("vlan_tci", 0),
-        ByteField("len_lo", 0),
-        BitField("csum_level", 0, 2),
-        BitField("len_hi", 0, 6),
-        BitField("rss_type", 0, 4),
-        BitField("rsvd2", 0, 3),
-        BitField("V", 0, 1),
-        BitField("color", 0, 1),
-        BitField("rsvd3", 0, 7),
+class EthTxSgElement(LittleEndianStructure):
+    _fields_ = [
+        ("addr", c_uint64, 52),
+        ("rsvd", c_uint64, 12),
+        ("len", c_uint16),
+        ("rsvd2", c_uint16 * 2),
     ]
 
 
-class AdminDesciptor(Packet):
-    fields_desc = [
-        LEShortField("opcode", 0),
-        LEShortField("rsvd", 0),
-        LEIntField("cmd_data0", 0),
-        LEIntField("cmd_data1", 0),
-        LEIntField("cmd_data2", 0),
-        LEIntField("cmd_data3", 0),
-        LEIntField("cmd_data4", 0),
-        LEIntField("cmd_data5", 0),
-        LEIntField("cmd_data6", 0),
-        LEIntField("cmd_data7", 0),
-        LEIntField("cmd_data8", 0),
-        LEIntField("cmd_data9", 0),
-        LEIntField("cmd_data10", 0),
-        LEIntField("cmd_data11", 0),
-        LEIntField("cmd_data12", 0),
-        LEIntField("cmd_data13", 0),
-        LEIntField("cmd_data14", 0),
+class EthTxSgDescriptor(LittleEndianStructure):
+    _fields_ = [
+        ("elems", EthTxSgElement * IONIC_TX_MAX_SG_ELEMS),
     ]
 
 
-class AdminCqDescriptor(Packet):
-    fields_desc = [
-        LEShortField("cmd_status", 0),
-        LEShortField("completion_index", 0),
-        BitField("rsvd", 0, 7),
-        BitField("color", 0, 1),
-        LEIntField("cmd_data0", 0),
-        LEIntField("cmd_data1", 0),
-        LEIntField("cmd_data2", 0),
-        LEIntField("cmd_data3", 0),
-        LEIntField("cmd_data4", 0),
-        LEIntField("cmd_data5", 0),
-        BitField("rsvd0", 0, 24),
+class EthTxCqDescriptor(LittleEndianStructure):
+    _fields_ = [
+        ("status", c_uint32, 8),
+        ("rsvd", c_uint32, 8),
+        ("comp_index", c_uint32, 16),
+        ("rsvd2", c_uint32 * 2),
+        ("rsvd3", c_uint32, 31),
+        ("color", c_uint32, 1),
+    ]
+
+
+class AdminDesciptor(LittleEndianStructure):
+    _fields_ = [
+        ("opcode", c_uint16),
+        ("rsvd", c_uint16),
+        ("cmd_data", c_uint32 * 15),
+    ]
+
+
+class AdminCqDescriptor(LittleEndianStructure):
+    _fields_ = [
+        ("cmd_status", c_uint16),
+        ("comp_index", c_uint16),
+        ("cmd_data", c_uint32 * 6),
+        ("rsvd0", c_uint32, 31),
+        ("color", c_uint32, 1),
     ]
 
 
@@ -109,9 +129,8 @@ class EthDescriptorObject(base.FactoryObjectBase):
 
     def __init__(self):
         super().__init__()
-        assert(issubclass(self.__data_class__, Packet))
         self.logger = cfglogger
-        self.size = len(self.__data_class__())
+        self.size = sizeof(self.__data_class__)
         if (self.size & (self.size - 1)) != 0:    # Size must be power of 2
             raise ValueError('Size must be a power of 2.'
                              'Size of type %s is %d' % (self.__data_class__.__name__,
@@ -147,7 +166,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         self.logger.info("Writing %s" % self)
         self._data = self.__data_class__(**self.fields)
         resmgr.HostMemoryAllocator.write(self._mem, bytes(self._data))
-        self.logger.ShowScapyObject(self._data)
+        self.logger.info(ctypes_pformat(self._data))
 
     def Read(self):
         """
@@ -158,11 +177,11 @@ class EthDescriptorObject(base.FactoryObjectBase):
 
         self.logger.info("Reading %s" % self)
         ba = resmgr.HostMemoryAllocator.read(self._mem, self.size)
-        self._data = self.__data_class__(ba)
+        self._data = self.__data_class__.from_buffer_copy(ba)
         # Fill in the fields from data
-        self.fields = {k.name: getattr(self._data[self.__data_class__], k.name)
-                       for k in self._data.fields_desc}
-        self.logger.ShowScapyObject(self._data)
+        self.fields = {k[0]: getattr(self._data, k[0])
+                       for k in self.__data_class__._fields_}
+        self.logger.info(ctypes_pformat(self._data))
 
     def __str__(self):
         return "%s GID:%s/Id:0x%x/Memory:%s" % (
@@ -216,15 +235,11 @@ class EthRxCqDescriptorObject(EthDescriptorObject):
         # This is a read-only descriptor type
         return
 
-    @property
-    def len(self):
-        return (self._data[self.__data_class__].len_hi << 8) + self._data[self.__data_class__].len_lo
-
     def GetCompletionIndex(self):
-        return self._data[self.__data_class__].comp_index
+        return self._data.comp_index
 
     def GetColor(self):
-        return self._data[self.__data_class__].color
+        return self._data.color
 
 
 class EthTxDescriptorObject(EthDescriptorObject):
@@ -243,10 +258,10 @@ class EthTxCqDescriptorObject(EthDescriptorObject):
         return
 
     def GetCompletionIndex(self):
-        return self._data[self.__data_class__].comp_index
+        return self._data.comp_index
 
     def GetColor(self):
-        return self._data[self.__data_class__].color
+        return self._data.color
 
 
 class AdminDescriptorObject(EthDescriptorObject):
