@@ -19,6 +19,15 @@ from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 import test.app_redir.app_redir_shared as app_redir_shared
 
+rnmdr = 0
+rnmpr = 0
+rnmpr_small = 0
+proxyrcbid = ""
+proxyccbid = ""
+tlscbid = ""
+tlscb = 0
+proxyrcb = 0
+proxyccb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -31,6 +40,15 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    global rnmdr
+    global rnmpr
+    global rnmpr_small
+    global proxyrcbid
+    global proxyccbid
+    global tlscbid
+    global tlscb
+    global proxyrcb
+    global proxyccb
 
     tc.pvtdata = ObjectDatabase(logger)
     tcp_proxy.SetupProxyArgs(tc)
@@ -62,9 +80,6 @@ def TestCaseSetup(tc):
     print("vrf %d flow sport %d dport %d" % 
           (proxyrcb.vrf, proxyrcb.sport, proxyrcb.dport))
     proxyrcb.SetObjValPd()
-
-    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
-    brq.Configure()
 
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
@@ -100,35 +115,29 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
-    rnmpr_small.Configure()
-
-    serqid = "TLSCB%04d_SERQ" % id
-    serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
-    serq.Configure()
+    rnmpr_small.GetMeta()
 
     proxyrcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[proxyrcbid])
     proxyrcb.GetObjValPd()
     proxyccb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[proxyccbid])
     proxyccb.GetObjValPd()
-    proxyccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["PROXYCCBQ"])
-    proxyccbq.Configure()
     
-    tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(rnmpr_small)
-    tc.pvtdata.Add(brq)
-    tc.pvtdata.Add(proxyrcb)
-    tc.pvtdata.Add(proxyccb)
-    tc.pvtdata.Add(proxyccbq)
-    tc.pvtdata.Add(serq)
     return
 
 def TestCaseVerify(tc):
+    global rnmdr
+    global rnmpr
+    global rnmpr_small
+    global proxyrcbid
+    global proxyccbid
+    global tlscbid
+    global tlscb
+    global proxyrcb
+    global proxyccb
 
     num_pkts = 1
     if hasattr(tc.module.args, 'num_pkts'):
@@ -141,10 +150,6 @@ def TestCaseVerify(tc):
     num_flow_miss_pkts = 0
     if hasattr(tc.module.args, 'num_flow_miss_pkts'):
         num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
-
-    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-    tlscbid = "TlsCb%04d" % id
-    tlscb = tc.pvtdata.db[tlscbid]
 
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % 
@@ -163,9 +168,6 @@ def TestCaseVerify(tc):
         return False
 
     # Verify chain_rxq_base
-    _proxyrcb_id = id
-    proxyrcbid = "ProxyrCb%04d" % _proxyrcb_id
-    proxyrcb = tc.pvtdata.db[proxyrcbid]
     proxyrcb_cur = tc.infra_data.ConfigStore.objects.db[proxyrcbid]
     proxyrcb_cur.GetObjValPd()
     if proxyrcb_cur.chain_rxq_base == 0:
@@ -175,9 +177,6 @@ def TestCaseVerify(tc):
     print("chain_rxq_base value post-sync from HBM 0x%x" % proxyrcb_cur.chain_rxq_base)
 
     # Verify my_txq_base
-    _proxyccb_id = id
-    proxyccbid = "ProxycCb%04d" % _proxyccb_id
-    proxyccb = tc.pvtdata.db[proxyccbid]
     proxyccb_cur = tc.infra_data.ConfigStore.objects.db[proxyccbid]
     proxyccb_cur.GetObjValPd()
     if proxyccb_cur.my_txq_base == 0:
@@ -187,26 +186,15 @@ def TestCaseVerify(tc):
     print("my_txq_base value post-sync from HBM 0x%x" % proxyccb_cur.my_txq_base)
 
     # Fetch current values from Platform
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    rnmpr_small = tc.pvtdata.db["RNMPR_SMALL"]
-    brq = tc.pvtdata.db["BRQ_ENCRYPT"]
-    proxyccbq = tc.pvtdata.db["PROXYCCBQ"]
-
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
-    rnmpr_small_cur.Configure()
-    proxyccbq_cur = tc.infra_data.ConfigStore.objects.db["PROXYCCBQ"]
-    proxyccbq_cur.Configure()
+    rnmpr_small_cur.GetMeta()
 
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.GetObjValPd()
-
-    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
-    brq_cur.Configure()
 
     # Verify PI for RNMDR got incremented
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):

@@ -259,6 +259,7 @@ typedef struct ingress_info_s {
 std::ostream& operator<<(std::ostream& os, const ingress_info_t& val);
 
 typedef struct mirror_info_s {
+    bool proxy_mirror;
     uint8_t egr_mirror_session;
     uint8_t ing_mirror_session;
 } mirror_info_t;
@@ -392,6 +393,10 @@ public:
 
     // Flow has drop action set (installs flow with drop action)
     bool drop_flow() { return drop_flow_; }
+
+    // Flow configured to mirror to a proxy
+    bool get_proxy_mirror_flow(hal::flow_role_t role);
+    bool proxy_mirror_flow() { return get_proxy_mirror_flow(role_); }
 
     // Drop packet
     bool drop() const { return drop_; }

@@ -507,6 +507,7 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     size_t                          hdr_len = 0;
     hal_ret_t                       ret = HAL_RET_OK;
+    uint16_t                        redir_flags;
 
     /*
      * No-op if header already inserted
@@ -518,6 +519,12 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
     redir_miss_hdr.app.h_proto = htons(PEN_APP_REDIR_ETHERTYPE);
     cpu_rxhdr = ctx.cpu_rxhdr();
     redir_miss_hdr.ver.format = format;
+    redir_flags = PEN_APP_REDIR_L3_CSUM_CHECKED |
+                  PEN_APP_REDIR_L4_CSUM_CHECKED;
+    if (redir_ctx.redir_span_type() != APP_REDIR_SPAN_NONE) {
+        redir_flags |= PEN_APP_REDIR_SPAN_INSTANCE;
+    }
+
     switch (format) {
 
     case PEN_RAW_REDIR_V1_FORMAT:
@@ -525,8 +532,7 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
                   PEN_RAW_REDIR_HEADER_V1_SIZE;
         redir_miss_hdr.ver.hdr_len = htons(hdr_len);
         redir_miss_hdr.raw.vrf = htons(flow_key.vrf_id);
-        redir_miss_hdr.raw.flags = htons(PEN_APP_REDIR_L3_CSUM_CHECKED |
-                                         PEN_APP_REDIR_L4_CSUM_CHECKED);
+        redir_miss_hdr.raw.flags = htons(redir_flags);
         redir_miss_hdr.raw.flow_id = htonl(redir_ctx.chain_flow_id());
         redir_ctx.set_redir_miss_pkt_p(ctx.pkt());
         redir_miss_hdr.raw.redir_miss_pkt_p = (uint64_t)ctx.pkt();
@@ -540,8 +546,7 @@ app_redir_miss_hdr_insert(fte::ctx_t& ctx,
                   PEN_PROXY_REDIR_HEADER_V1_SIZE;
         redir_miss_hdr.ver.hdr_len = htons(hdr_len);
         redir_miss_hdr.proxy.vrf = htons(flow_key.vrf_id);
-        redir_miss_hdr.proxy.flags = htons(PEN_APP_REDIR_L3_CSUM_CHECKED |
-                                           PEN_APP_REDIR_L4_CSUM_CHECKED);
+        redir_miss_hdr.proxy.flags = htons(redir_flags);
         redir_miss_hdr.proxy.flow_id = htonl(redir_ctx.chain_flow_id());
         redir_miss_hdr.proxy.tcp_flags = cpu_rxhdr->tcp_flags;
         redir_ctx.set_redir_miss_pkt_p(ctx.pkt());
@@ -592,7 +597,7 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
     size_t                          pkt_len;
     size_t                          hdr_len;
     uint16_t                        h_proto;
-    uint16_t                        flags = 0;
+    uint16_t                        redir_flags = 0;
     hal_ret_t                       ret = HAL_RET_OK;
 
     app_hdr = (pen_app_redir_header_v1_full_t *)ctx.pkt();
@@ -630,10 +635,10 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
         /*
          * Tenant ID not accessible from P4+ so have to set it here
          */
-        flags = ntohs(app_hdr->raw.flags);
+        redir_flags = ntohs(app_hdr->raw.flags);
         app_hdr->raw.vrf = htons(flow_key.vrf_id);
-        HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
-                        ntohl(app_hdr->raw.flow_id), flags, flow_key.vrf_id);
+        HAL_TRACE_DEBUG("{} flow_id {:#x} redir_flags {:#x} vrf {}", __FUNCTION__,
+                        ntohl(app_hdr->raw.flow_id), redir_flags, flow_key.vrf_id);
         if ((pkt_len < PEN_RAW_REDIR_HEADER_V1_FULL_SIZE) ||
             ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
                         PEN_RAW_REDIR_HEADER_V1_SIZE)) {
@@ -648,9 +653,9 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
         break;
 
     case PEN_PROXY_REDIR_V1_FORMAT:
-        flags = ntohs(app_hdr->proxy.flags);
-        HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
-                        ntohl(app_hdr->proxy.flow_id), flags, 
+        redir_flags = ntohs(app_hdr->proxy.flags);
+        HAL_TRACE_DEBUG("{} flow_id {:#x} redir_flags {:#x} vrf {}", __FUNCTION__,
+                        ntohl(app_hdr->proxy.flow_id), redir_flags, 
                         ntohs(app_hdr->proxy.vrf));
         if ((pkt_len < PEN_PROXY_REDIR_HEADER_V1_FULL_SIZE) ||
             ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
@@ -683,8 +688,11 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
         goto done;
     }
 
-    redir_ctx.set_redir_flags(flags);
+    redir_ctx.set_redir_flags(redir_flags);
     redir_ctx.set_hdr_len_total(hdr_len + PEN_APP_REDIR_HEADER_SIZE);
+    if (redir_flags & PEN_APP_REDIR_SPAN_INSTANCE) {
+        redir_ctx.set_redir_span_type(APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE);
+    }
 
 done:
     app_redir_feature_status_set(ctx, ret);
@@ -816,15 +824,9 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
         redir_ctx.set_tcp_tls_proxy_flow((type == types::PROXY_TYPE_TCP) ||
                           (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP) ||
                           (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN));
-        /*
-         * span_flow might have been set by appid; if not, evaluate it here
-         */
-        if (redir_ctx.redir_span_type() == APP_REDIR_SPAN_NONE) {
-
-            if ((type == types::PROXY_TYPE_APP_REDIR_SPAN) ||
-                (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN)) {
-                redir_ctx.set_redir_span_type(APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE);
-            }
+        if ((type == types::PROXY_TYPE_APP_REDIR_SPAN) ||
+            (type == types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN)) {
+            redir_ctx.set_redir_span_type(APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE);
         }
 
     } else {
@@ -886,8 +888,8 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
          * on flow and spray to appropriate ARQ.
          */
         type = redir_ctx.redir_span_type() == APP_REDIR_SPAN_NONE ?
-               types::PROXY_TYPE_APP_REDIR :
-               types::PROXY_TYPE_APP_REDIR_SPAN;
+               types::PROXY_TYPE_APP_REDIR : types::PROXY_TYPE_APP_REDIR_SPAN;
+
         alloc_qid = !ctx.existing_session() &&
                     (type != types::PROXY_TYPE_APP_REDIR_SPAN);
         ret = proxy_flow_enable(type, flow_key, alloc_qid, NULL, NULL);
@@ -950,6 +952,7 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
         } else {
             ret = app_redir_span_create_init(ctx);
             flowupd.type = fte::FLOWUPD_MIRROR_INFO;
+            flowupd.mirror_info.proxy_mirror = true;
             if (redir_ctx.redir_span_type() == APP_REDIR_SPAN_INGRESS) {
                 flowupd.mirror_info.ing_mirror_session = 1 << mirror_session_id;
                 flowupd.mirror_info.egr_mirror_session = 0;
@@ -1104,6 +1107,10 @@ app_redir_tcp_pipeline_process(fte::ctx_t& ctx)
 
             redir_ctx.set_chain_flow_id(flow_id);
             ctx.set_role((hal::flow_role_t)proxyrcb->role);
+            if (proxyrcb->redir_span) {
+                redir_ctx.set_redir_span_type(APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE);
+            }
+
             app_redir_flow_key_build_from_proxyrcb(ctx, *proxyrcb);
             ret = app_redir_miss_hdr_insert(ctx, PEN_PROXY_REDIR_V1_FORMAT);
             if (ret == HAL_RET_OK) {

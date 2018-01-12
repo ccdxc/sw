@@ -11,6 +11,7 @@
             "features"  : [
                 "stage-marker",
                 "fwding",
+                "fwding-pre-stage",
                 "tunnel",
                 "qos",
                 "ingress-checks"
@@ -174,6 +175,7 @@
                 "pensando.io/app-redir:app-redir-miss",
                 "pensando.io/app-redir:app-redir-appid",
                 "pensando.io/sfw:sfw",
+                "pensando.io/network:fwding-pre-stage",
                 "pensando.io/network:stage-marker",
                 "pensando.io/lb:lb",
                 "pensando.io/network:qos",
@@ -193,6 +195,7 @@
                 "pensando.io/app-redir:app-redir-miss",
                 "pensando.io/sfw:sfw",
                 "pensando.io/app-redir:app-redir-appid",
+                "pensando.io/network:fwding-pre-stage",
                 "pensando.io/network:stage-marker",
                 "pensando.io/sfw:sfw",
                 "pensando.io/sfw:conntrack",

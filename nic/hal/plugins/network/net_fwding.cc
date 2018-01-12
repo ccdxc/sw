@@ -104,5 +104,30 @@ fwding_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
+fte::pipeline_action_t
+fwding_pre_stage_exec(fte::ctx_t& ctx)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    /*
+     * When proxy mirror is enabled on the current flow, 2 flow instances will
+     * be required: instance 0 with normal network forwarding plus mirror, and
+     * instance 1 with normal forwarding only (as needed for CPU flow-miss Tx).
+     *
+     * Hence, prior to stage_exec(), if the current flow has been updated
+     * to mirror to a proxy, issue network forwarding update for the flow.
+     */
+    if (ctx.proxy_mirror_flow()) {
+        ret = update_flow(ctx);
+
+        if (ret != HAL_RET_OK) {
+            ctx.set_feature_status(ret);
+            return fte::PIPELINE_END; 
+        }
+    }
+
+    return fte::PIPELINE_CONTINUE;
+}
+
 } // namespace hal
 } // namespace net

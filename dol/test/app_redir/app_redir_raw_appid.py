@@ -7,6 +7,9 @@ import test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 
+rnmdr = 0
+rnmpr = 0
+rnmpr_small = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -19,9 +22,11 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    global rnmdr
+    global rnmpr
+    global rnmpr_small
 
     tc.pvtdata = ObjectDatabase(logger)
-    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
 
     # For this test, we'd like app_redir flow miss pipeline to configure
     # the necessary rawr/rawc CBs so we refrain from doing that here.
@@ -29,18 +34,18 @@ def TestCaseSetup(tc):
 
     # Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
-    rnmpr_small.Configure()
+    rnmpr_small.GetMeta()
     
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(rnmpr_small)
     return
 
 def TestCaseVerify(tc):
+    global rnmdr
+    global rnmpr
+    global rnmpr_small
 
     num_pkts = 1
     if hasattr(tc.module.args, 'num_pkts'):
@@ -51,16 +56,12 @@ def TestCaseVerify(tc):
         num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
 
     # Fetch current values from Platform
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    rnmpr_small = tc.pvtdata.db["RNMPR_SMALL"]
-
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
-    rnmpr_small_cur.Configure()
+    rnmpr_small_cur.GetMeta()
 
     # Verify PI for RNMDR got incremented
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):

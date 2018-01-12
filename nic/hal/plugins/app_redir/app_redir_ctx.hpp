@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include "nic/include/fte.hpp"
+#include "nic/p4/nw/include/defines.h"
 
 namespace hal {
 namespace app_redir {
@@ -121,7 +122,7 @@ public:
 
     bool chain_pkt_span_instance(void)
     {
-        return !!(redir_flags_ & PEN_APP_REDIR_SPAN_INSTANCE);
+        return redir_span_type_ != APP_REDIR_SPAN_NONE;
     }
 
     bool pipeline_end() const { return pipeline_end_; }
@@ -134,7 +135,12 @@ public:
     void set_tcp_tls_proxy_flow(bool yesno) { tcp_tls_proxy_flow_ = yesno; }
 
     app_redir_span_type_t redir_span_type() const { return redir_span_type_; }
-    void set_redir_span_type(app_redir_span_type_t redir_span_type) { redir_span_type_ = redir_span_type; }
+    void set_redir_span_type(app_redir_span_type_t redir_span_type)
+    { 
+        if (redir_span_type_ == APP_REDIR_SPAN_NONE) {
+            redir_span_type_ = redir_span_type;
+        }
+    }
 
     uint8_t chain_qtype() const { return chain_qtype_; }
     void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
@@ -259,8 +265,7 @@ private:
     bool                            chain_pkt_enqueued_ : 1,
                                     pipeline_end_       : 1,
                                     redir_policy_applic_: 1,
-                                    tcp_tls_proxy_flow_ : 1,
-                                    span_flow_          : 1;
+                                    tcp_tls_proxy_flow_ : 1;
     pen_app_redir_header_v1_full_t  redir_miss_hdr_;
     uint8_t                         *redir_miss_pkt_p_;
     hal::proxy_flow_info_t          *proxy_flow_info_;
@@ -288,6 +293,134 @@ inline app_redir_ctx_t* app_redir_ctx(fte::ctx_t& ctx,
 inline app_redir_ctx_t& app_redir_ctxref(fte::ctx_t& ctx,
                                          bool from_appid_feature = false) {
     return *app_redir_ctx(ctx, from_appid_feature);
+}
+
+/*
+ * Workaround (hopefully temporary) for the issue where, for a SPAN packet, 
+ * P4 does not provide any parsed info beyond L2.
+ */
+inline void app_redir_rx_span_parse_workaround(fte::ctx_t& ctx)
+{
+    fte::cpu_rxhdr_t    *cpu_rxhdr;
+    ether_header_t      *ethhdr;
+    ipv4_header_t       *iphdr;
+    ipv6_header_t       *iphdr6;
+    pen_app_redir_header_v1_full_t *app_hdr;
+    uint16_t            redir_flags;
+    uint16_t            ethertype;
+    uint8_t             proto;
+
+    if (ctx.pkt() && ctx.app_redir_pipeline()) {
+        cpu_rxhdr = (fte::cpu_rxhdr_t *)ctx.cpu_rxhdr();
+        if ((cpu_rxhdr->lkp_type != FLOW_KEY_LOOKUP_TYPE_MAC) &&
+            (cpu_rxhdr->l3_offset < 0)) {
+
+            app_hdr = (pen_app_redir_header_v1_full_t *)ctx.pkt();
+            if ((ctx.pkt_len() >= PEN_RAW_REDIR_HEADER_V1_FULL_SIZE) &&
+                (app_hdr->ver.format == PEN_RAW_REDIR_V1_FORMAT)) {
+
+                redir_flags = ntohs(app_hdr->raw.flags);
+                if (redir_flags & PEN_APP_REDIR_SPAN_INSTANCE) {
+                    assert((cpu_rxhdr->l2_offset >= 0) &&
+                           (cpu_rxhdr->payload_offset >= 0));
+
+                    ethhdr = (ether_header_t *)(ctx.pkt() + cpu_rxhdr->l2_offset);
+                    ethertype = cpu_rxhdr->flags & CPU_FLAGS_VLAN_VALID ?
+                                ntohs(((vlan_header_t*)ethhdr)->etype) :
+                                ntohs(ethhdr->etype);
+                    /*
+                     * Ignore L3/L4 options for now (the expectation is that P4 will
+                     * eventually provide us a fully parsed SPAN packet and we will
+                     * be able to get rid of this workaround).
+                     */
+                    cpu_rxhdr->l3_offset = cpu_rxhdr->payload_offset;
+                    proto = IPPROTO_RAW;
+                    switch (ethertype) {
+
+                    case ETH_P_IP:
+                        iphdr = (ipv4_header_t*)(ctx.pkt() + cpu_rxhdr->l3_offset);
+                        cpu_rxhdr->lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
+                        cpu_rxhdr->l4_offset = cpu_rxhdr->l3_offset + 
+                                               sizeof(ipv4_header_t);
+                        proto = iphdr->protocol;
+                        break;
+
+                    case ETH_P_IPV6:
+                        iphdr6 = (ipv6_header_t *)(ctx.pkt() + cpu_rxhdr->l3_offset);
+                        cpu_rxhdr->lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
+                        cpu_rxhdr->l4_offset = cpu_rxhdr->l3_offset + 
+                                               sizeof(ipv6_header_t);
+                        proto = iphdr6->nexthdr;
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    switch (proto) {
+
+                    case IPPROTO_TCP:
+                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset + 
+                                                    sizeof(tcp_header_t);
+                        break;
+
+                    case IPPROTO_UDP:
+                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset + 
+                                                    sizeof(udp_header_t);
+                        break;
+
+                    case IPPROTO_ICMP:
+                    case IPPROTO_ICMPV6:
+                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset + 
+                                                    sizeof(icmp_header_t);
+                        break;
+
+                    case IPPROTO_ESP:
+                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset + 
+                                                    sizeof(ipsec_esp_header_t);
+                        break;
+
+                    default:
+                        cpu_rxhdr->payload_offset = -1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/*
+ * Return true if the current packet was received for a raw flow in
+ * the app redirect pipeline.
+ */
+inline bool app_redir_pkt_rx_raw(fte::ctx_t& ctx)
+{
+    if (ctx.pkt() && ctx.app_redir_pipeline()) {
+        if (ctx.cpu_rxhdr()->qtype != APP_REDIR_PROXYR_QTYPE) {
+
+            app_redir_rx_span_parse_workaround(ctx);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*
+ * Return true if app_redir owns responsibility for Tx (or suppress Tx)
+ * of the current packet.
+ */
+inline bool app_redir_pkt_tx_ownership(fte::ctx_t& ctx)
+{
+    app_redir_ctx_t *redir_ctx = app_redir_ctx(ctx, false);
+
+    if (redir_ctx && redir_ctx->redir_policy_applic()) {
+        return !redir_ctx->tcp_tls_proxy_flow() && 
+               !redir_ctx->chain_pkt_span_instance();
+    }
+
+    return false;
 }
 
 inline hal_ret_t

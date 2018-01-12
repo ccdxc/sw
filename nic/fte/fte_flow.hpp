@@ -90,13 +90,8 @@ public:
         return valid_.ingress_info;
     }
 
-    hal_ret_t set_mirror_info(const mirror_info_t& mirror_info) {
-        mirror_info_.egr_mirror_session = mirror_info.egr_mirror_session;
-        mirror_info_.ing_mirror_session = mirror_info.ing_mirror_session;
-        valid_.mirror_info = true;
-        return HAL_RET_OK;
-    }
     hal_ret_t merge_mirror_info(const mirror_info_t& mirror_info) {
+        mirror_info_.proxy_mirror |= mirror_info.proxy_mirror;
         mirror_info_.egr_mirror_session |= mirror_info.egr_mirror_session;
         mirror_info_.ing_mirror_session |= mirror_info.ing_mirror_session;
         valid_.mirror_info = true;

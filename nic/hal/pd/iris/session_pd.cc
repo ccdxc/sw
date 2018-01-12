@@ -279,10 +279,32 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
         flow_attrs = aug ? &session->iflow->assoc_flow->pgm_attrs :
             &session->iflow->pgm_attrs;
         flow_cfg = &session->iflow->config;
+        if (aug) {
+            d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = 
+                                 session->iflow->assoc_flow->config.ing_mirror_session;
+            d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id =
+                                 session->iflow->assoc_flow->config.eg_mirror_session;
+        } else {
+            d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = 
+                                 flow_cfg->ing_mirror_session;
+            d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id = 
+                                 flow_cfg->eg_mirror_session;
+        }
     } else {
         flow_attrs = aug ? &session->rflow->assoc_flow->pgm_attrs :
             &session->rflow->pgm_attrs;
         flow_cfg = &session->rflow->config;
+        if (aug) {
+            d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = 
+                                 session->rflow->assoc_flow->config.ing_mirror_session;
+            d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id =
+                                 session->rflow->assoc_flow->config.eg_mirror_session;
+        } else {
+            d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = 
+                                 flow_cfg->ing_mirror_session;
+            d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id = 
+                                 flow_cfg->eg_mirror_session;
+        }
     }
 
     // populate the action information
@@ -301,9 +323,6 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     d.flow_info_action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
     d.flow_info_action_u.flow_info_flow_info.multicast_ptr = flow_attrs->mcast_ptr;
 
-    // TBD: where do these come from ?
-    d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = flow_cfg->ing_mirror_session;
-    d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id = flow_cfg->eg_mirror_session;
     // Set the tunnel originate flag
     d.flow_info_action_u.flow_info_flow_info.tunnel_originate = 
                                                     flow_attrs->tunnel_orig;
