@@ -513,7 +513,7 @@ packets:
    
     - packet:
          id          : READ_RESP_LAST     # Receive packet 
-         payloadsize : 1023
+         payloadsize : 24
          template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :
