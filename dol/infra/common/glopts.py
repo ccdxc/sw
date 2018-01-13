@@ -54,8 +54,8 @@ parser.add_argument('--mbt', dest='mbt',
 #                    help='Configuration Scale Factor.')
 parser.add_argument('--rtl', dest='rtl',
                     action='store_true', help='Run tests in RTL mode.')
-parser.add_argument('--hostmem', dest='hostmem', default=True,
-                    action='store_true', help='Enable Host Memory.')
+parser.add_argument('--nohostmem', dest='hostmem', default=True,
+                    action='store_false', help='Disable Host Memory.')
 GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():
