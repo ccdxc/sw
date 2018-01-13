@@ -163,6 +163,6 @@ p4pt_update_write_latency_distribution_start:
     add.c1   r2, r0, 1
 
 p4pt_update_write_latency_distribution_return:
-    P4PT_CLEAR_ALL_TABLES
+    P4PT_EXIT
     illegal
 

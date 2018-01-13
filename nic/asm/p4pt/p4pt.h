@@ -27,6 +27,7 @@
 // set sets exit bit in the global phv that is used as pipeline bail out indication
 #define P4PT_EXIT 				\
     phvwr       p.p4pt_global_exit, 1; 		\
+    phvwr       p.p4_intr_global_drop,1;        \
     P4PT_CLEAR_ALL_TABLES
 
 // if exit is set then all tables are unset and pipeline ends
