@@ -189,7 +189,6 @@ proxy_program_lif(proxy_t* proxy)
     hal_ret_t           ret = HAL_RET_OK;
     intf::LifSpec       lif_spec;
     intf::LifResponse   rsp;
-    LIFQStateParams     qstate_params = {0};
     lif_hal_info_t      lif_hal_info = {0};
     proxy_meta_t        *meta = &g_meta[proxy->type];
     proxy_meta_lif_t    *meta_lif_info = NULL;
@@ -204,7 +203,23 @@ proxy_program_lif(proxy_t* proxy)
         lif_spec.set_admin_status(intf::IF_STATUS_UP);
         lif_hal_info.with_hw_lif_id = true;
         lif_hal_info.hw_lif_id = meta_lif_info->lif_id;
-        HAL_TRACE_DEBUG("Calling lif create with id: {}", lif_hal_info.hw_lif_id);
+        
+        for(uint j = 0; j < meta_lif_info->num_qtype; j++) {
+            meta_qtype_info = &(meta_lif_info->qtype_info[j]);
+            lif_spec.add_lif_qstate_map();
+            lif_spec.mutable_lif_qstate_map(j)->set_type_num(meta_qtype_info->qtype_val);
+            lif_spec.mutable_lif_qstate_map(j)->set_size(meta_qtype_info->qstate_size);
+            lif_spec.mutable_lif_qstate_map(j)->set_entries(meta_qtype_info->qstate_entries);
+            
+            //qstate_params.dont_zero_memory = true;
+            HAL_TRACE_DEBUG("Added LIF: {}, entries: {}, size: {}",
+                    meta_lif_info->lif_id,
+                    meta_qtype_info->qstate_entries,
+                    meta_qtype_info->qstate_size);
+        }
+       
+        HAL_TRACE_DEBUG("Calling lif create with id: {}", 
+                    lif_hal_info.hw_lif_id);
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = lif_create(lif_spec, &rsp, &lif_hal_info);
@@ -216,24 +231,6 @@ proxy_program_lif(proxy_t* proxy)
         } else {
             hal::hal_cfg_db_close();
         }
-
-        // program qstate for the lif
-        for(uint j = 0; j < meta_lif_info->num_qtype; j++) {
-            meta_qtype_info = &(meta_lif_info->qtype_info[j]);
-            qstate_params.dont_zero_memory = true;
-            qstate_params.type[meta_qtype_info->qtype_val].entries = meta_qtype_info->qstate_entries;
-            qstate_params.type[meta_qtype_info->qtype_val].size = meta_qtype_info->qstate_size;
-            HAL_TRACE_DEBUG("Programming LIF: {}, entries: {}, size: {}",
-                    meta_lif_info->lif_id,
-                    qstate_params.type[meta_qtype_info->qtype_val].entries,
-                    qstate_params.type[meta_qtype_info->qtype_val].size);
-            int32_t rs = g_lif_manager->InitLIFQState(meta_lif_info->lif_id, &qstate_params);
-            if(rs != 0) {
-                HAL_TRACE_ERR("Failed to program lif qstate for Lif {}, qtype {}: err: 0x{0:x}",
-                            meta_lif_info->lif_id, meta_qtype_info->qtype_val, rs);
-                return HAL_RET_HW_PROG_ERR;
-            }
-        } // end qtype loop
 
         // get lport-id for this lif
         lif_t* lif = find_lif_by_id(meta_lif_info->lif_id);

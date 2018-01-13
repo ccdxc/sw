@@ -137,6 +137,8 @@ class VerifEngineObject:
     def __get_num_retries(self, tc):
         if tc.IsDrop():
             return MAX_DROP_RETRIES
+        if GlobalOptions.rtl:
+            return MAX_RETRIES * 3
         return MAX_RETRIES
 
     def __consume_descriptor(self, edescr, ring, tc):
