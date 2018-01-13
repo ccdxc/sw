@@ -123,7 +123,9 @@ ws-tools:
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/gomock && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/mockgen && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/dep/cmd/dep && go install )
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/dep/cmd/dep && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/asset-build/asset-pull && go install) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/asset-build/asset-upload && go install)
 	$(MAKE) local-goimports-install
 
 # Installs goimports only in non CI environments.
