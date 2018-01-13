@@ -110,6 +110,9 @@ static void
 hal_sig_handler (int sig, siginfo_t *info, void *ptr)
 {
     HAL_TRACE_DEBUG("HAL received signal {}", sig);
+    if (utils::hal_logger()) {
+        utils::hal_logger()->flush();
+    }
 
     switch (sig) {
     case SIGINT:

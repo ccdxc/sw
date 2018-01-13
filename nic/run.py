@@ -77,13 +77,13 @@ def run_rtl(args):
     log = open(model_log, "w")
     os.environ["ASIC_SRC"] = os.getcwd() + "/asic"
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:" + os.getcwd() + "/asic/capri/model/capsim-gen/lib:/home/asic/bin/tools/lib64"
-    os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]  
+    os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]
     model_test = "core_basic_dol"
     one_pkt_mode = ""
     if args.model_test:
         model_test = args.model_test
     if args.one_pkt_mode:
-        one_pkt_mode = "+dol_one_pkt_mode=1" 
+        one_pkt_mode = "+dol_one_pkt_mode=1"
     model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 '%one_pkt_mode ]
     if args.noverilog:
         model_cmd = model_cmd + ['-ro', '-nbc']
@@ -193,7 +193,7 @@ def run_hal(args):
     if args.classic:
         #jsonfile = 'hal_classic.json'
         os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
-    
+
     log = open(hal_log, "w")
     p = Popen(["./hal", "--config", jsonfile], stdout=log, stderr=log)
     global hal_process
@@ -557,6 +557,7 @@ def main():
             status = run_mbt()
             if status != 0:
                 print "- MBT test failed, status=", status
+                sys.exit(1)
         else:
             if args.mbt:
                 mbt_port = find_port()

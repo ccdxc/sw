@@ -7,6 +7,10 @@ objects:
         name : Network
         key_handle : NetworkKeyHandle
         ignore:
+            - op : Get
+            - op : Update
+            - op : Delete
+            - op : Create
         create:
             api      : NetworkCreate
             request  : NetworkRequestMsg

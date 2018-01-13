@@ -129,6 +129,32 @@ if_lookup_key_or_handle (const kh::InterfaceKeyHandle& key_handle)
 }
 
 //------------------------------------------------------------------------------
+// get if from either id or handle
+//------------------------------------------------------------------------------
+const char *
+if_lookup_key_or_handle_to_str (const kh::InterfaceKeyHandle& key_handle)
+{
+	static thread_local char       if_str[4][50];
+	static thread_local uint8_t    if_str_next = 0;
+	char                           *buf;
+
+	buf = if_str[if_str_next++ & 0x3];
+	memset(buf, 0, 50);
+
+    if (key_handle.key_or_handle_case() == 
+            kh::InterfaceKeyHandle::kInterfaceId) {
+		snprintf(buf, 50, "if_id: %lu", key_handle.interface_id());
+    }
+    if (key_handle.key_or_handle_case() == 
+            kh::InterfaceKeyHandle::kIfHandle) {
+		snprintf(buf, 50, "if_handle: 0x%lx", key_handle.if_handle());
+    }
+
+	return buf;
+
+}
+
+//------------------------------------------------------------------------------
 // validate an incoming interface create request
 //------------------------------------------------------------------------------
 static hal_ret_t
@@ -543,7 +569,7 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // free PI if
-    if_free(hal_if);
+    // if_free(hal_if);
 end:
     return ret;
 }
@@ -733,6 +759,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 end:
     if (ret != HAL_RET_OK && hal_if != NULL) {
         // if there is an error, if will be freed in abort CB
+        if_free(hal_if);
         hal_if = NULL;
     }
     if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID);
@@ -2253,11 +2280,14 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     for (int i = 0; i < spec.if_uplink_pc_info().member_if_key_handle_size(); i++) {
         mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
         mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
-        HAL_ASSERT_RETURN(mbr_if != NULL, HAL_RET_INVALID_ARG);
-        if (mbr_if->if_type != intf::IF_TYPE_UPLINK) {
+        if (mbr_if == NULL || mbr_if->if_type != intf::IF_TYPE_UPLINK) {
             HAL_TRACE_ERR("pi-uplinkpc:{}:unable to add non-uplinkif. "
-                          "Skipping if id: {}", __FUNCTION__, mbr_if->if_id);
-            continue;
+                          "Skipping if : {} , {}", __FUNCTION__, 
+                          if_lookup_key_or_handle_to_str(mbr_if_key_handle), 
+						  (mbr_if == NULL) ? "Not Present" :
+                          "Not Uplink If");
+            ret = HAL_RET_IF_INFO_INVALID;
+            goto end;
         }
         uplinkpc_add_uplinkif(hal_if, mbr_if);
     }

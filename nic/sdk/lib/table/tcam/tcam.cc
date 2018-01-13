@@ -113,12 +113,12 @@ tcam::insert(void *key, void *key_mask, void *data,
     // check if TCAM entry already exists
     if (entry_exists_(key, key_mask, swkey_len_, &te)) {
         if (!allow_dup_insert_) {
-            SDK_TRACE_DEBUG("TCAM table {} entry already exists at {} return err",
+            SDK_TRACE_DEBUG("TCAM table %s entry already exists at %d return err\n",
                             name_, te->index);
             return SDK_RET_DUPLICATE_INS;
         } else {
             // if entry exists, then increment ref-count and return the index
-            SDK_TRACE_DEBUG("TCAM table {} entry exists at {} refcount {}",
+            SDK_TRACE_DEBUG("TCAM table %s entry exists at %d refcount %d\n",
                             name_, te->index, te->ref_cnt);
             te->ref_cnt++;
             *index = te->index;
@@ -132,7 +132,7 @@ tcam::insert(void *key, void *key_mask, void *data,
         goto end;
     }
 
-    SDK_TRACE_DEBUG("TCAM table {} insert at {}", name_, *index);
+    SDK_TRACE_DEBUG("TCAM table %s insert at %d\n", name_, *index);
 #if 0
     te = tcam_entry::factory(key, key_mask, swkey_len_,
                              data, swdata_len_, *index);
@@ -170,12 +170,12 @@ tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
     // check if TCAM entry already exists
     if (entry_exists_(key, key_mask, swkey_len_, &te)) {
         if (!allow_dup_insert_) {
-            SDK_TRACE_DEBUG("TCAM table : {} Entry exists at {} return err",
+            SDK_TRACE_DEBUG("TCAM table : %s Entry exists at %d return err\n",
                              name_, index);
             return SDK_RET_DUPLICATE_INS;
         } else {
             // if entry exisits, then increment ref-count and return the index
-            SDK_TRACE_DEBUG("TCAM table : {} Entry exists at {} refcount {}",
+            SDK_TRACE_DEBUG("TCAM table : %s Entry exists at %d refcount %d\n",
                             name_, index, te->ref_cnt);
             te->ref_cnt++;
             return SDK_RET_OK;
@@ -185,7 +185,7 @@ tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
     // alloc index
     rs = alloc_index_withid_(index);
     if (rs != SDK_RET_OK) {
-        SDK_TRACE_DEBUG("tcam table {} index {} already allocated",
+        SDK_TRACE_DEBUG("tcam table %s index %d already allocated",
                         name_, index);
         goto end;
     }
@@ -293,7 +293,7 @@ tcam::remove(uint32_t tcam_idx)
 
     if (allow_dup_insert_) {
         // check refcnt and delete only if refcnt is zero
-        SDK_TRACE_DEBUG("TCAM: Table: {} Entry delete refcount {}",
+        SDK_TRACE_DEBUG("TCAM: Table: %s Entry delete refcount %d",
                         name_, te->ref_cnt);
 		te->ref_cnt--;
         // itr->second->decr_refcnt();
@@ -834,7 +834,7 @@ tcam::entry_trace_(tcam_entry_t *te)
             buff, sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
-    SDK_TRACE_DEBUG("Index: {} \n {}", te->index, buff);
+    SDK_TRACE_DEBUG("Index: %d \n %s\n", te->index, buff);
 
     return SDK_RET_OK;
 }
