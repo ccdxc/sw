@@ -108,6 +108,8 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     /* Copy the data input to the ilist memory */
     curr_ptr = ilist_mem_addr;
     
+    HAL_TRACE_DEBUG("1) Writing to 0x{:x} data_len {}",
+            curr_ptr, data_len);
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)data, data_len)) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write data bytes into ilist memory @ {:x}",
 		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
@@ -130,6 +132,8 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     ilist_msg_descr.next_address = 0;
     ilist_msg_descr.reserved = 0;
 
+    HAL_TRACE_DEBUG("2) Writing to 0x{:x} data_len {}",
+            ilist_msg_descr_addr, sizeof(ilist_msg_descr));
     if (capri_hbm_write_mem(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
 			    sizeof(ilist_msg_descr))) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write ilist MSG Descr @ {:x}",
@@ -144,6 +148,8 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
      * auth-tag-addr for barco to read.
      */
     if (!generate) {
+        HAL_TRACE_DEBUG("3) Writing to 0x{:x} data_len {}",
+                auth_tag_mem_addr, sizeof(digest_len));
         if (capri_hbm_write_mem(auth_tag_mem_addr, (uint8_t*)digest,
 				digest_len)) {
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write input digest @ {:x}",
@@ -156,6 +162,8 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
 	/*
 	 * Also initialize status to 0 at the status-address before we invoke barco.
 	 */
+        HAL_TRACE_DEBUG("4) Writing to 0x{:x} data_len {}",
+                status_addr, sizeof(status));
         if (capri_hbm_write_mem(status_addr, (uint8_t*)&status,
 				sizeof(status))) {
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to initialize status value @ {:x}",

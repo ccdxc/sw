@@ -250,11 +250,6 @@ tcp_write_serq_stats_end:
     nop.e
     nop
 
-dma_ooo_process:
-    b           stats
-    phvwr       p.pkt_dma_dma_cmd_eop, 1
-    // TODO: need to send ack
-
 flow_write_serq_drop:
     phvwri      p.p4_intr_no_data, 0
     seq         c1, k.common_phv_pending_txdma, 1

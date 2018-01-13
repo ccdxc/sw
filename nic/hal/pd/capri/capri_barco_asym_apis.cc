@@ -16,7 +16,6 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
     uint64_t                    ilist_mem_addr = 0, olist_mem_addr = 0, curr_ptr = 0;
-    uint64_t                    key_param = 0;
     barco_asym_descriptor_t     asym_req_descr;
     barco_asym_dma_descriptor_t ilist_dma_descr, olist_dma_descr;
     int32_t                     ecc_pm_p256_key_idx = -1;
@@ -33,14 +32,6 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"y1", (char *)y1, 32);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"k", (char *)k, 32);
 
-    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
-            NULL, &key_param);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for key param");
-        goto cleanup;
-    }
-    HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for key param @ {:x}", key_param); 
-
     ret = pd_crypto_asym_alloc_key(&ecc_pm_p256_key_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to allocate key descriptor");
@@ -48,7 +39,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     }
     HAL_TRACE_DEBUG("ECC Point Mul P256: Allocated Key Descr @ {:x}", ecc_pm_p256_key_idx); 
 
-    asym_key.key_param_list = key_param; /* Barco does not use key space for ECC Point MUL for now */
+    asym_key.key_param_list = 0; /* Barco does not use key space for ECC Point MUL for now */
     asym_key.command_reg = (CAPRI_BARCO_ASYM_CMD_SWAP_BYTES |
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(32) |
                             CAPRI_BARCO_ASYM_CMD_ECC_POINT_MUL);
@@ -260,14 +251,6 @@ cleanup:
         ret = pd_crypto_asym_free_key(ecc_pm_p256_key_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ECC Point Mul P256: Failed to free key descriptor");
-        }
-    }
-
-    if (key_param) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("ECC Point Mul P256: Failed to free memory for key param :{:x}",
-                    key_param);
         }
     }
 
@@ -612,12 +595,12 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
+    uint64_t                    ilist_dma_descr_addr = 0;
     uint64_t                    key_dma_descr_addr = 0;
     uint64_t                    ilist_mem_addr = 0, olist_mem_addr = 0, curr_ptr = 0;
     uint64_t                    key_param_addr = 0;
     barco_asym_descriptor_t     asym_req_descr;
-    barco_asym_dma_descriptor_t ilist_dma_descr, olist_dma_descr;
+    barco_asym_dma_descriptor_t ilist_dma_descr;
     barco_asym_dma_descriptor_t key_dma_descr;
     int32_t                     ecc_p256_key_idx = -1;
     crypto_asym_key_t           asym_key;
@@ -760,14 +743,6 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     }
     HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
 
-    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
-            NULL, &olist_dma_descr_addr);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
-        goto cleanup;
-    }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr); 
-
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
     if (ret != HAL_RET_OK) {
@@ -826,27 +801,9 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         goto cleanup;
     }
 
-    /* Setup olist DMA descriptor */
-    olist_dma_descr.address = olist_mem_addr;
-    olist_dma_descr.stop = 1;
-    olist_dma_descr.rsvd0 = 1;
-    olist_dma_descr.next = 0;
-    olist_dma_descr.int_en = 0;
-    olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 1;
-    olist_dma_descr.cst_addr = 0;
-    olist_dma_descr.length = (0 * 32 ); /* No outputs */
-    if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
-                sizeof(olist_dma_descr))) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
-                (uint64_t) olist_dma_descr_addr); 
-        ret = HAL_RET_INVALID_ARG;
-        goto cleanup;
-    }
-
     /* Setup Asymmetric Request Descriptor */
     asym_req_descr.input_list_addr = ilist_dma_descr_addr;
-    asym_req_descr.output_list_addr = olist_dma_descr_addr;
+    asym_req_descr.output_list_addr = 0;
     asym_req_descr.key_descr_idx = ecc_p256_key_idx;
     asym_req_descr.status_addr = curr_ptr;
     asym_req_descr.opaque_tag_value = 0;
@@ -898,14 +855,6 @@ cleanup:
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
                     ilist_mem_addr);
-        }
-    }
-
-    if (olist_dma_descr_addr) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, olist_dma_descr_addr);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: {:x}",
-                    olist_dma_descr_addr);
         }
     }
 
@@ -2203,12 +2152,12 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         uint8_t *h, uint8_t *s)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    uint64_t                    ilist_dma_descr_addr = 0, olist_dma_descr_addr = 0;
+    uint64_t                    ilist_dma_descr_addr = 0;
     uint64_t                    key_dma_descr_addr = 0;
     uint64_t                    ilist_mem_addr = 0, olist_mem_addr = 0, curr_ptr = 0;
     uint64_t                    key_param_addr = 0;
     barco_asym_descriptor_t     asym_req_descr;
-    barco_asym_dma_descriptor_t ilist_dma_descr, olist_dma_descr;
+    barco_asym_dma_descriptor_t ilist_dma_descr;
     barco_asym_dma_descriptor_t key_dma_descr;
     int32_t                     ecc_p256_key_idx = -1;
     crypto_asym_key_t           asym_key;
@@ -2302,14 +2251,6 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     }
     HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr); 
 
-    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
-            NULL, &olist_dma_descr_addr);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
-        goto cleanup;
-    }
-    HAL_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr); 
-
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
     if (ret != HAL_RET_OK) {
@@ -2361,27 +2302,9 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         goto cleanup;
     }
 
-    /* Setup olist DMA descriptor */
-    olist_dma_descr.address = olist_mem_addr;
-    olist_dma_descr.stop = 1;
-    olist_dma_descr.rsvd0 = 1;
-    olist_dma_descr.next = 0;
-    olist_dma_descr.int_en = 0;
-    olist_dma_descr.discard = 0;
-    olist_dma_descr.realign = 1;
-    olist_dma_descr.cst_addr = 0;
-    olist_dma_descr.length = (0 * 256); /* None */
-    if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
-                sizeof(olist_dma_descr))) {
-        HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
-                (uint64_t) olist_dma_descr_addr); 
-        ret = HAL_RET_INVALID_ARG;
-        goto cleanup;
-    }
-
     /* Setup Asymmetric Request Descriptor */
     asym_req_descr.input_list_addr = ilist_dma_descr_addr;
-    asym_req_descr.output_list_addr = olist_dma_descr_addr;
+    asym_req_descr.output_list_addr = 0;
     asym_req_descr.key_descr_idx = ecc_p256_key_idx;
     asym_req_descr.status_addr = olist_mem_addr + 256;
     asym_req_descr.opaque_tag_value = 0;
@@ -2434,13 +2357,6 @@ cleanup:
         }
     }
 
-    if (olist_dma_descr_addr) {
-        ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, olist_dma_descr_addr);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: {:x}",
-                    olist_dma_descr_addr);
-        }
-    }
 
     if (ilist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, ilist_dma_descr_addr);

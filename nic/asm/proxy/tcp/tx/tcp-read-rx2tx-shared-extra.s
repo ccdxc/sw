@@ -40,9 +40,12 @@ tcp_tx_start_pending:
 
     /*
      * For snd_una_update, the next stage is launched by pending stage,
-     * so skip launching the next stage here
+     * so skip launching the next stage here. Also if we are dropping
+     * the PHV, then set global_drop bit
      */
     phvwri.c1       p.app_header_table0_valid, 0
+    setcf           c3, [c1 & !c2]
+    phvwri.c3       p.p4_intr_global_drop, 1
     bcf             [c1 | c2], tcp_tx_rx2tx_extra_end
 
     /*

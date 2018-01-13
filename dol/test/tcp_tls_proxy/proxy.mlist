@@ -684,7 +684,7 @@ modules:
         name    : SYN_ACK_TO_ARQ
         package : test.tcp_tls_proxy
         module  : syn_ack_to_arq
-        spec    : one_pkt.testspec
+        spec    : syn_ack.testspec
         args    :
             maxflows: 1
         iterate :

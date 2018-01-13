@@ -26,6 +26,7 @@ tls_dec_post_crypto_aesgcm_newseg_get_barco_result:
     add         r2, D(output_list_address), r0
 
 tls_dec_post_crypto_aesgcm_newseg_get_barco_result_done:
+    phvwri      p.p4_intr_global_drop, 1
     CAPRI_CLEAR_TABLE0_VALID
     nop.e
     nop

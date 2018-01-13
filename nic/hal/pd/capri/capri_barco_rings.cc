@@ -607,7 +607,7 @@ hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, v
     sym_req_descr->opaque_tag_value = barco_ring->opaqe_tag_value;
     sym_req_descr->opaque_tag_wr_en = 1;
 
-#if 0
+#if 1
     /*
      * Use doorbell-address in the symm request descriptor to
      * track response from barco.

@@ -24,6 +24,8 @@ struct s6_t0_tcp_tx_tso_d d    ;
 tcp_tso_process_start:
     /* check SESQ for pending data to be transmitted */
     sne             c6, k.common_phv_debug_dol_dont_tx, r0
+    bcf             [c6], flow_tso_process_done
+    phvwri.c6       p.p4_intr_global_drop, 1
     or              r1, k.to_s6_pending_tso_data, k.to_s6_pending_tso_retx
     or              r1, r1, k.common_phv_pending_ack_send
     sne             c1, r1, r0
@@ -47,8 +49,6 @@ dma_cmd_intrinsic:
     // pipeline needs the original source_lif of the packet to derive
     // the input properties, as well as for spoofing checks
     phvwr           p.p4_intr_global_lif, d.source_lif
-    bcf             [c6], dma_cmd_data
-    nop
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
     // app header
@@ -103,8 +103,6 @@ dma_cmd_data:
     add.c1          r6, k.to_s6_rcv_mss, r0
     add.!c1         r6, k.to_s6_xmit_cursor_len, r0
 
-    bcf             [c6], bytes_sent_stats_update_start
-    nop
     CAPRI_DMA_CMD_MEM2PKT_SETUP(data_dma_dma_cmd, r2, r6)
     CAPRI_DMA_CMD_PKT_STOP(data_dma_dma)
         
@@ -131,8 +129,6 @@ debug_num_mem_to_pkt_stats_update_start:
 debug_num_mem_to_pkt_stats_update:
     CAPRI_STATS_INC_UPDATE(r1, d.debug_num_mem_to_pkt, p.to_s7_debug_num_mem_to_pkt)
 debug_num_mem_to_pkt_stats_update_end:
-    bcf             [c6], flow_tso_process_done
-    nop
 
 #if 0
     // TODO : move to tcp-cc-and-xmit

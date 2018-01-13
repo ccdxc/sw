@@ -147,6 +147,7 @@ table_read_TSO:
     nop
 
 flow_read_xmit_cursor_done:
+    phvwri          p.p4_intr_global_drop, 1
     CAPRI_CLEAR_TABLE_VALID(0)
     nop.e
     nop
