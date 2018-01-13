@@ -195,8 +195,10 @@ capri_tm_pg_params_update(uint32_t port,
                     pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(pg_params->mtu);
 
                     /* Write both registers */
+#ifdef CAPRI_TM_REG_WRITE_ENABLE
                     pbc_csr.port_${p}.cfg_account_pg_${pg}.write();
                     pbc_csr.port_${p}.cfg_account_mtu_table.write();
+#endif
                     break;
                 }
 //::    #endfor
@@ -277,7 +279,9 @@ capri_tm_tc_map_update(uint32_t port,
         {
             /* Update and write the tc to PG mapping */
             pbc_csr.port_${p}.cfg_account_tc_to_pg.table(tc_map_reg_val);
+#ifdef CAPRI_TM_REG_WRITE_ENABLE
             pbc_csr.port_${p}.cfg_account_tc_to_pg.write();
+#endif
             break;
         }
 //:: #endfor
@@ -362,10 +366,14 @@ capri_tm_uplink_input_map_update (tm_port_t port,
             hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(1);
             hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(use_ip);
             hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(dscp_map_val);
+#ifdef CAPRI_TM_REG_WRITE_ENABLE
             hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
+#endif
 
             pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
+#ifdef CAPRI_TM_REG_WRITE_ENABLE
             pbc_csr.cfg_parser${p}.write();
+#endif
             break;
         }
 //:: #endfor
@@ -429,8 +437,10 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
             pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority(strict_val);
 
             /* Write the registers */
+#ifdef CAPRI_TM_REG_WRITE_ENABLE
             pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.write();
             pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.write();
+#endif
             break;
         }
 //::    #endif
