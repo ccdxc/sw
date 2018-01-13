@@ -279,6 +279,8 @@ def run_dol(args):
         cmd.append('--regression')
     if args.skipverify is True:
         cmd.append('--skipverify')
+    if args.rtl is True and args.one_pkt_mode is False:
+        cmd.append('--eth_mode=ionic')
     if args.tcscale is not None:
         cmd.append('--tcscale')
         cmd.append(args.tcscale)

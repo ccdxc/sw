@@ -258,7 +258,7 @@ class EthQueueObject(QueueObject):
             raise NotImplementedError
 
     def Fill(self):
-        if GlobalOptions.skipverify and self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+        if GlobalOptions.eth_mode != "onepkt" and self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
             from attrdict import AttrDict
             from infra.factory.store import FactoryStore
             ring_id = 0
@@ -291,7 +291,7 @@ class EthQueueObject(QueueObject):
                 assert ret == status.SUCCESS
 
             if self.queue_type.purpose in ["LIF_QUEUE_PURPOSE_RX", "LIF_QUEUE_PURPOSE_TX"]:
-                self.queue_type.doorbell.Ring(self.id, ring_id, ring.pi, self.pid)
+                self.qstate.set_pindex(ring_id, ring.pi)
 
     def ConfigureRings(self):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:

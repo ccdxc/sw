@@ -110,7 +110,7 @@ class QueueTypeObject(base.ConfigObjectBase):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return status.SUCCESS
 
-        if GlobalOptions.skipverify and self.purpose == "LIF_QUEUE_PURPOSE_RX":
+        if GlobalOptions.eth_mode != "onepkt" and self.purpose == "LIF_QUEUE_PURPOSE_RX":
             return status.SUCCESS
 
         ring_id = 0

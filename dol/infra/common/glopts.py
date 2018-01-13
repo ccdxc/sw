@@ -40,6 +40,9 @@ parser.add_argument('--regression', dest='regression',
                     action='store_true', help='Run tests in regression mode.')
 parser.add_argument('--skipverify', dest='skipverify',
                     action='store_true', help='Skip Verification all tests.')
+parser.add_argument('--eth_mode', dest='eth_mode', default="onepkt",
+                    choices=["onepkt", "ionic"],
+                    help='ETH driver mode selection.')
 parser.add_argument('--tcscale', dest='tcscale', default=None,
                     help='Testcase Scale Factor.')
 parser.add_argument('--shuffle', dest='shuffle', default=1,
