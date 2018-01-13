@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #ifdef BUILD_ARCH_x86_64
-//#define USE_READLINE
+#define USE_READLINE
 #endif
 #ifdef USE_READLINE
 #ifdef BUILD_OS_Darwin

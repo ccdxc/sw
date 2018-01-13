@@ -140,8 +140,15 @@ static int
 pciehw_openmem(pciehw_t *phw)
 {
     pciehw_mem_t *pciehwmem;
+    const char *pciehw_addr_env = getenv("PCIEHW_ADDR");
+    u_int64_t pciehw_pa = 0x140000000;
 
-    pciehwmem = pal_mem_map(0xc0000000, sizeof(pciehw_mem_t));
+    if (pciehw_addr_env) {
+        pciehw_pa = strtoull(pciehw_addr_env, NULL, 0);
+        pciehsys_log("$PCIEHW_ADDR override 0x%"PRIx64"\n", pciehw_pa);
+    }
+
+    pciehwmem = pal_mem_map(pciehw_pa, sizeof(pciehw_mem_t));
     if (pciehwmem == NULL) {
         return -1;
     }

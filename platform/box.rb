@@ -1,7 +1,7 @@
 from "registry.test.pensando.io:5000/pensando/nic:1.7"
 
 PACKAGES = %w[
-  patch
+  patch readline-devel
 ]
 
 env GOPATH: "/usr"
