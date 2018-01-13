@@ -651,13 +651,14 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                                 table_oper_t oper)
 {
     hal_ret_t                               ret = HAL_RET_OK;
+    sdk_ret_t                               sdk_ret;
     input_properties_swkey_t                key;
     input_properties_otcam_swkey_mask_t     *key_mask = NULL;
     input_properties_actiondata             data;
     if_t                                    *hal_if = (if_t *)pd_enicif->pi_if;
     if_t                                    *uplink = NULL;
     pd_l2seg_t                              *l2seg_pd;
-    Hash                                    *inp_prop_tbl = NULL;
+    sdk_hash                                    *inp_prop_tbl = NULL;
     uint32_t                                hash_idx = INVALID_INDEXER_INDEX;
     bool                                    direct_to_otcam = false;
 
@@ -709,8 +710,9 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
 
     if (oper == TABLE_OPER_INSERT) {
         // Insert
-        ret = inp_prop_tbl->insert(&key, &data, &hash_idx, 
+        sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx, 
                                    key_mask, direct_to_otcam);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-enicif:{}:classic: unable to program for "
                           "(l2seg, upif): ({}, {})",
@@ -740,7 +742,8 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
             hash_idx = pd_enicif->inp_prop_native_l2seg_clsc;
         }
         // Update
-        ret = inp_prop_tbl->update(hash_idx, &data);
+        sdk_ret = inp_prop_tbl->update(hash_idx, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-enicif:{}:classic: unable to reprogram for "
                           "(l2seg, upif): ({}, {})",
@@ -777,7 +780,7 @@ pd_enicif_pd_repgm_inp_prop_l2seg(pd_if_args_t *args,
     if_t                        *uplink = NULL;
     pd_enicif_t                 *pd_enicif = (pd_enicif_t *)hal_if->pd_if;
     pd_l2seg_t                  *l2seg_pd;
-    Hash                        *inp_prop_tbl = NULL;
+    sdk_hash                        *inp_prop_tbl = NULL;
     uint32_t                    hash_idx = INVALID_INDEXER_INDEX;
 
     memset(&key, 0, sizeof(key));
@@ -841,9 +844,10 @@ hal_ret_t
 pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     input_properties_swkey_t    key;
     input_properties_actiondata data;
-    Hash                        *inp_prop_tbl = NULL;
+    sdk_hash                        *inp_prop_tbl = NULL;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -851,7 +855,8 @@ pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx)
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
     
-    ret = inp_prop_tbl->remove(inp_prop_idx);
+    sdk_ret = inp_prop_tbl->remove(inp_prop_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif:{}:classic: unable to deprogram at:{} ",
                       __FUNCTION__, inp_prop_idx);

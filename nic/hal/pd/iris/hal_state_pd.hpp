@@ -5,7 +5,7 @@
 #include "sdk/slab.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/directmap.hpp"
-#include "nic/hal/pd/utils/hash/hash.hpp"
+#include "sdk/hash.hpp"
 #include "sdk/tcam.hpp"
 #include "nic/hal/pd/utils/flow/flow.hpp"
 #include "nic/hal/pd/utils/met/met.hpp"
@@ -20,7 +20,6 @@ using hal::BMAllocator;
 using sdk::lib::indexer;
 using sdk::lib::slab;
 using sdk::lib::ht;
-using hal::pd::utils::Hash;
 using sdk::table::tcam;
 using sdk::table::directmap;
 using hal::pd::utils::Flow;
@@ -209,7 +208,7 @@ public:
         return dm_tables_[tid - P4TBL_ID_INDEX_MIN];
     }
 
-    Hash *hash_tcam_table(p4pd_table_id tid) const {
+    sdk_hash *hash_tcam_table(p4pd_table_id tid) const {
         if ((tid < P4TBL_ID_HASH_OTCAM_MIN) ||
             (tid > P4TBL_ID_HASH_OTCAM_MAX)) {
             return NULL;
@@ -458,7 +457,7 @@ private:
     } __PACK__;
 
     directmap    **dm_tables_;
-    Hash         **hash_tcam_tables_;
+    sdk_hash     **hash_tcam_tables_;
     tcam         **tcam_tables_;
     Flow         *flow_table_;
     Met          *met_table_;

@@ -634,9 +634,10 @@ hal_ret_t
 pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
 {
     hal_ret_t                       ret = HAL_RET_OK;
+    sdk_ret_t                       sdk_ret;
     registered_macs_swkey_t         key;
     registered_macs_actiondata      data;
-    Hash                            *reg_mac_tbl = NULL;
+    sdk_hash                        *reg_mac_tbl = NULL;
     ep_t                            *pi_ep = (ep_t *)pd_ep->pi_ep;
     l2seg_t                         *l2seg = NULL;
     mac_addr_t                      *mac = NULL;
@@ -667,7 +668,8 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
 
     if (oper == TABLE_OPER_INSERT) {
         // Insert
-        ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
+        sdk_ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-ep:{}:classic: unable to program for ep:{}",
                           __FUNCTION__, ep_l2_key_to_str(pi_ep));
@@ -681,7 +683,8 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     } else {
         hash_idx = pd_ep->reg_mac_tbl_idx;
         // Update
-        ret = reg_mac_tbl->update(hash_idx, &data);
+        sdk_ret = reg_mac_tbl->update(hash_idx, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-ep:{}:classic: unable to reprogram for ep:{} at: {}",
                           __FUNCTION__, ep_l2_key_to_str(pi_ep), hash_idx);

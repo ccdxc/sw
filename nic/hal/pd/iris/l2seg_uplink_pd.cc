@@ -92,8 +92,9 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
     bool                                    is_native = FALSE;
     types::encapType                        enc_type;
     pd_l2seg_t                              *l2seg_pd;
-    Hash                                    *inp_prop_tbl = NULL;
+    sdk_hash                                *inp_prop_tbl = NULL;
     hal_ret_t                               ret = HAL_RET_OK;
+    sdk_ret_t                               sdk_ret;
     uint32_t                                hash_idx = 0;
     l2seg_t                                 *infra_pi_l2seg = NULL;
     input_properties_swkey_t                key;
@@ -169,8 +170,9 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
                         key.vlan_tag_valid, key.vlan_tag_vid);
 
         // Insert
-        ret = inp_prop_tbl->insert(&key, &data, &hash_idx, key_mask, 
-                                   direct_to_otcam);
+        sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx, key_mask, 
+                                       direct_to_otcam);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}: Unable to program for "
                           "(l2seg, upif): ({}, {})",
@@ -198,8 +200,9 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
 			key.capri_intrinsic_lif,
                         key.vlan_tag_valid, key.vlan_tag_vid);
         // Insert
-        ret = inp_prop_tbl->insert(&key, &data, &hash_idx, 
-                                   key_mask, direct_to_otcam);
+        sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx, 
+                                       key_mask, direct_to_otcam);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}:unable to program "
                           "prio. entry for (l2seg, upif): ({}, {})",
@@ -225,8 +228,9 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
                         __FUNCTION__, key.capri_intrinsic_lif, 
                         key.vlan_tag_valid, key.vlan_tag_vid);
         // Insert
-        ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
-                                   key_mask, direct_to_otcam);
+        sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
+                                       key_mask, direct_to_otcam);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}:unable to program "
                           "untag entry for (l2seg, upif): ({}, {})",
@@ -258,7 +262,8 @@ hal_ret_t
 l2seg_uplink_depgm_input_properties_tbl (pd_l2seg_uplink_args_t *args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    Hash                        *inp_prop_tbl = NULL;
+    sdk_ret_t                   sdk_ret;
+    sdk_hash                    *inp_prop_tbl = NULL;
     uint32_t                    uplink_ifpc_id = 0;
     pd_l2seg_t                  *l2seg_pd =  NULL;
 
@@ -269,7 +274,8 @@ l2seg_uplink_depgm_input_properties_tbl (pd_l2seg_uplink_args_t *args)
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
     
     if (l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id] != INVALID_INDEXER_INDEX) {
-        ret = inp_prop_tbl->remove(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
+        sdk_ret = inp_prop_tbl->remove(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}:unable to deprogram "
                           "table:input_properties index:{}",
@@ -286,8 +292,9 @@ l2seg_uplink_depgm_input_properties_tbl (pd_l2seg_uplink_args_t *args)
 
     if (l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id] != 
             INVALID_INDEXER_INDEX) {
-        ret = inp_prop_tbl->
+        sdk_ret = inp_prop_tbl->
             remove(l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id]);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}:unable to deprogram pri entry "
                           "table:input_properties index:{}",
@@ -358,10 +365,11 @@ l2seg_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
                                        nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     pd_l2seg_t                  *l2seg_pd;
     bool                        is_native = FALSE;
     uint32_t                    uplink_ifpc_id = 0;
-    Hash                        *inp_prop_tbl = NULL;
+    sdk_hash                    *inp_prop_tbl = NULL;
     input_properties_actiondata data;
 
     l2seg_uplink_inp_prop_form_data(args, nwsec_prof, data);
@@ -375,7 +383,8 @@ l2seg_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
 
     if (!is_native) {
         // Update one entry
-        ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id], &data);
+        sdk_ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id], &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}: Unable to program for "
                           "(l2seg, upif): ({}, {})",
@@ -390,8 +399,9 @@ l2seg_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
         }
     } else {
         // Update Priority tagged entry
-        ret = inp_prop_tbl->update(
+        sdk_ret = inp_prop_tbl->update(
                 l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id], &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}:unable to program "
                           "prio. entry for (l2seg, upif): ({}, {})",
@@ -406,7 +416,8 @@ l2seg_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
         }
 
         // Update Untagged entry
-        ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id], &data);
+        sdk_ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id], &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-l2seg<->uplink:{}:unable to program "
                           "untag entry for (l2seg, upif): ({}, {})",

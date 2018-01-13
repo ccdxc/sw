@@ -286,13 +286,15 @@ l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd)
 hal_ret_t
 l2seg_pd_depgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    Hash                        *inp_prop_tbl = NULL;
+    hal_ret_t   ret           = HAL_RET_OK;
+    sdk_ret_t   sdk_ret;
+    sdk_hash    *inp_prop_tbl = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
     
-    ret = inp_prop_tbl->remove(l2seg_pd->inp_prop_tbl_cpu_idx);
+    sdk_ret = inp_prop_tbl->remove(l2seg_pd->inp_prop_tbl_cpu_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-l2seg::{}:unable to deprogram from cpu entry "
                 "input properties for seg_id:{}",
@@ -330,7 +332,8 @@ hal_ret_t
 l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
 {
     hal_ret_t                   ret           = HAL_RET_OK;
-    Hash                        *inp_prop_tbl = NULL;
+    sdk_ret_t                   sdk_ret;
+    sdk_hash                        *inp_prop_tbl = NULL;
     input_properties_swkey_t    key           = { 0 };
     input_properties_actiondata data          = { 0 };
 
@@ -359,7 +362,8 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
     inp_prop.allow_flood      = 1;
 
     // Insert
-    ret = inp_prop_tbl->insert(&key, &data, &l2seg_pd->inp_prop_tbl_cpu_idx);
+    sdk_ret = inp_prop_tbl->insert(&key, &data, &l2seg_pd->inp_prop_tbl_cpu_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-l2seg::{}: Unable to program from cpu entry "
                       "input properties for seg_id:{}",

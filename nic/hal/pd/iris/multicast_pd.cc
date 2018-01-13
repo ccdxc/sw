@@ -42,9 +42,10 @@ hal_ret_t
 pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
 {
     hal_ret_t                       ret  = HAL_RET_OK;
+    sdk_ret_t                       sdk_ret;
     registered_macs_swkey_t         key  = { 0 };
     registered_macs_actiondata      data = { 0 };
-    Hash                            *reg_mac_tbl = NULL;
+    sdk_hash                        *reg_mac_tbl = NULL;
     mc_entry_t                      *pi_mc_entry = (mc_entry_t *)pd_mc_entry->mc_entry;
     l2seg_t                         *l2seg = NULL;
     uint32_t                        hash_idx = INVALID_INDEXER_INDEX;
@@ -71,7 +72,8 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
 
     if (oper == TABLE_OPER_INSERT) {
         // Insert
-        ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
+        sdk_ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-mc_entry:{}:classic: unable to program for :{}",
                           __FUNCTION__, mc_key_to_string(&pi_mc_entry->key));
@@ -85,7 +87,8 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
     } else {
         hash_idx = pd_mc_entry->reg_mac_tbl_idx;
         // Update
-        ret = reg_mac_tbl->update(hash_idx, &data);
+        sdk_ret = reg_mac_tbl->update(hash_idx, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-mc_entry:{}:classic: unable to reprogram for "
                           "mc_entry:{} at: {}",
@@ -110,13 +113,15 @@ hal_ret_t
 pd_mc_entry_depgm_registered_mac (pd_mc_entry_t *mc_entry_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    Hash                        *inp_prop_tbl = NULL;
+    sdk_ret_t                   sdk_ret;
+    sdk_hash                    *inp_prop_tbl = NULL;
     mc_entry_t                  *mc_entry = (mc_entry_t*) mc_entry_pd->mc_entry;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
-    ret = inp_prop_tbl->remove(mc_entry_pd->reg_mac_tbl_idx);
+    sdk_ret = inp_prop_tbl->remove(mc_entry_pd->reg_mac_tbl_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-mc_entry::{}:unable to deprogram from cpu entry "
                               "input properties for seg_id:{}",

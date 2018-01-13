@@ -46,57 +46,6 @@ tcam_entry_create(void *key, void *key_mask, uint32_t key_len,
 void
 tcam_entry_delete(tcam_entry_t *te);
 
-// Deprecated. Cleanup once tcam is integrated from SDK
-#if 0
-class tcam_entry {
-
-#define TCAM_ENTRY_INVALID_INDEX 0xffffffff
-
-private:
-    void        *key_;          // sw key
-    void        *key_mask_;     // sw key mask
-    uint32_t    key_len_;       // sw key len
-    void        *data_;         // sw/hw data 
-    uint32_t    data_len_;      // sw/hw data len
-    uint32_t    index_;         // tcam index
-    uint32_t    priority_;      // tcam entry priority
-    int         refcnt_;        // tcam entry reference count
-
-    tcam_entry (void *key, void *key_mask, uint32_t key_len, 
-               void *data, uint32_t data_len, uint32_t index,
-               uint32_t priority = 0);
-    ~tcam_entry();
-public:
-    static tcam_entry *factory(void *key,                // key
-                               void *key_mask,           // key's mask
-                               uint32_t key_len,         // key's len
-                               void *data,               // data
-                               uint32_t data_len,        // data len
-                               uint32_t index,           // index
-                               uint32_t priority = 0,    // priority
-                               uint32_t mtrack_id = 
-                               SDK_MEM_ALLOC_ID_TCAM_ENTRY);
-    static void destroy(tcam_entry *te, 
-                        uint32_t mtrack_id = SDK_MEM_ALLOC_ID_TCAM_ENTRY); 
-
-    void update_data(void *data);
-
-    // Getters & Setters
-    void *get_key() { return key_; };
-    void *get_key_mask() { return key_mask_; }
-    uint32_t get_key_len() { return key_len_; }
-    void *get_data() { return data_; }
-    uint32_t get_data_len() { return data_len_; }
-    uint32_t get_index() { return index_; }
-    void set_index(uint32_t index) { index_ = index; }
-    uint32_t get_priority() { return priority_; }
-    int get_refcnt() { return refcnt_; }
-    void set_refcnt(int refcnt) { refcnt_ = refcnt; }
-    void incr_refcnt() { refcnt_++; }
-    void decr_refcnt() { refcnt_--; }
-};
-#endif
-
 }    // namespace table
 }    // namespace sdk
 

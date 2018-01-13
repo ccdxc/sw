@@ -607,7 +607,7 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4TBL_ID_HASH_OTCAM_MIN;
              tid < P4TBL_ID_HASH_OTCAM_MAX; tid++) {
             if (hash_tcam_tables_[tid]) {
-                Hash::destroy(hash_tcam_tables_[tid]);
+                sdk_hash::destroy(hash_tcam_tables_[tid]);
                 // delete hash_tcam_tables_[tid];
             }
         }
@@ -838,8 +838,8 @@ hal_state_pd::init_tables(void)
     HAL_ASSERT((P4TBL_ID_HASH_MAX - P4TBL_ID_HASH_MIN + 1) == 2);
 
     hash_tcam_tables_ =
-        (Hash **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
-                            sizeof(Hash *) *
+        (sdk_hash **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
+                            sizeof(sdk_hash *) *
                             (P4TBL_ID_HASH_OTCAM_MAX - P4TBL_ID_HASH_OTCAM_MIN + 1));
     HAL_ASSERT(hash_tcam_tables_ != NULL);
 
@@ -869,13 +869,13 @@ hal_state_pd::init_tables(void)
                 p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
             }
             hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] =
-                Hash::factory(tinfo.tablename, tid,
+                sdk_hash::factory(tinfo.tablename, tid,
                               tinfo.oflow_table_id,
                               tinfo.tabledepth,
                               tinfo.has_oflow_table ? ctinfo.tabledepth : 0,
                               tinfo.key_struct_size,
                               tinfo.actiondata_struct_size,
-                              static_cast<Hash::HashPoly>(tinfo.hash_type));
+                              static_cast<sdk_hash::HashPoly>(tinfo.hash_type));
             HAL_ASSERT(hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] != NULL);
             break;
 
@@ -985,13 +985,13 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
                 p4pluspd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
             }
             hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] =
-                new Hash(tinfo.tablename, tid,
+                new sdk_hash(tinfo.tablename, tid,
                          tinfo.oflow_table_id,
                          tinfo.tabledepth,
                          tinfo.has_oflow_table ? ctinfo.tabledepth : 0,
                          tinfo.key_struct_size,
                          tinfo.actiondata_struct_size,
-                         static_cast<Hash::HashPoly>(tinfo.hash_type));
+                         static_cast<sdk_hash::sdk_hashPoly>(tinfo.hash_type));
             HAL_ASSERT(hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] != NULL);
             break;
 
@@ -1022,7 +1022,7 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
                          tinfo.tabledepth, ctinfo.tabledepth,
                          tinfo.key_struct_size,
                          sizeof(p4pd_flow_hash_data_t), 6,    // no. of hints
-                         static_cast<Flow::HashPoly>(tinfo.hash_type));
+                         static_cast<Flow::sdk_hashPoly>(tinfo.hash_type));
             HAL_ASSERT(flow_table_ != NULL);
             break;
 #endif
@@ -1082,13 +1082,13 @@ hal_state_pd::p4plus_txdma_init_tables(void)
                 p4pluspd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
             }
             hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] =
-                new Hash(tinfo.tablename, tid,
+                new sdk_hash(tinfo.tablename, tid,
                          tinfo.oflow_table_id,
                          tinfo.tabledepth,
                          tinfo.has_oflow_table ? ctinfo.tabledepth : 0,
                          tinfo.key_struct_size,
                          tinfo.actiondata_struct_size,
-                         static_cast<Hash::HashPoly>(tinfo.hash_type));
+                         static_cast<sdk_hash::sdk_hashPoly>(tinfo.hash_type));
             HAL_ASSERT(hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] != NULL);
             break;
 
@@ -1119,7 +1119,7 @@ hal_state_pd::p4plus_txdma_init_tables(void)
                          tinfo.tabledepth, ctinfo.tabledepth,
                          tinfo.key_struct_size,
                          sizeof(p4pd_flow_hash_data_t), 6,    // no. of hints
-                         static_cast<Flow::HashPoly>(tinfo.hash_type));
+                         static_cast<Flow::sdk_hashPoly>(tinfo.hash_type));
             HAL_ASSERT(flow_table_ != NULL);
             break;
 #endif

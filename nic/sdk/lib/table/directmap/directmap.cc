@@ -672,10 +672,7 @@ directmap::stats_update(directmap::api ap, sdk_ret_t rs)
 sdk_ret_t
 directmap::add_directmap_entry_to_db(directmap_entry_t *dme)
 {
-    // TODO: Bharat fix when hash is moved to SDK
-    // return hal_sdk_ret_to_hal_ret(entry_ht_->insert(dme, &dme->ht_ctxt));
-    entry_ht_->insert(dme, &dme->ht_ctxt);
-    return SDK_RET_OK;
+    return entry_ht_->insert(dme, &dme->ht_ctxt);
 }
 
 // ----------------------------------------------------------------------------

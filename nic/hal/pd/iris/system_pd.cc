@@ -320,7 +320,7 @@ pd_system_populate_hash_tcam_table_stats(sys::TableStatsEntry *stats_entry,
         p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    Hash                    *hash;
+    sdk_hash                *hash;
 
     hash = g_hal_state_pd->hash_tcam_table(id);
 
@@ -329,15 +329,15 @@ pd_system_populate_hash_tcam_table_stats(sys::TableStatsEntry *stats_entry,
     }
 
     stats_entry->set_table_type (sys::TABLE_TYPE_HASH_TCAM);
-    stats_entry->set_table_name(hash->table_name());
-    stats_entry->set_table_size(hash->table_capacity());
-    stats_entry->set_overflow_table_size(hash->oflow_table_capacity());
-    stats_entry->set_entries_in_use(hash->table_num_entries_in_use());
-    stats_entry->set_overflow_entries_in_use(hash->oflow_table_num_entries_in_use());
-    stats_entry->set_num_inserts(hash->table_num_inserts());
-    stats_entry->set_num_insert_errors(hash->table_num_insert_errors());
-    stats_entry->set_num_deletes(hash->table_num_deletes());
-    stats_entry->set_num_delete_errors(hash->table_num_delete_errors());
+    stats_entry->set_table_name(hash->name());
+    stats_entry->set_table_size(hash->capacity());
+    stats_entry->set_overflow_table_size(hash->oflow_capacity());
+    stats_entry->set_entries_in_use(hash->num_entries_in_use());
+    stats_entry->set_overflow_entries_in_use(hash->oflow_num_entries_in_use());
+    stats_entry->set_num_inserts(hash->num_inserts());
+    stats_entry->set_num_insert_errors(hash->num_insert_errors());
+    stats_entry->set_num_deletes(hash->num_deletes());
+    stats_entry->set_num_delete_errors(hash->num_delete_errors());
 
     return ret;
 }

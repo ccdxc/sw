@@ -548,16 +548,16 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     if (spec.has_wire_encap()) {
         l2seg->wire_encap.type = spec.wire_encap().encap_type();
         l2seg->wire_encap.val = spec.wire_encap().encap_value();
-        HAL_TRACE_ERR("pi-l2seg:{}:wire enc_type:{} enc_val:{}",
-                __FUNCTION__, l2seg->wire_encap.type, 
-                l2seg->wire_encap.val);
+        HAL_TRACE_DEBUG("pi-l2seg:{}:wire enc_type:{} enc_val:{}",
+                        __FUNCTION__, l2seg->wire_encap.type, 
+                        l2seg->wire_encap.val);
     }
     if (spec.has_tunnel_encap()) {
         l2seg->tunnel_encap.type = spec.tunnel_encap().encap_type();
         l2seg->tunnel_encap.val = spec.tunnel_encap().encap_value();
-        HAL_TRACE_ERR("pi-l2seg:{}:tunnel enc_type:{} enc_val:{}",
-                __FUNCTION__, l2seg->tunnel_encap.type, 
-                l2seg->tunnel_encap.val);
+        HAL_TRACE_DEBUG("pi-l2seg:{}:tunnel enc_type:{} enc_val:{}",
+                        __FUNCTION__, l2seg->tunnel_encap.type, 
+                        l2seg->tunnel_encap.val);
     }
 
     ret = l2seg_read_networks(l2seg, spec);

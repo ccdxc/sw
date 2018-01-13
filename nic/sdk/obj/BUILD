@@ -78,6 +78,7 @@ cc_library(
         "//lib/table/directmap:directmap",
     ],
 )
+
 # Tcam Table Management Library
 cc_library(
     name = "sdk_tcam",
@@ -86,6 +87,17 @@ cc_library(
     ],
     deps = [
         "//lib/table/tcam:tcam",
+    ],
+)
+
+# Hash Table Management Library
+cc_library(
+    name = "sdk_hash",
+    srcs = [
+        "libhash.so",
+    ],
+    deps = [
+        "//lib/table/hash:hash",
     ],
 )
 
