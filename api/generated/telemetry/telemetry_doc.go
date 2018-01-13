@@ -7,21 +7,38 @@ Input file: protos/telemetry.proto
 
 The following Messages are defined.
 
-  AutoMsgMonitoringPolicyWatchHelper
-  MonitoringPolicy
-  MonitoringPolicyList
-  MonitoringPolicySpec
-  MonitoringPolicyStatus
+  AutoMsgFwlogPolicyWatchHelper
+  AutoMsgStatsPolicyWatchHelper
+  FlowExportPolicy
+  FlowExportSpec
+  FlowExportStatus
+  FlowExportTarget
+  FwlogPolicy
+  FwlogPolicyList
+  FwlogSpec
+  FwlogStatus
+  StatsPolicy
+  StatsPolicyList
+  StatsSpec
+  StatsStatus
 
 The following Services and Methods are defined.
 
- Service: MonitoringPolicyV1
-   AutoAddMonitoringPolicy
-   AutoDeleteMonitoringPolicy
-   AutoGetMonitoringPolicy
-   AutoListMonitoringPolicy
-   AutoUpdateMonitoringPolicy
-   AutoWatchMonitoringPolicy
+ Service: FwlogPolicyV1
+   AutoAddFwlogPolicy
+   AutoDeleteFwlogPolicy
+   AutoGetFwlogPolicy
+   AutoListFwlogPolicy
+   AutoUpdateFwlogPolicy
+   AutoWatchFwlogPolicy
+
+ Service: StatsPolicyV1
+   AutoAddStatsPolicy
+   AutoDeleteStatsPolicy
+   AutoGetStatsPolicy
+   AutoListStatsPolicy
+   AutoUpdateStatsPolicy
+   AutoWatchStatsPolicy
 
 */
 package telemetry

@@ -15,18 +15,34 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// MonitoringPolicyInterface exposes the CRUD methods for MonitoringPolicy
-type MonitoringPolicyInterface interface {
-	Create(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error)
-	Update(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*MonitoringPolicy, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*MonitoringPolicy, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*MonitoringPolicy, error)
+// FwlogPolicyInterface exposes the CRUD methods for FwlogPolicy
+type FwlogPolicyInterface interface {
+	Create(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
+	Update(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*FwlogPolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FwlogPolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*FwlogPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// MonitoringPolicyV1Interface exposes objects with CRUD operations allowed by the service
-type MonitoringPolicyV1Interface interface {
-	MonitoringPolicy() MonitoringPolicyInterface
+// StatsPolicyInterface exposes the CRUD methods for StatsPolicy
+type StatsPolicyInterface interface {
+	Create(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
+	Update(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*StatsPolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*StatsPolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*StatsPolicy, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// FwlogPolicyV1Interface exposes objects with CRUD operations allowed by the service
+type FwlogPolicyV1Interface interface {
+	FwlogPolicy() FwlogPolicyInterface
+}
+
+// StatsPolicyV1Interface exposes objects with CRUD operations allowed by the service
+type StatsPolicyV1Interface interface {
+	StatsPolicy() StatsPolicyInterface
 }

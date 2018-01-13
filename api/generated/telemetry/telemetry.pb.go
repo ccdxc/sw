@@ -10,11 +10,20 @@
 		telemetry.proto
 
 	It has these top-level messages:
-		AutoMsgMonitoringPolicyWatchHelper
-		MonitoringPolicy
-		MonitoringPolicyList
-		MonitoringPolicySpec
-		MonitoringPolicyStatus
+		AutoMsgFwlogPolicyWatchHelper
+		AutoMsgStatsPolicyWatchHelper
+		FlowExportPolicy
+		FlowExportSpec
+		FlowExportStatus
+		FlowExportTarget
+		FwlogPolicy
+		FwlogPolicyList
+		FwlogSpec
+		FwlogStatus
+		StatsPolicy
+		StatsPolicyList
+		StatsSpec
+		StatsStatus
 */
 package telemetry
 
@@ -25,6 +34,7 @@ import _ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import api "github.com/pensando/sw/api"
+import api1 "github.com/pensando/sw/api"
 
 import (
 	context "golang.org/x/net/context"
@@ -44,178 +54,374 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-type MonitoringPolicySpec_Areas int32
+type FlowExportTarget_Formats int32
 
 const (
-	MonitoringPolicySpec_FwLogs      MonitoringPolicySpec_Areas = 0
-	MonitoringPolicySpec_FlowData    MonitoringPolicySpec_Areas = 1
-	MonitoringPolicySpec_ObjectStats MonitoringPolicySpec_Areas = 2
+	FlowExportTarget_Netflow FlowExportTarget_Formats = 0
 )
 
-var MonitoringPolicySpec_Areas_name = map[int32]string{
-	0: "FwLogs",
-	1: "FlowData",
-	2: "ObjectStats",
+var FlowExportTarget_Formats_name = map[int32]string{
+	0: "Netflow",
 }
-var MonitoringPolicySpec_Areas_value = map[string]int32{
-	"FwLogs":      0,
-	"FlowData":    1,
-	"ObjectStats": 2,
+var FlowExportTarget_Formats_value = map[string]int32{
+	"Netflow": 0,
 }
 
-func (x MonitoringPolicySpec_Areas) String() string {
-	return proto.EnumName(MonitoringPolicySpec_Areas_name, int32(x))
+func (x FlowExportTarget_Formats) String() string {
+	return proto.EnumName(FlowExportTarget_Formats_name, int32(x))
 }
-func (MonitoringPolicySpec_Areas) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorTelemetry, []int{3, 0}
-}
-
-type AutoMsgMonitoringPolicyWatchHelper struct {
-	// Area describes an area for which the monitoring policy is specified
-	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	// object selector for the service (list of object kind/namespace/instance to match)
-	// TBD: this would need to be replaced by a generic definition of an object selector
-	Object *MonitoringPolicy `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+func (FlowExportTarget_Formats) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{5, 0}
 }
 
-func (m *AutoMsgMonitoringPolicyWatchHelper) Reset()         { *m = AutoMsgMonitoringPolicyWatchHelper{} }
-func (m *AutoMsgMonitoringPolicyWatchHelper) String() string { return proto.CompactTextString(m) }
-func (*AutoMsgMonitoringPolicyWatchHelper) ProtoMessage()    {}
-func (*AutoMsgMonitoringPolicyWatchHelper) Descriptor() ([]byte, []int) {
+// telemetry policies:
+// -------------------------------------------------------------------------------
+// policy name         |  intended for        |     description                 |
+// -------------------------------------------------------------------------------
+// stats               |  sys admins          |    for all stats other than     |
+//                     |                      |    fwlog/netflow.               |
+//                     |                      |    includes retention,compaction|
+// -------------------------------------------------------------------------------
+// fwlog               |  security admins     |    firewall log policy          |
+//                     |                      |    includes retention,          |
+//                     |                      |    export parameters            |
+// -------------------------------------------------------------------------------
+//                     |                      |                                 |
+// flowexport          |  network admins      |    netflow export policy        |
+//                     |                      |    includes interval,           |
+//                     |                      |    export parameters            |
+// -------------------------------------------------------------------------------
+//
+// =========================================================================================
+//  stats policy
+// =========================================================================================
+type AutoMsgFwlogPolicyWatchHelper struct {
+	Type   string       `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *FwlogPolicy `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgFwlogPolicyWatchHelper) Reset()         { *m = AutoMsgFwlogPolicyWatchHelper{} }
+func (m *AutoMsgFwlogPolicyWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgFwlogPolicyWatchHelper) ProtoMessage()    {}
+func (*AutoMsgFwlogPolicyWatchHelper) Descriptor() ([]byte, []int) {
 	return fileDescriptorTelemetry, []int{0}
 }
 
-func (m *AutoMsgMonitoringPolicyWatchHelper) GetType() string {
+func (m *AutoMsgFwlogPolicyWatchHelper) GetType() string {
 	if m != nil {
 		return m.Type
 	}
 	return ""
 }
 
-func (m *AutoMsgMonitoringPolicyWatchHelper) GetObject() *MonitoringPolicy {
+func (m *AutoMsgFwlogPolicyWatchHelper) GetObject() *FwlogPolicy {
 	if m != nil {
 		return m.Object
 	}
 	return nil
 }
 
-type MonitoringPolicy struct {
-	// list of workloads to be monitored for the policy
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
-	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
-	Spec           MonitoringPolicySpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	Status         MonitoringPolicyStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+// compaction method will be selected by Venice based on the mesaurement/table
+// collection interval will be selected by Venice based on workloads
+type AutoMsgStatsPolicyWatchHelper struct {
+	// Compaction Interval is the down sampling interval in minutes, hours or days
+	// this would be mapped to GROUP BY TIME() in influxdb CQ
+	// example: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host
+	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	// RetentionTime defines for how long to keep the stats data before it is deleted
+	// The value is specified as a string format to be hours, days, or months etc.
+	// e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
+	Object *StatsPolicy `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
 }
 
-func (m *MonitoringPolicy) Reset()                    { *m = MonitoringPolicy{} }
-func (m *MonitoringPolicy) String() string            { return proto.CompactTextString(m) }
-func (*MonitoringPolicy) ProtoMessage()               {}
-func (*MonitoringPolicy) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{1} }
+func (m *AutoMsgStatsPolicyWatchHelper) Reset()         { *m = AutoMsgStatsPolicyWatchHelper{} }
+func (m *AutoMsgStatsPolicyWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgStatsPolicyWatchHelper) ProtoMessage()    {}
+func (*AutoMsgStatsPolicyWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorTelemetry, []int{1}
+}
 
-func (m *MonitoringPolicy) GetSpec() MonitoringPolicySpec {
+func (m *AutoMsgStatsPolicyWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgStatsPolicyWatchHelper) GetObject() *StatsPolicy {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type FlowExportPolicy struct {
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
+	Spec           FlowExportSpec `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	// Status contains the current state of the policy.
+	Status FlowExportStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+}
+
+func (m *FlowExportPolicy) Reset()                    { *m = FlowExportPolicy{} }
+func (m *FlowExportPolicy) String() string            { return proto.CompactTextString(m) }
+func (*FlowExportPolicy) ProtoMessage()               {}
+func (*FlowExportPolicy) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{2} }
+
+func (m *FlowExportPolicy) GetSpec() FlowExportSpec {
 	if m != nil {
 		return m.Spec
 	}
-	return MonitoringPolicySpec{}
+	return FlowExportSpec{}
 }
 
-func (m *MonitoringPolicy) GetStatus() MonitoringPolicyStatus {
+func (m *FlowExportPolicy) GetStatus() FlowExportStatus {
 	if m != nil {
 		return m.Status
 	}
-	return MonitoringPolicyStatus{}
+	return FlowExportStatus{}
 }
 
-type MonitoringPolicyList struct {
+type FlowExportSpec struct {
+	Targets []FlowExportTarget `protobuf:"bytes,1,rep,name=Targets" json:"targets,omitempty"`
+}
+
+func (m *FlowExportSpec) Reset()                    { *m = FlowExportSpec{} }
+func (m *FlowExportSpec) String() string            { return proto.CompactTextString(m) }
+func (*FlowExportSpec) ProtoMessage()               {}
+func (*FlowExportSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{3} }
+
+func (m *FlowExportSpec) GetTargets() []FlowExportTarget {
+	if m != nil {
+		return m.Targets
+	}
+	return nil
+}
+
+// Firewall logs are managed like syslog.
+// Venice collects fwlog irrespective of the export config
+type FlowExportStatus struct {
+}
+
+func (m *FlowExportStatus) Reset()                    { *m = FlowExportStatus{} }
+func (m *FlowExportStatus) String() string            { return proto.CompactTextString(m) }
+func (*FlowExportStatus) ProtoMessage()               {}
+func (*FlowExportStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{4} }
+
+type FlowExportTarget struct {
+	Interval string              `protobuf:"bytes,1,opt,name=Interval,proto3" json:"interval,omitempty"`
+	Format   string              `protobuf:"bytes,2,opt,name=Format,proto3" json:"format,omitempty"`
+	Exports  []api1.ExportConfig `protobuf:"bytes,3,rep,name=Exports" json:"exports,omitempty"`
+}
+
+func (m *FlowExportTarget) Reset()                    { *m = FlowExportTarget{} }
+func (m *FlowExportTarget) String() string            { return proto.CompactTextString(m) }
+func (*FlowExportTarget) ProtoMessage()               {}
+func (*FlowExportTarget) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{5} }
+
+func (m *FlowExportTarget) GetInterval() string {
+	if m != nil {
+		return m.Interval
+	}
+	return ""
+}
+
+func (m *FlowExportTarget) GetFormat() string {
+	if m != nil {
+		return m.Format
+	}
+	return ""
+}
+
+func (m *FlowExportTarget) GetExports() []api1.ExportConfig {
+	if m != nil {
+		return m.Exports
+	}
+	return nil
+}
+
+// ========================================================================================
+//  flow export policy
+// ========================================================================================
+type FwlogPolicy struct {
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
+	Spec           FwlogSpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	Status         FwlogStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+}
+
+func (m *FwlogPolicy) Reset()                    { *m = FwlogPolicy{} }
+func (m *FwlogPolicy) String() string            { return proto.CompactTextString(m) }
+func (*FwlogPolicy) ProtoMessage()               {}
+func (*FwlogPolicy) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{6} }
+
+func (m *FwlogPolicy) GetSpec() FwlogSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return FwlogSpec{}
+}
+
+func (m *FwlogPolicy) GetStatus() FwlogStatus {
+	if m != nil {
+		return m.Status
+	}
+	return FwlogStatus{}
+}
+
+type FwlogPolicyList struct {
+	// Interval defines how often to push the records to an external or internal collector
+	// The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	// Spec contains the configuration of the monitoring policy.
-	Items []*MonitoringPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// Export contains export parameters.
+	Items []*FwlogPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
-func (m *MonitoringPolicyList) Reset()                    { *m = MonitoringPolicyList{} }
-func (m *MonitoringPolicyList) String() string            { return proto.CompactTextString(m) }
-func (*MonitoringPolicyList) ProtoMessage()               {}
-func (*MonitoringPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{2} }
+func (m *FwlogPolicyList) Reset()                    { *m = FwlogPolicyList{} }
+func (m *FwlogPolicyList) String() string            { return proto.CompactTextString(m) }
+func (*FwlogPolicyList) ProtoMessage()               {}
+func (*FwlogPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{7} }
 
-func (m *MonitoringPolicyList) GetItems() []*MonitoringPolicy {
+func (m *FwlogPolicyList) GetItems() []*FwlogPolicy {
 	if m != nil {
 		return m.Items
 	}
 	return nil
 }
 
-type MonitoringPolicySpec struct {
-	Area             []string          `protobuf:"bytes,1,rep,name=Area" json:"Area,omitempty"`
-	ObjectSelector   map[string]string `protobuf:"bytes,2,rep,name=ObjectSelector" json:"object-selector,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	CollectionPolicy string            `protobuf:"bytes,3,opt,name=CollectionPolicy,proto3" json:"collection-policy,omitempty"`
-	RetentionPolicy  string            `protobuf:"bytes,4,opt,name=RetentionPolicy,proto3" json:"retention-policy,omitempty"`
-	ExportPolicies   []string          `protobuf:"bytes,5,rep,name=ExportPolicies" json:"export-policy,omitempty"`
+type FwlogSpec struct {
+	RetentionTime string              `protobuf:"bytes,1,opt,name=RetentionTime,proto3" json:"retention-time,omitempty"`
+	Exports       []api1.ExportConfig `protobuf:"bytes,2,rep,name=Exports" json:"exports,omitempty"`
 }
 
-func (m *MonitoringPolicySpec) Reset()                    { *m = MonitoringPolicySpec{} }
-func (m *MonitoringPolicySpec) String() string            { return proto.CompactTextString(m) }
-func (*MonitoringPolicySpec) ProtoMessage()               {}
-func (*MonitoringPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{3} }
+func (m *FwlogSpec) Reset()                    { *m = FwlogSpec{} }
+func (m *FwlogSpec) String() string            { return proto.CompactTextString(m) }
+func (*FwlogSpec) ProtoMessage()               {}
+func (*FwlogSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{8} }
 
-func (m *MonitoringPolicySpec) GetArea() []string {
+func (m *FwlogSpec) GetRetentionTime() string {
 	if m != nil {
-		return m.Area
-	}
-	return nil
-}
-
-func (m *MonitoringPolicySpec) GetObjectSelector() map[string]string {
-	if m != nil {
-		return m.ObjectSelector
-	}
-	return nil
-}
-
-func (m *MonitoringPolicySpec) GetCollectionPolicy() string {
-	if m != nil {
-		return m.CollectionPolicy
+		return m.RetentionTime
 	}
 	return ""
 }
 
-func (m *MonitoringPolicySpec) GetRetentionPolicy() string {
+func (m *FwlogSpec) GetExports() []api1.ExportConfig {
 	if m != nil {
-		return m.RetentionPolicy
+		return m.Exports
+	}
+	return nil
+}
+
+type FwlogStatus struct {
+}
+
+func (m *FwlogStatus) Reset()                    { *m = FwlogStatus{} }
+func (m *FwlogStatus) String() string            { return proto.CompactTextString(m) }
+func (*FwlogStatus) ProtoMessage()               {}
+func (*FwlogStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{9} }
+
+type StatsPolicy struct {
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
+	Spec           StatsSpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	Status         StatsStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+}
+
+func (m *StatsPolicy) Reset()                    { *m = StatsPolicy{} }
+func (m *StatsPolicy) String() string            { return proto.CompactTextString(m) }
+func (*StatsPolicy) ProtoMessage()               {}
+func (*StatsPolicy) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{10} }
+
+func (m *StatsPolicy) GetSpec() StatsSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return StatsSpec{}
+}
+
+func (m *StatsPolicy) GetStatus() StatsStatus {
+	if m != nil {
+		return m.Status
+	}
+	return StatsStatus{}
+}
+
+type StatsPolicyList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*StatsPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *StatsPolicyList) Reset()                    { *m = StatsPolicyList{} }
+func (m *StatsPolicyList) String() string            { return proto.CompactTextString(m) }
+func (*StatsPolicyList) ProtoMessage()               {}
+func (*StatsPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{11} }
+
+func (m *StatsPolicyList) GetItems() []*StatsPolicy {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type StatsSpec struct {
+	CompactionInterval      string `protobuf:"bytes,1,opt,name=CompactionInterval,proto3" json:"compaction-interval ,omitempty"`
+	RetentionTime           string `protobuf:"bytes,2,opt,name=RetentionTime,proto3" json:"retention-time,omitempty"`
+	DownSampleRetentionTime string `protobuf:"bytes,3,opt,name=DownSampleRetentionTime,proto3" json:"downsample-retention-time,omitempty"`
+}
+
+func (m *StatsSpec) Reset()                    { *m = StatsSpec{} }
+func (m *StatsSpec) String() string            { return proto.CompactTextString(m) }
+func (*StatsSpec) ProtoMessage()               {}
+func (*StatsSpec) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{12} }
+
+func (m *StatsSpec) GetCompactionInterval() string {
+	if m != nil {
+		return m.CompactionInterval
 	}
 	return ""
 }
 
-func (m *MonitoringPolicySpec) GetExportPolicies() []string {
+func (m *StatsSpec) GetRetentionTime() string {
 	if m != nil {
-		return m.ExportPolicies
+		return m.RetentionTime
 	}
-	return nil
+	return ""
 }
 
-type MonitoringPolicyStatus struct {
-	Workloads []string `protobuf:"bytes,1,rep,name=Workloads" json:"workloads,omitempty"`
-}
-
-func (m *MonitoringPolicyStatus) Reset()                    { *m = MonitoringPolicyStatus{} }
-func (m *MonitoringPolicyStatus) String() string            { return proto.CompactTextString(m) }
-func (*MonitoringPolicyStatus) ProtoMessage()               {}
-func (*MonitoringPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{4} }
-
-func (m *MonitoringPolicyStatus) GetWorkloads() []string {
+func (m *StatsSpec) GetDownSampleRetentionTime() string {
 	if m != nil {
-		return m.Workloads
+		return m.DownSampleRetentionTime
 	}
-	return nil
+	return ""
 }
+
+type StatsStatus struct {
+}
+
+func (m *StatsStatus) Reset()                    { *m = StatsStatus{} }
+func (m *StatsStatus) String() string            { return proto.CompactTextString(m) }
+func (*StatsStatus) ProtoMessage()               {}
+func (*StatsStatus) Descriptor() ([]byte, []int) { return fileDescriptorTelemetry, []int{13} }
 
 func init() {
-	proto.RegisterType((*AutoMsgMonitoringPolicyWatchHelper)(nil), "telemetry.AutoMsgMonitoringPolicyWatchHelper")
-	proto.RegisterType((*MonitoringPolicy)(nil), "telemetry.MonitoringPolicy")
-	proto.RegisterType((*MonitoringPolicyList)(nil), "telemetry.MonitoringPolicyList")
-	proto.RegisterType((*MonitoringPolicySpec)(nil), "telemetry.MonitoringPolicySpec")
-	proto.RegisterType((*MonitoringPolicyStatus)(nil), "telemetry.MonitoringPolicyStatus")
-	proto.RegisterEnum("telemetry.MonitoringPolicySpec_Areas", MonitoringPolicySpec_Areas_name, MonitoringPolicySpec_Areas_value)
+	proto.RegisterType((*AutoMsgFwlogPolicyWatchHelper)(nil), "telemetry.AutoMsgFwlogPolicyWatchHelper")
+	proto.RegisterType((*AutoMsgStatsPolicyWatchHelper)(nil), "telemetry.AutoMsgStatsPolicyWatchHelper")
+	proto.RegisterType((*FlowExportPolicy)(nil), "telemetry.FlowExportPolicy")
+	proto.RegisterType((*FlowExportSpec)(nil), "telemetry.FlowExportSpec")
+	proto.RegisterType((*FlowExportStatus)(nil), "telemetry.FlowExportStatus")
+	proto.RegisterType((*FlowExportTarget)(nil), "telemetry.FlowExportTarget")
+	proto.RegisterType((*FwlogPolicy)(nil), "telemetry.FwlogPolicy")
+	proto.RegisterType((*FwlogPolicyList)(nil), "telemetry.FwlogPolicyList")
+	proto.RegisterType((*FwlogSpec)(nil), "telemetry.FwlogSpec")
+	proto.RegisterType((*FwlogStatus)(nil), "telemetry.FwlogStatus")
+	proto.RegisterType((*StatsPolicy)(nil), "telemetry.StatsPolicy")
+	proto.RegisterType((*StatsPolicyList)(nil), "telemetry.StatsPolicyList")
+	proto.RegisterType((*StatsSpec)(nil), "telemetry.StatsSpec")
+	proto.RegisterType((*StatsStatus)(nil), "telemetry.StatsStatus")
+	proto.RegisterEnum("telemetry.FlowExportTarget_Formats", FlowExportTarget_Formats_name, FlowExportTarget_Formats_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -226,76 +432,106 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for MonitoringPolicyV1 service
+// Client API for FlowExportPolicyV1 service
 
-type MonitoringPolicyV1Client interface {
-	AutoAddMonitoringPolicy(ctx context.Context, in *MonitoringPolicy, opts ...grpc.CallOption) (*MonitoringPolicy, error)
-	AutoDeleteMonitoringPolicy(ctx context.Context, in *MonitoringPolicy, opts ...grpc.CallOption) (*MonitoringPolicy, error)
-	AutoGetMonitoringPolicy(ctx context.Context, in *MonitoringPolicy, opts ...grpc.CallOption) (*MonitoringPolicy, error)
-	AutoListMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*MonitoringPolicyList, error)
-	AutoUpdateMonitoringPolicy(ctx context.Context, in *MonitoringPolicy, opts ...grpc.CallOption) (*MonitoringPolicy, error)
-	AutoWatchMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringPolicyV1_AutoWatchMonitoringPolicyClient, error)
+type FlowExportPolicyV1Client interface {
 }
 
-type monitoringPolicyV1Client struct {
+type flowExportPolicyV1Client struct {
 	cc *grpc.ClientConn
 }
 
-func NewMonitoringPolicyV1Client(cc *grpc.ClientConn) MonitoringPolicyV1Client {
-	return &monitoringPolicyV1Client{cc}
+func NewFlowExportPolicyV1Client(cc *grpc.ClientConn) FlowExportPolicyV1Client {
+	return &flowExportPolicyV1Client{cc}
 }
 
-func (c *monitoringPolicyV1Client) AutoAddMonitoringPolicy(ctx context.Context, in *MonitoringPolicy, opts ...grpc.CallOption) (*MonitoringPolicy, error) {
-	out := new(MonitoringPolicy)
-	err := grpc.Invoke(ctx, "/telemetry.MonitoringPolicyV1/AutoAddMonitoringPolicy", in, out, c.cc, opts...)
+// Server API for FlowExportPolicyV1 service
+
+type FlowExportPolicyV1Server interface {
+}
+
+func RegisterFlowExportPolicyV1Server(s *grpc.Server, srv FlowExportPolicyV1Server) {
+	s.RegisterService(&_FlowExportPolicyV1_serviceDesc, srv)
+}
+
+var _FlowExportPolicyV1_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "telemetry.FlowExportPolicyV1",
+	HandlerType: (*FlowExportPolicyV1Server)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams:     []grpc.StreamDesc{},
+	Metadata:    "telemetry.proto",
+}
+
+// Client API for FwlogPolicyV1 service
+
+type FwlogPolicyV1Client interface {
+	AutoAddFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error)
+	AutoDeleteFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error)
+	AutoGetFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error)
+	AutoListFwlogPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*FwlogPolicyList, error)
+	AutoUpdateFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error)
+	AutoWatchFwlogPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (FwlogPolicyV1_AutoWatchFwlogPolicyClient, error)
+}
+
+type fwlogPolicyV1Client struct {
+	cc *grpc.ClientConn
+}
+
+func NewFwlogPolicyV1Client(cc *grpc.ClientConn) FwlogPolicyV1Client {
+	return &fwlogPolicyV1Client{cc}
+}
+
+func (c *fwlogPolicyV1Client) AutoAddFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error) {
+	out := new(FwlogPolicy)
+	err := grpc.Invoke(ctx, "/telemetry.FwlogPolicyV1/AutoAddFwlogPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *monitoringPolicyV1Client) AutoDeleteMonitoringPolicy(ctx context.Context, in *MonitoringPolicy, opts ...grpc.CallOption) (*MonitoringPolicy, error) {
-	out := new(MonitoringPolicy)
-	err := grpc.Invoke(ctx, "/telemetry.MonitoringPolicyV1/AutoDeleteMonitoringPolicy", in, out, c.cc, opts...)
+func (c *fwlogPolicyV1Client) AutoDeleteFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error) {
+	out := new(FwlogPolicy)
+	err := grpc.Invoke(ctx, "/telemetry.FwlogPolicyV1/AutoDeleteFwlogPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *monitoringPolicyV1Client) AutoGetMonitoringPolicy(ctx context.Context, in *MonitoringPolicy, opts ...grpc.CallOption) (*MonitoringPolicy, error) {
-	out := new(MonitoringPolicy)
-	err := grpc.Invoke(ctx, "/telemetry.MonitoringPolicyV1/AutoGetMonitoringPolicy", in, out, c.cc, opts...)
+func (c *fwlogPolicyV1Client) AutoGetFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error) {
+	out := new(FwlogPolicy)
+	err := grpc.Invoke(ctx, "/telemetry.FwlogPolicyV1/AutoGetFwlogPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *monitoringPolicyV1Client) AutoListMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*MonitoringPolicyList, error) {
-	out := new(MonitoringPolicyList)
-	err := grpc.Invoke(ctx, "/telemetry.MonitoringPolicyV1/AutoListMonitoringPolicy", in, out, c.cc, opts...)
+func (c *fwlogPolicyV1Client) AutoListFwlogPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*FwlogPolicyList, error) {
+	out := new(FwlogPolicyList)
+	err := grpc.Invoke(ctx, "/telemetry.FwlogPolicyV1/AutoListFwlogPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *monitoringPolicyV1Client) AutoUpdateMonitoringPolicy(ctx context.Context, in *MonitoringPolicy, opts ...grpc.CallOption) (*MonitoringPolicy, error) {
-	out := new(MonitoringPolicy)
-	err := grpc.Invoke(ctx, "/telemetry.MonitoringPolicyV1/AutoUpdateMonitoringPolicy", in, out, c.cc, opts...)
+func (c *fwlogPolicyV1Client) AutoUpdateFwlogPolicy(ctx context.Context, in *FwlogPolicy, opts ...grpc.CallOption) (*FwlogPolicy, error) {
+	out := new(FwlogPolicy)
+	err := grpc.Invoke(ctx, "/telemetry.FwlogPolicyV1/AutoUpdateFwlogPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *monitoringPolicyV1Client) AutoWatchMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringPolicyV1_AutoWatchMonitoringPolicyClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_MonitoringPolicyV1_serviceDesc.Streams[0], c.cc, "/telemetry.MonitoringPolicyV1/AutoWatchMonitoringPolicy", opts...)
+func (c *fwlogPolicyV1Client) AutoWatchFwlogPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (FwlogPolicyV1_AutoWatchFwlogPolicyClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_FwlogPolicyV1_serviceDesc.Streams[0], c.cc, "/telemetry.FwlogPolicyV1/AutoWatchFwlogPolicy", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &monitoringPolicyV1AutoWatchMonitoringPolicyClient{stream}
+	x := &fwlogPolicyV1AutoWatchFwlogPolicyClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -305,185 +541,442 @@ func (c *monitoringPolicyV1Client) AutoWatchMonitoringPolicy(ctx context.Context
 	return x, nil
 }
 
-type MonitoringPolicyV1_AutoWatchMonitoringPolicyClient interface {
-	Recv() (*AutoMsgMonitoringPolicyWatchHelper, error)
+type FwlogPolicyV1_AutoWatchFwlogPolicyClient interface {
+	Recv() (*AutoMsgFwlogPolicyWatchHelper, error)
 	grpc.ClientStream
 }
 
-type monitoringPolicyV1AutoWatchMonitoringPolicyClient struct {
+type fwlogPolicyV1AutoWatchFwlogPolicyClient struct {
 	grpc.ClientStream
 }
 
-func (x *monitoringPolicyV1AutoWatchMonitoringPolicyClient) Recv() (*AutoMsgMonitoringPolicyWatchHelper, error) {
-	m := new(AutoMsgMonitoringPolicyWatchHelper)
+func (x *fwlogPolicyV1AutoWatchFwlogPolicyClient) Recv() (*AutoMsgFwlogPolicyWatchHelper, error) {
+	m := new(AutoMsgFwlogPolicyWatchHelper)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-// Server API for MonitoringPolicyV1 service
+// Server API for FwlogPolicyV1 service
 
-type MonitoringPolicyV1Server interface {
-	AutoAddMonitoringPolicy(context.Context, *MonitoringPolicy) (*MonitoringPolicy, error)
-	AutoDeleteMonitoringPolicy(context.Context, *MonitoringPolicy) (*MonitoringPolicy, error)
-	AutoGetMonitoringPolicy(context.Context, *MonitoringPolicy) (*MonitoringPolicy, error)
-	AutoListMonitoringPolicy(context.Context, *api.ListWatchOptions) (*MonitoringPolicyList, error)
-	AutoUpdateMonitoringPolicy(context.Context, *MonitoringPolicy) (*MonitoringPolicy, error)
-	AutoWatchMonitoringPolicy(*api.ListWatchOptions, MonitoringPolicyV1_AutoWatchMonitoringPolicyServer) error
+type FwlogPolicyV1Server interface {
+	AutoAddFwlogPolicy(context.Context, *FwlogPolicy) (*FwlogPolicy, error)
+	AutoDeleteFwlogPolicy(context.Context, *FwlogPolicy) (*FwlogPolicy, error)
+	AutoGetFwlogPolicy(context.Context, *FwlogPolicy) (*FwlogPolicy, error)
+	AutoListFwlogPolicy(context.Context, *api.ListWatchOptions) (*FwlogPolicyList, error)
+	AutoUpdateFwlogPolicy(context.Context, *FwlogPolicy) (*FwlogPolicy, error)
+	AutoWatchFwlogPolicy(*api.ListWatchOptions, FwlogPolicyV1_AutoWatchFwlogPolicyServer) error
 }
 
-func RegisterMonitoringPolicyV1Server(s *grpc.Server, srv MonitoringPolicyV1Server) {
-	s.RegisterService(&_MonitoringPolicyV1_serviceDesc, srv)
+func RegisterFwlogPolicyV1Server(s *grpc.Server, srv FwlogPolicyV1Server) {
+	s.RegisterService(&_FwlogPolicyV1_serviceDesc, srv)
 }
 
-func _MonitoringPolicyV1_AutoAddMonitoringPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MonitoringPolicy)
+func _FwlogPolicyV1_AutoAddFwlogPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FwlogPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MonitoringPolicyV1Server).AutoAddMonitoringPolicy(ctx, in)
+		return srv.(FwlogPolicyV1Server).AutoAddFwlogPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/telemetry.MonitoringPolicyV1/AutoAddMonitoringPolicy",
+		FullMethod: "/telemetry.FwlogPolicyV1/AutoAddFwlogPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MonitoringPolicyV1Server).AutoAddMonitoringPolicy(ctx, req.(*MonitoringPolicy))
+		return srv.(FwlogPolicyV1Server).AutoAddFwlogPolicy(ctx, req.(*FwlogPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MonitoringPolicyV1_AutoDeleteMonitoringPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MonitoringPolicy)
+func _FwlogPolicyV1_AutoDeleteFwlogPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FwlogPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MonitoringPolicyV1Server).AutoDeleteMonitoringPolicy(ctx, in)
+		return srv.(FwlogPolicyV1Server).AutoDeleteFwlogPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/telemetry.MonitoringPolicyV1/AutoDeleteMonitoringPolicy",
+		FullMethod: "/telemetry.FwlogPolicyV1/AutoDeleteFwlogPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MonitoringPolicyV1Server).AutoDeleteMonitoringPolicy(ctx, req.(*MonitoringPolicy))
+		return srv.(FwlogPolicyV1Server).AutoDeleteFwlogPolicy(ctx, req.(*FwlogPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MonitoringPolicyV1_AutoGetMonitoringPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MonitoringPolicy)
+func _FwlogPolicyV1_AutoGetFwlogPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FwlogPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MonitoringPolicyV1Server).AutoGetMonitoringPolicy(ctx, in)
+		return srv.(FwlogPolicyV1Server).AutoGetFwlogPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/telemetry.MonitoringPolicyV1/AutoGetMonitoringPolicy",
+		FullMethod: "/telemetry.FwlogPolicyV1/AutoGetFwlogPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MonitoringPolicyV1Server).AutoGetMonitoringPolicy(ctx, req.(*MonitoringPolicy))
+		return srv.(FwlogPolicyV1Server).AutoGetFwlogPolicy(ctx, req.(*FwlogPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MonitoringPolicyV1_AutoListMonitoringPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _FwlogPolicyV1_AutoListFwlogPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MonitoringPolicyV1Server).AutoListMonitoringPolicy(ctx, in)
+		return srv.(FwlogPolicyV1Server).AutoListFwlogPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/telemetry.MonitoringPolicyV1/AutoListMonitoringPolicy",
+		FullMethod: "/telemetry.FwlogPolicyV1/AutoListFwlogPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MonitoringPolicyV1Server).AutoListMonitoringPolicy(ctx, req.(*api.ListWatchOptions))
+		return srv.(FwlogPolicyV1Server).AutoListFwlogPolicy(ctx, req.(*api.ListWatchOptions))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MonitoringPolicyV1_AutoUpdateMonitoringPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MonitoringPolicy)
+func _FwlogPolicyV1_AutoUpdateFwlogPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FwlogPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MonitoringPolicyV1Server).AutoUpdateMonitoringPolicy(ctx, in)
+		return srv.(FwlogPolicyV1Server).AutoUpdateFwlogPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/telemetry.MonitoringPolicyV1/AutoUpdateMonitoringPolicy",
+		FullMethod: "/telemetry.FwlogPolicyV1/AutoUpdateFwlogPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MonitoringPolicyV1Server).AutoUpdateMonitoringPolicy(ctx, req.(*MonitoringPolicy))
+		return srv.(FwlogPolicyV1Server).AutoUpdateFwlogPolicy(ctx, req.(*FwlogPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MonitoringPolicyV1_AutoWatchMonitoringPolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _FwlogPolicyV1_AutoWatchFwlogPolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(api.ListWatchOptions)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(MonitoringPolicyV1Server).AutoWatchMonitoringPolicy(m, &monitoringPolicyV1AutoWatchMonitoringPolicyServer{stream})
+	return srv.(FwlogPolicyV1Server).AutoWatchFwlogPolicy(m, &fwlogPolicyV1AutoWatchFwlogPolicyServer{stream})
 }
 
-type MonitoringPolicyV1_AutoWatchMonitoringPolicyServer interface {
-	Send(*AutoMsgMonitoringPolicyWatchHelper) error
+type FwlogPolicyV1_AutoWatchFwlogPolicyServer interface {
+	Send(*AutoMsgFwlogPolicyWatchHelper) error
 	grpc.ServerStream
 }
 
-type monitoringPolicyV1AutoWatchMonitoringPolicyServer struct {
+type fwlogPolicyV1AutoWatchFwlogPolicyServer struct {
 	grpc.ServerStream
 }
 
-func (x *monitoringPolicyV1AutoWatchMonitoringPolicyServer) Send(m *AutoMsgMonitoringPolicyWatchHelper) error {
+func (x *fwlogPolicyV1AutoWatchFwlogPolicyServer) Send(m *AutoMsgFwlogPolicyWatchHelper) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-var _MonitoringPolicyV1_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "telemetry.MonitoringPolicyV1",
-	HandlerType: (*MonitoringPolicyV1Server)(nil),
+var _FwlogPolicyV1_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "telemetry.FwlogPolicyV1",
+	HandlerType: (*FwlogPolicyV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AutoAddMonitoringPolicy",
-			Handler:    _MonitoringPolicyV1_AutoAddMonitoringPolicy_Handler,
+			MethodName: "AutoAddFwlogPolicy",
+			Handler:    _FwlogPolicyV1_AutoAddFwlogPolicy_Handler,
 		},
 		{
-			MethodName: "AutoDeleteMonitoringPolicy",
-			Handler:    _MonitoringPolicyV1_AutoDeleteMonitoringPolicy_Handler,
+			MethodName: "AutoDeleteFwlogPolicy",
+			Handler:    _FwlogPolicyV1_AutoDeleteFwlogPolicy_Handler,
 		},
 		{
-			MethodName: "AutoGetMonitoringPolicy",
-			Handler:    _MonitoringPolicyV1_AutoGetMonitoringPolicy_Handler,
+			MethodName: "AutoGetFwlogPolicy",
+			Handler:    _FwlogPolicyV1_AutoGetFwlogPolicy_Handler,
 		},
 		{
-			MethodName: "AutoListMonitoringPolicy",
-			Handler:    _MonitoringPolicyV1_AutoListMonitoringPolicy_Handler,
+			MethodName: "AutoListFwlogPolicy",
+			Handler:    _FwlogPolicyV1_AutoListFwlogPolicy_Handler,
 		},
 		{
-			MethodName: "AutoUpdateMonitoringPolicy",
-			Handler:    _MonitoringPolicyV1_AutoUpdateMonitoringPolicy_Handler,
+			MethodName: "AutoUpdateFwlogPolicy",
+			Handler:    _FwlogPolicyV1_AutoUpdateFwlogPolicy_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "AutoWatchMonitoringPolicy",
-			Handler:       _MonitoringPolicyV1_AutoWatchMonitoringPolicy_Handler,
+			StreamName:    "AutoWatchFwlogPolicy",
+			Handler:       _FwlogPolicyV1_AutoWatchFwlogPolicy_Handler,
 			ServerStreams: true,
 		},
 	},
 	Metadata: "telemetry.proto",
 }
 
-func (m *AutoMsgMonitoringPolicyWatchHelper) Marshal() (dAtA []byte, err error) {
+// Client API for StatsPolicyV1 service
+
+type StatsPolicyV1Client interface {
+	AutoAddStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
+	AutoDeleteStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
+	AutoGetStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
+	AutoListStatsPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*StatsPolicyList, error)
+	AutoUpdateStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
+	AutoWatchStatsPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (StatsPolicyV1_AutoWatchStatsPolicyClient, error)
+}
+
+type statsPolicyV1Client struct {
+	cc *grpc.ClientConn
+}
+
+func NewStatsPolicyV1Client(cc *grpc.ClientConn) StatsPolicyV1Client {
+	return &statsPolicyV1Client{cc}
+}
+
+func (c *statsPolicyV1Client) AutoAddStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error) {
+	out := new(StatsPolicy)
+	err := grpc.Invoke(ctx, "/telemetry.StatsPolicyV1/AutoAddStatsPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *statsPolicyV1Client) AutoDeleteStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error) {
+	out := new(StatsPolicy)
+	err := grpc.Invoke(ctx, "/telemetry.StatsPolicyV1/AutoDeleteStatsPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *statsPolicyV1Client) AutoGetStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error) {
+	out := new(StatsPolicy)
+	err := grpc.Invoke(ctx, "/telemetry.StatsPolicyV1/AutoGetStatsPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *statsPolicyV1Client) AutoListStatsPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*StatsPolicyList, error) {
+	out := new(StatsPolicyList)
+	err := grpc.Invoke(ctx, "/telemetry.StatsPolicyV1/AutoListStatsPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *statsPolicyV1Client) AutoUpdateStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error) {
+	out := new(StatsPolicy)
+	err := grpc.Invoke(ctx, "/telemetry.StatsPolicyV1/AutoUpdateStatsPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *statsPolicyV1Client) AutoWatchStatsPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (StatsPolicyV1_AutoWatchStatsPolicyClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_StatsPolicyV1_serviceDesc.Streams[0], c.cc, "/telemetry.StatsPolicyV1/AutoWatchStatsPolicy", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &statsPolicyV1AutoWatchStatsPolicyClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type StatsPolicyV1_AutoWatchStatsPolicyClient interface {
+	Recv() (*AutoMsgStatsPolicyWatchHelper, error)
+	grpc.ClientStream
+}
+
+type statsPolicyV1AutoWatchStatsPolicyClient struct {
+	grpc.ClientStream
+}
+
+func (x *statsPolicyV1AutoWatchStatsPolicyClient) Recv() (*AutoMsgStatsPolicyWatchHelper, error) {
+	m := new(AutoMsgStatsPolicyWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for StatsPolicyV1 service
+
+type StatsPolicyV1Server interface {
+	AutoAddStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
+	AutoDeleteStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
+	AutoGetStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
+	AutoListStatsPolicy(context.Context, *api.ListWatchOptions) (*StatsPolicyList, error)
+	AutoUpdateStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
+	AutoWatchStatsPolicy(*api.ListWatchOptions, StatsPolicyV1_AutoWatchStatsPolicyServer) error
+}
+
+func RegisterStatsPolicyV1Server(s *grpc.Server, srv StatsPolicyV1Server) {
+	s.RegisterService(&_StatsPolicyV1_serviceDesc, srv)
+}
+
+func _StatsPolicyV1_AutoAddStatsPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatsPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsPolicyV1Server).AutoAddStatsPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.StatsPolicyV1/AutoAddStatsPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsPolicyV1Server).AutoAddStatsPolicy(ctx, req.(*StatsPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StatsPolicyV1_AutoDeleteStatsPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatsPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsPolicyV1Server).AutoDeleteStatsPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.StatsPolicyV1/AutoDeleteStatsPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsPolicyV1Server).AutoDeleteStatsPolicy(ctx, req.(*StatsPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StatsPolicyV1_AutoGetStatsPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatsPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsPolicyV1Server).AutoGetStatsPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.StatsPolicyV1/AutoGetStatsPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsPolicyV1Server).AutoGetStatsPolicy(ctx, req.(*StatsPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StatsPolicyV1_AutoListStatsPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsPolicyV1Server).AutoListStatsPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.StatsPolicyV1/AutoListStatsPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsPolicyV1Server).AutoListStatsPolicy(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StatsPolicyV1_AutoUpdateStatsPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatsPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsPolicyV1Server).AutoUpdateStatsPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/telemetry.StatsPolicyV1/AutoUpdateStatsPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsPolicyV1Server).AutoUpdateStatsPolicy(ctx, req.(*StatsPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StatsPolicyV1_AutoWatchStatsPolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(StatsPolicyV1Server).AutoWatchStatsPolicy(m, &statsPolicyV1AutoWatchStatsPolicyServer{stream})
+}
+
+type StatsPolicyV1_AutoWatchStatsPolicyServer interface {
+	Send(*AutoMsgStatsPolicyWatchHelper) error
+	grpc.ServerStream
+}
+
+type statsPolicyV1AutoWatchStatsPolicyServer struct {
+	grpc.ServerStream
+}
+
+func (x *statsPolicyV1AutoWatchStatsPolicyServer) Send(m *AutoMsgStatsPolicyWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _StatsPolicyV1_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "telemetry.StatsPolicyV1",
+	HandlerType: (*StatsPolicyV1Server)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AutoAddStatsPolicy",
+			Handler:    _StatsPolicyV1_AutoAddStatsPolicy_Handler,
+		},
+		{
+			MethodName: "AutoDeleteStatsPolicy",
+			Handler:    _StatsPolicyV1_AutoDeleteStatsPolicy_Handler,
+		},
+		{
+			MethodName: "AutoGetStatsPolicy",
+			Handler:    _StatsPolicyV1_AutoGetStatsPolicy_Handler,
+		},
+		{
+			MethodName: "AutoListStatsPolicy",
+			Handler:    _StatsPolicyV1_AutoListStatsPolicy_Handler,
+		},
+		{
+			MethodName: "AutoUpdateStatsPolicy",
+			Handler:    _StatsPolicyV1_AutoUpdateStatsPolicy_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchStatsPolicy",
+			Handler:       _StatsPolicyV1_AutoWatchStatsPolicy_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "telemetry.proto",
+}
+
+func (m *AutoMsgFwlogPolicyWatchHelper) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -493,7 +986,7 @@ func (m *AutoMsgMonitoringPolicyWatchHelper) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *AutoMsgMonitoringPolicyWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+func (m *AutoMsgFwlogPolicyWatchHelper) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -517,7 +1010,7 @@ func (m *AutoMsgMonitoringPolicyWatchHelper) MarshalTo(dAtA []byte) (int, error)
 	return i, nil
 }
 
-func (m *MonitoringPolicy) Marshal() (dAtA []byte, err error) {
+func (m *AutoMsgStatsPolicyWatchHelper) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -527,7 +1020,41 @@ func (m *MonitoringPolicy) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MonitoringPolicy) MarshalTo(dAtA []byte) (int, error) {
+func (m *AutoMsgStatsPolicyWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(m.Object.Size()))
+		n2, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
+func (m *FlowExportPolicy) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowExportPolicy) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -535,39 +1062,39 @@ func (m *MonitoringPolicy) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintTelemetry(dAtA, i, uint64(m.TypeMeta.Size()))
-	n2, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintTelemetry(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n3, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n3, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n3
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x12
 	i++
-	i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
-	n4, err := m.Spec.MarshalTo(dAtA[i:])
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n4, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n4
-	dAtA[i] = 0x22
+	dAtA[i] = 0x1a
 	i++
-	i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
-	n5, err := m.Status.MarshalTo(dAtA[i:])
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
+	n5, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n5
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
+	n6, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n6
 	return i, nil
 }
 
-func (m *MonitoringPolicyList) Marshal() (dAtA []byte, err error) {
+func (m *FlowExportSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -577,7 +1104,147 @@ func (m *MonitoringPolicyList) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MonitoringPolicyList) MarshalTo(dAtA []byte) (int, error) {
+func (m *FlowExportSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Targets) > 0 {
+		for _, msg := range m.Targets {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *FlowExportStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowExportStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *FlowExportTarget) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FlowExportTarget) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Interval) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.Interval)))
+		i += copy(dAtA[i:], m.Interval)
+	}
+	if len(m.Format) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.Format)))
+		i += copy(dAtA[i:], m.Format)
+	}
+	if len(m.Exports) > 0 {
+		for _, msg := range m.Exports {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *FwlogPolicy) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FwlogPolicy) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.TypeMeta.Size()))
+	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n8, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
+	n9, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n9
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
+	n10, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n10
+	return i, nil
+}
+
+func (m *FwlogPolicyList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FwlogPolicyList) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -585,19 +1252,19 @@ func (m *MonitoringPolicyList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintTelemetry(dAtA, i, uint64(m.TypeMeta.Size()))
-	n6, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n11, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
+	i += n11
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintTelemetry(dAtA, i, uint64(m.ListMeta.Size()))
-	n7, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n12, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n7
+	i += n12
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -613,7 +1280,7 @@ func (m *MonitoringPolicyList) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *MonitoringPolicySpec) Marshal() (dAtA []byte, err error) {
+func (m *FwlogSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -623,74 +1290,33 @@ func (m *MonitoringPolicySpec) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MonitoringPolicySpec) MarshalTo(dAtA []byte) (int, error) {
+func (m *FwlogSpec) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Area) > 0 {
-		for _, s := range m.Area {
-			dAtA[i] = 0xa
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
+	if len(m.RetentionTime) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.RetentionTime)))
+		i += copy(dAtA[i:], m.RetentionTime)
 	}
-	if len(m.ObjectSelector) > 0 {
-		for k := range m.ObjectSelector {
+	if len(m.Exports) > 0 {
+		for _, msg := range m.Exports {
 			dAtA[i] = 0x12
 			i++
-			v := m.ObjectSelector[k]
-			mapSize := 1 + len(k) + sovTelemetry(uint64(len(k))) + 1 + len(v) + sovTelemetry(uint64(len(v)))
-			i = encodeVarintTelemetry(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintTelemetry(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintTelemetry(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
-		}
-	}
-	if len(m.CollectionPolicy) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.CollectionPolicy)))
-		i += copy(dAtA[i:], m.CollectionPolicy)
-	}
-	if len(m.RetentionPolicy) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.RetentionPolicy)))
-		i += copy(dAtA[i:], m.RetentionPolicy)
-	}
-	if len(m.ExportPolicies) > 0 {
-		for _, s := range m.ExportPolicies {
-			dAtA[i] = 0x2a
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
 			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+			i += n
 		}
 	}
 	return i, nil
 }
 
-func (m *MonitoringPolicyStatus) Marshal() (dAtA []byte, err error) {
+func (m *FwlogStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -700,26 +1326,161 @@ func (m *MonitoringPolicyStatus) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MonitoringPolicyStatus) MarshalTo(dAtA []byte) (int, error) {
+func (m *FwlogStatus) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Workloads) > 0 {
-		for _, s := range m.Workloads {
-			dAtA[i] = 0xa
+	return i, nil
+}
+
+func (m *StatsPolicy) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StatsPolicy) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.TypeMeta.Size()))
+	n13, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n13
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n14, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n14
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.Spec.Size()))
+	n15, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n15
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.Status.Size()))
+	n16, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n16
+	return i, nil
+}
+
+func (m *StatsPolicyList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StatsPolicyList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.TypeMeta.Size()))
+	n17, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n17
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintTelemetry(dAtA, i, uint64(m.ListMeta.Size()))
+	n18, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n18
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
 			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
+			i = encodeVarintTelemetry(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
 			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+			i += n
 		}
 	}
+	return i, nil
+}
+
+func (m *StatsSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StatsSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.CompactionInterval) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.CompactionInterval)))
+		i += copy(dAtA[i:], m.CompactionInterval)
+	}
+	if len(m.RetentionTime) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.RetentionTime)))
+		i += copy(dAtA[i:], m.RetentionTime)
+	}
+	if len(m.DownSampleRetentionTime) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTelemetry(dAtA, i, uint64(len(m.DownSampleRetentionTime)))
+		i += copy(dAtA[i:], m.DownSampleRetentionTime)
+	}
+	return i, nil
+}
+
+func (m *StatsStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StatsStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
 	return i, nil
 }
 
@@ -732,7 +1493,7 @@ func encodeVarintTelemetry(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *AutoMsgMonitoringPolicyWatchHelper) Size() (n int) {
+func (m *AutoMsgFwlogPolicyWatchHelper) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Type)
@@ -746,7 +1507,21 @@ func (m *AutoMsgMonitoringPolicyWatchHelper) Size() (n int) {
 	return n
 }
 
-func (m *MonitoringPolicy) Size() (n int) {
+func (m *AutoMsgStatsPolicyWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *FlowExportPolicy) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
@@ -760,7 +1535,59 @@ func (m *MonitoringPolicy) Size() (n int) {
 	return n
 }
 
-func (m *MonitoringPolicyList) Size() (n int) {
+func (m *FlowExportSpec) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Targets) > 0 {
+		for _, e := range m.Targets {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *FlowExportStatus) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *FlowExportTarget) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Interval)
+	if l > 0 {
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	l = len(m.Format)
+	if l > 0 {
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	if len(m.Exports) > 0 {
+		for _, e := range m.Exports {
+			l = e.Size()
+			n += 1 + l + sovTelemetry(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *FwlogPolicy) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	l = m.Spec.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	l = m.Status.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	return n
+}
+
+func (m *FwlogPolicyList) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
@@ -776,49 +1603,79 @@ func (m *MonitoringPolicyList) Size() (n int) {
 	return n
 }
 
-func (m *MonitoringPolicySpec) Size() (n int) {
+func (m *FwlogSpec) Size() (n int) {
 	var l int
 	_ = l
-	if len(m.Area) > 0 {
-		for _, s := range m.Area {
-			l = len(s)
-			n += 1 + l + sovTelemetry(uint64(l))
-		}
-	}
-	if len(m.ObjectSelector) > 0 {
-		for k, v := range m.ObjectSelector {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovTelemetry(uint64(len(k))) + 1 + len(v) + sovTelemetry(uint64(len(v)))
-			n += mapEntrySize + 1 + sovTelemetry(uint64(mapEntrySize))
-		}
-	}
-	l = len(m.CollectionPolicy)
+	l = len(m.RetentionTime)
 	if l > 0 {
 		n += 1 + l + sovTelemetry(uint64(l))
 	}
-	l = len(m.RetentionPolicy)
-	if l > 0 {
-		n += 1 + l + sovTelemetry(uint64(l))
-	}
-	if len(m.ExportPolicies) > 0 {
-		for _, s := range m.ExportPolicies {
-			l = len(s)
+	if len(m.Exports) > 0 {
+		for _, e := range m.Exports {
+			l = e.Size()
 			n += 1 + l + sovTelemetry(uint64(l))
 		}
 	}
 	return n
 }
 
-func (m *MonitoringPolicyStatus) Size() (n int) {
+func (m *FwlogStatus) Size() (n int) {
 	var l int
 	_ = l
-	if len(m.Workloads) > 0 {
-		for _, s := range m.Workloads {
-			l = len(s)
+	return n
+}
+
+func (m *StatsPolicy) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	l = m.Spec.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	l = m.Status.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	return n
+}
+
+func (m *StatsPolicyList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovTelemetry(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
 			n += 1 + l + sovTelemetry(uint64(l))
 		}
 	}
+	return n
+}
+
+func (m *StatsSpec) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.CompactionInterval)
+	if l > 0 {
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	l = len(m.RetentionTime)
+	if l > 0 {
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	l = len(m.DownSampleRetentionTime)
+	if l > 0 {
+		n += 1 + l + sovTelemetry(uint64(l))
+	}
+	return n
+}
+
+func (m *StatsStatus) Size() (n int) {
+	var l int
+	_ = l
 	return n
 }
 
@@ -835,7 +1692,7 @@ func sovTelemetry(x uint64) (n int) {
 func sozTelemetry(x uint64) (n int) {
 	return sovTelemetry(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *AutoMsgMonitoringPolicyWatchHelper) Unmarshal(dAtA []byte) error {
+func (m *AutoMsgFwlogPolicyWatchHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -858,10 +1715,10 @@ func (m *AutoMsgMonitoringPolicyWatchHelper) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgMonitoringPolicyWatchHelper: wiretype end group for non-group")
+			return fmt.Errorf("proto: AutoMsgFwlogPolicyWatchHelper: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgMonitoringPolicyWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AutoMsgFwlogPolicyWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -920,7 +1777,7 @@ func (m *AutoMsgMonitoringPolicyWatchHelper) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Object == nil {
-				m.Object = &MonitoringPolicy{}
+				m.Object = &FwlogPolicy{}
 			}
 			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -947,7 +1804,7 @@ func (m *AutoMsgMonitoringPolicyWatchHelper) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MonitoringPolicy) Unmarshal(dAtA []byte) error {
+func (m *AutoMsgStatsPolicyWatchHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -970,10 +1827,122 @@ func (m *MonitoringPolicy) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MonitoringPolicy: wiretype end group for non-group")
+			return fmt.Errorf("proto: AutoMsgStatsPolicyWatchHelper: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MonitoringPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AutoMsgStatsPolicyWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &StatsPolicy{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowExportPolicy) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowExportPolicy: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowExportPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1117,7 +2086,7 @@ func (m *MonitoringPolicy) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MonitoringPolicyList) Unmarshal(dAtA []byte) error {
+func (m *FlowExportSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1140,10 +2109,450 @@ func (m *MonitoringPolicyList) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MonitoringPolicyList: wiretype end group for non-group")
+			return fmt.Errorf("proto: FlowExportSpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MonitoringPolicyList: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FlowExportSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Targets", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Targets = append(m.Targets, FlowExportTarget{})
+			if err := m.Targets[len(m.Targets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowExportStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowExportStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowExportStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FlowExportTarget) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FlowExportTarget: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FlowExportTarget: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Interval = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Format", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Format = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Exports", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Exports = append(m.Exports, api1.ExportConfig{})
+			if err := m.Exports[len(m.Exports)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FwlogPolicy) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FwlogPolicy: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FwlogPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FwlogPolicyList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FwlogPolicyList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FwlogPolicyList: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 2:
@@ -1232,7 +2641,7 @@ func (m *MonitoringPolicyList) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Items = append(m.Items, &MonitoringPolicy{})
+			m.Items = append(m.Items, &FwlogPolicy{})
 			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1258,7 +2667,7 @@ func (m *MonitoringPolicyList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MonitoringPolicySpec) Unmarshal(dAtA []byte) error {
+func (m *FwlogSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1281,15 +2690,15 @@ func (m *MonitoringPolicySpec) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MonitoringPolicySpec: wiretype end group for non-group")
+			return fmt.Errorf("proto: FwlogSpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MonitoringPolicySpec: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FwlogSpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Area", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RetentionTime", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1314,11 +2723,11 @@ func (m *MonitoringPolicySpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Area = append(m.Area, string(dAtA[iNdEx:postIndex]))
+			m.RetentionTime = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObjectSelector", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Exports", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1342,184 +2751,10 @@ func (m *MonitoringPolicySpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ObjectSelector == nil {
-				m.ObjectSelector = make(map[string]string)
+			m.Exports = append(m.Exports, api1.ExportConfig{})
+			if err := m.Exports[len(m.Exports)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowTelemetry
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowTelemetry
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthTelemetry
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowTelemetry
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthTelemetry
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipTelemetry(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthTelemetry
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.ObjectSelector[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CollectionPolicy", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CollectionPolicy = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RetentionPolicy", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RetentionPolicy = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExportPolicies", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTelemetry
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTelemetry
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ExportPolicies = append(m.ExportPolicies, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1542,7 +2777,7 @@ func (m *MonitoringPolicySpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MonitoringPolicyStatus) Unmarshal(dAtA []byte) error {
+func (m *FwlogStatus) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1565,15 +2800,376 @@ func (m *MonitoringPolicyStatus) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MonitoringPolicyStatus: wiretype end group for non-group")
+			return fmt.Errorf("proto: FwlogStatus: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MonitoringPolicyStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FwlogStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StatsPolicy) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StatsPolicy: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StatsPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Workloads", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StatsPolicyList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StatsPolicyList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StatsPolicyList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &StatsPolicy{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StatsSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StatsSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StatsSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CompactionInterval", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1598,8 +3194,116 @@ func (m *MonitoringPolicyStatus) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Workloads = append(m.Workloads, string(dAtA[iNdEx:postIndex]))
+			m.CompactionInterval = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetentionTime", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RetentionTime = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DownSampleRetentionTime", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTelemetry
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DownSampleRetentionTime = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTelemetry(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTelemetry
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StatsStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTelemetry
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StatsStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StatsStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTelemetry(dAtA[iNdEx:])
@@ -1729,68 +3433,85 @@ var (
 func init() { proto.RegisterFile("telemetry.proto", fileDescriptorTelemetry) }
 
 var fileDescriptorTelemetry = []byte{
-	// 1005 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xc7, 0x33, 0xb6, 0xe3, 0xc6, 0x93, 0x34, 0xb6, 0x26, 0xa6, 0xb1, 0x37, 0x25, 0x1b, 0xb6,
-	0xaa, 0x48, 0xd3, 0xc4, 0xdb, 0xa6, 0xe2, 0x97, 0x41, 0x82, 0xb8, 0x4d, 0x29, 0x4a, 0x83, 0x2b,
-	0x3b, 0xd0, 0x2b, 0x93, 0xf5, 0x63, 0xb3, 0x74, 0xbd, 0xb3, 0xda, 0x9d, 0x8d, 0x31, 0xa8, 0x17,
-	0x0c, 0x9c, 0xb8, 0x00, 0x91, 0x40, 0xdc, 0xe8, 0x31, 0x47, 0x2e, 0xfd, 0x17, 0x7a, 0xac, 0xe0,
-	0x82, 0x7a, 0xb0, 0x50, 0xc4, 0xc9, 0x7f, 0x03, 0x07, 0x34, 0xe3, 0x75, 0xb2, 0xac, 0x8d, 0x93,
-	0x43, 0x6e, 0x9e, 0x79, 0xef, 0x7d, 0xe6, 0xfb, 0xde, 0x9b, 0x9d, 0x67, 0x9c, 0xe5, 0x60, 0x43,
-	0x13, 0xb8, 0xd7, 0x2e, 0xb9, 0x1e, 0xe3, 0x8c, 0x64, 0x8e, 0x37, 0x94, 0xcb, 0x26, 0x63, 0xa6,
-	0x0d, 0x3a, 0x75, 0x2d, 0x9d, 0x3a, 0x0e, 0xe3, 0x94, 0x5b, 0xcc, 0xf1, 0xfb, 0x8e, 0xca, 0xa6,
-	0x69, 0xf1, 0xbd, 0x60, 0xb7, 0x64, 0xb0, 0xa6, 0xee, 0x82, 0xe3, 0x53, 0xa7, 0xc1, 0x74, 0xbf,
-	0xa5, 0xef, 0x83, 0x63, 0x19, 0xa0, 0x07, 0xdc, 0xb2, 0x7d, 0x11, 0x6a, 0x82, 0x13, 0x8d, 0xd6,
-	0x2d, 0xc7, 0xb0, 0x83, 0x06, 0x0c, 0x30, 0x6b, 0x11, 0x8c, 0xc9, 0x4c, 0xa6, 0xcb, 0xed, 0xdd,
-	0xe0, 0x53, 0xb9, 0x92, 0x0b, 0xf9, 0x2b, 0x74, 0xbf, 0xfa, 0x3f, 0xa7, 0x0a, 0x8d, 0x4d, 0xe0,
-	0xb4, 0xef, 0xa6, 0xb9, 0x58, 0xdb, 0x08, 0x38, 0xdb, 0xf6, 0xcd, 0x6d, 0xe6, 0x58, 0x9c, 0x79,
-	0x96, 0x63, 0x3e, 0x60, 0xb6, 0x65, 0xb4, 0x1f, 0x52, 0x6e, 0xec, 0xdd, 0x03, 0xdb, 0x05, 0x8f,
-	0xcc, 0xe0, 0xd4, 0x4e, 0xdb, 0x85, 0x02, 0x5a, 0x42, 0xcb, 0x19, 0x72, 0x1d, 0xa7, 0xab, 0xbb,
-	0x9f, 0x81, 0xc1, 0x0b, 0x89, 0x25, 0xb4, 0x3c, 0xbd, 0xbe, 0x50, 0x3a, 0xa9, 0x4d, 0x9c, 0x52,
-	0xce, 0xbe, 0x38, 0xc8, 0x4f, 0xb7, 0x04, 0x6b, 0x4f, 0xb2, 0xb4, 0xa7, 0x09, 0x9c, 0x8b, 0x7b,
-	0x91, 0x1b, 0x18, 0xed, 0x48, 0xfa, 0xf4, 0xfa, 0xc5, 0x12, 0x75, 0xad, 0x92, 0x38, 0x6e, 0x1b,
-	0x38, 0xad, 0xcc, 0x3d, 0xeb, 0xaa, 0x13, 0xcf, 0xbb, 0x2a, 0xea, 0x75, 0xd5, 0x0b, 0xab, 0x96,
-	0x63, 0x5b, 0x0e, 0xd4, 0xd0, 0x0e, 0x79, 0x0b, 0xa3, 0x6a, 0x78, 0x7e, 0x56, 0x46, 0xf4, 0x25,
-	0xc9, 0x18, 0x25, 0x12, 0x33, 0x2b, 0x92, 0x5d, 0x65, 0x4d, 0x8b, 0x43, 0xd3, 0xe5, 0xed, 0x1a,
-	0xaa, 0x92, 0x2d, 0x9c, 0xaa, 0xbb, 0x60, 0x14, 0x92, 0x32, 0x5a, 0x1d, 0xa3, 0x5e, 0xb8, 0x55,
-	0x2e, 0x09, 0x9a, 0x20, 0xf9, 0x2e, 0x18, 0x11, 0x92, 0x84, 0x90, 0x3a, 0x4e, 0xd7, 0x39, 0xe5,
-	0x81, 0x5f, 0x48, 0x49, 0xdc, 0x2b, 0xe3, 0x70, 0xd2, 0xb1, 0x52, 0x08, 0x81, 0x39, 0x5f, 0xae,
-	0x23, 0xc8, 0x10, 0x55, 0xce, 0xff, 0xfe, 0x4d, 0x31, 0xd7, 0x8c, 0x45, 0x6b, 0xbf, 0x22, 0x9c,
-	0x8f, 0x23, 0xef, 0x5b, 0x3e, 0x27, 0x9a, 0xa8, 0x5e, 0x62, 0x54, 0xf5, 0xa6, 0x06, 0x95, 0x20,
-	0xd7, 0xf0, 0x94, 0xf0, 0x15, 0xbb, 0x61, 0xe2, 0x7d, 0xd7, 0xc1, 0x66, 0xc4, 0x75, 0x05, 0x4f,
-	0x7e, 0xc0, 0xa1, 0x29, 0x32, 0x4a, 0x9e, 0xd6, 0xde, 0xd9, 0x17, 0x07, 0x79, 0x6c, 0x5b, 0x3e,
-	0x0f, 0xbb, 0xfb, 0x24, 0x35, 0xac, 0x51, 0xd6, 0xe9, 0x6d, 0x9c, 0xda, 0xf0, 0x80, 0x16, 0xd0,
-	0x52, 0x72, 0x39, 0x53, 0x79, 0xf5, 0xf0, 0xdb, 0xe2, 0x95, 0x3a, 0xf7, 0x36, 0x9d, 0xa0, 0xb9,
-	0x3c, 0xca, 0xbf, 0x24, 0x9c, 0xfd, 0x6b, 0x35, 0x19, 0x44, 0xbe, 0xc0, 0xb3, 0xfd, 0xf6, 0xd6,
-	0xc1, 0x06, 0x83, 0x33, 0xaf, 0x90, 0x90, 0xd2, 0x6e, 0x9d, 0xd2, 0xbb, 0xd2, 0x7f, 0xa3, 0x36,
-	0x1d, 0xee, 0xb5, 0x2b, 0x2f, 0xf7, 0xba, 0x6a, 0x91, 0x49, 0xc3, 0x9a, 0x1f, 0x5a, 0x22, 0x3d,
-	0x88, 0x9d, 0x44, 0xb6, 0x70, 0xee, 0x36, 0xb3, 0xc5, 0xc2, 0x62, 0x4e, 0x1f, 0x2d, 0x0b, 0x98,
-	0xa9, 0xa8, 0xbd, 0xae, 0xba, 0x60, 0x1c, 0xdb, 0xd6, 0x5c, 0x69, 0x8c, 0xa0, 0x86, 0x02, 0xc9,
-	0x3d, 0x9c, 0xad, 0x01, 0x07, 0x27, 0xc2, 0x4a, 0x49, 0xd6, 0x62, 0xaf, 0xab, 0x2a, 0xde, 0xc0,
-	0x34, 0x8c, 0x8a, 0x87, 0x91, 0xdb, 0x78, 0x76, 0xf3, 0x73, 0x97, 0x79, 0x5c, 0xae, 0x2d, 0xf0,
-	0x0b, 0x93, 0xb2, 0xb2, 0x0b, 0xbd, 0xae, 0x3a, 0x0f, 0xd2, 0x32, 0x4c, 0x89, 0x85, 0x28, 0x1b,
-	0x78, 0x6e, 0x44, 0x85, 0x48, 0x0e, 0x27, 0x1f, 0x41, 0xbb, 0xff, 0xb5, 0xd7, 0xc4, 0x4f, 0x92,
-	0xc7, 0x93, 0xfb, 0xd4, 0x0e, 0x40, 0xde, 0xb2, 0x4c, 0xad, 0xbf, 0x28, 0x27, 0xde, 0x44, 0xda,
-	0x3a, 0x9e, 0x94, 0xad, 0x22, 0x18, 0xa7, 0xef, 0xb6, 0xee, 0x33, 0xd3, 0xcf, 0x4d, 0x90, 0x19,
-	0x3c, 0x75, 0xd7, 0x66, 0xad, 0x3b, 0x94, 0xd3, 0x1c, 0x22, 0x59, 0x3c, 0x1d, 0x9e, 0xc2, 0x29,
-	0xf7, 0x73, 0x09, 0xad, 0x8a, 0x2f, 0x8d, 0xfe, 0x34, 0xc8, 0x6b, 0x38, 0xf3, 0x90, 0x79, 0x8f,
-	0x6c, 0x46, 0x1b, 0x7e, 0x78, 0x55, 0xe6, 0x7b, 0x5d, 0x75, 0xae, 0x35, 0xd8, 0x8c, 0x24, 0x73,
-	0xe2, 0xb9, 0xfe, 0xcf, 0x05, 0x4c, 0xe2, 0xc4, 0x8f, 0x6f, 0x92, 0xef, 0x10, 0x9e, 0x17, 0xaf,
-	0xdb, 0x46, 0xa3, 0x31, 0xf4, 0xe2, 0x8c, 0xbb, 0xd5, 0xca, 0x38, 0xa3, 0xf6, 0xc6, 0x9f, 0x07,
-	0x79, 0xf4, 0xdb, 0xd7, 0xc5, 0xb4, 0xe1, 0x01, 0xe5, 0xf0, 0xd5, 0x1f, 0x7f, 0xff, 0x98, 0xb8,
-	0x82, 0x27, 0xca, 0x68, 0x45, 0xbb, 0xac, 0x7f, 0x59, 0x2d, 0xed, 0x80, 0x43, 0x1d, 0xfe, 0x58,
-	0x8f, 0x7f, 0xbf, 0xe4, 0x27, 0x84, 0x15, 0x21, 0xe7, 0x0e, 0xd8, 0xc0, 0xe1, 0x1c, 0x15, 0xbd,
-	0x3b, 0x50, 0xd4, 0x90, 0x64, 0xa9, 0xe8, 0x3a, 0x9e, 0x28, 0x4f, 0xac, 0x5c, 0x1d, 0x27, 0x48,
-	0xd8, 0x3e, 0xa4, 0x4d, 0x78, 0x4c, 0xbe, 0x0f, 0x0b, 0xf5, 0x3e, 0xf0, 0x73, 0x94, 0xf5, 0x4e,
-	0x28, 0x2b, 0x69, 0x02, 0x3f, 0xd1, 0x44, 0xce, 0xa8, 0xe9, 0x13, 0x5c, 0x10, 0x92, 0xe4, 0xfb,
-	0x14, 0xd7, 0xf4, 0xd2, 0xf1, 0xd3, 0x25, 0xa7, 0x54, 0xd5, 0x95, 0x13, 0x53, 0x19, 0xf7, 0x94,
-	0x0b, 0x67, 0x6d, 0x26, 0x54, 0x94, 0x12, 0x2f, 0x16, 0xf9, 0x39, 0xec, 0xc7, 0x47, 0x6e, 0x83,
-	0x9e, 0x6b, 0x3f, 0xde, 0x1b, 0xf4, 0x23, 0x90, 0x64, 0x99, 0xfb, 0xaa, 0xbc, 0x21, 0xca, 0x19,
-	0x93, 0xf7, 0x70, 0x51, 0x28, 0x93, 0xd9, 0x9d, 0x35, 0xfb, 0xb5, 0x88, 0xa4, 0xd3, 0x67, 0xba,
-	0x76, 0x31, 0x14, 0x39, 0x29, 0x87, 0xf3, 0x0d, 0xa4, 0x3c, 0x45, 0x3f, 0x74, 0x8a, 0x89, 0xfd,
-	0x9b, 0xbf, 0x74, 0x86, 0x67, 0xcf, 0x93, 0x4e, 0x71, 0x68, 0x68, 0x1f, 0x76, 0x8a, 0x5b, 0x23,
-	0x46, 0xb9, 0xe8, 0x36, 0x49, 0xba, 0x01, 0x27, 0xe1, 0x75, 0x3c, 0x63, 0xce, 0x87, 0x9d, 0xe2,
-	0xeb, 0x23, 0x70, 0x29, 0x97, 0xf9, 0x5c, 0x19, 0xfb, 0x61, 0x55, 0x66, 0x9e, 0x1d, 0x2d, 0xa2,
-	0xe7, 0x47, 0x8b, 0xe8, 0xaf, 0xa3, 0x45, 0xf4, 0x00, 0xed, 0xa6, 0xe5, 0x7f, 0x9b, 0x5b, 0xff,
-	0x06, 0x00, 0x00, 0xff, 0xff, 0xdb, 0xad, 0x0d, 0xa1, 0xb4, 0x09, 0x00, 0x00,
+	// 1269 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcf, 0x4f, 0x1b, 0x47,
+	0x14, 0x66, 0x6c, 0x62, 0xc3, 0x38, 0xfc, 0xc8, 0xc4, 0x21, 0xf6, 0x96, 0x60, 0xba, 0x15, 0x81,
+	0x44, 0xc1, 0x0e, 0xee, 0xa1, 0x0a, 0xed, 0xa1, 0x38, 0x81, 0x26, 0x52, 0x09, 0x14, 0xdc, 0xf4,
+	0xbc, 0xac, 0x07, 0xb3, 0xd5, 0xee, 0xce, 0xca, 0x3b, 0xc6, 0x41, 0x15, 0x97, 0x3a, 0xc9, 0x1f,
+	0xd0, 0x22, 0x21, 0x55, 0x95, 0x2a, 0xe5, 0x48, 0x6f, 0xbd, 0xf4, 0x5f, 0xc8, 0xa9, 0x8a, 0xd2,
+	0x4b, 0x95, 0x83, 0x55, 0xa1, 0x9e, 0xf8, 0x0f, 0x7a, 0xab, 0x66, 0x76, 0x6d, 0xde, 0x9a, 0x5d,
+	0x70, 0x64, 0x29, 0xea, 0x8d, 0x9d, 0x7d, 0xef, 0xfb, 0xde, 0x7c, 0xfb, 0xbe, 0x37, 0x63, 0xf0,
+	0x18, 0xa7, 0x26, 0xb5, 0x28, 0xaf, 0xed, 0xe5, 0x9d, 0x1a, 0xe3, 0x8c, 0x0c, 0x77, 0x16, 0x94,
+	0xc9, 0x2a, 0x63, 0x55, 0x93, 0x16, 0x34, 0xc7, 0x28, 0x68, 0xb6, 0xcd, 0xb8, 0xc6, 0x0d, 0x66,
+	0xbb, 0x5e, 0xa0, 0xb2, 0x5c, 0x35, 0xf8, 0x4e, 0x7d, 0x2b, 0xaf, 0x33, 0xab, 0xe0, 0x50, 0xdb,
+	0xd5, 0xec, 0x0a, 0x2b, 0xb8, 0x8d, 0xc2, 0x2e, 0xb5, 0x0d, 0x9d, 0x16, 0xea, 0xdc, 0x30, 0x5d,
+	0x91, 0x5a, 0xa5, 0x36, 0xcc, 0x2e, 0x18, 0xb6, 0x6e, 0xd6, 0x2b, 0xb4, 0x0d, 0x33, 0x0f, 0x60,
+	0xaa, 0xac, 0xca, 0x0a, 0x72, 0x79, 0xab, 0xbe, 0x2d, 0x9f, 0xe4, 0x83, 0xfc, 0xcb, 0x0f, 0x9f,
+	0x89, 0x60, 0x15, 0x35, 0x5a, 0x94, 0x6b, 0x7e, 0xd8, 0xec, 0x39, 0x61, 0xf4, 0xa9, 0xc3, 0x6a,
+	0xdc, 0x0b, 0x54, 0xb7, 0xf1, 0x8d, 0xa5, 0x3a, 0x67, 0xab, 0x6e, 0x75, 0xa5, 0x61, 0xb2, 0xea,
+	0x3a, 0x33, 0x0d, 0x7d, 0xef, 0x1b, 0x8d, 0xeb, 0x3b, 0x0f, 0xa9, 0xe9, 0xd0, 0x1a, 0xb9, 0x8c,
+	0x07, 0xcb, 0x7b, 0x0e, 0xcd, 0xa0, 0x69, 0x34, 0x37, 0x4c, 0x6e, 0xe2, 0xc4, 0xda, 0xd6, 0xb7,
+	0x54, 0xe7, 0x99, 0xd8, 0x34, 0x9a, 0x4b, 0x15, 0x27, 0xf2, 0xa7, 0xfa, 0x01, 0x80, 0xc5, 0xb1,
+	0xb7, 0x07, 0xe9, 0x54, 0x43, 0xc0, 0xec, 0x48, 0x18, 0xc0, 0xb3, 0xc9, 0x35, 0xee, 0xf6, 0xc3,
+	0x03, 0x00, 0xce, 0xf2, 0xfc, 0x1a, 0xc3, 0xe3, 0x2b, 0x26, 0x6b, 0x2c, 0xcb, 0x4d, 0x7a, 0x51,
+	0xe4, 0x2e, 0x46, 0x65, 0x09, 0x9c, 0x2a, 0x8e, 0xe4, 0x35, 0xc7, 0xc8, 0x0b, 0xa6, 0x55, 0xca,
+	0xb5, 0xd2, 0xd5, 0x57, 0xad, 0xdc, 0xc0, 0xeb, 0x56, 0x0e, 0x9d, 0xb4, 0x72, 0xc9, 0x3b, 0x86,
+	0x6d, 0x1a, 0x36, 0xdd, 0x40, 0x65, 0x72, 0x0f, 0xa3, 0x35, 0x9f, 0x7a, 0x4c, 0x66, 0x78, 0xd5,
+	0xc8, 0x1c, 0x05, 0xe4, 0x8c, 0x0a, 0xcd, 0xef, 0x30, 0xcb, 0xe0, 0xd4, 0x72, 0xf8, 0xde, 0x06,
+	0x5a, 0x23, 0xcb, 0x78, 0x70, 0xd3, 0xa1, 0x7a, 0x26, 0x2e, 0xb3, 0xb3, 0x50, 0xa0, 0x4e, 0x5d,
+	0x22, 0xa0, 0x34, 0x21, 0x70, 0x04, 0x86, 0xeb, 0x50, 0x1d, 0x60, 0xc8, 0x74, 0xb2, 0x8a, 0x13,
+	0x62, 0xa3, 0x75, 0x37, 0x33, 0x28, 0x81, 0x3e, 0x08, 0x07, 0x92, 0x21, 0xa5, 0x8c, 0x0f, 0x35,
+	0xee, 0xca, 0x67, 0x00, 0xe6, 0x83, 0x2c, 0xa6, 0xdf, 0x3c, 0xcf, 0x8e, 0x6f, 0x77, 0x09, 0xa3,
+	0x6e, 0xe1, 0xd1, 0x60, 0x51, 0x64, 0x1d, 0x27, 0xcb, 0x5a, 0xad, 0x4a, 0xb9, 0x9b, 0x41, 0xd3,
+	0xf1, 0x48, 0x5e, 0x2f, 0xa6, 0x94, 0xf5, 0x79, 0xaf, 0x70, 0x2f, 0x07, 0x10, 0xb7, 0x61, 0x54,
+	0x02, 0x3f, 0x88, 0x57, 0x8d, 0xfa, 0x2f, 0x82, 0x8b, 0x5e, 0x24, 0x29, 0xe2, 0xa1, 0x47, 0x36,
+	0xa7, 0xb5, 0x5d, 0xcd, 0xf4, 0xba, 0xa0, 0x34, 0x71, 0xd2, 0xca, 0x11, 0xc3, 0x5f, 0x03, 0xd8,
+	0x9d, 0x38, 0xf2, 0x15, 0x4e, 0xac, 0xb0, 0x9a, 0xa5, 0x79, 0x7d, 0x32, 0x5c, 0xba, 0x77, 0xf4,
+	0x22, 0xfb, 0xe1, 0x26, 0xaf, 0x2d, 0xdb, 0x75, 0x6b, 0xae, 0x9b, 0x21, 0xef, 0x85, 0xba, 0xb7,
+	0x84, 0x52, 0xdb, 0xf2, 0x6f, 0xa8, 0x94, 0xf7, 0x96, 0xac, 0xe0, 0xa4, 0x97, 0xe4, 0x66, 0xe2,
+	0x52, 0x81, 0x2b, 0xb2, 0x01, 0xbc, 0xb5, 0xfb, 0xcc, 0xde, 0x36, 0xaa, 0xa7, 0xfb, 0xf6, 0xbc,
+	0x14, 0xd8, 0xb7, 0x9f, 0xac, 0x4e, 0xe0, 0xa4, 0xcf, 0x47, 0x52, 0x38, 0xf9, 0x98, 0x72, 0xa1,
+	0xfe, 0xf8, 0x80, 0x7a, 0x18, 0xc3, 0x29, 0x60, 0x95, 0xf7, 0xdb, 0x9c, 0x9f, 0x07, 0x9a, 0x33,
+	0xdd, 0xed, 0xde, 0x1e, 0xfa, 0xf2, 0x61, 0x57, 0x5f, 0x9e, 0x99, 0x00, 0x3d, 0xb7, 0xe4, 0xd8,
+	0x9b, 0xe7, 0x59, 0xa8, 0x84, 0x7a, 0x88, 0xf0, 0x18, 0x78, 0xfe, 0xd2, 0x70, 0x39, 0x51, 0x85,
+	0x3a, 0xb1, 0x30, 0x75, 0x86, 0xda, 0x3b, 0x25, 0xb7, 0xf0, 0x90, 0x88, 0x15, 0xab, 0xfe, 0xc6,
+	0xbc, 0xd0, 0xf6, 0x22, 0x08, 0x9d, 0xc1, 0x97, 0x1e, 0x71, 0x6a, 0x89, 0xe2, 0xe3, 0xe7, 0x8c,
+	0xaf, 0xd1, 0xb7, 0x07, 0x69, 0x6c, 0x1a, 0x2e, 0xf7, 0xa7, 0xca, 0x21, 0xc2, 0xc3, 0x1d, 0x81,
+	0x48, 0x09, 0x8f, 0x6c, 0x50, 0x4e, 0x6d, 0x31, 0xcf, 0xcb, 0x86, 0xe5, 0xcf, 0xac, 0xd2, 0xe4,
+	0x49, 0x2b, 0x97, 0xa9, 0xb5, 0x5f, 0xcc, 0x73, 0xc3, 0xa2, 0x60, 0xd7, 0xc1, 0x14, 0xd8, 0x65,
+	0xb1, 0x7e, 0xba, 0x6c, 0xc4, 0x6f, 0x26, 0xdf, 0x58, 0xa2, 0xb9, 0xc0, 0x7c, 0xfc, 0xbf, 0x34,
+	0x97, 0x2c, 0xa9, 0xcf, 0xe6, 0xf2, 0x30, 0xde, 0xa9, 0xb9, 0x80, 0x12, 0xb2, 0xb9, 0xc0, 0xf3,
+	0x7b, 0x6e, 0x2e, 0x78, 0x66, 0x75, 0x37, 0xd7, 0x8b, 0x18, 0x1e, 0xee, 0x08, 0x44, 0x36, 0x30,
+	0xb9, 0xcf, 0x2c, 0x47, 0xd3, 0x45, 0xab, 0x74, 0xcd, 0x43, 0xf5, 0xa4, 0x95, 0x9b, 0xd2, 0x3b,
+	0x6f, 0xe7, 0xdb, 0xa3, 0x71, 0x1a, 0x08, 0x10, 0x92, 0x7d, 0xb6, 0x61, 0x63, 0xef, 0xde, 0xb0,
+	0x1a, 0xbe, 0xfe, 0x80, 0x35, 0xec, 0x4d, 0xcd, 0x72, 0x4c, 0x1a, 0x44, 0x8b, 0x4b, 0xb4, 0xd9,
+	0x93, 0x56, 0xee, 0xa3, 0x0a, 0x6b, 0xd8, 0xae, 0x0c, 0x99, 0x8f, 0x04, 0x8e, 0xc2, 0x11, 0xbd,
+	0x0c, 0x3e, 0x72, 0xf1, 0x0f, 0x84, 0x49, 0xf7, 0x51, 0xfe, 0x64, 0x41, 0xf9, 0x1d, 0xfd, 0xd0,
+	0xcc, 0xc6, 0x76, 0x17, 0x7e, 0x6a, 0x9e, 0x3d, 0xd0, 0x5e, 0x86, 0xac, 0x1d, 0x35, 0xb3, 0xcb,
+	0x18, 0x9f, 0x02, 0x91, 0xb8, 0x38, 0x6c, 0xe2, 0x4e, 0x9d, 0x93, 0x44, 0x85, 0x9a, 0x94, 0x53,
+	0x65, 0xa6, 0xf0, 0xdd, 0x5a, 0xbe, 0x4c, 0x6d, 0xcd, 0xe6, 0xfb, 0x85, 0xee, 0x7c, 0xf1, 0xee,
+	0xb1, 0x66, 0xd1, 0xfd, 0xa3, 0x66, 0xf6, 0xb3, 0x90, 0xcb, 0xc5, 0xa0, 0xc3, 0x5c, 0x4e, 0x06,
+	0xc5, 0x07, 0x55, 0x26, 0xcf, 0x03, 0x2a, 0xfe, 0x9c, 0xc4, 0x23, 0x60, 0xca, 0x3c, 0x59, 0x20,
+	0x4f, 0x31, 0x11, 0xb7, 0xa2, 0xa5, 0x4a, 0x05, 0x9e, 0x08, 0x11, 0x53, 0x49, 0x89, 0x58, 0x57,
+	0x8b, 0x7f, 0x1d, 0xa4, 0xd1, 0x6f, 0xcf, 0xb2, 0x09, 0xbd, 0x46, 0x35, 0x4e, 0xbf, 0xff, 0xf3,
+	0x9f, 0x1f, 0x63, 0x53, 0x78, 0x60, 0x11, 0xdd, 0x56, 0xaf, 0x07, 0x0a, 0x02, 0x1c, 0x4d, 0x84,
+	0xaf, 0x09, 0xea, 0x07, 0x52, 0x81, 0x7e, 0xd8, 0x17, 0xdb, 0xec, 0x9e, 0x98, 0x92, 0xfd, 0x26,
+	0x1e, 0x58, 0x1c, 0xb8, 0x3d, 0x1d, 0x41, 0xde, 0x51, 0x94, 0xec, 0x7b, 0xfb, 0xff, 0x82, 0xf2,
+	0x7e, 0x2a, 0xf8, 0xc4, 0xaf, 0x40, 0x7c, 0xd8, 0x53, 0x7a, 0x72, 0x31, 0xfd, 0x1e, 0xbe, 0x2a,
+	0xe8, 0x85, 0x95, 0x21, 0xff, 0xb5, 0x8e, 0xc1, 0xe5, 0x05, 0x75, 0xcd, 0x91, 0x17, 0x77, 0x45,
+	0x09, 0xa7, 0x17, 0x71, 0x6a, 0xc1, 0x2f, 0x41, 0xb6, 0x81, 0xac, 0xe1, 0x86, 0xac, 0x21, 0x52,
+	0xff, 0x67, 0xbe, 0xfe, 0x5f, 0x3b, 0x15, 0xad, 0x3f, 0xfd, 0x3f, 0x6d, 0xeb, 0x5f, 0x97, 0x50,
+	0x92, 0x7c, 0x56, 0x7e, 0x7d, 0xe5, 0x62, 0x05, 0x76, 0x70, 0x5a, 0x54, 0x21, 0xf7, 0xd9, 0x83,
+	0x04, 0x73, 0xa0, 0x86, 0x73, 0x7f, 0x36, 0xa8, 0x23, 0x7e, 0x55, 0x97, 0xe4, 0xe5, 0xfc, 0x2e,
+	0x52, 0x7e, 0x39, 0xb5, 0x6d, 0x0a, 0x94, 0xf2, 0xb2, 0x19, 0xb8, 0x03, 0x1c, 0x35, 0xb3, 0x4b,
+	0xc1, 0xeb, 0xd1, 0x59, 0xb7, 0x5e, 0xb8, 0xab, 0xa3, 0x66, 0xb6, 0x18, 0x04, 0x81, 0x1e, 0x8d,
+	0xfa, 0x24, 0xd2, 0x9e, 0x60, 0x4e, 0x07, 0xec, 0x09, 0xcf, 0xd4, 0x88, 0xb9, 0xae, 0x44, 0xac,
+	0xf7, 0x6c, 0x4f, 0x17, 0x70, 0x04, 0xed, 0xd9, 0x0f, 0x7b, 0x8f, 0xf6, 0x04, 0xe4, 0x61, 0xf6,
+	0xec, 0xa7, 0x82, 0x5e, 0xec, 0x19, 0x4a, 0x0f, 0xec, 0x09, 0xf9, 0x7b, 0xb0, 0x67, 0xd7, 0x41,
+	0xdf, 0x9b, 0x3d, 0xa1, 0xfe, 0x41, 0x7b, 0xf6, 0xb3, 0xfb, 0x5e, 0xed, 0x19, 0xaa, 0x00, 0xb4,
+	0x67, 0x0f, 0x12, 0x84, 0xd8, 0x33, 0xfc, 0xd7, 0xf6, 0xf9, 0xf6, 0x04, 0xa5, 0x08, 0x7b, 0x02,
+	0x08, 0xcf, 0x9e, 0xb0, 0x92, 0x0b, 0xec, 0x19, 0xb6, 0x2b, 0xcf, 0x9e, 0x10, 0x24, 0xd2, 0x9e,
+	0x20, 0xbd, 0x74, 0xf9, 0xd5, 0xf1, 0x14, 0x7a, 0x7d, 0x3c, 0x85, 0xfe, 0x3e, 0x9e, 0x42, 0xeb,
+	0x68, 0x2b, 0x21, 0xff, 0x81, 0xf1, 0xf1, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xf2, 0x74, 0xec,
+	0xc9, 0xc2, 0x11, 0x00, 0x00,
 }

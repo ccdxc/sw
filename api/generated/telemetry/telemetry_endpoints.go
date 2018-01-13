@@ -28,291 +28,291 @@ var _ api.ObjectMeta
 var _ grpc.ServerStream
 var _ fmt.Formatter
 
-// MiddlewareMonitoringPolicyV1Client add middleware to the client
-type MiddlewareMonitoringPolicyV1Client func(ServiceMonitoringPolicyV1Client) ServiceMonitoringPolicyV1Client
+// MiddlewareFwlogPolicyV1Client add middleware to the client
+type MiddlewareFwlogPolicyV1Client func(ServiceFwlogPolicyV1Client) ServiceFwlogPolicyV1Client
 
-// EndpointsMonitoringPolicyV1Client is the endpoints for the client
-type EndpointsMonitoringPolicyV1Client struct {
-	Client MonitoringPolicyV1Client
+// EndpointsFwlogPolicyV1Client is the endpoints for the client
+type EndpointsFwlogPolicyV1Client struct {
+	Client FwlogPolicyV1Client
 
-	AutoAddMonitoringPolicyEndpoint    endpoint.Endpoint
-	AutoDeleteMonitoringPolicyEndpoint endpoint.Endpoint
-	AutoGetMonitoringPolicyEndpoint    endpoint.Endpoint
-	AutoListMonitoringPolicyEndpoint   endpoint.Endpoint
-	AutoUpdateMonitoringPolicyEndpoint endpoint.Endpoint
+	AutoAddFwlogPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteFwlogPolicyEndpoint endpoint.Endpoint
+	AutoGetFwlogPolicyEndpoint    endpoint.Endpoint
+	AutoListFwlogPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateFwlogPolicyEndpoint endpoint.Endpoint
 }
 
-// EndpointsMonitoringPolicyV1RestClient is the REST client
-type EndpointsMonitoringPolicyV1RestClient struct {
+// EndpointsFwlogPolicyV1RestClient is the REST client
+type EndpointsFwlogPolicyV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
 
-	AutoAddMonitoringPolicyEndpoint    endpoint.Endpoint
-	AutoDeleteMonitoringPolicyEndpoint endpoint.Endpoint
-	AutoGetMonitoringPolicyEndpoint    endpoint.Endpoint
-	AutoListMonitoringPolicyEndpoint   endpoint.Endpoint
-	AutoUpdateMonitoringPolicyEndpoint endpoint.Endpoint
-	AutoWatchMonitoringPolicyEndpoint  endpoint.Endpoint
+	AutoAddFwlogPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteFwlogPolicyEndpoint endpoint.Endpoint
+	AutoGetFwlogPolicyEndpoint    endpoint.Endpoint
+	AutoListFwlogPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateFwlogPolicyEndpoint endpoint.Endpoint
+	AutoWatchFwlogPolicyEndpoint  endpoint.Endpoint
 }
 
-// MiddlewareMonitoringPolicyV1Server adds middle ware to the server
-type MiddlewareMonitoringPolicyV1Server func(ServiceMonitoringPolicyV1Server) ServiceMonitoringPolicyV1Server
+// MiddlewareFwlogPolicyV1Server adds middle ware to the server
+type MiddlewareFwlogPolicyV1Server func(ServiceFwlogPolicyV1Server) ServiceFwlogPolicyV1Server
 
-// EndpointsMonitoringPolicyV1Server is the server endpoints
-type EndpointsMonitoringPolicyV1Server struct {
-	AutoAddMonitoringPolicyEndpoint    endpoint.Endpoint
-	AutoDeleteMonitoringPolicyEndpoint endpoint.Endpoint
-	AutoGetMonitoringPolicyEndpoint    endpoint.Endpoint
-	AutoListMonitoringPolicyEndpoint   endpoint.Endpoint
-	AutoUpdateMonitoringPolicyEndpoint endpoint.Endpoint
+// EndpointsFwlogPolicyV1Server is the server endpoints
+type EndpointsFwlogPolicyV1Server struct {
+	AutoAddFwlogPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteFwlogPolicyEndpoint endpoint.Endpoint
+	AutoGetFwlogPolicyEndpoint    endpoint.Endpoint
+	AutoListFwlogPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateFwlogPolicyEndpoint endpoint.Endpoint
 
-	watchHandlerMonitoringPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerFwlogPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
-// AutoAddMonitoringPolicy is endpoint for AutoAddMonitoringPolicy
-func (e EndpointsMonitoringPolicyV1Client) AutoAddMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	resp, err := e.AutoAddMonitoringPolicyEndpoint(ctx, in)
+// AutoAddFwlogPolicy is endpoint for AutoAddFwlogPolicy
+func (e EndpointsFwlogPolicyV1Client) AutoAddFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
+	resp, err := e.AutoAddFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return &MonitoringPolicy{}, err
+		return &FwlogPolicy{}, err
 	}
-	return resp.(*MonitoringPolicy), nil
+	return resp.(*FwlogPolicy), nil
 }
 
-type respMonitoringPolicyV1AutoAddMonitoringPolicy struct {
-	V   MonitoringPolicy
+type respFwlogPolicyV1AutoAddFwlogPolicy struct {
+	V   FwlogPolicy
 	Err error
 }
 
-// AutoDeleteMonitoringPolicy is endpoint for AutoDeleteMonitoringPolicy
-func (e EndpointsMonitoringPolicyV1Client) AutoDeleteMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	resp, err := e.AutoDeleteMonitoringPolicyEndpoint(ctx, in)
+// AutoDeleteFwlogPolicy is endpoint for AutoDeleteFwlogPolicy
+func (e EndpointsFwlogPolicyV1Client) AutoDeleteFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
+	resp, err := e.AutoDeleteFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return &MonitoringPolicy{}, err
+		return &FwlogPolicy{}, err
 	}
-	return resp.(*MonitoringPolicy), nil
+	return resp.(*FwlogPolicy), nil
 }
 
-type respMonitoringPolicyV1AutoDeleteMonitoringPolicy struct {
-	V   MonitoringPolicy
+type respFwlogPolicyV1AutoDeleteFwlogPolicy struct {
+	V   FwlogPolicy
 	Err error
 }
 
-// AutoGetMonitoringPolicy is endpoint for AutoGetMonitoringPolicy
-func (e EndpointsMonitoringPolicyV1Client) AutoGetMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	resp, err := e.AutoGetMonitoringPolicyEndpoint(ctx, in)
+// AutoGetFwlogPolicy is endpoint for AutoGetFwlogPolicy
+func (e EndpointsFwlogPolicyV1Client) AutoGetFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
+	resp, err := e.AutoGetFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return &MonitoringPolicy{}, err
+		return &FwlogPolicy{}, err
 	}
-	return resp.(*MonitoringPolicy), nil
+	return resp.(*FwlogPolicy), nil
 }
 
-type respMonitoringPolicyV1AutoGetMonitoringPolicy struct {
-	V   MonitoringPolicy
+type respFwlogPolicyV1AutoGetFwlogPolicy struct {
+	V   FwlogPolicy
 	Err error
 }
 
-// AutoListMonitoringPolicy is endpoint for AutoListMonitoringPolicy
-func (e EndpointsMonitoringPolicyV1Client) AutoListMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions) (*MonitoringPolicyList, error) {
-	resp, err := e.AutoListMonitoringPolicyEndpoint(ctx, in)
+// AutoListFwlogPolicy is endpoint for AutoListFwlogPolicy
+func (e EndpointsFwlogPolicyV1Client) AutoListFwlogPolicy(ctx context.Context, in *api.ListWatchOptions) (*FwlogPolicyList, error) {
+	resp, err := e.AutoListFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return &MonitoringPolicyList{}, err
+		return &FwlogPolicyList{}, err
 	}
-	return resp.(*MonitoringPolicyList), nil
+	return resp.(*FwlogPolicyList), nil
 }
 
-type respMonitoringPolicyV1AutoListMonitoringPolicy struct {
-	V   MonitoringPolicyList
+type respFwlogPolicyV1AutoListFwlogPolicy struct {
+	V   FwlogPolicyList
 	Err error
 }
 
-// AutoUpdateMonitoringPolicy is endpoint for AutoUpdateMonitoringPolicy
-func (e EndpointsMonitoringPolicyV1Client) AutoUpdateMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	resp, err := e.AutoUpdateMonitoringPolicyEndpoint(ctx, in)
+// AutoUpdateFwlogPolicy is endpoint for AutoUpdateFwlogPolicy
+func (e EndpointsFwlogPolicyV1Client) AutoUpdateFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
+	resp, err := e.AutoUpdateFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return &MonitoringPolicy{}, err
+		return &FwlogPolicy{}, err
 	}
-	return resp.(*MonitoringPolicy), nil
+	return resp.(*FwlogPolicy), nil
 }
 
-type respMonitoringPolicyV1AutoUpdateMonitoringPolicy struct {
-	V   MonitoringPolicy
+type respFwlogPolicyV1AutoUpdateFwlogPolicy struct {
+	V   FwlogPolicy
 	Err error
 }
 
-// AutoWatchMonitoringPolicy performs Watch for MonitoringPolicy
-func (e EndpointsMonitoringPolicyV1Client) AutoWatchMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions) (MonitoringPolicyV1_AutoWatchMonitoringPolicyClient, error) {
-	return e.Client.AutoWatchMonitoringPolicy(ctx, in)
+// AutoWatchFwlogPolicy performs Watch for FwlogPolicy
+func (e EndpointsFwlogPolicyV1Client) AutoWatchFwlogPolicy(ctx context.Context, in *api.ListWatchOptions) (FwlogPolicyV1_AutoWatchFwlogPolicyClient, error) {
+	return e.Client.AutoWatchFwlogPolicy(ctx, in)
 }
 
-// AutoAddMonitoringPolicy implementation on server Endpoint
-func (e EndpointsMonitoringPolicyV1Server) AutoAddMonitoringPolicy(ctx context.Context, in MonitoringPolicy) (MonitoringPolicy, error) {
-	resp, err := e.AutoAddMonitoringPolicyEndpoint(ctx, in)
+// AutoAddFwlogPolicy implementation on server Endpoint
+func (e EndpointsFwlogPolicyV1Server) AutoAddFwlogPolicy(ctx context.Context, in FwlogPolicy) (FwlogPolicy, error) {
+	resp, err := e.AutoAddFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return MonitoringPolicy{}, err
+		return FwlogPolicy{}, err
 	}
-	return *resp.(*MonitoringPolicy), nil
+	return *resp.(*FwlogPolicy), nil
 }
 
-// MakeMonitoringPolicyV1AutoAddMonitoringPolicyEndpoint creates  AutoAddMonitoringPolicy endpoints for the service
-func MakeMonitoringPolicyV1AutoAddMonitoringPolicyEndpoint(s ServiceMonitoringPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeFwlogPolicyV1AutoAddFwlogPolicyEndpoint creates  AutoAddFwlogPolicy endpoints for the service
+func MakeFwlogPolicyV1AutoAddFwlogPolicyEndpoint(s ServiceFwlogPolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*MonitoringPolicy)
-		v, err := s.AutoAddMonitoringPolicy(ctx, *req)
-		return respMonitoringPolicyV1AutoAddMonitoringPolicy{
+		req := request.(*FwlogPolicy)
+		v, err := s.AutoAddFwlogPolicy(ctx, *req)
+		return respFwlogPolicyV1AutoAddFwlogPolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return trace.ServerEndpoint("MonitoringPolicyV1:AutoAddMonitoringPolicy")(f)
+	return trace.ServerEndpoint("FwlogPolicyV1:AutoAddFwlogPolicy")(f)
 }
 
-// AutoDeleteMonitoringPolicy implementation on server Endpoint
-func (e EndpointsMonitoringPolicyV1Server) AutoDeleteMonitoringPolicy(ctx context.Context, in MonitoringPolicy) (MonitoringPolicy, error) {
-	resp, err := e.AutoDeleteMonitoringPolicyEndpoint(ctx, in)
+// AutoDeleteFwlogPolicy implementation on server Endpoint
+func (e EndpointsFwlogPolicyV1Server) AutoDeleteFwlogPolicy(ctx context.Context, in FwlogPolicy) (FwlogPolicy, error) {
+	resp, err := e.AutoDeleteFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return MonitoringPolicy{}, err
+		return FwlogPolicy{}, err
 	}
-	return *resp.(*MonitoringPolicy), nil
+	return *resp.(*FwlogPolicy), nil
 }
 
-// MakeMonitoringPolicyV1AutoDeleteMonitoringPolicyEndpoint creates  AutoDeleteMonitoringPolicy endpoints for the service
-func MakeMonitoringPolicyV1AutoDeleteMonitoringPolicyEndpoint(s ServiceMonitoringPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeFwlogPolicyV1AutoDeleteFwlogPolicyEndpoint creates  AutoDeleteFwlogPolicy endpoints for the service
+func MakeFwlogPolicyV1AutoDeleteFwlogPolicyEndpoint(s ServiceFwlogPolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*MonitoringPolicy)
-		v, err := s.AutoDeleteMonitoringPolicy(ctx, *req)
-		return respMonitoringPolicyV1AutoDeleteMonitoringPolicy{
+		req := request.(*FwlogPolicy)
+		v, err := s.AutoDeleteFwlogPolicy(ctx, *req)
+		return respFwlogPolicyV1AutoDeleteFwlogPolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return trace.ServerEndpoint("MonitoringPolicyV1:AutoDeleteMonitoringPolicy")(f)
+	return trace.ServerEndpoint("FwlogPolicyV1:AutoDeleteFwlogPolicy")(f)
 }
 
-// AutoGetMonitoringPolicy implementation on server Endpoint
-func (e EndpointsMonitoringPolicyV1Server) AutoGetMonitoringPolicy(ctx context.Context, in MonitoringPolicy) (MonitoringPolicy, error) {
-	resp, err := e.AutoGetMonitoringPolicyEndpoint(ctx, in)
+// AutoGetFwlogPolicy implementation on server Endpoint
+func (e EndpointsFwlogPolicyV1Server) AutoGetFwlogPolicy(ctx context.Context, in FwlogPolicy) (FwlogPolicy, error) {
+	resp, err := e.AutoGetFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return MonitoringPolicy{}, err
+		return FwlogPolicy{}, err
 	}
-	return *resp.(*MonitoringPolicy), nil
+	return *resp.(*FwlogPolicy), nil
 }
 
-// MakeMonitoringPolicyV1AutoGetMonitoringPolicyEndpoint creates  AutoGetMonitoringPolicy endpoints for the service
-func MakeMonitoringPolicyV1AutoGetMonitoringPolicyEndpoint(s ServiceMonitoringPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeFwlogPolicyV1AutoGetFwlogPolicyEndpoint creates  AutoGetFwlogPolicy endpoints for the service
+func MakeFwlogPolicyV1AutoGetFwlogPolicyEndpoint(s ServiceFwlogPolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*MonitoringPolicy)
-		v, err := s.AutoGetMonitoringPolicy(ctx, *req)
-		return respMonitoringPolicyV1AutoGetMonitoringPolicy{
+		req := request.(*FwlogPolicy)
+		v, err := s.AutoGetFwlogPolicy(ctx, *req)
+		return respFwlogPolicyV1AutoGetFwlogPolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return trace.ServerEndpoint("MonitoringPolicyV1:AutoGetMonitoringPolicy")(f)
+	return trace.ServerEndpoint("FwlogPolicyV1:AutoGetFwlogPolicy")(f)
 }
 
-// AutoListMonitoringPolicy implementation on server Endpoint
-func (e EndpointsMonitoringPolicyV1Server) AutoListMonitoringPolicy(ctx context.Context, in api.ListWatchOptions) (MonitoringPolicyList, error) {
-	resp, err := e.AutoListMonitoringPolicyEndpoint(ctx, in)
+// AutoListFwlogPolicy implementation on server Endpoint
+func (e EndpointsFwlogPolicyV1Server) AutoListFwlogPolicy(ctx context.Context, in api.ListWatchOptions) (FwlogPolicyList, error) {
+	resp, err := e.AutoListFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return MonitoringPolicyList{}, err
+		return FwlogPolicyList{}, err
 	}
-	return *resp.(*MonitoringPolicyList), nil
+	return *resp.(*FwlogPolicyList), nil
 }
 
-// MakeMonitoringPolicyV1AutoListMonitoringPolicyEndpoint creates  AutoListMonitoringPolicy endpoints for the service
-func MakeMonitoringPolicyV1AutoListMonitoringPolicyEndpoint(s ServiceMonitoringPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeFwlogPolicyV1AutoListFwlogPolicyEndpoint creates  AutoListFwlogPolicy endpoints for the service
+func MakeFwlogPolicyV1AutoListFwlogPolicyEndpoint(s ServiceFwlogPolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListMonitoringPolicy(ctx, *req)
-		return respMonitoringPolicyV1AutoListMonitoringPolicy{
+		v, err := s.AutoListFwlogPolicy(ctx, *req)
+		return respFwlogPolicyV1AutoListFwlogPolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return trace.ServerEndpoint("MonitoringPolicyV1:AutoListMonitoringPolicy")(f)
+	return trace.ServerEndpoint("FwlogPolicyV1:AutoListFwlogPolicy")(f)
 }
 
-// AutoUpdateMonitoringPolicy implementation on server Endpoint
-func (e EndpointsMonitoringPolicyV1Server) AutoUpdateMonitoringPolicy(ctx context.Context, in MonitoringPolicy) (MonitoringPolicy, error) {
-	resp, err := e.AutoUpdateMonitoringPolicyEndpoint(ctx, in)
+// AutoUpdateFwlogPolicy implementation on server Endpoint
+func (e EndpointsFwlogPolicyV1Server) AutoUpdateFwlogPolicy(ctx context.Context, in FwlogPolicy) (FwlogPolicy, error) {
+	resp, err := e.AutoUpdateFwlogPolicyEndpoint(ctx, in)
 	if err != nil {
-		return MonitoringPolicy{}, err
+		return FwlogPolicy{}, err
 	}
-	return *resp.(*MonitoringPolicy), nil
+	return *resp.(*FwlogPolicy), nil
 }
 
-// MakeMonitoringPolicyV1AutoUpdateMonitoringPolicyEndpoint creates  AutoUpdateMonitoringPolicy endpoints for the service
-func MakeMonitoringPolicyV1AutoUpdateMonitoringPolicyEndpoint(s ServiceMonitoringPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeFwlogPolicyV1AutoUpdateFwlogPolicyEndpoint creates  AutoUpdateFwlogPolicy endpoints for the service
+func MakeFwlogPolicyV1AutoUpdateFwlogPolicyEndpoint(s ServiceFwlogPolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*MonitoringPolicy)
-		v, err := s.AutoUpdateMonitoringPolicy(ctx, *req)
-		return respMonitoringPolicyV1AutoUpdateMonitoringPolicy{
+		req := request.(*FwlogPolicy)
+		v, err := s.AutoUpdateFwlogPolicy(ctx, *req)
+		return respFwlogPolicyV1AutoUpdateFwlogPolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return trace.ServerEndpoint("MonitoringPolicyV1:AutoUpdateMonitoringPolicy")(f)
+	return trace.ServerEndpoint("FwlogPolicyV1:AutoUpdateFwlogPolicy")(f)
 }
 
-// AutoWatchMonitoringPolicy is the watch handler for MonitoringPolicy on the server side.
-func (e EndpointsMonitoringPolicyV1Server) AutoWatchMonitoringPolicy(in *api.ListWatchOptions, stream MonitoringPolicyV1_AutoWatchMonitoringPolicyServer) error {
-	return e.watchHandlerMonitoringPolicy(in, stream)
+// AutoWatchFwlogPolicy is the watch handler for FwlogPolicy on the server side.
+func (e EndpointsFwlogPolicyV1Server) AutoWatchFwlogPolicy(in *api.ListWatchOptions, stream FwlogPolicyV1_AutoWatchFwlogPolicyServer) error {
+	return e.watchHandlerFwlogPolicy(in, stream)
 }
 
-// MakeAutoWatchMonitoringPolicyEndpoint creates the Watch endpoint
-func MakeAutoWatchMonitoringPolicyEndpoint(s ServiceMonitoringPolicyV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+// MakeAutoWatchFwlogPolicyEndpoint creates the Watch endpoint
+func MakeAutoWatchFwlogPolicyEndpoint(s ServiceFwlogPolicyV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
 	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(MonitoringPolicyV1_AutoWatchMonitoringPolicyServer)
-		return s.AutoWatchMonitoringPolicy(options, wstream)
+		wstream := stream.(FwlogPolicyV1_AutoWatchFwlogPolicyServer)
+		return s.AutoWatchFwlogPolicy(options, wstream)
 	}
 }
 
-// MakeMonitoringPolicyV1ServerEndpoints creates server endpoints
-func MakeMonitoringPolicyV1ServerEndpoints(s ServiceMonitoringPolicyV1Server, logger log.Logger) EndpointsMonitoringPolicyV1Server {
-	return EndpointsMonitoringPolicyV1Server{
+// MakeFwlogPolicyV1ServerEndpoints creates server endpoints
+func MakeFwlogPolicyV1ServerEndpoints(s ServiceFwlogPolicyV1Server, logger log.Logger) EndpointsFwlogPolicyV1Server {
+	return EndpointsFwlogPolicyV1Server{
 
-		AutoAddMonitoringPolicyEndpoint:    MakeMonitoringPolicyV1AutoAddMonitoringPolicyEndpoint(s, logger),
-		AutoDeleteMonitoringPolicyEndpoint: MakeMonitoringPolicyV1AutoDeleteMonitoringPolicyEndpoint(s, logger),
-		AutoGetMonitoringPolicyEndpoint:    MakeMonitoringPolicyV1AutoGetMonitoringPolicyEndpoint(s, logger),
-		AutoListMonitoringPolicyEndpoint:   MakeMonitoringPolicyV1AutoListMonitoringPolicyEndpoint(s, logger),
-		AutoUpdateMonitoringPolicyEndpoint: MakeMonitoringPolicyV1AutoUpdateMonitoringPolicyEndpoint(s, logger),
+		AutoAddFwlogPolicyEndpoint:    MakeFwlogPolicyV1AutoAddFwlogPolicyEndpoint(s, logger),
+		AutoDeleteFwlogPolicyEndpoint: MakeFwlogPolicyV1AutoDeleteFwlogPolicyEndpoint(s, logger),
+		AutoGetFwlogPolicyEndpoint:    MakeFwlogPolicyV1AutoGetFwlogPolicyEndpoint(s, logger),
+		AutoListFwlogPolicyEndpoint:   MakeFwlogPolicyV1AutoListFwlogPolicyEndpoint(s, logger),
+		AutoUpdateFwlogPolicyEndpoint: MakeFwlogPolicyV1AutoUpdateFwlogPolicyEndpoint(s, logger),
 
-		watchHandlerMonitoringPolicy: MakeAutoWatchMonitoringPolicyEndpoint(s, logger),
+		watchHandlerFwlogPolicy: MakeAutoWatchFwlogPolicyEndpoint(s, logger),
 	}
 }
 
-// LoggingMonitoringPolicyV1MiddlewareClient adds middleware for the client
-func LoggingMonitoringPolicyV1MiddlewareClient(logger log.Logger) MiddlewareMonitoringPolicyV1Client {
-	return func(next ServiceMonitoringPolicyV1Client) ServiceMonitoringPolicyV1Client {
-		return loggingMonitoringPolicyV1MiddlewareClient{
+// LoggingFwlogPolicyV1MiddlewareClient adds middleware for the client
+func LoggingFwlogPolicyV1MiddlewareClient(logger log.Logger) MiddlewareFwlogPolicyV1Client {
+	return func(next ServiceFwlogPolicyV1Client) ServiceFwlogPolicyV1Client {
+		return loggingFwlogPolicyV1MiddlewareClient{
 			logger: logger,
 			next:   next,
 		}
 	}
 }
 
-type loggingMonitoringPolicyV1MiddlewareClient struct {
+type loggingFwlogPolicyV1MiddlewareClient struct {
 	logger log.Logger
-	next   ServiceMonitoringPolicyV1Client
+	next   ServiceFwlogPolicyV1Client
 }
 
-// LoggingMonitoringPolicyV1MiddlewareServer adds middleware for the client
-func LoggingMonitoringPolicyV1MiddlewareServer(logger log.Logger) MiddlewareMonitoringPolicyV1Server {
-	return func(next ServiceMonitoringPolicyV1Server) ServiceMonitoringPolicyV1Server {
-		return loggingMonitoringPolicyV1MiddlewareServer{
+// LoggingFwlogPolicyV1MiddlewareServer adds middleware for the client
+func LoggingFwlogPolicyV1MiddlewareServer(logger log.Logger) MiddlewareFwlogPolicyV1Server {
+	return func(next ServiceFwlogPolicyV1Server) ServiceFwlogPolicyV1Server {
+		return loggingFwlogPolicyV1MiddlewareServer{
 			logger: logger,
 			next:   next,
 		}
 	}
 }
 
-type loggingMonitoringPolicyV1MiddlewareServer struct {
+type loggingFwlogPolicyV1MiddlewareServer struct {
 	logger log.Logger
-	next   ServiceMonitoringPolicyV1Server
+	next   ServiceFwlogPolicyV1Server
 }
 
-func (m loggingMonitoringPolicyV1MiddlewareClient) AutoAddMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (resp *MonitoringPolicy, err error) {
+func (m loggingFwlogPolicyV1MiddlewareClient) AutoAddFwlogPolicy(ctx context.Context, in *FwlogPolicy) (resp *FwlogPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -320,12 +320,12 @@ func (m loggingMonitoringPolicyV1MiddlewareClient) AutoAddMonitoringPolicy(ctx c
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoAddMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoAddFwlogPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoAddMonitoringPolicy(ctx, in)
+	resp, err = m.next.AutoAddFwlogPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringPolicyV1MiddlewareClient) AutoDeleteMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (resp *MonitoringPolicy, err error) {
+func (m loggingFwlogPolicyV1MiddlewareClient) AutoDeleteFwlogPolicy(ctx context.Context, in *FwlogPolicy) (resp *FwlogPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -333,12 +333,12 @@ func (m loggingMonitoringPolicyV1MiddlewareClient) AutoDeleteMonitoringPolicy(ct
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoDeleteMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoDeleteFwlogPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoDeleteMonitoringPolicy(ctx, in)
+	resp, err = m.next.AutoDeleteFwlogPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringPolicyV1MiddlewareClient) AutoGetMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (resp *MonitoringPolicy, err error) {
+func (m loggingFwlogPolicyV1MiddlewareClient) AutoGetFwlogPolicy(ctx context.Context, in *FwlogPolicy) (resp *FwlogPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -346,12 +346,12 @@ func (m loggingMonitoringPolicyV1MiddlewareClient) AutoGetMonitoringPolicy(ctx c
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoGetMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoGetFwlogPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoGetMonitoringPolicy(ctx, in)
+	resp, err = m.next.AutoGetFwlogPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringPolicyV1MiddlewareClient) AutoListMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *MonitoringPolicyList, err error) {
+func (m loggingFwlogPolicyV1MiddlewareClient) AutoListFwlogPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *FwlogPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -359,12 +359,12 @@ func (m loggingMonitoringPolicyV1MiddlewareClient) AutoListMonitoringPolicy(ctx 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoListMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoListFwlogPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoListMonitoringPolicy(ctx, in)
+	resp, err = m.next.AutoListFwlogPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringPolicyV1MiddlewareClient) AutoUpdateMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (resp *MonitoringPolicy, err error) {
+func (m loggingFwlogPolicyV1MiddlewareClient) AutoUpdateFwlogPolicy(ctx context.Context, in *FwlogPolicy) (resp *FwlogPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -372,27 +372,13 @@ func (m loggingMonitoringPolicyV1MiddlewareClient) AutoUpdateMonitoringPolicy(ct
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoUpdateMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoUpdateFwlogPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateMonitoringPolicy(ctx, in)
-	return
-}
-
-func (m loggingMonitoringPolicyV1MiddlewareClient) AutoWatchMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions) (resp MonitoringPolicyV1_AutoWatchMonitoringPolicyClient, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoWatchMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoWatchMonitoringPolicy(ctx, in)
+	resp, err = m.next.AutoUpdateFwlogPolicy(ctx, in)
 	return
 }
 
-func (m loggingMonitoringPolicyV1MiddlewareServer) AutoAddMonitoringPolicy(ctx context.Context, in MonitoringPolicy) (resp MonitoringPolicy, err error) {
+func (m loggingFwlogPolicyV1MiddlewareClient) AutoWatchFwlogPolicy(ctx context.Context, in *api.ListWatchOptions) (resp FwlogPolicyV1_AutoWatchFwlogPolicyClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -400,65 +386,13 @@ func (m loggingMonitoringPolicyV1MiddlewareServer) AutoAddMonitoringPolicy(ctx c
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoAddMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoWatchFwlogPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoAddMonitoringPolicy(ctx, in)
-	return
-}
-func (m loggingMonitoringPolicyV1MiddlewareServer) AutoDeleteMonitoringPolicy(ctx context.Context, in MonitoringPolicy) (resp MonitoringPolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoDeleteMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteMonitoringPolicy(ctx, in)
-	return
-}
-func (m loggingMonitoringPolicyV1MiddlewareServer) AutoGetMonitoringPolicy(ctx context.Context, in MonitoringPolicy) (resp MonitoringPolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoGetMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetMonitoringPolicy(ctx, in)
-	return
-}
-func (m loggingMonitoringPolicyV1MiddlewareServer) AutoListMonitoringPolicy(ctx context.Context, in api.ListWatchOptions) (resp MonitoringPolicyList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoListMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListMonitoringPolicy(ctx, in)
-	return
-}
-func (m loggingMonitoringPolicyV1MiddlewareServer) AutoUpdateMonitoringPolicy(ctx context.Context, in MonitoringPolicy) (resp MonitoringPolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringPolicyV1", "method", "AutoUpdateMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateMonitoringPolicy(ctx, in)
+	resp, err = m.next.AutoWatchFwlogPolicy(ctx, in)
 	return
 }
 
-func (m loggingMonitoringPolicyV1MiddlewareServer) AutoWatchMonitoringPolicy(in *api.ListWatchOptions, stream MonitoringPolicyV1_AutoWatchMonitoringPolicyServer) (err error) {
+func (m loggingFwlogPolicyV1MiddlewareServer) AutoAddFwlogPolicy(ctx context.Context, in FwlogPolicy) (resp FwlogPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -466,12 +400,78 @@ func (m loggingMonitoringPolicyV1MiddlewareServer) AutoWatchMonitoringPolicy(in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(stream.Context(), "service", "MonitoringPolicyV1", "method", "AutoWatchMonitoringPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoAddFwlogPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	err = m.next.AutoWatchMonitoringPolicy(in, stream)
+	resp, err = m.next.AutoAddFwlogPolicy(ctx, in)
 	return
 }
-func (r *EndpointsMonitoringPolicyV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
+func (m loggingFwlogPolicyV1MiddlewareServer) AutoDeleteFwlogPolicy(ctx context.Context, in FwlogPolicy) (resp FwlogPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoDeleteFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteFwlogPolicy(ctx, in)
+	return
+}
+func (m loggingFwlogPolicyV1MiddlewareServer) AutoGetFwlogPolicy(ctx context.Context, in FwlogPolicy) (resp FwlogPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoGetFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetFwlogPolicy(ctx, in)
+	return
+}
+func (m loggingFwlogPolicyV1MiddlewareServer) AutoListFwlogPolicy(ctx context.Context, in api.ListWatchOptions) (resp FwlogPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoListFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListFwlogPolicy(ctx, in)
+	return
+}
+func (m loggingFwlogPolicyV1MiddlewareServer) AutoUpdateFwlogPolicy(ctx context.Context, in FwlogPolicy) (resp FwlogPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FwlogPolicyV1", "method", "AutoUpdateFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateFwlogPolicy(ctx, in)
+	return
+}
+
+func (m loggingFwlogPolicyV1MiddlewareServer) AutoWatchFwlogPolicy(in *api.ListWatchOptions, stream FwlogPolicyV1_AutoWatchFwlogPolicyServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "FwlogPolicyV1", "method", "AutoWatchFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchFwlogPolicy(in, stream)
+	return
+}
+func (r *EndpointsFwlogPolicyV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
 		return nil, fmt.Errorf("invalid instance %s", r.instance)
@@ -488,28 +488,33 @@ func (r *EndpointsMonitoringPolicyV1RestClient) getHTTPRequest(ctx context.Conte
 }
 
 //
-func makeURIMonitoringPolicyV1AutoAddMonitoringPolicyCreateOper(in *MonitoringPolicy) string {
-	return fmt.Sprint("/v1/monitoringPolicy", "/", in.Tenant, "/monitoringPolicy")
+func makeURIFwlogPolicyV1AutoAddFwlogPolicyCreateOper(in *FwlogPolicy) string {
+	return fmt.Sprint("/v1/fwlogPolicy", "/", in.Tenant, "/fwlogPolicy")
 }
 
 //
-func makeURIMonitoringPolicyV1AutoDeleteMonitoringPolicyDeleteOper(in *MonitoringPolicy) string {
-	return fmt.Sprint("/v1/monitoringPolicy", "/", in.Tenant, "/monitoringPolicy/", in.Name)
+func makeURIFwlogPolicyV1AutoDeleteFwlogPolicyDeleteOper(in *FwlogPolicy) string {
+	return fmt.Sprint("/v1/fwlogPolicy", "/", in.Tenant, "/fwlogPolicy/", in.Name)
 }
 
 //
-func makeURIMonitoringPolicyV1AutoGetMonitoringPolicyGetOper(in *MonitoringPolicy) string {
-	return fmt.Sprint("/v1/monitoringPolicy", "/", in.Tenant, "/monitoringPolicy/", in.Name)
+func makeURIFwlogPolicyV1AutoGetFwlogPolicyGetOper(in *FwlogPolicy) string {
+	return fmt.Sprint("/v1/fwlogPolicy", "/", in.Tenant, "/fwlogPolicy/", in.Name)
 }
 
 //
-func makeURIMonitoringPolicyV1AutoUpdateMonitoringPolicyUpdateOper(in *MonitoringPolicy) string {
-	return fmt.Sprint("/v1/monitoringPolicy", "/", in.Tenant, "/monitoringPolicy/", in.Name)
+func makeURIFwlogPolicyV1AutoListFwlogPolicyListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/fwlogPolicy", "/", in.Tenant, "/fwlogPolicy")
 }
 
-// AutoAddMonitoringPolicy CRUD method for MonitoringPolicy
-func (r *EndpointsMonitoringPolicyV1RestClient) AutoAddMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	path := makeURIMonitoringPolicyV1AutoAddMonitoringPolicyCreateOper(in)
+//
+func makeURIFwlogPolicyV1AutoUpdateFwlogPolicyUpdateOper(in *FwlogPolicy) string {
+	return fmt.Sprint("/v1/fwlogPolicy", "/", in.Tenant, "/fwlogPolicy/", in.Name)
+}
+
+// AutoAddFwlogPolicy CRUD method for FwlogPolicy
+func (r *EndpointsFwlogPolicyV1RestClient) AutoAddFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
+	path := makeURIFwlogPolicyV1AutoAddFwlogPolicyCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -518,16 +523,16 @@ func (r *EndpointsMonitoringPolicyV1RestClient) AutoAddMonitoringPolicy(ctx cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespMonitoringPolicyV1AutoAddMonitoringPolicy(ctx, httpresp)
+	ret, err := decodeHTTPrespFwlogPolicyV1AutoAddFwlogPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*MonitoringPolicy), nil
+	return ret.(*FwlogPolicy), nil
 }
 
-// AutoUpdateMonitoringPolicy CRUD method for MonitoringPolicy
-func (r *EndpointsMonitoringPolicyV1RestClient) AutoUpdateMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	path := makeURIMonitoringPolicyV1AutoUpdateMonitoringPolicyUpdateOper(in)
+// AutoUpdateFwlogPolicy CRUD method for FwlogPolicy
+func (r *EndpointsFwlogPolicyV1RestClient) AutoUpdateFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
+	path := makeURIFwlogPolicyV1AutoUpdateFwlogPolicyUpdateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -536,16 +541,16 @@ func (r *EndpointsMonitoringPolicyV1RestClient) AutoUpdateMonitoringPolicy(ctx c
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespMonitoringPolicyV1AutoUpdateMonitoringPolicy(ctx, resp)
+	ret, err := decodeHTTPrespFwlogPolicyV1AutoUpdateFwlogPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*MonitoringPolicy), err
+	return ret.(*FwlogPolicy), err
 }
 
-// AutoGetMonitoringPolicy CRUD method for MonitoringPolicy
-func (r *EndpointsMonitoringPolicyV1RestClient) AutoGetMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	path := makeURIMonitoringPolicyV1AutoGetMonitoringPolicyGetOper(in)
+// AutoGetFwlogPolicy CRUD method for FwlogPolicy
+func (r *EndpointsFwlogPolicyV1RestClient) AutoGetFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
+	path := makeURIFwlogPolicyV1AutoGetFwlogPolicyGetOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -554,16 +559,16 @@ func (r *EndpointsMonitoringPolicyV1RestClient) AutoGetMonitoringPolicy(ctx cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespMonitoringPolicyV1AutoGetMonitoringPolicy(ctx, resp)
+	ret, err := decodeHTTPrespFwlogPolicyV1AutoGetFwlogPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*MonitoringPolicy), err
+	return ret.(*FwlogPolicy), err
 }
 
-// AutoDeleteMonitoringPolicy CRUD method for MonitoringPolicy
-func (r *EndpointsMonitoringPolicyV1RestClient) AutoDeleteMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	path := makeURIMonitoringPolicyV1AutoDeleteMonitoringPolicyDeleteOper(in)
+// AutoDeleteFwlogPolicy CRUD method for FwlogPolicy
+func (r *EndpointsFwlogPolicyV1RestClient) AutoDeleteFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
+	path := makeURIFwlogPolicyV1AutoDeleteFwlogPolicyDeleteOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -572,30 +577,635 @@ func (r *EndpointsMonitoringPolicyV1RestClient) AutoDeleteMonitoringPolicy(ctx c
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespMonitoringPolicyV1AutoDeleteMonitoringPolicy(ctx, resp)
+	ret, err := decodeHTTPrespFwlogPolicyV1AutoDeleteFwlogPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*MonitoringPolicy), err
+	return ret.(*FwlogPolicy), err
 }
 
-// AutoListMonitoringPolicy CRUD method for MonitoringPolicy
-func (r *EndpointsMonitoringPolicyV1RestClient) AutoListMonitoringPolicy(ctx context.Context, options *api.ListWatchOptions) (*MonitoringPolicyList, error) {
+// AutoListFwlogPolicy CRUD method for FwlogPolicy
+func (r *EndpointsFwlogPolicyV1RestClient) AutoListFwlogPolicy(ctx context.Context, options *api.ListWatchOptions) (*FwlogPolicyList, error) {
+	path := makeURIFwlogPolicyV1AutoListFwlogPolicyListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespFwlogPolicyV1AutoListFwlogPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FwlogPolicyList), err
+}
+
+// AutoWatchFwlogPolicy CRUD method for FwlogPolicy
+func (r *EndpointsFwlogPolicyV1RestClient) AutoWatchFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
 	return nil, errors.New("not allowed")
 }
 
-// AutoWatchMonitoringPolicy CRUD method for MonitoringPolicy
-func (r *EndpointsMonitoringPolicyV1RestClient) AutoWatchMonitoringPolicy(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error) {
-	return nil, errors.New("not allowed")
-}
-
-// MakeMonitoringPolicyV1RestClientEndpoints make REST client endpoints
-func MakeMonitoringPolicyV1RestClientEndpoints(instance string) (EndpointsMonitoringPolicyV1RestClient, error) {
+// MakeFwlogPolicyV1RestClientEndpoints make REST client endpoints
+func MakeFwlogPolicyV1RestClientEndpoints(instance string) (EndpointsFwlogPolicyV1RestClient, error) {
 	if !strings.HasPrefix(instance, "http") {
 		instance = "http://" + instance
 	}
 
-	return EndpointsMonitoringPolicyV1RestClient{
+	return EndpointsFwlogPolicyV1RestClient{
+		instance: instance,
+		client:   http.DefaultClient,
+	}, nil
+
+}
+
+// MiddlewareStatsPolicyV1Client add middleware to the client
+type MiddlewareStatsPolicyV1Client func(ServiceStatsPolicyV1Client) ServiceStatsPolicyV1Client
+
+// EndpointsStatsPolicyV1Client is the endpoints for the client
+type EndpointsStatsPolicyV1Client struct {
+	Client StatsPolicyV1Client
+
+	AutoAddStatsPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteStatsPolicyEndpoint endpoint.Endpoint
+	AutoGetStatsPolicyEndpoint    endpoint.Endpoint
+	AutoListStatsPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateStatsPolicyEndpoint endpoint.Endpoint
+}
+
+// EndpointsStatsPolicyV1RestClient is the REST client
+type EndpointsStatsPolicyV1RestClient struct {
+	logger   log.Logger
+	client   *http.Client
+	instance string
+
+	AutoAddStatsPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteStatsPolicyEndpoint endpoint.Endpoint
+	AutoGetStatsPolicyEndpoint    endpoint.Endpoint
+	AutoListStatsPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateStatsPolicyEndpoint endpoint.Endpoint
+	AutoWatchStatsPolicyEndpoint  endpoint.Endpoint
+}
+
+// MiddlewareStatsPolicyV1Server adds middle ware to the server
+type MiddlewareStatsPolicyV1Server func(ServiceStatsPolicyV1Server) ServiceStatsPolicyV1Server
+
+// EndpointsStatsPolicyV1Server is the server endpoints
+type EndpointsStatsPolicyV1Server struct {
+	AutoAddStatsPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteStatsPolicyEndpoint endpoint.Endpoint
+	AutoGetStatsPolicyEndpoint    endpoint.Endpoint
+	AutoListStatsPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateStatsPolicyEndpoint endpoint.Endpoint
+
+	watchHandlerStatsPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+}
+
+// AutoAddStatsPolicy is endpoint for AutoAddStatsPolicy
+func (e EndpointsStatsPolicyV1Client) AutoAddStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	resp, err := e.AutoAddStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &StatsPolicy{}, err
+	}
+	return resp.(*StatsPolicy), nil
+}
+
+type respStatsPolicyV1AutoAddStatsPolicy struct {
+	V   StatsPolicy
+	Err error
+}
+
+// AutoDeleteStatsPolicy is endpoint for AutoDeleteStatsPolicy
+func (e EndpointsStatsPolicyV1Client) AutoDeleteStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	resp, err := e.AutoDeleteStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &StatsPolicy{}, err
+	}
+	return resp.(*StatsPolicy), nil
+}
+
+type respStatsPolicyV1AutoDeleteStatsPolicy struct {
+	V   StatsPolicy
+	Err error
+}
+
+// AutoGetStatsPolicy is endpoint for AutoGetStatsPolicy
+func (e EndpointsStatsPolicyV1Client) AutoGetStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	resp, err := e.AutoGetStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &StatsPolicy{}, err
+	}
+	return resp.(*StatsPolicy), nil
+}
+
+type respStatsPolicyV1AutoGetStatsPolicy struct {
+	V   StatsPolicy
+	Err error
+}
+
+// AutoListStatsPolicy is endpoint for AutoListStatsPolicy
+func (e EndpointsStatsPolicyV1Client) AutoListStatsPolicy(ctx context.Context, in *api.ListWatchOptions) (*StatsPolicyList, error) {
+	resp, err := e.AutoListStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &StatsPolicyList{}, err
+	}
+	return resp.(*StatsPolicyList), nil
+}
+
+type respStatsPolicyV1AutoListStatsPolicy struct {
+	V   StatsPolicyList
+	Err error
+}
+
+// AutoUpdateStatsPolicy is endpoint for AutoUpdateStatsPolicy
+func (e EndpointsStatsPolicyV1Client) AutoUpdateStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	resp, err := e.AutoUpdateStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &StatsPolicy{}, err
+	}
+	return resp.(*StatsPolicy), nil
+}
+
+type respStatsPolicyV1AutoUpdateStatsPolicy struct {
+	V   StatsPolicy
+	Err error
+}
+
+// AutoWatchStatsPolicy performs Watch for StatsPolicy
+func (e EndpointsStatsPolicyV1Client) AutoWatchStatsPolicy(ctx context.Context, in *api.ListWatchOptions) (StatsPolicyV1_AutoWatchStatsPolicyClient, error) {
+	return e.Client.AutoWatchStatsPolicy(ctx, in)
+}
+
+// AutoAddStatsPolicy implementation on server Endpoint
+func (e EndpointsStatsPolicyV1Server) AutoAddStatsPolicy(ctx context.Context, in StatsPolicy) (StatsPolicy, error) {
+	resp, err := e.AutoAddStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return StatsPolicy{}, err
+	}
+	return *resp.(*StatsPolicy), nil
+}
+
+// MakeStatsPolicyV1AutoAddStatsPolicyEndpoint creates  AutoAddStatsPolicy endpoints for the service
+func MakeStatsPolicyV1AutoAddStatsPolicyEndpoint(s ServiceStatsPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*StatsPolicy)
+		v, err := s.AutoAddStatsPolicy(ctx, *req)
+		return respStatsPolicyV1AutoAddStatsPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("StatsPolicyV1:AutoAddStatsPolicy")(f)
+}
+
+// AutoDeleteStatsPolicy implementation on server Endpoint
+func (e EndpointsStatsPolicyV1Server) AutoDeleteStatsPolicy(ctx context.Context, in StatsPolicy) (StatsPolicy, error) {
+	resp, err := e.AutoDeleteStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return StatsPolicy{}, err
+	}
+	return *resp.(*StatsPolicy), nil
+}
+
+// MakeStatsPolicyV1AutoDeleteStatsPolicyEndpoint creates  AutoDeleteStatsPolicy endpoints for the service
+func MakeStatsPolicyV1AutoDeleteStatsPolicyEndpoint(s ServiceStatsPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*StatsPolicy)
+		v, err := s.AutoDeleteStatsPolicy(ctx, *req)
+		return respStatsPolicyV1AutoDeleteStatsPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("StatsPolicyV1:AutoDeleteStatsPolicy")(f)
+}
+
+// AutoGetStatsPolicy implementation on server Endpoint
+func (e EndpointsStatsPolicyV1Server) AutoGetStatsPolicy(ctx context.Context, in StatsPolicy) (StatsPolicy, error) {
+	resp, err := e.AutoGetStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return StatsPolicy{}, err
+	}
+	return *resp.(*StatsPolicy), nil
+}
+
+// MakeStatsPolicyV1AutoGetStatsPolicyEndpoint creates  AutoGetStatsPolicy endpoints for the service
+func MakeStatsPolicyV1AutoGetStatsPolicyEndpoint(s ServiceStatsPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*StatsPolicy)
+		v, err := s.AutoGetStatsPolicy(ctx, *req)
+		return respStatsPolicyV1AutoGetStatsPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("StatsPolicyV1:AutoGetStatsPolicy")(f)
+}
+
+// AutoListStatsPolicy implementation on server Endpoint
+func (e EndpointsStatsPolicyV1Server) AutoListStatsPolicy(ctx context.Context, in api.ListWatchOptions) (StatsPolicyList, error) {
+	resp, err := e.AutoListStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return StatsPolicyList{}, err
+	}
+	return *resp.(*StatsPolicyList), nil
+}
+
+// MakeStatsPolicyV1AutoListStatsPolicyEndpoint creates  AutoListStatsPolicy endpoints for the service
+func MakeStatsPolicyV1AutoListStatsPolicyEndpoint(s ServiceStatsPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListStatsPolicy(ctx, *req)
+		return respStatsPolicyV1AutoListStatsPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("StatsPolicyV1:AutoListStatsPolicy")(f)
+}
+
+// AutoUpdateStatsPolicy implementation on server Endpoint
+func (e EndpointsStatsPolicyV1Server) AutoUpdateStatsPolicy(ctx context.Context, in StatsPolicy) (StatsPolicy, error) {
+	resp, err := e.AutoUpdateStatsPolicyEndpoint(ctx, in)
+	if err != nil {
+		return StatsPolicy{}, err
+	}
+	return *resp.(*StatsPolicy), nil
+}
+
+// MakeStatsPolicyV1AutoUpdateStatsPolicyEndpoint creates  AutoUpdateStatsPolicy endpoints for the service
+func MakeStatsPolicyV1AutoUpdateStatsPolicyEndpoint(s ServiceStatsPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*StatsPolicy)
+		v, err := s.AutoUpdateStatsPolicy(ctx, *req)
+		return respStatsPolicyV1AutoUpdateStatsPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("StatsPolicyV1:AutoUpdateStatsPolicy")(f)
+}
+
+// AutoWatchStatsPolicy is the watch handler for StatsPolicy on the server side.
+func (e EndpointsStatsPolicyV1Server) AutoWatchStatsPolicy(in *api.ListWatchOptions, stream StatsPolicyV1_AutoWatchStatsPolicyServer) error {
+	return e.watchHandlerStatsPolicy(in, stream)
+}
+
+// MakeAutoWatchStatsPolicyEndpoint creates the Watch endpoint
+func MakeAutoWatchStatsPolicyEndpoint(s ServiceStatsPolicyV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(StatsPolicyV1_AutoWatchStatsPolicyServer)
+		return s.AutoWatchStatsPolicy(options, wstream)
+	}
+}
+
+// MakeStatsPolicyV1ServerEndpoints creates server endpoints
+func MakeStatsPolicyV1ServerEndpoints(s ServiceStatsPolicyV1Server, logger log.Logger) EndpointsStatsPolicyV1Server {
+	return EndpointsStatsPolicyV1Server{
+
+		AutoAddStatsPolicyEndpoint:    MakeStatsPolicyV1AutoAddStatsPolicyEndpoint(s, logger),
+		AutoDeleteStatsPolicyEndpoint: MakeStatsPolicyV1AutoDeleteStatsPolicyEndpoint(s, logger),
+		AutoGetStatsPolicyEndpoint:    MakeStatsPolicyV1AutoGetStatsPolicyEndpoint(s, logger),
+		AutoListStatsPolicyEndpoint:   MakeStatsPolicyV1AutoListStatsPolicyEndpoint(s, logger),
+		AutoUpdateStatsPolicyEndpoint: MakeStatsPolicyV1AutoUpdateStatsPolicyEndpoint(s, logger),
+
+		watchHandlerStatsPolicy: MakeAutoWatchStatsPolicyEndpoint(s, logger),
+	}
+}
+
+// LoggingStatsPolicyV1MiddlewareClient adds middleware for the client
+func LoggingStatsPolicyV1MiddlewareClient(logger log.Logger) MiddlewareStatsPolicyV1Client {
+	return func(next ServiceStatsPolicyV1Client) ServiceStatsPolicyV1Client {
+		return loggingStatsPolicyV1MiddlewareClient{
+			logger: logger,
+			next:   next,
+		}
+	}
+}
+
+type loggingStatsPolicyV1MiddlewareClient struct {
+	logger log.Logger
+	next   ServiceStatsPolicyV1Client
+}
+
+// LoggingStatsPolicyV1MiddlewareServer adds middleware for the client
+func LoggingStatsPolicyV1MiddlewareServer(logger log.Logger) MiddlewareStatsPolicyV1Server {
+	return func(next ServiceStatsPolicyV1Server) ServiceStatsPolicyV1Server {
+		return loggingStatsPolicyV1MiddlewareServer{
+			logger: logger,
+			next:   next,
+		}
+	}
+}
+
+type loggingStatsPolicyV1MiddlewareServer struct {
+	logger log.Logger
+	next   ServiceStatsPolicyV1Server
+}
+
+func (m loggingStatsPolicyV1MiddlewareClient) AutoAddStatsPolicy(ctx context.Context, in *StatsPolicy) (resp *StatsPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoAddStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddStatsPolicy(ctx, in)
+	return
+}
+func (m loggingStatsPolicyV1MiddlewareClient) AutoDeleteStatsPolicy(ctx context.Context, in *StatsPolicy) (resp *StatsPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoDeleteStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteStatsPolicy(ctx, in)
+	return
+}
+func (m loggingStatsPolicyV1MiddlewareClient) AutoGetStatsPolicy(ctx context.Context, in *StatsPolicy) (resp *StatsPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoGetStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetStatsPolicy(ctx, in)
+	return
+}
+func (m loggingStatsPolicyV1MiddlewareClient) AutoListStatsPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *StatsPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoListStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListStatsPolicy(ctx, in)
+	return
+}
+func (m loggingStatsPolicyV1MiddlewareClient) AutoUpdateStatsPolicy(ctx context.Context, in *StatsPolicy) (resp *StatsPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoUpdateStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateStatsPolicy(ctx, in)
+	return
+}
+
+func (m loggingStatsPolicyV1MiddlewareClient) AutoWatchStatsPolicy(ctx context.Context, in *api.ListWatchOptions) (resp StatsPolicyV1_AutoWatchStatsPolicyClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoWatchStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchStatsPolicy(ctx, in)
+	return
+}
+
+func (m loggingStatsPolicyV1MiddlewareServer) AutoAddStatsPolicy(ctx context.Context, in StatsPolicy) (resp StatsPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoAddStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddStatsPolicy(ctx, in)
+	return
+}
+func (m loggingStatsPolicyV1MiddlewareServer) AutoDeleteStatsPolicy(ctx context.Context, in StatsPolicy) (resp StatsPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoDeleteStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteStatsPolicy(ctx, in)
+	return
+}
+func (m loggingStatsPolicyV1MiddlewareServer) AutoGetStatsPolicy(ctx context.Context, in StatsPolicy) (resp StatsPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoGetStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetStatsPolicy(ctx, in)
+	return
+}
+func (m loggingStatsPolicyV1MiddlewareServer) AutoListStatsPolicy(ctx context.Context, in api.ListWatchOptions) (resp StatsPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoListStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListStatsPolicy(ctx, in)
+	return
+}
+func (m loggingStatsPolicyV1MiddlewareServer) AutoUpdateStatsPolicy(ctx context.Context, in StatsPolicy) (resp StatsPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StatsPolicyV1", "method", "AutoUpdateStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateStatsPolicy(ctx, in)
+	return
+}
+
+func (m loggingStatsPolicyV1MiddlewareServer) AutoWatchStatsPolicy(in *api.ListWatchOptions, stream StatsPolicyV1_AutoWatchStatsPolicyServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "StatsPolicyV1", "method", "AutoWatchStatsPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchStatsPolicy(in, stream)
+	return
+}
+func (r *EndpointsStatsPolicyV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
+	target, err := url.Parse(r.instance)
+	if err != nil {
+		return nil, fmt.Errorf("invalid instance %s", r.instance)
+	}
+	target.Path = path
+	req, err := http.NewRequest(method, target.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not create request (%s)", err)
+	}
+	if err = encodeHTTPRequest(ctx, req, in); err != nil {
+		return nil, fmt.Errorf("could not encode request (%s)", err)
+	}
+	return req, nil
+}
+
+//
+func makeURIStatsPolicyV1AutoAddStatsPolicyCreateOper(in *StatsPolicy) string {
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy")
+}
+
+//
+func makeURIStatsPolicyV1AutoDeleteStatsPolicyDeleteOper(in *StatsPolicy) string {
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy/", in.Name)
+}
+
+//
+func makeURIStatsPolicyV1AutoGetStatsPolicyGetOper(in *StatsPolicy) string {
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy/", in.Name)
+}
+
+//
+func makeURIStatsPolicyV1AutoListStatsPolicyListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy")
+}
+
+//
+func makeURIStatsPolicyV1AutoUpdateStatsPolicyUpdateOper(in *StatsPolicy) string {
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy/", in.Name)
+}
+
+// AutoAddStatsPolicy CRUD method for StatsPolicy
+func (r *EndpointsStatsPolicyV1RestClient) AutoAddStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	path := makeURIStatsPolicyV1AutoAddStatsPolicyCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespStatsPolicyV1AutoAddStatsPolicy(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*StatsPolicy), nil
+}
+
+// AutoUpdateStatsPolicy CRUD method for StatsPolicy
+func (r *EndpointsStatsPolicyV1RestClient) AutoUpdateStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	path := makeURIStatsPolicyV1AutoUpdateStatsPolicyUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespStatsPolicyV1AutoUpdateStatsPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*StatsPolicy), err
+}
+
+// AutoGetStatsPolicy CRUD method for StatsPolicy
+func (r *EndpointsStatsPolicyV1RestClient) AutoGetStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	path := makeURIStatsPolicyV1AutoGetStatsPolicyGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespStatsPolicyV1AutoGetStatsPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*StatsPolicy), err
+}
+
+// AutoDeleteStatsPolicy CRUD method for StatsPolicy
+func (r *EndpointsStatsPolicyV1RestClient) AutoDeleteStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	path := makeURIStatsPolicyV1AutoDeleteStatsPolicyDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespStatsPolicyV1AutoDeleteStatsPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*StatsPolicy), err
+}
+
+// AutoListStatsPolicy CRUD method for StatsPolicy
+func (r *EndpointsStatsPolicyV1RestClient) AutoListStatsPolicy(ctx context.Context, options *api.ListWatchOptions) (*StatsPolicyList, error) {
+	path := makeURIStatsPolicyV1AutoListStatsPolicyListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespStatsPolicyV1AutoListStatsPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*StatsPolicyList), err
+}
+
+// AutoWatchStatsPolicy CRUD method for StatsPolicy
+func (r *EndpointsStatsPolicyV1RestClient) AutoWatchStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
+// MakeStatsPolicyV1RestClientEndpoints make REST client endpoints
+func MakeStatsPolicyV1RestClientEndpoints(instance string) (EndpointsStatsPolicyV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsStatsPolicyV1RestClient{
 		instance: instance,
 		client:   http.DefaultClient,
 	}, nil

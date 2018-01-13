@@ -6,6 +6,7 @@
 
 	It is generated from these files:
 		common.proto
+		export.proto
 		meta.proto
 
 	It has these top-level messages:
@@ -13,6 +14,8 @@
 		Filter
 		WatchSpec
 		Empty
+		ExportConfig
+		ExternalCred
 		TypeMeta
 		ListMeta
 		Timestamp

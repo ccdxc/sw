@@ -1,0 +1,52 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+package api;
+
+// Mandatory imports.
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// ----------------------------- Export Config -----------------------------
+// Export Config specifies server address and user credentials
+message ExportConfig {
+    // IP address or URL of the collector/entity to which the data is to be exported
+    string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty"];
+
+    // protocol and Port number where an external collector is gathering the data
+    // example "TCP/2055"
+    string Transport = 2 [(gogoproto.jsontag) = "transport,omitempty"];
+
+    // Credentials provide secure access to the collector
+    ExternalCred Credentials = 3 [(gogoproto.jsontag) = "credentials,omitempty"];
+}
+
+// ------------------------ ExternalCred Object ----------------------------
+// ExternalCred defines credentials required to access an external entity, such as
+// a stats collector, compute orchestration entity, or a syslog server.
+// External entity may support a variety of methods, like username/password,
+// TLS Client authentication, or Bearer Token based authentication. User is
+// expected to configure one of the methods
+message ExternalCred {
+    // UserName is the login id to be used towards the external entity
+    string UserName = 1 [(gogoproto.jsontag) = "username,omitempty"];
+
+    // Password is one time specified, not visibile on read operations
+    // Only valid when UserName is defined
+    // TBD: need to add (venice.secret) = "true" support for this
+    string Password = 2 [(gogoproto.jsontag) = "password,omitempty"];
+
+    // External entity supports bearer tokens for authentication and authorization
+    // Token refresh is not supported using OAuth2
+    // TBD: need to add (venice.secret) = "true" support for this
+    string BearerToken = 3 [(gogoproto.jsontag) = "bearer-token,omitempty"];
+
+    // CertData holds PEM-encoded bytes (typically read from a client certificate file).
+    bytes CertData = 4 [(gogoproto.jsontag) = "cert-data,omitempty"];
+
+    // KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
+    // TBD: need to add (venice.secret) = "true" support for this
+    bytes KeyData = 5 [(gogoproto.jsontag) = "key-data,omitempty"];
+
+    // CaData holds PEM-encoded bytes (typically read from a root certificates bundle).
+    bytes CaData = 6 [(gogoproto.jsontag) = "ca-data,omitempty"];
+}

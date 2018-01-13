@@ -15,24 +15,46 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-// ServiceMonitoringPolicyV1Client  is the client interface for the service.
-type ServiceMonitoringPolicyV1Client interface {
-	AutoAddMonitoringPolicy(ctx context.Context, t *MonitoringPolicy) (*MonitoringPolicy, error)
-	AutoDeleteMonitoringPolicy(ctx context.Context, t *MonitoringPolicy) (*MonitoringPolicy, error)
-	AutoGetMonitoringPolicy(ctx context.Context, t *MonitoringPolicy) (*MonitoringPolicy, error)
-	AutoListMonitoringPolicy(ctx context.Context, t *api.ListWatchOptions) (*MonitoringPolicyList, error)
-	AutoUpdateMonitoringPolicy(ctx context.Context, t *MonitoringPolicy) (*MonitoringPolicy, error)
+// ServiceFwlogPolicyV1Client  is the client interface for the service.
+type ServiceFwlogPolicyV1Client interface {
+	AutoAddFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
+	AutoDeleteFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
+	AutoGetFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
+	AutoListFwlogPolicy(ctx context.Context, t *api.ListWatchOptions) (*FwlogPolicyList, error)
+	AutoUpdateFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
 
-	AutoWatchMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions) (MonitoringPolicyV1_AutoWatchMonitoringPolicyClient, error)
+	AutoWatchFwlogPolicy(ctx context.Context, in *api.ListWatchOptions) (FwlogPolicyV1_AutoWatchFwlogPolicyClient, error)
 }
 
-// ServiceMonitoringPolicyV1Server is the server interface for the service.
-type ServiceMonitoringPolicyV1Server interface {
-	AutoAddMonitoringPolicy(ctx context.Context, t MonitoringPolicy) (MonitoringPolicy, error)
-	AutoDeleteMonitoringPolicy(ctx context.Context, t MonitoringPolicy) (MonitoringPolicy, error)
-	AutoGetMonitoringPolicy(ctx context.Context, t MonitoringPolicy) (MonitoringPolicy, error)
-	AutoListMonitoringPolicy(ctx context.Context, t api.ListWatchOptions) (MonitoringPolicyList, error)
-	AutoUpdateMonitoringPolicy(ctx context.Context, t MonitoringPolicy) (MonitoringPolicy, error)
+// ServiceStatsPolicyV1Client  is the client interface for the service.
+type ServiceStatsPolicyV1Client interface {
+	AutoAddStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
+	AutoDeleteStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
+	AutoGetStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
+	AutoListStatsPolicy(ctx context.Context, t *api.ListWatchOptions) (*StatsPolicyList, error)
+	AutoUpdateStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
 
-	AutoWatchMonitoringPolicy(in *api.ListWatchOptions, stream MonitoringPolicyV1_AutoWatchMonitoringPolicyServer) error
+	AutoWatchStatsPolicy(ctx context.Context, in *api.ListWatchOptions) (StatsPolicyV1_AutoWatchStatsPolicyClient, error)
+}
+
+// ServiceFwlogPolicyV1Server is the server interface for the service.
+type ServiceFwlogPolicyV1Server interface {
+	AutoAddFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
+	AutoDeleteFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
+	AutoGetFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
+	AutoListFwlogPolicy(ctx context.Context, t api.ListWatchOptions) (FwlogPolicyList, error)
+	AutoUpdateFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
+
+	AutoWatchFwlogPolicy(in *api.ListWatchOptions, stream FwlogPolicyV1_AutoWatchFwlogPolicyServer) error
+}
+
+// ServiceStatsPolicyV1Server is the server interface for the service.
+type ServiceStatsPolicyV1Server interface {
+	AutoAddStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
+	AutoDeleteStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
+	AutoGetStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
+	AutoListStatsPolicy(ctx context.Context, t api.ListWatchOptions) (StatsPolicyList, error)
+	AutoUpdateStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
+
+	AutoWatchStatsPolicy(in *api.ListWatchOptions, stream StatsPolicyV1_AutoWatchStatsPolicyServer) error
 }

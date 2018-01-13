@@ -25,166 +25,257 @@ var _ api.TypeMeta
 var _ listerwatcher.WatcherClient
 var _ kvstore.Interface
 
-// NewMonitoringPolicyV1 sets up a new client for MonitoringPolicyV1
-func NewMonitoringPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceMonitoringPolicyV1Client {
+// NewFwlogPolicyV1 sets up a new client for FwlogPolicyV1
+func NewFwlogPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceFwlogPolicyV1Client {
 
-	var lAutoAddMonitoringPolicyEndpoint endpoint.Endpoint
+	var lAutoAddFwlogPolicyEndpoint endpoint.Endpoint
 	{
-		lAutoAddMonitoringPolicyEndpoint = grpctransport.NewClient(
+		lAutoAddFwlogPolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"telemetry.MonitoringPolicyV1",
-			"AutoAddMonitoringPolicy",
-			telemetry.EncodeGrpcReqMonitoringPolicy,
-			telemetry.DecodeGrpcRespMonitoringPolicy,
-			&telemetry.MonitoringPolicy{},
+			"telemetry.FwlogPolicyV1",
+			"AutoAddFwlogPolicy",
+			telemetry.EncodeGrpcReqFwlogPolicy,
+			telemetry.DecodeGrpcRespFwlogPolicy,
+			&telemetry.FwlogPolicy{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoAddMonitoringPolicy")(lAutoAddMonitoringPolicyEndpoint)
+		lAutoAddFwlogPolicyEndpoint = trace.ClientEndPoint("FwlogPolicyV1:AutoAddFwlogPolicy")(lAutoAddFwlogPolicyEndpoint)
 	}
-	var lAutoDeleteMonitoringPolicyEndpoint endpoint.Endpoint
+	var lAutoDeleteFwlogPolicyEndpoint endpoint.Endpoint
 	{
-		lAutoDeleteMonitoringPolicyEndpoint = grpctransport.NewClient(
+		lAutoDeleteFwlogPolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"telemetry.MonitoringPolicyV1",
-			"AutoDeleteMonitoringPolicy",
-			telemetry.EncodeGrpcReqMonitoringPolicy,
-			telemetry.DecodeGrpcRespMonitoringPolicy,
-			&telemetry.MonitoringPolicy{},
+			"telemetry.FwlogPolicyV1",
+			"AutoDeleteFwlogPolicy",
+			telemetry.EncodeGrpcReqFwlogPolicy,
+			telemetry.DecodeGrpcRespFwlogPolicy,
+			&telemetry.FwlogPolicy{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoDeleteMonitoringPolicy")(lAutoDeleteMonitoringPolicyEndpoint)
+		lAutoDeleteFwlogPolicyEndpoint = trace.ClientEndPoint("FwlogPolicyV1:AutoDeleteFwlogPolicy")(lAutoDeleteFwlogPolicyEndpoint)
 	}
-	var lAutoGetMonitoringPolicyEndpoint endpoint.Endpoint
+	var lAutoGetFwlogPolicyEndpoint endpoint.Endpoint
 	{
-		lAutoGetMonitoringPolicyEndpoint = grpctransport.NewClient(
+		lAutoGetFwlogPolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"telemetry.MonitoringPolicyV1",
-			"AutoGetMonitoringPolicy",
-			telemetry.EncodeGrpcReqMonitoringPolicy,
-			telemetry.DecodeGrpcRespMonitoringPolicy,
-			&telemetry.MonitoringPolicy{},
+			"telemetry.FwlogPolicyV1",
+			"AutoGetFwlogPolicy",
+			telemetry.EncodeGrpcReqFwlogPolicy,
+			telemetry.DecodeGrpcRespFwlogPolicy,
+			&telemetry.FwlogPolicy{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoGetMonitoringPolicy")(lAutoGetMonitoringPolicyEndpoint)
+		lAutoGetFwlogPolicyEndpoint = trace.ClientEndPoint("FwlogPolicyV1:AutoGetFwlogPolicy")(lAutoGetFwlogPolicyEndpoint)
 	}
-	var lAutoListMonitoringPolicyEndpoint endpoint.Endpoint
+	var lAutoListFwlogPolicyEndpoint endpoint.Endpoint
 	{
-		lAutoListMonitoringPolicyEndpoint = grpctransport.NewClient(
+		lAutoListFwlogPolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"telemetry.MonitoringPolicyV1",
-			"AutoListMonitoringPolicy",
+			"telemetry.FwlogPolicyV1",
+			"AutoListFwlogPolicy",
 			telemetry.EncodeGrpcReqListWatchOptions,
-			telemetry.DecodeGrpcRespMonitoringPolicyList,
-			&telemetry.MonitoringPolicyList{},
+			telemetry.DecodeGrpcRespFwlogPolicyList,
+			&telemetry.FwlogPolicyList{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoListMonitoringPolicy")(lAutoListMonitoringPolicyEndpoint)
+		lAutoListFwlogPolicyEndpoint = trace.ClientEndPoint("FwlogPolicyV1:AutoListFwlogPolicy")(lAutoListFwlogPolicyEndpoint)
 	}
-	var lAutoUpdateMonitoringPolicyEndpoint endpoint.Endpoint
+	var lAutoUpdateFwlogPolicyEndpoint endpoint.Endpoint
 	{
-		lAutoUpdateMonitoringPolicyEndpoint = grpctransport.NewClient(
+		lAutoUpdateFwlogPolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"telemetry.MonitoringPolicyV1",
-			"AutoUpdateMonitoringPolicy",
-			telemetry.EncodeGrpcReqMonitoringPolicy,
-			telemetry.DecodeGrpcRespMonitoringPolicy,
-			&telemetry.MonitoringPolicy{},
+			"telemetry.FwlogPolicyV1",
+			"AutoUpdateFwlogPolicy",
+			telemetry.EncodeGrpcReqFwlogPolicy,
+			telemetry.DecodeGrpcRespFwlogPolicy,
+			&telemetry.FwlogPolicy{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoUpdateMonitoringPolicy")(lAutoUpdateMonitoringPolicyEndpoint)
+		lAutoUpdateFwlogPolicyEndpoint = trace.ClientEndPoint("FwlogPolicyV1:AutoUpdateFwlogPolicy")(lAutoUpdateFwlogPolicyEndpoint)
 	}
-	return telemetry.EndpointsMonitoringPolicyV1Client{
-		Client: telemetry.NewMonitoringPolicyV1Client(conn),
+	return telemetry.EndpointsFwlogPolicyV1Client{
+		Client: telemetry.NewFwlogPolicyV1Client(conn),
 
-		AutoAddMonitoringPolicyEndpoint:    lAutoAddMonitoringPolicyEndpoint,
-		AutoDeleteMonitoringPolicyEndpoint: lAutoDeleteMonitoringPolicyEndpoint,
-		AutoGetMonitoringPolicyEndpoint:    lAutoGetMonitoringPolicyEndpoint,
-		AutoListMonitoringPolicyEndpoint:   lAutoListMonitoringPolicyEndpoint,
-		AutoUpdateMonitoringPolicyEndpoint: lAutoUpdateMonitoringPolicyEndpoint,
+		AutoAddFwlogPolicyEndpoint:    lAutoAddFwlogPolicyEndpoint,
+		AutoDeleteFwlogPolicyEndpoint: lAutoDeleteFwlogPolicyEndpoint,
+		AutoGetFwlogPolicyEndpoint:    lAutoGetFwlogPolicyEndpoint,
+		AutoListFwlogPolicyEndpoint:   lAutoListFwlogPolicyEndpoint,
+		AutoUpdateFwlogPolicyEndpoint: lAutoUpdateFwlogPolicyEndpoint,
 	}
 }
 
-// NewMonitoringPolicyV1Backend creates an instrumented client with middleware
-func NewMonitoringPolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceMonitoringPolicyV1Client {
-	cl := NewMonitoringPolicyV1(conn, logger)
-	cl = telemetry.LoggingMonitoringPolicyV1MiddlewareClient(logger)(cl)
+// NewFwlogPolicyV1Backend creates an instrumented client with middleware
+func NewFwlogPolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceFwlogPolicyV1Client {
+	cl := NewFwlogPolicyV1(conn, logger)
+	cl = telemetry.LoggingFwlogPolicyV1MiddlewareClient(logger)(cl)
 	return cl
 }
 
-type grpcObjMonitoringPolicyV1MonitoringPolicy struct {
+// NewStatsPolicyV1 sets up a new client for StatsPolicyV1
+func NewStatsPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceStatsPolicyV1Client {
+
+	var lAutoAddStatsPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoAddStatsPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.StatsPolicyV1",
+			"AutoAddStatsPolicy",
+			telemetry.EncodeGrpcReqStatsPolicy,
+			telemetry.DecodeGrpcRespStatsPolicy,
+			&telemetry.StatsPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddStatsPolicyEndpoint = trace.ClientEndPoint("StatsPolicyV1:AutoAddStatsPolicy")(lAutoAddStatsPolicyEndpoint)
+	}
+	var lAutoDeleteStatsPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteStatsPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.StatsPolicyV1",
+			"AutoDeleteStatsPolicy",
+			telemetry.EncodeGrpcReqStatsPolicy,
+			telemetry.DecodeGrpcRespStatsPolicy,
+			&telemetry.StatsPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteStatsPolicyEndpoint = trace.ClientEndPoint("StatsPolicyV1:AutoDeleteStatsPolicy")(lAutoDeleteStatsPolicyEndpoint)
+	}
+	var lAutoGetStatsPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoGetStatsPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.StatsPolicyV1",
+			"AutoGetStatsPolicy",
+			telemetry.EncodeGrpcReqStatsPolicy,
+			telemetry.DecodeGrpcRespStatsPolicy,
+			&telemetry.StatsPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetStatsPolicyEndpoint = trace.ClientEndPoint("StatsPolicyV1:AutoGetStatsPolicy")(lAutoGetStatsPolicyEndpoint)
+	}
+	var lAutoListStatsPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoListStatsPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.StatsPolicyV1",
+			"AutoListStatsPolicy",
+			telemetry.EncodeGrpcReqListWatchOptions,
+			telemetry.DecodeGrpcRespStatsPolicyList,
+			&telemetry.StatsPolicyList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListStatsPolicyEndpoint = trace.ClientEndPoint("StatsPolicyV1:AutoListStatsPolicy")(lAutoListStatsPolicyEndpoint)
+	}
+	var lAutoUpdateStatsPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateStatsPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.StatsPolicyV1",
+			"AutoUpdateStatsPolicy",
+			telemetry.EncodeGrpcReqStatsPolicy,
+			telemetry.DecodeGrpcRespStatsPolicy,
+			&telemetry.StatsPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateStatsPolicyEndpoint = trace.ClientEndPoint("StatsPolicyV1:AutoUpdateStatsPolicy")(lAutoUpdateStatsPolicyEndpoint)
+	}
+	return telemetry.EndpointsStatsPolicyV1Client{
+		Client: telemetry.NewStatsPolicyV1Client(conn),
+
+		AutoAddStatsPolicyEndpoint:    lAutoAddStatsPolicyEndpoint,
+		AutoDeleteStatsPolicyEndpoint: lAutoDeleteStatsPolicyEndpoint,
+		AutoGetStatsPolicyEndpoint:    lAutoGetStatsPolicyEndpoint,
+		AutoListStatsPolicyEndpoint:   lAutoListStatsPolicyEndpoint,
+		AutoUpdateStatsPolicyEndpoint: lAutoUpdateStatsPolicyEndpoint,
+	}
+}
+
+// NewStatsPolicyV1Backend creates an instrumented client with middleware
+func NewStatsPolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceStatsPolicyV1Client {
+	cl := NewStatsPolicyV1(conn, logger)
+	cl = telemetry.LoggingStatsPolicyV1MiddlewareClient(logger)(cl)
+	return cl
+}
+
+type grpcObjFwlogPolicyV1FwlogPolicy struct {
 	logger log.Logger
-	client telemetry.ServiceMonitoringPolicyV1Client
+	client telemetry.ServiceFwlogPolicyV1Client
 }
 
-func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) Create(ctx context.Context, in *telemetry.MonitoringPolicy) (*telemetry.MonitoringPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "MonitoringPolicy", "oper", "create")
+func (a *grpcObjFwlogPolicyV1FwlogPolicy) Create(ctx context.Context, in *telemetry.FwlogPolicy) (*telemetry.FwlogPolicy, error) {
+	a.logger.DebugLog("msg", "recieved call", "object", "FwlogPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddMonitoringPolicy(nctx, in)
+	return a.client.AutoAddFwlogPolicy(nctx, in)
 }
 
-func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) Update(ctx context.Context, in *telemetry.MonitoringPolicy) (*telemetry.MonitoringPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "MonitoringPolicy", "oper", "update")
+func (a *grpcObjFwlogPolicyV1FwlogPolicy) Update(ctx context.Context, in *telemetry.FwlogPolicy) (*telemetry.FwlogPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FwlogPolicy", "oper", "update")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateMonitoringPolicy(nctx, in)
+	return a.client.AutoUpdateFwlogPolicy(nctx, in)
 }
 
-func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.MonitoringPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "MonitoringPolicy", "oper", "get")
+func (a *grpcObjFwlogPolicyV1FwlogPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.FwlogPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FwlogPolicy", "oper", "get")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := telemetry.MonitoringPolicy{}
+	in := telemetry.FwlogPolicy{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetMonitoringPolicy(nctx, &in)
+	return a.client.AutoGetFwlogPolicy(nctx, &in)
 }
 
-func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.MonitoringPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "MonitoringPolicy", "oper", "delete")
+func (a *grpcObjFwlogPolicyV1FwlogPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.FwlogPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FwlogPolicy", "oper", "delete")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := telemetry.MonitoringPolicy{}
+	in := telemetry.FwlogPolicy{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteMonitoringPolicy(nctx, &in)
+	return a.client.AutoDeleteFwlogPolicy(nctx, &in)
 }
 
-func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*telemetry.MonitoringPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "MonitoringPolicy", "oper", "list")
+func (a *grpcObjFwlogPolicyV1FwlogPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*telemetry.FwlogPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FwlogPolicy", "oper", "list")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListMonitoringPolicy(nctx, options)
+	r, err := a.client.AutoListFwlogPolicy(nctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "MonitoringPolicy", "oper", "WatchOper")
+func (a *grpcObjFwlogPolicyV1FwlogPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FwlogPolicy", "oper", "WatchOper")
 	nctx := addVersion(ctx, "v1")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	stream, err := a.client.AutoWatchMonitoringPolicy(nctx, options)
+	stream, err := a.client.AutoWatchFwlogPolicy(nctx, options)
 	if err != nil {
 		return nil, err
 	}
-	wstream := stream.(telemetry.MonitoringPolicyV1_AutoWatchMonitoringPolicyClient)
+	wstream := stream.(telemetry.FwlogPolicyV1_AutoWatchFwlogPolicyClient)
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			r, err := wstream.Recv()
@@ -210,63 +301,63 @@ func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) Watch(ctx context.Context, o
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjFwlogPolicyV1FwlogPolicy) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
 
-type restObjMonitoringPolicyV1MonitoringPolicy struct {
-	endpoints telemetry.EndpointsMonitoringPolicyV1RestClient
+type restObjFwlogPolicyV1FwlogPolicy struct {
+	endpoints telemetry.EndpointsFwlogPolicyV1RestClient
 	instance  string
 }
 
-func (a *restObjMonitoringPolicyV1MonitoringPolicy) Create(ctx context.Context, in *telemetry.MonitoringPolicy) (*telemetry.MonitoringPolicy, error) {
+func (a *restObjFwlogPolicyV1FwlogPolicy) Create(ctx context.Context, in *telemetry.FwlogPolicy) (*telemetry.FwlogPolicy, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoAddMonitoringPolicy(ctx, in)
+	return a.endpoints.AutoAddFwlogPolicy(ctx, in)
 }
 
-func (a *restObjMonitoringPolicyV1MonitoringPolicy) Update(ctx context.Context, in *telemetry.MonitoringPolicy) (*telemetry.MonitoringPolicy, error) {
+func (a *restObjFwlogPolicyV1FwlogPolicy) Update(ctx context.Context, in *telemetry.FwlogPolicy) (*telemetry.FwlogPolicy, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoUpdateMonitoringPolicy(ctx, in)
+	return a.endpoints.AutoUpdateFwlogPolicy(ctx, in)
 }
 
-func (a *restObjMonitoringPolicyV1MonitoringPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.MonitoringPolicy, error) {
+func (a *restObjFwlogPolicyV1FwlogPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.FwlogPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := telemetry.MonitoringPolicy{}
+	in := telemetry.FwlogPolicy{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetMonitoringPolicy(ctx, &in)
+	return a.endpoints.AutoGetFwlogPolicy(ctx, &in)
 }
 
-func (a *restObjMonitoringPolicyV1MonitoringPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.MonitoringPolicy, error) {
+func (a *restObjFwlogPolicyV1FwlogPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.FwlogPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := telemetry.MonitoringPolicy{}
+	in := telemetry.FwlogPolicy{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteMonitoringPolicy(ctx, &in)
+	return a.endpoints.AutoDeleteFwlogPolicy(ctx, &in)
 }
 
-func (a *restObjMonitoringPolicyV1MonitoringPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*telemetry.MonitoringPolicy, error) {
+func (a *restObjFwlogPolicyV1FwlogPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*telemetry.FwlogPolicy, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	r, err := a.endpoints.AutoListMonitoringPolicy(ctx, options)
+	r, err := a.endpoints.AutoListFwlogPolicy(ctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *restObjMonitoringPolicyV1MonitoringPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *restObjFwlogPolicyV1FwlogPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("not allowed")
 }
 
-func (a *restObjMonitoringPolicyV1MonitoringPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjFwlogPolicyV1FwlogPolicy) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
 		return true
@@ -277,7 +368,7 @@ func (a *restObjMonitoringPolicyV1MonitoringPolicy) Allowed(oper apiserver.APIOp
 	case apiserver.DeleteOper:
 		return true
 	case apiserver.ListOper:
-		return false
+		return true
 	case apiserver.WatchOper:
 		return false
 	default:
@@ -285,39 +376,245 @@ func (a *restObjMonitoringPolicyV1MonitoringPolicy) Allowed(oper apiserver.APIOp
 	}
 }
 
-type crudClientMonitoringPolicyV1 struct {
-	grpcMonitoringPolicy telemetry.MonitoringPolicyInterface
+type grpcObjStatsPolicyV1StatsPolicy struct {
+	logger log.Logger
+	client telemetry.ServiceStatsPolicyV1Client
 }
 
-// NewGrpcCrudClientMonitoringPolicyV1 creates a GRPC client for the service
-func NewGrpcCrudClientMonitoringPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.MonitoringPolicyV1Interface {
-	client := NewMonitoringPolicyV1Backend(conn, logger)
-	return &crudClientMonitoringPolicyV1{
+func (a *grpcObjStatsPolicyV1StatsPolicy) Create(ctx context.Context, in *telemetry.StatsPolicy) (*telemetry.StatsPolicy, error) {
+	a.logger.DebugLog("msg", "recieved call", "object", "StatsPolicy", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddStatsPolicy(nctx, in)
+}
 
-		grpcMonitoringPolicy: &grpcObjMonitoringPolicyV1MonitoringPolicy{client: client, logger: logger},
+func (a *grpcObjStatsPolicyV1StatsPolicy) Update(ctx context.Context, in *telemetry.StatsPolicy) (*telemetry.StatsPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateStatsPolicy(nctx, in)
+}
+
+func (a *grpcObjStatsPolicyV1StatsPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.StatsPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := telemetry.StatsPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetStatsPolicy(nctx, &in)
+}
+
+func (a *grpcObjStatsPolicyV1StatsPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.StatsPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := telemetry.StatsPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteStatsPolicy(nctx, &in)
+}
+
+func (a *grpcObjStatsPolicyV1StatsPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*telemetry.StatsPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListStatsPolicy(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjStatsPolicyV1StatsPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchStatsPolicy(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(telemetry.StatsPolicyV1_AutoWatchStatsPolicyClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			ev := kvstore.WatchEvent{
+				Type:   kvstore.WatchEventType(r.Type),
+				Object: r.Object,
+			}
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjStatsPolicyV1StatsPolicy) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjStatsPolicyV1StatsPolicy struct {
+	endpoints telemetry.EndpointsStatsPolicyV1RestClient
+	instance  string
+}
+
+func (a *restObjStatsPolicyV1StatsPolicy) Create(ctx context.Context, in *telemetry.StatsPolicy) (*telemetry.StatsPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddStatsPolicy(ctx, in)
+}
+
+func (a *restObjStatsPolicyV1StatsPolicy) Update(ctx context.Context, in *telemetry.StatsPolicy) (*telemetry.StatsPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateStatsPolicy(ctx, in)
+}
+
+func (a *restObjStatsPolicyV1StatsPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.StatsPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := telemetry.StatsPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetStatsPolicy(ctx, &in)
+}
+
+func (a *restObjStatsPolicyV1StatsPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.StatsPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := telemetry.StatsPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteStatsPolicy(ctx, &in)
+}
+
+func (a *restObjStatsPolicyV1StatsPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*telemetry.StatsPolicy, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListStatsPolicy(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjStatsPolicyV1StatsPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjStatsPolicyV1StatsPolicy) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
 	}
 }
 
-func (a *crudClientMonitoringPolicyV1) MonitoringPolicy() telemetry.MonitoringPolicyInterface {
-	return a.grpcMonitoringPolicy
+type crudClientFwlogPolicyV1 struct {
+	grpcFwlogPolicy telemetry.FwlogPolicyInterface
 }
 
-type crudRestClientMonitoringPolicyV1 struct {
-	restMonitoringPolicy telemetry.MonitoringPolicyInterface
+// NewGrpcCrudClientFwlogPolicyV1 creates a GRPC client for the service
+func NewGrpcCrudClientFwlogPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.FwlogPolicyV1Interface {
+	client := NewFwlogPolicyV1Backend(conn, logger)
+	return &crudClientFwlogPolicyV1{
+
+		grpcFwlogPolicy: &grpcObjFwlogPolicyV1FwlogPolicy{client: client, logger: logger},
+	}
 }
 
-// NewRestCrudClientMonitoringPolicyV1 creates a REST client for the service.
-func NewRestCrudClientMonitoringPolicyV1(url string) telemetry.MonitoringPolicyV1Interface {
-	endpoints, err := telemetry.MakeMonitoringPolicyV1RestClientEndpoints(url)
+func (a *crudClientFwlogPolicyV1) FwlogPolicy() telemetry.FwlogPolicyInterface {
+	return a.grpcFwlogPolicy
+}
+
+type crudRestClientFwlogPolicyV1 struct {
+	restFwlogPolicy telemetry.FwlogPolicyInterface
+}
+
+// NewRestCrudClientFwlogPolicyV1 creates a REST client for the service.
+func NewRestCrudClientFwlogPolicyV1(url string) telemetry.FwlogPolicyV1Interface {
+	endpoints, err := telemetry.MakeFwlogPolicyV1RestClientEndpoints(url)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
-	return &crudRestClientMonitoringPolicyV1{
+	return &crudRestClientFwlogPolicyV1{
 
-		restMonitoringPolicy: &restObjMonitoringPolicyV1MonitoringPolicy{endpoints: endpoints, instance: url},
+		restFwlogPolicy: &restObjFwlogPolicyV1FwlogPolicy{endpoints: endpoints, instance: url},
 	}
 }
 
-func (a *crudRestClientMonitoringPolicyV1) MonitoringPolicy() telemetry.MonitoringPolicyInterface {
-	return a.restMonitoringPolicy
+func (a *crudRestClientFwlogPolicyV1) FwlogPolicy() telemetry.FwlogPolicyInterface {
+	return a.restFwlogPolicy
+}
+
+type crudClientStatsPolicyV1 struct {
+	grpcStatsPolicy telemetry.StatsPolicyInterface
+}
+
+// NewGrpcCrudClientStatsPolicyV1 creates a GRPC client for the service
+func NewGrpcCrudClientStatsPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.StatsPolicyV1Interface {
+	client := NewStatsPolicyV1Backend(conn, logger)
+	return &crudClientStatsPolicyV1{
+
+		grpcStatsPolicy: &grpcObjStatsPolicyV1StatsPolicy{client: client, logger: logger},
+	}
+}
+
+func (a *crudClientStatsPolicyV1) StatsPolicy() telemetry.StatsPolicyInterface {
+	return a.grpcStatsPolicy
+}
+
+type crudRestClientStatsPolicyV1 struct {
+	restStatsPolicy telemetry.StatsPolicyInterface
+}
+
+// NewRestCrudClientStatsPolicyV1 creates a REST client for the service.
+func NewRestCrudClientStatsPolicyV1(url string) telemetry.StatsPolicyV1Interface {
+	endpoints, err := telemetry.MakeStatsPolicyV1RestClientEndpoints(url)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientStatsPolicyV1{
+
+		restStatsPolicy: &restObjStatsPolicyV1StatsPolicy{endpoints: endpoints, instance: url},
+	}
+}
+
+func (a *crudRestClientStatsPolicyV1) StatsPolicy() telemetry.StatsPolicyInterface {
+	return a.restStatsPolicy
 }

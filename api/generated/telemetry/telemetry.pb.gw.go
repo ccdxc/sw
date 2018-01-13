@@ -16,6 +16,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/pensando/grpc-gateway/runtime"
 	"github.com/pensando/grpc-gateway/utilities"
+	"github.com/pensando/sw/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -27,8 +28,8 @@ var _ io.Reader
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_MonitoringPolicyV1_AutoAddMonitoringPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MonitoringPolicy
+func request_FwlogPolicyV1_AutoAddFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FwlogPolicy
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
@@ -53,17 +54,17 @@ func request_MonitoringPolicyV1_AutoAddMonitoringPolicy_0(ctx context.Context, m
 		return nil, metadata, err
 	}
 
-	msg, err := client.AutoAddMonitoringPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoAddFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_FwlogPolicyV1_AutoDeleteFwlogPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MonitoringPolicy
+func request_FwlogPolicyV1_AutoDeleteFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FwlogPolicy
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -95,21 +96,21 @@ func request_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0(ctx context.Context
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoDeleteFwlogPolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteMonitoringPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_MonitoringPolicyV1_AutoGetMonitoringPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_FwlogPolicyV1_AutoGetFwlogPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_MonitoringPolicyV1_AutoGetMonitoringPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MonitoringPolicy
+func request_FwlogPolicyV1_AutoGetFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FwlogPolicy
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -141,17 +142,52 @@ func request_MonitoringPolicyV1_AutoGetMonitoringPolicy_0(ctx context.Context, m
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_MonitoringPolicyV1_AutoGetMonitoringPolicy_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoGetFwlogPolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetMonitoringPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_MonitoringPolicyV1_AutoUpdateMonitoringPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MonitoringPolicy
+var (
+	filter_FwlogPolicyV1_AutoListFwlogPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_FwlogPolicyV1_AutoListFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_FwlogPolicyV1_AutoListFwlogPolicy_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_FwlogPolicyV1_AutoUpdateFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client FwlogPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FwlogPolicy
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
@@ -187,14 +223,214 @@ func request_MonitoringPolicyV1_AutoUpdateMonitoringPolicy_0(ctx context.Context
 		return nil, metadata, err
 	}
 
-	msg, err := client.AutoUpdateMonitoringPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateFwlogPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-// RegisterMonitoringPolicyV1HandlerFromEndpoint is same as RegisterMonitoringPolicyV1Handler but
+func request_StatsPolicyV1_AutoAddStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq StatsPolicy
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	msg, err := client.AutoAddStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+var (
+	filter_StatsPolicyV1_AutoDeleteStatsPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+)
+
+func request_StatsPolicyV1_AutoDeleteStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq StatsPolicy
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoDeleteStatsPolicy_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+var (
+	filter_StatsPolicyV1_AutoGetStatsPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+)
+
+func request_StatsPolicyV1_AutoGetStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq StatsPolicy
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoGetStatsPolicy_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+var (
+	filter_StatsPolicyV1_AutoListStatsPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_StatsPolicyV1_AutoListStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_StatsPolicyV1_AutoListStatsPolicy_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_StatsPolicyV1_AutoUpdateStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client StatsPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq StatsPolicy
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	msg, err := client.AutoUpdateStatsPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+// RegisterFwlogPolicyV1HandlerFromEndpoint is same as RegisterFwlogPolicyV1Handler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterMonitoringPolicyV1HandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+func RegisterFwlogPolicyV1HandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
 	conn, err := grpc.Dial(endpoint, opts...)
 	if err != nil {
 		return err
@@ -214,21 +450,21 @@ func RegisterMonitoringPolicyV1HandlerFromEndpoint(ctx context.Context, mux *run
 		}()
 	}()
 
-	return RegisterMonitoringPolicyV1Handler(ctx, mux, conn)
+	return RegisterFwlogPolicyV1Handler(ctx, mux, conn)
 }
 
-// RegisterMonitoringPolicyV1Handler registers the http handlers for service MonitoringPolicyV1 to "mux".
+// RegisterFwlogPolicyV1Handler registers the http handlers for service FwlogPolicyV1 to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterMonitoringPolicyV1Handler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	client := NewMonitoringPolicyV1Client(conn)
-	return RegisterMonitoringPolicyV1HandlerWithClient(ctx, mux, client)
+func RegisterFwlogPolicyV1Handler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	client := NewFwlogPolicyV1Client(conn)
+	return RegisterFwlogPolicyV1HandlerWithClient(ctx, mux, client)
 }
 
-// RegisterMonitoringPolicyV1HandlerClient registers the http handlers for service MonitoringPolicyV1 to "mux".
+// RegisterFwlogPolicyV1HandlerClient registers the http handlers for service FwlogPolicyV1 to "mux".
 // The handlers forward requests to the grpc endpoint using client provided.
-func RegisterMonitoringPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client MonitoringPolicyV1Client) error {
+func RegisterFwlogPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client FwlogPolicyV1Client) error {
 
-	mux.Handle("POST", pattern_MonitoringPolicyV1_AutoAddMonitoringPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_FwlogPolicyV1_AutoAddFwlogPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -245,18 +481,18 @@ func RegisterMonitoringPolicyV1HandlerWithClient(ctx context.Context, mux *runti
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_MonitoringPolicyV1_AutoAddMonitoringPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_FwlogPolicyV1_AutoAddFwlogPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_MonitoringPolicyV1_AutoAddMonitoringPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_FwlogPolicyV1_AutoAddFwlogPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_FwlogPolicyV1_AutoDeleteFwlogPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -273,18 +509,18 @@ func RegisterMonitoringPolicyV1HandlerWithClient(ctx context.Context, mux *runti
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_FwlogPolicyV1_AutoDeleteFwlogPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_FwlogPolicyV1_AutoDeleteFwlogPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_MonitoringPolicyV1_AutoGetMonitoringPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_FwlogPolicyV1_AutoGetFwlogPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -301,18 +537,18 @@ func RegisterMonitoringPolicyV1HandlerWithClient(ctx context.Context, mux *runti
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_MonitoringPolicyV1_AutoGetMonitoringPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_FwlogPolicyV1_AutoGetFwlogPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_MonitoringPolicyV1_AutoGetMonitoringPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_FwlogPolicyV1_AutoGetFwlogPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_MonitoringPolicyV1_AutoUpdateMonitoringPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_FwlogPolicyV1_AutoListFwlogPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -329,14 +565,42 @@ func RegisterMonitoringPolicyV1HandlerWithClient(ctx context.Context, mux *runti
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_MonitoringPolicyV1_AutoUpdateMonitoringPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_FwlogPolicyV1_AutoListFwlogPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_MonitoringPolicyV1_AutoUpdateMonitoringPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_FwlogPolicyV1_AutoListFwlogPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_FwlogPolicyV1_AutoUpdateFwlogPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_FwlogPolicyV1_AutoUpdateFwlogPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_FwlogPolicyV1_AutoUpdateFwlogPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -344,21 +608,228 @@ func RegisterMonitoringPolicyV1HandlerWithClient(ctx context.Context, mux *runti
 }
 
 var (
-	pattern_MonitoringPolicyV1_AutoAddMonitoringPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "monitoringPolicy"}, ""))
+	pattern_FwlogPolicyV1_AutoAddFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "fwlogPolicy"}, ""))
 
-	pattern_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "monitoringPolicy", "O.Name"}, ""))
+	pattern_FwlogPolicyV1_AutoDeleteFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "fwlogPolicy", "O.Name"}, ""))
 
-	pattern_MonitoringPolicyV1_AutoGetMonitoringPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "monitoringPolicy", "O.Name"}, ""))
+	pattern_FwlogPolicyV1_AutoGetFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "fwlogPolicy", "O.Name"}, ""))
 
-	pattern_MonitoringPolicyV1_AutoUpdateMonitoringPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "monitoringPolicy", "O.Name"}, ""))
+	pattern_FwlogPolicyV1_AutoListFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "fwlogPolicy"}, ""))
+
+	pattern_FwlogPolicyV1_AutoUpdateFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "fwlogPolicy", "O.Name"}, ""))
 )
 
 var (
-	forward_MonitoringPolicyV1_AutoAddMonitoringPolicy_0 = runtime.ForwardResponseMessage
+	forward_FwlogPolicyV1_AutoAddFwlogPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_MonitoringPolicyV1_AutoDeleteMonitoringPolicy_0 = runtime.ForwardResponseMessage
+	forward_FwlogPolicyV1_AutoDeleteFwlogPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_MonitoringPolicyV1_AutoGetMonitoringPolicy_0 = runtime.ForwardResponseMessage
+	forward_FwlogPolicyV1_AutoGetFwlogPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_MonitoringPolicyV1_AutoUpdateMonitoringPolicy_0 = runtime.ForwardResponseMessage
+	forward_FwlogPolicyV1_AutoListFwlogPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_FwlogPolicyV1_AutoUpdateFwlogPolicy_0 = runtime.ForwardResponseMessage
+)
+
+// RegisterStatsPolicyV1HandlerFromEndpoint is same as RegisterStatsPolicyV1Handler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterStatsPolicyV1HandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+
+	return RegisterStatsPolicyV1Handler(ctx, mux, conn)
+}
+
+// RegisterStatsPolicyV1Handler registers the http handlers for service StatsPolicyV1 to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterStatsPolicyV1Handler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	client := NewStatsPolicyV1Client(conn)
+	return RegisterStatsPolicyV1HandlerWithClient(ctx, mux, client)
+}
+
+// RegisterStatsPolicyV1HandlerClient registers the http handlers for service StatsPolicyV1 to "mux".
+// The handlers forward requests to the grpc endpoint using client provided.
+func RegisterStatsPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client StatsPolicyV1Client) error {
+
+	mux.Handle("POST", pattern_StatsPolicyV1_AutoAddStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_StatsPolicyV1_AutoAddStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_StatsPolicyV1_AutoAddStatsPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_StatsPolicyV1_AutoDeleteStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_StatsPolicyV1_AutoDeleteStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_StatsPolicyV1_AutoDeleteStatsPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_StatsPolicyV1_AutoGetStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_StatsPolicyV1_AutoGetStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_StatsPolicyV1_AutoGetStatsPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_StatsPolicyV1_AutoListStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_StatsPolicyV1_AutoListStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_StatsPolicyV1_AutoListStatsPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_StatsPolicyV1_AutoUpdateStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_StatsPolicyV1_AutoUpdateStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_StatsPolicyV1_AutoUpdateStatsPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_StatsPolicyV1_AutoAddStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "statsPolicy"}, ""))
+
+	pattern_StatsPolicyV1_AutoDeleteStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "statsPolicy", "O.Name"}, ""))
+
+	pattern_StatsPolicyV1_AutoGetStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "statsPolicy", "O.Name"}, ""))
+
+	pattern_StatsPolicyV1_AutoListStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "statsPolicy"}, ""))
+
+	pattern_StatsPolicyV1_AutoUpdateStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "statsPolicy", "O.Name"}, ""))
+)
+
+var (
+	forward_StatsPolicyV1_AutoAddStatsPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_StatsPolicyV1_AutoDeleteStatsPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_StatsPolicyV1_AutoGetStatsPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_StatsPolicyV1_AutoListStatsPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_StatsPolicyV1_AutoUpdateStatsPolicy_0 = runtime.ForwardResponseMessage
 )

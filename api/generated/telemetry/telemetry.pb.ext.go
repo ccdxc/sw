@@ -25,24 +25,46 @@ var _ validators.DummyVar
 var funcMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
-func (m *MonitoringPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "monitoringPolicy/", m.Name)
+func (m *FlowExportPolicy) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "flowExportPolicy/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *MonitoringPolicyList) MakeKey(prefix string) string {
-	obj := MonitoringPolicy{}
+func (m *FwlogPolicy) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "FwlogPolicy/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *StatsPolicy) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "StatsPolicy/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *FwlogPolicyList) MakeKey(prefix string) string {
+	obj := FwlogPolicy{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgMonitoringPolicyWatchHelper) MakeKey(prefix string) string {
-	obj := MonitoringPolicy{}
+func (m *StatsPolicyList) MakeKey(prefix string) string {
+	obj := StatsPolicy{}
 	return obj.MakeKey(prefix)
 }
 
-func (m *AutoMsgMonitoringPolicyWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgMonitoringPolicyWatchHelper)
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgFwlogPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := FwlogPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgStatsPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := StatsPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *AutoMsgFwlogPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgFwlogPolicyWatchHelper)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -50,8 +72,8 @@ func (m *AutoMsgMonitoringPolicyWatchHelper) Clone(into interface{}) error {
 	return nil
 }
 
-func (m *MonitoringPolicy) Clone(into interface{}) error {
-	out, ok := into.(*MonitoringPolicy)
+func (m *AutoMsgStatsPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgStatsPolicyWatchHelper)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -59,8 +81,8 @@ func (m *MonitoringPolicy) Clone(into interface{}) error {
 	return nil
 }
 
-func (m *MonitoringPolicyList) Clone(into interface{}) error {
-	out, ok := into.(*MonitoringPolicyList)
+func (m *FlowExportPolicy) Clone(into interface{}) error {
+	out, ok := into.(*FlowExportPolicy)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -68,8 +90,8 @@ func (m *MonitoringPolicyList) Clone(into interface{}) error {
 	return nil
 }
 
-func (m *MonitoringPolicySpec) Clone(into interface{}) error {
-	out, ok := into.(*MonitoringPolicySpec)
+func (m *FlowExportSpec) Clone(into interface{}) error {
+	out, ok := into.(*FlowExportSpec)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -77,8 +99,89 @@ func (m *MonitoringPolicySpec) Clone(into interface{}) error {
 	return nil
 }
 
-func (m *MonitoringPolicyStatus) Clone(into interface{}) error {
-	out, ok := into.(*MonitoringPolicyStatus)
+func (m *FlowExportStatus) Clone(into interface{}) error {
+	out, ok := into.(*FlowExportStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *FlowExportTarget) Clone(into interface{}) error {
+	out, ok := into.(*FlowExportTarget)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *FwlogPolicy) Clone(into interface{}) error {
+	out, ok := into.(*FwlogPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *FwlogPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*FwlogPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *FwlogSpec) Clone(into interface{}) error {
+	out, ok := into.(*FwlogSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *FwlogStatus) Clone(into interface{}) error {
+	out, ok := into.(*FwlogStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *StatsPolicy) Clone(into interface{}) error {
+	out, ok := into.(*StatsPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *StatsPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*StatsPolicyList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *StatsSpec) Clone(into interface{}) error {
+	out, ok := into.(*StatsSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *StatsStatus) Clone(into interface{}) error {
+	out, ok := into.(*StatsStatus)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -88,22 +191,23 @@ func (m *MonitoringPolicyStatus) Clone(into interface{}) error {
 
 // Validators
 
-func (m *AutoMsgMonitoringPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
+func (m *AutoMsgFwlogPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *MonitoringPolicy) Validate(ver string, ignoreStatus bool) bool {
+func (m *AutoMsgStatsPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *FlowExportPolicy) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Spec.Validate(ver, ignoreStatus) {
 		return false
 	}
 	return true
 }
 
-func (m *MonitoringPolicyList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
+func (m *FlowExportSpec) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Targets {
 		if !v.Validate(ver, ignoreStatus) {
 			return false
 		}
@@ -111,14 +215,18 @@ func (m *MonitoringPolicyList) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *MonitoringPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapTelemetry["MonitoringPolicySpec"][ver]; ok {
+func (m *FlowExportStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *FlowExportTarget) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapTelemetry["FlowExportTarget"][ver]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
 			}
 		}
-	} else if vs, ok := funcMapTelemetry["MonitoringPolicySpec"]["all"]; ok {
+	} else if vs, ok := funcMapTelemetry["FlowExportTarget"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -128,21 +236,47 @@ func (m *MonitoringPolicySpec) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *MonitoringPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
+func (m *FwlogPolicy) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *FwlogPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *FwlogSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *FwlogStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *StatsPolicy) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *StatsPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *StatsSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *StatsStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
 func init() {
 	funcMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapTelemetry["MonitoringPolicySpec"] = make(map[string][]func(interface{}) bool)
-	funcMapTelemetry["MonitoringPolicySpec"]["all"] = append(funcMapTelemetry["MonitoringPolicySpec"]["all"], func(i interface{}) bool {
-		m := i.(*MonitoringPolicySpec)
+	funcMapTelemetry["FlowExportTarget"] = make(map[string][]func(interface{}) bool)
+	funcMapTelemetry["FlowExportTarget"]["all"] = append(funcMapTelemetry["FlowExportTarget"]["all"], func(i interface{}) bool {
+		m := i.(*FlowExportTarget)
 
-		for _, v := range m.Area {
-			if _, ok := MonitoringPolicySpec_Areas_value[v]; !ok {
-				return false
-			}
+		if _, ok := FlowExportTarget_Formats_value[m.Format]; !ok {
+			return false
 		}
 		return true
 	})

@@ -9,70 +9,186 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/export.proto";
 
-// ----------------------------- Monitoring  Policy -----------------------------
-// Monitoring  Policy associates a specific set of workloads to a monitoring policy
-// It is expected that multiple monitoring policies are active within a given tenant
-// and specifies the unique requirements for collecting, exporting the data differently
-// The policy defines when, how and what to collect and retain
+// telemetry policies:
+//-------------------------------------------------------------------------------
+// policy name         |  intended for        |     description                 |
+//-------------------------------------------------------------------------------
+// stats               |  sys admins          |    for all stats other than     |
+//                     |                      |    fwlog/netflow.               |
+//                     |                      |    includes retention,compaction|
+//-------------------------------------------------------------------------------
+// fwlog               |  security admins     |    firewall log policy          |
+//                     |                      |    includes retention,          |
+//                     |                      |    export parameters            |
+//-------------------------------------------------------------------------------
+//                     |                      |                                 |
+// flowexport          |  network admins      |    netflow export policy        |
+//                     |                      |    includes interval,           |
+//                     |                      |    export parameters            |
+//-------------------------------------------------------------------------------
+//
+//=========================================================================================
+//  stats policy
+//=========================================================================================
+message StatsStatus {
 
-message MonitoringPolicySpec {
-    enum Areas{
-      FwLogs = 0;
-      FlowData = 1; 
-      ObjectStats = 2;
-    }
-    // Area describes an area for which the monitoring policy is specified
-    repeated string Area = 1 [(venice.check) = "StrEnum(MonitoringPolicySpec.Areas)"];
-
-    // object selector for the service (list of object kind/namespace/instance to match)
-    // TBD: this would need to be replaced by a generic definition of an object selector
-    map <string, string> ObjectSelector  = 2 [(gogoproto.jsontag) = "object-selector,omitempty"];
-
-    // CollectionPolicy specifies parameters to collect, how often and aggregation performed on this
-    string CollectionPolicy  = 3 [(gogoproto.jsontag) = "collection-policy,omitempty"];
-
-    // RetentionPolicy specifies for how long the data is kept
-    string RetentionPolicy  = 4 [(gogoproto.jsontag) = "retention-policy,omitempty"];
-
-    // ExportPolicies defines the location, frequency and format of data to an external collector
-    repeated string ExportPolicies  = 5 [(gogoproto.jsontag) = "export-policy,omitempty"];
 }
 
-message MonitoringPolicyStatus {
-    // list of workloads to be monitored for the policy
-    repeated string Workloads = 1 [(gogoproto.jsontag) = "workloads,omitempty"];
+// compaction method will be selected by Venice based on the mesaurement/table
+// collection interval will be selected by Venice based on workloads
+message StatsSpec {
+     // Compaction Interval is the down sampling interval in minutes, hours or days
+     // this would be mapped to GROUP BY TIME() in influxdb CQ
+     // example: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host
+     string CompactionInterval  = 1 [(gogoproto.jsontag) = "compaction-interval ,omitempty"];
+
+     // RetentionTime defines for how long to keep the stats data before it is deleted
+     // The value is specified as a string format to be hours, days, or months etc.
+     // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
+     string RetentionTime = 2 [(gogoproto.jsontag) = "retention-time,omitempty"];
+
+     // DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted
+     // The value is specified as a string format to be hours, days, or months etc.
+     // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
+     string DownSampleRetentionTime = 3 [(gogoproto.jsontag) = "downsample-retention-time,omitempty"];
 }
 
-message MonitoringPolicy {
-    option (venice.objectPrefix) = "monitoringPolicy";
+message StatsPolicy {
+    option (venice.objectPrefix) = "StatsPolicy";
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
-    // Spec contains the configuration of the monitoring policy.
-    MonitoringPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    StatsSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
 
-    // Status contains the current state of the monitoring policy.
-    MonitoringPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    // Status contains the current state of the policy.
+    StatsStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// MonitoringPolicy REST API
-service MonitoringPolicyV1 {
+// StatsPolicy REST API
+service StatsPolicyV1 {
     // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "monitoringPolicy";
+    option (venice.apiPrefix) = "statsPolicy";
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    option (venice.apiGrpcCrudService) = "MonitoringPolicy";
+    option (venice.apiGrpcCrudService) = "StatsPolicy";
 
     option (venice.apiRestService) = {
-        Object: "MonitoringPolicy"
+        Object: "StatsPolicy"
         Method: [ "get", "put", "delete" ]
-        Pattern: "/{O.Tenant}/monitoringPolicy/{O.Name}"
+        Pattern: "/{O.Tenant}/statsPolicy/{O.Name}"
     };
     option (venice.apiRestService) = {
-        Object: "MonitoringPolicy"
-        Method: [ "post" ]
-        Pattern: "/{O.Tenant}/monitoringPolicy"
+        Object: "StatsPolicy"
+        Method: [ "post", "list" ]
+        Pattern: "/{O.Tenant}/statsPolicy"
+    };
+}
+
+//=========================================================================================
+//  firewall log policy
+//=========================================================================================
+
+message FwlogStatus {
+}
+
+// Firewall logs are managed like syslog.
+// Venice collects fwlog irrespective of the export config
+message FwlogSpec {
+    // RetentionTime defines for how long to keep the fwlog before it is deleted
+    string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty"];
+
+    // Export contains the export config
+    repeated api.ExportConfig Exports = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
+}
+
+message FwlogPolicy {
+    option (venice.objectPrefix) = "FwlogPolicy";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    FwlogSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the policy.
+    FwlogStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// FwlogPolicy REST API
+service FwlogPolicyV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "fwlogPolicy";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    option (venice.apiGrpcCrudService) = "FwlogPolicy";
+
+    option (venice.apiRestService) = {
+        Object: "FwlogPolicy"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/fwlogPolicy/{O.Name}"
+    };
+    option (venice.apiRestService) = {
+        Object: "FwlogPolicy"
+        Method: [ "post", "list" ]
+        Pattern: "/{O.Tenant}/fwlogPolicy"
+    };
+}
+
+//========================================================================================
+//  flow export policy
+//========================================================================================
+message FlowExportStatus {
+}
+
+
+message FlowExportTarget {
+    enum Formats {
+        Netflow = 0;
+    }
+    // Interval defines how often to push the records to an external or internal collector
+    // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
+    string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty"];
+
+    string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportTarget.Formats)"];
+    // Export contains export parameters.
+    repeated api.ExportConfig Exports = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
+
+}
+
+message FlowExportSpec {
+    repeated FlowExportTarget Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
+}
+
+message FlowExportPolicy {
+    option (venice.objectPrefix) = "flowExportPolicy";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    FlowExportSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the export policy.
+    FlowExportStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// FlowExportPolicyV1 REST API
+service FlowExportPolicyV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "flowExportPolicy";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    option (venice.apiGrpcCrudService) = "flowExportPolicy";
+
+    option (venice.apiRestService) = {
+        Object: "FlowExport"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/flowExportPolicy/{O.Name}"
+    };
+    option (venice.apiRestService) = {
+        Object: "FlowExportPolicy"
+        Method: [ "post", "list" ]
+        Pattern: "/{O.Tenant}/flowExportPolicy"
     };
 }

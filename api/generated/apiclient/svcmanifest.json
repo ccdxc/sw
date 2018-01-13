@@ -58,19 +58,6 @@
       "protos/cmd.proto"
     ]
   },
-  "collection": {
-    "Svcs": {
-      "CollectionPolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "CollectionPolicy"
-        ]
-      }
-    },
-    "Files": [
-      "protos/collection.proto"
-    ]
-  },
   "events": {
     "Svcs": {
       "EventPolicyV1": {
@@ -88,19 +75,6 @@
     },
     "Files": [
       "protos/events.proto"
-    ]
-  },
-  "export": {
-    "Svcs": {
-      "ExportPolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "ExportPolicy"
-        ]
-      }
-    },
-    "Files": [
-      "protos/export.proto"
     ]
   },
   "network": {
@@ -165,25 +139,18 @@
       "protos/networkencryption.proto"
     ]
   },
-  "retention": {
-    "Svcs": {
-      "RetentionPolicyV1": {
-        "Version": "v1",
-        "Messages": [
-          "RetentionPolicy"
-        ]
-      }
-    },
-    "Files": [
-      "protos/retention.proto"
-    ]
-  },
   "telemetry": {
     "Svcs": {
-      "MonitoringPolicyV1": {
+      "FwlogPolicyV1": {
         "Version": "v1",
         "Messages": [
-          "MonitoringPolicy"
+          "FwlogPolicy"
+        ]
+      },
+      "StatsPolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "StatsPolicy"
         ]
       }
     },

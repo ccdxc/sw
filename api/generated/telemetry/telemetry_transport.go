@@ -22,287 +22,708 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-type grpcServerMonitoringPolicyV1 struct {
-	Endpoints EndpointsMonitoringPolicyV1Server
+type grpcServerFwlogPolicyV1 struct {
+	Endpoints EndpointsFwlogPolicyV1Server
 
-	AutoAddMonitoringPolicyHdlr    grpctransport.Handler
-	AutoDeleteMonitoringPolicyHdlr grpctransport.Handler
-	AutoGetMonitoringPolicyHdlr    grpctransport.Handler
-	AutoListMonitoringPolicyHdlr   grpctransport.Handler
-	AutoUpdateMonitoringPolicyHdlr grpctransport.Handler
+	AutoAddFwlogPolicyHdlr    grpctransport.Handler
+	AutoDeleteFwlogPolicyHdlr grpctransport.Handler
+	AutoGetFwlogPolicyHdlr    grpctransport.Handler
+	AutoListFwlogPolicyHdlr   grpctransport.Handler
+	AutoUpdateFwlogPolicyHdlr grpctransport.Handler
 }
 
-// MakeGRPCServerMonitoringPolicyV1 creates a GRPC server for MonitoringPolicyV1 service
-func MakeGRPCServerMonitoringPolicyV1(ctx context.Context, endpoints EndpointsMonitoringPolicyV1Server, logger log.Logger) MonitoringPolicyV1Server {
+// MakeGRPCServerFwlogPolicyV1 creates a GRPC server for FwlogPolicyV1 service
+func MakeGRPCServerFwlogPolicyV1(ctx context.Context, endpoints EndpointsFwlogPolicyV1Server, logger log.Logger) FwlogPolicyV1Server {
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerErrorLogger(logger),
 		grpctransport.ServerBefore(recoverVersion),
 	}
-	return &grpcServerMonitoringPolicyV1{
+	return &grpcServerFwlogPolicyV1{
 		Endpoints: endpoints,
-		AutoAddMonitoringPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoAddMonitoringPolicyEndpoint,
-			DecodeGrpcReqMonitoringPolicy,
-			EncodeGrpcRespMonitoringPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddMonitoringPolicy", logger)))...,
+		AutoAddFwlogPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoAddFwlogPolicyEndpoint,
+			DecodeGrpcReqFwlogPolicy,
+			EncodeGrpcRespFwlogPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFwlogPolicy", logger)))...,
 		),
 
-		AutoDeleteMonitoringPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteMonitoringPolicyEndpoint,
-			DecodeGrpcReqMonitoringPolicy,
-			EncodeGrpcRespMonitoringPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteMonitoringPolicy", logger)))...,
+		AutoDeleteFwlogPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteFwlogPolicyEndpoint,
+			DecodeGrpcReqFwlogPolicy,
+			EncodeGrpcRespFwlogPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFwlogPolicy", logger)))...,
 		),
 
-		AutoGetMonitoringPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoGetMonitoringPolicyEndpoint,
-			DecodeGrpcReqMonitoringPolicy,
-			EncodeGrpcRespMonitoringPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetMonitoringPolicy", logger)))...,
+		AutoGetFwlogPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoGetFwlogPolicyEndpoint,
+			DecodeGrpcReqFwlogPolicy,
+			EncodeGrpcRespFwlogPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFwlogPolicy", logger)))...,
 		),
 
-		AutoListMonitoringPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoListMonitoringPolicyEndpoint,
+		AutoListFwlogPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoListFwlogPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespMonitoringPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListMonitoringPolicy", logger)))...,
+			EncodeGrpcRespFwlogPolicyList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFwlogPolicy", logger)))...,
 		),
 
-		AutoUpdateMonitoringPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateMonitoringPolicyEndpoint,
-			DecodeGrpcReqMonitoringPolicy,
-			EncodeGrpcRespMonitoringPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateMonitoringPolicy", logger)))...,
+		AutoUpdateFwlogPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateFwlogPolicyEndpoint,
+			DecodeGrpcReqFwlogPolicy,
+			EncodeGrpcRespFwlogPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFwlogPolicy", logger)))...,
 		),
 	}
 }
 
-func (s *grpcServerMonitoringPolicyV1) AutoAddMonitoringPolicy(ctx oldcontext.Context, req *MonitoringPolicy) (*MonitoringPolicy, error) {
-	_, resp, err := s.AutoAddMonitoringPolicyHdlr.ServeGRPC(ctx, req)
+func (s *grpcServerFwlogPolicyV1) AutoAddFwlogPolicy(ctx oldcontext.Context, req *FwlogPolicy) (*FwlogPolicy, error) {
+	_, resp, err := s.AutoAddFwlogPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	r := resp.(respMonitoringPolicyV1AutoAddMonitoringPolicy).V
-	return &r, resp.(respMonitoringPolicyV1AutoAddMonitoringPolicy).Err
+	r := resp.(respFwlogPolicyV1AutoAddFwlogPolicy).V
+	return &r, resp.(respFwlogPolicyV1AutoAddFwlogPolicy).Err
 }
 
-func decodeHTTPrespMonitoringPolicyV1AutoAddMonitoringPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+func decodeHTTPrespFwlogPolicyV1AutoAddFwlogPolicy(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp MonitoringPolicy
+	var resp FwlogPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringPolicyV1) AutoDeleteMonitoringPolicy(ctx oldcontext.Context, req *MonitoringPolicy) (*MonitoringPolicy, error) {
-	_, resp, err := s.AutoDeleteMonitoringPolicyHdlr.ServeGRPC(ctx, req)
+func (s *grpcServerFwlogPolicyV1) AutoDeleteFwlogPolicy(ctx oldcontext.Context, req *FwlogPolicy) (*FwlogPolicy, error) {
+	_, resp, err := s.AutoDeleteFwlogPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	r := resp.(respMonitoringPolicyV1AutoDeleteMonitoringPolicy).V
-	return &r, resp.(respMonitoringPolicyV1AutoDeleteMonitoringPolicy).Err
+	r := resp.(respFwlogPolicyV1AutoDeleteFwlogPolicy).V
+	return &r, resp.(respFwlogPolicyV1AutoDeleteFwlogPolicy).Err
 }
 
-func decodeHTTPrespMonitoringPolicyV1AutoDeleteMonitoringPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+func decodeHTTPrespFwlogPolicyV1AutoDeleteFwlogPolicy(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp MonitoringPolicy
+	var resp FwlogPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringPolicyV1) AutoGetMonitoringPolicy(ctx oldcontext.Context, req *MonitoringPolicy) (*MonitoringPolicy, error) {
-	_, resp, err := s.AutoGetMonitoringPolicyHdlr.ServeGRPC(ctx, req)
+func (s *grpcServerFwlogPolicyV1) AutoGetFwlogPolicy(ctx oldcontext.Context, req *FwlogPolicy) (*FwlogPolicy, error) {
+	_, resp, err := s.AutoGetFwlogPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	r := resp.(respMonitoringPolicyV1AutoGetMonitoringPolicy).V
-	return &r, resp.(respMonitoringPolicyV1AutoGetMonitoringPolicy).Err
+	r := resp.(respFwlogPolicyV1AutoGetFwlogPolicy).V
+	return &r, resp.(respFwlogPolicyV1AutoGetFwlogPolicy).Err
 }
 
-func decodeHTTPrespMonitoringPolicyV1AutoGetMonitoringPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+func decodeHTTPrespFwlogPolicyV1AutoGetFwlogPolicy(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp MonitoringPolicy
+	var resp FwlogPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringPolicyV1) AutoListMonitoringPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*MonitoringPolicyList, error) {
-	_, resp, err := s.AutoListMonitoringPolicyHdlr.ServeGRPC(ctx, req)
+func (s *grpcServerFwlogPolicyV1) AutoListFwlogPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*FwlogPolicyList, error) {
+	_, resp, err := s.AutoListFwlogPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	r := resp.(respMonitoringPolicyV1AutoListMonitoringPolicy).V
-	return &r, resp.(respMonitoringPolicyV1AutoListMonitoringPolicy).Err
+	r := resp.(respFwlogPolicyV1AutoListFwlogPolicy).V
+	return &r, resp.(respFwlogPolicyV1AutoListFwlogPolicy).Err
 }
 
-func decodeHTTPrespMonitoringPolicyV1AutoListMonitoringPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+func decodeHTTPrespFwlogPolicyV1AutoListFwlogPolicy(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp MonitoringPolicyList
+	var resp FwlogPolicyList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringPolicyV1) AutoUpdateMonitoringPolicy(ctx oldcontext.Context, req *MonitoringPolicy) (*MonitoringPolicy, error) {
-	_, resp, err := s.AutoUpdateMonitoringPolicyHdlr.ServeGRPC(ctx, req)
+func (s *grpcServerFwlogPolicyV1) AutoUpdateFwlogPolicy(ctx oldcontext.Context, req *FwlogPolicy) (*FwlogPolicy, error) {
+	_, resp, err := s.AutoUpdateFwlogPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	r := resp.(respMonitoringPolicyV1AutoUpdateMonitoringPolicy).V
-	return &r, resp.(respMonitoringPolicyV1AutoUpdateMonitoringPolicy).Err
+	r := resp.(respFwlogPolicyV1AutoUpdateFwlogPolicy).V
+	return &r, resp.(respFwlogPolicyV1AutoUpdateFwlogPolicy).Err
 }
 
-func decodeHTTPrespMonitoringPolicyV1AutoUpdateMonitoringPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+func decodeHTTPrespFwlogPolicyV1AutoUpdateFwlogPolicy(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp MonitoringPolicy
+	var resp FwlogPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringPolicyV1) AutoWatchMonitoringPolicy(in *api.ListWatchOptions, stream MonitoringPolicyV1_AutoWatchMonitoringPolicyServer) error {
-	return s.Endpoints.AutoWatchMonitoringPolicy(in, stream)
+func (s *grpcServerFwlogPolicyV1) AutoWatchFwlogPolicy(in *api.ListWatchOptions, stream FwlogPolicyV1_AutoWatchFwlogPolicyServer) error {
+	return s.Endpoints.AutoWatchFwlogPolicy(in, stream)
 }
 
-func encodeHTTPMonitoringPolicy(ctx context.Context, req *http.Request, request interface{}) error {
+type grpcServerStatsPolicyV1 struct {
+	Endpoints EndpointsStatsPolicyV1Server
+
+	AutoAddStatsPolicyHdlr    grpctransport.Handler
+	AutoDeleteStatsPolicyHdlr grpctransport.Handler
+	AutoGetStatsPolicyHdlr    grpctransport.Handler
+	AutoListStatsPolicyHdlr   grpctransport.Handler
+	AutoUpdateStatsPolicyHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerStatsPolicyV1 creates a GRPC server for StatsPolicyV1 service
+func MakeGRPCServerStatsPolicyV1(ctx context.Context, endpoints EndpointsStatsPolicyV1Server, logger log.Logger) StatsPolicyV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerStatsPolicyV1{
+		Endpoints: endpoints,
+		AutoAddStatsPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoAddStatsPolicyEndpoint,
+			DecodeGrpcReqStatsPolicy,
+			EncodeGrpcRespStatsPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddStatsPolicy", logger)))...,
+		),
+
+		AutoDeleteStatsPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteStatsPolicyEndpoint,
+			DecodeGrpcReqStatsPolicy,
+			EncodeGrpcRespStatsPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteStatsPolicy", logger)))...,
+		),
+
+		AutoGetStatsPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoGetStatsPolicyEndpoint,
+			DecodeGrpcReqStatsPolicy,
+			EncodeGrpcRespStatsPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStatsPolicy", logger)))...,
+		),
+
+		AutoListStatsPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoListStatsPolicyEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespStatsPolicyList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListStatsPolicy", logger)))...,
+		),
+
+		AutoUpdateStatsPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateStatsPolicyEndpoint,
+			DecodeGrpcReqStatsPolicy,
+			EncodeGrpcRespStatsPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStatsPolicy", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerStatsPolicyV1) AutoAddStatsPolicy(ctx oldcontext.Context, req *StatsPolicy) (*StatsPolicy, error) {
+	_, resp, err := s.AutoAddStatsPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respStatsPolicyV1AutoAddStatsPolicy).V
+	return &r, resp.(respStatsPolicyV1AutoAddStatsPolicy).Err
+}
+
+func decodeHTTPrespStatsPolicyV1AutoAddStatsPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp StatsPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerStatsPolicyV1) AutoDeleteStatsPolicy(ctx oldcontext.Context, req *StatsPolicy) (*StatsPolicy, error) {
+	_, resp, err := s.AutoDeleteStatsPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respStatsPolicyV1AutoDeleteStatsPolicy).V
+	return &r, resp.(respStatsPolicyV1AutoDeleteStatsPolicy).Err
+}
+
+func decodeHTTPrespStatsPolicyV1AutoDeleteStatsPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp StatsPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerStatsPolicyV1) AutoGetStatsPolicy(ctx oldcontext.Context, req *StatsPolicy) (*StatsPolicy, error) {
+	_, resp, err := s.AutoGetStatsPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respStatsPolicyV1AutoGetStatsPolicy).V
+	return &r, resp.(respStatsPolicyV1AutoGetStatsPolicy).Err
+}
+
+func decodeHTTPrespStatsPolicyV1AutoGetStatsPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp StatsPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerStatsPolicyV1) AutoListStatsPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*StatsPolicyList, error) {
+	_, resp, err := s.AutoListStatsPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respStatsPolicyV1AutoListStatsPolicy).V
+	return &r, resp.(respStatsPolicyV1AutoListStatsPolicy).Err
+}
+
+func decodeHTTPrespStatsPolicyV1AutoListStatsPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp StatsPolicyList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerStatsPolicyV1) AutoUpdateStatsPolicy(ctx oldcontext.Context, req *StatsPolicy) (*StatsPolicy, error) {
+	_, resp, err := s.AutoUpdateStatsPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respStatsPolicyV1AutoUpdateStatsPolicy).V
+	return &r, resp.(respStatsPolicyV1AutoUpdateStatsPolicy).Err
+}
+
+func decodeHTTPrespStatsPolicyV1AutoUpdateStatsPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp StatsPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerStatsPolicyV1) AutoWatchStatsPolicy(in *api.ListWatchOptions, stream StatsPolicyV1_AutoWatchStatsPolicyServer) error {
+	return s.Endpoints.AutoWatchStatsPolicy(in, stream)
+}
+
+func encodeHTTPFlowExportPolicy(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPMonitoringPolicy(_ context.Context, r *http.Request) (interface{}, error) {
-	var req MonitoringPolicy
+func decodeHTTPFlowExportPolicy(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FlowExportPolicy
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqMonitoringPolicy encodes GRPC request
-func EncodeGrpcReqMonitoringPolicy(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MonitoringPolicy)
+// EncodeGrpcReqFlowExportPolicy encodes GRPC request
+func EncodeGrpcReqFlowExportPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportPolicy)
 	return req, nil
 }
 
-// DecodeGrpcReqMonitoringPolicy decodes GRPC request
-func DecodeGrpcReqMonitoringPolicy(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MonitoringPolicy)
+// DecodeGrpcReqFlowExportPolicy decodes GRPC request
+func DecodeGrpcReqFlowExportPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportPolicy)
 	return req, nil
 }
 
-// EncodeGrpcRespMonitoringPolicy encodes GRC response
-func EncodeGrpcRespMonitoringPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFlowExportPolicy encodes GRC response
+func EncodeGrpcRespFlowExportPolicy(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespMonitoringPolicy decodes GRPC response
-func DecodeGrpcRespMonitoringPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFlowExportPolicy decodes GRPC response
+func DecodeGrpcRespFlowExportPolicy(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPMonitoringPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPFlowExportSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPMonitoringPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req MonitoringPolicyList
+func decodeHTTPFlowExportSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FlowExportSpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqMonitoringPolicyList encodes GRPC request
-func EncodeGrpcReqMonitoringPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MonitoringPolicyList)
+// EncodeGrpcReqFlowExportSpec encodes GRPC request
+func EncodeGrpcReqFlowExportSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportSpec)
 	return req, nil
 }
 
-// DecodeGrpcReqMonitoringPolicyList decodes GRPC request
-func DecodeGrpcReqMonitoringPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MonitoringPolicyList)
+// DecodeGrpcReqFlowExportSpec decodes GRPC request
+func DecodeGrpcReqFlowExportSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportSpec)
 	return req, nil
 }
 
-// EncodeGrpcRespMonitoringPolicyList endodes the GRPC response
-func EncodeGrpcRespMonitoringPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFlowExportSpec encodes GRC response
+func EncodeGrpcRespFlowExportSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespMonitoringPolicyList decodes the GRPC response
-func DecodeGrpcRespMonitoringPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFlowExportSpec decodes GRPC response
+func DecodeGrpcRespFlowExportSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPMonitoringPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPFlowExportStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPMonitoringPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req MonitoringPolicySpec
+func decodeHTTPFlowExportStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FlowExportStatus
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqMonitoringPolicySpec encodes GRPC request
-func EncodeGrpcReqMonitoringPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MonitoringPolicySpec)
+// EncodeGrpcReqFlowExportStatus encodes GRPC request
+func EncodeGrpcReqFlowExportStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportStatus)
 	return req, nil
 }
 
-// DecodeGrpcReqMonitoringPolicySpec decodes GRPC request
-func DecodeGrpcReqMonitoringPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MonitoringPolicySpec)
+// DecodeGrpcReqFlowExportStatus decodes GRPC request
+func DecodeGrpcReqFlowExportStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportStatus)
 	return req, nil
 }
 
-// EncodeGrpcRespMonitoringPolicySpec encodes GRC response
-func EncodeGrpcRespMonitoringPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFlowExportStatus encodes GRC response
+func EncodeGrpcRespFlowExportStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespMonitoringPolicySpec decodes GRPC response
-func DecodeGrpcRespMonitoringPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFlowExportStatus decodes GRPC response
+func DecodeGrpcRespFlowExportStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPMonitoringPolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPFlowExportTarget(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPMonitoringPolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req MonitoringPolicyStatus
+func decodeHTTPFlowExportTarget(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FlowExportTarget
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqMonitoringPolicyStatus encodes GRPC request
-func EncodeGrpcReqMonitoringPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MonitoringPolicyStatus)
+// EncodeGrpcReqFlowExportTarget encodes GRPC request
+func EncodeGrpcReqFlowExportTarget(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportTarget)
 	return req, nil
 }
 
-// DecodeGrpcReqMonitoringPolicyStatus decodes GRPC request
-func DecodeGrpcReqMonitoringPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MonitoringPolicyStatus)
+// DecodeGrpcReqFlowExportTarget decodes GRPC request
+func DecodeGrpcReqFlowExportTarget(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportTarget)
 	return req, nil
 }
 
-// EncodeGrpcRespMonitoringPolicyStatus encodes GRC response
-func EncodeGrpcRespMonitoringPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFlowExportTarget encodes GRC response
+func EncodeGrpcRespFlowExportTarget(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespMonitoringPolicyStatus decodes GRPC response
-func DecodeGrpcRespMonitoringPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFlowExportTarget decodes GRPC response
+func DecodeGrpcRespFlowExportTarget(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFwlogPolicy(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogPolicy(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogPolicy
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogPolicy encodes GRPC request
+func EncodeGrpcReqFwlogPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogPolicy)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogPolicy decodes GRPC request
+func DecodeGrpcReqFwlogPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogPolicy)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogPolicy encodes GRC response
+func EncodeGrpcRespFwlogPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogPolicy decodes GRPC response
+func DecodeGrpcRespFwlogPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFwlogPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogPolicyList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogPolicyList encodes GRPC request
+func EncodeGrpcReqFwlogPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogPolicyList)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogPolicyList decodes GRPC request
+func DecodeGrpcReqFwlogPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogPolicyList)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogPolicyList endodes the GRPC response
+func EncodeGrpcRespFwlogPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogPolicyList decodes the GRPC response
+func DecodeGrpcRespFwlogPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFwlogSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogSpec encodes GRPC request
+func EncodeGrpcReqFwlogSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogSpec decodes GRPC request
+func DecodeGrpcReqFwlogSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogSpec encodes GRC response
+func EncodeGrpcRespFwlogSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogSpec decodes GRPC response
+func DecodeGrpcRespFwlogSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFwlogStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogStatus encodes GRPC request
+func EncodeGrpcReqFwlogStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogStatus decodes GRPC request
+func DecodeGrpcReqFwlogStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogStatus encodes GRC response
+func EncodeGrpcRespFwlogStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogStatus decodes GRPC response
+func DecodeGrpcRespFwlogStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPStatsPolicy(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStatsPolicy(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StatsPolicy
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStatsPolicy encodes GRPC request
+func EncodeGrpcReqStatsPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsPolicy)
+	return req, nil
+}
+
+// DecodeGrpcReqStatsPolicy decodes GRPC request
+func DecodeGrpcReqStatsPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsPolicy)
+	return req, nil
+}
+
+// EncodeGrpcRespStatsPolicy encodes GRC response
+func EncodeGrpcRespStatsPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStatsPolicy decodes GRPC response
+func DecodeGrpcRespStatsPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPStatsPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStatsPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StatsPolicyList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStatsPolicyList encodes GRPC request
+func EncodeGrpcReqStatsPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsPolicyList)
+	return req, nil
+}
+
+// DecodeGrpcReqStatsPolicyList decodes GRPC request
+func DecodeGrpcReqStatsPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsPolicyList)
+	return req, nil
+}
+
+// EncodeGrpcRespStatsPolicyList endodes the GRPC response
+func EncodeGrpcRespStatsPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStatsPolicyList decodes the GRPC response
+func DecodeGrpcRespStatsPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPStatsSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStatsSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StatsSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStatsSpec encodes GRPC request
+func EncodeGrpcReqStatsSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqStatsSpec decodes GRPC request
+func DecodeGrpcReqStatsSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespStatsSpec encodes GRC response
+func EncodeGrpcRespStatsSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStatsSpec decodes GRPC response
+func DecodeGrpcRespStatsSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPStatsStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStatsStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StatsStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStatsStatus encodes GRPC request
+func EncodeGrpcReqStatsStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqStatsStatus decodes GRPC request
+func DecodeGrpcReqStatsStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespStatsStatus encodes GRC response
+func EncodeGrpcRespStatsStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStatsStatus decodes GRPC response
+func DecodeGrpcRespStatsStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
