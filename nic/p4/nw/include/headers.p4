@@ -545,6 +545,12 @@ header_type roce_deth_immdt_t {
     }
 }
 
+header_type icrc_t {
+    fields {
+        value : 32;
+    }
+}
+
 header_type recirc_header_t {
     fields {
         src_tm_iport : 4;

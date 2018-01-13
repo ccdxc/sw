@@ -276,6 +276,12 @@ action p4plus_app_rdma() {
     remove_header(ipv4);
     remove_header(ipv6);
     remove_header(udp);
+    remove_header(icrc);
+    remove_header(udp_opt_eol);
+    remove_header(udp_opt_nop);
+    remove_header(udp_opt_ocs);
+    remove_header(udp_opt_mss); 
+    // packet payload removed in ASM (decode_roce_opcode.asm)
 }
 
 

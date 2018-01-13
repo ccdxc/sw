@@ -26,7 +26,7 @@ decode_roce_opcode:
   seq         c1, d.u.decode_roce_opcode_d.tm_oq_overwrite, TRUE
   phvwr.c1    p.capri_intrinsic_tm_oq, d.u.decode_roce_opcode_d.tm_oq
 
-  phvwr       p.capri_rxdma_intrinsic_valid, TRUE
+  phvwrpair   p.capri_intrinsic_payload, FALSE, p.capri_rxdma_intrinsic_valid, TRUE
   seq         c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_MULTICAST
   cmov        r1, c1, k.control_metadata_qid, k.roce_bth_destQP
   phvwr       p.capri_rxdma_intrinsic_qid, r1

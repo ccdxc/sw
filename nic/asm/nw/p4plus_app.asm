@@ -202,7 +202,8 @@ p4plus_app_rdma:
                     p.p4_to_p4plus_roce_roce_opt_mss_valid, k.udp_opt_mss_valid
   phvwrpair     p.vlan_tag_valid, FALSE, p.ethernet_valid, FALSE
   phvwrpair.e   p.ipv4_valid, FALSE, p.ipv6_valid, FALSE
-  phvwr         p.udp_valid, FALSE
+  .assert(offsetof(p, udp_opt_eol_valid) - offsetof(p, icrc_valid) == 7)
+  phvwrpair     p.{udp_opt_eol_valid...icrc_valid}, 0, p.udp_valid, FALSE
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

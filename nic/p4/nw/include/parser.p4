@@ -138,6 +138,7 @@ header genv_t genv;
 header roce_bth_t roce_bth;
 header roce_deth_t roce_deth;
 header roce_deth_immdt_t roce_deth_immdt;
+header icrc_t icrc;
 
 header gre_t gre;
 header nvgre_t nvgre;
@@ -1262,9 +1263,10 @@ parser parse_tcp_options {
 }
 
 parser parse_roce_v2_pre {
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - \
-        parser_metadata.ipv6_options_len);
-    set_metadata(parser_metadata.l4_len, parser_metadata.ipv6_options_len-20); // 8 byte udp + 12 byte BTH
+    set_metadata(parser_metadata.l4_trailer,
+                 parser_metadata.l4_trailer - parser_metadata.ipv6_options_len);
+    // subtract 24 (8B UDP header, 12B BTH, 4B iCRC)
+    set_metadata(parser_metadata.l4_len, parser_metadata.ipv6_options_len - 24);
     return parse_roce_v2;
 }
 
@@ -1274,7 +1276,7 @@ parser parse_roce_v2 {
     return select(latest.opCode) {
         0x64 : parse_roce_deth;
         0x65 : parse_roce_deth_immdt;
-        default : parse_udp_trailer;
+        default : parse_udp_payload;
     }
 }
 
@@ -1282,7 +1284,7 @@ parser parse_roce_deth {
     extract(roce_deth);
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len-8);
     return select(latest.reserved) {
-        default : parse_udp_trailer;
+        default : parse_udp_payload;
         0x1 mask 0x0 : parse_roce_eth;
     }
 }
@@ -1291,16 +1293,8 @@ parser parse_roce_deth_immdt {
     extract(roce_deth_immdt);
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len-12);
     return select(latest.reserved) {
-        default : parse_udp_trailer;
-        0x1 mask 0x0 : parse_roce_eth;
-    }
-}
-
-@pragma xgress egress
-parser parse_udp_trailer {
-    return select(parser_metadata.l4_trailer) {
-        0x0000 mask 0xffff: ingress;
         default : parse_udp_payload;
+        0x1 mask 0x0 : parse_roce_eth;
     }
 }
 
@@ -1310,6 +1304,15 @@ parser parse_udp_payload {
     set_metadata(parser_metadata.l4_len, parser_metadata.l4_len + 0);
     set_metadata(ohi.udp_opt_len, parser_metadata.l4_trailer + 0);
     extract(udp_payload);
+    return select(parser_metadata.l4_trailer) {
+        0x0000 mask 0xffff: ingress;
+        default : parse_udp_trailer;
+    }
+}
+
+@pragma xgress egress
+parser parse_udp_trailer {
+    extract(icrc);
     return parse_udp_options;
 }
 
@@ -1838,9 +1841,10 @@ parser parse_inner_udp {
 
 
 parser parse_inner_roce_v2_pre {
-    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - \
-        parser_metadata.inner_ipv6_options_len);
-    set_metadata(parser_metadata.l4_len, parser_metadata.inner_ipv6_options_len-20); // 8 byte udp + 12 byte BTH
+    set_metadata(parser_metadata.l4_trailer,
+                 parser_metadata.l4_trailer - parser_metadata.inner_ipv6_options_len);
+    // subtract 24 (8B UDP header, 12B BTH, 4B iCRC)
+    set_metadata(parser_metadata.l4_len, parser_metadata.inner_ipv6_options_len - 24);
     return parse_roce_v2;
 }
 
