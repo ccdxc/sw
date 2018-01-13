@@ -9,6 +9,7 @@ import time
 import signal
 import atexit
 import pdb
+import glob
 
 from subprocess import Popen, PIPE, call
 
@@ -45,9 +46,51 @@ lock_file = nic_dir + "/.run.pid"
 os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
 os.environ["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
 
+#Path and executables
+model_executable = nic_dir + "/../bazel-bin/nic/model_sim/cap_model"
+model_core_path  = nic_dir + "/../bazel-out/local-fastbuild/bin/nic/model_sim"
+
+hal_executable = nic_dir + "/../bazel-bin/nic/hal/hal"
+hal_core_path = nic_dir + "/../bazel-out/local-fastbuild/bin/nic/hal"
+
+def print_core(executable, core):
+    cmd = ['gdb -batch -ex  "bt"']
+    cmd.extend([executable, core])
+    call(" ".join(cmd), universal_newlines=True, shell=True)
+
+def get_latest_core_file(path):                                          
+    list_of_files = glob.glob(path + "/core.*")                          
+    if list_of_files:
+        latest_file = max(list_of_files, key=os.path.getctime)           
+        return latest_file
+
+def remove_core_files(path):
+    for filename in glob.glob(path + "/core.*"):
+        os.remove(filename)
+
+def remove_all_core_files():
+    remove_core_files(hal_core_path) 
+    remove_core_files(model_core_path) 
+    
+def print_hal_core():
+    hal_core_file = get_latest_core_file(hal_core_path)
+    if hal_core_file:
+        print "**************************HAL CORE BEGIN*********************************"
+        print_core(hal_executable, hal_core_file)
+        print "**************************HAL CORE END***********************************"
+
+def print_model_core():
+    model_core_file = get_latest_core_file(model_core_path)
+    if model_core_file:
+        print "**************************MODEL CORE BEGIN*********************************"
+        print_core(model_executable, model_core_file)
+        print "**************************MODEL CORE END***********************************"
+      
+def print_cores():
+    print_hal_core()
+    print_model_core()
+          
 # build
-
-
 def build():
     print "* Starting build"
     print "- Log file: " + build_log
@@ -332,21 +375,28 @@ def run_dol(args):
 
 
     exitcode = 0
+    check_for_cores = False;
     if model_process:
         print "* MODEL exit code " + str(model_process.returncode)
         if model_process.returncode:
             exitcode = model_process.returncode
+            check_for_cores = True
 
     if hal_process:
         print "* HAL exit code " + str(hal_process.returncode)
         if hal_process.returncode:
             exitcode = hal_process.returncode
+            check_for_cores = True
 
     if p:
         print "* DOL exit code " + str(p.returncode)
         if p.returncode:
             exitcode = p.returncode
 
+    if check_for_cores:
+        #Wait for all stdouts to clear out.
+        time.sleep(5)
+        print_cores()
     return exitcode
 
 def run_mbt(standalone=True):
@@ -593,4 +643,5 @@ if __name__ == "__main__":
     signal.signal(signal.SIGABRT, signal_handler) # Assert or Abort
     signal.signal(signal.SIGSEGV, signal_handler) # Seg Fault
     atexit.register(cleanup)
+    remove_all_core_files()
     main()
