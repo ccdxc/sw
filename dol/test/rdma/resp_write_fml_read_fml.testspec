@@ -148,7 +148,7 @@ packets:
 
    - packet:
         id          : IN_RD_PKT    # First packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         encaps      :   
@@ -181,7 +181,7 @@ packets:
                 dma_len : 2700  #matching to write buffer content
                 r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
    - packet:
         id          : EXP_ACK_PKT    # Expected Ack packet
