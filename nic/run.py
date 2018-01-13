@@ -609,7 +609,6 @@ def main():
             status = run_mbt()
             if status != 0:
                 print "- MBT test failed, status=", status
-                sys.exit(1)
         else:
             if args.mbt:
                 mbt_port = find_port()

@@ -7,10 +7,6 @@ objects:
         name : SecurityProfile
         key_handle : SecurityProfileKeyHandle
         ignore:
-            - op : Get
-            - op : Update
-            - op : Delete
-            - op : Create
         create:
             api      : SecurityProfileCreate
             request  : SecurityProfileRequestMsg
