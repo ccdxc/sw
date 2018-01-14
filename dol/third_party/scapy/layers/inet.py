@@ -455,11 +455,9 @@ class L4OptionsField(StrField):
                OCS_oval_index = 1
             csum = calc_ones8(opt) #8 bit one's complement checksum
             opt_list = list(opt);
-            warning("Writing OCS: %d at offset: %d" % (csum, OCS_oval_index))
             opt_list[OCS_oval_index] = csum
             opt = bytes(opt_list)
 
-        warning("Adding %d bytes of UDP options\n" % len(opt))
 
         if self.align:
             return opt + b"\x00" * (3 - ((len(opt) + 3) % 4))

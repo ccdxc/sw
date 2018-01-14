@@ -376,6 +376,7 @@ class TestCase(objects.FrameworkObject):
 
     def __setup_callback(self):
         self.module.RunModuleCallback('TestCaseSetup', self)
+        ModelConnector.TestCaseBegin(self.GID())
         return
 
     def __show_config_objects(self):
@@ -408,6 +409,7 @@ class TestCase(objects.FrameworkObject):
     def TeardownCallback(self):
         self.info("Invoking TestCaseTeardown.")
         self.module.RunModuleCallback('TestCaseTeardown', self)
+        ModelConnector.TestCaseEnd(self.GID())
         self.coverage.Process()
         return
 
@@ -419,7 +421,6 @@ class TestCase(objects.FrameworkObject):
     def StepSetupCallback(self, step):
         self.info("Invoking TestCaseStepSetup.")
         self.module.RunModuleCallback('TestCaseStepSetup', self, step)
-        ModelConnector.TestCaseBegin(self.GID())
         return
 
     def StepTriggerCallback(self, step):
@@ -436,5 +437,4 @@ class TestCase(objects.FrameworkObject):
     def StepTeardownCallback(self, step):
         self.info("Invoking TestCaseStepTeardown.")
         self.module.RunModuleCallback('TestCaseStepTeardown', self, step)
-        ModelConnector.TestCaseEnd(self.GID())
         return
