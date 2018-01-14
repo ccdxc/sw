@@ -58,6 +58,15 @@ hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
     HAL_TRACE_DEBUG("Barco gcm0 descriptor base setup @ {:x}, descriptor count {}",
             ring_base, ring_size);
 
+    /* Reset GCM0 ring */
+    hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0xffffffff);
+    hens.dhs_crypto_ctl.gcm0_soft_rst.write();
+    /* Bring out of reset */
+    hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0);
+    hens.dhs_crypto_ctl.gcm0_soft_rst.write();
+    hens.dhs_crypto_ctl.gcm0_ring_size.fld(ring_size);
+    hens.dhs_crypto_ctl.gcm0_ring_size.write();
+
     hens.dhs_crypto_ctl.gcm0_ring_base_w0.fld((uint32_t)(ring_base & 0xffffffff));
     hens.dhs_crypto_ctl.gcm0_ring_base_w0.write();
     hens.dhs_crypto_ctl.gcm0_ring_base_w1.fld((uint32_t)(ring_base >> 32));

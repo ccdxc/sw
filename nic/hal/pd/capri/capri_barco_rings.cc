@@ -220,6 +220,13 @@ hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
         return ret;
     }
 
+    /* Reset Asym ring */
+    hens.dhs_crypto_ctl.pk_soft_rst.fld(0xffffffff);
+    hens.dhs_crypto_ctl.pk_soft_rst.write();
+    /* Bring out of reset */
+    hens.dhs_crypto_ctl.pk_soft_rst.fld(0);
+    hens.dhs_crypto_ctl.pk_soft_rst.write();
+
     hens.dhs_crypto_ctl.pk_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
     hens.dhs_crypto_ctl.pk_ring_base_w0.write();
     hens.dhs_crypto_ctl.pk_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
@@ -349,6 +356,13 @@ hal_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring)
         return ret;
     }
 
+    /* Reset XTS0 ring */
+    hens.dhs_crypto_ctl.xts_enc_soft_rst.fld(0xffffffff);
+    hens.dhs_crypto_ctl.xts_enc_soft_rst.write();
+    /* Bring out of reset */
+    hens.dhs_crypto_ctl.xts_enc_soft_rst.fld(0);
+    hens.dhs_crypto_ctl.xts_enc_soft_rst.write();
+
     hens.dhs_crypto_ctl.xts_enc_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
     hens.dhs_crypto_ctl.xts_enc_ring_base_w0.write();
     hens.dhs_crypto_ctl.xts_enc_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
@@ -426,6 +440,13 @@ hal_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring)
         return ret;
     }
 
+    /* Reset XTS1 ring */
+    hens.dhs_crypto_ctl.xts_soft_rst.fld(0xffffffff);
+    hens.dhs_crypto_ctl.xts_soft_rst.write();
+    /* Bring out of reset */
+    hens.dhs_crypto_ctl.xts_soft_rst.fld(0);
+    hens.dhs_crypto_ctl.xts_soft_rst.write();
+
     hens.dhs_crypto_ctl.xts_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
     hens.dhs_crypto_ctl.xts_ring_base_w0.write();
     hens.dhs_crypto_ctl.xts_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
@@ -500,6 +521,13 @@ hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
     if (ret != HAL_RET_OK) {
         return ret;
     }
+
+    /* Reset MPP0 ring */
+    mpns.dhs_crypto_ctl.mpp0_soft_rst.fld(0xffffffff);
+    mpns.dhs_crypto_ctl.mpp0_soft_rst.write();
+    /* Bring out of reset */
+    mpns.dhs_crypto_ctl.mpp0_soft_rst.fld(0);
+    mpns.dhs_crypto_ctl.mpp0_soft_rst.write();
 
     mpns.dhs_crypto_ctl.mpp0_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
     mpns.dhs_crypto_ctl.mpp0_ring_base_w0.write();
@@ -653,6 +681,13 @@ hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
         return ret;
     }
 
+    /* Reset MPP1 ring */
+    mpns.dhs_crypto_ctl.mpp1_soft_rst.fld(0xffffffff);
+    mpns.dhs_crypto_ctl.mpp1_soft_rst.write();
+    /* Bring out of reset */
+    mpns.dhs_crypto_ctl.mpp1_soft_rst.fld(0);
+    mpns.dhs_crypto_ctl.mpp1_soft_rst.write();
+
     mpns.dhs_crypto_ctl.mpp1_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
     mpns.dhs_crypto_ctl.mpp1_ring_base_w0.write();
     mpns.dhs_crypto_ctl.mpp1_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
@@ -722,6 +757,13 @@ hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
         return ret;
     }
 
+    /* Reset MPP2 ring */
+    mpns.dhs_crypto_ctl.mpp2_soft_rst.fld(0xffffffff);
+    mpns.dhs_crypto_ctl.mpp2_soft_rst.write();
+    /* Bring out of reset */
+    mpns.dhs_crypto_ctl.mpp2_soft_rst.fld(0);
+    mpns.dhs_crypto_ctl.mpp2_soft_rst.write();
+
     mpns.dhs_crypto_ctl.mpp2_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
     mpns.dhs_crypto_ctl.mpp2_ring_base_w0.write();
     mpns.dhs_crypto_ctl.mpp2_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
@@ -790,6 +832,13 @@ hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
     if (ret != HAL_RET_OK) {
         return ret;
     }
+
+    /* Reset MPP3 ring */
+    mpns.dhs_crypto_ctl.mpp3_soft_rst.fld(0xffffffff);
+    mpns.dhs_crypto_ctl.mpp3_soft_rst.write();
+    /* Bring out of reset */
+    mpns.dhs_crypto_ctl.mpp3_soft_rst.fld(0);
+    mpns.dhs_crypto_ctl.mpp3_soft_rst.write();
 
     mpns.dhs_crypto_ctl.mpp3_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
     mpns.dhs_crypto_ctl.mpp3_ring_base_w0.write();
