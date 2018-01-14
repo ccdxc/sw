@@ -34,6 +34,21 @@ int in6_pton(const char *src, int srclen, uint8_t *dst,
 /*
  * Inlines
  */
+
+inline uint8_t
+isNullip(ipvx_addr_t ip, uint8_t addr_family) {
+    uint8_t null_ipv6[16];
+
+    memset(null_ipv6, 0, sizeof(null_ipv6));
+    if ((addr_family == IP_PROTO_IPV6 &&
+        memcmp(ip.v6_addr.addr8, null_ipv6, sizeof(null_ipv6))) ||
+        (addr_family == IP_PROTO_IPV4 && !ip.v4_addr)) {
+        return 1;
+    }
+
+    return 0;
+}
+
 // Big-Endian util
 inline uint64_t __be_pack_uint64(const uint8_t *buf, uint32_t *idx) {
     int shift = 56;

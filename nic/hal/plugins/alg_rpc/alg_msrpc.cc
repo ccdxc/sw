@@ -540,6 +540,7 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
                  * l4 session list
                  */
                 g_rpc_state->move_expflow_to_l4sess(l4_sess->app_session, l4_sess);
+                l4_sess->alg = nwsec::APP_SVC_NONE;
                 memset(&(l4_sess->info), 0, sizeof(rpc_info_t));
                 HAL_TRACE_DEBUG("Move expected flow to l4 session");
             }
@@ -864,6 +865,8 @@ hal_ret_t parse_msrpc_dg_control_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow
              (rpc_info->call_id == rpc_hdr.seqnum && 
               (!memcmp(&rpc_info->act_id, &rpc_hdr.act_id, UUID_BYTES)))) {
             HAL_TRACE_DEBUG("Received matching PDU response key: {}", ctx.key());
+            // Register completion handler
+            ctx.register_completion_handler(msrpc_completion_hdlr); 
         }
     }
  

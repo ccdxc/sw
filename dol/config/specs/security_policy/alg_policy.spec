@@ -30,6 +30,10 @@ policies:
                         proto    : 6
                         dst_port : 135
                         alg      : MSFT_RPC
+                    - svc:
+                        proto    : 6
+                        dst_port : 21
+                        alg      : FTP
             - rule:
                 action :  DENY 
                 log    :  True

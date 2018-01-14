@@ -1,0 +1,60 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://native=True
+        endpoint: filter://remote=True
+    dst:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://native=True
+        endpoint: filter://remote=True
+    session       :
+        base      : filter://proto=TCP,label=FTE
+        iflow     : filter://any
+        rflow     : filter://any
+    flow          : None 
+    maxsessions   : 1
+
+tracker: True
+
+packets:
+    - packet:
+        id          : PKT  # IFlow Base Packet
+        payloadsize : ref://testcase/tracker/step/payloadsize
+        template    : callback://alg/callbacks/GetPacketTemplateBySessionIflow
+        headers     :
+            eth:
+                src     : ref://testcase/tracker/config/src/endpoint/macaddr
+                dst     : ref://testcase/tracker/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/tracker/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/tracker/step/fields/sip
+                dst     : ref://testcase/tracker/step/fields/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/tracker/config/flow/sip
+                dst     : ref://testcase/tracker/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/tracker/step/fields/sport
+                dport   : ref://testcase/tracker/step/fields/dport
+                seq     : ref://testcase/tracker/step/fields/seq
+                ack     : ref://testcase/tracker/step/fields/ack
+            payload:
+                data    : callback://alg/callbacks/GetFTPData
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT
+            port    : ref://testcase/tracker/config/src/endpoint/intf/ports
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    packets:
+        - packet:
+            object  : callback://alg/callbacks/GetForwardingCopy/pktid=PKT
+            port    : ref://testcase/tracker/config/dst/endpoint/intf/ports
+        - packet:
+            object  : callback://alg/callbacks/GetCpuCopy/pktid=PKT
+            port    : 128

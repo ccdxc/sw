@@ -54,6 +54,19 @@ class StepALGObject(base.StepObject):
             if 'dport' not in dir(self.fields):
                 self.fields.dport = iport
         return
+ 
+    def SetIPs(self, lg):
+        if self.IsIflow():
+            if 'sip' not in dir(self.fields):
+                self.fields.sip = lg.config.session.iconfig.flow.sip
+            if 'dip' not in dir(self.fields):
+                self.fields.dip = lg.config.session.iconfig.flow.dip
+        else:
+            if 'sip' not in dir(self.fields):
+                self.fields.sip = lg.config.session.rconfig.flow.sip 
+            if 'dip' not in dir(self.fields):
+                self.fields.dip = lg.config.session.rconfig.flow.dip
+        return
 
     def Show(self, lg):
         lg.info("Tracker Step: %s" % self.GID())

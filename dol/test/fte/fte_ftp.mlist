@@ -1,0 +1,134 @@
+# Feature Test Modules List
+feature:
+    id          : alg 
+    sub         : ftp
+    package     : test.fte
+    module      : alg
+    spec        : ftp.testspec
+    enable      : True
+    ignore      : False
+    serial      : True
+
+modules:
+    - module:
+        name     : FTP_PORT
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV4,proto=TCP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+        iterate  :
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_SYN_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_PORT
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_PORT_RSP
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_ACK
+              pkttemplate : ETH_IPV4_TCP
+              fte_done    : True
+  
+    - module:
+        name     : FTP_EPRT
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV6,proto=TCP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+        iterate  :
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_SYN_ACK
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_ACK
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_EPRT
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_EPRT_RSP
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN_ACK
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_ACK
+              pkttemplate : ETH_IPV6_TCP
+              fte_done    : True
+
+    - module:
+        name     : FTP_PASV
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV4,proto=TCP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+        iterate  :
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_SYN_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_PASV
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_PASV_RSP
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_ACK
+              pkttemplate : ETH_IPV4_TCP
+              fte_done    : True
+
+    - module:
+        name     : FTP_EPSV
+        tracker  : True
+        args     :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        selectors:
+            session       :
+                base      : filter://type=IPV6,proto=TCP,label=FTE
+                iflow     : filter://any
+                rflow     : filter://any
+        iterate  :
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_SYN_ACK
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_ACK
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_EPSV
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_EPSV_RSP
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_SYN
+              cpu         : True
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN_ACK
+              pkttemplate : ETH_IPV6_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_ACK
+              pkttemplate : ETH_IPV6_TCP

@@ -351,10 +351,9 @@ hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t 
 void alg_state::move_expflow_to_l4sess(app_session_t *app_sess, 
                                             l4_alg_status_t *exp_flow) {
     fte::remove_expected_flow(exp_flow->entry.key);
- 
+
     HAL_SPINLOCK_LOCK(&app_sess->slock);
     dllist_del(&exp_flow->exp_flow_lentry);
-    dllist_reset(&exp_flow->exp_flow_lentry);
     dllist_reset(&exp_flow->l4_sess_lentry);
     dllist_add(&app_sess->l4_sess_lhead, &exp_flow->l4_sess_lentry);
     HAL_SPINLOCK_UNLOCK(&app_sess->slock);

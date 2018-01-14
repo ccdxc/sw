@@ -345,3 +345,104 @@ steps:
         fields      :
             flags   : syn
             dport   : 49154
+
+    - step:
+        id          : IFLOW_FTP_SYN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            dport   : 21 
+
+    - step:
+        id          : RFLOW_FTP_SYN_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            sport   : 21 
+
+    - step:
+        id          : IFLOW_FTP_ACK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : ack
+            dport   : 21 
+ 
+    - step:
+        id          : IFLOW_FTP_PORT
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 23  
+        fields      :
+            dport   : 21
+
+    - step:
+        id          : RFLOW_FTP_PORT_RSP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 51
+        fields      :
+            sport   : 21
+
+    - step:
+        id          : IFLOW_FTP_DATA_SYN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            sport   : 20
+            dport   : 37075
+
+    - step:
+        id          : RFLOW_FTP_DATA_SYN_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            sport   : 37075
+            dport   : 20
+
+    - step:
+        id          : IFLOW_FTP_DATA_ACK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : ack
+            sport   : 20
+            dport   : 37075
+
+    - step:
+        id          : IFLOW_FTP_EPRT
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 27
+        fields      :
+            dport   : 21
+
+    - step:
+        id          : RFLOW_FTP_EPRT_RSP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 30 
+        fields      :
+            sport   : 21 
+
+    - step:
+        id          : IFLOW_FTP_PASV
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 8 
+        fields      :
+            dport   : 21
+
+    - step:
+        id          : RFLOW_FTP_PASV_RSP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 47 
+        fields      :
+            sport   : 21
+
+    - step:
+        id          : IFLOW_FTP_EPSV
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 8 
+        fields      :
+            dport   : 21
+
+    - step:
+        id          : RFLOW_FTP_EPSV_RSP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 60 
+        fields      :
+            sport   : 21

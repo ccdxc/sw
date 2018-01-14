@@ -237,20 +237,6 @@ netid2addrfamily(char *netid)
     }
 }
 
-static inline uint8_t 
-isNullip(ipvx_addr_t ip, uint8_t addr_family) {
-    uint8_t null_ipv6[16];
-  
-    memset(null_ipv6, 0, sizeof(null_ipv6));
-    if ((addr_family == IP_PROTO_IPV6 && 
-        memcmp(ip.v6_addr.addr8, null_ipv6, sizeof(null_ipv6))) ||
-        (addr_family == IP_PROTO_IPV4 && !ip.v4_addr)) {
-        return 1;
-    }
-
-    return 0;
-}
-
 static inline void
 decodeuaddr(char *uaddr, ipvx_addr_t *ip, 
             uint32_t *dport, uint8_t addr_family) {

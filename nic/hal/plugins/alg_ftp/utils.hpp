@@ -25,17 +25,18 @@ typedef struct ftp_info_ ftp_info_t;
  */
 #define FTP_STATE(ENTRY)                                  \
     ENTRY(FTP_INIT,           0,  "FTP_INIT")             \
-    ENTRY(FTP_PORT_EPRT,      1,  "FTP_PORT_EPRT")        \
-    ENTRY(FTP_PASV,           2,  "FTP_PASV")             \
-    ENTRY(FTP_EPSV,           3,  "FTP_EPSV")             \
-    ENTRY(FTP_USER,           4,  "FTP_USER")             \
-    ENTRY(FTP_MORE_INFO_PASS, 5,  "FTP_MORE_INFO_PASS")   \
-    ENTRY(FTP_PASS,           6,  "FTP_PASS")             \
-    ENTRY(FTP_MORE_INFO_ACCT, 7,  "FTP_MORE_INFO_ACCT")   \
-    ENTRY(FTP_ACCT,           8,  "FTP_ACCT")             \
-    ENTRY(FTP_SYNTAX_ERR,     9,  "FTP_SYNTAX_ERR")       \
-    ENTRY(FTP_TRANS_ERR,      10, "FTP_TRANS_ERR")        \
-    ENTRY(FTP_ERROR_RSP,      11, "FTP_ERR_RSP")          \
+    ENTRY(FTP_PORT,           1,  "FTP_PORT")             \
+    ENTRY(FTP_EPRT,           2,  "FTP_EPRT")             \
+    ENTRY(FTP_PASV,           3,  "FTP_PASV")             \
+    ENTRY(FTP_EPSV,           4,  "FTP_EPSV")             \
+    ENTRY(FTP_USER,           5,  "FTP_USER")             \
+    ENTRY(FTP_MORE_INFO_PASS, 6,  "FTP_MORE_INFO_PASS")   \
+    ENTRY(FTP_PASS,           7,  "FTP_PASS")             \
+    ENTRY(FTP_MORE_INFO_ACCT, 8,  "FTP_MORE_INFO_ACCT")   \
+    ENTRY(FTP_ACCT,           9,  "FTP_ACCT")             \
+    ENTRY(FTP_SYNTAX_ERR,     10, "FTP_SYNTAX_ERR")       \
+    ENTRY(FTP_TRANS_ERR,      11, "FTP_TRANS_ERR")        \
+    ENTRY(FTP_ERROR_RSP,      12, "FTP_ERR_RSP")          \
 
 DEFINE_ENUM(ftp_state_t, FTP_STATE)
 #undef FTP_STATE
@@ -52,23 +53,16 @@ typedef void (*ftp_callback_t) (fte::ctx_t &ctx, ftp_info_t *);
  */
 
 typedef struct ftp_info_ {
-    union {
-        struct {
-            ftp_state_t     state;
-            uint8_t         isIPv6;
-            ipvx_addr_t     ip;
-            uint16_t        port;
-            bool            lnbrk_en;
-            bool            secex_en;
-            ftp_callback_t  callback;
-        } __PACK__;
-        struct {
-            bool            skip_sfw;
-            uint32_t        parse_errors;
-            uint32_t        data_sess;
-            uint32_t        login_errors;
-        } __PACK__;
-    } __PACK__;
+     ftp_state_t     state;
+     uint8_t         isIPv6;
+     ipvx_addr_t     ip;
+     uint16_t        port;
+     bool            lnbrk_en;
+     bool            secex_en;
+     ftp_callback_t  callback;
+     bool            skip_sfw;
+     uint32_t        parse_errors;
+     uint32_t        login_errors;
 } ftp_info_t;
 
 

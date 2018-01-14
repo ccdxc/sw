@@ -37,9 +37,10 @@ class ALGTrackerObject(base.TrackerObject):
         self.step.SetFTEDone(getattr(stepspec, 'fte_done', False))
         self.__set_flow_states()
         self.step.SetPorts(self.iport, self.rport)
-        self.step.Show(self.lg)
         if 'pkttemplate' in dir(stepspec):
             self.step.SetPktTemplate(getattr(stepspec, 'pkttemplate'))
+        self.step.SetIPs(self.lg)
+        self.step.Show(self.lg)
 
 logger.info("Loading Tracker Connection Specs:")
 connection.LoadConnectionSpecs()
