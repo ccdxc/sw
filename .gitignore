@@ -48,3 +48,5 @@ vendor/**/*.bin
 vendor/**/*.db
 vendor/**/*.tff
 vendor/**/*.woff
+.gitmessage
+
