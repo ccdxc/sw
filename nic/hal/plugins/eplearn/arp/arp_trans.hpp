@@ -35,16 +35,18 @@ enum arp_fsm_state_t {
     ARP_DONE,
 };
 
-#define DHCP_FSM_EVENT_ENTRIES(ENTRY)        \
-    ENTRY(ARP_ADD,       0, "ARP_ADD")       \
-    ENTRY(RARP_REQ,      1, "RARP_REQ")      \
-    ENTRY(RARP_REPLY,    2, "RARP_REPLY")    \
-    ENTRY(ARP_REMOVE,    3, "ARP_REMOVE")    \
-    ENTRY(ARP_ERROR,     4, "ARP_ERROR")     \
-    ENTRY(ARP_DUPLICATE, 5, "ARP_DUPLICATE") \
-    ENTRY(ARP_TIMEOUT,   6, "ARP_TIMEOUT")   \
+#define ARP_FSM_EVENT_ENTRIES(ENTRY)                   \
+    ENTRY(ARP_ADD,             0, "ARP_ADD")                  \
+    ENTRY(RARP_REQ,            1, "RARP_REQ")                 \
+    ENTRY(RARP_REPLY,          2, "RARP_REPLY")               \
+    ENTRY(ARP_REMOVE,          3, "ARP_REMOVE")               \
+    ENTRY(ARP_ERROR,           4, "ARP_ERROR")                \
+    ENTRY(ARP_DUPLICATE,       5, "ARP_DUPLICATE")            \
+    ENTRY(ARP_TIMEOUT,         6, "ARP_TIMEOUT")              \
+    ENTRY(ARP_IP_ADD,          7, "ARP_IP_ADD")               \
+    ENTRY(ARP_IP_RESET_ADD,    8, "ARP_IP_RESET_ADD")         \
 
-DEFINE_ENUM(arp_fsm_event_t, DHCP_FSM_EVENT_ENTRIES)
+DEFINE_ENUM(arp_fsm_event_t, ARP_FSM_EVENT_ENTRIES)
 
 enum arp_trans_type_t {
     ARP_TRANS_IPV4,
@@ -63,8 +65,11 @@ typedef struct arp_trans_key_s {
 } __PACK__ arp_trans_key_t;
 
 struct arp_event_data_t {
-    const fte::ctx_t  *fte_ctx;
-    ip_addr_t         *ip_addr;
+    fte::ctx_t        *fte_ctx;
+    hal_handle_t      ep_handle;
+    ip_addr_t         ip_addr;
+    uint32_t          event;
+    bool              in_fte_pipeline;
 };
 
 class arp_trans_t : public trans_t {
@@ -100,11 +105,15 @@ private:
         bool process_rarp_request(fsm_state_ctx ctx, fsm_event_data data);
         bool process_rarp_reply(fsm_state_ctx ctx, fsm_event_data data);
         bool process_arp_renewal_request(fsm_state_ctx ctx, fsm_event_data data);
+        bool reset_and_add_new_ip(fsm_state_ctx ctx, fsm_event_data data);
+        bool add_ip_entry(fsm_state_ctx ctx, fsm_event_data data);
+        bool del_ip_entry(fsm_state_ctx ctx, fsm_event_data data);
         void bound_entry_func(fsm_state_ctx ctx);
 
        public:
         fsm_state_machine_def_t sm_def;
         arp_fsm_t() { this->_init_state_machine(); }
+        static void set_state_timeout(uint32_t state, uint32_t timeout);
     };
 
     static arp_trans_t *arp_trans_alloc(void) {
@@ -170,6 +179,11 @@ private:
             fte::ctx_t &ctx);
     arp_fsm_state_t get_state();
     void reset();
+
+    static void set_state_timeout(uint32_t state, uint32_t timeout) {
+        trans_t::set_state_timeout(get_sm_def_func(), state, timeout);
+    }
+
     virtual void log_info(const char *message) {
         HAL_TRACE_INFO("(tenant id : {}, l2_segid : {}, "
                 "macaddr : {}, ip : {}) : {} ",

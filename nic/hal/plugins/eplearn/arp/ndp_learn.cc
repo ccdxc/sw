@@ -107,7 +107,7 @@ ndp_process_entry(const unsigned char *ether_pkt,
     if (trans == NULL) {
         trans = new arp_trans_t(hw_address, ARP_TRANS_IPV6, ctx);
     }
-    event_data.ip_addr = &ip_addr;
+    event_data.ip_addr = ip_addr;
     event_data.fte_ctx = &ctx;
     arp_trans_t::process_transaction(trans, ARP_ADD,
                                  (fsm_event_data)(&event_data));

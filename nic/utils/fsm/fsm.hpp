@@ -20,39 +20,6 @@ typedef std::function<bool(fsm_state_ctx, fsm_event_data data)>
 typedef std::function<void(fsm_state_ctx)> fsm_state_func;
 typedef std::function<uint32_t(fsm_state_ctx)> fsm_timeout_func;
 
-class fsm_state_t {
-
-    string name_;
-
-   public:
-    uint32_t state_id;
-    uint32_t timeout;
-    fsm_state_func entry_func;
-    fsm_state_func exit_func;
-
-    fsm_state_t(uint32_t id, string name = "", uint32_t timeout = 0,
-                fsm_state_func entry_func = NULL,
-                fsm_state_func exit_func = NULL) {
-        this->state_id = id;
-        this->name_ = name;
-        this->timeout = timeout;
-        this->entry_func = entry_func;
-        this->exit_func = exit_func;
-    }
-
-    bool operator<(const fsm_state_t& s) const {
-        if (state_id < s.state_id)
-            return 1;
-        else
-            return 0;
-  }
-  static void state_entry(fsm_state_ctx ctx) {}
-
-  static void state_exit(fsm_state_ctx ctx) {}
-
-  const char* get_state_name() { return name_.c_str(); }
-};
-
 class fsm_transition_t {
 public:
   uint32_t event;
@@ -66,8 +33,45 @@ public:
                    const char *next_state_name);
 };
 
-typedef std::map<fsm_state_t, std::vector<fsm_transition_t>>
-    fsm_state_machine_def_t;
+class fsm_state_t {
+
+    string name_;
+
+   public:
+    uint32_t state_id;
+    uint32_t timeout;
+    fsm_state_func entry_func;
+    fsm_state_func exit_func;
+    std::vector<fsm_transition_t> transitions;
+
+    fsm_state_t(uint32_t id, string name, uint32_t timeout,
+                fsm_state_func entry_func,
+                fsm_state_func exit_func,
+                std::vector<fsm_transition_t> transitions) {
+        this->state_id = id;
+        this->name_ = name;
+        this->timeout = timeout;
+        this->entry_func = entry_func;
+        this->exit_func = exit_func;
+        this->transitions = transitions;
+    }
+
+    bool operator<(const fsm_state_t& s) const {
+        if (state_id < s.state_id)
+            return 1;
+        else
+            return 0;
+  }
+  static void state_entry(fsm_state_ctx ctx) {}
+
+  static void state_exit(fsm_state_ctx ctx) {}
+
+  const char* get_state_name() { return name_.c_str(); }
+
+};
+
+
+typedef std::map<uint32_t, fsm_state_t>fsm_state_machine_def_t;
 
 class fsm_state_machine_t;//forward declaration.
 class fsm_timer_t {
@@ -141,9 +145,9 @@ class fsm_state_machine_t {
 
 #define FSM_STATE_BEGIN(state_id, timer, entry_func, exit_func) \
     {                                                           \
-        fsm_state_t(state_id, #state_id, timer, entry_func, exit_func), {
+        state_id, fsm_state_t(state_id, #state_id, timer, entry_func, exit_func, {
 #define FSM_STATE_END \
-  }                   \
+  })                   \
   }                   \
   ,
 

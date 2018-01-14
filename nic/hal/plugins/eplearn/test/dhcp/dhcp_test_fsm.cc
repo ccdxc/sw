@@ -5,6 +5,7 @@
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_packet.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_learn.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_trans.hpp"
+#include "nic/hal/plugins/eplearn/eplearn.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 
@@ -51,7 +52,7 @@ hal_handle_t *dhcp_server_ep = &ep_handles[MAX_ENDPOINTS - 1];
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
         hal::ep_t *dep, fte::cpu_rxhdr_t *cpu_rxhdr,
         uint8_t *pkt, size_t pkt_len,
-        fte::flow_t iflow[], fte::flow_t rflow[]);
+        fte::flow_t iflow[], fte::flow_t rflow[], fte::feature_state_t feature_state[]);
 
 
 void dhcp_topo_setup()
@@ -270,10 +271,18 @@ void dhcp_packet_send(hal_handle_t ep_handle,
     fte::cpu_rxhdr_t cpu_hdr;
     cpu_hdr.flags = 0;
     cpu_hdr.l3_offset = L2_ETH_HDR_LEN;
+
+    fte::feature_state_t feature_state[100];
+    eplearn_info_t info;
+    memset(&info, 0, sizeof(info));
+    memset(&feature_state, 0, sizeof(feature_state));
+    feature_state[fte::feature_id(FTE_FEATURE_EP_LEARN)].ctx_state = &info;
     fte_ctx_init(ctx, dummy_ten,
-            dummy_ep, dummy_ep, &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL);
+            dummy_ep, dummy_ep, &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL, feature_state);
+    ctx.set_feature_name(FTE_FEATURE_EP_LEARN.c_str());
     hal_ret_t ret = dhcp_process_packet(ctx);
     ASSERT_EQ(ret, HAL_RET_OK);
+    ctx.process();
 }
 
 static void setup_basic_dhcp_session(hal_handle_t ep_handle,

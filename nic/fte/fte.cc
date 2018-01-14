@@ -83,6 +83,7 @@ void feature_state_init(feature_state_t *feature_state, uint16_t num_features)
     for (uint16_t id = 0; id < num_features; id++) {
         feature_state[id].session_state = NULL;
         feature_state[id].ctx_state = NULL;
+        feature_state[id].completion_handler = nullptr;
 
         feature = g_feature_list_[id];
         if (feature && feature->registered && feature->state_size > 0) {

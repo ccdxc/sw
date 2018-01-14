@@ -325,6 +325,8 @@ typedef struct feature_session_state_s {
     dllist_ctxt_t       session_feature_lentry;  // session's feature list context
 } __PACK__ feature_session_state_t;
 
+typedef void (*completion_handler_t) (ctx_t &ctx, bool fail);
+
 //------------------------------------------------------------------------------
 // Feature specific state
 // Used for storing as an array inside fte::ctx_t for faster lookups using featutre id
@@ -332,6 +334,7 @@ typedef struct feature_session_state_s {
 struct feature_state_t {
     void                         *ctx_state;
     feature_session_state_t      *session_state;
+    completion_handler_t          completion_handler;
 };
 uint16_t feature_id(const std::string &name);
 size_t feature_state_size(uint16_t *num_features);
@@ -352,8 +355,6 @@ struct txpkt_info_s {
 typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
 class flow_t;
 class ctx_t;
-
-typedef void (*completion_handler_t) (ctx_t &ctx, bool fail);
 
 static const uint8_t MAX_FLOW_KEYS = 3;
 
@@ -446,10 +447,9 @@ public:
     // callback's 'fail' argument is set to true if the pkt processing failed and
     // flow is not getting installed.
     hal_ret_t register_completion_handler(completion_handler_t handler) {
-        HAL_ASSERT_RETURN(num_handlers_ + 1 < MAX_QUEUED_HANDLERS, HAL_RET_INVALID_OP);
-        completion_handlers_[num_handlers_++] = handler;
-        HAL_TRACE_DEBUG("fte: feature={} queued completion handler {:p} num_handlers: {}", 
-                         feature_name_, (void*)handler, num_handlers_);
+        feature_state_[feature_id_].completion_handler = handler;
+        HAL_TRACE_DEBUG("fte: feature={} queued completion handler {:p}",
+                         feature_name_, (void*)handler);
         return HAL_RET_OK;
     }
 
@@ -475,6 +475,8 @@ public:
     void set_dif(hal::if_t *dif) { dif_ = dif; }
     hal::ep_t *sep() const { return sep_; }
     hal::ep_t *dep() const { return dep_; }
+    hal_handle_t sep_handle() { return sep_handle_; }
+    hal_handle_t dep_handle() { return dep_handle_; }
 
     void* alg_entry() const { return alg_entry_; }
     void set_alg_entry(void* entry) { alg_entry_ = entry; }
@@ -538,10 +540,6 @@ private:
     feature_state_t*      feature_state_;  // feature specific states
     uint16_t              num_features_;   // num of features
 
-    //completion handlers
-    uint8_t               num_handlers_;
-    completion_handler_t  completion_handlers_[MAX_QUEUED_HANDLERS];
-
     bool                  drop_;           // Drop the packet
     bool                  drop_flow_;   // fw action is drop, installs drop flow
     hal::session_t        *session_;
@@ -563,6 +561,8 @@ private:
     hal::if_t             *dif_;
     hal::ep_t             *sep_;
     hal::ep_t             *dep_;
+    hal_handle_t          sep_handle_;
+    hal_handle_t          dep_handle_;
     void*                 alg_entry_;         // ALG entry in the wildcard table
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

@@ -55,17 +55,19 @@ enum dhcp_fsm_state_t {
 };
 
 #define DHCP_FSM_EVENT_ENTRIES(ENTRY)                      \
-    ENTRY(DHCP_DISCOVER,       0, "DHCP_DISCOVER")         \
-    ENTRY(DHCP_OFFER,          1, "DHCP_OFFER")            \
-    ENTRY(DHCP_REQUEST,        2, "DHCP_REQUEST")          \
-    ENTRY(DHCP_INFORM,         3, "DHCP_INFORM")           \
-    ENTRY(DHCP_ACK,            4, "DHCP_ACK")              \
-    ENTRY(DHCP_NACK,           5, "DHCP_NACK")             \
-    ENTRY(DHCP_DECLINE,        6, "DHCP_DECLINE")          \
-    ENTRY(DHCP_RELEASE,        7, "DHCP_RELEASE")          \
-    ENTRY(DHCP_INVALID_PACKET, 8, "DHCP_INVALID_PACKET")   \
-    ENTRY(DHCP_ERROR,          9, "DHCP_ERROR")            \
-    ENTRY(DHCP_TIMEOUT,        10, "DHCP_TIMEOUT")         \
+    ENTRY(DHCP_DISCOVER,       0,  "DHCP_DISCOVER")         \
+    ENTRY(DHCP_OFFER,          1,  "DHCP_OFFER")            \
+    ENTRY(DHCP_REQUEST,        2,  "DHCP_REQUEST")          \
+    ENTRY(DHCP_INFORM,         3,  "DHCP_INFORM")           \
+    ENTRY(DHCP_ACK,            4,  "DHCP_ACK")              \
+    ENTRY(DHCP_NACK,           5,  "DHCP_NACK")             \
+    ENTRY(DHCP_DECLINE,        6,  "DHCP_DECLINE")          \
+    ENTRY(DHCP_RELEASE,        7,  "DHCP_RELEASE")          \
+    ENTRY(DHCP_INVALID_PACKET, 8,  "DHCP_INVALID_PACKET")   \
+    ENTRY(DHCP_ERROR,          9,  "DHCP_ERROR")            \
+    ENTRY(DHCP_TIMEOUT,        10, "DHCP_TIMEOUT")          \
+    ENTRY(DHCP_IP_ADD,         11, "DHCP_IP_ADD")           \
+    ENTRY(DHCP_RESET_TRANS,    12, "DHCP_RESET_TRANS")      \
 
 DEFINE_ENUM(dhcp_fsm_event_t, DHCP_FSM_EVENT_ENTRIES)
 
@@ -84,7 +86,10 @@ class dhcp_ctx {
 
 struct dhcp_event_data {
     const struct packet *decoded_packet;
-    fte::ctx_t    *fte_ctx;
+    fte::ctx_t          *fte_ctx;
+    hal_handle_t         ep_handle;
+    uint32_t             event;
+    bool                 in_fte_pipeline;
 };
 
 class dhcp_trans_t : public trans_t  {
@@ -123,6 +128,8 @@ private:
                                               fsm_event_data data);
         bool process_dhcp_bound_timeout(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_ack(fsm_state_ctx ctx, fsm_event_data data);
+        bool restart_transaction(fsm_state_ctx ctx, fsm_event_data data);
+        bool add_ip_entry(fsm_state_ctx ctx, fsm_event_data data);
         bool process_dhcp_offer(fsm_state_ctx ctx, fsm_event_data data);
 
         void bound_entry_func(fsm_state_ctx ctx);
@@ -167,6 +174,7 @@ private:
         return p;
     }
     void operator delete(void* p) { dhcp_trans_free((dhcp_trans_t*)p); }
+    void reset();
 
     static inline hal_ret_t dhcp_trans_free(dhcp_trans_t* dhcp_trans) {
         dhcplearn_slab_->free(dhcp_trans);

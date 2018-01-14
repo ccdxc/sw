@@ -175,6 +175,10 @@ ctx_t::lookup_flow_objs()
          }
     }
 
+    if (sep_) {
+        sep_handle_ = sep_->hal_handle;
+    }
+
     if (dep_) {
         dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
         HAL_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
@@ -301,7 +305,6 @@ ctx_t::create_session()
     }
  
     cleanup_hal_ = false;
-    num_handlers_ = 0;
    
     valid_iflow_ = true;
     // read rkey from spec
@@ -579,6 +582,7 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
         return HAL_RET_EP_NOT_FOUND;
     }
 
+    dep_handle_ = dep_->hal_handle;
     dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
     dif_ = hal::find_if_by_handle(dep_->if_handle);
     HAL_ASSERT(dif_ != NULL);
@@ -976,11 +980,13 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 void
 ctx_t::invoke_completion_handlers(bool fail)
 {
-    HAL_TRACE_DEBUG("fte: invoking completion handlers count={}", num_handlers_);
-    for (int i = 0; i < num_handlers_; i++) {
-        HAL_TRACE_DEBUG("fte: invoking completion handler {:p}",
-                        (void*)(completion_handlers_[i]));
-        (*completion_handlers_[i])(*this, fail);
+    HAL_TRACE_DEBUG("fte: invoking completion handlers.");
+    for (int i = 0; i < num_features_; i++) {
+        if (feature_state_[i].completion_handler != nullptr) {
+            HAL_TRACE_DEBUG("fte: invoking completion handler {:p}",
+                        (void*)(feature_state_[i].completion_handler));
+            (*feature_state_[i].completion_handler)(*this, fail);
+        }
     }
 }
 
@@ -1021,12 +1027,15 @@ ctx_t::swap_flow_objs()
 {
     hal::if_t    *dif = sif_;
     hal::ep_t    *dep = sep_;
+    hal_handle_t  dep_handle = sep_handle_;
     hal::l2seg_t *dl2seg = sl2seg_;
 
     sif_ = dif_;
     dif_ = dif;
     sep_ = dep_;
     dep_ = dep;
+    sep_handle_ = dep_handle_;
+    dep_handle_ = dep_handle;
     sl2seg_ = dl2seg_;
     dl2seg_ = dl2seg;
 }

@@ -40,13 +40,15 @@ static hal_ret_t arp_process_req_entry(uint16_t opcode, uint8_t *hw_address,
     memcpy(&(ip_addr.addr.v4_addr), protocol_address,
             sizeof(ip_addr.addr.v4_addr));
     ip_addr.addr.v4_addr = ntohl(ip_addr.addr.v4_addr);
-    event_data.ip_addr = &ip_addr;
+    event_data.ip_addr = ip_addr;
     event_data.fte_ctx = &ctx;
+    event_data.in_fte_pipeline = true;
     HAL_TRACE_INFO("Processing ARP event {}", event);
     arp_trans_t::process_transaction(trans, event,
                                  (fsm_event_data)(&event_data));
     return HAL_RET_OK;
 }
+
 
 static hal_ret_t arp_process_entry(struct ether_arp *arphead,
                                    fte::ctx_t &ctx) {
@@ -72,7 +74,7 @@ static hal_ret_t arp_process_entry(struct ether_arp *arphead,
         event = RARP_REPLY;
         memcpy(&(ip_addr.addr.v4_addr), arphead->arp_tpa,
                 sizeof(ip_addr.addr.v4_addr));
-        event_data.ip_addr = &ip_addr;
+        event_data.ip_addr = ip_addr;
         event_data.fte_ctx = &ctx;
         HAL_TRACE_INFO("Processing ARP event {}", event);
         arp_trans_t::process_transaction(trans, event,

@@ -11,6 +11,7 @@
 #include "nic/include/periodic.hpp"
 
 using hal::utils::fsm_state_machine_t;
+using hal::utils::fsm_state_machine_def_t;
 using hal::utils::fsm_event_data;
 using hal::utils::fsm_timer_t;
 using hal::utils::fsm_state_timer_ctx;
@@ -94,6 +95,16 @@ public:
 
     uint32_t get_current_state_timeout() {
         return this->sm_->get_current_state_timeout();
+    }
+
+    static fsm_state_machine_def_t *get_sm_def_func() { return nullptr; };
+
+    static void set_state_timeout(fsm_state_machine_def_t *sm_def,
+            uint32_t state, uint32_t timeout) {
+        auto result = sm_def->find(state);
+        /*  Assert, state not defined in SM */
+        HAL_ABORT(result != sm_def->end());
+        result->second.timeout = timeout;
     }
 
     ep_t* get_ep_entry() {

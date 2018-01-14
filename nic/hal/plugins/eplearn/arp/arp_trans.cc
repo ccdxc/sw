@@ -2,6 +2,7 @@
 #include "nic/include/base.h"
 #include "arp_trans.hpp"
 #include "nic/utils/fsm/fsm.hpp"
+#include "nic/hal/plugins/eplearn/eplearn.hpp"
 
 using hal::utils::fsm_transition_t;
 using hal::utils::fsm_transition_func;
@@ -74,6 +75,9 @@ void arp_trans_t::arp_fsm_t::_init_state_machine() {
         FSM_STATE_BEGIN(ARP_BOUND, BOUND_TIMEOUT, NULL, NULL)
             FSM_TRANSITION(ARP_ADD, SM_FUNC(process_arp_renewal_request),
                            ARP_BOUND)
+            FSM_TRANSITION(ARP_IP_RESET_ADD, SM_FUNC(reset_and_add_new_ip),
+                           ARP_BOUND)
+            FSM_TRANSITION(ARP_IP_ADD, SM_FUNC(add_ip_entry), ARP_BOUND)
             FSM_TRANSITION(ARP_TIMEOUT, NULL, ARP_DONE)
             FSM_TRANSITION(ARP_REMOVE, NULL, ARP_DONE)
         FSM_STATE_END
@@ -83,6 +87,35 @@ void arp_trans_t::arp_fsm_t::_init_state_machine() {
     this->set_state_machine(sm_def);
 }
 // clang-format on
+
+#define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __ip_addr)     \
+    uint32_t __trans_cnt = eplearn_info->trans_ctx_cnt;                      \
+    eplearn_info->trans_ctx[__trans_cnt].trans = __trans;                    \
+    eplearn_info->trans_ctx[__trans_cnt].arp_data.event = __event;           \
+    eplearn_info->trans_ctx[__trans_cnt].arp_data.ep_handle = (__ep_handle); \
+    eplearn_info->trans_ctx[__trans_cnt].arp_data.ip_addr =  (__ip_addr);    \
+    eplearn_info->trans_ctx_cnt++;                                           \
+    fte_ctx->register_completion_handler(arp_completion_hdlr);
+
+static void arp_completion_hdlr (fte::ctx_t& ctx, bool status) {
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                ctx.feature_state(FTE_FEATURE_EP_LEARN);
+
+    arp_event_data_t event_data = { 0 };
+
+    for (uint32_t i = 0; i < eplearn_info->trans_ctx_cnt; i++) {
+        event_data.fte_ctx = &ctx;
+        event_data.ep_handle = eplearn_info->trans_ctx[i].arp_data.ep_handle;
+        event_data.in_fte_pipeline = false;
+        event_data.ip_addr = eplearn_info->trans_ctx[i].arp_data.ip_addr;
+
+        eplearn_info->trans_ctx[i].trans->log_info("Executing completion handler ");
+        arp_trans_t::process_transaction(eplearn_info->trans_ctx[i].trans,
+                eplearn_info->trans_ctx[i].arp_data.event,
+                (fsm_event_data)(&event_data));
+    }
+}
+
 ep_t* arp_trans_t::get_ep_entry() {
     ep_t *other_ep_entry = NULL;
     ep_l3_key_t l3_key = {0};
@@ -96,16 +129,67 @@ ep_t* arp_trans_t::get_ep_entry() {
     return other_ep_entry;
 }
 
+bool arp_trans_t::arp_fsm_t::add_ip_entry(fsm_state_ctx ctx,
+                                          fsm_event_data fsm_data)
+{
+    arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
+    arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
+    hal_ret_t ret;
+    ep_t *ep_entry = find_ep_by_handle(data->ep_handle);
+
+    trans->log_info("Trying to add IP to EP entry.");
+    ret = endpoint_update_ip_add(ep_entry,
+            &trans->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
+
+    if (ret != HAL_RET_OK) {
+       trans->log_error("IP add update failed");
+       trans->sm_->throw_event(ARP_ERROR, NULL);
+       /* We should probably drop this packet as this ARP request may not be valid one */
+       return false;
+    }
+
+    trans->log_info("Successfully added IP to EP entry.");
+    arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
+    arp_trans_t::arplearn_ip_entry_ht()->insert((void *)trans,
+                                                &trans->ip_entry_ht_ctxt_);
+
+    return true;
+}
+
+bool arp_trans_t::arp_fsm_t::del_ip_entry(fsm_state_ctx ctx,
+        fsm_event_data fsm_data)
+{
+    arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
+    arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
+    hal_ret_t ret;
+    ep_t *ep_entry = find_ep_by_handle(data->ep_handle);
+
+    if (ep_entry != NULL) {
+        ret = endpoint_update_ip_delete(ep_entry,
+                &trans->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
+        if (ret != HAL_RET_OK) {
+            trans->log_error("IP delete update failed");
+        }
+        ep_entry = trans->get_ep_entry();
+        HAL_ASSERT(ep_entry == NULL);
+    }
+
+    return true;
+}
+
 bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data) {
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
     arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
-    const fte::ctx_t *fte_ctx = data->fte_ctx;
-    const ip_addr_t *ip_addr = data->ip_addr;
-    hal_ret_t ret;
-    ep_t *ep_entry = fte_ctx->sep();
+    fte::ctx_t *fte_ctx = data->fte_ctx;
+    const ip_addr_t *ip_addr = &data->ip_addr;
+    hal_handle_t ep_handle = fte_ctx->sep_handle();
+    ep_t *ep_entry;
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
 
     trans->log_info("Processing ARP request.");
+    ep_entry = find_ep_by_handle(ep_handle);
     if (ep_entry == nullptr) {
         trans->log_error("Endpoint entry not found.");
         trans->sm_->throw_event(ARP_ERROR, NULL);
@@ -126,19 +210,13 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
         arp_trans_t::process_transaction(other_trans, ARP_REMOVE, NULL);
     }
 
-    ret = endpoint_update_ip_add(ep_entry,
-            &trans->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
-
-    if (ret != HAL_RET_OK) {
-       trans->log_error("IP add update failed");
-       trans->sm_->throw_event(ARP_ERROR, NULL);
-       /* We should probably drop this packet as this ARP request may not be valid one */
-       return false;
+    if(data->in_fte_pipeline) {
+        /* Everything looks good, do a commit after FTE pipeline completed. */
+        ADD_COMPLETION_HANDLER(trans, ARP_IP_ADD,
+                ep_entry->hal_handle, *ip_addr);
+    } else {
+        add_ip_entry(ctx, fsm_data);
     }
-
-    arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
-    arp_trans_t::arplearn_ip_entry_ht()->insert((void *)trans,
-                                                &trans->ip_entry_ht_ctxt_);
 
     return true;
 }
@@ -147,12 +225,15 @@ bool arp_trans_t::arp_fsm_t::process_rarp_reply(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data) {
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
     arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
-    const fte::ctx_t *fte_ctx = data->fte_ctx;
-    const ip_addr_t *ip_addr = data->ip_addr;
-    hal_ret_t ret;
-    ep_t *ep_entry = fte_ctx->dep();
+    fte::ctx_t *fte_ctx = data->fte_ctx;
+    const ip_addr_t *ip_addr = &data->ip_addr;
+    hal_handle_t ep_handle = fte_ctx->dep_handle();
+    ep_t *ep_entry;
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
 
     trans->log_info("Processing RARP reply.");
+    ep_entry = find_ep_by_handle(ep_handle);
     if (ep_entry == nullptr) {
         trans->log_error("Endpoint entry not found.");
         trans->sm_->throw_event(ARP_ERROR, NULL);
@@ -172,19 +253,10 @@ bool arp_trans_t::arp_fsm_t::process_rarp_reply(fsm_state_ctx ctx,
         arp_trans_t::process_transaction(other_trans, ARP_REMOVE, NULL);
     }
 
-    ret = endpoint_update_ip_add(ep_entry,
-            &trans->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
+    /* Everything looks good, do a commit after FTE pipeline completed. */
 
-    if (ret != HAL_RET_OK) {
-       trans->log_error("IP add update failed");
-       trans->sm_->throw_event(ARP_ERROR, NULL);
-       /* We should probably drop this packet as this ARP request may not be valid one */
-       return false;
-    }
-
-    arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
-    arp_trans_t::arplearn_ip_entry_ht()->insert((void *)trans,
-                                                &trans->ip_entry_ht_ctxt_);
+    ADD_COMPLETION_HANDLER(trans, ARP_IP_ADD,
+                ep_entry->hal_handle, *ip_addr);
 
     return true;
 }
@@ -193,10 +265,12 @@ bool arp_trans_t::arp_fsm_t::process_rarp_request(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data) {
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
     arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
-    const fte::ctx_t *fte_ctx = data->fte_ctx;
-    ep_t *ep_entry = fte_ctx->sep();
+    fte::ctx_t *fte_ctx = data->fte_ctx;
+    hal_handle_t ep_handle = fte_ctx->sep_handle();
+    ep_t *ep_entry;
 
     trans->log_info("Processing RARP request.");
+    ep_entry = find_ep_by_handle(ep_handle);
     if (ep_entry == nullptr) {
         trans->log_error("Endpoint entry not found.");
         trans->sm_->throw_event(ARP_ERROR, NULL);
@@ -212,11 +286,16 @@ bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data) {
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
     arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
-    const fte::ctx_t *fte_ctx = data->fte_ctx;
-    const ip_addr_t *ip_addr = data->ip_addr;
-    ep_t *ep_entry = fte_ctx->sep();
+    fte::ctx_t *fte_ctx = data->fte_ctx;
+    const ip_addr_t *ip_addr = &data->ip_addr;
+    hal_handle_t ep_handle = fte_ctx->sep_handle();
+    ep_t *ep_entry;
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
+    bool ret = true;
 
-    trans->log_info("Processing RARP renewal request.");
+    ep_entry = find_ep_by_handle(ep_handle);
+    trans->log_info("Processing ARP renewal request.");
     if (ep_entry == nullptr) {
         trans->log_error("Endpoint entry not found.");
         trans->sm_->throw_event(ARP_ERROR, NULL);
@@ -229,11 +308,25 @@ bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
         return true;
     }
 
-    trans->reset();
-    return process_arp_request(ctx, fsm_data);
+    if (data->in_fte_pipeline) {
+        ADD_COMPLETION_HANDLER(trans, ARP_IP_RESET_ADD,
+                    ep_entry->hal_handle, *ip_addr);
+    } else {
+        ret = reset_and_add_new_ip(ctx, fsm_data);
+    }
 
+    return ret;
 }
 
+bool arp_trans_t::arp_fsm_t::reset_and_add_new_ip(fsm_state_ctx ctx,
+                                               fsm_event_data fsm_data) {
+    arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
+
+    trans->log_info("Resetting and Adding a new IP to transaction.");
+
+    trans->reset();
+    return process_arp_request(ctx, fsm_data);
+}
 
 void arp_trans_t::set_up_ip_entry_key(const ip_addr_t *ip_addr) {
     memcpy(&this->ip_addr_, ip_addr, sizeof(ip_addr_t));
@@ -293,8 +386,6 @@ void arp_trans_t::reset() {
         if (ret != HAL_RET_OK) {
             this->log_error("IP delete update failed");
         }
-        ep_entry = this->get_ep_entry();
-        HAL_ASSERT(ep_entry == NULL);
     }
 
     this->sm_->stop_state_timer();

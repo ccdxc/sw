@@ -5,6 +5,7 @@
 #include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/ndp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/arp_trans.hpp"
+#include "nic/hal/plugins/eplearn/eplearn.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 
@@ -47,7 +48,7 @@ string mac_addr_base = "12345";
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
         hal::ep_t *dep, fte::cpu_rxhdr_t *cpu_rxhdr,
         uint8_t *pkt, size_t pkt_len,
-        fte::flow_t iflow[], fte::flow_t rflow[]);
+        fte::flow_t iflow[], fte::flow_t rflow[], fte::feature_state_t feature_state[]);
 
 void arp_topo_setup()
 {
@@ -185,6 +186,9 @@ class arp_fsm_test : public hal_base_test {
         /* Override the timer so that we can control  */
         //hal::periodic::g_twheel = twheel::factory(10, 100, false);
         arp_topo_setup();
+        //Reduce the time to avoid thread locking.
+        arp_trans_t::set_state_timeout(ARP_BOUND, 1 * TIME_MSECS_PER_MIN);
+        arp_trans_t::set_state_timeout(ARP_INIT, 1 * TIME_MSECS_PER_MIN);
     }
 };
 
@@ -271,6 +275,7 @@ hal_ret_t arp_packet_send(hal_handle_t ep_handle,
     std::vector<uint8_t> buffer = eth->serialize();
     fte::ctx_t ctx;
     ep_t *dst_ep = nullptr;
+    hal_ret_t ret;
 
     ep_t *dummy_ep = find_ep_by_handle(ep_handle);
     if (dst_ep_handle) {
@@ -278,9 +283,17 @@ hal_ret_t arp_packet_send(hal_handle_t ep_handle,
     }
     fte::cpu_rxhdr_t cpu_rxhdr;
     cpu_rxhdr.flags = 0;
+    fte::feature_state_t feature_state[100];
+    eplearn_info_t info;
+    memset(&info, 0, sizeof(info));
+    memset(&feature_state, 0, sizeof(feature_state));
+    feature_state[fte::feature_id(FTE_FEATURE_EP_LEARN)].ctx_state = &info;
     fte_ctx_init(ctx, dummy_ten,
-            dummy_ep, dst_ep, &cpu_rxhdr, &buffer[0], buffer.size(), NULL, NULL);
-    return arp_process_packet(ctx);
+            dummy_ep, dst_ep, &cpu_rxhdr, &buffer[0], buffer.size(), NULL, NULL, feature_state);
+    ctx.set_feature_name(FTE_FEATURE_EP_LEARN.c_str());
+    ret = arp_process_packet(ctx);
+    ctx.process();
+    return ret;
 }
 
 hal_ret_t arp_ipv6_packet_send(hal_handle_t ep_handle,
@@ -291,6 +304,7 @@ hal_ret_t arp_ipv6_packet_send(hal_handle_t ep_handle,
     EthernetII *eth = get_default_neighbor_disc_packet(type,
                                sender_ip_address, sender_hw_addr,
                                target_ip_addr, target_hw_addr);
+    hal_ret_t ret;
 
     std::vector<uint8_t> buffer = eth->serialize();
     fte::ctx_t ctx;
@@ -304,9 +318,18 @@ hal_ret_t arp_ipv6_packet_send(hal_handle_t ep_handle,
     cpu_rxhdr.l4_offset = L2_ETH_HDR_LEN + sizeof(ipv6_header_t);
     cpu_rxhdr.l3_offset = L2_ETH_HDR_LEN;
     cpu_rxhdr.flags = 0;
+
+    fte::feature_state_t feature_state[100];
+    memset(&feature_state, 0, sizeof(feature_state));
+    eplearn_info_t info;
+    memset(&info, 0, sizeof(info));
+    feature_state[fte::feature_id(FTE_FEATURE_EP_LEARN)].ctx_state = &info;
     fte_ctx_init(ctx, dummy_ten,
-            dummy_ep, dst_ep, &cpu_rxhdr, &buffer[0], buffer.size(), NULL, NULL);
-    return neighbor_disc_process_packet(ctx);
+            dummy_ep, dst_ep, &cpu_rxhdr, &buffer[0], buffer.size(), NULL, NULL, feature_state);
+    ctx.set_feature_name(FTE_FEATURE_EP_LEARN.c_str());
+    ret = neighbor_disc_process_packet(ctx);
+    ctx.process();
+    return ret;
 }
 
 TEST_F(arp_fsm_test, arp_ipv6_request_response) {
@@ -525,7 +548,6 @@ TEST_F(arp_fsm_test, arp_entry_timeout) {
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
 }
-
 
 TEST_F(arp_fsm_test, arp_request_response_again) {
     arp_packet_send(ep_handles[0], ARP::Flags::REQUEST, "1.1.1.1",

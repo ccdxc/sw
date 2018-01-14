@@ -2,6 +2,7 @@
 #include "dhcp_trans.hpp"
 #include <arpa/inet.h>
 #include "dhcp_packet.hpp"
+#include "nic/hal/plugins/eplearn/eplearn.hpp"
 
 namespace hal {
 namespace eplearn {
@@ -64,6 +65,16 @@ ht *dhcp_trans_t::dhcplearn_ip_entry_ht_ =
 #define BOUND_TIMEOUT       120000 * TIME_MSECS_PER_SEC
 #define RENEWING_TIMEOUT    120000 * TIME_MSECS_PER_SEC
 
+#define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __decoded_pkt)           \
+    uint32_t __trans_cnt = eplearn_info->trans_ctx_cnt;                                \
+    eplearn_info->trans_ctx[__trans_cnt].trans = __trans;                              \
+    eplearn_info->trans_ctx[__trans_cnt].dhcp_data.event = __event;                    \
+    eplearn_info->trans_ctx[__trans_cnt].dhcp_data.ep_handle = (__ep_handle);          \
+    eplearn_info->trans_ctx[__trans_cnt].dhcp_data.decoded_packet =  (__decoded_pkt);  \
+    eplearn_info->trans_ctx_cnt++;                                                     \
+    fte_ctx->register_completion_handler(dhcp_completion_hdlr);
+
+
 // clang-format off
 void dhcp_trans_t::dhcp_fsm_t::_init_state_machine() {
 #define SM_FUNC(__func) SM_BIND_NON_STATIC(dhcp_fsm_t, __func)
@@ -91,12 +102,15 @@ void dhcp_trans_t::dhcp_fsm_t::_init_state_machine() {
         FSM_STATE_BEGIN(DHCP_BOUND, BOUND_TIMEOUT, SM_FUNC_ARG_1(bound_entry_func), NULL)
             FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request_after_bound), DHCP_RENEWING)
             FSM_TRANSITION(DHCP_INFORM, SM_FUNC(process_dhcp_request_after_bound), DHCP_BOUND)
+            FSM_TRANSITION(DHCP_IP_ADD, SM_FUNC(add_ip_entry), DHCP_BOUND)
             FSM_TRANSITION(DHCP_DECLINE, NULL, DHCP_DONE)
             FSM_TRANSITION(DHCP_RELEASE, SM_FUNC(process_dhcp_release), DHCP_DONE)
+            FSM_TRANSITION(DHCP_INVALID_PACKET, NULL, DHCP_DONE)
             FSM_TRANSITION(DHCP_TIMEOUT, SM_FUNC(process_dhcp_bound_timeout), DHCP_DONE)
         FSM_STATE_END
         FSM_STATE_BEGIN(DHCP_RENEWING, RENEWING_TIMEOUT, NULL, NULL)
             FSM_TRANSITION(DHCP_ACK, SM_FUNC(process_dhcp_ack), DHCP_BOUND)
+            FSM_TRANSITION(DHCP_RESET_TRANS, SM_FUNC(restart_transaction), DHCP_RENEWING)
             FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request), DHCP_REQUESTING)
             FSM_TRANSITION(DHCP_NACK, NULL, DHCP_DONE)
         FSM_STATE_END
@@ -106,6 +120,28 @@ void dhcp_trans_t::dhcp_fsm_t::_init_state_machine() {
     this->set_state_machine(sm_def);
 }
 // clang-format on
+
+
+static void dhcp_completion_hdlr (fte::ctx_t& ctx, bool status) {
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                ctx.feature_state(FTE_FEATURE_EP_LEARN);
+
+    dhcp_event_data event_data = { 0 };
+
+    for (uint32_t i = 0; i < eplearn_info->trans_ctx_cnt; i++) {
+        event_data.fte_ctx = &ctx;
+        event_data.ep_handle =
+                eplearn_info->trans_ctx[i].dhcp_data.ep_handle;
+        event_data.in_fte_pipeline = false;
+        event_data.decoded_packet =
+                eplearn_info->trans_ctx[i].dhcp_data.decoded_packet;
+
+        eplearn_info->trans_ctx[i].trans->log_info("Executing completion handler ");
+        dhcp_trans_t::process_transaction(eplearn_info->trans_ctx[i].trans,
+                eplearn_info->trans_ctx[i].dhcp_data.event,
+                (fsm_event_data)(&event_data));
+    }
+}
 
 static hal_ret_t
 update_flow_fwding(fte::ctx_t *fte_ctx)
@@ -184,14 +220,18 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_inform(fsm_state_ctx ctx,
                                                     fsm_event_data fsm_data) {
     dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
     const struct packet *decoded_packet = data->decoded_packet;
-    const fte::ctx_t *fte_ctx = data->fte_ctx;
+    fte::ctx_t *fte_ctx = data->fte_ctx;
     dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
     struct dhcp_packet *raw = decoded_packet->raw;
     dhcp_ctx *dhcp_ctx = &dhcp_trans->ctx_;
     struct option_data option_data;
     ep_t *ep_entry = fte_ctx->sep();
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
     ip_addr_t ip_addr = {0};
     hal_ret_t ret;
+    bool rc = true;
+    dhcp_trans_t *existing_trans;
 
     ip_addr.addr.v4_addr = ntohl(raw->yiaddr.s_addr);
 
@@ -199,19 +239,21 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_inform(fsm_state_ctx ctx,
                              DHO_DHCP_SERVER_IDENTIFIER, &option_data);
     if (ret != HAL_RET_OK) {
         dhcp_trans->sm_->throw_event(DHCP_INVALID_PACKET, NULL);
-        return false;
+        rc = false;
+        goto out;
     }
 
     if (ep_entry == nullptr) {
         HAL_TRACE_ERR("DHCP client Endpoint entry not found.");
         dhcp_trans->sm_->throw_event(DHCP_INVALID_PACKET, NULL);
-        return false;
+        rc = false;
+        goto out;
     }
 
     memcpy(&(dhcp_ctx->server_identifer_), option_data.data,
            sizeof(dhcp_ctx->server_identifer_));
 
-    dhcp_trans_t *existing_trans = reinterpret_cast<dhcp_trans_t *>(
+    existing_trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&dhcp_trans->trans_key_));
 
     if (existing_trans == nullptr) {
@@ -223,18 +265,18 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_inform(fsm_state_ctx ctx,
                       dhcp_trans->trans_key_ptr()->vrf_id,
                       dhcp_trans->ip_entry_key_ptr());
 
-    ret = endpoint_update_ip_add(ep_entry,
-            &dhcp_trans->ip_entry_key_ptr()->ip_addr,
-            EP_FLAGS_LEARN_SRC_DHCP);
-
-    if (ret != HAL_RET_OK) {
-       HAL_TRACE_ERR("pi-ep:{}:IP add update failed", __FUNCTION__);
-       dhcp_trans->sm_->throw_event(DHCP_ERROR, NULL);
-       /* We should probably drop this packet as this DHCP request may not be valid one */
-       return false;
+    if (data->in_fte_pipeline) {
+        ADD_COMPLETION_HANDLER(dhcp_trans, DHCP_IP_ADD,
+                ep_entry->hal_handle, NULL);
+    } else {
+        rc = add_ip_entry(ctx, fsm_data);
+        if (!rc) {
+            goto out;
+        }
     }
 
-    return true;
+out:
+    return rc;
 }
 
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_request(fsm_state_ctx ctx,
@@ -270,30 +312,70 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_request(fsm_state_ctx ctx,
 
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_request_after_bound(
     fsm_state_ctx ctx, fsm_event_data fsm_data) {
-    hal_ret_t ret;
     dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
+    dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
+    fte::ctx_t *fte_ctx = data->fte_ctx;
+    const struct packet *decoded_packet = data->decoded_packet;
     ep_t *ep_entry;
+    hal_ret_t ret;
+    struct option_data option_data;
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
+    bool rc = true;
+    dhcp_ctx *dhcp_ctx = &dhcp_trans->ctx_;
 
-    ep_entry = dhcp_trans->get_ep_entry();
+    dhcp_trans->log_info("Processing DHCP request after bound.");
 
-    ret = endpoint_update_ip_delete(ep_entry,
-            &dhcp_trans->ip_entry_key_ptr()->ip_addr,
-            EP_FLAGS_LEARN_SRC_DHCP);
+    ret = dhcp_lookup_option(decoded_packet,
+                            DHO_DHCP_SERVER_IDENTIFIER, &option_data);
 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:IP delete update failed", __FUNCTION__);
+        dhcp_trans->sm_->throw_event(DHCP_INVALID_PACKET, NULL);
+        rc = false;
+        goto out;
     }
 
-    /* Remove this IP reference as new IP will be retrieved. */
-    dhcp_trans_t::dhcplearn_ip_entry_ht()->remove(
-            dhcp_trans->ip_entry_key_ptr());
-    return this->process_dhcp_request(ctx, fsm_data);
+    memcpy(&(dhcp_ctx->server_identifer_), option_data.data,
+           sizeof(dhcp_ctx->server_identifer_));
+
+    if (data->in_fte_pipeline) {
+        ADD_COMPLETION_HANDLER(dhcp_trans, DHCP_RESET_TRANS,
+                ep_entry->hal_handle, NULL);
+    } else {
+        rc = restart_transaction(ctx, fsm_data);
+        if (!rc) {
+            goto out;
+        }
+    }
+
+out:
+    return rc;
 }
 
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_release(fsm_state_ctx ctx,
                                                     fsm_event_data data) {
     /* Delete of IP will done during removal of transaction */
     return true;
+}
+
+
+void dhcp_trans_t::reset() {
+    hal_ret_t ret;
+    ep_t * ep_entry;
+
+    dhcp_trans_t::dhcplearn_key_ht()->remove(&this->trans_key_);
+    dhcp_trans_t::dhcplearn_ip_entry_ht()->remove(this->ip_entry_key_ptr());
+
+    ep_entry = this->get_ep_entry();
+    if (ep_entry != NULL) {
+        ret = endpoint_update_ip_delete(ep_entry,
+                &this->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_DHCP);
+        if (ret != HAL_RET_OK) {
+            this->log_error("IP delete update failed");
+        }
+    }
+
+    this->sm_->stop_state_timer();
 }
 
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_offer(fsm_state_ctx ctx,
@@ -319,6 +401,49 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_offer(fsm_state_ctx ctx,
     return true;
 }
 
+bool dhcp_trans_t::dhcp_fsm_t::add_ip_entry(fsm_state_ctx ctx,
+                                          fsm_event_data fsm_data)
+{
+    dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
+    dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
+    ep_t *ep_entry = find_ep_by_handle(data->ep_handle);
+    hal_ret_t ret;
+    bool rc = true;
+
+    ret = endpoint_update_ip_add(ep_entry,
+            &dhcp_trans->ip_entry_key_ptr()->ip_addr,
+            EP_FLAGS_LEARN_SRC_DHCP);
+
+    if (ret != HAL_RET_OK) {
+        dhcp_trans->log_error("IP add update failed");
+        dhcp_trans->sm_->throw_event(DHCP_ERROR, NULL);
+       /* We should probably drop this packet as this DHCP request may not be valid one */
+        rc = false;
+    } else {
+        dhcp_trans->log_info("IP add update successful");
+    }
+
+    dhcp_trans_t::dhcplearn_ip_entry_ht()->insert(
+        (void *)dhcp_trans, &dhcp_trans->ip_entry_ht_ctxt_);
+
+    return rc;
+}
+
+
+bool dhcp_trans_t::dhcp_fsm_t::restart_transaction(fsm_state_ctx ctx,
+                                          fsm_event_data fsm_data)
+{
+    dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
+
+    dhcp_trans->log_info("Restarting DHCP Transaction.");
+    dhcp_trans->reset();
+    dhcp_trans_t::dhcplearn_key_ht()->insert((void *)dhcp_trans,
+                                            &dhcp_trans->ht_ctxt_);
+
+    return true;
+}
+
+
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
                                                 fsm_event_data fsm_data) {
     dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
@@ -327,10 +452,13 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
     struct dhcp_packet *raw = decoded_packet->raw;
     dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
     dhcp_ctx *dhcp_ctx = &dhcp_trans->ctx_;
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
     struct option_data option_data;
     hal_ret_t ret;
     ip_addr_t ip_addr = {0};
     ep_t *ep_entry;
+    bool rc = true;
 
     ip_addr.addr.v4_addr = ntohl(raw->yiaddr.s_addr);
 
@@ -384,21 +512,15 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
                       dhcp_trans->trans_key_ptr()->vrf_id,
                       dhcp_trans->ip_entry_key_ptr());
 
-    ret = endpoint_update_ip_add(ep_entry,
-            &dhcp_trans->ip_entry_key_ptr()->ip_addr,
-            EP_FLAGS_LEARN_SRC_DHCP);
-
-    if (ret != HAL_RET_OK) {
-        dhcp_trans->log_error("IP add update failed");
-        dhcp_trans->sm_->throw_event(DHCP_ERROR, NULL);
-       /* We should probably drop this packet as this DHCP request may not be valid one */
-       return false;
+    if (data->in_fte_pipeline) {
+        ADD_COMPLETION_HANDLER(dhcp_trans, DHCP_IP_ADD,
+                ep_entry->hal_handle, NULL);
     } else {
-        dhcp_trans->log_info("IP add update successful");
+        rc = add_ip_entry(ctx, fsm_data);
+        if (!rc) {
+            goto out;
+        }
     }
-
-    dhcp_trans_t::dhcplearn_ip_entry_ht()->insert(
-        (void *)dhcp_trans, &dhcp_trans->ip_entry_ht_ctxt_);
 
     /*
      * Finally update flow forwarding information.
@@ -408,10 +530,12 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
     if (ret != HAL_RET_OK) {
         dhcp_trans->log_error("Unable to update flow fwding info, dropping transaction");
         dhcp_trans->sm_->throw_event(DHCP_ERROR, NULL);
-        return false;
+        rc = false;
+        goto out;
     }
 
-    return true;
+ out:
+    return rc;
 }
 
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_bound_timeout(fsm_state_ctx ctx,
@@ -456,23 +580,7 @@ void dhcp_trans_t::process_event(dhcp_fsm_event_t event, fsm_event_data data) {
 }
 
 dhcp_trans_t::~dhcp_trans_t() {
-    hal_ret_t ret;
-    ep_t * ep_entry;
-
-    dhcp_trans_t::dhcplearn_key_ht()->remove(&this->trans_key_);
-    dhcp_trans_t::dhcplearn_ip_entry_ht()->remove(this->ip_entry_key_ptr());
-
-    ep_entry = this->get_ep_entry();
-    if (ep_entry != nullptr) {
-        ret = endpoint_update_ip_delete(ep_entry,
-                &this->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_DHCP);
-        if (ret != HAL_RET_OK) {
-            this->log_error("IP delete update failed");
-        } else {
-            this->log_info("IP deleted.");
-        }
-    }
-    this->sm_->stop_state_timer();
+    this->reset();
     delete this->sm_;
 }
 

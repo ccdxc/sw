@@ -32,6 +32,7 @@ cc_library(
         ":arp_learn",
         ":dhcp_learn",
         ":ep_learn_common",
+        ":eplearn_includes",
     ],
     alwayslink = 1,
     copts = sdk_copts,
@@ -40,6 +41,7 @@ cc_library(
 cc_library(
     name = "eplearn_includes",
     hdrs = [
+        "eplearn.hpp",
         "arp/arp_learn.hpp",
         "dhcp/dhcp_learn.hpp",
     ],
@@ -48,7 +50,7 @@ cc_library(
 cc_library(
     name = "ep_learn_common",
     srcs = glob(["common/*.cc"]),
-    hdrs = glob(["common/*.hpp"]),
+    hdrs = glob(["common/*.hpp"]) + ["eplearn.hpp", "dhcp/dhcp_trans.hpp", "arp/arp_trans.hpp"],
     deps = common_deps,
     copts = sdk_copts,
     alwayslink = 1,

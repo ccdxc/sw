@@ -33,12 +33,12 @@ fsm_state_machine_t::fsm_state_machine_t(get_sm_func sm_func, uint32_t init_stat
     this->ctx_ = ctx;
     this->_reset_next_event();
 
-    fsm_state_t current_state(this->get_state());
+    //fsm_state_t current_state(this->get_state());
     fsm_state_machine_def_t* sm = sm_func();
-    auto result = sm->find(current_state);
+    auto result = sm->find(this->get_state());
 
     HAL_ABORT(result != sm->end());
-    fsm_state_t state = result->first;
+    fsm_state_t state = result->second;
     if (state.entry_func) {
         state.entry_func(NULL);
     }
@@ -53,14 +53,13 @@ fsm_state_machine_t::fsm_state_machine_t(get_sm_func sm_func, uint32_t init_stat
 
 void fsm_state_machine_t::_process_event_internal(uint32_t event,
                                                 fsm_event_data data) {
-    fsm_state_t current_state(this->get_state());
     fsm_state_machine_def_t* sm = this->sm_get_func_();
 
-    auto result = sm->find(current_state);
+    auto result = sm->find(this->get_state());
     HAL_ABORT(result != sm->end());
 
-    fsm_state_t state = result->first;
-    std::vector<fsm_transition_t> transitions = result->second;
+    fsm_state_t state = result->second;
+    std::vector<fsm_transition_t> transitions = result->second.transitions;
     HAL_TRACE_INFO("Processing event at State {}", state.get_state_name());
     for (fsm_transition_t t : transitions) {
         if (t.event == event) {
@@ -87,14 +86,10 @@ void fsm_state_machine_t::_process_event_internal(uint32_t event,
                     this->cur_state_time_ctx_);
                 this->cur_state_time_ctx_ = nullptr;
             }
-            fsm_state_t newState(t.next_state);
-            auto result = sm->find(newState);
+            auto result = sm->find(t.next_state);
             /*  Assert, state not defined in SM */
             HAL_ABORT(result != sm->end());
-            current_state = result->first;
-            /* Set the timeout default to Statically defined state machine.
-             * In entry function caller can override the value.
-             */
+            fsm_state_t current_state = result->second;
             this->timeout_ = current_state.timeout;
             if (current_state.entry_func) {
                 current_state.entry_func(this->ctx_);

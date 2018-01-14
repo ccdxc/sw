@@ -144,8 +144,8 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) $(SNORT_CMD_OPTS) ./nic/hal/test/gtests/appid_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/appid_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/qos_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/copp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/copp_test.xml"
-	#$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
-	#$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
 	# PI Utils gtests
 	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
 	cd ../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"
