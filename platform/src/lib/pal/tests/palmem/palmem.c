@@ -28,29 +28,17 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-    u_int64_t pa, size;
-    u_int64_t offset, sz, endoffset;
+    u_int64_t pa, size, offset;
     int opt;
     u_int8_t *va;
     char buf[80];
 
-    pa = 0;
+    pa = -1;
     size = 16;
-    offset = 0;
-    sz = size;
-    while ((opt = getopt(argc, argv, "P:S:o:s:")) != -1) {
+    while ((opt = getopt(argc, argv, "s:")) != -1) {
         switch (opt) {
-        case 'P':
-            pa = strtoull(optarg, NULL, 0);
-            break;
-        case 'S':
-            size = strtoull(optarg, NULL, 0);
-            break;
-        case 'o':
-            offset = strtoull(optarg, NULL, 0);
-            break;
         case 's':
-            sz = strtoul(optarg, NULL, 0);
+            size = strtoull(optarg, NULL, 0);
             break;
         default:
             usage();
@@ -58,8 +46,16 @@ main(int argc, char *argv[])
         }
     }
 
-    if (offset + sz > size) {
-        fprintf(stderr, "palmem: offset out of range\n");
+    printf("optind %d argc %d\n", optind, argc);
+
+    if (optind >= argc) {
+        usage();
+        exit(1);
+    }
+
+    pa = strtoull(argv[optind], NULL, 0);
+    if (pa == 0) {
+        usage();
         exit(1);
     }
 
@@ -69,9 +65,8 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-    endoffset = offset + sz;
-    for (; offset < endoffset; offset += 16) {
-        const u_int16_t len = MIN(16, endoffset - offset);
+    for (offset = 0; offset < size; offset += 16) {
+        const u_int16_t len = MIN(16, size - offset);
         hex_format(buf, sizeof(buf), &va[offset], len);
         printf("%08"PRIx64": %s\n", pa + offset, buf);
     }

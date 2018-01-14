@@ -72,6 +72,8 @@ typedef struct pciehw_spmt_s {
     u_int32_t loaded:1;
     u_int64_t baraddr;
     u_int32_t barsize;
+    u_int8_t qtypestart;
+    u_int8_t qtypemask;
 } pciehw_spmt_t;
 
 typedef struct pciehw_sromsk_s {

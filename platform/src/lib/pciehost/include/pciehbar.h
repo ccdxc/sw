@@ -23,6 +23,8 @@ typedef struct pciehbarreg_s {
     u_int32_t align;                    /* alignment of this region in bar */
     u_int32_t baroff;                   /* offset from beginning of bar */
     u_int8_t upd[8];                    /* db*: upd vector for qtypes */
+    u_int8_t qtyshift;                  /* db*: qtype shift */
+    u_int8_t qtywidth;                  /* db*: qtype width */
     u_int8_t idxshift;                  /* db32/16: shift data for index */
     u_int8_t idxwidth;                  /* db32/16: index width in data */
     u_int8_t qidshift;                  /* db32/16: shift data for qid */
@@ -38,8 +40,7 @@ typedef struct pciehbarreg_s {
 #define PCIEHBARREGF_NOTIFYRW   (PCIEHBARREGF_NOTIFYRD | PCIEHBARREGF_NOTIFYWR)
 #define PCIEHBARREGF_MSIX_TBL   0x0010  /* region contains msix table */
 #define PCIEHBARREGF_MSIX_PBA   0x0020  /* region contains msix pba */
-#define PCIEHBARREGF_DB64       0x0040  /* 64-bit doorbells */
-#define PCIEHBARREGF_DBQIDADDR  0x0080  /* qid source: address */
+#define PCIEHBARREGF_DBQIDADDR  0x0040  /* qid source: address */
 
 /* BAR region type - regtype */
 #define PCIEHBARREGT_RES        0       /* resource region */

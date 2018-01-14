@@ -50,10 +50,16 @@ pciehwdev_geth(pciehwdev_t *phwdev)
     return phwdev ? phwdev - phwmem->dev : 0;
 }
 
+/*
+ * Avoid hw alignment fault when accessing name by carefully
+ * copying into a static buf and returning a pointer to that.
+ */
 char *
 pciehwdev_get_name(pciehwdev_t *phwdev)
 {
-    return phwdev->name;
+    static char name[32];
+    pciehw_memcpy(name, phwdev->name, sizeof(name));
+    return name;
 }
 
 pciehwdev_t *
@@ -141,7 +147,7 @@ pciehw_openmem(pciehw_t *phw)
 {
     pciehw_mem_t *pciehwmem;
     const char *pciehw_addr_env = getenv("PCIEHW_ADDR");
-    u_int64_t pciehw_pa = 0x140000000;
+    u_int64_t pciehw_pa = 0x13c000000;
 
     if (pciehw_addr_env) {
         pciehw_pa = strtoull(pciehw_addr_env, NULL, 0);
@@ -439,6 +445,32 @@ pciehw_finalize_topology(pciehdev_t *proot)
  */
 
 static void
+cmd_dev(int argc, char *argv[])
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehwdev_t *phwdev;
+    char lifstr[8];
+    int i;
+
+    pciehsys_log("%-3s %-10s %-9s %-4s\n",
+                 "hdl", "name", "p:bdf", "lif");
+    phwdev = &phwmem->dev[1];
+    for (i = 1; i <= phwmem->allocdev; i++, phwdev++) {
+        lifstr[0] = '\0';
+        if (phwdev->lif_valid) {
+            snprintf(lifstr, sizeof(lifstr), "%d", phwdev->lif);
+        }
+        pciehsys_log("%3d %-10s %1d:%-7s %4s\n",
+                     pciehwdev_geth(phwdev),
+                     pciehwdev_get_name(phwdev),
+                     phwdev->port,
+                     bdf_to_str(phwdev->bdf),
+                     lifstr);
+    }
+}
+
+static void
 cmd_bar(int argc, char *argv[])
 {
     pciehw_bar_dbg(argc, argv);
@@ -482,18 +514,18 @@ cmd_meminfo(int argc, char *argv[])
     u_int64_t hwmempa = pal_mem_vtop(phwmem);
     const int w = 16;
 
+    pciehsys_log("%-*s: 0x%08"PRIx64" size %lu\n", w, "physaddr",
+                 hwmempa, sizeof(pciehw_mem_t));
     pciehsys_log("%-*s: 0x%08x\n", w, "magic", phwmem->magic);
     pciehsys_log("%-*s: %d\n", w, "version", phwmem->version);
     pciehsys_log("%-*s: %d\n", w, "allocdev", phwmem->allocdev);
     pciehsys_log("%-*s: %d\n", w, "allocprt", phwmem->allocprt);
-    pciehsys_log("%-*s: 0x%08"PRIx64"\n", w, "physaddr", hwmempa);
     pciehsys_log("%-*s: 0x%08"PRIx64" size %lu\n", w, "cfgcur",
                  hwmempa + offsetof(pciehw_mem_t, cfgcur),
                  sizeof(phwmem->cfgcur));
     pciehsys_log("%-*s: 0x%08"PRIx64" size %lu\n", w, "notify_area",
                  hwmempa + offsetof(pciehw_mem_t, notify_area),
                  sizeof(phwmem->notify_area));
-    pciehsys_log("%-*s: %lu\n", w, "mem size", sizeof(pciehw_mem_t));
 }
 
 typedef struct cmd_s {
@@ -506,6 +538,7 @@ typedef struct cmd_s {
 static cmd_t cmdtab[] = {
 #define CMDENT(name, desc, helpstr) \
     { #name, cmd_##name, desc, helpstr }
+    CMDENT(dev, "dev", ""),
     CMDENT(bar, "bar", ""),
     CMDENT(pmt, "pmt", ""),
     CMDENT(prt, "prt", ""),

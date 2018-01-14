@@ -95,9 +95,8 @@ typedef struct {
     u_int64_t flimit    :3;
     u_int64_t stridesel :4;
     u_int64_t td        :1;
-    u_int64_t addrdw_lo :4;
-    /* u_int64_t [1] */
-    u_int64_t addrdw_hi :30;
+    /* u_int64_t [1] addrdw_lo:4 */
+    u_int64_t addrdw    :34;
     u_int64_t aspace    :1;
     u_int64_t romsksel  :7;
     u_int64_t spare     :8;

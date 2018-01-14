@@ -218,8 +218,7 @@ pmt_set_cfg(pciehw_t *phw,
     r->flimit    = bdf_to_fnc(bdf);
     r->stridesel = phwdev->vfstridesel;
     r->td        = 0;
-    r->addrdw_lo = cfgpadw;
-    r->addrdw_hi = cfgpadw >> 4;
+    r->addrdw    = cfgpadw;
     r->aspace    = 0;    /* cfgpadw is local */
     r->romsksel  = romsksel;
 
@@ -236,7 +235,9 @@ pmt_set_bar(pciehw_t *phw,
             const u_int64_t addrm,
             const u_int32_t prtbase,
             const u_int32_t prtcount,
-            const u_int32_t prtsize)
+            const u_int32_t prtsize,
+            const u_int8_t qtypestart,
+            const u_int8_t qtypemask)
 {
     pmt_t pmt = { 0 };
     pmt_bar_t *d = (pmt_bar_t *)&pmt.data;
@@ -272,8 +273,8 @@ pmt_set_bar(pciehw_t *phw,
     r->bdf       = bdf;
     r->td        = 0;
     r->pagesize  = 0;   /* 4k page size for now */
-    r->qtypestart= 0;
-    r->qtypemask = 0;
+    r->qtypestart= qtypestart;
+    r->qtypemask = qtypemask;
     r->qidstart  = 0;
     r->qidend    = 1;
 
@@ -391,6 +392,8 @@ pciehw_pmt_alloc(pciehwdev_t *phwdev, pciehbar_t *bar)
     phwbar->valid = 1;
     spmt = &phwmem->spmt[pmti];
     spmt->barsize = bar->size;
+    spmt->qtypestart = 3;
+    spmt->qtypemask = 0x7;
     return 0;
 }
 
@@ -415,7 +418,9 @@ pciehw_pmt_load_bar(pciehw_t *phw,
                 addrm,
                 phwbar->prtbase,
                 phwbar->prtcount,
-                phwbar->prtsize);
+                phwbar->prtsize,
+                spmt->qtypestart,
+                spmt->qtypemask);
 
     if (!spmt->loaded) {
         spmt->loaded = 1;
@@ -441,7 +446,7 @@ static void
 pmt_show_cfg_entry_hdr(void)
 {
     pciehsys_log("%-4s %-2s %-3s %-2s %-9s %-6s "
-                 "%-4s %-9s %-4s %-5s %-10s %-5s\n",
+                 "%-4s %-9s %-4s %-5s %-11s %-5s\n",
                  "idx", "id", "typ", "rw", "p:bdf", "cfgreg",
                  "vfid", "p:bdflim", "vfst", "romsk",
                  "address", "flags");
@@ -453,12 +458,11 @@ pmt_show_cfg_entry(pciehw_t *phw, const int pmti, pmt_t *pmt)
     const pmt_cfg_t *d = (pmt_cfg_t *)&pmt->data;
     const pmt_cfg_t *m = (pmt_cfg_t *)&pmt->mask;
     const pmr_cfg_t *r = (pmr_cfg_t *)&pmt->pmr;
-    const u_int64_t addrdw = (r->addrdw_hi << 4 | r->addrdw_lo);
     const int rw = d->rw;
     const int rw_m = m->rw;
 
     pciehsys_log("%4d %2d %-3s %c%c %1d:%-7s 0x%04x "
-                 "%4d %d:%-7s %4d %5d 0x%08"PRIx64" %c%c%c%c%c\n",
+                 "%4d %d:%-7s %4d %5d 0x%09"PRIx64" %c%c%c%c%c\n",
                  pmti, d->tblid,
                  d->type == r->type ? pmt_type_str(d->type) : "BAD",
                  ((!rw && rw_m) || !rw_m) ? 'r' : ' ',
@@ -469,7 +473,7 @@ pmt_show_cfg_entry(pciehw_t *phw, const int pmti, pmt_t *pmt)
                  bdf_to_str(bdf_make(r->blimit, r->dlimit, r->flimit)),
                  r->stridesel,
                  r->romsksel,
-                 addrdw << 2,
+                 (u_int64_t)r->addrdw << 2,
                  d->valid && r->valid ? 'v' : '-',
                  r->indirect ? 'i' : '-',
                  r->notify ? 'n' : '-',

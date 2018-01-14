@@ -42,8 +42,8 @@ config simulated pcie bus with 1 ethernet device
 # pciemgrd used to config device
 cd $SW/platform
 gen/x86_64/bin/pciemgrd
-pciemgrd> add enet
-enet0
+pciemgrd> add eth
+eth0
 pciemgrd> finalize
 pciemgrd> exit
 

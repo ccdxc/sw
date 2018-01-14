@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <setjmp.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #ifdef BUILD_ARCH_x86_64
@@ -45,9 +46,11 @@ static void
 usage(void)
 {
     fprintf(stderr,
-"Usage: pciemgrd [-Fnv][-P gen<G>x<W>][-s subdeviceid]\n"
+"Usage: pciemgrd [-Fnv][-b <first_bus_num>][-P gen<G>x<W>][-s subdeviceid]\n"
+"    -b <first_bus_num> set first bus used to <first_bus_num>\n"
 "    -F                 no fake bios scan\n"
-"    -n                 no initializing hw\n"
+"    -h                 initializing hw\n"
+"    -H                 no initializing hw\n"
 "    -P gen<G>x<W>      spec devices as pcie gen <G>, lane width <W>\n"
 "    -s subdeviceid     default subsystem device id\n"
 "    -v                 verbose\n");
@@ -613,6 +616,14 @@ process(int argc, char *argv[])
     c->f(argc, argv);
 }
 
+static jmp_buf prompt_env;
+
+static void
+sighand(int s)
+{
+    longjmp(prompt_env, 1);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -692,6 +703,11 @@ main(int argc, char *argv[])
     if (pciehdev_initialize() < 0) {
         printf("pciehdev_initialize failed\n");
         exit(1);
+    }
+
+    if (setjmp(prompt_env) == 0) {
+        signal(SIGINT, sighand);
+        signal(SIGQUIT, sighand);
     }
 
     strncpy0(prompt, "pciemgr> ", sizeof(prompt));

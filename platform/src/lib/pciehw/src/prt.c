@@ -368,14 +368,22 @@ prt_show_res_entry(const int prti, prt_t prt)
 }
 
 static char *
-updvec_str(const u_int64_t updvec)
+updvec_str(const u_int64_t updvec, const int raw)
 {
     static char buf[32];
-    char sched, pici, pidchk;
+    char sched, pici, pidchk, *bp;
     int i;
 
+    bp = buf;
     for (i = 0; i < 8; i++) {
         const u_int8_t upde = (updvec >> (i * 5)) & 0x1f;
+
+        if (raw) {
+            snprintf(bp, sizeof(buf) - i * 3,
+                     "%02x%s", upde, i < 7 ? ":" : "");
+            bp += 3;
+            continue;
+        }
 
         switch (upde & 0x3) { /* sched bits */
         case 0: sched = '-'; break;
@@ -391,8 +399,9 @@ updvec_str(const u_int64_t updvec)
         }
         pidchk = upde & 0x10 ? 'p' : '-';
 
-        snprintf(&buf[i * 4], sizeof(buf) - i * 4,
+        snprintf(bp, sizeof(buf) - i * 4,
                  "%c%c%c%s", sched, pici, pidchk, i < 7 ? ":" : "");
+        bp += 4;
     }
     return buf;
 }
@@ -409,7 +418,7 @@ prt_show_db_entry_hdr(void)
 }
 
 static void
-prt_show_db_entry(const int prti, prt_t prt)
+prt_show_db_entry(const int prti, prt_t prt, const int raw)
 {
     const prt_db_t *r = (prt_db_t *)prt;
     u_int8_t idxshift = r->idxshf_hi << 1 | r->idxshf_lo;
@@ -424,13 +433,13 @@ prt_show_db_entry(const int prti, prt_t prt)
                  r->indirect ? 'i' : '-',
                  r->notify   ? 'n' : '-',
                  r->qidsel   ? 'a' : 'd',
-                 updvec_str(r->updvec));
+                 updvec_str(r->updvec, raw));
 }
 
 static int last_hdr_displayed = -1;
 
 static void
-prt_show_entry(const int prti, prt_t prt)
+prt_show_entry(const int prti, prt_t prt, const int raw)
 {
     prt_common_t *prt_common = (prt_common_t *)prt;
 
@@ -449,7 +458,7 @@ prt_show_entry(const int prti, prt_t prt)
             last_hdr_displayed != PRT_TYPE_DB16) {
             prt_show_db_entry_hdr();
         }
-        prt_show_db_entry(prti, prt);
+        prt_show_db_entry(prti, prt, raw);
         break;
     default:
         break;
@@ -458,7 +467,7 @@ prt_show_entry(const int prti, prt_t prt)
 }
 
 static void
-prt_show(void)
+prt_show(const int raw)
 {
     pciehw_t *phw = pciehw_get();
     prt_t prt;
@@ -469,7 +478,7 @@ prt_show(void)
         prt_common_t *prt_common = (prt_common_t *)prt;
         prt_get(phw, i, prt);
         if (prt_common->valid) {
-            prt_show_entry(i, prt);
+            prt_show_entry(i, prt, raw);
         }
     }
 }
@@ -477,15 +486,17 @@ prt_show(void)
 void
 pciehw_prt_dbg(int argc, char *argv[])
 {
+    int raw = 0;
     int opt;
 
     optind = 0;
-    while ((opt = getopt(argc, argv, "")) != -1) {
+    while ((opt = getopt(argc, argv, "r")) != -1) {
         switch (opt) {
+        case 'r': raw = 1; break;
         default:
             return;
         }
     }
 
-    prt_show();
+    prt_show(raw);
 }
