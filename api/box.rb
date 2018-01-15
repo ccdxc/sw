@@ -1,4 +1,4 @@
-import "box-base.rb"
+import "box-base.rb" # references repo root (sw/) box-base.rb
 
 # docker in docker
 copy "tools/test-build/dind", "/dind"
