@@ -60,6 +60,16 @@
             "features"  : ["alg_tftp"]
         },
         {
+            "name"      : "alg_dns",
+            "provider"  : "pensando.io",
+            "lib"       : "alg_dns/libalg_dns.so",
+            "init_func" : "alg_dns_init",
+            "exit_func" : "alg_dns_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/sfw", "pensando.io/alg_utils"],
+            "features"  : ["alg_dns"]
+        },
+        {
             "name"      : "alg_rpc",
             "provider"  : "pensando.io",
             "lib"       : "alg_rpc/libalg_rpc.so",
@@ -157,6 +167,7 @@
                 "pensando.io/sfw:conntrack",
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
+                "pensando.io/alg_dns:alg_dns",
                 "pensando.io/alg_rpc:alg_rpc",
                 "pensando.io/proxy:tcp",
                 "pensando.io/proxy:ipsec",
@@ -187,6 +198,7 @@
                 "pensando.io/sfw:conntrack",
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
+                "pensando.io/alg_dns:alg_dns",
                 "pensando.io/alg_rpc:alg_rpc",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding",
