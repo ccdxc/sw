@@ -127,6 +127,8 @@ if_get_lif(if_t *pi_if)
         return find_lif_by_handle(pi_if->lif_handle);
     } else if (pi_if->if_type == intf::IF_TYPE_CPU) {
         return find_lif_by_handle(pi_if->lif_handle);
+    } else if (pi_if->if_type == intf::IF_TYPE_APP_REDIR) {
+        return find_lif_by_handle(pi_if->lif_handle);
     } else {
         return NULL;
     }

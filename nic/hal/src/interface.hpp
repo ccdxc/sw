@@ -390,6 +390,9 @@ hal_ret_t uplink_pc_create(intf::InterfaceSpec& spec,
 hal_ret_t cpu_if_create(intf::InterfaceSpec& spec, 
                         intf::InterfaceResponse *rsp,
                         if_t *hal_if);
+hal_ret_t app_redir_if_create(intf::InterfaceSpec& spec, 
+                              intf::InterfaceResponse *rsp,
+                              if_t *hal_if);
 hal_ret_t uplink_if_update(intf::InterfaceSpec& spec, 
                            intf::InterfaceResponse *rsp,
                            if_t *hal_if, void *if_args);
@@ -406,6 +409,9 @@ hal_ret_t get_lif_handle_for_enic_if(intf::InterfaceSpec& spec,
 hal_ret_t get_lif_handle_for_cpu_if(intf::InterfaceSpec& spec,
                                     intf::InterfaceResponse *rsp,
                                     if_t *hal_if);
+hal_ret_t get_lif_handle_for_app_redir_if(intf::InterfaceSpec& spec,
+                                          intf::InterfaceResponse *rsp,
+                                          if_t *hal_if);
 if_t *if_lookup_key_or_handle(const kh::InterfaceKeyHandle& key_handle);
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);

@@ -380,6 +380,7 @@ hal_cfg_db::hal_cfg_db()
 
     rawrcb_id_ht_ = NULL;
     rawrcb_hal_handle_ht_ = NULL;
+    app_redir_if_id_ = HAL_IFINDEX_INVALID;
 
     rawccb_id_ht_ = NULL;
     rawccb_hal_handle_ht_ = NULL;

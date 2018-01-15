@@ -198,7 +198,6 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
     rawrcb->chain_txq_qtype = spec.chain_txq_qtype();
     rawrcb->chain_txq_qid = spec.chain_txq_qid();
 
-
     pd::pd_rawrcb_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = rawrcb;
     

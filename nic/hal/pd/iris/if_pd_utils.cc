@@ -5,6 +5,7 @@
 #include "enicif_pd.hpp"
 #include "uplinkif_pd.hpp"
 #include "cpuif_pd.hpp"
+#include "app_redir_if_pd.hpp"
 #include "tunnelif_pd.hpp"
 #include "vrf_pd.hpp"
 #include "uplinkpc_pd.hpp"
@@ -29,6 +30,19 @@ if_is_cpu_if(if_t *pi_if)
 
     if_type = intf_get_if_type(pi_if);
     return if_type == intf::IF_TYPE_CPU ? true : false;
+}
+
+// ----------------------------------------------------------------------------
+// Given a PI If, return true if it is an App Redirect If 
+// ----------------------------------------------------------------------------
+bool
+if_is_app_redir_if(if_t *pi_if)
+{
+    intf::IfType    if_type;
+    HAL_ASSERT(pi_if != NULL);
+
+    if_type = intf_get_if_type(pi_if);
+    return if_type == intf::IF_TYPE_APP_REDIR ? true : false;
 }
 
 // ----------------------------------------------------------------------------
@@ -73,6 +87,7 @@ if_get_lport_id(if_t *pi_if)
     pd_uplinkif_t   *pd_upif = NULL;
     pd_uplinkpc_t   *pd_uppc = NULL;
     pd_cpuif_t      *pd_cpuif = NULL;
+    pd_app_redir_if_t *pd_app_redir_if = NULL;
     intf::IfType    if_type;
     uint32_t        lport_id = 0;
 
@@ -116,6 +131,11 @@ if_get_lport_id(if_t *pi_if)
             HAL_ASSERT(pd_cpuif!= NULL);
 
             lport_id = pd_cpuif->cpu_lport_id;
+            break;
+        case intf::IF_TYPE_APP_REDIR:
+            pd_app_redir_if = (pd_app_redir_if_t *)if_get_pd_if(pi_if);
+            HAL_ASSERT(pd_app_redir_if!= NULL);
+            lport_id = pd_app_redir_if->lport_id;
             break;
         default:
             HAL_ASSERT(0);
@@ -351,6 +371,7 @@ if_get_tm_oport(if_t *pi_if)
             tm_port = if_get_tm_oport(ep_if);
             break;
         case intf::IF_TYPE_CPU:
+        case intf::IF_TYPE_APP_REDIR:
             tm_port = TM_PORT_DMA;
             break;
         default:

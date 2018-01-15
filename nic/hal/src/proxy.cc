@@ -33,31 +33,31 @@ proxy_meta_init() {
 
     // CB size 1024, num_entries 4096
     g_meta[types::PROXY_TYPE_TCP] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 1, {0, 5, 12}}, types::PROXY_TYPE_NONE};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 1, {0, 5, 12}}, types::PROXY_TYPE_NONE, false};
 
     // CB size 512, num_entries 4096
     g_meta[types::PROXY_TYPE_TLS] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 4, 12}}, types::PROXY_TYPE_NONE};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 4, 12}}, types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_IPSEC] =
         (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}},
-                        types::PROXY_TYPE_NONE};
+                        types::PROXY_TYPE_NONE, false};
 
     // CB size 64 bytes, num_entries = 2
     //  QID 0 : RNMDR
     //  QID 1 : TNMDR
     g_meta[types::PROXY_TYPE_GC] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}, types::PROXY_TYPE_NONE};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}, types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_CPU] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)ceil(log2(types::CpucbId_ARRAYSIZE))}},
-                        types::PROXY_TYPE_NONE};
+                        types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_IPFIX] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}, types::PROXY_TYPE_NONE};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}, types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_APP_REDIR] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX,
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX,
             {{APP_REDIR_RAWR_QTYPE, RAWRCB_TABLE_ENTRY_MULTIPLE,
                         (uint8_t)log2(RAWRCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_RAWC_QTYPE, RAWCCB_TABLE_ENTRY_MULTIPLE,
@@ -65,12 +65,15 @@ proxy_meta_init() {
              {APP_REDIR_PROXYR_QTYPE, PROXYRCB_TABLE_ENTRY_MULTIPLE, 
                         (uint8_t)log2(PROXYRCB_NUM_ENTRIES_MAX)},
              {APP_REDIR_PROXYC_QTYPE, PROXYCCB_TABLE_ENTRY_MULTIPLE,
-                        (uint8_t)log2(PROXYCCB_NUM_ENTRIES_MAX)}}}, types::PROXY_TYPE_NONE};
-    g_meta[types::PROXY_TYPE_APP_REDIR_PROXY_TCP] = {true, 0, {}, types::PROXY_TYPE_TCP},
+                        (uint8_t)log2(PROXYCCB_NUM_ENTRIES_MAX)}}},
+             types::PROXY_TYPE_NONE, true};
+    g_meta[types::PROXY_TYPE_APP_REDIR_PROXY_TCP] = {false, 0, {}, types::PROXY_TYPE_TCP, false},
+    g_meta[types::PROXY_TYPE_APP_REDIR_SPAN] = {false, 0, {}, types::PROXY_TYPE_APP_REDIR, true},
+    g_meta[types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN] = {false, 0, {}, types::PROXY_TYPE_TCP, false},
 
     // 128 bytes of P4PT state per connection (e.g. dir) and a total of 2^12 connections
     g_meta[types::PROXY_TYPE_P4PT] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_P4PT, 1, {0, 1, 12}}, types::PROXY_TYPE_NONE};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_P4PT, 1, {0, 1, 12}}, types::PROXY_TYPE_NONE, false};
 
     return HAL_RET_OK;
 }
@@ -343,6 +346,10 @@ proxy_factory(types::ProxyType type)
 {
     hal_ret_t       ret = HAL_RET_OK;
     proxy_t         * proxy = NULL;
+    proxy_meta_t    *meta;
+
+    assert(type < types::ProxyType_ARRAYSIZE);
+    meta = &g_meta[type];
 
     // instantiate Proxy
     proxy = proxy_alloc_init();
@@ -362,8 +369,11 @@ proxy_factory(types::ProxyType type)
     HAL_ASSERT(proxy->flow_ht_ != NULL);
 
     // Instantiate QID indexer
-    proxy->qid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_QID);
-    HAL_ASSERT(NULL != proxy->qid_idxr_);
+    if (meta->num_lif) {
+        proxy->qid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_QID, true,
+                                              meta->indexer_skip_zero);
+        HAL_ASSERT(NULL != proxy->qid_idxr_);
+    }
 
    // initialize default params
     proxy_init_default_params(proxy);

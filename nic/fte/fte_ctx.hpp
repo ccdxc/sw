@@ -25,6 +25,7 @@ namespace fte {
     ENTRY(FLOWUPD_KEY,           6, "flow key update")                  \
     ENTRY(FLOWUPD_MCAST_COPY,    7, "flow mcast copy update")           \
     ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")                     \
+    ENTRY(FLOWUPD_MIRROR_INFO,   9, "mirror info")                      \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -258,6 +259,13 @@ typedef struct ingress_info_s {
 
 std::ostream& operator<<(std::ostream& os, const ingress_info_t& val);
 
+typedef struct mirror_info_s {
+    uint8_t egr_mirror_session;
+    uint8_t ing_mirror_session;
+} mirror_info_t;
+
+std::ostream& operator<<(std::ostream& os, const mirror_info_t& val);
+
 typedef struct flow_update_s {
     flow_update_type_t type;
     union {
@@ -270,6 +278,7 @@ typedef struct flow_update_s {
         ingress_info_t ingress_info;
         hal::flow_key_t key;
         mcast_info_t mcast_info;
+        mirror_info_t mirror_info;
     };
 }__PACK__ flow_update_t;
 

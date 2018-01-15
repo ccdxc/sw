@@ -14,11 +14,21 @@ const std::string FTE_FEATURE_APP_REDIR("pensando.io/app-redir:app-redir");
 const std::string FTE_FEATURE_APP_REDIR_APPID("pensando.io/app-redir:app-redir-appid");
 const std::string FTE_FEATURE_APP_REDIR_FINI("pensando.io/app-redir:app-redir-fini");
 
-// Application redirect context
+// Application redirect verdict
 typedef enum {
     APP_REDIR_VERDICT_PASS,     // pass the packet
     APP_REDIR_VERDICT_BLOCK,    // block the packet
-} app_redir_verdict_t;
+} __PACK__ app_redir_verdict_t;
+
+// Redirect SPAN type
+typedef enum {
+    APP_REDIR_SPAN_NONE,
+    APP_REDIR_SPAN_INGRESS,
+    APP_REDIR_SPAN_EGRESS,
+
+    // when SPAN is applicable, this is the default type
+    APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE = APP_REDIR_SPAN_INGRESS 
+} __PACK__ app_redir_span_type_t;
 
 // appID state
 #define APPID_STATE(ENTRY)                                          \
@@ -79,6 +89,7 @@ public:
         app_ctx->chain_pkt_enqueued_     = false;
         app_ctx->redir_policy_applic_    = false;
         app_ctx->tcp_tls_proxy_flow_     = false;
+        app_ctx->redir_span_type_        = APP_REDIR_SPAN_NONE;
         app_ctx->redir_miss_pkt_p_       = nullptr;
         app_ctx->proxy_flow_info_        = nullptr;
         app_ctx->arm_ctx_                = nullptr;
@@ -121,6 +132,9 @@ public:
 
     bool tcp_tls_proxy_flow() const { return tcp_tls_proxy_flow_; }
     void set_tcp_tls_proxy_flow(bool yesno) { tcp_tls_proxy_flow_ = yesno; }
+
+    app_redir_span_type_t redir_span_type() const { return redir_span_type_; }
+    void set_redir_span_type(app_redir_span_type_t redir_span_type) { redir_span_type_ = redir_span_type; }
 
     uint8_t chain_qtype() const { return chain_qtype_; }
     void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
@@ -245,8 +259,8 @@ private:
     bool                            chain_pkt_enqueued_ : 1,
                                     pipeline_end_       : 1,
                                     redir_policy_applic_: 1,
-                                    tcp_tls_proxy_flow_ : 1;
-    app_redir_verdict_t             chain_pkt_verdict_;
+                                    tcp_tls_proxy_flow_ : 1,
+                                    span_flow_          : 1;
     pen_app_redir_header_v1_full_t  redir_miss_hdr_;
     uint8_t                         *redir_miss_pkt_p_;
     hal::proxy_flow_info_t          *proxy_flow_info_;
@@ -256,6 +270,8 @@ private:
     hal::flow_role_t                chain_rev_role_;    // rflow role
     uint8_t                         chain_qtype_;
     uint8_t                         chain_ring_;
+    app_redir_verdict_t             chain_pkt_verdict_;
+    app_redir_span_type_t           redir_span_type_;
     appid_info_t                    *appid_info_;
     bool                            appid_updated_;
 };

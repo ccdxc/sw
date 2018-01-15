@@ -128,6 +128,7 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
     uint8_t             entry_size_shift;
 
     proxyccb = proxyccb_pd->proxyccb;
+    data.u.start_d.redir_span = proxyccb->redir_span;
     data.u.start_d.my_txq_base = proxyccb->my_txq_base;
     data.u.start_d.my_txq_ring_size_shift = proxyccb->my_txq_ring_size_shift;
     data.u.start_d.my_txq_entry_size_shift = proxyccb->my_txq_entry_size_shift;
@@ -256,6 +257,7 @@ p4pd_get_proxyccb_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd)
         return HAL_RET_HW_FAIL;
     }
     proxyccb = proxyccb_pd->proxyccb;
+    proxyccb->redir_span = data.u.start_d.redir_span;
     proxyccb->proxyccb_flags = data.u.start_d.proxyccb_flags;
     proxyccb->my_txq_base = data.u.start_d.my_txq_base;
     proxyccb->my_txq_ring_size_shift = data.u.start_d.my_txq_ring_size_shift;

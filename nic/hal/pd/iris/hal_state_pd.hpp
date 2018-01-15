@@ -101,6 +101,9 @@ public:
     // get APIs for cpuif  related state
     slab *cpuif_pd_slab(void) const { return cpuif_pd_slab_; }
 
+    // get APIs for App redirect if  related state
+    slab *app_redir_if_pd_slab(void) const { return app_redir_if_pd_slab_; }
+
     // get APIs for TunnelIf related state
     slab *tunnelif_pd_slab(void) const { return tunnelif_pd_slab_; }
 
@@ -321,6 +324,11 @@ private:
     // CPU IF related state
     struct {
         slab       *cpuif_pd_slab_;
+    } __PACK__;
+
+    // App Redirect IF related state
+    struct {
+        slab       *app_redir_if_pd_slab_;
     } __PACK__;
 
     // Tunnel IF related state

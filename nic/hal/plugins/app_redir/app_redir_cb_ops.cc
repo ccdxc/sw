@@ -182,6 +182,7 @@ app_redir_proxyrcb_spec_build(const proxyrcb_t& proxyrcb,
     spec.set_dir(proxyrcb.dir);
     spec.set_role(proxyrcb.role);
     spec.set_rev_cb_id(proxyrcb.rev_cb_id);
+    spec.set_redir_span(proxyrcb.redir_span);
 
     if (proxyrcb.af == AF_INET) {
         spec.mutable_ip_sa()->set_v4_addr(proxyrcb.ip_sa.v4_addr);
@@ -307,6 +308,7 @@ app_redir_proxyccb_spec_build(const proxyccb_t& proxyccb,
     spec.set_chain_txq_qtype(proxyccb.chain_txq_qtype);
     spec.set_chain_txq_qid(proxyccb.chain_txq_qid);
     spec.set_chain_txq_ring(proxyccb.chain_txq_ring);
+    spec.set_redir_span(proxyccb.redir_span);
 
     spec.set_proxyccb_flags(proxyccb.proxyccb_flags);
 }
@@ -389,6 +391,45 @@ app_redir_proxyccb_update(const proxyccb_t& proxyccb)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{} failed for cb_id {} ret {} rsp: ",
                       __FUNCTION__, proxyccb.cb_id, ret, rsp.api_status());
+    }
+
+    return ret;
+}
+
+
+/*
+ * Build a mirror session spec for interfacing with mirror_session_create()
+ */     
+static void
+app_redir_mirror_session_spec_build(MirrorSessionSpec& spec)
+{
+    if_id_t     app_redir_if_id = get_app_redir_if_id();
+
+    HAL_TRACE_DEBUG("{} session {} for if_id {}", __FUNCTION__,
+                    MIRROR_SESSION_APP_REDIR_VISIB_ID, app_redir_if_id);
+    spec.mutable_id()->set_session_id(MIRROR_SESSION_APP_REDIR_VISIB_ID);
+    spec.mutable_local_span_if()->set_interface_id(app_redir_if_id);
+    spec.set_snaplen(0);
+}
+
+
+/*
+ * Wrapper for creating a mirror session for app redirect
+ */     
+hal_ret_t
+app_redir_mirror_session_create(mirror_session_id_t &ret_id)
+{
+    MirrorSessionSpec   spec;
+    MirrorSession       rsp;
+    hal_ret_t           ret;
+
+    app_redir_mirror_session_spec_build(spec);
+    ret_id = spec.mutable_id()->session_id();
+
+    ret = mirror_session_create(&spec, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{} failed ret {} rsp: ",
+                      __FUNCTION__, ret, rsp.api_status());
     }
 
     return ret;

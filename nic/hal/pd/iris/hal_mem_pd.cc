@@ -9,6 +9,7 @@
 #include "nic/hal/pd/iris/uplinkpc_pd.hpp"
 #include "nic/hal/pd/iris/enicif_pd.hpp"
 #include "nic/hal/pd/iris/cpuif_pd.hpp"
+#include "nic/hal/pd/iris/app_redir_if_pd.hpp"
 #include "nic/hal/pd/iris/if_pd.hpp"
 #include "nic/hal/pd/iris/tunnelif_pd.hpp"
 #include "nic/hal/pd/iris/session_pd.hpp"
@@ -144,6 +145,11 @@ hal_state_pd::init(void)
                                  false, true, true);
     HAL_ASSERT_RETURN((cpuif_pd_slab_ != NULL), false);
 
+    // initialize App Redirect If PD related data structures
+    app_redir_if_pd_slab_ = slab::factory("APP_REDIR_IF_PD", HAL_SLAB_APP_REDIR_IF_PD,
+                                          sizeof(hal::pd::pd_app_redir_if_t), 2,
+                                          false, true, true);
+    HAL_ASSERT_RETURN((app_redir_if_pd_slab_ != NULL), false);
 
     // initialize TUNNEL If PD related data structures
     tunnelif_pd_slab_ = slab::factory("TUNNELIF_PD", HAL_SLAB_TUNNELIF_PD,
@@ -463,6 +469,7 @@ hal_state_pd::hal_state_pd()
     tunnelif_pd_slab_ = NULL;
 
     cpuif_pd_slab_ = NULL;
+    app_redir_if_pd_slab_ = NULL;
 
     ep_pd_slab_ = NULL;
     ep_pd_ip_entry_slab_ = NULL;
@@ -724,6 +731,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(uplinkpc_pd_slab_);
     GET_SLAB(enicif_pd_slab_);
     GET_SLAB(cpuif_pd_slab_);
+    GET_SLAB(app_redir_if_pd_slab_);
     GET_SLAB(tunnelif_pd_slab_);
     GET_SLAB(ep_pd_slab_);
     GET_SLAB(ep_pd_ip_entry_slab_);
@@ -1292,6 +1300,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_CPUIF_PD:
         g_hal_state_pd->cpuif_pd_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_APP_REDIR_IF_PD:
+        g_hal_state_pd->app_redir_if_pd_slab()->free(elem);
         break;
 
     case HAL_SLAB_SECURITY_PROFILE_PD:

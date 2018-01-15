@@ -127,6 +127,11 @@ public:
     // get APIs for Raw Redirect CB state
     ht *rawrcb_id_ht(void) const { return rawrcb_id_ht_; }
     ht *rawrcb_hal_handle_ht(void) const { return rawrcb_hal_handle_ht_; }
+    if_id_t app_redir_if_id(void) const { return app_redir_if_id_; }
+
+    void set_app_redir_if_id(if_id_t id) { 
+        app_redir_if_id_ = id;
+    }
 
     // get APIs for Raw Chain CB state
     ht *rawccb_id_ht(void) const { return rawccb_id_ht_; }
@@ -280,6 +285,7 @@ private:
     struct {
         ht         *rawrcb_id_ht_;
         ht         *rawrcb_hal_handle_ht_;
+        if_id_t    app_redir_if_id_;
     } __PACK__;
 
     // Raw Chain CB related state
@@ -583,6 +589,11 @@ public:
     slab *rawrcb_slab(void) const { return mem_db_->rawrcb_slab(); }
     ht *rawrcb_id_ht(void) const { return cfg_db_->rawrcb_id_ht(); }
     ht *rawrcb_hal_handle_ht(void) const { return cfg_db_->rawrcb_hal_handle_ht(); }
+    if_id_t app_redir_if_id(void) const { return cfg_db_->app_redir_if_id(); }
+
+    void set_app_redir_if_id(if_id_t id) { 
+        cfg_db_->set_app_redir_if_id(id);
+    }
 
     // get APIs for Raw Chain CB state
     slab *rawccb_slab(void) const { return mem_db_->rawccb_slab(); }
@@ -640,6 +651,12 @@ static inline bool
 is_forwarding_mode_smart_nic (void)
 {
     return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH;
+}
+
+static inline if_id_t
+get_app_redir_if_id (void)
+{
+    return g_hal_state->app_redir_if_id();
 }
 
 //------------------------------------------------------------------------------

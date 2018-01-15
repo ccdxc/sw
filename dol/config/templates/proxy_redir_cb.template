@@ -17,6 +17,7 @@ spec                            : None # (REF) PROXYR CB Spec from Base Config.
 pi                              : 0
 ci                              : 0
 proxyrcb_flags                  : 0
+redir_span                      : 0
 my_txq_base                     : 0
 my_txq_ring_size_shift          : 0
 my_txq_entry_size_shift         : 0

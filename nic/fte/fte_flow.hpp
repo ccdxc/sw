@@ -90,6 +90,25 @@ public:
         return valid_.ingress_info;
     }
 
+    hal_ret_t set_mirror_info(const mirror_info_t& mirror_info) {
+        mirror_info_.egr_mirror_session = mirror_info.egr_mirror_session;
+        mirror_info_.ing_mirror_session = mirror_info.ing_mirror_session;
+        valid_.mirror_info = true;
+        return HAL_RET_OK;
+    }
+    hal_ret_t merge_mirror_info(const mirror_info_t& mirror_info) {
+        mirror_info_.egr_mirror_session |= mirror_info.egr_mirror_session;
+        mirror_info_.ing_mirror_session |= mirror_info.ing_mirror_session;
+        valid_.mirror_info = true;
+        return HAL_RET_OK;
+    }
+    const mirror_info_t& mirror_info() const {
+        return mirror_info_;
+    } 
+    bool valid_mirror_info() const {
+        return valid_.mirror_info;
+    }
+
 
 
 private:
@@ -106,6 +125,7 @@ private:
         uint8_t fwding:1;
         uint8_t mcast_info:1;
         uint8_t ingress_info:1;
+        uint8_t mirror_info:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
@@ -114,6 +134,7 @@ private:
     fwding_info_t             fwding_;              // Fwding info
     mcast_info_t              mcast_info_;          // Mulitcast Enable
     ingress_info_t            ingress_info_;        // Ingress info (src if check)
+    mirror_info_t             mirror_info_;         // Mirror info
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];

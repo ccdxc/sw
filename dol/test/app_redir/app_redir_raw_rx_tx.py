@@ -10,7 +10,6 @@ from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 import test.app_redir.app_redir_shared as app_redir_shared
 
-
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
     modcbs.Setup(infra, module)
@@ -25,20 +24,25 @@ def TestCaseSetup(tc):
 
     tc.pvtdata = ObjectDatabase(logger)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-    RawrCbHelper.main(id)
+    if hasattr(tc.module.args, 'redir_span'):
+        id = app_redir_shared.app_redir_span_rawrcb_id
+
     rawrcbid = "RawrCb%04d" % id
-    # 1. Configure RAWRCB in HBM before packet injection
+    rawccbid = "RawcCb%04d" % id
+
+    RawrCbHelper.main(id)
     rawrcb = tc.infra_data.ConfigStore.objects.db[rawrcbid]
+    RawcCbHelper.main(id)
+    rawccb = tc.infra_data.ConfigStore.objects.db[rawccbid]
+
+    # 1. Configure RAWRCB in HBM before packet injection
     # let HAL fill in defaults for chain_rxq_base, etc.
     rawrcb.chain_txq_base = 0
     rawrcb.chain_rxq_base = 0
     rawrcb.rawrcb_flags = app_redir_shared.app_redir_dol_pipeline_loopbk_en
     rawrcb.SetObjValPd()
 
-    RawcCbHelper.main(id)
-    rawccbid = "RawcCb%04d" % id
     # 1. Configure RAWCCB in HBM before packet injection
-    rawccb = tc.infra_data.ConfigStore.objects.db[rawccbid]
     # let HAL fill in defaults for my_txq_base, etc.
     rawccb.my_txq_base = 0
     rawccb.SetObjValPd()
@@ -50,6 +54,7 @@ def TestCaseSetup(tc):
     rnmpr.Configure()
     rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
     rnmpr_small.Configure()
+
     rawrcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[rawrcbid])
     rawrcb.GetObjValPd()
     rawccb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[rawccbid])
@@ -75,9 +80,16 @@ def TestCaseVerify(tc):
     if hasattr(tc.module.args, 'num_flow_miss_pkts'):
         num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
 
+    redir_span = False
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-    # Verify chain_rxq_base
+    if hasattr(tc.module.args, 'redir_span'):
+        id = app_redir_shared.app_redir_span_rawrcb_id
+        redir_span = True
+
     rawrcbid = "RawrCb%04d" % id
+    rawccbid = "RawcCb%04d" % id
+
+    # Verify chain_rxq_base
     rawrcb = tc.pvtdata.db[rawrcbid]
     rawrcb_cur = tc.infra_data.ConfigStore.objects.db[rawrcbid]
     rawrcb_cur.GetObjValPd()
@@ -88,15 +100,15 @@ def TestCaseVerify(tc):
     print("chain_rxq_base value post-sync from HBM 0x%x" % rawrcb_cur.chain_rxq_base)
 
     # Verify my_txq_base
-    rawccbid = "RawcCb%04d" % id
     rawccb = tc.pvtdata.db[rawccbid]
     rawccb_cur = tc.infra_data.ConfigStore.objects.db[rawccbid]
     rawccb_cur.GetObjValPd()
-    if rawccb_cur.my_txq_base == 0:
-        print("my_txq_base not set")
-        return False
+    if not redir_span:
+        if rawccb_cur.my_txq_base == 0:
+            print("my_txq_base not set")
+            return False
 
-    print("my_txq_base value post-sync from HBM 0x%x" % rawccb_cur.my_txq_base)
+        print("my_txq_base value post-sync from HBM 0x%x" % rawccb_cur.my_txq_base)
 
     # Fetch current values from Platform
     rnmdr = tc.pvtdata.db["RNMDR"]
@@ -143,21 +155,22 @@ def TestCaseVerify(tc):
 
     # Tx: verify PI for RAWCCB got incremented
     rawccb_cur.GetObjValPd()
-    if (rawccb_cur.pi != rawccb.pi+num_pkts):
-        print("RAWCCB pi check failed old %d new %d expected %d" %
-                      (rawccb.pi, rawccb_cur.pi, rawccb.pi+num_pkts))
-        app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
-        return False
-    print("RAWCCB pi old %d new %d" % (rawccb.pi, rawccb_cur.pi))
+    if not redir_span:
+        if (rawccb_cur.pi != rawccb.pi+num_pkts):
+            print("RAWCCB pi check failed old %d new %d expected %d" %
+                          (rawccb.pi, rawccb_cur.pi, rawccb.pi+num_pkts))
+            app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
+            return False
+        print("RAWCCB pi old %d new %d" % (rawccb.pi, rawccb_cur.pi))
 
-    # Tx: verify # packets chained
-    if (rawccb_cur.stat_pkts_chain != rawccb.stat_pkts_chain+num_pkts):
-        print("stat_pkts_chain check failed old %d new %d expected %d" %
-              (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain, rawccb.stat_pkts_chain+num_pkts))
-        app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
-        return False
-    print("stat_pkts_chain old %d new %d" % 
-          (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain))
+        # Tx: verify # packets chained
+        if (rawccb_cur.stat_pkts_chain != rawccb.stat_pkts_chain+num_pkts):
+            print("stat_pkts_chain check failed old %d new %d expected %d" %
+                  (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain, rawccb.stat_pkts_chain+num_pkts))
+            app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
+            return False
+        print("stat_pkts_chain old %d new %d" % 
+              (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain))
 
     app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
     app_redir_shared.rawccb_stats_print(tc, rawccb_cur)

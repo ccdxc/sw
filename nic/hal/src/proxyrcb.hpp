@@ -50,6 +50,8 @@ typedef struct proxyrcb_s {
     uint8_t               chain_rxq_entry_size_shift;
     uint8_t               chain_rxq_ring_index_select;
 
+    uint8_t               redir_span;
+
     /*
      * Flow keys for generating pen_proxy_redir_header_v1_t
      */
@@ -88,7 +90,7 @@ typedef struct proxyrcb_s {
     proxyrcb_id_t         rev_cb_id;                // cb_id of reverse direction
     uint8_t               dir;
     uint8_t               role;
-} __PACK__ proxyrcb_t;
+} proxyrcb_t;
 
 #define HAL_MAX_PROXYRCB_HT_SIZE          1024      // hash table size
 

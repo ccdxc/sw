@@ -6,6 +6,7 @@
 #include "nic/hal/pd/iris/uplinkpc_pd.hpp"
 #include "nic/hal/pd/iris/enicif_pd.hpp"
 #include "nic/hal/pd/iris/cpuif_pd.hpp"
+#include "nic/hal/pd/iris/app_redir_if_pd.hpp"
 #include "nic/hal/pd/iris/tunnelif_pd.hpp"
 #include "nic/hal/pd/iris/l2seg_uplink_pd.hpp"
 
@@ -40,6 +41,9 @@ pd_if_create (pd_if_args_t *args)
             break;
         case intf::IF_TYPE_CPU:
             ret = pd_cpuif_create(args);
+            break;
+        case intf::IF_TYPE_APP_REDIR:
+            ret = pd_app_redir_if_create(args);
             break;
         default:
             HAL_ASSERT(0);
@@ -76,6 +80,9 @@ pd_if_update (pd_if_args_t *args)
         case intf::IF_TYPE_CPU:
             ret = pd_cpuif_update(args);
             break;
+        case intf::IF_TYPE_APP_REDIR:
+            ret = pd_app_redir_if_update(args);
+            break;
         default:
             HAL_ASSERT(0);
     }
@@ -110,6 +117,9 @@ pd_if_delete (pd_if_args_t *args)
             break;
         case intf::IF_TYPE_CPU:
             ret = pd_cpuif_delete(args);
+            break;
+        case intf::IF_TYPE_APP_REDIR:
+            ret = pd_app_redir_if_delete(args);
             break;
         default:
             HAL_ASSERT(0);
@@ -158,6 +168,9 @@ pd_if_mem_free (pd_if_args_t *args)
         case intf::IF_TYPE_CPU:
             ret = pd_cpuif_mem_free(args);
             break;
+        case intf::IF_TYPE_APP_REDIR:
+            ret = pd_app_redir_if_mem_free(args);
+            break;
         default:
             HAL_ASSERT(0);
     }
@@ -188,6 +201,9 @@ pd_if_make_clone (if_t *hal_if, if_t *clone)
             break;
         case intf::IF_TYPE_CPU:
             ret = pd_cpuif_make_clone(hal_if, clone);
+            break;
+        case intf::IF_TYPE_APP_REDIR:
+            ret = pd_app_redir_if_make_clone(hal_if, clone);
             break;
         default:
             HAL_ASSERT(0);

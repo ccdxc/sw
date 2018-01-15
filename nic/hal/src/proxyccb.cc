@@ -133,6 +133,7 @@ proxyccb_create (ProxycCbSpec& spec, ProxycCbResponse *rsp)
     proxyccb->chain_txq_qid = spec.chain_txq_qid();
     proxyccb->chain_txq_ring = spec.chain_txq_ring();
 
+    proxyccb->redir_span = spec.redir_span();
     proxyccb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
@@ -193,6 +194,7 @@ proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
     proxyccb->chain_txq_qtype = spec.chain_txq_qtype();
     proxyccb->chain_txq_qid = spec.chain_txq_qid();
     proxyccb->chain_txq_ring = spec.chain_txq_ring();
+    proxyccb->redir_span = spec.redir_span();
 
     pd::pd_proxyccb_args_init(&pd_proxyccb_args);
     pd_proxyccb_args.proxyccb = proxyccb;
@@ -257,6 +259,7 @@ proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponse *rsp)
     rsp->mutable_spec()->set_chain_txq_qtype(rproxyccb.chain_txq_qtype);
     rsp->mutable_spec()->set_chain_txq_qid(rproxyccb.chain_txq_qid);
     rsp->mutable_spec()->set_chain_txq_ring(rproxyccb.chain_txq_ring);
+    rsp->mutable_spec()->set_redir_span(rproxyccb.redir_span);
 
     rsp->mutable_spec()->set_stat_pkts_chain(rproxyccb.stat_pkts_chain);
     rsp->mutable_spec()->set_stat_pkts_discard(rproxyccb.stat_pkts_discard);

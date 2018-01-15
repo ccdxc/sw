@@ -18,6 +18,15 @@ entries:
     - entry:
         name        : SERVICE_LIF
         type        : P4PT
+    - entry:
+        name        : SERVICE_LIF
+        type        : APP_REDIR_PROXY_TCP
+    - entry:
+        name        : SERVICE_LIF
+        type        : APP_REDIR_SPAN
+    - entry:
+        name        : SERVICE_LIF
+        type        : APP_REDIR_PROXY_TCP_SPAN
 #    - entry:
 #        name        : SERVICE_LIF
 #        type        : CPU_PROXY

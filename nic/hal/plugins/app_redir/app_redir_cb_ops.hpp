@@ -4,6 +4,7 @@
 #include "nic/hal/src/rawccb.hpp"
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/hal/src/proxyccb.hpp"
+#include "nic/hal/src/telemetry.hpp"
 
 namespace hal {
 namespace app_redir {
@@ -55,6 +56,8 @@ app_redir_proxyccb_init(uint32_t cb_id,
     proxyccb.cb_id = cb_id;
 }
 
+
+hal_ret_t app_redir_mirror_session_create(mirror_session_id_t &ret_id);
 
 } // namespace app_redir
 } // namespace hal

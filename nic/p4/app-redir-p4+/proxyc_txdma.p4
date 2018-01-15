@@ -94,7 +94,7 @@ header_type proxyccb_t {
          * to early detect and enter cleanup.
          */
         proxyccb_deactivate             : 8;  // must be first in CB after header rings
-        pad                             : 8;
+        redir_span                      : 8;
         proxyccb_flags                  : 16; // DOL flags and others
         my_txq_base                     : 64;
         
@@ -434,7 +434,7 @@ metadata dma_cmd_phv2mem_t              dma_doorbell;
 action start(rsvd, cosA, cosB, cos_sel, 
              eval_last, host, total, pid,
              pi_0, ci_0,
-             proxyccb_deactivate,
+             proxyccb_deactivate, redir_span,
              my_txq_base, my_txq_ring_size_shift, my_txq_entry_size_shift,
              chain_txq_ring_size_shift, chain_txq_entry_size_shift,
              chain_txq_base, chain_txq_ring_indices_addr,
@@ -472,6 +472,7 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(proxyccb_d.ci_0, ci_0);
     
     modify_field(proxyccb_d.proxyccb_deactivate, proxyccb_deactivate);
+    modify_field(proxyccb_d.redir_span, redir_span);
     modify_field(proxyccb_d.my_txq_base, my_txq_base);
     modify_field(proxyccb_d.my_txq_ring_size_shift, my_txq_ring_size_shift);
     modify_field(proxyccb_d.my_txq_entry_size_shift, my_txq_entry_size_shift);

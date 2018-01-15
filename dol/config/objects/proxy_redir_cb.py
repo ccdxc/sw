@@ -47,6 +47,7 @@ class ProxyrCbObject(base.ConfigObjectBase):
         req_spec.key_or_handle.proxyrcb_id  = self.id
         if req_spec.__class__.__name__ != 'ProxyrCbGetRequest':
            req_spec.proxyrcb_flags               = self.proxyrcb_flags
+           req_spec.redir_span                   = self.redir_span
            req_spec.my_txq_base                  = self.my_txq_base
            req_spec.my_txq_ring_size_shift       = self.my_txq_ring_size_shift
            req_spec.my_txq_entry_size_shift      = self.my_txq_entry_size_shift
@@ -86,6 +87,7 @@ class ProxyrCbObject(base.ConfigObjectBase):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'ProxyrCbResponse':
             self.proxyrcb_flags               = resp_spec.spec.proxyrcb_flags
+            self.redir_span                   = resp_spec.spec.redir_span
             self.my_txq_base                  = resp_spec.spec.my_txq_base
             self.my_txq_ring_size_shift       = resp_spec.spec.my_txq_ring_size_shift
             self.my_txq_entry_size_shift      = resp_spec.spec.my_txq_entry_size_shift

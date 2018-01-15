@@ -269,6 +269,15 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
         }
+    } else if (if_type == intf::IF_TYPE_APP_REDIR) {
+        // App Redirect specific validation
+        if (!spec.has_if_app_redir_info() ||
+            !spec.if_app_redir_info().has_lif_key_or_handle()) {
+            HAL_TRACE_ERR("{}: no app redir if info. err:{} ",
+                          __FUNCTION__, HAL_RET_INVALID_ARG);
+            rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
     } else {
         HAL_TRACE_ERR("pi-if:{}: invalid type err:{} ",
                 __FUNCTION__, HAL_RET_INVALID_ARG);
@@ -477,6 +486,10 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             goto end;
         }
 
+    }
+
+    if (hal_if->if_type == intf::IF_TYPE_APP_REDIR) {
+        g_hal_state->set_app_redir_if_id(hal_if->if_id);
     }
 
     // TODO: Increment the ref counts of dependent objects
@@ -690,6 +703,13 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 
     case intf::IF_TYPE_CPU:
         ret = cpu_if_create(spec, rsp, hal_if);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+        break;
+
+    case intf::IF_TYPE_APP_REDIR:
+        ret = app_redir_if_create(spec, rsp, hal_if);
         if (ret != HAL_RET_OK) {
             goto end;
         }
@@ -920,6 +940,19 @@ cpuif_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
 }
 
 //------------------------------------------------------------------------------
+// App Redirect If Update
+//------------------------------------------------------------------------------
+hal_ret_t
+app_redir_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
+                                      if_update_app_ctxt_t *app_ctxt,
+                                      bool *has_changed)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // Uplink If Update
 //  - Handle native l2seg change
 //------------------------------------------------------------------------------
@@ -1058,6 +1091,11 @@ if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                                                 has_changed);
             break;
 
+        case intf::IF_TYPE_APP_REDIR:
+            ret = app_redir_if_update_check_for_change(spec, hal_if, app_ctxt,
+                                                       has_changed);
+            break;
+
         default:
             HAL_TRACE_ERR("pi-if:{}:invalid if type: {}", __FUNCTION__, 
                           hal_if->if_type);
@@ -1126,6 +1164,8 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         case intf::IF_TYPE_TUNNEL:
             break;
         case intf::IF_TYPE_CPU:
+            break;
+        case intf::IF_TYPE_APP_REDIR:
             break;
         default:
             HAL_TRACE_ERR("pi-if:{}:invalid if type: {}", __FUNCTION__, 
@@ -1385,6 +1425,8 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         case intf::IF_TYPE_TUNNEL:
             break;
         case intf::IF_TYPE_CPU:
+            break;
+        case intf::IF_TYPE_APP_REDIR:
             break;
         default:
             HAL_TRACE_ERR("pi-if:{}:invalid if type: {}", __FUNCTION__, 
@@ -1661,6 +1703,9 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
         break;
 
     case intf::IF_TYPE_CPU:     // TODO: why is this exposed in API or only GET is supported ?
+        break;
+
+    case intf::IF_TYPE_APP_REDIR:
         break;
 
     default:
@@ -1941,6 +1986,34 @@ cpu_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     lif = find_lif_by_handle(hal_if->lif_handle);
     HAL_TRACE_DEBUG("PI-CPUif:{}: if_id:{} lif_id:{}", __FUNCTION__, 
             hal_if->if_id, lif->lif_id);
+
+    return ret;
+}
+
+
+//------------------------------------------------------------------------------
+// App Redir If Create 
+//------------------------------------------------------------------------------
+hal_ret_t
+app_redir_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, 
+                     if_t *hal_if)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    lif_t               *lif;
+
+    HAL_TRACE_DEBUG("{}: Create for id {}", __FUNCTION__, 
+                    spec.key_or_handle().interface_id());
+
+    ret = get_lif_handle_for_app_redir_if(spec, rsp, hal_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: Unable to find the lif handle Err: {}",
+                      __FUNCTION__, ret);
+        return ret;
+    }
+
+    lif = find_lif_by_handle(hal_if->lif_handle);
+    HAL_TRACE_DEBUG("{}: if_id:{} lif_id:{}", __FUNCTION__, 
+                    hal_if->if_id, lif->lif_id);
 
     return ret;
 }
@@ -2491,6 +2564,8 @@ validate_if_delete (if_t *hal_if)
         break;
     case intf::IF_TYPE_CPU:
         break;
+    case intf::IF_TYPE_APP_REDIR:
+        break;
     default:
         ret = HAL_RET_INVALID_ARG;
         HAL_TRACE_ERR("{}:invalid if type", __FUNCTION__);
@@ -2847,6 +2922,43 @@ get_lif_handle_for_cpu_if (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     if (lif == NULL) {
         HAL_TRACE_ERR("PI-CPUif:{}: LIF handle not found for ID:{} HDL:{}",
+                      __FUNCTION__, lif_id, lif_handle);
+        rsp->set_api_status(types::API_STATUS_LIF_NOT_FOUND);
+         ret = HAL_RET_LIF_NOT_FOUND;
+         goto end;
+    } else {
+        hal_if->lif_handle = lif->hal_handle;
+    }
+
+end:
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Get lif handle for App Redirect If
+//------------------------------------------------------------------------------
+hal_ret_t
+get_lif_handle_for_app_redir_if (InterfaceSpec& spec, InterfaceResponse *rsp, 
+                                 if_t *hal_if)
+{
+    lif_id_t        lif_id = 0;
+    hal_handle_t    lif_handle = 0;
+    lif_t           *lif = NULL;
+    hal_ret_t       ret = HAL_RET_OK;
+
+    // fetch the lif associated with this interface
+    auto lif_kh = spec.if_app_redir_info().lif_key_or_handle();
+    if (lif_kh.key_or_handle_case() == kh::LifKeyHandle::kLifId) {
+        lif_id = lif_kh.lif_id();
+        lif = find_lif_by_id(lif_id);
+    } else {
+        lif_handle = lif_kh.lif_handle();
+        lif = find_lif_by_handle(lif_handle);
+    }
+
+    if (lif == NULL) {
+        HAL_TRACE_ERR("{}: LIF handle not found for ID:{} HDL:{}",
                       __FUNCTION__, lif_id, lif_handle);
         rsp->set_api_status(types::API_STATUS_LIF_NOT_FOUND);
          ret = HAL_RET_LIF_NOT_FOUND;

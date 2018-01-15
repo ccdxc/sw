@@ -14,6 +14,7 @@ void destroy();
 void thread_init();
 void thread_destroy();
 
+void app_redir_init(void);
 fte::pipeline_action_t app_redir_miss_exec(fte::ctx_t& ctx);
 fte::pipeline_action_t app_redir_exec(fte::ctx_t& ctx);
 fte::pipeline_action_t app_redir_exec_fini(fte::ctx_t& ctx);
