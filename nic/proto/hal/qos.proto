@@ -75,9 +75,9 @@ message QosBuffer {
                                   // below this limit, xoff will be cleared
 }
 
-// QosPFC specifies the pfc cos-es
+// QosPFC specifies the pfc cos to respond to
 message QosPFC {
-  repeated uint32 pfc_cos = 1;    // PFC cos values for no-drop classes
+  uint32 pfc_cos = 1;    // PFC cos value for no-drop classes
 }
 
 // QosSched specifies the QosClass scheduling configuration

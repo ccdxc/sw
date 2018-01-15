@@ -419,7 +419,7 @@ get_acl_type (const acl::AclSelector &sel)
 // Added for internal dol test use only to get the drop reason defines
 // TODO: REMOVE
 #include "nic/p4/nw/include/defines.h"
-static uint32_t
+static uint64_t
 drop_reason_to_define (const acl::DropReason drop_reason)
 {
     switch(drop_reason) {
@@ -708,11 +708,11 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->int_mask.ip_frag = sel.internal_mask().ip_frag();
         for (i = 0; i < sel.internal_key().drop_reason_size(); i++) {
             ms->int_key.drop_reason |= 
-                1 << drop_reason_to_define(sel.internal_key().drop_reason(i));
+                1ull << drop_reason_to_define(sel.internal_key().drop_reason(i));
         }
         for (i = 0; i < sel.internal_mask().drop_reason_size(); i++) {
             ms->int_mask.drop_reason |= 
-                1 << drop_reason_to_define(sel.internal_mask().drop_reason(i));
+                1ull << drop_reason_to_define(sel.internal_mask().drop_reason(i));
         }
         MAC_UINT64_TO_ADDR(ms->int_key.outer_mac_da, sel.internal_key().outer_dst_mac());
         MAC_UINT64_TO_ADDR(ms->int_mask.outer_mac_da, sel.internal_mask().outer_dst_mac());

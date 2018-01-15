@@ -34,20 +34,37 @@ DEFINE_ENUM(pd_qos_iq_type_e, HAL_PD_QOS_IQS)
 DEFINE_ENUM(pd_qos_oq_type_e, HAL_PD_QOS_OQS)
 #undef HAL_PD_QOS_OQS
 
+typedef struct pd_qos_uplink_iq_s {
+    tm_q_t   iq;
+    uint64_t payload_hbm_offset[TM_NUM_UPLINK_PORTS];
+    uint64_t control_hbm_offset[TM_NUM_UPLINK_PORTS];
+} __PACK__ pd_qos_uplink_iq_t;
+
+typedef struct pd_qos_txdma_iq_s {
+    tm_q_t   iq;
+    uint64_t payload_hbm_offset;
+    uint64_t control_hbm_offset;
+} __PACK__ pd_qos_txdma_iq_t;
+
 struct pd_qos_class_s {
-    tm_q_t           uplink_iq;
-    tm_q_t           txdma_iq[HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS];
-    tm_q_t           p4_q[HAL_PD_QOS_NUM_IQ_TYPES];
-    tm_q_t           p4_eg_q[HAL_PD_QOS_NUM_IQ_TYPES];
-    pd_qos_oq_type_e dest_oq_type;
-    tm_q_t           dest_oq;
-    bool             pcie_oq; // indicates if the rxdma oq is towards pcie/hbm
-    uint32_t         cells_per_mtu;
+    pd_qos_uplink_iq_t uplink;
+    pd_qos_txdma_iq_t  txdma[HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS];
+    tm_q_t             p4_ig_q[HAL_PD_QOS_NUM_IQ_TYPES];
+    tm_q_t             p4_eg_q[HAL_PD_QOS_NUM_IQ_TYPES];
+    pd_qos_oq_type_e   dest_oq_type;
+    tm_q_t             dest_oq;
+    bool               pcie_oq; // indicates if the rxdma oq is towards pcie/hbm
+    uint32_t           cells_per_mtu;
+    uint32_t           island_cells[HAL_TM_NUM_BUFFER_ISLANDS];
+    uint64_t           hbm_fifo_base;
+    uint32_t           hbm_fifo_size;
+    uint32_t           payload_hbm_size;
+    uint32_t           control_hbm_size;
+
 
     // pi ptr
-    void             *pi_qos_class;
+    void               *pi_qos_class;
 } __PACK__;
-
 
 // allocate Qos-class Instance
 static inline pd_qos_class_t *
@@ -73,15 +90,15 @@ qos_class_pd_init (pd_qos_class_t *qos_class)
     }
 
     // Set here if you want to initialize any fields
-    qos_class->uplink_iq = HAL_TM_INVALID_Q;
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_q); i++) {
-        qos_class->p4_q[i] = HAL_TM_INVALID_Q;
+    qos_class->uplink.iq = HAL_TM_INVALID_Q;
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_ig_q); i++) {
+        qos_class->p4_ig_q[i] = HAL_TM_INVALID_Q;
     }
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_eg_q); i++) {
         qos_class->p4_eg_q[i] = HAL_TM_INVALID_Q;
     }
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->txdma_iq); i++) {
-        qos_class->txdma_iq[i] = HAL_TM_INVALID_Q;
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->txdma); i++) {
+        qos_class->txdma[i].iq = HAL_TM_INVALID_Q;
     }
     qos_class->dest_oq = HAL_TM_INVALID_Q;
 

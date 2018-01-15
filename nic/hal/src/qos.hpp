@@ -75,7 +75,7 @@ typedef struct qos_buf_s {
                                   // max occupancy at which xoff will be cleared
     uint32_t xoff_clear_limit;    // When the pool occupancy goes
                                   // below this limit, xoff will be cleared
-} __PACK__   qos_buf_t;
+} __PACK__ qos_buf_t;
 
 #define QOS_SCHED_TYPES(ENTRY)                       \
     ENTRY(QOS_SCHED_TYPE_DWRR,          0, "dwrr")   \
@@ -110,23 +110,23 @@ typedef struct qos_marking_action_s {
 
 // QosClass structure
 typedef struct qos_class_s {
-    hal_spinlock_t       slock;                            // lock to protect this structure
-    qos_class_key_t      key;                              // QOS group information
-    bool                 no_drop;                          // No drop class
+    hal_spinlock_t       slock;          // lock to protect this structure
+    qos_class_key_t      key;            // QOS group information
 
-    uint32_t             mtu;                              // MTU of the packets in bytes
-    qos_buf_t            buffer;                           // buffer configuration
-    bool                 pfc_cos[HAL_MAX_PFC_COS_VALS];    // PFC coses the class
-                                                           // participates in
-    qos_sched_t          sched;                            // scheduler configuration
-    qos_uplink_cmap_t    uplink_cmap;                      // Uplink class map
+    uint32_t             mtu;            // MTU of the packets in bytes
+    qos_buf_t            buffer;         // buffer configuration
+    bool                 no_drop;        // No drop class
+    uint32_t             pfc_cos;        // PFC cos the class
+                                         // participates in
+    qos_sched_t          sched;          // scheduler configuration
+    qos_uplink_cmap_t    uplink_cmap;    // Uplink class map
     qos_marking_action_t marking;
 
-    // operational state of qos-class
-    hal_handle_t         hal_handle;                       // HAL allocated handle
+                                         // operational state of qos-class
+    hal_handle_t         hal_handle;     // HAL allocated handle
 
     pd::pd_qos_class_t   *pd;
-} __PACK__ qos_class_t;
+} __PACK__               qos_class_t;
 
 // CB data structures
 typedef struct qos_class_create_app_ctxt_s {
@@ -278,6 +278,12 @@ static inline bool
 qos_class_is_user_defined (qos_class_t *qos_class)
 {
     return qos_group_is_user_defined(qos_class->key.qos_group);
+}
+
+static inline bool
+qos_class_is_default (qos_class_t *qos_class)
+{
+    return qos_class->key.qos_group == QOS_GROUP_DEFAULT;
 }
 
 

@@ -430,7 +430,6 @@ static hal_ret_t
 update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_buf_t   *buffer = &qos_class->buffer;
-    uint8_t     pfc_cos;
     bool        no_drop = false;
 
     if (!spec.has_buffer()) {
@@ -439,6 +438,12 @@ update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
 
     if (spec.has_pfc()) {
         no_drop = true;
+        qos_class->pfc_cos = spec.pfc().pfc_cos();
+        if (qos_class->pfc_cos >= HAL_MAX_PFC_COS_VALS) {
+            HAL_TRACE_ERR("pi-qos:{}: Invalid pfc cos value {}", 
+                          __func__, qos_class->pfc_cos);
+            return HAL_RET_INVALID_ARG;
+        }
     }
 
     buffer->reserved_mtus = spec.buffer().reserved_mtus();
@@ -446,18 +451,6 @@ update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
         buffer->headroom_mtus =  spec.buffer().headroom_mtus();
         buffer->xon_threshold =  spec.buffer().xon_threshold();
         buffer->xoff_clear_limit =  spec.buffer().xoff_clear_limit();
-    }
-
-    for (int i = 0; i < spec.pfc().pfc_cos_size(); i++) {
-        pfc_cos = spec.pfc().pfc_cos(i);
-        if (pfc_cos >= HAL_MAX_PFC_COS_VALS) {
-            HAL_TRACE_ERR("pi-qos:{}: Invalid pfc cos value {}", 
-                          __func__, pfc_cos);
-            return HAL_RET_INVALID_ARG;
-        }
-
-        // TODO: Can pfc-cos be overlapping across different classes ? 
-        qos_class->pfc_cos[pfc_cos] = true;
     }
 
     qos_class->no_drop = no_drop;

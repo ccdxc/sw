@@ -67,7 +67,6 @@ typedef uint32_t        lif_id_t;
 typedef uint32_t        qtype_t;
 typedef uint32_t        port_num_t;
 typedef uint32_t        rawccb_id_t;
-typedef uint32_t        buf_pool_id_t;
 typedef uint32_t        queue_id_t;
 typedef uint32_t        proxyrcb_id_t;
 typedef uint32_t        proxyccb_id_t;

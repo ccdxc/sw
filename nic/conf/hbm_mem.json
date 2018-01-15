@@ -281,12 +281,8 @@
             "size_kb": 1024
         },
         {
-            "name": "qos-txdma-hbm-fifo",
-            "size_kb": 65536 
-        },
-        {
-            "name": "qos-uplink-hbm-fifo",
-            "size_kb": 65536 
+            "name": "qos-hbm-fifo",
+            "size_kb": 131072 
         }
     ]
 }
