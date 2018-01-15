@@ -1,5 +1,5 @@
 # format: <name> <version>
-asic_libs ca59a62
-ncc_tools ca59a62
+asic_libs 0354ca6
+ncc_tools 0354ca6
 third_party_libs 1.1.25
-pbc_config ca59a62
+pbc_config 0354ca6
