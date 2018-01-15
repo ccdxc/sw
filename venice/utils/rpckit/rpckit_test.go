@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -421,71 +422,71 @@ func TestRPCTlsConnections(t *testing.T) {
 	*/
 }
 
-// test load balancing of RPCs
-func TestRPCBalancing(t *testing.T) {
-	// create two handler objects
-	testHandler1 := NewTestRPCHandler("", "t1")
-	testHandler2 := NewTestRPCHandler("", "t2")
-
-	// create two rpc servers
-	rpcServer1, err := NewRPCServer("testService", "localhost:0", WithTracerEnabled(true))
-	AssertOk(t, err, "Failed to create listener")
-	defer func() {
-		rpcServer1.Stop()
-		time.Sleep(time.Millisecond)
-	}()
-	_, portStr1, err := net.SplitHostPort(rpcServer1.GetListenURL())
-	AssertOk(t, err, "Failed to parse port")
-	port1, err := strconv.Atoi(portStr1)
-	AssertOk(t, err, "Failed to convert port")
-
-	rpcServer2, err := NewRPCServer("testService", "localhost:0", WithTracerEnabled(true))
-	AssertOk(t, err, "Failed to create listener")
-	defer func() {
-		rpcServer2.Stop()
-		time.Sleep(time.Millisecond)
-	}()
-	_, portStr2, err := net.SplitHostPort(rpcServer2.GetListenURL())
-	AssertOk(t, err, "Failed to parse port")
-	port2, err := strconv.Atoi(portStr2)
-	AssertOk(t, err, "Failed to convert port")
-
-	// register handlers with rpc servers and start them
-	RegisterTestServer(rpcServer1.GrpcServer, testHandler1)
-	RegisterTestServer(rpcServer2.GrpcServer, testHandler2)
-	rpcServer1.Start()
-	rpcServer2.Start()
-
-	// Now create a mock resolver
+// helper function to start a mock resolver.
+func startMockResolver(t *testing.T) (*mock.ResolverService, *RPCServer) {
+	// Create a mock resolver, no server backends are registered with the resolver.
 	m := mock.NewResolverService()
 	resolverHandler := service.NewRPCHandler(m)
-	resolverServer, err := NewRPCServer("resolver", "localhost:0", WithTracerEnabled(true))
+	resolverServer, err := NewRPCServer("resolver", "localhost:0", WithTracerEnabled(true), WithTLSProvider(nil))
 	AssertOk(t, err, "Failed to create listener")
 	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
 	resolverServer.Start()
+	return m, resolverServer
+}
 
-	// populate the mock resolver with the two servers
-	si1 := types.ServiceInstance{
+// helper function to start a test server.
+func startTestServer(t *testing.T, svcName, reqMsg, respMsg string) *RPCServer {
+	testHandler := NewTestRPCHandler(reqMsg, respMsg)
+	rpcServer, err := NewRPCServer(svcName, "localhost:0", WithTracerEnabled(true), WithTLSProvider(nil))
+	AssertOk(t, err, "Failed to create listener")
+
+	// register handlers with rpc server and start it
+	RegisterTestServer(rpcServer.GrpcServer, testHandler)
+	rpcServer.Start()
+	return rpcServer
+}
+
+// helper function to add a test server to a mock resolver.
+func addServerToResolver(t *testing.T, m *mock.ResolverService, s *RPCServer, svcName, instanceName string) {
+	_, portStr, err := net.SplitHostPort(s.GetListenURL())
+	AssertOk(t, err, "Failed to parse port")
+	port, err := strconv.Atoi(portStr)
+	AssertOk(t, err, "Failed to convert port")
+
+	// populate the mock resolver with the server instance.
+	si := types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "t1",
+			Name: instanceName,
 		},
-		Service: "testService",
+		Service: svcName,
 		Node:    "localhost",
-		URL:     fmt.Sprintf("localhost:%d", port1),
+		URL:     fmt.Sprintf("localhost:%d", port),
 	}
-	si2 := si1
-	si2.Name = "t2"
-	si2.URL = fmt.Sprintf("localhost:%d", port2)
-	m.AddServiceInstance(&si1)
-	m.AddServiceInstance(&si2)
+	m.AddServiceInstance(&si)
+}
+
+// test load balancing of RPCs
+func TestRPCBalancing(t *testing.T) {
+	m, resolverServer := startMockResolver(t)
+
+	rpcServer1 := startTestServer(t, "testService", "", "t1")
+	rpcServer2 := startTestServer(t, "testService", "", "t2")
+	defer func() {
+		rpcServer1.Stop()
+		rpcServer2.Stop()
+		time.Sleep(time.Millisecond)
+	}()
+
+	addServerToResolver(t, m, rpcServer1, "testService", "t1")
+	addServerToResolver(t, m, rpcServer2, "testService", "t2")
 
 	// Now create a rpc client with a balancer
 	r := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
 	b := balancer.New(r)
-	client, err := NewRPCClient("RPCBalanceTest", "testService", WithBalancer(b))
+	client, err := NewRPCClient("RPCBalanceTest", "testService", WithBalancer(b), WithTLSProvider(nil))
 	AssertOk(t, err, "Failed to create RPC Client")
 	defer client.Close()
 	testClient := NewTestClient(client.ClientConn)
@@ -504,6 +505,50 @@ func TestRPCBalancing(t *testing.T) {
 	}
 	if respMap["t1"] != 50 || respMap["t2"] != 50 {
 		t.Fatalf("Load balancing of RPCs failed, got %v and %v", respMap["t1"], respMap["t2"])
+	}
+}
+
+// test RPC blocking with Balancer. This is the default behavior. RPC should
+// block when there is no backend available and should succeed if the backend
+// becomes available before the default timeout of 3 seconds.
+func TestRPCBlockingWithBalancer(t *testing.T) {
+	m, resolverServer := startMockResolver(t)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	t1 := time.Now()
+	sleepTime := time.Millisecond * 100
+	go func() {
+		// Now create a rpc client with a balancer
+		r := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
+		b := balancer.New(r)
+		client, err := NewRPCClient("RPCBlockingWithBalancerTest", "testService", WithBalancer(b), WithTLSProvider(nil))
+		AssertOk(t, err, "Failed to create RPC Client")
+		defer client.Close()
+		testClient := NewTestClient(client.ClientConn)
+		resp, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
+		t.Logf("Got resp %v, err %v", resp, err)
+		if time.Since(t1) < sleepTime {
+			t.Fatalf("Client RPC returned before server backend is up")
+		}
+		wg.Done()
+	}()
+
+	// Add a server after the client sends the RPC.
+	time.Sleep(sleepTime)
+
+	rpcServer := startTestServer(t, "testService", "", "t1")
+	defer func() {
+		rpcServer.Stop()
+		time.Sleep(time.Millisecond)
+	}()
+
+	addServerToResolver(t, m, rpcServer, "testService", "t1")
+
+	wg.Wait()
+
+	if time.Since(t1) > time.Second*1 {
+		t.Fatalf("Client RPC didn't finish in 1 second after server backend is up")
 	}
 }
 
