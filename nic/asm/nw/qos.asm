@@ -34,5 +34,5 @@ qos:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 qos_error:
-  nop.e
+  phvwr.e p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
   nop

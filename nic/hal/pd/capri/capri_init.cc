@@ -56,6 +56,44 @@ capri_default_config_init (void)
     return ret;
 }
 
+hal_ret_t
+capri_default_config_verify (void)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    char        *cfg_path;
+    std::string full_path;
+    int         num_phases = 2;
+    int         i;
+
+    cfg_path = getenv("HAL_CONFIG_PATH");
+    if (!cfg_path) {
+        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+    }
+
+    for (i = 0; i < num_phases; i++) {
+        full_path =  std::string(cfg_path) + "/init_bins/" + "init_" + 
+                                        std::to_string(i) + "_bin";
+
+        // Check if directory is present
+        if (access(full_path.c_str(), R_OK) < 0) {
+            HAL_TRACE_DEBUG("Skipping init binaries");
+            return HAL_RET_OK;
+        }
+
+        HAL_TRACE_DEBUG("Init phase {} Binaries dir: {}", i, full_path.c_str());
+
+        ret = capri_verify_config((char *)full_path.c_str());
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error verifying init phase {} binaries ret {}", i, ret);
+            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        }
+
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 // - link all the P4 programs, by resolving symbols, labels etc.

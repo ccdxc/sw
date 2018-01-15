@@ -61,5 +61,5 @@ lb_replica_honor_ingress:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 replica_error:
-  nop.e
+  phvwr.e p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
   nop
