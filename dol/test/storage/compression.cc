@@ -129,6 +129,7 @@ compression_init()
   write_reg(cfg_q_base + 4, (queue_mem_pa >> 32) & 0xFFFFFFFFu);
   // Enable all 16 engines.
   write_reg(cfg_ueng, 0xFFFF);
+  write_reg(cfg_ueng+4, 0);
   // Enable cold/warm queue.
   write_reg(cfg_dist, 0x1);
 
@@ -535,20 +536,6 @@ int compress_crc_sha512() {
   spec.num_dst_sgls = 1;
   spec.datain_len   = 4096;
   spec.dataout_len  = 4096;
-
-  return run_cp_test(&spec);
-}
-
-int compress_only_sha512() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 4;
-  spec.cmd_bits.sha_en = 1;
-  spec.cmd_bits.sha256 = 0;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
 
   return run_cp_test(&spec);
 }
