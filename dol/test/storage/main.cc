@@ -100,7 +100,6 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_return_through_hbm, "Compress Status/dest-buf in HBM", false},
   {&tests::compress_adler_sha256, "Compress with Adler32 and SHA256", false},
   {&tests::compress_crc_sha512, "Compress with CRC32 and SHA512", false},
-  {&tests::compress_only_sha512, "Compress with only SHA512", false},
   {&tests::compress_doorbell_odata, "Compress with DMA end writes", false},
   {&tests::compress_max_features, "Compress with multiple features", false},
   {&tests::compress_output_through_sequencer, "Compress with out through seq", false},
