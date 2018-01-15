@@ -2353,7 +2353,7 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     auto if_tunnel_info = spec.if_tunnel_info();
     hal_if->tid = if_tunnel_info.vrf_key_handle().vrf_id();
     hal_if->encap_type = if_tunnel_info.encap_type();
-    /* Both source addr and dest addr have to v4 or v6 */
+    /* Both source addr and dest addr have to be v4 or v6 */
     if ((if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
         !if_tunnel_info.vxlan_info().remote_tep().v4_addr()) || 
         (!if_tunnel_info.vxlan_info().local_tep().v4_addr() &&

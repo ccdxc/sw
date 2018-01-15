@@ -75,13 +75,13 @@ objects:
             api      : SecurityGroupPolicyCreate
             request  : SecurityGroupPolicyRequestMsg
             response : SecurityGroupPolicyRequestMsg
-            pre_cb   : None
+            pre_cb   : callback://security_profile/SecGroupPolicyPreCreateCb
             post_cb  : None
         update:
             api      : SecurityGroupPolicyUpdate
             request  : SecurityGroupPolicyRequestMsg
             response : SecurityGroupPolicyRequestMsg
-            pre_cb   : None
+            pre_cb   : callback://security_profile/SecGroupPolicyPreUpdateCb
             post_cb  : None
         delete:
             api      : SecurityGroupPolicyDelete

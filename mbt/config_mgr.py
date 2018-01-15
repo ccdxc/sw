@@ -170,13 +170,13 @@ class ConfigObject():
             # if type(req_message).__name__ == "LifRequestMsg":
             crud_oper._pre_cb.call(self.data, req_message, None)
         api = self.get_api(op_type)
-        logger.info("Sending request message %s:%s:%s" % (self._cfg_meta_object,
+        print("Sending request message %s:%s:%s" % (self._cfg_meta_object,
                                                        op_type.__name__, req_message))
         resp_message = api(req_message)
-        logger.info("Received response message %s:%s:%s" % (self._cfg_meta_object,
+        print("Received response message %s:%s:%s" % (self._cfg_meta_object,
                                                       op_type.__name__, resp_message))
         api_status = GrpcReqRspMsg.GetApiStatusObject(resp_message)
-        logger.info("API response status %s" % api_status)
+        print("API response status %s" % api_status)
         if crud_oper._post_cb and not self.is_dol_created:
             crud_oper._post_cb.call(self.data, req_message, resp_message)
         self._msg_cache[op_type] = req_message
@@ -201,12 +201,12 @@ class ConfigObjectHelper(object):
         self._service_object = service_object
         self.key_type = None
         self.sorted_ext_refs = []
-        logger.info("Setting up config meta for the object %s in service %s"
+        print("Setting up config meta for the object %s in service %s"
                     %(service_object.name, spec.Service))
         self._cfg_meta = ConfigObjectMeta(self._pb2, self._stub, self._spec, self._service_object)
         try:
             self.key_type = getattr(cfg_meta_mapper.kh_proto, service_object.key_handle)
-            logger.info("Adding config meta for the object %s in service %s"
+            print("Adding config meta for the object %s in service %s"
                         %(service_object.name, spec.Service))
             cfg_meta_mapper.Add(self.key_type, service_object, self)
         except AttributeError:
@@ -218,7 +218,7 @@ class ConfigObjectHelper(object):
         return str(self._spec.Service) + " " + str(self._service_object.name)
 
     def ReadDolConfig(self, message):
-        logger.info("Reading DOL config for %s" %(self))
+        print("Reading DOL config for %s" %(self))
         config_object = ConfigObject(self._cfg_meta, self, is_dol_created=True)
         ret_status = config_object.process(ConfigObjectMeta.CREATE, dol_message=message)
         # Iterate over a copy of self._config_objects so that we can modify the original list.
@@ -266,7 +266,7 @@ class ConfigObjectHelper(object):
         return config_object
 
     def CreateConfigs(self, count, status, forced_references=None):
-        logger.info("Creating configuration for %s, count : %d" % (self, count))
+        print("Creating configuration for %s, count : %d" % (self, count))
         for _ in range(0, count):
             config_object = self.CreateConfigObject(status, ext_refs={})
             if config_object:
@@ -275,7 +275,7 @@ class ConfigObjectHelper(object):
         return True
 
     def ReCreateConfigs(self, count, status):
-        logger.info("ReCreating configuration for %s, count : %d" % (self, count))
+        print("ReCreating configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
             if config_object.is_dol_config_modified:
                 continue
@@ -291,7 +291,7 @@ class ConfigObjectHelper(object):
         return True
                  
     def VerifyConfigs(self, count, status):
-        logger.info("Verifying configuration for %s, count : %d" % (self, count))
+        print("Verifying configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
             if config_object.is_dol_config_modified:
                 continue
@@ -316,7 +316,7 @@ class ConfigObjectHelper(object):
         return True
     
     def UpdateConfigs(self, count, status):
-        logger.info("Updating configuration for %s, count : %d" % (self, count))
+        print("Updating configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
             ret_status = config_object.process(ConfigObjectMeta.UPDATE, ext_refs={})    
             if ret_status != status:
@@ -327,7 +327,7 @@ class ConfigObjectHelper(object):
         return True
     
     def DeleteConfigs(self, count, status):
-        logger.info("Deleting configuration for %s, count : %d" % (self, count))
+        print("Deleting configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
             if config_object.is_dol_config_modified:
                 continue
@@ -342,7 +342,7 @@ class ConfigObjectHelper(object):
     
     def GetRandomConfig(self):
         if( len(self._config_objects) == 0 ):
-            logger.info("Should not try to choose an external reference when none exists!")
+            print("Should not try to choose an external reference when none exists!")
             assert False
         index = random.randint(0, len(self._config_objects))
         return self._config_objects[index - 1]
@@ -356,7 +356,7 @@ class ConfigObjectHelper(object):
 
 def AddConfigSpec(config_spec, hal_channel):
     for sub_service in config_spec.objects:
-       logger.info("Adding config spec for service : " , config_spec.Service, sub_service.object.name)
+       print("Adding config spec for service : " , config_spec.Service, sub_service.object.name)
        ConfigObjectHelper(config_spec, hal_channel, sub_service.object)
 
 def SortConfigExternalDeps():
@@ -398,7 +398,7 @@ def ModifyConfigFromDol(message_name):
         object_helper = cfg_meta_mapper.dol_message_map[message_name]
         object_helper.ModifyDolConfig()
     except KeyError:
-        logger.info("Unsupported modify for object")
+        print("Unsupported modify for object")
         # raise
 
 def CreateConfigFromDol(incoming_message):
@@ -406,7 +406,7 @@ def CreateConfigFromDol(incoming_message):
         object_helper = cfg_meta_mapper.dol_message_map[type(incoming_message).__name__]
     except KeyError:
         # This object hasn't been enabled in MBT as yet. Return
-        logger.info("Not reading config from DOL for %s" %(type(incoming_message)))
+        print("Not reading config from DOL for %s" %(type(incoming_message)))
         return
     messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
     for message in messages:

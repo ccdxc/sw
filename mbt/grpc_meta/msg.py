@@ -198,7 +198,7 @@ class GrpcReqRspMsg:
     @staticmethod
     # Ext_refs is keyed by field_name and parent_message_type, and the value is either a 
     # single external reference, or a list of ext references.
-    def static_generate_message(message, key=None, ext_refs=None, external_constraints=None):
+    def static_generate_message(message, key=None, ext_refs={}, external_constraints=None):
 
         # Apply constraints and external constraints
         GrpcReqRspMsg.apply_constraints(message, key, ext_refs, external_constraints)

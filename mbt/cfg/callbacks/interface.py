@@ -1,6 +1,10 @@
 import interface_pb2
 import random
 import math
+from grpc_meta.msg import GrpcReqRspMsg
+import os
+import types_pb2
+
 
 def PreCreateCb(data, req_spec, resp_spec):
     if req_spec.request[0].HasField("if_enic_info"):
@@ -13,6 +17,10 @@ def PreCreateCb(data, req_spec, resp_spec):
         req_spec.request[0].type = interface_pb2.IF_TYPE_TUNNEL
     elif req_spec.request[0].HasField("if_cpu_info"):
         req_spec.request[0].type = interface_pb2.IF_TYPE_CPU
+
+    if req_spec.request[0].type == interface_pb2.IF_TYPE_TUNNEL:
+        req_spec.request[0].type = interface_pb2.IF_TYPE_UPLINK
+        GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_uplink_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK:
         req_spec.request[0].if_uplink_info.port_num = 1
