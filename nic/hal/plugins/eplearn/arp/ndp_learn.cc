@@ -109,6 +109,7 @@ ndp_process_entry(const unsigned char *ether_pkt,
     }
     event_data.ip_addr = ip_addr;
     event_data.fte_ctx = &ctx;
+    event_data.in_fte_pipeline = true;
     arp_trans_t::process_transaction(trans, ARP_ADD,
                                  (fsm_event_data)(&event_data));
 
