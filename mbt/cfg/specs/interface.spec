@@ -7,10 +7,6 @@ objects:
         name : Interface
         key_handle : InterfaceKeyHandle
         ignore:
-            - op : Get
-            - op : Update
-            - op : Create
-            - op : Delete
         create:
             api      : InterfaceCreate
             request  : InterfaceRequestMsg
