@@ -22,6 +22,10 @@
 // below. We are leaving it that way assuming that IMMDT_AS_DBELL is
 // used only by storage folks, their case wouldn't be needing 4 SGEs
 // anyway.
+// In cases of error (KEY permissions, VA offset mismatch etc.,) where
+// one do not want to transfer payload, skip to eop should be marked thru
+// a DMA instruction. Using DMA_CMD 12 for that, as it is mutually exclusive
+// to PYLD transfer
 #define RESP_RX_DMA_CMD_PYLD_BASE   2
 #define RESP_RX_DMA_CMD_RSQWQE      2
 #define RESP_RX_DMA_CMD_ATOMIC_RESOURCE_WR          3
@@ -34,6 +38,7 @@
 
 #define RESP_RX_DMA_CMD_START       0
 #define RESP_RX_DMA_CMD_ACK         0
+#define RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR (RESP_RX_MAX_DMA_CMDS - 4)
 #define RESP_RX_DMA_CMD_IMMDT_AS_DBELL (RESP_RX_MAX_DMA_CMDS - 3)
 #define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 2)
 #define RESP_RX_DMA_CMD_EQ          (RESP_RX_MAX_DMA_CMDS - 1)

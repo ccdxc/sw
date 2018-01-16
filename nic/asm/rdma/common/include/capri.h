@@ -626,6 +626,9 @@ struct capri_dma_cmd_pkt2mem_t {
 
 //RX
 #define DMA_CMD_SKIP_T struct capri_dma_cmd_skip_t
+#define SKIP_SKIP_TO_EOP_OFFSET offsetof(DMA_CMD_SKIP_T, skip_to_eop)
+#define SKIP_CMDEOP_OFFSET offsetof(DMA_CMD_SKIP_T, cmdeop)
+#define SKIP_CMDTYPE_OFFSET offsetof(DMA_CMD_SKIP_T, cmdtype)
 struct capri_dma_cmd_skip_t {
     rsvd: 109;
     skip_to_eop: 1;
@@ -851,6 +854,9 @@ addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, size), sizeof(DMA_CMD_MEM2MEM_T.size), _size; \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
     phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, host_addr, cmdtype), (1 << MEM2MEM_HOST_ADDR_OFFSET) | (DMA_CMD_MEM2MEM_TYPE_DST << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET);
+
+#define DMA_SKIP_CMD_SETUP(_base_r, _cmd_eop, _skip_to_eop) \
+    phvwrpi      _base_r, offsetof(DMA_CMD_SKIP_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_SKIP_T, skip_to_eop, cmdtype), (_skip_to_eop << SKIP_SKIP_TO_EOP_OFFSET) | (_cmd_eop << SKIP_CMDEOP_OFFSET) | (DMA_CMD_TYPE_SKIP << SKIP_CMDTYPE_OFFSET);
 
 #define DMA_SET_END_OF_CMDS(_cmd_t, _base_r)                                  \
     phvwrp     _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 1

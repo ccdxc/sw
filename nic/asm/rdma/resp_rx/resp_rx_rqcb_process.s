@@ -537,9 +537,13 @@ duplicate_wr_send:
                             CAPRI_RXDMA_INTRINSIC_QTYPE, \
                             CAPRI_RXDMA_INTRINSIC_QID, \
                             DB_ADDR, DB_DATA)
+
+    //Generate DMA command to skip to payload end
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+
     // release chance to next packet
     tbladd.e  d.nxt_to_go_token_id, 1  
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE) //Exit Slot
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
 duplicate_rd_atomic:
     // recirc if threre is already another duplicate req in progress
@@ -620,9 +624,12 @@ nak:
                                    CAPRI_RXDMA_INTRINSIC_QID, \
                                    DB_ADDR, DB_DATA)
 
+    //Generate DMA command to skip to payload end
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+
     // release chance to next packet
     tbladd.e  d.nxt_to_go_token_id, 1  
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE) //Exit Slot
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
 /****** Logic for UD ******/
 

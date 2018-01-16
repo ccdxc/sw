@@ -184,6 +184,10 @@ error_completion:
                                    k.global.qid,
                                    DB_ADDR, DB_DATA)
     
+    //Generate DMA command to skip to payload end
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
+
     bcf     [!c1],  check_write_back
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, !c1) //BD Slot
     //clear both lkey0 and lkey1 table valid bits
