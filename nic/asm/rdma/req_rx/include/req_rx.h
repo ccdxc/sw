@@ -15,7 +15,10 @@
 
 #define REQ_RX_DMA_CMD_START_FLIT_ID       8 // flits 8-11 are used for dma cmds
 #define REQ_RX_DMA_CMD_START               0
-#define REQ_RX_BKTRACK_PSN_DMA_CMD         3
+#define REQ_RX_DMA_CMD_MSN_CREDITS         0
+#define REQ_RX_DMA_CMD_FC_DB               1
+#define REQ_RX_DMA_CMD_REXMIT_PSN          2
+#define REQ_RX_DMA_CMD_BKTRACK_DB          3
 #define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
 #define REQ_RX_MAX_DMA_CMDS                16
 #define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 3)

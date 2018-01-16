@@ -18,6 +18,9 @@ struct resp_tx_rqcb1_process_k_t k;
 
 resp_tx_rqcb1_dcqcn_rate_process:
 
+    // Drop PHV for dcqcn algo processing.
+    phvwr         p.common.p4_intr_global_drop, 1
+
     add     DCQCN_CB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT 
     bbeq    k.args.timer_event_process, 1 , timer_event
 

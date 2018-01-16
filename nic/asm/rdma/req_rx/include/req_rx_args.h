@@ -74,9 +74,10 @@ struct req_rx_sqcb1_write_back_info_t {
     in_progress             : 1;
     incr_nxt_to_go_token_id : 1;
     post_bktrack            : 1;
+    dma_cmd_eop             : 1;
     num_sges                : 8;
     tbl_id                  : 8;
-    pad                     : 67;
+    pad                     : 66;
 };
 
 struct req_rx_rrqlkey_to_ptseg_info_t {

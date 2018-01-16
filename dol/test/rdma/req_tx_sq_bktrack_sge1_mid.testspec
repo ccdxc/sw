@@ -92,7 +92,7 @@ packets:
 
     - packet:
         id          : READ_RESP_LAST_PYLD # Base packet
-        payloadsize : 24
+        payloadsize : 1023
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -509,11 +509,11 @@ packets:
                  destqp  : ref://testcase/config/rdmasession/lqp/id
                  psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=8
              payload:
-                 data    : ref://testcase/packets/id=READ_RESP_MID1_PYLD/rawbytes
+                 data    : ref://testcase/packets/id=READ_RESP_MID2_PYLD/rawbytes
    
     - packet:
          id          : READ_RESP_LAST     # Receive packet 
-         payloadsize : 24
+         payloadsize : 1023
          template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :

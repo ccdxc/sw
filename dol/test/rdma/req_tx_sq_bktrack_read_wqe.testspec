@@ -44,7 +44,7 @@ packets:
 
     - packet:
         id          : READ_RESP_LAST_PYLD # Base packet
-        payloadsize : 24
+        payloadsize : 1023
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -517,7 +517,7 @@ packets:
 
     - packet:
          id          : REXMIT_READ_RESP_LAST     # Receive packet 
-         payloadsize : 24
+         payloadsize : 1023
          template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :

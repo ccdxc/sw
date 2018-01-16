@@ -60,7 +60,8 @@ resp_tx_rqcb_process:
     // Process DCQCN algo ring first as its the highest priority.
     seq         c1, DCQCN_RATE_COMPUTE_C_INDEX, DCQCN_RATE_COMPUTE_P_INDEX
     bcf         [c1], check_dcqcn_timer_q
-    nop
+    // set DMA cmd ptr   (dma cmd idx with in flit is zero)
+    TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID, 0) // BD-slot
 
     // Increment c-index and pass to stage 4
     add         r2, r0, DCQCN_RATE_COMPUTE_C_INDEX
@@ -144,9 +145,6 @@ check_rsq:
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.rsq_rkey.congestion_mgmt_enable, d.congestion_mgmt_enable)
     CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.congestion_mgmt_enable, d.congestion_mgmt_enable)
-
-    // set DMA cmd ptr   (dma cmd idx with in flit is zero)
-    TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID, 0)
 
     seq         c1, RSQ_C_INDEX, RSQ_P_INDEX
     bcf         [c1], check_ack_nak

@@ -41,6 +41,8 @@ update_spec_cindex:
      CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot
 
      tblmincri     SPEC_SQ_C_INDEX,  d.log_num_wqes, 1
+     phvwr  p.common.p4_intr_global_drop, 1
+
 
 end:
      nop.e

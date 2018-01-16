@@ -70,11 +70,14 @@ p_ack:
     phvwr.!c2      p.rexmit_psn, d.psn 
     phvwr.c2       p.rexmit_psn, k.args.e_rsp_psn
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c1)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, dma_cmd_eop, 1)
 
     // If ack msn in implicit nak is already acked' do not post CQ
     scwle24        c1, r2, k.args.msn
     bcf            [c1], end
     nop            // Branch Delay Slot
+ 
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, dma_cmd_eop, 0)
 
     b              set_cqcb_arg
     nop            // Branch Delay Slot
@@ -88,12 +91,15 @@ nak_seq_error:
     // SQ backtrack if NAK is due to SEQ_ERR    
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_SEQ_ERR)
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c3)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, dma_cmd_eop, 1)
 
     // if implicit ack MSN in NAK matches already ack'ed msn, do not post CQ
     sub            r2, r2, 1
     scwle24        c1, r2, k.args.msn
     bcf            [c1], end
     phvwr          p.cqwqe.id.msn, r2 // Branch Delay Slot
+
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, dma_cmd_eop, 0)
 
     b              set_cqcb_arg
     nop            // Branch Delay Slot
@@ -142,13 +148,18 @@ read_or_atomic:
     nop            // Branch Delay Slot
 
 read:
+    CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqsge_process)
+    add            r3, d.read.wqe_sge_list_addr, k.args.cur_sge_id, LOG_SIZEOF_SGE_T
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
+
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
     //CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, is_atomic, 0)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, cur_sge_id, k.args.cur_sge_id)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, cur_sge_offset, k.args.cur_sge_offset)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, in_progress, k.args.in_progress)
-    CAPRI_SET_FIELD_C(r7, RRQWQE_TO_SGE_T, dma_cmd_eop, 1, !c4)
+    CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, dma_cmd_eop, 1)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, rrq_cindex, k.args.rrq_cindex)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
     sub            r3, d.num_sges, k.args.cur_sge_id
@@ -157,15 +168,13 @@ read:
     add            r3, r3, 1
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, e_rsp_psn, r3)
 
-    CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqsge_process)
-    add            r3, d.read.wqe_sge_list_addr, k.args.cur_sge_id, LOG_SIZEOF_SGE_T
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
-
     // if read_resp first contains already ack'ed msn, do not post CQ
     scwle24        c1, r1, k.args.msn
     bcf            [c1 & c3], end
     nop            // Branch Delay Slot
+
+    // set cmd_eop at the end of data transfer if there is no CQ posting
+    CAPRI_SET_FIELD_C(r7, RRQWQE_TO_SGE_T, dma_cmd_eop, 0, c4)
 
     b              set_cqcb_arg
     nop            // Branch Delay Slot

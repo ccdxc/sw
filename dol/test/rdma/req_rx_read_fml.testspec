@@ -183,7 +183,7 @@ packets:
                 syndrome : 14 # TODO - credits
                 msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
              payload:
-                 data    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/rawbytes
+                 data    : ref://testcase/packets/id=READ_RESP_LAST_PYLD/rawbytes
 
 buffers:
     - buffer:

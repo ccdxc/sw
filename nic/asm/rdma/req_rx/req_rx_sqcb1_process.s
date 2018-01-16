@@ -43,6 +43,7 @@ req_rx_sqcb1_process:
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
 process_rx_pkt:
+    SQCB1_ADDR_GET(r5)
     bbeq           k.global.flags.req_rx._feedback, 1, process_feedback
     add            r2, r0, k.global.flags //Branch Delay Slot
 
@@ -83,8 +84,7 @@ check_ack_sanity:
 
 process_aeth:
     // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
-    SQCB1_ADDR_GET(r5)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_MSN_CREDITS)
 
     bcf            [!c4], post_rexmit_psn
     phvwr.!c4      p.rexmit_psn, k.to_stage.bth_psn // Branch Delay Slot
@@ -97,21 +97,20 @@ process_aeth:
 
 post_credits:
     // dma_cmd - msn and credits
-    phvwrpair      p.msn, k.to_stage.msn, p.credits, k.to_stage.syndrome[4:0]
-
     add            r4, r5, SQCB1_MSN_OFFSET
     DMA_HBM_PHV2MEM_SETUP(r6, msn, credits, r4)
     bcf            [!c1], post_rexmit_psn
-    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    phvwrpair      p.msn, k.to_stage.msn, p.credits, k.to_stage.syndrome[4:0]
 
     // dma_cmd - fc_ring db data
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_FC_DB)
     PREPARE_DOORBELL_INC_PINDEX(k.global.lif, k.global.qtype, k.global.qid, FC_RING_ID, r1, r2)
     phvwr          p.db_data1, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r6, db_data1, db_data1, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
-    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
 
 post_rexmit_psn:
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_REXMIT_PSN)
     add            r4, r5, SQCB1_REXMIT_PSN_OFFSET
     DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, rexmit_psn, r4)
     bcf            [c3], unsolicited_ack
@@ -145,7 +144,7 @@ set_arg:
 
 unsolicited_ack:
     // if its unsolicted ack, just post credits, msn and exit, CQ posting not needed
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
     CAPRI_SET_TABLE_0_VALID(0)
     // TODO - need to do this as part of write-back for locking
     tblmincri      d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
