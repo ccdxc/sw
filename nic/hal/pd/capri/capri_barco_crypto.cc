@@ -47,6 +47,13 @@ hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
     HAL_TRACE_DEBUG("Barco gcm0 key descriptor base setup @ {:x}, key descriptor count {}",
             key_desc_array_base, key_desc_array_size);
 
+    /* Reset GCM0 ring */
+    hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0xffffffff);
+    hens.dhs_crypto_ctl.gcm0_soft_rst.write();
+    /* Bring out of reset */
+    hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0);
+    hens.dhs_crypto_ctl.gcm0_soft_rst.write();
+
     hese.dhs_crypto_ctl.gcm0_key_array_base_w0.fld((uint32_t)(key_desc_array_base & 0xffffffff));
     hese.dhs_crypto_ctl.gcm0_key_array_base_w0.write();
     hese.dhs_crypto_ctl.gcm0_key_array_base_w1.fld((uint32_t)(key_desc_array_base >> 32));
@@ -57,15 +64,6 @@ hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
 
     HAL_TRACE_DEBUG("Barco gcm0 descriptor base setup @ {:x}, descriptor count {}",
             ring_base, ring_size);
-
-    /* Reset GCM0 ring */
-    hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0xffffffff);
-    hens.dhs_crypto_ctl.gcm0_soft_rst.write();
-    /* Bring out of reset */
-    hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0);
-    hens.dhs_crypto_ctl.gcm0_soft_rst.write();
-    hens.dhs_crypto_ctl.gcm0_ring_size.fld(ring_size);
-    hens.dhs_crypto_ctl.gcm0_ring_size.write();
 
     hens.dhs_crypto_ctl.gcm0_ring_base_w0.fld((uint32_t)(ring_base & 0xffffffff));
     hens.dhs_crypto_ctl.gcm0_ring_base_w0.write();
@@ -78,8 +76,9 @@ hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
     hens.dhs_crypto_ctl.gcm0_producer_idx.fld(0);
     hens.dhs_crypto_ctl.gcm0_producer_idx.write();
 
-    hens.dhs_crypto_ctl.gcm0_consumer_idx.fld(0);
-    hens.dhs_crypto_ctl.gcm0_consumer_idx.write();
+    // CI is read-only
+    //hens.dhs_crypto_ctl.gcm0_consumer_idx.fld(0);
+    //hens.dhs_crypto_ctl.gcm0_consumer_idx.write();
 
     return HAL_RET_OK;
 } 

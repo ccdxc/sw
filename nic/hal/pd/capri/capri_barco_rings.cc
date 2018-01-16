@@ -243,14 +243,16 @@ hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.pk_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.pk_producer_idx.write();
 
-    hens.dhs_crypto_ctl.pk_consumer_idx.fld(barco_ring->consumer_idx);
-    hens.dhs_crypto_ctl.pk_consumer_idx.write();
+    // CI is read-only
+    //hens.dhs_crypto_ctl.pk_consumer_idx.fld(barco_ring->consumer_idx);
+    //hens.dhs_crypto_ctl.pk_consumer_idx.write();
 
     HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_asym_key_array_init();
 }
+
 
 bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
@@ -379,8 +381,9 @@ hal_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.xts_enc_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.xts_enc_producer_idx.write();
 
-    hens.dhs_crypto_ctl.xts_enc_consumer_idx.fld(barco_ring->consumer_idx);
-    hens.dhs_crypto_ctl.xts_enc_consumer_idx.write();
+    // CI is read-only
+    //hens.dhs_crypto_ctl.xts_enc_consumer_idx.fld(barco_ring->consumer_idx);
+    //hens.dhs_crypto_ctl.xts_enc_consumer_idx.write();
 
     HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -463,8 +466,9 @@ hal_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.xts_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.xts_producer_idx.write();
 
-    hens.dhs_crypto_ctl.xts_consumer_idx.fld(barco_ring->consumer_idx);
-    hens.dhs_crypto_ctl.xts_consumer_idx.write();
+    // CI is read-only
+    //hens.dhs_crypto_ctl.xts_consumer_idx.fld(barco_ring->consumer_idx);
+    //hens.dhs_crypto_ctl.xts_consumer_idx.write();
 
     HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -545,8 +549,9 @@ hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
     mpns.dhs_crypto_ctl.mpp0_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp0_producer_idx.write();
 
-    mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld(barco_ring->consumer_idx);
-    mpns.dhs_crypto_ctl.mpp0_consumer_idx.write();
+    // CI is read-only
+    //mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld(barco_ring->consumer_idx);
+    //mpns.dhs_crypto_ctl.mpp0_consumer_idx.write();
 
     HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -704,8 +709,9 @@ hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
     mpns.dhs_crypto_ctl.mpp1_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp1_producer_idx.write();
 
-    mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld(barco_ring->consumer_idx);
-    mpns.dhs_crypto_ctl.mpp1_consumer_idx.write();
+    // CI is read-only
+    //mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld(barco_ring->consumer_idx);
+    //mpns.dhs_crypto_ctl.mpp1_consumer_idx.write();
 
     HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -780,8 +786,9 @@ hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
     mpns.dhs_crypto_ctl.mpp2_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp2_producer_idx.write();
 
-    mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld(barco_ring->consumer_idx);
-    mpns.dhs_crypto_ctl.mpp2_consumer_idx.write();
+    // CI is read-only
+    //mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld(barco_ring->consumer_idx);
+    //mpns.dhs_crypto_ctl.mpp2_consumer_idx.write();
 
     HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
@@ -856,8 +863,9 @@ hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
     mpns.dhs_crypto_ctl.mpp3_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp3_producer_idx.write();
 
-    mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld(barco_ring->consumer_idx);
-    mpns.dhs_crypto_ctl.mpp3_consumer_idx.write();
+    // CI is read-only
+    //mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld(barco_ring->consumer_idx);
+    //mpns.dhs_crypto_ctl.mpp3_consumer_idx.write();
 
     HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
