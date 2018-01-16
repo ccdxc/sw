@@ -3946,7 +3946,7 @@ def capri_p4pd_create_swig_interface(be):
 %include "std_string.i"
 %{
     #include <thread>
-    #include "nic/gen/iris/include/p4pd.h"
+    #include "nic/gen/iris/include/p4pd_swig.h"
     #include "iris_custom.h"
     extern int capri_init(void);
     char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
@@ -3981,7 +3981,7 @@ typedef unsigned long long uint64_t;
 %free(uint16_t);
 %free(uint32_t);
 %free(uint64_t);
-%include "p4pd.h"
+%include "p4pd_swig.h"
 %include "iris_custom.h"
 """
     out_file = out_dir + '%s.i' % (name)

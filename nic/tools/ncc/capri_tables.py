@@ -5685,6 +5685,7 @@ class capri_table_mapper:
                         break
 
             if 'sram' in table_spec.keys():
+                ctable = self.tmgr.gress_tm[xgress_from_string(table_spec['region'])].tables[table_spec['name']]
                 if table_spec['overflow_parent']:
                     # Overflow SRAMs are appended to their parent SRAMs. Create layout using parent's layout
                     for table in self.tables['sram'][table_spec['region']]:
@@ -5697,7 +5698,10 @@ class capri_table_mapper:
                                     break
                             memory = OrderedDict()
                             memory['entry_width'] = table['width']
-                            memory['entry_width_bits'] = entry_bit_width
+                            if ctable.is_writeback:
+                                memory['entry_width_bits'] = 16 * table['width']
+                            else:
+                                memory['entry_width_bits'] = entry_bit_width
                             memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
                             memory['entry_start_index'] = capri_get_sram_sw_start_address_from_layout(memory['layout'])
                             memory['entry_end_index'] = capri_get_sram_sw_end_address_from_layout(memory['layout'])
@@ -5709,7 +5713,10 @@ class capri_table_mapper:
                         if table_spec['name'] == table['name']:
                             memory = OrderedDict()
                             memory['entry_width'] = table['width']
-                            memory['entry_width_bits'] = table_spec['sram']['width']
+                            if ctable.is_writeback:
+                                memory['entry_width_bits'] = 16 * table['width']
+                            else:
+                                memory['entry_width_bits'] = table_spec['sram']['width']
                             memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
                             memory['entry_start_index'] = capri_get_sram_sw_start_address_from_layout(memory['layout'])
                             memory['entry_end_index'] = capri_get_sram_sw_end_address_from_layout(memory['layout'])

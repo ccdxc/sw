@@ -115,6 +115,9 @@ class ${table}():
 //::            var = 0
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
+//::            if actionname.startswith("__"):
+//::                continue
+//::            #endif
 //::                actname = actionname.upper()
         self.${tbl}_${actname}_ID = ${var}
 //::                var = var + 1
@@ -130,8 +133,14 @@ class ${table}():
 //::            for fldunion in pddict['tables'][table]['fldunion_keys']:
 //::                (container_field, un_fields) = fldunion
 //::                if len(un_fields) > 1:
+//::                    cnt = 0
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        p4fldname = 'data_' + str(cnt) + '.' + p4fldname
+//::                        cnt += 1
+//::                        #endif
 //::                        if (p4fldwidth <= 32):
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
@@ -161,6 +170,9 @@ class ${table}():
 //::                if len(un_fields) > 1:
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 32):
 
         if ('${p4fldname}' in ctx['swkey']):
@@ -187,8 +199,10 @@ class ${table}():
                 # foreach keys
 //::            for fields in pddict['tables'][table]['keys']:
 //::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if p4fldname.startswith("__"):
+//::                    continue
+//::                #endif
 //::                if (p4fldwidth <= 32):
-
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
@@ -217,6 +231,9 @@ class ${table}():
 //::                else:
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 32):
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
@@ -245,6 +262,9 @@ class ${table}():
 //::                else:
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 32):
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
@@ -276,9 +296,14 @@ class ${table}():
 //::            for fldunion in pddict['tables'][table]['fldunion_keys']:
 //::                (container_field, un_fields) = fldunion
 //::                if len(un_fields) > 1:
-
+//::                    cnt = 0
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
+//::                        p4fldname = 'data_' + str(cnt) + '.' + p4fldname
+//::                        cnt += 1
 //::                        if (p4fldwidth <= 32):
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
@@ -309,6 +334,9 @@ class ${table}():
 
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 32):
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
@@ -335,6 +363,9 @@ class ${table}():
                 # for each keys
 //::            for fields in pddict['tables'][table]['keys']:
 //::                (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if p4fldname.startswith("__"):
+//::                    continue
+//::                #endif
 //::                if (p4fldwidth <= 32):
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
@@ -364,6 +395,9 @@ class ${table}():
 //::                else:
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 32):
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
@@ -392,6 +426,9 @@ class ${table}():
 //::                else:
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 32):
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
@@ -419,6 +456,9 @@ class ${table}():
             # for each actions
 //::        for action in pddict['tables'][table]['actions']:
 //::            (actionname, actionfldlist) = action
+//::            if actionname.startswith("__"):
+//::                continue
+//::            #endif
 //::            action_name_upper = actionname.upper()
 //::            table_upper = table.upper()
         if ctx['action_name'] == '${actionname}':
@@ -428,6 +468,9 @@ class ${table}():
                     # for each action field
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
+//::                    if actionfldname.startswith("__"):
+//::                        continue
+//::                    #endif
 //::                    if (actionfldwidth <= 32):
             if '${actionfldname}' in ctx['actionfld']:
                 values = ctx['actionfld']['${actionfldname}'].split()
@@ -603,6 +646,9 @@ class ${table}():
                 # for each keys
 //::            for fields in pddict['tables'][table]['keys']:
 //::            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if p4fldname.startswith("__"):
+//::                    continue
+//::                #endif
 //::                if (p4fldwidth <= 8):
         print('  ${p4fldname}: %d (0x%02x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                elif (p4fldwidth <= 16):
@@ -625,10 +671,16 @@ class ${table}():
 //::            for fldunion in pddict['tables'][table]['fldunion_keys']:
 //::            (container_field, un_fields) = fldunion
 //::                if len(un_fields) > 1:
-
+//::                    cnt = 0
         print('  ${table}_union${i}_t:')
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        p4fldname = 'data_' + str(cnt) + '.' + p4fldname
+//::                        cnt += 1
 //::                        if (p4fldwidth <= 8):
         print('    ${p4fldname}: %d (0x%02x)' % (self.swkey.${table}_u${i}.${p4fldname}, self.swkey.${table}_u${i}.${p4fldname}))
 //::                        elif (p4fldwidth <= 16):
@@ -650,6 +702,9 @@ class ${table}():
 //::                else:
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 8):
         print('  ${p4fldname}: %d (0x%02x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        elif (p4fldwidth <= 16):
@@ -676,6 +731,9 @@ class ${table}():
         print('  ${table}_hdr_union${i}_t:')
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 8):
         print('    ${p4fldname}: %d (0x%02x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
 //::                        elif (p4fldwidth <= 16):
@@ -697,6 +755,9 @@ class ${table}():
 //::                else:
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 8):
         print('  ${p4fldname}: %d (0x%02x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        elif (p4fldwidth <= 16):
@@ -722,6 +783,9 @@ class ${table}():
         print('${table}_swkey_mask_t:')
 //::            for fields in pddict['tables'][table]['keys']:
 //::            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                if p4fldname.startswith("__"):
+//::                    continue
+//::                #endif
 //::                if (p4fldwidth <= 8):
         print('  ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                elif (p4fldwidth <= 16):
@@ -744,9 +808,16 @@ class ${table}():
 //::            (container_field, un_fields) = fldunion
 //::                if len(un_fields) > 1:
 
-        print('  ${table}_union${i}_t:')
+        print('  ${table}_union_mask_${i}_t:')
+//::                    cnt = 0
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        p4fldname = 'data_' + str(cnt) + '.' + p4fldname
+//::                        cnt += 1
 //::                        if (p4fldwidth <= 8):
         print('    ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 16):
@@ -768,6 +839,9 @@ class ${table}():
 //::                else:
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 8):
         print('  ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 16):
@@ -794,6 +868,9 @@ class ${table}():
         print('  ${table}_hdr_union${i}_t:')
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 8):
         print('    ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 16):
@@ -815,6 +892,9 @@ class ${table}():
 //::                else:
 //::                    for fields in un_fields:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if p4fldname.startswith("__"):
+//::                           continue
+//::                        #endif
 //::                        if (p4fldwidth <= 8):
         print('  ${p4fldname}_mask: %d (0x%02x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 16):
@@ -846,12 +926,17 @@ class ${table}():
 //::        for action in pddict['tables'][table]['actions']:
 //::            (actionname, actionfldlist) = action
 //::            actionname_upper = actionname.upper()
-
+//::            if actionname.startswith("__"):
+//::                continue
+//::            #endif
         if self.actiondata.actionid == self.${table_upper}_${actionname_upper}_ID:
 //::            if len(actionfldlist):
             print('    ${table}_${actionname}_t:')
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
+//::                    if actionfldname.startswith("__"):
+//::                        continue
+//::                    #endif
 //::                    if (actionfldwidth <= 8):
             print('      ${actionfldname}: %d (0x%02x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
 //::                    elif (actionfldwidth <= 16):
