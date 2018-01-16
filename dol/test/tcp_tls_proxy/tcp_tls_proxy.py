@@ -18,6 +18,10 @@ tls_debug_dol_dec_reasm_path = 0x40
 #  HACK: used until the issue with payload generation is fixed in DoL framework
 tls_debug_dol_fake_handshake_msg = 0x80
 
+# tls_debug_dol_sesq_stop prevents producing into both SESQ and L7 queue.
+# However, for L7 span there's a need to produce into L7 queue but not SESQ.
+# The following encrypt related flag(s) is overloaded for use in decrypt.
+tls_debug_dol_dec_only_sesq_stop = tls_debug_dol_explicit_iv_use_random
 
 def tcp_inorder_rx_verify (fwdata, usrdata):
     # usrdata will have initial and expected object usrdata.initial and

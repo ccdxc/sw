@@ -436,6 +436,13 @@
 #define TLS_DDOL_FAKE_HANDSHAKE_MSG     0x80
 
 /*
+ * TLS_DDOL_SESQ_STOP prevents producing into both SESQ and L7 queue.
+ * However, for L7 span there's a need to produce into L7 queue but not SESQ.
+ * The following encrypt related flag(s) is overloaded for use in decrypt.
+ */
+#define TLS_DDOL_DEC_ONLY_SESQ_STOP     TLS_DDOL_EXPLICIT_IV_USE_RANDOM
+
+/*
 
 TLS CB is split into 8 64B chunks as below.
 PRE_CRYPTO atomic stats start at offset 2*64 and use up 128B

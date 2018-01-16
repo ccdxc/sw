@@ -53,7 +53,7 @@ dma_cmd_sesq_slot:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
 
-    smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
+    smneb       c1, k.to_s5_debug_dol, TLS_DDOL_SESQ_STOP | TLS_DDOL_DEC_ONLY_SESQ_STOP, 0
     bcf         [c1], tls_sesq_produce_skip
     nop
 
@@ -69,6 +69,7 @@ tls_sesq_produce:
                               
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
     bcf         [c1], tls_queue_sesq_process_done
+    nop
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd2_dma_cmd)
     b           tls_queue_sesq_process_done
     nop

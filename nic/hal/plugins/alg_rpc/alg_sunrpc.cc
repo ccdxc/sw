@@ -639,12 +639,14 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 flowupd.type = fte::FLOWUPD_MCAST_COPY;
                 flowupd.mcast_info.mcast_en = 1;
                 flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;    
+                flowupd.mcast_info.proxy_mcast_ptr = 0;
                 ret = ctx.update_flow(flowupd);
             }
         } else { /* Responder flow */
            flowupd.type = fte::FLOWUPD_MCAST_COPY;
            flowupd.mcast_info.mcast_en = 1;
            flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
+           flowupd.mcast_info.proxy_mcast_ptr = 0;
            ret = ctx.update_flow(flowupd);
         }
     } else if (l4_sess && l4_sess->info) {

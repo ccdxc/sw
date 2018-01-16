@@ -180,3 +180,13 @@ entries:
         initiator: 
             port : const/47802
 
+    - entry:
+        label: proxy-redir-span-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder:
+            port : const/8089
+        initiator:
+            port : const/47802
+

@@ -66,7 +66,7 @@ tls_l7q_produce:
                                 r7, 
                                 0,
                                 d.{u.tls_queue_l7q_d.sw_l7q_pi}.hx,
-                                db_data_data)
+                                l7_db_data_data)
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd5_dma_cmd)
     phvwri      p.dma_cmd5_dma_cmd_eop, 1
     tbladd      d.{u.tls_queue_l7q_d.sw_l7q_pi}.hx, 1

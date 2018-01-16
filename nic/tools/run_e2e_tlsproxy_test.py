@@ -264,6 +264,10 @@ def main():
         # Run TCP/TLS proxy with app redirect E2E
         time.sleep(5)
         status = run_test(3, "TLS", str(89))
+        if status == 0:
+            # Run TCP/TLS proxy (SPAN mode) with app redirect E2E
+            time.sleep(5)
+            status = run_test(4, "TLS", str(8089))
         if status:
             print("Test App redirect E2E failure logged for monitoring\n")
             status = 0

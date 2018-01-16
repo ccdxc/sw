@@ -16,6 +16,7 @@ p4pt_exec(fte::ctx_t& ctx)
         HAL_TRACE_DEBUG("p4pt flow");
         flowupd.mcast_info.mcast_en = 1;
         flowupd.mcast_info.mcast_ptr = 4; // P4_NW_MCAST_INDEX_P4PT_COPY defined in nic/p4/nw/include/defines.h
+        flowupd.mcast_info.proxy_mcast_ptr = 0;
         ret = ctx.update_flow(flowupd);
         if (ret != HAL_RET_OK) {
             ctx.set_feature_status(ret);

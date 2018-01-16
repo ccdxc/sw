@@ -71,6 +71,31 @@ public:
         valid_.mcast_info = true;
         return HAL_RET_OK;
     }
+    hal_ret_t merge_mcast_info(const mcast_info_t& mcast_info) {
+
+        // Merge the argument mcast_info; the final evaluation of which
+        // mcast ptr is ultimately applicable will be done in fte::to_config()
+        
+        if (mcast_info.mcast_en) {
+            if (mcast_info.mcast_ptr) {
+                mcast_info_.mcast_ptr = mcast_info.mcast_ptr;
+            }
+            if (mcast_info.proxy_mcast_ptr) {
+                mcast_info_.proxy_mcast_ptr = mcast_info.proxy_mcast_ptr;
+            }
+        } else {
+            if (mcast_info.mcast_ptr) {
+                mcast_info_.mcast_ptr = 0;
+            }
+            if (mcast_info.proxy_mcast_ptr) {
+                mcast_info_.proxy_mcast_ptr = 0;
+            }
+        }
+
+        mcast_info_.mcast_en = mcast_info_.mcast_ptr || mcast_info_.proxy_mcast_ptr;
+        valid_.mcast_info = true;
+        return HAL_RET_OK;
+    }
     const mcast_info_t& mcast_info() const {
         return mcast_info_;
     } 
@@ -91,9 +116,17 @@ public:
     }
 
     hal_ret_t merge_mirror_info(const mirror_info_t& mirror_info) {
-        mirror_info_.proxy_mirror |= mirror_info.proxy_mirror;
-        mirror_info_.egr_mirror_session |= mirror_info.egr_mirror_session;
-        mirror_info_.ing_mirror_session |= mirror_info.ing_mirror_session;
+        if (mirror_info.mirror_en) {
+            mirror_info_.egr_mirror_session |= mirror_info.egr_mirror_session;
+            mirror_info_.ing_mirror_session |= mirror_info.ing_mirror_session;
+            mirror_info_.proxy_egr_mirror_session |= mirror_info.proxy_egr_mirror_session;
+            mirror_info_.proxy_ing_mirror_session |= mirror_info.proxy_ing_mirror_session;
+        } else {
+            mirror_info_.egr_mirror_session &= ~mirror_info.egr_mirror_session;
+            mirror_info_.ing_mirror_session &= ~mirror_info.ing_mirror_session;
+            mirror_info_.proxy_egr_mirror_session &= ~mirror_info.proxy_egr_mirror_session;
+            mirror_info_.proxy_ing_mirror_session &= ~mirror_info.proxy_ing_mirror_session;
+        }
         valid_.mirror_info = true;
         return HAL_RET_OK;
     }

@@ -108,6 +108,32 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : APP_REDIR_PROXY_TCP_TLS_SPAN_ENCRYPT
+        module  : app_redir_proxy_tcp_tls_encrypt
+        spec    : app_redir_proxy.testspec
+        args    :
+            cipher_suite: GCM
+            maxflows: 1
+            key_size : 16
+            num_pkts : 1
+            proxyr_meta_pages : 1
+            redir_span : True
+
+    - module:
+        name    : APP_REDIR_PROXY_TCP_TLS_SPAN_DECRYPT
+        module  : app_redir_proxy_tcp_tls_decrypt
+        spec    : app_redir_proxy_one_tls_aes128_gcm.testspec
+        args    :
+            cipher_suite: GCM
+            maxflows: 1
+            key_size : 16
+            num_pkts : 1
+            proxyr_meta_pages : 1
+            redir_span : True
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : APP_REDIR_RAW_MYSQL
         module  : app_redir_raw_appid
         spec    : app_redir_raw_mysql.testspec

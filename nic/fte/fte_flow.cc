@@ -407,8 +407,20 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     }
 
     if (valid_.mcast_info) {
+
+        // Evaluate which mcast ptr is ultimately applicable
         attrs.mcast_en = mcast_info_.mcast_en;
-        attrs.mcast_ptr = mcast_info_.mcast_ptr;
+        attrs.mcast_ptr = 0;
+        if (attrs.mcast_en) {
+            if (mcast_info_.mcast_ptr && mcast_info_.proxy_mcast_ptr) {
+                HAL_TRACE_ERR("fte: {} cannot set both mcast ptrs", __FUNCTION__);
+                ret = HAL_RET_INVALID_OP;
+                goto end;
+            }
+
+            attrs.mcast_ptr = mcast_info_.mcast_ptr ? mcast_info_.mcast_ptr :
+                                                      mcast_info_.proxy_mcast_ptr;
+        }
     }
 
     if (valid_.ingress_info) {
@@ -431,8 +443,10 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     }
 
     if (valid_.mirror_info) {
-        config.ing_mirror_session = mirror_info_.ing_mirror_session;
-        config.eg_mirror_session = mirror_info_.egr_mirror_session;
+        config.ing_mirror_session = mirror_info_.ing_mirror_session |
+                                    mirror_info_.proxy_ing_mirror_session;
+        config.eg_mirror_session = mirror_info_.egr_mirror_session |
+                                   mirror_info_.proxy_egr_mirror_session;
     }
 
     // header manipulations
@@ -458,6 +472,7 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
         }
     }
 
+end:
     return ret;
 }
 

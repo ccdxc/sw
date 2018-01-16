@@ -58,6 +58,7 @@ app_redir_proxyccb_init(uint32_t cb_id,
 
 
 hal_ret_t app_redir_mirror_session_create(mirror_session_id_t &ret_id);
+hal_ret_t app_redir_ing_replication_create(oif_list_id_t &ret_id);
 
 } // namespace app_redir
 } // namespace hal

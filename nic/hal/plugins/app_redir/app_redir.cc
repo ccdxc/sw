@@ -21,8 +21,12 @@ typedef enum {
 
 
 static hal_spinlock_t       mirror_create_lock;
-static mirror_session_id_t  mirror_session_id;
 
+#if APP_REDIR_VISIBILITY_USE_MIRROR_SESSION
+static mirror_session_id_t  visib_mirror_session_id;
+#else
+static oif_list_id_t        visib_oif_list_id;
+#endif
 
 /*
  * One time initialization outside of any thread context
@@ -355,7 +359,12 @@ app_redir_span_create_init(fte::ctx_t& ctx)
     HAL_SPINLOCK_LOCK(&mirror_create_lock);
     rawrcb = find_rawrcb_by_id(APP_REDIR_SPAN_RAWRCB_ID);
     if (!rawrcb) {
-        ret = app_redir_mirror_session_create(mirror_session_id);
+
+#if APP_REDIR_VISIBILITY_USE_MIRROR_SESSION
+        ret = app_redir_mirror_session_create(visib_mirror_session_id);
+#else
+        ret = app_redir_ing_replication_create(visib_oif_list_id);
+#endif
         if (ret == HAL_RET_OK) {
             ret = _app_redir_rawccb_create(ctx, APP_REDIR_SPAN_RAWRCB_ID);
         }
@@ -950,18 +959,36 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
             HAL_TRACE_DEBUG("app_redir updating lport = {} for sport = {} dport = {}",
                             flowupd.fwding.lport, flow_key.sport, flow_key.dport);
         } else {
-            ret = app_redir_span_create_init(ctx);
-            flowupd.type = fte::FLOWUPD_MIRROR_INFO;
-            flowupd.mirror_info.proxy_mirror = true;
-            if (redir_ctx.redir_span_type() == APP_REDIR_SPAN_INGRESS) {
-                flowupd.mirror_info.ing_mirror_session = 1 << mirror_session_id;
-                flowupd.mirror_info.egr_mirror_session = 0;
-            } else {
-                flowupd.mirror_info.ing_mirror_session = 0;
-                flowupd.mirror_info.egr_mirror_session = 1 << mirror_session_id;
-            }
             HAL_TRACE_DEBUG("app_redir flow forwarding role: {} span_type: {}",
                             ctx.role(), redir_ctx.redir_span_type());
+            ret = app_redir_span_create_init(ctx);
+
+#if APP_REDIR_VISIBILITY_USE_MIRROR_SESSION
+            flowupd.type = fte::FLOWUPD_MIRROR_INFO;
+            flowupd.mirror_info.mirror_en = true;
+            flowupd.mirror_info.ing_mirror_session = 0;
+            flowupd.mirror_info.egr_mirror_session = 0;
+            if (redir_ctx.redir_span_type() == APP_REDIR_SPAN_INGRESS) {
+                flowupd.mirror_info.proxy_ing_mirror_session = 
+                                              1 << visib_mirror_session_id;
+                flowupd.mirror_info.proxy_egr_mirror_session = 0;
+            } else {
+                flowupd.mirror_info.proxy_ing_mirror_session = 0;
+                flowupd.mirror_info.proxy_egr_mirror_session = 
+                                              1 << visib_mirror_session_id;
+            }
+#else
+            if (redir_ctx.redir_span_type() == APP_REDIR_SPAN_INGRESS) {
+                flowupd.type = fte::FLOWUPD_MCAST_COPY;
+                flowupd.mcast_info.mcast_en = true;
+                flowupd.mcast_info.proxy_mcast_ptr = visib_oif_list_id;
+                flowupd.mcast_info.mcast_ptr = 0;
+            } else {
+                HAL_TRACE_ERR("app_redir ingress replication cannot be used "
+                              "for egress");
+                ret = HAL_RET_INVALID_OP;
+            }
+#endif
         }
 
         if (ret == HAL_RET_OK) {

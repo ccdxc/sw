@@ -211,7 +211,7 @@ ctx_t::get_key(hal::flow_role_t role)
 }
 
 //------------------------------------------------------------------------------
-// Returns flow key of the specified flow
+// Returns true if proxy mirror session(s) is configured for the current flow
 //------------------------------------------------------------------------------
 bool
 ctx_t::get_proxy_mirror_flow(hal::flow_role_t role)
@@ -224,7 +224,18 @@ ctx_t::get_proxy_mirror_flow(hal::flow_role_t role)
         flow = rflow_[rstage_];
     }
 
-    return flow ? flow->mirror_info().proxy_mirror : false;
+    if (flow) {
+        if (flow->mirror_info().proxy_ing_mirror_session ||
+            flow->mirror_info().proxy_egr_mirror_session) {
+            return true;
+        }
+
+        if (flow->mcast_info().mcast_en && flow->mcast_info().proxy_mcast_ptr) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------
@@ -840,7 +851,7 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         break;
 
     case FLOWUPD_MCAST_COPY:
-        ret = flow->set_mcast_info(flowupd.mcast_info);
+        ret = flow->merge_mcast_info(flowupd.mcast_info);
         LOG_FLOW_UPDATE(mcast_info);
         break;
 
@@ -1234,15 +1245,18 @@ std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
     os << "{mcast_en=" << (bool)val.mcast_en;
     if (val.mcast_en) {
         os << " ,mcast_ptr=" << val.mcast_ptr;
+        os << " ,proxy_mcast_ptr=" << val.proxy_mcast_ptr;
     }
     return os << "}";
 }
 
 std::ostream& operator<<(std::ostream& os, const mirror_info_t& val)
 {
-    os << "{proxy_mirror" << val.proxy_mirror;
+    os << "{mirror_en" << val.mirror_en;
     os << " ,ing_mirror_session=" << val.ing_mirror_session;
     os << " ,egr_mirror_session=" << val.egr_mirror_session;
+    os << " ,proxy_ing_mirror_session=" << val.proxy_ing_mirror_session;
+    os << " ,proxy_egr_mirror_session=" << val.proxy_egr_mirror_session;
     return os << "}";
 }
 

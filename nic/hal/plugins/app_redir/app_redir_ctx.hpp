@@ -31,6 +31,25 @@ typedef enum {
     APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE = APP_REDIR_SPAN_INGRESS 
 } __PACK__ app_redir_span_type_t;
 
+/*
+ * Two ways of supporting visibility mode: using a mirror session or 
+ * ingress replication. 
+ *
+ * Mirror session has a limitation that P4 only parses up to the L2 header 
+ * on the span packet so we'd have to work around that with 
+ * app_redir_rx_span_parse_workaround() below.
+ *
+ * Ingress replication does not have such limitation but is available for
+ * ingress copy only. In addition, replication will back pressure the source
+ * if either the flow's destination queue or the replication-to queue is full.
+ *
+ * In the case of mirror session, the span copy would be dropped if the
+ * mirror-to queue were full.
+ * 
+ */
+#define APP_REDIR_VISIBILITY_USE_MIRROR_SESSION     0
+
+
 // appID state
 #define APPID_STATE(ENTRY)                                          \
     ENTRY(APPID_STATE_INIT,        0,  "APPID_STATE_INIT")         \
@@ -308,6 +327,9 @@ inline void app_redir_rx_span_parse_workaround(fte::ctx_t& ctx)
     pen_app_redir_header_v1_full_t *app_hdr;
     uint16_t            redir_flags;
     uint16_t            ethertype;
+    uint16_t            payload_len;
+    uint16_t            pkt_len;
+    uint16_t            hdr_len;
     uint8_t             proto;
 
     if (ctx.pkt() && ctx.app_redir_pipeline()) {
@@ -317,6 +339,7 @@ inline void app_redir_rx_span_parse_workaround(fte::ctx_t& ctx)
 
             app_hdr = (pen_app_redir_header_v1_full_t *)ctx.pkt();
             if ((ctx.pkt_len() >= PEN_RAW_REDIR_HEADER_V1_FULL_SIZE) &&
+                (ntohs(app_hdr->app.h_proto) == PEN_APP_REDIR_ETHERTYPE) &&
                 (app_hdr->ver.format == PEN_RAW_REDIR_V1_FORMAT)) {
 
                 redir_flags = ntohs(app_hdr->raw.flags);
@@ -328,29 +351,47 @@ inline void app_redir_rx_span_parse_workaround(fte::ctx_t& ctx)
                     ethertype = cpu_rxhdr->flags & CPU_FLAGS_VLAN_VALID ?
                                 ntohs(((vlan_header_t*)ethhdr)->etype) :
                                 ntohs(ethhdr->etype);
-                    /*
-                     * Ignore L3/L4 options for now (the expectation is that P4 will
-                     * eventually provide us a fully parsed SPAN packet and we will
-                     * be able to get rid of this workaround).
-                     */
+
                     cpu_rxhdr->l3_offset = cpu_rxhdr->payload_offset;
+                    cpu_rxhdr->l4_offset = -1;
                     proto = IPPROTO_RAW;
                     switch (ethertype) {
 
                     case ETH_P_IP:
-                        iphdr = (ipv4_header_t*)(ctx.pkt() + cpu_rxhdr->l3_offset);
+                        iphdr = (ipv4_header_t *)(ctx.pkt() + cpu_rxhdr->l3_offset);
                         cpu_rxhdr->lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
-                        cpu_rxhdr->l4_offset = cpu_rxhdr->l3_offset + 
-                                               sizeof(ipv4_header_t);
-                        proto = iphdr->protocol;
+                        hdr_len = iphdr->ihl * sizeof(uint32_t);
+                        if (hdr_len >= sizeof(ipv4_header_t)) {
+                            cpu_rxhdr->l4_offset = cpu_rxhdr->l3_offset + hdr_len;
+                            proto = iphdr->protocol;
+                        }
                         break;
 
                     case ETH_P_IPV6:
                         iphdr6 = (ipv6_header_t *)(ctx.pkt() + cpu_rxhdr->l3_offset);
                         cpu_rxhdr->lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
-                        cpu_rxhdr->l4_offset = cpu_rxhdr->l3_offset + 
-                                               sizeof(ipv6_header_t);
-                        proto = iphdr6->nexthdr;
+
+                        /*
+                         * payload_len is the size of the payload, including any
+                         * extension headers. It is 0 when a hop-by-hop extension
+                         * header carries a jumbo payload option.
+                         */
+                        payload_len = ntohs(iphdr6->payload_len);
+                        if (payload_len) {
+
+                            /*
+                             * pkt_len = packet length - (L7 hdr length + L2 hdr length)
+                             */
+                            pkt_len = ctx.pkt_len() - cpu_rxhdr->payload_offset;
+                            if (pkt_len > payload_len) {
+                                hdr_len = pkt_len - payload_len;
+                                if (hdr_len >= sizeof(ipv6_header_t)) {
+                                    cpu_rxhdr->l4_offset = cpu_rxhdr->l3_offset + 
+                                                           hdr_len;
+                                    proto = iphdr6->nexthdr;
+                                }
+                            }
+                        }
                         break;
 
                     default:
@@ -375,11 +416,6 @@ inline void app_redir_rx_span_parse_workaround(fte::ctx_t& ctx)
                                                     sizeof(icmp_header_t);
                         break;
 
-                    case IPPROTO_ESP:
-                        cpu_rxhdr->payload_offset = cpu_rxhdr->l4_offset + 
-                                                    sizeof(ipsec_esp_header_t);
-                        break;
-
                     default:
                         cpu_rxhdr->payload_offset = -1;
                         break;
@@ -399,7 +435,9 @@ inline bool app_redir_pkt_rx_raw(fte::ctx_t& ctx)
     if (ctx.pkt() && ctx.app_redir_pipeline()) {
         if (ctx.cpu_rxhdr()->qtype != APP_REDIR_PROXYR_QTYPE) {
 
+#if APP_REDIR_VISIBILITY_USE_MIRROR_SESSION
             app_redir_rx_span_parse_workaround(ctx);
+#endif
             return true;
         }
     }
