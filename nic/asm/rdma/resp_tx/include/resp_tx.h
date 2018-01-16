@@ -17,7 +17,9 @@
 #define RESP_TX_DMA_CMD_AETH            5
 #define RESP_TX_DMA_CMD_CNP_RSVD        5 // CNP packets do not have AETH header. Re-using index.
 #define RESP_TX_DMA_CMD_ATOMICAETH      6 
-#define RESP_TX_DMA_CMD_PYLD_BASE       6
+#define RESP_TX_DMA_CMD_PYLD_BASE       6 // consumes 3 DMA commands
+#define RESP_TX_DMA_CMD_RSQ_C_IDX      (RESP_TX_MAX_DMA_CMDS - 4)
+#define RESP_TX_DMA_CMD_READ_RSP_LOCK  (RESP_TX_MAX_DMA_CMDS - 3)
 #define RESP_TX_DMA_CMD_PAD_ICRC       (RESP_TX_MAX_DMA_CMDS - 2)
 #define RESP_TX_DMA_CMD_UDP_OPTIONS    (RESP_TX_MAX_DMA_CMDS - 1)
 
@@ -56,7 +58,9 @@ struct resp_tx_phv_t {
     //***NOTE: Keep 4 bytes after pad with in this flit, so that can be copied as ICRC data into phv
     //ICRC data does not need to be given as zero as Capri overtites icrc after computation
     icrc     :  32;                              //  4B
-    rsvd2    : 312;                              // 39B
+    rsq_c_index   : 16;                          //  2B
+    read_rsp_lock : 8;                           //  1B
+    rsvd2    : 288;                              // 36B
     struct p4plus_to_p4_header_t p4plus_to_p4;   // 18B
 
     /* flit 6 */

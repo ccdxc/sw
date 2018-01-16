@@ -1052,7 +1052,9 @@ typedef struct rqcb1_s {
     uint8_t header_template_size;
     uint8_t p4plus_to_p4_flags;
     uint32_t current_sge_offset;
-    uint8_t  num_sges;
+    uint8_t  num_sges:7;
+    uint8_t read_rsp_in_progress:1;
+    uint8_t read_rsp_lock:8;
     uint8_t  current_sge_id;
     uint64_t curr_wqe_ptr;
     uint32_t dst_qp:24;
@@ -1061,9 +1063,6 @@ typedef struct rqcb1_s {
     rdma_aeth_t aeth;
     uint32_t ack_nak_psn:24;
     uint32_t cur_read_rsp_psn:24;
-    uint8_t dummy1:6;
-    uint8_t read_rsp_lock:1;
-    uint8_t read_rsp_in_progress:1;
     uint32_t cq_id:24;
     uint64_t wrid;
     //cached {va, len, r_key} from first packet of write req

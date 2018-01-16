@@ -49,15 +49,27 @@ rsq_write_back:
     cmov        CURR_READ_RSP_PSN, c1, k.args.curr_read_rsp_psn, 0
     add.c1      CURR_READ_RSP_PSN, CURR_READ_RSP_PSN, 1
 
-    // TODO: ordering rules
     tblwr       d.curr_read_rsp_psn, CURR_READ_RSP_PSN
-    tblwr       d.read_rsp_lock, 0
-    bcf         [c1], exit
 
     // TODO: ordering rules
-    // ring doorbell to update RSQ_C_INDEX to NEW_RSQ_C_INDEX
-    // currently it is done thru memwr. Need to see if it should be done thru DMA
-    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, RSQ_RING_ID, k.to_stage.s5.rqcb1_wb.new_c_index, DB_ADDR, DB_DATA)
+    // Need to release lock and increment rsq's ci at same time to avoid tx scheduler issues
+    // Also need to increment ci first and then release rsp lock (must fence)
+    phvwr   p.rsq_c_index, k.{to_stage.s5.rqcb1_wb.new_c_index}.hx
+    phvwri  p.read_rsp_lock, 0
+
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_READ_RSP_LOCK)
+    RQCB1_ADDR_GET(r5)
+    add            r6, r5, RQCB1_READ_RESP_LOCK
+    DMA_HBM_PHV2MEM_SETUP_F(DMA_CMD_BASE, read_rsp_lock, read_rsp_lock, r6)
+
+    // Update RSQ_C_INDEX to NEW_RSQ_C_INDEX only when read rsp NOT in progress (!c1)
+    bcf         [c1], exit
+
+    RQCB0_ADDR_GET(r5)
+    add            r6, r5, RSQ_C_INDEX_OFFSET
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_RSQ_C_IDX) //BD slot
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsq_c_index, rsq_c_index, r6)
+
     nop.e
     nop
 
