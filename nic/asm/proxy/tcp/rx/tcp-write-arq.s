@@ -10,13 +10,13 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_s5_t1_tcp_rx_k.h"
-    
+
 struct phv_ p;
 struct s5_t1_tcp_rx_k_ k;
 struct s5_t1_tcp_rx_write_arq_d d;
 
 %%
-    .align    
+    .align
     .param          ARQRX_BASE
 tcp_rx_write_arq_stage_start:
     CAPRI_CLEAR_TABLE1_VALID
@@ -34,19 +34,15 @@ dma_cmd_data:
     add         r1, r0, k.to_s5_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
-    sne         c1, k.common_phv_write_tcp_app_hdr, r0
+    seq         c1, k.common_phv_write_tcp_app_hdr, 1
     bcf         [c1], dma_cmd_cpu_hdr
     nop
 
-#if 1
-    addi        r6, r6, (70+NIC_CPU_HDR_SIZE_BYTES)
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, r6)
-#else
     CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.to_s5_payload_len)
-#endif
-        
-     b          dma_cmd_descr
-     nop
+    add         r6, r0, k.to_s5_payload_len
+
+    b          dma_cmd_descr
+    nop
 dma_cmd_cpu_hdr:
     addi        r6, r0, NIC_CPU_HDR_SIZE_BYTES
     phvwri      p.cpu_hdr1_src_lif, 0
@@ -70,8 +66,8 @@ dma_cmd_cpu_hdr:
     add         r1, r0, k.to_s5_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr3_tcp_ws)
-        
-dma_cmd_descr:    
+
+dma_cmd_descr:
     /* Set the DMA_WRITE CMD for descr */
     add         r5, k.to_s5_descr, r0
     addi        r1, r5, PKT_DESC_AOL_OFFSET
@@ -82,15 +78,7 @@ dma_cmd_descr:
     sub         r4, r3, k.to_s5_page
     phvwr       p.aol_O0, r4.wx
 
-    /* We have to get the length of (eth+ip+tcp) for syn ack from P4.
-     * Till then...
-     */
-#if 1
-    add         r4, r6, r0
-#else
-    add         r4, k.to_s5_payload_len, NIC_CPU_HDR_SIZE_BYTES
-#endif
-    phvwr       p.aol_L0, r4.wx
+    phvwr       p.aol_L0, r6.wx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(pkt_descr_dma_dma_cmd, r1, aol_A0, aol_next_pkt)    
     

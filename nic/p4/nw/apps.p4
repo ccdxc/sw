@@ -18,6 +18,8 @@ action p4plus_app_tcp_proxy() {
     if ((tcp.flags & TCP_FLAG_SYN) == TCP_FLAG_SYN) {
         f_p4plus_cpu_pkt(0);
         f_egress_tcp_options_fixup();
+        modify_field(p4_to_p4plus_tcp_proxy.payload_len,
+                     (capri_p4_intrinsic.packet_len + P4PLUS_CPU_PKT_SZ));
     } else {
         remove_header(ethernet);
         remove_header(vlan_tag);
@@ -35,11 +37,12 @@ action p4plus_app_tcp_proxy() {
         remove_header(tcp_option_two_sack);
         remove_header(tcp_option_three_sack);
         remove_header(tcp_option_four_sack);
+        modify_field(p4_to_p4plus_tcp_proxy.payload_len,
+                     l4_metadata.tcp_data_len);
     }
 
     add_header(p4_to_p4plus_tcp_proxy);
     add_header(p4_to_p4plus_tcp_proxy_sack);
-    modify_field(p4_to_p4plus_tcp_proxy.payload_len, l4_metadata.tcp_data_len);
     modify_field(p4_to_p4plus_tcp_proxy.p4plus_app_id,
                  control_metadata.p4plus_app_id);
     modify_field(p4_to_p4plus_tcp_proxy.table0_valid, TRUE);

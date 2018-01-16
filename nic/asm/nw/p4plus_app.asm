@@ -57,38 +57,40 @@ p4plus_app_classic_nic_no_vlan_strip:
 
 .align
 p4plus_app_tcp_proxy:
-  sne         c1, k.control_metadata_checksum_results, r0
-  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
-  smeqb       c1, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
-  balcf       r7, [c1], f_p4plus_cpu_pkt
-  add         r6, r0, r0 // pass packet start offset = 0
+  sne           c1, k.control_metadata_checksum_results, r0
+  phvwr.c1.e    p.capri_intrinsic_drop, TRUE
+  smeqb         c7, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
+  balcf         r7, [c7], f_p4plus_cpu_pkt
+  add           r6, r0, r0 // pass packet start offset = 0
 
-  phvwr.!c1   p.ethernet_valid, FALSE
-  phvwr.!c1   p.vlan_tag_valid, FALSE
-  phvwr.!c1   p.ipv4_valid, FALSE
-  phvwr.!c1   p.ipv6_valid, FALSE
+  phvwrpair.!c7 p.vlan_tag_valid, FALSE, p.ethernet_valid, FALSE
+  phvwrpair.!c7 p.ipv4_valid, FALSE, p.ipv6_valid, FALSE
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_options_blob_valid) == 12)
-  phvwr.!c1   p.{tcp_option_eol_valid...tcp_options_blob_valid}, r0
-  phvwr.!c1   p.tcp_valid, r0
+  phvwrpair.!c7 p.{tcp_option_eol_valid...tcp_options_blob_valid}, r0, p.tcp_valid, r0
+  or            r3, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                    k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add           r3, r3, P4PLUS_CPU_PKT_SZ
+  add.!c7       r3, r0, k.l4_metadata_tcp_data_len
 
-  phvwr       p.p4_to_p4plus_tcp_proxy_valid, TRUE
-  phvwr       p.p4_to_p4plus_tcp_proxy_sack_valid, TRUE
-  phvwr       p.p4_to_p4plus_tcp_proxy_payload_len, k.l4_metadata_tcp_data_len
-  phvwr       p.p4_to_p4plus_tcp_proxy_p4plus_app_id, k.control_metadata_p4plus_app_id
-  phvwr       p.p4_to_p4plus_tcp_proxy_table0_valid, TRUE
+  phvwrpair     p.p4_to_p4plus_tcp_proxy_sack_valid, TRUE, \
+                    p.p4_to_p4plus_tcp_proxy_valid, TRUE
+  phvwrpair     p.p4_to_p4plus_tcp_proxy_p4plus_app_id, \
+                    k.control_metadata_p4plus_app_id[3:0], \
+                    p.p4_to_p4plus_tcp_proxy_table0_valid, TRUE
 
-  or          r1, k.tcp_option_one_sack_valid, k.tcp_option_two_sack_valid, 1
-  or          r1, r1, k.tcp_option_three_sack_valid, 2
-  or          r1, r1, k.tcp_option_four_sack_valid, 3
-  indexn      r2, r1, [0xF, 0x7, 0x3, 0x1, 0x0], 0
-  phvwr       p.p4_to_p4plus_tcp_proxy_num_sack_blocks, r2
+  or            r1, k.tcp_option_one_sack_valid, k.tcp_option_two_sack_valid, 1
+  or            r1, r1, k.tcp_option_three_sack_valid, 2
+  or            r1, r1, k.tcp_option_four_sack_valid, 3
+  indexn        r2, r1, [0xF, 0x7, 0x3, 0x1, 0x0], 0
+  phvwrpair     p.p4_to_p4plus_tcp_proxy_num_sack_blocks, r2, \
+                    p.p4_to_p4plus_tcp_proxy_payload_len, r3
 
-  phvwr       p.capri_rxdma_intrinsic_valid, TRUE
-  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
-              (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
-              P4PLUS_TCP_PROXY_HDR_SZ)
-  phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
-  phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
+  phvwr         p.capri_rxdma_intrinsic_valid, TRUE
+  phvwr.e       p.capri_rxdma_intrinsic_rx_splitter_offset, \
+                    (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
+                     CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_TCP_PROXY_HDR_SZ)
+  phvwrpair     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
+                    p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
 
 .align
 p4plus_app_cpu:
@@ -240,6 +242,7 @@ p4plus_app_p4pt:
   phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
 
 // input r6 : packet start offset
+// do not use c7 in this function
 f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
   phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx

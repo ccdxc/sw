@@ -22,9 +22,14 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
     .param          tcp_rx_process_stage1_start
     .align
 tcp_rx_read_shared_stage0_start:
+#ifdef CAPRI_IGNORE_TIMESTAMP
+    add             r4, r0, r0
+    add             r6, r0, r0
+#endif
+    /* Debug instruction */
     CAPRI_CLEAR_TABLE0_VALID
     CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
-    /* Debug instruction */
+
     tblwr           d.rx_ts, r4
     phvwr           p.common_phv_debug_dol, d.debug_dol
 
