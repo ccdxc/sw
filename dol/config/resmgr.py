@@ -180,6 +180,8 @@ class HostMemory(object):
         memset(va, 0, c_uint64(size))
 
     def __del__(self):
+        if GlobalOptions == None:
+            return
         if GlobalOptions.dryrun or not GlobalOptions.hostmem: return
         self.lib.delete_host_mem()
 

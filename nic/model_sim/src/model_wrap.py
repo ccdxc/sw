@@ -1,16 +1,25 @@
 import zmq
 import os
 import sys
+import datetime
 from struct import *
 
+gl_socket = None
+
 def error_exit():
-    print("[ERROR]: Exiting due to Timeout: Model-NOT-Responding.")
+    print("[%s] [ERROR]: Exiting due to Timeout: Model-NOT-Responding." %\
+          str(datetime.datetime.now()))
     sys.exit(1)
 
 def zmq_connect ():
+    global gl_socket
+    if gl_socket != None:
+        return gl_socket
+
     _model_sock_timeo_sec = 60
     if 'MODEL_TIMEOUT' in os.environ:
         _model_sock_timeo_sec = int(os.environ['MODEL_TIMEOUT'])
+    print("MODEL_TIMEOUT = %d" % _model_sock_timeo_sec)
     context = zmq.Context()
     #  Socket to talk to server
     socket = context.socket(zmq.REQ)
@@ -22,12 +31,14 @@ def zmq_connect ():
 
     model_sock_path = os.environ['ZMQ_SOC_DIR']
     zmqsockstr = 'ipc:///' + model_sock_path + '/' + model_socket_name
+    print("ZMQ SOCKET STRING = %s" % zmqsockstr)
     socket.connect(zmqsockstr)
+    gl_socket = socket
     return socket
 
 def zmq_close (socket):
     socket.close()
-    pass
+    return
 
 def step_network_pkt (pkt, port):
     socket = zmq_connect()
@@ -38,8 +49,7 @@ def step_network_pkt (pkt, port):
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
             error_exit()
-    zmq_close(socket)
-    pass
+    return
 
 def get_next_pkt ():
     buffsize = 4096
@@ -54,10 +64,8 @@ def get_next_pkt ():
     btype, size, port, cos, status, slowfast, ctime, addr= unpack('iiiiiiiQ', msg[0:40])
     eoffset = 40 + size
     pkt = msg[40:eoffset]
-    zmq_close(socket)
     # DOL is 1-based port numbering, model is 0-based.
     return (pkt, port+1, cos)
-    pass
 
 def get_next_cpu_pkt ():
     buffsize = 4096
@@ -72,9 +80,7 @@ def get_next_cpu_pkt ():
     btype, size, port, cos, status, slowfast, ctime, addr= unpack('iiiiiiiQ', msg[0:40])
     eoffset = 40 + size
     pkt = msg[40:eoffset]
-    zmq_close(socket)
     return pkt
-    pass
 
 def read_reg (addr):
     socket = zmq_connect()
@@ -87,7 +93,6 @@ def read_reg (addr):
             error_exit()
     btype, size, port, cos, status, slowfast, ctime, addr = unpack('iiiiiiiQ', msg[0:40])
     eoffset = 40 + size
-    zmq_close(socket)
     return (msg[40:eoffset])
 
 def write_reg (addr, data):
@@ -100,8 +105,7 @@ def write_reg (addr, data):
         if e.errno == zmq.EAGAIN:
             error_exit()
     btype, size, port, cos, status, slowfast, ctime, addr = unpack('iiiiiiiQ', msg[0:40])
-    zmq_close(socket)
-    pass
+    return
 
 def read_mem (addr, size):
     socket = zmq_connect()
@@ -114,7 +118,6 @@ def read_mem (addr, size):
             error_exit()
     btype, size, port, cos, status, slowfast, ctime, addr = unpack('iiiiiiiQ', msg[0:40])
     eoffset = 40 + size
-    zmq_close(socket)
     return (msg[40:eoffset])
 
 def write_mem (addr, data, size):
@@ -126,8 +129,7 @@ def write_mem (addr, data, size):
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
             error_exit()
-    zmq_close(socket)
-    pass
+    return
 
 def step_doorbell(addr, data):
     socket = zmq_connect()
@@ -138,8 +140,7 @@ def step_doorbell(addr, data):
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
             error_exit()
-    zmq_close(socket)
-    pass
+    return
 
 def step_tmr_wheel_update(slowfast, ctime):
     socket = zmq_connect()
@@ -150,28 +151,15 @@ def step_tmr_wheel_update(slowfast, ctime):
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
             error_exit()
-    zmq_close(socket)
-    pass
+    return
 
 def exit_simulation ():
-    buffsize = 4096
     socket = zmq_connect()
     buff = pack('iiiiiiiQ', 19, 0, 0, 0, 0, 0, 0, 0)
-    try:
-        socket.send(buff)
-        msg = socket.recv()
-    except zmq.ZMQError as e:
-        if e.errno == zmq.EAGAIN:
-            error_exit()
-    btype, size, port, cos, status, slowfast, ctime, addr= unpack('iiiiiiiQ', msg[0:40])
-    eoffset = 40 + size
-    pkt = msg[40:eoffset]
-    zmq_close(socket)
-    return pkt
-    pass
+    socket.send(buff)
+    return
 
 def config_done ():
-    buffsize = 4096
     socket = zmq_connect()
     buff = pack('iiiiiiiQ', 20, 0, 0, 0, 0, 0, 0, 0)
     try:
@@ -180,15 +168,9 @@ def config_done ():
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
             error_exit()
-    btype, size, port, cos, status, slowfast, ctime, addr= unpack('iiiiiiiQ', msg[0:40])
-    eoffset = 40 + size
-    pkt = msg[40:eoffset]
-    zmq_close(socket)
-    return pkt
-    pass
+    return
 
 def testcase_begin (tcid):
-    buffsize = 4096
     socket = zmq_connect()
     buff = pack('iiiiiiiQ', 21, tcid, 0, 0, 0, 0, 0, 0)
     try:
@@ -197,11 +179,9 @@ def testcase_begin (tcid):
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
             error_exit()
-    zmq_close(socket)
     return
 
 def testcase_end (tcid):
-    buffsize = 4096
     socket = zmq_connect()
     buff = pack('iiiiiiiQ', 22, tcid, 0, 0, 0, 0, 0, 0)
     try:
@@ -210,5 +190,4 @@ def testcase_end (tcid):
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
             error_exit()
-    zmq_close(socket)
     return

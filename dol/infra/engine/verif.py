@@ -178,7 +178,8 @@ class VerifEngineObject:
         return defs.status.SUCCESS
 
     def __receive_packets(self, pcr, step, tc):
-        for r in range(10):
+        max_retries = self.__get_num_retries(tc)
+        for r in range(max_retries):
             mpkts = ModelConnector.Receive()
             for mpkt in mpkts:
                 pcr.AddReceived(mpkt.rawpkt, [ mpkt.port ])

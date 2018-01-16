@@ -50,6 +50,7 @@ class LoggerSink:
         self.lock.acquire()
         self.sink.write(text)
         self.lock.release()
+        self.flush()
 
     def flush(self):
         self.sink.flush()

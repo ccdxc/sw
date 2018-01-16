@@ -37,6 +37,7 @@ inline const key_t HostMemHandle() {
       assert(getenv("MODEL_SHMKEY_PROJID"));
       printf("Deriving Model SHM Key from Path:%s ProjID:%s\n",
              getenv("MODEL_SHMKEY_PATH"), getenv("MODEL_SHMKEY_PROJID"));
+      fflush(stdout);
       return ftok(getenv("MODEL_SHMKEY_PATH"),
                   atoi(getenv("MODEL_SHMKEY_PROJID")));
   }
