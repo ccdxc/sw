@@ -21,7 +21,8 @@ struct tx_table_s2_t3_k     k;
 
 tls_dec_post_read_idesc:
 
-    CAPRI_CLEAR_TABLE3_VALID
+    seq         c1, k.tls_global_phv_l7_proxy_type_span, 1
+    phvwri.!c1  p.app_header_table3_valid, 0;
     phvwr       p.to_s3_ipage,  d.u.tls_read_idesc_d.A0
 
 tls_dec_post_read_idesc_done:
