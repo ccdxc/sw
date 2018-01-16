@@ -42,7 +42,7 @@ const (
 
 func main() {
 	var etcdServers string
-	flag.StringVar(&etcdServers, "etcd-servers", "http://localhost:2379", "comma seperated URLs for etcd servers")
+	flag.StringVar(&etcdServers, "etcd-servers", "http://localhost:2379", "comma separated URLs for etcd servers")
 	flag.Parse()
 
 	s := runtime.NewScheme()

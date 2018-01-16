@@ -17,7 +17,7 @@ const (
 
 func main() {
 	var etcdServers, id string
-	flag.StringVar(&etcdServers, "etcd-servers", "http://localhost:2379", "comma seperated URLs for etcd servers")
+	flag.StringVar(&etcdServers, "etcd-servers", "http://localhost:2379", "comma separated URLs for etcd servers")
 	flag.StringVar(&id, "id", "", "identifier to be used in leader election")
 	flag.Parse()
 

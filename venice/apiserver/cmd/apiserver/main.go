@@ -25,7 +25,7 @@ const srvName = "ApiServer"
 func main() {
 	var (
 		grpcaddr        = flag.String("grpc-server-port", ":"+globals.APIServerPort, "GRPC Port to listen on")
-		kvstore         = flag.String("kvdest", "localhost:2379", "Comma seperated list of etcd servers")
+		kvstore         = flag.String("kvdest", "localhost:2379", "Comma separated list of etcd servers")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		version         = flag.String("version", "v1", "Version string for native version")
 		logToStdoutFlag = flag.Bool("logtostdout", true, "enable logging to stdout")

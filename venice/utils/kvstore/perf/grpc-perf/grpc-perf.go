@@ -13,7 +13,7 @@ func main() {
 	var kvServers string
 	var numWatchers, numKVClients, numGRPCClients, numPuts, putRate, restPort, gRPCPort int
 
-	flag.StringVar(&kvServers, "kv-servers", "http://localhost:2379", "comma seperated URLs for kvstore servers")
+	flag.StringVar(&kvServers, "kv-servers", "http://localhost:2379", "comma separated URLs for kvstore servers")
 	flag.IntVar(&numWatchers, "num-watchers", 30, "number of watchers")
 	flag.IntVar(&numGRPCClients, "num-grpc-clients", 30, "number of gRPC clients (nodes in the system)")
 	flag.IntVar(&numKVClients, "num-kv-clients", 30, "number of KV clients")

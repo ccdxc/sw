@@ -497,7 +497,7 @@ func main() {
 	reqCountp := flag.Int("req-count", 100000, "number of requests")
 	workersCountP := flag.Int("workers", 500, "number of workers to spin")
 	objCountp := flag.Int("obj-count", 5000, "number of objects")
-	kvstore := flag.String("kvdest", "localhost:2379", "Comma seperated list of etcd servers")
+	kvstore := flag.String("kvdest", "localhost:2379", "Comma separated list of etcd servers")
 	clntPoolSizep := flag.Int("api-clients", 500, "number of api server clients for workers to use")
 	wcount := flag.Int("watchers", 0, "Number of Watchers to start")
 	list := flag.Bool("list", false, "Run list operation only")

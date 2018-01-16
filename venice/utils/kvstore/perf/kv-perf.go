@@ -24,7 +24,7 @@ const (
 func main() {
 	var kvServers string
 	var numWatchers, numPuts, putRate int
-	flag.StringVar(&kvServers, "kv-servers", "http://localhost:2379", "comma seperated URLs for kvstore servers")
+	flag.StringVar(&kvServers, "kv-servers", "http://localhost:2379", "comma separated URLs for kvstore servers")
 	flag.IntVar(&numWatchers, "num-watchers", 100, "number of watchers")
 	flag.IntVar(&numPuts, "num-puts", 1000, "number of puts")
 	flag.IntVar(&putRate, "put-rate", 1000, "number of puts per second")
