@@ -1346,7 +1346,6 @@ parser parse_udp_option_nop {
 }
 
 @pragma xgress egress
-@pragma generic_checksum_start capri_udp_option_csum.udp_option_checksum
 parser parse_udp_option_ocs {
     extract(udp_opt_ocs);
     set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 2);
