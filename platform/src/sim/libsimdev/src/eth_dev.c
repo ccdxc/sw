@@ -48,6 +48,7 @@ typedef struct ethparams_s {
     int intr_base;
     int intr_count;
     int qidbase[8];
+    int upd[8];
     u_int64_t qstate_addr;
     mac_t mac;
 } ethparams_t;
@@ -867,7 +868,9 @@ static int
 bar_db_wr(int bar, int reg,
           u_int64_t offset, u_int8_t size, u_int64_t val)
 {
-    u_int32_t idx = eth_lif(current_sd);
+    simdev_t *sd = current_sd;
+    ethparams_t *ep = sd->priv;
+    u_int32_t idx = eth_lif(sd);
     u_int64_t base = db_host_addr(idx);
     struct doorbell {
         u16 p_index;
@@ -878,6 +881,7 @@ bar_db_wr(int bar, int reg,
         u16 rsvd2;
     } PACKED db;
     u_int32_t qid;
+    u_int8_t qtype, upd;
 
     if (size != 8) {
         simdev_error("doorbell: write size %d != 8, ignoring\n", size);
@@ -892,10 +896,13 @@ bar_db_wr(int bar, int reg,
     *(u64 *)&db = val;
     qid = (db.qid_hi << 8) | db.qid_lo;
 
-    offset |= (0xb << 17);
+    /* set UPD bits on doorbell based on qtype */
+    qtype = (offset >> 3) & 0x7;
+    upd = ep->upd[qtype];
+    offset |= (upd << 17);
 
-    simdev_log("doorbell: pid %d qid %d ring %d index %d\n",
-               reg, qid, db.ring, db.p_index);
+    simdev_log("doorbell: upd 0x%x pid %d qid %d ring %d index %d\n",
+               upd, reg, qid, db.ring, db.p_index);
     simdev_doorbell(base + offset, val);
     return 0;
 }
@@ -1189,7 +1196,7 @@ static int
 eth_init(simdev_t *sd, const char *devparams)
 {
     ethparams_t *ep;
-    char qidbase[80];
+    char pbuf[80];
 
     if (0) eth_read_txqstate(NULL, 0, NULL);
     if (0) eth_read_rxqstate(NULL, 0, NULL);
@@ -1239,15 +1246,33 @@ eth_init(simdev_t *sd, const char *devparams)
     /*
      * qidbase=0:1:2:3:4:5:6:7
      */
-    if (devparam_str(devparams, "qidbase", qidbase, sizeof(qidbase)) == 0) {
+    if (devparam_str(devparams, "qidbase", pbuf, sizeof(pbuf)) == 0) {
         char *p, *q, *sp;
         int i;
 
-        q = qidbase;
+        q = pbuf;
         for (i = 0; i < 8 && (p = strtok_r(q, ":", &sp)) != NULL; i++) {
             ep->qidbase[i] = strtoul(p, NULL, 0);
             if (q != NULL) q = NULL;
         }
+    }
+
+    /*
+     * upd=0x8:0xb:0:0:0:0:0:0
+     */
+    if (devparam_str(devparams, "upd", pbuf, sizeof(pbuf)) == 0) {
+        char *p, *q, *sp;
+        int i;
+
+        q = pbuf;
+        for (i = 0; i < 8 && (p = strtok_r(q, ":", &sp)) != NULL; i++) {
+            ep->upd[i] = strtoul(p, NULL, 0);
+            if (q != NULL) q = NULL;
+        }
+    } else {
+        /* UPD defaults */
+        ep->upd[ep->rxq_type] = 0x8; /* PI_SET */
+        ep->upd[ep->txq_type] = 0xb; /* PI_SET | SCHED_SET */
     }
 
     eth_init_device(sd);
