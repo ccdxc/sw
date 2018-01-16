@@ -488,7 +488,9 @@ flow_to_flow_spec(flow_t *flow, FlowSpec *spec)
 static void
 session_to_session_get_response (session_t *session, SessionGetResponse *response)
 {
-    response->mutable_spec()->mutable_meta()->set_vrf_id(session->vrf->vrf_id);
+    vrf_t   *vrf = vrf_lookup_by_handle(session->vrf_handle);
+
+    response->mutable_spec()->mutable_meta()->set_vrf_id(vrf->vrf_id);
     response->mutable_spec()->set_session_id(session->config.session_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
@@ -599,7 +601,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     *session = {};
     dllist_reset(&session->feature_list_head);
     session->config = *args->session;
-    session->vrf = args->vrf;
+    session->vrf_handle = args->vrf->hal_handle;
 
     // fetch the security profile, if any
     if (args->vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
@@ -673,7 +675,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     }
 
     // add this session to our db
-    add_session_to_db(session->vrf, args->sl2seg, args->dl2seg,
+    add_session_to_db(args->vrf, args->sl2seg, args->dl2seg,
                       args->sep, args->dep, args->sif, args->dif, session);
     HAL_ASSERT(ret == HAL_RET_OK);
 

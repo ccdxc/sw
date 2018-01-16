@@ -280,7 +280,7 @@ struct session_s {
     session_cfg_t       config;                   // session config
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
-    vrf_t               *vrf;                     // vrf
+    hal_handle_t        vrf_handle;               // vrf handle
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state

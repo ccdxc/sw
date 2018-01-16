@@ -504,15 +504,15 @@ ctx_t::update_flow_table()
                         rflow_cfg.nat_type, rflow_attrs.expected_src_lif_en, rflow_attrs.expected_src_lif);
     }
 
-    session_args.vrf = vrf_;
-    session_args.sep = sep_;
-    session_args.dep = dep_;
-    session_args.sif = sif_;
-    session_args.dif = dif_;
-    session_args.sl2seg = sl2seg_;
-    session_args.dl2seg = dl2seg_;
-    session_args.spec = sess_spec_;
-    session_args.rsp = sess_resp_;
+    session_args.vrf         = vrf_;
+    session_args.sep         = sep_;
+    session_args.dep         = dep_;
+    session_args.sif         = sif_;
+    session_args.dif         = dif_;
+    session_args.sl2seg      = sl2seg_;
+    session_args.dl2seg      = dl2seg_;
+    session_args.spec        = sess_spec_;
+    session_args.rsp         = sess_resp_;
     session_args.valid_rflow = valid_rflow_;
 
     if (hal_cleanup() == true) {
