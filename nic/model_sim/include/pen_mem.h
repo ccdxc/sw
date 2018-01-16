@@ -212,7 +212,17 @@ public:
         int rc;
         J1FA(rc, dirty_bits);
     }
-
+    virtual bool is_dirty(addr_t addr) {
+	int rc;
+	Word_t tmp = addr>>2;
+	Word_t tmp2 = tmp;
+	J1F(rc, dirty_bits, tmp2);
+	if (rc == 0 && tmp == tmp2) {
+	    return true;
+	} else {
+	    return false;
+	}
+    }
 
     // TODO: Add unaligned accesses
     template <typename T>
