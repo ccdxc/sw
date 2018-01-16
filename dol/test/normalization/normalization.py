@@ -2,16 +2,9 @@
 import pdb
 
 def Setup(infra, module):
-    asp = infra.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
     iterelem = module.iterator.Get()
+    module.pvtdata.profile = None
     
-    pfname = getattr(iterelem, 'profile', None)
-    if pfname is not None:
-        profile = infra.ConfigStore.objects.Get(pfname)
-        module.logger.info("Updating Active Security Profile --> %s" % profile)
-        asp.CloneFields(profile)
-        asp.Update()
-
     flowsel = getattr(iterelem, 'flow', None)
     if flowsel is not None:
         module.testspec.selectors.flow.Extend(flowsel)
@@ -25,6 +18,24 @@ def Teardown(infra, module):
         asp.CloneFields(profile)
         asp.Update()
     return
+
+def TestCaseSetup(tc):
+    asp = tc.module.infra_data.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
+
+    iterelem = tc.module.iterator.Get()
+    if iterelem is None:
+        return
+
+    pfname = getattr(iterelem, 'profile', None)
+    if pfname is not None and tc.module.pvtdata.profile != pfname:
+        profile = tc.module.infra_data.ConfigStore.objects.Get(pfname)
+        tc.module.logger.info("Updating Active Security Profile --> %s" % profile)
+        asp.CloneFields(profile)
+        asp.Update()
+        tc.module.pvtdata.profile = pfname
+
+    return
+
 
 def TestCaseVerify(tc):
     return True

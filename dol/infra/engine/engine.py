@@ -33,6 +33,7 @@ def CreateInfraData():
     obj.TriggerEngine   = TriggerEngine
     obj.VerifEngine     = VerifEngine
     obj.UserData        = None
+    obj.pvtdata         = None
     obj.LockAttributes()
     return obj
 

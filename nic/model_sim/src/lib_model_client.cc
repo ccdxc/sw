@@ -26,7 +26,7 @@ std::mutex g_zmq_mutex;
 
 int lib_model_connect ()
 {
-    char zmqsockstr[100];
+    char zmqsockstr[600];
     char *model_socket_name = NULL;
     int rc;
     uint16_t event;
@@ -46,7 +46,7 @@ int lib_model_connect ()
         model_socket_name = (char *)"zmqsock";
     }
     const char* user_str = std::getenv("ZMQ_SOC_DIR");
-    snprintf(zmqsockstr, 100, "ipc:///%s/%s", user_str, model_socket_name);
+    snprintf(zmqsockstr, 600, "ipc:///%s/%s", user_str, model_socket_name);
 
     __zmq_context = zmq_ctx_new ();
     __zmq_sock = zmq_socket (__zmq_context, ZMQ_REQ);

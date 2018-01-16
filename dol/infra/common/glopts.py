@@ -67,4 +67,10 @@ def ValidateGlopts():
     if GlobalOptions.tcid is not None:
         GlobalOptions.tcid = [utils.ParseInteger(tcid)
                                   for tcid in GlobalOptions.tcid.split(',')]
-        
+        if len(GlobalOptions.tcid) == 1:
+            GlobalOptions.tcid = GlobalOptions.tcid[0]
+        else:
+            GlobalOptions.tcid = GlobalOptions.tcid.sort()
+
+    GlobalOptions.alltc_done = False
+

@@ -60,6 +60,10 @@ class ModuleIterator:
     def Reset(self):
         self.idx = 0
 
+class ModulePrivateData:
+    def __init__(self):
+        return
+
 class Module(objects.FrameworkObject):
     def __init__(self, spec):
         super().__init__()
@@ -166,6 +170,10 @@ class Module(objects.FrameworkObject):
         if self.enable == False:
             return 0
         if self.stats.total == 0:
+            if GlobalOptions.tcid != None:
+                # When running in 1 testcase mode, tests can be skipped as 
+                # they did not match the testcase id. Dont treat this as error.
+                return 0
             return 1
 
         if self.stats.failed == 0:
@@ -184,7 +192,10 @@ class Module(objects.FrameworkObject):
         if self.enable == False:
             status = 'Disabled'
         elif self.stats.total == 0:
-            status = 'Error'
+            if GlobalOptions.tcid != None:
+                status = 'Skipped'
+            else:
+                status = 'Error'
         elif self.ignore:
             status = 'Ignore'
         elif self.GetFinalResult():
@@ -238,12 +249,19 @@ class Module(objects.FrameworkObject):
             return True
 
         if isinstance(GlobalOptions.tcid, list):
-            return tcid in GlobalOptions.tcid
+            if tcid in GlobalOptions.tcid:
+                if tcid == GlobalOptions.tcid[-1]:
+                    GlobalOptions.alltc_done = True
+                return True
+            return False
             
         if not isinstance(GlobalOptions.tcid, int):
             GlobalOptions.tcid = utils.ParseInteger(GlobalOptions.tcid)
     
-        return tcid == GlobalOptions.tcid
+        if tcid == GlobalOptions.tcid:
+            GlobalOptions.alltc_done = True
+            return True
+        return False
 
     def __execute(self):
         for root in self.testspec.selectors.roots:
@@ -280,7 +298,10 @@ class Module(objects.FrameworkObject):
         self.infra_data.Logger = self.logger
         self.__load()
         self.__init_tracker()
-        while self.iterator.End() is False and self.abort is False:
+        while self.iterator.End() is False and\
+              self.abort is False and\
+              GlobalOptions.alltc_done == False:
+            self.pvtdata = ModulePrivateData()
             self.logger.info("========== Starting Test Module =============")
             self.logger.info("Starting new Iteration")
             self.__load_spec()
