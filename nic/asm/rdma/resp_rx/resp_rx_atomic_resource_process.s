@@ -14,9 +14,9 @@ struct resp_rx_read_atomic_process_k_t k;
 #define KEY_ADDR r2
 #define RAW_TABLE_PC r3
 
-#define DMA_CMD_BASE r1
+#define DMA_CMD_BASE r5
 #define DB_ADDR r4
-#define DB_DATA r5
+#define DB_DATA r1
 
 #define FILL_PATTERN_W      0x01010101
 #define FILL_PATTERN_H      0x0101   
