@@ -315,7 +315,11 @@ action f_p4plus_cpu_pkt(offset) {
                  control_metadata.lkp_flags_egress);
     modify_field(p4_to_p4plus_cpu_pkt.lkp_type,
                  control_metadata.lkp_flags_egress);
-    modify_field(p4_to_p4plus_cpu_pkt.src_tm_iq, control_metadata.src_tm_iq);
+    // Copy the src_tm_iq only for pkts from TxDMA
+    if ((control_metadata.lkp_flags_egress & (1 << CPU_LKP_FLAGS_LKP_DIR)) == 
+            (FLOW_DIR_FROM_DMA << CPU_LKP_FLAGS_LKP_DIR)) {
+        modify_field(p4_to_p4plus_cpu_pkt.src_tm_iq, control_metadata.src_tm_iq);
+    }
 
     modify_field(p4_to_p4plus_cpu_pkt.l2_offset, 0xFFFF);
     modify_field(p4_to_p4plus_cpu_pkt.l3_offset, 0xFFFF);

@@ -248,9 +248,10 @@ f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_qid, k.{control_metadata_qid}.wx
   phvwr       p.p4_to_p4plus_cpu_pkt_qtype, k.control_metadata_qtype
   phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.{flow_lkp_metadata_lkp_vrf}.hx
-  phvwrpair   p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
-                  k.control_metadata_lkp_flags_egress[5:0], \
-              p.p4_to_p4plus_cpu_pkt_src_tm_iq[4:0], k.control_metadata_src_tm_iq
+  phvwr       p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
+                  k.control_metadata_lkp_flags_egress[5:0]
+  seq         c1, k.control_metadata_lkp_flags_egress[CPU_LKP_FLAGS_LKP_DIR], FLOW_DIR_FROM_DMA
+  phvwr.c1    p.p4_to_p4plus_cpu_pkt_src_tm_iq[4:0], k.control_metadata_src_tm_iq
   phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_payload_offset}, -1
   // r1 : offset
   // r2 : flags

@@ -12,8 +12,8 @@ struct phv_        p;
 flow_hash_info:
   K_DBG_WR(0x40)
   DBG_WR(0x48, r1)
-  or          r7, k.flow_lkp_metadata_lkp_type, k.flow_lkp_metadata_lkp_inst, 4
-  or          r7, r7, k.flow_lkp_metadata_lkp_dir, 5
+  or          r7, k.flow_lkp_metadata_lkp_type, k.flow_lkp_metadata_lkp_inst, CPU_LKP_FLAGS_LKP_INST 
+  or          r7, r7, k.flow_lkp_metadata_lkp_dir, CPU_LKP_FLAGS_LKP_DIR 
   phvwr       p.control_metadata_lkp_flags_egress, r7
   seq         c2, d.flow_hash_info_d.entry_valid, 1
   bcf         [c1&c2], flow_hash_hit
