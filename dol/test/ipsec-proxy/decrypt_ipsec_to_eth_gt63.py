@@ -57,11 +57,11 @@ def TestCaseSetup(tc):
     ipseccb.expected_seq_no           = 0
     ipseccb.seq_no_bmp                = 0
     ipseccb.vrf_vlan                  = 0x0005
+    ipseccb.last_replay_seq_no        = 0
     ipseccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
     expected_seq_no = ipseccb.expected_seq_no
-
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
@@ -123,20 +123,21 @@ def TestCaseVerify(tc):
     # 1. Verify pi/ci got update got updated
     ipseccb_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
     print("pre-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
+    print("pre-sync: ipseccb.pi %d ipseccb.ci %d" % (ipseccb.pi, ipseccb.ci))
     ipseccb_cur.GetObjValPd()
     print("post-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
-    if (ipseccb_cur.pi != ipseccb.pi or ipseccb_cur.ci != ipseccb.ci):
-        print("serq pi/ci not as expected")
+    if (ipseccb_cur.pi == ipseccb.pi and ipseccb_cur.ci == ipseccb.ci):
+        print("serq pi/ci as expected")
+    else:
         return False
 
     print("Expected seq no 0x%x seq_no_bmp 0x%x" % (ipseccb_cur.expected_seq_no, ipseccb_cur.seq_no_bmp))
-
     # 3. Fetch current values from Platform
     ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"]
     ipseccbqq_cur.Configure()
 
     # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi ):
+    if (rnmdr_cur.pi - rnmdr.pi > 2):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
@@ -146,20 +147,21 @@ def TestCaseVerify(tc):
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     brq_cur.GetMeta()
     brq_cur.GetRingEntries([brq.pi, brq_cur.pi])
+
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    if (brq_cur.pi != brq.pi):
+    if (brq_cur.pi != (brq.pi+1)):
         print("brq pi/ci not as expected")
         #needs fix in HAL and support in model/p4+ for this check to work/pass
         return False
 
     # 8. Verify PI for TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi):
+    if (tnmdr_cur.pi != tnmdr.pi+1):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         return False
     print("Old TNMDR PI: %d, New TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
 
     # 9. Verify PI for TNMPR got incremented by 1
-    if (tnmpr_cur.pi != tnmpr.pi):
+    if (tnmpr_cur.pi != tnmpr.pi+1):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))

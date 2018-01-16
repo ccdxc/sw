@@ -102,6 +102,9 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
     sllv r7, 1, r3
     or r6, r6, r7
     tblwr d.replay_seq_no_bmp, r6
+    nop
+    j ipsec_esp_v4_tunnel_n2h_good_pkt
+    nop
     nop.e
     nop
  
@@ -119,6 +122,9 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     add r1, r0, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}
     addi r1, r1, 1
     tblwr d.expected_seq_no, r1 
+    nop
+    j ipsec_esp_v4_tunnel_n2h_good_pkt
+    nop
     nop.e
     nop
 
@@ -130,6 +136,9 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     add r1, r0, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}
     addi r1, r1, 1
     tblwr d.expected_seq_no, r1 
+    nop
+    j ipsec_esp_v4_tunnel_n2h_good_pkt
+    nop
     nop.e
     nop
  
