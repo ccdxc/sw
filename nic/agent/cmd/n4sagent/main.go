@@ -9,6 +9,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -27,6 +28,7 @@ func main() {
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
 		logToFile    = flag.String("logtofile", "/var/log/pensando/n4sagent.log", "Redirect logs to file")
 		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
+		datapathType = flag.String("datapath-type", "fswitch", "specify the agent datapath type either fswitch or hal")
 	)
 	flag.Parse()
 
@@ -68,11 +70,19 @@ func main() {
 	if err != nil {
 		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
 	}
+	var dp state.NetDatapathAPI
 
 	// create a network datapath
-	dp, err := datapath.NewNaplesDatapath(*hostIf, *uplinkIf)
-	if err != nil {
-		log.Fatalf("Error creating fake datapath. Err: %v", err)
+	if *datapathType == "hal" {
+		dp, err = datapath.NewHalDatapath("hal")
+		if err != nil {
+			log.Fatalf("Error creating hal datapath. Err: %v", err)
+		}
+	} else {
+		dp, err = datapath.NewNaplesDatapath(*hostIf, *uplinkIf)
+		if err != nil {
+			log.Fatalf("Error creating fake datapath. Err: %v", err)
+		}
 	}
 
 	// create the new NetAgent
