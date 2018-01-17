@@ -49,6 +49,7 @@ static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
 
     event_data.decoded_packet = decoded_packet;
     event_data.fte_ctx = &ctx;
+    event_data.in_fte_pipeline = true;
     dhcp_trans_t::process_transaction(trans, event,
                                          (fsm_event_data)(&event_data));
     return HAL_RET_OK;
