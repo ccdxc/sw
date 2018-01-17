@@ -216,22 +216,11 @@ ctx_t::get_key(hal::flow_role_t role)
 hal_ret_t
 ctx_t::lookup_session()
 {
-    hal_ret_t ret;
     hal::flow_t *hflow = NULL;
     int stage = 0;
 
-    // TODO(pavithra) handle protobuf requests
     if (protobuf_request()) {
         return HAL_RET_SESSION_NOT_FOUND; 
-    }
-
-    // Check wild card entry table
-    expected_flow_t *expected_flow = lookup_expected_flow(key_);
-    if (expected_flow) {
-        ret = expected_flow->handler(*this, expected_flow);
-        if (ret != HAL_RET_OK) {
-            return ret;
-        }
     }
 
     session_ = hal::session_lookup(key_, &role_);

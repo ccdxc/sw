@@ -20,5 +20,7 @@ cc_library(
 
 cc_library(
     name = "alg_utils_includes",
-    hdrs = ["core.hpp"],
+    hdrs = ["core.hpp",
+            "alg_db.hpp",
+    ],
 )    

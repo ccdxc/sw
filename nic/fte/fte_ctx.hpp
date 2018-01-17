@@ -7,7 +7,6 @@
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/include/cpupkt_api.hpp"
 #include <netinet/ether.h>
-#include "nic/include/fte_db.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/include/app_redir_headers.hpp"
 #include "nic/include/app_redir_shared.h"
@@ -333,6 +332,8 @@ typedef struct feature_session_state_s {
     fte::feature_name_t feature_name;                    // Name of the feature
     dllist_ctxt_t       session_feature_lentry;  // session's feature list context
 } __PACK__ feature_session_state_t;
+
+class ctx_t;
 
 typedef void (*completion_handler_t) (ctx_t &ctx, bool fail);
 

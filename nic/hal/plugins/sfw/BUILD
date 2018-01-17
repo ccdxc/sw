@@ -1,7 +1,8 @@
 package(default_visibility = ["//visibility:public"])
-load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 licenses(["notice"])  # MIT license
+
+load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
     name = "sfw",
@@ -14,9 +15,10 @@ cc_library(
         "//nic/model_sim/include:modelsim_includes",
         "//nic/third-party/spdlog",
         "//nic/hal/plugins/app_redir:app_redir_includes",
+        "//nic/hal/plugins/alg_utils:alg_utils_includes",
     ],
-    copts = sdk_copts,
     alwayslink = 1,
+    copts = sdk_copts,
 )
 
 cc_library(

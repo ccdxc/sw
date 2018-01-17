@@ -17,27 +17,27 @@
             ]
         },
         {
-            "name"      : "sfw",
-            "provider"  : "pensando.io",
-            "lib"       : "sfw/libsfw.so",
-            "init_func" : "sfw_init",
-            "exit_func" : "sfw_exit",
-            "auto_load" : "true",
-            "deps"      : [],
-            "features"  : [
-                "sfw",
-                "conntrack"
-            ]
-        },
-        {
             "name"      : "alg_utils",
             "provider"  : "pensando.io",
             "lib"       : "alg_utils/libalg_utils.so",
             "init_func" : "alg_utils_init",
             "exit_func" : "alg_utils_exit",
             "auto_load" : "true",
-            "deps"      : ["pensando.io/sfw"],
+            "deps"      : [],
             "features"  : ["alg_utils"]
+        },
+        {
+            "name"      : "sfw",
+            "provider"  : "pensando.io",
+            "lib"       : "sfw/libsfw.so",
+            "init_func" : "sfw_init",
+            "exit_func" : "sfw_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/alg_utils"],
+            "features"  : [
+                "sfw",
+                "conntrack"
+            ]
         },
         {
             "name"      : "alg_sip",

@@ -1,7 +1,7 @@
 #pragma once
+#include "alg_db.hpp"
 #include "nic/hal/src/session.hpp"
 #include "sdk/list.hpp"
-#include "nic/fte/fte_db.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/hal/src/session.hpp"
 
@@ -170,7 +170,7 @@ typedef struct app_session_s {
 // back pointer to app_session that it belongs to. 
 //-----------------------------------------------------------------------------
 typedef struct l4_alg_status {
-    fte::expected_flow_t            entry;                     // Flow key and handler 
+    expected_flow_t                 entry;                     // Flow key and handler 
     nwsec::ALGName                  alg;                       // ALG applied on this L4-session
     bool                            isCtrl;                    // Is this a control session
     session_t                      *session;                   // Back pointer to L4-session

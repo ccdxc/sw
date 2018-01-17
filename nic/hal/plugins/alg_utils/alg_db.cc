@@ -1,8 +1,8 @@
-#include "nic/fte/fte.hpp"
-#include "nic/fte/fte_db.hpp"
+#include "alg_db.hpp"
 
-
-namespace fte {
+namespace hal {
+namespace plugins {
+namespace alg_utils {
 
 static void * expected_flow_get_key_func(void *entry)
 {
@@ -42,7 +42,7 @@ static sdk::lib::ht *expected_flow_ht()
 hal_ret_t
 insert_expected_flow(expected_flow_t *entry)
 {
-    HAL_TRACE_DEBUG("fte::insert_expected_flow key={}", entry->key);
+    HAL_TRACE_DEBUG("ALG::insert_expected_flow key={}", entry->key);
     entry->expected_flow_ht_ctxt.reset();
     return hal_sdk_ret_to_hal_ret(expected_flow_ht()->
                                   insert(entry, &entry->expected_flow_ht_ctxt));
@@ -54,7 +54,7 @@ insert_expected_flow(expected_flow_t *entry)
 expected_flow_t *
 remove_expected_flow(const hal::flow_key_t &key)
 {
-    HAL_TRACE_DEBUG("fte::remove_expected_flow  key={}", key);
+    HAL_TRACE_DEBUG("ALG::remove_expected_flow  key={}", key);
     return (expected_flow_t *)expected_flow_ht()->remove((void *)&key);
 }
 
@@ -75,7 +75,7 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
 
     // Exact match
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("fte::lookup_expected_flow exact match key={}", key);
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow exact match key={}", key);
         return entry;
     }
 
@@ -95,7 +95,7 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
     key.sip = ikey.dip;
     key.dip = ikey.sip;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("fte::lookup_expected_flow reverse exact match key={}", key);
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow reverse exact match key={}", key);
         return entry;
     }
 
@@ -104,7 +104,7 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
     // Mask SPORT and do lookup (tftp)
     key.sport = 0;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("fte::lookup_expected_flow widcard sport key={}", key);
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow widcard sport key={}", key);
         return entry;
     }
 
@@ -112,11 +112,13 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
     key.sip = {};
     key.dir = 0;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("fte::lookup_expected_flow wildcard sip/sport/dir key={}", key);
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard sip/sport/dir key={}", key);
         return entry;
     }
 
     return NULL;
 }
 
-}
+} // namespace alg_utils
+} // namespace plugins
+} // namespace hal

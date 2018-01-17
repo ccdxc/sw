@@ -6,8 +6,10 @@
 #include "nic/hal/src/nwsec.hpp"
 #include "core.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
+#include "nic/hal/plugins/alg_utils/alg_db.hpp"
 
 using namespace hal::app_redir;
+using namespace hal::plugins::alg_utils;
 
 namespace hal {
 namespace plugins {
@@ -249,6 +251,12 @@ sfw_exec(fte::ctx_t& ctx)
     if(app_ctx->appid_started() &&
        (!app_ctx->appid_updated() && !app_ctx->appid_completed())) {
         return fte::PIPELINE_CONTINUE;
+    }
+
+    // ALG Wild card entry table lookup. 
+    expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
+    if (expected_flow) {
+        ret = expected_flow->handler(ctx, expected_flow);
     }
 
     // ToDo (lseshan) - for now handling only ingress rules

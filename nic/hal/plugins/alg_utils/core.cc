@@ -1,6 +1,6 @@
+#include "alg_db.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 #include "sdk/list.hpp"
-#include "nic/include/fte_db.hpp"
 
 namespace hal {
 namespace plugins {
@@ -285,7 +285,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
     HAL_SPINLOCK_LOCK(&app_sess->slock);
     exp_flow->app_session = app_sess;
     memcpy(&exp_flow->entry.key, &key, sizeof(hal::flow_key_t));
-    fte::insert_expected_flow(&exp_flow->entry);
+    insert_expected_flow(&exp_flow->entry);
     dllist_reset(&exp_flow->exp_flow_lentry);
     dllist_add(&app_sess->exp_flow_lhead, &exp_flow->exp_flow_lentry);
     HAL_SPINLOCK_UNLOCK(&app_sess->slock);
@@ -351,7 +351,7 @@ hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t 
 
 void alg_state::move_expflow_to_l4sess(app_session_t *app_sess, 
                                             l4_alg_status_t *exp_flow) {
-    fte::remove_expected_flow(exp_flow->entry.key);
+    remove_expected_flow(exp_flow->entry.key);
 
     HAL_SPINLOCK_LOCK(&app_sess->slock);
     dllist_del(&exp_flow->exp_flow_lentry);
@@ -408,7 +408,7 @@ void alg_state::cleanup_l4_sess(l4_alg_status_t *l4_sess) {
 }
 
 void alg_state::cleanup_exp_flow(l4_alg_status_t *exp_flow) {
-    fte::remove_expected_flow(exp_flow->entry.key);
+    remove_expected_flow(exp_flow->entry.key);
     dllist_del(&exp_flow->exp_flow_lentry);
     if (l4_sess_cleanup_hdlr_)
         l4_sess_cleanup_hdlr_(exp_flow);

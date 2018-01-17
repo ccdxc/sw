@@ -32,7 +32,7 @@ void tftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
 /*
  * Expected flow callback. FTE issues this callback with the expected flow data
  */
-hal_ret_t expected_flow_handler(fte::ctx_t &ctx, fte::expected_flow_t *wentry) {
+hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     l4_alg_status_t               *entry = NULL;
     tftp_info_t                   *tftp_info = NULL;
     sfw_info_t                    *sfw_info =

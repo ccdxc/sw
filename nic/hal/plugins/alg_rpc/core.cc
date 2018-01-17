@@ -24,7 +24,7 @@ uint8_t *alloc_rpc_pkt(void) {
 /*
  * Expected flow callback. FTE issues this callback with the expected flow data
  */
-hal_ret_t expected_flow_handler(fte::ctx_t &ctx, fte::expected_flow_t *wentry) {
+hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     l4_alg_status_t      *entry = NULL;
     rpc_info_t           *rpc_info = NULL;
     sfw_info_t           *sfw_info = (sfw_info_t*)\
