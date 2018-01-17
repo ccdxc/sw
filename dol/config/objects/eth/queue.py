@@ -113,10 +113,17 @@ class EthQstateObject(object):
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
 
     def set_pindex(self, ring, value):
-        assert(isinstance(ring, int) and 0 <= ring <= 1)
+        assert(isinstance(ring, int))
+        assert(0 <= ring <= 1)
         ring_size = self.data[self.__data_class__].ring_size
-        assert(isinstance(value, int) and 0 <= value <= math.log(2, ring_size))
+        assert(isinstance(value, int))
+        assert(0 <= value <= math.pow(2, ring_size))
         model_wrap.write_mem(self.addr + 8 + (4 * ring), bytes(ctypes.c_uint16(value)), 2)
+
+    def get_pindex(self, ring):
+        assert(isinstance(ring, int))
+        assert(0 <= ring <= 1)
+        return getattr(self.data[self.__data_class__], 'p_index%d' % ring)
 
     def set_enable(self, value):
         assert(isinstance(value, int))

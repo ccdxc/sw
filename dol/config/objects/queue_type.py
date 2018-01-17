@@ -1,6 +1,7 @@
 #! /usr/bin/python3
-import math
 
+import math
+import time
 import infra.config.base        as base
 import infra.common.objects     as objects
 import config.objects.eth.queue as eth_queue
@@ -121,7 +122,10 @@ class QueueTypeObject(base.ConfigObjectBase):
             if not GlobalOptions.skipverify:
                 queue.qstate.Read()
             if self.purpose in ["LIF_QUEUE_PURPOSE_RX", "LIF_QUEUE_PURPOSE_TX"]:
-                self.doorbell.Ring(queue_id, ring_id, ring.pi, queue.pid)
+                if GlobalOptions.rtl and GlobalOptions.eth_mode == "onepkt":
+                    queue.qstate.set_pindex(ring_id, ring.pi)
+                else:
+                    self.doorbell.Ring(queue_id, ring_id, ring.pi, queue.pid)
             if not GlobalOptions.skipverify:
                 queue.qstate.Read()
 
