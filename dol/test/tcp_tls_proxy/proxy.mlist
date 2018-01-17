@@ -6,6 +6,7 @@ feature:
     package     : test.tcp_tls_proxy
     module      : None
     enable      : True
+    rtl         : False
     ignore      : False
 
 modules:
@@ -22,6 +23,7 @@ modules:
         name    : IN_ORDER_PKT_NOT_TO_SERQ_V4_ACK
         spec    : one_pkt_ack.testspec
         module  : in_order
+        rtl     : True
         args    :
             maxflows : 1
             send_ack : 1
@@ -70,6 +72,7 @@ modules:
         name    : IN_ORDER_PKT_NOT_TO_SERQ_VXLAN
         spec    : one_pkt_vxlan.testspec
         module  : in_order
+        rtl     : True
         args    :
             maxflows: 1
         iterate :
@@ -107,6 +110,7 @@ modules:
         name    : OOO_PKT_IN_ORDER_PKT_TO_SERQ_V4
         spec    : ooo_pkt_in_order_pkt.testspec
         module  : pkt_to_serq_ooo_in_order
+        rtl     : True
         args    :
             maxflows: 1
             ooo_seq_delta: 1000
@@ -156,6 +160,7 @@ modules:
         name    : PKT_TO_SERQ_ATOMIC_STATS
         spec    : one_pkt.testspec
         module  : pkt_to_serq
+        rtl     : True
         args    :
             maxflows: 2
             atomic_stats : 1
@@ -249,6 +254,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
+        rtl     : True
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -318,6 +324,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes256_ccm_record_pkt.testspec
+        rtl     : True
         args    :
             cipher_suite: CCM
             maxflows: 1
@@ -444,6 +451,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_CONG_AVOID
         spec    : uplink_to_uplink_clean_retx_partial.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             num_pkts : 2
             bypass_barco : 1
@@ -729,6 +737,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : crypto_apis
         spec    : no_pkt.testspec
+        rtl     : True
         args    :
             api:    CRYPTO_API_ASYM_ECC_POINT_MUL_P256
         iterate :
@@ -918,6 +927,7 @@ modules:
         name    : TCP_PKT_TO_L7Q_IDS_V4
         spec    : one_pkt.testspec
         module  : tcp_pkt_to_l7q_ids
+        rtl     : True
         args    :
             maxflows: 1
         iterate :
@@ -945,6 +955,7 @@ modules:
         name    : TCP_PKT_TO_L7Q_IPS_V4
         spec    : one_pkt.testspec
         module  : tcp_pkt_to_l7q_ips
+        rtl     : True
         args    :
             maxflows: 1
         iterate :
