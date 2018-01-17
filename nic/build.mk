@@ -12,8 +12,8 @@ BLD_MC = $(shell uname -n)
 SHELL := /bin/bash
 
 ifeq ($(ARCH), aarch64)
-    CC=$(TOPDIR)/buildroot/buildroot-2017.02.8/output/host/opt/ext-toolchain/bin/aarch64-linux-gnu-gcc
-    CXX=$(TOPDIR)/buildroot/buildroot-2017.02.8/output/host/opt/ext-toolchain/bin/aarch64-linux-gnu-g++
+    CC=/tool/toolchain/aarch64/bin/aarch64-linux-gnu-gcc
+    CXX=/tool/toolchain/aarch64/bin/aarch64-linux-gnu-g++
 else
     CC=gcc
     CXX=g++

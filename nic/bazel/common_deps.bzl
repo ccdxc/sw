@@ -47,7 +47,8 @@ gl_linkopts_list = [
     "-lpthread",
     "-pthread",
     "-lz",
-    "-lprotobuf"
+    "-lprotobuf",
+    "-lm"
     ]
 
 sdk_copts = ["-Inic/sdk"]

@@ -58,6 +58,7 @@ cc_library(
     ] + glob(["*.hpp"]) + glob(["*.h"]),
     copts = [
         "-DCAPRI_HAL",
+        "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024",
     ] + sdk_copts,
     deps = [
                "//nic:asic_includes",

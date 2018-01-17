@@ -41,7 +41,7 @@ hbm_get_addr_for_stat_index(p4pd_table_id table_id,
     p4pd_table_properties_t  tbl_ctx;
 
     stats_base_addr =  get_start_offset(JP4_ATOMIC_STATS);
-    stats_base_addr &= 0x7FFFFFFF;
+    stats_base_addr &= ~((uint64_t)0x80000000);
 
     switch (table_id) {
     case P4TBL_ID_INGRESS_TX_STATS:

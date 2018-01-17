@@ -152,7 +152,7 @@ class ${table}():
 
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -185,7 +185,7 @@ class ${table}():
 
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -213,7 +213,7 @@ class ${table}():
 
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -244,7 +244,7 @@ class ${table}():
 //::                        else:
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -275,7 +275,7 @@ class ${table}():
 //::                        else:
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -315,7 +315,7 @@ class ${table}():
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -348,7 +348,7 @@ class ${table}():
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -377,7 +377,7 @@ class ${table}():
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -408,7 +408,7 @@ class ${table}():
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -439,7 +439,7 @@ class ${table}():
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
-            if len(values) == 0 or len(values) > ((${p4fldwidth} + 7) / 8):
+            if len(values) == 0 or len(values) > ( int((${p4fldwidth} + 7) / 8)):
                 return
 
             for i in range(len(values)):
@@ -481,7 +481,7 @@ class ${table}():
 //::                    else:
             if '${actionfldname}' in ctx['actionfld']:
                 values = ctx['actionfld']['${actionfldname}'].split()
-                if len(values) == 0 or len(values) > ((${actionfldwidth} + 7) / 8):
+                if len(values) == 0 or len(values) > int((${actionfldwidth} + 7) / 8):
                     return
 
                 for i in range(len(values)):
@@ -658,7 +658,7 @@ class ${table}():
 //::                else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${p4fldname}, i))
@@ -690,7 +690,7 @@ class ${table}():
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${table}_u${i}.${p4fldname}, i))
@@ -714,7 +714,7 @@ class ${table}():
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${p4fldname}, i))
@@ -743,7 +743,7 @@ class ${table}():
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${table}_hdr_union${i}_t.${p4fldname}, i))
@@ -767,7 +767,7 @@ class ${table}():
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey.${p4fldname}, i))
@@ -795,7 +795,7 @@ class ${table}():
 //::                else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${p4fldname}_mask, i))
@@ -827,7 +827,7 @@ class ${table}():
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i))
@@ -851,7 +851,7 @@ class ${table}():
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${p4fldname}_mask, i))
@@ -880,7 +880,7 @@ class ${table}():
 //::                        else:
         valstr = '    ${p4fldname}_mask[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i))
@@ -904,7 +904,7 @@ class ${table}():
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
-        for i in range((${p4fldwidth} + 7) / 8):
+        for i in range( int((${p4fldwidth} + 7) / 8)):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
             valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.swkey_mask.${p4fldname}_mask, i))
@@ -946,7 +946,7 @@ class ${table}():
 //::                    else:
             valstr =   '      ${actionfldname}[]: '
             lenstr = len(valstr)
-            for i in range((${actionfldwidth} + 7) / 8):
+            for i in range(int((${actionfldwidth} + 7) / 8)):
                 if i != 0 and (i % array_cols) == 0:
                     valstr += ('\n' + (' ' * lenstr))
                 valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i))

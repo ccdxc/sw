@@ -29,7 +29,12 @@ else
 endif
 
 SKIP_DIRS = --deleted_packages=test/lib/list
-BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS)
+
+ifeq ($(ARCH), aarch64)
+	BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS) --crosstool_top=//tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
+else
+	BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS)
+endif
 
 all: lib
 

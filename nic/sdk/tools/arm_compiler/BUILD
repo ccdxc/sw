@@ -33,7 +33,7 @@ cc_toolchain_suite(
 filegroup(
   name = 'linaro_linux_all_files',
   srcs = [
-    '//nic/tools/arm_compiler/linaro_linux_gcc:tool-wrappers',
+    '//tools/arm_compiler/linaro_linux_gcc:tool-wrappers',
     '@linaro_linux_gcc_repo//:compiler_pieces',
   ],
 )
@@ -41,9 +41,9 @@ filegroup(
 filegroup(
   name = 'linaro_linux_linker_files',
   srcs = [
-    '//nic/tools/arm_compiler/linaro_linux_gcc:gcc',
-    '//nic/tools/arm_compiler/linaro_linux_gcc:ld',
-    '//nic/tools/arm_compiler/linaro_linux_gcc:ar',
+    '//tools/arm_compiler/linaro_linux_gcc:gcc',
+    '//tools/arm_compiler/linaro_linux_gcc:ld',
+    '//tools/arm_compiler/linaro_linux_gcc:ar',
     '@linaro_linux_gcc_repo//:compiler_pieces',
   ],
 )
@@ -51,9 +51,9 @@ filegroup(
 filegroup(
   name = 'linaro_linux_compiler_files',
   srcs = [
-    '//nic/tools/arm_compiler/linaro_linux_gcc:gcc',
-    '//nic/tools/arm_compiler/linaro_linux_gcc:ld',
-    '//nic/tools/arm_compiler/linaro_linux_gcc:as',
+    '//tools/arm_compiler/linaro_linux_gcc:gcc',
+    '//tools/arm_compiler/linaro_linux_gcc:ld',
+    '//tools/arm_compiler/linaro_linux_gcc:as',
   ],
 )
 
@@ -65,9 +65,9 @@ cc_toolchain(
   dwp_files = ':empty',
   dynamic_runtime_libs = [':empty'],
   linker_files = ':linaro_linux_linker_files',
-  objcopy_files = '//nic/tools/arm_compiler/linaro_linux_gcc:objcopy',
+  objcopy_files = '//tools/arm_compiler/linaro_linux_gcc:objcopy',
   static_runtime_libs = [':empty'],
-  strip_files = '//nic/tools/arm_compiler/linaro_linux_gcc:strip',
+  strip_files = '//tools/arm_compiler/linaro_linux_gcc:strip',
   supports_param_files = 1,
 )
 

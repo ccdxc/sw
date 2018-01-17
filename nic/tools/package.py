@@ -25,6 +25,7 @@ for line in f:
         print cmd
         call(cmd, shell=True)
 
+'''
 input_file = 'nic/tools/pack_arm_server_binaries_runtime.txt'
 f          = open(input_file, 'r')
 
@@ -39,15 +40,30 @@ for line in f:
     cmd = 'sshpass -p ' + arm_server_passwd + ' scp ' + arm_server_username + '@' +  arm_server + ':' + line + ' ' + directory
     print cmd
     # call(cmd, shell=True)
+'''
 
 for root, dirs, files in os.walk(output_dir):
     for file in files:
         if '.so' in file or 'hal' in file or 'linkmgr' in file:
             non_stripped = os.path.join(root, file)
             call(['chmod', '755', non_stripped])
-            call(['nic/buildroot/buildroot-2017.02.8/output/host/usr/bin/aarch64-linux-gnu-strip', non_stripped])
+            call(['/tool/toolchain/aarch64/bin/aarch64-linux-gnu-objcopy', '--only-keep-debug', non_stripped, non_stripped + '.debug'])
+            call(['/tool/toolchain/aarch64/bin/aarch64-linux-gnu-strip', non_stripped])
+            call(['/tool/toolchain/aarch64/bin/aarch64-linux-gnu-objcopy', '--add-gnu-debuglink=' + non_stripped + '.debug', non_stripped])
 
-cmd = 'tar -cvzf hal.tgz ' + output_dir
+cmd = 'mkdir -p fake_root_target/nic/lib'
+call(cmd, shell=True)
+
+cmd = 'find bazel-bin/nic/hal/plugins/ -name "*.so" | grep -v __main__ | xargs tar cf plugins.tar'
+call(cmd, shell=True)
+
+cmd = 'tar -xf plugins.tar -C fake_root_target/nic/lib/ --strip-components=4'
+call(cmd, shell=True)
+
+cmd = 'tar --exclude=*.debug -cvzf hal.tgz ' + output_dir
+call(cmd, shell=True)
+
+cmd = 'tar --exclude=*.debug -cvf hal.tar '  + output_dir
 call(cmd, shell=True)
 
 '''

@@ -822,6 +822,7 @@ int capri_table_rw_init()
 
     // Register at top level all MRL classes.
     cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
+
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
     register_chip_inst("cap0", 0, 0);
@@ -1733,25 +1734,6 @@ cap_csr_base * get_csr_base_from_path(string);
 namespace hal {
 namespace pd {
 
-string
-asic_csr_dump (char *csr_str)
-{
-    HAL_TRACE_DEBUG("{} csr string {}", __FUNCTION__, csr_str);
-    string csr_string = std::string(csr_str);
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_csr_base *cap = cap0.search_csr_by_name(csr_string);
-    if (NULL != cap) {
-        cap->read();
-        HAL_TRACE_DEBUG("{0:s}: {1:s}, value 0x{2:x}",
-                        __FUNCTION__, csr_str, cap->all().convert_to<uint64_t>());
-    } else {
-        HAL_TRACE_DEBUG("{} search returned NULL", __FUNCTION__);
-    }
-
-    return csr_read(std::string(csr_str));
-
-}
-
 vector < tuple < string, string, string >>
 asic_csr_dump_reg(char *block_name, bool exclude_mem)
 {
@@ -1797,5 +1779,39 @@ vector <string> asic_csr_list_get(string path, int level) {
     }
     return block_name;
 }
+
 }
+}
+
+extern void
+capri_tm_dump_debug_regs(void);
+extern void
+capri_tm_dump_config_regs(void);
+extern void
+capri_tm_dump_all_regs(void);
+
+std::string
+hal::pd::asic_csr_dump (char *csr_str)
+{
+    HAL_TRACE_DEBUG("{} csr_str print: {}", __FUNCTION__, csr_str);
+    std::string val = "";
+
+    if (!strcmp(csr_str, "pbc_debug")) {
+        capri_tm_dump_debug_regs();
+    } else if (!strcmp(csr_str, "pbc_config")) {
+        capri_tm_dump_config_regs();
+    } else if (!strcmp(csr_str, "pbc_all")) {
+        capri_tm_dump_all_regs();
+    } else if (!strcmp(csr_str, "mpu_debug")) {
+        capri_debug_hbm_read();
+    } else if (!strcmp(csr_str, "mpu_reset")) {
+        capri_debug_hbm_reset();
+    } else {
+        val = csr_read(std::string(csr_str));
+        uint64_t offset = csr_get_offset(std::string(csr_str));
+        HAL_TRACE_DEBUG("{0:s}, csr: {1:s}, offset: 0x{2:x}, value: {3:s}",
+                        __FUNCTION__, csr_str, offset, val);
+        csr_show(std::string(csr_str), -1);
+    }
+    return val;
 }

@@ -421,12 +421,14 @@ port_add_to_db (port_t *pi_p, hal_handle_t handle)
 static hal_ret_t
 validate_port_create (PortSpec& spec, PortResponse *rsp)
 {
+#if 0
     if (!spec.has_meta()) {
         HAL_TRACE_ERR("{}:no meta",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
+#endif
 
     std::string str;
 

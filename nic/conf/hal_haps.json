@@ -1,5 +1,5 @@
 {
-  "mode": "hw",
+  "mode": "haps",
   "asic": {
     "name": "capri",
     "loader_info_file" : "capri_loader.conf"

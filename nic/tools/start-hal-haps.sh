@@ -1,3 +1,5 @@
 export HAL_CONFIG_PATH=/nic/conf/
+export HAL_PLUGIN_PATH=/nic/lib/
 export LD_LIBRARY_PATH=/nic/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
-$GDB /nic/bin/hal -c hal.json 2>&1 | tee hal.log
+ulimit -c unlimited
+$GDB /nic/bin/hal -c hal_haps.json > hal.log 2>&1

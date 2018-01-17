@@ -169,6 +169,7 @@ cc_library(
     copts = [
             "-DEXCLUDE_PER_FIELD_CNTRL",
             "-DCAPRI_HAL",
+            "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024",
             # Disabling warnings
             "-Wno-unused-function",
             "-Wno-unused-variable",

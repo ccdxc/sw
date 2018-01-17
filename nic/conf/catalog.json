@@ -5,7 +5,7 @@
 
     "platform_type" : "haps",
 
-    "access_mock_mode" : "true",
+    "access_mock_mode" : "false",
 
     "num_asics" : "1",
     "asics" :

@@ -66,11 +66,15 @@ slab::init(const char *name, slab_id_t slab_id, uint32_t elem_sz,
     this->num_alloc_fails_ = 0;
     this->num_blocks_ = 0;
 
+#if 0
     // allocate a block and keep it ready
     this->block_head_ = alloc_block_();
     if (this->block_head_ == NULL) {
         return -1;
     }
+#endif
+
+    this->block_head_ = NULL;
 
     return 0;
 }
@@ -95,6 +99,7 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
     if (mem == NULL) {
         return NULL;
     }
+
     new_slab = new (mem) slab();
     rv = new_slab->init(name, slab_id, elem_sz, elems_per_block, thread_safe,
                         grow_on_demand, zero_on_alloc);
@@ -163,7 +168,9 @@ slab::alloc(void)
             block = alloc_block_();
             if (block) {
                 block->next_ = this->block_head_;
-                this->block_head_->prev_ = block;
+                if (this->block_head_) {
+                    this->block_head_->prev_ = block;
+                }
                 this->block_head_ = block;
             } else {
                 goto cleanup;
