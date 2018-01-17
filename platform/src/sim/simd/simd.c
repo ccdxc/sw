@@ -81,6 +81,7 @@ simd_doorbell(u_int64_t addr, u_int64_t data)
 static int
 simd_read_reg(u_int64_t addr, u_int32_t *data)
 {
+    *data = 0;
     return 0;
 }
 
@@ -93,6 +94,7 @@ simd_write_reg(u_int64_t addr, u_int32_t data)
 static int
 simd_read_mem(u_int64_t addr, void *buf, size_t size)
 {
+    memset(buf, 0 , size);
     return 0;
 }
 

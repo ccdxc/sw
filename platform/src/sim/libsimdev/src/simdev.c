@@ -102,12 +102,12 @@ simdev_read_reg(u_int64_t addr, u_int32_t *data)
 
     if (api && api->read_reg) {
         int r = api->read_reg(addr, data);
-        if (r) {
-            simdev_log("read_reg 0x08%"PRIx64" = 0x%x\n", addr, *data);
+        if (r >= 0) {
+            simdev_log("read_reg 0x%08"PRIx64" = 0x%x\n", addr, *data);
         } else {
             simdev_log("read_reg addr 0x%08"PRIx64" failed\n", addr);
         }
-        return r ? 0 : -1;
+        return r;
     }
     return 0;
 }
@@ -132,12 +132,12 @@ simdev_write_reg(u_int64_t addr, u_int32_t data)
 
     if (api && api->write_reg) {
         int r = api->write_reg(addr, data);
-        if (r) {
-            simdev_log("write_reg 0x08%"PRIx64" = 0x%x\n", addr, data);
+        if (r >= 0) {
+            simdev_log("write_reg 0x%08"PRIx64" = 0x%x\n", addr, data);
         } else {
             simdev_log("write_reg addr 0x%08"PRIx64" failed\n", addr);
         }
-        return r ? 0 : -1;
+        return r;
     }
     return 0;
 }
@@ -220,6 +220,8 @@ simdev_initialize(simdev_t *sd, const char *devparams)
     sd->bdf = bdf;
     if (strcmp(type, "eth") == 0) {
         sd->ops = &eth_ops;
+    } else if (strcmp(type, "compress") == 0) {
+        sd->ops = &compress_ops;
     } else if (strcmp(type, "generic") == 0) {
         sd->ops = &generic_ops;
     } else {

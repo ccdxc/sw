@@ -105,25 +105,25 @@ sim_server_doorbell(u_int64_t addr, u_int64_t data)
 static int
 sim_server_read_reg(u_int64_t addr, u_int32_t *data)
 {
-    return model_server_read_reg(addr, data);
+    return model_server_read_reg(addr, data) ? 0 : -1;
 }
 
 static int
 sim_server_write_reg(u_int64_t addr, u_int32_t data)
 {
-    return model_server_write_reg(addr, data);
+    return model_server_write_reg(addr, data) ? 0 : -1;
 }
 
 static int
 sim_server_read_mem(u_int64_t addr, void *buf, size_t size)
 {
-    return model_server_read_mem(addr, buf, size);
+    return model_server_read_mem(addr, buf, size) ? 0 : -1;
 }
 
 static int
 sim_server_write_mem(u_int64_t addr, void *buf, size_t size)
 {
-    return model_server_write_mem(addr, buf, size);
+    return model_server_write_mem(addr, buf, size) ? 0 : -1;
 }
 
 static simdev_api_t sim_server_api = {
