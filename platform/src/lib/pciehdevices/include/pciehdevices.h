@@ -29,6 +29,9 @@ pciehdev_t *pciehdev_enet_new(const char *name,
 pciehdev_t *pciehdev_nvme_new(const char *name,
                               const pciehdevice_resources_t *pres);
 
+pciehdev_t *pciehdev_accel_new(const char *name,
+                               const pciehdevice_resources_t *pres);
+
 pciehdev_t *pciehdev_debug_new(const char *name,
                                const pciehdevice_resources_t *pres);
 

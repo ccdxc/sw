@@ -220,8 +220,8 @@ simdev_initialize(simdev_t *sd, const char *devparams)
     sd->bdf = bdf;
     if (strcmp(type, "eth") == 0) {
         sd->ops = &eth_ops;
-    } else if (strcmp(type, "compress") == 0) {
-        sd->ops = &compress_ops;
+    } else if (strcmp(type, "accel") == 0) {
+        sd->ops = &accel_ops;
     } else if (strcmp(type, "generic") == 0) {
         sd->ops = &generic_ops;
     } else {

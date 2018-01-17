@@ -132,6 +132,19 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
             printf("pciehdev_nvme_new failed\n");
             return NULL;
         }
+    } else if (strcmp(type, "accel") == 0) {
+        if (namearg == NULL) {
+            static int accel_instance;
+            snprintf(lname, sizeof(lname), "accel%d", accel_instance++);
+            name = lname;
+        } else {
+            name = namearg;
+        }
+        pdev = pciehdev_accel_new(name, pres);
+        if (pdev == NULL) {
+            printf("pciehdev_accel_new failed\n");
+            return NULL;
+        }
     } else if (strcmp(type, "debug") == 0) {
         if (namearg == NULL) {
             static int debug_instance;

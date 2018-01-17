@@ -74,5 +74,6 @@ simdev_t *genericdev_get(const u_int16_t bdf);
 
 extern dev_ops_t generic_ops;
 extern dev_ops_t eth_ops;
+extern dev_ops_t accel_ops;
 
 #endif /* __SIMDEV_IMPL_H__ */

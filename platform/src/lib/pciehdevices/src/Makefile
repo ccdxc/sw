@@ -6,6 +6,7 @@ LIBRARY = libpciehdevices.a libpciehdevices.so
 SOURCES = \
 	eth.c \
 	nvme.c \
+	accel.c \
 	debug.c \
 	utils.c \
 	$(NULL)

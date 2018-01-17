@@ -9,6 +9,7 @@ SOURCES = \
 	devparams.c \
 	generic_dev.c \
 	eth_dev.c \
+	accel_dev.c \
 	dev_utils.c \
 	$(NULL)
 

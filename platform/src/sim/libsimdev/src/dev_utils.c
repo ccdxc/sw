@@ -5,14 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <stdarg.h>
 #include <inttypes.h>
 #include <unistd.h>
 #include <string.h>
-#include <getopt.h>
-#include <netdb.h>
-#include <errno.h>
-#include <signal.h>
+#include <assert.h>
 #include <sys/types.h>
 
 #include "src/lib/misc/include/maclib.h"
@@ -218,4 +214,91 @@ intr_fwcfg_msi(const int intr, const int lif, const int port_id)
         simdev_write_regs(pa, v.w, 2);
     }
     simdev_write_reg(pa, 0); /* function_mask = 0 */
+}
+
+int
+msixtbl_rd(const int intrb,
+           const u_int64_t offset,
+           const u_int8_t size,
+           u_int64_t *valp)
+{
+    const u_int64_t base = intr_msixcfg_addr(intrb);
+    u_int32_t val;
+
+    simdev_log("msixtbl read offset 0x%"PRIx64" size %d\n", offset, size);
+    if (size != 4 && size != 8) {
+        simdev_error("msixtbl read size %d invalid, ignoring\n", size);
+        return -1;
+    }
+    if (size == 8) { /* XXX */
+        simdev_error("msixtbl read size %d unimplemented\n", size);
+        assert(0);
+    }
+    if (simdev_read_reg(base + offset, &val) < 0) {
+        return -1;
+    }
+    *valp = val;
+    return 0;
+}
+
+int
+msixtbl_wr(const int intrb,
+           const u_int64_t offset,
+           const u_int8_t size,
+           const u_int64_t val)
+{
+    const u_int64_t base = intr_msixcfg_addr(intrb);
+
+    simdev_log("msixtbl write offset 0x%"PRIx64" size %d\n", offset, size);
+    if (size != 4 && size != 8) {
+        simdev_error("msixtbl write size %d invalid, ignoring\n", size);
+        return -1;
+    }
+    if (size == 8) { /* XXX */
+        simdev_error("msixtbl write size %d unimplemented\n", size);
+        assert(0);
+    }
+    if (simdev_write_reg(base + offset, val) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
+int
+msixpba_rd(const int lif,
+           const u_int64_t offset,
+           const u_int8_t size,
+           u_int64_t *valp)
+{
+    const u_int64_t base = intr_pba_addr(lif);
+    u_int32_t val;
+
+    simdev_log("msixpba read offset 0x%"PRIx64" "
+               "pba_base 0x%"PRIx64" size %d\n",
+               offset, base, size);
+    if (size != 4 && size != 8) {
+        simdev_error("msixpba read size %d invalid, ignoring\n", size);
+        return -1;
+    }
+    if (size == 8) { /* XXX */
+        simdev_error("msixpba read size %d unimplemented\n", size);
+        assert(0);
+    }
+    if (simdev_read_reg(base + offset, &val) < 0) {
+        return -1;
+    }
+    *valp = val;
+    return 0;
+}
+
+int
+msixpba_wr(const int lif,
+           const u_int64_t offset,
+           const u_int8_t size,
+           const u_int64_t val)
+{
+    /* msixpba is read-only */
+    simdev_error("msixpba_wr: off 0x%"PRIx64" size %d = val 0x%"PRIx64"\n",
+                 offset, size, val);
+    return -1;
 }

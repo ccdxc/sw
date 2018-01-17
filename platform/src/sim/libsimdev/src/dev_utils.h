@@ -36,4 +36,21 @@ void intr_msixcfg(const int intr,
                   const int vctrl);
 void intr_fwcfg_msi(const int intr, const int lif, const int port_id);
 
+int msixtbl_rd(const int intrb,
+               const u_int64_t offset,
+               const u_int8_t size,
+               u_int64_t *valp);
+int msixtbl_wr(const int intrb,
+               const u_int64_t offset,
+               const u_int8_t size,
+               const u_int64_t val);
+int msixpba_rd(const int lif,
+               const u_int64_t offset,
+               const u_int8_t size,
+               u_int64_t *valp);
+int msixpba_wr(const int lif,
+               const u_int64_t offset,
+               const u_int8_t size,
+               const u_int64_t val);
+
 #endif /* __DEV_UTILS_H__ */
