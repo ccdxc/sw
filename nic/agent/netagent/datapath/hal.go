@@ -678,7 +678,14 @@ func (hd *HalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 }
 
 // CreateNetwork creates a network in datapath
-func (hd *HalDatapath) CreateNetwork(nw *netproto.Network) error {
+func (hd *HalDatapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
+	// construct vrf key that gets passed on to hal
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: tn.Status.TenantID,
+		},
+	}
+
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
 		Meta: &halproto.ObjectMeta{},
@@ -698,6 +705,7 @@ func (hd *HalDatapath) CreateNetwork(nw *netproto.Network) error {
 			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
+		VrfKeyHandle: vrfKey,
 	}
 	segReq := halproto.L2SegmentRequestMsg{
 		Request: []*halproto.L2SegmentSpec{&seg},
@@ -920,6 +928,11 @@ func (hd *HalDatapath) CreateTenant(tn *netproto.Tenant) error {
 	vrfSpec := halproto.VrfSpec{
 		Meta: &halproto.ObjectMeta{
 			VrfId: tn.Status.TenantID,
+		},
+		KeyOrHandle: &halproto.VrfKeyHandle{
+			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+				VrfId: tn.Status.TenantID,
+			},
 		},
 	}
 	vrfReqMsg := halproto.VrfRequestMsg{

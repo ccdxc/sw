@@ -59,7 +59,7 @@ func NewNetAgent(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) 
 			return nil, err
 		}
 		// We need to create a default tenant at startup as HAL expects an actual tenant object to be present before any api calls
-		err = createDefaultTenant(dp)
+		err = nagent.createDefaultTenant()
 		if err != nil {
 			emdb.Close()
 			return nil, err
@@ -106,12 +106,13 @@ func (na *NetAgent) GetAgentID() string {
 	return na.nodeUUID
 }
 
-func createDefaultTenant(dp NetDatapathAPI) error {
+func (na *NetAgent) createDefaultTenant() error {
 	tn := netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "default",
+			Name:   "default",
+			Tenant: "default",
 		},
 	}
-	return dp.CreateTenant(&tn)
+	return na.CreateTenant(&tn)
 }

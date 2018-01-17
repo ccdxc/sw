@@ -5,6 +5,7 @@ package veniceinteg
 import (
 	"flag"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -214,6 +215,12 @@ func (it *veniceIntegSuite) SetUpTest(c *C) {
 
 func (it *veniceIntegSuite) TearDownTest(c *C) {
 	log.Infof("============================= %s completed ==========================", c.TestName())
+	// Remove persisted agent db files
+	for i := 0; i < it.numAgents; i++ {
+		// mock datapath
+		os.Remove(fmt.Sprintf("/tmp/agent_%d.db", i))
+	}
+
 }
 
 func (it *veniceIntegSuite) TearDownSuite(c *C) {

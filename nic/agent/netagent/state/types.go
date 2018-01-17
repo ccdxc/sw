@@ -30,7 +30,7 @@ type NetAgent struct {
 	nodeUUID   string                             // Node's UUID
 	datapath   NetDatapathAPI                     // network datapath
 	ctrlerif   CtrlerAPI                          // controller object
-	networkDB  map[string]*netproto.Network       // Network object db
+	networkDB  map[string]*netproto.Network       // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
 	endpointDB map[string]*netproto.Endpoint      // Endpoint object db
 	secgroupDB map[string]*netproto.SecurityGroup // security group object db
 	tenantDB   map[string]*netproto.Tenant        // tenant object db
@@ -81,7 +81,7 @@ type NetDatapathAPI interface {
 	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error             // creates a remote endpoint in datapath
 	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error             // updates a remote endpoint in datapath
 	DeleteRemoteEndpoint(ep *netproto.Endpoint) error                                                                  // deletes a remote endpoint in datapath
-	CreateNetwork(nw *netproto.Network) error                                                                          // creates a network
+	CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error                                                     // creates a network
 	UpdateNetwork(nw *netproto.Network) error                                                                          // updates a network in datapath
 	DeleteNetwork(nw *netproto.Network) error                                                                          // deletes a network from datapath
 	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                              // creates a security group

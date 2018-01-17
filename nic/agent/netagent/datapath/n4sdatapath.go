@@ -103,7 +103,7 @@ func (ndp *NaplesDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 }
 
 // CreateNetwork creates a network in datapath
-func (ndp *NaplesDatapath) CreateNetwork(nw *netproto.Network) error {
+func (ndp *NaplesDatapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
 	return ndp.fSwitch.CreateNetwork(nw)
 }
 

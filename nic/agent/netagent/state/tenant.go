@@ -7,6 +7,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"fmt"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -60,7 +62,7 @@ func (na *NetAgent) FindTenant(meta api.ObjectMeta) (*netproto.Tenant, error) {
 	key := objectKey(meta)
 	tn, ok := na.tenantDB[key]
 	if !ok {
-		return nil, errors.New("tenant not found")
+		return nil, fmt.Errorf("tenant not found %v", tn)
 	}
 
 	return tn, nil

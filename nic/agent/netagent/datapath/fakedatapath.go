@@ -132,7 +132,7 @@ func (fdp *FakeDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 }
 
 // CreateNetwork creates a network in datapath
-func (fdp *FakeDatapath) CreateNetwork(nw *netproto.Network) error {
+func (fdp *FakeDatapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
 	return fdp.fSwitch.CreateNetwork(nw)
 }
 

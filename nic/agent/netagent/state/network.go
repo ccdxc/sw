@@ -33,8 +33,20 @@ func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
+	// find the corresponding tenant
+	tnMeta := api.ObjectMeta{
+		Name:   nt.Tenant,
+		Tenant: nt.Tenant,
+	}
+
+	tn, err := na.FindTenant(tnMeta)
+	if err != nil {
+		log.Errorf("Could not find the tenant: {%+v}", err)
+		return err
+	}
+
 	// create it in datapath
-	err = na.datapath.CreateNetwork(nt)
+	err = na.datapath.CreateNetwork(nt, tn)
 	if err != nil {
 		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
 		return err

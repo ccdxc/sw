@@ -82,7 +82,7 @@ func (dp *mockDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 }
 
 // CreateNetwork creates a network in datapath
-func (dp *mockDatapath) CreateNetwork(nw *netproto.Network) error {
+func (dp *mockDatapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
 	return nil
 }
 
@@ -258,18 +258,30 @@ func TestNetworkUpdate(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
-	// network
-	nt := netproto.Network{
+	// create backing tenant
+	tn := &netproto.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "updateTenant",
+			Name:   "updateTenant",
+		},
+	}
+
+	err := ag.CreateTenant(tn)
+	AssertOk(t, err, "Error creating tenant")
+
+	// create network
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "updateTenant",
 			Name:   "updateNetwork",
 		},
 	}
 
-	// create tenant
-	err := ag.CreateNetwork(&nt)
-	AssertOk(t, err, "Error creating tenant")
+	// create network
+	err = ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
 	tnt, err := ag.FindNetwork(nt.ObjectMeta)
 	AssertOk(t, err, "Tenant was not found in DB")
 	Assert(t, tnt.Name == "updateNetwork", "Tenant names did not match", tnt)
@@ -855,9 +867,9 @@ func TestTenantCreateDelete(t *testing.T) {
 	err = ag.CreateTenant(&tn)
 	AssertOk(t, err, "Error creating duplicate tenant")
 
-	// verify list api works
+	// verify list api works. 2 accounts for the default tenant that gets created at agent startup
 	tenantList := ag.ListTenant()
-	Assert(t, len(tenantList) == 1, "Incorrect number of tenants")
+	Assert(t, len(tenantList) == 2, "Incorrect number of tenants")
 
 	// delete the network and verify its gone from db
 	err = ag.DeleteTenant(&tn)
@@ -902,4 +914,24 @@ func TestTenantUpdate(t *testing.T) {
 
 	err = ag.UpdateTenant(&tn)
 	AssertOk(t, err, "Error updating tenant")
+}
+
+func TestNetworkCreateOnNonExistentTenant(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// create network
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "nonExistentNetwork",
+			Name:   "default",
+		},
+	}
+
+	// create network
+	err := ag.CreateNetwork(&nt)
+	Assert(t, err != nil, "Network create was expected to fail.")
 }
