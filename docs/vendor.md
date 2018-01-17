@@ -51,18 +51,49 @@ Preferably CI binaries can be hosted on its own github repo with tracked release
 
 #### Updating existing dependencies
 - Update the semver in `Gopkg.toml`
-- Run dep ensure
-- Run dep prune. [Future releases of dep will not need this](https://github.com/golang/dep/issues/944)
+- Run `dep ensure`
+- Run `dep prune`. [Future releases of dep will not need this](https://github.com/golang/dep/issues/944)
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Removing dependencies
 - Remove the imports from source.
-- Run dep ensure
-- Run dep prune. [Future releases of dep will not need this](https://github.com/golang/dep/issues/944)
+- Run `dep ensure`
+- Run `dep prune` [Future releases of dep will not need this](https://github.com/golang/dep/issues/944)
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
+#### Working with pensando forks.
+- Submit a PR for the upstream fork and get it merged.
+- Run `dep ensure -update github.com/pensando/foo`
+- Run `dep prune`
+- Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
+
+#### Semantic versioning cheatsheet
+It is recommended to use semantic versioning for the imported packages.
+Also `dep` by default uses `^` operator if no other operators are specified.
+If `github.com/foo` is defined as follows
 ```
+[[constraint]]
+  name = "github.com/foo"
+  version = "1.6"
 ```
+
+`^` will interpret the git version as the min-boundary ranges like below.
+- `1.6`   translates to the highest compatible commit available between `>=1.6.0 to < 2.0.0`
+- `0.6.2` translates to the highest compatible commit available between `>=0.6.2 to < 0.7.0`
+- `0.0.4` translates to the highest compatible commit available between `>=0.0.4 to < 0.1.0`
+
+`dep` [uses an external semver library](https://github.com/Masterminds/semver)
+It has support for [fancier operators and regexes](https://github.com/golang/dep#semantic-versioning)
+
+However if our code is still compatible with `v2.0.0` and higher, just doing a dep ensure will *not*
+update `github.com/foo`, We will need a corresponding `Gopkg.toml` change to the constraint as follows
+
+```
+[[constraint]]
+  name = "github.com/foo"
+  version = "2.0"
+```
+
 ### Things to consider while adding newer packages
 - Preferably use a released version of the dependency which complies with semantic versioning
 - Avoid using different versions of the same repo. For eg. If you need a go package, github.com/foo/a
