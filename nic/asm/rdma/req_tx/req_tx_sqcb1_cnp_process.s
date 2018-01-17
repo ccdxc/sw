@@ -10,7 +10,6 @@ struct req_tx_phv_t p;
 struct sqcb1_t d;
 
 #define DMA_CMD_BASE        r1
-#define RAW_TABLE_PC        r3
 
 %%
 
@@ -47,9 +46,8 @@ add_headers:
 
     // Load dcqcn_cb to fetch pkey to fill in BTH
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r2)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, req_tx_dcqcn_cnp_process)
     add     r4, r4, HDR_TEMPLATE_T_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r2, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r4)
+    CAPRI_NEXT_TABLE_I_READ_PC(r2, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_cnp_process, r4)
 
     nop.e
     nop

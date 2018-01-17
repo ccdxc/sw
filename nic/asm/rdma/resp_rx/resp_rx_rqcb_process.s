@@ -22,8 +22,6 @@ struct rdma_stage0_table_k k;
 #define RQCB_TO_RD_ATOMIC_T struct resp_rx_rqcb_to_read_atomic_rkey_info_t
 #define TO_S_ATOMIC_INFO_T struct resp_rx_to_stage_atomic_info_t
 
-#define RAW_TABLE_PC r2
-
 #define REM_PYLD_BYTES  r6
 #define RSQWQE_P r2
 #define DMA_CMD_BASE r1

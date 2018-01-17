@@ -79,8 +79,7 @@ set_arg:
      CAPRI_SET_FIELD_RANGE(r7, INFO_OUT_T, pt_bytes, sge_index, k.{args.sge_bytes...args.sge_index})
 
      CAPRI_GET_TABLE_0_OR_1_K(req_tx_phv_t, r7, c1)
-     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqptseg_process)
-     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
+     CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqptseg_process, r3)
 
      nop.e
      nop

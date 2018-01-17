@@ -10,7 +10,6 @@ struct rqcb1_t d;
 struct resp_tx_rqcb1_process_k_t k;
 
 #define RSQWQE_INFO_T struct resp_tx_rqcb1_to_rsqwqe_info_t
-#define RAW_TABLE_PC    r3
 #define TO_STAGE_T struct resp_tx_to_stage_t
 
 %%
@@ -46,10 +45,9 @@ resp_tx_rqcb1_process:
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.rsq_rkey.dcqcn_cb_addr, r2)
 
     CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rsqwqe_process)
 
     // load 256 bits (i.e,32 bytes) which is the size of rsqwqe
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, k.args.rsqwqe_addr)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_tx_rsqwqe_process, k.args.rsqwqe_addr)
 
 exit:
     nop.e

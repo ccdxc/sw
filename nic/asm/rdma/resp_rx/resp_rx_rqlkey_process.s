@@ -12,7 +12,6 @@ struct key_entry_aligned_t d;
 #define LOG_PT_SEG_SIZE r1
 #define PT_SEG_P r5
 #define PT_OFFSET r3
-#define RAW_TABLE_PC r2
 
 #define DMA_CMD_BASE r1
 #define TMP r3

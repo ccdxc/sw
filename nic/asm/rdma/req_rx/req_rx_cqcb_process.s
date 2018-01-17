@@ -56,8 +56,7 @@ req_rx_cqcb_process:
     CAPRI_SET_FIELD(r5, CQ_PT_INFO_T, page_seg_offset, r4)
     CAPRI_SET_FIELD(r5, CQ_PT_INFO_T, page_offset, r1)
 
-    CAPRI_SET_RAW_TABLE_PC(r2, req_rx_cqpt_process)
-    CAPRI_NEXT_TABLE_I_READ(r6, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r2, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r6, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, r3)
 
     // increment p_index
     tblmincri       CQ_P_INDEX, d.log_num_wqes, 1

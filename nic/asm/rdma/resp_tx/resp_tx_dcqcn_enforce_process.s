@@ -16,7 +16,6 @@ struct resp_tx_rqcb1_write_back_process_k_t k;
 #define NUM_TOKENS_REQUIRED  r5
 
 #define RQCB1_WB_INFO_T struct resp_tx_rqcb1_write_back_info_t  
-#define RAW_TABLE_PC    r6
 
 %%
     .param rdma_num_clock_ticks_per_us

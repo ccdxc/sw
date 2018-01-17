@@ -104,9 +104,8 @@ sge_loop:
     // Get common.common_te[0]_phv_table_addr or common.common_te[1]_phv_table_Addr ... based on
     // sge_index to invoke program in multiple MPUs
     CAPRI_GET_TABLE_0_OR_1_K(req_rx_phv_t, r7, c7)
-    CAPRI_SET_RAW_TABLE_PC(r4, req_rx_rrqlkey_process)
     // aligned_key_addr and key_id sent to next stage to load lkey
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r4, r6)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqlkey_process, r6)
 
     // big-endian - subtract sizeof(sge_t) as sges are read from bottom to top in big-endian format
     // sge_p[1]
@@ -159,8 +158,7 @@ set_arg:
 
     SQCB1_ADDR_GET(r5)
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
  
     nop.e
     nop

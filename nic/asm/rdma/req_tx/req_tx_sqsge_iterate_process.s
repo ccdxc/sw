@@ -37,7 +37,6 @@ trigger_stg3_sqsge_process:
     CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, in_progress, inv_key, k.{args.in_progress...args.inv_key})
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7) // Branch Delay Slot
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
     //mfspr          r1, spr_tbladdr
 
     // sge_offset = TXWQE_SGE_OFFSET + sqcb0_p->current_sge_id * sizeof(sge_t);
@@ -45,16 +44,15 @@ trigger_stg3_sqsge_process:
     // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
     add            r1, r1, k.to_stage.sq.wqe_addr
 
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1) // Branch Delay Slot
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r1)
     CAPRI_SET_TABLE_3_VALID(0)
 
     nop.e
     nop
 
 trigger_stg0_sqsge_process:
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7) // Branch Delay Slot
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6) // Branch Delay Slot
+    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process)
     phvwr          p.common.p4_intr_recirc, 1
     phvwr          p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
 

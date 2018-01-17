@@ -16,7 +16,6 @@ struct rqcb0_t d;
 #define RQCB1_ADDR r6
 #define T2_ARG r7
 #define T2_K r7
-#define RAW_TABLE_PC r2
 
 %%
     .param  resp_rx_rqcb1_write_back_process

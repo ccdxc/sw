@@ -130,9 +130,8 @@ next_stage_arg:
      
 
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_process)
     add            r1, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_process, r1)
 
     nop.e
     nop
@@ -155,9 +154,8 @@ ud_feedback:
     phvwrpair      p.cqwqe.id.wrid, r7, p.cqwqe.status, k.rdma_ud_feedback_status
 
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_process)
     add            r1, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_process, r1)
 
 exit:
     nop.e

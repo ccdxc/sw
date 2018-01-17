@@ -10,8 +10,6 @@ struct sqcb1_t d;
 
 %%
     .param req_tx_credits_process
-    .param req_tx_bktrack_sqwqe_process
-    .param req_tx_bktrack_sqpt_process
 
 .align
 req_tx_sqcb1_process:
@@ -35,8 +33,7 @@ req_tx_sqcb1_process:
 
     SQCB0_ADDR_GET(r1)
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_credits_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_credits_process, r1)
 
     nop.e
     nop

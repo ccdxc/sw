@@ -12,7 +12,6 @@ struct cqcb_t d;
 #define PAGE_INDEX          r3
 #define PAGE_OFFSET         r1
 #define PAGE_SEG_OFFSET     r4
-#define RAW_TABLE_PC        r2
 
 #define CQ_PT_INFO_T    struct resp_rx_cqcb_to_pt_info_t
 

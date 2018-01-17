@@ -20,7 +20,6 @@ struct rqcb1_t d;
 #define CQCB_ADDR           r3
 #define RQCB4_ADDR          r3
 #define KEY_ADDR            r3
-#define RAW_TABLE_PC        r2
 
 #define STATS_INFO_T struct resp_rx_stats_info_t
 
@@ -93,7 +92,6 @@ stats:
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, ARG_P)
     CAPRI_SET_FIELD(ARG_P, STATS_INFO_T, bubble_count, 1)
     RQCB4_ADDR_GET(RQCB4_ADDR)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_stats_process)
     CAPRI_NEXT_TABLE_I_READ_PC(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_stats_process, RQCB4_ADDR)
 
 exit:

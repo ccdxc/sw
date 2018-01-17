@@ -9,7 +9,6 @@ struct resp_tx_phv_t p;
 struct rqcb1_t d;
 
 #define TO_STAGE_T struct resp_tx_to_stage_t
-#define RAW_TABLE_PC    r3 
 
 %%
     .param      resp_tx_dcqcn_enforce_process
@@ -23,8 +22,7 @@ resp_tx_ack_process:
 
     // invoke MPU only dcqcn in table 1.
     CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_dcqcn_enforce_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, RAW_TABLE_PC, r0)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)
  
     CAPRI_SET_TABLE_0_VALID(0)
 exit:

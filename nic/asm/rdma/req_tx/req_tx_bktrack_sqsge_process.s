@@ -140,9 +140,8 @@ sqcb_writeback:
     CAPRI_SET_FIELD_C(r7, SQCB0_WRITE_BACK_T, empty_rrq_bktrack, 1, c7)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_write_back_process)
     SQCB0_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)
 
     CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, skip_wqe_start_psn, 1)
@@ -153,9 +152,8 @@ sqcb_writeback:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, inv_key, k.args.inv_key)
 
     CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_sqcb1_write_back_process)
     SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb1_write_back_process, r5)
 
     nop.e
     nop

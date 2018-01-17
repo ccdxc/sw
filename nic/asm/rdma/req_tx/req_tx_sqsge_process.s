@@ -96,9 +96,8 @@ sge_loop:
     // Get common.common_te[0]_phv_table_addr or common.common_te[1]_phv_table_Addr ... based on
     // sge_index to invoke program in multiple MPUs
     CAPRI_GET_TABLE_0_OR_1_K(req_tx_phv_t, r7, c7)
-    CAPRI_SET_RAW_TABLE_PC(r4, req_tx_sqlkey_process)
     // aligned_key_addr and key_id sent to next stage to load lkey
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, r4, r6)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_tx_sqlkey_process, r6)
 
     // big-endian - subtract sizeof(sge_t) as sges are read from bottom to top in big-endian format
     // sge_p[1]
@@ -158,20 +157,19 @@ sge_loop:
     seq            c1, r1[4:2], STAGE_3
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_dcqcn_enforce_process)
 
     seq           c2, k.to_stage.sq.congestion_mgmt_enable, 1  
     bcf           [c1 & c2], write_back
     add            r1, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
 
 write_back_mpu_only:
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r1)
  
     nop.e
     nop
 
 write_back:
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_enforce_process, r1)
 
     nop.e
     nop
@@ -195,8 +193,7 @@ iterate_sges:
     add            r1, r1, 2, LOG_SIZEOF_SGE_T
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_iterate_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r1)
 
 end:
     nop.e

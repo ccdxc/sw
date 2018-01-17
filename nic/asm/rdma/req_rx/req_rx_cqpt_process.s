@@ -42,8 +42,7 @@ req_rx_cqpt_process:
     CAPRI_SET_FIELD(r7, EQ_INFO_T, tbl_id, r6)
     CAPRI_SET_FIELD(r7, EQ_INFO_T, dma_cmd_index, r4)
     CAPRI_SET_FIELD(r7, EQ_INFO_T, cq_id, k.args.cq_id)
-    CAPRI_SET_RAW_TABLE_PC(r2, req_rx_eqcb_process)
-    CAPRI_NEXT_TABLE_I_READ(r3, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r2, r5)
+    CAPRI_NEXT_TABLE_I_READ_PC(r3, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5)
 
 cqpt_exit:
 

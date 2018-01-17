@@ -15,7 +15,6 @@ struct key_entry_aligned_t d;
 #define LOG_PT_SEG_SIZE r1
 #define PT_SEG_P r5
 #define PT_OFFSET r3
-#define RAW_TABLE_PC r2
 #define RQCB1_ADDR r5
 #define DMA_CMD_BASE r1
 #define IN_PROGRESS r2
@@ -111,8 +110,7 @@ aligned_pt:
 invoke_pt:
 
     CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rsqptseg_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, PT_SEG_P)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsqptseg_process, PT_SEG_P)
     
     CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, pt_seg_offset, PT_OFFSET)
@@ -152,17 +150,16 @@ invoke_dcqcn:
     CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, read_rsp_in_progress, IN_PROGRESS)
 
     CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_dcqcn_enforce_process)
     bbeq           k.to_stage.s3.rsq_rkey.congestion_mgmt_enable, 1, dcqcn
     add            r3,  r0, k.to_stage.s3.rsq_rkey.dcqcn_cb_addr // BD slot
 
 dcqcn_mpu_only:
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r3)
     nop.e
     nop
 
 dcqcn:
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_dcqcn_enforce_process, r3)
 
 exit:
     nop.e

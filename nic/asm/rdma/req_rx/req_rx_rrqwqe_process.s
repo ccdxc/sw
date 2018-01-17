@@ -29,8 +29,7 @@ ack:
     // Hardcode table 2 for write_back process
     SQCB1_ADDR_GET(r5)
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
 
     CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
@@ -149,9 +148,8 @@ read_or_atomic:
 
 read:
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqsge_process)
     add            r3, d.read.wqe_sge_list_addr, k.args.cur_sge_id, LOG_SIZEOF_SGE_T
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqsge_process, r3)
 
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
     //CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, is_atomic, 0)
@@ -198,8 +196,7 @@ atomic:
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, is_atomic, 1)
 
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqlkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_rrqlkey_process, r1)
 
     // Hardcode table id 2 for write_back process
     // to keep it consistent with read process where
@@ -219,8 +216,7 @@ atomic:
 
     SQCB1_ADDR_GET(r1)
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r1)
 
 set_cqcb_arg:
     // if(!completion) goto end
@@ -233,9 +229,8 @@ set_cqcb_arg:
     CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, dma_cmd_index, REQ_RX_DMA_CMD_CQ)
 
     CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_cqcb_process)
     REQ_RX_CQCB_ADDR_GET(r1, k.args.cq_id)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_cqcb_process, r1)
 
 end:
     nop.e

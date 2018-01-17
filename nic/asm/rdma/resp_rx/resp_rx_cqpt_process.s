@@ -15,7 +15,6 @@ struct resp_rx_cqpt_process_k_t k;
 #define KEY_P           r3
 #define ARG_P           r7
 
-#define RAW_TABLE_PC    r2
 
 //TODO: verify if it is in right order
 //#define PHV_CQWQE_START cqwqe.id.wrid
