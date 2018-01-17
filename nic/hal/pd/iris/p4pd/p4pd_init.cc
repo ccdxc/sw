@@ -1409,6 +1409,11 @@ p4pd_decode_roce_opcode_init (void)
     opc_to_info[101].raw_flags = (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND |
                                   RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION |
                                   RESP_RX_FLAG_UD);
+
+    // CNP packet entry.
+    opc_to_info[129].valid = 1;
+    opc_to_info[129].roce_hdr_length = sizeof(rdma_bth_t)+sizeof(rdma_reth_t);
+    opc_to_info[129].type = Q_TYPE_RDMA_RQ;
         
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DECODE_ROCE_OPCODE);
     HAL_ASSERT(dm != NULL);

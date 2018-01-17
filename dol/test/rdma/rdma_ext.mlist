@@ -41,7 +41,47 @@ modules:
         module  : req_tx_send_only_inline_dcqcn_rl
         spec    : req_tx_send_only_inline_dcqcn_rl.testspec
         ignore  : False
- 
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_DCQCN_FAST_RECOVERY
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_dcqcn_fast_recovery
+        spec    : req_tx_send_only_dcqcn_fast_recovery.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_DCQCN_ADDITIVE_INCREASE 
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_dcqcn_additive_increase
+        spec    : req_tx_send_only_dcqcn_additive_increase.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_DCQCN_HYPER_INCREASE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_dcqcn_hyper_increase
+        spec    : req_tx_send_only_dcqcn_hyper_increase.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:                                      
+        name    : RDMA_RX_SEND_ONLY_DCQCN_CNP                                             
+        enable  : True                             
+        package : test.rdma                        
+        module  : resp_rx_send_only_dcqcn_cnp
+        spec    : resp_rx_send_only_dcqcn_cnp.testspec                                             
+        ignore  : False                           
+        selectors:
+            maxrdmasessions: 1
+
     - module:
         name    : RDMA_TX_WRITE_ONLY_INLINE_16B
         enable  : True
