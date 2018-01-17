@@ -1,6 +1,6 @@
 # Makefile for building packages
 
-EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts|netagent/datapath/halproto"
+EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts|netagent/datapath/halproto|nic/gen"
 # Has venice protos and all things auto generated.
 TO_GEN := venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
 venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \

@@ -2,18 +2,20 @@
 # Please refer docs/vendor.md for more details.
 
 # required lists packages needed by dev tools that aren't improted in the project
-# prune will not touch these packages. Please add newer packages to required with caution
-required = ["github.com/gogo/protobuf/protoc-gen-gofast",
-            "github.com/golang/protobuf/protoc-gen-go/generator",
-            "github.com/golang/protobuf/protoc-gen-go/grpc",
-            "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway",
-            "github.com/pensando/grpc-gateway/protoc-gen-swagger/genswagger",
-            "github.com/golang/mock/mockgen",
-            "github.com/golang/lint",
-            "github.com/golang/lint/golint",
-            "github.com/minio/minio-go",
-            "github.com/golang/dep",
-            "github.com/golang/dep/cmd/dep"]
+# prune will not touch these packages. Please add newer packages to required with caution.
+# Maintain required lists in lexicographical order
+required = ['github.com/gogo/protobuf/protoc-gen-gofast',
+            'github.com/golang/dep',
+            'github.com/golang/dep/cmd/dep',
+            'github.com/golang/lint',
+            'github.com/golang/lint/golint',
+            'github.com/golang/mock/mockgen',
+            'github.com/golang/protobuf/protoc-gen-go/generator',
+            'github.com/golang/protobuf/protoc-gen-go/grpc',
+            'github.com/golang/tools/cmd/goimports',
+            'github.com/minio/minio-go',
+            'github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway',
+            'github.com/pensando/grpc-gateway/protoc-gen-swagger/genswagger']
 
 [[constraint]]
   branch = "master"
@@ -236,3 +238,7 @@ required = ["github.com/gogo/protobuf/protoc-gen-gofast",
 [[override]]
   revision = "eda1d775a087f2a96fec7c7876ea94dea43e6027"
   name = "github.com/miekg/pkcs11"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/tools"

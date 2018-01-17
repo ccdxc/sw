@@ -354,6 +354,12 @@
   revision = "553a641470496b2327abcac10b36396bd98e45c9"
 
 [[projects]]
+  branch = "release-branch.go1.4"
+  name = "github.com/golang/tools"
+  packages = ["cmd/goimports"]
+  revision = "abf43428cc239218424c7a44dc9b5987cd351c3e"
+
+[[projects]]
   branch = "master"
   name = "github.com/google/btree"
   packages = ["."]
@@ -811,6 +817,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2d8bb2a5e7091ab6d42284689f8e2f2bd693c390291fc7ded3877da35301e1e6"
+  inputs-digest = "66fb9683f654ffc372b77546df1b9e3aad79b5591ba41cac860f91869689c090"
   solver-name = "gps-cdcl"
   solver-version = 1
