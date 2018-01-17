@@ -14,12 +14,10 @@ struct resp_rx_write_dummy_process_k_t k;
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
 #define RQCB0_ADDR r2
-#define RAW_TABLE_PC r3
 #define GLOBAL_FLAGS r7
 
 %%
     .param  resp_rx_rqlkey_process
-    .param  resp_rx_rqcb0_write_back_process
 
 .align
 resp_rx_write_dummy_process:
@@ -57,9 +55,8 @@ resp_rx_write_dummy_process:
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, invoke_writeback, 1)
 
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, KEY_ADDR)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
 
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
     tblwr.c1    d.va, 0

@@ -113,8 +113,7 @@ aligned_pt:
 
 invoke_pt:
     CAPRI_GET_TABLE_0_OR_1_K(resp_rx_phv_t, r7, c2)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_ptseg_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, PT_SEG_P)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_ptseg_process, PT_SEG_P)
     CAPRI_GET_TABLE_0_OR_1_ARG(resp_rx_phv_t, r7, c2)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_bytes, k.args.len)
@@ -145,8 +144,7 @@ check_write_back:
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, k.args.incr_nxt_to_go_token_id)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, k.args.incr_c_index)
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb0_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB0_ADDR)
+    CAPRI_NEXT_TABLE_I_READ_PC(T2_KEY, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb0_write_back_process, RQCB0_ADDR)
 
 exit:
     nop.e

@@ -197,6 +197,14 @@ struct capri_intrinsic_ring_t {
     addui._c _r, r0, hiword(_pc); \
     addi._c  _r, _r, loword(_pc); \
 
+#define CAPRI_SET_PICK_RAW_TABLE_PC_C(_c, _r, _pc1, _pc2) \
+    cmov _r, _c, _pc1[33:CAPRI_RAW_TABLE_PC_SHIFT], _pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+
+#define CAPRI_NEXT_TABLE_I_READ_PC(_base_r, _lock_en, _table_read_size, _table_pc, _table_addr_r) \
+    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \
+    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
+
 #define CAPRI_NEXT_TABLE_I_READ(_base_r, _lock_en, _table_read_size, _table_pc_r, _table_addr_r) \
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r[63:CAPRI_RAW_TABLE_PC_SHIFT]; \

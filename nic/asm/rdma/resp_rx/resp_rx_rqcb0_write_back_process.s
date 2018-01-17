@@ -83,8 +83,7 @@ invoke_wb1:
     // invoke rqcb1 write back from rqcb0 write back
     CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, current_sge_offset, curr_wqe_ptr, k.{args.current_sge_offset...args.curr_wqe_ptr})
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_K)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
+    CAPRI_NEXT_TABLE_I_READ_PC(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
 
     nop.e
     nop

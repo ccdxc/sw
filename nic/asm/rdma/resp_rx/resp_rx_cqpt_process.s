@@ -50,8 +50,7 @@ resp_rx_cqpt_process:
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, KEY_P)
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
     CAPRI_SET_FIELD(ARG_P, EQ_INFO_T, cq_id, k.args.cq_id)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_eqcb_process)
-    CAPRI_NEXT_TABLE_I_READ(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, EQCB_ADDR)
+    CAPRI_NEXT_TABLE_I_READ_PC(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, EQCB_ADDR)
 
 cqpt_exit:
 

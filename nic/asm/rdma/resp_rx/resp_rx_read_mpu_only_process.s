@@ -12,7 +12,6 @@ struct resp_rx_read_atomic_process_k_t k;
 #define R_KEY r2
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
-#define RAW_TABLE_PC r3
 
 #define DMA_CMD_BASE r1
 #define DB_ADDR r4
@@ -46,9 +45,8 @@ resp_rx_read_mpu_only_process:
     CAPRI_SET_FIELD_RANGE(r4, RKEY_INFO_T, incr_nxt_to_go_token_id, invoke_writeback, (1<<3 | 0 << 2 | 1 << 1 | 1))
 
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, KEY_ADDR)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
 
     // ring rsq dbell if reqd
     bbeq    k.args.skip_rsq_dbell, 1, exit

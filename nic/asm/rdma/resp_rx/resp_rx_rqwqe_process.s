@@ -27,9 +27,6 @@ struct rqwqe_base_t d;
 #define RECIRC_ARG      r6
 #define WB1_ARG         r6
 
-#define RAW_TABLE_PC    r2
-#define RAW_TABLE_PC2   r1
-
 #define F_FIRST_PASS  c7
 
 %%
@@ -38,9 +35,6 @@ struct rqwqe_base_t d;
 
 .align
 resp_rx_rqwqe_process:
-
-    //MPU GLOBAL
-    RQCB1_ADDR_GET(r7)
 
     // current_sge_id = rqcb_to_wqe_info_p->current_sge_id;
     // current_sge_offset = rqcb_to_wqe_info_p->current_sge_offset; 
@@ -69,7 +63,7 @@ resp_rx_rqwqe_process:
     // rqcb1_p->wrid = wqe_p->wrid
     //TODO: make sure wrid is at byte boundary so that below divison works
     // wrid address needs some work as offset does not directly gives. 
-    add         r6, r7, FIELD_OFFSET(rqcb1_t, wrid)
+    RQCB1_WRID_ADDR_GET(r6)
     //TODO: change to DMA
     memwr.d.!c1 r6, d.wrid
 
@@ -142,8 +136,7 @@ loop:
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
 
     CAPRI_GET_TABLE_0_OR_1_K(resp_rx_phv_t, r7, F_FIRST_PASS)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, r6)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, r6)
     CAPRI_SET_TABLE_0_VALID_C(F_FIRST_PASS, 1)
     CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
 
@@ -181,9 +174,10 @@ exit:
 
     // only first packet need to set num_sges and wqe_ptr values into
     // rqcb1. middle/last packets will simply use these fields from cb
-    CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_num_sges, 1, c2)    
+    //CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_num_sges, 1, c2)    
+    //CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_wqe_ptr, 1, c2)
+    CAPRI_SET_FIELD_RANGE_C(WB1_ARG, TO_S_WB1_T, update_wqe_ptr, update_num_sges, 3, c2)
     CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, num_sges, NUM_VALID_SGES, c2)
-    CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_wqe_ptr, 1, c2)
 
 non_first_or_recirc_pkt:
 
@@ -199,25 +193,22 @@ non_first_or_recirc_pkt:
 
     .cscase 0
 
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, in_progress, 1)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, 1)
+    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, in_progress, 1)
+    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB0_T, in_progress, incr_nxt_to_go_token_id, 3)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, cache, k.args.cache)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, tbl_id, TABLE_2)
 
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_id, r1[63:32])
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_offset, CURR_SGE_OFFSET)
 
     b       cb0_cb1_wb_exit
-    nop
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_offset, CURR_SGE_OFFSET) //BD Slot
 
     .cscase 1
     
-    // incr_nxt_to_go_token_id, incr_c_index, tbl_id
-    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, tbl_id, (1<<4 | 1<<3 | TABLE_2)) 
-
-
     b       cb0_cb1_wb_exit
-    nop
+    // incr_nxt_to_go_token_id, incr_c_index, tbl_id
+    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, tbl_id, (1<<4 | 1<<3 | TABLE_2)) //BD Slot
     .csend
 
 cb0_cb1_wb_exit:
@@ -238,8 +229,7 @@ cb0_cb1_wb_exit:
 
     RQCB0_ADDR_GET(r2)
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_K)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC2, resp_rx_rqcb0_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC2, r2)
+    CAPRI_NEXT_TABLE_I_READ_PC(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb0_write_back_process, r2)
 
     nop.e
     nop

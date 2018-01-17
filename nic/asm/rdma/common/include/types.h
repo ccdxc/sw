@@ -48,6 +48,9 @@
 
 #define RQCB1_ADDR_GET(_r) \
     add     _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, RQCB_ADDR_SHIFT;
+
+#define RQCB1_WRID_ADDR_GET(_r) \
+    add     _r, (CB_UNIT_SIZE_BYTES + FIELD_OFFSET(rqcb1_t, wrid)), k.global.cb_addr, RQCB_ADDR_SHIFT;
     
 //RESP_RX_STATS
 #define RQCB4_ADDR_GET(_r) \

@@ -40,7 +40,6 @@ struct rdma_stage0_table_k k;
     .param    resp_rx_write_dummy_process
     .param    resp_rx_rsq_backtrack_process
     .param    resp_rx_rqcb1_recirc_sge_process
-    .param    resp_rx_stats_process
     .param    resp_rx_rqcb1_ecn_process
     .param    resp_rx_rqcb1_cnp_process
     .param    rdma_atomic_resource_addr
@@ -99,9 +98,8 @@ skip_roce_opt_parsing:
     CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, ECN_INFO_T, p_key, CAPRI_APP_DATA_BTH_P_KEY)
     CAPRI_GET_TABLE_3_K(resp_rx_phv_t, r4)        
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_ecn_process) 
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES                         
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5) 
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_ecn_process, r5) 
 
 skip_cnp_send:
     // Check if its CNP packet.
@@ -110,9 +108,8 @@ skip_cnp_send:
 
     // Load rqcb1-->dcqcn_cb to cut rate based on dcqcn algorithm.
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_cnp_process) 
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES                         
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5) 
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_cnp_process, r5) 
     nop.e
     nop
 
@@ -186,9 +183,8 @@ process_send_write_fml:
 /****** Slow path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_write_dummy_process)
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
     // only first packet has reth header
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
@@ -280,9 +276,8 @@ send_skip_immdt_as_dbell:
 
 send_in_progress:
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_in_progress_process)
     add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_in_progress_process, r3)
 
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) //BD Slot
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, in_progress, d.in_progress)
@@ -382,8 +377,7 @@ process_write_only:
     
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_write_dummy_process) //BD Slot
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, va, CAPRI_RXDMA_RETH_VA)
@@ -466,8 +460,7 @@ process_read:
     CAPRI_SET_FIELD(r4, RQCB_TO_RD_ATOMIC_T, len, CAPRI_RXDMA_RETH_DMA_LEN)
     // do a MPU-only lookup
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_read_mpu_only_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, RAW_TABLE_PC, r0)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
     
     //increment e_psn by 'n'
     // e_psn += read_len >> log_pmtu
@@ -488,11 +481,10 @@ process_atomic:
 
     // do a MPU-only lookup
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_atomic_resource_process)
     addui           r3, r0, hiword(rdma_atomic_resource_addr)
     addi            r3, r3, loword(rdma_atomic_resource_addr)            
     // load 32 Bytes (256-bits) of atomic resource
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_atomic_resource_process, r3)
     
     phvwr           p.rsqwqe.read_or_atomic, RSQ_OP_TYPE_ATOMIC
 
@@ -593,8 +585,7 @@ duplicate_rd_atomic:
     sll         r3, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
     add         r3, r3, r6, LOG_SIZEOF_RSQWQE_T
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rsq_backtrack_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rsq_backtrack_process, r3)
 
     nop.e
     nop
@@ -700,8 +691,7 @@ rc_checkout:
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, remaining_payload_bytes, REM_PYLD_BYTES)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqpt_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqpt_process, r3)
     nop.e
     nop
 
@@ -739,9 +729,8 @@ recirc_sge_work_pending:
     // to pass as of now
     
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_recirc_sge_process)
     add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_recirc_sge_process, r3)
 
     nop.e
     nop

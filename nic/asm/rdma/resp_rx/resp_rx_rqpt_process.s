@@ -49,6 +49,8 @@ resp_rx_rqpt_process:
     // if write_with_imm, load resp_rx_rqwqe_wrid_process, 
     // else load resp_rx_rqwqe_process
     ARE_ALL_FLAGS_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
+
+    //CAPRI_SET_PICK_RAW_TABLE_PC_C(c1, RAW_TABLE_PC, resp_rx_rqwqe_wrid_process, resp_rx_rqwqe_process)
     CAPRI_SET_RAW_TABLE_PC_C(c1, RAW_TABLE_PC, resp_rx_rqwqe_wrid_process)
     CAPRI_SET_RAW_TABLE_PC_C(!c1, RAW_TABLE_PC, resp_rx_rqwqe_process)
 

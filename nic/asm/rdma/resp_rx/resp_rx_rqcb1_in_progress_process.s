@@ -12,8 +12,6 @@ struct resp_rx_rqcb1_in_progress_process_k_t k;
 #define NUM_VALID_SGES  r2
 #define ADDR_TO_LOAD    r3
 
-#define RAW_TABLE_PC    r7
-
 #define RQCB_TO_WQE_T   struct resp_rx_rqcb_to_wqe_info_t
 
 
@@ -52,8 +50,7 @@ resp_rx_rqcb1_in_progress_process:
     //CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, tbl_id, 0)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqwqe_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, ADDR_TO_LOAD)
+    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 
     nop.e
     nop
