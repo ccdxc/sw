@@ -9,118 +9,12 @@ import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
-// -------------------------- Event Object -----------------------------
-// Event is a system notification of a fault, condition or configuration
-// that should be user visible. These objects are created internally by
-// Event client and persisted in EventDB.
-message Event {
-
-    option (venice.objectPrefix) = "event";
-
-    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
-                            (gogoproto.nullable) = false,
-                            (gogoproto.jsontag) = ",inline"];
-
-    // ObjectMeta.Name will be an UUID for an Event object.
-    // ObjectMeta.Labels will be used to tag an events
-    // with Reason, UserInfo etc that will provide more
-    // context for an event.
-    // eg: Reason: NodeJoined, NetworkDeleted, NicRejected
-    //     User: user-foo
-    // TBD: Should there be predefined list of labels for
-    //      Reason or keep it free form ?
-    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
-                            (gogoproto.nullable) = false,
-                            (gogoproto.jsontag) = "meta,omitempty"];
-
-    // Spec is empty for an Event, since it is internally generated object.
-    EventSpec Spec      = 3 [(gogoproto.nullable) = false,
-                            (gogoproto.jsontag) = ",inline"];
-
-    // Status contains the attributes of an event.
-    EventStatus Status  = 4 [(gogoproto.nullable) = false,
-                            (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// EventSpec is empty for Event Object
-message EventSpec {
-}
-
-// EventSource has info about the component and
-// host/node that generated the event
-message EventSource {
-
-    // Component from which the event is generated.
-    string Component    = 1 [(gogoproto.jsontag) = "component,omitempty"];
-
-    // Node name on which the event is generated.
-    string Node         = 2 [(gogoproto.jsontag) = "node,omitempty"];
-}
-
-// EventStatus is status of the Event object
-message EventStatus {
-
-    // Severity represents the criticality level of an Event
-    string Severity         = 1 [(venice.check) = "StrEnum(SeverityLevel)",
-                                (gogoproto.jsontag) = "severity,omitempty"];
-
-    // Description represents the human readable description of an Event
-    string Description      = 2 [(gogoproto.jsontag) = "description,omitempty"];
-
-    // ObjectRef is the reference to the object associated with an event
-    api.ObjectRef ObjectRef = 3 [(gogoproto.jsontag) = "object-ref,omitempty"];
-
-    // Source is the host or node which generated an event
-    EventSource Source      = 4 [(gogoproto.jsontag) = "source,omitempty"];
-
-    // CreatedTime represents the Time of creation for this event
-    string CreatedTime      = 5 [(gogoproto.jsontag) = "created-time,omitempty"];
-
-    // Reference to the EventPolicy that led to creation of an event object
-    string EventPolicy      = 6 [(gogoproto.jsontag) = "event-policy,omitempty"];
-
-    // TODO: Support for Count, FirstTimestamp, LastTimestamp attributes
-    //       are subject to choice of eventDB and supported schema.
-}
-
-// Severity Level of an event
-enum SeverityLevel {
-    INFO        = 0;
-    WARNING     = 1;
-    ERROR       = 2;
-    CRITICAL    = 3;
-}
-
-// Event object REST API definition
-// Events are internally created by the venice and naples sub-system
-// Users are only allowed to GET & LIST events
-service EventV1 {
-
-    // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "event";
-    // API Version.
-    option (venice.apiVersion) = "v1";
-
-    option(venice.apiGrpcCrudService) = "Event";
-
-    option(venice.apiRestService) = {
-        Object: "Event"
-        Method: ["get"]
-         Pattern: "/{O.Tenant}/events/{O.Name}"
-    };
-    option(venice.apiRestService) = {
-        Object: "Event"
-        Method: ["list"]
-         Pattern: "/{O.Tenant}/events"
-    };
-}
-
 // -------------------------- Event Policy -----------------------------
 // Event Policy represents the policy definition for Events.
 // Event Client module will be consumer of this policy.
 message EventPolicy {
 
-    option (venice.objectPrefix) = "monitoringPolicy";
+    option (venice.objectPrefix) = "eventPolicy";
     api.TypeMeta T              = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = ",inline"];
@@ -128,31 +22,25 @@ message EventPolicy {
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = "meta,omitempty"];
 
-    // Spec contains the configuration of the event policy.
+    // Spec contains the configuration of an event policy.
     EventPolicySpec Spec        = 3 [(gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = "spec,omitempty"];
 
-    // Status contains the current state of the event policy.
+    // Status contains the current state of an event policy.
     EventPolicyStatus Status    = 4 [(gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = "status,omitempty"];
 }
 
 // EventPolicySpec is the specification of an Event Policy,
-// It consists of the Object Selector, Level selector,
-// Retention and Export policies.
-//
-// TBD: Decide if we need event specific collection policy
+// It consists of Retention and Export policies.
 message EventPolicySpec {
 
-    // Levels is a match list of levels permitted for event generation
-    repeated string Levels                  = 1 [(venice.check) = "StrEnum(SeverityLevel)",
-                                                (gogoproto.jsontag) = "levels,omitempty" ];
+    // Name of the export policies that defines the location, frequency and format of data to an external collector
+    repeated string ExportPolicies  = 1 [(gogoproto.jsontag) = "export-policies,omitempty"];
 
-    // RetentionPolicy specifies for how long the data is kept
-    string RetentionPolicy                  = 2 [(gogoproto.jsontag) = "retention-policy,omitempty"];
-
-    // ExportPolicies defines the location, frequency and format of data to an external collector
-    repeated string ExportPolicies          = 3 [(gogoproto.jsontag) = "export-policy,omitempty"];
+    // MaxRetentionTime defines for how long to keep the data before it is deleted
+    // The value is specified as a string format e.g. 30d (30 days)
+    string MaxRetentionTime         = 2 [(gogoproto.jsontag) = "max-retention-time,omitempty"];
 }
 
 // EventPolicyStatus
@@ -178,5 +66,98 @@ service EventPolicyV1 {
         Object: "EventPolicy"
         Method: [ "post" ]
         Pattern: "/{O.Tenant}/eventPolicy"
+    };
+}
+
+
+// -------------------------- Event -----------------------------
+// Severity Level of an event
+enum SeverityLevel {
+    INFO        = 0; // no action needed
+    WARNING     = 1; // can cause problems in the future, no immediate action required
+    CRITICAL    = 2; // immediate attention required
+}
+
+// Event is a system notification of a fault, condition or configuration
+// that should be user visible. These objects are created internally by
+// Event client and persisted in EventDB.
+message Event {
+    api.TypeMeta T              = 1 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = ", inline"];
+
+    // ObjectMeta.Name will be the UUID for an event object.
+    // TODO: Should there be a predefined list of labels or keep it free form ?
+    api.ObjectMeta O            = 2 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "meta, omitempty"];
+
+    // Attributes contains the attributes of an event.
+    EventAttributes Attributes  = 3 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = ", inline"];
+}
+
+// EventAttributes contains all the event attributes
+message EventAttributes {
+
+    // Severity represents the criticality level of an event
+    string Severity         = 1 [(venice.check) = "StrEnum(SeverityLevel)",
+                                (gogoproto.jsontag) = "severity, omitempty"];
+
+    // Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined
+    string Type             = 2 [(gogoproto.jsontag) = "type, omitempty"];
+
+    // Message represents the human readable description of an event
+    string Message          = 3  [(gogoproto.jsontag) = "message, omitempty"];
+
+    // ObjectRef is the reference to the object associated with an event
+    api.ObjectRef ObjectRef = 4 [(gogoproto.jsontag) = "object-ref, omitempty"];
+
+    // Source is the component and host/node which generated an event
+    EventSource Source      = 5 [(gogoproto.jsontag) = "source, omitempty"];
+
+    // Number of occurrence of this event in the active interval
+    uint32 Count            = 6 [(gogoproto.jsontag) = "count, omitempty"];
+
+    // Timestamp of the first occurrence of this event in the active interval
+    string FirstTimestamp   = 7 [(gogoproto.jsontag) = "first-timestamp, omitempty"];
+
+    // Timestamp of the last occurrence of this event in the active interval
+    string LastTimestamp    = 8 [(gogoproto.jsontag) = "last-timestamp, omitempty"];
+}
+
+
+// EventSource has info about the component and
+// host/node that generated the event
+message EventSource {
+
+    // Component from which the event is generated.
+    string Component    = 1 [(gogoproto.jsontag) = "component,omitempty"];
+
+    // Host of the venice or workload node which is generating the event.
+    string Host         = 2 [(gogoproto.jsontag) = "host,omitempty"];
+}
+
+// Event object REST API definition
+// Events are internally created by the venice and naples sub-system
+// Users are only allowed to GET & LIST events
+service EventV1 {
+
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "events";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    // GET and LIST calls are handled by API gateway -> Query processor -> elastic DB(or events manager)
+    option(venice.apiRestService) = {
+        Object: "Event"
+        Method: ["get"]
+        Pattern: "/{O.Tenant}/events/{O.Name}"
+    };
+    option(venice.apiRestService) = {
+        Object: "Event"
+        Method: ["list"]
+        Pattern: "/{O.Tenant}/events"
     };
 }

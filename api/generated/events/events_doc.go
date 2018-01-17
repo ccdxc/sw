@@ -8,16 +8,13 @@ Input file: protos/events.proto
 The following Messages are defined.
 
   AutoMsgEventPolicyWatchHelper
-  AutoMsgEventWatchHelper
   Event
-  EventList
+  EventAttributes
   EventPolicy
   EventPolicyList
   EventPolicySpec
   EventPolicyStatus
   EventSource
-  EventSpec
-  EventStatus
 
 The following Services and Methods are defined.
 
@@ -28,14 +25,6 @@ The following Services and Methods are defined.
    AutoListEventPolicy
    AutoUpdateEventPolicy
    AutoWatchEventPolicy
-
- Service: EventV1
-   AutoAddEvent
-   AutoDeleteEvent
-   AutoGetEvent
-   AutoListEvent
-   AutoUpdateEvent
-   AutoWatchEvent
 
 */
 package events

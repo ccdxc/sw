@@ -65,12 +65,6 @@
         "Messages": [
           "EventPolicy"
         ]
-      },
-      "EventV1": {
-        "Version": "v1",
-        "Messages": [
-          "Event"
-        ]
       }
     },
     "Files": [

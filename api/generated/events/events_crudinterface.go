@@ -15,17 +15,6 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// EventInterface exposes the CRUD methods for Event
-type EventInterface interface {
-	Create(ctx context.Context, in *Event) (*Event, error)
-	Update(ctx context.Context, in *Event) (*Event, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Event, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Event, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Event, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
 // EventPolicyInterface exposes the CRUD methods for EventPolicy
 type EventPolicyInterface interface {
 	Create(ctx context.Context, in *EventPolicy) (*EventPolicy, error)
@@ -40,9 +29,4 @@ type EventPolicyInterface interface {
 // EventPolicyV1Interface exposes objects with CRUD operations allowed by the service
 type EventPolicyV1Interface interface {
 	EventPolicy() EventPolicyInterface
-}
-
-// EventV1Interface exposes objects with CRUD operations allowed by the service
-type EventV1Interface interface {
-	Event() EventInterface
 }

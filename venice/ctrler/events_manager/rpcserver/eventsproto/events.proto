@@ -1,0 +1,24 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+package eventsproto;
+
+// Mandatory imports
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/protos/events.proto";
+
+message Empty {
+}
+
+// events gRPC API
+service Events {
+    // any component can use this method to generate an event
+    rpc SendEvent (events.Event) returns (Empty) {};
+
+    // any component can establish a watch to get a stream of events.
+    // e.g. alerting system could watch for events to trigger an alert.
+    rpc WatchEvents (Empty) returns (stream events.Event) {};
+}

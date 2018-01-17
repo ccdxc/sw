@@ -37,8 +37,6 @@ type Services interface {
 	CmdV1() cmd.CmdV1Interface
 	// Package is events and len of messages is 1
 	EventPolicyV1() events.EventPolicyV1Interface
-	// Package is events and len of messages is 1
-	EventV1() events.EventV1Interface
 	// Package is network and len of messages is 1
 	EndpointV1() network.EndpointV1Interface
 	// Package is network and len of messages is 1
@@ -71,7 +69,6 @@ type apiGrpcServerClient struct {
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
 	aEventPolicyV1             events.EventPolicyV1Interface
-	aEventV1                   events.EventV1Interface
 	aEndpointV1                network.EndpointV1Interface
 	aLbPolicyV1                network.LbPolicyV1Interface
 	aNetworkV1                 network.NetworkV1Interface
@@ -107,10 +104,6 @@ func (a *apiGrpcServerClient) CmdV1() cmd.CmdV1Interface {
 
 func (a *apiGrpcServerClient) EventPolicyV1() events.EventPolicyV1Interface {
 	return a.aEventPolicyV1
-}
-
-func (a *apiGrpcServerClient) EventV1() events.EventV1Interface {
-	return a.aEventV1
 }
 
 func (a *apiGrpcServerClient) EndpointV1() network.EndpointV1Interface {
@@ -170,7 +163,6 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Ser
 		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
 		aCmdV1:                     cmdClient.NewGrpcCrudClientCmdV1(client.ClientConn, logger),
 		aEventPolicyV1:             eventsClient.NewGrpcCrudClientEventPolicyV1(client.ClientConn, logger),
-		aEventV1:                   eventsClient.NewGrpcCrudClientEventV1(client.ClientConn, logger),
 		aEndpointV1:                networkClient.NewGrpcCrudClientEndpointV1(client.ClientConn, logger),
 		aLbPolicyV1:                networkClient.NewGrpcCrudClientLbPolicyV1(client.ClientConn, logger),
 		aNetworkV1:                 networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
@@ -192,7 +184,6 @@ type apiRestServerClient struct {
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
 	aEventPolicyV1             events.EventPolicyV1Interface
-	aEventV1                   events.EventV1Interface
 	aEndpointV1                network.EndpointV1Interface
 	aLbPolicyV1                network.LbPolicyV1Interface
 	aNetworkV1                 network.NetworkV1Interface
@@ -228,10 +219,6 @@ func (a *apiRestServerClient) CmdV1() cmd.CmdV1Interface {
 
 func (a *apiRestServerClient) EventPolicyV1() events.EventPolicyV1Interface {
 	return a.aEventPolicyV1
-}
-
-func (a *apiRestServerClient) EventV1() events.EventV1Interface {
-	return a.aEventV1
 }
 
 func (a *apiRestServerClient) EndpointV1() network.EndpointV1Interface {
@@ -284,7 +271,6 @@ func NewRestAPIClient(url string) (Services, error) {
 		aBookstoreV1:               bookstoreClient.NewRestCrudClientBookstoreV1(url),
 		aCmdV1:                     cmdClient.NewRestCrudClientCmdV1(url),
 		aEventPolicyV1:             eventsClient.NewRestCrudClientEventPolicyV1(url),
-		aEventV1:                   eventsClient.NewRestCrudClientEventV1(url),
 		aEndpointV1:                networkClient.NewRestCrudClientEndpointV1(url),
 		aLbPolicyV1:                networkClient.NewRestCrudClientLbPolicyV1(url),
 		aNetworkV1:                 networkClient.NewRestCrudClientNetworkV1(url),

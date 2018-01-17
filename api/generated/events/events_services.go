@@ -26,17 +26,6 @@ type ServiceEventPolicyV1Client interface {
 	AutoWatchEventPolicy(ctx context.Context, in *api.ListWatchOptions) (EventPolicyV1_AutoWatchEventPolicyClient, error)
 }
 
-// ServiceEventV1Client  is the client interface for the service.
-type ServiceEventV1Client interface {
-	AutoAddEvent(ctx context.Context, t *Event) (*Event, error)
-	AutoDeleteEvent(ctx context.Context, t *Event) (*Event, error)
-	AutoGetEvent(ctx context.Context, t *Event) (*Event, error)
-	AutoListEvent(ctx context.Context, t *api.ListWatchOptions) (*EventList, error)
-	AutoUpdateEvent(ctx context.Context, t *Event) (*Event, error)
-
-	AutoWatchEvent(ctx context.Context, in *api.ListWatchOptions) (EventV1_AutoWatchEventClient, error)
-}
-
 // ServiceEventPolicyV1Server is the server interface for the service.
 type ServiceEventPolicyV1Server interface {
 	AutoAddEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
@@ -46,15 +35,4 @@ type ServiceEventPolicyV1Server interface {
 	AutoUpdateEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 
 	AutoWatchEventPolicy(in *api.ListWatchOptions, stream EventPolicyV1_AutoWatchEventPolicyServer) error
-}
-
-// ServiceEventV1Server is the server interface for the service.
-type ServiceEventV1Server interface {
-	AutoAddEvent(ctx context.Context, t Event) (Event, error)
-	AutoDeleteEvent(ctx context.Context, t Event) (Event, error)
-	AutoGetEvent(ctx context.Context, t Event) (Event, error)
-	AutoListEvent(ctx context.Context, t api.ListWatchOptions) (EventList, error)
-	AutoUpdateEvent(ctx context.Context, t Event) (Event, error)
-
-	AutoWatchEvent(in *api.ListWatchOptions, stream EventV1_AutoWatchEventServer) error
 }

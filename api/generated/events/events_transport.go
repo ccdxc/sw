@@ -171,155 +171,6 @@ func (s *grpcServerEventPolicyV1) AutoWatchEventPolicy(in *api.ListWatchOptions,
 	return s.Endpoints.AutoWatchEventPolicy(in, stream)
 }
 
-type grpcServerEventV1 struct {
-	Endpoints EndpointsEventV1Server
-
-	AutoAddEventHdlr    grpctransport.Handler
-	AutoDeleteEventHdlr grpctransport.Handler
-	AutoGetEventHdlr    grpctransport.Handler
-	AutoListEventHdlr   grpctransport.Handler
-	AutoUpdateEventHdlr grpctransport.Handler
-}
-
-// MakeGRPCServerEventV1 creates a GRPC server for EventV1 service
-func MakeGRPCServerEventV1(ctx context.Context, endpoints EndpointsEventV1Server, logger log.Logger) EventV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
-	return &grpcServerEventV1{
-		Endpoints: endpoints,
-		AutoAddEventHdlr: grpctransport.NewServer(
-			endpoints.AutoAddEventEndpoint,
-			DecodeGrpcReqEvent,
-			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEvent", logger)))...,
-		),
-
-		AutoDeleteEventHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteEventEndpoint,
-			DecodeGrpcReqEvent,
-			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEvent", logger)))...,
-		),
-
-		AutoGetEventHdlr: grpctransport.NewServer(
-			endpoints.AutoGetEventEndpoint,
-			DecodeGrpcReqEvent,
-			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEvent", logger)))...,
-		),
-
-		AutoListEventHdlr: grpctransport.NewServer(
-			endpoints.AutoListEventEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespEventList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEvent", logger)))...,
-		),
-
-		AutoUpdateEventHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateEventEndpoint,
-			DecodeGrpcReqEvent,
-			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEvent", logger)))...,
-		),
-	}
-}
-
-func (s *grpcServerEventV1) AutoAddEvent(ctx oldcontext.Context, req *Event) (*Event, error) {
-	_, resp, err := s.AutoAddEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respEventV1AutoAddEvent).V
-	return &r, resp.(respEventV1AutoAddEvent).Err
-}
-
-func decodeHTTPrespEventV1AutoAddEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Event
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerEventV1) AutoDeleteEvent(ctx oldcontext.Context, req *Event) (*Event, error) {
-	_, resp, err := s.AutoDeleteEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respEventV1AutoDeleteEvent).V
-	return &r, resp.(respEventV1AutoDeleteEvent).Err
-}
-
-func decodeHTTPrespEventV1AutoDeleteEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Event
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerEventV1) AutoGetEvent(ctx oldcontext.Context, req *Event) (*Event, error) {
-	_, resp, err := s.AutoGetEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respEventV1AutoGetEvent).V
-	return &r, resp.(respEventV1AutoGetEvent).Err
-}
-
-func decodeHTTPrespEventV1AutoGetEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Event
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerEventV1) AutoListEvent(ctx oldcontext.Context, req *api.ListWatchOptions) (*EventList, error) {
-	_, resp, err := s.AutoListEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respEventV1AutoListEvent).V
-	return &r, resp.(respEventV1AutoListEvent).Err
-}
-
-func decodeHTTPrespEventV1AutoListEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp EventList
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerEventV1) AutoUpdateEvent(ctx oldcontext.Context, req *Event) (*Event, error) {
-	_, resp, err := s.AutoUpdateEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respEventV1AutoUpdateEvent).V
-	return &r, resp.(respEventV1AutoUpdateEvent).Err
-}
-
-func decodeHTTPrespEventV1AutoUpdateEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Event
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerEventV1) AutoWatchEvent(in *api.ListWatchOptions, stream EventV1_AutoWatchEventServer) error {
-	return s.Endpoints.AutoWatchEvent(in, stream)
-}
-
 func encodeHTTPEvent(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -354,37 +205,37 @@ func DecodeGrpcRespEvent(ctx context.Context, response interface{}) (interface{}
 	return response, nil
 }
 
-func encodeHTTPEventList(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPEventAttributes(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPEventList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EventList
+func decodeHTTPEventAttributes(_ context.Context, r *http.Request) (interface{}, error) {
+	var req EventAttributes
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqEventList encodes GRPC request
-func EncodeGrpcReqEventList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventList)
+// EncodeGrpcReqEventAttributes encodes GRPC request
+func EncodeGrpcReqEventAttributes(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EventAttributes)
 	return req, nil
 }
 
-// DecodeGrpcReqEventList decodes GRPC request
-func DecodeGrpcReqEventList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventList)
+// DecodeGrpcReqEventAttributes decodes GRPC request
+func DecodeGrpcReqEventAttributes(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EventAttributes)
 	return req, nil
 }
 
-// EncodeGrpcRespEventList endodes the GRPC response
-func EncodeGrpcRespEventList(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespEventAttributes encodes GRC response
+func EncodeGrpcRespEventAttributes(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespEventList decodes the GRPC response
-func DecodeGrpcRespEventList(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespEventAttributes decodes GRPC response
+func DecodeGrpcRespEventAttributes(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -555,73 +406,5 @@ func EncodeGrpcRespEventSource(ctx context.Context, response interface{}) (inter
 
 // DecodeGrpcRespEventSource decodes GRPC response
 func DecodeGrpcRespEventSource(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPEventSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEventSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EventSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEventSpec encodes GRPC request
-func EncodeGrpcReqEventSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqEventSpec decodes GRPC request
-func DecodeGrpcReqEventSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespEventSpec encodes GRC response
-func EncodeGrpcRespEventSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEventSpec decodes GRPC response
-func DecodeGrpcRespEventSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPEventStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEventStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EventStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEventStatus encodes GRPC request
-func EncodeGrpcReqEventStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqEventStatus decodes GRPC request
-func DecodeGrpcReqEventStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespEventStatus encodes GRC response
-func EncodeGrpcRespEventStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEventStatus decodes GRPC response
-func DecodeGrpcRespEventStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

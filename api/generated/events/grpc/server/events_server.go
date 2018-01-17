@@ -36,7 +36,6 @@ type seventsEventsBackend struct {
 	Messages map[string]apiserver.Message
 
 	endpointsEventPolicyV1 *eEventPolicyV1Endpoints
-	endpointsEventV1       *eEventV1Endpoints
 }
 
 type eEventPolicyV1Endpoints struct {
@@ -50,127 +49,14 @@ type eEventPolicyV1Endpoints struct {
 
 	fnAutoWatchEventPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
-type eEventV1Endpoints struct {
-	Svc seventsEventsBackend
-
-	fnAutoAddEvent    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteEvent func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetEvent    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListEvent   func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateEvent func(ctx context.Context, t interface{}) (interface{}, error)
-
-	fnAutoWatchEvent func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-}
 
 func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
 	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
 		"events.AutoMsgEventPolicyWatchHelper": apisrvpkg.NewMessage("events.AutoMsgEventPolicyWatchHelper"),
-		"events.AutoMsgEventWatchHelper":       apisrvpkg.NewMessage("events.AutoMsgEventWatchHelper"),
-		"events.Event": apisrvpkg.NewMessage("events.Event").WithKeyGenerator(func(i interface{}, prefix string) string {
-			if i == nil {
-				r := events.Event{}
-				return r.MakeKey(prefix)
-			}
-			r := i.(events.Event)
-			return r.MakeKey(prefix)
-		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(events.Event)
-			r.APIVersion = version
-			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
-			r := i.(events.Event)
-			key := r.MakeKey(prefix)
-			r.Kind = "Event"
-			var err error
-			if create {
-				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
-			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*events.Event)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
-					into := &events.Event{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
-				} else {
-					if r.ResourceVersion != "" {
-						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
-					} else {
-						err = kvs.Update(ctx, key, &r)
-					}
-					err = errors.Wrap(err, "KV update failed")
-				}
-			}
-			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(events.Event)
-			key := r.MakeKey(prefix)
-			var err error
-			if create {
-				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
-			} else {
-				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
-			}
-			return err
-		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
-			r := i.(events.Event)
-			r.UUID = uuid.NewV4().String()
-			return r, nil
-		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
-			r := i.(events.Event)
-			var err error
-			ts, err := types.TimestampProto(time.Now())
-			if err == nil {
-				r.CreationTime.Timestamp = *ts
-			}
-			return r, err
-		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
-			r := i.(events.Event)
-			var err error
-			ts, err := types.TimestampProto(time.Now())
-			if err == nil {
-				r.ModTime.Timestamp = *ts
-			}
-			return r, err
-		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := events.Event{}
-			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
-			return r, err
-		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := events.Event{}
-			err := kvs.Delete(ctx, key, &r)
-			return r, err
-		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
-			r := i.(events.Event)
-			if !r.Validate(ver, ignoreStatus) {
-				return fmt.Errorf("Default Validation failed")
-			}
-			return nil
-		}),
-		"events.EventList": apisrvpkg.NewMessage("events.EventList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := events.EventList{}
-			r := events.Event{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
+		"events.Event":                         apisrvpkg.NewMessage("events.Event"),
+		"events.EventAttributes":               apisrvpkg.NewMessage("events.EventAttributes"),
 		"events.EventPolicy": apisrvpkg.NewMessage("events.EventPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := events.EventPolicy{}
@@ -277,14 +163,11 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 		"events.EventPolicySpec":   apisrvpkg.NewMessage("events.EventPolicySpec"),
 		"events.EventPolicyStatus": apisrvpkg.NewMessage("events.EventPolicyStatus"),
 		"events.EventSource":       apisrvpkg.NewMessage("events.EventSource"),
-		"events.EventSpec":         apisrvpkg.NewMessage("events.EventSpec"),
-		"events.EventStatus":       apisrvpkg.NewMessage("events.EventStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
 	scheme.AddKnownTypes(
-		&events.Event{},
 		&events.EventPolicy{},
 	)
 
@@ -377,93 +260,6 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 
 	}
 
-	{
-		srv := apisrvpkg.NewService("EventV1")
-
-		s.endpointsEventV1.fnAutoAddEvent = srv.AddMethod("AutoAddEvent",
-			apisrvpkg.NewMethod(s.Messages["events.Event"], s.Messages["events.Event"], "event", "AutoAddEvent")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsEventV1.fnAutoDeleteEvent = srv.AddMethod("AutoDeleteEvent",
-			apisrvpkg.NewMethod(s.Messages["events.Event"], s.Messages["events.Event"], "event", "AutoDeleteEvent")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsEventV1.fnAutoGetEvent = srv.AddMethod("AutoGetEvent",
-			apisrvpkg.NewMethod(s.Messages["events.Event"], s.Messages["events.Event"], "event", "AutoGetEvent")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsEventV1.fnAutoListEvent = srv.AddMethod("AutoListEvent",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["events.EventList"], "event", "AutoListEvent")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsEventV1.fnAutoUpdateEvent = srv.AddMethod("AutoUpdateEvent",
-			apisrvpkg.NewMethod(s.Messages["events.Event"], s.Messages["events.Event"], "event", "AutoUpdateEvent")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsEventV1.fnAutoWatchEvent = s.Messages["events.Event"].WatchFromKv
-
-		s.Services = map[string]apiserver.Service{
-			"events.EventV1": srv,
-		}
-		apisrv.RegisterService("events.EventV1", srv)
-		endpoints := events.MakeEventV1ServerEndpoints(s.endpointsEventV1, logger)
-		server := events.MakeGRPCServerEventV1(ctx, endpoints, logger)
-		events.RegisterEventV1Server(grpcserver.GrpcServer, server)
-	}
-	// Add Watchers
-	{
-
-		s.Messages["events.Event"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := events.Event{}
-			key := o.MakeKey(svcprefix)
-			wstream := stream.(events.EventV1_AutoWatchEventServer)
-			nctx, cancel := context.WithCancel(wstream.Context())
-			defer cancel()
-			if kvs == nil {
-				return fmt.Errorf("Nil KVS")
-			}
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
-			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Event")
-				return err
-			}
-			for {
-				select {
-				case ev, ok := <-watcher.EventChan():
-					if !ok {
-						l.DebugLog("Channel closed for Event Watcher")
-						return nil
-					}
-					in, ok := ev.Object.(*events.Event)
-					if !ok {
-						status, ok := ev.Object.(*api.Status)
-						if !ok {
-							return errors.New("unknown error")
-						}
-						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
-					}
-					strEvent := events.AutoMsgEventWatchHelper{
-						Type:   string(ev.Type),
-						Object: in,
-					}
-					l.DebugLog("msg", "recieved Event watch event from KV", "type", ev.Type)
-					if version != in.APIVersion {
-						i, err := txfn(in.APIVersion, version, in)
-						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Event", "fromver", in.APIVersion, "tover", version)
-							break
-						}
-						strEvent.Object = i.(*events.Event)
-					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Event", "error", err)
-						return err
-					}
-				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Event Watcher")
-					return wstream.Context().Err()
-				}
-			}
-		})
-
-	}
-
 	return nil
 }
 
@@ -511,50 +307,6 @@ func (e *eEventPolicyV1Endpoints) AutoUpdateEventPolicy(ctx context.Context, t e
 func (e *eEventPolicyV1Endpoints) AutoWatchEventPolicy(in *api.ListWatchOptions, stream events.EventPolicyV1_AutoWatchEventPolicyServer) error {
 	return e.fnAutoWatchEventPolicy(in, stream, "eventPolicy")
 }
-func (e *eEventV1Endpoints) AutoAddEvent(ctx context.Context, t events.Event) (events.Event, error) {
-	r, err := e.fnAutoAddEvent(ctx, t)
-	if err == nil {
-		return r.(events.Event), err
-	}
-	return events.Event{}, err
-
-}
-func (e *eEventV1Endpoints) AutoDeleteEvent(ctx context.Context, t events.Event) (events.Event, error) {
-	r, err := e.fnAutoDeleteEvent(ctx, t)
-	if err == nil {
-		return r.(events.Event), err
-	}
-	return events.Event{}, err
-
-}
-func (e *eEventV1Endpoints) AutoGetEvent(ctx context.Context, t events.Event) (events.Event, error) {
-	r, err := e.fnAutoGetEvent(ctx, t)
-	if err == nil {
-		return r.(events.Event), err
-	}
-	return events.Event{}, err
-
-}
-func (e *eEventV1Endpoints) AutoListEvent(ctx context.Context, t api.ListWatchOptions) (events.EventList, error) {
-	r, err := e.fnAutoListEvent(ctx, t)
-	if err == nil {
-		return r.(events.EventList), err
-	}
-	return events.EventList{}, err
-
-}
-func (e *eEventV1Endpoints) AutoUpdateEvent(ctx context.Context, t events.Event) (events.Event, error) {
-	r, err := e.fnAutoUpdateEvent(ctx, t)
-	if err == nil {
-		return r.(events.Event), err
-	}
-	return events.Event{}, err
-
-}
-
-func (e *eEventV1Endpoints) AutoWatchEvent(in *api.ListWatchOptions, stream events.EventV1_AutoWatchEventServer) error {
-	return e.fnAutoWatchEvent(in, stream, "event")
-}
 
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
@@ -564,10 +316,6 @@ func init() {
 	{
 		e := eEventPolicyV1Endpoints{Svc: svc}
 		svc.endpointsEventPolicyV1 = &e
-	}
-	{
-		e := eEventV1Endpoints{Svc: svc}
-		svc.endpointsEventV1 = &e
 	}
 	apisrv.Register("events.protos/events.proto", &svc)
 }

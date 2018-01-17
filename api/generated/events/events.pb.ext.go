@@ -25,19 +25,8 @@ var _ validators.DummyVar
 var funcMapEvents = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
-func (m *Event) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "event/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *EventPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "monitoringPolicy/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *EventList) MakeKey(prefix string) string {
-	obj := Event{}
-	return obj.MakeKey(prefix)
+	return fmt.Sprint("/venice/", prefix, "/", "eventPolicy/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -52,23 +41,8 @@ func (m *AutoMsgEventPolicyWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgEventWatchHelper) MakeKey(prefix string) string {
-	obj := Event{}
-	return obj.MakeKey(prefix)
-}
-
 func (m *AutoMsgEventPolicyWatchHelper) Clone(into interface{}) error {
 	out, ok := into.(*AutoMsgEventPolicyWatchHelper)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
-	}
-	*out = *m
-	return nil
-}
-
-func (m *AutoMsgEventWatchHelper) Clone(into interface{}) error {
-	out, ok := into.(*AutoMsgEventWatchHelper)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -85,8 +59,8 @@ func (m *Event) Clone(into interface{}) error {
 	return nil
 }
 
-func (m *EventList) Clone(into interface{}) error {
-	out, ok := into.(*EventList)
+func (m *EventAttributes) Clone(into interface{}) error {
+	out, ok := into.(*EventAttributes)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -139,88 +113,45 @@ func (m *EventSource) Clone(into interface{}) error {
 	return nil
 }
 
-func (m *EventSpec) Clone(into interface{}) error {
-	out, ok := into.(*EventSpec)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
-	}
-	*out = *m
-	return nil
-}
-
-func (m *EventStatus) Clone(into interface{}) error {
-	out, ok := into.(*EventStatus)
-	if !ok {
-		return fmt.Errorf("mismatched object types")
-	}
-	*out = *m
-	return nil
-}
-
 // Validators
 
 func (m *AutoMsgEventPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
-	return true
-}
-
-func (m *AutoMsgEventWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
-		return false
-	}
 	return true
 }
 
 func (m *Event) Validate(ver string, ignoreStatus bool) bool {
-	if !ignoreStatus {
-		if !m.Status.Validate(ver, ignoreStatus) {
-			return false
-		}
+	if !m.EventAttributes.Validate(ver, ignoreStatus) {
+		return false
 	}
 	return true
 }
 
-func (m *EventList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
+func (m *EventAttributes) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapEvents["EventAttributes"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapEvents["EventAttributes"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
 		}
 	}
 	return true
 }
 
 func (m *EventPolicy) Validate(ver string, ignoreStatus bool) bool {
-	if !m.Spec.Validate(ver, ignoreStatus) {
-		return false
-	}
 	return true
 }
 
 func (m *EventPolicyList) Validate(ver string, ignoreStatus bool) bool {
-	for _, v := range m.Items {
-		if !v.Validate(ver, ignoreStatus) {
-			return false
-		}
-	}
 	return true
 }
 
 func (m *EventPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapEvents["EventPolicySpec"][ver]; ok {
-		for _, v := range vs {
-			if !v(m) {
-				return false
-			}
-		}
-	} else if vs, ok := funcMapEvents["EventPolicySpec"]["all"]; ok {
-		for _, v := range vs {
-			if !v(m) {
-				return false
-			}
-		}
-	}
 	return true
 }
 
@@ -232,45 +163,12 @@ func (m *EventSource) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *EventSpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *EventStatus) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapEvents["EventStatus"][ver]; ok {
-		for _, v := range vs {
-			if !v(m) {
-				return false
-			}
-		}
-	} else if vs, ok := funcMapEvents["EventStatus"]["all"]; ok {
-		for _, v := range vs {
-			if !v(m) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 func init() {
 	funcMapEvents = make(map[string]map[string][]func(interface{}) bool)
 
-	funcMapEvents["EventPolicySpec"] = make(map[string][]func(interface{}) bool)
-	funcMapEvents["EventPolicySpec"]["all"] = append(funcMapEvents["EventPolicySpec"]["all"], func(i interface{}) bool {
-		m := i.(*EventPolicySpec)
-
-		for _, v := range m.Levels {
-			if _, ok := SeverityLevel_value[v]; !ok {
-				return false
-			}
-		}
-		return true
-	})
-
-	funcMapEvents["EventStatus"] = make(map[string][]func(interface{}) bool)
-	funcMapEvents["EventStatus"]["all"] = append(funcMapEvents["EventStatus"]["all"], func(i interface{}) bool {
-		m := i.(*EventStatus)
+	funcMapEvents["EventAttributes"] = make(map[string][]func(interface{}) bool)
+	funcMapEvents["EventAttributes"]["all"] = append(funcMapEvents["EventAttributes"]["all"], func(i interface{}) bool {
+		m := i.(*EventAttributes)
 
 		if _, ok := SeverityLevel_value[m.Severity]; !ok {
 			return false
