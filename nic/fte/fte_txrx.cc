@@ -143,7 +143,13 @@ std::string hex_str(const uint8_t *buf, size_t sz)
 inst_t::inst_t(uint8_t fte_id) :
     id_(fte_id),
     arm_ctx_(hal::pd::cpupkt_ctxt_alloc_init()),
-    softq_(mpscq_t::alloc(MAX_SOFTQ_SLOTS))
+    softq_(mpscq_t::alloc(MAX_SOFTQ_SLOTS)),
+    ctx_(NULL),
+    feature_state_(NULL),
+    feature_state_size_(0),
+    num_features_(0),
+    iflow_(NULL),
+    rflow_(NULL)
 {
     hal_ret_t ret;
 
