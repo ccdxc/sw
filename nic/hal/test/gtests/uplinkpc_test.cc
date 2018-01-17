@@ -90,6 +90,14 @@ TEST_F(uplinkpc_test, test1)
     ret = hal::interface_update(pc_spec, &pc_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
+
+    // Verify that changing type in update is not allowed
+    pc_spec.mutable_if_uplink_pc_info()->clear_native_l2segment_id();
+    pc_spec.set_type(intf::IF_TYPE_UPLINK);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_update(pc_spec, &pc_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
     // Release if_uplink_info
     // free spec.release_if_uplink_info();
 }

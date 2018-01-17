@@ -17,6 +17,8 @@ def PreCreateCb(data, req_spec, resp_spec):
         req_spec.request[0].type = interface_pb2.IF_TYPE_TUNNEL
     elif req_spec.request[0].HasField("if_cpu_info"):
         req_spec.request[0].type = interface_pb2.IF_TYPE_CPU
+    elif req_spec.request[0].HasField("if_app_redir_info"):
+        req_spec.request[0].type = interface_pb2.IF_TYPE_APP_REDIR
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_TUNNEL:
         req_spec.request[0].type = interface_pb2.IF_TYPE_UPLINK

@@ -1069,6 +1069,12 @@ if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
 {
     hal_ret_t           ret = HAL_RET_OK;
 
+    if (hal_if->if_type != spec.type()) {
+        HAL_TRACE_ERR("pi-if:{} Cannot change if type from {} to {} as part of "
+                      "if update", __FUNCTION__, hal_if->if_type, spec.type());
+        return HAL_RET_INVALID_ARG;
+    }
+
     switch (hal_if->if_type) {
         case intf::IF_TYPE_ENIC:
             ret = enic_if_update_check_for_change(spec, hal_if, app_ctxt, 
@@ -1137,40 +1143,40 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, hal_if->if_id);
 
     switch (hal_if->if_type) {
-        case intf::IF_TYPE_ENIC:
-            pd::pd_if_args_init(&pd_if_args);
-            pd_if_args.intf = hal_if;
-            pd_if_args.native_l2seg_clsc_change = app_ctxt->native_l2seg_clsc_change;
-            pd_if_args.new_native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
-            pd_if_args.pinned_uplink_change = app_ctxt->pinned_uplink_change;
-            pd_if_args.new_pinned_uplink = app_ctxt->new_pinned_uplink;
-            pd_if_args.l2seg_clsc_change = app_ctxt->l2segclsclist_change;
-            pd_if_args.add_l2seg_clsclist = app_ctxt->add_l2segclsclist;
-            pd_if_args.del_l2seg_clsclist = app_ctxt->del_l2segclsclist;
-            break;
-        case intf::IF_TYPE_UPLINK:
-        case intf::IF_TYPE_UPLINK_PC:
-            pd::pd_if_args_init(&pd_if_args);
-            pd_if_args.intf = hal_if;
-            pd_if_args.native_l2seg_change = app_ctxt->native_l2seg_change;
-            pd_if_args.native_l2seg = app_ctxt->native_l2seg;
+    case intf::IF_TYPE_ENIC:
+        pd::pd_if_args_init(&pd_if_args);
+        pd_if_args.intf = hal_if;
+        pd_if_args.native_l2seg_clsc_change = app_ctxt->native_l2seg_clsc_change;
+        pd_if_args.new_native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
+        pd_if_args.pinned_uplink_change = app_ctxt->pinned_uplink_change;
+        pd_if_args.new_pinned_uplink = app_ctxt->new_pinned_uplink;
+        pd_if_args.l2seg_clsc_change = app_ctxt->l2segclsclist_change;
+        pd_if_args.add_l2seg_clsclist = app_ctxt->add_l2segclsclist;
+        pd_if_args.del_l2seg_clsclist = app_ctxt->del_l2segclsclist;
+        break;
+    case intf::IF_TYPE_UPLINK:
+    case intf::IF_TYPE_UPLINK_PC:
+        pd::pd_if_args_init(&pd_if_args);
+        pd_if_args.intf = hal_if;
+        pd_if_args.native_l2seg_change = app_ctxt->native_l2seg_change;
+        pd_if_args.native_l2seg = app_ctxt->native_l2seg;
 
-            pd_if_args.mbrlist_change = app_ctxt->mbrlist_change;
-            pd_if_args.add_mbrlist = app_ctxt->add_mbrlist;
-            pd_if_args.del_mbrlist = app_ctxt->del_mbrlist;
-            pd_if_args.aggr_mbrlist = app_ctxt->aggr_mbrlist;
+        pd_if_args.mbrlist_change = app_ctxt->mbrlist_change;
+        pd_if_args.add_mbrlist = app_ctxt->add_mbrlist;
+        pd_if_args.del_mbrlist = app_ctxt->del_mbrlist;
+        pd_if_args.aggr_mbrlist = app_ctxt->aggr_mbrlist;
 
-            break;
-        case intf::IF_TYPE_TUNNEL:
-            break;
-        case intf::IF_TYPE_CPU:
-            break;
-        case intf::IF_TYPE_APP_REDIR:
-            break;
-        default:
-            HAL_TRACE_ERR("pi-if:{}:invalid if type: {}", __FUNCTION__, 
-                          hal_if->if_type);
-            ret = HAL_RET_INVALID_ARG;
+        break;
+    case intf::IF_TYPE_TUNNEL:
+        break;
+    case intf::IF_TYPE_CPU:
+        break;
+    case intf::IF_TYPE_APP_REDIR:
+        break;
+    default:
+        HAL_TRACE_ERR("pi-if:{}:invalid if type: {}", __FUNCTION__, 
+                      hal_if->if_type);
+        ret = HAL_RET_INVALID_ARG;
     }
 
     ret = pd::pd_if_update(&pd_if_args);
