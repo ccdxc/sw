@@ -36,13 +36,16 @@ public:
     virtual bool burst_write(uint64_t addr, const unsigned char * data, unsigned int len, bool secure = false, bool reverse_byte_order = false) {
 	return _mem->burst_write(addr, data, len, secure, reverse_byte_order);
     }
-    static pen_mem_base * access()
+    static HOST_MEM_CPY * access()
     {
         static HOST_MEM_CPY * _hmc = nullptr;
         if (!_hmc) {
             _hmc = new HOST_MEM_CPY();
         }
         return _hmc;
+    }
+    pen_mem<12> * get_mem(void) {
+	return _mem;
     }
 };
 #endif
