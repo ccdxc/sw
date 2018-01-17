@@ -520,9 +520,9 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
              * Alloc APP session, L4 Session and FTP info
              */
             ret = g_ftp_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-            HAL_ASSERT_RETURN((ret != HAL_RET_OOM), fte::PIPELINE_CONTINUE);
+            HAL_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
             ret = g_ftp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-            HAL_ASSERT_RETURN((ret != HAL_RET_OOM), fte::PIPELINE_CONTINUE);
+            HAL_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
             l4_sess->alg = nwsec::APP_SVC_FTP;
             ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
             HAL_ASSERT_RETURN((ftp_info != NULL), fte::PIPELINE_CONTINUE);

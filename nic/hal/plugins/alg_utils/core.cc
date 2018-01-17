@@ -331,6 +331,7 @@ hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t 
     // Lookup if app session already exists
     ret = lookup_app_sess(key, app_sess);
     if (ret != HAL_RET_ENTRY_NOT_FOUND) {
+        *app_session = app_sess;
         return HAL_RET_ENTRY_EXISTS;
     }   
 
