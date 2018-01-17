@@ -423,7 +423,7 @@ TEST_F(l2seg_test, test3)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    // Update to l2segment with no change
+    // Create another l2segment with no change
     l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec1.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -431,7 +431,40 @@ TEST_F(l2seg_test, test3)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp1);
     hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Now use the same key with a non-existent VRF.
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(1000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
+
+    // Set back the original VRF id, and add a non-existent network key. 
+    l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
+    nkh = l2seg_spec1.add_network_key_handle();
+    nkh->set_nw_handle(10000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp1);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
+
+    // Clear the network, and add in a GIPO IPv4 address which is different.
+    l2seg_spec1.clear_network_key_handle();
+    l2seg_spec1.mutable_gipo()->set_ip_af(types::IP_AF_INET);
+    l2seg_spec1.mutable_gipo()->set_v4_addr(0xa0000000);
+    ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
+
+    // Clear the GIPO field
+    l2seg_spec1.clear_gipo();
+    l2seg_spec1.mutable_gipo()->set_ip_af(types::IP_AF_INET6);
+    l2seg_spec1.mutable_gipo()->set_v6_addr("00010001000100010001000100010001");
+    ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
+    l2seg_spec1.clear_gipo();
 
     // Update to l2segment with no change
     l2seg_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
@@ -654,7 +687,7 @@ TEST_F(l2seg_test, test5)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     HAL_TRACE_DEBUG("ret: {}", ret);
     hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
 
     // Create l2seg with no meta
     // l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
@@ -747,7 +780,8 @@ TEST_F(l2seg_test, test5)
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     
-    // Create l2seg which already exists
+    // Create l2seg which already exists, this should be idempotent and return the old
+    // handle
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     nkh = l2seg_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl);
@@ -758,7 +792,8 @@ TEST_F(l2seg_test, test5)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     HAL_TRACE_DEBUG("ret: {}", ret);
     hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(l2seg_hdl == l2seg_rsp.mutable_l2segment_status()->l2segment_handle());
 
     // Create the max number of HAL_MAX_HW_L2SEGMENTS
     // Create l2seg resulting in no resource

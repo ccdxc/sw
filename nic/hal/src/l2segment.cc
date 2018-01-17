@@ -112,8 +112,11 @@ l2seg_del_from_db (l2seg_t *l2seg)
 // 1. check if L2 segment exists already
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
+validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
+                           l2seg_create_app_ctxt_t &app_ctxt)
 {
+    vrf_t   *vrf = NULL;
+
     if (!spec.has_vrf_key_handle() ||
         spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         HAL_TRACE_ERR("pi-l2seg:{}:no vrf_key_handle or invalid vrf id",
@@ -155,6 +158,17 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         rsp->set_api_status(types::API_STATUS_ENCAP_INVALID);
         return HAL_RET_INVALID_ARG;
     }
+
+    // fetch the vrf
+    vrf = vrf_lookup_key_or_handle(spec.vrf_key_handle());
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-l2seg:{}: Fetch Vrf Id:{}/{} Failed. ret: {}",
+                      __FUNCTION__, spec.vrf_key_handle().vrf_id(),
+                      spec.vrf_key_handle().vrf_handle(), HAL_RET_INVALID_ARG);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        return HAL_RET_VRF_NOT_FOUND;
+    }
+    app_ctxt.vrf = vrf;
 
     return HAL_RET_OK;
 }
@@ -477,6 +491,94 @@ end:
     return ret;
 }
 
+static bool
+is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app_ctxt) 
+{
+    bool             ret            = false;
+    uint32_t         num_nws        = 0;
+    uint32_t         i              = 0;
+    NetworkKeyHandle nw_key_handle;
+    ip_addr_t        gipo;
+
+    // All L2Segment's should be associated with a valid VRF object.
+    if (spec.vrf_key_handle().vrf_id() != app_ctxt.vrf->vrf_id) {
+        return ret;
+    }
+
+    if (spec.segment_type() != l2seg->segment_type) {
+        return ret;
+    }
+
+    if (spec.mcast_fwd_policy() != l2seg->mcast_fwd_policy) {
+        return ret;
+    }
+
+    if (spec.bcast_fwd_policy() != l2seg->bcast_fwd_policy) {
+        return ret;
+    }
+
+    if (spec.has_wire_encap()) {
+        if ((spec.wire_encap().encap_type() != l2seg->wire_encap.type) ||
+            (spec.wire_encap().encap_value() != l2seg->wire_encap.val)) {
+            return ret;
+        }
+    } else {
+        if (l2seg->wire_encap.type || l2seg->wire_encap.val) {
+            return ret;
+        }
+    }
+
+    if (spec.has_tunnel_encap()) {
+        if ((spec.tunnel_encap().encap_type() != l2seg->tunnel_encap.type) ||
+            (spec.tunnel_encap().encap_value() != l2seg->tunnel_encap.val)) {
+            return ret;
+        }
+    } else {
+        if (l2seg->tunnel_encap.type || l2seg->tunnel_encap.val) {
+            return ret;
+        }
+    }
+
+    if (spec.has_gipo()) {
+        hal_ret_t ip_ret = ip_addr_spec_to_ip_addr(&gipo, spec.gipo());
+
+        if (ip_ret != HAL_RET_OK) {
+            return ret;
+        }
+
+        if (!ip_addr_check_equal(&gipo, &l2seg->gipo)) {
+            return ret;
+        }
+    } else {
+        memset(&gipo, 0, sizeof(gipo));
+        if (memcmp(&gipo, &l2seg->gipo, sizeof(gipo))) {
+            return ret;
+        }
+    }
+
+    if (spec.pinned_uplink_if_handle() != l2seg->pinned_uplink) {
+        return ret;
+    }
+    
+    num_nws = spec.network_key_handle_size();
+
+    for (i = 0; i < num_nws; i++) {
+        nw_key_handle = spec.network_key_handle(i);
+        auto nw = network_lookup_key_or_handle(nw_key_handle, app_ctxt.vrf->vrf_id);
+        if (nw == NULL) {
+            return false;
+        }
+
+        if (!hal_handle_in_block_list(l2seg->nw_list, nw->hal_handle)) {
+            return false;
+        }
+    }
+ 
+    // If we've reached this point, it means that the L2Segment spec is the same
+    // as the one that exists. Return the existing handle in this case.
+    return true;
+}
+
 //------------------------------------------------------------------------------
 // process a L2 segment create request
 // TODO: if L2 segment exists, treat this as modify (vrf id in the vrf_key_handle must
@@ -488,10 +590,11 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     hal_ret_t                   ret;
     vrf_t                       *vrf;
     l2seg_t                     *l2seg    = NULL;
-    vrf_id_t                    tid;
     l2seg_create_app_ctxt_t     app_ctxt  = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt  = { 0 };
+    l2seg_t                     *existing_l2seg = NULL;
+    bool                        is_same   = false;
 
 
     hal_api_trace(" API Begin: l2segment create ");
@@ -499,7 +602,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                     spec.key_or_handle().segment_id());
 
     // validate the request message
-    ret = validate_l2segment_create(spec, rsp);
+    ret = validate_l2segment_create(spec, rsp, app_ctxt);
     if (ret != HAL_RET_OK) {
         // api_status already set, just return
         HAL_TRACE_ERR("pi-l2seg:{}:validation Failed. ret: {}",
@@ -508,23 +611,21 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     }
 
     // check if l2segment exists already, and reject if one is found
-    if (find_l2seg_by_id(spec.key_or_handle().segment_id())) {
+    existing_l2seg = l2seg_lookup_key_or_handle(spec.key_or_handle());
+    if (existing_l2seg) {
+        // Check if the 2 specs are the same. If so, then return the old handle
+        is_same = is_l2seg_same(existing_l2seg, spec, app_ctxt);
+        if (is_same) {
+            l2seg = existing_l2seg;
+            ret = HAL_RET_OK;
+            goto end;
+        }
+
         HAL_TRACE_ERR("pi-l2seg:{}:failed to create a l2seg, "
                       "l2seg {} exists already", __FUNCTION__, 
                       spec.key_or_handle().segment_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         ret = HAL_RET_ENTRY_EXISTS;
-        goto end;
-    }
-
-    // fetch the vrf
-    tid = spec.vrf_key_handle().vrf_id();
-    vrf = vrf_lookup_by_id(tid);
-    if (vrf == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}: Fetch Vrf Id:{} Failed. ret: {}",
-                      __FUNCTION__, tid, ret);
-        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
@@ -538,6 +639,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
+    vrf = app_ctxt.vrf;
     l2seg->vrf_handle = vrf->hal_handle;
     l2seg->seg_id = spec.key_or_handle().segment_id();
     l2seg->segment_type = spec.segment_type();
@@ -587,7 +689,6 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     }
 
     // form ctxt and call infra add
-    app_ctxt.vrf = vrf;
     dhl_entry.handle = l2seg->hal_handle;
     dhl_entry.obj = l2seg;
     cfg_ctxt.app_ctxt = &app_ctxt;

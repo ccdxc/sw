@@ -66,6 +66,33 @@ ip_pfx_spec_to_pfx_spec (ip_prefix_t *ip_pfx,
 }
 
 //----------------------------------------------------------------------------
+// check if 2 IP addresses are equal
+//----------------------------------------------------------------------------
+bool
+ip_addr_check_equal (ip_addr_t *ipaddr1, ip_addr_t *ipaddr2)
+{
+    if (!ipaddr1 || !ipaddr2) {
+        return false;
+    }
+
+    if (ipaddr1->af != ipaddr2->af) {
+        return false;
+    }
+
+    if (ipaddr1->af == IP_AF_IPV4) {
+        if (ipaddr1->addr.v4_addr != ipaddr2->addr.v4_addr) {
+            return false;
+        }
+    } else {
+        if (memcmp(&(ipaddr1->addr.v6_addr), &(ipaddr2->addr.v6_addr), sizeof(uint8_t) * IP6_ADDR8_LEN)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//----------------------------------------------------------------------------
 // check if IP address is in IP prefix
 //----------------------------------------------------------------------------
 bool

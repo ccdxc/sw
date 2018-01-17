@@ -21,6 +21,7 @@ hal_ret_t ip_addr_to_spec (types::IPAddress *ip_addr_spec,
                            const ip_addr_t *ip_addr);
 hal_ret_t ip_pfx_spec_to_pfx_spec(ip_prefix_t *ip_pfx, 
                                   const types::IPPrefix& in_ippfx);
+bool ip_addr_check_equal(ip_addr_t *ipaddr1, ip_addr_t *ipaddr2);
 bool ip_addr_in_ip_pfx(ip_addr_t *ipaddr, ip_prefix_t *ip_pfx);
 
 ApiStatus hal_prepare_rsp (hal_ret_t ret);
