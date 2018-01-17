@@ -662,7 +662,16 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 						} else {
 						}
 						glog.Infof("setting pointer to [%v] for {%s]", pointer, *msg.Name+"/"+*fld.Name)
-						ret.Map[*msg.Name].Fields[*fld.Name] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
+
+						// if it is a embedded field, do not use field name rather use type
+						if fld.Embedded {
+							// fld.GetTypeName() -> e.g. ".events.EventAttributes"
+							temp := strings.Split(fld.GetTypeName(), ".")
+							fldType := temp[len(temp)-1]
+							ret.Map[*msg.Name].Fields[fldType] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
+						} else {
+							ret.Map[*msg.Name].Fields[*fld.Name] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
+						}
 					}
 				}
 			}
