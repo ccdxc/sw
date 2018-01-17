@@ -76,7 +76,8 @@ header_type l4_metadata_t {
 
 header_type flow_act_metadata_t {
     fields {
-        flow_index          : 20;
+        //flow_index        : 20;
+        flow_index          : 16;
         policer_index       : 14;
         overflow_lkp        : 1;
     }
@@ -93,11 +94,10 @@ header_type scratch_metadata_t {
         last_seen_timestamp : 48;
         flow_packets        : 64;
         flow_bytes          : 64;
-        rewrite_fields      : 8;
         payload_len         : 16;
         flag                : 1;
         match_fields        : 32;
-        hdr_bits            : 32;
+        hdr_bits            : 24;
         num_packets         : 64;
         num_bytes           : 64;
         hash                : 12;

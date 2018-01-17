@@ -12,10 +12,8 @@ gft_hash_info:
     seq.c1      c1, d.gft_hash_info_d.entry_valid, TRUE
     bcf         [!c1], gft_hash_miss
     phvwr.c1    p.flow_action_metadata_flow_index, d.gft_hash_info_d.flow_index
-    phvwr       p.flow_action_metadata_policer_index[13:3], \
-                    d.gft_hash_info_d.policer_index_sbit0_ebit10
-    phvwr       p.flow_action_metadata_policer_index[2:0], \
-                    d.gft_hash_info_d.policer_index_sbit11_ebit13
+    phvwr       p.flow_action_metadata_policer_index, \
+                    d.gft_hash_info_d.policer_index
 
     // copy flow index (12 bits) to the top bits of ethernet src address
     // for packet verification

@@ -198,7 +198,7 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 
 gft-build: sdk
 	$(MAKE) capmodel
-	$(MAKE) -C p4
+	$(MAKE) -j4 -C p4
 	$(MAKE) -C asm
 	$(MAKE) -C proto
 	$(MAKE) -j4 -C gen/proto/hal

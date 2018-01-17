@@ -27,7 +27,7 @@ SRC_FILES := \
 	ingress_key4.asm \
 	ingress_vport.asm \
 	ingress_vport_stats.asm \
-	ipolicer.asm \
+	ingress_policer.asm \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))

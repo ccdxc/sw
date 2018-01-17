@@ -1,477 +1,342 @@
-action hdr_transpositions_layer_00(hdr_bits, ethernet_src, ethernet_dst,
+action hdr_transpositions_layer_00(hdr_bits, ethernet_dst, ethernet_src,
                                    ethernet_type, ctag, stag, ip_src, ip_dst,
-                                   ip_dscp, ip_proto, ip_ttl) {
+                                   ip_dscp, ip_ttl, ip_proto) {
     if ((hdr_bits & TRANSPOSITIONS_PUSH_ETHERNET_00) != 0) {
         add_header(ethernet_00);
+        modify_field(ethernet_00.dstAddr, ethernet_dst);
+        modify_field(ethernet_00.srcAddr, ethernet_src);
+        modify_field(ethernet_00.etherType, ethernet_type);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV4_00) != 0) {
         add_header(ipv4_00);
+        modify_field(ipv4_00.srcAddr, ip_src);
+        modify_field(ipv4_00.dstAddr, ip_dst);
+        modify_field(ipv4_00.diffserv, ip_dscp);
+        modify_field(ipv4_00.protocol, ip_proto);
+        modify_field(ipv4_00.ttl, ip_ttl);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV6_00) != 0) {
         add_header(ipv6_00);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET_00) != 0) {
-        remove_header(ethernet_00);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV4_00) != 0) {
-        remove_header(ipv4_00);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV6_00) != 0) {
-        remove_header(ipv6_00);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_SRC_00) != 0) {
-        modify_field(ethernet_00.srcAddr, ethernet_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_DST_00) != 0) {
-        modify_field(ethernet_00.dstAddr, ethernet_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_00) != 0) {
-        modify_field(ethernet_00.etherType, ethernet_type);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG_00) != 0) {
-        modify_field(ctag_00.vid, ctag);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG_00) != 0) {
-        modify_field(stag_00.vid, stag);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC_00) != 0) {
-        modify_field(ipv4_00.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST_00) != 0) {
-        modify_field(ipv4_00.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP_00) != 0) {
-        modify_field(ipv4_00.diffserv, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO_00) != 0) {
-        modify_field(ipv4_00.protocol, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL_00) != 0) {
-        modify_field(ipv4_00.ttl, ip_ttl);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC_00) != 0) {
         modify_field(ipv6_00.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST_00) != 0) {
         modify_field(ipv6_00.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP_00) != 0) {
         modify_field(ipv6_00.trafficClass, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO_00) != 0) {
         modify_field(ipv6_00.nextHdr, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL_00) != 0) {
         modify_field(ipv6_00.hopLimit, ip_ttl);
+    }
+    if ((hdr_bits & TRANSPOSITIONS_PUSH_CTAG_00) != 0) {
+        add_header(ctag_00);
+        modify_field(ethernet_00.etherType, ETHERTYPE_CTAG);
+        modify_field(ctag_00.vid, ctag);
+        modify_field(ctag_00.etherType, ethernet_type);
+    }
+    if ((hdr_bits & TRANSPOSITIONS_PUSH_STAG_00) != 0) {
+        add_header(stag_00);
+        modify_field(ethernet_00.etherType, ETHERTYPE_STAG);
+        modify_field(stag_00.etherType, ETHERTYPE_CTAG);
+        modify_field(stag_00.vid, stag);
     }
 }
 
-action hdr_transpositions_layer_01(hdr_bits, ethernet_src, ethernet_dst,
+action hdr_transpositions_layer_01(hdr_bits, ethernet_dst, ethernet_src,
                                    ethernet_type, ctag, stag, ip_src, ip_dst,
-                                   ip_dscp, ip_proto, ip_ttl) {
+                                   ip_dscp, ip_ttl, ip_proto) {
     if ((hdr_bits & TRANSPOSITIONS_PUSH_ETHERNET_01) != 0) {
         add_header(ethernet_01);
+        modify_field(ethernet_01.dstAddr, ethernet_dst);
+        modify_field(ethernet_01.srcAddr, ethernet_src);
+        modify_field(ethernet_01.etherType, ethernet_type);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV4_01) != 0) {
         add_header(ipv4_01);
+        modify_field(ipv4_01.srcAddr, ip_src);
+        modify_field(ipv4_01.dstAddr, ip_dst);
+        modify_field(ipv4_01.diffserv, ip_dscp);
+        modify_field(ipv4_01.protocol, ip_proto);
+        modify_field(ipv4_01.ttl, ip_ttl);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV6_01) != 0) {
         add_header(ipv6_01);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET_01) != 0) {
-        remove_header(ethernet_01);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV4_01) != 0) {
-        remove_header(ipv4_01);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV6_01) != 0) {
-        remove_header(ipv6_01);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_SRC_01) != 0) {
-        modify_field(ethernet_01.srcAddr, ethernet_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_DST_01) != 0) {
-        modify_field(ethernet_01.dstAddr, ethernet_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_01) != 0) {
-        modify_field(ethernet_01.etherType, ethernet_type);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG_01) != 0) {
-        modify_field(ctag_01.vid, ctag);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG_01) != 0) {
-        modify_field(stag_01.vid, stag);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC_01) != 0) {
-        modify_field(ipv4_01.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST_01) != 0) {
-        modify_field(ipv4_01.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP_01) != 0) {
-        modify_field(ipv4_01.diffserv, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO_01) != 0) {
-        modify_field(ipv4_01.protocol, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL_01) != 0) {
-        modify_field(ipv4_01.ttl, ip_ttl);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC_01) != 0) {
         modify_field(ipv6_01.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST_01) != 0) {
         modify_field(ipv6_01.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP_01) != 0) {
         modify_field(ipv6_01.trafficClass, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO_01) != 0) {
         modify_field(ipv6_01.nextHdr, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL_01) != 0) {
         modify_field(ipv6_01.hopLimit, ip_ttl);
+    }
+
+    if ((hdr_bits & TRANSPOSITIONS_PUSH_CTAG_01) != 0) {
+        add_header(ctag_00);
+        modify_field(ethernet_01.etherType, ETHERTYPE_CTAG);
+        modify_field(ctag_01.vid, ctag);
+        modify_field(ctag_01.etherType, ethernet_type);
+    }
+    if ((hdr_bits & TRANSPOSITIONS_PUSH_STAG_01) != 0) {
+        modify_field(ethernet_01.etherType, ETHERTYPE_STAG);
+        modify_field(stag_01.etherType, ETHERTYPE_CTAG);
+        modify_field(stag_01.vid, stag);
     }
 }
 
-action hdr_transpositions_layer_1(hdr_bits, ethernet_src, ethernet_dst,
+action hdr_transpositions_layer_1(hdr_bits, ethernet_dst, ethernet_src,
                                   ethernet_type, ctag, stag, ip_src, ip_dst,
-                                  ip_dscp, ip_proto, ip_ttl) {
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_ETHERNET_1) != 0) {
-        add_header(ethernet_1);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV4_1) != 0) {
-        add_header(ipv4_1);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV6_1) != 0) {
-        add_header(ipv6_1);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET_1) != 0) {
+                                  ip_dscp, ip_ttl, ip_proto) {
+    if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET) != 0) {
         remove_header(ethernet_1);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV4_1) != 0) {
+#if 0
+    if ((hdr_bits & TRANSPOSITIONS_POP_CTAG) != 0) {
+        remove_header(ctag_1);
+    }
+    if ((hdr_bits & TRANSPOSITIONS_POP_STAG) != 0) {
+        remove_header(stag_1);
+    }
+#endif
+    if ((hdr_bits & TRANSPOSITIONS_POP_IPV4) != 0) {
         remove_header(ipv4_1);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV6_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_POP_IPV6) != 0) {
         remove_header(ipv6_1);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_SRC_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_SRC) != 0) {
         modify_field(ethernet_1.srcAddr, ethernet_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_DST_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_DST) != 0) {
         modify_field(ethernet_1.dstAddr, ethernet_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_TYPE) != 0) {
         modify_field(ethernet_1.etherType, ethernet_type);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG) != 0) {
         modify_field(ctag_1.vid, ctag);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG) != 0) {
         modify_field(stag_1.vid, stag);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
         modify_field(ipv4_1.srcAddr, ip_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST) != 0) {
         modify_field(ipv4_1.dstAddr, ip_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP) != 0) {
         modify_field(ipv4_1.diffserv, ip_dscp);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO) != 0) {
         modify_field(ipv4_1.protocol, ip_proto);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL) != 0) {
         modify_field(ipv4_1.ttl, ip_ttl);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC) != 0) {
         modify_field(ipv6_1.srcAddr, ip_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST) != 0) {
         modify_field(ipv6_1.dstAddr, ip_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP) != 0) {
         modify_field(ipv6_1.trafficClass, ip_dscp);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO) != 0) {
         modify_field(ipv6_1.nextHdr, ip_proto);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL_1) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL) != 0) {
         modify_field(ipv6_1.hopLimit, ip_ttl);
     }
 }
 
-action hdr_transpositions_layer_2(hdr_bits, ethernet_src, ethernet_dst,
+action hdr_transpositions_layer_2(hdr_bits, ethernet_dst, ethernet_src,
                                   ethernet_type, ctag, stag, ip_src, ip_dst,
-                                  ip_dscp, ip_proto, ip_ttl) {
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_ETHERNET_2) != 0) {
-        add_header(ethernet_2);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV4_2) != 0) {
-        add_header(ipv4_2);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV6_2) != 0) {
-        add_header(ipv6_2);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET_2) != 0) {
+                                  ip_dscp, ip_ttl, ip_proto) {
+    if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET) != 0) {
         remove_header(ethernet_2);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV4_2) != 0) {
+#if 0
+    if ((hdr_bits & TRANSPOSITIONS_POP_CTAG) != 0) {
+        remove_header(ctag_2);
+    }
+    if ((hdr_bits & TRANSPOSITIONS_POP_STAG) != 0) {
+        remove_header(stag_2);
+    }
+#endif
+    if ((hdr_bits & TRANSPOSITIONS_POP_IPV4) != 0) {
         remove_header(ipv4_2);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV6_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_POP_IPV6) != 0) {
         remove_header(ipv6_2);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_SRC_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_SRC) != 0) {
         modify_field(ethernet_2.srcAddr, ethernet_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_DST_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_DST) != 0) {
         modify_field(ethernet_2.dstAddr, ethernet_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_TYPE) != 0) {
         modify_field(ethernet_2.etherType, ethernet_type);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG) != 0) {
         modify_field(ctag_2.vid, ctag);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG) != 0) {
         modify_field(stag_2.vid, stag);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
         modify_field(ipv4_2.srcAddr, ip_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST) != 0) {
         modify_field(ipv4_2.dstAddr, ip_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP) != 0) {
         modify_field(ipv4_2.diffserv, ip_dscp);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO) != 0) {
         modify_field(ipv4_2.protocol, ip_proto);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL) != 0) {
         modify_field(ipv4_2.ttl, ip_ttl);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC) != 0) {
         modify_field(ipv6_2.srcAddr, ip_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST) != 0) {
         modify_field(ipv6_2.dstAddr, ip_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP) != 0) {
         modify_field(ipv6_2.trafficClass, ip_dscp);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO) != 0) {
         modify_field(ipv6_2.nextHdr, ip_proto);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL_2) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL) != 0) {
         modify_field(ipv6_2.hopLimit, ip_ttl);
     }
 }
 
-action hdr_transpositions_layer_3(hdr_bits, ethernet_src, ethernet_dst,
+action hdr_transpositions_layer_3(hdr_bits, ethernet_dst, ethernet_src,
                                   ethernet_type, ctag, stag, ip_src, ip_dst,
-                                  ip_dscp, ip_proto, ip_ttl) {
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_ETHERNET_3) != 0) {
-        add_header(ethernet_3);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV4_3) != 0) {
-        add_header(ipv4_3);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_IPV6_3) != 0) {
-        add_header(ipv6_3);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET_3) != 0) {
+                                  ip_dscp, ip_ttl, ip_proto) {
+    if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET) != 0) {
         remove_header(ethernet_3);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV4_3) != 0) {
+#if 0
+    if ((hdr_bits & TRANSPOSITIONS_POP_CTAG) != 0) {
+        remove_header(ctag_3);
+    }
+    if ((hdr_bits & TRANSPOSITIONS_POP_STAG) != 0) {
+        remove_header(stag_3);
+    }
+#endif
+    if ((hdr_bits & TRANSPOSITIONS_POP_IPV4) != 0) {
         remove_header(ipv4_3);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_IPV6_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_POP_IPV6) != 0) {
         remove_header(ipv6_3);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_SRC_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_SRC) != 0) {
         modify_field(ethernet_3.srcAddr, ethernet_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_DST_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_DST) != 0) {
         modify_field(ethernet_3.dstAddr, ethernet_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ETHERNET_TYPE) != 0) {
         modify_field(ethernet_3.etherType, ethernet_type);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG) != 0) {
         modify_field(ctag_3.vid, ctag);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG) != 0) {
         modify_field(stag_3.vid, stag);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
         modify_field(ipv4_3.srcAddr, ip_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST) != 0) {
         modify_field(ipv4_3.dstAddr, ip_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP) != 0) {
         modify_field(ipv4_3.diffserv, ip_dscp);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO) != 0) {
         modify_field(ipv4_3.protocol, ip_proto);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL) != 0) {
         modify_field(ipv4_3.ttl, ip_ttl);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC) != 0) {
         modify_field(ipv6_3.srcAddr, ip_src);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST) != 0) {
         modify_field(ipv6_3.dstAddr, ip_dst);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP) != 0) {
         modify_field(ipv6_3.trafficClass, ip_dscp);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO) != 0) {
         modify_field(ipv6_3.nextHdr, ip_proto);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL_3) != 0) {
+    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL) != 0) {
         modify_field(ipv6_3.hopLimit, ip_ttl);
     }
 }
 
-action hdr_transpositions(hdr_bits, ethernet_src, ethernet_dst, ethernet_type,
-                          ctag, stag, ip_src, ip_dst, ip_dscp, ip_proto,
-                          ip_ttl) {
-    hdr_transpositions_layer_00(hdr_bits, ethernet_src, ethernet_dst,
+action hdr_transpositions(hdr0_bits, hdr1_bits, hdr2_bits, hdr3_bits,
+                          ethernet_dst, ethernet_src, ethernet_type,
+                          ctag, stag, ip_src, ip_dst, ip_dscp, ip_ttl,
+                          ip_proto) {
+    hdr_transpositions_layer_00(hdr0_bits, ethernet_dst, ethernet_src,
                                 ethernet_type, ctag, stag, ip_src, ip_dst,
-                                ip_dscp, ip_proto, ip_ttl);
-    hdr_transpositions_layer_01(hdr_bits, ethernet_src, ethernet_dst,
+                                ip_dscp, ip_ttl, ip_proto);
+    hdr_transpositions_layer_01(hdr0_bits, ethernet_dst, ethernet_src,
                                 ethernet_type, ctag, stag, ip_src, ip_dst,
-                                ip_dscp, ip_proto, ip_ttl);
-    hdr_transpositions_layer_1(hdr_bits, ethernet_src, ethernet_dst,
+                                ip_dscp, ip_ttl, ip_proto);
+    hdr_transpositions_layer_1(hdr1_bits, ethernet_dst, ethernet_src,
                                ethernet_type, ctag, stag, ip_src, ip_dst,
-                               ip_dscp, ip_proto, ip_ttl);
-    hdr_transpositions_layer_2(hdr_bits, ethernet_src, ethernet_dst,
+                               ip_dscp, ip_ttl, ip_proto);
+    hdr_transpositions_layer_2(hdr2_bits, ethernet_dst, ethernet_src,
                                ethernet_type, ctag, stag, ip_src, ip_dst,
-                               ip_dscp, ip_proto, ip_ttl);
-    hdr_transpositions_layer_3(hdr_bits, ethernet_src, ethernet_dst,
+                               ip_dscp, ip_ttl, ip_proto);
+    hdr_transpositions_layer_3(hdr3_bits, ethernet_dst, ethernet_src,
                                ethernet_type, ctag, stag, ip_src, ip_dst,
-                               ip_dscp, ip_proto, ip_ttl);
+                               ip_dscp, ip_ttl, ip_proto);
 
-    modify_field(scratch_metadata.hdr_bits, hdr_bits);
+    modify_field(scratch_metadata.hdr_bits, hdr0_bits);
+    modify_field(scratch_metadata.hdr_bits, hdr1_bits);
+    modify_field(scratch_metadata.hdr_bits, hdr2_bits);
+    modify_field(scratch_metadata.hdr_bits, hdr3_bits);
 }
 
 action l4_hdr_transpositions_layer_00(hdr_bits, tenant_id, l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_PUSH_VXLAN_00) != 0) {
         add_header(vxlan_00);
+        modify_field(vxlan_00.vni, tenant_id);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_UDP_00) != 0) {
         add_header(udp_00);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_POP_VXLAN_00) != 0) {
-        remove_header(vxlan_00);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_POP_UDP_00) != 0) {
-        remove_header(udp_00);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_UDP_SPORT_00) != 0) {
         modify_field(udp_00.srcPort, l4_sport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_UDP_DPORT_00) != 0) {
         modify_field(udp_00.dstPort, l4_dport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TCP_SPORT_00) != 0) {
-        modify_field(tcp_00.srcPort, l4_sport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TCP_DPORT_00) != 0) {
-        modify_field(tcp_00.dstPort, l4_dport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_TYPE_00) != 0) {
-        modify_field(icmp_00.icmp_type, l4_sport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_00) != 0) {
-        modify_field(icmp_00.icmp_code, l4_dport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_00) != 0) {
-        modify_field(icmp_00.icmp_code, l4_dport);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TENANT_ID_00) != 0) {
-        modify_field(vxlan_00.vni, tenant_id);
     }
 }
 
 action l4_hdr_transpositions_layer_01(hdr_bits, tenant_id, l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_PUSH_VXLAN_01) != 0) {
         add_header(vxlan_01);
+        modify_field(vxlan_01.vni, tenant_id);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_UDP_01) != 0) {
         add_header(udp_01);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_POP_VXLAN_01) != 0) {
-        remove_header(vxlan_01);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_POP_UDP_01) != 0) {
-        remove_header(udp_01);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_UDP_SPORT_01) != 0) {
         modify_field(udp_01.srcPort, l4_sport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_UDP_DPORT_01) != 0) {
         modify_field(udp_01.dstPort, l4_dport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TCP_SPORT_01) != 0) {
-        modify_field(tcp_01.srcPort, l4_sport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TCP_DPORT_01) != 0) {
-        modify_field(tcp_01.dstPort, l4_dport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_TYPE_01) != 0) {
-        modify_field(icmp_01.icmp_type, l4_sport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_01) != 0) {
-        modify_field(icmp_01.icmp_code, l4_dport);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_01) != 0) {
-        modify_field(icmp_01.icmp_code, l4_dport);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TENANT_ID_01) != 0) {
-        modify_field(vxlan_01.vni, tenant_id);
     }
 }
 
-action l4_hdr_transpositions_layer_1(hdr_bits, tenant_id, l4_sport, l4_dport) {
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_VXLAN_1) != 0) {
-        add_header(vxlan_1);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_UDP_1) != 0) {
-        add_header(udp_1);
-    }
-
+action l4_hdr_transpositions_layer_1(hdr_bits, l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_POP_VXLAN_1) != 0) {
         remove_header(vxlan_1);
     }
@@ -497,23 +362,9 @@ action l4_hdr_transpositions_layer_1(hdr_bits, tenant_id, l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_1) != 0) {
         modify_field(icmp_1.icmp_code, l4_dport);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_1) != 0) {
-        modify_field(icmp_1.icmp_code, l4_dport);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TENANT_ID_1) != 0) {
-        modify_field(vxlan_1.vni, tenant_id);
-    }
 }
 
-action l4_hdr_transpositions_layer_2(hdr_bits, tenant_id, l4_sport, l4_dport) {
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_VXLAN_2) != 0) {
-        add_header(vxlan_2);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_UDP_2) != 0) {
-        add_header(udp_2);
-    }
-
+action l4_hdr_transpositions_layer_2(hdr_bits, l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_POP_VXLAN_2) != 0) {
         remove_header(vxlan_2);
     }
@@ -539,23 +390,9 @@ action l4_hdr_transpositions_layer_2(hdr_bits, tenant_id, l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_2) != 0) {
         modify_field(icmp_2.icmp_code, l4_dport);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_2) != 0) {
-        modify_field(icmp_2.icmp_code, l4_dport);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TENANT_ID_2) != 0) {
-        modify_field(vxlan_2.vni, tenant_id);
-    }
 }
 
-action l4_hdr_transpositions_layer_3(hdr_bits, tenant_id, l4_sport, l4_dport) {
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_VXLAN_3) != 0) {
-        add_header(vxlan_3);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_UDP_3) != 0) {
-        add_header(udp_3);
-    }
-
+action l4_hdr_transpositions_layer_3(hdr_bits, l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_POP_VXLAN_3) != 0) {
         remove_header(vxlan_3);
     }
@@ -581,23 +418,24 @@ action l4_hdr_transpositions_layer_3(hdr_bits, tenant_id, l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_3) != 0) {
         modify_field(icmp_3.icmp_code, l4_dport);
     }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_ICMP_CODE_3) != 0) {
-        modify_field(icmp_3.icmp_code, l4_dport);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_TENANT_ID_3) != 0) {
-        modify_field(vxlan_3.vni, tenant_id);
-    }
 }
 
-action l4_hdr_transpositions(hdr_bits, tenant_id, l4_sport, l4_dport) {
-    l4_hdr_transpositions_layer_00(hdr_bits, tenant_id, l4_sport, l4_dport);
-    l4_hdr_transpositions_layer_01(hdr_bits, tenant_id, l4_sport, l4_dport);
-    l4_hdr_transpositions_layer_1(hdr_bits, tenant_id, l4_sport, l4_dport);
-    l4_hdr_transpositions_layer_2(hdr_bits, tenant_id, l4_sport, l4_dport);
-    l4_hdr_transpositions_layer_3(hdr_bits, tenant_id, l4_sport, l4_dport);
+action l4_hdr_transpositions(hdr0_bits, hdr_bits, tenant_id00, tenant_id01,
+                             l4_sport00, l4_dport00, l4_sport01, l4_dport01,
+                             l4_sport1, l4_dport1, l4_sport2, l4_dport2,
+                             l4_sport3, l4_dport3, in_pkts, in_bytes) {
+    l4_hdr_transpositions_layer_00(hdr0_bits, tenant_id00,
+                                   l4_sport00, l4_dport00);
+    l4_hdr_transpositions_layer_01(hdr0_bits, tenant_id01,
+                                   l4_sport01, l4_dport01);
+    l4_hdr_transpositions_layer_1(hdr_bits, l4_sport1, l4_dport1);
+    l4_hdr_transpositions_layer_2(hdr_bits, l4_sport2, l4_dport2);
+    l4_hdr_transpositions_layer_3(hdr_bits, l4_sport3, l4_dport3);
 
+    modify_field(scratch_metadata.hdr_bits, hdr0_bits);
     modify_field(scratch_metadata.hdr_bits, hdr_bits);
+    modify_field(scratch_metadata.num_packets, in_pkts);
+    modify_field(scratch_metadata.num_bytes, in_bytes);
 }
 
 @pragma stage 5

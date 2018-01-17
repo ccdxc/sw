@@ -1,5 +1,5 @@
-action execute_ipolicer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
-                        color_aware, rsvd, axi_wr_pend, burst, rate, tbkt) {
+action execute_rx_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
+                          color_aware, rsvd, axi_wr_pend, burst, rate, tbkt) {
     if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
         drop_packet();
     }
@@ -17,16 +17,16 @@ action execute_ipolicer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
 
 @pragma stage 5
 @pragma policer_table two_color
-table ipolicer {
+table ingress_policer {
     reads {
         flow_action_metadata.policer_index : exact;
     }
     actions {
-        execute_ipolicer;
+        execute_rx_policer;
     }
     size : POLICER_TABLE_SIZE;
 }
 
 control ingress_policer {
-    apply(ipolicer);
+    apply(ingress_policer);
 }

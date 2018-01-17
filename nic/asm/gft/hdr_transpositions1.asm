@@ -8,6 +8,4 @@ struct phv_ p;
 
 %%
 
-hdr_transpositions:
-    nop.e
-    nop
+#include "hdr_transpositions.h"

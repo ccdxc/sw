@@ -369,6 +369,9 @@ table ingress_key4 {
 }
 
 action ingress_vport(vport) {
+    modify_field(capri_p4_intrinsic.packet_len,
+                 capri_p4_intrinsic.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
+
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
 
     // if (capri_register.c1)
