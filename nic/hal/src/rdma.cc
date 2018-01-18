@@ -824,10 +824,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.log_pmtu = log2(spec.pmtu());
     rqcb.rqcb0.cache = FALSE;
     rqcb.rqcb0.immdt_as_dbell = spec.immdt_as_dbell();
-    rqcb.rqcb0.pd = spec.pd();
     rqcb.rqcb0.congestion_mgmt_enable = FALSE;
     // initialize last_ack_nak_psn to a value which is different from ack_nak_psn
     rqcb.rqcb1.last_ack_nak_psn = rqcb.rqcb1.ack_nak_psn - 1;
+    rqcb.rqcb1.pd = spec.pd();
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
     rqcb.rqcb1.header_template_addr = 
                             header_template_addr >> HDR_TEMP_ADDR_SHIFT;

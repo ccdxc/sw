@@ -24,20 +24,20 @@ resp_tx_rqcb1_process:
 
     // check for read_rsp_lock. If already taken, give up scheduling 
     // opportunity
-    seq         c1, d.read_rsp_lock, 1
-    bcf         [c1], drop
-    nop         // BD Slot
+    //seq         c1, d.read_rsp_lock, 1
+    //bcf         [c1], drop
+    //nop         // BD Slot
 
     // take lock
-    tblwr       d.read_rsp_lock, 1
+    //tblwr       d.read_rsp_lock, 1
     
     CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, curr_read_rsp_psn, d.curr_read_rsp_psn)
+    CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, curr_read_rsp_psn, k.args.curr_read_rsp_psn)
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, serv_type, k.args.serv_type)
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, log_pmtu, k.args.log_pmtu)
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, header_template_addr, d.header_template_addr)
     CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, header_template_size, d.header_template_size)
-    CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, read_rsp_in_progress, d.read_rsp_in_progress)
+    CAPRI_SET_FIELD(r4, RSQWQE_INFO_T, read_rsp_in_progress, k.args.read_rsp_in_progress)
 
     // Pass dcqcn_cb_addr to stage 3.
     add         r2, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT

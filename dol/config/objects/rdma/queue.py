@@ -76,7 +76,10 @@ class RdmaRQstate(Packet):
 
         X3BytesField("msn", 0),
 
-        IntField("pd", 0),
+        X3BytesField("curr_read_rsp_psn", 0),
+        BitField("read_rsp_lock", 0, 1),
+        BitField("read_rsp_in_progress", 0, 1),
+        BitField("rsvd", 0, 6),
 
         LEShortField("proxy_cindex", 0),
         LEShortField("spec_cindex", 0),
@@ -87,7 +90,6 @@ class RdmaRQstate(Packet):
         IntField("r_key", 0),
         LongField("wrid", 0),
         X3BytesField("cq_id", 0),
-        X3BytesField("curr_read_rsp_psn", 0),
         X3BytesField("ack_nak_psn", 0),
         ByteField("aeth_syndrome", 0),
         X3BytesField("aeth_msn", 0),
@@ -96,9 +98,8 @@ class RdmaRQstate(Packet):
         X3BytesField("dst_qp", 0),
         LongField("curr_wqe_ptr", 0),
         ByteField("current_sge_id", 0),
-        ByteField("read_rsp_lock", 0),
-        BitField("read_rsp_in_progress", 0, 1),
-        BitField("num_sges", 0, 7),
+        IntField("pd", 0),
+        ByteField("num_sges", 0),
         IntField("current_sge_offset", 0),
         ByteField("p4plus_to_p4_flags", 0),
         ByteField("header_template_size", 0),

@@ -33,7 +33,7 @@
 #define SPEC_RQ_C_INDEX d.{spec_cindex}.hx
 
 #define RSQ_C_INDEX_OFFSET          FIELD_OFFSET(rqcb0_t, ring1.cindex)
-#define RQCB1_READ_RESP_LOCK        FIELD_OFFSET(rqcb1_t, read_rsp_lock)
+#define RQCB0_CURR_READ_RSP_PSN     FIELD_OFFSET(rqcb0_t, curr_read_rsp_psn)
 
 struct rqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
@@ -81,7 +81,10 @@ struct rqcb0_t {
 
     msn:24; 
 
-    pd: 32; 
+    curr_read_rsp_psn: 24;
+    read_rsp_lock: 1;
+    read_rsp_in_progress: 1;
+    rsvd: 6;
 
     proxy_cindex: 16; // place holder for a copy of c_index to avoid
                        // scheduler ringing RQ all the time.
@@ -94,7 +97,6 @@ struct rqcb1_t {
     r_key: 32;
     wrid: 64;
     cq_id: 24;
-    curr_read_rsp_psn: 24;
     ack_nak_psn: 24;
     struct rdma_aeth_t aeth;
     last_ack_nak_psn: 24;
@@ -102,9 +104,8 @@ struct rqcb1_t {
     dst_qp: 24;
     curr_wqe_ptr: 64;
     current_sge_id: 8;
-    read_rsp_lock: 8;
-    read_rsp_in_progress: 1;
-    num_sges: 7;
+    pd: 32; 
+    num_sges: 8;
     current_sge_offset: 32;
     p4plus_to_p4_flags: 8;
     header_template_size: 8;

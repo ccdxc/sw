@@ -22,10 +22,6 @@ add_headers:
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_START)
 
-    // reset all the in_progress variables
-    tblwr       d.read_rsp_in_progress, 0
-    tblwr       d.curr_read_rsp_psn, 0
-    tblwr       d.read_rsp_lock, 0
     CAPRI_SET_TABLE_0_VALID(0)
 
     // adjust the RSQ_C_INDEX to the value provided in adjust_rsq_c_index

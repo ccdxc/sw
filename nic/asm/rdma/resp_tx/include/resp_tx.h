@@ -59,8 +59,11 @@ struct resp_tx_phv_t {
     //ICRC data does not need to be given as zero as Capri overtites icrc after computation
     icrc     :  32;                              //  4B
     rsq_c_index   : 16;                          //  2B
-    read_rsp_lock : 8;                           //  1B
-    rsvd2    : 288;                              // 36B
+    curr_read_rsp_psn: 24;
+    read_rsp_lock: 1;
+    read_rsp_in_progress: 1;
+    rsvd: 6;
+    rsvd2    : 264;                              // 33B
     struct p4plus_to_p4_header_t p4plus_to_p4;   // 18B
 
     /* flit 6 */
@@ -91,7 +94,9 @@ struct resp_tx_rqcb_to_rqcb1_info_t {
     log_pmtu: 5;
     serv_type: 3;
     timer_event_process: 1;
-    pad: 87;
+    curr_read_rsp_psn: 24;
+    read_rsp_in_progress: 1;
+    pad: 62;
 };
 
 struct resp_tx_rqcb1_process_k_t {
