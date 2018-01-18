@@ -1,5 +1,5 @@
 action hdr_transpositions_layer_00(hdr_bits, ethernet_dst, ethernet_src,
-                                   ethernet_type, ctag, stag, ip_src, ip_dst,
+                                   ethernet_type, ctag, ip_src, ip_dst,
                                    ip_dscp, ip_ttl, ip_proto) {
     if ((hdr_bits & TRANSPOSITIONS_PUSH_ETHERNET_00) != 0) {
         add_header(ethernet_00);
@@ -12,6 +12,9 @@ action hdr_transpositions_layer_00(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ipv4_00.srcAddr, ip_src);
         modify_field(ipv4_00.dstAddr, ip_dst);
         modify_field(ipv4_00.diffserv, ip_dscp);
+        modify_field(ipv4_00.totalLen, capri_p4_intrinsic.packet_len +
+                     ((hdr_bits & TRANSPOSITIONS_ENCAP_LEN_MASK_00) >>
+                      TRANSPOSITIONS_ENCAP_LEN_SHIFT_00));
         modify_field(ipv4_00.protocol, ip_proto);
         modify_field(ipv4_00.ttl, ip_ttl);
     }
@@ -20,25 +23,22 @@ action hdr_transpositions_layer_00(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ipv6_00.srcAddr, ip_src);
         modify_field(ipv6_00.dstAddr, ip_dst);
         modify_field(ipv6_00.trafficClass, ip_dscp);
+        modify_field(ipv6_00.payloadLen, capri_p4_intrinsic.packet_len +
+                     ((hdr_bits & TRANSPOSITIONS_ENCAP_LEN_MASK_00) >>
+                      TRANSPOSITIONS_ENCAP_LEN_SHIFT_00));
         modify_field(ipv6_00.nextHdr, ip_proto);
         modify_field(ipv6_00.hopLimit, ip_ttl);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_CTAG_00) != 0) {
-        add_header(ctag_00);
         modify_field(ethernet_00.etherType, ETHERTYPE_CTAG);
+        add_header(ctag_00);
         modify_field(ctag_00.vid, ctag);
         modify_field(ctag_00.etherType, ethernet_type);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_STAG_00) != 0) {
-        add_header(stag_00);
-        modify_field(ethernet_00.etherType, ETHERTYPE_STAG);
-        modify_field(stag_00.etherType, ETHERTYPE_CTAG);
-        modify_field(stag_00.vid, stag);
     }
 }
 
 action hdr_transpositions_layer_01(hdr_bits, ethernet_dst, ethernet_src,
-                                   ethernet_type, ctag, stag, ip_src, ip_dst,
+                                   ethernet_type, ctag, ip_src, ip_dst,
                                    ip_dscp, ip_ttl, ip_proto) {
     if ((hdr_bits & TRANSPOSITIONS_PUSH_ETHERNET_01) != 0) {
         add_header(ethernet_01);
@@ -51,6 +51,9 @@ action hdr_transpositions_layer_01(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ipv4_01.srcAddr, ip_src);
         modify_field(ipv4_01.dstAddr, ip_dst);
         modify_field(ipv4_01.diffserv, ip_dscp);
+        modify_field(ipv4_01.totalLen, capri_p4_intrinsic.packet_len +
+                     ((hdr_bits & TRANSPOSITIONS_ENCAP_LEN_MASK_01) >>
+                      TRANSPOSITIONS_ENCAP_LEN_SHIFT_01));
         modify_field(ipv4_01.protocol, ip_proto);
         modify_field(ipv4_01.ttl, ip_ttl);
     }
@@ -59,37 +62,29 @@ action hdr_transpositions_layer_01(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ipv6_01.srcAddr, ip_src);
         modify_field(ipv6_01.dstAddr, ip_dst);
         modify_field(ipv6_01.trafficClass, ip_dscp);
+        modify_field(ipv6_01.payloadLen, capri_p4_intrinsic.packet_len +
+                     ((hdr_bits & TRANSPOSITIONS_ENCAP_LEN_MASK_01) >>
+                      TRANSPOSITIONS_ENCAP_LEN_SHIFT_01));
         modify_field(ipv6_01.nextHdr, ip_proto);
         modify_field(ipv6_01.hopLimit, ip_ttl);
     }
-
     if ((hdr_bits & TRANSPOSITIONS_PUSH_CTAG_01) != 0) {
-        add_header(ctag_00);
         modify_field(ethernet_01.etherType, ETHERTYPE_CTAG);
+        add_header(ctag_01);
         modify_field(ctag_01.vid, ctag);
         modify_field(ctag_01.etherType, ethernet_type);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_PUSH_STAG_01) != 0) {
-        modify_field(ethernet_01.etherType, ETHERTYPE_STAG);
-        modify_field(stag_01.etherType, ETHERTYPE_CTAG);
-        modify_field(stag_01.vid, stag);
     }
 }
 
 action hdr_transpositions_layer_1(hdr_bits, ethernet_dst, ethernet_src,
-                                  ethernet_type, ctag, stag, ip_src, ip_dst,
+                                  ethernet_type, ctag, ip_src, ip_dst,
                                   ip_dscp, ip_ttl, ip_proto) {
     if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET) != 0) {
         remove_header(ethernet_1);
     }
-#if 0
     if ((hdr_bits & TRANSPOSITIONS_POP_CTAG) != 0) {
         remove_header(ctag_1);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_STAG) != 0) {
-        remove_header(stag_1);
-    }
-#endif
     if ((hdr_bits & TRANSPOSITIONS_POP_IPV4) != 0) {
         remove_header(ipv4_1);
     }
@@ -107,10 +102,10 @@ action hdr_transpositions_layer_1(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ethernet_1.etherType, ethernet_type);
     }
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG) != 0) {
+        modify_field(ethernet_1.etherType, ETHERTYPE_CTAG);
+        add_header(ctag_1);
         modify_field(ctag_1.vid, ctag);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG) != 0) {
-        modify_field(stag_1.vid, stag);
+        modify_field(ctag_1.etherType, ethernet_type);
     }
 
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
@@ -147,19 +142,14 @@ action hdr_transpositions_layer_1(hdr_bits, ethernet_dst, ethernet_src,
 }
 
 action hdr_transpositions_layer_2(hdr_bits, ethernet_dst, ethernet_src,
-                                  ethernet_type, ctag, stag, ip_src, ip_dst,
+                                  ethernet_type, ctag, ip_src, ip_dst,
                                   ip_dscp, ip_ttl, ip_proto) {
     if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET) != 0) {
         remove_header(ethernet_2);
     }
-#if 0
     if ((hdr_bits & TRANSPOSITIONS_POP_CTAG) != 0) {
         remove_header(ctag_2);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_STAG) != 0) {
-        remove_header(stag_2);
-    }
-#endif
     if ((hdr_bits & TRANSPOSITIONS_POP_IPV4) != 0) {
         remove_header(ipv4_2);
     }
@@ -177,10 +167,10 @@ action hdr_transpositions_layer_2(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ethernet_2.etherType, ethernet_type);
     }
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG) != 0) {
+        modify_field(ethernet_2.etherType, ETHERTYPE_CTAG);
+        add_header(ctag_2);
         modify_field(ctag_2.vid, ctag);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG) != 0) {
-        modify_field(stag_2.vid, stag);
+        modify_field(ctag_2.etherType, ethernet_type);
     }
 
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
@@ -217,19 +207,14 @@ action hdr_transpositions_layer_2(hdr_bits, ethernet_dst, ethernet_src,
 }
 
 action hdr_transpositions_layer_3(hdr_bits, ethernet_dst, ethernet_src,
-                                  ethernet_type, ctag, stag, ip_src, ip_dst,
+                                  ethernet_type, ctag, ip_src, ip_dst,
                                   ip_dscp, ip_ttl, ip_proto) {
     if ((hdr_bits & TRANSPOSITIONS_POP_ETHERNET) != 0) {
         remove_header(ethernet_3);
     }
-#if 0
     if ((hdr_bits & TRANSPOSITIONS_POP_CTAG) != 0) {
         remove_header(ctag_3);
     }
-    if ((hdr_bits & TRANSPOSITIONS_POP_STAG) != 0) {
-        remove_header(stag_3);
-    }
-#endif
     if ((hdr_bits & TRANSPOSITIONS_POP_IPV4) != 0) {
         remove_header(ipv4_3);
     }
@@ -247,10 +232,10 @@ action hdr_transpositions_layer_3(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ethernet_3.etherType, ethernet_type);
     }
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_CTAG) != 0) {
+        modify_field(ethernet_3.etherType, ETHERTYPE_CTAG);
+        add_header(ctag_3);
         modify_field(ctag_3.vid, ctag);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_STAG) != 0) {
-        modify_field(stag_3.vid, stag);
+        modify_field(ctag_3.etherType, ethernet_type);
     }
 
     if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
@@ -288,22 +273,22 @@ action hdr_transpositions_layer_3(hdr_bits, ethernet_dst, ethernet_src,
 
 action hdr_transpositions(hdr0_bits, hdr1_bits, hdr2_bits, hdr3_bits,
                           ethernet_dst, ethernet_src, ethernet_type,
-                          ctag, stag, ip_src, ip_dst, ip_dscp, ip_ttl,
+                          ctag, ip_src, ip_dst, ip_dscp, ip_ttl,
                           ip_proto) {
     hdr_transpositions_layer_00(hdr0_bits, ethernet_dst, ethernet_src,
-                                ethernet_type, ctag, stag, ip_src, ip_dst,
+                                ethernet_type, ctag, ip_src, ip_dst,
                                 ip_dscp, ip_ttl, ip_proto);
     hdr_transpositions_layer_01(hdr0_bits, ethernet_dst, ethernet_src,
-                                ethernet_type, ctag, stag, ip_src, ip_dst,
+                                ethernet_type, ctag, ip_src, ip_dst,
                                 ip_dscp, ip_ttl, ip_proto);
     hdr_transpositions_layer_1(hdr1_bits, ethernet_dst, ethernet_src,
-                               ethernet_type, ctag, stag, ip_src, ip_dst,
+                               ethernet_type, ctag, ip_src, ip_dst,
                                ip_dscp, ip_ttl, ip_proto);
     hdr_transpositions_layer_2(hdr2_bits, ethernet_dst, ethernet_src,
-                               ethernet_type, ctag, stag, ip_src, ip_dst,
+                               ethernet_type, ctag, ip_src, ip_dst,
                                ip_dscp, ip_ttl, ip_proto);
     hdr_transpositions_layer_3(hdr3_bits, ethernet_dst, ethernet_src,
-                               ethernet_type, ctag, stag, ip_src, ip_dst,
+                               ethernet_type, ctag, ip_src, ip_dst,
                                ip_dscp, ip_ttl, ip_proto);
 
     modify_field(scratch_metadata.hdr_bits, hdr0_bits);
@@ -312,27 +297,33 @@ action hdr_transpositions(hdr0_bits, hdr1_bits, hdr2_bits, hdr3_bits,
     modify_field(scratch_metadata.hdr_bits, hdr3_bits);
 }
 
-action l4_hdr_transpositions_layer_00(hdr_bits, tenant_id, l4_sport, l4_dport) {
+action l4_hdr_transpositions_layer_00(hdr_bits, encap_len, tenant_id,
+                                      l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_PUSH_VXLAN_00) != 0) {
         add_header(vxlan_00);
+        modify_field(vxlan_00.flags, 0x8);
         modify_field(vxlan_00.vni, tenant_id);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_UDP_00) != 0) {
         add_header(udp_00);
         modify_field(udp_00.srcPort, l4_sport);
         modify_field(udp_00.dstPort, l4_dport);
+        modify_field(udp_00.len, capri_p4_intrinsic.packet_len + encap_len);
     }
 }
 
-action l4_hdr_transpositions_layer_01(hdr_bits, tenant_id, l4_sport, l4_dport) {
+action l4_hdr_transpositions_layer_01(hdr_bits, encap_len, tenant_id,
+                                      l4_sport, l4_dport) {
     if ((hdr_bits & TRANSPOSITIONS_PUSH_VXLAN_01) != 0) {
         add_header(vxlan_01);
+        modify_field(vxlan_01.flags, 0x8);
         modify_field(vxlan_01.vni, tenant_id);
     }
     if ((hdr_bits & TRANSPOSITIONS_PUSH_UDP_01) != 0) {
         add_header(udp_01);
         modify_field(udp_01.srcPort, l4_sport);
         modify_field(udp_01.dstPort, l4_dport);
+        modify_field(udp_01.len, capri_p4_intrinsic.packet_len + encap_len);
     }
 }
 
@@ -420,17 +411,18 @@ action l4_hdr_transpositions_layer_3(hdr_bits, l4_sport, l4_dport) {
     }
 }
 
-action l4_hdr_transpositions(hdr0_bits, hdr_bits, tenant_id00, tenant_id01,
-                             l4_sport00, l4_dport00, l4_sport01, l4_dport01,
-                             l4_sport1, l4_dport1, l4_sport2, l4_dport2,
-                             l4_sport3, l4_dport3, in_pkts, in_bytes) {
-    l4_hdr_transpositions_layer_00(hdr0_bits, tenant_id00,
-                                   l4_sport00, l4_dport00);
-    l4_hdr_transpositions_layer_01(hdr0_bits, tenant_id01,
-                                   l4_sport01, l4_dport01);
-    l4_hdr_transpositions_layer_1(hdr_bits, l4_sport1, l4_dport1);
-    l4_hdr_transpositions_layer_2(hdr_bits, l4_sport2, l4_dport2);
-    l4_hdr_transpositions_layer_3(hdr_bits, l4_sport3, l4_dport3);
+action l4_hdr_transpositions(hdr0_bits, hdr_bits, encap_len_00, encap_len_01,
+                             tenant_id_00, tenant_id_01,
+                             l4_sport_00, l4_dport_00, l4_sport_01, l4_dport_01,
+                             l4_sport_1, l4_dport_1, l4_sport_2, l4_dport_2,
+                             l4_sport_3, l4_dport_3, in_pkts, in_bytes) {
+    l4_hdr_transpositions_layer_00(hdr0_bits, encap_len_00, tenant_id_00,
+                                   l4_sport_00, l4_dport_00);
+    l4_hdr_transpositions_layer_01(hdr0_bits, encap_len_01, tenant_id_01,
+                                   l4_sport_01, l4_dport_01);
+    l4_hdr_transpositions_layer_1(hdr_bits, l4_sport_1, l4_dport_1);
+    l4_hdr_transpositions_layer_2(hdr_bits, l4_sport_2, l4_dport_2);
+    l4_hdr_transpositions_layer_3(hdr_bits, l4_sport_3, l4_dport_3);
 
     modify_field(scratch_metadata.hdr_bits, hdr0_bits);
     modify_field(scratch_metadata.hdr_bits, hdr_bits);

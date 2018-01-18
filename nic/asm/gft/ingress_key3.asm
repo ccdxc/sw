@@ -19,9 +19,6 @@ ingress_key3:
     seq         c1, d.ingress_key3_d.match_fields[MATCH_CUSTOMER_VLAN_ID_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_ctag_3, \
                     k.{ctag_3_vid_sbit0_ebit3,ctag_3_vid_sbit4_ebit11}
-    seq         c1, d.ingress_key3_d.match_fields[MATCH_SERVICE_VLAN_ID_BIT_POS], 1
-    phvwr.c1    p.flow_lkp_metadata_stag_3, \
-                    k.{stag_3_vid_sbit0_ebit3,stag_3_vid_sbit4_ebit11}
     seq         c1, k.ipv4_3_valid, TRUE
     bcf         [c1], ingress_key3_ipv4
     seq         c1, k.ipv6_3_valid, TRUE

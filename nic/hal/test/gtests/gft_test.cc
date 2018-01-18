@@ -94,26 +94,28 @@ static uint8_t g_rcv_pkt2[] = {
     0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0x06, 0x2F, 0x00,
     0x00};
 
-uint64_t g_layer1_dmac  = 0x000102030405ULL;
-uint64_t g_layer1_smac  = 0x00A1A2A3A4A5ULL;
-uint32_t g_layer1_dip   = 0x0A010203;
-uint32_t g_layer1_sip   = 0x0B010203;
-uint8_t  g_layer1_proto = IP_PROTO_UDP;
-uint64_t g_layer2_dmac  = 0x001112131415ULL;
-uint64_t g_layer2_smac  = 0x00B1B2B3B4B5ULL;
-uint32_t g_layer2_dip   = 0x0C010203;
-uint32_t g_layer2_sip   = 0x0D010203;
-uint8_t  g_layer2_proto = IP_PROTO_UDP;
-uint64_t g_layer3_dmac  = 0x002122232425ULL;
-uint64_t g_layer3_smac  = 0x00C1C2C3C4C5ULL;
-uint32_t g_layer3_dip   = 0x0E010203;
-uint32_t g_layer3_sip   = 0x0F010203;
-uint8_t  g_layer3_proto = IP_PROTO_TCP;
+uint64_t g_layer1_dmac   = 0x000102030405ULL;
+uint64_t g_layer1_smac   = 0x00A1A2A3A4A5ULL;
+uint32_t g_layer1_dip    = 0x0A010203;
+uint32_t g_layer1_sip    = 0x0B010203;
+uint8_t  g_layer1_proto  = IP_PROTO_UDP;
+uint64_t g_layer2_dmac   = 0x001112131415ULL;
+uint64_t g_layer2_smac   = 0x00B1B2B3B4B5ULL;
+uint32_t g_layer2_dip    = 0x0C010203;
+uint32_t g_layer2_sip    = 0x0D010203;
+uint8_t  g_layer2_proto  = IP_PROTO_UDP;
+uint64_t g_layer3_dmac   = 0x002122232425ULL;
+uint64_t g_layer3_smac   = 0x00C1C2C3C4C5ULL;
+uint32_t g_layer3_dip    = 0x0E010203;
+uint32_t g_layer3_sip    = 0x0F010203;
+uint8_t  g_layer3_proto  = IP_PROTO_TCP;
 uint16_t g_layer31_sport = 0xABBA;
 uint16_t g_layer31_dport = 0xBEEF;
 uint16_t g_layer32_sport = 0x1234;
 uint16_t g_layer32_dport = 0x5678;
-uint32_t g_ohash_idx    = 0xDEAF;
+uint32_t g_ohash_idx     = 0xDEAF;
+uint32_t g_flow_idx1     = 0xA32;
+uint32_t g_flow_idx2     = 0xA34;
 
 static uint32_t
 generate_hash_(void *key, uint32_t key_len, uint32_t crc_init_val) {
@@ -383,6 +385,14 @@ create_vport_entry() {
 }
 
 static void
+create_transposition1() {
+}
+
+static void
+create_transposition2() {
+}
+
+static void
 create_gft_entry1() {
     gft_hash_swkey_t     key;
     gft_hash_actiondata  data;
@@ -417,7 +427,7 @@ create_gft_entry1() {
 
     // data
     data.gft_hash_action_u.gft_hash_gft_hash_info.entry_valid = 1;
-    data.gft_hash_action_u.gft_hash_gft_hash_info.flow_index = 0xA32;
+    data.gft_hash_action_u.gft_hash_gft_hash_info.flow_index = g_flow_idx1;
 
     // build hardware entry
     p4pd_gft_hwentry_query(P4_GFT_TBL_ID_GFT_HASH, &hwkey_len, NULL,
@@ -547,7 +557,7 @@ create_gft_overflow_entry() {
 
     // data
     data.gft_hash_action_u.gft_hash_gft_hash_info.entry_valid = 1;
-    data.gft_hash_action_u.gft_hash_gft_hash_info.flow_index = 0xA34;
+    data.gft_hash_action_u.gft_hash_gft_hash_info.flow_index = g_flow_idx2;
 
     // build hardware entry
     p4pd_gft_hwentry_query(P4_GFT_TBL_ID_GFT_HASH_OVERFLOW, &hwkey_len, NULL,
@@ -594,6 +604,8 @@ TEST_F(gft_test, test1) {
     ASSERT_NE(ret, -1);
     ingress_key_init();
     create_vport_entry();
+    create_transposition1();
+    create_transposition2();
     create_gft_entry1();
     create_gft_entry2();
     create_gft_overflow_entry();

@@ -5,7 +5,6 @@ header capri_i2e_metadata_t capri_i2e_metadata;
 
 // layer 00
 header ethernet_t ethernet_00;
-header vlan_tag_t stag_00;
 header vlan_tag_t ctag_00;
 @pragma pa_header_union xgress ipv4_00 ipv6_00
 header ipv4_t ipv4_00;
@@ -14,15 +13,12 @@ header ipv6_t ipv6_00;
 header udp_t udp_00;
 header tcp_t tcp_00;
 header icmp_t icmp_00;
-@pragma pa_header_union xgress vxlan_00 nvgre_00
 header vxlan_t vxlan_00;
-header nvgre_t nvgre_00;
 header gre_t gre_00;
 header erspan_header_t3_t erspan_00;
 
 // layer 01
 header ethernet_t ethernet_01;
-header vlan_tag_t stag_01;
 header vlan_tag_t ctag_01;
 @pragma pa_header_union xgress ipv4_01 ipv6_01
 header ipv4_t ipv4_01;
@@ -31,15 +27,12 @@ header ipv6_t ipv6_01;
 header udp_t udp_01;
 header tcp_t tcp_01;
 header icmp_t icmp_01;
-@pragma pa_header_union xgress vxlan_01 nvgre_01
 header vxlan_t vxlan_01;
-header nvgre_t nvgre_01;
 header gre_t gre_01;
 header erspan_header_t3_t erspan_01;
 
 // layer 1
 header ethernet_t ethernet_1;
-header vlan_tag_t stag_1;
 header vlan_tag_t ctag_1;
 @pragma pa_header_union xgress ipv4_1 ipv6_1
 header ipv4_t ipv4_1;
@@ -48,15 +41,12 @@ header ipv6_t ipv6_1;
 header udp_t udp_1;
 header tcp_t tcp_1;
 header icmp_t icmp_1;
-@pragma pa_header_union xgress vxlan_1 nvgre_1
 header vxlan_t vxlan_1;
-header nvgre_t nvgre_1;
 header gre_t gre_1;
 header erspan_header_t3_t erspan_1;
 
 // layer 2
 header ethernet_t ethernet_2;
-header vlan_tag_t stag_2;
 header vlan_tag_t ctag_2;
 @pragma pa_header_union xgress ipv4_2 ipv6_2
 header ipv4_t ipv4_2;
@@ -65,15 +55,12 @@ header ipv6_t ipv6_2;
 header udp_t udp_2;
 header tcp_t tcp_2;
 header icmp_t icmp_2;
-@pragma pa_header_union xgress vxlan_2 nvgre_2
 header vxlan_t vxlan_2;
-header nvgre_t nvgre_2;
 header gre_t gre_2;
 header erspan_header_t3_t erspan_2;
 
 // layer 3
 header ethernet_t ethernet_3;
-header vlan_tag_t stag_3;
 header vlan_tag_t ctag_3;
 //@pragma pa_header_union xgress ipv4_3 ipv6_3
 @pragma pa_field_union ingress ipv4_3.ttl ipv6_3.nextHdr        // keep ordering so parser can combine
@@ -87,9 +74,7 @@ header ipv6_t ipv6_3;
 header udp_t udp_3;
 header tcp_t tcp_3;
 header icmp_t icmp_3;
-@pragma pa_header_union xgress vxlan_3 nvgre_3
 header vxlan_t vxlan_3;
-header nvgre_t nvgre_3;
 header gre_t gre_3;
 header erspan_header_t3_t erspan_3;
 
@@ -111,7 +96,6 @@ parser dummy {
 parser deparse_start {
     // layer 00
     extract(ethernet_00);
-    extract(stag_00);
     extract(ctag_00);
     extract(ipv4_00);
     extract(ipv6_00);
@@ -119,13 +103,11 @@ parser deparse_start {
     extract(tcp_00);
     extract(icmp_00);
     extract(vxlan_00);
-    extract(nvgre_00);
     extract(gre_00);
     extract(erspan_00);
 
     // layer 01
     extract(ethernet_01);
-    extract(stag_01);
     extract(ctag_01);
     extract(ipv4_01);
     extract(ipv6_01);
@@ -133,7 +115,6 @@ parser deparse_start {
     extract(tcp_01);
     extract(icmp_01);
     extract(vxlan_01);
-    extract(nvgre_01);
     extract(gre_01);
     extract(erspan_01);
 
@@ -152,17 +133,11 @@ parser parse_nic {
 parser parse_ethernet_1 {
     extract(ethernet_1);
     return select(latest.etherType) {
-        ETHERTYPE_STAG : parse_stag_1;
         ETHERTYPE_CTAG : parse_ctag_1;
         ETHERTYPE_IPV4 : parse_ipv4_1;
         ETHERTYPE_IPV6 : parse_ipv6_1;
         default: ingress;
     }
-}
-
-parser parse_stag_1 {
-    extract(stag_1);
-    return parse_ctag_1;
 }
 
 parser parse_ctag_1 {
@@ -236,7 +211,6 @@ parser parse_gre_1 {
     extract(gre_1);
     return select(latest.C, latest.R, latest.K, latest.S, latest.s,
                   latest.recurse, latest.flags, latest.ver, latest.proto) {
-        GRE_PROTO_NVGRE : parse_nvgre_1;
         ETHERTYPE_IPV4 : parse_gre_ipv4_1;
         ETHERTYPE_IPV6 : parse_gre_ipv6_1;
         GRE_PROTO_ERSPAN_T3 : parse_erspan_1;
@@ -252,13 +226,6 @@ parser parse_gre_ipv4_1 {
 parser parse_gre_ipv6_1 {
     set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_GRE);
     return parse_ipv6_2;
-}
-
-parser parse_nvgre_1 {
-    extract(nvgre_1);
-    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_NVGRE);
-    set_metadata(tunnel_metadata.tunnel_vni_1, latest.tni);
-    return parse_ethernet_2;
 }
 
 parser parse_erspan_1 {
@@ -279,17 +246,11 @@ parser parse_vxlan_1 {
 parser parse_ethernet_2 {
     extract(ethernet_2);
     return select(latest.etherType) {
-        ETHERTYPE_STAG : parse_stag_2;
         ETHERTYPE_CTAG : parse_ctag_2;
         ETHERTYPE_IPV4 : parse_ipv4_2;
         ETHERTYPE_IPV6 : parse_ipv6_2;
         default: ingress;
     }
-}
-
-parser parse_stag_2 {
-    extract(stag_2);
-    return parse_ctag_2;
 }
 
 parser parse_ctag_2 {
@@ -363,7 +324,6 @@ parser parse_gre_2 {
     extract(gre_2);
     return select(latest.C, latest.R, latest.K, latest.S, latest.s,
                   latest.recurse, latest.flags, latest.ver, latest.proto) {
-        GRE_PROTO_NVGRE : parse_nvgre_2;
         ETHERTYPE_IPV4 : parse_gre_ipv4_2;
         ETHERTYPE_IPV6 : parse_gre_ipv6_2;
         GRE_PROTO_ERSPAN_T3 : parse_erspan_2;
@@ -379,13 +339,6 @@ parser parse_gre_ipv4_2 {
 parser parse_gre_ipv6_2 {
     set_metadata(tunnel_metadata.tunnel_type_2, INGRESS_TUNNEL_TYPE_GRE);
     return parse_ipv6_3;
-}
-
-parser parse_nvgre_2 {
-    extract(nvgre_2);
-    set_metadata(tunnel_metadata.tunnel_type_2, INGRESS_TUNNEL_TYPE_NVGRE);
-    set_metadata(tunnel_metadata.tunnel_vni_2, latest.tni);
-    return parse_ethernet_3;
 }
 
 parser parse_erspan_2 {
@@ -406,17 +359,11 @@ parser parse_vxlan_2 {
 parser parse_ethernet_3 {
     extract(ethernet_3);
     return select(latest.etherType) {
-        ETHERTYPE_STAG : parse_stag_3;
         ETHERTYPE_CTAG : parse_ctag_3;
         ETHERTYPE_IPV4 : parse_ipv4_3;
         ETHERTYPE_IPV6 : parse_ipv6_3;
         default: ingress;
     }
-}
-
-parser parse_stag_3 {
-    extract(stag_3);
-    return parse_ctag_3;
 }
 
 parser parse_ctag_3 {
@@ -491,7 +438,6 @@ parser parse_gre_3 {
     extract(gre_3);
     return select(latest.C, latest.R, latest.K, latest.S, latest.s,
                   latest.recurse, latest.flags, latest.ver, latest.proto) {
-        GRE_PROTO_NVGRE : parse_nvgre_3;
         ETHERTYPE_IPV4 : parse_gre_ipv4_3;
         ETHERTYPE_IPV6 : parse_gre_ipv6_3;
         GRE_PROTO_ERSPAN_T3 : parse_erspan_3;
@@ -507,13 +453,6 @@ parser parse_gre_ipv4_3 {
 parser parse_gre_ipv6_3 {
     set_metadata(tunnel_metadata.tunnel_type_3, INGRESS_TUNNEL_TYPE_GRE);
     return ingress;
-}
-
-parser parse_nvgre_3 {
-    extract(nvgre_3);
-    set_metadata(tunnel_metadata.tunnel_type_3, INGRESS_TUNNEL_TYPE_NVGRE);
-    set_metadata(tunnel_metadata.tunnel_vni_3, latest.tni);
-    return parse_end;
 }
 
 parser parse_erspan_3 {

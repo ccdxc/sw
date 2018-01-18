@@ -13,6 +13,7 @@ action ingress_vport_stats(permit_packets, permit_bytes,
 }
 
 @pragma stage 5
+@pragma table_write
 table ingress_vport_stats {
     reads {
         capri_intrinsic.lif : exact;

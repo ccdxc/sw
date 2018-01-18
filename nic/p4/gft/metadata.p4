@@ -3,8 +3,8 @@ header_type flow_lkp_metadata_t {
         ethernet_dst_1           : 48;
         ethernet_src_1           : 48;
         ethernet_type_1          : 16;
+        pad_1                    : 4;
         ctag_1                   : 12;
-        stag_1                   : 12;
         ip_dscp_1                : 8;
         ip_proto_1               : 8;
         ip_ttl_1                 : 8;
@@ -19,8 +19,8 @@ header_type flow_lkp_metadata_t {
         ethernet_dst_2           : 48;
         ethernet_src_2           : 48;
         ethernet_type_2          : 16;
+        pad_2                    : 4;
         ctag_2                   : 12;
-        stag_2                   : 12;
         ip_dscp_2                : 8;
         ip_proto_2               : 8;
         ip_ttl_2                 : 8;
@@ -35,8 +35,8 @@ header_type flow_lkp_metadata_t {
         ethernet_dst_3           : 48;
         ethernet_src_3           : 48;
         ethernet_type_3          : 16;
+        pad_3                    : 4;
         ctag_3                   : 12;
-        stag_3                   : 12;
         ip_dscp_3                : 8;
         ip_proto_3               : 8;
         ip_ttl_3                 : 8;

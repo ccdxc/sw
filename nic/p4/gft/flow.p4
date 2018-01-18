@@ -44,8 +44,8 @@ table gft_hash {
         flow_lkp_metadata.ethernet_dst_1     : exact;
         flow_lkp_metadata.ethernet_src_1     : exact;
         flow_lkp_metadata.ethernet_type_1    : exact;
+        flow_lkp_metadata.pad_1              : exact;
         flow_lkp_metadata.ctag_1             : exact;
-        flow_lkp_metadata.stag_1             : exact;
         flow_lkp_metadata.ip_src_1           : exact;
         flow_lkp_metadata.ip_dst_1           : exact;
         flow_lkp_metadata.ip_dscp_1          : exact;
@@ -60,8 +60,8 @@ table gft_hash {
         flow_lkp_metadata.ethernet_dst_2     : exact;
         flow_lkp_metadata.ethernet_src_2     : exact;
         flow_lkp_metadata.ethernet_type_2    : exact;
+        flow_lkp_metadata.pad_2              : exact;
         flow_lkp_metadata.ctag_2             : exact;
-        flow_lkp_metadata.stag_2             : exact;
         flow_lkp_metadata.ip_src_2           : exact;
         flow_lkp_metadata.ip_dst_2           : exact;
         flow_lkp_metadata.ip_dscp_2          : exact;
@@ -76,8 +76,8 @@ table gft_hash {
         flow_lkp_metadata.ethernet_dst_3     : exact;
         flow_lkp_metadata.ethernet_src_3     : exact;
         flow_lkp_metadata.ethernet_type_3    : exact;
+        flow_lkp_metadata.pad_3              : exact;
         flow_lkp_metadata.ctag_3             : exact;
-        flow_lkp_metadata.stag_3             : exact;
         flow_lkp_metadata.ip_src_3           : exact;
         flow_lkp_metadata.ip_dst_3           : exact;
         flow_lkp_metadata.ip_dscp_3          : exact;

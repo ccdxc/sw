@@ -12,9 +12,6 @@ action ingress_key1(match_fields) {
     if ((match_fields & MATCH_CUSTOMER_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.ctag_1, ctag_1.vid);
     }
-    if ((match_fields & MATCH_SERVICE_VLAN_ID) != 0) {
-        modify_field(flow_lkp_metadata.stag_1, stag_1.vid);
-    }
 
     if (ipv4_1.valid == TRUE) {
         if ((match_fields & MATCH_IP_SRC) != 0) {
@@ -68,9 +65,6 @@ action ingress_key2(match_fields) {
     if ((match_fields & MATCH_CUSTOMER_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.ctag_2, ctag_2.vid);
     }
-    if ((match_fields & MATCH_SERVICE_VLAN_ID) != 0) {
-        modify_field(flow_lkp_metadata.stag_2, stag_2.vid);
-    }
 
     if (ipv4_2.valid == TRUE) {
         if ((match_fields & MATCH_IP_SRC) != 0) {
@@ -123,9 +117,6 @@ action ingress_key3(match_fields) {
 
     if ((match_fields & MATCH_CUSTOMER_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.ctag_3, ctag_3.vid);
-    }
-    if ((match_fields & MATCH_SERVICE_VLAN_ID) != 0) {
-        modify_field(flow_lkp_metadata.stag_3, stag_3.vid);
     }
 
     if (ipv4_3.valid == TRUE) {
