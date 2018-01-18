@@ -26,9 +26,10 @@ esp_ipv4_tunnel_n2h_txdma_stage0:
 	            j esp_ipv4_tunnel_n2h_txdma2_initial_table
 	            nop
             .brcase 2
+                phvwri p.p4_intr_global_drop, 1
                 nop.e
                 nop
 	.brend
-
+    phvwri p.p4_intr_global_drop, 1
 	nop.e
     nop

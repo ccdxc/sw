@@ -26,9 +26,11 @@ esp_ipv4_tunnel_h2n_txdma_stage0:
 	            j esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table
 	            nop
             .brcase 2
+                phvwri p.p4_intr_global_drop, 1
                 nop.e
                 nop
 	.brend
 
+    phvwri p.p4_intr_global_drop, 1
 	nop.e
     nop
