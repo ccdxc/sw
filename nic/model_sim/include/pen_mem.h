@@ -215,9 +215,8 @@ public:
     virtual bool is_dirty(addr_t addr) {
 	int rc;
 	Word_t tmp = addr>>2;
-	Word_t tmp2 = tmp;
-	J1F(rc, dirty_bits, tmp2);
-	if (rc == 0 && tmp == tmp2) {
+	J1T(rc, dirty_bits, tmp);
+	if (rc == 1) {
 	    return true;
 	} else {
 	    return false;
