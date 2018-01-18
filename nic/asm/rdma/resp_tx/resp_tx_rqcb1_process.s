@@ -55,4 +55,4 @@ exit:
 
 drop:
     phvwr.e   p.common.p4_intr_global_drop, 1
-    nop
+    CAPRI_SET_TABLE_0_VALID(0)  //Exit slot
