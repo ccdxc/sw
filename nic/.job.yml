@@ -1,10 +1,10 @@
 ---
 targets:
   main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make bazel-build && make bazel-gtests && make run-gtests && make clean" ]
-  storage:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --storage" ]
+  storage:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --storage --no_error_check" ]
   # config:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --configtest" ]
-  rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo rdma --feature rdma" ]
-  rdma_ext:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo rdma --feature rdma_ext,rdma_perf" ]
+  rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo rdma --feature rdma --no_error_check" ]
+  rdma_ext:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo rdma --feature rdma_ext,rdma_perf --no_error_check" ]
   fte:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo fte --feature fte" ]
   fte2:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo fte --feature fte2" ]
   ftevxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo fte --feature ftevxlan" ]
@@ -14,7 +14,7 @@ targets:
   acl:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo acl --feature acl" ]
   proxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo proxy --feature proxy" ]
   e2etlsproxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo proxy --feature proxy --config-only --e2e-tls-dol" ]
-  ipsec:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo proxy --feature ipsec" ]
+  ipsec:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo proxy --feature ipsec --no_error_check" ]
   networking:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo up2up --feature networking" ]
   vxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo vxlan --feature vxlan" ]
   ipsg:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo eth --feature ipsg" ]

@@ -562,6 +562,9 @@ def main():
                         help='Modify DOL config testre starting packet tests')
     parser.add_argument('--storage_test', dest='storage_test', default=None,
                         help='Run only a subtest of storage test suite')
+    parser.add_argument('--no_error_check', dest='no_error_check', default=None,
+                        action='store_true',
+                        help='Disable model error checking')
     args = parser.parse_args()
 
     zmq_soc_dir = nic_dir
@@ -628,6 +631,13 @@ def main():
         os.chdir(nic_dir)
         if args.asmcov:
             call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
+
+        if not args.rtl and not args.no_error_check:
+            ec = os.system("grep ERROR model.log")
+            if not ec:
+                print "ERRORs found in model.log"
+                sys.exit(1)
+            print "PASS: No errors found in model.log"
         sys.exit(status)
     else:
         print "- build failed!"

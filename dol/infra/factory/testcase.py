@@ -108,7 +108,7 @@ class TestCasePrivateData:
         return
 
 class TestCase(objects.FrameworkObject):
-    def __init__(self, tcid, root, module):
+    def __init__(self, tcid, root, module, loopid = 0):
         super().__init__()
         self.template = FactoryStore.testobjects.Get('TESTCASE')
         self.Clone(self.template)
@@ -133,10 +133,16 @@ class TestCase(objects.FrameworkObject):
         self.step_id        = 0
         self.pvtdata        = TestCasePrivateData()
         self.coverage       = TestCaseCoverageHelper(self)
-
-        self.logpfx         = "TC%06d:" % self.ID()
+        
+        if GlobalOptions.tcscale:
+            self.logpfx = "TC%06d-%04d:" % (self.ID(), loopid+1)
+        else:
+            self.logpfx = "TC%06d" % self.ID()
         self.__generate()
         return
+
+    def GetRoot(self):
+        return self.__root
 
     def SetDrop(self):
         self.drop = True

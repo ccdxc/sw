@@ -114,8 +114,6 @@ class Module(objects.FrameworkObject):
             else:
                 objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
 
-        if GlobalOptions.tcscale is not None:
-            objs = objs * int(GlobalOptions.tcscale)
         self.testspec.selectors.roots = objs
         self.logger.info("- Selected %d Matching Objects" % len(objs))
         utils.LogFunctionEnd(self.logger)
@@ -264,15 +262,24 @@ class Module(objects.FrameworkObject):
         return False
 
     def __execute(self):
+        matching_tcsets = []
         for root in self.testspec.selectors.roots:
             tcid = TestCaseIdAllocator.get()
             if not self.__is_tcid_filter_match(tcid): continue
-            tc = testcase.TestCase(tcid, root, self)
-            self.__execute_testcase(tc)
-            self.CompletedTestCases.append(tc)
-            if self.tracker and tc.status == defs.status.ERROR:
-                self.abort = True
-                break
+            matching_tcsets.append((tcid,root))
+
+        nloops = 1
+        if GlobalOptions.tcscale:
+            nloops = int(GlobalOptions.tcscale)
+
+        for tcid,root in matching_tcsets:
+            for loopid in range(nloops):
+                looptc = testcase.TestCase(tcid, root, self, loopid)
+                self.__execute_testcase(looptc)
+                self.CompletedTestCases.append(looptc)
+                if self.tracker and looptc.status == defs.status.ERROR:
+                    self.abort = True
+                    break
         return
 
     def __teardown_callback(self):
