@@ -3,9 +3,7 @@
 #ifndef __LINKMGR_PORT_HPP__
 #define __LINKMGR_PORT_HPP__
 
-//#include "nic/include/base.h"
-#include "sdk/lib/catalog/catalog.hpp"
-//#include "nic/gen/proto/hal/port.pb.h"
+#include "sdk/catalog.hpp"
 
 //extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
 //extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
@@ -28,6 +26,7 @@
 }
 #endif
 
+namespace sdk {
 namespace linkmgr {
 
 //extern bool hw_access_mock_mode(void);
@@ -281,5 +280,6 @@ private:
 
 }    // namespace pd
 }    // namespace linkmgr
+}    // namespace sdk
 
 #endif  // __LINKMGR_PORT_HPP__

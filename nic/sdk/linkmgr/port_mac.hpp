@@ -3,6 +3,9 @@
 #ifndef __PORT_MAC_HPP__
 #define __PORT_MAC_HPP__
 
+namespace sdk {
+namespace linkmgr {
+
 // MAC CFG
 int mac_cfg(uint32_t port_num, uint32_t speed, uint32_t num_lanes);
 
@@ -24,6 +27,9 @@ int mac_intr_enable(uint32_t port_num, uint32_t speed,
 
 // mac interrupt clear
 int mac_intr_clear(uint32_t port_num, uint32_t speed, uint32_t num_lanes);
+
+}    // namespace linkmgr
+}    // namespace sdk
 
 #endif  // __PORT_MAC_HPP__
 

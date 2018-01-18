@@ -7,6 +7,9 @@
 #include <atomic>
 #include "port.hpp"
 
+namespace sdk {
+namespace linkmgr {
+
 //---------------------------------------------------------------------------
 // HAPS platform methods
 //---------------------------------------------------------------------------
@@ -67,38 +70,44 @@ serdes_reset_haps (uint32_t sbus_addr, bool reset)
 // default methods
 //---------------------------------------------------------------------------
 
-int serdes_cfg_default(uint32_t sbus_addr)
+int
+serdes_cfg_default (uint32_t sbus_addr)
 {
     return SDK_RET_OK;
 }
 
-bool serdes_signal_detect_default(uint32_t sbus_addr)
+bool
+serdes_signal_detect_default (uint32_t sbus_addr)
 {
     return true;
 }
 
-bool serdes_rdy_default(uint32_t sbus_addr)
+bool
+serdes_rdy_default (uint32_t sbus_addr)
 {
     return true;
 }
 
-int serdes_output_enable_default(uint32_t sbus_addr, bool enable)
+int
+serdes_output_enable_default (uint32_t sbus_addr, bool enable)
 {
     return SDK_RET_OK;
 }
 
-int serdes_tx_rx_enable_default(uint32_t sbus_addr, bool enable)
+int
+serdes_tx_rx_enable_default (uint32_t sbus_addr, bool enable)
 {
     return SDK_RET_OK;
 }
 
-int serdes_reset_default(uint32_t sbus_addr, bool reset)
+int
+serdes_reset_default (uint32_t sbus_addr, bool reset)
 {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-linkmgr::pd::port::port_serdes_fn_init()
+linkmgr::pd::port::port_serdes_fn_init(void)
 {
     linkmgr::pd::serdes_fn_t *serdes_fn = &linkmgr::pd::port::serdes_fn;
     sdk::lib::platform_type_t platform_type = linkmgr::platform_type();
@@ -127,3 +136,5 @@ linkmgr::pd::port::port_serdes_fn_init()
     return SDK_RET_OK;
 }
 
+}    // namespace linkmgr
+}    // namespace sdk

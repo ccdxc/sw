@@ -7,8 +7,8 @@
 #include <atomic>
 #include "sdk/twheel.hpp"
 #include "sdk/thread.hpp"
-#include "sdk/linkmgr/port_mac.hpp"
-#include "sdk/linkmgr/port.hpp"
+#include "port_mac.hpp"
+#include "port.hpp"
 
 namespace linkmgr {
 

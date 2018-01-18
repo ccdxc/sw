@@ -8,12 +8,18 @@
 #include "port.hpp"
 #include "port_mac.hpp"
 
-// ---------------------------------------------------------------------------
-// HAPS platform methods
-// ---------------------------------------------------------------------------
+// TODO: Avinash, please add static to all methods that are local to this file
 
-int mac_temac_regrd_haps (uint32_t chip, uint32_t port_num,
-                          uint64_t offset, uint32_t *data)
+namespace sdk {
+namespace linkmgr {
+
+//---------------------------------------------------------------------------
+// HAPS platform methods
+//---------------------------------------------------------------------------
+
+int
+mac_temac_regrd_haps (uint32_t chip, uint32_t port_num,
+                      uint64_t offset, uint32_t *data)
 {
     uint64_t addr = 0x0;
 
@@ -28,8 +34,9 @@ int mac_temac_regrd_haps (uint32_t chip, uint32_t port_num,
     return 0;
 }
 
-int mac_temac_regwr_haps (uint32_t chip, uint32_t port_num,
-                          uint64_t offset, uint32_t data)
+int
+mac_temac_regwr_haps (uint32_t chip, uint32_t port_num,
+                      uint64_t offset, uint32_t data)
 {
     uint64_t addr = 0x0;
 
@@ -44,11 +51,13 @@ int mac_temac_regwr_haps (uint32_t chip, uint32_t port_num,
     return 0;
 }
 
-int mac_temac_regrd_words_haps(uint32_t chip, uint32_t port_num,
-                               uint32_t offset, uint32_t size,
-                               uint32_t *data)
+int
+mac_temac_regrd_words_haps (uint32_t chip, uint32_t port_num,
+                            uint32_t offset, uint32_t size,
+                            uint32_t *data)
 {
     uint32_t i = 0;
+
     for (i = 0; i < size; ++i) {
         mac_temac_regrd_haps(chip, port_num, offset + (i * 0x4), &data[i]);
     }
@@ -56,8 +65,9 @@ int mac_temac_regrd_words_haps(uint32_t chip, uint32_t port_num,
     return 0;
 }
 
-int mac_temac_mdio_rd_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
-                           uint64_t addr, uint32_t *data)
+int
+mac_temac_mdio_rd_haps (uint32_t chip, uint32_t port_num, uint32_t phy_addr,
+                        uint64_t addr, uint32_t *data)
 {
     uint32_t reg_data = 0x0;
     uint32_t mdio_ready = 0x0;
@@ -82,8 +92,9 @@ int mac_temac_mdio_rd_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
     return 0;
 }
 
-int mac_temac_mdio_wr_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
-                           uint64_t addr, uint32_t data)
+int
+mac_temac_mdio_wr_haps (uint32_t chip, uint32_t port_num, uint32_t phy_addr,
+                        uint64_t addr, uint32_t data)
 {
     uint32_t reg_data = 0x0;
     uint32_t mdio_ready = 0x0;
@@ -110,13 +121,15 @@ int mac_temac_mdio_wr_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
     return 0;
 }
 
-int mac_sgmii_regwr_haps (uint32_t chip, uint32_t port_num,
-                          uint64_t addr, uint32_t data)
+int
+mac_sgmii_regwr_haps (uint32_t chip, uint32_t port_num,
+                      uint64_t addr, uint32_t data)
 {
     return mac_temac_mdio_wr_haps (chip, 1, 4 + port_num, addr, data);
 }
 
-int mac_sgmii_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
+int
+mac_sgmii_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
 {
     uint64_t addr = 0x0;
     uint32_t data = 0x0;
@@ -135,7 +148,8 @@ int mac_sgmii_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
     return 0;
 }
 
-int mac_temac_reset_haps(uint32_t chip, uint32_t port_num, bool reset)
+int
+mac_temac_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
 {
     uint64_t addr = 0x0;
     uint32_t data = 0x0;
@@ -154,7 +168,8 @@ int mac_temac_reset_haps(uint32_t chip, uint32_t port_num, bool reset)
     return 0;
 }
 
-int mac_datapath_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
+int
+mac_datapath_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
 {
     uint64_t addr = 0x0;
     uint32_t data = 0x0;
@@ -173,19 +188,22 @@ int mac_datapath_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
     return 0;
 }
 
-int mac_cfg_haps (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+int
+mac_cfg_haps (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
     return 0x0;
 }
 
-int mac_enable_haps (uint32_t port_num, uint32_t speed,
-                     uint32_t num_lanes, bool enable)
+int
+mac_enable_haps (uint32_t port_num, uint32_t speed,
+                 uint32_t num_lanes, bool enable)
 {
     return 0;
 }
 
-int mac_soft_reset_haps (uint32_t port_num, uint32_t speed,
-                         uint32_t num_lanes, bool reset)
+int
+mac_soft_reset_haps (uint32_t port_num, uint32_t speed,
+                     uint32_t num_lanes, bool reset)
 {
     // MAC driver interfaces are agnostic of instance since the
     // asic-lib handles only interms of mac port numbers.
@@ -233,24 +251,28 @@ int mac_soft_reset_haps (uint32_t port_num, uint32_t speed,
     return 0;
 }
 
-int mac_stats_reset_haps (uint32_t port_num, uint32_t speed,
-                          uint32_t num_lanes, bool reset)
+int
+mac_stats_reset_haps (uint32_t port_num, uint32_t speed,
+                      uint32_t num_lanes, bool reset)
 {
     return 0;
 }
 
-int mac_intr_clear_haps (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+int
+mac_intr_clear_haps (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
     return 0;
 }
 
-int mac_intr_enable_haps (uint32_t port_num, uint32_t speed,
-                          uint32_t num_lanes, bool enable)
+int
+mac_intr_enable_haps (uint32_t port_num, uint32_t speed,
+                      uint32_t num_lanes, bool enable)
 {
     return 0;
 }
 
-int mac_temac_stats_rd(uint32_t port_num, uint32_t size)
+int
+mac_temac_stats_rd (uint32_t port_num, uint32_t size)
 {
     int i = 0;
     uint32_t data[1];
@@ -391,9 +413,9 @@ int mac_temac_stats_rd(uint32_t port_num, uint32_t size)
     return 0;
 }
 
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // SIM platform methods
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 hal_ret_t
 asic_port_cfg (uint32_t port_num,
@@ -410,13 +432,15 @@ asic_port_cfg (uint32_t port_num,
     return HAL_RET_OK;
 }
 
-int mac_cfg_sim (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+int
+mac_cfg_sim (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
     return asic_port_cfg(port_num, speed, BUFF_TYPE_MAC_CFG, num_lanes, 0);
 }
 
-int mac_enable_sim (uint32_t port_num, uint32_t speed,
-                    uint32_t num_lanes, bool enable)
+int
+mac_enable_sim (uint32_t port_num, uint32_t speed,
+                uint32_t num_lanes, bool enable)
 {
     if(enable == false) {
         return asic_port_cfg(port_num, speed, BUFF_TYPE_MAC_EN,
@@ -426,8 +450,9 @@ int mac_enable_sim (uint32_t port_num, uint32_t speed,
     return asic_port_cfg(port_num, speed, BUFF_TYPE_MAC_EN, num_lanes, 1);
 }
 
-int mac_soft_reset_sim (uint32_t port_num, uint32_t speed,
-                        uint32_t num_lanes, bool reset)
+int
+mac_soft_reset_sim (uint32_t port_num, uint32_t speed,
+                    uint32_t num_lanes, bool reset)
 {
     if(reset == false) {
         return asic_port_cfg(port_num, speed, BUFF_TYPE_MAC_SOFT_RESET,
@@ -438,10 +463,11 @@ int mac_soft_reset_sim (uint32_t port_num, uint32_t speed,
             num_lanes, 1);
 }
 
-int mac_stats_reset_sim (uint32_t port_num, uint32_t speed,
-                         uint32_t num_lanes, bool reset)
+int
+mac_stats_reset_sim (uint32_t port_num, uint32_t speed,
+                     uint32_t num_lanes, bool reset)
 {
-    if(reset == false) {
+    if (reset == false) {
         return asic_port_cfg(
                 port_num, speed, BUFF_TYPE_MAC_STATS_RESET, num_lanes, 0);
     }
@@ -450,14 +476,16 @@ int mac_stats_reset_sim (uint32_t port_num, uint32_t speed,
             num_lanes, 1);
 }
 
-int mac_intr_clear_sim (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+int
+mac_intr_clear_sim (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
     return asic_port_cfg(port_num, speed, BUFF_TYPE_MAC_INTR_CLR,
             num_lanes, 0);
 }
 
-int mac_intr_enable_sim (uint32_t port_num, uint32_t speed,
-                         uint32_t num_lanes, bool enable)
+int
+mac_intr_enable_sim (uint32_t port_num, uint32_t speed,
+                     uint32_t num_lanes, bool enable)
 {
     if(enable == false) {
         return asic_port_cfg(port_num, speed, BUFF_TYPE_MAC_INTR_EN,
@@ -468,51 +496,58 @@ int mac_intr_enable_sim (uint32_t port_num, uint32_t speed,
             num_lanes, 1);
 }
 
-// ---------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Default methods
-// ---------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
-int mac_cfg_default (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+int
+mac_cfg_default (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
     return 0;
 }
 
-int mac_enable_default (uint32_t port_num, uint32_t speed,
-                        uint32_t num_lanes, bool enable)
+int
+mac_enable_default (uint32_t port_num, uint32_t speed,
+                    uint32_t num_lanes, bool enable)
 {
     return 0;
 }
 
-int mac_soft_reset_default (uint32_t port_num, uint32_t speed,
-                            uint32_t num_lanes, bool reset)
+int
+mac_soft_reset_default (uint32_t port_num, uint32_t speed,
+                        uint32_t num_lanes, bool reset)
 {
     return 0;
 }
 
-int mac_stats_reset_default (uint32_t port_num, uint32_t speed,
-                             uint32_t num_lanes, bool reset)
+int
+mac_stats_reset_default (uint32_t port_num, uint32_t speed,
+                         uint32_t num_lanes, bool reset)
 {
     return 0;
 }
 
-int mac_intr_clear_default (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+int
+mac_intr_clear_default (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
     return 0;
 }
 
-int mac_intr_enable_default (uint32_t port_num, uint32_t speed,
-                             uint32_t num_lanes, bool enable)
+int
+mac_intr_enable_default (uint32_t port_num, uint32_t speed,
+                         uint32_t num_lanes, bool enable)
 {
     return 0;
 }
 
-bool mac_faults_get_default (uint32_t port_num)
+bool
+mac_faults_get_default (uint32_t port_num)
 {
     return false;
 }
 
 hal_ret_t
-linkmgr::pd::port::port_mac_fn_init()
+linkmgr::pd::port::port_mac_fn_init(void)
 {
     linkmgr::pd::mac_fn_t *mac_fn = &linkmgr::pd::port::mac_fn;
     sdk::lib::platform_type_t platform_type = linkmgr::platform_type();
@@ -548,3 +583,5 @@ linkmgr::pd::port::port_mac_fn_init()
     return HAL_RET_OK;
 }
 
+}    // namespace linkmgr
+}    // namespace sdk

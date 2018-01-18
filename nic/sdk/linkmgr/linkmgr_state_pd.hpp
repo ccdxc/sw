@@ -6,6 +6,7 @@
 
 using sdk::lib::slab;
 
+namespace sdk {
 namespace linkmgr {
 namespace pd {
 
@@ -26,6 +27,7 @@ extern linkmgr_state_pd *g_linkmgr_state_pd;
 
 }    // namespace pd
 }    // namespace linkmgr
+}    // namespace sdk
 
 #endif    // __LINKMGR_STATE_PD_HPP__
 
