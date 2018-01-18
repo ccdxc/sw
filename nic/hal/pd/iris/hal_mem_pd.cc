@@ -1417,7 +1417,7 @@ pd_slab_delay_delete_cb (hal_slab_t slab_id, void *elem)
     } else if (slab_id < HAL_SLAB_PD_MAX) {
         ret = hal::pd::free_to_slab(slab_id, elem);
     } else {
-        HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
+        HAL_TRACE_ERR("{}: Unexpected slab id {}", __FUNCTION__, slab_id);
         ret = HAL_RET_INVALID_ARG;
     }
     if (ret != HAL_RET_OK) {

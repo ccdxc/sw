@@ -172,8 +172,9 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 
 VAL_CMD = valgrind --xml=yes 
 VAL_CMD_OPTS = $(CMD_OPTS) $(VAL_CMD)
-VAL_TR = $(TOPDIR_ABS)/gen/valgrind/test_results
-VAL_INFO = $(TOPDIR_ABS)/gen/valgrind/info
+VALGRIND_DIR= $(TOPDIR_ABS)/gen/valgrind
+VAL_TR = $(VALGRIND_DIR)/test_results
+VAL_INFO = $(VALGRIND_DIR)/info
 run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	# PI gtests
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/uplinkif_val.xml ./nic/hal/test/gtests/uplinkif_test --gtest_output="xml:$(VAL_TR)/uplinkif_test.xml"
@@ -218,6 +219,7 @@ hal-rtl: sdk
 
 clean:
 	bazel clean
+	rm -rf $(VALGRIND_DIR)
 	rm -rf $(GEN_TEST_RESULTS_DIR)
 	rm -rf conf/hal.ini
 	$(MAKE) -C p4 clean

@@ -674,7 +674,7 @@ slab_delay_delete_cb (hal_slab_t slab_id, void *elem)
                           elem, slab_id);
         }
     } else {
-        HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
+        HAL_TRACE_ERR("{}: Unexpected slab id {}", __FUNCTION__, slab_id);
     }
     return;
 }
