@@ -467,7 +467,7 @@ func Teardown(m *testing.M) {
 	// stop the CMD smartnic RPC server
 	tInfo.rpcServer.Stop()
 
-	// stop the apiServer
+	// close the apiClient
 	tInfo.apiClient.Close()
 
 	// stop the apiServer

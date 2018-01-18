@@ -21,4 +21,6 @@ import (
 	_ "github.com/pensando/sw/api/generated/networkencryption/gateway"
 	// blank import to pull in telemetry service into api gateway
 	_ "github.com/pensando/sw/api/generated/telemetry/gateway"
+	// blank import to pull in x509 service into api gateway
+	_ "github.com/pensando/sw/api/generated/x509/gateway"
 )

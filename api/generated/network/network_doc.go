@@ -40,6 +40,8 @@ The following Messages are defined.
   SgpolicyList
   SgpolicySpec
   SgpolicyStatus
+  TLSClientPolicySpec
+  TLSServerPolicySpec
   Tenant
   TenantList
   TenantSpec

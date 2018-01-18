@@ -817,19 +817,21 @@
           },
           {
             "name": "Spec.Type",
-            "description": "list of workloads that are backends of this service (load balancer).",
+            "description": "A map containing the certificate to use for a set of destinations.\nThe key is a selector for workloads that exist either inside or\noutside the cluster. It can be based on labels, hostnames or \"IP:port\" pairs.\nThe value is the name of the certificate to use for the selected destinations.\nThe certificates \"usage\" field must contain \"client\".\nTODO: replace the first \"string\" type with proper selector type when available.\nA single \"default\" certificate which matches all destinations is allowed.\nIf a destination matches multiple non-default map keys, an error is returned.\nIf a destination does not match any map key (and there is no default),\nthe outbound connection is initiated without TLS.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.Algorithm",
+            "description": "The list of root certificates used to validate a trust chain presented by a server.\nIf the list is empty, all roots certificates in the tenant scope are considered.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.SessionAffinity",
+            "description": "Valid DNS names or IP addresses that must appear in the server certificate\nSubjAltName or Common Name (if SAN is not specified). If not specified,\nclient validates the IP address of the server.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -871,6 +873,7 @@
           },
           {
             "name": "Status.Services",
+            "description": "FIXME: maps are not working. change this after its fixed\nmap\u003cstring, string\u003e WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = \"workload-labels,omitempty\"];\nworkload selector for the service (list of labels to match).",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1138,31 +1141,35 @@
           },
           {
             "name": "Spec.Type",
-            "description": "list of service objects refering this lb-policy.",
+            "description": "Health check interval.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.IPv4Subnet",
+            "description": "# of probes per interval.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.IPv4Gateway",
+            "description": "probe URL.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.IPv6Subnet",
+            "description": "timeout for declaring backend down.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.IPv6Gateway",
+            "description": "# of successful probes before we declare the backend back up.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1183,6 +1190,7 @@
           },
           {
             "name": "Status.Workloads",
+            "description": "load balancing type.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1192,6 +1200,7 @@
           },
           {
             "name": "Status.AllocatedIPv4Addrs",
+            "description": "load balancing algorithm.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1457,6 +1466,7 @@
           },
           {
             "name": "Spec.WorkloadSelector",
+            "description": "endpoint UUID.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1466,6 +1476,7 @@
           },
           {
             "name": "Spec.ServiceSelector",
+            "description": "VM or container UUID.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1475,6 +1486,7 @@
           },
           {
             "name": "Spec.MatchPrefixes",
+            "description": "VM or container name.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1784,6 +1796,57 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "Spec.TLSServerPolicy.Certificates",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.TLSServerPolicy.ClientAuthentication",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.TLSServerPolicy.TrustRoots",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.TLSServerPolicy.AllowedPeerId",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.TLSClientPolicy.TrustRoots",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.TLSClientPolicy.AllowedPeerId",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "Status.Workloads",
@@ -2480,40 +2543,42 @@
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "title": "workload selector for the service (list of labels to match)"
+          "description": "List of names of certificates to present to clients.\nThe certificates \"usage\" field must contain \"server\".\nIf multiple certificates names are provided, system tries to choose the\ncorrect one using SNI, otherwise it picks the first one in the list."
         },
         "ListMeta": {
           "$ref": "#/definitions/apiListMeta",
-          "title": "Virtual IP of the load balancer"
+          "description": "Client authentication\n\"None\" means that server does not request and will not validate a client certificate.\n\"Mandatory\" means that server requests and validates client certificate.\n\"Optional\" means that server requests client certificate but proceeds even\nif client does not present it.\nDefault is \"Mandatory\"."
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkLbPolicy"
           },
-          "title": "load balancer port"
+          "description": "The list of root certificates used to validate a trust chain presented by client.\nIf the list is empty, all roots certificates in the tenant scope are considered."
         }
       },
-      "title": "spec part of service object(load balancer)"
+      "description": "The Service TLS configuration for inbound connections.\nIt is used on all ports specified in the Service spec.\nMultiple Service objects can select the same workload and provide different\nserver TLS configurations for disjoint sets of ports."
     },
     "networkLbPolicySpec": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string",
-          "title": "list of workloads that are backends of this service (load balancer)"
+          "description": "A map containing the certificate to use for a set of destinations.\nThe key is a selector for workloads that exist either inside or\noutside the cluster. It can be based on labels, hostnames or \"IP:port\" pairs.\nThe value is the name of the certificate to use for the selected destinations.\nThe certificates \"usage\" field must contain \"client\".\nTODO: replace the first \"string\" type with proper selector type when available.\nA single \"default\" certificate which matches all destinations is allowed.\nIf a destination matches multiple non-default map keys, an error is returned.\nIf a destination does not match any map key (and there is no default),\nthe outbound connection is initiated without TLS."
         },
         "Algorithm": {
-          "type": "string"
+          "type": "string",
+          "description": "The list of root certificates used to validate a trust chain presented by a server.\nIf the list is empty, all roots certificates in the tenant scope are considered."
         },
         "SessionAffinity": {
-          "type": "string"
+          "type": "string",
+          "description": "Valid DNS names or IP addresses that must appear in the server certificate\nSubjAltName or Common Name (if SAN is not specified). If not specified,\nclient validates the IP address of the server."
         },
         "HealthCheck": {
           "$ref": "#/definitions/networkHealthCheckSpec"
         }
       },
-      "title": "status part of service object"
+      "description": "Service TLS configuration for connections initiated by the workload towards\ndestinations inside or outside the cluster."
     },
     "networkLbPolicyStatus": {
       "type": "object",
@@ -2522,70 +2587,72 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "FIXME: maps are not working. change this after its fixed\nmap\u003cstring, string\u003e WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = \"workload-labels,omitempty\"];\nworkload selector for the service (list of labels to match)"
         }
       },
-      "title": "Service represents a L4 load balancer"
+      "title": "spec part of service object"
     },
     "networkNetwork": {
       "type": "object",
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "title": "Health check interval"
+          "title": "list of workloads that are backends of this service"
         },
         "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "# of probes per interval"
+          "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/networkNetworkSpec",
-          "title": "probe URL"
+          "$ref": "#/definitions/networkNetworkSpec"
         },
         "Status": {
-          "$ref": "#/definitions/networkNetworkStatus",
-          "title": "timeout for declaring backend down"
+          "$ref": "#/definitions/networkNetworkStatus"
         }
-      }
+      },
+      "title": "status part of service object"
     },
     "networkNetworkList": {
       "type": "object",
       "properties": {
         "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "load balancing type"
+          "$ref": "#/definitions/apiTypeMeta"
         },
         "ListMeta": {
-          "$ref": "#/definitions/apiListMeta",
-          "title": "load balancing algorithm"
+          "$ref": "#/definitions/apiListMeta"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkNetwork"
           },
-          "title": "session affinity"
+          "description": "Spec contains the configuration of the Service."
         }
-      }
+      },
+      "title": "Service represents a group of identical endpoints, such as servers in an app tier"
     },
     "networkNetworkSpec": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string",
-          "title": "list of service objects refering this lb-policy"
+          "title": "Health check interval"
         },
         "IPv4Subnet": {
-          "type": "string"
+          "type": "string",
+          "title": "# of probes per interval"
         },
         "IPv4Gateway": {
-          "type": "string"
+          "type": "string",
+          "title": "probe URL"
         },
         "IPv6Subnet": {
-          "type": "string"
+          "type": "string",
+          "title": "timeout for declaring backend down"
         },
         "IPv6Gateway": {
-          "type": "string"
+          "type": "string",
+          "title": "# of successful probes before we declare the backend back up"
         },
         "VlanID": {
           "type": "integer",
@@ -2604,20 +2671,22 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "load balancing type"
         },
         "AllocatedIPv4Addrs": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "load balancing algorithm"
         }
-      },
-      "title": "LbPolicy represents a load balancer policy"
+      }
     },
     "networkSGRule": {
       "type": "object",
       "properties": {
         "Ports": {
-          "type": "string"
+          "type": "string",
+          "title": "list of service objects refering this lb-policy"
         },
         "Action": {
           "type": "string"
@@ -2637,30 +2706,27 @@
         "AppUserGrp": {
           "type": "string"
         }
-      },
-      "title": "spec part of Endpoint object"
+      }
     },
     "networkSecurityGroup": {
       "type": "object",
       "properties": {
         "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "endpoint UUID"
+          "$ref": "#/definitions/apiTypeMeta"
         },
         "O": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "VM or container UUID"
+          "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
           "$ref": "#/definitions/networkSecurityGroupSpec",
-          "title": "VM or container name"
+          "description": "Spec contains the configuration of the LbPolicy."
         },
         "Status": {
           "$ref": "#/definitions/networkSecurityGroupStatus",
-          "title": "network this endpoint belogs to"
+          "description": "Status contains the current state of the LbPolicy."
         }
       },
-      "title": "status part of Endpoint object"
+      "title": "LbPolicy represents a load balancer policy"
     },
     "networkSecurityGroupList": {
       "type": "object",
@@ -2675,11 +2741,10 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkSecurityGroup"
-          },
-          "description": "Spec contains the configuration of the Endpoint."
+          }
         }
       },
-      "title": "Endpoint represents a network endpoint"
+      "title": "spec part of Endpoint object"
     },
     "networkSecurityGroupSpec": {
       "type": "object",
@@ -2688,21 +2753,25 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "endpoint UUID"
         },
         "ServiceSelector": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "VM or container UUID"
         },
         "MatchPrefixes": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "VM or container name"
         }
-      }
+      },
+      "title": "status part of Endpoint object"
     },
     "networkSecurityGroupStatus": {
       "type": "object",
@@ -2719,7 +2788,8 @@
             "type": "string"
           }
         }
-      }
+      },
+      "title": "Endpoint represents a network endpoint"
     },
     "networkService": {
       "type": "object",
@@ -2772,6 +2842,12 @@
         },
         "LBPolicy": {
           "type": "string"
+        },
+        "TLSServerPolicy": {
+          "$ref": "#/definitions/networkTLSServerPolicySpec"
+        },
+        "TLSClientPolicy": {
+          "$ref": "#/definitions/networkTLSClientPolicySpec"
         }
       }
     },
@@ -2847,6 +2923,55 @@
       "type": "object",
       "properties": {
         "Workloads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "networkTLSClientPolicySpec": {
+      "type": "object",
+      "properties": {
+        "CertificatesSelector": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "TrustRoots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "AllowedPeerId": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "networkTLSServerPolicySpec": {
+      "type": "object",
+      "properties": {
+        "Certificates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ClientAuthentication": {
+          "type": "string"
+        },
+        "TrustRoots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "AllowedPeerId": {
           "type": "array",
           "items": {
             "type": "string"

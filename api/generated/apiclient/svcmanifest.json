@@ -151,5 +151,18 @@
     "Files": [
       "protos/telemetry.proto"
     ]
+  },
+  "x509": {
+    "Svcs": {
+      "CertificateV1": {
+        "Version": "v1",
+        "Messages": [
+          "Certificate"
+        ]
+      }
+    },
+    "Files": [
+      "protos/x509.proto"
+    ]
   }
 }

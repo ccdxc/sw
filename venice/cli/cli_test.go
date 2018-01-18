@@ -797,11 +797,11 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create service --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --lb-policy --ports --virtual-ip --workload-labels {service}") {
+	if !strings.Contains(out, "--label --dry-run --file --client-authentication --lb-policy --ports --tls-client-allowed-peer-id --tls-client-certificates-selector --tls-client-trust-roots --tls-server-allowed-peer-id --tls-server-certificates --tls-server-trust-roots --virtual-ip --workload-labels {service}") {
 		t.Fatalf("service command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update service --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --lb-policy --ports --virtual-ip --workload-labels uService122") {
+	if !strings.Contains(out, "--label --dry-run --file --client-authentication --lb-policy --ports --tls-client-allowed-peer-id --tls-client-certificates-selector --tls-client-trust-roots --tls-server-allowed-peer-id --tls-server-certificates --tls-server-trust-roots --virtual-ip --workload-labels uService122") {
 		t.Fatalf("service command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("delete service --gbc")

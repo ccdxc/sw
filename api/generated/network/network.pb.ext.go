@@ -12,12 +12,17 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
 // Dummy definitions to suppress nonused warnings
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+var _ validators.DummyVar
+var funcMapNetwork = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Endpoint) MakeKey(prefix string) string {
@@ -435,6 +440,24 @@ func (m *SgpolicyStatus) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *TLSClientPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*TLSClientPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *TLSServerPolicySpec) Clone(into interface{}) error {
+	out, ok := into.(*TLSServerPolicySpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *Tenant) Clone(into interface{}) error {
 	out, ok := into.(*Tenant)
 	if !ok {
@@ -490,6 +513,9 @@ func (m *AutoMsgSecurityGroupWatchHelper) Validate(ver string, ignoreStatus bool
 }
 
 func (m *AutoMsgServiceWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -574,14 +600,25 @@ func (m *SecurityGroupStatus) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *Service) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *ServiceList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
 func (m *ServiceSpec) Validate(ver string, ignoreStatus bool) bool {
+	if m.TLSServerPolicy != nil && !m.TLSServerPolicy.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -605,6 +642,27 @@ func (m *SgpolicyStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *TLSClientPolicySpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TLSServerPolicySpec) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapNetwork["TLSServerPolicySpec"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapNetwork["TLSServerPolicySpec"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (m *Tenant) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
@@ -619,4 +677,19 @@ func (m *TenantSpec) Validate(ver string, ignoreStatus bool) bool {
 
 func (m *TenantStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
+}
+
+func init() {
+	funcMapNetwork = make(map[string]map[string][]func(interface{}) bool)
+
+	funcMapNetwork["TLSServerPolicySpec"] = make(map[string][]func(interface{}) bool)
+	funcMapNetwork["TLSServerPolicySpec"]["all"] = append(funcMapNetwork["TLSServerPolicySpec"]["all"], func(i interface{}) bool {
+		m := i.(*TLSServerPolicySpec)
+
+		if _, ok := TLSServerPolicySpec_ClientAuthTypes_value[m.ClientAuthentication]; !ok {
+			return false
+		}
+		return true
+	})
+
 }

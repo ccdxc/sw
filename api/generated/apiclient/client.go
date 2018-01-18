@@ -19,6 +19,8 @@ import (
 	networkencryptionClient "github.com/pensando/sw/api/generated/networkencryption/grpc/client"
 	telemetry "github.com/pensando/sw/api/generated/telemetry"
 	telemetryClient "github.com/pensando/sw/api/generated/telemetry/grpc/client"
+	x509 "github.com/pensando/sw/api/generated/x509"
+	x509Client "github.com/pensando/sw/api/generated/x509/grpc/client"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -57,6 +59,8 @@ type Services interface {
 	FwlogPolicyV1() telemetry.FwlogPolicyV1Interface
 	// Package is telemetry and len of messages is 1
 	StatsPolicyV1() telemetry.StatsPolicyV1Interface
+	// Package is x509 and len of messages is 1
+	CertificateV1() x509.CertificateV1Interface
 }
 
 type apiGrpcServerClient struct {
@@ -79,6 +83,7 @@ type apiGrpcServerClient struct {
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
 	aFwlogPolicyV1             telemetry.FwlogPolicyV1Interface
 	aStatsPolicyV1             telemetry.StatsPolicyV1Interface
+	aCertificateV1             x509.CertificateV1Interface
 }
 
 // Close closes the client
@@ -146,6 +151,10 @@ func (a *apiGrpcServerClient) StatsPolicyV1() telemetry.StatsPolicyV1Interface {
 	return a.aStatsPolicyV1
 }
 
+func (a *apiGrpcServerClient) CertificateV1() x509.CertificateV1Interface {
+	return a.aCertificateV1
+}
+
 // NewGrpcAPIClient returns a gRPC client
 func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Services, error) {
 	client, err := rpckit.NewRPCClient("ApiClient", url, opts...)
@@ -173,6 +182,7 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Ser
 		aTrafficEncryptionPolicyV1: networkencryptionClient.NewGrpcCrudClientTrafficEncryptionPolicyV1(client.ClientConn, logger),
 		aFwlogPolicyV1:             telemetryClient.NewGrpcCrudClientFwlogPolicyV1(client.ClientConn, logger),
 		aStatsPolicyV1:             telemetryClient.NewGrpcCrudClientStatsPolicyV1(client.ClientConn, logger),
+		aCertificateV1:             x509Client.NewGrpcCrudClientCertificateV1(client.ClientConn, logger),
 	}, nil
 }
 
@@ -194,6 +204,7 @@ type apiRestServerClient struct {
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
 	aFwlogPolicyV1             telemetry.FwlogPolicyV1Interface
 	aStatsPolicyV1             telemetry.StatsPolicyV1Interface
+	aCertificateV1             x509.CertificateV1Interface
 }
 
 // Close closes the client
@@ -261,6 +272,10 @@ func (a *apiRestServerClient) StatsPolicyV1() telemetry.StatsPolicyV1Interface {
 	return a.aStatsPolicyV1
 }
 
+func (a *apiRestServerClient) CertificateV1() x509.CertificateV1Interface {
+	return a.aCertificateV1
+}
+
 // NewRestAPIClient returns a REST client
 func NewRestAPIClient(url string) (Services, error) {
 	return &apiRestServerClient{
@@ -281,5 +296,6 @@ func NewRestAPIClient(url string) (Services, error) {
 		aTrafficEncryptionPolicyV1: networkencryptionClient.NewRestCrudClientTrafficEncryptionPolicyV1(url),
 		aFwlogPolicyV1:             telemetryClient.NewRestCrudClientFwlogPolicyV1(url),
 		aStatsPolicyV1:             telemetryClient.NewRestCrudClientStatsPolicyV1(url),
+		aCertificateV1:             x509Client.NewRestCrudClientCertificateV1(url),
 	}, nil
 }

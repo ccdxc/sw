@@ -1098,11 +1098,39 @@ var CreateSecurityGroupFlags = []cli.Flag{
 var CreateServiceFlags = []cli.Flag{
 
 	cli.StringFlag{
+		Name: "client-authentication",
+	},
+
+	cli.StringFlag{
 		Name: "lb-policy",
 	},
 
 	cli.StringFlag{
 		Name: "ports",
+	},
+
+	cli.StringSliceFlag{
+		Name: "tls-client-allowed-peer-id",
+	},
+
+	cli.StringFlag{
+		Name: "tls-client-certificates-selector",
+	},
+
+	cli.StringSliceFlag{
+		Name: "tls-client-trust-roots",
+	},
+
+	cli.StringSliceFlag{
+		Name: "tls-server-allowed-peer-id",
+	},
+
+	cli.StringSliceFlag{
+		Name: "tls-server-certificates",
+	},
+
+	cli.StringSliceFlag{
+		Name: "tls-server-trust-roots",
 	},
 
 	cli.StringFlag{

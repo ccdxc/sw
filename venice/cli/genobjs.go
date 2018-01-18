@@ -91,6 +91,14 @@ func getSubObj(kind string) interface{} {
 		var v cmd.ConditionStatus
 		return v
 
+	case "TLSServerPolicySpec":
+		var v network.TLSServerPolicySpec
+		return v
+
+	case "TLSClientPolicySpec":
+		var v network.TLSClientPolicySpec
+		return v
+
 	case "SGRule":
 		var v network.SGRule
 		return v
@@ -660,6 +668,26 @@ func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FIn
 	newConditionStatus := new.(cmd.ConditionStatus)
 
 	return &newConditionStatus
+}
+
+func writeTLSServerPolicySpecObj(obj network.TLSServerPolicySpec, specKvs map[string]ref.FInfo) *network.TLSServerPolicySpec {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newTLSServerPolicySpec := new.(network.TLSServerPolicySpec)
+
+	return &newTLSServerPolicySpec
+}
+
+func writeTLSClientPolicySpecObj(obj network.TLSClientPolicySpec, specKvs map[string]ref.FInfo) *network.TLSClientPolicySpec {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newTLSClientPolicySpec := new.(network.TLSClientPolicySpec)
+
+	return &newTLSClientPolicySpec
 }
 
 func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.SGRule {

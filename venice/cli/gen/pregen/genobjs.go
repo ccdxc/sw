@@ -81,6 +81,14 @@ func GetSubObj(kind string) interface{} {
 		var v cmd.ConditionStatus
 		return &v
 
+	case "TLSServerPolicySpec":
+		var v network.TLSServerPolicySpec
+		return &v
+
+	case "TLSClientPolicySpec":
+		var v network.TLSClientPolicySpec
+		return &v
+
 	case "SGRule":
 		var v network.SGRule
 		return &v

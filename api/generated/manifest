@@ -7,3 +7,4 @@ example.proto bookstore
 network.proto network
 networkencryption.proto networkencryption
 telemetry.proto telemetry
+x509.proto x509

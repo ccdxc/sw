@@ -763,8 +763,10 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			}
 			return into, nil
 		}),
-		"network.SgpolicySpec":   apisrvpkg.NewMessage("network.SgpolicySpec"),
-		"network.SgpolicyStatus": apisrvpkg.NewMessage("network.SgpolicyStatus"),
+		"network.SgpolicySpec":        apisrvpkg.NewMessage("network.SgpolicySpec"),
+		"network.SgpolicyStatus":      apisrvpkg.NewMessage("network.SgpolicyStatus"),
+		"network.TLSClientPolicySpec": apisrvpkg.NewMessage("network.TLSClientPolicySpec"),
+		"network.TLSServerPolicySpec": apisrvpkg.NewMessage("network.TLSServerPolicySpec"),
 		"network.Tenant": apisrvpkg.NewMessage("network.Tenant").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := network.Tenant{}

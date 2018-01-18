@@ -1949,6 +1949,74 @@ func DecodeGrpcRespSgpolicyStatus(ctx context.Context, response interface{}) (in
 	return response, nil
 }
 
+func encodeHTTPTLSClientPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTLSClientPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TLSClientPolicySpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTLSClientPolicySpec encodes GRPC request
+func EncodeGrpcReqTLSClientPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TLSClientPolicySpec)
+	return req, nil
+}
+
+// DecodeGrpcReqTLSClientPolicySpec decodes GRPC request
+func DecodeGrpcReqTLSClientPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TLSClientPolicySpec)
+	return req, nil
+}
+
+// EncodeGrpcRespTLSClientPolicySpec encodes GRC response
+func EncodeGrpcRespTLSClientPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTLSClientPolicySpec decodes GRPC response
+func DecodeGrpcRespTLSClientPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTLSServerPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTLSServerPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TLSServerPolicySpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTLSServerPolicySpec encodes GRPC request
+func EncodeGrpcReqTLSServerPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TLSServerPolicySpec)
+	return req, nil
+}
+
+// DecodeGrpcReqTLSServerPolicySpec decodes GRPC request
+func DecodeGrpcReqTLSServerPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TLSServerPolicySpec)
+	return req, nil
+}
+
+// EncodeGrpcRespTLSServerPolicySpec encodes GRC response
+func EncodeGrpcRespTLSServerPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTLSServerPolicySpec decodes GRPC response
+func DecodeGrpcRespTLSServerPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPTenant(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
