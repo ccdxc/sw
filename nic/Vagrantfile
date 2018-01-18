@@ -79,6 +79,7 @@ yum install -y python-setuptools python-enum34 swig openssl-devel libpcap-devel
 yum install -y cscope 
 yum install -y ctags
 yum install -y softhsm libtool-ltdl-devel
+yum install -y nfs-utils nfs-utils-lib
 
 # install golang
 ln -s /usr/share/pkgconfig /usr/lib/pkgconfig

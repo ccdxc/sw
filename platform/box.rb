@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.8"
+from "registry.test.pensando.io:5000/pensando/nic:1.9"
 
 PACKAGES = %w[
   patch readline-devel

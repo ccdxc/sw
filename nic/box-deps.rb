@@ -13,6 +13,7 @@ run "yum -y install softhsm libtool-ltdl-devel"
 run "ln -s /usr/bin/python3.6 /usr/bin/python3"
 run "ln -s /usr/bin/pip3.6 /usr/bin/pip3"
 run "yum install -y epel-release"
+run "yum install -y nfs-utils nfs-utils-lib"
 
 PIP2_PACKAGES = %w[
   ply==3.9
@@ -252,7 +253,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.8"
+tag "pensando/nic:1.9"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
