@@ -49,6 +49,8 @@ typedef struct lif_queue_info_s {
     uint8_t     type;        // hardware queue type of queue
     uint16_t    size;        // size of qstate
     uint16_t    num_queues;  // number of queues
+    hal_handle_t cosA_handle; // Handle for cosA qos class
+    hal_handle_t cosB_handle; // Handle for cosB qos class
 } __PACK__ lif_queue_info_t;
 
 // LIF structure

@@ -104,6 +104,18 @@ public:
         return valid_.mirror_info;
     }
 
+    hal_ret_t set_qos_info(const qos_info_t& qos_info) {
+        qos_info_ = qos_info;
+        valid_.qos_info = true;
+        return HAL_RET_OK;
+    }
+    const qos_info_t& qos_info() const {
+        return qos_info_;
+    } 
+    bool valid_qos_info() const {
+        return valid_.qos_info;
+    }
+
 
 
 private:
@@ -121,6 +133,7 @@ private:
         uint8_t mcast_info:1;
         uint8_t ingress_info:1;
         uint8_t mirror_info:1;
+        uint8_t qos_info:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
@@ -130,6 +143,7 @@ private:
     mcast_info_t              mcast_info_;          // Mulitcast Enable
     ingress_info_t            ingress_info_;        // Ingress info (src if check)
     mirror_info_t             mirror_info_;         // Mirror info
+    qos_info_t                qos_info_;            // Qos Info
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];

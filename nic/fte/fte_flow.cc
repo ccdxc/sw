@@ -418,6 +418,11 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
         }
     }
 
+    if (valid_.qos_info) {
+        attrs.qos_class_en = qos_info_.qos_class_en;
+        attrs.qos_class_id = qos_info_.qos_class_id;
+    }
+
     if (valid_.fwding) {
         attrs.lport = fwding_.lport;
         attrs.qid_en =  fwding_.qid_en;

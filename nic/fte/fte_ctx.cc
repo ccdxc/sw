@@ -449,7 +449,8 @@ ctx_t::update_flow_table()
         HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
-                        "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={}",
+                        "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={} "
+                        "qos_class_en={} qos_class_id={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_cfg.action,
                         iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -457,7 +458,8 @@ ctx_t::update_flow_table()
                         iflow_attrs.rw_act, iflow_attrs.rw_idx, iflow_attrs.tnnl_rw_act,
                         iflow_attrs.tnnl_rw_idx, iflow_attrs.tnnl_vnid, iflow_cfg.nat_sip,
                         iflow_cfg.nat_dip, iflow_cfg.nat_sport, iflow_cfg.nat_dport,
-                        iflow_cfg.nat_type, iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif);
+                        iflow_cfg.nat_type, iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif,
+                        iflow_attrs.qos_class_en, iflow_attrs.qos_class_id);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && stage <= rstage_; stage++) {
@@ -499,7 +501,8 @@ ctx_t::update_flow_table()
         HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
-                        "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={}",
+                        "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={} "
+                        "qos_class_en={} qos_class_id={}",
                         stage, rflow_cfg.key, rflow_attrs.lkp_inst, rflow_cfg.action,
                         rflow_attrs.mac_sa_rewrite,
                         rflow_attrs.mac_da_rewrite, rflow_attrs.ttl_dec, rflow_attrs.mcast_en,
@@ -507,7 +510,8 @@ ctx_t::update_flow_table()
                         rflow_attrs.rw_act, rflow_attrs.rw_idx, rflow_attrs.tnnl_rw_act,
                         rflow_attrs.tnnl_rw_idx, rflow_attrs.tnnl_vnid, rflow_cfg.nat_sip,
                         rflow_cfg.nat_dip, rflow_cfg.nat_sport, rflow_cfg.nat_dport,
-                        rflow_cfg.nat_type, rflow_attrs.expected_src_lif_en, rflow_attrs.expected_src_lif);
+                        rflow_cfg.nat_type, rflow_attrs.expected_src_lif_en, rflow_attrs.expected_src_lif,
+                        rflow_attrs.qos_class_en, rflow_attrs.qos_class_id);
     }
 
     session_args.vrf         = vrf_;
@@ -849,6 +853,11 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         ret = flow->merge_mirror_info(flowupd.mirror_info);
         LOG_FLOW_UPDATE(mirror_info);
         break;
+
+    case FLOWUPD_QOS_INFO:
+        ret = flow->set_qos_info(flowupd.qos_info);
+        LOG_FLOW_UPDATE(qos_info);
+        break;
     }
 
 
@@ -907,12 +916,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         }
     }
 
-    // TODO Fixme
-    if (cpu_rxhdr_->src_tm_iq >= 23) {
-        pkt_info->cpu_header.tm_oq = 0;
-    } else {
-        pkt_info->cpu_header.tm_oq = cpu_rxhdr_->src_tm_iq;
-    }
+    pkt_info->cpu_header.tm_oq = cpu_rxhdr_->src_tm_iq;
     
     if (p4plus_header) {
         pkt_info->p4plus_header = *p4plus_header;
@@ -1052,6 +1056,34 @@ ctx_t::swap_flow_objs()
     dl2seg_ = dl2seg;
 }
 
+bool
+ctx_t::is_proxy_enabled()
+{
+    flow_t **flow = (role_ == hal::FLOW_ROLE_INITIATOR) ? iflow_ : rflow_;
+
+    // For proxy flow we need to be either in stage 1 or
+    // in stage 0 with forwarding info set by the proxy.
+    if (stage() == 0 && flow[stage()]->valid_fwding() == false) {
+        return false;
+    }
+    return true;
+}
+
+bool
+ctx_t::is_proxy_flow()
+{
+    flow_t **flow = (role_ == hal::FLOW_ROLE_INITIATOR) ? iflow_ : rflow_;
+
+    if (!is_proxy_enabled()) {
+        return false;
+    }
+
+    // In the case of pkts from uplink, stage 0 flow is proxy flow and
+    // in the case of pkts from host, stage 1 flow is the proxy flow
+    return (flow[stage()]->key().dir == FLOW_DIR_FROM_UPLINK) ?  
+                                stage() == 0 : stage() != 0;
+}
+
 std::ostream& operator<<(std::ostream& os, const mpls_label_t& val)
 {
     os << "{label=" << val.label;
@@ -1185,6 +1217,15 @@ std::ostream& operator<<(std::ostream& os, const fwding_info_t& val)
 std::ostream& operator<<(std::ostream& os, const ingress_info_t& val)
 {
     os << "{expected_sif=" << val.expected_sif->if_id;
+    return os << "}";
+}
+
+std::ostream& operator<<(std::ostream& os, const qos_info_t& val)
+{
+    os << "{qos_class_en=" << (bool)val.qos_class_en;
+    if (val.qos_class_en) {
+        os << " ,qos_class_id=" << val.qos_class_id;
+    }
     return os << "}";
 }
 

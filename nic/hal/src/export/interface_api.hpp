@@ -13,12 +13,14 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/src/qos.hpp"
 
 namespace hal {
 
 using hal::lif_t;
 using hal::if_t;
 using hal::l2seg_t;
+using hal::qos_class_t;
 
 // LIF APIs
 uint32_t lif_get_lif_id(lif_t *pi_lif);
@@ -28,6 +30,8 @@ void *lif_get_pd_lif(lif_t *pi_lif);
 bool lif_get_enable_rdma(lif_t *pi_lif);
 void lif_set_enable_rdma(lif_t *pi_lif, bool enable_rdma);
 uint32_t lif_get_total_qcount (uint32_t hw_lif_id);
+qos_class_t *lif_get_rx_qos_class(lif_t *pi_lif);
+qos_class_t *lif_get_tx_qos_class(lif_t *pi_lif);
 
 // Interface APIs
 intf::IfType intf_get_if_type(if_t *pi_if);

@@ -166,6 +166,12 @@ class SessionObject(base.ConfigObjectBase):
     def Get(self):
         halapi.GetSessions([self])
 
+    def GetIflow(self):
+        return self.iflow
+
+    def GetRflow(self):
+        return self.rflow
+
     def IsTCP(self):
         return self.initiator.IsTCP()
     def IsUDP(self):

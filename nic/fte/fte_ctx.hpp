@@ -25,6 +25,7 @@ namespace fte {
     ENTRY(FLOWUPD_MCAST_COPY,    7, "flow mcast copy update")           \
     ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")                     \
     ENTRY(FLOWUPD_MIRROR_INFO,   9, "mirror info")                      \
+    ENTRY(FLOWUPD_QOS_INFO,      10, "qos info")                        \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -266,6 +267,13 @@ typedef struct mirror_info_s {
 
 std::ostream& operator<<(std::ostream& os, const mirror_info_t& val);
 
+typedef struct qos_info_s {
+    bool qos_class_en;
+    uint32_t qos_class_id;
+} qos_info_t;
+
+std::ostream& operator<<(std::ostream& os, const qos_info_t& val);
+
 typedef struct flow_update_s {
     flow_update_type_t type;
     union {
@@ -276,6 +284,7 @@ typedef struct flow_update_s {
         flow_state_t flow_state;
         fwding_info_t fwding;
         ingress_info_t ingress_info;
+        qos_info_t qos_info;
         hal::flow_key_t key;
         mcast_info_t mcast_info;
         mirror_info_t mirror_info;
@@ -499,6 +508,8 @@ public:
     bool hal_cleanup() const { return cleanup_hal_; }
     void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
     void swap_flow_objs();
+    bool is_proxy_enabled();
+    bool is_proxy_flow();
 
     void *feature_state(const std::string &name = "") {
         uint16_t id = name.length() ? feature_id(name) : feature_id_;

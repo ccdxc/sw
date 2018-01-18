@@ -79,13 +79,16 @@ packets:
                 dst     : ref://testcase/config/src/endpoint/macaddr
             qtag:
                 vlan    : ref://testcase/config/dst/segment/vlan_id
+                prio    : callback://tcpcb/tcpcb/GetOpposingFlowTxCos
             ipv4:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip
+                tos     : callback://tcpcb/tcpcb/GetOpposingFlowTxDscp
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip
+                tc      : callback://tcpcb/tcpcb/GetOpposingFlowTxDscp
                 hlim    : 64
             tcp:
                 sport   : ref://testcase/config/flow/dport

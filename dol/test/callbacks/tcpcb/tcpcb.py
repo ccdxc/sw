@@ -104,3 +104,13 @@ def GetQuiesceSrcMac(tc, pkt):
 
 def GetQuiesceDstMac(tc, pkt):
     return MacAddressBase(integer=(0x00eeff000005))
+
+def GetOpposingFlowTxCos(tc, pkt):
+    flow = tc.config.flow
+    oflow = flow.GetOpposingFlow()
+    return oflow.txqos.cos
+
+def GetOpposingFlowTxDscp(tc, pkt):
+    flow = tc.config.flow
+    oflow = flow.GetOpposingFlow()
+    return oflow.txqos.dscp

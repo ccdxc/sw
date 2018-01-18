@@ -45,6 +45,28 @@ lif_get_pd_lif(lif_t *pi_lif)
 }
 
 //----------------------------------------------------------------------------
+// LIF API: Get Tx qos class
+//----------------------------------------------------------------------------
+qos_class_t *
+lif_get_tx_qos_class(lif_t *pi_lif)
+{
+    hal_handle_t qos_class_handle;
+    qos_class_handle = pi_lif->qinfo[intf::LIF_QUEUE_PURPOSE_TX].cosA_handle;
+    return find_qos_class_by_handle(qos_class_handle);
+}
+
+//----------------------------------------------------------------------------
+// LIF API: Get Rx qos class
+//----------------------------------------------------------------------------
+qos_class_t *
+lif_get_rx_qos_class(lif_t *pi_lif)
+{
+    hal_handle_t qos_class_handle;
+    qos_class_handle = pi_lif->qinfo[intf::LIF_QUEUE_PURPOSE_RX].cosA_handle;
+    return find_qos_class_by_handle(qos_class_handle);
+}
+
+//----------------------------------------------------------------------------
 // IF API: Get If Type
 //----------------------------------------------------------------------------
 intf::IfType

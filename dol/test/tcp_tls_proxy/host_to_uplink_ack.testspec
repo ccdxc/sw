@@ -57,7 +57,11 @@ packets:
         headers     :
             qtag:
                 vlan    : ref://testcase/config/dst/segment/vlan_id
+                prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
+                tos     : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                tc      : ref://testcase/config/flow/txqos/dscp
             tcp:
                 seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum

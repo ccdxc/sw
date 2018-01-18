@@ -125,6 +125,8 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
 
     for (int i = 0; i < spec.lif_qstate_map_size(); i++) {
         const auto &ent = spec.lif_qstate_map(i);
+        cosA_class = NULL;
+        cosB_class = NULL;
         if (ent.type_num() >= kNumQTypes) {
             HAL_TRACE_ERR("Invalid type num in LifSpec : {}", ent.type_num());
             return HAL_RET_INVALID_ARG;
@@ -184,6 +186,10 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
         lif->qinfo[ent.purpose()].type = ent.type_num();
         lif->qinfo[ent.purpose()].size = (uint16_t)pow(2, ent.size());
         lif->qinfo[ent.purpose()].num_queues = (uint16_t)pow(2, ent.entries());
+        lif->qinfo[ent.purpose()].cosA_handle = 
+            cosA_class ? cosA_class->hal_handle : HAL_HANDLE_INVALID;
+        lif->qinfo[ent.purpose()].cosB_handle = 
+            cosB_class ? cosB_class->hal_handle : HAL_HANDLE_INVALID;
     }
 
     // make sure that when you are creating with hw_lif_id the lif is alloced

@@ -336,9 +336,9 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     }
     d.flow_info_action_u.flow_info_flow_info.twice_nat_idx = flow_attrs->twice_nat_idx;
 
-    // TODO Setup these params
-    d.flow_info_action_u.flow_info_flow_info.qos_class_en = 0;
-    d.flow_info_action_u.flow_info_flow_info.qos_class_id = 0;
+    // QOS Info
+    d.flow_info_action_u.flow_info_flow_info.qos_class_en = flow_attrs->qos_class_en;
+    d.flow_info_action_u.flow_info_flow_info.qos_class_id = flow_attrs->qos_class_id;
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;

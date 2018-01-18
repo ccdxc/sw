@@ -19,7 +19,7 @@ uplink:
 
 uplinkpc: None
 acls: None
-qos : False
+qos : True
 tenants:
     -   spec    : ref://store/specs/id=TENANT_INFRA_PROXY
         count   : 1

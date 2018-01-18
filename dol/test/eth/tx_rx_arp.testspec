@@ -48,7 +48,6 @@ packets:
         headers     :
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: ref://testcase/config/flow/txqos/cos
 
 buffers:
     - buffer:

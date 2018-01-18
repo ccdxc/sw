@@ -335,6 +335,12 @@ class FlowObject(base.ConfigObjectBase):
     def GetSession(self):
         return self.__session
 
+    def GetOpposingFlow(self):
+        if self.IsIflow():
+            return self.__session.GetRflow()
+        else:
+            return self.__session.GetIflow()
+
     def GetIngressMirrorSession(self, idx = 0):
         if idx > len(self.ing_mirror_sessions):
             return None

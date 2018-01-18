@@ -167,6 +167,7 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  qid:24;              // Qid
     uint64_t                  lkp_inst:1;          // Flow instance
     uint64_t                  expected_src_lif_en:1;  // src lif check for host pinning
+    uint64_t                  qos_class_en: 1;        // Qos class enable
 
     uint32_t                  vrf_hwid;         // source l2seg vrf hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action
@@ -179,6 +180,7 @@ typedef struct flow_pgm_attrs_s {
     uint32_t                  twice_nat_idx;       // Twice nat index
     uint16_t                  mcast_ptr;           // Mcast Pointer
     uint32_t                  expected_src_lif;    // src lif for host pinning check
+    uint32_t                  qos_class_id;        // Qos class id
 } __PACK__ flow_pgm_attrs_t;
 
 // flow state

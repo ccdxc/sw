@@ -237,8 +237,20 @@ find_qos_class_by_group (qos_group_t qos_group)
 static inline qos_class_t *
 find_qos_class_by_handle (hal_handle_t handle)
 {
-    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
-               HAL_OBJ_ID_QOS_CLASS);
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_ERR("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_QOS_CLASS) {
+        HAL_TRACE_ERR("{}:failed to find qos_class with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
     return (qos_class_t *)hal_handle_get_obj(handle);
 }
 

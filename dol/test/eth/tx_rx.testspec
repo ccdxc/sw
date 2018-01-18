@@ -65,11 +65,6 @@ packets:
         headers     :
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: ref://testcase/config/flow/txqos/cos
-            ipv4:
-                tos : ref://testcase/config/flow/txqos/dscp
-            ipv6:
-                tc  : ref://testcase/config/flow/txqos/dscp
             tcp:
                 flags: ack
 
