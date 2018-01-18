@@ -69,6 +69,8 @@ resp_rx_rqwqe_process:
 
     add         REM_PYLD_BYTES, r0, k.args.remaining_payload_bytes
    
+    CAPRI_RESET_TABLE_0_AND_1_ARG(resp_rx_phv_t)
+
     // first_pass = TRUE
     setcf       F_FIRST_PASS, [c0]
 loop:
@@ -82,7 +84,7 @@ loop:
     slt         c2, r6, REM_PYLD_BYTES
     cmov        r6, c2, r6, REM_PYLD_BYTES
 
-    CAPRI_GET_TABLE_0_OR_1_ARG(resp_rx_phv_t, r7, F_FIRST_PASS)
+    CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(resp_rx_phv_t, r7, F_FIRST_PASS)
     // r2 <- sge_p->va
     CAPRI_TABLE_GET_FIELD(r2, SGE_P, SGE_T, va)
 
@@ -135,10 +137,8 @@ loop:
 
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
 
-    CAPRI_GET_TABLE_0_OR_1_K(resp_rx_phv_t, r7, F_FIRST_PASS)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, r6)
-    CAPRI_SET_TABLE_0_VALID_C(F_FIRST_PASS, 1)
-    CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
+    CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(resp_rx_phv_t, r2, F_FIRST_PASS)
+    CAPRI_NEXT_TABLE_I_READ_PC(r2, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, r6)
 
     // are remaining_payload_bytes 0 ?
     seq         c5, REM_PYLD_BYTES, 0
@@ -157,8 +157,9 @@ loop:
     
 exit:
 
-    //Get the arg pointer one more time as we couldn't keep r7 intact
-    CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(resp_rx_phv_t, r7, F_FIRST_PASS)
+    CAPRI_SET_TABLE_0_VALID(1)
+    CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
+
     // set dma_cmdeop for the last table (could be T0 or T1)
     CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, dma_cmdeop, 1, c5)
 
@@ -259,14 +260,10 @@ recirc:
     CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, remaining_payload_bytes, REM_PYLD_BYTES)
     
     // set recirc
-    phvwr   p.common.p4_intr_recirc, 1
-    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING
-    nop.e
-    nop
+    phvwr.e p.common.p4_intr_recirc, 1
+    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING //Exit Slot
 
 nak:
     //TODO: generate nak. for now, drop
-    phvwr   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_ALL_TABLES_VALID(0) 
-    nop.e
-    nop
+    phvwr.e   p.common.p4_intr_global_drop, 1
+    CAPRI_SET_ALL_TABLES_VALID(0)  //Exit Slot

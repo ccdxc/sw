@@ -165,9 +165,11 @@ struct resp_rx_rqcb_to_pt_info_t {
     in_progress: 1;
     page_seg_offset: 3;
     tbl_id: 3;
-    cache: 1;
     page_offset: 16;
+    //field packing begin
+    cache: 1;
     remaining_payload_bytes: 16;
+    //field packing end
     pad: 120;
 };
 
@@ -182,9 +184,11 @@ struct resp_rx_rqpt_process_k_t {
 struct resp_rx_rqcb_to_wqe_info_t {
     //rqcb1
     in_progress:1;
+    //field packing begin
     cache:1;
-    current_sge_id: 6;
     remaining_payload_bytes: 16;
+    //field packing end
+    current_sge_id: 6;
     //rqcb2
     curr_wqe_ptr: 64;
     current_sge_offset: 32;
