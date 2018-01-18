@@ -34,6 +34,16 @@ entries:
             port : const/19695
 
     - entry:
+        label: raw-redir-span-flow-miss
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/19696
+        initiator: 
+            port : const/19697
+
+    - entry:
         label: raw-redir-known-appid
         tracking: False
         timestamp: False

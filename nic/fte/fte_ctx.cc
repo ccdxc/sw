@@ -211,6 +211,23 @@ ctx_t::get_key(hal::flow_role_t role)
 }
 
 //------------------------------------------------------------------------------
+// Returns flow key of the specified flow
+//------------------------------------------------------------------------------
+bool
+ctx_t::get_proxy_mirror_flow(hal::flow_role_t role)
+{
+    flow_t *flow = NULL;
+
+    if (role == hal::FLOW_ROLE_INITIATOR) {
+        flow = iflow_[istage_];
+    } else {
+        flow = rflow_[rstage_];
+    }
+
+    return flow ? flow->mirror_info().proxy_mirror : false;
+}
+
+//------------------------------------------------------------------------------
 // Lookup existing session for the flow
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -686,9 +703,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     pkt_ = pkt;
     pkt_len_ = pkt_len;
 
-    if ((cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) ||
-        ((cpu_rxhdr->lif == hal::SERVICE_LIF_APP_REDIR) &&
-         (cpu_rxhdr->qtype != APP_REDIR_PROXYR_QTYPE))) {
+    if ((cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) || app_redir_pkt_rx_raw(*this)) {
         ret = init_flows(iflow, rflow);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
@@ -831,7 +846,7 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         break;
 
     case FLOWUPD_MIRROR_INFO:
-        ret = flow->set_mirror_info(flowupd.mirror_info);
+        ret = flow->merge_mirror_info(flowupd.mirror_info);
         LOG_FLOW_UPDATE(mirror_info);
         break;
     }
@@ -932,10 +947,8 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     hal_ret_t ret;
 
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
-    app_redir_ctx_t* app_ctx = app_redir_ctx(*this, false);
-    bool app_redir = app_ctx? app_ctx->redir_policy_applic() && !app_ctx->tcp_tls_proxy_flow(): false;
     if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() &&
-       !app_redir) {
+       !app_redir_pkt_tx_ownership(*this)) {
         queue_txpkt(pkt_, pkt_len_);
     }
 
@@ -1186,7 +1199,8 @@ std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
 
 std::ostream& operator<<(std::ostream& os, const mirror_info_t& val)
 {
-    os << "{ing_mirror_session=" << val.ing_mirror_session;
+    os << "{proxy_mirror" << val.proxy_mirror;
+    os << " ,ing_mirror_session=" << val.ing_mirror_session;
     os << " ,egr_mirror_session=" << val.egr_mirror_session;
     return os << "}";
 }

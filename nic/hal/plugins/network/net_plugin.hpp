@@ -9,6 +9,7 @@ void init();
 
 fte::pipeline_action_t stage_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t tunnel_exec(fte::ctx_t &ctx);
+fte::pipeline_action_t fwding_pre_stage_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t fwding_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t dfw_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t lb_exec(fte::ctx_t &ctx);

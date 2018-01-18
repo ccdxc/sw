@@ -50,6 +50,12 @@ policies:
                         dst_port : 19694
                     - svc:
                         proto    : 6
+                        dst_port : 19696
+                    - svc:
+                        proto    : 6
+                        dst_port : 23761
+                    - svc:
+                        proto    : 6
                         dst_port : 23763
                     - svc:
                         proto    : 6
@@ -112,6 +118,12 @@ policies:
                     - svc:
                         proto    : 6
                         dst_port : 19694
+                    - svc:
+                        proto    : 6
+                        dst_port : 19696
+                    - svc:
+                        proto    : 6
+                        dst_port : 23761
                     - svc:
                         proto    : 6
                         dst_port : 23763

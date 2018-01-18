@@ -10,6 +10,15 @@ from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 import test.app_redir.app_redir_shared as app_redir_shared
 
+rnmdr = 0
+rnmpr = 0
+rnmpr_small = 0
+rawrcbid = ""
+rawccbid = ""
+rawrcb = 0
+rawccb = 0
+redir_span = False
+
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
     modcbs.Setup(infra, module)
@@ -21,10 +30,19 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    global rnmdr
+    global rnmpr
+    global rnmpr_small
+    global rawrcbid
+    global rawccbid
+    global rawrcb
+    global rawccb
+    global redir_span
 
     tc.pvtdata = ObjectDatabase(logger)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     if hasattr(tc.module.args, 'redir_span'):
+        redir_span = True
         id = app_redir_shared.app_redir_span_rawrcb_id
 
     rawrcbid = "RawrCb%04d" % id
@@ -49,28 +67,28 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.Configure()
+    rnmdr.GetMeta()
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.Configure()
+    rnmpr.GetMeta()
     rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
-    rnmpr_small.Configure()
+    rnmpr_small.GetMeta()
 
     rawrcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[rawrcbid])
     rawrcb.GetObjValPd()
     rawccb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[rawccbid])
     rawccb.GetObjValPd()
-    rawccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RAWCCBQ"])
-    rawccbq.Configure()
     
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(rnmpr_small)
-    tc.pvtdata.Add(rawrcb)
-    tc.pvtdata.Add(rawccb)
-    tc.pvtdata.Add(rawccbq)
     return
 
 def TestCaseVerify(tc):
+    global rnmdr
+    global rnmpr
+    global rnmpr_small
+    global rawrcbid
+    global rawccbid
+    global rawrcb
+    global rawccb
+    global redir_span
 
     num_pkts = 1
     if hasattr(tc.module.args, 'num_pkts'):
@@ -80,17 +98,7 @@ def TestCaseVerify(tc):
     if hasattr(tc.module.args, 'num_flow_miss_pkts'):
         num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
 
-    redir_span = False
-    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-    if hasattr(tc.module.args, 'redir_span'):
-        id = app_redir_shared.app_redir_span_rawrcb_id
-        redir_span = True
-
-    rawrcbid = "RawrCb%04d" % id
-    rawccbid = "RawcCb%04d" % id
-
     # Verify chain_rxq_base
-    rawrcb = tc.pvtdata.db[rawrcbid]
     rawrcb_cur = tc.infra_data.ConfigStore.objects.db[rawrcbid]
     rawrcb_cur.GetObjValPd()
     if rawrcb_cur.chain_rxq_base == 0:
@@ -100,7 +108,6 @@ def TestCaseVerify(tc):
     print("chain_rxq_base value post-sync from HBM 0x%x" % rawrcb_cur.chain_rxq_base)
 
     # Verify my_txq_base
-    rawccb = tc.pvtdata.db[rawccbid]
     rawccb_cur = tc.infra_data.ConfigStore.objects.db[rawccbid]
     rawccb_cur.GetObjValPd()
     if not redir_span:
@@ -111,19 +118,12 @@ def TestCaseVerify(tc):
         print("my_txq_base value post-sync from HBM 0x%x" % rawccb_cur.my_txq_base)
 
     # Fetch current values from Platform
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    rnmpr_small = tc.pvtdata.db["RNMPR_SMALL"]
-    rawccbq = tc.pvtdata.db["RAWCCBQ"]
-
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
+    rnmdr_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
+    rnmpr_cur.GetMeta()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
-    rnmpr_small_cur.Configure()
-    rawccbq_cur = tc.infra_data.ConfigStore.objects.db["RAWCCBQ"]
-    rawccbq_cur.Configure()
+    rnmpr_small_cur.GetMeta()
 
     # Verify PI for RNMDR got incremented
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):

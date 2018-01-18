@@ -126,3 +126,14 @@ modules:
         iterate :
             - flow: filter://type=IPV4
 
+    - module:
+        name    : APP_REDIR_RAW_SPAN_MULTI_PKTS
+        module  : app_redir_raw_rx_tx
+        spec    : app_redir_raw_span_multi_pkts.testspec
+        args    :
+            num_pkts : 3
+            num_flow_miss_pkts : 1
+            redir_span : True
+        iterate :
+            - flow: filter://type=IPV4
+
