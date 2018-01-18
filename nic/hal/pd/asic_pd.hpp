@@ -21,7 +21,7 @@ typedef struct asic_cfg_s {
 // NOTE: this is always a blocking call and this API runs in the calling
 //       thread's context
 //------------------------------------------------------------------------------
-hal_ret_t asic_reg_read(uint64_t addr, uint32_t *data);
+hal_ret_t asic_reg_read(uint64_t addr, uint32_t *data, uint32_t num_words = 1);
 uint32_t asic_reg_read(uint64_t addr);
 
 
@@ -36,7 +36,10 @@ hal_ret_t asic_mem_read(uint64_t addr, uint8_t *data, uint32_t len);
 // public API for register write operations
 // write given data at specified address in the memory
 //------------------------------------------------------------------------------
-hal_ret_t asic_reg_write(uint64_t addr, uint32_t data, bool blocking = true);
+hal_ret_t asic_reg_write(uint64_t addr,
+                         uint32_t *data,
+                         uint32_t num_words = 1,
+                         bool blocking = true);
 
 //------------------------------------------------------------------------------
 // public API for memory write operations

@@ -49,7 +49,7 @@ pal_init_sim_vectors ()
 }
 
 pal_ret_t
-pal_sim_reg_read (uint64_t addr, uint32_t *data)
+pal_sim_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words)
 {
     if (!(*gl_sim_vecs.read_reg)(addr, *data)) {
         return PAL_RET_NOK;
@@ -58,9 +58,9 @@ pal_sim_reg_read (uint64_t addr, uint32_t *data)
 }
 
 pal_ret_t
-pal_sim_reg_write (uint64_t addr, uint32_t data)
+pal_sim_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words)
 {
-    if (!(*gl_sim_vecs.write_reg)(addr, data)) {
+    if (!(*gl_sim_vecs.write_reg)(addr, *data)) {
         return PAL_RET_NOK;
     }
     return PAL_RET_OK;

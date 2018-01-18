@@ -35,15 +35,15 @@ pal_init (bool sim)
 }
 
 pal_ret_t
-pal_reg_read (uint64_t addr, uint32_t *data)
+pal_reg_read(uint64_t addr, uint32_t *data, uint32_t num_words)
 {
-    return gl_pal_info.rwvecs.reg_read(addr, data);
+    return gl_pal_info.rwvecs.reg_read(addr, data, num_words);
 }
 
 pal_ret_t
-pal_reg_write (uint64_t addr, uint32_t data)
+pal_reg_write(uint64_t addr, uint32_t *data, uint32_t num_words)
 {
-    return gl_pal_info.rwvecs.reg_write(addr, data);
+    return gl_pal_info.rwvecs.reg_write(addr, data, num_words);
 }
 
 pal_ret_t

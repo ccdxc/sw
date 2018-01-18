@@ -165,7 +165,8 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
         } else {
             HAL_TRACE_DEBUG("{}: Writing Data: 0x{0:x}",
                             __FUNCTION__, spec.reg_data());
-            hal::pd::asic_reg_write(spec.addr(), spec.reg_data());
+            uint32_t reg_data = spec.reg_data();
+            hal::pd::asic_reg_write(spec.addr(), &reg_data);
         }
         response->set_api_status(types::API_STATUS_OK);
     }

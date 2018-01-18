@@ -10,6 +10,7 @@ namespace hal {
 namespace pd {
 
 using sdk::lib::pal_ret_t;
+using sdk::lib::PAL_RET_OK;
 
 // asic model's cfg port socket descriptor
 static std::atomic<bool> g_asic_rw_ready_;
@@ -45,7 +46,6 @@ typedef struct asic_rw_entry_ {
     uint64_t             addr;       // address to write to or read from
     uint32_t             len;        // length of data to read or write
     uint8_t              *data;      // data to write or buffer to copy data to for mem read/write
-    uint32_t             reg_data;   // data to write or buffer to copy data to for mem read/write
     asic_rw_port_entry_t port_entry; // port data
 } asic_rw_entry_t;
 
@@ -180,15 +180,15 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
 //       thread's context
 //------------------------------------------------------------------------------
 static hal_ret_t
-asic_reg_read_impl (uint64_t addr, uint32_t *data)
+asic_reg_read_impl (uint64_t addr, uint32_t *data, uint32_t num_words)
 {
     hal_ret_t rc = HAL_RET_OK;
 
     if (is_asic_rw_thread() == false) {
         rc = asic_do_read(HAL_ASIC_RW_OPERATION_REG_READ,
-                          addr, (uint8_t *)data, 0);
+                          addr, (uint8_t *)data, num_words);
     } else {
-        sdk::lib::pal_reg_read(addr, data);
+        sdk::lib::pal_reg_read(addr, data, num_words);
     }
 
     if (rc != HAL_RET_OK) {
@@ -203,14 +203,14 @@ uint32_t
 asic_reg_read (uint64_t addr)
 {
     uint32_t data = 0;
-    asic_reg_read_impl(addr, &data);
+    asic_reg_read_impl(addr, &data, 1);
     return data;
 }
 
 hal_ret_t
-asic_reg_read (uint64_t addr, uint32_t *data)
+asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words)
 {
-    return asic_reg_read_impl(addr, data);
+    return asic_reg_read_impl(addr, data, num_words);
 }
 
 //------------------------------------------------------------------------------
@@ -263,11 +263,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
     rw_entry->status = HAL_RET_ERR;
     rw_entry->addr = addr;
     rw_entry->len = len;
-    if (!len) {
-        rw_entry->reg_data = *((uint32_t *)data);
-    } else {
-        rw_entry->data = data;
-    }
+    rw_entry->data = data;
     rw_entry->done.store(false);
 
     g_asic_rw_workq[curr_tid].nentries++;
@@ -301,19 +297,22 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
 // blocking and non-blocking writes
 //------------------------------------------------------------------------------
 hal_ret_t
-asic_reg_write (uint64_t addr, uint32_t data, bool blocking)
+asic_reg_write (uint64_t addr,
+                uint32_t *data,
+                uint32_t num_words,
+                bool     blocking)
 {
     hal_ret_t rc = HAL_RET_OK;
 
     if (is_asic_rw_thread() == false) {
         rc = asic_do_write(HAL_ASIC_RW_OPERATION_REG_WRITE,
-                           addr, (uint8_t *)&data, 0, blocking);
+                           addr, (uint8_t *)data, num_words, blocking);
     } else {
-        pal_ret_t prc = sdk::lib::pal_reg_write(addr, data);
+        pal_ret_t prc = sdk::lib::pal_reg_write(addr, data, num_words);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
     }
     if (rc != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error writing addr:{} data:{}", addr, data);
+        HAL_TRACE_ERR("Error writing addr:{} data:{}", addr, *data);
         HAL_ASSERT(0);
     }
 
@@ -445,9 +444,8 @@ asic_rw_loop (void)
     uint32_t            qid;
     uint16_t            cindx;
     bool                work_done = false;
-    pal_ret_t           rv;
-    asic_rw_entry_t     *rw_entry;
-    uint32_t            regval;
+    pal_ret_t           rv        = PAL_RET_OK;
+    asic_rw_entry_t     *rw_entry = NULL;
 
     while (TRUE) {
         work_done = false;
@@ -472,15 +470,15 @@ asic_rw_loop (void)
                 break;
 
             case HAL_ASIC_RW_OPERATION_REG_READ:
-                rv = sdk::lib::pal_reg_read(rw_entry->addr, &regval);
-                if (IS_PAL_API_SUCCESS(rv)) {
-                    *(uint32_t *)rw_entry->data = regval;
-                }
+                rv = sdk::lib::pal_reg_read(rw_entry->addr,
+                                            (uint32_t*)rw_entry->data,
+                                            rw_entry->len);
                 break;
 
             case HAL_ASIC_RW_OPERATION_REG_WRITE:
-                regval = rw_entry->reg_data;
-                rv = sdk::lib::pal_reg_write(rw_entry->addr, regval);
+                rv = sdk::lib::pal_reg_write(rw_entry->addr,
+                                             (uint32_t*)rw_entry->data,
+                                             rw_entry->len);
                 break;
 
             case HAL_ASIC_RW_OPERATION_PORT:

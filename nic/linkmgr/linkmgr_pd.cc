@@ -243,7 +243,7 @@ uint32_t read_reg_base (uint32_t chip, uint64_t addr)
 
 void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data)
 {
-    if (sdk::lib::pal_reg_write(addr, data) != sdk::lib::PAL_RET_OK) {
+    if (sdk::lib::pal_reg_write(addr, &data) != sdk::lib::PAL_RET_OK) {
         HAL_TRACE_ERR("{} write failed", __FUNCTION__);
     }
 

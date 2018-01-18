@@ -43,7 +43,7 @@ capri_load_config(char *config_dir)
         while ((readsz = read(fd, buff, sizeof(buff))) > 0) {
             nelems = readsz / sizeof(addr_data_t);
             for (int i = 0; i < nelems; i++) {
-                hal::pd::asic_reg_write(buff[i].addr, buff[i].data);
+                hal::pd::asic_reg_write(buff[i].addr, &buff[i].data);
             }
         }
     }

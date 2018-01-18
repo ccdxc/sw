@@ -43,7 +43,7 @@ p4plus_reg_read(uint64_t addr, uint32_t& data)
 static inline bool
 p4plus_reg_write(uint64_t addr, uint32_t data)
 {
-    hal_ret_t rv = hal::pd::asic_reg_write(addr, data);
+    hal_ret_t rv = hal::pd::asic_reg_write(addr, &data);
     return rv == HAL_RET_OK ? true : false;
 }
 

@@ -10,5 +10,5 @@ cpu_hal_if::read(uint32_t chip, uint64_t addr,
 void
 cpu_hal_if::write(uint32_t chip, uint64_t addr, uint32_t data,
                   cpu_access_type_e do_backdoor, uint32_t flags) {
-    hal::pd::asic_reg_write(addr, data);
+    hal::pd::asic_reg_write(addr, &data);
 }

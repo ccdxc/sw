@@ -36,11 +36,20 @@ else
 	BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS)
 endif
 
+ifeq ($(BAZEL_OUTPUT_BASE),)
+    OUTPUT_BASE =
+else
+    OUTPUT_BASE = --output_base=$(BAZEL_OUTPUT_BASE)
+endif
+
+BZL_OPT = $(OUTPUT_BASE)
+
 all: lib
 
 lib:
 	@echo $(BUILD_OPTS)
-	bazel build $(BUILD_OPTS) lib/...
+	bazel $(BZL_OPT) build $(BUILD_OPTS) lib/...
+	bazel $(BZL_OPT) build $(BUILD_OPTS) examples/...
 	@echo Copying over libs ...
 	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj \;
 	@chmod 755 obj/*.so
@@ -51,11 +60,11 @@ test: lib build-test
 
 build-test:
 	@echo $(BUILD_OPTS)
-	bazel build $(BUILD_OPTS) test/...
+	bazel $(BZL_OPT) build $(BUILD_OPTS) test/...
 
 clean:
-	bazel clean
-	bazel shutdown
+	bazel $(BZL_OPT) clean
+	bazel $(BZL_OPT) shutdown
 	$(RM) obj/*.so
 
 # -----------------------------------------      For Container     -----------------------------------------

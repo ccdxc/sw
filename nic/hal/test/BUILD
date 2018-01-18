@@ -42,17 +42,3 @@ cc_binary(
         "-lm",
     ],
 )
-
-cc_binary(
-    name = "hal_access",
-    srcs = [
-        "hal_access.cc",
-    ],
-    deps = [
-        "@sdk//obj:sdk_pal",
-        "@sdk//obj:sdk_logger",
-    ],
-    linkopts = [
-        "-ldl"
-    ],
-)

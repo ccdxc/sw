@@ -7,8 +7,12 @@ namespace sdk {
 namespace lib {
 
 typedef struct pal_rwvectors_s {
-    pal_ret_t   (*reg_read)(uint64_t addr, uint32_t *data);
-    pal_ret_t   (*reg_write)(uint64_t addr, uint32_t data);
+    pal_ret_t   (*reg_read)(uint64_t addr,
+                            uint32_t *data,
+                            uint32_t num_words);
+    pal_ret_t   (*reg_write)(uint64_t addr,
+                             uint32_t *data,
+                             uint32_t num_words);
     pal_ret_t   (*mem_read)(uint64_t addr, uint8_t *data,
                             uint32_t size);
     pal_ret_t   (*mem_write)(uint64_t addr, uint8_t *data,
@@ -21,6 +25,12 @@ typedef struct pal_info_s {
     bool                sim;
     pal_rwvectors_t    rwvecs;
 } __PACK__ pal_info_t;
+
+typedef struct pal_mmap_regions_s {
+    uint64_t        phy_addr_base;
+    uint64_t        size;
+    uint64_t        virtual_addr_base;
+} __PACK__ pal_mmap_regions_t;
 
 pal_ret_t pal_init_sim(void);
 pal_ret_t pal_hw_init(void);
