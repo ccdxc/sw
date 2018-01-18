@@ -7,6 +7,7 @@ feature:
     module      : rdma
     enable      : True
     ignore      : False
+    rtl         : False
     selectors:
         maxrdmasessions: 1
 
@@ -18,6 +19,7 @@ modules:
         module  : req_tx_send_only
         spec    : req_tx_send_only.testspec
         ignore  : False
+        rtl     : True
 
     - module:
         name    : RDMA_TX_SEND_ONLY_INLINE
@@ -26,6 +28,7 @@ modules:
         module  : req_tx_send_only
         spec    : req_tx_send_only_inline.testspec
         ignore  : False
+        rtl     : True
 
     - module:
         name    : RDMA_TX_WRITE_ONLY
@@ -34,6 +37,7 @@ modules:
         module  : req_tx_write_only
         spec    : req_tx_write_only.testspec
         ignore  : False
+        rtl     : True
 
     - module:
         name    : RDMA_TX_WRITE_ONLY_INLINE
@@ -42,6 +46,7 @@ modules:
         module  : req_tx_write_only
         spec    : req_tx_write_only_inline.testspec
         ignore  : False
+        rtl     : True
 
     - module:
         name    : RDMA_RX_READ_ONLY
@@ -50,6 +55,7 @@ modules:
         module  : req_rx_read_only
         spec    : req_rx_read_only.testspec
         ignore  : False
+        rtl     : True
 
     - module:
         name    : RDMA_RX_SEND_ONLY
@@ -58,6 +64,7 @@ modules:
         module  : resp_rx_send_only
         spec    : resp_rx_send_only.testspec
         ignore  : False
+        rtl     : True
 
     - module:
         name    : RDMA_RESP_RX_READ_ONLY
@@ -74,3 +81,4 @@ modules:
         module  : resp_rx_write_only
         spec    : resp_rx_write_only.testspec
         ignore  : False
+        rtl     : True
