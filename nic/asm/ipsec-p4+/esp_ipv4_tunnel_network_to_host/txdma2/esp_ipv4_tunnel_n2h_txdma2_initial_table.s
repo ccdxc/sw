@@ -13,6 +13,8 @@ struct phv_ p;
 esp_ipv4_tunnel_n2h_txdma2_initial_table:
     seq c2, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx
     b.c2 esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing
+    phvwri.c2 p.p4_intr_global_drop, 1
+
     seq c1, d.is_v6, 1
     phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.txdma2_global_iv_size, d.iv_size

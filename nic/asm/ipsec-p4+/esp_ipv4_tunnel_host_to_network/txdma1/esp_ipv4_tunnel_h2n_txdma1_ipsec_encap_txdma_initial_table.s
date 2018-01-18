@@ -13,6 +13,7 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     b.c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing
+    phvwri.c1 p.p4_intr_global_drop, 1
     
     phvwr p.p4_intr_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
     phvwr p.p4_intr_global_tm_iq, k.p4_intr_global_tm_iq
