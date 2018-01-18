@@ -2251,6 +2251,14 @@ class capri_parser:
                     if lf not in out_lfs and lf not in sol_lfs and lf not in cs.load_saved_lkp:
                         # pass thru' variable
                         out_lfs[lf] = in_lfs[lf]
+
+            if len(out_lfs):
+                # unassigned/un-initialized lfs.. remove them
+                for lf in out_lfs.keys():
+                    self.logger.critical("%s:Un-initialized variable %s on path %s" % \
+                        (self.d.name, lf.hfname, path))
+                assert 0, pdb.set_trace()
+
         for cs in self.states:
             if cs not in cs_lfs:
                 continue
@@ -2336,7 +2344,7 @@ class capri_parser:
                 for lf in out_lfs.keys():
                     self.logger.critical("%s:Un-initialized variable %s on path %s" % \
                         (self.d.name, lf.hfname, path))
-                    assert 0, pdb.set_trace()
+                assert 0, pdb.set_trace()
                 pass
 
             # allocate reg ids for new lfs
@@ -2754,7 +2762,7 @@ class capri_parser:
                     assert ohi.start < (cf.p4_fld.offset/8)
                     max_ohi = self.be.hw_model['parser']['num_ohi']
                     assert self.ohi_used < max_ohi
-                    self.logger.warning("Allocate new ohi slots for %s %s" % (new_cs.name, cf.hfname))
+                    self.logger.info("Allocate new ohi slots for %s %s" % (new_cs.name, cf.hfname))
                     new_ohi = capri_ohi(cf.p4_fld.offset/8,
                                         ohi.start + ohi.length - (cf.p4_fld.offset / 8))
                     new_ohi.id = self.ohi_used
@@ -2784,7 +2792,6 @@ class capri_parser:
         cs.key_l2p_map = None
         cs.is_split = True
         new_cs.is_split = True
-
         return new_cs
 
     def split_states(self, cs, add_cs):
@@ -2802,29 +2809,35 @@ class capri_parser:
         total_extract = (add_cs.extract_len if add_cs else 0) + cs.extract_len
         insts = self.generate_extract_instructions(cs, add_cs)
 
-        if len(insts) <= num_extracts and total_extract <= max_extract:
+        # No need to check extract_len, if number of extract inst are less than
+        # allowed we are within the budget. This can happen when headers go to ohi
+        # and therefore do not consume extract instructions
+        if len(insts) <= num_extracts:
             return
 
         split_off = 0
+        '''
         if len(insts) > num_extracts:
-            # find the inst that takes over the limit
-            for i, inst in enumerate(insts):
-                # check if reached extraction limit
-                if (i+1) == num_extracts:
-                    split_off = inst[0]
-                    break
-                # check inst crosses parser limit
-                if inst[0] + inst[1] > max_extract:
-                    split_off = inst[0]
-                    break
-            if not split_off:
-                # this split is due to extract instuction limit, not len
-                # use the offset from last instruction
-                split_off = insts[num_extracts-1][0]
+        '''
+        # find the inst that takes over the limit
+        for i, inst in enumerate(insts):
+            # check if reached extraction limit
+            if (i+1) == num_extracts:
+                split_off = inst[0]
+                break
+            # check inst crosses parser limit
+            if inst[0] + inst[1] > max_extract:
+                split_off = inst[0]
+                break
+        if not split_off:
+            # this split is due to extract instuction limit, not len
+            # use the offset from last instruction
+            split_off = insts[num_extracts-1][0]
+        '''
         else:
             # split is due to extract len limit
             split_off = max_extract
-
+        '''
         assert split_off, pdb.set_trace()
         self.logger.warning("%s:Splitting states %s, %s, split_off %d" % \
             (self.d.name, cs.name, add_cs.name if add_cs else None, split_off))
@@ -2851,6 +2864,7 @@ class capri_parser:
         # - extractions instructions > 64 due to large headers and/or metadata extraction
         # - variable-len header whose max size can exceed 64B (Ok if OHI?)
         # - num ohi slots when multiple headers are extracted
+        # - parser flit crossing (this is currently handled when while doing phv allocation)
         # XXX currently only checks done are for the extraction size rest TBD
         max_extract = self.be.hw_model['parser']['max_extract']
         second_states = [bi.nxt_state for bi in self.start_state.branches]

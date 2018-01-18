@@ -2345,7 +2345,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     # select values
     meta_ops = parser.be.hw_model['parser']['parser_consts']['meta_ops']
     for hv_byte,hv in hv_bits.items():
-        assert mid < max_mid
+        assert mid < max_mid, pdb.set_trace()
         sram['meta_inst'][mid]['sel']['value'] = meta_ops['set_hv']
         sram['meta_inst'][mid]['phv_idx']['value'] = str(hv_byte)
         sram['meta_inst'][mid]['val']['value'] = str(hv)
@@ -2648,34 +2648,38 @@ def capri_parser_output_decoders(parser):
                 idx += 1
 
                 #Generate csum related profile config for parser block
-                csum_prof, cprof_inst = parser.be.checksum.\
+                csum_prof_list = parser.be.checksum.\
                                 ParserCsumProfileGenerate(parser, \
                                                           parse_states_in_path+\
                                                           [bi.nxt_state], bi.nxt_state,\
                                                           csum_t)
-                csum_phdr_prof, phdr_inst = parser.be.checksum.\
+                csum_phdr_prof_list = parser.be.checksum.\
                            ParserCsumPhdrProfileGenerate(parser, \
                                                          parse_states_in_path +\
                                                          [bi.nxt_state], bi.nxt_state,\
                                                          csum_phdr_t)
-                if csum_prof != None:
-                    #For handling wide register store word_size  *  profile#
-                    csum_prof['word_size'] = str(hex(int(csum_t['word_size'], 16) * cprof_inst))
-                    ppa_json['cap_ppa']['registers']\
-                        ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
-                            = csum_prof
-                    ppa_json['cap_ppa']['registers']\
-                        ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]['_modified']\
-                            = True
-                if csum_phdr_prof != None:
-                    #For handling wide register store word_size  *  profile#
-                    csum_phdr_prof['word_size'] = str(hex(int(csum_phdr_t['word_size'], 16) * phdr_inst))
-                    ppa_json['cap_ppa']['registers']\
-                        ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
-                                                          = csum_phdr_prof
-                    ppa_json['cap_ppa']['registers']\
-                        ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]['_modified']\
-                            = True
+                if len(csum_prof_list):
+                    for csum_p in csum_prof_list:
+                        csum_prof, cprof_inst = csum_p
+                        #For handling wide register store word_size  *  profile#
+                        csum_prof['word_size'] = str(hex(int(csum_t['word_size'], 16) * cprof_inst))
+                        ppa_json['cap_ppa']['registers']\
+                            ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
+                                = csum_prof
+                        ppa_json['cap_ppa']['registers']\
+                            ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]['_modified']\
+                                = True
+                if len(csum_phdr_prof_list):
+                    for csum_p in csum_phdr_prof_list:
+                        csum_phdr_prof, phdr_inst = csum_p
+                        #For handling wide register store word_size  *  profile#
+                        csum_phdr_prof['word_size'] = str(hex(int(csum_phdr_t['word_size'], 16) * phdr_inst))
+                        ppa_json['cap_ppa']['registers']\
+                            ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
+                                                              = csum_phdr_prof
+                        ppa_json['cap_ppa']['registers']\
+                            ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]['_modified']\
+                                = True
 
                 #Generate Gso csum related profile config for parser block
                 csum_prof, cprof_inst = parser.be.checksum.\

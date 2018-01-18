@@ -1021,7 +1021,10 @@ class Checksum:
             csum_phdr = calfldobj.CsumPhdrNameGet()
             if csum_phdr != '' and csum_phdr not in csum_phdrs:
                 csum_phdrs.add(csum_phdr)
-        assert len(csum_phdrs) > 0, pdb.set_trace()
+
+        if not len(csum_phdrs):
+            return None, None
+
         matched_calobj = False
         matched_phdr = False
         for phdr in headers_in_parse_path:
@@ -1071,17 +1074,56 @@ class Checksum:
                     % (from_parse_state.name, parse_state.name)
         log_str += '_____________________________________\n\n'
 
+        processed_calfld_objs = []
         phdr_parse_state = None
-        if len(parse_state.verify_cal_field_objs) > 1:
-            calfldobj, phdr_parse_state = self._CsumFindCalFldObjMatchingPhdr(\
+        l4_calfldobj, phdr_parse_state = self._CsumFindCalFldObjMatchingPhdr(\
                                               parse_state, parse_states_in_path)
-        else:
-            calfldobj = parse_state.verify_cal_field_objs[0]
+        if l4_calfldobj != None:
+            assert phdr_parse_state != None, pdb.set_trace()
+            phdr_calfldobj = None
+            for calfldobj in phdr_parse_state.verify_cal_field_objs:
+                if l4_calfldobj.phdr_name == calfldobj.CalculatedFieldHdrGet():
+                    phdr_calfldobj = calfldobj
+                    break
+            ohi_instr_inst = self.CalFldCsumParserConfigGenerate(parser,      \
+                                       parse_states_in_path,                  \
+                                       parse_state, sram, ohi_instr_inst,     \
+                                       ohi_inst_allocator, mux_idx_allocator, \
+                                       mux_inst_allocator, l4len_mux_instr_id,\
+                                       l4len_mux_idx_id, hdrlen_mux_idx_id,   \
+                                       log_str, l4_calfldobj, phdr_parse_state,\
+                                        phdr_calfldobj)
+            processed_calfld_objs.append(l4_calfldobj)
+
+        #When multiple headers are extracted in a parse state and more than
+        #one such extracted headers is part of csum, it is required to loop
+        #through all those headers.
+        for calfldobj in parse_state.verify_cal_field_objs:
+            if  not calfldobj.payload_checksum and calfldobj not in processed_calfld_objs:
+                ohi_instr_inst = self.CalFldCsumParserConfigGenerate(parser,      \
+                                       parse_states_in_path,                      \
+                                       parse_state, sram, ohi_instr_inst,         \
+                                       ohi_inst_allocator, mux_idx_allocator,     \
+                                       mux_inst_allocator, l4len_mux_instr_id,    \
+                                       l4len_mux_idx_id, hdrlen_mux_idx_id,       \
+                                       log_str, calfldobj, None, None)
+
+        return ohi_instr_inst
+
+
+    def CalFldCsumParserConfigGenerate(self, parser, parse_states_in_path,    \
+                                       parse_state, sram, ohi_instr_inst,     \
+                                       ohi_inst_allocator, mux_idx_allocator, \
+                                       mux_inst_allocator, l4len_mux_instr_id,\
+                                       l4len_mux_idx_id, hdrlen_mux_idx_id,   \
+                                       log_str, calfldobj, phdr_parse_state,  \
+                                       phdr_calfldobj):
 
         if calfldobj == None:
             assert(0), pdb.set_trace()
         phdr_ohi_id = -1
         if calfldobj.payload_checksum and not calfldobj.option_checksum:
+            assert phdr_parse_state != None, pdb.set_trace()
             if calfldobj.payload_checksum and \
                 phdr_parse_state.phdr_offset_ohi_id != -1:
                 phdr_ohi_id = phdr_parse_state.phdr_offset_ohi_id
@@ -1091,11 +1133,10 @@ class Checksum:
                 #Go back to calfld obj where ipv4 hdr is processed to compute
                 #header checksum; Use the same ohi slot where start of ipv4 hdr
                 #is captured and where TotalLen-ihl*4 is captured as PayloadLen.
-                phdr_ohi_id = phdr_parse_state.\
-                                verify_cal_field_objs[0].ParserCsumObjGet().\
+                assert phdr_calfldobj != None, pdb.set_trace()
+                phdr_ohi_id = phdr_calfldobj.ParserCsumObjGet().\
                                 CsumOhiPhdrSelGet()
-                totalLen_ohi_id = phdr_parse_state.\
-                                verify_cal_field_objs[0].ParserCsumObjGet().\
+                totalLen_ohi_id = phdr_calfldobj.ParserCsumObjGet().\
                                 CsumOhiTotalLenGet()
             elif calfldobj.payload_checksum:
                 assert(0), pdb.set_trace()
@@ -1117,37 +1158,45 @@ class Checksum:
                                               calfldobj.CalculatedFieldHdrGet()])
         if ohi_id != None:
             assert hdr_ohi_id == ohi_id, pdb.set_trace()
-            assert ohi_instr_inst < len(sram['ohi_inst']), pdb.set_trace()
-            # Ohi Instr to capture HdrStart Offset
-            select          = 1 # Load current offset + index
-            na              = 0 # NA
-            index           = 0
-            log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, \
-                                                       na, index, hdr_ohi_id)
-            ohi_instr_inst += 1
+            ohi_instr_generated = False
+            for allocated_ohi_instr in ohi_inst_allocator:
+                if allocated_ohi_instr:
+                    _expr, _ohi_id = allocated_ohi_instr
+                    if _ohi_id == ohi_id:
+                        ohi_instr_generated = True
+                        break
+            if not ohi_instr_generated:
+                assert ohi_instr_inst < len(sram['ohi_inst']), pdb.set_trace()
+                # Ohi Instr to capture HdrStart Offset
+                select          = 1 # Load current offset + index
+                na              = 0 # NA
+                index           = 0
+                log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, \
+                                                           na, index, hdr_ohi_id)
+                ohi_instr_inst += 1
 
         if not calfldobj.payload_checksum and not calfldobj.option_checksum:
             # When no payload, assume its always ipv4 hdr checksum. Its not
             # expected to have cal fld on any collection of p4 fields.
             # Target doesn't support it; Instead target only takes
             # (start-offset, size) to compute checksum.
-            assert(l4len_mux_instr_id != -1), pdb.set_trace()
-            assert(l4len_mux_idx_id != -1), pdb.set_trace()
-            assert(hdrlen_mux_idx_id != -1), pdb.set_trace()
 
-            index       = 0
-            mask        = 0x0F00
-            shift_left  = 0
-            shift_val   = 6
-            add_sub     = 0
-            add_sub_val = 0
-            load_mux_pkt = 1
-            log_str += ParserCalField._build_mux_instr(sram, 1,                 \
-                                             l4len_mux_instr_id,                \
-                                             hdrlen_mux_idx_id, mask, add_sub,  \
-                                             add_sub_val, shift_val,            \
-                                             shift_left, load_mux_pkt,          \
-                                             l4len_mux_idx_id)
+            if (l4len_mux_instr_id != -1) and \
+               (l4len_mux_idx_id != -1) and \
+               (hdrlen_mux_idx_id != -1) :
+                index       = 0
+                mask        = 0x0F00
+                shift_left  = 0
+                shift_val   = 6
+                add_sub     = 0
+                add_sub_val = 0
+                load_mux_pkt = 1
+                log_str += ParserCalField._build_mux_instr(sram, 1,                 \
+                                                 l4len_mux_instr_id,                \
+                                                 hdrlen_mux_idx_id, mask, add_sub,  \
+                                                 add_sub_val, shift_val,            \
+                                                 shift_left, load_mux_pkt,          \
+                                                 l4len_mux_idx_id)
 
             #Configure checksum profile.
             csum_profile_obj = calfldobj.ParserCsumProfileGet()
@@ -1245,62 +1294,58 @@ class Checksum:
         profile_obj = None
         p = -1
         phdr_in_path = False
+        profile_list = []
 
         # Since this function is called on parse state where
         # calculated field may not be extracted, check for
         # existence of calfld obj
         if not len(parse_state.verify_cal_field_objs):
-            return profile, p
+            return profile_list
 
-        calfldobj = parse_state.verify_cal_field_objs[0]
-        if calfldobj.payload_checksum:
-            calfldobj, phdr_parse_state = self._CsumFindCalFldObjMatchingPhdr(\
-                                              parse_state, parse_states_in_path)
+        for calfldobj in parse_state.verify_cal_field_objs:
+            if calfldobj.payload_checksum:
+                calfldobj, phdr_parse_state = self._CsumFindCalFldObjMatchingPhdr(\
+                                                  parse_state, parse_states_in_path)
 
-        profile_obj = calfldobj.ParserCsumProfileGet()
-        if profile_obj != None:
-            profile = copy.deepcopy(csum_t)
-            p = profile_obj.csum_profile
-            if p == -1: 
-                assert(0), pdb.set_trace()
-            log_str = profile_obj.ConfigGenerate(profile)
-            calfldobj.ParserCsumObjAddLog(log_str)
-            #Only one calFld processed in any parse state
-            return profile, p
-        else:
-            assert(0), pdb.set_trace()
+            profile_obj = calfldobj.ParserCsumProfileGet()
+            if profile_obj != None:
+                profile = copy.deepcopy(csum_t)
+                p = profile_obj.csum_profile
+                if p == -1: 
+                    assert(0), pdb.set_trace()
+                log_str = profile_obj.ConfigGenerate(profile)
+                calfldobj.ParserCsumObjAddLog(log_str)
+                #Only one calFld processed in any parse state
+                profile_list.append((profile, p))
 
-        return profile, p
+        return profile_list
 
     def ParserCsumPhdrProfileGenerate(self, parser, parse_states_in_path,\
                                       parse_state, csum_phdr_t):
         phdr_profile = None
         p = -1
         phdr_in_path = False
-
-
+        profile_list = []
 
         if not len(parse_state.verify_cal_field_objs):
-            return phdr_profile, p
+            return profile_list
         from_parse_state = parse_states_in_path[-2]
         headers_in_parse_path = []
         for _parse_state in parse_states_in_path:
             headers_in_parse_path += _parse_state.headers
 
-        calfldobj = parse_state.verify_cal_field_objs[0]
-        if calfldobj.payload_checksum:
-            calfldobj, phdr_parse_state = self._CsumFindCalFldObjMatchingPhdr(\
-                                              parse_state, parse_states_in_path)
-            phdr_profile_obj = calfldobj.ParserPhdrProfileGet()
-            if phdr_profile_obj != None:
-                phdr_profile = copy.deepcopy(csum_phdr_t)
-                p = phdr_profile_obj.phdr_profile
-                phdr_profile_obj.ConfigGenerate(phdr_profile)
-                return phdr_profile, p
-            else:
-                assert(0), pdb.set_trace()
+        for calfldobj in parse_state.verify_cal_field_objs:
+            if calfldobj.payload_checksum:
+                calfldobj, phdr_parse_state = self._CsumFindCalFldObjMatchingPhdr(\
+                                                  parse_state, parse_states_in_path)
+                phdr_profile_obj = calfldobj.ParserPhdrProfileGet()
+                if phdr_profile_obj != None:
+                    phdr_profile = copy.deepcopy(csum_phdr_t)
+                    p = phdr_profile_obj.phdr_profile
+                    phdr_profile_obj.ConfigGenerate(phdr_profile)
+                    profile_list.append((phdr_profile, p))
 
-        return phdr_profile, p
+        return profile_list
 
     def ParserCsumUnitAllocationCodeGenerate(self):
         '''

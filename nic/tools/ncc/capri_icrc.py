@@ -275,7 +275,7 @@ class IcrcParserProfile:
 class IcrcParserCalField:
     '''
     '''
-    def __init__(self, capri_be, dstField, VerifyOrUpdateFunc):
+    def __init__(self, capri_be, dstField, VerifyOrUpdateFunc, roce_hdr):
         self.be                         = capri_be
         self.logstr_tbl                 = []
         self.dstField                   = dstField
@@ -287,6 +287,7 @@ class IcrcParserCalField:
                                                # states where L3 hdr fields
                                                # are extracted/built.
         self.l3hdr_name                 = ''
+        self.roce_hdr                   = roce_hdr
 
         self.P4FieldListCalculation     = self.be.h.\
                                             p4_field_list_calculations\
@@ -686,7 +687,7 @@ class IcrcDeParserProfile:
 class IcrcDeParserCalField:
     '''
     '''
-    def __init__(self, capri_be, dstField, VerifyOrUpdateFunc):
+    def __init__(self, capri_be, dstField, VerifyOrUpdateFunc, roce_hdr):
         self.be                    = capri_be
         self.logstr_tbl            = []
         self.dstField              = dstField
@@ -721,6 +722,7 @@ class IcrcDeParserCalField:
         self.l3hdr_name, self.l3hdr_invariant_fields, self.l4_hdr_name, \
         self.l4_hdr_invariant_fields, self.l5_hdr_name, self.l5_hdr_invariant_fields  = \
             self.ProcessIcrcCalFields(self.P4FieldListCalculation, dstField)
+        self.roce_hdr = roce_hdr
 
     def __getitem__(self, index):
         return self
@@ -991,7 +993,6 @@ class Icrc:
         self.l3hdr_to_profile_map_dp        = {}
         self.l4_hdr_to_profile_map_dp       = {}
         self.l5_hdr_to_profile_map_dp       = {}
-        self.roce_hdr                       = None
         self.dpr_hw_icrc_obj                = [] #Sorted list of calfldobj; sorted by fldstart
 
     def initialize(self):
@@ -1003,6 +1004,7 @@ class Icrc:
                 if self.be.h.p4_field_list_calculations[ops[1]].algorithm != 'icrc':
                     #calculated field objects are not icrc(skip checksum related obj)
                     continue
+                '''
                 if ops[2] and ops[2].op == 'valid':
                     if not self.roce_hdr:
                         self.roce_hdr = ops[2].right
@@ -1010,14 +1012,15 @@ class Icrc:
                         #Make sure there is no mistake in P4 expressing icrc with
                         #different header instances in icrc calculation.
                         assert self.roce_hdr == ops[2].right, pdb.set_trace()
+                '''
                 if ops[0] == 'verify':
                     self.verify_cal_fieldlist.append(IcrcParserCalField(\
                                                      self.be, \
-                                                     field_dst, ops[1]))
+                                                     field_dst, ops[1], ops[2].right))
                 else:
                     self.update_cal_fieldlist.append(IcrcDeParserCalField(\
                                                      self.be, \
-                                                     field_dst, ops[1]))
+                                                     field_dst, ops[1], ops[2].right))
 
     def ProcessIcrcObjects(self, d):
         if d == xgress.INGRESS:
@@ -1032,7 +1035,13 @@ class Icrc:
             self.AllocateDeParserIcrcResources(self.be.parsers[d])
 
     def IsHdrRoceV2(self, hdr_name):
-        return True if self.roce_hdr and self.roce_hdr.name == hdr_name else False
+        for calfldobj in self.verify_cal_fieldlist:
+            if calfldobj.roce_hdr.name == hdr_name:
+                return True
+        for calfldobj in self.update_cal_fieldlist:
+            if calfldobj.roce_hdr.name == hdr_name:
+                return True
+        return False
 
 
     #   --------  iCRC verification related Code --------
@@ -1230,7 +1239,7 @@ class Icrc:
                                             append(("L3_IFLD", calfldobj))
                             l3_calfldlist.append(calfldobj)
                     icrc_l3hdrs.remove(hdr.name)
-                    icrc_calfldobjs.remove(calfldobj)
+                    #icrc_calfldobjs.remove(calfldobj)
                 if hdr.name in icrc_l4_hdrs:
                     calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name)
                     for parsestate in parser.get_ext_cstates(hdr):
@@ -1252,8 +1261,9 @@ class Icrc:
         #one of the calfldobj will be used to program parser when extracting
         #roce_bth header that corresponds to L3hdr in the parser path.
         all_calflds = [("L3_IFLD", calfldobj) for calfldobj in self.verify_cal_fieldlist]
-        for parsestate in parser.get_ext_cstates(self.roce_hdr):
-            parsestate.icrc_verify_cal_field_objs =  all_calflds
+        for calfldobj in self.verify_cal_fieldlist:
+            for parsestate in parser.get_ext_cstates(calfldobj.roce_hdr):
+                parsestate.icrc_verify_cal_field_objs =  all_calflds
 
 
     def AllocateParserIcrcResources(self, parser):
@@ -1266,11 +1276,15 @@ class Icrc:
             return
 
         icrc_objects = set(calfldobj for calfldobj in self.verify_cal_fieldlist)
+        all_roce_hdr_names = set(calfldobj.roce_hdr.name for calfldobj in self.verify_cal_fieldlist)
         all_parse_paths = sorted(parser.paths, key=lambda p: len(p), reverse=True)
         for parse_path in all_parse_paths:
             program_icrc = False
             parse_path_hdrs = set(hdr.name for hdr in parse_path)
-            if self.roce_hdr.name in parse_path_hdrs:
+            rhdr = parse_path_hdrs.intersection(all_roce_hdr_names)
+            if len(rhdr):
+                assert(len(rhdr) == 1), pdb.set_trace()
+                roce_hdr_name = list(rhdr)[0]
                 program_icrc = True
             if program_icrc:
                 l3_hdrs = None
@@ -1283,7 +1297,7 @@ class Icrc:
                     assert(0), pdb.set_trace()
 
                 for hdr in parse_path:
-                    if hdr.name != self.roce_hdr.name:
+                    if hdr.name != roce_hdr_name:
                         continue
                     #In order to associate right l3hdr, maintain
                     #l3hdrs in the same order as they are in parse path.
@@ -1362,9 +1376,8 @@ class Icrc:
                         for parsestate in parser.get_ext_cstates(self.be.h.\
                                                 p4_header_instances[l4_hdr_name]):
                             if len(parsestate.verify_cal_field_objs):
-                                ohi_start_id = parsestate.\
-                                    verify_cal_field_objs[0].\
-                                    ParserCsumObjGet().CsumOhiStartSelGet()
+                                ohi_start_id = parsestate.verify_cal_field_objs[0].\
+                                           ParserCsumObjGet().CsumOhiStartSelGet()
 
                                 #When processing csum constructs, OHI ID with L3
                                 #offset is already loaded. Reusing same OHI
@@ -1433,7 +1446,7 @@ class Icrc:
                     break
         assert matched_calobj and matched_l3hdr, pdb.set_trace()
 
-        return calfldobj
+        return hdr_type, calfldobj
 
     def IcrcParserConfigGenerate(self, parser, parse_states_in_path,\
                                  parse_state, sram):
@@ -1451,7 +1464,7 @@ class Icrc:
         log_str += 'Headers in the parse path %s\n\n\n' % (headers_in_parse_path)
 
         if len(parse_state.icrc_verify_cal_field_objs) > 1:
-            calfldobj = self.IcrcFindCalFldObjMatchingL3hdr(\
+            hdr_type, calfldobj = self.IcrcFindCalFldObjMatchingL3hdr(\
                                               parse_state, parse_states_in_path)
         else:
             hdr_type, calfldobj = parse_state.icrc_verify_cal_field_objs[0]
@@ -1468,7 +1481,7 @@ class Icrc:
         assert mask_ohi_id != -1, pdb.set_trace()
 
         extracted_hdrs = [hdr for hdr in parse_state.headers]
-        if self.roce_hdr in extracted_hdrs:
+        if calfldobj.roce_hdr in extracted_hdrs:
             icrc_enable = True
             use_latched_profile_from_l3_state = True
         elif hdr_type == 'L4_IFLD' or hdr_type == 'L5_IFLD':
