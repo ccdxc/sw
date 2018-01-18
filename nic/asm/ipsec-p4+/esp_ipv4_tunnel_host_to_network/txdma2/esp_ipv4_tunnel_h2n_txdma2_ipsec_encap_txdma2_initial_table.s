@@ -11,6 +11,8 @@ struct phv_ p;
         .param BRQ_BASE
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
+    seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
+    b.c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
     phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.txdma2_global_iv_size, d.iv_size
     phvwr p.txdma2_global_icv_size, d.icv_size
@@ -31,11 +33,16 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr p.ipsec_to_stage3_is_v6, r2 
     smeqb c3, d.flags, IPSEC_FLAGS_NATT_MASK, IPSEC_FLAGS_NATT_MASK 
     phvwr.c3 p.ipsec_to_stage3_is_nat_t, 1
+    tbladd d.barco_cindex, 1
     tbladd d.{barco_ring_cindex}.hx, 1
+    nop 
+    seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
+    b.!c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.{barco_ring_cindex}.hx)
     memwr.dx  r4, r3
-    tbladd d.barco_cindex, 1
+
+esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing:
     nop.e
     nop
 

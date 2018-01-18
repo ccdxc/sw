@@ -11,6 +11,8 @@ struct phv_ p;
         .param BRQ_BASE
         .align
 esp_ipv4_tunnel_n2h_txdma2_initial_table:
+    seq c2, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx
+    b.c2 esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing
     seq c1, d.is_v6, 1
     phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.txdma2_global_iv_size, d.iv_size
@@ -30,13 +32,6 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     add r1, r1, d.barco_ring_base_addr 
     phvwr  p.common_te0_phv_table_addr, r1
 
-    //add r1, r0, d.{barco_ring_cindex}.hx
-    //addi r1, r1, 1
-    tbladd d.{barco_ring_cindex}.hx, 1
-
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
-    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.{barco_ring_cindex}.hx)
-    memwr.dx  r4, r3
 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.ipsec_to_stage3_block_size, d.block_size
@@ -44,9 +39,18 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     phvwr p.ipsec_to_stage4_vrf_vlan, d.vrf_vlan
     cmov r6, c1, IPV6_ETYPE, IPV4_ETYPE
     phvwr p.ipsec_to_stage4_ip_etype, r6
-    //add r3, r0, d.barco_cindex
-    //addi r3, r3, 1
     tbladd d.barco_cindex, 1 
+
+    tbladd d.{barco_ring_cindex}.hx, 1
+    nop
+    seq c2, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx
+    b.!c2 esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing
+    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
+    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.{barco_ring_cindex}.hx)
+    memwr.dx  r4, r3
+
+
+esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing:
     nop.e
     nop
 
