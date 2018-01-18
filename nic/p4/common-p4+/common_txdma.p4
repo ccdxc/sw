@@ -959,7 +959,6 @@ table tx_table_s1_t1 {
 }
 
 @pragma stage 1
-@pragma table_write
 @pragma raw_table common_te0_phv.table_pc
 @pragma table_write // lock_en_raw=1
 table tx_table_s1_t0 {
