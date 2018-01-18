@@ -27,6 +27,7 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/tcpcb.hpp"
 #include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/session.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -449,6 +450,10 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
 
+    // do per module initialization
+    // TODO: needed only in smart nic mode
+    HAL_ABORT(hal::session_init() == HAL_RET_OK);
+
     // TODO_CLEANUP: this doesn't belong here, why is this outside
     // hal_state ??? how it this special compared to other global state ??
     g_lif_manager = new LIFManager();
@@ -468,6 +473,7 @@ hal_init (hal_cfg_t *hal_cfg)
         }
     }
 
+    // do proxy init
     hal_proxy_svc_init();
 
     // install signal handlers

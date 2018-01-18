@@ -8,7 +8,7 @@ namespace pd {
 //------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
-linkmgr_state_pd*
+linkmgr_state_pd *
 linkmgr_state_pd::factory(void)
 {
     linkmgr_state_pd *state = NULL;
@@ -18,7 +18,7 @@ linkmgr_state_pd::factory(void)
         return NULL;
     }
 
-    if (state->init() != HAL_RET_OK) {
+    if (state->init() != SDK_RET_OK) {
         delete state;
         return NULL;
     }
@@ -26,17 +26,17 @@ linkmgr_state_pd::factory(void)
     return state;
 }
 
-hal_ret_t
-linkmgr_state_pd::init()
+sdk_ret_t
+linkmgr_state_pd::init(void)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     port_slab_ = slab::factory("port_pd", hal::HAL_SLAB_PORT_PD,
                                sizeof(linkmgr::pd::port), 8,
                                false, true, true);
 
     if (NULL == port_slab_) {
-        ret = HAL_RET_ERR;
+        ret = SDK_RET_ERR;
     }
 
     return ret;

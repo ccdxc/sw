@@ -1408,7 +1408,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 // callback invoked by the timerwheel to release an object to its slab
 //------------------------------------------------------------------------------
 static inline void
-pd_slab_delay_delete_cb (hal_slab_t slab_id, void *elem)
+pd_slab_delay_delete_cb (void *timer, hal_slab_t slab_id, void *elem)
 {
     hal_ret_t    ret;
 
@@ -1421,9 +1421,11 @@ pd_slab_delay_delete_cb (hal_slab_t slab_id, void *elem)
         ret = HAL_RET_INVALID_ARG;
     }
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to release elem {} to slab id {}",
-                      elem, slab_id);
+        HAL_TRACE_ERR("[{}:{}] Failed to release elem {} to slab id {}",
+                      __FUNCTION__, __LINE__, elem, slab_id);
     }
+
+    return;
 }
 
 //------------------------------------------------------------------------------
@@ -1443,13 +1445,13 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
         timer_ctxt =
             hal::periodic::timer_schedule(slab_id,
                                           TIME_MSECS_PER_SEC << 1, elem,
-                                          (sdk::lib::twheel_cb_t)slab_delay_delete_cb,
+                                          (sdk::lib::twheel_cb_t)pd_slab_delay_delete_cb,
                                           false);
         if (!timer_ctxt) {
             return HAL_RET_ERR;
         }
     } else {
-        pd_slab_delay_delete_cb(slab_id, elem);
+        pd_slab_delay_delete_cb(NULL, slab_id, elem);
     }
     return HAL_RET_OK;
 }

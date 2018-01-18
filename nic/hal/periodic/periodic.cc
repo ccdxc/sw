@@ -67,7 +67,7 @@ timerfd_prepare (struct periodic_info *pinfo)
     pinfo->timer_fd = fd;
 
     // initialize the timeout
-    timestamp_from_nsecs(&tspec, pinfo->usecs * TIME_NSECS_PER_USEC);
+    sdk::timestamp_from_nsecs(&tspec, pinfo->usecs * TIME_NSECS_PER_USEC);
     itspec.it_interval = tspec;
     itspec.it_value = tspec;
     return timerfd_settime(fd, 0, &itspec, NULL);
@@ -180,6 +180,18 @@ timer_delete (void *timer)
 {
     if (g_twheel) {
         return g_twheel->del_timer(timer);
+    }
+    return NULL;
+}
+
+//------------------------------------------------------------------------------
+// API invoked by other threads to update the scheduled timer
+//------------------------------------------------------------------------------
+void *
+timer_update (void *timer, uint64_t timeout, bool periodic, void *ctxt)
+{
+    if (g_twheel) {
+        return g_twheel->upd_timer(timer, timeout, periodic, ctxt);
     }
     return NULL;
 }

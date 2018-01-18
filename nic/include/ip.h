@@ -128,31 +128,31 @@ extern char *ipv6addr2str(ipv6_addr_t v6_addr);
 extern char *ipaddr2str(const ip_addr_t *ip_addr);
 extern char *ippfx2str(const ip_prefix_t *ip_pfx);
 
-//spdlog formatter for ip_addr_t
-inline std::ostream& operator<<(std::ostream& os, const ip_addr_t& ip) {
+// spdlog formatter for ip_addr_t
+static inline std::ostream& operator<<(std::ostream& os, const ip_addr_t& ip) {
     return os << ipaddr2str(&ip);
 }
 
-// TODO(goli) conflicts with another << operator overload for unisigned int
-//spdlog formatter for ipv4_addr_t
-//inline std::ostream& operator<<(std::ostream& os, const ipv4_addr_t& ip) {
-//    return os << ipv4addr2str(ip);
-//}
-
-//spdlog formatter for ipv6_addr_t
-inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip) {
+// spdlog formatter for ipv6_addr_t
+static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
+{
     return os << ipv6addr2str(ip);
 }
 
-inline ipv4_addr_t ipv4_prefix_len_to_mask(uint8_t len) {
+static inline ipv4_addr_t
+ipv4_prefix_len_to_mask (uint8_t len)
+{
     if (len > 32) {
         return 0;
     }
     return len == 0 ? 0: ~((1<<(32-len))-1);
 }
 
-inline void ipv6_prefix_len_to_mask(ipv6_addr_t *v6_addr, uint8_t len) {
-    uint8_t wp = 0;
+static inline void
+ipv6_prefix_len_to_mask (ipv6_addr_t *v6_addr, uint8_t len)
+{
+    uint8_t    wp = 0;
+
     if (len > 128) {
         v6_addr->addr64[0] = 0;
         v6_addr->addr64[1] = 0;
@@ -167,22 +167,27 @@ inline void ipv6_prefix_len_to_mask(ipv6_addr_t *v6_addr, uint8_t len) {
     }
 }
 
-inline bool ipv4_addr_is_multicast(ipv4_addr_t *ipv4_addr)
+static inline bool
+ipv4_addr_is_multicast (ipv4_addr_t *ipv4_addr)
 {
     return (((*ipv4_addr) & 0xF0000000) == 0xE0000000);
 }
 
-inline bool ipv6_addr_is_multicast(ipv6_addr_t *ipv6_addr)
+static inline bool
+ipv6_addr_is_multicast (ipv6_addr_t *ipv6_addr)
 {
     return (ipv6_addr->addr8[0]  == 0xFF);
 }
 
-inline bool ip_addr_is_multicast(ip_addr_t *ip_addr)
+static inline bool
+ip_addr_is_multicast (ip_addr_t *ip_addr)
 {
-    if (ip_addr->af == IP_AF_IPV4)
+    if (ip_addr->af == IP_AF_IPV4) {
         return ipv4_addr_is_multicast(&(ip_addr->addr.v4_addr));
-    else
+    } else {
         return ipv6_addr_is_multicast(&(ip_addr->addr.v6_addr));
+    }
 }
+
 #endif    // __IP_H__
 

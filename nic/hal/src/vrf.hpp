@@ -151,7 +151,7 @@ vrf_free (vrf_t *vrf)
 
 // anti vrf_alloc_init
 static inline hal_ret_t
-vrf_cleanup(vrf_t *vrf)
+vrf_cleanup (vrf_t *vrf)
 {
     if (vrf->l2seg_list) {
         block_list::destroy(vrf->l2seg_list);

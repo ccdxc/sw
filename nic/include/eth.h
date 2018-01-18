@@ -69,14 +69,7 @@ mac_str_to_addr (char *str, mac_addr_t *mac)
            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
-static inline void
-mac_addr_to_str (mac_addr_t mac, char *str)
-{
-    snprintf(str, 30, "%.2X-%.2X-%.2X-%.2X-%.2X-%.2X",
-            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
-
-//spdlog formatter for ipv6_addr_t
+// spdlog formatter for mac_addr_t
 inline std::ostream& operator<<(std::ostream& os, mac_addr_t mac) {
     return os << macaddr2str(mac);
 }

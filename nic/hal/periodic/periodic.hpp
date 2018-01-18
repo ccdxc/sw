@@ -23,14 +23,18 @@ bool periodic_thread_is_running(void);
 // API invoked by other threads to trigger cb after timeout
 // Returns the timer entry used to update/delete the timer
 //------------------------------------------------------------------------------
-void *
-timer_schedule(uint32_t timer_id, uint64_t timeout, void *ctxt,
-               sdk::lib::twheel_cb_t cb, bool periodic);
+void *timer_schedule(uint32_t timer_id, uint64_t timeout, void *ctxt,
+                     sdk::lib::twheel_cb_t cb, bool periodic);
 
 //------------------------------------------------------------------------------
 // API invoked by other threads to delete the scheduled timer
 //------------------------------------------------------------------------------
 void *timer_delete(void *timer);
+
+//------------------------------------------------------------------------------
+// API invoked by other threads to update the scheduled timer
+//------------------------------------------------------------------------------
+void *timer_update(void *timer, uint64_t timeout, bool periodic, void *ctxt);
 
 }    // namespace periodic
 }    // namespace hal

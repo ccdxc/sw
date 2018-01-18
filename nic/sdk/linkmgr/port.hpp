@@ -242,7 +242,7 @@ public:
     // ----------------------------------------------------
 
     static sdk_ret_t
-        link_bring_up_timer_cb(uint32_t timer_id, void *ctxt);
+        link_bring_up_timer_cb(void *timer, uint32_t timer_id, void *ctxt);
 
     static sdk_ret_t port_init(void);
 

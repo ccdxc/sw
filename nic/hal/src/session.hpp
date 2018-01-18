@@ -35,6 +35,7 @@ using session::SessionGetRequest;
 using session::SessionGetRequestMsg;
 using session::SessionGetResponse;
 using session::SessionGetResponseMsg;
+using session::FlowTCPState;
 using types::IPProtocol;
 
 namespace hal {
@@ -204,12 +205,12 @@ typedef struct flow_state_s {
     uint64_t        packets;             // packet count on this flow
     uint64_t        bytes;               // byte count on this flow
     uint32_t        exception_bmap;      // exceptions seen on this flow
-    session::FlowTCPState   state;             // flow state
+    FlowTCPState    state;               // flow state
 
     uint32_t        tcp_seq_num;
     uint32_t        tcp_ack_num;
     uint32_t        tcp_win_sz;
-    int32_t         syn_ack_delta;            // ACK delta of iflow
+    int32_t         syn_ack_delta;       // ACK delta of iflow
     uint16_t        tcp_mss;
     uint8_t         tcp_win_scale;
     uint8_t         tcp_ws_option_sent : 1;
@@ -253,19 +254,17 @@ typedef struct session_args_s {
     flow_cfg_t         *rflow[MAX_SESSION_FLOWS];         // responder flow
     flow_pgm_attrs_t   *iflow_attrs[MAX_SESSION_FLOWS];   // initiator flow attrs
     flow_pgm_attrs_t   *rflow_attrs[MAX_SESSION_FLOWS];   // responder flow attrs
-
-    session_state_t    *session_state;            // connection tracking state
-    bool               valid_rflow;               // Rflow valid ?
-
-    vrf_t           *vrf;                   // vrf
-    ep_t               *sep;                      // spurce ep
-    ep_t               *dep;                      // dest ep
-    if_t               *sif;                      // source interface
-    if_t               *dif;                      // dest interface
-    l2seg_t            *sl2seg;                   // source l2seg
-    l2seg_t            *dl2seg;                   // dest l2seg
-    SessionSpec        *spec;                     // session spec
-    SessionResponse    *rsp;                      // session response
+    session_state_t    *session_state;                    // connection tracking state
+    bool               valid_rflow;                       // Rflow valid ?
+    vrf_t              *vrf;                              // vrf
+    ep_t               *sep;                              // spurce ep
+    ep_t               *dep;                              // dest ep
+    if_t               *sif;                              // source interface
+    if_t               *dif;                              // dest interface
+    l2seg_t            *sl2seg;                           // source l2seg
+    l2seg_t            *dl2seg;                           // dest l2seg
+    SessionSpec        *spec;                             // session spec
+    SessionResponse    *rsp;                              // session response
 } __PACK__ session_args_t;
 
 //------------------------------------------------------------------------------
@@ -320,39 +319,31 @@ find_session_by_id (session_id_t session_id)
 extern void *session_get_key_func(void *entry);
 extern uint32_t session_compute_hash_func(void *key, uint32_t ht_size);
 extern bool session_compare_key_func(void *key1, void *key2);
-
 extern void *session_get_handle_key_func(void *entry);
 extern uint32_t session_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool session_compare_handle_key_func(void *key1, void *key2);
-
 extern void *session_get_iflow_key_func(void *entry);
 extern uint32_t session_compute_iflow_hash_func(void *key, uint32_t ht_size);
 extern bool session_compare_iflow_key_func(void *key1, void *key2);
-
 extern void *session_get_rflow_key_func(void *entry);
 extern uint32_t session_compute_rflow_hash_func(void *key, uint32_t ht_size);
 extern bool session_compare_rflow_key_func(void *key1, void *key2);
-
 extern void *flow_get_key_func(void *entry);
 extern uint32_t flow_compute_hash_func(void *key, uint32_t ht_size);
 extern bool flow_compare_key_func(void *key1, void *key2);
-
 extern hal_ret_t ep_get_from_flow_key(const flow_key_t* key,
                                       ep_t **sep, ep_t **dep);
 bool flow_needs_associate_flow(const flow_key_t *flow_key);
-
 extern hal_ret_t session_release(session_t *session);
-
-hal_ret_t extract_flow_key_from_spec (vrf_id_t tid,
-                                      flow_key_t *flow_key, 
-                                      const FlowKey& flow_spec_key);
-
+hal_ret_t extract_flow_key_from_spec(vrf_id_t tid,
+                                     flow_key_t *flow_key, 
+                                     const FlowKey& flow_spec_key);
+hal_ret_t session_init(void);
 hal_ret_t session_create(const session_args_t *args,
                          hal_handle_t *session_handle, session_t **sess);
 hal_ret_t session_update(const session_args_t *args, session_t *session);
 hal_ret_t session_delete(const session_args_t *args, session_t *session);
 hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
-
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);
 

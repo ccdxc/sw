@@ -61,7 +61,7 @@ public:
         virtual void delete_timer(fsm_state_timer_ctx timer) {
             hal::periodic::timer_delete(timer);
         }
-        static void timeout_handler(uint32_t timer_id, void *ctxt) {
+        static void timeout_handler(void *timer, uint32_t timer_id, void *ctxt) {
             fsm_state_machine_t* sm_ = reinterpret_cast<fsm_state_machine_t*>(ctxt);
             sm_->reset_timer();
             trans_t* trans =

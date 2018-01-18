@@ -164,7 +164,7 @@ slab::alloc(void)
 
     // allocate a new block if all blocks are fully utilized
     if (block == NULL) {
-        if (grow_on_demand_) {
+        if (grow_on_demand_ || (this->block_head_ == NULL)) {
             block = alloc_block_();
             if (block) {
                 block->next_ = this->block_head_;

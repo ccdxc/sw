@@ -97,7 +97,7 @@ static bool scanner_dlclose()
     return (rc == 0);
 }
 
-void scanner_periodic_cb(uint32_t timer_id, void* ctx)
+void scanner_periodic_cb(void *timer, uint32_t timer_id, void* ctx)
 {
     sdk::lib::thread* t = sdk::lib::thread::current_thread();
     if (t) {

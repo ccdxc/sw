@@ -19,7 +19,7 @@ namespace lib {
 #define TWHEEL_DEFAULT_SLICE_DURATION    250      // in msecs
 #define TWHEEL_DEFAULT_DURATION          (2 * 60 * TIME_MSECS_PER_MIN) // 2 hr
 
-typedef void (*twheel_cb_t)(uint32_t timer_id, void *ctxt);
+typedef void (*twheel_cb_t)(void *timer, uint32_t timer_id, void *ctxt);
 typedef struct twentry_s twentry_t;
 struct twentry_s {
     uint32_t       timer_id_;    // unique (in app's space) timer id
@@ -52,7 +52,7 @@ public:
     void *add_timer(uint32_t timer_id, uint64_t timeout, void *ctxt,
                     twheel_cb_t cb, bool periodic=false);
     void *del_timer(void *timer);
-    void *upd_timer(void *timer, uint64_t timeout, bool periodic=false);
+    void *upd_timer(void *timer, uint64_t timeout, bool periodic, void *ctxt);
     uint32_t num_entries(void) const { return num_entries_; }
 
 private:

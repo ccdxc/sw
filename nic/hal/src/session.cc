@@ -11,6 +11,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/src/qos.hpp"
+#include "sdk/timestamp.hpp"
 
 using telemetry::MirrorSessionId;
 using session::FlowInfo;
@@ -20,6 +21,8 @@ using session::FlowData;
 using session::ConnTrackInfo;
 
 namespace hal {
+
+thread_local void *g_session_timer;
 
 void *
 session_get_key_func (void *entry)
@@ -771,10 +774,11 @@ session_delete(const session_args_t *args, session_t *session)
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_args_init(&pd_session_args);
-    pd_session_args.vrf = args->vrf;
+    pd_session_args.vrf =
+        args ? args->vrf : vrf_lookup_by_handle(session->vrf_handle);
     pd_session_args.session = session;
-    pd_session_args.session_state = args->session_state;
-    pd_session_args.rsp = args->rsp;
+    pd_session_args.session_state = args ? args->session_state : NULL;
+    pd_session_args.rsp = args ? args->rsp : NULL;
 
     ret = pd::pd_session_delete(&pd_session_args);
     if (ret != HAL_RET_OK) {
@@ -784,6 +788,150 @@ session_delete(const session_args_t *args, session_t *session)
     session_cleanup(session);
 
     return ret;
+}
+
+#define HAL_SESSION_AGE_SCAN_INTVL                   (5 * TIME_MSECS_PER_SEC)
+#define HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL        4
+
+//------------------------------------------------------------------------------
+// determine aging timeout of a session based on its properties
+// TODO: look at the nwsec profile
+//------------------------------------------------------------------------------
+static uint32_t
+session_aging_timeout (session_t *session,
+                       flow_t *iflow, flow_state_t *iflow_state,
+                       flow_t *rflow, flow_state_t *rflow_state)
+{
+    // TODO:fill this in
+    return 1000;
+}
+
+//------------------------------------------------------------------------------
+// convert hardware timestamp to software timestamp
+// TODO: move this to PD and always expose sw time in PI
+//------------------------------------------------------------------------------
+static uint64_t
+hw_time_to_sw_time_ns (uint64_t ctime_ns)
+{
+    return ctime_ns;
+}
+
+//------------------------------------------------------------------------------
+// determine whether a given session should be aged or not
+//------------------------------------------------------------------------------
+static bool
+session_age_cb (void *entry, void *ctxt)
+{
+    hal_ret_t                ret;
+    session_t                *session = (session_t *)entry;
+    flow_t                   *iflow, *rflow;
+    flow_state_t             iflow_state, rflow_state;
+    uint64_t                 ctime_ns = *(uint64_t *)ctxt;
+    uint64_t                 last_pkt_ts;
+    uint64_t                 session_timeout;
+    session_args_t           session_args;
+
+    // read the initiator flow record
+    iflow = session->iflow;
+    if (!iflow) {
+        HAL_TRACE_ERR("session {} has no iflow, ignoring ...",
+                      session->config.session_id);
+        return false;
+    }
+    ret = hal::pd::pd_flow_get(session, iflow, &iflow_state);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
+                      session->config.session_id);
+        return ret;
+    }
+
+    // read the responder flow record
+    rflow = session->rflow;
+    if (!rflow) {
+        HAL_TRACE_ERR("session {} has no rflow, ignoring ...",
+                      session->config.session_id);
+    } else {
+        ret = hal::pd::pd_flow_get(session, rflow, &rflow_state);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to fetch rflow record of session {}",
+                          session->config.session_id);
+            return ret;
+        }
+    }
+
+    // check if iflow has expired now
+    session_timeout = session_aging_timeout(session, iflow, &iflow_state,
+                                            rflow, rflow ? &rflow_state : NULL);
+    last_pkt_ts = hw_time_to_sw_time_ns(iflow_state.last_pkt_ts);
+    if ((ctime_ns - last_pkt_ts) < session_timeout) {
+        // session hasn't aged yet, move on
+        return false;
+    } else  {
+        // no activity detected on initiator flow for a while, check responder
+        last_pkt_ts = hw_time_to_sw_time_ns(rflow_state.last_pkt_ts);
+        if ((ctime_ns - last_pkt_ts) < session_timeout) {
+            // responder flow seems to be active still
+            return false;
+        }
+
+        // time to clean up the session
+        memset(&session_args, 0, sizeof(session_args));
+        ret = session_delete(NULL, session);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delte aged session {}",
+                          session->config.session_id);
+            return false;
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// callback invoked by the HAL periodic thread for session aging
+//------------------------------------------------------------------------------
+void
+session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    uint32_t      i, bucket = *((uint32_t *)(&ctxt));
+    timespec_t    ctime;
+    uint64_t      ctime_ns;
+
+    // get current time
+    clock_gettime(CLOCK_MONOTONIC, &ctime);
+    sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+
+    //HAL_TRACE_DEBUG("[{}:{}] timer id {}, bucket {}",
+                    //__FUNCTION__, __LINE__, timer_id, bucket);
+    for (i = 0; i < HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL; i++) {
+        g_hal_state->session_id_ht()->walk_bucket_safe(bucket,
+                                                       session_age_cb, &ctime_ns);
+        bucket = (bucket + 1)%g_hal_state->session_id_ht()->num_buckets();
+    }
+    // store the bucket id to resume on next invocation
+    hal::periodic::timer_update(g_session_timer, HAL_SESSION_AGE_SCAN_INTVL,
+                                true, reinterpret_cast<void *>(bucket));
+}
+
+//------------------------------------------------------------------------------
+// initialize the session management module
+//------------------------------------------------------------------------------
+hal_ret_t
+session_init (void)
+{
+    // wait until the periodic thread is ready
+    while (!hal::periodic::periodic_thread_is_running()) {
+        pthread_yield();
+    }
+    g_session_timer =
+        hal::periodic::timer_schedule(0,            // timer_id
+                                      HAL_SESSION_AGE_SCAN_INTVL,
+                                      (void *)0,    // ctxt
+                                      session_age_walk_cb, true);
+    if (!g_session_timer) {
+        return HAL_RET_ERR;
+    }
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

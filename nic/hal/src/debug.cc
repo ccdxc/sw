@@ -80,8 +80,7 @@ set_slab_response(slab *s, debug::SlabGetResponseMsg *rsp)
 }
 
 hal_ret_t
-slab_get_from_req (debug::SlabGetRequest& req,
-            debug::SlabGetResponseMsg *rsp)
+slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
 {
     hal_slab_t  slab_id;
     hal_ret_t   ret = HAL_RET_OK;

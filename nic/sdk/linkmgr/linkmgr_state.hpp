@@ -1,9 +1,9 @@
 #ifndef __LINKMGR_STATE_HPP__
 #define __LINKMGR_STATE_HPP__
 
-#include "nic/include/hal_cfg.hpp"
-#include "nic/include/hal_mem.hpp"
-#include "nic/hal/lib/hal_handle.hpp"
+//#include "nic/include/hal_cfg.hpp"
+//#include "nic/include/hal_mem.hpp"
+//#include "nic/hal/lib/hal_handle.hpp"
 #include "sdk/slab.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/catalog.hpp"

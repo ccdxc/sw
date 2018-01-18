@@ -4,12 +4,14 @@
 // timestamp related helper functions
 //-----------------------------------------------------------------------------
 
-#ifndef __TIMESTAMP_HPP__
-#define __TIMESTAMP_HPP__
+#ifndef __SDK_TIMESTAMP_HPP__
+#define __SDK_TIMESTAMP_HPP__
 
 #include <assert.h>
 #include <time.h>
 #include "sdk/base.hpp"
+
+namespace sdk {
 
 // define our typedef on top of struct timespec
 typedef struct timespec timespec_t;
@@ -88,10 +90,10 @@ timestamp_equal_or_later (timespec_t *ts1, timespec_t *ts2)
 // do ts1 += ts2(seconds, nseconds)
 //--------------------------------------------------------------------------
 static inline void
-timestamp_add (timespec_t *ts, long secs, unsigned long long nsecs)
+timestamp_add (timespec_t *ts, long secs, uint64_t nsecs)
 {
     ts->tv_nsec += nsecs;
-    if ((unsigned long long)ts->tv_nsec >= TIME_NSECS_PER_SEC) {
+    if ((uint64_t)ts->tv_nsec >= TIME_NSECS_PER_SEC) {
         ts->tv_sec++;
         ts->tv_nsec -= TIME_NSECS_PER_SEC;
     }
@@ -129,7 +131,7 @@ timestamp_subtract (timespec_t *ts1, timespec_t *ts2)
 // convert time from nanoseconds to timespec format
 //--------------------------------------------------------------------------
 static inline void
-timestamp_from_nsecs (timespec_t *ts, unsigned long long nsecs)
+timestamp_from_nsecs (timespec_t *ts, uint64_t nsecs)
 {
     assert((ts != NULL) && (nsecs != 0));
     ts->tv_sec = nsecs/TIME_NSECS_PER_SEC;
@@ -140,12 +142,16 @@ timestamp_from_nsecs (timespec_t *ts, unsigned long long nsecs)
 // convert time from timespec format to nanoseconds
 //--------------------------------------------------------------------------
 static inline void
-timestamp_to_nsecs (timespec_t *ts, unsigned long long *nsecs)
+timestamp_to_nsecs (timespec_t *ts, uint64_t *nsecs)
 {
     assert((ts != NULL) && (nsecs != NULL));
     *nsecs = ts->tv_nsec;
-    *nsecs += (unsigned long long) ts->tv_sec * TIME_NSECS_PER_SEC;
+    *nsecs += (uint64_t) (ts->tv_sec * TIME_NSECS_PER_SEC);
 }
 
-#endif    // __TIMESTAMP_HPP__
+}    // namespace sdk
+
+using sdk::timespec_t;
+
+#endif    // __SDK_TIMESTAMP_HPP__
 

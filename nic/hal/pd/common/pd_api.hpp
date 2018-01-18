@@ -167,18 +167,9 @@ typedef struct pd_ep_upd_args_s {
 } pd_ep_upd_args_t;
 
 typedef struct pd_sessoin_args_s {
-    vrf_t           *vrf;
+    vrf_t              *vrf;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
-
-#if 0
-    l2seg_t            *l2seg_s;
-    l2seg_t            *l2seg_d;
-    if_t               *sif;
-    if_t               *dif;
-    ep_t               *sep;
-    ep_t               *dep;
-#endif
     session_t          *session;
     session_state_t    *session_state;
     SessionResponse    *rsp;
@@ -516,6 +507,9 @@ hal_ret_t pd_ep_make_clone(ep_t *ep, ep_t *clone);
 hal_ret_t pd_session_create(pd_session_args_t *session);
 hal_ret_t pd_session_update(pd_session_args_t *session);
 hal_ret_t pd_session_delete(pd_session_args_t *session);
+hal_ret_t pd_session_get (pd_session_args_t *args);
+hal_ret_t pd_flow_get(session_t *session,
+                      flow_t *iflow, flow_state_t *flow_state);
 
 hal_ret_t pd_add_l2seg_uplink(pd_l2seg_uplink_args_t *args);
 hal_ret_t pd_del_l2seg_uplink(pd_l2seg_uplink_args_t *args);

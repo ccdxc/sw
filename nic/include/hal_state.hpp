@@ -663,19 +663,20 @@ get_app_redir_if_id (void)
 // callback invoked by the timerwheel to release an object to its slab
 //------------------------------------------------------------------------------
 static inline void
-slab_delay_delete_cb (hal_slab_t slab_id, void *elem)
+slab_delay_delete_cb (void *timer, hal_slab_t slab_id, void *elem)
 {
     hal_ret_t    ret;
 
     if (slab_id < HAL_SLAB_PI_MAX) {
         ret = hal::free_to_slab(slab_id, elem);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to release elem {} to slab id {}",
-                          elem, slab_id);
+            HAL_TRACE_ERR("[{}:{}] Failed to release elem {} to slab id {}",
+                          __FUNCTION__, __LINE__, elem, slab_id);
         }
     } else {
         HAL_TRACE_ERR("{}: Unexpected slab id {}", __FUNCTION__, slab_id);
     }
+
     return;
 }
 
@@ -702,7 +703,7 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
             return HAL_RET_ERR;
         }
     } else {
-        slab_delay_delete_cb(slab_id, elem);
+        slab_delay_delete_cb(NULL, slab_id, elem);
     }
     return HAL_RET_OK;
 }

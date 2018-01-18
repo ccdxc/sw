@@ -910,5 +910,23 @@ pd_session_delete (pd_session_args_t *args)
     return ret;
 }
 
+//-----------------------------------------
+// get all session related information
+//------------------------------------------
+hal_ret_t
+pd_session_get (pd_session_args_t *args)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// get all flow related information
+//------------------------------------------------------------------------------
+hal_ret_t
+pd_flow_get (session_t *session, flow_t *iflow, flow_state_t *flow_state)
+{
+    return HAL_RET_OK;
+}
+
 }    // namespace pd
 }    // namespace hal

@@ -369,7 +369,7 @@ class TestTimer: public fsm_timer_t {
     }
 
     static void
-    timeout_handler(uint32_t timer_id, void *ctxt)
+    timeout_handler(void *timer, uint32_t timer_id, void *ctxt)
     {
         fsm_state_machine_t* sm_ = reinterpret_cast<fsm_state_machine_t*>(ctxt);
         //100 is timeout event

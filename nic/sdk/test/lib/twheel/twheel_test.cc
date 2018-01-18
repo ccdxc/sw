@@ -30,7 +30,7 @@ protected:
 uint32_t g_ctxt = 100;
 
 void
-timeout_handler(uint32_t timer_id, void *ctxt)
+timeout_handler (void *timer, uint32_t timer_id, void *ctxt)
 {
     uint32_t    *i = (uint32_t *)ctxt;
     ASSERT_EQ(*i, 100);

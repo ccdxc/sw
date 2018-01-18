@@ -20,7 +20,7 @@ serdes_fn_t port::serdes_fn;
 
 // Invoked by the periodic thread when timer expires
 hal_ret_t
-port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
+port::link_bring_up_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
 {
     hal_ret_t ret = HAL_RET_OK;
 

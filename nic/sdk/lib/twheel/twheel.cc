@@ -10,6 +10,20 @@
 namespace sdk {
 namespace lib {
 
+#define TWHEEL_LOCK_SLICE(slice)                                       \
+{                                                                      \
+    if (thread_safe_) {                                                \
+        SDK_SPINLOCK_LOCK(&twheel_[(slice)].slock_);                   \
+    }                                                                  \
+}
+
+#define TWHEEL_UNLOCK_SLICE(slice)                                     \
+{                                                                      \
+    if (thread_safe_) {                                                \
+        SDK_SPINLOCK_UNLOCK(&twheel_[(slice)].slock_);                 \
+    }                                                                  \
+}
+
 //------------------------------------------------------------------------------
 // init function for the timer wheel
 //------------------------------------------------------------------------------
@@ -133,13 +147,9 @@ twheel::add_timer(uint32_t timer_id, uint64_t timeout, void *ctxt,
     }
     init_twentry_(twentry, timer_id, timeout, periodic, ctxt, cb);
 
-    if (thread_safe_) {
-        SDK_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
-    }
+    TWHEEL_LOCK_SLICE(twentry->slice_);
     insert_timer_(twentry);
-    if (thread_safe_) {
-        SDK_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
-    }
+    TWHEEL_UNLOCK_SLICE(twentry->slice_);
 
     return twentry;
 }
@@ -160,13 +170,9 @@ twheel::del_timer(void *timer)
     twentry = static_cast<twentry_t *>(timer);
     ctxt = twentry->ctxt_;
 
-    if (thread_safe_) {
-        SDK_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
-    }
+    TWHEEL_LOCK_SLICE(twentry->slice_);
     remove_timer_(twentry);
-    if (thread_safe_) {
-        SDK_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
-    }
+    TWHEEL_UNLOCK_SLICE(twentry->slice_);
     twentry_slab_->free(twentry);
 
     return ctxt;
@@ -176,7 +182,7 @@ twheel::del_timer(void *timer)
 // update a given timer wheel entry
 //------------------------------------------------------------------------------
 void *
-twheel::upd_timer(void *timer, uint64_t timeout, bool periodic)
+twheel::upd_timer(void *timer, uint64_t timeout, bool periodic, void *ctxt)
 {
     twentry_t        *twentry;
 
@@ -185,19 +191,19 @@ twheel::upd_timer(void *timer, uint64_t timeout, bool periodic)
     }
     twentry = static_cast<twentry_t *>(timer);
 
-    if (thread_safe_) {
-        SDK_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
-    }
     // remove this entry from current slice
+    TWHEEL_LOCK_SLICE(twentry->slice_);
     remove_timer_(twentry);
+    TWHEEL_UNLOCK_SLICE(twentry->slice_);
+
     // re-init with updated params
     init_twentry_(twentry, twentry->timer_id_, timeout,
-                  periodic, twentry->ctxt_, twentry->cb_);
+                  periodic, ctxt, twentry->cb_);
     // re-insert in the right slice
+    TWHEEL_LOCK_SLICE(twentry->slice_);
     insert_timer_(twentry);
-    if (thread_safe_) {
-        SDK_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
-    }
+    TWHEEL_UNLOCK_SLICE(twentry->slice_);
+
     return twentry;
 }
 
@@ -226,9 +232,7 @@ twheel::tick(uint32_t msecs_elapsed)
 
     // process all the timer events from current slice
     do {
-        if (thread_safe_) {
-            SDK_SPINLOCK_LOCK(&twheel_[curr_slice_].slock_);
-        }
+        TWHEEL_LOCK_SLICE(curr_slice_);
         twentry = twheel_[curr_slice_].slice_head_;
         while (twentry) {
             if (twentry->nspins_) {
@@ -236,9 +240,13 @@ twheel::tick(uint32_t msecs_elapsed)
                 twentry->nspins_ -= 1;
                 twentry = twentry->next_;
             } else {
-                twentry->cb_(twentry->timer_id_, twentry->ctxt_);
+                TWHEEL_UNLOCK_SLICE(curr_slice_);
+                // cache the next entry, in case callback function does
+                // something to this timer (it shouldn't ideally)
+                next_entry = twentry->next_;
+                twentry->cb_(twentry, twentry->timer_id_, twentry->ctxt_);
+                TWHEEL_LOCK_SLICE(curr_slice_);
                 if (twentry->periodic_) {
-                    next_entry = twentry->next_;
                     // re-insert this timer
                     upd_timer_(twentry, twentry->timeout_, true);
                     twentry = next_entry;
@@ -251,9 +259,7 @@ twheel::tick(uint32_t msecs_elapsed)
                 }
             }
         }
-        if (thread_safe_) {
-            SDK_SPINLOCK_UNLOCK(&twheel_[curr_slice_].slock_);
-        }
+        TWHEEL_UNLOCK_SLICE(curr_slice_);
         curr_slice_ = (curr_slice_ + 1)%nslices_;
     } while (--nslices);
 }
