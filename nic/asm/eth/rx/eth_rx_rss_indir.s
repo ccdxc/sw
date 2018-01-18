@@ -7,8 +7,6 @@ struct phv_ p;
 struct eth_rx_rss_indir_k k;
 struct eth_rx_rss_indir_eth_rx_rss_indir_d d;
 
-#define PHV_OFF(N, W)      ((512 * N) + (W * 64))
-
 %%
 
 .param  eth_rx_fetch_desc
@@ -26,8 +24,8 @@ eth_rx_rss_indir:
     nop
 
     // Zero-out the flits used for Toeplitz
-    phvwr           p[PHV_OFF(2, 8)-1:PHV_OFF(2, 0)], r0
-    phvwr           p[PHV_OFF(3, 8)-1:PHV_OFF(3, 0)], r0
+    phvwr           p.{toeplitz_input0_data...toeplitz_key1_data}, r0
+    phvwr           p.{toeplitz_input2_data...toeplitz_key2_data}, r0
 
     // Pass RSS hash to the driver in the completion entry
     phvwr           p.eth_rx_cq_desc_rss_hash, r1.wx

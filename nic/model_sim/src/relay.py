@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 import os
 import sys
@@ -82,7 +82,11 @@ def model2tap(tap, stop, poll_interval, verbose, examine, fix_checksum):
     print("model2tap: started")
     count = 1
     while not stop.is_set():
-        (pkt, port, cos) = model_wrap.get_next_pkt()
+        try:
+            (pkt, port, cos) = model_wrap.get_next_pkt()
+        except Exception:
+            time.sleep(poll_interval)
+            continue
         if pkt:
             print("\nmodel2tap: packet %d length %d\n" % (count, len(pkt)))
             if verbose or examine or fix_checksum:

@@ -135,10 +135,10 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint32_t port;
             uint32_t cos;
             /* Send packet through the model */
+            std::cout << "step_network_pkt port: " << buff->port << " size: " << buff->size << std::endl;
             env->step_network_pkt(pkt_vector, buff->port);
             buff->type = BUFF_TYPE_STATUS;
             buff->status = 0;
-            std::cout << "step_network_pkt port: " << port << " size: " << buff->size << std::endl;
         }
             break;
         case BUFF_TYPE_GET_NEXT_PKT:
@@ -231,11 +231,11 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint64_t data;
             uint64_t addr = buff->addr;
             memcpy(&data, buff->data, sizeof(uint64_t));
+            std::cout << "step_doorbell addr: " << std::hex << addr << 
+                         " data: " << std::hex << data << std::endl;
             env->step_doorbell(addr, data);
             buff->type = BUFF_TYPE_STATUS;
             buff->status = 0;
-            std::cout << "step_doorbell addr: " << std::hex << addr << 
-                         " data: " << std::hex << data << std::endl;
         }
             break;
         case BUFF_TYPE_HBM_DUMP:

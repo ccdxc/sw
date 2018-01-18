@@ -47,4 +47,4 @@ eth_rx_fetch_desc:
 
 abort_rx:
   phvwr.e         p.p4_intr_global_drop, 1
-  nop
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 0

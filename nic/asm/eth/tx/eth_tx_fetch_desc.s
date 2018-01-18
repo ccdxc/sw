@@ -63,38 +63,35 @@ eth_tx_fetch_desc:
   phvwr           p.eth_tx_cq_desc_comp_index, d.c_index0
   phvwr           p.eth_tx_cq_desc_color, d.color
 
-  // Claim the descriptor
-  tblmincri       d.{c_index0}.hx, d.{ring_size}.hx, 1
-
   // Claim the completion entry
   tblmincri       d.{p_index1}.hx, d.{ring_size}.hx, 1
 
+  // Change color if end-of-ring
   seq             c1, d.p_index1, 0
-  tblmincri.c1.f  d.color, 1, 1
+  tblmincri.c1    d.color, 1, 1
+
+  // Claim the descriptor
+  tblmincri.f     d.{c_index0}.hx, d.{ring_size}.hx, 1
 
   // Eval the doorbell only when pi == ci
-  sne             c1, d.{p_index0}.hx, d.{c_index0}.hx
-  nop.c1.e
+  seq             c3, d.{p_index0}.hx, d.{c_index0}.hx
+  bcf             [c3], eth_tx_eval_db    // pi == ci
+  nop.!c3.e                               // pi != ci
+  nop
 
+eth_tx_spurious_db:
+  tblmincri.f     d.spurious_db_cnt, 8, 1
+  bcf             [c3], eth_tx_eval_db        // spurious_db_cnt == 255
+  phvwr.!c3.e     p.p4_intr_global_drop, 1    // spurious_db_cnt != 255
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 0
+
+eth_tx_eval_db:
   or              r1, k.p4_intr_global_lif_sbit3_ebit10, k.p4_intr_global_lif_sbit0_ebit2, 8
   CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, r1)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
   memwr.dx        r4, r3
 
   nop.e
-  nop
-
-eth_tx_spurious_db:
-  tblmincri.f     d.{spurious_db_cnt}.hx, 8, 1
-  bcf             [c3], eth_tx_fetch_desc_drop
-
-  or              r1, k.p4_intr_global_lif_sbit3_ebit10, k.p4_intr_global_lif_sbit0_ebit2, 8
-  CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, r1)   // R4 = ADDR
-  CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
-  memwr.dx        r4, r3
-
-eth_tx_fetch_desc_drop:
-  phvwr.e         p.p4_intr_global_drop, 1
   nop
 
 eth_tx_queue_disabled:
@@ -104,4 +101,5 @@ eth_tx_queue_disabled:
   memwr.dx        r4, r3
 
   phvwr.e         p.p4_intr_global_drop, 1
-  nop
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 0
+

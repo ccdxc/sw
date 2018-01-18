@@ -64,6 +64,7 @@ typedef struct {
     uint16_t    ring_size;
     uint64_t    cq_ring_base;
     uint32_t    intr_assert_addr;
+    uint8_t     spurious_db_cnt;
     uint8_t     color:1;
     uint8_t     rsvd:7;
 } __attribute__((packed)) qstate_app_ethtx_t;
@@ -320,8 +321,8 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
         return;
     }
 
-    qs.host = 2;
-    qs.total = 2;
+    qs.host = 1;
+    qs.total = 1;
     qs.pid = cmd->pid;
     qsethtx = (qstate_app_ethtx_t *)qs.app_data;
     qsethtx->enable = cmd->E;
@@ -383,8 +384,8 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
         return;
     }
 
-    qs.host = 2;
-    qs.total = 2;
+    qs.host = 1;
+    qs.total = 1;
     qs.pid = cmd->pid;
     qsethrx = (qstate_app_ethrx_t *)qs.app_data;
     qsethrx->p_index0 = 0;
